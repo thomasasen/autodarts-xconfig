@@ -1,0 +1,568 @@
+// ==UserScript==
+// @name         Autodarts Animate Remove Darts Notification
+// @namespace    https://github.com/thomasasen/autodarts-tampermonkey-themes
+// @version      2.4
+// @description  Ersetzt die TakeOut-Meldung durch eine gut sichtbare Hand-Grafik.
+// @xconfig-description  Macht den Hinweis zum Darts-Entfernen auffälliger und leichter erkennbar.
+// @xconfig-title  Darts-entfernen-Hinweis
+// @xconfig-variant      all
+// @xconfig-readme-anchor  animation-autodarts-animate-remove-darts-notification
+// @xconfig-tech-anchor  animation-autodarts-animate-remove-darts-notification
+// @xconfig-background     assets/animation-remove-darts-notification-xConfig.png
+// @xconfig-settings-version 4
+// @author       Thomas Asen
+// @license      MIT
+// @match        *://play.autodarts.io/*
+// @run-at       document-start
+// @require      https://github.com/thomasasen/autodarts-tampermonkey-themes/raw/refs/heads/main/Animation/autodarts-animation-shared.js
+// @grant        none
+// @downloadURL  https://github.com/thomasasen/autodarts-tampermonkey-themes/raw/refs/heads/main/Animation/Autodarts%20Animate%20Remove%20Darts%20Notification.user.js
+// @updateURL    https://github.com/thomasasen/autodarts-tampermonkey-themes/raw/refs/heads/main/Animation/Autodarts%20Animate%20Remove%20Darts%20Notification.user.js
+// ==/UserScript==
+
+(function () {
+	"use strict";
+
+	// xConfig: {"type":"select","label":"Bildgröße","description":"Legt die Größe der Hand-Grafik in der Meldung fest.","options":[{"value":"compact","label":"Kompakt"},{"value":"standard","label":"Standard"},{"value":"large","label":"Groß"}]}
+	const xConfig_BILDGROESSE = "standard";
+	// xConfig: {"type":"toggle","label":"Pulse-Animation","description":"Schaltet den leichten Puls-Effekt ein oder aus.","options":[{"value":true,"label":"An"},{"value":false,"label":"Aus"}]}
+	const xConfig_PULSE_ANIMATION = true;
+	// xConfig: {"type":"select","label":"Pulse-Stärke","description":"Bestimmt, wie stark die Grafik beim Puls skaliert.","options":[{"value":1.02,"label":"Dezent"},{"value":1.04,"label":"Standard"},{"value":1.08,"label":"Stark"}]}
+	const xConfig_PULSE_STAERKE = 1.04;
+
+	// xConfig: {"type":"toggle","label":"Debug","description":"Nur bei Fehlersuche aktivieren. Zeigt zusätzliche Hinweise in der Browser-Konsole.","options":[{"value":false,"label":"Aus"},{"value":true,"label":"An"}]}
+	const xConfig_DEBUG = false;
+
+
+	function resolveDebugToggle(value) {
+		if (typeof value === "boolean") {
+			return value;
+		}
+		const normalized = String(value || "").trim().toLowerCase();
+		return ["1", "true", "yes", "on", "aktiv", "active"].includes(normalized);
+	}
+
+	const DEBUG_ENABLED = resolveDebugToggle(xConfig_DEBUG);
+	const DEBUG_PREFIX = "[xConfig][Remove Darts Notification]";
+
+	function debugLog(event, payload) {
+		if (!DEBUG_ENABLED) {
+			return;
+		}
+		if (typeof payload === "undefined") {
+			console.log(`${DEBUG_PREFIX} ${event}`);
+			return;
+		}
+		console.log(`${DEBUG_PREFIX} ${event}`, payload);
+	}
+
+	function debugWarn(event, payload) {
+		if (!DEBUG_ENABLED) {
+			return;
+		}
+		if (typeof payload === "undefined") {
+			console.warn(`${DEBUG_PREFIX} ${event}`);
+			return;
+		}
+		console.warn(`${DEBUG_PREFIX} ${event}`, payload);
+	}
+
+	function debugError(event, payload) {
+		if (!DEBUG_ENABLED) {
+			return;
+		}
+		if (typeof payload === "undefined") {
+			console.error(`${DEBUG_PREFIX} ${event}`);
+			return;
+		}
+		console.error(`${DEBUG_PREFIX} ${event}`, payload);
+	}
+	function resolveToggle(value, fallbackValue) {
+		if (typeof value === "boolean") {
+			return value;
+		}
+		if (value === 1 || value === "1") {
+			return true;
+		}
+		if (value === 0 || value === "0") {
+			return false;
+		}
+		if (typeof value === "string") {
+			const normalized = value.trim().toLowerCase();
+			if (["true", "yes", "on", "aktiv", "active"].includes(normalized)) {
+				return true;
+			}
+			if (["false", "no", "off", "inaktiv", "inactive"].includes(normalized)) {
+				return false;
+			}
+		}
+		return fallbackValue;
+	}
+
+	function resolveStringChoice(value, fallbackValue, allowedValues) {
+		const normalizedValue = String(value || "").trim();
+		return allowedValues.includes(normalizedValue)
+			? normalizedValue
+			: fallbackValue;
+	}
+
+	function resolveNumberChoice(value, fallbackValue, allowedValues) {
+		const numericValue = Number(value);
+		return Number.isFinite(numericValue) && allowedValues.includes(numericValue)
+			? numericValue
+			: fallbackValue;
+	}
+
+	const IMAGE_SIZE_PRESETS = {
+		compact: {
+			imageMaxWidthRem: 24,
+			imageMaxWidthVw: 72,
+		},
+		standard: {
+			imageMaxWidthRem: 30,
+			imageMaxWidthVw: 90,
+		},
+		large: {
+			imageMaxWidthRem: 36,
+			imageMaxWidthVw: 96,
+		},
+	};
+
+	const RESOLVED_IMAGE_SIZE = resolveStringChoice(xConfig_BILDGROESSE, "standard", [
+		"compact",
+		"standard",
+		"large",
+	]);
+	const RESOLVED_PULSE_ANIMATION = resolveToggle(xConfig_PULSE_ANIMATION, true);
+	const RESOLVED_PULSE_SCALE = resolveNumberChoice(xConfig_PULSE_STAERKE, 1.04, [1.02, 1.04, 1.08]);
+	const IMAGE_SIZE = IMAGE_SIZE_PRESETS[RESOLVED_IMAGE_SIZE] || IMAGE_SIZE_PRESETS.standard;
+
+	const {ensureStyle, createRafScheduler, observeMutations} = window.autodartsAnimationShared;
+
+	/**
+   * Configuration for the takeout notification replacement.
+   * @property {string} noticeSelector - Selector for the "Removing Darts" notice element.
+   * @property {string} imageUrl - URL to the TakeOut.png asset.
+   * @property {string} imageAlt - Alt text for the replacement image.
+   * @property {string[]} fallbackTexts - Text matches used if the selector changes.
+   * @property {boolean} searchShadowRoots - Also search open shadow roots for the notice.
+   * @property {number} fallbackScanMs - Minimum delay between text fallback scans.
+   * @property {string[]} matchViewSelectors - Candidate selectors to identify match-view scopes.
+   * @property {string[]} fallbackAreaSelectors - Candidate selectors for bounded text fallback scans.
+   * @property {number} fallbackAreaLimit - Max candidate areas tracked per view.
+   * @property {number} fallbackAreaWindowSize - Number of candidate areas scanned per fallback run.
+   * @property {number} fallbackTextNodeBudget - Max text nodes inspected per fallback run.
+   * @property {number} imageMaxWidthRem - Max width in rem (desktop sizing).
+   * @property {number} imageMaxWidthVw - Max width in vw (mobile sizing).
+   * @property {number} pulseDurationMs - Duration of the pulse animation.
+   * @property {number} pulseScale - Max scale for the pulse animation.
+   */
+	const CONFIG = {
+		noticeSelector: ".adt-remove",
+		imageUrl: "https://github.com/thomasasen/autodarts-tampermonkey-themes/raw/refs/heads/main/assets/TakeOut.png",
+		imageAlt: "Removing darts",
+		fallbackTexts: [
+			"Removing Darts", "Darts entfernen"
+		],
+		searchShadowRoots: true,
+		fallbackScanMs: 900,
+		matchViewSelectors: [
+			"main", "[role=\"main\"]", "#app"
+		],
+		fallbackAreaSelectors: [
+			".v-overlay-container",
+			".v-overlay__content",
+			".v-snackbar",
+			".v-alert",
+			"[role=\"alert\"]",
+			".adt-remove"
+		],
+		fallbackAreaLimit: 10,
+		fallbackAreaWindowSize: 3,
+		fallbackTextNodeBudget: 700,
+		imageMaxWidthRem: IMAGE_SIZE.imageMaxWidthRem,
+		imageMaxWidthVw: IMAGE_SIZE.imageMaxWidthVw,
+		pulseDurationMs: 1400,
+		pulseScale: RESOLVED_PULSE_SCALE
+	};
+
+	const STYLE_ID = "ad-ext-takeout-style";
+	const CARD_CLASS = "ad-ext-takeout-card";
+	const IMAGE_CLASS = "ad-ext-takeout-image";
+	const fallbackTextMatches = (CONFIG.fallbackTexts || []).map((text) => String(text || "").trim().toLowerCase()).filter(Boolean);
+	let lastFallbackScan = 0;
+	const seenShadowHosts = new WeakSet();
+	const seenShadowRoots = new WeakSet();
+	const shadowRoots = [];
+	let currentViewKey = "";
+	let fallbackAreasDirty = true;
+	let fallbackAreas = [];
+	let fallbackWindowOffset = 0;
+
+	const STYLE_TEXT = `
+.${CARD_CLASS} {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  pointer-events: none;
+}
+
+.${CARD_CLASS} > :not(.${IMAGE_CLASS}) {
+  display: none !important;
+}
+
+.${CARD_CLASS} .${IMAGE_CLASS} {
+  display: block;
+  width: min(${
+		CONFIG.imageMaxWidthRem
+	}rem, ${
+		CONFIG.imageMaxWidthVw
+	}vw);
+  height: auto;
+  background: transparent;
+  transform-origin: center;
+  animation: ${RESOLVED_PULSE_ANIMATION
+		? `ad-ext-takeout-pulse ${CONFIG.pulseDurationMs}ms ease-in-out infinite`
+		: "none"};
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@keyframes ad-ext-takeout-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(${
+		CONFIG.pulseScale
+	}); opacity: 0.95; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .${CARD_CLASS} .${IMAGE_CLASS} {
+    animation: none;
+  }
+}
+`;
+
+	function buildImage() {
+		const image = document.createElement("img");
+		image.className = IMAGE_CLASS;
+		image.src = CONFIG.imageUrl;
+		image.alt = CONFIG.imageAlt;
+		image.decoding = "async";
+		image.loading = "eager";
+		return image;
+	}
+
+	function getCurrentViewKey() {
+		return `${
+			location.pathname
+		}|${
+			location.search
+		}|${
+			location.hash
+		}`;
+	}
+
+	function syncViewState() {
+		const viewKey = getCurrentViewKey();
+		if (viewKey === currentViewKey) {
+			return;
+		}
+		currentViewKey = viewKey;
+		fallbackAreasDirty = true;
+		fallbackAreas = [];
+		fallbackWindowOffset = 0;
+	}
+
+	function markFallbackAreasDirty() {
+		fallbackAreasDirty = true;
+	}
+
+	function refreshKnownShadowRoots(rootNode) {
+		if (! CONFIG.searchShadowRoots) {
+			return;
+		}
+		const root = rootNode || document.documentElement;
+		trackShadowHost(document.documentElement);
+		trackShadowHost(document.body);
+		if (! root || typeof document.createTreeWalker !== "function") {
+			return;
+		}
+		const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
+		let current = walker.nextNode();
+		while (current) {
+			trackShadowHost(current);
+			current = walker.nextNode();
+		}
+	}
+
+	function trackShadowHost(host) {
+		if (! CONFIG.searchShadowRoots || ! host || host.nodeType !== Node.ELEMENT_NODE || seenShadowHosts.has(host)) {
+			return;
+		}
+		seenShadowHosts.add(host);
+
+		const root = host.shadowRoot;
+		if (! root || root.mode !== "open" || seenShadowRoots.has(root)) {
+			return;
+		}
+		seenShadowRoots.add(root);
+		shadowRoots.push(root);
+		markFallbackAreasDirty();
+	}
+
+	function trackShadowHostsInNode(node) {
+		if (! CONFIG.searchShadowRoots || ! node) {
+			return;
+		}
+		if (node.nodeType === Node.ELEMENT_NODE) {
+			trackShadowHost(node);
+		}
+		if ((node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) || typeof document.createTreeWalker !== "function") {
+			return;
+		}
+		const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, null);
+		let current = walker.nextNode();
+		while (current) {
+			trackShadowHost(current);
+			current = walker.nextNode();
+		}
+	}
+
+	function collectShadowRootsFromMutations(mutations) {
+		if (! CONFIG.searchShadowRoots || !Array.isArray(mutations)) {
+			return;
+		}
+		mutations.forEach((mutation) => {
+			if (!mutation) {
+				return;
+			}
+			if (mutation.type === "childList") {
+				if (mutation.addedNodes && mutation.addedNodes.length) {
+					markFallbackAreasDirty();
+					mutation.addedNodes.forEach((node) => trackShadowHostsInNode(node));
+				}
+				if (mutation.removedNodes && mutation.removedNodes.length) {
+					markFallbackAreasDirty();
+				}
+			}
+		});
+	}
+
+	function getSearchRoots() {
+		const roots = [document];
+		if (! CONFIG.searchShadowRoots) {
+			return roots;
+		}
+		refreshKnownShadowRoots();
+		shadowRoots.forEach((root) => {
+			if (root && root.host && root.host.isConnected) {
+				roots.push(root);
+			}
+		});
+		return roots;
+	}
+
+	function collectBySelector(roots, selector) {
+		const results = new Set();
+		roots.forEach((root) => {
+			if (!root || typeof root.querySelectorAll !== "function") {
+				return;
+			}
+			root.querySelectorAll(selector).forEach((node) => results.add(node));
+		});
+		return Array.from(results);
+	}
+
+	function getFallbackAreas(roots) {
+		syncViewState();
+		if (! fallbackAreasDirty) {
+			return fallbackAreas;
+		}
+
+		const limit = Math.max(1, Number(CONFIG.fallbackAreaLimit) || 1);
+		const collected = [];
+		const seen = new Set();
+		const addCandidate = (element) => {
+			if (!element || element.nodeType !== Node.ELEMENT_NODE || !element.isConnected || seen.has(element)) {
+				return false;
+			}
+			seen.add(element);
+			collected.push(element);
+			return collected.length >= limit;
+		};
+
+		const collectWithSelectors = (root, selectors) => {
+			if (!root || typeof root.querySelectorAll !== "function") {
+				return false;
+			}
+			for (const selector of selectors) {
+				const nodes = root.querySelectorAll(selector);
+				for (const node of nodes) {
+					if (addCandidate(node)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+
+		for (const root of roots) {
+			if (collectWithSelectors(root, CONFIG.fallbackAreaSelectors || [])) {
+				break;
+			}
+			if (collectWithSelectors(root, CONFIG.matchViewSelectors || [])) {
+				break;
+			}
+			if (collected.length < limit) {
+				if (root === document) {
+					addCandidate(document.body || document.documentElement);
+				} else if (root && root.host) {
+					addCandidate(root.host);
+				}
+			}
+			if (collected.length >= limit) {
+				break;
+			}
+		}
+
+		if (! collected.length) {
+			addCandidate(document.body || document.documentElement);
+		}
+
+		fallbackAreas = collected.slice(0, limit);
+		fallbackAreasDirty = false;
+		if (fallbackAreas.length === 0) {
+			fallbackWindowOffset = 0;
+		} else if (fallbackWindowOffset >= fallbackAreas.length) {
+			fallbackWindowOffset = fallbackWindowOffset % fallbackAreas.length;
+		}
+		return fallbackAreas;
+	}
+
+	function getFallbackScanAreas(roots) {
+		const areas = getFallbackAreas(roots);
+		if (! areas.length) {
+			return [];
+		}
+		const windowSize = Math.max(1, Math.min(Number(CONFIG.fallbackAreaWindowSize) || 1, areas.length));
+		const selected = [];
+		for (let index = 0; index < windowSize; index += 1) {
+			selected.push(areas[(fallbackWindowOffset + index) % areas.length]);
+		}
+		fallbackWindowOffset = (fallbackWindowOffset + windowSize) % areas.length;
+		return selected;
+	}
+
+	function collectByText(areas) {
+		if (! fallbackTextMatches.length || ! areas.length) {
+			return [];
+		}
+		const matches = new Set();
+		let remainingTextBudget = Math.max(1, Number(CONFIG.fallbackTextNodeBudget) || 1);
+		areas.forEach((area) => {
+			if (!area || remainingTextBudget <= 0) {
+				return;
+			}
+			const walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT, null);
+			let node = walker.nextNode();
+			while (node && remainingTextBudget > 0) {
+				remainingTextBudget -= 1;
+				const value = node.nodeValue;
+				const normalized = value ? value.trim().toLowerCase() : "";
+				if (normalized) {
+					for (const match of fallbackTextMatches) {
+						if (normalized.includes(match)) {
+							if (node.parentElement) {
+								matches.add(node.parentElement);
+							}
+							break;
+						}
+					}
+				}
+				node = walker.nextNode();
+			}
+		});
+		return Array.from(matches);
+	}
+
+	function shouldRunFallback() {
+		if (! CONFIG.searchShadowRoots && ! fallbackTextMatches.length) {
+			return false;
+		}
+		const now = Date.now();
+		if (now - lastFallbackScan < CONFIG.fallbackScanMs) {
+			return false;
+		}
+		lastFallbackScan = now;
+		return true;
+	}
+
+	function findNotices() {
+		const primary = collectBySelector([document], CONFIG.noticeSelector);
+		if (primary.length) {
+			return primary;
+		}
+		if (! shouldRunFallback()) {
+			return [];
+		}
+		const roots = getSearchRoots();
+		const deep = collectBySelector(roots, CONFIG.noticeSelector);
+		if (deep.length) {
+			return deep;
+		}
+		if (! fallbackTextMatches.length) {
+			return [];
+		}
+		const scanAreas = getFallbackScanAreas(roots);
+		return collectByText(scanAreas);
+	}
+
+	function applyReplacement(notice) {
+		if (! notice || notice.nodeType !== Node.ELEMENT_NODE) {
+			return;
+		}
+		const card = notice;
+		card.classList.add(CARD_CLASS);
+
+		let image = notice.querySelector(`.${IMAGE_CLASS}`);
+		if (! image) {
+			image = buildImage();
+			notice.appendChild(image);
+		} else {
+			image.src = CONFIG.imageUrl;
+			image.alt = CONFIG.imageAlt;
+		}
+	}
+
+	function updateNotices() {
+		findNotices().forEach((notice) => {
+			applyReplacement(notice);
+		});
+	}
+
+	const scheduleUpdate = createRafScheduler(updateNotices);
+
+	refreshKnownShadowRoots();
+	ensureStyle(STYLE_ID, STYLE_TEXT);
+	updateNotices();
+
+	debugLog("applied");
+	observeMutations({
+		onChange: (mutation, mutations) => {
+			collectShadowRootsFromMutations(mutations || [mutation]);
+			scheduleUpdate();
+		}
+	});
+	debugLog("init", { debug: DEBUG_ENABLED });
+})();
+

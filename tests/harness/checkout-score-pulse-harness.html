@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Checkout Score Pulse Harness</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        background: #111;
+        color: #f5f5f5;
+      }
+      .pass {
+        color: #86efac;
+      }
+      .fail {
+        color: #fca5a5;
+      }
+      #fixture {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+        max-width: 420px;
+      }
+      .ad-ext-player {
+        border: 1px solid #444;
+        padding: 8px;
+      }
+      .ad-ext-player-active {
+        border-color: #86efac;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Checkout Score Pulse Harness</h1>
+    <p id="summary">Running...</p>
+    <ul id="results"></ul>
+
+    <div id="fixture">
+      <div id="ad-ext-game-variant">X01</div>
+      <div class="suggestion"></div>
+      <div class="ad-ext-player ad-ext-player-active">
+        <p class="ad-ext-player-score">170</p>
+      </div>
+    </div>
+
+    <script type="module">
+      import { createDomGuards } from "../../src/core/dom-guards.js";
+      import { createObserverRegistry } from "../../src/core/observer-registry.js";
+      import { createListenerRegistry } from "../../src/core/listener-registry.js";
+      import { mountCheckoutScorePulse } from "../../src/features/checkout-score-pulse/index.js";
+      import { variantRules } from "../../src/domain/variant-rules.js";
+      import { x01Rules } from "../../src/domain/x01-rules.js";
+      import { HIGHLIGHT_CLASS, STYLE_ID } from "../../src/features/checkout-score-pulse/style.js";
+
+      const summaryNode = document.getElementById("summary");
+      const resultList = document.getElementById("results");
+      const variantNode = document.getElementById("ad-ext-game-variant");
+      const suggestionNode = document.querySelector(".suggestion");
+      const scoreNode = document.querySelector(".ad-ext-player-score");
+
+      const domain = { variantRules, x01Rules };
+      const domGuards = createDomGuards({ documentRef: document });
+      const observers = createObserverRegistry();
+      const listeners = createListenerRegistry();
+
+      const gameStateSubscribers = new Set();
+      const gameState = {
+        getActiveScore() {
+          const value = Number((scoreNode.textContent || "").trim());
+          return Number.isFinite(value) ? value : null;
+        },
+        isX01Variant() {
+          return variantRules.isX01VariantText(variantNode.textContent || "", {
+            allowNumeric: true,
+            allowMissing: true,
+            allowEmpty: true,
+          });
+        },
+        subscribe(listener) {
+          if (typeof listener !== "function") {
+            return () => {};
+          }
+          gameStateSubscribers.add(listener);
+          return () => gameStateSubscribers.delete(listener);
+        },
+      };
+
+      function emitGameState() {
+        gameStateSubscribers.forEach((listener) => {
+          try {
+            listener();
+          } catch (_) {
+            // ignore in harness
+          }
+        });
+      }
+
+      let currentFeatureConfig = {
+        enabled: true,
+        effect: "scale",
+        colorTheme: "159, 219, 88",
+        intensity: "standard",
+        triggerSource: "suggestion-first",
+      };
+
+      const config = {
+        getFeatureConfig() {
+          return { ...currentFeatureConfig };
+        },
+      };
+
+      const cleanup = mountCheckoutScorePulse({
+        documentRef: document,
+        windowRef: window,
+        domGuards,
+        registries: { observers, listeners },
+        gameState,
+        config,
+        domain,
+      });
+
+      const results = [];
+
+      function assert(condition, label, details = "") {
+        results.push({ pass: Boolean(condition), label, details });
+      }
+
+      async function wait(ms = 30) {
+        await new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      async function runScenario({
+        label,
+        variant,
+        score,
+        suggestion,
+        triggerSource,
+        expectedHighlight,
+      }) {
+        variantNode.textContent = variant;
+        scoreNode.textContent = String(score);
+        suggestionNode.textContent = suggestion;
+        currentFeatureConfig = {
+          ...currentFeatureConfig,
+          triggerSource,
+        };
+
+        emitGameState();
+        await wait();
+
+        const highlighted = scoreNode.classList.contains(HIGHLIGHT_CLASS);
+        assert(
+          highlighted === expectedHighlight,
+          label,
+          JSON.stringify({ highlighted, expectedHighlight, score, suggestion, triggerSource, variant })
+        );
+      }
+
+      (async () => {
+        await runScenario({
+          label: "score-only highlights score 170 in X01",
+          variant: "X01",
+          score: 170,
+          suggestion: "",
+          triggerSource: "score-only",
+          expectedHighlight: true,
+        });
+
+        await runScenario({
+          label: "score-only ignores impossible checkout score 169",
+          variant: "X01",
+          score: 169,
+          suggestion: "",
+          triggerSource: "score-only",
+          expectedHighlight: false,
+        });
+
+        await runScenario({
+          label: "suggestion-only highlights for explicit double checkout suggestion",
+          variant: "X01",
+          score: 171,
+          suggestion: "D16",
+          triggerSource: "suggestion-only",
+          expectedHighlight: true,
+        });
+
+        await runScenario({
+          label: "suggestion-only disables highlight on No Checkout",
+          variant: "X01",
+          score: 170,
+          suggestion: "No Checkout",
+          triggerSource: "suggestion-only",
+          expectedHighlight: false,
+        });
+
+        await runScenario({
+          label: "suggestion-first falls back to score when suggestion is empty",
+          variant: "X01",
+          score: 170,
+          suggestion: "",
+          triggerSource: "suggestion-first",
+          expectedHighlight: true,
+        });
+
+        await runScenario({
+          label: "feature stays inactive outside X01",
+          variant: "Cricket",
+          score: 170,
+          suggestion: "D20",
+          triggerSource: "score-only",
+          expectedHighlight: false,
+        });
+
+        const styleCount = document.querySelectorAll(`#${STYLE_ID}`).length;
+        assert(styleCount === 1, "style node is not duplicated", String(styleCount));
+
+        cleanup();
+        await wait();
+
+        assert(
+          !scoreNode.classList.contains(HIGHLIGHT_CLASS),
+          "cleanup removes highlight class",
+          scoreNode.className
+        );
+
+        const passed = results.filter((result) => result.pass).length;
+        summaryNode.textContent = `${passed}/${results.length} checks passed`;
+        summaryNode.className = passed === results.length ? "pass" : "fail";
+
+        results.forEach((result) => {
+          const item = document.createElement("li");
+          item.className = result.pass ? "pass" : "fail";
+          item.innerHTML = `${result.pass ? "PASS" : "FAIL"} <strong>${result.label}</strong><br><code>${result.details}</code>`;
+          resultList.appendChild(item);
+        });
+      })();
+    </script>
+  </body>
+</html>

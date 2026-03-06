@@ -1,0 +1,2084 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cricket / Tactics State Harness</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        background: #111;
+        color: #f5f5f5;
+      }
+
+      .pass {
+        color: #86efac;
+      }
+
+      .fail {
+        color: #fca5a5;
+      }
+
+      code {
+        color: #93c5fd;
+      }
+    </style>
+    <script src="../Animation/autodarts-cricket-state-shared.js"></script>
+  </head>
+  <body>
+    <h1>Cricket / Tactics State Harness</h1>
+    <p id="summary">Running…</p>
+    <ul id="results"></ul>
+
+    <script>
+      (function () {
+        "use strict";
+
+        const helper = window.autodartsCricketStateShared;
+        const CRICKET_TARGETS = helper.CRICKET_TARGET_ORDER || [
+          "20",
+          "19",
+          "18",
+          "17",
+          "16",
+          "15",
+          "BULL",
+        ];
+        const TACTICS_TARGETS = helper.TACTICS_TARGET_ORDER || [
+          "20",
+          "19",
+          "18",
+          "17",
+          "16",
+          "15",
+          "14",
+          "13",
+          "12",
+          "11",
+          "10",
+          "BULL",
+        ];
+        const results = [];
+
+        function markCell(mark, textOverride, options) {
+          const config = options || {};
+          const cell = document.createElement("div");
+          cell.className = "player-cell";
+          if (config.includeAttribute !== false) {
+            cell.setAttribute("data-marks", String(mark));
+          }
+          if (typeof textOverride === "string") {
+            cell.textContent = textOverride;
+          }
+          return cell;
+        }
+
+        function buildLinearRoot(targetOrder, markSets, labelFormatter) {
+          const root = document.createElement("div");
+          root.className = "grid-root";
+          targetOrder.forEach((label, index) => {
+            const labelCell = document.createElement("div");
+            labelCell.className = "label-cell";
+            labelCell.textContent = labelFormatter ? labelFormatter(label, index) : label;
+            root.appendChild(labelCell);
+
+            markSets[index].forEach((mark) => {
+              root.appendChild(markCell(mark));
+            });
+          });
+          return root;
+        }
+
+        function buildLinearTextRoot(targetOrder, textSets) {
+          const root = document.createElement("div");
+          root.className = "grid-root";
+          targetOrder.forEach((label, index) => {
+            const labelCell = document.createElement("div");
+            labelCell.className = "label-cell";
+            labelCell.textContent = label;
+            root.appendChild(labelCell);
+
+            textSets[index].forEach((text) => {
+              root.appendChild(markCell(0, text, { includeAttribute: false }));
+            });
+          });
+          return root;
+        }
+
+        function buildSingleColumnLinearRoot(targetOrder, markValues) {
+          const root = document.createElement("div");
+          root.className = "grid-root";
+          targetOrder.forEach((label, index) => {
+            const labelCell = document.createElement("div");
+            labelCell.className = "label-cell";
+            labelCell.textContent = label;
+            root.appendChild(labelCell);
+            root.appendChild(markCell(markValues[index]));
+          });
+          return root;
+        }
+
+        function buildNestedRowRoot(targetOrder, markSets) {
+          const root = document.createElement("div");
+          root.className = "nested-root";
+          targetOrder.forEach((label, index) => {
+            const row = document.createElement("div");
+            row.className = "row";
+
+            const labelCell = document.createElement("div");
+            labelCell.className = "label-cell";
+            const labelNode = document.createElement("span");
+            labelNode.textContent = label;
+            labelCell.appendChild(labelNode);
+            row.appendChild(labelCell);
+
+            const playerWrapper = document.createElement("div");
+            playerWrapper.className = "player-wrapper";
+            markSets[index].forEach((mark) => {
+              playerWrapper.appendChild(markCell(mark));
+            });
+            row.appendChild(playerWrapper);
+            root.appendChild(row);
+          });
+          return root;
+        }
+
+        function buildDecoratedLabelRoot(targetOrder, markSets) {
+          const root = document.createElement("div");
+          root.className = "decorated-root";
+          targetOrder.forEach((label, index) => {
+            const labelCell = document.createElement("div");
+            labelCell.className = "label-cell";
+            const labelNode = document.createElement("span");
+            labelNode.className = "ad-ext-crfx-badge";
+            labelNode.textContent = label;
+            labelCell.appendChild(labelNode);
+
+            const wave = document.createElement("span");
+            wave.className = "ad-ext-crfx-row-wave";
+            wave.textContent = "ignored";
+            labelCell.appendChild(wave);
+
+            const delta = document.createElement("span");
+            delta.className = "ad-ext-crfx-delta";
+            delta.textContent = "+1";
+            labelCell.appendChild(delta);
+
+            root.appendChild(labelCell);
+            markSets[index].forEach((mark) => {
+              root.appendChild(markCell(mark));
+            });
+          });
+          return root;
+        }
+
+        function buildCombinedLabelPlayerRoot(targetOrder, markSets, options) {
+          const config = options || {};
+          const labelPlayerIndex = Number.isFinite(config.labelPlayerIndex)
+            ? config.labelPlayerIndex
+            : 0;
+          const root = document.createElement("div");
+          root.className = "combined-label-player-root";
+          targetOrder.forEach((label, index) => {
+            const markValues = Array.isArray(markSets[index]) ? markSets[index] : [];
+            const labelCell = document.createElement("div");
+            labelCell.className = "label-cell";
+            labelCell.setAttribute(
+              "data-marks",
+              String(markValues[labelPlayerIndex] ?? 0)
+            );
+
+            const labelNode = document.createElement("span");
+            labelNode.className = "label-text";
+            labelNode.textContent = label;
+            labelCell.appendChild(labelNode);
+
+            const markSlot = document.createElement("span");
+            markSlot.className = "label-mark-slot";
+            const markValue = markValues[labelPlayerIndex] ?? 0;
+            if (markValue > 0) {
+              const icon = document.createElement("img");
+              icon.setAttribute("alt", String(markValue));
+              markSlot.appendChild(icon);
+            }
+            labelCell.appendChild(markSlot);
+
+            root.appendChild(labelCell);
+            markValues.forEach((mark, playerIndex) => {
+              if (playerIndex === labelPlayerIndex) {
+                return;
+              }
+              root.appendChild(markCell(mark));
+            });
+          });
+          return root;
+        }
+
+        function mountPlayerStrip(playerCount, activePlayerIndex, options) {
+          const config = options || {};
+          const activeIndices = new Set(
+            Array.isArray(config.activePlayerIndices)
+              ? config.activePlayerIndices.filter((value) => Number.isFinite(value))
+              : Number.isFinite(activePlayerIndex)
+                ? [activePlayerIndex]
+                : []
+          );
+          const players = Array.isArray(config.players) && config.players.length
+            ? config.players.slice(0, playerCount)
+            : Array.from({ length: playerCount }, (_, index) => ({
+                id: `player-${index + 1}`,
+                name: `P${index + 1}`,
+              }));
+          const domOrder = Array.isArray(config.domOrder) && config.domOrder.length === players.length
+            ? config.domOrder
+            : players.map((_, index) => index);
+          const visualOrder = Array.isArray(config.visualOrder) && config.visualOrder.length === players.length
+            ? config.visualOrder
+            : players.map((_, index) => index);
+          const host = document.createElement("div");
+          host.id = "ad-ext-player-display";
+          host.className = "ad-ext-player-strip";
+          host.style.display = config.visible === false ? "none" : "flex";
+          host.style.gap = "8px";
+
+          domOrder.forEach((playerIndex) => {
+            const playerData = players[playerIndex] || {};
+            const wrapper = document.createElement("div");
+            wrapper.className = `player-wrap player-wrap-${playerIndex}`;
+            wrapper.style.display = "flex";
+            wrapper.style.order = String(
+              Number.isFinite(visualOrder[playerIndex]) ? visualOrder[playerIndex] : playerIndex
+            );
+            const player = document.createElement("div");
+            player.className = "ad-ext-player";
+            player.style.width = "80px";
+            player.style.height = "24px";
+            if (config.includeIds !== false && playerData.id) {
+              player.setAttribute("data-player-id", String(playerData.id));
+            }
+            const nameNode = document.createElement("span");
+            nameNode.className = "ad-ext-player-name";
+            nameNode.textContent = playerData.name || `P${playerIndex + 1}`;
+            player.appendChild(nameNode);
+            if (activeIndices.has(playerIndex)) {
+              player.classList.add("ad-ext-player-active");
+            }
+            wrapper.appendChild(player);
+            host.appendChild(wrapper);
+          });
+
+          const hiddenActiveDuplicates = Number(config.hiddenActiveDuplicates) || 0;
+          Array.from({ length: hiddenActiveDuplicates }, (_, index) => index).forEach((index) => {
+            const hiddenWrap = document.createElement("div");
+            hiddenWrap.style.display = "none";
+            const player = document.createElement("div");
+            player.className = "ad-ext-player ad-ext-player-active";
+            player.textContent = `H${index + 1}`;
+            hiddenWrap.appendChild(player);
+            host.appendChild(hiddenWrap);
+          });
+
+          const extraVisiblePlayers = Number(config.extraVisiblePlayers) || 0;
+          Array.from({ length: extraVisiblePlayers }, (_, index) => index).forEach((index) => {
+            const player = document.createElement("div");
+            player.className = "ad-ext-player";
+            player.textContent = `E${index + 1}`;
+            player.style.width = "80px";
+            player.style.height = "24px";
+            host.appendChild(player);
+          });
+
+          document.body.appendChild(host);
+          return host;
+        }
+
+        function fakeGameState(activePlayerIndex, scoringMode, gameMode, options) {
+          const config = options || {};
+          const playerCount =
+            Number.isFinite(config.domPlayerCount) && config.domPlayerCount >= 0
+              ? config.domPlayerCount
+              : Number.isFinite(config.playerCount) && config.playerCount > 0
+                ? config.playerCount
+                : 2;
+          const state = {
+            getActivePlayerIndex: function () {
+              return activePlayerIndex;
+            },
+            getCricketMode: function () {
+              return scoringMode || "";
+            },
+            getActiveThrows: function () {
+              return Array.isArray(config.activeThrows) ? config.activeThrows : [];
+            },
+            getState: function () {
+              if (config.matchState) {
+                return {
+                  match: config.matchState,
+                  updatedAt: 1,
+                  source: "test",
+                };
+              }
+              return {
+                match: {
+                  players: Array.from({ length: playerCount }, (_, index) => ({
+                    id: `player-${index + 1}`,
+                  })),
+                  turns: [],
+                },
+                updatedAt: 1,
+                source: "test",
+              };
+            },
+          };
+
+          if (config.includeGameMode !== false) {
+            state.getCricketGameMode = function () {
+              return gameMode || "";
+            };
+          }
+          if (config.includeFamilyVariant !== false) {
+            state.isCricketVariant = function () {
+              return true;
+            };
+          }
+
+          return state;
+        }
+
+        function buildState(root, playerCount, activePlayerIndex, scoringMode, gameMode, options) {
+          const config = options || {};
+          const domPlayers =
+            Number.isFinite(config.domPlayerCount) && config.domPlayerCount >= 0
+              ? mountPlayerStrip(config.domPlayerCount, config.domActivePlayerIndex, {
+                  visible: config.domVisible,
+                  hiddenActiveDuplicates: config.hiddenActiveDuplicates,
+                  extraVisiblePlayers: config.extraVisiblePlayers,
+                  players: config.domPlayers,
+                  domOrder: config.domOrder,
+                  visualOrder: config.visualOrder,
+                  includeIds: config.includeIds,
+                  activePlayerIndices: config.domActivePlayerIndices,
+                })
+              : null;
+
+          try {
+            const snapshot = helper.buildGridSnapshot({
+              root,
+              playerCount,
+              gameStateShared: fakeGameState(
+                activePlayerIndex,
+                scoringMode,
+                gameMode,
+                Object.assign({}, options, { playerCount })
+              ),
+            });
+            if (!snapshot) {
+              return { snapshot: null, states: null };
+            }
+            return {
+              snapshot,
+              states: helper.computeTargetStates(snapshot, {
+                showDeadTargets: true,
+              }),
+            };
+          } finally {
+            if (domPlayers) {
+              domPlayers.remove();
+            }
+          }
+        }
+
+        function mountGridRoot(root, options) {
+          const config = options || {};
+          root.dataset.testGridRoot = "true";
+          root.style.width = "420px";
+          root.style.marginTop = "8px";
+          if (config.visible === false) {
+            root.style.display = "none";
+          }
+          document.body.appendChild(root);
+          return root;
+        }
+
+        function cleanupMountedGridRoots() {
+          document.querySelectorAll("[data-test-grid-root='true']").forEach((node) => {
+            node.remove();
+          });
+        }
+
+        function createUniformMarkSets(targetOrder, producer) {
+          return targetOrder.map((label, index) => producer(label, index));
+        }
+
+        function createThrowForLabel(label, multiplier) {
+          const normalizedLabel = String(label || "").toUpperCase();
+          const resolvedMultiplier = Number.isFinite(multiplier)
+            ? Math.max(1, Math.min(3, Math.round(multiplier)))
+            : 1;
+          if (normalizedLabel === "BULL") {
+            const isDoubleBull = resolvedMultiplier >= 2;
+            return {
+              segment: {
+                name: isDoubleBull ? "DBULL" : "S25",
+                number: 25,
+                multiplier: isDoubleBull ? 2 : 1,
+                bed: isDoubleBull ? "Inner Bull" : "Outer Bull",
+              },
+            };
+          }
+          const numeric = Number(label);
+          const prefix = resolvedMultiplier === 3 ? "T" : resolvedMultiplier === 2 ? "D" : "S";
+          const bed = resolvedMultiplier === 3 ? "Triple" : resolvedMultiplier === 2 ? "Double" : "Single";
+          return {
+            segment: {
+              name: `${prefix}${numeric}`,
+              number: numeric,
+              multiplier: resolvedMultiplier,
+              bed,
+            },
+          };
+        }
+
+        function assert(condition, label, details) {
+          results.push({
+            label,
+            pass: Boolean(condition),
+            details: details || "",
+          });
+        }
+
+        function readCellPresentations(state, label) {
+          const entry = state && state.states ? state.states.get(label) : null;
+          return Array.isArray(entry?.cellStates)
+            ? entry.cellStates.map((cellState) => cellState.presentation)
+            : [];
+        }
+
+        function readBoardPresentation(state, label) {
+          const entry = state && state.states ? state.states.get(label) : null;
+          return String(entry?.boardPresentation || entry?.presentation || "");
+        }
+
+        function readBoardResolution(state) {
+          return state?.snapshot?.activePlayerResolution || null;
+        }
+
+        assert(
+          helper &&
+            helper.__moduleId === "autodarts-cricket-state-shared" &&
+            helper.__apiVersion === 2 &&
+            helper.__buildSignature ===
+              "autodarts-cricket-state-shared@2:2026-03-label-cell-shortfall-fix",
+          "Shared helper exposes moduleId, apiVersion and buildSignature for runtime compatibility checks",
+          helper
+            ? JSON.stringify({
+                moduleId: helper.__moduleId,
+                apiVersion: helper.__apiVersion,
+                buildSignature: helper.__buildSignature,
+              })
+            : "helper=null"
+        );
+
+        const twoPlayerOpenCricket = createUniformMarkSets(CRICKET_TARGETS, () => [3, 0]);
+        const twoPlayerDangerCricket = createUniformMarkSets(CRICKET_TARGETS, () => [0, 3]);
+        const threePlayerCricket = createUniformMarkSets(CRICKET_TARGETS, () => [0, 3, 0]);
+        const soloCricket = createUniformMarkSets(CRICKET_TARGETS, () => [3]);
+        const singleColumnCricket = CRICKET_TARGETS.map((label) =>
+          label === "20" ? 3 : 0
+        );
+        const twoPlayerOpenTactics = createUniformMarkSets(TACTICS_TARGETS, () => [3, 0]);
+        const twoPlayerDangerTactics = createUniformMarkSets(TACTICS_TARGETS, () => [0, 3]);
+        const soloTactics = createUniformMarkSets(TACTICS_TARGETS, () => [3]);
+        const tacticsScreenshotRegression = createUniformMarkSets(
+          TACTICS_TARGETS,
+          function (label) {
+            if (label === "20" || label === "17" || label === "15") {
+              return [3, 0];
+            }
+            if (label === "16") {
+              return [0, 3];
+            }
+            if (label === "19") {
+              return [3, 3];
+            }
+            return [0, 0];
+          }
+        );
+
+        const case1 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case1.states.get("20").presentation === "offense",
+          "Linear 2-player: active closed vs opponent open -> offense",
+          JSON.stringify(case1.states.get("20"))
+        );
+
+        const case2 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerDangerCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case2.states.get("20").presentation === "pressure",
+          "Linear 2-player: active open vs opponent closed -> pressure",
+          JSON.stringify(case2.states.get("20"))
+        );
+
+        const case3 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, threePlayerCricket),
+          3,
+          1,
+          "cut-throat",
+          "Cricket"
+        );
+        assert(
+          case3.states.get("20").presentation === "offense",
+          "Linear 3-player: active player index stays relative to player cells",
+          JSON.stringify(case3.states.get("20"))
+        );
+
+        const case4 = buildState(
+          buildNestedRowRoot(CRICKET_TARGETS, twoPlayerDangerCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case4.states.get("20").presentation === "pressure",
+          "Nested row container: wrapper children become player cells and preserve pressure",
+          JSON.stringify(case4.states.get("20"))
+        );
+
+        const case5 = buildState(
+          buildDecoratedLabelRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case5.snapshot && case5.snapshot.rows.length === 7,
+          "Decorated labels: helper still finds all 7 Cricket targets",
+          case5.snapshot ? `rows=${case5.snapshot.rows.length}` : "snapshot=null"
+        );
+        assert(
+          case5.snapshot &&
+            case5.snapshot.rows.every(
+              (row) => row.badgeNode && row.badgeNode !== row.labelCell
+            ),
+          "Decorated labels: dedicated badge nodes stay separate from label cells",
+          case5.snapshot
+            ? case5.snapshot.rows
+                .map((row) => `${row.label}:${row.badgeNode === row.labelCell}`)
+                .join(",")
+            : "snapshot=null"
+        );
+
+        const case6 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case6.snapshot &&
+            case6.snapshot.rows.every((row) => row.badgeNode === null),
+          "Plain text label cells do not create synthetic badge nodes",
+          case6.snapshot
+            ? case6.snapshot.rows
+                .map((row) => `${row.label}:${row.badgeNode === null}`)
+                .join(",")
+            : "snapshot=null"
+        );
+
+        const case6Combined = buildState(
+          buildCombinedLabelPlayerRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case6Combined.snapshot &&
+            case6Combined.snapshot.rows.every(
+              (row) => row.playerCells[0] === row.labelCell
+            ),
+          "Combined label/player cell: label cell is promoted to the first player slot",
+          case6Combined.snapshot
+            ? case6Combined.snapshot.rows
+                .map((row) => `${row.label}:${row.playerCells[0] === row.labelCell}`)
+                .join(",")
+            : "snapshot=null"
+        );
+        assert(
+          case6Combined.states.get("20").presentation === "offense" &&
+            readCellPresentations(case6Combined, "20").join(",") ===
+              "offense,pressure",
+          "Combined label/player cell: offense stays on the label-bearing first column",
+          JSON.stringify({
+            state: case6Combined.states.get("20"),
+            cells: readCellPresentations(case6Combined, "20"),
+          })
+        );
+
+        const case6CombinedDanger = buildState(
+          buildCombinedLabelPlayerRoot(CRICKET_TARGETS, twoPlayerDangerCricket),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case6CombinedDanger.states.get("20").presentation === "pressure" &&
+            readCellPresentations(case6CombinedDanger, "20").join(",") ===
+              "pressure,offense",
+          "Combined label/player cell: an open leading cell stays mapped even when its visible marks are zero",
+          JSON.stringify({
+            state: case6CombinedDanger.states.get("20"),
+            cells: readCellPresentations(case6CombinedDanger, "20"),
+          })
+        );
+
+        assert(
+          helper.normalizeLabel("25") === "BULL" &&
+            helper.normalizeLabel("BULLSEYE") === "BULL" &&
+            helper.normalizeLabel("Bull") === "BULL",
+          "Bull aliases normalize to BULL",
+          [
+            helper.normalizeLabel("25"),
+            helper.normalizeLabel("BULLSEYE"),
+            helper.normalizeLabel("Bull"),
+          ].join(", ")
+        );
+
+        const case7 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, soloCricket),
+          1,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case7.states.get("20").presentation === "closed" &&
+            !case7.states.get("20").dead,
+          "Solo Cricket: closed stays closed and never dead",
+          JSON.stringify(case7.states.get("20"))
+        );
+
+        const case8 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          2,
+          0,
+          "mystery-mode",
+          "Cricket"
+        );
+        assert(
+          case8.states.get("20").presentation === "closed" &&
+            !case8.states.get("20").offense &&
+            !case8.states.get("20").danger,
+          "Unknown mode: tactical highlights are suppressed",
+          JSON.stringify(case8.states.get("20"))
+        );
+
+        const case9 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          0,
+          "standard",
+          "Tactics"
+        );
+        assert(
+          case9.snapshot &&
+            case9.snapshot.rows.length === 12 &&
+            case9.snapshot.targetOrder.join(",") === TACTICS_TARGETS.join(","),
+          "Tactics: snapshot resolves the full 20..10,BULL target set",
+          case9.snapshot ? case9.snapshot.targetOrder.join(",") : "snapshot=null"
+        );
+        assert(
+          case9.states.get("14").presentation === "offense" &&
+            case9.states.get("10").presentation === "offense",
+          "Tactics standard: 14 and 10 participate like normal scoring targets",
+          JSON.stringify({
+            fourteen: case9.states.get("14"),
+            ten: case9.states.get("10"),
+          })
+        );
+
+        const case10 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerDangerTactics),
+          2,
+          0,
+          "standard",
+          "Tactics"
+        );
+        assert(
+          case10.states.get("14").presentation === "pressure" &&
+            case10.states.get("10").presentation === "pressure",
+          "Tactics standard: 14 and 10 can also become pressure targets",
+          JSON.stringify({
+            fourteen: case10.states.get("14"),
+            ten: case10.states.get("10"),
+          })
+        );
+
+        const case11 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          0,
+          "no-score",
+          "Tactics"
+        );
+        assert(
+          case11.states.get("12").presentation === "closed" &&
+            !case11.states.get("12").offense &&
+            !case11.states.get("12").danger,
+          "Tactics no-score: tactical highlights stay neutral",
+          JSON.stringify(case11.states.get("12"))
+        );
+
+        const case12 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, soloTactics),
+          1,
+          0,
+          "standard",
+          "Tactics"
+        );
+        assert(
+          case12.states.get("11").presentation === "closed" &&
+            !case12.states.get("11").dead,
+          "Solo Tactics: closed stays closed and never dead",
+          JSON.stringify(case12.states.get("11"))
+        );
+
+        const case13 = buildState(
+          buildDecoratedLabelRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          0,
+          "cut-throat",
+          "Tactics"
+        );
+        assert(
+          case13.snapshot && case13.snapshot.rows.length === 12,
+          "Decorated labels: helper still finds all 12 Tactics targets",
+          case13.snapshot ? `rows=${case13.snapshot.rows.length}` : "snapshot=null"
+        );
+
+        const case14 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          0,
+          "standard",
+          "",
+          {
+            includeGameMode: false,
+            includeFamilyVariant: false,
+          }
+        );
+        assert(
+          case14.snapshot &&
+            case14.snapshot.gameModeInfo &&
+            case14.snapshot.gameModeInfo.normalized === "tactics",
+          "Row inference: 10..14 force Tactics even without explicit game mode",
+          case14.snapshot
+            ? JSON.stringify(case14.snapshot.gameModeInfo)
+            : "snapshot=null"
+        );
+
+        const case15 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          0,
+          "standard",
+          "Cricket"
+        );
+        assert(
+          case15.snapshot &&
+            case15.snapshot.rows.length === 7 &&
+            !case15.states.has("14"),
+          "Cricket mode filter: 10..14 are excluded when the game mode is Cricket",
+          case15.snapshot ? case15.snapshot.rows.map((row) => row.label).join(",") : "snapshot=null"
+        );
+
+        assert(
+          helper.normalizeLabel("14") === "14" &&
+            helper.normalizeLabel("Target 13") === "13" &&
+            helper.normalizeLabel("11 geschlossen") === "11" &&
+            helper.normalizeLabel("10") === "10",
+          "Tactics labels 10..14 normalize correctly",
+          [
+            helper.normalizeLabel("14"),
+            helper.normalizeLabel("Target 13"),
+            helper.normalizeLabel("11 geschlossen"),
+            helper.normalizeLabel("10"),
+          ].join(", ")
+        );
+
+        const case16 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          2,
+          1,
+          "standard",
+          "Cricket",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+          }
+        );
+        assert(
+          case16.snapshot &&
+            case16.snapshot.activePlayerIndex === 0 &&
+            case16.states.get("20").presentation === "offense",
+          "DOM active player overrides stale game-state index in Cricket",
+          case16.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case16.snapshot.activePlayerIndex,
+                twenty: case16.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case17 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+          }
+        );
+        assert(
+          case17.snapshot &&
+            case17.snapshot.activePlayerIndex === 0 &&
+            case17.states.get("10").presentation === "offense",
+          "DOM active player overrides stale game-state index in Tactics",
+          case17.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case17.snapshot.activePlayerIndex,
+                ten: case17.states.get("10"),
+              })
+            : "snapshot=null"
+        );
+
+        const case18 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerDangerCricket),
+          2,
+          1,
+          "standard",
+          "Cricket",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: -1,
+            domVisible: false,
+          }
+        );
+        assert(
+          case18.snapshot &&
+            case18.snapshot.activePlayerIndex === 1 &&
+            case18.states.get("20").presentation === "offense",
+          "Without a visible DOM active player, the helper still falls back to game state",
+          case18.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case18.snapshot.activePlayerIndex,
+                twenty: case18.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case19 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, tacticsScreenshotRegression),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+          }
+        );
+        assert(
+          case19.snapshot &&
+            case19.snapshot.activePlayerIndex === 0 &&
+            case19.snapshot.playerCount === 2 &&
+            case19.states.get("20").presentation === "offense" &&
+            case19.states.get("17").presentation === "offense" &&
+            case19.states.get("15").presentation === "offense" &&
+            case19.states.get("16").presentation === "pressure" &&
+            case19.states.get("19").presentation === "dead",
+          "Tactics screenshot regression: TEST2 active yields green 20/17/15, red 16 and dead 19",
+          case19.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case19.snapshot.activePlayerIndex,
+                playerCount: case19.snapshot.playerCount,
+                twenty: case19.states.get("20"),
+                seventeen: case19.states.get("17"),
+                sixteen: case19.states.get("16"),
+                fifteen: case19.states.get("15"),
+                nineteen: case19.states.get("19"),
+              })
+            : "snapshot=null"
+        );
+
+        const case20 = buildState(
+          buildLinearRoot(TACTICS_TARGETS, twoPlayerOpenTactics),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+            hiddenActiveDuplicates: 1,
+          }
+        );
+        assert(
+          case20.snapshot &&
+            case20.snapshot.activePlayerIndex === 0 &&
+            case20.snapshot.visiblePlayerCount === 2 &&
+            case20.states.get("10").presentation === "offense",
+          "Hidden duplicate active players do not override the visible primary player display",
+          case20.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case20.snapshot.activePlayerIndex,
+                visiblePlayerCount: case20.snapshot.visiblePlayerCount,
+                playerSource: case20.snapshot.playerSource,
+                ten: case20.states.get("10"),
+              })
+            : "snapshot=null"
+        );
+
+        const case21 = buildState(
+          buildLinearRoot(CRICKET_TARGETS, twoPlayerOpenCricket),
+          null,
+          0,
+          "standard",
+          "Cricket",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+            extraVisiblePlayers: 2,
+          }
+        );
+        assert(
+          case21.snapshot &&
+            case21.snapshot.playerCount === 2 &&
+            case21.snapshot.detectedPlayerCount === 2 &&
+            case21.snapshot.visiblePlayerCount === 4 &&
+            case21.snapshot.playerSource === "grid" &&
+            case21.states.get("20").presentation === "offense",
+          "Grid player count wins over extra visible DOM players and prevents phantom opponents",
+          case21.snapshot
+            ? JSON.stringify({
+                playerCount: case21.snapshot.playerCount,
+                detectedPlayerCount: case21.snapshot.detectedPlayerCount,
+                visiblePlayerCount: case21.snapshot.visiblePlayerCount,
+                playerSource: case21.snapshot.playerSource,
+                twenty: case21.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case22 = buildState(
+          buildLinearTextRoot(TACTICS_TARGETS, createUniformMarkSets(TACTICS_TARGETS, function (label) {
+            if (label === "20") {
+              return ["⊗", "/"];
+            }
+            if (label === "19") {
+              return ["X", "✕"];
+            }
+            return ["", ""];
+          })),
+          2,
+          0,
+          "standard",
+          "Tactics"
+        );
+        assert(
+          case22.snapshot &&
+            case22.snapshot.rows.find((row) => row.label === "20").marksByPlayer.join(",") === "3,1" &&
+            case22.snapshot.rows.find((row) => row.label === "19").marksByPlayer.join(",") === "2,2",
+          "Symbol parsing reads ⊗ as 3, X/✕ as 2 and / as 1 without data attributes",
+          case22.snapshot
+            ? JSON.stringify({
+                twenty: case22.snapshot.rows.find((row) => row.label === "20").marksByPlayer,
+                nineteen: case22.snapshot.rows.find((row) => row.label === "19").marksByPlayer,
+              })
+            : "snapshot=null"
+        );
+
+        const case22bRoot = buildLinearRoot(
+          TACTICS_TARGETS,
+          createUniformMarkSets(TACTICS_TARGETS, function (label) {
+            if (label === "19") {
+              return [0, 3];
+            }
+            return [0, 0];
+          })
+        );
+        const case22bRowIndex = TACTICS_TARGETS.indexOf("19");
+        if (case22bRowIndex >= 0) {
+          const case22bOpponentCell = case22bRoot.children[case22bRowIndex * 3 + 1];
+          if (case22bOpponentCell) {
+            case22bOpponentCell.setAttribute("aria-label", "closed lane warning");
+          }
+        }
+        const case22b = buildState(
+          case22bRoot,
+          2,
+          1,
+          "standard",
+          "Tactics"
+        );
+        assert(
+          case22b.snapshot &&
+            case22b.snapshot.rows.find((row) => row.label === "19").marksByPlayer.join(",") === "0,3" &&
+            case22b.states.get("19").presentation === "offense" &&
+            readCellPresentations(case22b, "19").join(",") === "pressure,offense",
+          "Generic aria-label text with \"closed\" must not override real marks and suppress offense",
+          case22b.snapshot
+            ? JSON.stringify({
+                nineteenMarks: case22b.snapshot.rows.find((row) => row.label === "19")
+                  .marksByPlayer,
+                nineteen: case22b.states.get("19"),
+                nineteenCells: readCellPresentations(case22b, "19"),
+              })
+            : "snapshot=null"
+        );
+
+        const case23 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, () => [0, 0])
+          ),
+          2,
+          0,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+            activeThrows: [
+              {
+                segment: {
+                  name: "T20",
+                  number: 20,
+                  multiplier: 3,
+                  bed: "Triple",
+                },
+              },
+            ],
+          }
+        );
+        assert(
+          case23.snapshot &&
+            case23.snapshot.rows.find((row) => row.label === "20").marksByPlayer.join(",") === "3,0" &&
+            case23.states.get("20").presentation === "offense" &&
+            readCellPresentations(case23, "20").join(",") === "offense,pressure",
+          "Active throws preview closes 20 immediately after a first-dart T20 in Tactics",
+          case23.snapshot
+            ? JSON.stringify({
+                playerCount: case23.snapshot.playerCount,
+                twenty: case23.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case24 = buildState(
+          buildSingleColumnLinearRoot(CRICKET_TARGETS, singleColumnCricket),
+          null,
+          0,
+          "standard",
+          "Cricket",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+          }
+        );
+        assert(
+          case24.snapshot &&
+            case24.snapshot.playerCount === 2 &&
+            case24.snapshot.playerSource === "visible-gap-repair" &&
+            case24.snapshot.rows.find((row) => row.label === "20").marksByPlayer.join(",") === "3,0" &&
+            case24.states.get("20").presentation === "offense",
+          "A one-column grid undercount is repaired from the visible player strip without reviving phantom players",
+          case24.snapshot
+            ? JSON.stringify({
+                playerCount: case24.snapshot.playerCount,
+                playerSource: case24.snapshot.playerSource,
+                twenty: case24.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case25 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, () => [0, 0])
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            matchState: {
+              players: [{ id: "player-1" }, { id: "player-2" }],
+              turns: [
+                {
+                  playerId: "player-1",
+                  finishedAt: "2026-03-04T15:00:00.000Z",
+                  throws: [
+                    {
+                      segment: {
+                        name: "T20",
+                        number: 20,
+                        multiplier: 3,
+                        bed: "Triple",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          }
+        );
+        assert(
+          case25.snapshot &&
+            case25.snapshot.activePlayerIndex === 1 &&
+            case25.snapshot.rows.find((row) => row.label === "20").marksByPlayer.join(",") === "3,0" &&
+            case25.states.get("20").presentation === "pressure" &&
+            readCellPresentations(case25, "20").join(",") === "offense,pressure",
+          "Nach einem gegnerischen T20 wird 20 für den nächsten aktiven Spieler sofort als pressure erkannt, während die Gegnerspalte offensiv bleibt",
+          case25.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case25.snapshot.activePlayerIndex,
+                twenty: case25.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case25b = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "17") {
+                return [0, 3];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            matchState: {
+              players: [
+                { id: "player-1", name: "TEST1" },
+                { id: "player-2", name: "TEST2" },
+              ],
+              turns: [
+                {
+                  playerId: "player-1",
+                  finishedAt: "2026-03-04T15:00:30.000Z",
+                  throws: [
+                    {
+                      segment: {
+                        name: "T17",
+                        number: 17,
+                        multiplier: 3,
+                        bed: "Triple",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          }
+        );
+        assert(
+          case25b.snapshot &&
+            case25b.snapshot.rows.find((row) => row.label === "17").marksByPlayer.join(",") === "0,3" &&
+            case25b.states.get("17").presentation === "offense" &&
+            readCellPresentations(case25b, "17").join(",") === "pressure,offense",
+          "Turn-Vorschau überschreibt keine bereits belegte DOM-Zeile: TEST2 bleibt auf 17 offensiv, obwohl TEST1 in match.turns ein T17 hat",
+          case25b.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case25b.snapshot.activePlayerIndex,
+                seventeenRow: case25b.snapshot.rows.find((row) => row.label === "17"),
+                seventeen: case25b.states.get("17"),
+              })
+            : "snapshot=null"
+        );
+
+        const case25c = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, () => [0, 0])
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            activeThrows: [
+              {
+                segment: {
+                  name: "T17",
+                  number: 17,
+                  multiplier: 3,
+                  bed: "Triple",
+                },
+              },
+            ],
+            matchState: {
+              players: [
+                { id: "player-1", name: "TEST1" },
+                { id: "player-2", name: "TEST2" },
+              ],
+              turns: [
+                {
+                  playerId: "player-1",
+                  finishedAt: "2026-03-04T15:00:30.000Z",
+                  throws: [
+                    {
+                      segment: {
+                        name: "S17",
+                        number: 17,
+                        multiplier: 1,
+                        bed: "Single",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          }
+        );
+        assert(
+          case25c.snapshot &&
+            case25c.snapshot.rows.find((row) => row.label === "17").marksByPlayer.join(",") === "1,3" &&
+            case25c.states.get("17").presentation === "offense" &&
+            readCellPresentations(case25c, "17").join(",") === "pressure,offense",
+          "Turn-Fallback und aktive Wurfvorschau werden kombiniert: TEST1 behält 1 Mark auf 17, TEST2 sieht mit T17 sofort offense",
+          case25c.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case25c.snapshot.activePlayerIndex,
+                seventeenRow: case25c.snapshot.rows.find((row) => row.label === "17"),
+                seventeen: case25c.states.get("17"),
+              })
+            : "snapshot=null"
+        );
+
+        const case25d = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "17") {
+                return [1, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            activeThrows: [
+              {
+                segment: {
+                  name: "D17",
+                  number: 17,
+                  multiplier: 2,
+                  bed: "Double",
+                },
+              },
+            ],
+            matchState: {
+              players: [
+                { id: "player-1", name: "TEST1" },
+                { id: "player-2", name: "TEST2" },
+              ],
+              turns: [
+                {
+                  playerId: "player-2",
+                  finishedAt: "2026-03-04T15:02:30.000Z",
+                  throws: [
+                    {
+                      segment: {
+                        name: "S17",
+                        number: 17,
+                        multiplier: 1,
+                        bed: "Single",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          }
+        );
+        assert(
+          case25d.snapshot &&
+            case25d.snapshot.rows.find((row) => row.label === "17").marksByPlayer.join(",") === "1,3" &&
+            case25d.states.get("17").presentation === "offense" &&
+            readCellPresentations(case25d, "17").join(",") === "pressure,offense",
+          "Aktiver D17 nutzt bei bestehender gegnerischer DOM-Markierung die eigene Turn-Baseline: TEST2 schließt 17 sofort offensiv",
+          case25d.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case25d.snapshot.activePlayerIndex,
+                seventeenRow: case25d.snapshot.rows.find((row) => row.label === "17"),
+                seventeen: case25d.states.get("17"),
+              })
+            : "snapshot=null"
+        );
+
+        const case25e = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, () => [1, 0])
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            activeThrows: TACTICS_TARGETS.map((label) =>
+              createThrowForLabel(label, 2)
+            ),
+            matchState: {
+              players: [
+                { id: "player-1", name: "TEST1" },
+                { id: "player-2", name: "TEST2" },
+              ],
+              turns: [
+                {
+                  playerId: "player-2",
+                  finishedAt: "2026-03-04T15:05:30.000Z",
+                  throws: TACTICS_TARGETS.map((label) =>
+                    createThrowForLabel(label, 1)
+                  ),
+                },
+              ],
+            },
+          }
+        );
+        const case25eFailures = TACTICS_TARGETS.filter((label) => {
+          const row = case25e.snapshot?.rows.find((entry) => entry.label === label);
+          const state = case25e.states?.get(label);
+          const cells = readCellPresentations(case25e, label).join(",");
+          return (
+            !row ||
+            row.marksByPlayer.join(",") !== "1,3" ||
+            !state ||
+            state.presentation !== "offense" ||
+            cells !== "pressure,offense"
+          );
+        });
+        assert(
+          case25e.snapshot && case25eFailures.length === 0,
+          "Generische Tactics-Logik: alle Targets 20..10 und Bull folgen derselben Merge-/Regelbewertung wie 17",
+          case25eFailures.length
+            ? JSON.stringify({
+                failedLabels: case25eFailures,
+                sampleRows: case25eFailures
+                  .slice(0, 3)
+                  .map((label) => case25e.snapshot?.rows.find((row) => row.label === label)),
+              })
+            : "ok"
+        );
+
+        const case25f = buildState(
+          buildLinearRoot(
+            CRICKET_TARGETS,
+            createUniformMarkSets(CRICKET_TARGETS, () => [1, 0])
+          ),
+          2,
+          1,
+          "standard",
+          "Cricket",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            activeThrows: CRICKET_TARGETS.map((label) =>
+              createThrowForLabel(label, 2)
+            ),
+            matchState: {
+              players: [
+                { id: "player-1", name: "TEST1" },
+                { id: "player-2", name: "TEST2" },
+              ],
+              turns: [
+                {
+                  playerId: "player-2",
+                  finishedAt: "2026-03-04T15:06:30.000Z",
+                  throws: CRICKET_TARGETS.map((label) =>
+                    createThrowForLabel(label, 1)
+                  ),
+                },
+              ],
+            },
+          }
+        );
+        const case25fFailures = CRICKET_TARGETS.filter((label) => {
+          const row = case25f.snapshot?.rows.find((entry) => entry.label === label);
+          const state = case25f.states?.get(label);
+          const cells = readCellPresentations(case25f, label).join(",");
+          return (
+            !row ||
+            row.marksByPlayer.join(",") !== "1,3" ||
+            !state ||
+            state.presentation !== "offense" ||
+            cells !== "pressure,offense"
+          );
+        });
+        assert(
+          case25f.snapshot && case25fFailures.length === 0,
+          "Generische Cricket-Logik: alle Targets 20..15 und Bull folgen denselben Cricket-Regeln und Merge-Regeln",
+          case25fFailures.length
+            ? JSON.stringify({
+                failedLabels: case25fFailures,
+                sampleRows: case25fFailures
+                  .slice(0, 3)
+                  .map((label) => case25f.snapshot?.rows.find((row) => row.label === label)),
+              })
+            : "ok"
+        );
+
+        cleanupMountedGridRoots();
+        const case26Players = mountPlayerStrip(2, 1, {
+          visible: true,
+        });
+        try {
+          const hiddenRoot = mountGridRoot(
+            buildLinearRoot(
+              TACTICS_TARGETS,
+              createUniformMarkSets(TACTICS_TARGETS, () => [0, 0])
+            ),
+            { visible: false }
+          );
+          const visibleRoot = mountGridRoot(
+            buildLinearRoot(
+              TACTICS_TARGETS,
+              createUniformMarkSets(TACTICS_TARGETS, function (label) {
+                if (label === "20" || label === "10") {
+                  return [3, 0];
+                }
+                if (label === "18") {
+                  return [1, 0];
+                }
+                return [0, 0];
+              })
+            )
+          );
+          const case26Snapshot = helper.buildGridSnapshot({
+            gameStateShared: fakeGameState(1, "standard", "Tactics", {
+              domPlayerCount: 2,
+              domActivePlayerIndex: 1,
+              domVisible: true,
+            }),
+          });
+          const case26States = helper.computeTargetStates(case26Snapshot, {
+            showDeadTargets: true,
+          });
+          assert(
+            case26Snapshot &&
+              case26Snapshot.root === visibleRoot &&
+              hiddenRoot.isConnected &&
+              case26States.get("20").presentation === "pressure" &&
+              case26States.get("10").presentation === "pressure" &&
+              case26States.get("18").presentation === "open",
+            "Ein sichtbares aktuelles Grid schlÃ¤gt ein verstecktes Alt-Grid bei der Root-Erkennung",
+            case26Snapshot
+              ? JSON.stringify({
+                  rootMatchesVisible: case26Snapshot.root === visibleRoot,
+                  hiddenStillConnected: hiddenRoot.isConnected,
+                  twenty: case26States.get("20"),
+                  ten: case26States.get("10"),
+                  eighteen: case26States.get("18"),
+                })
+              : "snapshot=null"
+          );
+        } finally {
+          case26Players.remove();
+          cleanupMountedGridRoots();
+        }
+
+        cleanupMountedGridRoots();
+        const case27Players = mountPlayerStrip(2, 1, {
+          visible: true,
+        });
+        try {
+          const firstRoot = mountGridRoot(
+            buildLinearRoot(
+              TACTICS_TARGETS,
+              createUniformMarkSets(TACTICS_TARGETS, () => [0, 0])
+            )
+          );
+          const firstSnapshot = helper.buildGridSnapshot({
+            gameStateShared: fakeGameState(1, "standard", "Tactics", {
+              domPlayerCount: 2,
+              domActivePlayerIndex: 1,
+              domVisible: true,
+            }),
+          });
+          firstRoot.style.display = "none";
+          const secondRoot = mountGridRoot(
+            buildLinearRoot(
+              TACTICS_TARGETS,
+              createUniformMarkSets(TACTICS_TARGETS, function (label) {
+                if (label === "20" || label === "10") {
+                  return [3, 0];
+                }
+                return [0, 0];
+              })
+            )
+          );
+          const case27Snapshot = helper.buildGridSnapshot({
+            gameStateShared: fakeGameState(1, "standard", "Tactics", {
+              domPlayerCount: 2,
+              domActivePlayerIndex: 1,
+              domVisible: true,
+            }),
+          });
+          const case27States = helper.computeTargetStates(case27Snapshot, {
+            showDeadTargets: true,
+          });
+          assert(
+            firstSnapshot &&
+              case27Snapshot &&
+              firstSnapshot.root === firstRoot &&
+              case27Snapshot.root === secondRoot &&
+              case27States.get("20").presentation === "pressure" &&
+              case27States.get("10").presentation === "pressure",
+            "Ein versteckt verbundenes gecachtes Alt-Grid wird nach dem Re-Render nicht weiterverwendet",
+            case27Snapshot
+              ? JSON.stringify({
+                  firstRootCached: firstSnapshot.root === firstRoot,
+                  secondRootSelected: case27Snapshot.root === secondRoot,
+                  twenty: case27States.get("20"),
+                  ten: case27States.get("10"),
+                })
+              : "snapshot=null"
+          );
+        } finally {
+          case27Players.remove();
+          cleanupMountedGridRoots();
+        }
+
+        const case28 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "20" || label === "15") {
+                return [3, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            domOrder: [1, 0],
+            visualOrder: [0, 1],
+            matchState: {
+              players: [
+                { id: "player-1", name: "TEST1" },
+                { id: "player-2", name: "TEST2" },
+              ],
+              turns: [],
+            },
+          }
+        );
+        assert(
+          case28.snapshot &&
+            case28.snapshot.activePlayerIndex === 1 &&
+            case28.snapshot.boardPlayerIndex === 1 &&
+            readBoardResolution(case28)?.source === "visible-dom-display" &&
+            case28.snapshot.playerSlots.map((slot) => slot.playerId).join(",") ===
+              "player-1,player-2" &&
+            case28.states.get("20").presentation === "pressure" &&
+            readCellPresentations(case28, "20").join(",") === "offense,pressure" &&
+            readCellPresentations(case28, "15").join(",") === "offense,pressure",
+          "Die visuelle Player-Reihenfolge schlägt die DOM-Reihenfolge und hält offense/pressure auf den richtigen TEST-Spalten",
+          case28.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case28.snapshot.activePlayerIndex,
+                playerSlots: case28.snapshot.playerSlots,
+                twenty: case28.states.get("20"),
+                fifteen: case28.states.get("15"),
+              })
+            : "snapshot=null"
+        );
+
+        const case29 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, () => [0, 0])
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+            matchState: {
+              players: [
+                { id: "player-2", name: "TEST2" },
+                { id: "player-1", name: "TEST1" },
+              ],
+              turns: [
+                {
+                  playerId: "player-1",
+                  finishedAt: "2026-03-04T15:01:00.000Z",
+                  throws: [
+                    {
+                      segment: {
+                        name: "T20",
+                        number: 20,
+                        multiplier: 3,
+                        bed: "Triple",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          }
+        );
+        assert(
+          case29.snapshot &&
+            case29.snapshot.boardPlayerIndex === 1 &&
+            readBoardResolution(case29)?.usedVisibleDom === true &&
+            case29.snapshot.playerSlots.map((slot) => slot.playerId).join(",") ===
+              "player-1,player-2" &&
+            case29.snapshot.playerMappingSource === "id-match" &&
+            case29.snapshot.rows.find((row) => row.label === "20").marksByPlayer.join(",") ===
+              "3,0" &&
+            case29.states.get("20").presentation === "pressure" &&
+            readCellPresentations(case29, "20").join(",") === "offense,pressure",
+          "Historische Turns werden trotz vertauschter match.players-Reihenfolge per ID auf die richtige Grid-Spalte remappt",
+          case29.snapshot
+            ? JSON.stringify({
+                playerMappingSource: case29.snapshot.playerMappingSource,
+                playerSlots: case29.snapshot.playerSlots,
+                twentyRow: case29.snapshot.rows.find((row) => row.label === "20"),
+                twenty: case29.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case30 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "20" || label === "15") {
+                return [3, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          0,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: -1,
+            domVisible: true,
+            domPlayers: [
+              { name: "TEST1" },
+              { name: "TEST2" },
+            ],
+            includeIds: false,
+            matchState: {
+              player: 0,
+              players: [
+                { name: "TEST2" },
+                { name: "TEST1" },
+              ],
+              turns: [],
+            },
+          }
+        );
+        assert(
+          case30.snapshot &&
+            case30.snapshot.playerMappingSource === "name-match" &&
+            case30.snapshot.activePlayerIndex === 1 &&
+            case30.snapshot.boardPlayerIndex === 1 &&
+            readBoardResolution(case30)?.source === "game-state-match" &&
+            case30.states.get("20").presentation === "pressure" &&
+            readCellPresentations(case30, "20").join(",") === "offense,pressure",
+          "Ohne IDs wird der aktive Spieler über Namensabgleich trotzdem auf die richtige Grid-Spalte gemappt",
+          case30.snapshot
+            ? JSON.stringify({
+                playerMappingSource: case30.snapshot.playerMappingSource,
+                activePlayerIndex: case30.snapshot.activePlayerIndex,
+                playerSlots: case30.snapshot.playerSlots,
+                twenty: case30.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case31 = buildState(
+          buildLinearRoot(
+            CRICKET_TARGETS,
+            createUniformMarkSets(CRICKET_TARGETS, function (label) {
+              if (label === "20" || label === "15") {
+                return [3, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Cricket",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+          }
+        );
+        assert(
+          case31.snapshot &&
+            case31.states.get("20").presentation === "pressure" &&
+            case31.states.get("15").presentation === "pressure" &&
+            readCellPresentations(case31, "20").join(",") === "offense,pressure" &&
+            readCellPresentations(case31, "15").join(",") === "offense,pressure",
+          "Cricket spiegelt dieselbe Board-/Grid-Trennung wie Tactics: TEST2 sieht TEST1s geschlossene 20 und 15 sofort rot, TEST1 bleibt offensiv grün",
+          case31.snapshot
+            ? JSON.stringify({
+                activePlayerIndex: case31.snapshot.activePlayerIndex,
+                twenty: case31.states.get("20"),
+                fifteen: case31.states.get("15"),
+              })
+            : "snapshot=null"
+        );
+
+        const case32 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "20") {
+                return [3, 3];
+              }
+              if (label === "18") {
+                return [1, 3];
+              }
+              if (label === "10") {
+                return [3, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+          }
+        );
+        assert(
+          case32.snapshot &&
+            case32.snapshot.boardPlayerIndex === 1 &&
+            readBoardResolution(case32)?.columnIndex === 1 &&
+            readBoardResolution(case32)?.usedVisibleDom === true &&
+            case32.states.get("20").presentation === "dead" &&
+            readCellPresentations(case32, "20").join(",") === "dead,dead" &&
+            case32.states.get("18").presentation === "offense" &&
+            readBoardPresentation(case32, "18") === "offense" &&
+            readCellPresentations(case32, "18").join(",") === "pressure,offense" &&
+            case32.states.get("10").presentation === "pressure" &&
+            readBoardPresentation(case32, "10") === "pressure" &&
+            readCellPresentations(case32, "10").join(",") === "offense,pressure",
+          "Screenshot-Regression: Board bleibt aktivspielerbezogen, Grid zeigt gleichzeitig dead, offense und pressure pro Spieler",
+          case32.snapshot
+            ? JSON.stringify({
+                resolution: case32.snapshot.activePlayerResolution,
+                twenty: case32.states.get("20"),
+                eighteen: case32.states.get("18"),
+                ten: case32.states.get("10"),
+              })
+            : "snapshot=null"
+        );
+
+        const case33Left = buildState(
+          buildLinearRoot(TACTICS_TARGETS, createUniformMarkSets(TACTICS_TARGETS, function (label) {
+            if (label === "20" || label === "10") {
+              return [3, 0];
+            }
+            return [0, 0];
+          })),
+          2,
+          0,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 0,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+          }
+        );
+        const case33Right = buildState(
+          buildLinearRoot(TACTICS_TARGETS, createUniformMarkSets(TACTICS_TARGETS, function (label) {
+            if (label === "20" || label === "10") {
+              return [3, 0];
+            }
+            return [0, 0];
+          })),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+          }
+        );
+        assert(
+          case33Left.snapshot &&
+            case33Right.snapshot &&
+            readCellPresentations(case33Left, "20").join(",") ===
+              readCellPresentations(case33Right, "20").join(",") &&
+            readBoardPresentation(case33Left, "20") === "offense" &&
+            readBoardPresentation(case33Right, "20") === "pressure" &&
+            case33Left.snapshot.boardPlayerIndex === 0 &&
+            case33Right.snapshot.boardPlayerIndex === 1,
+          "Gleiche Marks, anderer aktiver Spieler: cellStates bleiben stabil, nur die Board-Perspektive kippt",
+          JSON.stringify({
+            left: {
+              resolution: readBoardResolution(case33Left),
+              boardTwenty: readBoardPresentation(case33Left, "20"),
+              cellsTwenty: readCellPresentations(case33Left, "20"),
+            },
+            right: {
+              resolution: readBoardResolution(case33Right),
+              boardTwenty: readBoardPresentation(case33Right, "20"),
+              cellsTwenty: readCellPresentations(case33Right, "20"),
+            },
+          })
+        );
+
+        const case34 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "20") {
+                return [3, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domVisible: false,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+          }
+        );
+        assert(
+          case34.snapshot &&
+            case34.snapshot.boardPlayerIndex === 1 &&
+            readBoardResolution(case34)?.source === "game-state-match" &&
+            readBoardPresentation(case34, "20") === "pressure",
+          "Ohne sichtbaren DOM-Aktivspieler fällt das Board deterministisch auf den Match-/State-Index zurück",
+          case34.snapshot
+            ? JSON.stringify({
+                resolution: readBoardResolution(case34),
+                twenty: case34.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const case35 = buildState(
+          buildLinearRoot(
+            TACTICS_TARGETS,
+            createUniformMarkSets(TACTICS_TARGETS, function (label) {
+              if (label === "20" || label === "10") {
+                return [3, 0];
+              }
+              return [0, 0];
+            })
+          ),
+          2,
+          1,
+          "standard",
+          "Tactics",
+          {
+            domPlayerCount: 2,
+            domActivePlayerIndex: 1,
+            domActivePlayerIndices: [0, 1],
+            domVisible: true,
+            domPlayers: [
+              { id: "player-1", name: "TEST1" },
+              { id: "player-2", name: "TEST2" },
+            ],
+          }
+        );
+        assert(
+          case35.snapshot &&
+            case35.snapshot.boardPlayerIndex === 1 &&
+            readBoardResolution(case35)?.source === "visible-dom-state-id" &&
+            readBoardResolution(case35)?.visibleActiveCandidates === 2 &&
+            readBoardPresentation(case35, "20") === "pressure" &&
+            readCellPresentations(case35, "20").join(",") === "offense,pressure",
+          "Mehrere sichtbare Active-Klassen kippen das Board nicht mehr auf den ersten DOM-Spieler, sondern auf den echten Match-/State-Spieler",
+          case35.snapshot
+            ? JSON.stringify({
+                resolution: readBoardResolution(case35),
+                twenty: case35.states.get("20"),
+              })
+            : "snapshot=null"
+        );
+
+        const debugEntries = [];
+        const debugRoot = buildSingleColumnLinearRoot(CRICKET_TARGETS, singleColumnCricket);
+        const debugPlayers = mountPlayerStrip(2, 0, {
+          visible: true,
+        });
+        try {
+          const debugOptions = {
+            root: debugRoot,
+            gameStateShared: fakeGameState(0, "standard", "Cricket", {
+              domPlayerCount: 2,
+              domActivePlayerIndex: 0,
+              domVisible: true,
+            }),
+            debugLog: function (event, payload, level) {
+              debugEntries.push({
+                event,
+                level: level || "warn",
+                payload,
+              });
+            },
+          };
+          helper.buildGridSnapshot(debugOptions);
+          helper.buildGridSnapshot(debugOptions);
+        } finally {
+          debugPlayers.remove();
+        }
+        assert(
+          debugEntries.filter((entry) => {
+            return entry.event === "buildGridSnapshot: player-source-mismatch";
+          }).length === 1 &&
+            debugEntries.filter((entry) => {
+              return entry.event === "buildGridSnapshot: repaired player undercount";
+            }).length === 1,
+          "Debug dedupe: dieselbe Player-Mismatch-/Undercount-Signatur wird nur einmal geloggt",
+          JSON.stringify(debugEntries)
+        );
+
+        const summary = document.getElementById("summary");
+        const list = document.getElementById("results");
+        const passed = results.filter((result) => result.pass).length;
+
+        summary.textContent = `${passed}/${results.length} checks passed`;
+        summary.className = passed === results.length ? "pass" : "fail";
+        document.body.dataset.status = passed === results.length ? "pass" : "fail";
+
+        results.forEach((result) => {
+          const item = document.createElement("li");
+          item.className = result.pass ? "pass" : "fail";
+          item.innerHTML = `${result.pass ? "PASS" : "FAIL"} <strong>${result.label}</strong><br><code>${result.details}</code>`;
+          list.appendChild(item);
+        });
+      })();
+    </script>
+  </body>
+</html>
