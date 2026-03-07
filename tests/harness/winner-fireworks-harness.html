@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>Winner Fireworks Harness</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; background: #020617; color: #f8fafc; }
+      .pass { color: #86efac; }
+      .fail { color: #fca5a5; }
+      .row { display: flex; gap: 12px; margin-top: 12px; }
+      button { padding: 8px 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #f8fafc; }
+      .ad-ext-player { margin-top: 16px; padding: 10px; border: 1px solid #334155; border-radius: 8px; max-width: 280px; }
+      .ad-ext-player-winner { border-color: #22c55e; box-shadow: 0 0 0 1px #22c55e; }
+    </style>
+  </head>
+  <body>
+    <h1>Winner Fireworks Harness</h1>
+    <p id="summary">Wird geprüft …</p>
+
+    <div id="ad-ext-game-variant">X01</div>
+    <div class="ad-ext-player" id="winnerNode">Spieler A</div>
+
+    <div class="row">
+      <button id="start">Gewinner setzen</button>
+      <button id="stop">Gewinner entfernen</button>
+    </div>
+
+    <script type="module">
+      import { createDomGuards } from "../../src/core/dom-guards.js";
+      import { createObserverRegistry } from "../../src/core/observer-registry.js";
+      import { createListenerRegistry } from "../../src/core/listener-registry.js";
+      import { createEventBus } from "../../src/core/event-bus.js";
+      import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
+      import { initializeWinnerFireworks } from "../../src/features/winner-fireworks/index.js";
+
+      const summary = document.getElementById("summary");
+      const winnerNode = document.getElementById("winnerNode");
+      const startButton = document.getElementById("start");
+      const stopButton = document.getElementById("stop");
+
+      // Harness-Fallback: lokale confetti-Funktion, falls Vendor im Testkontext nicht lädt.
+      if (typeof window.confetti !== "function") {
+        window.confetti = function noopConfetti() {
+          return null;
+        };
+      }
+
+      const domGuards = createDomGuards({ documentRef: document });
+      const observers = createObserverRegistry();
+      const listeners = createListenerRegistry();
+      const eventBus = createEventBus();
+
+      const gameState = {
+        getVariant() { return "X01"; },
+        getSnapshot() { return { match: {} }; },
+        subscribe() { return () => {}; }
+      };
+
+      const config = {
+        getFeatureConfig() {
+          return {
+            enabled: true,
+            style: "realistic",
+            colorTheme: "autodarts",
+            intensity: "dezent",
+            includeBullOut: true,
+            pointerDismiss: true
+          };
+        }
+      };
+
+      const cleanup = initializeWinnerFireworks({
+        documentRef: document,
+        windowRef: window,
+        eventBus,
+        gameState,
+        config,
+        domGuards,
+        registries: { observers, listeners },
+        helpers: { createRafScheduler: (cb, options = {}) => createRafScheduler(cb, options) }
+      });
+
+      const wait = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      startButton.addEventListener("click", async () => {
+        winnerNode.classList.add("ad-ext-player-winner");
+        eventBus.emit("game-state:updated", {});
+        await wait(150);
+
+        const overlay = document.getElementById("ad-ext-winner-fireworks");
+        const style = document.getElementById("ad-ext-winner-fireworks-style");
+        const ok = Boolean(style) && Boolean(overlay);
+
+        summary.textContent = ok
+          ? "PASS: Winner-Effekt aktiv."
+          : "FAIL: Overlay wurde nicht erzeugt.";
+        summary.className = ok ? "pass" : "fail";
+      });
+
+      stopButton.addEventListener("click", async () => {
+        winnerNode.classList.remove("ad-ext-player-winner");
+        eventBus.emit("game-state:updated", {});
+        await wait(150);
+
+        const overlay = document.getElementById("ad-ext-winner-fireworks");
+        const ok = !overlay;
+
+        summary.textContent = ok
+          ? "PASS: Winner-Effekt wurde beendet."
+          : "FAIL: Overlay ist noch vorhanden.";
+        summary.className = ok ? "pass" : "fail";
+      });
+
+      window.addEventListener("beforeunload", () => {
+        cleanup();
+      });
+    </script>
+  </body>
+</html>

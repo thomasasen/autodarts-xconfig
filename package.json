@@ -1,10 +1,22 @@
 {
   "name": "autodarts-xconfig",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Clean successor architecture for autodarts xConfig userscript modules",
   "type": "module",
-  "scripts": {
-    "test": "node --test"
+  "imports": {
+    "#feature-assets": {
+      "node": "./src/shared/feature-assets.node.js",
+      "default": "./src/shared/feature-assets.browser.js"
+    }
   },
-  "license": "MIT"
+  "scripts": {
+    "build": "npm run build:userscript",
+    "build:userscript": "node ./scripts/build-userscript.mjs",
+    "test": "node ./scripts/run-tests.mjs",
+    "verify": "npm run build && npm test"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.12"
+  }
 }

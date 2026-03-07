@@ -135,6 +135,8 @@ test("config updates remount affected mounted features without duplicating obser
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--blink"), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(windowRef.__adXConfig.inspect().observerCount, 1);
+
+  runtime.stop();
 });
 
 test("initializeRuntime starts an existing namespace-backed runtime", () => {
@@ -152,4 +154,6 @@ test("initializeRuntime starts an existing namespace-backed runtime", () => {
 
   assert.equal(initialized.started, true);
   assert.equal(runtime.getSnapshot().started, true);
+
+  initialized.stop();
 });

@@ -1,25 +1,86 @@
-# autodarts-xconfig
+# Autodarts xConfig
 
-Clean successor repository for `autodarts-tampermonkey-themes`, rebuilt with layered architecture and explicit runtime ownership.
+Autodarts xConfig ist ein Tampermonkey-Skript für `play.autodarts.io`, das dir Themes, Animationen und bessere Lesbarkeit direkt im Match bringt.  
+Die Spiellogik bleibt unverändert. Es werden nur Darstellung und Hinweise verbessert.
 
-## Current State
-- Phase 1-4 foundation implemented.
-- First migrated feature: `Checkout Score Pulse`.
-- Legacy repository is used only as behavior/reference source (`.oldrepo`).
+## Installation
 
-## Project Structure
-- `src/core` runtime/bootstrap/event infrastructure
-- `src/domain` pure dart rules
-- `src/features` feature modules mounted via bootstrap
-- `src/config` default + normalized runtime config
-- `tests` domain/runtime tests and browser harnesses
-- `docs` architecture, migration plan, and status
+1. Tampermonkey installieren: https://www.tampermonkey.net/
+2. Script installieren: `https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js`
+3. Autodarts neu laden: `https://play.autodarts.io/`
 
-## Run Tests
+Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Einstellung:
+
+![Tampermonkey Injection Hinweis](docs/screenshots/tempermonkey-injection.png)
+
+## Funktionen
+
+### X01
+- Checkout Score Pulse
+- Checkout Board Targets
+- TV Board Zoom
+- Style Checkout Suggestions
+
+### Cricket und Tactics
+- Cricket Highlighter
+- Cricket Grid FX
+
+### Allgemeine Effekte
+- Average Trend Arrow
+- Turn Start Sweep
+- Triple/Double/Bull Hits
+- Dart Marker Emphasis
+- Dart Marker Darts
+- Remove Darts Notification
+- Single Bull Sound
+- Turn Points Count
+- Winner Fireworks
+
+![Checkout Score Pulse](docs/screenshots/animation-checkout-score-pulse.gif)
+![Dart Marker Darts](docs/screenshots/animation-dart-marker-darts.png)
+![Winner Fireworks](docs/screenshots/animation-winner-fireworks.gif)
+
+## Themes / Templates
+
+Zusätzlich zu den Animationen gibt es fünf spielmodusbezogene Themes:
+
+- Theme X01
+- Theme Shanghai
+- Theme Bermuda
+- Theme Cricket (für Cricket und Tactics)
+- Theme Bull-off
+
+Jedes Theme ist als eigenes Feature integriert, idempotent initialisiert und über die zentrale Konfiguration schaltbar.
+
+![Theme X01](docs/screenshots/template-theme-x01-readme.png)
+![Theme X01 Preview](docs/screenshots/template-theme-x01-preview-under-throws-readme.png)
+![Theme Shanghai](docs/screenshots/template-theme-shanghai-readme.png)
+![Theme Bermuda](docs/screenshots/template-theme-bermuda-readme.png)
+![Theme Cricket](docs/screenshots/template-theme-cricket-readme.png)
+![Theme Bull-off](docs/screenshots/template-theme-bull-off-readme.png)
+
+## Hinweise
+
+- Standardmäßig ist nur `Checkout Score Pulse` aktiv, alles andere ist zunächst deaktiviert.
+- Theme-Hintergrundbilder werden pro Theme in der Konfiguration gespeichert.
+- Installationsziel ist das gebaute Userscript: `dist/autodarts-xconfig.user.js`
+
+## Dokumentation
+
+- [Feature-Übersicht](docs/FEATURES.md)
+- [Technische Architektur](docs/TECHNICAL-ARCHITECTURE.md)
+- [Migrationsstatus](docs/MIGRATION-STATUS.md)
+
+## Für Entwickler
+
 ```bash
+npm install
+npm run build
 npm test
 ```
 
-## Harness
-Open in browser:
-- `tests/harness/checkout-score-pulse-harness.html`
+Optional:
+
+```bash
+npm run verify
+```

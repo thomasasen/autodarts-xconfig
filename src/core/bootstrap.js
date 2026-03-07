@@ -1,6 +1,6 @@
 import { createRuntimeConfig } from "../config/runtime-config.js";
 import { dartRules } from "../domain/dart-rules.js";
-import { mountCheckoutScorePulse } from "../features/checkout-score-pulse/index.js";
+import { defaultFeatureDefinitions } from "../features/feature-registry.js";
 import { createRafScheduler } from "../shared/raf-scheduler.js";
 import { createDomGuards } from "./dom-guards.js";
 import { createEventBus } from "./event-bus.js";
@@ -9,38 +9,89 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-const API_VERSION = "0.1.0";
+const API_VERSION = "1.0.0";
 
-const FEATURE_DEFINITIONS = [
-  {
-    featureKey: "checkout-score-pulse",
-    configKey: "checkoutScorePulse",
-    mount: mountCheckoutScorePulse,
-  },
-];
+function normalizeFeatureDefinitions(definitions) {
+  if (!Array.isArray(definitions) || !definitions.length) {
+    return [];
+  }
 
-function featureDefinitionByConfigKey(configKey) {
-  return FEATURE_DEFINITIONS.find((feature) => feature.configKey === configKey) || null;
+  const seenFeatureKeys = new Set();
+
+  return definitions.reduce((result, definition) => {
+    if (!definition || typeof definition !== "object") {
+      return result;
+    }
+
+    const featureKey = String(definition.featureKey || "").trim();
+    const configKey = String(definition.configKey || "").trim();
+    const initialize = definition.initialize || definition.mount;
+
+    if (!featureKey || !configKey || typeof initialize !== "function") {
+      return result;
+    }
+
+    if (seenFeatureKeys.has(featureKey)) {
+      return result;
+    }
+
+    seenFeatureKeys.add(featureKey);
+    result.push({
+      ...definition,
+      featureKey,
+      configKey,
+      mount: initialize,
+      initialize,
+    });
+    return result;
+  }, []);
 }
 
-function featureDefinitionByFeatureKey(featureKey) {
-  return FEATURE_DEFINITIONS.find((feature) => feature.featureKey === featureKey) || null;
+function featureDefinitionByConfigKey(featureDefinitions, configKey) {
+  return (
+    featureDefinitions.find((feature) => feature.configKey === configKey) || null
+  );
 }
 
-function getAffectedFeatureDefinitions(partialConfig = {}) {
+function featureDefinitionByFeatureKey(featureDefinitions, featureKey) {
+  return (
+    featureDefinitions.find((feature) => feature.featureKey === featureKey) || null
+  );
+}
+
+function getAffectedFeatureDefinitions(featureDefinitions, partialConfig = {}) {
   const configKeys = new Set();
 
-  if (partialConfig && typeof partialConfig === "object") {
-    Object.keys(partialConfig.featureToggles || {}).forEach((key) => {
-      configKeys.add(String(key));
-    });
+  function collectNestedConfigKeys(value, prefix = "") {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return;
+    }
 
-    Object.keys(partialConfig.features || {}).forEach((key) => {
-      configKeys.add(String(key));
+    Object.keys(value).forEach((rawKey) => {
+      const key = String(rawKey || "").trim();
+      if (!key) {
+        return;
+      }
+
+      const nextPrefix = prefix ? `${prefix}.${key}` : key;
+      const entry = value[key];
+      const isObjectEntry =
+        Boolean(entry) && typeof entry === "object" && !Array.isArray(entry);
+
+      configKeys.add(nextPrefix);
+
+      if (isObjectEntry) {
+        collectNestedConfigKeys(entry, nextPrefix);
+      }
     });
   }
 
-  return FEATURE_DEFINITIONS.filter((definition) => {
+  if (partialConfig && typeof partialConfig === "object") {
+    collectNestedConfigKeys(partialConfig.featureToggles || {});
+    collectNestedConfigKeys(partialConfig.features || {});
+  }
+
+  return featureDefinitions.filter((definition) => {
     return configKeys.has(definition.configKey);
   });
 }
@@ -57,6 +108,9 @@ export function createBootstrap(options = {}) {
   const listeners = createListenerRegistry();
   const domGuards = createDomGuards({ documentRef });
   const config = createRuntimeConfig(options.config || {});
+  const featureDefinitions = normalizeFeatureDefinitions(
+    options.featureDefinitions || defaultFeatureDefinitions
+  );
 
   const gameState = createGameStateStore({
     eventBus,
@@ -65,6 +119,7 @@ export function createBootstrap(options = {}) {
   });
 
   const featureCleanups = new Map();
+  const extraPublicApi = {};
   let started = false;
 
   const context = {
@@ -101,6 +156,7 @@ export function createBootstrap(options = {}) {
     namespace.updateConfig = updateConfig;
     namespace.setFeatureEnabled = setFeatureEnabled;
     namespace.inspect = inspectRuntime;
+    Object.assign(namespace, extraPublicApi);
 
     windowRef[GLOBAL_NAMESPACE_KEY] = namespace;
   }
@@ -146,7 +202,7 @@ export function createBootstrap(options = {}) {
       Array.isArray(options.remountFeatureKeys) ? options.remountFeatureKeys : []
     );
 
-    FEATURE_DEFINITIONS.forEach((definition) => {
+    featureDefinitions.forEach((definition) => {
       const enabled = config.isFeatureEnabled(definition.configKey);
       if (!started || !enabled) {
         unmountFeature(definition.featureKey);
@@ -166,7 +222,7 @@ export function createBootstrap(options = {}) {
     return {
       started,
       gameState: gameState.getSnapshot(),
-      features: FEATURE_DEFINITIONS.reduce((result, definition) => {
+      features: featureDefinitions.reduce((result, definition) => {
         result[definition.featureKey] = {
           configKey: definition.configKey,
           enabled: config.isFeatureEnabled(definition.configKey),
@@ -207,7 +263,7 @@ export function createBootstrap(options = {}) {
       return api;
     }
 
-    FEATURE_DEFINITIONS.forEach((definition) => {
+    featureDefinitions.forEach((definition) => {
       unmountFeature(definition.featureKey);
     });
 
@@ -223,7 +279,10 @@ export function createBootstrap(options = {}) {
   }
 
   function updateConfig(partialConfig = {}) {
-    const affectedDefinitions = getAffectedFeatureDefinitions(partialConfig);
+    const affectedDefinitions = getAffectedFeatureDefinitions(
+      featureDefinitions,
+      partialConfig
+    );
     config.update(partialConfig);
     refreshFeatures({
       remountFeatureKeys: affectedDefinitions.map((definition) => definition.featureKey),
@@ -235,8 +294,8 @@ export function createBootstrap(options = {}) {
 
   function setFeatureEnabled(featureRef, enabled) {
     const definition =
-      featureDefinitionByFeatureKey(String(featureRef || "")) ||
-      featureDefinitionByConfigKey(String(featureRef || ""));
+      featureDefinitionByFeatureKey(featureDefinitions, String(featureRef || "")) ||
+      featureDefinitionByConfigKey(featureDefinitions, String(featureRef || ""));
 
     const configKey = definition ? definition.configKey : String(featureRef || "");
     config.setFeatureEnabled(configKey, enabled);
@@ -251,12 +310,30 @@ export function createBootstrap(options = {}) {
     return config.isFeatureEnabled(configKey);
   }
 
+  function attachPublicApi(entries = {}) {
+    if (!entries || typeof entries !== "object") {
+      return api;
+    }
+
+    Object.keys(entries).forEach((key) => {
+      const normalizedKey = String(key || "").trim();
+      if (!normalizedKey) {
+        return;
+      }
+      extraPublicApi[normalizedKey] = entries[normalizedKey];
+    });
+
+    syncGlobalNamespace();
+    return api;
+  }
+
   const api = {
     start,
     stop,
     getSnapshot,
     updateConfig,
     setFeatureEnabled,
+    attachPublicApi,
     context,
   };
 

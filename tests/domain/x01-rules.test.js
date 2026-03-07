@@ -2,14 +2,24 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  classifyThrowHitText,
   IMPOSSIBLE_CHECKOUT_SCORES,
   canFinishWithSegment,
   evaluateThrowOutcome,
+  getHighlightHitKind,
   getOneDartCheckoutSegment,
+  getSuggestionOneDartCheckoutSegment,
+  isDoubleBullSegment,
   isCheckoutPossibleFromScore,
+  isSingleBullHitText,
+  isSingleBullThrowEntry,
+  isSingleBullSegment,
   isOneDartCheckoutSegment,
   isSensibleThirdT20Score,
+  normalizeSegmentName,
   normalizeOutMode,
+  parseCheckoutTargetsFromSuggestion,
+  parseExplicitCheckoutSegments,
   parseCheckoutSuggestionState,
 } from "../../src/domain/x01-rules.js";
 
@@ -33,6 +43,134 @@ test("one-dart checkout helpers resolve expected segments", () => {
   assert.equal(isOneDartCheckoutSegment("BULL"), true);
   assert.equal(isOneDartCheckoutSegment("D16"), true);
   assert.equal(isOneDartCheckoutSegment("S20"), false);
+});
+
+test("normalizeSegmentName resolves common aliases and segment formats", () => {
+  assert.equal(normalizeSegmentName("bullseye"), "BULL");
+  assert.equal(normalizeSegmentName("db"), "BULL");
+  assert.equal(normalizeSegmentName("  d 16 "), "D16");
+  assert.equal(normalizeSegmentName("20"), "S20");
+});
+
+test("throw hit classification centralizes triple/double/bull interpretation", () => {
+  assert.deepEqual(classifyThrowHitText("T20"), {
+    kind: "triple",
+    normalizedSegment: "T20",
+    ring: "T",
+    value: 20,
+    score: 60,
+  });
+  assert.deepEqual(classifyThrowHitText("d16"), {
+    kind: "double",
+    normalizedSegment: "D16",
+    ring: "D",
+    value: 16,
+    score: 32,
+  });
+  assert.deepEqual(classifyThrowHitText("bull"), {
+    kind: "bull",
+    normalizedSegment: "BULL",
+    ring: "D",
+    value: 25,
+    score: 50,
+  });
+  assert.equal(classifyThrowHitText("S20")?.kind, "single");
+  assert.equal(classifyThrowHitText("T25"), null);
+});
+
+test("highlight hit kind returns only triple/double/bull", () => {
+  assert.equal(getHighlightHitKind("T20"), "triple");
+  assert.equal(getHighlightHitKind("D18"), "double");
+  assert.equal(getHighlightHitKind("DB"), "bull");
+  assert.equal(getHighlightHitKind("bullseye"), "bull");
+  assert.equal(getHighlightHitKind("S20"), null);
+  assert.equal(getHighlightHitKind("SB"), null);
+  assert.equal(getHighlightHitKind(""), null);
+});
+
+test("single bull helpers distinguish SB/S25 from DB/BULL", () => {
+  assert.equal(isSingleBullSegment("S25"), true);
+  assert.equal(isSingleBullSegment("SB"), true);
+  assert.equal(isSingleBullSegment("25"), true);
+  assert.equal(isSingleBullSegment("BULL"), false);
+
+  assert.equal(isDoubleBullSegment("BULL"), true);
+  assert.equal(isDoubleBullSegment("DB"), true);
+  assert.equal(isDoubleBullSegment("S25"), false);
+
+  assert.equal(isSingleBullHitText("S25"), true);
+  assert.equal(isSingleBullHitText("sb"), true);
+  assert.equal(isSingleBullHitText("25"), true);
+  assert.equal(isSingleBullHitText("BULL"), false);
+  assert.equal(isSingleBullHitText("DB"), false);
+});
+
+test("single bull throw helper classifies throw entries without DOM parsing", () => {
+  assert.equal(
+    isSingleBullThrowEntry({
+      segment: {
+        name: "S25",
+      },
+    }),
+    true
+  );
+  assert.equal(
+    isSingleBullThrowEntry({
+      segment: {
+        name: "SB",
+      },
+    }),
+    true
+  );
+  assert.equal(
+    isSingleBullThrowEntry({
+      segment: {
+        name: "BULL",
+        multiplier: 2,
+      },
+    }),
+    false
+  );
+  assert.equal(
+    isSingleBullThrowEntry({
+      points: 25,
+    }),
+    true
+  );
+  assert.equal(
+    isSingleBullThrowEntry({
+      points: 50,
+    }),
+    false
+  );
+});
+
+test("explicit checkout segment parser extracts normalized explicit targets only", () => {
+  assert.deepEqual(parseExplicitCheckoutSegments("D16"), ["D16"]);
+  assert.deepEqual(parseExplicitCheckoutSegments("  bull "), ["BULL"]);
+  assert.deepEqual(parseExplicitCheckoutSegments("T20 D10"), ["T20", "D10"]);
+  assert.deepEqual(parseExplicitCheckoutSegments("No Checkout"), []);
+});
+
+test("suggestion one-dart parser accepts exactly one explicit one-dart segment", () => {
+  assert.equal(getSuggestionOneDartCheckoutSegment("D17"), "D17");
+  assert.equal(getSuggestionOneDartCheckoutSegment("Bull"), "BULL");
+  assert.equal(getSuggestionOneDartCheckoutSegment("T20 D20"), "");
+  assert.equal(getSuggestionOneDartCheckoutSegment("T20"), "");
+});
+
+test("checkout target parser keeps legacy summary filtering behavior", () => {
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("20 D10"), [{ ring: "D", value: 10 }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("20 10"), [
+    { ring: "S", value: 20 },
+    { ring: "S", value: 10 },
+  ]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("BULL"), [{ ring: "SB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("DB"), [{ ring: "DB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("T20 D20"), [
+    { ring: "T", value: 20 },
+    { ring: "D", value: 20 },
+  ]);
 });
 
 test("parseCheckoutSuggestionState preserves suggestion parser behavior", () => {
@@ -67,8 +205,18 @@ test("evaluateThrowOutcome covers bust and finish behavior across out modes", ()
   assert.equal(finishDouble.isFinish, true);
   assert.equal(finishDouble.isBust, false);
 
-  const invalidFinishDouble = evaluateThrowOutcome({
+  const scoredWithoutFinish = evaluateThrowOutcome({
     scoreBefore: 40,
+    segmentName: "S20",
+    outMode: "double",
+  });
+  assert.equal(scoredWithoutFinish.isBust, false);
+  assert.equal(scoredWithoutFinish.isFinish, false);
+  assert.equal(scoredWithoutFinish.scoreAfter, 20);
+  assert.equal(scoredWithoutFinish.reason, "scored");
+
+  const invalidFinishDouble = evaluateThrowOutcome({
+    scoreBefore: 20,
     segmentName: "S20",
     outMode: "double",
   });

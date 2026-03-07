@@ -106,3 +106,7 @@ export function mountCheckoutScorePulse(context = {}) {
     domGuards.removeNodeById(STYLE_ID);
   };
 }
+
+export const initializeCheckoutScorePulse = mountCheckoutScorePulse;
+export const initialize = mountCheckoutScorePulse;
+export const mount = mountCheckoutScorePulse;

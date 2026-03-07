@@ -19,6 +19,14 @@ export const TACTICS_TARGET_ORDER = [
 
 const TARGET_SET = new Set(TACTICS_TARGET_ORDER);
 
+function toSafePlayerCount(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return 0;
+  }
+  return Math.max(0, Math.round(numeric));
+}
+
 export function clampMarks(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
@@ -59,6 +67,136 @@ export function normalizeCricketLabel(value) {
 export function getTargetOrderByGameMode(gameMode) {
   const mode = classifyCricketGameMode(gameMode);
   return mode === "tactics" ? TACTICS_TARGET_ORDER : CRICKET_TARGET_ORDER;
+}
+
+export function createEmptyMarksByLabel(targetOrder, playerCount = 0) {
+  const normalizedPlayerCount = toSafePlayerCount(playerCount);
+  const order = Array.isArray(targetOrder) && targetOrder.length
+    ? targetOrder
+    : CRICKET_TARGET_ORDER;
+
+  return order.reduce((result, label) => {
+    result[label] = Array.from({ length: normalizedPlayerCount }, () => 0);
+    return result;
+  }, {});
+}
+
+function normalizeSegmentName(value) {
+  const raw = String(value || "").trim().toUpperCase();
+  if (!raw) {
+    return "";
+  }
+
+  if (raw === "BULL" || raw === "BULLSEYE" || raw === "DBULL" || raw === "DB") {
+    return "BULL";
+  }
+  if (raw === "SBULL" || raw === "SB" || raw === "OB" || raw === "S25") {
+    return "S25";
+  }
+
+  const match = raw.match(/^([SDT])\s*(\d{1,2})$/);
+  if (match) {
+    return `${match[1]}${Number(match[2])}`;
+  }
+
+  if (/^\d{1,2}$/.test(raw)) {
+    return `S${Number(raw)}`;
+  }
+
+  return raw;
+}
+
+export function parseCricketThrowSegment(throwEntry) {
+  if (!throwEntry || typeof throwEntry !== "object") {
+    return null;
+  }
+
+  const segment = throwEntry.segment && typeof throwEntry.segment === "object"
+    ? throwEntry.segment
+    : throwEntry;
+  const normalizedName = normalizeSegmentName(
+    segment.name ||
+      segment.segment ||
+      segment.label ||
+      ""
+  );
+  if (!normalizedName) {
+    return null;
+  }
+
+  if (normalizedName === "BULL") {
+    return {
+      ring: "D",
+      value: 25,
+      marks: 2,
+      label: "BULL",
+    };
+  }
+
+  if (normalizedName === "S25") {
+    return {
+      ring: "S",
+      value: 25,
+      marks: 1,
+      label: "BULL",
+    };
+  }
+
+  const match = normalizedName.match(/^([SDT])(\d{1,2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const ring = match[1];
+  const value = Number(match[2]);
+  if (!(value >= 1 && value <= 20)) {
+    return null;
+  }
+
+  return {
+    ring,
+    value,
+    marks: ring === "T" ? 3 : ring === "D" ? 2 : 1,
+    label: String(value),
+  };
+}
+
+export function applyThrowsToMarksByLabel(options = {}) {
+  const targetOrder = Array.isArray(options.targetOrder) && options.targetOrder.length
+    ? options.targetOrder
+    : CRICKET_TARGET_ORDER;
+  const playerIndex = Number.isFinite(Number(options.playerIndex))
+    ? Math.max(0, Math.round(Number(options.playerIndex)))
+    : 0;
+  const throws = Array.isArray(options.throws) ? options.throws : [];
+  const baseMarks = options.baseMarksByLabel && typeof options.baseMarksByLabel === "object"
+    ? options.baseMarksByLabel
+    : createEmptyMarksByLabel(targetOrder, playerIndex + 1);
+  const marksByLabel = Object.keys(baseMarks).reduce((result, label) => {
+    const values = Array.isArray(baseMarks[label]) ? baseMarks[label] : [];
+    result[label] = values.map((value) => clampMarks(value));
+    return result;
+  }, {});
+
+  targetOrder.forEach((label) => {
+    if (!Array.isArray(marksByLabel[label])) {
+      marksByLabel[label] = [];
+    }
+    while (marksByLabel[label].length <= playerIndex) {
+      marksByLabel[label].push(0);
+    }
+  });
+
+  throws.forEach((throwEntry) => {
+    const parsed = parseCricketThrowSegment(throwEntry);
+    if (!parsed || !targetOrder.includes(parsed.label)) {
+      return;
+    }
+    const currentMarks = clampMarks(marksByLabel[parsed.label][playerIndex] || 0);
+    marksByLabel[parsed.label][playerIndex] = clampMarks(currentMarks + parsed.marks);
+  });
+
+  return marksByLabel;
 }
 
 export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = {}) {
@@ -186,4 +324,104 @@ export function computeTargetStates(marksByLabel, options = {}) {
   });
 
   return stateMap;
+}
+
+function toTargetOrderForDiff(options = {}) {
+  const explicitTargetOrder = Array.isArray(options.targetOrder)
+    ? options.targetOrder.filter(Boolean)
+    : [];
+  if (explicitTargetOrder.length) {
+    return explicitTargetOrder;
+  }
+
+  const previousLabels = Object.keys(options.previousMarksByLabel || {});
+  const nextLabels = Object.keys(options.nextMarksByLabel || {});
+  const combined = Array.from(new Set([...previousLabels, ...nextLabels]));
+  if (combined.length) {
+    return combined;
+  }
+
+  return TACTICS_TARGET_ORDER.slice();
+}
+
+export function diffMarksByLabel(options = {}) {
+  const previousMarksByLabel =
+    options.previousMarksByLabel && typeof options.previousMarksByLabel === "object"
+      ? options.previousMarksByLabel
+      : {};
+  const nextMarksByLabel =
+    options.nextMarksByLabel && typeof options.nextMarksByLabel === "object"
+      ? options.nextMarksByLabel
+      : {};
+  const targetOrder = toTargetOrderForDiff({
+    targetOrder: options.targetOrder,
+    previousMarksByLabel,
+    nextMarksByLabel,
+  });
+
+  const diffMap = new Map();
+
+  targetOrder.forEach((label) => {
+    const previous = Array.isArray(previousMarksByLabel[label])
+      ? previousMarksByLabel[label].map((value) => clampMarks(value))
+      : [];
+    const next = Array.isArray(nextMarksByLabel[label])
+      ? nextMarksByLabel[label].map((value) => clampMarks(value))
+      : [];
+    const playerCount = Math.max(previous.length, next.length);
+    const playerDeltas = Array.from({ length: playerCount }, (_, index) => {
+      return clampMarks(next[index] || 0) - clampMarks(previous[index] || 0);
+    });
+    const changed = playerDeltas.some((delta) => delta !== 0);
+    const hasIncrease = playerDeltas.some((delta) => delta > 0);
+    const maxIncrease = playerDeltas.reduce((max, delta) => {
+      return delta > max ? delta : max;
+    }, 0);
+
+    diffMap.set(label, {
+      label,
+      previousMarks: previous,
+      nextMarks: next,
+      playerDeltas,
+      changed,
+      hasIncrease,
+      maxIncrease,
+    });
+  });
+
+  return diffMap;
+}
+
+export function deriveTargetTransitions(options = {}) {
+  const previousStateMap = options.previousStateMap instanceof Map ? options.previousStateMap : new Map();
+  const nextStateMap = options.nextStateMap instanceof Map ? options.nextStateMap : new Map();
+  const targetOrder = Array.isArray(options.targetOrder)
+    ? options.targetOrder.filter(Boolean)
+    : Array.from(new Set([...previousStateMap.keys(), ...nextStateMap.keys()]));
+
+  const transitionMap = new Map();
+  targetOrder.forEach((label) => {
+    const previousState = previousStateMap.get(label) || null;
+    const nextState = nextStateMap.get(label) || null;
+    const previousPresentation = String(
+      previousState?.boardPresentation || previousState?.presentation || "open"
+    ).toLowerCase();
+    const nextPresentation = String(
+      nextState?.boardPresentation || nextState?.presentation || "open"
+    ).toLowerCase();
+
+    transitionMap.set(label, {
+      label,
+      previousPresentation,
+      nextPresentation,
+      presentationChanged: previousPresentation !== nextPresentation,
+      becameOffense: previousPresentation !== "offense" && nextPresentation === "offense",
+      becameDanger: previousPresentation !== "danger" && nextPresentation === "danger",
+      becamePressure: previousPresentation !== "pressure" && nextPresentation === "pressure",
+      becameClosed: previousPresentation !== "closed" && nextPresentation === "closed",
+      becameDead: previousPresentation !== "dead" && nextPresentation === "dead",
+    });
+  });
+
+  return transitionMap;
 }
