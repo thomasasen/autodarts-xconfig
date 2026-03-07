@@ -29,3 +29,9 @@ test("README screenshot paths exist in docs/screenshots", () => {
     );
   });
 });
+
+test("README documents the AD xConfig UI screenshot", () => {
+  const readme = readFileSync(readmePath, "utf8");
+
+  assert.match(readme, /docs\/screenshots\/ad-xconfig\.png/);
+});

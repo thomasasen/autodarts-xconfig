@@ -1,73 +1,91 @@
 # Feature-Übersicht
 
-## Kurzüberblick
+## Überblick
 
-Autodarts xConfig enthält aktuell:
+Autodarts xConfig liefert aktuell 20 Module:
 
 - 15 Animationen und Komfortfunktionen
-- 5 Themes (Templates)
+- 5 Themes
 
-Alle Features sind modular registriert. Standardmäßig ist nur `Checkout Score Pulse` aktiviert.
+Alle Module werden zentral über `AD xConfig` gesteuert. Die Feature-Registry sorgt dafür, dass ein Modul nur einmal aktiv ist und bei Konfigurationsänderungen sauber neu gemountet wird.
+
+## AD xConfig
+
+Die Oberfläche ist direkt in Autodarts eingebunden und über den Menüpunkt `AD xConfig` erreichbar.
+
+![AD xConfig](screenshots/ad-xconfig.png)
 
 ## Animationen und Komfort
 
 ### X01
-- Checkout Score Pulse: hebt finish-fähige Restwerte hervor.
-- Checkout Board Targets: markiert sinnvolle Checkout-Ziele auf dem Board.
-- TV Board Zoom: zoomt in klaren Checkout-/Setup-Situationen.
-- Style Checkout Suggestions: macht Checkout-Hinweise sichtbarer.
+
+- `Checkout Score Pulse`: hebt finishfähige Restwerte hervor
+- `Checkout Board Targets`: markiert sinnvolle Ziele direkt am Board
+- `TV Board Zoom`: zoomt auf relevante Checkout-Bereiche
+- `Style Checkout Suggestions`: macht Finish-Empfehlungen auffälliger
 
 ### Cricket und Tactics
-- Cricket Highlighter: visualisiert Druck- und Zielzustände.
-- Cricket Grid FX: zusätzliche Rastereffekte für schnelle Orientierung.
 
-### Alle Modi
-- Average Trend Arrow
-- Turn Start Sweep
-- Triple/Double/Bull Hits
-- Dart Marker Emphasis
-- Dart Marker Darts
-- Remove Darts Notification
-- Single Bull Sound
-- Turn Points Count
-- Winner Fireworks
+- `Cricket Highlighter`: visualisiert Ziel- und Druckzustände
+- `Cricket Grid FX`: ergänzt die Matrix um zusätzliche Live-Effekte
 
-## Themes / Templates
+### Alle Spielmodi
+
+- `Average Trend Arrow`
+- `Turn Start Sweep`
+- `Triple/Double/Bull Hits`
+- `Dart Marker Emphasis`
+- `Dart Marker Darts`
+- `Remove Darts Notification`
+- `Single Bull Sound`
+- `Turn Points Count`
+- `Winner Fireworks`
+
+![Checkout Score Pulse](screenshots/animation-checkout-score-pulse.gif)
+![Dart Marker Darts](screenshots/animation-dart-marker-darts.png)
+![Winner Fireworks](screenshots/animation-winner-fireworks.gif)
+
+## Themes
 
 ### Theme X01
-- Für: `X01`
-- Optionen: AVG anzeigen, Hintergrundmodus, Bild-Deckkraft, Spielerfeld-Transparenz, Hintergrundbild
+
+- Gilt für: `X01`
+- Optionen: AVG, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme X01](screenshots/template-theme-x01-readme.png)
-![Theme X01 Preview Standard](screenshots/template-theme-x01-preview-standard-readme.png)
-![Theme X01 Preview Under Throws](screenshots/template-theme-x01-preview-under-throws-readme.png)
+![Theme X01 Vorschau Standard](screenshots/template-theme-x01-preview-standard-readme.png)
+![Theme X01 Vorschau unter den Würfen](screenshots/template-theme-x01-preview-under-throws-readme.png)
 
 ### Theme Shanghai
-- Für: `Shanghai`
-- Optionen: AVG anzeigen, Hintergrundmodus, Bild-Deckkraft, Spielerfeld-Transparenz, Hintergrundbild
+
+- Gilt für: `Shanghai`
+- Optionen: AVG, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Shanghai](screenshots/template-theme-shanghai-readme.png)
 
 ### Theme Bermuda
-- Für: `Bermuda` (inklusive Varianten mit Zusätzen)
-- Optionen: Hintergrundmodus, Bild-Deckkraft, Spielerfeld-Transparenz, Hintergrundbild
+
+- Gilt für: `Bermuda` und Varianten mit passendem Namenszusatz
+- Optionen: Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Bermuda](screenshots/template-theme-bermuda-readme.png)
 
 ### Theme Cricket
-- Für: `Cricket` und `Tactics`
-- Optionen: AVG anzeigen, Hintergrundmodus, Bild-Deckkraft, Spielerfeld-Transparenz, Hintergrundbild
+
+- Gilt für: `Cricket` und `Tactics`
+- Optionen: AVG, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Cricket](screenshots/template-theme-cricket-readme.png)
 
 ### Theme Bull-off
-- Für: `Bull-off` (inklusive Varianten mit Zusätzen)
-- Optionen: Kontrast-Preset, Hintergrundmodus, Bild-Deckkraft, Spielerfeld-Transparenz, Hintergrundbild
+
+- Gilt für: `Bull-off` und Varianten mit passendem Namenszusatz
+- Optionen: Kontrast-Preset, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Bull-off](screenshots/template-theme-bull-off-readme.png)
 
 ## Hinweise
 
 - Theme-Konfiguration liegt unter `features.themes.<themeKey>`.
-- Hintergrundbilder werden als Data-URL pro Theme gespeichert.
-- Runtime und Feature-Registry verhindern doppelte Mounts, Listener und Observer.
+- Theme-Hintergründe werden als Data-URL im lokalen Config-Speicher abgelegt.
+- Die Konfiguration wird lokal im Browser gespeichert und beim Start automatisch geladen.

@@ -2,72 +2,103 @@
 
 ## Struktur
 
-Die Projektstruktur bleibt stabil:
+Die Projektstruktur bleibt für v1.0 unverändert:
 
-- `src/core`: Bootstrap, Lifecycle, Event-Bus, Listener-/Observer-Registries
-- `src/domain`: Regeln für X01, Varianten, Cricket/Tactics (ohne DOM)
-- `src/features`: modulare Features inklusive Themes
-- `src/config`: Defaults, Normalisierung, Persistenz
-- `src/runtime`: Tampermonkey-Initialisierung und Public API
+- `src/core`: Bootstrap, Lifecycle, Listener- und Observer-Registries
+- `src/domain`: Spiellogik und Regelbewertung ohne DOM-Abhängigkeit
+- `src/features`: modulare Features und Themes
+- `src/config`: Defaults, Normalisierung, Persistenz und Legacy-Import
+- `src/runtime`: Tampermonkey-Start, Public API und `AD xConfig`-Shell
+- `src/vendors`: eingebundene Vendor-Bausteine
 - `loader`: Userscript-Entry
 - `dist`: gebautes Installationsartefakt
 - `tests`: Domain- und Runtime-Tests
 
 ## Laufzeitmodell
 
-1. Loader startet `initializeTampermonkeyRuntime(...)`.
-2. Config wird geladen und normalisiert.
-3. Feature-Registry liefert Definitionen.
-4. Bootstrap mountet aktivierte Features idempotent.
-5. Stop/Cleanup entfernt Styles, Listener und Observer zuverlässig.
+1. Das Userscript aus `loader/autodarts-xconfig.user.js` startet die Runtime.
+2. Die Konfiguration wird geladen, normalisiert und bei Bedarf aus Legacy-Daten übernommen.
+3. Die Feature-Registry liefert alle Definitionsdaten für Animationen und Themes.
+4. Aktivierte Module werden idempotent gemountet.
+5. Die Runtime-Shell für `AD xConfig` hängt sich an Navigation und DOM an und bleibt ebenfalls idempotent.
+6. Cleanup entfernt Styles, Listener und Observer sauber.
 
-Wichtige Eigenschaft: mehrfaches Starten erzeugt keine doppelten Instanzen.
+Wichtige Eigenschaft: wiederholtes Starten oder erneutes Rendern erzeugt keine doppelten Instanzen.
 
-## Feature-Architektur
+## Feature- und Theme-Modell
 
-Jedes Feature exportiert eine `mount...`-Funktion und liefert eine Cleanup-Funktion zurück.
+Jedes Feature exportiert eine `mount...`-Funktion und gibt eine Cleanup-Funktion zurück.
 
-Themes sind als normale Features integriert:
+Ausgeliefert sind:
 
-- `theme-x01` (`themes.x01`)
-- `theme-shanghai` (`themes.shanghai`)
-- `theme-bermuda` (`themes.bermuda`)
-- `theme-cricket` (`themes.cricket`)
-- `theme-bull-off` (`themes.bullOff`)
+- 15 Animationen und Komfortfunktionen
+- 5 Themes
 
-Gemeinsame Theme-Bausteine liegen unter `src/features/themes/shared`.
+Themes sind als normale Feature-Module unter `src/features/themes/*` umgesetzt:
+
+- `theme-x01` mit `themes.x01`
+- `theme-shanghai` mit `themes.shanghai`
+- `theme-bermuda` mit `themes.bermuda`
+- `theme-cricket` mit `themes.cricket`
+- `theme-bull-off` mit `themes.bullOff`
+
+Gemeinsame Theme-Logik liegt in `src/features/themes/shared`.
+
+## AD xConfig-Oberfläche
+
+Die zentrale Oberfläche ist kein normales Endnutzer-Feature aus der Registry, sondern eine Runtime-Shell unter `src/runtime`.
+
+Sie übernimmt:
+
+- das einmalige Einfügen des Menüeintrags `AD xConfig`
+- das routenbasierte Anzeigen des Panels unter `/ad-xconfig`
+- das Rendern von Tabs für `Themen` und `Animationen`
+- das Speichern von Feature- und Theme-Einstellungen über `window.__adXConfig`
+
+Für Stabilität nutzt die Shell ausschließlich die vorhandenen Registries und DOM-Guards:
+
+- keine direkten doppelten Listener
+- keine unkontrollierten zusätzlichen MutationObserver
+- idempotente DOM-Injektion
 
 ## Konfiguration
 
-Bestehende Feature-Keys bleiben erhalten.  
-Theme-Konfiguration ist strikt verschachtelt:
+Die Feature-Konfiguration bleibt kompatibel zum bestehenden Runtime-Modell.
 
-- `features.themes.x01`
-- `features.themes.shanghai`
-- `features.themes.bermuda`
-- `features.themes.cricket`
-- `features.themes.bullOff`
+Wichtige Pfade:
 
-`featureToggles` nutzt weiterhin Feature-Keys (inkl. dotted keys wie `themes.x01`).
+- klassische Features unter `features.<featureKey>`
+- Theme-Features unter `features.themes.<themeKey>`
+- Aktivierungsstatus zusätzlich über `featureToggles`, auch für dotted keys wie `themes.x01`
+
+Theme-Hintergründe werden pro Theme als Data-URL gespeichert.
+
+## Asset-Strategie
+
+PNG- und MP3-Dateien werden über einen gemeinsamen Alias aufgelöst:
+
+- Browser-Build: `src/shared/feature-assets.browser.js`
+- Node/Test-Umgebung: `src/shared/feature-assets.node.js`
+
+Dadurch bleiben der Userscript-Build und die Runtime mit echten Assets intakt, während Tests unter Node keine Binärimporte direkt laden müssen.
 
 ## Public API
 
-Namespace: `window.__adXConfig`
+Die öffentliche Oberfläche bleibt auf `window.__adXConfig` begrenzt.
 
-Kernmethoden:
+Verfügbar sind:
 
 - `getConfig()`
 - `saveConfig(partialConfig)`
 - `resetConfig()`
 - `setFeatureEnabled(featureRef, enabled)`
 - `listFeatures()`
-
-Theme-spezifisch:
-
 - `setThemeBackgroundImage(themeKey, dataUrl)`
 - `clearThemeBackgroundImage(themeKey)`
 
-## Test- und Build-Workflow
+## Build und Tests
+
+Kanonischer Ablauf:
 
 ```bash
 npm install
@@ -81,4 +112,4 @@ Optional:
 npm run verify
 ```
 
-Das gebaute Userscript liegt in `dist/autodarts-xconfig.user.js`.
+Das gebaute Userscript liegt in `dist/autodarts-xconfig.user.js` und enthält den vollständigen Tampermonkey-Header mit `@match https://play.autodarts.io/*` und `@grant none`.

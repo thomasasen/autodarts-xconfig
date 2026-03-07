@@ -1,3 +1,27 @@
+class FakeEvent {
+  constructor(type, options = {}) {
+    this.type = String(type || "");
+    this.bubbles = options.bubbles !== false;
+    this.cancelable = options.cancelable !== false;
+    this.defaultPrevented = false;
+    this.key = String(options.key || "");
+    this.detail = options.detail;
+    this.target = options.target || null;
+    this.currentTarget = null;
+    this._stopped = false;
+  }
+
+  preventDefault() {
+    if (this.cancelable) {
+      this.defaultPrevented = true;
+    }
+  }
+
+  stopPropagation() {
+    this._stopped = true;
+  }
+}
+
 class FakeClassList {
   constructor(initial = []) {
     this._set = new Set(initial);
@@ -31,16 +55,21 @@ class FakeClassList {
       this._set.delete(className);
       return false;
     }
+
     this._set.add(className);
     return true;
   }
 
   contains(className) {
-    return this._set.has(className);
+    return this._set.has(String(className));
   }
 
   toArray() {
     return Array.from(this._set.values());
+  }
+
+  toString() {
+    return this.toArray().join(" ");
   }
 }
 
@@ -62,9 +91,91 @@ class FakeStyleDecl {
   }
 }
 
-class FakeElement {
+class FakeEventTarget {
+  constructor() {
+    this._listeners = [];
+  }
+
+  addEventListener(type, handler, options) {
+    this._listeners.push({
+      type: String(type || ""),
+      handler,
+      options,
+    });
+  }
+
+  removeEventListener(type, handler, options) {
+    const normalizedType = String(type || "");
+    this._listeners = this._listeners.filter((record) => {
+      return !(
+        record.type === normalizedType &&
+        record.handler === handler &&
+        record.options === options
+      );
+    });
+  }
+
+  dispatchEvent(eventLike) {
+    const event =
+      eventLike instanceof FakeEvent
+        ? eventLike
+        : new FakeEvent(eventLike?.type || "", eventLike || {});
+
+    if (!event.target) {
+      event.target = this;
+    }
+    event.currentTarget = this;
+
+    const listeners = this._listeners.slice();
+    listeners.forEach((record) => {
+      if (record.type !== event.type || typeof record.handler !== "function") {
+        return;
+      }
+
+      record.handler.call(this, event);
+
+      if (record.options && typeof record.options === "object" && record.options.once) {
+        this.removeEventListener(record.type, record.handler, record.options);
+      }
+    });
+
+    return !event.defaultPrevented;
+  }
+
+  listenerCount() {
+    return this._listeners.length;
+  }
+}
+
+function isObjectLike(value) {
+  return Boolean(value) && typeof value === "object";
+}
+
+function splitSelectorList(selector) {
+  return String(selector || "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function splitSelectorChain(selector) {
+  return String(selector || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function normalizeDatasetKey(attrName) {
+  return String(attrName || "")
+    .replace(/^data-/, "")
+    .replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
+}
+
+class FakeElement extends FakeEventTarget {
   constructor(tagName = "div") {
+    super();
     this.tagName = String(tagName || "div").toUpperCase();
+    this.nodeType = 1;
     this.id = "";
     this.textContent = "";
     this.classList = new FakeClassList();
@@ -72,11 +183,26 @@ class FakeElement {
     this.parentNode = null;
     this.children = [];
     this.dataset = {};
+    this.attributes = new Map();
+    this.ownerDocument = null;
+    this.value = "";
+    this.checked = false;
+    this.disabled = false;
+    this.href = "";
+    this.role = "";
+    this.type = "";
+    this.title = "";
+    this.tabIndex = 0;
+    this.__rect = { width: 240, height: 48 };
   }
 
   appendChild(child) {
     if (!child) {
       return child;
+    }
+
+    if (child.parentNode && child.parentNode !== this) {
+      child.parentNode.removeChild(child);
     }
 
     if (!child.ownerDocument && this.ownerDocument) {
@@ -88,6 +214,53 @@ class FakeElement {
     return child;
   }
 
+  insertBefore(child, referenceNode) {
+    if (!child) {
+      return child;
+    }
+
+    if (!referenceNode || referenceNode.parentNode !== this) {
+      return this.appendChild(child);
+    }
+
+    if (child.parentNode && child.parentNode !== this) {
+      child.parentNode.removeChild(child);
+    }
+
+    if (!child.ownerDocument && this.ownerDocument) {
+      child.ownerDocument = this.ownerDocument;
+    }
+
+    const index = this.children.indexOf(referenceNode);
+    if (index < 0) {
+      return this.appendChild(child);
+    }
+
+    child.parentNode = this;
+    this.children.splice(index, 0, child);
+    return child;
+  }
+
+  insertAdjacentElement(position, element) {
+    if (!element || !this.parentNode) {
+      return element;
+    }
+
+    if (position === "afterend") {
+      return this.parentNode.insertBefore(element, this.nextElementSibling);
+    }
+
+    if (position === "beforebegin") {
+      return this.parentNode.insertBefore(element, this);
+    }
+
+    if (position === "afterbegin") {
+      return this.insertBefore(element, this.firstElementChild);
+    }
+
+    return this.appendChild(element);
+  }
+
   removeChild(child) {
     const index = this.children.indexOf(child);
     if (index >= 0) {
@@ -97,48 +270,125 @@ class FakeElement {
     return child;
   }
 
+  remove() {
+    if (this.parentNode) {
+      this.parentNode.removeChild(this);
+    }
+  }
+
+  replaceChildren(...nodes) {
+    this.children.slice().forEach((child) => {
+      this.removeChild(child);
+    });
+    nodes.flat().forEach((node) => {
+      if (node) {
+        this.appendChild(node);
+      }
+    });
+  }
+
+  cloneNode(deep = false) {
+    const clone = new FakeElement(this.tagName);
+    clone.id = this.id;
+    clone.textContent = this.textContent;
+    clone.classList = new FakeClassList(this.classList.toArray());
+    clone.style = this.style;
+    clone.value = this.value;
+    clone.checked = this.checked;
+    clone.disabled = this.disabled;
+    clone.href = this.href;
+    clone.role = this.role;
+    clone.type = this.type;
+    clone.title = this.title;
+    clone.tabIndex = this.tabIndex;
+    clone.dataset = { ...this.dataset };
+    clone.attributes = new Map(this.attributes);
+    clone.ownerDocument = this.ownerDocument;
+    clone.__rect = { ...this.__rect };
+
+    if (deep) {
+      this.children.forEach((child) => {
+        clone.appendChild(child.cloneNode(true));
+      });
+    }
+
+    return clone;
+  }
+
   setAttribute(name, value) {
-    if (name === "id") {
-      this.id = String(value);
+    const normalizedName = String(name || "");
+    const normalizedValue = String(value);
+
+    if (normalizedName === "id") {
+      this.id = normalizedValue;
       return;
     }
 
-    if (name === "class") {
+    if (normalizedName === "class") {
       this.classList = new FakeClassList(
-        String(value)
+        normalizedValue
           .split(/\s+/)
           .filter(Boolean)
       );
       return;
     }
 
-    this[name] = String(value);
+    if (normalizedName.startsWith("data-")) {
+      this.dataset[normalizeDatasetKey(normalizedName)] = normalizedValue;
+    }
+
+    this.attributes.set(normalizedName, normalizedValue);
+    this[normalizedName] = normalizedValue;
   }
 
   getAttribute(name) {
-    if (name === "id") {
+    const normalizedName = String(name || "");
+
+    if (normalizedName === "id") {
       return this.id;
     }
-    if (name === "class") {
-      return this.classList.toArray().join(" ");
+    if (normalizedName === "class") {
+      return this.classList.toString();
     }
-    return this[name] || "";
+    if (normalizedName.startsWith("data-")) {
+      return this.dataset[normalizeDatasetKey(normalizedName)] || "";
+    }
+
+    if (this.attributes.has(normalizedName)) {
+      return this.attributes.get(normalizedName) || "";
+    }
+
+    return this[normalizedName] || "";
   }
 
   removeAttribute(name) {
-    if (name === "id") {
+    const normalizedName = String(name || "");
+
+    if (normalizedName === "id") {
       this.id = "";
       return;
     }
-    if (name === "class") {
+    if (normalizedName === "class") {
       this.classList = new FakeClassList();
       return;
     }
-    delete this[name];
+    if (normalizedName.startsWith("data-")) {
+      delete this.dataset[normalizeDatasetKey(normalizedName)];
+    }
+
+    this.attributes.delete(normalizedName);
+    delete this[normalizedName];
   }
 
-  get firstChild() {
-    return this.children.length ? this.children[0] : null;
+  contains(node) {
+    let current = node;
+    while (current) {
+      if (current === this) {
+        return true;
+      }
+      current = current.parentNode || null;
+    }
+    return false;
   }
 
   querySelector(selector) {
@@ -147,18 +397,13 @@ class FakeElement {
   }
 
   querySelectorAll(selector) {
-    const normalized = String(selector || "").trim();
-    if (!normalized) {
+    const selectors = splitSelectorList(selector);
+    if (!selectors.length) {
       return [];
     }
 
-    const selectors = normalized
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-
+    const results = [];
     const seen = new Set();
-    const matches = [];
     const stack = [...this.children];
 
     while (stack.length) {
@@ -167,10 +412,10 @@ class FakeElement {
         continue;
       }
 
-      const hit = selectors.some((entry) => matchesSelector(node, entry));
-      if (hit && !seen.has(node)) {
+      const matches = selectors.some((entry) => matchesSelector(node, entry));
+      if (matches && !seen.has(node)) {
         seen.add(node);
-        matches.push(node);
+        results.push(node);
       }
 
       if (Array.isArray(node.children) && node.children.length) {
@@ -178,39 +423,107 @@ class FakeElement {
       }
     }
 
-    return matches;
+    return results;
+  }
+
+  closest(selector) {
+    let current = this;
+    while (current) {
+      if (matchesSelector(current, selector)) {
+        return current;
+      }
+      current = current.parentNode || null;
+    }
+    return null;
   }
 
   matches(selector) {
     return matchesSelector(this, selector);
   }
 
+  click() {
+    this.dispatchEvent(new FakeEvent("click", { bubbles: true, target: this }));
+  }
+
+  getBoundingClientRect() {
+    return {
+      width: Number(this.__rect.width || 0),
+      height: Number(this.__rect.height || 0),
+      top: 0,
+      left: 0,
+      right: Number(this.__rect.width || 0),
+      bottom: Number(this.__rect.height || 0),
+    };
+  }
+
   getClientRects() {
-    return [1];
-  }
-}
-
-class FakeEventTarget {
-  constructor() {
-    this._listeners = [];
+    return [this.getBoundingClientRect()];
   }
 
-  addEventListener(type, handler, options) {
-    this._listeners.push({ type, handler, options });
+  dispatchEvent(eventLike) {
+    const event =
+      eventLike instanceof FakeEvent
+        ? eventLike
+        : new FakeEvent(eventLike?.type || "", eventLike || {});
+
+    if (!event.target) {
+      event.target = this;
+    }
+
+    let current = this;
+    while (current) {
+      FakeEventTarget.prototype.dispatchEvent.call(current, event);
+      if (!event.bubbles || event._stopped) {
+        break;
+      }
+      current = current.parentNode || null;
+    }
+
+    if (event.bubbles && !event._stopped && this.ownerDocument && current !== this.ownerDocument) {
+      FakeEventTarget.prototype.dispatchEvent.call(this.ownerDocument, event);
+    }
+
+    return !event.defaultPrevented;
   }
 
-  removeEventListener(type, handler, options) {
-    this._listeners = this._listeners.filter((record) => {
-      return !(
-        record.type === type &&
-        record.handler === handler &&
-        record.options === options
-      );
-    });
+  get parentElement() {
+    return this.parentNode instanceof FakeElement ? this.parentNode : null;
   }
 
-  listenerCount() {
-    return this._listeners.length;
+  get firstChild() {
+    return this.children.length ? this.children[0] : null;
+  }
+
+  get firstElementChild() {
+    return this.firstChild;
+  }
+
+  get lastElementChild() {
+    return this.children.length ? this.children[this.children.length - 1] : null;
+  }
+
+  get previousElementSibling() {
+    if (!this.parentNode) {
+      return null;
+    }
+
+    const index = this.parentNode.children.indexOf(this);
+    return index > 0 ? this.parentNode.children[index - 1] : null;
+  }
+
+  get nextElementSibling() {
+    if (!this.parentNode) {
+      return null;
+    }
+
+    const index = this.parentNode.children.indexOf(this);
+    return index >= 0 && index < this.parentNode.children.length - 1
+      ? this.parentNode.children[index + 1]
+      : null;
+  }
+
+  get isConnected() {
+    return Boolean(this.ownerDocument?.documentElement?.contains(this));
   }
 }
 
@@ -223,6 +536,10 @@ class FakeMutationObserver {
 
   observe(target, options) {
     this.observeCalls.push({ target, options });
+    const documentRef = target?.ownerDocument || target;
+    if (documentRef && Array.isArray(documentRef.__mutationObservers)) {
+      documentRef.__mutationObservers.push(this);
+    }
   }
 
   disconnect() {
@@ -263,18 +580,67 @@ class FakeStorage {
   }
 }
 
+function createSidebarLink(documentRef, href, label) {
+  const link = documentRef.createElement("a");
+  link.href = href;
+  link.textContent = label;
+  link.setAttribute("href", href);
+  link.classList.add("chakra-link");
+  return link;
+}
+
 class FakeDocument extends FakeEventTarget {
   constructor() {
     super();
+
+    this.nodeType = 9;
+    this.hidden = false;
+    this.visibilityState = "visible";
+    this.__mutationObservers = [];
+
     this.head = new FakeElement("head");
     this.head.ownerDocument = this;
+
     this.documentElement = new FakeElement("html");
     this.documentElement.ownerDocument = this;
+
     this.body = new FakeElement("body");
     this.body.ownerDocument = this;
 
     this.documentElement.appendChild(this.head);
     this.documentElement.appendChild(this.body);
+
+    this.rootElement = new FakeElement("div");
+    this.rootElement.ownerDocument = this;
+    this.rootElement.id = "root";
+
+    this.layoutShell = new FakeElement("div");
+    this.layoutShell.ownerDocument = this;
+
+    this.sidebar = new FakeElement("nav");
+    this.sidebar.ownerDocument = this;
+    this.sidebar.classList.add("navigation");
+    this.sidebar.setAttribute("role", "navigation");
+    this.sidebar.__rect = { width: 260, height: 720 };
+
+    [
+      ["/lobbies", "Lobbies"],
+      ["/boards", "Boards"],
+      ["/matches", "Matches"],
+      ["/statistics", "Statistik"],
+      ["/settings", "Settings"],
+    ].forEach(([href, label]) => {
+      this.sidebar.appendChild(createSidebarLink(this, href, label));
+    });
+
+    this.main = new FakeElement("main");
+    this.main.ownerDocument = this;
+    this.main.__rect = { width: 1280, height: 720 };
+
+    this.layoutShell.appendChild(this.sidebar);
+    this.layoutShell.appendChild(this.main);
+    this.rootElement.appendChild(this.layoutShell);
+    this.body.appendChild(this.rootElement);
 
     this.variantElement = new FakeElement("div");
     this.variantElement.ownerDocument = this;
@@ -298,6 +664,7 @@ class FakeDocument extends FakeEventTarget {
     this.throwRow = new FakeElement("div");
     this.throwRow.ownerDocument = this;
     this.throwRow.classList.add("ad-ext-turn-throw");
+
     this.throwTextElement = new FakeElement("p");
     this.throwTextElement.ownerDocument = this;
     this.throwTextElement.classList.add("chakra-text");
@@ -318,14 +685,12 @@ class FakeDocument extends FakeEventTarget {
     this.winnerNode.ownerDocument = this;
     this.winnerNode.classList.add("ad-ext-player");
 
-    this.scoreElements = [this.activeScoreElement];
-
-    this.body.appendChild(this.variantElement);
-    this.body.appendChild(this.suggestionElement);
-    this.body.appendChild(this.activePlayerRow);
-    this.body.appendChild(this.turnContainer);
-    this.body.appendChild(this.turnPointsElement);
-    this.body.appendChild(this.winnerNode);
+    this.main.appendChild(this.variantElement);
+    this.main.appendChild(this.suggestionElement);
+    this.main.appendChild(this.activePlayerRow);
+    this.main.appendChild(this.turnContainer);
+    this.main.appendChild(this.turnPointsElement);
+    this.main.appendChild(this.winnerNode);
   }
 
   createElement(tagName) {
@@ -335,17 +700,13 @@ class FakeDocument extends FakeEventTarget {
   }
 
   createElementNS(_namespace, tagName) {
-    const node = new FakeElement(tagName);
-    node.ownerDocument = this;
-    return node;
+    return this.createElement(tagName);
   }
 
   getElementById(id) {
-    if (id === "ad-ext-game-variant") {
-      return this.variantElement;
-    }
-    if (id === "ad-ext-turn") {
-      return this.turnContainer;
+    const normalizedId = String(id || "");
+    if (!normalizedId) {
+      return null;
     }
 
     const stack = [this.documentElement];
@@ -354,7 +715,7 @@ class FakeDocument extends FakeEventTarget {
       if (!node) {
         continue;
       }
-      if (node.id === id) {
+      if (node.id === normalizedId) {
         return node;
       }
       if (Array.isArray(node.children) && node.children.length) {
@@ -371,160 +732,213 @@ class FakeDocument extends FakeEventTarget {
   }
 
   querySelectorAll(selector) {
-    const normalized = String(selector || "").trim();
-    if (!normalized) {
-      return [];
-    }
+    return this.documentElement.querySelectorAll(selector);
+  }
 
-    if (normalized.includes(",")) {
-      const results = [];
-      const seen = new Set();
-      normalized
-        .split(",")
-        .map((entry) => entry.trim())
-        .filter(Boolean)
-        .forEach((entry) => {
-          this.querySelectorAll(entry).forEach((node) => {
-            if (seen.has(node)) {
-              return;
-            }
-            seen.add(node);
-            results.push(node);
-          });
-        });
-      return results;
-    }
+  flushMutations(records = []) {
+    const mutationRecords = Array.isArray(records) && records.length
+      ? records
+      : [{ target: this.rootElement, addedNodes: [], removedNodes: [] }];
 
-    if (normalized === ".suggestion") {
-      return this.suggestionElement ? [this.suggestionElement] : [];
-    }
-
-    if (normalized === "p.ad-ext-player-score") {
-      return this.scoreElements.slice();
-    }
-
-    if (
-      normalized === ".ad-ext-player-active" ||
-      normalized === ".ad-ext-player.ad-ext-player-active"
-    ) {
-      return this.activePlayerRow ? [this.activePlayerRow] : [];
-    }
-
-    if (
-      normalized.includes(".ad-ext-player-active p.ad-ext-player-score") ||
-      normalized.includes(".ad-ext-player.ad-ext-player-active p.ad-ext-player-score")
-    ) {
-      return this.scoreElements.slice();
-    }
-
-    if (normalized === ".ad-ext-turn-throw") {
-      return this.throwRow ? [this.throwRow] : [];
-    }
-
-    if (normalized === ".ad-ext-turn-throw p" || normalized === ".ad-ext-turn-throw p.chakra-text") {
-      return this.throwTextElement ? [this.throwTextElement] : [];
-    }
-
-    if (normalized === "p.ad-ext-turn-points") {
-      return this.turnPointsElement ? [this.turnPointsElement] : [];
-    }
-
-    if (
-      normalized === ".ad-ext_winner-animation" ||
-      normalized === ".ad-ext-player-winner" ||
-      normalized === ".ad-ext-player.ad-ext-player-winner"
-    ) {
-      const isWinner =
-        this.winnerNode &&
-        this.winnerNode.classList.contains("ad-ext-player-winner");
-      return isWinner ? [this.winnerNode] : [];
-    }
-
-    if (normalized.startsWith("#")) {
-      const found = this.getElementById(normalized.slice(1));
-      return found ? [found] : [];
-    }
-
-    return [];
+    this.__mutationObservers
+      .filter((observer) => observer && !observer.disconnected && typeof observer.callback === "function")
+      .forEach((observer) => observer.callback(mutationRecords));
   }
 }
 
-function matchesSelector(node, selector) {
-  if (!node || !selector) {
+function matchAttribute(node, rawAttribute) {
+  const trimmed = String(rawAttribute || "").trim();
+  if (!trimmed) {
     return false;
   }
 
-  const normalized = String(selector).trim();
+  const match = trimmed.match(/^([a-zA-Z0-9:_-]+)(?:=(['"]?)(.*?)\2)?$/);
+  if (!match) {
+    return false;
+  }
+
+  const attrName = match[1];
+  const expectedValue = typeof match[3] === "string" ? match[3] : null;
+  const actualValue = node.getAttribute(attrName);
+
+  if (expectedValue === null) {
+    return Boolean(actualValue);
+  }
+
+  return String(actualValue || "") === expectedValue;
+}
+
+function matchSimpleSelector(node, selector) {
+  if (!(node instanceof FakeElement)) {
+    return false;
+  }
+
+  const normalized = String(selector || "").trim();
   if (!normalized) {
     return false;
   }
 
-  if (normalized.startsWith("#")) {
-    return node.id === normalized.slice(1);
-  }
-
-  if (normalized.startsWith(".")) {
-    const classes = normalized
-      .split(".")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-    return classes.every((className) => node.classList?.contains(className));
-  }
-
-  const tagAndClassMatch = normalized.match(/^([a-zA-Z0-9_-]+)(\.[a-zA-Z0-9_.-]+)?$/);
-  if (tagAndClassMatch) {
-    const tagName = String(tagAndClassMatch[1] || "").toUpperCase();
+  let remainder = normalized;
+  const tagMatch = remainder.match(/^[a-zA-Z0-9_-]+/);
+  if (tagMatch) {
+    const tagName = String(tagMatch[0] || "").toUpperCase();
     if (tagName && node.tagName !== tagName) {
       return false;
     }
+    remainder = remainder.slice(tagMatch[0].length);
+  }
 
-    const classChunk = String(tagAndClassMatch[2] || "").trim();
-    if (!classChunk) {
-      return true;
+  const idMatches = remainder.match(/#[a-zA-Z0-9_-]+/g) || [];
+  if (idMatches.length && !idMatches.every((entry) => node.id === entry.slice(1))) {
+    return false;
+  }
+
+  const classMatches = remainder.match(/\.[a-zA-Z0-9_-]+/g) || [];
+  if (classMatches.length) {
+    const allClassesPresent = classMatches.every((entry) =>
+      node.classList.contains(entry.slice(1))
+    );
+    if (!allClassesPresent) {
+      return false;
+    }
+  }
+
+  const attributeMatches = remainder.match(/\[[^\]]+\]/g) || [];
+  if (attributeMatches.length) {
+    const allAttributesPresent = attributeMatches.every((entry) =>
+      matchAttribute(node, entry.slice(1, -1))
+    );
+    if (!allAttributesPresent) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function matchesSelector(node, selector) {
+  const chain = splitSelectorChain(selector);
+  if (!chain.length) {
+    return false;
+  }
+
+  let current = node;
+  for (let index = chain.length - 1; index >= 0; index -= 1) {
+    const part = chain[index];
+    if (!current || !matchSimpleSelector(current, part)) {
+      if (index === chain.length - 1) {
+        return false;
+      }
+
+      current = current?.parentNode || null;
+      while (current && !matchSimpleSelector(current, part)) {
+        current = current.parentNode || null;
+      }
+
+      if (!current) {
+        return false;
+      }
     }
 
-    const classes = classChunk
-      .split(".")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-    return classes.every((className) => node.classList?.contains(className));
+    if (index > 0) {
+      current = current.parentNode || null;
+    }
   }
 
-  const attrMatch = normalized.match(/^\[([a-zA-Z0-9_-]+)\]$/);
-  if (attrMatch) {
-    const attrName = attrMatch[1];
-    return Boolean(node[attrName]) || Boolean(node.dataset?.[attrName]);
+  return true;
+}
+
+function createLocation(initialHref = "https://play.autodarts.io/lobbies") {
+  const parsed = new URL(initialHref);
+  return {
+    origin: parsed.origin,
+    pathname: parsed.pathname,
+    search: parsed.search,
+    hash: parsed.hash,
+    get href() {
+      return `${this.origin}${this.pathname}${this.search}${this.hash}`;
+    },
+  };
+}
+
+function updateLocation(locationRef, url) {
+  if (!locationRef || !url) {
+    return;
   }
 
-  return false;
+  const parsed = new URL(String(url), locationRef.origin || "https://play.autodarts.io");
+  locationRef.pathname = parsed.pathname;
+  locationRef.search = parsed.search;
+  locationRef.hash = parsed.hash;
 }
 
 function createFakeWindow(options = {}) {
   const documentRef = options.documentRef || new FakeDocument();
   const eventTarget = new FakeEventTarget();
+  const location = createLocation(options.href || "https://play.autodarts.io/lobbies");
 
-  return {
+  const history = {
+    pushState(_state, _title, url) {
+      updateLocation(location, url);
+    },
+    replaceState(_state, _title, url) {
+      updateLocation(location, url);
+    },
+  };
+
+  const windowRef = {
     document: documentRef,
+    history,
+    location,
     localStorage: options.localStorage || new FakeStorage(),
     MutationObserver: FakeMutationObserver,
     MessageEvent: FakeMessageEvent,
     WebSocket: FakeWebSocket,
+    Event: FakeEvent,
+    CustomEvent: class extends FakeEvent {
+      constructor(type, eventOptions = {}) {
+        super(type, eventOptions);
+      }
+    },
+    Element: FakeElement,
+    HTMLElement: FakeElement,
+    HTMLAnchorElement: FakeElement,
+    HTMLInputElement: FakeElement,
+    HTMLSelectElement: FakeElement,
+    Node: FakeElement,
     requestAnimationFrame(callback) {
       return setTimeout(callback, 0);
     },
     cancelAnimationFrame(handle) {
       clearTimeout(handle);
     },
+    setTimeout(callback, ms, ...args) {
+      return setTimeout(callback, ms, ...args);
+    },
+    clearTimeout(handle) {
+      clearTimeout(handle);
+    },
+    setInterval(callback, ms, ...args) {
+      return setInterval(callback, ms, ...args);
+    },
+    clearInterval(handle) {
+      clearInterval(handle);
+    },
     addEventListener: eventTarget.addEventListener.bind(eventTarget),
     removeEventListener: eventTarget.removeEventListener.bind(eventTarget),
+    dispatchEvent: eventTarget.dispatchEvent.bind(eventTarget),
     __eventTarget: eventTarget,
   };
+
+  documentRef.defaultView = windowRef;
+  return windowRef;
 }
 
 export {
   FakeClassList,
   FakeDocument,
   FakeElement,
+  FakeEvent,
   FakeEventTarget,
   FakeMessageEvent,
   FakeMutationObserver,

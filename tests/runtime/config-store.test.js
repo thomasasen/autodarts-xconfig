@@ -51,7 +51,7 @@ test("config store saves, updates, and resets persisted config", async () => {
   assert.equal(reset.featureToggles.checkoutScorePulse, true);
 });
 
-test("config store imports only compatible checkout pulse settings from legacy config once", async () => {
+test("config store imports migrated legacy feature and theme settings once without overwriting later config", async () => {
   const localStorage = new FakeStorage({
     [LEGACY_CONFIG_STORAGE_KEY]: JSON.stringify({
       features: {
@@ -65,9 +65,27 @@ test("config store imports only compatible checkout pulse settings from legacy c
             DEBUG: true,
           },
         },
-      },
-      ui: {
-        activeTab: "animations",
+        "a-winner-fireworks": {
+          enabled: true,
+          settings: {
+            STYLE: "cannon",
+            FARBE: "gold",
+            INTENSITAET: "stark",
+            BULLOUT_AKTIV: false,
+            KLICK_ZUM_STOPPEN: false,
+            DEBUG: true,
+          },
+        },
+        "theme-x01": {
+          enabled: true,
+          settings: {
+            AVG_ANZEIGE: false,
+            HINTERGRUND_DARSTELLUNG: "fit",
+            HINTERGRUND_OPAZITAET: 40,
+            SPIELERFELD_TRANSPARENZ: 30,
+            DEBUG: true,
+          },
+        },
       },
     }),
   });
@@ -84,11 +102,25 @@ test("config store imports only compatible checkout pulse settings from legacy c
   assert.equal(importedConfig.features.checkoutScorePulse.intensity, "stark");
   assert.equal(importedConfig.features.checkoutScorePulse.triggerSource, "score-only");
   assert.equal(importedConfig.features.checkoutScorePulse.debug, true);
+  assert.equal(importedConfig.featureToggles.winnerFireworks, true);
+  assert.equal(importedConfig.features.winnerFireworks.style, "cannon");
+  assert.equal(importedConfig.features.winnerFireworks.colorTheme, "gold");
+  assert.equal(importedConfig.features.winnerFireworks.intensity, "stark");
+  assert.equal(importedConfig.features.winnerFireworks.includeBullOut, false);
+  assert.equal(importedConfig.features.winnerFireworks.pointerDismiss, false);
+  assert.equal(importedConfig.features.winnerFireworks.debug, true);
+  assert.equal(importedConfig.featureToggles["themes.x01"], true);
+  assert.equal(importedConfig.features.themes.x01.enabled, true);
+  assert.equal(importedConfig.features.themes.x01.showAvg, false);
+  assert.equal(importedConfig.features.themes.x01.backgroundDisplayMode, "fit");
+  assert.equal(importedConfig.features.themes.x01.backgroundOpacity, 40);
+  assert.equal(importedConfig.features.themes.x01.playerFieldTransparency, 30);
+  assert.equal(importedConfig.features.themes.x01.debug, true);
   assert.equal(localStorage.getItem(LEGACY_IMPORT_FLAG_KEY), "true");
 
   const secondRun = await store.importLegacyConfigIfAvailable();
   assert.equal(secondRun.imported, false);
-  assert.equal(secondRun.reason, "already-imported");
+  assert.equal(secondRun.reason, "existing-current-config");
 });
 
 test("config store prefers GM storage when available and falls back safely", async () => {
