@@ -8,6 +8,7 @@ Abschluss der UI/UX-Parität für die bestehende Bundle-Architektur ohne Rückke
 
 - Sidebar-Menüeintrag `AD xConfig` auf Template-Klon umgestellt, Position direkt nach `Boards`-ähnlichem Menüpunkt.
 - Menü- und Panel-Injektion idempotent gehalten (Mutation/Re-Render/Start-Stop-Zyklen).
+- Observer-Feedbackschleife beseitigt: interne Mutationen im xConfig-Host/Menü triggern keinen Re-Render mehr.
 - Label-Kollaps bei schmaler Sidebar ergänzt.
 - xConfig-Shell auf dunkles, Legacy-nahes Kartenlayout umgestellt.
 - Tabs `Themen` / `Animationen` mit klarer Hierarchie und verbessertem Click-Target.

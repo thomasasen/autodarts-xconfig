@@ -51,6 +51,7 @@ const styleText = `
 #${PANEL_HOST_ID}{display:none;width:100%;position:relative;z-index:2147480000}
 #${PANEL_HOST_ID} .ad-xconfig-page{margin:0 auto;width:100%;padding:1rem;color:#fff;font-family:"Open Sans","Segoe UI",Tahoma,sans-serif}
 #${PANEL_HOST_ID} .ad-xconfig-shell{max-width:1366px;margin:0 auto;padding:1rem;border-radius:14px;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 30px rgba(0,0,0,.28);background:rgba(25,32,71,.95);background-image:radial-gradient(50% 30% at 86% 0%,rgba(49,51,112,.89) 0%,rgba(64,52,134,0) 100%),radial-gradient(50% 70% at 70% 22%,rgba(38,89,154,.9) 0%,rgba(64,52,134,0) 100%),radial-gradient(50% 70% at -2% 53%,rgba(52,32,95,.89) 0%,rgba(64,52,134,0) 100%),radial-gradient(50% 40% at 66% 59%,rgba(32,111,185,.87) 7%,rgba(32,111,185,0) 100%)}
+#${PANEL_HOST_ID} .ad-xconfig-shell,#${PANEL_HOST_ID} .ad-xconfig-shell *{pointer-events:auto}
 #${PANEL_HOST_ID} .ad-xconfig-header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-header-main{display:flex;align-items:center;gap:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-title{margin:0;font-size:1.65rem;line-height:1.2}
@@ -348,6 +349,19 @@ function sortFeatures(left, right) {
 
 function menuIconMarkup() {
   return "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M3 6.5A1.5 1.5 0 0 1 4.5 5h10A1.5 1.5 0 0 1 16 6.5v1A1.5 1.5 0 0 1 14.5 9h-10A1.5 1.5 0 0 1 3 7.5zm0 10A1.5 1.5 0 0 1 4.5 15h6A1.5 1.5 0 0 1 12 16.5v1a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 17.5zM18 4a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0 10a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3\"/></svg>";
+}
+
+function buildMenuIconElement(documentRef, template) {
+  const icon = createElement(documentRef, "span");
+  const templateIcon =
+    template && typeof template.querySelector === "function"
+      ? template.querySelector(".chakra-button__icon")
+      : null;
+  icon.className = templateIcon?.className
+    ? `${templateIcon.className} ad-xconfig-menu-icon`
+    : "ad-xconfig-menu-icon";
+  icon.innerHTML = menuIconMarkup();
+  return icon;
 }
 
 function buildFeatureToggle(documentRef, feature) {
@@ -907,8 +921,12 @@ function ensureXConfigShell(options = {}) {
     }
 
     const sidebarLinks = Array.from(sidebar.querySelectorAll("a[href]"));
-    const insertionAnchor =
+    const boardsAnchor =
       sidebarLinks.find((link) => toRoutePathname(windowRef, link.getAttribute("href")) === "/boards") ||
+      sidebarLinks.find((link) => String(link.textContent || "").trim().toLowerCase() === "meine boards") ||
+      null;
+    const insertionAnchor =
+      boardsAnchor ||
       sidebarLinks.find((link) => SIDEBAR_ROUTE_HINTS.has(toRoutePathname(windowRef, link.getAttribute("href")))) ||
       null;
 
@@ -934,10 +952,7 @@ function ensureXConfigShell(options = {}) {
         item.setAttribute("type", "button");
       }
 
-      const icon = createElement(documentRef, "span", {
-        className: "ad-xconfig-menu-icon",
-      });
-      icon.innerHTML = menuIconMarkup();
+      const icon = buildMenuIconElement(documentRef, template);
       const label = createElement(documentRef, "span", {
         className: "ad-xconfig-menu-label",
         text: MENU_LABEL,
@@ -1033,6 +1048,46 @@ function ensureXConfigShell(options = {}) {
     });
   }
 
+  function isManagedNode(node) {
+    let current = node;
+    while (current) {
+      const nodeId = String(current.id || "");
+      if (nodeId === MENU_ITEM_ID || nodeId === PANEL_HOST_ID || nodeId === STYLE_ID) {
+        return true;
+      }
+      current = current.parentNode || null;
+    }
+    return false;
+  }
+
+  function hasExternalDomMutation(mutations = []) {
+    if (!Array.isArray(mutations) || !mutations.length) {
+      return true;
+    }
+
+    return mutations.some((mutation) => {
+      if (isManagedNode(mutation?.target || null)) {
+        return false;
+      }
+
+      const addedNodes =
+        mutation?.addedNodes && typeof mutation.addedNodes[Symbol.iterator] === "function"
+          ? Array.from(mutation.addedNodes)
+          : [];
+      const removedNodes =
+        mutation?.removedNodes && typeof mutation.removedNodes[Symbol.iterator] === "function"
+          ? Array.from(mutation.removedNodes)
+          : [];
+      const touchedNodes = [...addedNodes, ...removedNodes].filter(Boolean);
+
+      if (!touchedNodes.length) {
+        return true;
+      }
+
+      return touchedNodes.some((node) => !isManagedNode(node));
+    });
+  }
+
   function observeRoot() {
     const target =
       documentRef.getElementById?.("root") ||
@@ -1047,11 +1102,15 @@ function ensureXConfigShell(options = {}) {
     observerRegistry.registerMutationObserver({
       key: ROOT_OBSERVER_KEY,
       target,
-      callback: () => queueSync(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations)) {
+          return;
+        }
+        queueSync();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef.MutationObserver,
     });

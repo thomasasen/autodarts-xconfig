@@ -35,6 +35,11 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.ok(menuButton);
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   assert.equal(menuButton.getAttribute("data-adxconfig-action"), "open");
+  const boardsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
+    .find((link) => String(link.getAttribute("href") || "") === "/boards");
+  assert.ok(boardsLink);
+  assert.equal(boardsLink.nextElementSibling, menuButton);
+  assert.ok(menuButton.classList.contains("chakra-link"));
 
   menuButton.click();
   await wait(5);
@@ -54,6 +59,47 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(panelHost.style.display, "none");
   assert.equal(documentRef.variantElement.style.display, "");
+
+  runtime.stop();
+});
+
+test("xConfig observer ignores self-managed menu/panel mutations and only syncs for external changes", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  let rafCount = 0;
+  const nativeRaf = windowRef.requestAnimationFrame.bind(windowRef);
+  windowRef.requestAnimationFrame = (callback) => {
+    rafCount += 1;
+    return nativeRaf(callback);
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(8);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(8);
+
+  const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+  const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
+  assert.ok(panelHost);
+  assert.ok(menuButton);
+  assert.ok(panelHost.firstElementChild);
+
+  const baseline = rafCount;
+  documentRef.flushMutations([
+    { target: panelHost, addedNodes: [panelHost.firstElementChild], removedNodes: [] },
+    { target: menuButton, addedNodes: [menuButton.firstElementChild], removedNodes: [] },
+  ]);
+  await wait(8);
+  const afterManagedMutations = rafCount;
+  assert.ok(afterManagedMutations - baseline <= 1);
+
+  documentRef.flushMutations([
+    { target: documentRef.main, addedNodes: [documentRef.createElement("div")], removedNodes: [] },
+  ]);
+  await wait(8);
+  assert.ok(rafCount > afterManagedMutations);
 
   runtime.stop();
 });
