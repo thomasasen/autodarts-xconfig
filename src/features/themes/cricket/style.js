@@ -178,10 +178,12 @@ span.chakra-switch__track.css-v4l15v {
 .css-14xtjvc .css-tqsk66{
   height: 100% !important;
   min-height: 0 !important;
-  padding-bottom: 12px !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
+  padding: 0 0 8px 0 !important;
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  align-items: stretch !important;
+  justify-items: center !important;
+  row-gap: 8px !important;
 }
 
 .css-1kejrvi .css-7bjx6y,
@@ -192,12 +194,17 @@ span.chakra-switch__track.css-v4l15v {
   bottom: 0;
 }
 
-.css-1kejrvi svg[viewBox="0 0 1000 1000"],
-.css-14xtjvc svg[viewBox="0 0 1000 1000"]{
-  width: min(100%, 86vh) !important;
-  height: min(100%, 86vh) !important;
+.css-1kejrvi svg,
+.css-14xtjvc svg,
+.css-1kejrvi canvas,
+.css-14xtjvc canvas,
+.css-1kejrvi img,
+.css-14xtjvc img{
+  width: min(100%, calc(100dvh - 170px)) !important;
+  height: auto !important;
+  max-height: calc(100dvh - 170px) !important;
   max-width: 100%;
-  max-height: 100%;
+  object-fit: contain;
 }
 `;
 
