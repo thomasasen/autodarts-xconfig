@@ -11,6 +11,7 @@ import {
   createEmptyMarksByLabel,
   deriveTargetTransitions,
   diffMarksByLabel,
+  evaluateCricketWinState,
   evaluatePlayerTargetState,
   getCricketTargetBaseScore,
   getTargetOrderByGameMode,
@@ -358,4 +359,61 @@ test("deriveTargetTransitions exposes board presentation changes", () => {
   assert.equal(transitions.get("19")?.becamePressure, true);
   assert.equal(transitions.get("BULL")?.becameDead, true);
   assert.equal(transitions.get("BULL")?.becameClosed, false);
+});
+
+test("evaluateCricketWinState resolves standard, cut-throat and neutral winners", () => {
+  const standardWin = evaluateCricketWinState({
+    targetOrder: CRICKET_TARGET_ORDER,
+    scoringMode: "standard",
+    scoresByPlayer: [45, 30],
+    marksByLabel: {
+      "20": [3, 3],
+      "19": [3, 3],
+      "18": [3, 3],
+      "17": [3, 3],
+      "16": [3, 3],
+      "15": [3, 0],
+      BULL: [3, 3],
+    },
+  });
+  assert.equal(standardWin.hasWinner, true);
+  assert.deepEqual(standardWin.winnerIndexes, [0]);
+  assert.equal(standardWin.playerStates[0].allTargetsClosed, true);
+  assert.equal(standardWin.playerStates[1].allTargetsClosed, false);
+
+  const cutThroatWin = evaluateCricketWinState({
+    targetOrder: CRICKET_TARGET_ORDER,
+    scoringMode: "cut-throat",
+    scoresByPlayer: [75, 25],
+    marksByLabel: {
+      "20": [3, 3],
+      "19": [3, 3],
+      "18": [3, 3],
+      "17": [3, 3],
+      "16": [3, 3],
+      "15": [3, 3],
+      BULL: [3, 3],
+    },
+  });
+  assert.equal(cutThroatWin.hasWinner, true);
+  assert.deepEqual(cutThroatWin.winnerIndexes, [1]);
+  assert.equal(cutThroatWin.playerStates[1].leading, true);
+
+  const neutralTie = evaluateCricketWinState({
+    targetOrder: CRICKET_TARGET_ORDER,
+    scoringMode: "no-score",
+    scoresByPlayer: [100, 10],
+    marksByLabel: {
+      "20": [3, 3],
+      "19": [3, 3],
+      "18": [3, 3],
+      "17": [3, 3],
+      "16": [3, 3],
+      "15": [3, 3],
+      BULL: [3, 3],
+    },
+  });
+  assert.equal(neutralTie.hasWinner, true);
+  assert.equal(neutralTie.isTie, true);
+  assert.deepEqual(neutralTie.winnerIndexes, [0, 1]);
 });

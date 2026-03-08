@@ -22,10 +22,16 @@ function selectField(key, label, options = []) {
   });
 }
 
-function actionField(action, label) {
+function actionField(action, label, options = {}) {
   return Object.freeze({
     action,
     label,
+    actionId: String(options.actionId || "").trim(),
+    buttonLabel: String(options.buttonLabel || label).trim(),
+    description: String(options.description || "").trim(),
+    successMessage: String(options.successMessage || "").trim(),
+    errorMessage: String(options.errorMessage || "").trim(),
+    prominent: options.prominent === true,
     control: "action",
   });
 }
@@ -81,8 +87,13 @@ export const xconfigDescriptors = Object.freeze([
         PLAYER_FIELD_TRANSPARENCY_OPTIONS
       ),
       checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
     ],
   }),
   descriptorEntry({
@@ -100,8 +111,13 @@ export const xconfigDescriptors = Object.freeze([
         PLAYER_FIELD_TRANSPARENCY_OPTIONS
       ),
       checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
     ],
   }),
   descriptorEntry({
@@ -118,8 +134,13 @@ export const xconfigDescriptors = Object.freeze([
         PLAYER_FIELD_TRANSPARENCY_OPTIONS
       ),
       checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
     ],
   }),
   descriptorEntry({
@@ -137,8 +158,13 @@ export const xconfigDescriptors = Object.freeze([
         PLAYER_FIELD_TRANSPARENCY_OPTIONS
       ),
       checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
     ],
   }),
   descriptorEntry({
@@ -160,8 +186,13 @@ export const xconfigDescriptors = Object.freeze([
         PLAYER_FIELD_TRANSPARENCY_OPTIONS
       ),
       checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
     ],
   }),
   descriptorEntry({
@@ -432,7 +463,7 @@ export const xconfigDescriptors = Object.freeze([
         { value: "yellow", label: "Yellow" },
         { value: "yellowscull", label: "Yellow Scull" },
       ]),
-      checkboxField("animateDarts", "Dart Fluganimation"),
+      checkboxField("animateDarts", "Dart-Fluganimation"),
       selectField("sizePercent", "Dart-Größe", [
         { value: 90, label: "Klein" },
         { value: 100, label: "Standard" },
@@ -532,6 +563,15 @@ export const xconfigDescriptors = Object.freeze([
         { value: "standard", label: "Standard" },
         { value: "stark", label: "Stark" },
       ]),
+      actionField("run-feature-action", "Test-Button", {
+        actionId: "preview",
+        buttonLabel: "Effekt jetzt testen",
+        description:
+          "Startet die aktuelle Einstellung sofort als Vorschau, auch im geöffneten xConfig-Fenster.",
+        successMessage: "Vorschau gestartet.",
+        errorMessage: "Vorschau konnte nicht gestartet werden.",
+        prominent: true,
+      }),
       checkboxField("includeBullOut", "Bei Bull-Out aktiv"),
       checkboxField("pointerDismiss", "Klick beendet Effekt"),
       checkboxField("debug", "Debug"),

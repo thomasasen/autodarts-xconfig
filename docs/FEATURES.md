@@ -1,11 +1,11 @@
 # Feature-Übersicht
 
-Autodarts xConfig enthält 20 Module:
+`autodarts-xconfig` bündelt 20 Module in einem Userscript:
 
 - 15 Animationen und Komfortfunktionen
 - 5 Themes
 
-Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
+Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
 
 ![AD xConfig](screenshots/ad-xconfig.png)
 
@@ -14,7 +14,7 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 ### Theme X01
 
 - Gilt für: `X01`
-- Optionen: AVG, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
+- Optionen: AVG-Anzeige, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme X01 in AD xConfig](screenshots/template-theme-x01-xConfig.png)
 ![Theme X01 Vorschau Standard](screenshots/template-theme-x01-preview-standard-readme.png)
@@ -23,32 +23,32 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 ### Theme Shanghai
 
 - Gilt für: `Shanghai`
-- Optionen: AVG, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
+- Optionen: AVG-Anzeige, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Shanghai in AD xConfig](screenshots/template-theme-shanghai-xConfig.png)
 
 ### Theme Bermuda
 
-- Gilt für: `Bermuda` und Varianten mit Namenszusatz
+- Gilt für: `Bermuda`
 - Optionen: Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Bermuda in AD xConfig](screenshots/template-theme-bermuda-xConfig.png)
 
 ### Theme Cricket
 
-- Gilt für: `Cricket` und `Tactics`
-- Optionen: AVG, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
+- Gilt für: `Cricket`, `Tactics`
+- Optionen: AVG-Anzeige, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Cricket in AD xConfig](screenshots/template-theme-cricket-xConfig.png)
 
 ### Theme Bull-off
 
-- Gilt für: `Bull-off` und Varianten mit Namenszusatz
+- Gilt für: `Bull-off`
 - Optionen: Kontrast-Preset, Hintergrundbild, Darstellung, Deckkraft, Spielerfeld-Transparenz
 
 ![Theme Bull-off in AD xConfig](screenshots/template-theme-bull-off-xConfig.png)
 
-## Animationen (X01)
+## Animationen für X01
 
 ### Checkout Score Pulse
 
@@ -70,7 +70,7 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 ![Format Ticket](screenshots/animation-style-checkout-suggestions-format-ticket-readme.png)
 ![Format Outline](screenshots/animation-style-checkout-suggestions-format-outline-readme.png)
 
-## Animationen (Cricket/Tactics)
+## Animationen für Cricket und Tactics
 
 ### Cricket Highlighter
 
@@ -80,7 +80,7 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 
 ![Cricket Grid FX](screenshots/animation-cricket-grid-fx.png)
 
-## Animationen (alle Modi)
+## Animationen für alle Modi
 
 ### Average Trend Arrow
 
@@ -90,7 +90,7 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 
 ![Turn Start Sweep](screenshots/animation-turn-start-sweep.gif)
 
-### Triple/Double/Bull Hits
+### Triple / Double / Bull Hits
 
 ![Triple Double Bull Hits](screenshots/animation-triple-double-bull-hits.gif)
 
@@ -109,7 +109,7 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 
 ### Single Bull Sound
 
-- Akustisches Signal bei Single Bull.
+- Akustisches Signal bei Single Bull mit Lautstärke-, Cooldown- und Fallback-Scan-Option.
 
 ### Turn Points Count
 
@@ -125,4 +125,5 @@ Die Steuerung läuft vollständig über **AD xConfig** im Spiel.
 
 - Alle Einstellungen werden lokal gespeichert.
 - Theme-Hintergründe werden pro Theme als Data-URL abgelegt.
-- Nach Reload bleiben Aktivierungen und Einstellungen erhalten.
+- Aktivierungen, Theme-Bilder und Feineinstellungen bleiben nach Reload erhalten.
+- `Winner Fireworks` besitzt wieder einen integrierten Test-Button in AD xConfig.

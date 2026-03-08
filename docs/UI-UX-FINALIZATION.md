@@ -2,55 +2,33 @@
 
 ## Ziel
 
-Abschluss der UI/UX-Parität für die bestehende Bundle-Architektur ohne Rückkehr zum Legacy-Loader-Modell.
+Abschluss der UI-/UX-Parität für die bestehende Bundle-Architektur ohne Rückkehr zum Legacy-Loader-Modell.
 
 ## Umgesetzte UI-Korrekturen
 
-- Sidebar-Menüeintrag `AD xConfig` auf Template-Klon umgestellt, Position direkt nach `Boards`-ähnlichem Menüpunkt.
-- Menü- und Panel-Injektion idempotent gehalten (Mutation/Re-Render/Start-Stop-Zyklen).
-- Observer-Feedbackschleife beseitigt: interne Mutationen im xConfig-Host/Menü triggern keinen Re-Render mehr.
-- Label-Kollaps bei schmaler Sidebar ergänzt.
-- xConfig-Shell auf dunkles, Legacy-nahes Kartenlayout umgestellt.
-- Tabs `Themen` / `Animationen` mit klarer Hierarchie und verbessertem Click-Target.
-- Karten mit segmentierten `An/Aus`-Buttons und Preview-Hintergründen.
-- Fehlende Preview-Hintergründe für zentrale Animationskarten ergänzt (GIF/PNG-Mapping erweitert).
-- Zurück-Button und Segment-Toggles auf Legacy-nahe Proportionen korrigiert.
-- Einstellungs-Modal ergänzt (`⚙ Einstellungen`) mit vollständiger Verdrahtung für:
-  - Toggle-Settings
-  - Select-Settings
-  - Theme-Hintergrund `Upload` / `Clear`
-- Auto-Save beibehalten, inklusive Notice-Statusmeldungen.
-- Debug-Option pro registriertem Skript technisch abgesichert (normalisierte `debug`-Flags + Feature-Debug-Hooks).
+- Sidebar-Menüeintrag `AD xConfig` wird idempotent direkt in die vorhandene Navigation eingefügt.
+- Menü- und Panel-Injektion bleiben stabil bei Mutation, Re-Render und Start-/Stop-Zyklen.
+- Interne xConfig-Mutationen triggern keine Observer-Feedbackschleifen.
+- Schmale Sidebars blenden das Label kontrolliert aus.
+- Kartenlayout, Tabs und Toggles orientieren sich an der Legacy-UX, bleiben aber Bundle-only.
+- Karten besitzen Preview-Hintergründe, README-Links und klar erkennbare `An`-/`Aus`-Schalter.
+- Settings-Modal unterstützt Checkboxen, Selects, Theme-Bild-Upload/Clear und Feature-Aktionen.
+- `Winner Fireworks` besitzt wieder einen gut sichtbaren Test-Button im Settings-Modal.
+- Notice-Meldungen und Auto-Save bleiben erhalten.
 
 ## Referenznutzung
 
-- Struktur, Positionierung und Interaktionsmuster aus `.oldrepo/Config/AD xConfig.user.js`.
-- Visuelle Cues aus `.beispiele/menüpunkt` und `.beispiele/configurationsbildschirm`.
-- Keine Rückkehr zu Remote-Loader, GitHub-Module-Fetching oder zweitem Config-System.
+- Interaktionsmuster aus `.oldrepo/Config/AD xConfig.user.js`
+- visuelle Referenzen aus den Legacy-Screenshots in `.oldrepo/assets`
+- keine Rückkehr zu Remote-Loader, GitHub-Module-Fetching oder zweitem Config-System
 
-## Screenshot-/Asset-Deduplizierung
+## Screenshot- und Asset-Deduplizierung
 
-Entfernte Dubletten in `docs/screenshots`:
-
-- `legacy-ad-xconfig.png` (kanonisch: `ad-xconfig.png`)
-- `animation-average-trend-arrow-xConfig.png`
-- `animation-cricket-target-highlighter-xConfig.png`
-- `animation-dart-marker-darts-xConfig.png`
-- `animation-dart-marker-emphasis-xConfig.gif`
-- `animation-remove-darts-notification-xConfig.png`
-- `animation-style-checkout-suggestions-xConfig.png`
-- `animation-style-checkout-suggestions-format-ribbon-readme.png`
-- `animation-turn-points-count-xConfig.gif`
-- `animation-turn-start-sweep-xConfig.gif`
-- `template-theme-*-readme.png` (kanonisch: jeweilige `template-theme-*-xConfig.png`)
-- `docs/screenshots/TakeOut.png` (kanonisch: `src/assets/TakeOut.png`)
-
-Zusätzlich:
-
-- xConfig-Preview-Hintergründe auf kanonische Screenshot-Dateien aus `docs/screenshots` gemappt.
-- Node/Browser-kompatible Asset-Auflösung über `#xconfig-preview-assets`.
+- `docs/screenshots` nutzt nur kanonische Dateien ohne Dubletten.
+- xConfig-Karten greifen auf dieselben Preview-Dateien zurück wie README und `docs/FEATURES.md`.
+- Theme- und Animationskarten verwenden vorhandene Assets statt neue Screenshot-Varianten zu duplizieren.
 
 ## Restliche Grenzen
 
-- Legacy-spezifische GitHub-Loader-Funktionen bleiben bewusst ausgeschlossen.
+- Legacy-spezifische Loader- und Admin-Flows bleiben bewusst ausgeschlossen.
 - Fokus bleibt auf stabilem Single-Bundle-Userscript mit lokaler Persistenz.

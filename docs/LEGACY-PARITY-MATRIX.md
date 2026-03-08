@@ -1,6 +1,6 @@
 # Legacy-Paritätsmatrix
 
-Diese Matrix ist der verbindliche Abgleich zwischen `.oldrepo` und dem aktuellen Stand.
+Diese Matrix bleibt der stabile Kompatibilitätsanker für den Abgleich zwischen `.oldrepo` und dem aktuellen Stand.
 
 Pflichtspalten:
 
@@ -9,6 +9,8 @@ Pflichtspalten:
 - `migrated (yes/no/partial)`
 - `remaining gap`
 - `user-visible difference`
+
+Details zur Release-Bewertung stehen zusätzlich in [LEGACY-DISCREPANCY-MATRIX.md](LEGACY-DISCREPANCY-MATRIX.md).
 
 ## User-facing Module aus `.oldrepo/Animation`
 
@@ -28,7 +30,7 @@ Pflichtspalten:
 | `Animation/Autodarts Animate Remove Darts Notification.user.js` | `feature: remove-darts-notification` | yes | kein offener Gap | keine relevante Verhaltensabweichung |
 | `Animation/Autodarts Animate Single Bull Sound.user.js` | `feature: single-bull-sound` | yes | kein offener Gap | keine relevante Verhaltensabweichung |
 | `Animation/Autodarts Animate Turn Points Count.user.js` | `feature: turn-points-count` | yes | kein offener Gap | keine relevante Verhaltensabweichung |
-| `Animation/Autodarts Animate Winner Fireworks.user.js` | `feature: winner-fireworks` | yes | kein offener Gap | keine relevante Verhaltensabweichung |
+| `Animation/Autodarts Animate Winner Fireworks.user.js` | `feature: winner-fireworks` | yes | kein offener Gap | keine relevante Verhaltensabweichung; Test-Button ist in AD xConfig wieder verfügbar |
 
 ## User-facing Module aus `.oldrepo/Template`
 
@@ -44,24 +46,24 @@ Pflichtspalten:
 
 | legacy source file | new counterpart | migrated (yes/no/partial) | remaining gap | user-visible difference |
 | --- | --- | --- | --- | --- |
-| `Config/AD xConfig.user.js` | `system-ui: src/features/xconfig-ui` | partial | kein Remote-Modul-Discovery und kein GM-Admin-Flow | gleiche Kern-UX (Menü, Tabs, Toggles, Settings), aber bewusst vereinfachte Bundle-only-Verwaltung |
+| `Config/AD xConfig.user.js` | `system-ui: src/features/xconfig-ui` | partial | kein Remote-Modul-Discovery, kein GM-Admin-Flow | gleiche Kern-UX mit Menü, Tabs, Settings, Theme-Bildern und Winner-Fireworks-Vorschau, aber bewusst ohne Loader-Verwaltung |
 | `Config/AD xConfig Auto Loader.user.js` | `kein Gegenstück (Bundle-Modell)` | no | bewusst nicht Teil der neuen Architektur | Installation erfolgt direkt über `dist/autodarts-xconfig.user.js`, kein Loader-Cache |
 
-## Shared-/Vendor-Bestand aus Legacy
+## Shared- und Vendor-Bestand aus Legacy
 
 | legacy source file | new counterpart | migrated (yes/no/partial) | remaining gap | user-visible difference |
 | --- | --- | --- | --- | --- |
 | `Template/autodarts-theme-shared.js` | `src/features/themes/shared/*` | yes | kein offener Gap | keine direkte Nutzerabweichung |
-| `Animation/autodarts-animation-shared.js` | `src/core/*` + `src/shared/*` | yes | kein offener Gap | stabilere Laufzeit ohne sichtbare Funktionskürzung |
+| `Animation/autodarts-animation-shared.js` | `src/core/*` und `src/shared/*` | yes | kein offener Gap | stabilere Laufzeit ohne sichtbare Funktionskürzung |
 | `Animation/autodarts-game-state-shared.js` | `src/core/game-state-store.js` | yes | kein offener Gap | keine direkte Nutzerabweichung |
-| `Animation/autodarts-cricket-state-shared.js` | `src/domain/cricket-rules.js` + Cricket-Features | yes | kein offener Gap | keine direkte Nutzerabweichung |
+| `Animation/autodarts-cricket-state-shared.js` | `src/domain/cricket-rules.js` plus Cricket-Features | yes | kein offener Gap | keine direkte Nutzerabweichung |
 | `Animation/vendor/anime.min.js` | `src/vendors/anime.min.cjs` | yes | kein offener Gap | keine direkte Nutzerabweichung |
 | `Animation/vendor/canvas-confetti.browser.js` | `src/vendors/canvas-confetti.browser.js` | yes | kein offener Gap | keine direkte Nutzerabweichung |
-| `Animation/vendor/gsap.min.js` | `kein Gegenstück` | no | aktuell von keinem Modul benötigt | keine sichtbare Lücke im aktuellen Feature-Set |
-| `Animation/vendor/mo.umd.min.js` | `kein Gegenstück` | no | aktuell von keinem Modul benötigt | keine sichtbare Lücke im aktuellen Feature-Set |
+| `Animation/vendor/gsap.min.js` | `kein Gegenstück` | no | aktuell von keinem Modul benötigt | keine sichtbare Lücke im Release-Umfang |
+| `Animation/vendor/mo.umd.min.js` | `kein Gegenstück` | no | aktuell von keinem Modul benötigt | keine sichtbare Lücke im Release-Umfang |
 
-## Release-Freigabe 1.0.0
+## Release-Freigabe 1.1.0
 
 - Major-Paritätsgaps: **keine**.
-- Bewusst nicht enthalten: Legacy-Loader/GM-Remote-Flows.
-- Ergebnis: `1.0.0` ist aus Paritätssicht freigegeben.
+- Bundle-only bleibt eine bewusste Produktentscheidung.
+- Ergebnis: `1.1.0` ist aus Paritätssicht freigegeben.

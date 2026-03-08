@@ -8,11 +8,14 @@ const bundlePath = path.resolve(
   "dist",
   "autodarts-xconfig.user.js"
 );
+const packageJsonPath = path.resolve(process.cwd(), "package.json");
 
 test("checked-in userscript bundle contains metadata header and runtime bootstrap entry", () => {
   const text = readFileSync(bundlePath, "utf8");
+  const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
 
   assert.match(text, /\/\/ ==UserScript==/);
+  assert.match(text, new RegExp(`@version\\s+${packageVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
   assert.match(text, /@match\s+https:\/\/play\.autodarts\.io\/\*/);
   assert.match(text, /@grant\s+none/);
   assert.doesNotMatch(text, /@grant\s+GM_getValue/);

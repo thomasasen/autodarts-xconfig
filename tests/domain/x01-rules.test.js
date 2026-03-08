@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  applyX01ThrowsToState,
   classifyThrowHitText,
   IMPOSSIBLE_CHECKOUT_SCORES,
   canFinishWithSegment,
@@ -288,4 +289,39 @@ test("isSensibleThirdT20Score follows old TV zoom bust-guard threshold", () => {
   assert.equal(isSensibleThirdT20Score(60, "master"), true);
   assert.equal(isSensibleThirdT20Score(61, "straight"), true);
   assert.equal(isSensibleThirdT20Score(59, "straight"), false);
+});
+
+test("applyX01ThrowsToState evaluates multi-dart visits with finish and bust reset", () => {
+  const finishedVisit = applyX01ThrowsToState({
+    scoreBefore: 170,
+    outMode: "double",
+    throws: ["T20", "T20", "BULL"],
+  });
+  assert.equal(finishedVisit.scoreAfter, 0);
+  assert.equal(finishedVisit.totalScoredPoints, 170);
+  assert.equal(finishedVisit.isFinish, true);
+  assert.equal(finishedVisit.isBust, false);
+  assert.equal(finishedVisit.stopReason, "finished");
+  assert.equal(finishedVisit.throwResults[2].outcome?.reason, "finished");
+
+  const bustedVisit = applyX01ThrowsToState({
+    scoreBefore: 100,
+    outMode: "double",
+    throws: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+  });
+  assert.equal(bustedVisit.scoreAfter, 100);
+  assert.equal(bustedVisit.totalScoredPoints, 0);
+  assert.equal(bustedVisit.isBust, true);
+  assert.equal(bustedVisit.stopReason, "bust");
+  assert.equal(bustedVisit.throwResults[1].outcome?.reason, "below-zero");
+
+  const invalidFinishVisit = applyX01ThrowsToState({
+    scoreBefore: 20,
+    outMode: "double",
+    throws: [{ segment: { number: 20, multiplier: 1 } }],
+  });
+  assert.equal(invalidFinishVisit.scoreAfter, 20);
+  assert.equal(invalidFinishVisit.isBust, true);
+  assert.equal(invalidFinishVisit.throwResults[0].segmentName, "S20");
+  assert.equal(invalidFinishVisit.throwResults[0].outcome?.reason, "invalid-finish-segment");
 });

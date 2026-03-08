@@ -2,88 +2,52 @@
 
 ## Struktur
 
-Die Projektstruktur bleibt für v1.0.0 unverändert:
+Die Release-Struktur für `v1.1.0` ist bewusst klar getrennt:
 
-- `src/core`: Bootstrap, Lifecycle, Listener- und Observer-Registries
-- `src/domain`: Spiellogik und Regelbewertung ohne DOM-Abhängigkeit
-- `src/features`: modulare Features, Themes und xConfig-UI
+- `src/core`: Bootstrap, DOM-Guards, Event-Bus, Listener- und Observer-Registries
+- `src/domain`: Dart-Regeln und regelnahe Auswertung ohne DOM-Abhängigkeit
+- `src/features`: UI-Features, Animationen, Themes und die xConfig-Oberfläche
 - `src/config`: Defaults, Normalisierung, Persistenz und Legacy-Import
-- `src/runtime`: Tampermonkey-Start und Public API
-- `src/vendors`: eingebundene Vendor-Bausteine
+- `src/runtime`: Tampermonkey-Start und öffentliche Runtime-API
+- `src/vendors`: gebündelte Third-Party-Bausteine
 - `loader`: Userscript-Entry
 - `dist`: gebautes Installationsartefakt
-- `tests`: Domain- und Runtime-Tests
+- `tests`: Domain-, Runtime- und Dokumentationstests
 
 ## Laufzeitmodell
 
 1. Das Userscript aus `loader/autodarts-xconfig.user.js` startet die Runtime.
-2. Die Konfiguration wird geladen, normalisiert und bei Bedarf aus Legacy-Daten übernommen.
-3. Die Feature-Registry liefert alle Definitionsdaten für Animationen und Themes.
+2. Die Konfiguration wird geladen, normalisiert und bei Bedarf einmalig aus `ad-xconfig:config` migriert.
+3. Die Feature-Registry liefert definierte Feature-Metadaten, Mount-Funktionen und optionale Feature-Aktionen.
 4. Aktivierte Module werden idempotent gemountet.
-5. Die immer aktive `xconfig-ui` hängt sich an Navigation und DOM an und bleibt ebenfalls idempotent.
-6. Cleanup entfernt Styles, Listener und Observer sauber.
+5. `xconfig-ui` wird immer aktiv gemountet und steuert Menülayout, Route, Settings-Modal und Feature-Aktionen.
+6. Cleanup entfernt Styles, Overlay-Nodes, Listener und Observer sauber.
 
-Wichtige Eigenschaft: wiederholtes Starten oder erneutes Rendern erzeugt keine doppelten Instanzen.
+Wichtig: Wiederholtes Initialisieren bleibt idempotent.
 
-## Feature- und Theme-Modell
+## Domain-Schicht
 
-Jedes Feature exportiert eine `mount...`-Funktion und gibt eine Cleanup-Funktion zurück.
+Die Regelwahrheit liegt ausschließlich in `src/domain`:
 
-Ausgeliefert sind:
+- `x01-rules.js`: Segment-Normalisierung, Out-Modi, Checkout-, Bust- und Visit-Auswertung
+- `cricket-rules.js`: Zielmengen, Marks, Overflow-Scoring, Target-States und Gewinnerlogik
+- `variant-rules.js`: Klassifikation von X01-, Cricket- und Tactics-Varianten
+- `dart-rules.js`: Re-Export der Domain-Cluster
 
-- 15 Animationen und Komfortfunktionen
-- 5 Themes
+Neue reine Helfer in `v1.1.0`:
 
-Themes sind als normale Feature-Module unter `src/features/themes/*` umgesetzt:
+- `applyX01ThrowsToState({ scoreBefore, outMode, throws })`
+- `evaluateCricketWinState({ marksByLabel, scoresByPlayer, scoringMode, targetOrder })`
 
-- `theme-x01` mit `themes.x01`
-- `theme-shanghai` mit `themes.shanghai`
-- `theme-bermuda` mit `themes.bermuda`
-- `theme-cricket` mit `themes.cricket`
-- `theme-bull-off` mit `themes.bullOff`
+## Feature-Modell
 
-Gemeinsame Theme-Logik liegt in `src/features/themes/shared`.
+Jedes Feature exportiert mindestens eine Mount-Funktion und optional eine Action-Funktion.
 
-## AD xConfig-Oberfläche
+- Animationen und Themes werden über die Feature-Registry verwaltet.
+- Themes sind normale Feature-Module unter `src/features/themes/*`.
+- `winner-fireworks` nutzt zusätzlich `runFeatureAction(featureKey, actionId)` für die xConfig-Vorschau.
 
-Die zentrale Oberfläche ist als eigenes Modul unter `src/features/xconfig-ui` umgesetzt und wird beim Runtime-Start immer aktiv gemountet.
-Sie ist absichtlich kein normales Endnutzer-Toggle in der Feature-Registry.
-
-Sie übernimmt:
-
-- das einmalige Einfügen des Menüeintrags `AD xConfig`
-- das routenbasierte Anzeigen des Panels unter `/ad-xconfig`
-- das Rendern von Tabs für `Themen` und `Animationen`
-- das Speichern von Feature- und Theme-Einstellungen über `window.__adXConfig`
-
-Für Stabilität nutzt die Shell ausschließlich die vorhandenen Registries und DOM-Guards:
-
-- keine direkten doppelten Listener
-- keine unkontrollierten zusätzlichen MutationObserver
-- idempotente DOM-Injektion
-
-## Konfiguration
-
-Die Feature-Konfiguration bleibt kompatibel zum bestehenden Runtime-Modell.
-
-Wichtige Pfade:
-
-- klassische Features unter `features.<featureKey>`
-- Theme-Features unter `features.themes.<themeKey>`
-- Aktivierungsstatus zusätzlich über `featureToggles`, auch für dotted keys wie `themes.x01`
-
-Theme-Hintergründe werden pro Theme als Data-URL gespeichert.
-
-## Asset-Strategie
-
-PNG- und MP3-Dateien werden über einen gemeinsamen Alias aufgelöst:
-
-- Browser-Build: `src/shared/feature-assets.browser.js`
-- Node/Test-Umgebung: `src/shared/feature-assets.node.js`
-
-Dadurch bleiben der Userscript-Build und die Runtime mit echten Assets intakt, während Tests unter Node keine Binärimporte direkt laden müssen.
-
-## Public API
+## Öffentliche Runtime-API
 
 Die öffentliche Oberfläche bleibt auf `window.__adXConfig` begrenzt.
 
@@ -93,6 +57,7 @@ Verfügbar sind:
 - `saveConfig(partialConfig)`
 - `resetConfig()`
 - `setFeatureEnabled(featureRef, enabled)`
+- `runFeatureAction(featureKey, actionId)`
 - `listFeatures()`
 - `setThemeBackgroundImage(themeKey, dataUrl)`
 - `clearThemeBackgroundImage(themeKey)`
@@ -113,4 +78,4 @@ Optional:
 npm run verify
 ```
 
-Das gebaute Userscript liegt in `dist/autodarts-xconfig.user.js` und enthält den vollständigen Tampermonkey-Header mit `@version 1.0.0`, `@match https://play.autodarts.io/*` und `@grant none`.
+Das gebaute Userscript liegt in `dist/autodarts-xconfig.user.js` und verwendet den Versionsstand aus `package.json`.

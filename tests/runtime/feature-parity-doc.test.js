@@ -6,6 +6,19 @@ import path from "node:path";
 const matrixPath = path.resolve(process.cwd(), "docs", "LEGACY-PARITY-MATRIX.md");
 const matrixText = readFileSync(matrixPath, "utf8");
 
+const discrepancyMatrixPath = path.resolve(
+  process.cwd(),
+  "docs",
+  "LEGACY-DISCREPANCY-MATRIX.md"
+);
+const discrepancyMatrixText = readFileSync(discrepancyMatrixPath, "utf8");
+
+const oldRepoInventoryPath = path.resolve(process.cwd(), "docs", "OLDREPO-INVENTORY.md");
+const oldRepoInventoryText = readFileSync(oldRepoInventoryPath, "utf8");
+
+const newSystemInventoryPath = path.resolve(process.cwd(), "docs", "NEW-SYSTEM-INVENTORY.md");
+const newSystemInventoryText = readFileSync(newSystemInventoryPath, "utf8");
+
 const featureParityPath = path.resolve(process.cwd(), "docs", "FEATURE-PARITY.md");
 const featureParityText = readFileSync(featureParityPath, "utf8");
 
@@ -58,4 +71,26 @@ test("LEGACY-PARITY-MATRIX includes explicit no/partial statuses", () => {
 
 test("FEATURE-PARITY points to LEGACY-PARITY-MATRIX", () => {
   assert.match(featureParityText, /LEGACY-PARITY-MATRIX\.md/);
+});
+
+test("LEGACY-DISCREPANCY-MATRIX uses the required release columns", () => {
+  assert.match(discrepancyMatrixText, /\|\s*legacy feature\s*\|/i);
+  assert.match(discrepancyMatrixText, /\|\s*new implementation counterpart\s*\|/i);
+  assert.match(discrepancyMatrixText, /\|\s*status\s*\|/i);
+  assert.match(discrepancyMatrixText, /\|\s*explanation\s*\|/i);
+  assert.match(discrepancyMatrixText, /\|\s*user-visible impact\s*\|/i);
+  assert.match(discrepancyMatrixText, /fully implemented/i);
+  assert.match(discrepancyMatrixText, /partially implemented/i);
+  assert.match(discrepancyMatrixText, /intentionally removed/i);
+});
+
+test("inventory documents exist and cover both legacy and new architecture", () => {
+  assert.match(oldRepoInventoryText, /OLDREPO-Inventur/);
+  assert.match(oldRepoInventoryText, /Animation\/Autodarts Animate Checkout Score Pulse\.user\.js/);
+  assert.match(oldRepoInventoryText, /Config\/AD xConfig Auto Loader\.user\.js/);
+
+  assert.match(newSystemInventoryText, /New-System-Inventur/);
+  assert.match(newSystemInventoryText, /src\/core\/bootstrap\.js/);
+  assert.match(newSystemInventoryText, /src\/domain\/x01-rules\.js/);
+  assert.match(newSystemInventoryText, /src\/features\/xconfig-ui/);
 });

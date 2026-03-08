@@ -12,7 +12,7 @@ import { mountDartMarkerDarts } from "./dart-marker-darts/index.js";
 import { mountRemoveDartsNotification } from "./remove-darts-notification/index.js";
 import { mountSingleBullSound } from "./single-bull-sound/index.js";
 import { mountTurnPointsCount } from "./turn-points-count/index.js";
-import { mountWinnerFireworks } from "./winner-fireworks/index.js";
+import { mountWinnerFireworks, runWinnerFireworksAction } from "./winner-fireworks/index.js";
 import { mountThemeX01 } from "./themes/x01/index.js";
 import { mountThemeShanghai } from "./themes/shanghai/index.js";
 import { mountThemeBermuda } from "./themes/bermuda/index.js";
@@ -121,6 +121,7 @@ function normalizeDefinition(definition, options = {}) {
     migratedFrom: String(definition.migratedFrom || "").trim(),
     initialize: wrappedInitialize,
     mount: wrappedInitialize,
+    runAction: typeof definition.runAction === "function" ? definition.runAction : null,
   };
 }
 
@@ -259,6 +260,7 @@ export const defaultFeatureDefinitions = Object.freeze([
     migratedFrom: "Animation/Autodarts Animate Winner Fireworks.user.js",
     initialize: mountWinnerFireworks,
     mount: mountWinnerFireworks,
+    runAction: runWinnerFireworksAction,
   }),
   Object.freeze({
     featureKey: "theme-x01",

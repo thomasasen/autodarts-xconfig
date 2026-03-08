@@ -555,6 +555,104 @@ function toTargetOrderForDiff(options = {}) {
   return TACTICS_TARGET_ORDER.slice();
 }
 
+function resolveTargetOrderForWinState(options = {}) {
+  const explicitTargetOrder = Array.isArray(options.targetOrder)
+    ? options.targetOrder.filter(Boolean)
+    : [];
+  if (explicitTargetOrder.length) {
+    return explicitTargetOrder;
+  }
+
+  const inferredMode = inferCricketGameModeByLabels(Object.keys(options.marksByLabel || {}));
+  return getTargetOrderByGameMode(options.gameMode || inferredMode);
+}
+
+function resolveCricketWinPlayerCount(marksByLabel, scoresByPlayer) {
+  const scoreCount = Array.isArray(scoresByPlayer) ? scoresByPlayer.length : 0;
+  const markCount = Object.values(marksByLabel || {}).reduce((max, values) => {
+    return Array.isArray(values) ? Math.max(max, values.length) : max;
+  }, 0);
+
+  return Math.max(scoreCount, markCount);
+}
+
+function normalizePlayerScores(scoresByPlayer, playerCount) {
+  return Array.from({ length: Math.max(0, playerCount) }, (_, index) => {
+    const numeric = Number(scoresByPlayer?.[index]);
+    return Number.isFinite(numeric) ? numeric : 0;
+  });
+}
+
+function countClosedTargetsForPlayer(marksByLabel, targetOrder, playerIndex) {
+  return targetOrder.reduce((count, label) => {
+    return clampMarks(marksByLabel?.[label]?.[playerIndex]) >= 3 ? count + 1 : count;
+  }, 0);
+}
+
+export function evaluateCricketWinState(options = {}) {
+  const marksByLabel =
+    options.marksByLabel && typeof options.marksByLabel === "object"
+      ? options.marksByLabel
+      : {};
+  const targetOrder = resolveTargetOrderForWinState({
+    targetOrder: options.targetOrder,
+    marksByLabel,
+    gameMode: options.gameMode,
+  });
+  const scoringModeNormalized = resolveScoringModeNormalized(options);
+  const playerCount = resolveCricketWinPlayerCount(marksByLabel, options.scoresByPlayer);
+  const scoresByPlayer = normalizePlayerScores(options.scoresByPlayer, playerCount);
+
+  const highestScore = scoresByPlayer.length ? Math.max(...scoresByPlayer) : 0;
+  const lowestScore = scoresByPlayer.length ? Math.min(...scoresByPlayer) : 0;
+
+  const playerStates = Array.from({ length: playerCount }, (_, playerIndex) => {
+    const closedTargetCount = countClosedTargetsForPlayer(marksByLabel, targetOrder, playerIndex);
+    const allTargetsClosed = targetOrder.length > 0 && closedTargetCount === targetOrder.length;
+    const score = scoresByPlayer[playerIndex] || 0;
+
+    let leading = false;
+    let winner = false;
+
+    if (scoringModeNormalized === "standard") {
+      leading = score === highestScore;
+      winner = allTargetsClosed && leading;
+    } else if (scoringModeNormalized === "cutthroat") {
+      leading = score === lowestScore;
+      winner = allTargetsClosed && leading;
+    } else if (scoringModeNormalized === "neutral") {
+      leading = allTargetsClosed;
+      winner = allTargetsClosed;
+    }
+
+    return {
+      playerIndex,
+      score,
+      closedTargetCount,
+      remainingTargets: Math.max(0, targetOrder.length - closedTargetCount),
+      allTargetsClosed,
+      leading,
+      winner,
+    };
+  });
+
+  const winnerIndexes = playerStates
+    .filter((playerState) => playerState.winner)
+    .map((playerState) => playerState.playerIndex);
+
+  return {
+    targetOrder,
+    scoringModeNormalized,
+    playerCount,
+    highestScore,
+    lowestScore,
+    hasWinner: winnerIndexes.length > 0,
+    isTie: winnerIndexes.length > 1,
+    winnerIndexes,
+    playerStates,
+  };
+}
+
 export function diffMarksByLabel(options = {}) {
   const previousMarksByLabel =
     options.previousMarksByLabel && typeof options.previousMarksByLabel === "object"

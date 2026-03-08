@@ -124,6 +124,8 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-setting-select{width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.28);background:rgba(12,17,36,.9);color:#fff;font-size:.84rem;padding:.45rem .55rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action{display:grid;gap:.45rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn{border:1px solid rgba(255,255,255,.3);border-radius:10px;min-height:2.65rem;padding:.55rem .8rem;background:rgba(22,38,82,.72);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer}
+#${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary{border-color:rgba(126,216,255,.92);background:linear-gradient(145deg,rgba(58,148,255,.52),rgba(88,200,255,.34));box-shadow:0 0 0 1px rgba(126,216,255,.24),0 4px 14px rgba(58,148,255,.24)}
+#${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary:hover{background:linear-gradient(145deg,rgba(72,170,255,.62),rgba(102,214,255,.4))}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn:disabled{opacity:.55;cursor:not-allowed}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-state{margin:0;font-size:.74rem;color:rgba(234,244,255,.9)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-state--disabled{color:rgba(255,212,212,.9)}
@@ -453,21 +455,32 @@ function buildFeatureField(documentRef, feature, field) {
     const button = createElement(documentRef, "button", {
       id: fieldId,
       type: "button",
-      className: "ad-xconfig-setting-action-btn",
-      text: field.label,
+      className: field.prominent
+        ? "ad-xconfig-setting-action-btn ad-xconfig-setting-action-btn--primary"
+        : "ad-xconfig-setting-action-btn",
+      text: field.buttonLabel || field.label,
       attributes: {
         "data-adxconfig-action": field.action,
         "data-feature-key": feature.featureKey,
         "data-config-key": feature.configKey,
+        "data-feature-action-id": field.actionId || "",
       },
     });
     wrapper.appendChild(button);
-    wrapper.appendChild(createElement(documentRef, "p", {
-      className: "ad-xconfig-note",
-      text: field.action === "clearThemeBackground"
-        ? "Entfernt das gespeicherte Bild für dieses Theme."
-        : "Speichert das Bild für dieses Theme.",
-    }));
+    const noteText = String(
+      field.description ||
+        (field.action === "clearThemeBackground"
+          ? "Entfernt das gespeicherte Bild für dieses Theme."
+          : field.action === "uploadThemeBackground"
+            ? "Öffnet die Dateiauswahl und speichert das Bild für dieses Theme."
+            : "")
+    ).trim();
+    if (noteText) {
+      wrapper.appendChild(createElement(documentRef, "p", {
+        className: "ad-xconfig-note",
+        text: noteText,
+      }));
+    }
     return wrapper;
   }
 
@@ -1370,6 +1383,25 @@ function ensureXConfigShell(options = {}) {
     }
 
     if (!feature) {
+      return;
+    }
+
+    if (action === "run-feature-action" && typeof runtimeApi.runFeatureAction === "function") {
+      const descriptor = getXConfigDescriptor(feature.featureKey);
+      const actionId = String(actionNode?.getAttribute?.("data-feature-action-id") || "").trim();
+      const actionField =
+        descriptor?.fields?.find(
+          (field) =>
+            field.control === "action" &&
+            field.action === action &&
+            String(field.actionId || "").trim() === actionId
+        ) || null;
+      withRuntimeCall(
+        runtimeApi.runFeatureAction(feature.featureKey, actionId),
+        actionField?.successMessage || "Aktion ausgeführt.",
+        actionField?.errorMessage || "Aktion konnte nicht ausgeführt werden.",
+        "info"
+      );
       return;
     }
 

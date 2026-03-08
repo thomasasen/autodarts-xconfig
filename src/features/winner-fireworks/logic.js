@@ -217,6 +217,7 @@ export function createWinnerFireworksState(options = {}) {
     windowRef: options.windowRef || null,
     domGuards: options.domGuards || null,
     visualConfig: options.visualConfig || null,
+    overlayId: String(options.overlayId || OVERLAY_ID).trim() || OVERLAY_ID,
     confettiFactory: options.confettiFactory || null,
     confettiRunner: null,
     overlayNode: null,
@@ -234,8 +235,9 @@ function ensureOverlay(state) {
   if (!documentRef || !state.domGuards) {
     return null;
   }
+  const overlayId = String(state.overlayId || OVERLAY_ID).trim() || OVERLAY_ID;
 
-  const existing = documentRef.getElementById?.(OVERLAY_ID);
+  const existing = documentRef.getElementById?.(overlayId);
   if (existing) {
     state.overlayNode = existing;
     state.canvasNode = existing.querySelector?.("canvas") || null;
@@ -247,8 +249,8 @@ function ensureOverlay(state) {
 
   if (!state.overlayNode) {
     const overlay = state.domGuards.ensureSingleNode({
-      id: OVERLAY_ID,
-      selector: `#${OVERLAY_ID}`,
+      id: overlayId,
+      selector: `#${overlayId}`,
       parent: documentRef.body || documentRef.documentElement || null,
       create: (doc) => doc.createElement("div"),
     });

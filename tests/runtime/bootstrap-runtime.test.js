@@ -48,6 +48,11 @@ test("runtime public config API persists updates and survives feature toggles", 
   documentRef.activeScoreElement.textContent = "170";
 
   const windowRef = createFakeWindow({ documentRef, localStorage });
+  const originalSetTimeout = windowRef.setTimeout.bind(windowRef);
+  windowRef.setTimeout = (callback, ms, ...args) => {
+    return originalSetTimeout(callback, Math.min(Number(ms) || 0, 15), ...args);
+  };
+  windowRef.confetti = function fakeConfetti() {};
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
   await wait(5);
@@ -98,6 +103,13 @@ test("runtime public config API persists updates and survives feature toggles", 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles.winnerFireworks, true);
   assert.equal(runtime.getSnapshot().features["winner-fireworks"].mounted, true);
+
+  const previewResult = await runtime.runFeatureAction("winner-fireworks", "preview");
+  assert.equal(previewResult.ok, true);
+  await wait(5);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), true);
+  await wait(30);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
 
   await runtime.setFeatureEnabled("theme-x01", true);
   await wait(5);

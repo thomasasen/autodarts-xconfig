@@ -1,62 +1,41 @@
 # Migrationsstatus
 
-## Ausgeliefert in v1.0.0
+## Ausgeliefert in v1.1.0
 
-### Animationen und Komfort
+### Funktionale Parität
 
-Die 15 wichtigen Animations- und Komfortfunktionen aus dem Altprojekt sind im aktuellen System enthalten:
+- Alle 15 relevanten Legacy-Animationen und Komfortfunktionen sind im Bundle enthalten.
+- Alle 5 Legacy-Themes sind als modulare Theme-Features enthalten.
+- Die zentrale Oberfläche `AD xConfig` ist Teil der Runtime und steuert alle ausgelieferten Module.
+- Der Legacy-Testbutton für `Winner Fireworks` ist als saubere Bundle-UX wieder vorhanden.
 
-1. Checkout Score Pulse
-2. Checkout Board Targets
-3. TV Board Zoom
-4. Style Checkout Suggestions
-5. Average Trend Arrow
-6. Turn Start Sweep
-7. Triple/Double/Bull Hits
-8. Cricket Highlighter
-9. Cricket Grid FX
-10. Dart Marker Emphasis
-11. Dart Marker Darts
-12. Remove Darts Notification
-13. Single Bull Sound
-14. Turn Points Count
-15. Winner Fireworks
+### Regelstand
 
-### Themes / Templates
+- X01-Regeln sind für `straight`, `double` und `master` sauber modelliert.
+- Cricket/Tactics trennen Zielmenge, Marks, Overflow-Scoring und Gewinnerlogik.
+- Für Cut-Throat gilt im Audit und in der Domain-Logik: niedrigster Punktestand gewinnt.
 
-Die fünf Legacy-Templates sind als modulare Theme-Features enthalten:
+### Technischer Stand
 
-- Theme X01
-- Theme Shanghai
-- Theme Bermuda
-- Theme Cricket
-- Theme Bull-off
+- Feature-Logik bleibt strikt von Domain-Regeln getrennt.
+- xConfig speichert Toggles, Einstellungen und Theme-Hintergründe persistent.
+- Das Bundle ist idempotent: wiederholtes Starten oder Re-Rendern erzeugt keine doppelten Instanzen.
 
-### Zentrale Oberfläche
+## Bewusst nicht übernommen
 
-Die zentrale Oberfläche `AD xConfig` ist wieder vorhanden und Bestandteil des aktuellen Runtime-Modells.
-Sie deckt die ausgelieferten Animationen, Komfortfunktionen und Themes inklusive ihrer Einstellungen ab.
+- `AD xConfig Auto Loader.user.js`
+- Remote-Cache-, GitHub-Sync- und Admin-Flows aus dem Legacy-Config-Bestand
+- ungenutzte Vendor-Dateien ohne aktuelles Feature (`gsap`, `mo.js`)
+- veraltete Skripte aus `.oldrepo/Deprecated`
 
-## Teilweise übernommen
+## Bekannte Grenzen
 
-- Legacy-Konfiguration aus `ad-xconfig:config` wird für die migrierten Features und Themes in das aktuelle Config-Format übernommen.
-- Historische Altoptionen ohne Entsprechung im aktuellen Modulbestand werden nicht vollständig gespiegelt.
+- Autodarts dokumentiert für X01 zusätzlich einen `Bull mode`; dieser ist im aktuellen Match-State nicht verlässlich verfügbar.
+- Deshalb bleibt die Runtime bei gesicherter Split-Bull-Semantik: `SB = 25`, `DB/BULL = 50`.
 
-## Bewusst nicht Teil von v1.0
+## Weiterführende Dokumente
 
-- alter GitHub-Sync- und Loader-Adminfluss
-- historische Cache- und Remote-Ladefunktionen
-- alte xConfig-Sonderbereiche, die nicht zu den ausgelieferten Features gehören
-- nicht benötigte Vendor-Varianten aus dem Altbestand
-
-## Nicht geplant
-
-- `Deprecated/`-Artefakte ohne Ziel im neuen Runtime-Modell
-- ungenutzte Legacy-Dateien ohne aktuelle Funktion
-- alte Loader-Varianten, die für das neue Userscript nicht benötigt werden
-
-## Verbleibende Lücken
-
-- Keine bekannte Funktionslücke bei den ausgelieferten 15 Animationen und 5 Themes.
-- Bewusst nicht enthaltene Altbestandteile sind dokumentiert und kein Release-Blocker für v1.0.0.
-- Der scriptweise Detailabgleich steht in `docs/LEGACY-PARITY-MATRIX.md`.
+- [Legacy-Inventur](OLDREPO-INVENTORY.md)
+- [Neue System-Inventur](NEW-SYSTEM-INVENTORY.md)
+- [Legacy-Diskrepanzmatrix](LEGACY-DISCREPANCY-MATRIX.md)
+- [Release-QA-Report](RELEASE-QA-REPORT.md)

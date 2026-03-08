@@ -451,7 +451,12 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - [Feature-Übersicht](docs/FEATURES.md)
 - [Technische Architektur](docs/TECHNICAL-ARCHITECTURE.md)
+- [Migrationsstatus](docs/MIGRATION-STATUS.md)
 - [Legacy-Paritätsmatrix](docs/LEGACY-PARITY-MATRIX.md)
+- [Legacy-Diskrepanzmatrix](docs/LEGACY-DISCREPANCY-MATRIX.md)
+- [Legacy-Inventur](docs/OLDREPO-INVENTORY.md)
+- [Neue System-Inventur](docs/NEW-SYSTEM-INVENTORY.md)
+- [Release-QA-Report](docs/RELEASE-QA-REPORT.md)
 - [UI-/UX-Finalisierung](docs/UI-UX-FINALIZATION.md)
 
 ## Für Entwickler

@@ -3,9 +3,10 @@ export const OVERLAY_ID = "ad-ext-winner-fireworks";
 
 const Z_INDEX = 2147483646;
 
-export function buildStyleText() {
+export function buildStyleText(options = {}) {
+  const overlayId = String(options.overlayId || OVERLAY_ID).trim() || OVERLAY_ID;
   return `
-#${OVERLAY_ID} {
+#${overlayId} {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -14,7 +15,7 @@ export function buildStyleText() {
   z-index: ${Z_INDEX};
 }
 
-#${OVERLAY_ID} canvas {
+#${overlayId} canvas {
   width: 100%;
   height: 100%;
   display: block;

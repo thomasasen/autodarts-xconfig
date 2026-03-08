@@ -174,8 +174,46 @@ export function isSingleBullHitText(text) {
 }
 
 function getThrowSegmentName(throwEntry) {
+  if (typeof throwEntry === "string") {
+    return String(throwEntry).trim();
+  }
   if (!throwEntry || typeof throwEntry !== "object") {
     return "";
+  }
+
+  const descriptor = throwEntry?.segment && typeof throwEntry.segment === "object"
+    ? throwEntry.segment
+    : throwEntry;
+  const namedSegment = normalizeSegmentName(
+    descriptor?.name || descriptor?.segment || descriptor?.label || ""
+  );
+  if (namedSegment) {
+    return namedSegment;
+  }
+
+  const numericValue = Number(descriptor?.number ?? descriptor?.value ?? NaN);
+  const multiplier = Number(descriptor?.multiplier ?? descriptor?.marks ?? NaN);
+  const bed = String(descriptor?.bed || "").trim().toLowerCase();
+
+  if (numericValue === 25) {
+    if (multiplier === 2 || bed.includes("double") || bed.includes("inner")) {
+      return "BULL";
+    }
+    if (multiplier === 1 || bed.includes("single") || bed.includes("outer")) {
+      return "S25";
+    }
+  }
+
+  if (numericValue >= 1 && numericValue <= 20) {
+    if (multiplier === 3 || bed.includes("triple")) {
+      return `T${numericValue}`;
+    }
+    if (multiplier === 2 || bed.includes("double")) {
+      return `D${numericValue}`;
+    }
+    if (multiplier === 1 || !Number.isFinite(multiplier) || bed.includes("single")) {
+      return `S${numericValue}`;
+    }
   }
 
   return String(
@@ -719,5 +757,92 @@ export function evaluateThrowOutcome(options = {}) {
     isBust: false,
     isFinish: false,
     reason: "scored",
+  };
+}
+
+export function applyX01ThrowsToState(options = {}) {
+  const scoreBefore = toNumber(options.scoreBefore);
+  const normalizedOutMode = normalizeOutMode(options.outMode);
+  const throws = Array.isArray(options.throws) ? options.throws : [];
+
+  if (!Number.isFinite(scoreBefore) || scoreBefore <= 0) {
+    return {
+      scoreBefore,
+      scoreAfter: scoreBefore,
+      normalizedOutMode,
+      totalScoredPoints: 0,
+      isBust: false,
+      isFinish: false,
+      stopReason: "invalid-input",
+      throwResults: [],
+    };
+  }
+
+  let currentScore = scoreBefore;
+  let stopReason = throws.length ? "throws-exhausted" : "no-throws";
+  let stoppedIndex = -1;
+  let isBust = false;
+  let isFinish = false;
+
+  const throwResults = throws.map((throwEntry, index) => {
+    const segmentName = normalizeSegmentName(getThrowSegmentName(throwEntry));
+    if (stoppedIndex >= 0) {
+      return {
+        index,
+        segmentName,
+        ignored: true,
+        reason: "turn-already-resolved",
+        outcome: null,
+      };
+    }
+
+    if (!segmentName) {
+      return {
+        index,
+        segmentName: "",
+        ignored: true,
+        reason: "invalid-segment",
+        outcome: null,
+      };
+    }
+
+    const outcome = evaluateThrowOutcome({
+      scoreBefore: currentScore,
+      segmentName,
+      outMode: normalizedOutMode,
+    });
+
+    if (outcome.isBust) {
+      isBust = true;
+      stopReason = "bust";
+      stoppedIndex = index;
+      currentScore = scoreBefore;
+    } else {
+      currentScore = outcome.scoreAfter;
+      if (outcome.isFinish) {
+        isFinish = true;
+        stopReason = "finished";
+        stoppedIndex = index;
+      }
+    }
+
+    return {
+      index,
+      segmentName,
+      ignored: false,
+      reason: outcome.reason,
+      outcome,
+    };
+  });
+
+  return {
+    scoreBefore,
+    scoreAfter: currentScore,
+    normalizedOutMode,
+    totalScoredPoints: isBust ? 0 : Math.max(0, scoreBefore - currentScore),
+    isBust,
+    isFinish,
+    stopReason,
+    throwResults,
   };
 }

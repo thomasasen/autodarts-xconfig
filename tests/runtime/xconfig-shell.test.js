@@ -393,6 +393,55 @@ test("xConfig shell theme background upload and clear actions are clickable and 
   runtime.stop();
 });
 
+test("xConfig shell runs feature preview actions for winner fireworks", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const originalSetTimeout = windowRef.setTimeout.bind(windowRef);
+  windowRef.setTimeout = (callback, ms, ...args) => {
+    return originalSetTimeout(callback, Math.min(Number(ms) || 0, 20), ...args);
+  };
+  windowRef.confetti = function fakeConfetti() {};
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='winner-fireworks']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await wait(5);
+
+  const previewButton = documentRef.getElementById(
+    "ad-xconfig-field-winner-fireworks-run-feature-action"
+  );
+  assert.ok(previewButton);
+  previewButton.click();
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), true);
+
+  windowRef.dispatchEvent(new FakeEvent("pointerdown", { bubbles: true }));
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-style-preview")), false);
+
+  previewButton.click();
+  await wait(5);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), true);
+  await wait(40);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
+
+  runtime.stop();
+});
+
 test("xConfig shell restores persisted toggle, setting and background state after reload", async () => {
   const localStorage = new FakeStorage();
 

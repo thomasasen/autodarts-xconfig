@@ -9,11 +9,13 @@ const repoRoot = path.resolve(__dirname, "..");
 const entryFile = path.join(repoRoot, "loader", "autodarts-xconfig.user.js");
 const outDir = path.join(repoRoot, "dist");
 const outFile = path.join(outDir, "autodarts-xconfig.user.js");
+const packageJson = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
+const packageVersion = String(packageJson.version || "").trim() || "0.0.0";
 
 const userscriptHeader = `// ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      1.0.0
+// @version      ${packageVersion}
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT

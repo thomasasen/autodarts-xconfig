@@ -1,7 +1,11 @@
 # Feature-Parität
 
-Die verbindliche, scriptweise Paritätsübersicht liegt in:
+Die Legacy-Parität ist in zwei Ebenen dokumentiert:
 
-- [LEGACY-PARITY-MATRIX.md](LEGACY-PARITY-MATRIX.md)
+- [LEGACY-PARITY-MATRIX.md](LEGACY-PARITY-MATRIX.md) als stabiler Kompatibilitätsanker für bestehende Verweise
+- [LEGACY-DISCREPANCY-MATRIX.md](LEGACY-DISCREPANCY-MATRIX.md) als Release-Matrix mit Status, Erklärung und Nutzerwirkung
 
-Dieses Dokument bleibt als stabiler Link für bestehende Verweise erhalten.
+Für den vollständigen Dateiscan siehe zusätzlich:
+
+- [OLDREPO-INVENTORY.md](OLDREPO-INVENTORY.md)
+- [NEW-SYSTEM-INVENTORY.md](NEW-SYSTEM-INVENTORY.md)

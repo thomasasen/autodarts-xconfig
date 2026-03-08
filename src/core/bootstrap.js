@@ -9,7 +9,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-const API_VERSION = "1.0.0";
+const API_VERSION = "1.1.0";
 
 function normalizeFeatureDefinitions(definitions) {
   if (!Array.isArray(definitions) || !definitions.length) {
@@ -155,6 +155,7 @@ export function createBootstrap(options = {}) {
     namespace.getSnapshot = getSnapshot;
     namespace.updateConfig = updateConfig;
     namespace.setFeatureEnabled = setFeatureEnabled;
+    namespace.runFeatureAction = runFeatureAction;
     namespace.inspect = inspectRuntime;
     Object.assign(namespace, extraPublicApi);
 
@@ -310,6 +311,30 @@ export function createBootstrap(options = {}) {
     return config.isFeatureEnabled(configKey);
   }
 
+  function runFeatureAction(featureRef, actionId) {
+    const definition =
+      featureDefinitionByFeatureKey(featureDefinitions, String(featureRef || "")) ||
+      featureDefinitionByConfigKey(featureDefinitions, String(featureRef || ""));
+
+    if (!definition || typeof definition.runAction !== "function") {
+      return Promise.reject(new Error("Unsupported feature action."));
+    }
+
+    try {
+      return Promise.resolve(
+        definition.runAction({
+          actionId: String(actionId || "").trim(),
+          featureKey: definition.featureKey,
+          configKey: definition.configKey,
+          featureConfig: config.getFeatureConfig(definition.configKey),
+          context,
+        })
+      );
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   function attachPublicApi(entries = {}) {
     if (!entries || typeof entries !== "object") {
       return api;
@@ -333,6 +358,7 @@ export function createBootstrap(options = {}) {
     getSnapshot,
     updateConfig,
     setFeatureEnabled,
+    runFeatureAction,
     attachPublicApi,
     context,
   };

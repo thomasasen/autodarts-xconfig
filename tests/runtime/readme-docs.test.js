@@ -11,6 +11,9 @@ const featuresDocPath = path.resolve(process.cwd(), "docs", "FEATURES.md");
 const dartRuleModulesDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-MODULES.md");
 const dartRulesReferenceDocPath = path.resolve(process.cwd(), "docs", "DART-RULES-REFERENCE.md");
 const dartRuleAuditDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-AUDIT.md");
+const architectureDocPath = path.resolve(process.cwd(), "docs", "TECHNICAL-ARCHITECTURE.md");
+const migrationStatusDocPath = path.resolve(process.cwd(), "docs", "MIGRATION-STATUS.md");
+const releaseQaDocPath = path.resolve(process.cwd(), "docs", "RELEASE-QA-REPORT.md");
 
 test("README references the canonical userscript install target", () => {
   const readme = readFileSync(readmePath, "utf8");
@@ -163,4 +166,16 @@ test("dart rule docs mention the audited core modules and rule topics", () => {
   assert.match(referenceDoc, /Cut-Throat|Cut Throat/);
   assert.match(auditDoc, /checkout-score-pulse/);
   assert.match(auditDoc, /tv-board-zoom/);
+});
+
+test("release architecture and QA docs mention public action API and release status", () => {
+  const architectureDoc = readFileSync(architectureDocPath, "utf8");
+  const migrationDoc = readFileSync(migrationStatusDocPath, "utf8");
+  const releaseQaDoc = readFileSync(releaseQaDocPath, "utf8");
+
+  assert.match(architectureDoc, /runFeatureAction\(featureKey, actionId\)/);
+  assert.match(architectureDoc, /v1\.1\.0/);
+  assert.match(migrationDoc, /v1\.1\.0/);
+  assert.match(releaseQaDoc, /Winner Fireworks/);
+  assert.match(releaseQaDoc, /Release-QA-Report/);
 });
