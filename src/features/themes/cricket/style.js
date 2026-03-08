@@ -4,7 +4,7 @@ import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-util
 export const STYLE_ID = "ad-ext-theme-cricket-style";
 
 const PREVIEW_PLACEMENT = Object.freeze({
-  mode: "under-throws",
+  mode: "standard",
   previewHeightPx: 128,
   previewGapPx: 8,
 });
@@ -27,14 +27,11 @@ const cricketThemeCss = `
   --theme-alt-bg: #274e13;
 }
 
-.css-1k7iu8k {
-  max-width: 96%;
-}
-
 #ad-ext-turn > .ad-ext-turn-throw,
 #ad-ext-turn > .score,
 #ad-ext-turn > .suggestion{
-  height:100px !important;
+  height: 100px !important;
+  width: 100% !important;
 }
 
 #ad-ext-player-display{
@@ -42,15 +39,15 @@ const cricketThemeCss = `
   grid-auto-flow: column !important;
   grid-auto-columns: minmax(0, 1fr) !important;
   align-items: stretch !important;
-  gap: 0.35rem !important;
+  gap: 0.45rem !important;
 }
 
 #ad-ext-player-display .ad-ext-player{
-  min-height: 185px !important;
+  min-height: 172px !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
-  min-height: 185px !important;
+  min-height: 172px !important;
   padding-top: 0.3rem !important;
   padding-bottom: 0.3rem !important;
 }
@@ -95,10 +92,6 @@ div.ad-ext-player.ad-ext-player-active.css-1en42kf p.chakra-text.css-11cuipc{
   scrollbar-width: none !important;
 }
 
-.css-tkevr6{
-  height:99%;
-}
-
 div.css-gmuwbf,
 div.css-tkevr6,
 div.css-nfhdnc {
@@ -113,22 +106,20 @@ div.css-nfhdnc {
   border: 2px solid #9fdb58 !important;
 }
 
-.css-c04tlr {
-  height: calc(92% - 185px) !important;
-}
-
 .chakra-stack.navigation {
   background-color: var(--theme-navigation-bg);
 }
 
 p.chakra-text.css-1qlemha {
   background-color: var(--theme-current-bg);
-  left: calc(var(--chakra-space-2) * -5);
-  font-size: 36px;
+  left: 0 !important;
+  margin-left: 0 !important;
+  font-size: clamp(1.6rem, 2vw, 2.2rem);
   white-space: nowrap;
   line-height: 1.1;
-  padding: 0 0.5rem;
-  width: fit-content;
+  padding: 0 0.5rem 0 0.45rem;
+  width: max-content;
+  max-width: 100%;
 }
 
 span.css-elma0c {
@@ -171,17 +162,77 @@ span.chakra-switch__track.css-v4l15v {
   background-color: #38761d;
 }
 
-.css-1yso2z2 {
+.css-tkevr6 > .chakra-stack{
+  grid-template-areas:
+    "header header"
+    "footer board"
+    "players board" !important;
+  grid-template-columns: 0.9fr 1.1fr !important;
+  grid-template-rows: max-content 108px minmax(0, 1fr) !important;
+}
+
+#ad-ext-turn{
+  grid-column-start: 1 !important;
+  grid-column-end: 2 !important;
+  grid-row-start: 2 !important;
+  grid-row-end: 3 !important;
+  grid-area: footer !important;
+  width: 100% !important;
+  padding-right: 0.5rem !important;
+}
+
+#ad-ext-turn > .score > img{
+  width: 100% !important;
+  max-width: none !important;
+  height: 68px;
+  object-fit: contain;
+}
+
+.css-1kejrvi,
+.css-14xtjvc{
+  grid-column-start: 2 !important;
+  grid-column-end: 3 !important;
+  grid-row-start: 2 !important;
+  grid-row-end: 4 !important;
+  grid-area: board !important;
+  align-self: stretch !important;
   height: 100% !important;
+  min-height: 0 !important;
+  margin-top: 0 !important;
 }
 
-.css-1f26ant {
-  height: calc(100% - 230px);
+.css-1kejrvi .css-tqsk66,
+.css-14xtjvc .css-tqsk66{
+  height: calc(100% - 52px) !important;
+  min-height: 0 !important;
+  padding-bottom: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
+.css-1kejrvi .css-7bjx6y,
+.css-14xtjvc .css-7bjx6y,
+.css-1kejrvi .css-1wegtvo,
+.css-14xtjvc .css-1wegtvo{
+  top: auto;
+  bottom: 0;
+}
+
+.css-1kejrvi svg[viewBox="0 0 1000 1000"],
+.css-14xtjvc svg[viewBox="0 0 1000 1000"]{
+  width: min(100%, 90vh) !important;
+  height: min(100%, 90vh) !important;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.css-c04tlr,
+.css-1yso2z2,
+.css-1f26ant,
 .css-1f26ant > div {
-  height: 80% !important;
-  margin-bottom: 1px !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
 `;
 

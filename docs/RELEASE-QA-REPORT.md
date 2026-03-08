@@ -40,3 +40,18 @@
 
 - Kein Remote-Loader- oder GitHub-Sync-Flow mehr; das ist eine bewusste Produktentscheidung.
 - Der X01-`Bull mode` wird erst modelliert, wenn Autodarts ihn verlässlich im Match-State liefert.
+
+## Manual QA Check: Cricket Template Layout
+
+- Viewports: `1366x768`, `1920x1080`, `2560x1440`
+- Modes: `Cricket` and `Tactics`
+- Player counts: `2`, `3`, `4`
+- Acceptance:
+  - no large vertical gap between throw row and player/grid area
+  - row labels (`20...Bull`) stay fully visible in viewport
+  - board uses the available right-side area significantly better
+  - no overlap with `Undo`/`Next`
+- Smoke:
+  - `AVG anzeigen` on/off
+  - theme background image on/off
+  - no layout regressions during these toggles

@@ -116,9 +116,11 @@ test("theme-cricket activates for tactics and cleans style on cleanup", async ()
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-cricket-style")), true);
+  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-cricket-style")), false);
+  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
 });
 
 test("theme-bull-off applies includes matching without preview-space class", async () => {
