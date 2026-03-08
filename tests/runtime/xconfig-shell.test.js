@@ -67,6 +67,32 @@ test("xConfig shell stays idempotent across repeated runtime init and DOM mutati
   first.stop();
 });
 
+test("xConfig shell remains single-instance across stop/start cycles", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  await wait(5);
+
+  const initialInspect = windowRef.__adXConfig.inspect();
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-panel-host").length, 1);
+
+  runtime.stop();
+  await wait(5);
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-panel-host").length, 1);
+  assert.equal(windowRef.__adXConfig.inspect().observerCount, initialInspect.observerCount);
+  assert.equal(windowRef.__adXConfig.inspect().listenerCount, initialInspect.listenerCount);
+
+  runtime.stop();
+});
+
 test("xConfig shell persists feature toggles and settings via UI controls", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -110,4 +136,77 @@ test("xConfig shell persists feature toggles and settings via UI controls", asyn
   assert.equal(storedConfig.features.checkoutScorePulse.effect, "blink");
 
   runtime.stop();
+});
+
+test("xConfig shell restores persisted toggles and settings after reload", async () => {
+  const localStorage = new FakeStorage();
+
+  const firstDocument = new FakeDocument();
+  const firstWindow = createFakeWindow({ documentRef: firstDocument, localStorage });
+  const firstRuntime = await initializeTampermonkeyRuntime({
+    windowRef: firstWindow,
+    documentRef: firstDocument,
+  });
+
+  await wait(5);
+  firstDocument.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+
+  const themeToggle = firstDocument.getElementById("ad-xconfig-toggle-theme-x01");
+  assert.ok(themeToggle);
+  themeToggle.checked = true;
+  themeToggle.dispatchEvent(new FakeEvent("change", { bubbles: true, target: themeToggle }));
+  await wait(5);
+
+  firstDocument.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const sweepToggle = firstDocument.getElementById("ad-xconfig-toggle-turn-start-sweep");
+  assert.ok(sweepToggle);
+  sweepToggle.checked = true;
+  sweepToggle.dispatchEvent(new FakeEvent("change", { bubbles: true, target: sweepToggle }));
+  await wait(5);
+
+  const effectSelect = firstDocument.getElementById("ad-xconfig-field-checkout-score-pulse-effect");
+  assert.ok(effectSelect);
+  effectSelect.value = "glow";
+  effectSelect.dispatchEvent(new FakeEvent("change", { bubbles: true, target: effectSelect }));
+  await wait(5);
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.featureToggles["themes.x01"], true);
+  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
+  assert.equal(storedConfig.features.checkoutScorePulse.effect, "glow");
+
+  firstRuntime.stop();
+
+  const secondDocument = new FakeDocument();
+  const secondWindow = createFakeWindow({ documentRef: secondDocument, localStorage });
+  const secondRuntime = await initializeTampermonkeyRuntime({
+    windowRef: secondWindow,
+    documentRef: secondDocument,
+  });
+
+  await wait(5);
+
+  const secondSnapshot = secondRuntime.getSnapshot();
+  assert.equal(secondSnapshot.features["theme-x01"].enabled, true);
+  assert.equal(secondSnapshot.features["turn-start-sweep"].enabled, true);
+  assert.equal(secondSnapshot.features["turn-start-sweep"].mounted, true);
+  assert.equal(secondSnapshot.features["theme-x01"].mounted, true);
+
+  secondDocument.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+  secondDocument.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const restoredEffect = secondDocument.getElementById("ad-xconfig-field-checkout-score-pulse-effect");
+  assert.ok(restoredEffect);
+  assert.equal(restoredEffect.value, "glow");
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.featureToggles["themes.x01"], true);
+  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
+
+  secondRuntime.stop();
 });

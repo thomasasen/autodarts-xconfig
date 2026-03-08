@@ -1,7 +1,7 @@
 import { createConfigStore } from "../config/config-store.js";
 import { createBootstrap } from "../core/bootstrap.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
-import { ensureXConfigShell } from "./xconfig-shell.js";
+import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
 const RUNTIME_INIT_PROMISE_KEY = "__runtimeInitPromise";
@@ -234,7 +234,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     runtime.start();
 
     const namespace = getGlobalNamespace(windowRef);
-    ensureXConfigShell({
+    ensureXConfigUi({
       windowRef,
       documentRef,
       runtime,

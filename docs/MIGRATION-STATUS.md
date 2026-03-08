@@ -1,6 +1,6 @@
 # Migrationsstatus
 
-## Ausgeliefert in v1.0
+## Ausgeliefert in v1.0.0
 
 ### Animationen und Komfort
 
@@ -58,4 +58,5 @@ Sie deckt die ausgelieferten Animationen, Komfortfunktionen und Themes inklusive
 ## Verbleibende Lücken
 
 - Keine bekannte Funktionslücke bei den ausgelieferten 15 Animationen und 5 Themes.
-- Bewusst nicht enthaltene Altbestandteile sind dokumentiert und kein Release-Blocker für v1.0.
+- Bewusst nicht enthaltene Altbestandteile sind dokumentiert und kein Release-Blocker für v1.0.0.
+- Der scriptweise Detailabgleich steht in `docs/LEGACY-PARITY-MATRIX.md`.

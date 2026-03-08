@@ -2,13 +2,13 @@
 
 ## Struktur
 
-Die Projektstruktur bleibt für v1.0 unverändert:
+Die Projektstruktur bleibt für v1.0.0 unverändert:
 
 - `src/core`: Bootstrap, Lifecycle, Listener- und Observer-Registries
 - `src/domain`: Spiellogik und Regelbewertung ohne DOM-Abhängigkeit
-- `src/features`: modulare Features und Themes
+- `src/features`: modulare Features, Themes und xConfig-UI
 - `src/config`: Defaults, Normalisierung, Persistenz und Legacy-Import
-- `src/runtime`: Tampermonkey-Start, Public API und `AD xConfig`-Shell
+- `src/runtime`: Tampermonkey-Start und Public API
 - `src/vendors`: eingebundene Vendor-Bausteine
 - `loader`: Userscript-Entry
 - `dist`: gebautes Installationsartefakt
@@ -20,7 +20,7 @@ Die Projektstruktur bleibt für v1.0 unverändert:
 2. Die Konfiguration wird geladen, normalisiert und bei Bedarf aus Legacy-Daten übernommen.
 3. Die Feature-Registry liefert alle Definitionsdaten für Animationen und Themes.
 4. Aktivierte Module werden idempotent gemountet.
-5. Die Runtime-Shell für `AD xConfig` hängt sich an Navigation und DOM an und bleibt ebenfalls idempotent.
+5. Die immer aktive `xconfig-ui` hängt sich an Navigation und DOM an und bleibt ebenfalls idempotent.
 6. Cleanup entfernt Styles, Listener und Observer sauber.
 
 Wichtige Eigenschaft: wiederholtes Starten oder erneutes Rendern erzeugt keine doppelten Instanzen.
@@ -46,7 +46,8 @@ Gemeinsame Theme-Logik liegt in `src/features/themes/shared`.
 
 ## AD xConfig-Oberfläche
 
-Die zentrale Oberfläche ist kein normales Endnutzer-Feature aus der Registry, sondern eine Runtime-Shell unter `src/runtime`.
+Die zentrale Oberfläche ist als eigenes Modul unter `src/features/xconfig-ui` umgesetzt und wird beim Runtime-Start immer aktiv gemountet.
+Sie ist absichtlich kein normales Endnutzer-Toggle in der Feature-Registry.
 
 Sie übernimmt:
 
@@ -112,4 +113,4 @@ Optional:
 npm run verify
 ```
 
-Das gebaute Userscript liegt in `dist/autodarts-xconfig.user.js` und enthält den vollständigen Tampermonkey-Header mit `@match https://play.autodarts.io/*` und `@grant none`.
+Das gebaute Userscript liegt in `dist/autodarts-xconfig.user.js` und enthält den vollständigen Tampermonkey-Header mit `@version 1.0.0`, `@match https://play.autodarts.io/*` und `@grant none`.
