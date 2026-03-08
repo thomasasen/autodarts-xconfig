@@ -244,6 +244,37 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   runtime.stop();
 });
 
+test("xConfig shell renders mapped preview backgrounds and compact legacy back button", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+
+  const backButton = documentRef.querySelector("[data-adxconfig-action='close']");
+  assert.ok(backButton);
+  assert.equal(backButton.classList.contains("ad-xconfig-back-btn"), true);
+
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  [
+    "checkout-score-pulse",
+    "checkout-board-targets",
+    "tv-board-zoom",
+    "turn-start-sweep",
+  ].forEach((featureKey) => {
+    const card = documentRef.querySelector(`.ad-xconfig-card[data-feature-key='${featureKey}']`);
+    assert.ok(card, `missing card for ${featureKey}`);
+    assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing preview background for ${featureKey}`);
+  });
+
+  runtime.stop();
+});
+
 test("xConfig shell theme background upload and clear actions are clickable and persisted", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

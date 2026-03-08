@@ -3,11 +3,20 @@ import themeShanghaiPng from "../../docs/screenshots/template-theme-shanghai-xCo
 import themeBermudaPng from "../../docs/screenshots/template-theme-bermuda-xConfig.png";
 import themeCricketPng from "../../docs/screenshots/template-theme-cricket-xConfig.png";
 import themeBullOffPng from "../../docs/screenshots/template-theme-bull-off-xConfig.png";
+import checkoutScorePulseGif from "../../docs/screenshots/animation-checkout-score-pulse.gif";
+import checkoutBoardTargetsGif from "../../docs/screenshots/animation-checkout-board-targets.gif";
+import tvBoardZoomGif from "../../docs/screenshots/animation-tv-board-zoom.gif";
 import styleCheckoutSuggestionsPng from "../../docs/screenshots/animation-style-checkout-suggestions.png";
 import cricketHighlighterPng from "../../docs/screenshots/animation-cricket-target-highlighter.png";
+import cricketGridFxPng from "../../docs/screenshots/animation-cricket-grid-fx.png";
 import averageTrendArrowPng from "../../docs/screenshots/animation-average-trend-arrow.png";
+import turnStartSweepGif from "../../docs/screenshots/animation-turn-start-sweep.gif";
+import tripleDoubleBullHitsGif from "../../docs/screenshots/animation-triple-double-bull-hits.gif";
+import dartMarkerEmphasisGif from "../../docs/screenshots/animation-dart-marker-emphasis.gif";
 import dartMarkerDartsPng from "../../docs/screenshots/animation-dart-marker-darts.png";
 import removeDartsNotificationPng from "../../docs/screenshots/animation-remove-darts-notification.png";
+import turnPointsCountGif from "../../docs/screenshots/animation-turn-points-count.gif";
+import winnerFireworksGif from "../../docs/screenshots/animation-winner-fireworks.gif";
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-x01": themeX01Png,
@@ -15,11 +24,20 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-bermuda": themeBermudaPng,
   "theme-cricket": themeCricketPng,
   "theme-bull-off": themeBullOffPng,
+  "checkout-score-pulse": checkoutScorePulseGif,
+  "checkout-board-targets": checkoutBoardTargetsGif,
+  "tv-board-zoom": tvBoardZoomGif,
   "style-checkout-suggestions": styleCheckoutSuggestionsPng,
   "cricket-highlighter": cricketHighlighterPng,
+  "cricket-grid-fx": cricketGridFxPng,
   "average-trend-arrow": averageTrendArrowPng,
+  "turn-start-sweep": turnStartSweepGif,
+  "triple-double-bull-hits": tripleDoubleBullHitsGif,
+  "dart-marker-emphasis": dartMarkerEmphasisGif,
   "dart-marker-darts": dartMarkerDartsPng,
   "remove-darts-notification": removeDartsNotificationPng,
+  "turn-points-count": turnPointsCountGif,
+  "winner-fireworks": winnerFireworksGif,
 });
 
 export function resolveXConfigPreviewAsset(featureKey) {

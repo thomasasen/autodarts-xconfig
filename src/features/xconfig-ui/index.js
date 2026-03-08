@@ -52,7 +52,7 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-page{margin:0 auto;width:100%;padding:1rem;color:#fff;font-family:"Open Sans","Segoe UI",Tahoma,sans-serif}
 #${PANEL_HOST_ID} .ad-xconfig-shell{max-width:1366px;margin:0 auto;padding:1rem;border-radius:14px;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 30px rgba(0,0,0,.28);background:rgba(25,32,71,.95);background-image:radial-gradient(50% 30% at 86% 0%,rgba(49,51,112,.89) 0%,rgba(64,52,134,0) 100%),radial-gradient(50% 70% at 70% 22%,rgba(38,89,154,.9) 0%,rgba(64,52,134,0) 100%),radial-gradient(50% 70% at -2% 53%,rgba(52,32,95,.89) 0%,rgba(64,52,134,0) 100%),radial-gradient(50% 40% at 66% 59%,rgba(32,111,185,.87) 7%,rgba(32,111,185,0) 100%)}
 #${PANEL_HOST_ID} .ad-xconfig-shell,#${PANEL_HOST_ID} .ad-xconfig-shell *{pointer-events:auto}
-#${PANEL_HOST_ID} .ad-xconfig-header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem}
+#${PANEL_HOST_ID} .ad-xconfig-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-header-main{display:flex;align-items:center;gap:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-title{margin:0;font-size:1.65rem;line-height:1.2}
 #${PANEL_HOST_ID} .ad-xconfig-subtitle{margin:.45rem 0 0;font-size:.95rem;color:rgba(255,255,255,.72)}
@@ -64,6 +64,8 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{border:1px solid rgba(255,255,255,.24);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{padding:.55rem .85rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn:hover,#${PANEL_HOST_ID} .ad-xconfig-tab:hover{background:rgba(255,255,255,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-back-btn{width:2.1rem;min-width:2.1rem;height:2.1rem;padding:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:.92rem}
+#${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
 #${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]{border-color:rgba(112,196,255,.95);background:rgba(58,148,255,.34)}
 #${PANEL_HOST_ID} .ad-xconfig-tab-title{font-size:1rem;font-weight:800;line-height:1.2}
@@ -88,8 +90,11 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-field label{font-weight:600;font-size:.86rem}
 #${PANEL_HOST_ID} .ad-xconfig-field select{width:100%;max-width:20rem;padding:.45rem .55rem;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(12,17,36,.9);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-field--checkbox{display:flex;align-items:center;gap:.55rem}
-#${PANEL_HOST_ID} .ad-xconfig-onoff{display:inline-flex;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,32,.45);width:5.2rem}
-#${PANEL_HOST_ID} .ad-xconfig-onoff-btn{border:none;background:transparent;color:rgba(255,255,255,.9);width:50%;min-width:2.6rem;height:2.2rem;padding:0 .45rem;cursor:pointer;font-weight:700;font-size:.86rem}
+#${PANEL_HOST_ID} .ad-xconfig-onoff{position:relative;display:inline-flex;flex:0 0 auto;width:5.2rem;min-width:5.2rem;max-width:5.2rem;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,32,.45)}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn{appearance:none;border:none;background:transparent;color:rgba(255,255,255,.9);width:50%;min-width:2.6rem;height:2.2rem;padding:0 .45rem;cursor:pointer;font-weight:700;font-size:.86rem;line-height:1;white-space:nowrap;text-align:center;flex:1 1 50%}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn:hover{background:rgba(255,255,255,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn--on{color:rgba(198,255,220,.94)}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off{color:rgba(255,216,216,.94)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--on[data-active="true"]{background:rgba(44,170,90,.44);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off[data-active="true"]{background:rgba(199,63,63,.42);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-note{margin:.5rem 0 0;color:rgba(234,244,255,.9);font-size:.82rem}
@@ -520,6 +525,9 @@ function buildFeatureCard(documentRef, feature) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
   const card = createElement(documentRef, "article", {
     className: "ad-xconfig-card",
+    attributes: {
+      "data-feature-key": feature.featureKey,
+    },
   });
   const previewUrl =
     String(feature.config?.backgroundImageDataUrl || "").trim() ||
@@ -700,7 +708,7 @@ function buildShellContent(documentRef, state, features) {
   });
   headingMain.appendChild(createElement(documentRef, "button", {
     type: "button",
-    className: "ad-xconfig-btn ad-xconfig-btn--square",
+    className: "ad-xconfig-btn ad-xconfig-back-btn",
     text: "←",
     attributes: {
       "data-adxconfig-action": "close",

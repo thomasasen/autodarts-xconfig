@@ -13,11 +13,14 @@ Abschluss der UI/UX-Parität für die bestehende Bundle-Architektur ohne Rückke
 - xConfig-Shell auf dunkles, Legacy-nahes Kartenlayout umgestellt.
 - Tabs `Themen` / `Animationen` mit klarer Hierarchie und verbessertem Click-Target.
 - Karten mit segmentierten `An/Aus`-Buttons und Preview-Hintergründen.
+- Fehlende Preview-Hintergründe für zentrale Animationskarten ergänzt (GIF/PNG-Mapping erweitert).
+- Zurück-Button und Segment-Toggles auf Legacy-nahe Proportionen korrigiert.
 - Einstellungs-Modal ergänzt (`⚙ Einstellungen`) mit vollständiger Verdrahtung für:
   - Toggle-Settings
   - Select-Settings
   - Theme-Hintergrund `Upload` / `Clear`
 - Auto-Save beibehalten, inklusive Notice-Statusmeldungen.
+- Debug-Option pro registriertem Skript technisch abgesichert (normalisierte `debug`-Flags + Feature-Debug-Hooks).
 
 ## Referenznutzung
 

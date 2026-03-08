@@ -38,6 +38,7 @@ await build({
   legalComments: "none",
   loader: {
     ".png": "dataurl",
+    ".gif": "dataurl",
     ".mp3": "dataurl",
   },
   banner: {

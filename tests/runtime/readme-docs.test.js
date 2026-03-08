@@ -97,3 +97,35 @@ test("xConfig preview screenshot manifest points only to existing canonical scre
     );
   });
 });
+
+test("xConfig preview manifest covers the key animation/theme cards with visual backgrounds", () => {
+  const requiredPreviewFeatureKeys = [
+    "theme-x01",
+    "theme-shanghai",
+    "theme-bermuda",
+    "theme-cricket",
+    "theme-bull-off",
+    "checkout-score-pulse",
+    "checkout-board-targets",
+    "tv-board-zoom",
+    "style-checkout-suggestions",
+    "average-trend-arrow",
+    "turn-start-sweep",
+    "triple-double-bull-hits",
+    "cricket-highlighter",
+    "cricket-grid-fx",
+    "dart-marker-emphasis",
+    "dart-marker-darts",
+    "remove-darts-notification",
+    "turn-points-count",
+    "winner-fireworks",
+  ];
+
+  requiredPreviewFeatureKeys.forEach((featureKey) => {
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(XCONFIG_PREVIEW_SCREENSHOTS, featureKey),
+      true,
+      `missing preview mapping for ${featureKey}`
+    );
+  });
+});

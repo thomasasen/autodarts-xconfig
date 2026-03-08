@@ -68,3 +68,43 @@ test("feature registry lists runtime metadata against snapshots", () => {
     false
   );
 });
+
+test("feature registry wires per-feature debug helper based on config.debug", () => {
+  const calls = [];
+  const logger = {
+    info: (...args) => calls.push(["info", ...args]),
+    warn: (...args) => calls.push(["warn", ...args]),
+    error: (...args) => calls.push(["error", ...args]),
+  };
+  const registry = createFeatureRegistry({
+    logger,
+    definitions: [
+      {
+        featureKey: "debug-check",
+        configKey: "debugCheck",
+        initialize: (context) => {
+          context.featureDebug.log("mount");
+          return () => context.featureDebug.log("unmount");
+        },
+      },
+    ],
+  });
+
+  const [definition] = registry.getDefinitions();
+  const cleanup = definition.mount({
+    config: {
+      getFeatureConfig: () => ({ debug: true }),
+    },
+    logger,
+  });
+  cleanup();
+
+  assert.equal(
+    calls.some((entry) => entry.join(" ").includes("[autodarts-xconfig:debug-check] mount")),
+    true
+  );
+  assert.equal(
+    calls.some((entry) => entry.join(" ").includes("[autodarts-xconfig:debug-check] unmount")),
+    true
+  );
+});

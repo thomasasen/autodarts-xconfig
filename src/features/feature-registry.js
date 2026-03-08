@@ -19,6 +19,52 @@ import { mountThemeBermuda } from "./themes/bermuda/index.js";
 import { mountThemeCricket } from "./themes/cricket/index.js";
 import { mountThemeBullOff } from "./themes/bull-off/index.js";
 
+function readFeatureDebugFlag(context, configKey) {
+  const configRef = context?.config;
+  if (!configRef || typeof configRef.getFeatureConfig !== "function") {
+    return false;
+  }
+
+  const featureConfig = configRef.getFeatureConfig(configKey);
+  return Boolean(featureConfig && typeof featureConfig === "object" && featureConfig.debug === true);
+}
+
+function createFeatureDebugTools(context, featureKey, configKey, fallbackLogger) {
+  const loggerRef = context?.logger || fallbackLogger || console;
+  const prefix = `[autodarts-xconfig:${featureKey}]`;
+
+  const emit = (methodName, args) => {
+    if (!readFeatureDebugFlag(context, configKey)) {
+      return;
+    }
+
+    const method =
+      loggerRef && typeof loggerRef[methodName] === "function"
+        ? loggerRef[methodName].bind(loggerRef)
+        : null;
+    if (!method) {
+      return;
+    }
+
+    method(prefix, ...args);
+  };
+
+  return {
+    get enabled() {
+      return readFeatureDebugFlag(context, configKey);
+    },
+    log(...args) {
+      emit("info", args);
+    },
+    warn(...args) {
+      emit("warn", args);
+    },
+    error(...args) {
+      emit("error", args);
+    },
+  };
+}
+
 function normalizeDefinition(definition, options = {}) {
   if (!definition || typeof definition !== "object") {
     return null;
@@ -32,18 +78,29 @@ function normalizeDefinition(definition, options = {}) {
     return null;
   }
 
-  const debug = Boolean(options.debug);
+  const registryDebug = Boolean(options.debug);
   const logger = options.logger || console;
   const wrappedInitialize = function wrappedInitialize(context) {
-    if (debug && logger && typeof logger.info === "function") {
+    const featureDebug = createFeatureDebugTools(context, featureKey, configKey, logger);
+
+    if (registryDebug && logger && typeof logger.info === "function") {
       logger.info(`[autodarts-xconfig] feature initialize: ${featureKey}`);
     }
+    if (featureDebug.enabled) {
+      featureDebug.log("Debug aktiviert.");
+    }
 
-    const cleanup = initialize(context);
+    const cleanup = initialize({
+      ...context,
+      featureDebug,
+    });
 
     return function wrappedCleanup() {
-      if (debug && logger && typeof logger.info === "function") {
+      if (registryDebug && logger && typeof logger.info === "function") {
         logger.info(`[autodarts-xconfig] feature cleanup: ${featureKey}`);
+      }
+      if (featureDebug.enabled) {
+        featureDebug.log("Cleanup.");
       }
 
       if (typeof cleanup === "function") {

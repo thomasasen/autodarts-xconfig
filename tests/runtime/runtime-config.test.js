@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createRuntimeConfig, normalizeRuntimeConfig } from "../../src/config/runtime-config.js";
+import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 
 test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   const config = normalizeRuntimeConfig();
@@ -234,4 +235,17 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").playerFieldTransparency, 5);
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").contrastPreset, "high");
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").backgroundDisplayMode, "fill");
+});
+
+test("normalized feature configs expose a boolean debug flag for every registered script", () => {
+  const runtimeConfig = createRuntimeConfig();
+
+  defaultFeatureDefinitions.forEach((definition) => {
+    const normalizedFeatureConfig = runtimeConfig.getFeatureConfig(definition.configKey);
+    assert.equal(
+      typeof normalizedFeatureConfig.debug,
+      "boolean",
+      `missing debug boolean for ${definition.configKey}`
+    );
+  });
 });
