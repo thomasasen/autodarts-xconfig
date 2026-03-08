@@ -163,38 +163,11 @@ span.chakra-switch__track.css-v4l15v {
 }
 
 .css-tkevr6 > .chakra-stack{
-  grid-template-areas:
-    "header header"
-    "footer board"
-    "players board" !important;
-  grid-template-columns: 0.9fr 1.1fr !important;
-  grid-template-rows: max-content 108px minmax(0, 1fr) !important;
-}
-
-#ad-ext-turn{
-  grid-column-start: 1 !important;
-  grid-column-end: 2 !important;
-  grid-row-start: 2 !important;
-  grid-row-end: 3 !important;
-  grid-area: footer !important;
-  width: 100% !important;
-  padding-right: 0.5rem !important;
-}
-
-#ad-ext-turn > .score > img{
-  width: 100% !important;
-  max-width: none !important;
-  height: 68px;
-  object-fit: contain;
+  grid-template-columns: 0.92fr 1.08fr !important;
 }
 
 .css-1kejrvi,
 .css-14xtjvc{
-  grid-column-start: 2 !important;
-  grid-column-end: 3 !important;
-  grid-row-start: 2 !important;
-  grid-row-end: 4 !important;
-  grid-area: board !important;
   align-self: stretch !important;
   height: 100% !important;
   min-height: 0 !important;
@@ -203,9 +176,9 @@ span.chakra-switch__track.css-v4l15v {
 
 .css-1kejrvi .css-tqsk66,
 .css-14xtjvc .css-tqsk66{
-  height: calc(100% - 52px) !important;
+  height: 100% !important;
   min-height: 0 !important;
-  padding-bottom: 0 !important;
+  padding-bottom: 12px !important;
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -221,18 +194,10 @@ span.chakra-switch__track.css-v4l15v {
 
 .css-1kejrvi svg[viewBox="0 0 1000 1000"],
 .css-14xtjvc svg[viewBox="0 0 1000 1000"]{
-  width: min(100%, 90vh) !important;
-  height: min(100%, 90vh) !important;
+  width: min(100%, 86vh) !important;
+  height: min(100%, 86vh) !important;
   max-width: 100%;
   max-height: 100%;
-}
-
-.css-c04tlr,
-.css-1yso2z2,
-.css-1f26ant,
-.css-1f26ant > div {
-  min-height: 0 !important;
-  height: auto !important;
 }
 `;
 

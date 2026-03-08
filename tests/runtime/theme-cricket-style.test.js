@@ -11,11 +11,12 @@ test("cricket theme uses standard preview placement and board-first layout rules
 
   assert.equal(PREVIEW_PLACEMENT.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
-  assert.match(
+  assert.match(css, /grid-template-columns:\s*0\.92fr 1\.08fr\s*!important;/);
+  assert.match(css, /width:\s*min\(100%,\s*86vh\)\s*!important;/);
+  assert.doesNotMatch(
     css,
     /grid-template-areas:\s*"header header"\s*"footer board"\s*"players board"/
   );
-  assert.match(css, /width:\s*min\(100%,\s*90vh\)\s*!important;/);
 });
 
 test("cricket theme css no longer contains fragile legacy layout hardcodes", () => {
@@ -26,4 +27,3 @@ test("cricket theme css no longer contains fragile legacy layout hardcodes", () 
   assert.doesNotMatch(css, /height:\s*80%\s*!important/);
   assert.doesNotMatch(css, /left:\s*calc\(var\(--chakra-space-2\)\s*\*\s*-5\)/);
 });
-
