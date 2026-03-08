@@ -58,7 +58,22 @@ export function initializeTurnStartSweep(context = {}) {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (
+          Array.isArray(mutations) &&
+          mutations.length &&
+          mutations.every((mutation) => {
+            return (
+              mutation?.type === "attributes" &&
+              mutation?.attributeName === "class" &&
+              state.nodes.has(mutation?.target || null)
+            );
+          })
+        ) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,

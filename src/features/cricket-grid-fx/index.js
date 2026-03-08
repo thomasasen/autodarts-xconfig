@@ -4,7 +4,16 @@ import {
   createCricketGridFxState,
   updateCricketGridFx,
 } from "./logic.js";
-import { STYLE_ID, buildStyleText, resolveCricketGridFxConfig } from "./style.js";
+import {
+  DELTA_CLASS,
+  ROW_WAVE_CLASS,
+  SPARK_CLASS,
+  STYLE_ID,
+  WIPE_CLASS,
+  buildStyleText,
+  resolveCricketGridFxConfig,
+} from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "cricket-grid-fx";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -41,7 +50,6 @@ export function initializeCricketGridFx(context = {}) {
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const variantRules = context.domain?.variantRules;
   const cricketRules = context.domain?.cricketRules;
@@ -74,6 +82,11 @@ export function initializeCricketGridFx(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   const state = createCricketGridFxState(windowRef);
+  const invalidateRenderCache = () => {
+    if (state.renderCache && typeof state.renderCache === "object") {
+      state.renderCache.grid = null;
+    }
+  };
 
   function update() {
     if (!isCricketActive(gameState, documentRef, variantRules)) {
@@ -87,6 +100,7 @@ export function initializeCricketGridFx(context = {}) {
       cricketRules,
       variantRules,
       visualConfig,
+      cache: state.renderCache,
     });
 
     if (!renderState) {
@@ -105,17 +119,25 @@ export function initializeCricketGridFx(context = {}) {
 
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const isManagedNode = createManagedNodeMatcher({
+    classNames: [ROW_WAVE_CLASS, DELTA_CLASS, SPARK_CLASS, WIPE_CLASS],
+  });
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -126,28 +148,33 @@ export function initializeCricketGridFx(context = {}) {
       key: LISTENER_KEYS.resize,
       target: windowRef,
       type: "resize",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
       options: { passive: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.orientation,
       target: windowRef,
       type: "orientationchange",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
       options: { passive: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe(() => scheduler.schedule())
@@ -164,11 +191,6 @@ export function initializeCricketGridFx(context = {}) {
 
     scheduler.cancel();
 
-    try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // keep cleanup fail-soft
-    }
     try {
       unsubscribeGameState();
     } catch (_) {

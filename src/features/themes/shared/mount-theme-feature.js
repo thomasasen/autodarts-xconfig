@@ -4,6 +4,7 @@ import {
   isThemeVariantActive,
   togglePreviewSpace,
 } from "./theme-utils.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 
 export function mountThemeFeature(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -70,18 +71,26 @@ export function mountThemeFeature(context = {}, options = {}) {
     context.helpers && typeof context.helpers.createRafScheduler === "function"
       ? context.helpers.createRafScheduler(evaluateThemeState)
       : createRafScheduler(evaluateThemeState, { windowRef });
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [styleId],
+    classNames: [previewSpaceClass],
+  });
 
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: observerKey,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -142,4 +151,3 @@ export function mountThemeFeature(context = {}, options = {}) {
     }
   };
 }
-

@@ -6,7 +6,14 @@ import {
   resolveZoomHost,
   resolveZoomTarget,
 } from "./logic.js";
-import { STYLE_ID, buildStyleText, resolveZoomSpeedConfig } from "./style.js";
+import {
+  STYLE_ID,
+  ZOOM_CLASS,
+  ZOOM_HOST_CLASS,
+  buildStyleText,
+  resolveZoomSpeedConfig,
+} from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -60,11 +67,28 @@ export function initializeTvBoardZoom(context = {}) {
     lastTurnId: "",
     lastThrowCount: -1,
   };
+  const boardCache = {
+    svg: null,
+  };
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
-  const scheduler = schedulerFactory(() => {
+  function invalidateBoardCache() {
+    boardCache.svg = null;
+  }
+
+  function getBoardSvg() {
+    if (boardCache.svg && boardCache.svg.isConnected !== false) {
+      return boardCache.svg;
+    }
+
     const boardSvg = findBoardSvg(documentRef);
+    boardCache.svg = boardSvg;
+    return boardSvg;
+  }
+
+  const scheduler = schedulerFactory(() => {
+    const boardSvg = getBoardSvg();
     if (!boardSvg) {
       resetZoom(speedConfig, zoomState);
       return;
@@ -93,18 +117,32 @@ export function initializeTvBoardZoom(context = {}) {
     const hostNode = resolveZoomHost(targetNode);
     applyZoom(targetNode, hostNode, zoomLevel, speedConfig, intent, zoomState);
   }, { windowRef });
+  const isManagedNode = createManagedNodeMatcher({
+    classNames: [ZOOM_CLASS, ZOOM_HOST_CLASS],
+    predicates: [
+      (node) => node === zoomState.zoomedElement,
+      (node) => node === zoomState.zoomHost,
+    ],
+  });
 
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        invalidateBoardCache();
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
         attributes: true,
+        attributeFilter: ["class", "style"],
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -120,14 +158,20 @@ export function initializeTvBoardZoom(context = {}) {
       key: LISTENER_KEYS.resize,
       target: windowRef,
       type: "resize",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateBoardCache();
+        scheduler.schedule();
+      },
       options: { passive: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.orientation,
       target: windowRef,
       type: "orientationchange",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateBoardCache();
+        scheduler.schedule();
+      },
       options: { passive: true },
     });
     listenerRegistry.register({
@@ -148,7 +192,10 @@ export function initializeTvBoardZoom(context = {}) {
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateBoardCache();
+        scheduler.schedule();
+      },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.beforeUnload,
@@ -189,6 +236,7 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     resetZoom(speedConfig, zoomState, true);
+    invalidateBoardCache();
     domGuards.removeNodeById(STYLE_ID);
   };
 }

@@ -1,5 +1,6 @@
 import { updateAverageTrendArrows } from "./logic.js";
-import { STYLE_ID, buildStyleText } from "./style.js";
+import { ARROW_CLASS, STYLE_ID, buildStyleText } from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "average-trend-arrow";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -48,18 +49,25 @@ export function initializeAverageTrendArrow(context = {}) {
       durationMs: featureConfig.durationMs,
     });
   }, { windowRef });
+  const isManagedNode = createManagedNodeMatcher({
+    classNames: [ARROW_CLASS],
+  });
 
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -90,10 +98,14 @@ export function initializeAverageTrendArrow(context = {}) {
       observerRegistry.disconnect(OBSERVER_KEY);
     }
 
+    const clearTimeoutRef =
+      windowRef && typeof windowRef.clearTimeout === "function"
+        ? windowRef.clearTimeout.bind(windowRef)
+        : clearTimeout;
     arrowNodes.forEach((arrowNode) => {
       const timeout = timeoutByArrow.get(arrowNode);
       if (timeout) {
-        clearTimeout(timeout);
+        clearTimeoutRef(timeout);
       }
       if (arrowNode && arrowNode.parentNode && typeof arrowNode.parentNode.removeChild === "function") {
         arrowNode.parentNode.removeChild(arrowNode);

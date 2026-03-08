@@ -4,10 +4,12 @@
   updateRemoveDartsNotification,
 } from "./logic.js";
 import {
+  IMAGE_CLASS,
   STYLE_ID,
   buildStyleText,
   resolveRemoveDartsNotificationConfig,
 } from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "remove-darts-notification";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -17,7 +19,6 @@ export function initializeRemoveDartsNotification(context = {}) {
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
@@ -49,26 +50,29 @@ export function initializeRemoveDartsNotification(context = {}) {
 
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const isManagedNode = createManagedNodeMatcher({
+    classNames: [IMAGE_CLASS],
+  });
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe(() => scheduler.schedule())
@@ -85,11 +89,6 @@ export function initializeRemoveDartsNotification(context = {}) {
 
     scheduler.cancel();
 
-    try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // fail-soft
-    }
     try {
       unsubscribeGameState();
     } catch (_) {

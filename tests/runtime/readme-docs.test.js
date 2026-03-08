@@ -14,6 +14,8 @@ const dartRuleAuditDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-AUDI
 const architectureDocPath = path.resolve(process.cwd(), "docs", "TECHNICAL-ARCHITECTURE.md");
 const migrationStatusDocPath = path.resolve(process.cwd(), "docs", "MIGRATION-STATUS.md");
 const releaseQaDocPath = path.resolve(process.cwd(), "docs", "RELEASE-QA-REPORT.md");
+const runtimeEntrypointsDocPath = path.resolve(process.cwd(), "docs", "RUNTIME-ENTRYPOINTS.md");
+const performanceAuditDocPath = path.resolve(process.cwd(), "docs", "PERFORMANCE-AUDIT.md");
 
 test("README references the canonical userscript install target", () => {
   const readme = readFileSync(readmePath, "utf8");
@@ -178,4 +180,23 @@ test("release architecture and QA docs mention public action API and release sta
   assert.match(migrationDoc, /v1\.1\.0/);
   assert.match(releaseQaDoc, /Winner Fireworks/);
   assert.match(releaseQaDoc, /Release-QA-Report/);
+});
+
+test("runtime audit docs exist and cover entry points plus findings", () => {
+  [runtimeEntrypointsDocPath, performanceAuditDocPath].forEach((filePath) => {
+    assert.equal(existsSync(filePath), true, `missing runtime audit doc: ${path.basename(filePath)}`);
+  });
+
+  const runtimeEntrypointsDoc = readFileSync(runtimeEntrypointsDocPath, "utf8");
+  const performanceAuditDoc = readFileSync(performanceAuditDocPath, "utf8");
+
+  assert.match(runtimeEntrypointsDoc, /Bootstrap/i);
+  assert.match(runtimeEntrypointsDoc, /Mutation Observer/i);
+  assert.match(runtimeEntrypointsDoc, /Game State/i);
+  assert.match(runtimeEntrypointsDoc, /winner-fireworks/);
+
+  assert.match(performanceAuditDoc, /Findings/i);
+  assert.match(performanceAuditDoc, /Changes Applied/i);
+  assert.match(performanceAuditDoc, /Verification/i);
+  assert.match(performanceAuditDoc, /duplicate game-state wakeups/i);
 });

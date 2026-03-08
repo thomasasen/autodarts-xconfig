@@ -440,6 +440,9 @@ export function createCricketGridFxState(windowRef = null) {
     previousMarksByLabel: {},
     previousStateMap: new Map(),
     previousActivePlayerIndex: null,
+    renderCache: {
+      grid: null,
+    },
   };
 }
 
@@ -453,6 +456,9 @@ export function clearCricketGridFxState(state) {
   state.previousMarksByLabel = {};
   state.previousStateMap = new Map();
   state.previousActivePlayerIndex = null;
+  if (state.renderCache && typeof state.renderCache === "object") {
+    state.renderCache.grid = null;
+  }
 }
 
 export function updateCricketGridFx(options = {}) {

@@ -1,5 +1,6 @@
 ﻿import { getXConfigDescriptor, xconfigDescriptors } from "./descriptors.js";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const MENU_LABEL = "AD xConfig";
@@ -1139,45 +1140,9 @@ function ensureXConfigShell(options = {}) {
     });
   }
 
-  function isManagedNode(node) {
-    let current = node;
-    while (current) {
-      const nodeId = String(current.id || "");
-      if (nodeId === MENU_ITEM_ID || nodeId === PANEL_HOST_ID || nodeId === STYLE_ID) {
-        return true;
-      }
-      current = current.parentNode || null;
-    }
-    return false;
-  }
-
-  function hasExternalDomMutation(mutations = []) {
-    if (!Array.isArray(mutations) || !mutations.length) {
-      return true;
-    }
-
-    return mutations.some((mutation) => {
-      if (isManagedNode(mutation?.target || null)) {
-        return false;
-      }
-
-      const addedNodes =
-        mutation?.addedNodes && typeof mutation.addedNodes[Symbol.iterator] === "function"
-          ? Array.from(mutation.addedNodes)
-          : [];
-      const removedNodes =
-        mutation?.removedNodes && typeof mutation.removedNodes[Symbol.iterator] === "function"
-          ? Array.from(mutation.removedNodes)
-          : [];
-      const touchedNodes = [...addedNodes, ...removedNodes].filter(Boolean);
-
-      if (!touchedNodes.length) {
-        return true;
-      }
-
-      return touchedNodes.some((node) => !isManagedNode(node));
-    });
-  }
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID],
+  });
 
   function observeRoot() {
     const target =
@@ -1194,7 +1159,7 @@ function ensureXConfigShell(options = {}) {
       key: ROOT_OBSERVER_KEY,
       target,
       callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations)) {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
         queueSync();

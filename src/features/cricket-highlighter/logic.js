@@ -181,6 +181,30 @@ function findBestGridRoot(documentRef, cricketRules, targetOrder) {
   };
 }
 
+function resolveGridSnapshot(documentRef, cricketRules, targetOrder, cache = null) {
+  if (cache?.grid?.root && cache.grid.root.isConnected !== false) {
+    return cache.grid;
+  }
+
+  const nextGrid = findBestGridRoot(documentRef, cricketRules, targetOrder);
+  if (cache && typeof cache === "object") {
+    cache.grid = nextGrid;
+  }
+  return nextGrid;
+}
+
+function resolveBoardSnapshot(documentRef, cache = null) {
+  if (cache?.board?.group && cache.board.group.isConnected !== false) {
+    return cache.board;
+  }
+
+  const nextBoard = findBoardSvgGroup(documentRef);
+  if (cache && typeof cache === "object") {
+    cache.board = nextBoard;
+  }
+  return nextBoard;
+}
+
 function hasOwnMarkValue(node) {
   if (!node) {
     return false;
@@ -438,7 +462,7 @@ function buildMarksByLabelSnapshot(options = {}) {
   const discoveryTargetOrder = explicitGameModeNormalized
     ? cricketRules.getTargetOrderByGameMode(explicitGameModeNormalized)
     : cricketRules.getTargetOrderByGameMode("tactics");
-  const grid = findBestGridRoot(documentRef, cricketRules, discoveryTargetOrder);
+  const grid = resolveGridSnapshot(documentRef, cricketRules, discoveryTargetOrder, options.cache);
   if (!grid) {
     return null;
   }
@@ -700,7 +724,7 @@ export function renderCricketHighlights(options = {}) {
     return false;
   }
 
-  const board = findBoardSvgGroup(documentRef);
+  const board = resolveBoardSnapshot(documentRef, options.cache);
   if (!board?.group || !board.radius) {
     return false;
   }

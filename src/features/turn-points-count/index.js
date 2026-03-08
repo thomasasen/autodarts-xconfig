@@ -1,5 +1,5 @@
 import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
-import { stopAnimation, updateTurnPoints } from "./logic.js";
+import { collectScoreNodes, stopAnimation, updateTurnPoints } from "./logic.js";
 
 const FEATURE_KEY = "turn-points-count";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -12,7 +12,6 @@ export function initializeTurnPointsCount(context = {}) {
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
@@ -36,6 +35,7 @@ export function initializeTurnPointsCount(context = {}) {
     activeAnimeByNode: new Map(),
   };
   let animeRef = getAnime(windowRef);
+  let disposed = false;
 
   function update() {
     updateTurnPoints({
@@ -49,12 +49,30 @@ export function initializeTurnPointsCount(context = {}) {
 
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const isAnimatingScoreNode = (node) => {
+    const candidate = node?.nodeType === 3 ? node.parentNode || null : node;
+    return (
+      state.activeAnimeByNode.has(candidate) ||
+      state.activeRafByNode.has(candidate)
+    );
+  };
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (
+          Array.isArray(mutations) &&
+          mutations.length &&
+          mutations.every((mutation) => {
+            return mutation?.type === "characterData" && isAnimatingScoreNode(mutation?.target || null);
+          })
+        ) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
@@ -73,20 +91,17 @@ export function initializeTurnPointsCount(context = {}) {
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe(() => scheduler.schedule())
       : () => {};
 
   ensureAnimeLoaded(windowRef).then((loadedAnime) => {
-    if (loadedAnime) {
-      animeRef = loadedAnime;
-      scheduler.schedule();
+    if (disposed || !loadedAnime) {
+      return;
     }
+    animeRef = loadedAnime;
+    scheduler.schedule();
   });
 
   scheduler.schedule();
@@ -97,13 +112,9 @@ export function initializeTurnPointsCount(context = {}) {
       return;
     }
     cleanedUp = true;
+    disposed = true;
     scheduler.cancel();
 
-    try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // fail-soft
-    }
     try {
       unsubscribeGameState();
     } catch (_) {
@@ -124,7 +135,7 @@ export function initializeTurnPointsCount(context = {}) {
       animeRef: null,
       windowRef,
     });
-    const scoreNodes = Array.from(documentRef.querySelectorAll?.("p.ad-ext-turn-points") || []);
+    const scoreNodes = collectScoreNodes(documentRef);
     scoreNodes.forEach((node) => stopAnimation(node, state, windowRef));
   };
 }

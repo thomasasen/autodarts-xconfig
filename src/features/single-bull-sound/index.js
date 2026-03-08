@@ -20,7 +20,6 @@ export function initializeSingleBullSound(context = {}) {
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const x01Rules = context.domain?.x01Rules;
   const config = context.config;
@@ -53,13 +52,14 @@ export function initializeSingleBullSound(context = {}) {
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
+  const scheduleUpdate = () => scheduler.schedule();
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: scheduleUpdate,
       observeOptions: {
         childList: true,
         subtree: true,
@@ -88,20 +88,21 @@ export function initializeSingleBullSound(context = {}) {
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduler.schedule(),
+      handler: scheduleUpdate,
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
+      ? gameState.subscribe(scheduleUpdate)
       : () => {};
 
-  installSingleBullSoundPolling(state, () => scheduler.schedule(), soundConfig.pollIntervalMs);
+  installSingleBullSoundPolling(state, () => {
+    if (documentRef.visibilityState === "hidden") {
+      return;
+    }
+    scheduleUpdate();
+  }, soundConfig.pollIntervalMs);
 
   tryUnlockSingleBullAudio(state);
   scheduler.schedule();
@@ -115,11 +116,6 @@ export function initializeSingleBullSound(context = {}) {
 
     scheduler.cancel();
 
-    try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // fail-soft
-    }
     try {
       unsubscribeGameState();
     } catch (_) {

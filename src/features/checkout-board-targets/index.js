@@ -1,10 +1,10 @@
 import {
   clearOverlay,
-  ensureOverlay,
   findBoard,
   renderCheckoutTargets,
 } from "./logic.js";
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -77,13 +77,35 @@ export function initializeCheckoutBoardTargets(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   let lastRenderSignature = "";
+  const boardCache = {
+    value: null,
+  };
+
+  function invalidateBoardCache() {
+    boardCache.value = null;
+  }
+
+  function getBoard() {
+    const cachedBoard = boardCache.value;
+    if (
+      cachedBoard &&
+      cachedBoard.group?.isConnected !== false &&
+      cachedBoard.svg?.isConnected !== false
+    ) {
+      return cachedBoard;
+    }
+
+    const nextBoard = findBoard(documentRef);
+    boardCache.value = nextBoard;
+    return nextBoard;
+  }
 
   function clearCurrentOverlay() {
-    const board = findBoard(documentRef);
+    const board = getBoard();
     if (!board?.group) {
       return;
     }
-    const overlay = ensureOverlay(board.group);
+    const overlay = board.group.querySelector?.(`#${OVERLAY_ID}`) || null;
     if (overlay) {
       clearOverlay(overlay);
     }
@@ -109,7 +131,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
 
     const targets = x01Rules.parseCheckoutTargetsFromSuggestion(suggestionText);
-    const board = findBoard(documentRef);
+    const board = getBoard();
     if (!board) {
       return;
     }
@@ -123,16 +145,24 @@ export function initializeCheckoutBoardTargets(context = {}) {
 
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [OVERLAY_ID],
+  });
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        invalidateBoardCache();
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -164,6 +194,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
 
     clearCurrentOverlay();
+    invalidateBoardCache();
     domGuards.removeNodeById(STYLE_ID);
     domGuards.removeNodeById(OVERLAY_ID);
   };

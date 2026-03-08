@@ -3,6 +3,9 @@ import { STYLE_ID, buildStyleText } from "./style.js";
 
 const FEATURE_KEY = "triple-double-bull-hits";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const LISTENER_KEYS = Object.freeze({
+  visibility: `${FEATURE_KEY}:document-visibility`,
+});
 
 function resolvePollIntervalMs(value) {
   const numeric = Number(value);
@@ -14,6 +17,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
+  const listenerRegistry = context.registries?.listeners;
   const gameState = context.gameState;
   const x01Rules = context.domain?.x01Rules;
   const config = context.config;
@@ -56,9 +60,17 @@ export function initializeTripleDoubleBullHits(context = {}) {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
+    });
+  }
+
+  if (listenerRegistry && typeof listenerRegistry.register === "function") {
+    listenerRegistry.register({
+      key: LISTENER_KEYS.visibility,
+      target: documentRef,
+      type: "visibilitychange",
+      handler: () => scheduler.schedule(),
     });
   }
 
@@ -76,7 +88,14 @@ export function initializeTripleDoubleBullHits(context = {}) {
       ? windowRef.clearInterval.bind(windowRef)
       : clearInterval);
   const pollHandle =
-    pollIntervalMs > 0 ? setIntervalRef(() => scheduler.schedule(), pollIntervalMs) : null;
+    pollIntervalMs > 0
+      ? setIntervalRef(() => {
+        if (documentRef.visibilityState === "hidden") {
+          return;
+        }
+        scheduler.schedule();
+      }, pollIntervalMs)
+      : null;
 
   scheduler.schedule();
   let cleanedUp = false;
@@ -96,6 +115,9 @@ export function initializeTripleDoubleBullHits(context = {}) {
 
     if (observerRegistry && typeof observerRegistry.disconnect === "function") {
       observerRegistry.disconnect(OBSERVER_KEY);
+    }
+    if (listenerRegistry && typeof listenerRegistry.remove === "function") {
+      Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
     }
 
     if (pollHandle) {

@@ -109,6 +109,7 @@ export function createGameStateStore(options = {}) {
     source: "none",
     topic: "",
     payloadKind: "",
+    lastMessageSignature: "",
   };
 
   let started = false;
@@ -331,6 +332,14 @@ export function createGameStateStore(options = {}) {
       return;
     }
 
+    const messageSignature =
+      meta && typeof meta.messageSignature === "string"
+        ? String(meta.messageSignature)
+        : "";
+    if (messageSignature && messageSignature === state.lastMessageSignature) {
+      return;
+    }
+
     state.match = match;
     state.updatedAt = Date.now();
     state.source = String(source || "unknown");
@@ -340,6 +349,7 @@ export function createGameStateStore(options = {}) {
       meta && typeof meta.payloadKind === "string"
         ? String(meta.payloadKind)
         : classifyPayloadKind(match);
+    state.lastMessageSignature = messageSignature;
 
     notifyUpdate();
   }
@@ -368,14 +378,23 @@ export function createGameStateStore(options = {}) {
     const payloadKind = classifyPayloadKind(parsed.data);
     const fromStateTopic = topic.endsWith(TOPIC_STATE_SUFFIX);
     const fromStateShape = isLikelyMatchStatePayload(parsed.data);
+    const messageSignature = `${topic}|${rawData}`;
 
     if (fromStateTopic && fromStateShape) {
-      applyMatch(parsed.data, "websocket-state-topic", { topic, payloadKind });
+      applyMatch(parsed.data, "websocket-state-topic", {
+        topic,
+        payloadKind,
+        messageSignature,
+      });
       return;
     }
 
     if (!topic && fromStateShape) {
-      applyMatch(parsed.data, "websocket-state-shape", { topic, payloadKind });
+      applyMatch(parsed.data, "websocket-state-shape", {
+        topic,
+        payloadKind,
+        messageSignature,
+      });
     }
   }
 
@@ -480,6 +499,7 @@ export function createGameStateStore(options = {}) {
     }
 
     started = false;
+    state.lastMessageSignature = "";
     uninstallWebSocketInterception();
 
     if (eventBus && typeof eventBus.emit === "function") {

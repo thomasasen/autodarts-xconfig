@@ -6,7 +6,8 @@ import {
   stopWinnerFireworks,
   syncWinnerFireworks,
 } from "./logic.js";
-import { STYLE_ID, buildStyleText, resolveWinnerVisualConfig } from "./style.js";
+import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveWinnerVisualConfig } from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "winner-fireworks";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -148,7 +149,6 @@ export function initializeWinnerFireworks(context = {}) {
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
@@ -178,6 +178,9 @@ export function initializeWinnerFireworks(context = {}) {
     visualConfig,
     confettiFactory: getConfetti(windowRef),
   });
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [OVERLAY_ID],
+  });
 
   function update() {
     const signal = getWinnerSignal({
@@ -194,7 +197,12 @@ export function initializeWinnerFireworks(context = {}) {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
@@ -234,17 +242,14 @@ export function initializeWinnerFireworks(context = {}) {
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe(() => scheduler.schedule())
       : () => {};
 
+  let disposed = false;
   ensureConfettiLoaded(windowRef).then((confettiFactory) => {
-    if (!confettiFactory) {
+    if (disposed || !confettiFactory) {
       return;
     }
     state.confettiFactory = confettiFactory;
@@ -261,13 +266,9 @@ export function initializeWinnerFireworks(context = {}) {
       return;
     }
     cleanedUp = true;
+    disposed = true;
     scheduler.cancel();
 
-    try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // fail-soft
-    }
     try {
       unsubscribeGameState();
     } catch (_) {

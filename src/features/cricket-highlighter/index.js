@@ -3,7 +3,8 @@ import {
   clearCricketHighlights,
   renderCricketHighlights,
 } from "./logic.js";
-import { STYLE_ID, buildStyleText, resolveCricketVisualConfig } from "./style.js";
+import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveCricketVisualConfig } from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "cricket-highlighter";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -58,7 +59,6 @@ export function initializeCricketHighlighter(context = {}) {
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const variantRules = context.domain?.variantRules;
   const cricketRules = context.domain?.cricketRules;
@@ -87,6 +87,15 @@ export function initializeCricketHighlighter(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   let lastSignature = "";
+  const renderCache = {
+    grid: null,
+    board: null,
+  };
+
+  function invalidateRenderCache() {
+    renderCache.grid = null;
+    renderCache.board = null;
+  }
 
   function update() {
     const active = isCricketActive(gameState, documentRef, variantRules);
@@ -102,6 +111,7 @@ export function initializeCricketHighlighter(context = {}) {
       cricketRules,
       variantRules,
       visualConfig,
+      cache: renderCache,
     });
 
     const signature = buildRenderSignature(renderState);
@@ -114,22 +124,31 @@ export function initializeCricketHighlighter(context = {}) {
       documentRef,
       visualConfig,
       renderState,
+      cache: renderCache,
     });
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [OVERLAY_ID],
+  });
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -140,28 +159,33 @@ export function initializeCricketHighlighter(context = {}) {
       key: LISTENER_KEYS.resize,
       target: windowRef,
       type: "resize",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
       options: { passive: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.orientation,
       target: windowRef,
       type: "orientationchange",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
       options: { passive: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduler.schedule(),
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe(() => scheduler.schedule())
@@ -178,11 +202,6 @@ export function initializeCricketHighlighter(context = {}) {
     scheduler.cancel();
 
     try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // keep cleanup fail-soft
-    }
-    try {
       unsubscribeGameState();
     } catch (_) {
       // keep cleanup fail-soft
@@ -196,6 +215,7 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     clearCricketHighlights(documentRef);
+    invalidateRenderCache();
     domGuards.removeNodeById(STYLE_ID);
   };
 }

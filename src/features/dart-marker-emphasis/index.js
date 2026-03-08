@@ -17,7 +17,6 @@ export function initializeDartMarkerEmphasis(context = {}) {
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
-  const eventBus = context.eventBus;
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
@@ -61,8 +60,6 @@ export function initializeDartMarkerEmphasis(context = {}) {
       observeOptions: {
         childList: true,
         subtree: true,
-        characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -77,10 +74,6 @@ export function initializeDartMarkerEmphasis(context = {}) {
     });
   }
 
-  const unsubscribeEventBus =
-    eventBus && typeof eventBus.on === "function"
-      ? eventBus.on("game-state:updated", () => scheduler.schedule())
-      : () => {};
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe(() => scheduler.schedule())
@@ -97,11 +90,6 @@ export function initializeDartMarkerEmphasis(context = {}) {
 
     scheduler.cancel();
 
-    try {
-      unsubscribeEventBus();
-    } catch (_) {
-      // fail-soft
-    }
     try {
       unsubscribeGameState();
     } catch (_) {

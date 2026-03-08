@@ -66,7 +66,6 @@ export function initializeStyleCheckoutSuggestions(context = {}) {
         childList: true,
         subtree: true,
         characterData: true,
-        attributes: true,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
