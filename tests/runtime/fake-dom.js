@@ -345,12 +345,16 @@ class FakeElement extends FakeEventTarget {
     const normalizedName = String(name || "");
 
     if (normalizedName === "id") {
-      return this.id;
+      return this.id || null;
     }
     if (normalizedName === "class") {
-      return this.classList.toString();
+      const className = this.classList.toString();
+      return className || null;
     }
     if (normalizedName.startsWith("data-")) {
+      if (!this.attributes.has(normalizedName)) {
+        return null;
+      }
       return this.dataset[normalizeDatasetKey(normalizedName)] || "";
     }
 
@@ -358,7 +362,7 @@ class FakeElement extends FakeEventTarget {
       return this.attributes.get(normalizedName) || "";
     }
 
-    return this[normalizedName] || "";
+    return null;
   }
 
   removeAttribute(name) {
@@ -890,6 +894,7 @@ function createFakeWindow(options = {}) {
     document: documentRef,
     history,
     location,
+    __openedUrls: [],
     localStorage: options.localStorage || new FakeStorage(),
     MutationObserver: FakeMutationObserver,
     MessageEvent: FakeMessageEvent,
@@ -923,6 +928,14 @@ function createFakeWindow(options = {}) {
     },
     clearInterval(handle) {
       clearInterval(handle);
+    },
+    open(url) {
+      const normalizedUrl = String(url || "");
+      this.__openedUrls.push(normalizedUrl);
+      return {
+        href: normalizedUrl,
+        focus() {},
+      };
     },
     addEventListener: eventTarget.addEventListener.bind(eventTarget),
     removeEventListener: eventTarget.removeEventListener.bind(eventTarget),

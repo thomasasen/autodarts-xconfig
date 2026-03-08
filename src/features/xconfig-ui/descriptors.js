@@ -30,6 +30,13 @@ function actionField(action, label) {
   });
 }
 
+function descriptorEntry(definition) {
+  return Object.freeze({
+    ...definition,
+    fields: Object.freeze(definition.fields || []),
+  });
+}
+
 const BACKGROUND_DISPLAY_OPTIONS = Object.freeze([
   { value: "fill", label: "Füllen" },
   { value: "fit", label: "Einpassen" },
@@ -59,11 +66,12 @@ const PLAYER_FIELD_TRANSPARENCY_OPTIONS = Object.freeze([
 ]);
 
 export const xconfigDescriptors = Object.freeze([
-  Object.freeze({
+  descriptorEntry({
     featureKey: "theme-x01",
     tab: "themes",
+    readmeAnchor: "template-autodarts-theme-x01",
     description: "Klares X01-Layout mit optionalem AVG und eigenem Hintergrundbild.",
-    fields: Object.freeze([
+    fields: [
       checkboxField("showAvg", "AVG anzeigen"),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
       selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
@@ -75,13 +83,14 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("debug", "Debug"),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
       actionField("clearThemeBackground", "Hintergrundbild entfernen"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "theme-shanghai",
     tab: "themes",
+    readmeAnchor: "template-autodarts-theme-shanghai",
     description: "Aufgeräumtes Shanghai-Theme mit optionalem AVG und Hintergrundbild.",
-    fields: Object.freeze([
+    fields: [
       checkboxField("showAvg", "AVG anzeigen"),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
       selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
@@ -93,13 +102,14 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("debug", "Debug"),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
       actionField("clearThemeBackground", "Hintergrundbild entfernen"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "theme-bermuda",
     tab: "themes",
+    readmeAnchor: "template-autodarts-theme-bermuda",
     description: "Bermuda-Theme mit ruhigerem Layout und eigenem Hintergrundbild.",
-    fields: Object.freeze([
+    fields: [
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
       selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
       selectField(
@@ -110,13 +120,14 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("debug", "Debug"),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
       actionField("clearThemeBackground", "Hintergrundbild entfernen"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "theme-cricket",
     tab: "themes",
+    readmeAnchor: "template-autodarts-theme-cricket",
     description: "Gemeinsames Theme für Cricket und Tactics mit optionalem AVG.",
-    fields: Object.freeze([
+    fields: [
       checkboxField("showAvg", "AVG anzeigen"),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
       selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
@@ -128,13 +139,14 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("debug", "Debug"),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
       actionField("clearThemeBackground", "Hintergrundbild entfernen"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "theme-bull-off",
     tab: "themes",
+    readmeAnchor: "template-autodarts-theme-bull-off",
     description: "Bull-off-Theme mit wählbarem Kontrast und Hintergrundbild.",
-    fields: Object.freeze([
+    fields: [
       selectField("contrastPreset", "Kontrast-Preset", [
         { value: "soft", label: "Sanft" },
         { value: "standard", label: "Standard" },
@@ -150,13 +162,14 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("debug", "Debug"),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen"),
       actionField("clearThemeBackground", "Hintergrundbild entfernen"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "checkout-score-pulse",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-checkout-score-pulse",
     description: "Hebt finishfähige Restwerte in X01 sichtbar hervor.",
-    fields: Object.freeze([
+    fields: [
       selectField("effect", "Effekt", [
         { value: "pulse", label: "Pulse" },
         { value: "glow", label: "Glow" },
@@ -180,13 +193,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "suggestion-only", label: "Nur Vorschlag" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "checkout-board-targets",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-checkout-board-targets",
     description: "Markiert sinnvolle Checkout-Ziele direkt am Board.",
-    fields: Object.freeze([
+    fields: [
       selectField("effect", "Effekt", [
         { value: "pulse", label: "Pulse" },
         { value: "blink", label: "Blink" },
@@ -212,13 +226,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "stark", label: "Stark" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "tv-board-zoom",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-tv-board-zoom",
     description: "Zoomt bei klaren Checkout-Situationen TV-artig auf Zielbereiche.",
-    fields: Object.freeze([
+    fields: [
       selectField("zoomLevel", "Zoom-Stufe", [
         { value: 2.35, label: "2,35" },
         { value: 2.75, label: "2,75" },
@@ -231,13 +246,14 @@ export const xconfigDescriptors = Object.freeze([
       ]),
       checkboxField("checkoutZoomEnabled", "Checkout-Zoom"),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "style-checkout-suggestions",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-style-checkout-suggestions",
     description: "Macht Checkout-Hinweise auffälliger und besser lesbar.",
-    fields: Object.freeze([
+    fields: [
       selectField("style", "Stil", [
         { value: "badge", label: "Badge" },
         { value: "ribbon", label: "Ribbon" },
@@ -256,13 +272,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "rose", label: "Rose" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "average-trend-arrow",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-average-trend-arrow",
     description: "Zeigt die Trendrichtung des AVG mit einem Pfeil an.",
-    fields: Object.freeze([
+    fields: [
       selectField("durationMs", "Animationsdauer", [
         { value: 220, label: "Kurz" },
         { value: 320, label: "Standard" },
@@ -274,13 +291,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "gross", label: "Groß" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "turn-start-sweep",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-turn-start-sweep",
     description: "Markiert den Spielerwechsel mit einem Sweep über die aktive Karte.",
-    fields: Object.freeze([
+    fields: [
       selectField("durationMs", "Sweep-Geschwindigkeit", [
         { value: 300, label: "Schnell" },
         { value: 420, label: "Standard" },
@@ -292,13 +310,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "strong", label: "Kräftig" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "triple-double-bull-hits",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-triple-double-bull-hits",
     description: "Hebt Triple-, Double- und Bull-Treffer in der Wurfliste hervor.",
-    fields: Object.freeze([
+    fields: [
       checkboxField("highlightTriple", "Triple hervorheben"),
       checkboxField("highlightDouble", "Double hervorheben"),
       checkboxField("highlightBull", "Bull hervorheben"),
@@ -307,13 +326,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: 3000, label: "Kompatibel" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "cricket-highlighter",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
-    fields: Object.freeze([
+    fields: [
       checkboxField("showDeadTargets", "Dead-Ziele anzeigen"),
       selectField("colorTheme", "Farbthema", [
         { value: "standard", label: "Standard" },
@@ -325,13 +345,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "strong", label: "Stark" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "cricket-grid-fx",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-cricket-grid-fx",
     description: "Ergänzt die Cricket-/Tactics-Matrix um zusätzliche Live-Effekte.",
-    fields: Object.freeze([
+    fields: [
       checkboxField("rowWave", "Zeilen-Sweep"),
       checkboxField("badgeBeacon", "Ziel-Badge-Hinweis"),
       checkboxField("markProgress", "Mark-Fortschritt"),
@@ -352,13 +373,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "strong", label: "Stark" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "dart-marker-emphasis",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-dart-marker-emphasis",
     description: "Macht Marker auf dem virtuellen Dartboard deutlicher sichtbar.",
-    fields: Object.freeze([
+    fields: [
       selectField("size", "Marker-Größe", [
         { value: 4, label: "Klein" },
         { value: 6, label: "Standard" },
@@ -387,13 +409,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "schwarz", label: "Schwarz" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "dart-marker-darts",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-dart-marker-darts",
     description: "Ersetzt Marker optional durch Dart-Bilder mit Fluganimation.",
-    fields: Object.freeze([
+    fields: [
       selectField("design", "Dart Design", [
         { value: "autodarts", label: "Autodarts" },
         { value: "blackblue", label: "Black Blue" },
@@ -422,13 +445,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "cinematic", label: "Cinematic" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "remove-darts-notification",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-remove-darts-notification",
     description: "Macht den Hinweis zum Entfernen der Darts auffälliger.",
-    fields: Object.freeze([
+    fields: [
       selectField("imageSize", "Bildgröße", [
         { value: "compact", label: "Kompakt" },
         { value: "standard", label: "Standard" },
@@ -441,13 +465,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: 1.08, label: "Stark" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "single-bull-sound",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-single-bull-sound",
     description: "Spielt bei Single Bull einen kurzen Ton ab.",
-    fields: Object.freeze([
+    fields: [
       selectField("volume", "Lautstärke", [
         { value: 0.5, label: "Leise" },
         { value: 0.75, label: "Mittel" },
@@ -464,26 +489,28 @@ export const xconfigDescriptors = Object.freeze([
         { value: 1200, label: "1200 ms" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "turn-points-count",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-turn-points-count",
     description: "Zählt Punkteänderungen sichtbar hoch oder runter.",
-    fields: Object.freeze([
+    fields: [
       selectField("durationMs", "Animationsdauer", [
         { value: 260, label: "Kurz" },
         { value: 416, label: "Standard" },
         { value: 650, label: "Lang" },
       ]),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
-  Object.freeze({
+  descriptorEntry({
     featureKey: "winner-fireworks",
     tab: "animations",
+    readmeAnchor: "animation-autodarts-animate-winner-fireworks",
     description: "Zeigt bei einem Sieg ein Feuerwerk in verschiedenen Stilen.",
-    fields: Object.freeze([
+    fields: [
       selectField("style", "Style", [
         { value: "realistic", label: "Realistic" },
         { value: "fireworks", label: "Fireworks" },
@@ -508,7 +535,7 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("includeBullOut", "Bei Bull-Out aktiv"),
       checkboxField("pointerDismiss", "Klick beendet Effekt"),
       checkboxField("debug", "Debug"),
-    ]),
+    ],
   }),
 ]);
 

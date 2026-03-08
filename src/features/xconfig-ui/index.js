@@ -7,6 +7,7 @@ const MENU_LABEL_COLLAPSE_WIDTH = 120;
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
 const STYLE_ID = "ad-xconfig-shell-style";
+const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
 const LISTENER_KEYS = Object.freeze({
@@ -60,22 +61,27 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-notice--success{background:rgba(58,180,122,.17);border-color:rgba(58,180,122,.52)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--error{background:rgba(255,84,84,.15);border-color:rgba(255,84,84,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--info{background:rgba(74,178,255,.18);border-color:rgba(74,178,255,.5)}
-#${PANEL_HOST_ID} .ad-xconfig-header-actions,#${PANEL_HOST_ID} .ad-xconfig-tabs{display:flex;flex-wrap:wrap;gap:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-header-actions{display:flex;flex-wrap:wrap;gap:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-tabs{margin-top:1rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{border:1px solid rgba(255,255,255,.24);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{padding:.55rem .85rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn:hover,#${PANEL_HOST_ID} .ad-xconfig-tab:hover{background:rgba(255,255,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-back-btn{width:2.1rem;min-width:2.1rem;height:2.1rem;padding:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:.92rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
-#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]{border-color:rgba(112,196,255,.95);background:rgba(58,148,255,.34)}
-#${PANEL_HOST_ID} .ad-xconfig-tab-title{font-size:1rem;font-weight:800;line-height:1.2}
-#${PANEL_HOST_ID} .ad-xconfig-tab-desc{font-size:.76rem;color:rgba(232,243,255,.92)}
+#${PANEL_HOST_ID} .ad-xconfig-tab{border-color:rgba(166,196,255,.52);border-radius:11px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(74,178,255,.14));padding:.86rem .82rem;min-height:4.1rem;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.22rem;text-align:left;box-shadow:0 6px 18px rgba(12,31,72,.28),inset 0 0 0 1px rgba(255,255,255,.06);transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+#${PANEL_HOST_ID} .ad-xconfig-tab:hover{border-color:rgba(173,214,255,.82);background:linear-gradient(145deg,rgba(255,255,255,.24),rgba(74,178,255,.18));transform:translateY(-1px)}
+#${PANEL_HOST_ID} .ad-xconfig-tab:focus-visible{outline:none;border-color:rgba(154,227,255,.98);box-shadow:0 0 0 2px rgba(112,196,255,.52),0 10px 24px rgba(12,31,72,.36)}
+#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]{border-color:rgba(112,196,255,.95);background:linear-gradient(145deg,rgba(138,204,255,.35),rgba(74,178,255,.28));box-shadow:0 10px 26px rgba(39,108,199,.28),inset 0 0 0 1px rgba(195,235,255,.24)}
+#${PANEL_HOST_ID} .ad-xconfig-tab-title{display:block;font-size:1rem;font-weight:800;line-height:1.2;letter-spacing:.01em}
+#${PANEL_HOST_ID} .ad-xconfig-tab-desc{display:block;font-size:.76rem;line-height:1.2;color:rgba(232,243,255,.92);font-weight:500}
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
-#${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-height:14rem;padding:.9rem;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.2)}
+#${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-height:14rem;padding:.9rem;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.2);transition:transform .2s ease}
+#${PANEL_HOST_ID} .ad-xconfig-card:hover{transform:translateY(-2px)}
 #${PANEL_HOST_ID} .ad-xconfig-card-bg{position:absolute;inset:0;pointer-events:none}
-#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,27,67,.88) 0%,rgba(15,27,67,.84) 40%,rgba(15,27,67,.36) 70%,rgba(15,27,67,.2) 100%)}
-#${PANEL_HOST_ID} .ad-xconfig-card-bg img{position:absolute;top:0;right:0;width:72%;height:100%;object-fit:cover;opacity:.5}
+#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,27,67,.88) 0%,rgba(15,27,67,.84) 40%,rgba(15,27,67,.36) 70%,rgba(15,27,67,.2) 100%),radial-gradient(100% 100% at 90% 10%,rgba(45,108,198,.35) 0%,rgba(45,108,198,0) 70%)}
+#${PANEL_HOST_ID} .ad-xconfig-card-bg img{position:absolute;top:0;right:0;width:72%;height:100%;object-fit:cover;opacity:.5;filter:saturate(.85)}
 #${PANEL_HOST_ID} .ad-xconfig-card-content{position:relative;z-index:1}
 #${PANEL_HOST_ID} .ad-xconfig-card-head{display:flex;justify-content:space-between;gap:.8rem;margin-bottom:.85rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-title{margin:0;font-size:.98rem}
@@ -83,8 +89,12 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-card-badges{margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-card-actions{margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-variant{display:inline-flex;margin-top:.55rem;padding:.2rem .55rem;border-radius:999px;background:rgba(163,191,250,.2);border:1px solid rgba(163,191,250,.7);font-size:.72rem}
-#${PANEL_HOST_ID} .ad-xconfig-mini-btn{border:1px solid rgba(255,255,255,.24);border-radius:7px;padding:.35rem .55rem;background:rgba(255,255,255,.08);color:#fff;font-size:.73rem;cursor:pointer}
-#${PANEL_HOST_ID} .ad-xconfig-mini-btn--settings{border-color:rgba(126,216,255,.92);background:rgba(58,148,255,.34);font-weight:700}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn{border:1px solid rgba(255,255,255,.24);border-radius:7px;padding:.35rem .55rem;background:rgba(255,255,255,.08);color:#fff;font-size:.73rem;line-height:1;cursor:pointer}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn:hover{background:rgba(255,255,255,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn--settings{border-color:rgba(126,216,255,.92);background:rgba(58,148,255,.34);font-weight:700;box-shadow:0 0 0 1px rgba(126,216,255,.24),0 2px 10px rgba(58,148,255,.26)}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn--settings:hover{background:rgba(72,170,255,.48)}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn--readme{border-color:rgba(201,219,255,.56);background:rgba(32,55,116,.48)}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn--readme:hover{background:rgba(46,72,146,.58)}
 #${PANEL_HOST_ID} .ad-xconfig-fields{display:grid;gap:.65rem}
 #${PANEL_HOST_ID} .ad-xconfig-field{display:grid;gap:.32rem}
 #${PANEL_HOST_ID} .ad-xconfig-field label{font-weight:600;font-size:.86rem}
@@ -92,6 +102,7 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-field--checkbox{display:flex;align-items:center;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-onoff{position:relative;display:inline-flex;flex:0 0 auto;width:5.2rem;min-width:5.2rem;max-width:5.2rem;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,32,.45)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn{appearance:none;border:none;background:transparent;color:rgba(255,255,255,.9);width:50%;min-width:2.6rem;height:2.2rem;padding:0 .45rem;cursor:pointer;font-weight:700;font-size:.86rem;line-height:1;white-space:nowrap;text-align:center;flex:1 1 50%}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn{box-shadow:inset 1px 0 0 rgba(255,255,255,.14)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn:hover{background:rgba(255,255,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--on{color:rgba(198,255,220,.94)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off{color:rgba(255,216,216,.94)}
@@ -102,6 +113,7 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-header{display:flex;justify-content:space-between;gap:.8rem}
+#${PANEL_HOST_ID} .ad-xconfig-modal-actions{display:flex;align-items:flex-start;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-title{margin:0;font-size:1.05rem;line-height:1.3}
 #${PANEL_HOST_ID} .ad-xconfig-modal-subtitle{margin:.35rem 0 0;color:rgba(255,255,255,.75);font-size:.82rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-body{margin-top:.95rem;display:grid;gap:.65rem}
@@ -117,6 +129,7 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-state--disabled{color:rgba(255,212,212,.9)}
 #${PANEL_HOST_ID} .ad-xconfig-hidden-input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}}
+@media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;
 
 function isObjectLike(value) {
@@ -350,6 +363,27 @@ function sortFeatures(left, right) {
     return leftOrder - rightOrder;
   }
   return String(left.title || "").localeCompare(String(right.title || ""));
+}
+
+function getFeatureReadmeHref(featureKey) {
+  const descriptor = getXConfigDescriptor(featureKey);
+  const anchor = String(descriptor?.readmeAnchor || "").trim();
+  return anchor ? `${README_URL}#${anchor}` : README_URL;
+}
+
+function openReadme(windowRef, featureKey) {
+  const href = getFeatureReadmeHref(featureKey);
+  if (typeof windowRef?.open === "function") {
+    const openedWindow = windowRef.open(href, "_blank", "noopener,noreferrer");
+    if (openedWindow && typeof openedWindow.focus === "function") {
+      openedWindow.focus();
+    }
+    return;
+  }
+
+  if (windowRef?.location) {
+    windowRef.location.href = href;
+  }
 }
 
 function menuIconMarkup() {
@@ -598,6 +632,29 @@ function buildFeatureCard(documentRef, feature) {
         "data-feature-key": feature.featureKey,
       },
     }));
+    actions.appendChild(createElement(documentRef, "button", {
+      type: "button",
+      className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--readme",
+      text: "📖 README",
+      attributes: {
+        "data-adxconfig-action": "open-readme",
+        "data-feature-key": feature.featureKey,
+      },
+    }));
+    cardContent.appendChild(actions);
+  } else {
+    const actions = createElement(documentRef, "div", {
+      className: "ad-xconfig-card-actions",
+    });
+    actions.appendChild(createElement(documentRef, "button", {
+      type: "button",
+      className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--readme",
+      text: "📖 README",
+      attributes: {
+        "data-adxconfig-action": "open-readme",
+        "data-feature-key": feature.featureKey,
+      },
+    }));
     cardContent.appendChild(actions);
   }
 
@@ -652,7 +709,19 @@ function buildSettingsModal(documentRef, state, features) {
     text: "Änderungen werden sofort gespeichert.",
   }));
   modalHeader.appendChild(heading);
-  modalHeader.appendChild(createElement(documentRef, "button", {
+  const modalActions = createElement(documentRef, "div", {
+    className: "ad-xconfig-modal-actions",
+  });
+  modalActions.appendChild(createElement(documentRef, "button", {
+    type: "button",
+    className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--readme",
+    text: "📖 README",
+    attributes: {
+      "data-adxconfig-action": "open-readme",
+      "data-feature-key": feature.featureKey,
+    },
+  }));
+  modalActions.appendChild(createElement(documentRef, "button", {
     type: "button",
     className: "ad-xconfig-btn ad-xconfig-btn--square",
     text: "✖",
@@ -661,6 +730,7 @@ function buildSettingsModal(documentRef, state, features) {
       "aria-label": "Einstellungen schließen",
     },
   }));
+  modalHeader.appendChild(modalActions);
   modal.appendChild(modalHeader);
 
   const body = createElement(documentRef, "div", {
@@ -1256,6 +1326,10 @@ function ensureXConfigShell(options = {}) {
     if (action === "close-settings-backdrop") {
       state.activeSettingsFeatureKey = "";
       queueSync();
+      return;
+    }
+    if (action === "open-readme") {
+      openReadme(windowRef, feature?.featureKey || "");
       return;
     }
 

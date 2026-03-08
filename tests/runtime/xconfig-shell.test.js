@@ -244,6 +244,52 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   runtime.stop();
 });
 
+test("xConfig shell links cards and settings modal to the matching README anchor", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const cardReadmeButton = documentRef.querySelector(
+    "[data-adxconfig-action='open-readme'][data-feature-key='checkout-score-pulse']"
+  );
+  assert.ok(cardReadmeButton);
+  cardReadmeButton.click();
+  await wait(5);
+
+  assert.equal(
+    windowRef.__openedUrls.at(-1),
+    "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#animation-autodarts-animate-checkout-score-pulse"
+  );
+
+  const settingsButton = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
+  );
+  assert.ok(settingsButton);
+  settingsButton.click();
+  await wait(5);
+
+  const modalReadmeButtons = documentRef.querySelectorAll(
+    "[data-adxconfig-action='open-readme'][data-feature-key='checkout-score-pulse']"
+  );
+  assert.ok(modalReadmeButtons.length >= 2);
+  modalReadmeButtons[1].click();
+  await wait(5);
+
+  assert.equal(
+    windowRef.__openedUrls.at(-1),
+    "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#animation-autodarts-animate-checkout-score-pulse"
+  );
+
+  runtime.stop();
+});
+
 test("xConfig shell renders mapped preview backgrounds and compact legacy back button", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -257,6 +303,13 @@ test("xConfig shell renders mapped preview backgrounds and compact legacy back b
   const backButton = documentRef.querySelector("[data-adxconfig-action='close']");
   assert.ok(backButton);
   assert.equal(backButton.classList.contains("ad-xconfig-back-btn"), true);
+  const styleNode = documentRef.getElementById("ad-xconfig-shell-style");
+  assert.ok(styleNode);
+  assert.equal(String(styleNode.textContent || "").includes("flex-direction:column"), true);
+  assert.equal(
+    String(styleNode.textContent || "").includes(".ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn"),
+    true
+  );
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await wait(5);
