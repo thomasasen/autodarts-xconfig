@@ -57,11 +57,13 @@ test("game state store derives a match snapshot from websocket state messages", 
       channel: "autodarts.matches",
       topic: "match-123.state",
       data: {
-        variant: "X01",
+        variant: "Cricket",
         player: 0,
         players: [{ id: "player-1" }, { id: "player-2" }],
         gameScores: [170, 301],
         settings: {
+          gameMode: "Tactics",
+          mode: "Cut-Throat",
           outMode: "Double Out",
         },
         turns: [],
@@ -77,9 +79,14 @@ test("game state store derives a match snapshot from websocket state messages", 
   const snapshot = store.getSnapshot();
 
   assert.equal(snapshot.source, "websocket-state-topic");
-  assert.equal(snapshot.variantNormalized, "x01");
+  assert.equal(snapshot.variantNormalized, "cricket");
   assert.equal(snapshot.activeScore, 170);
   assert.equal(snapshot.outMode, "Double Out");
+  assert.equal(snapshot.cricketGameMode, "Tactics");
+  assert.equal(snapshot.cricketGameModeNormalized, "tactics");
+  assert.equal(snapshot.cricketMode, "Cut-Throat");
+  assert.equal(snapshot.cricketScoringMode, "Cut-Throat");
+  assert.equal(snapshot.cricketScoringModeNormalized, "cutthroat");
 
   store.stop();
 });

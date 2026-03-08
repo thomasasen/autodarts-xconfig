@@ -14,7 +14,16 @@ function toNumber(value) {
 }
 
 const CHECKOUT_TOKEN_PATTERN = /DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
-const EXPLICIT_SEGMENT_PATTERN = /\b(?:DB|BULLSEYE|BULL|[TDS](?:[1-9]|1\d|20))\b/g;
+const EXPLICIT_SEGMENT_PATTERN =
+  /\b(?:DB|BULLSEYE|BULL|SB|OB|[TDS](?:[1-9]|1\d|20|25))\b/g;
+
+const SCORING_SEGMENTS = Object.freeze([
+  ...Array.from({ length: 20 }, (_value, index) => `S${index + 1}`),
+  ...Array.from({ length: 20 }, (_value, index) => `D${index + 1}`),
+  ...Array.from({ length: 20 }, (_value, index) => `T${index + 1}`),
+  "S25",
+  "BULL",
+]);
 
 export function normalizeSegmentName(value) {
   const raw = String(value || "").trim().toUpperCase();
@@ -40,6 +49,21 @@ export function normalizeSegmentName(value) {
   }
 
   return raw;
+}
+
+function normalizeCheckoutSuggestionText(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/DOUBLE\s*[-:]?\s*BULL(?:SEYE)?/g, "BULL")
+    .replace(/INNER\s*BULL(?:SEYE)?/g, "BULL")
+    .replace(/SINGLE\s*BULL/g, "SB")
+    .replace(/OUTER\s*BULL/g, "SB")
+    .replace(/BULLSEYE/g, "BULL")
+    .replace(/DOUBLE\s*[-:]?\s*(\d{1,2})/g, "D$1")
+    .replace(/TRIPLE\s*[-:]?\s*(\d{1,2})/g, "T$1")
+    .replace(/SINGLE\s*[-:]?\s*(\d{1,2})/g, "S$1")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function parseSegment(normalizedSegmentName) {
@@ -255,6 +279,112 @@ export function normalizeOutMode(value) {
   return "straight";
 }
 
+function getCheckoutFinishSegments(outMode) {
+  const normalizedOutMode = normalizeOutMode(outMode);
+
+  return SCORING_SEGMENTS.map((segmentName) => parseSegment(segmentName)).filter((segment) => {
+    if (!segment) {
+      return false;
+    }
+
+    if (normalizedOutMode === "straight") {
+      return true;
+    }
+
+    if (normalizedOutMode === "double") {
+      return segment.ring === "D";
+    }
+
+    if (normalizedOutMode === "master") {
+      return segment.ring === "D" || segment.ring === "T";
+    }
+
+    return true;
+  });
+}
+
+function getCheckoutSetupSegments() {
+  return SCORING_SEGMENTS.map((segmentName) => parseSegment(segmentName)).filter(Boolean);
+}
+
+const CHECKOUT_SETUP_SEGMENTS = Object.freeze(getCheckoutSetupSegments());
+const CHECKOUT_FINISH_SEGMENTS_BY_MODE = Object.freeze({
+  straight: Object.freeze(getCheckoutFinishSegments("straight")),
+  double: Object.freeze(getCheckoutFinishSegments("double")),
+  master: Object.freeze(getCheckoutFinishSegments("master")),
+});
+
+function getCheckoutFeasibilitySet(outMode) {
+  const normalizedOutMode = normalizeOutMode(outMode);
+  const finishSegments =
+    CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] ||
+    CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
+  const scores = new Set();
+
+  finishSegments.forEach((finishSegment) => {
+    scores.add(finishSegment.score);
+  });
+
+  CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
+    finishSegments.forEach((finishSegment) => {
+      scores.add(firstSegment.score + finishSegment.score);
+    });
+  });
+
+  CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
+    CHECKOUT_SETUP_SEGMENTS.forEach((secondSegment) => {
+      finishSegments.forEach((finishSegment) => {
+        scores.add(firstSegment.score + secondSegment.score + finishSegment.score);
+      });
+    });
+  });
+
+  return scores;
+}
+
+const CHECKOUTABLE_SCORES_BY_MODE = Object.freeze({
+  straight: getCheckoutFeasibilitySet("straight"),
+  double: getCheckoutFeasibilitySet("double"),
+  master: getCheckoutFeasibilitySet("master"),
+});
+
+function getOneDartPreference(segment, outMode) {
+  if (!segment) {
+    return 99;
+  }
+
+  const normalizedOutMode = normalizeOutMode(outMode);
+  if (normalizedOutMode === "straight") {
+    if (segment.ring === "S") {
+      return 0;
+    }
+    if (segment.ring === "D") {
+      return 1;
+    }
+    return 2;
+  }
+
+  if (normalizedOutMode === "master") {
+    return segment.ring === "D" ? 0 : 1;
+  }
+
+  return 0;
+}
+
+function compareOneDartSegments(left, right, outMode) {
+  const leftPreference = getOneDartPreference(left, outMode);
+  const rightPreference = getOneDartPreference(right, outMode);
+  if (leftPreference !== rightPreference) {
+    return leftPreference - rightPreference;
+  }
+
+  if (left.value !== right.value) {
+    return right.value - left.value;
+  }
+
+  return String(left.normalized || "").localeCompare(String(right.normalized || ""));
+}
+
 export function getSegmentScore(segmentName) {
   const parsed = parseSegment(segmentName);
   return parsed ? parsed.score : NaN;
@@ -270,51 +400,79 @@ export function isTripleSegment(segmentName) {
   return Boolean(parsed) && parsed.ring === "T";
 }
 
-export function isCheckoutPossibleFromScore(score) {
+export function isCheckoutPossibleFromScoreForOutMode(score, outMode) {
   const numeric = toNumber(score);
-  if (!Number.isFinite(numeric)) {
-    return false;
-  }
-  if (numeric <= 1 || numeric > 170) {
+  if (!Number.isFinite(numeric) || numeric <= 0) {
     return false;
   }
 
-  return !IMPOSSIBLE_CHECKOUT_SCORES.has(numeric);
+  const normalizedOutMode = normalizeOutMode(outMode);
+  const scoreSet =
+    CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode] ||
+    CHECKOUTABLE_SCORES_BY_MODE.straight;
+  return scoreSet.has(numeric);
+}
+
+export function isCheckoutPossibleFromScore(score) {
+  return isCheckoutPossibleFromScoreForOutMode(score, "double");
+}
+
+export function getOneDartCheckoutSegmentsForOutMode(score, outMode) {
+  const numeric = toNumber(score);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return [];
+  }
+
+  const normalizedOutMode = normalizeOutMode(outMode);
+  const finishSegments =
+    CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] ||
+    CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
+
+  return finishSegments
+    .filter((segment) => segment.score === numeric)
+    .sort((left, right) => compareOneDartSegments(left, right, normalizedOutMode))
+    .map((segment) => segment.normalized);
+}
+
+export function getPreferredOneDartCheckoutSegment(score, outMode) {
+  return getOneDartCheckoutSegmentsForOutMode(score, outMode)[0] || "";
 }
 
 export function getOneDartCheckoutSegment(score) {
-  const numeric = toNumber(score);
-  if (!Number.isFinite(numeric)) {
-    return "";
+  return getPreferredOneDartCheckoutSegment(score, "double");
+}
+
+export function isOneDartCheckoutSegmentForOutMode(segmentName, outMode) {
+  const parsed = parseSegment(segmentName);
+  if (!parsed) {
+    return false;
   }
 
-  if (numeric === 50) {
-    return "BULL";
-  }
-
-  if (numeric >= 2 && numeric <= 40 && numeric % 2 === 0) {
-    return `D${numeric / 2}`;
-  }
-
-  return "";
+  const oneDartSegments = getOneDartCheckoutSegmentsForOutMode(parsed.score, outMode);
+  return oneDartSegments.includes(parsed.normalized);
 }
 
 export function isOneDartCheckoutSegment(segmentName) {
-  const normalized = normalizeSegmentName(segmentName);
-  return normalized === "BULL" || /^D([1-9]|1\d|20)$/.test(normalized);
+  return isOneDartCheckoutSegmentForOutMode(segmentName, "double");
 }
 
-export function isSensibleThirdT20Score(remainingScore) {
+export function isSensibleThirdT20Score(remainingScore, outMode = "double") {
   const numeric = toNumber(remainingScore);
   if (!Number.isFinite(numeric)) {
     return true;
   }
 
-  return numeric >= 62;
+  const evaluation = evaluateThrowOutcome({
+    scoreBefore: numeric,
+    segmentName: "T20",
+    outMode,
+  });
+
+  return evaluation.isBust === false;
 }
 
 export function parseExplicitCheckoutSegments(text) {
-  const raw = String(text || "").toUpperCase();
+  const raw = normalizeCheckoutSuggestionText(text);
   if (!raw) {
     return [];
   }
@@ -331,12 +489,12 @@ export function parseExplicitCheckoutSegments(text) {
 }
 
 export function parseCheckoutTargetsFromSuggestion(text) {
-  const raw = String(text || "");
+  const raw = normalizeCheckoutSuggestionText(text);
   if (!raw.trim()) {
     return [];
   }
 
-  const tokens = raw.toUpperCase().match(CHECKOUT_TOKEN_PATTERN) || [];
+  const tokens = raw.match(CHECKOUT_TOKEN_PATTERN) || [];
   const parsedTargets = [];
   let hasExplicitTargets = false;
 
@@ -350,7 +508,16 @@ export function parseCheckoutTargetsFromSuggestion(text) {
       return;
     }
 
-    if (token === "BULL" || token === "SB" || token === "OB") {
+    if (token === "BULL") {
+      parsedTargets.push({
+        ring: "DB",
+        isSummary: false,
+      });
+      hasExplicitTargets = true;
+      return;
+    }
+
+    if (token === "SB" || token === "OB") {
       parsedTargets.push({
         ring: "SB",
         isSummary: false,
@@ -422,11 +589,18 @@ export function getSuggestionOneDartCheckoutSegment(text) {
   return isOneDartCheckoutSegment(segment) ? segment : "";
 }
 
-export function parseCheckoutSuggestionState(text) {
-  const normalized = String(text || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toUpperCase();
+export function getSuggestionOneDartCheckoutSegmentForOutMode(text, outMode) {
+  const segments = parseExplicitCheckoutSegments(text);
+  if (segments.length !== 1) {
+    return "";
+  }
+
+  const segment = segments[0];
+  return isOneDartCheckoutSegmentForOutMode(segment, outMode) ? segment : "";
+}
+
+export function parseCheckoutSuggestionState(text, outMode = "double") {
+  const normalized = normalizeCheckoutSuggestionText(text);
 
   if (!normalized) {
     return null;
@@ -440,19 +614,13 @@ export function parseCheckoutSuggestionState(text) {
     return false;
   }
 
-  if (/D\s*[-:]?\s*\d+/.test(normalized)) {
-    return true;
+  const explicitSegments = parseExplicitCheckoutSegments(normalized);
+  if (!explicitSegments.length) {
+    return null;
   }
 
-  if (/DOUBLE\s*\d+/.test(normalized)) {
-    return true;
-  }
-
-  if (/DB|BULLSEYE|BULL/.test(normalized)) {
-    return true;
-  }
-
-  return null;
+  const lastSegment = explicitSegments[explicitSegments.length - 1];
+  return isOneDartCheckoutSegmentForOutMode(lastSegment, outMode);
 }
 
 export function canFinishWithSegment(remainingScore, segmentName, outMode) {

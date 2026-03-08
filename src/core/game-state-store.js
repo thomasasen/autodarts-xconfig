@@ -1,5 +1,6 @@
 import {
   classifyCricketGameMode,
+  classifyCricketScoringMode,
   isCricketVariantText,
   isX01VariantText,
   normalizeVariant,
@@ -267,6 +268,26 @@ export function createGameStateStore(options = {}) {
     return cricketMode ? String(cricketMode) : "";
   }
 
+  function getCricketScoringMode() {
+    const candidates = [
+      state.match?.settings?.mode,
+      state.match?.settings?.gameMode,
+      state.match?.gameMode,
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim()) {
+        return String(candidate).trim();
+      }
+    }
+
+    return "";
+  }
+
+  function getCricketScoringModeNormalized() {
+    return classifyCricketScoringMode(getCricketScoringMode());
+  }
+
   function getSnapshot() {
     return {
       running: started,
@@ -282,6 +303,8 @@ export function createGameStateStore(options = {}) {
       activeScore: getActiveScore(),
       outMode: getOutMode(),
       cricketMode: getCricketMode(),
+      cricketScoringMode: getCricketScoringMode(),
+      cricketScoringModeNormalized: getCricketScoringModeNormalized(),
       cricketGameMode: getCricketGameMode(),
       cricketGameModeNormalized: getCricketGameModeNormalized(),
     };
@@ -485,6 +508,8 @@ export function createGameStateStore(options = {}) {
     getCricketGameModeNormalized,
     getOutMode,
     getCricketMode,
+    getCricketScoringMode,
+    getCricketScoringModeNormalized,
     getActivePlayerIndex,
     getActiveTurn,
     getActiveThrows,

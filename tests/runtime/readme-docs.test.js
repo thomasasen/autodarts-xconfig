@@ -4,9 +4,13 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
+import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 
 const readmePath = path.resolve(process.cwd(), "README.md");
 const featuresDocPath = path.resolve(process.cwd(), "docs", "FEATURES.md");
+const dartRuleModulesDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-MODULES.md");
+const dartRulesReferenceDocPath = path.resolve(process.cwd(), "docs", "DART-RULES-REFERENCE.md");
+const dartRuleAuditDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-AUDIT.md");
 
 test("README references the canonical userscript install target", () => {
   const readme = readFileSync(readmePath, "utf8");
@@ -48,6 +52,18 @@ test("README contains a visible install badge", () => {
   const readme = readFileSync(readmePath, "utf8");
 
   assert.match(readme, /\!\[Installieren\]\(https:\/\/img\.shields\.io\/badge\//);
+});
+
+test("README contains stable anchors for every xConfig module entry", () => {
+  const readme = readFileSync(readmePath, "utf8");
+
+  xconfigDescriptors.forEach((descriptor) => {
+    assert.match(
+      readme,
+      new RegExp(`<a id="${descriptor.readmeAnchor}"></a>`),
+      `missing README anchor for ${descriptor.featureKey}`
+    );
+  });
 });
 
 test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
@@ -128,4 +144,23 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
       `missing preview mapping for ${featureKey}`
     );
   });
+});
+
+test("dart rule audit documents exist", () => {
+  [dartRuleModulesDocPath, dartRulesReferenceDocPath, dartRuleAuditDocPath].forEach((filePath) => {
+    assert.equal(existsSync(filePath), true, `missing dart rule doc: ${path.basename(filePath)}`);
+  });
+});
+
+test("dart rule docs mention the audited core modules and rule topics", () => {
+  const modulesDoc = readFileSync(dartRuleModulesDocPath, "utf8");
+  const referenceDoc = readFileSync(dartRulesReferenceDocPath, "utf8");
+  const auditDoc = readFileSync(dartRuleAuditDocPath, "utf8");
+
+  assert.match(modulesDoc, /src\/domain\/x01-rules\.js/);
+  assert.match(modulesDoc, /src\/domain\/cricket-rules\.js/);
+  assert.match(referenceDoc, /Double-Out|Double Out/);
+  assert.match(referenceDoc, /Cut-Throat|Cut Throat/);
+  assert.match(auditDoc, /checkout-score-pulse/);
+  assert.match(auditDoc, /tv-board-zoom/);
 });

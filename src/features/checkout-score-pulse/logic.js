@@ -45,6 +45,7 @@ export function getActiveScoreValue(context = {}) {
 export function getCheckoutSuggestionState(context = {}) {
   const documentRef = context.documentRef;
   const x01Rules = context.x01Rules;
+  const outMode = String(context.outMode || "");
 
   if (!documentRef || typeof documentRef.querySelector !== "function") {
     return null;
@@ -59,7 +60,7 @@ export function getCheckoutSuggestionState(context = {}) {
     return null;
   }
 
-  return x01Rules.parseCheckoutSuggestionState(suggestionNode.textContent || "");
+  return x01Rules.parseCheckoutSuggestionState(suggestionNode.textContent || "", outMode);
 }
 
 export function getScoreNodes(documentRef) {
@@ -108,16 +109,25 @@ export function isX01Active(context = {}) {
 export function computeShouldHighlight(context = {}) {
   const triggerSource = String(context.triggerSource || "suggestion-first");
   const x01Rules = context.x01Rules;
+  const outMode =
+    context.gameState && typeof context.gameState.getOutMode === "function"
+      ? String(context.gameState.getOutMode() || "")
+      : String(context.outMode || "");
 
   if (!isX01Active(context)) {
     return false;
   }
 
-  const suggestionState = getCheckoutSuggestionState(context);
+  const suggestionState = getCheckoutSuggestionState({
+    ...context,
+    outMode,
+  });
   const activeScore = getActiveScoreValue(context);
   const scoreCheckoutPossible =
-    x01Rules && typeof x01Rules.isCheckoutPossibleFromScore === "function"
-      ? x01Rules.isCheckoutPossibleFromScore(activeScore)
+    x01Rules && typeof x01Rules.isCheckoutPossibleFromScoreForOutMode === "function"
+      ? x01Rules.isCheckoutPossibleFromScoreForOutMode(activeScore, outMode)
+      : x01Rules && typeof x01Rules.isCheckoutPossibleFromScore === "function"
+        ? x01Rules.isCheckoutPossibleFromScore(activeScore)
       : false;
 
   if (triggerSource === "score-only") {

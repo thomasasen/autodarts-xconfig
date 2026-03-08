@@ -46,6 +46,7 @@ function buildRenderSignature(renderState) {
   entries.sort();
   return [
     renderState.gameModeNormalized,
+    renderState.scoringModeNormalized,
     renderState.activePlayerIndex,
     entries.join("|"),
   ].join("::");

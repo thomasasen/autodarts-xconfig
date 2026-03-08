@@ -330,7 +330,97 @@ function resolveGameModeNormalized(gameState, variantRules, documentRef) {
     }
   }
 
-  return "cricket";
+  return "";
+}
+
+function resolveScoringModeNormalized(gameState, variantRules) {
+  if (typeof gameState?.getCricketScoringModeNormalized === "function") {
+    const normalized = String(gameState.getCricketScoringModeNormalized() || "").trim().toLowerCase();
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  const rawMode = typeof gameState?.getCricketScoringMode === "function"
+    ? String(gameState.getCricketScoringMode() || "")
+    : typeof gameState?.getCricketMode === "function"
+      ? String(gameState.getCricketMode() || "")
+      : "";
+
+  if (variantRules && typeof variantRules.classifyCricketScoringMode === "function") {
+    return variantRules.classifyCricketScoringMode(rawMode);
+  }
+
+  return "unknown";
+}
+
+function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder) {
+  const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
+  const marksByLabel = new Map();
+
+  activeThrows.forEach((throwEntry) => {
+    const parsed = cricketRules.parseCricketThrowSegment(throwEntry);
+    if (!parsed || !targetOrder.includes(parsed.label)) {
+      return;
+    }
+
+    marksByLabel.set(
+      parsed.label,
+      cricketRules.clampMarks((marksByLabel.get(parsed.label) || 0) + parsed.marks)
+    );
+  });
+
+  return {
+    throws: activeThrows,
+    marksByLabel,
+  };
+}
+
+function readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount) {
+  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
+  const match = snapshot?.match;
+
+  if (!match || !Array.isArray(match.players) || !Array.isArray(match.turns)) {
+    return null;
+  }
+
+  const resolvedPlayerCount = Math.max(playerCount, match.players.length);
+  const playerIndexById = new Map();
+  match.players.forEach((player, index) => {
+    const playerId = player?.id || player?.userId || player?.playerId || "";
+    if (playerId) {
+      playerIndexById.set(String(playerId), index);
+    }
+  });
+
+  if (!playerIndexById.size) {
+    return null;
+  }
+
+  let marksByLabel = cricketRules.createEmptyMarksByLabel(targetOrder, resolvedPlayerCount);
+  let hasAnyTurnMarks = false;
+
+  match.turns.forEach((turn) => {
+    if (!turn || typeof turn !== "object" || !Array.isArray(turn.throws) || !turn.throws.length) {
+      return;
+    }
+
+    const playerIndex = playerIndexById.get(String(turn.playerId || ""));
+    if (!Number.isFinite(playerIndex)) {
+      return;
+    }
+
+    hasAnyTurnMarks = true;
+    marksByLabel = cricketRules.applyThrowsToMarksByLabel({
+      targetOrder,
+      playerIndex,
+      playerCount: resolvedPlayerCount,
+      baseMarksByLabel: marksByLabel,
+      throws: turn.throws,
+    });
+  });
+
+  return hasAnyTurnMarks ? marksByLabel : null;
 }
 
 function buildMarksByLabelSnapshot(options = {}) {
@@ -344,18 +434,28 @@ function buildMarksByLabelSnapshot(options = {}) {
     return null;
   }
 
-  const gameModeNormalized = resolveGameModeNormalized(gameState, variantRules, documentRef);
-  const targetOrder = cricketRules.getTargetOrderByGameMode(gameModeNormalized);
-  const targetSet = new Set(targetOrder);
-  const grid = findBestGridRoot(documentRef, cricketRules, targetOrder);
+  const explicitGameModeNormalized = resolveGameModeNormalized(gameState, variantRules, documentRef);
+  const discoveryTargetOrder = explicitGameModeNormalized
+    ? cricketRules.getTargetOrderByGameMode(explicitGameModeNormalized)
+    : cricketRules.getTargetOrderByGameMode("tactics");
+  const grid = findBestGridRoot(documentRef, cricketRules, discoveryTargetOrder);
   if (!grid) {
     return null;
   }
 
+  const inferredGameModeNormalized = explicitGameModeNormalized ||
+    cricketRules.inferCricketGameModeByLabels(grid.labels.map((entry) => entry.label));
+  const gameModeNormalized = inferredGameModeNormalized || "cricket";
+  const targetOrder = cricketRules.getTargetOrderByGameMode(gameModeNormalized);
+  const targetSet = new Set(targetOrder);
   const marksByLabel = cricketRules.createEmptyMarksByLabel(targetOrder, 0);
   let maxPlayerCount = 0;
 
   grid.labels.forEach(({ node, label }) => {
+    if (!targetSet.has(label)) {
+      return;
+    }
+
     const playerCells = collectPlayerCellsForLabel(node, cricketRules, targetSet);
     const marks = [];
     if (hasOwnMarkValue(node)) {
@@ -371,9 +471,8 @@ function buildMarksByLabelSnapshot(options = {}) {
     maxPlayerCount = Math.max(maxPlayerCount, marks.length);
   });
 
-  const playerCountFromMatch = Array.isArray(gameState?.getSnapshot?.()?.match?.players)
-    ? gameState.getSnapshot().match.players.length
-    : 0;
+  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
+  const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
   const playerCount = Math.max(maxPlayerCount, playerCountFromMatch, 1);
 
   targetOrder.forEach((label) => {
@@ -386,23 +485,52 @@ function buildMarksByLabelSnapshot(options = {}) {
   });
 
   const activePlayerIndex = resolveActivePlayerIndex(gameState, documentRef, playerCount);
-  const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
+  const turnMarksByLabel = readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount);
+  const activeThrowPreview = readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder);
+
+  targetOrder.forEach((label) => {
+    const domMarks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
+    const rowHasAnyDomMarks = domMarks.some((mark) => cricketRules.clampMarks(mark) > 0);
+    const turnMarks = Array.isArray(turnMarksByLabel?.[label]) ? turnMarksByLabel[label] : [];
+    const activeThrowMarks = activeThrowPreview.marksByLabel.get(label) || 0;
+
+    if (!rowHasAnyDomMarks && turnMarks.length) {
+      for (let index = 0; index < playerCount; index += 1) {
+        domMarks[index] = Math.max(
+          cricketRules.clampMarks(domMarks[index] || 0),
+          cricketRules.clampMarks(turnMarks[index] || 0)
+        );
+      }
+    } else if (
+      activeThrowMarks > 0 &&
+      Array.isArray(turnMarks) &&
+      cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0) > 0
+    ) {
+      domMarks[activePlayerIndex] = Math.max(
+        cricketRules.clampMarks(domMarks[activePlayerIndex] || 0),
+        cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0)
+      );
+    }
+  });
+
+  const scoringModeNormalized = resolveScoringModeNormalized(gameState, variantRules);
   const enrichedMarksByLabel = cricketRules.applyThrowsToMarksByLabel({
     targetOrder,
     playerIndex: activePlayerIndex,
     baseMarksByLabel: marksByLabel,
-    throws: activeThrows,
+    throws: activeThrowPreview.throws,
+    scoringModeNormalized,
   });
 
   const stateMap = cricketRules.computeTargetStates(enrichedMarksByLabel, {
     gameMode: gameModeNormalized,
+    scoringModeNormalized,
     activePlayerIndex,
-    showDeadTargets: visualConfig.showDeadTargets,
-    supportsTacticalHighlights: true,
   });
 
   return {
     gameModeNormalized,
+    scoringModeNormalized,
     targetOrder,
     activePlayerIndex,
     marksByLabel: enrichedMarksByLabel,

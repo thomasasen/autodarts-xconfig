@@ -6,11 +6,16 @@ import {
   IMPOSSIBLE_CHECKOUT_SCORES,
   canFinishWithSegment,
   evaluateThrowOutcome,
+  getOneDartCheckoutSegmentsForOutMode,
   getHighlightHitKind,
   getOneDartCheckoutSegment,
+  getPreferredOneDartCheckoutSegment,
+  getSuggestionOneDartCheckoutSegmentForOutMode,
   getSuggestionOneDartCheckoutSegment,
   isDoubleBullSegment,
+  isCheckoutPossibleFromScoreForOutMode,
   isCheckoutPossibleFromScore,
+  isOneDartCheckoutSegmentForOutMode,
   isSingleBullHitText,
   isSingleBullThrowEntry,
   isSingleBullSegment,
@@ -28,21 +33,39 @@ test("IMPOSSIBLE_CHECKOUT_SCORES include known impossible finishes", () => {
   assert.equal(IMPOSSIBLE_CHECKOUT_SCORES.has(170), false);
 });
 
-test("isCheckoutPossibleFromScore mirrors old score feasibility rules", () => {
+test("double-out checkout feasibility preserves the classic impossible score set", () => {
   assert.equal(isCheckoutPossibleFromScore(170), true);
   assert.equal(isCheckoutPossibleFromScore(169), false);
   assert.equal(isCheckoutPossibleFromScore(1), false);
   assert.equal(isCheckoutPossibleFromScore(171), false);
 });
 
-test("one-dart checkout helpers resolve expected segments", () => {
+test("out-mode-aware checkout feasibility distinguishes straight, double and master out", () => {
+  assert.equal(isCheckoutPossibleFromScoreForOutMode(159, "double"), false);
+  assert.equal(isCheckoutPossibleFromScoreForOutMode(159, "master"), true);
+  assert.equal(isCheckoutPossibleFromScoreForOutMode(1, "straight"), true);
+  assert.equal(isCheckoutPossibleFromScoreForOutMode(1, "double"), false);
+  assert.equal(isCheckoutPossibleFromScoreForOutMode(180, "double"), false);
+  assert.equal(isCheckoutPossibleFromScoreForOutMode(180, "straight"), true);
+});
+
+test("one-dart checkout helpers resolve expected segments per out mode", () => {
   assert.equal(getOneDartCheckoutSegment(50), "BULL");
   assert.equal(getOneDartCheckoutSegment(40), "D20");
   assert.equal(getOneDartCheckoutSegment(39), "");
+  assert.equal(getPreferredOneDartCheckoutSegment(60, "master"), "T20");
+  assert.equal(getPreferredOneDartCheckoutSegment(20, "straight"), "S20");
+  assert.equal(getPreferredOneDartCheckoutSegment(25, "straight"), "S25");
+  assert.deepEqual(getOneDartCheckoutSegmentsForOutMode(20, "straight"), ["S20", "D10"]);
+  assert.deepEqual(getOneDartCheckoutSegmentsForOutMode(60, "master"), ["T20"]);
+  assert.deepEqual(getOneDartCheckoutSegmentsForOutMode(50, "double"), ["BULL"]);
 
   assert.equal(isOneDartCheckoutSegment("BULL"), true);
   assert.equal(isOneDartCheckoutSegment("D16"), true);
   assert.equal(isOneDartCheckoutSegment("S20"), false);
+  assert.equal(isOneDartCheckoutSegmentForOutMode("T20", "master"), true);
+  assert.equal(isOneDartCheckoutSegmentForOutMode("T20", "double"), false);
+  assert.equal(isOneDartCheckoutSegmentForOutMode("S20", "straight"), true);
 });
 
 test("normalizeSegmentName resolves common aliases and segment formats", () => {
@@ -155,17 +178,23 @@ test("explicit checkout segment parser extracts normalized explicit targets only
 test("suggestion one-dart parser accepts exactly one explicit one-dart segment", () => {
   assert.equal(getSuggestionOneDartCheckoutSegment("D17"), "D17");
   assert.equal(getSuggestionOneDartCheckoutSegment("Bull"), "BULL");
+  assert.equal(getSuggestionOneDartCheckoutSegment("Double 16"), "D16");
   assert.equal(getSuggestionOneDartCheckoutSegment("T20 D20"), "");
   assert.equal(getSuggestionOneDartCheckoutSegment("T20"), "");
+  assert.equal(getSuggestionOneDartCheckoutSegmentForOutMode("T20", "master"), "T20");
+  assert.equal(getSuggestionOneDartCheckoutSegmentForOutMode("Single 20", "straight"), "S20");
 });
 
-test("checkout target parser keeps legacy summary filtering behavior", () => {
+test("checkout target parser keeps summary filtering but maps bull semantics correctly", () => {
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("20 D10"), [{ ring: "D", value: 10 }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("20 10"), [
     { ring: "S", value: 20 },
     { ring: "S", value: 10 },
   ]);
-  assert.deepEqual(parseCheckoutTargetsFromSuggestion("BULL"), [{ ring: "SB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("BULL"), [{ ring: "DB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("Bullseye"), [{ ring: "DB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("Single Bull"), [{ ring: "SB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("Double 16"), [{ ring: "D", value: 16 }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("DB"), [{ ring: "DB" }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("T20 D20"), [
     { ring: "T", value: 20 },
@@ -173,13 +202,17 @@ test("checkout target parser keeps legacy summary filtering behavior", () => {
   ]);
 });
 
-test("parseCheckoutSuggestionState preserves suggestion parser behavior", () => {
+test("parseCheckoutSuggestionState follows explicit finish validity per out mode", () => {
   assert.equal(parseCheckoutSuggestionState("No Checkout"), false);
   assert.equal(parseCheckoutSuggestionState("Bust"), false);
   assert.equal(parseCheckoutSuggestionState("D16"), true);
   assert.equal(parseCheckoutSuggestionState("Double 16"), true);
   assert.equal(parseCheckoutSuggestionState("Bull"), true);
-  assert.equal(parseCheckoutSuggestionState("T20 T20"), null);
+  assert.equal(parseCheckoutSuggestionState("T20 D20"), true);
+  assert.equal(parseCheckoutSuggestionState("T20 T20"), false);
+  assert.equal(parseCheckoutSuggestionState("T20", "master"), true);
+  assert.equal(parseCheckoutSuggestionState("T20", "double"), false);
+  assert.equal(parseCheckoutSuggestionState("Single 20", "straight"), true);
 });
 
 test("normalizeOutMode accepts common mode labels", () => {
@@ -194,6 +227,8 @@ test("canFinishWithSegment respects out mode constraints", () => {
   assert.equal(canFinishWithSegment(40, "S20", "double"), false);
   assert.equal(canFinishWithSegment(60, "T20", "master"), true);
   assert.equal(canFinishWithSegment(50, "BULL", "double"), true);
+  assert.equal(canFinishWithSegment(20, "S20", "straight"), true);
+  assert.equal(canFinishWithSegment(25, "S25", "straight"), true);
 });
 
 test("evaluateThrowOutcome covers bust and finish behavior across out modes", () => {
@@ -250,4 +285,7 @@ test("evaluateThrowOutcome covers bust and finish behavior across out modes", ()
 test("isSensibleThirdT20Score follows old TV zoom bust-guard threshold", () => {
   assert.equal(isSensibleThirdT20Score(62), true);
   assert.equal(isSensibleThirdT20Score(61), false);
+  assert.equal(isSensibleThirdT20Score(60, "master"), true);
+  assert.equal(isSensibleThirdT20Score(61, "straight"), true);
+  assert.equal(isSensibleThirdT20Score(59, "straight"), false);
 });

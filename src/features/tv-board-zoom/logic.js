@@ -173,6 +173,10 @@ export function computeZoomIntent(options = {}) {
   const windowRef = options.windowRef;
   const config = options.featureConfig;
   const nowTs = Number.isFinite(options.nowTs) ? options.nowTs : Date.now();
+  const outMode =
+    gameState && typeof gameState.getOutMode === "function"
+      ? String(gameState.getOutMode() || "")
+      : "";
 
   if (!gameState || typeof gameState.isX01Variant !== "function") {
     return null;
@@ -217,8 +221,14 @@ export function computeZoomIntent(options = {}) {
       : getBestVisibleScoreFromDom(documentRef, windowRef);
 
   if (config.checkoutZoomEnabled && throwCount <= 2) {
-    const checkoutSegment = x01Rules.getOneDartCheckoutSegment?.(activeScore);
-    if (checkoutSegment && x01Rules.isOneDartCheckoutSegment?.(checkoutSegment)) {
+    const checkoutSegment =
+      x01Rules.getPreferredOneDartCheckoutSegment?.(activeScore, outMode) ||
+      x01Rules.getOneDartCheckoutSegment?.(activeScore);
+    const isValidCheckoutSegment =
+      typeof x01Rules.isOneDartCheckoutSegmentForOutMode === "function"
+        ? x01Rules.isOneDartCheckoutSegmentForOutMode(checkoutSegment, outMode)
+        : x01Rules.isOneDartCheckoutSegment?.(checkoutSegment);
+    if (checkoutSegment && isValidCheckoutSegment) {
       const intent = { reason: "checkout", segment: checkoutSegment };
       state.activeIntent = intent;
       return intent;
@@ -231,7 +241,7 @@ export function computeZoomIntent(options = {}) {
     if (
       firstSegment === "T20" &&
       secondSegment === "T20" &&
-      x01Rules.isSensibleThirdT20Score?.(activeScore)
+      x01Rules.isSensibleThirdT20Score?.(activeScore, outMode)
     ) {
       const intent = { reason: "t20-setup", segment: "T20" };
       state.activeIntent = intent;

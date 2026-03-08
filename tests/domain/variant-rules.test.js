@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   classifyCricketGameMode,
+  classifyCricketScoringMode,
   classifyVariantFamily,
   isCricketVariantText,
   isX01VariantText,
@@ -19,6 +20,15 @@ test("classifyCricketGameMode handles cricket, tactics and hidden cricket", () =
   assert.equal(classifyCricketGameMode("Tactics Match"), "tactics");
   assert.equal(classifyCricketGameMode("Hidden Cricket"), "hidden-cricket");
   assert.equal(classifyCricketGameMode("Shanghai"), "");
+});
+
+test("classifyCricketScoringMode separates standard, cut-throat and neutral families", () => {
+  assert.equal(classifyCricketScoringMode("standard"), "standard");
+  assert.equal(classifyCricketScoringMode("Cut Throat"), "cutthroat");
+  assert.equal(classifyCricketScoringMode("cut-throat"), "cutthroat");
+  assert.equal(classifyCricketScoringMode("practice"), "neutral");
+  assert.equal(classifyCricketScoringMode("no-score"), "neutral");
+  assert.equal(classifyCricketScoringMode("mystery"), "unknown");
 });
 
 test("isX01VariantText supports direct and numeric X01 modes", () => {

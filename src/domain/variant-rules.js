@@ -29,6 +29,35 @@ export function classifyCricketGameMode(value) {
   return "";
 }
 
+export function classifyCricketScoringMode(value) {
+  const normalized = normalizeVariant(value).replace(/[_\s]+/g, "-");
+  if (!normalized) {
+    return "unknown";
+  }
+
+  if (["standard", "default", "normal", "regular", "classic"].includes(normalized)) {
+    return "standard";
+  }
+
+  if (normalized === "cut-throat" || normalized.replace(/-/g, "") === "cutthroat") {
+    return "cutthroat";
+  }
+
+  if (
+    [
+      "no-score",
+      "noscore",
+      "practice",
+      "practice-no-score",
+      "practice-noscore",
+    ].includes(normalized)
+  ) {
+    return "neutral";
+  }
+
+  return "unknown";
+}
+
 export function isX01VariantText(value, options = {}) {
   const normalized = normalizeVariant(value);
   if (!normalized) {

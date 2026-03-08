@@ -1,4 +1,7 @@
-import { classifyCricketGameMode } from "./variant-rules.js";
+import {
+  classifyCricketGameMode,
+  classifyCricketScoringMode,
+} from "./variant-rules.js";
 
 export const CRICKET_TARGET_ORDER = ["20", "19", "18", "17", "16", "15", "BULL"];
 
@@ -18,6 +21,7 @@ export const TACTICS_TARGET_ORDER = [
 ];
 
 const TARGET_SET = new Set(TACTICS_TARGET_ORDER);
+const TACTICS_ONLY_TARGETS = new Set(["14", "13", "12", "11", "10"]);
 
 function toSafePlayerCount(value) {
   const numeric = Number(value);
@@ -25,6 +29,169 @@ function toSafePlayerCount(value) {
     return 0;
   }
   return Math.max(0, Math.round(numeric));
+}
+
+function resolvePlayerCount(baseMarksByLabel, targetOrder, playerIndex, requestedPlayerCount) {
+  const fromBaseMarks = Object.values(baseMarksByLabel || {}).reduce((max, values) => {
+    return Array.isArray(values) ? Math.max(max, values.length) : max;
+  }, 0);
+
+  return Math.max(
+    toSafePlayerCount(requestedPlayerCount),
+    fromBaseMarks,
+    Number.isFinite(playerIndex) ? Math.max(0, playerIndex + 1) : 0
+  );
+}
+
+function cloneMarksByLabel(baseMarksByLabel, targetOrder, playerCount) {
+  const next = {};
+
+  targetOrder.forEach((label) => {
+    const source = Array.isArray(baseMarksByLabel?.[label]) ? baseMarksByLabel[label] : [];
+    const values = source.map((value) => clampMarks(value));
+
+    while (values.length < playerCount) {
+      values.push(0);
+    }
+
+    next[label] = values;
+  });
+
+  return next;
+}
+
+function resolveScoringModeNormalized(options = {}) {
+  if (typeof options.scoringModeNormalized === "string" && options.scoringModeNormalized.trim()) {
+    return options.scoringModeNormalized.trim().toLowerCase();
+  }
+
+  if (Object.prototype.hasOwnProperty.call(options, "scoringMode")) {
+    return classifyCricketScoringMode(options.scoringMode);
+  }
+
+  return "unknown";
+}
+
+function resolveSupportsTacticalHighlights(options = {}) {
+  if (typeof options.supportsTacticalHighlights === "boolean") {
+    return options.supportsTacticalHighlights;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(options, "scoringMode") ||
+    Object.prototype.hasOwnProperty.call(options, "scoringModeNormalized")
+  ) {
+    const scoringModeNormalized = resolveScoringModeNormalized(options);
+    return scoringModeNormalized === "standard" || scoringModeNormalized === "cutthroat";
+  }
+
+  return true;
+}
+
+function normalizeSegmentName(segment) {
+  const raw = String(segment || "").trim().toUpperCase();
+  if (!raw) {
+    return "";
+  }
+
+  if (
+    raw === "BULL" ||
+    raw === "BULLSEYE" ||
+    raw === "DBULL" ||
+    raw === "DB" ||
+    raw === "D25" ||
+    raw === "DOUBLE BULL"
+  ) {
+    return "BULL";
+  }
+
+  if (
+    raw === "SBULL" ||
+    raw === "SB" ||
+    raw === "OB" ||
+    raw === "OUTER BULL" ||
+    raw === "S25" ||
+    raw === "25"
+  ) {
+    return "S25";
+  }
+
+  const match = raw.match(/^([SDT])\s*(\d{1,2})$/);
+  if (match) {
+    return `${match[1]}${Number(match[2])}`;
+  }
+
+  if (/^\d{1,2}$/.test(raw)) {
+    return `S${Number(raw)}`;
+  }
+
+  return raw;
+}
+
+function readSegmentDescriptor(throwEntry) {
+  if (!throwEntry || typeof throwEntry !== "object") {
+    return null;
+  }
+
+  return throwEntry.segment && typeof throwEntry.segment === "object"
+    ? throwEntry.segment
+    : throwEntry;
+}
+
+function buildSegmentNameFromDescriptor(segment) {
+  const name = normalizeSegmentName(segment?.name || segment?.segment || segment?.label || "");
+  if (name) {
+    return name;
+  }
+
+  const numericValue = Number(segment?.number ?? segment?.value ?? NaN);
+  const multiplier = Number(segment?.multiplier ?? segment?.marks ?? NaN);
+  const bed = String(segment?.bed || "").trim().toLowerCase();
+
+  if (numericValue === 25) {
+    if (multiplier === 2 || bed.includes("double") || bed.includes("inner")) {
+      return "BULL";
+    }
+    if (multiplier === 1 || bed.includes("single") || bed.includes("outer")) {
+      return "S25";
+    }
+  }
+
+  if (numericValue >= 1 && numericValue <= 20) {
+    if (multiplier === 3 || bed.includes("triple")) {
+      return `T${numericValue}`;
+    }
+    if (multiplier === 2 || bed.includes("double")) {
+      return `D${numericValue}`;
+    }
+    if (multiplier === 1 || !Number.isFinite(multiplier) || bed.includes("single")) {
+      return `S${numericValue}`;
+    }
+  }
+
+  return "";
+}
+
+function getResolvedModeFamily(gameMode, targetOrder) {
+  const normalized = classifyCricketGameMode(gameMode);
+  if (normalized) {
+    return normalized;
+  }
+
+  if (Array.isArray(targetOrder) && targetOrder.some((label) => TACTICS_ONLY_TARGETS.has(label))) {
+    return "tactics";
+  }
+
+  return "cricket";
+}
+
+function getOpenOpponentIndexes(marksByPlayer, playerIndex) {
+  return marksByPlayer.reduce((result, mark, index) => {
+    if (index !== playerIndex && clampMarks(mark) < 3) {
+      result.push(index);
+    }
+    return result;
+  }, []);
 }
 
 export function clampMarks(value) {
@@ -64,6 +231,22 @@ export function normalizeCricketLabel(value) {
   return numberMatch ? numberMatch[1] : "";
 }
 
+export function inferCricketGameModeByLabels(labels) {
+  const normalizedLabels = Array.isArray(labels)
+    ? labels.map((label) => normalizeCricketLabel(label)).filter(Boolean)
+    : [];
+
+  if (!normalizedLabels.length) {
+    return "";
+  }
+
+  if (normalizedLabels.some((label) => TACTICS_ONLY_TARGETS.has(label))) {
+    return "tactics";
+  }
+
+  return "cricket";
+}
+
 export function getTargetOrderByGameMode(gameMode) {
   const mode = classifyCricketGameMode(gameMode);
   return mode === "tactics" ? TACTICS_TARGET_ORDER : CRICKET_TARGET_ORDER;
@@ -81,45 +264,22 @@ export function createEmptyMarksByLabel(targetOrder, playerCount = 0) {
   }, {});
 }
 
-function normalizeSegmentName(value) {
-  const raw = String(value || "").trim().toUpperCase();
-  if (!raw) {
-    return "";
+export function getCricketTargetBaseScore(label) {
+  const normalizedLabel = normalizeCricketLabel(label);
+  if (!normalizedLabel) {
+    return 0;
+  }
+  if (normalizedLabel === "BULL") {
+    return 25;
   }
 
-  if (raw === "BULL" || raw === "BULLSEYE" || raw === "DBULL" || raw === "DB") {
-    return "BULL";
-  }
-  if (raw === "SBULL" || raw === "SB" || raw === "OB" || raw === "S25") {
-    return "S25";
-  }
-
-  const match = raw.match(/^([SDT])\s*(\d{1,2})$/);
-  if (match) {
-    return `${match[1]}${Number(match[2])}`;
-  }
-
-  if (/^\d{1,2}$/.test(raw)) {
-    return `S${Number(raw)}`;
-  }
-
-  return raw;
+  const numeric = Number(normalizedLabel);
+  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 export function parseCricketThrowSegment(throwEntry) {
-  if (!throwEntry || typeof throwEntry !== "object") {
-    return null;
-  }
-
-  const segment = throwEntry.segment && typeof throwEntry.segment === "object"
-    ? throwEntry.segment
-    : throwEntry;
-  const normalizedName = normalizeSegmentName(
-    segment.name ||
-      segment.segment ||
-      segment.label ||
-      ""
-  );
+  const segment = readSegmentDescriptor(throwEntry);
+  const normalizedName = buildSegmentNameFromDescriptor(segment);
   if (!normalizedName) {
     return null;
   }
@@ -130,6 +290,7 @@ export function parseCricketThrowSegment(throwEntry) {
       value: 25,
       marks: 2,
       label: "BULL",
+      points: 50,
     };
   }
 
@@ -139,6 +300,7 @@ export function parseCricketThrowSegment(throwEntry) {
       value: 25,
       marks: 1,
       label: "BULL",
+      points: 25,
     };
   }
 
@@ -153,50 +315,102 @@ export function parseCricketThrowSegment(throwEntry) {
     return null;
   }
 
+  const marks = ring === "T" ? 3 : ring === "D" ? 2 : 1;
   return {
     ring,
     value,
-    marks: ring === "T" ? 3 : ring === "D" ? 2 : 1,
+    marks,
     label: String(value),
+    points: value * marks,
   };
 }
 
-export function applyThrowsToMarksByLabel(options = {}) {
-  const targetOrder = Array.isArray(options.targetOrder) && options.targetOrder.length
-    ? options.targetOrder
+export function applyCricketThrowsToState(options = {}) {
+  const explicitTargetOrder = Array.isArray(options.targetOrder) && options.targetOrder.length
+    ? options.targetOrder.filter(Boolean)
     : CRICKET_TARGET_ORDER;
   const playerIndex = Number.isFinite(Number(options.playerIndex))
     ? Math.max(0, Math.round(Number(options.playerIndex)))
     : 0;
   const throws = Array.isArray(options.throws) ? options.throws : [];
-  const baseMarks = options.baseMarksByLabel && typeof options.baseMarksByLabel === "object"
-    ? options.baseMarksByLabel
-    : createEmptyMarksByLabel(targetOrder, playerIndex + 1);
-  const marksByLabel = Object.keys(baseMarks).reduce((result, label) => {
-    const values = Array.isArray(baseMarks[label]) ? baseMarks[label] : [];
-    result[label] = values.map((value) => clampMarks(value));
-    return result;
-  }, {});
-
-  targetOrder.forEach((label) => {
-    if (!Array.isArray(marksByLabel[label])) {
-      marksByLabel[label] = [];
-    }
-    while (marksByLabel[label].length <= playerIndex) {
-      marksByLabel[label].push(0);
-    }
-  });
+  const baseMarksByLabel =
+    options.baseMarksByLabel && typeof options.baseMarksByLabel === "object"
+      ? options.baseMarksByLabel
+      : createEmptyMarksByLabel(explicitTargetOrder, playerIndex + 1);
+  const playerCount = resolvePlayerCount(
+    baseMarksByLabel,
+    explicitTargetOrder,
+    playerIndex,
+    options.playerCount
+  );
+  const nextMarksByLabel = cloneMarksByLabel(baseMarksByLabel, explicitTargetOrder, playerCount);
+  const scoreDeltaByPlayer = Array.from({ length: playerCount }, () => 0);
+  const scoringModeNormalized = resolveScoringModeNormalized(options);
+  const scoringEvents = [];
 
   throws.forEach((throwEntry) => {
     const parsed = parseCricketThrowSegment(throwEntry);
-    if (!parsed || !targetOrder.includes(parsed.label)) {
+    if (!parsed || !explicitTargetOrder.includes(parsed.label)) {
       return;
     }
-    const currentMarks = clampMarks(marksByLabel[parsed.label][playerIndex] || 0);
-    marksByLabel[parsed.label][playerIndex] = clampMarks(currentMarks + parsed.marks);
+
+    const marksByPlayer = nextMarksByLabel[parsed.label];
+    const currentMarks = clampMarks(marksByPlayer[playerIndex] || 0);
+    const marksToClose = Math.max(0, 3 - currentMarks);
+    const appliedMarks = Math.min(parsed.marks, marksToClose);
+    const overflowMarks = Math.max(0, parsed.marks - marksToClose);
+
+    marksByPlayer[playerIndex] = clampMarks(currentMarks + appliedMarks);
+
+    const openOpponentIndexes = getOpenOpponentIndexes(marksByPlayer, playerIndex);
+    if (!(overflowMarks > 0) || !openOpponentIndexes.length) {
+      return;
+    }
+
+    const baseScore = getCricketTargetBaseScore(parsed.label);
+    const totalPoints = overflowMarks * baseScore;
+    if (!(totalPoints > 0)) {
+      return;
+    }
+
+    const recipients = [];
+
+    if (scoringModeNormalized === "standard") {
+      scoreDeltaByPlayer[playerIndex] += totalPoints;
+      recipients.push({ playerIndex, delta: totalPoints });
+    } else if (scoringModeNormalized === "cutthroat") {
+      openOpponentIndexes.forEach((opponentIndex) => {
+        scoreDeltaByPlayer[opponentIndex] += totalPoints;
+        recipients.push({ playerIndex: opponentIndex, delta: totalPoints });
+      });
+    } else {
+      return;
+    }
+
+    scoringEvents.push({
+      label: parsed.label,
+      ring: parsed.ring,
+      marks: parsed.marks,
+      appliedMarks,
+      overflowMarks,
+      baseScore,
+      totalPoints,
+      playerIndex,
+      recipients,
+    });
   });
 
-  return marksByLabel;
+  return {
+    targetOrder: explicitTargetOrder,
+    nextMarksByLabel,
+    scoreDeltaByPlayer,
+    scoringModeNormalized,
+    scoringEvents,
+  };
+}
+
+export function applyThrowsToMarksByLabel(options = {}) {
+  return applyCricketThrowsToState(options).nextMarksByLabel;
 }
 
 export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = {}) {
@@ -210,29 +424,16 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
       : 0;
 
   const marks = resolvedMarks[resolvedIndex] || 0;
+  const closed = marks >= 3;
+  const allClosed = resolvedMarks.length > 0 && resolvedMarks.every((mark) => mark >= 3);
+  const dead = resolvedMarks.length > 1 && allClosed;
   const opponentMarks = resolvedMarks.filter((_, index) => index !== resolvedIndex);
-  const showDeadTargets = options.showDeadTargets !== false;
-  const supportsTacticalHighlights = Boolean(options.supportsTacticalHighlights);
-
-  const dead =
-    showDeadTargets &&
-    resolvedMarks.length > 1 &&
-    resolvedMarks.every((mark) => mark >= 3);
-
-  const offense =
-    supportsTacticalHighlights &&
-    marks >= 3 &&
-    opponentMarks.some((mark) => mark < 3) &&
-    !dead;
-
-  const danger =
-    supportsTacticalHighlights &&
-    marks < 3 &&
-    opponentMarks.some((mark) => mark >= 3) &&
-    !dead;
-
+  const scorableForPlayer = closed && opponentMarks.some((mark) => mark < 3) && !allClosed;
+  const scorableAgainstPlayer = !closed && opponentMarks.some((mark) => mark >= 3) && !allClosed;
+  const supportsTacticalHighlights = resolveSupportsTacticalHighlights(options);
+  const offense = supportsTacticalHighlights && scorableForPlayer;
+  const danger = supportsTacticalHighlights && scorableAgainstPlayer;
   const pressure = danger && marks <= 1;
-  const closed = marks >= 3 && !offense && !dead;
 
   let presentation = "open";
   if (dead) {
@@ -257,20 +458,25 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
     pressure,
     closed,
     dead,
+    allClosed,
+    scorableForPlayer,
+    scorableAgainstPlayer,
   };
 }
 
 export function computeTargetStates(marksByLabel, options = {}) {
   const stateMap = new Map();
-  const gameMode = options.gameMode || "";
-  const targetOrder = getTargetOrderByGameMode(gameMode);
-  const supportsTacticalHighlights = options.supportsTacticalHighlights !== false;
+  const inferredMode = inferCricketGameModeByLabels(Object.keys(marksByLabel || {}));
+  const modeFamily = getResolvedModeFamily(options.gameMode || inferredMode, options.targetOrder);
+  const targetOrder = Array.isArray(options.targetOrder) && options.targetOrder.length
+    ? options.targetOrder.filter(Boolean)
+    : getTargetOrderByGameMode(modeFamily);
+  const scoringModeNormalized = resolveScoringModeNormalized(options);
+  const supportsTacticalHighlights = resolveSupportsTacticalHighlights(options);
 
   targetOrder.forEach((targetLabel) => {
-    const marksByPlayer = (Array.isArray(marksByLabel?.[targetLabel])
-      ? marksByLabel[targetLabel]
-      : []
-    ).map((value) => clampMarks(value));
+    const marksByPlayer = (Array.isArray(marksByLabel?.[targetLabel]) ? marksByLabel[targetLabel] : [])
+      .map((value) => clampMarks(value));
 
     if (!marksByPlayer.length) {
       return;
@@ -279,9 +485,7 @@ export function computeTargetStates(marksByLabel, options = {}) {
     const activePlayerIndex = Math.max(
       0,
       Math.min(
-        Number.isFinite(options.activePlayerIndex)
-          ? Number(options.activePlayerIndex)
-          : 0,
+        Number.isFinite(options.activePlayerIndex) ? Number(options.activePlayerIndex) : 0,
         marksByPlayer.length - 1
       )
     );
@@ -289,8 +493,8 @@ export function computeTargetStates(marksByLabel, options = {}) {
     const cellStates = marksByPlayer.map((_, index) =>
       evaluatePlayerTargetState(marksByPlayer, index, {
         activePlayerIndex,
-        showDeadTargets: options.showDeadTargets,
         supportsTacticalHighlights,
+        scoringModeNormalized,
       })
     );
 
@@ -298,16 +502,20 @@ export function computeTargetStates(marksByLabel, options = {}) {
       cellStates[activePlayerIndex] ||
       evaluatePlayerTargetState(marksByPlayer, activePlayerIndex, {
         activePlayerIndex,
-        showDeadTargets: options.showDeadTargets,
         supportsTacticalHighlights,
+        scoringModeNormalized,
       });
 
     const presentation = boardState.presentation || "open";
 
     stateMap.set(targetLabel, {
       label: targetLabel,
-      modeFamily: classifyCricketGameMode(gameMode) || "cricket",
-      rawMode: String(gameMode || ""),
+      modeFamily,
+      rawMode: String(options.gameMode || ""),
+      scoringMode: Object.prototype.hasOwnProperty.call(options, "scoringMode")
+        ? String(options.scoringMode || "")
+        : "",
+      scoringModeNormalized,
       activePlayerIndex,
       marksByPlayer,
       activeMarks: boardState.marks,
@@ -316,6 +524,9 @@ export function computeTargetStates(marksByLabel, options = {}) {
       pressure: boardState.pressure,
       closed: boardState.closed,
       dead: boardState.dead,
+      allClosed: boardState.allClosed,
+      scorableForPlayer: boardState.scorableForPlayer,
+      scorableAgainstPlayer: boardState.scorableAgainstPlayer,
       presentation,
       boardPresentation: presentation,
       boardState,
