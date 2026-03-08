@@ -12,8 +12,9 @@ test("cricket theme uses standard preview placement and board-first layout rules
   assert.equal(PREVIEW_PLACEMENT.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
   assert.match(css, /grid-template-columns:\s*0\.92fr 1\.08fr\s*!important;/);
-  assert.match(css, /\.css-1kejrvi svg,\s*\.css-14xtjvc svg,/);
-  assert.match(css, /width:\s*min\(100%,\s*calc\(100dvh - 170px\)\)\s*!important;/);
+  assert.match(css, /:has\(svg\[viewBox="0 0 1000 1000"\]\)/);
+  assert.match(css, /grid-column-start:\s*2\s*!important;/);
+  assert.match(css, /width:\s*min\(100%,\s*calc\(100dvh - 132px\)\)\s*!important;/);
   assert.doesNotMatch(
     css,
     /grid-template-areas:\s*"header header"\s*"footer board"\s*"players board"/

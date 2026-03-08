@@ -166,17 +166,28 @@ span.chakra-switch__track.css-v4l15v {
   grid-template-columns: 0.92fr 1.08fr !important;
 }
 
-.css-1kejrvi,
-.css-14xtjvc{
+/* Stable board targeting without Chakra hash-class dependency. */
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]){
+  grid-column-start: 2 !important;
+  grid-column-end: 3 !important;
+  grid-row-start: 3 !important;
+  grid-row-end: 4 !important;
+  grid-area: board !important;
+  justify-self: stretch !important;
   align-self: stretch !important;
+  width: 100% !important;
   height: 100% !important;
+  min-width: 0 !important;
   min-height: 0 !important;
-  margin-top: 0 !important;
+  margin: 0 !important;
 }
 
-.css-1kejrvi .css-tqsk66,
-.css-14xtjvc .css-tqsk66{
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) > *{
+  width: 100% !important;
   height: 100% !important;
+}
+
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) .css-tqsk66{
   min-height: 0 !important;
   padding: 0 0 8px 0 !important;
   display: grid !important;
@@ -186,23 +197,21 @@ span.chakra-switch__track.css-v4l15v {
   row-gap: 8px !important;
 }
 
-.css-1kejrvi .css-7bjx6y,
-.css-14xtjvc .css-7bjx6y,
-.css-1kejrvi .css-1wegtvo,
-.css-14xtjvc .css-1wegtvo{
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) .css-7bjx6y,
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) .css-1wegtvo{
   top: auto;
   bottom: 0;
 }
 
-.css-1kejrvi svg,
-.css-14xtjvc svg,
-.css-1kejrvi canvas,
-.css-14xtjvc canvas,
-.css-1kejrvi img,
-.css-14xtjvc img{
-  width: min(100%, calc(100dvh - 170px)) !important;
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) svg,
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) canvas,
+.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) img{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: min(100%, calc(100dvh - 132px)) !important;
   height: auto !important;
-  max-height: calc(100dvh - 170px) !important;
+  max-height: calc(100dvh - 132px) !important;
   max-width: 100%;
   object-fit: contain;
 }
