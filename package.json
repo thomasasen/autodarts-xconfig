@@ -7,6 +7,10 @@
     "#feature-assets": {
       "node": "./src/shared/feature-assets.node.js",
       "default": "./src/shared/feature-assets.browser.js"
+    },
+    "#xconfig-preview-assets": {
+      "node": "./src/shared/xconfig-preview-assets.node.js",
+      "default": "./src/shared/xconfig-preview-assets.browser.js"
     }
   },
   "scripts": {

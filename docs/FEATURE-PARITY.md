@@ -1,6 +1,6 @@
 # Feature-Parität
 
-Die verbindliche scriptweise Paritätsübersicht liegt in:
+Die verbindliche, scriptweise Paritätsübersicht liegt in:
 
 - [LEGACY-PARITY-MATRIX.md](LEGACY-PARITY-MATRIX.md)
 
