@@ -6,15 +6,24 @@ import {
   buildCricketThemeCss,
 } from "../../src/features/themes/cricket/style.js";
 
-test("cricket theme uses standard preview placement with oldrepo-aligned layout rules", () => {
+test("cricket theme keeps standard preview placement and uses stable board layout hooks", () => {
   const css = buildCricketThemeCss({ showAvg: true });
 
   assert.equal(PREVIEW_PLACEMENT.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
   assert.match(css, /\.css-1k7iu8k\s*\{\s*max-width:\s*96%/);
-  assert.match(css, /\.css-c04tlr\s*\{\s*height:\s*calc\(92%\s*-\s*185px\)\s*!important;/);
-  assert.match(css, /\.css-1f26ant\s*\{\s*height:\s*calc\(100%\s*-\s*230px\)/);
-  assert.match(css, /\.css-1f26ant\s*>\s*div\s*\{\s*height:\s*80%\s*!important;/);
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\s*\{[^}]*grid-template-rows:\s*auto minmax\(0,\s*1fr\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-viewport\s*\{[^}]*padding-bottom:\s*0\s*!important;[^}]*display:\s*flex\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*aspect-ratio:\s*1 \/ 1;/s
+  );
   assert.match(
     css,
     /#ad-ext-player-display\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-auto-flow:\s*column\s*!important;[^}]*grid-auto-columns:\s*minmax\(0,\s*1fr\)\s*!important;/s
@@ -23,7 +32,8 @@ test("cricket theme uses standard preview placement with oldrepo-aligned layout 
     css,
     /grid-template-areas:\s*"header header"\s*"footer footer"\s*"players board"/
   );
-  assert.match(css, /\.css-1kejrvi,\s*\.css-14xtjvc\s*\{/);
+  assert.doesNotMatch(css, /\.css-c04tlr\s*\{/);
+  assert.doesNotMatch(css, /\.css-1f26ant\s*\{/);
   assert.doesNotMatch(css, /\[data-ad-theme-slot=/);
   assert.doesNotMatch(css, /\[data-ad-theme-layout-root=/);
   assert.doesNotMatch(css, /:has\(/);

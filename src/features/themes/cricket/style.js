@@ -113,10 +113,6 @@ div.css-nfhdnc {
   border: 2px solid #9fdb58 !important;
 }
 
-.css-c04tlr {
-  height: calc(92% - 185px) !important;
-}
-
 .chakra-stack.navigation {
   background-color: var(--theme-navigation-bg);
 }
@@ -174,15 +170,6 @@ span.chakra-switch__track.css-v4l15v {
 
 .css-1yso2z2 {
   height: 100% !important;
-}
-
-.css-1f26ant {
-  height: calc(100% - 230px);
-}
-
-.css-1f26ant > div {
-  height: 80% !important;
-  margin-bottom: 1px !important;
 }
 `;
 

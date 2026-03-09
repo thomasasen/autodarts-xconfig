@@ -248,4 +248,43 @@ div.css-y3hfdd > .css-1igwmid{
 .css-7bjx6y,
 .css-1wegtvo{ top: inherit; bottom: 0; }
 .css-1emway5 { grid-column: 1 / 3; }
+
+/* Stable board-layout hooks (primary path, class-hash agnostic). */
+.ad-ext-theme-board-panel{
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.ad-ext-theme-board-controls{
+  align-self: end !important;
+  position: relative !important;
+  z-index: 1;
+}
+
+.ad-ext-theme-board-viewport{
+  min-height: 0 !important;
+  height: 100% !important;
+  padding-bottom: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ad-ext-theme-board-canvas{
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{
+  width: min(100%, 100vh) !important;
+  height: min(100%, 100vh) !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 1 / 1;
+}
 `;
