@@ -30,12 +30,17 @@ function createThemeConfig(themeConfigKey, themeFeatureConfig = {}) {
   };
 }
 
-function createBoardFixture(documentRef) {
+function createBoardFixture(documentRef, options = {}) {
+  const withContentSlot = options.withContentSlot === true;
   const boardPanel = documentRef.createElement("div");
   const boardControls = documentRef.createElement("div");
   const boardViewport = documentRef.createElement("div");
   const boardCanvas = documentRef.createElement("div");
   const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const contentSlot = withContentSlot ? documentRef.createElement("div") : null;
+  const contentLeft = withContentSlot ? documentRef.createElement("div") : null;
+  const contentBoard = withContentSlot ? documentRef.createElement("div") : null;
+  const playerDisplay = withContentSlot ? documentRef.createElement("div") : null;
 
   boardControls.classList.add("chakra-stack");
   const undoButton = documentRef.createElement("button");
@@ -59,13 +64,35 @@ function createBoardFixture(documentRef) {
   boardViewport.appendChild(boardCanvas);
   boardPanel.appendChild(boardControls);
   boardPanel.appendChild(boardViewport);
-  documentRef.main.appendChild(boardPanel);
 
-  return { boardPanel, boardControls, boardViewport, boardCanvas, boardSvg };
+  if (withContentSlot) {
+    playerDisplay.id = "ad-ext-player-display";
+    contentLeft.appendChild(playerDisplay);
+    contentBoard.appendChild(boardPanel);
+    contentSlot.appendChild(contentLeft);
+    contentSlot.appendChild(contentBoard);
+    documentRef.main.appendChild(contentSlot);
+  } else {
+    documentRef.main.appendChild(boardPanel);
+  }
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+    boardPanel,
+    boardControls,
+    boardViewport,
+    boardCanvas,
+    boardSvg,
+  };
 }
 
 function assertThemeHookState(nodes, expectedActive) {
   const expectations = [
+    [nodes.contentSlot, THEME_LAYOUT_HOOK_CLASSES.contentSlot],
+    [nodes.contentLeft, THEME_LAYOUT_HOOK_CLASSES.contentLeft],
+    [nodes.contentBoard, THEME_LAYOUT_HOOK_CLASSES.contentBoard],
     [nodes.boardPanel, THEME_LAYOUT_HOOK_CLASSES.boardPanel],
     [nodes.boardControls, THEME_LAYOUT_HOOK_CLASSES.boardControls],
     [nodes.boardViewport, THEME_LAYOUT_HOOK_CLASSES.boardViewport],
@@ -74,6 +101,9 @@ function assertThemeHookState(nodes, expectedActive) {
   ];
 
   expectations.forEach(([node, className]) => {
+    if (!node) {
+      return;
+    }
     assert.equal(node.classList.contains(className), expectedActive);
   });
 }
@@ -97,6 +127,7 @@ test("theme-x01 mounts idempotently and cleans up style plus preview spacing", a
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), true);
   assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), true);
   assert.equal(documentRef.querySelectorAll(".ad-ext-theme-board-panel").length, 0);
+  assert.equal(documentRef.querySelectorAll(".ad-ext-theme-content-slot").length, 0);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), false);
@@ -106,7 +137,7 @@ test("theme-x01 mounts idempotently and cleans up style plus preview spacing", a
 test("theme-x01 applies board layout hooks when board exists and removes them on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
-  const boardNodes = createBoardFixture(documentRef);
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
@@ -127,6 +158,9 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   assertThemeHookState(boardNodes, true);
 
   const hookCounts = [
+    [boardNodes.contentSlot, THEME_LAYOUT_HOOK_CLASSES.contentSlot],
+    [boardNodes.contentLeft, THEME_LAYOUT_HOOK_CLASSES.contentLeft],
+    [boardNodes.contentBoard, THEME_LAYOUT_HOOK_CLASSES.contentBoard],
     [boardNodes.boardPanel, THEME_LAYOUT_HOOK_CLASSES.boardPanel],
     [boardNodes.boardControls, THEME_LAYOUT_HOOK_CLASSES.boardControls],
     [boardNodes.boardViewport, THEME_LAYOUT_HOOK_CLASSES.boardViewport],
@@ -134,6 +168,9 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
     [boardNodes.boardSvg, THEME_LAYOUT_HOOK_CLASSES.boardSvg],
   ];
   hookCounts.forEach(([node, className]) => {
+    if (!node) {
+      return;
+    }
     const count = node.classList
       .toArray()
       .filter((value) => value === className).length;

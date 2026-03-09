@@ -18,6 +18,14 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
+    /\.ad-ext-theme-content-slot\s*\{[^}]*grid-template-columns:\s*minmax\(20rem,\s*0\.95fr\)\s*minmax\(0,\s*1\.05fr\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-board\s*\{[^}]*grid-column:\s*2\s*!important;[^}]*display:\s*flex\s*!important;/s
+  );
+  assert.match(
+    css,
     /\.ad-ext-theme-board-viewport\s*\{[^}]*padding-bottom:\s*0\s*!important;[^}]*display:\s*flex\s*!important;/s
   );
   assert.match(

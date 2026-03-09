@@ -7,6 +7,9 @@ import {
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 
 export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
+  contentSlot: "ad-ext-theme-content-slot",
+  contentLeft: "ad-ext-theme-content-left",
+  contentBoard: "ad-ext-theme-content-board",
   boardPanel: "ad-ext-theme-board-panel",
   boardControls: "ad-ext-theme-board-controls",
   boardViewport: "ad-ext-theme-board-viewport",
@@ -150,18 +153,93 @@ function resolveBoardControls(panelNode, boardSvg) {
   return bestNode;
 }
 
+function findSharedAncestor(firstNode, secondNode, stopNode) {
+  if (!firstNode || !secondNode) {
+    return null;
+  }
+
+  const ancestors = new Set();
+  let current = firstNode;
+  while (current) {
+    ancestors.add(current);
+    if (current === stopNode) {
+      break;
+    }
+    current = current.parentElement || current.parentNode || null;
+  }
+
+  current = secondNode;
+  while (current) {
+    if (ancestors.has(current)) {
+      return current;
+    }
+    if (current === stopNode) {
+      break;
+    }
+    current = current.parentElement || current.parentNode || null;
+  }
+
+  return null;
+}
+
+function findDirectChildContaining(rootNode, targetNode) {
+  if (!rootNode || !targetNode || rootNode === targetNode) {
+    return null;
+  }
+
+  let current = targetNode;
+  let parent = current.parentElement || current.parentNode || null;
+  while (current && parent && parent !== rootNode) {
+    current = parent;
+    parent = current.parentElement || current.parentNode || null;
+  }
+  return parent === rootNode ? current : null;
+}
+
+function resolveContentLayoutTargets(documentRef, boardSvg) {
+  const playerDisplay = documentRef?.getElementById?.("ad-ext-player-display");
+  if (!playerDisplay || !boardSvg) {
+    return null;
+  }
+
+  const stopNode = documentRef?.body || null;
+  const contentSlot = findSharedAncestor(playerDisplay, boardSvg, stopNode);
+  if (!contentSlot || contentSlot === documentRef?.body || contentSlot === documentRef?.documentElement) {
+    return null;
+  }
+
+  const contentLeft = findDirectChildContaining(contentSlot, playerDisplay);
+  const contentBoard = findDirectChildContaining(contentSlot, boardSvg);
+  if (!contentLeft || !contentBoard || contentLeft === contentBoard) {
+    return null;
+  }
+
+  const slotChildren = getElementChildren(contentSlot);
+  if (slotChildren.length < 2 || !slotChildren.includes(contentLeft) || !slotChildren.includes(contentBoard)) {
+    return null;
+  }
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+  };
+}
+
 function resolveBoardLayoutTargets(documentRef) {
   const boardSvg = findBoardSvg(documentRef);
   if (!boardSvg) {
     return null;
   }
 
+  const contentTargets = resolveContentLayoutTargets(documentRef, boardSvg) || {};
   const boardCanvas = boardSvg.closest?.(".showAnimations") || boardSvg.parentElement || null;
   const boardViewport = boardCanvas?.parentElement || boardSvg.parentElement || null;
   const boardPanel = resolveBoardPanel(boardSvg, documentRef);
   const boardControls = boardPanel ? resolveBoardControls(boardPanel, boardSvg) : null;
 
   return {
+    ...contentTargets,
     boardPanel,
     boardControls,
     boardViewport,

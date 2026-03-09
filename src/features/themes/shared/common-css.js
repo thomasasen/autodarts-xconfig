@@ -250,6 +250,30 @@ div.css-y3hfdd > .css-1igwmid{
 .css-1emway5 { grid-column: 1 / 3; }
 
 /* Stable board-layout hooks (primary path, class-hash agnostic). */
+.ad-ext-theme-content-slot{
+  display: grid !important;
+  grid-template-columns: minmax(20rem, 0.95fr) minmax(0, 1.05fr) !important;
+  align-items: stretch !important;
+  gap: 0.5rem !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.ad-ext-theme-content-left{
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.ad-ext-theme-content-board{
+  grid-column: 2 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .ad-ext-theme-board-panel{
   display: grid !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
