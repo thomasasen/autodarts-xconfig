@@ -202,3 +202,44 @@ test("active throws merge with the active player turn baseline instead of ignori
   assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "offense");
   assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "pressure,offense");
 });
+
+test("numeric cricket row labels are not interpreted as player marks", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const table = documentRef.getElementById("grid");
+  Array.from(table?.querySelectorAll?.("tr") || []).forEach((row) => {
+    const cells = Array.from(row?.querySelectorAll?.("td") || []);
+    const labelCell = cells[0];
+    if (!labelCell) {
+      return;
+    }
+    labelCell.textContent = String(labelCell.textContent || "").replace(/^Ziel\s*/i, "");
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel["20"].join(","), "0,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "open");
+});

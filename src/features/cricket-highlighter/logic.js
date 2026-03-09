@@ -86,6 +86,15 @@ function queryAll(rootNode, selector) {
   }
 }
 
+function parseTextMarkValue(value) {
+  const normalized = String(value || "").trim();
+  if (!/^[0-3]$/.test(normalized)) {
+    return null;
+  }
+  const numeric = Number.parseInt(normalized, 10);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 function getNormalizedLabel(cricketRules, node) {
   if (!cricketRules || typeof cricketRules.normalizeCricketLabel !== "function") {
     return "";
@@ -205,10 +214,11 @@ function resolveBoardSnapshot(documentRef, cache = null) {
   return nextBoard;
 }
 
-function hasOwnMarkValue(node) {
+function hasOwnMarkValue(node, options = {}) {
   if (!node) {
     return false;
   }
+  const allowTextMarkValue = options.allowTextMarkValue !== false;
   if (typeof node.getAttribute === "function" && node.getAttribute("data-marks") !== null) {
     return true;
   }
@@ -218,8 +228,11 @@ function hasOwnMarkValue(node) {
       return true;
     }
   }
-  const numeric = Number.parseInt(String(node.textContent || "").trim(), 10);
-  return Number.isFinite(numeric);
+  if (!allowTextMarkValue) {
+    return false;
+  }
+
+  return Number.isFinite(parseTextMarkValue(node.textContent));
 }
 
 function parseMarksValue(node) {
@@ -245,7 +258,7 @@ function parseMarksValue(node) {
     }
   }
 
-  const textValue = Number.parseInt(String(node.textContent || "").trim(), 10);
+  const textValue = parseTextMarkValue(node.textContent);
   return Number.isFinite(textValue) ? textValue : 0;
 }
 
@@ -482,7 +495,7 @@ function buildMarksByLabelSnapshot(options = {}) {
 
     const playerCells = collectPlayerCellsForLabel(node, cricketRules, targetSet);
     const marks = [];
-    if (hasOwnMarkValue(node)) {
+    if (hasOwnMarkValue(node, { allowTextMarkValue: false })) {
       marks.push(parseMarksValue(node));
     }
     playerCells.forEach((cell) => {
