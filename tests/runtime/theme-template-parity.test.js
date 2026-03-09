@@ -75,7 +75,7 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   );
   assert.match(
     commonLayoutCss,
-    /\.ad-ext-theme-board-panel\s*\{[^}]*grid-template-rows:\s*auto minmax\(0,\s*1fr\)\s*!important;/s
+    /\.ad-ext-theme-board-panel\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)\s*!important;[^}]*position:\s*relative\s*!important;/s
   );
   assert.match(
     commonLayoutCss,
@@ -95,7 +95,11 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   );
   assert.match(
     commonLayoutCss,
-    /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*width:\s*auto\s*!important;[^}]*height:\s*100%\s*!important;[^}]*aspect-ratio:\s*1 \/ 1;/s
+    /\.ad-ext-theme-board-controls\s*\{[^}]*position:\s*absolute\s*!important;[^}]*top:\s*0\.5rem\s*!important;[^}]*right:\s*0\.5rem\s*!important;/s
+  );
+  assert.match(
+    commonLayoutCss,
+    /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*width:\s*auto\s*!important;[^}]*height:\s*100%\s*!important;[^}]*width:\s*min\(96cqw,\s*96cqh\)\s*!important;[^}]*height:\s*min\(96cqw,\s*96cqh\)\s*!important;[^}]*aspect-ratio:\s*1 \/ 1;/s
   );
   assert.doesNotMatch(commonLayoutCss, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
   assertNoFragileLayoutSelectors(commonLayoutCss);

@@ -299,17 +299,20 @@ div.css-y3hfdd > .css-1igwmid{
 
 .ad-ext-theme-board-panel{
   display: grid !important;
-  grid-template-rows: auto minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
   min-height: 0 !important;
   height: 100% !important;
   max-height: 100% !important;
+  position: relative !important;
   overflow: hidden !important;
 }
 
 .ad-ext-theme-board-controls{
-  align-self: end !important;
-  position: relative !important;
-  z-index: 1;
+  position: absolute !important;
+  top: 0.5rem !important;
+  right: 0.5rem !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
 }
 
 .ad-ext-theme-board-viewport{
@@ -327,15 +330,19 @@ div.css-y3hfdd > .css-1igwmid{
   flex: 1 1 auto !important;
   height: 100% !important;
   max-height: 100% !important;
+  width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  container-type: size !important;
   overflow: hidden !important;
 }
 
 .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{
   width: auto !important;
   height: 100% !important;
+  width: min(96cqw, 96cqh) !important;
+  height: min(96cqw, 96cqh) !important;
   min-width: 0 !important;
   min-height: 0 !important;
   max-width: 100% !important;
