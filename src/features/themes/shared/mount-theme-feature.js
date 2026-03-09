@@ -203,27 +203,35 @@ function resolveContentLayoutTargets(documentRef, boardSvg) {
   }
 
   const stopNode = documentRef?.body || null;
-  const contentSlot = findSharedAncestor(playerDisplay, boardSvg, stopNode);
+  let contentSlot = findSharedAncestor(playerDisplay, boardSvg, stopNode);
   if (!contentSlot || contentSlot === documentRef?.body || contentSlot === documentRef?.documentElement) {
     return null;
   }
 
-  const contentLeft = findDirectChildContaining(contentSlot, playerDisplay);
-  const contentBoard = findDirectChildContaining(contentSlot, boardSvg);
-  if (!contentLeft || !contentBoard || contentLeft === contentBoard) {
-    return null;
+  for (let depth = 0; depth < 8 && contentSlot; depth += 1) {
+    const contentLeft = findDirectChildContaining(contentSlot, playerDisplay);
+    const contentBoard = findDirectChildContaining(contentSlot, boardSvg);
+    if (!contentLeft || !contentBoard) {
+      return null;
+    }
+    if (contentLeft === contentBoard) {
+      contentSlot = contentLeft;
+      continue;
+    }
+
+    const slotChildren = getElementChildren(contentSlot);
+    if (!slotChildren.includes(contentLeft) || !slotChildren.includes(contentBoard)) {
+      return null;
+    }
+
+    return {
+      contentSlot,
+      contentLeft,
+      contentBoard,
+    };
   }
 
-  const slotChildren = getElementChildren(contentSlot);
-  if (slotChildren.length < 2 || !slotChildren.includes(contentLeft) || !slotChildren.includes(contentBoard)) {
-    return null;
-  }
-
-  return {
-    contentSlot,
-    contentLeft,
-    contentBoard,
-  };
+  return null;
 }
 
 function resolveBoardLayoutTargets(documentRef) {

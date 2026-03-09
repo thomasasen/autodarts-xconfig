@@ -252,11 +252,14 @@ div.css-y3hfdd > .css-1igwmid{
 /* Stable board-layout hooks (primary path, class-hash agnostic). */
 .ad-ext-theme-content-slot{
   display: grid !important;
-  grid-template-columns: minmax(20rem, 0.95fr) minmax(0, 1.05fr) !important;
+  grid-template-columns: minmax(18rem, clamp(22rem, 34vw, 38rem)) minmax(0, 1fr) !important;
   align-items: stretch !important;
   gap: 0.5rem !important;
+  grid-column: 1 / -1 !important;
+  grid-row: 3 !important;
   min-height: 0 !important;
   height: 100% !important;
+  width: 100% !important;
 }
 
 .ad-ext-theme-content-left{
