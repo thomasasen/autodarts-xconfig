@@ -5,6 +5,7 @@ export const TARGET_CLASS = "ad-ext-cricket-target";
 
 const THEME_PRESETS = Object.freeze({
   standard: {
+    open: "rgba(148, 163, 184, 0.1)",
     offense: "rgba(0, 178, 135, 0.42)",
     danger: "rgba(239, 68, 68, 0.42)",
     pressure: "rgba(249, 115, 22, 0.44)",
@@ -13,6 +14,7 @@ const THEME_PRESETS = Object.freeze({
     stroke: "rgba(255, 255, 255, 0.72)",
   },
   ["high-contrast"]: {
+    open: "rgba(148, 163, 184, 0.14)",
     offense: "rgba(34, 197, 94, 0.5)",
     danger: "rgba(239, 68, 68, 0.5)",
     pressure: "rgba(245, 158, 11, 0.52)",
@@ -48,6 +50,7 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
     intensity,
     strokeWidthRatio: 0.006,
     edgePaddingPx: 0.8,
+    showOpenTargets: featureConfig.showOpenTargets !== false,
     showDeadTargets: featureConfig.showDeadTargets !== false,
   };
 }
@@ -62,7 +65,8 @@ export function buildStyleText() {
 }
 
 .${TARGET_CLASS}.is-dead,
-.${TARGET_CLASS}.is-closed {
+.${TARGET_CLASS}.is-closed,
+.${TARGET_CLASS}.is-open {
   animation: none;
 }
 

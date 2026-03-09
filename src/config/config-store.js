@@ -252,6 +252,7 @@ function importTripleDoubleBullHits(legacyFeatureState) {
 function importCricketHighlighter(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
   return buildFeatureImport("cricketHighlighter", legacyFeatureState, {
+    showOpenTargets: readLegacySetting(settings, "OPEN_ZIELE_ANZEIGEN", true),
     showDeadTargets: readLegacySetting(settings, "DEAD_ZIELE_ANZEIGEN", true),
     colorTheme: readLegacySetting(settings, "FARBTHEMA", "standard"),
     intensity: readLegacySetting(settings, "INTENSITAET", "normal"),

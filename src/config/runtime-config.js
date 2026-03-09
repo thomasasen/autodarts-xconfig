@@ -334,6 +334,7 @@ function normalizeTripleDoubleBullHitsConfig(rawConfig = {}) {
 function normalizeCricketHighlighterConfig(rawConfig = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
+    showOpenTargets: normalizeBoolean(rawConfig.showOpenTargets, true),
     showDeadTargets: normalizeBoolean(rawConfig.showDeadTargets, true),
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES),
     intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES),

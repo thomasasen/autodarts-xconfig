@@ -76,6 +76,16 @@ test("config store imports migrated legacy feature and theme settings once witho
             DEBUG: true,
           },
         },
+        "a-cricket-target": {
+          enabled: true,
+          settings: {
+            OPEN_ZIELE_ANZEIGEN: false,
+            DEAD_ZIELE_ANZEIGEN: true,
+            FARBTHEMA: "high-contrast",
+            INTENSITAET: "strong",
+            DEBUG: true,
+          },
+        },
         "theme-x01": {
           enabled: true,
           settings: {
@@ -109,6 +119,13 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.winnerFireworks.includeBullOut, false);
   assert.equal(importedConfig.features.winnerFireworks.pointerDismiss, false);
   assert.equal(importedConfig.features.winnerFireworks.debug, true);
+  assert.equal(importedConfig.featureToggles.cricketHighlighter, true);
+  assert.equal(importedConfig.features.cricketHighlighter.enabled, true);
+  assert.equal(importedConfig.features.cricketHighlighter.showOpenTargets, false);
+  assert.equal(importedConfig.features.cricketHighlighter.showDeadTargets, true);
+  assert.equal(importedConfig.features.cricketHighlighter.colorTheme, "high-contrast");
+  assert.equal(importedConfig.features.cricketHighlighter.intensity, "strong");
+  assert.equal(importedConfig.features.cricketHighlighter.debug, true);
   assert.equal(importedConfig.featureToggles["themes.x01"], true);
   assert.equal(importedConfig.features.themes.x01.enabled, true);
   assert.equal(importedConfig.features.themes.x01.showAvg, false);

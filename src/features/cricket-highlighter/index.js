@@ -170,11 +170,13 @@ export function initializeCricketHighlighter(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("cricketHighlighter")
       : {
+          showOpenTargets: true,
           showDeadTargets: true,
           colorTheme: "standard",
           intensity: "normal",
         };
   const visualConfig = resolveCricketVisualConfig(featureConfig);
+  const showOpenTargets = visualConfig.showOpenTargets !== false;
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
@@ -276,8 +278,11 @@ export function initializeCricketHighlighter(context = {}) {
       signature,
       forcedStructuralRefresh ? "forced" : "normal",
       rendered ? "rendered" : "no-board",
+      showOpenTargets ? "open-on" : "open-off",
       debugStats.renderedShapeCount || 0,
       debugStats.nonOpenTargetCount || 0,
+      debugStats.openTargetCount || 0,
+      debugStats.renderedOpenTargetCount || 0,
       renderState.discoveredRawLabelCount || 0,
       renderState.discoveredLabelCount || 0,
       renderState.labelCellMarkSourceCount || 0,
@@ -287,7 +292,7 @@ export function initializeCricketHighlighter(context = {}) {
     emitDebugLog(
       debugState,
       debugSignature,
-      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} shapes=${Number(debugStats.renderedShapeCount) || 0} highlighted=${Number(debugStats.highlightedTargetCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0}`
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} showOpen=${showOpenTargets ? "on" : "off"} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} shapes=${Number(debugStats.renderedShapeCount) || 0} highlighted=${Number(debugStats.highlightedTargetCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0}`
     );
 
     if (!rendered) {
@@ -308,6 +313,17 @@ export function initializeCricketHighlighter(context = {}) {
         debugState,
         `${signature}::zero-shapes::${forcedStructuralRefresh ? "forced" : "normal"}`,
         `${warningPrefix} variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
+      );
+    }
+    if (
+      showOpenTargets &&
+      (Number(debugStats.openTargetCount) || 0) > 0 &&
+      (Number(debugStats.renderedOpenTargetCount) || 0) === 0
+    ) {
+      emitDebugWarning(
+        debugState,
+        `${signature}::zero-open-shapes::${forcedStructuralRefresh ? "forced" : "normal"}`,
+        `warn 0 Shapes trotz Open-Targets variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
       );
     }
 

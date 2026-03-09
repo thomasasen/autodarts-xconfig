@@ -9,6 +9,19 @@ function getBoardRadius(rootNode) {
   }, 0);
 }
 
+function isManagedOverlayGroup(groupNode) {
+  if (!groupNode || typeof groupNode.getAttribute !== "function") {
+    return false;
+  }
+
+  const id = String(groupNode.getAttribute("id") || "").trim().toLowerCase();
+  if (!id) {
+    return false;
+  }
+
+  return id.startsWith("ad-ext-");
+}
+
 export function findBoardSvgGroup(documentRef) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
     return null;
@@ -44,6 +57,10 @@ export function findBoardSvgGroup(documentRef) {
   let bestRadius = 0;
 
   Array.from(bestSvg.querySelectorAll("g")).forEach((group) => {
+    if (isManagedOverlayGroup(group)) {
+      return;
+    }
+
     const groupRadius = getBoardRadius(group);
     if (groupRadius > bestRadius) {
       bestRadius = groupRadius;

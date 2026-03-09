@@ -249,8 +249,28 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
 
   const overlay = documentRef.getElementById("ad-ext-cricket-targets");
   assert.equal(Boolean(overlay), true);
-  assert.equal(overlay?.children?.length || 0, 0);
+  assert.equal((overlay?.children?.length || 0) > 0, true);
   assert.equal(initialDebugStats.nonOpenTargetCount || 0, 0);
+  assert.equal((initialDebugStats.openTargetCount || 0) > 0, true);
+  assert.equal(initialDebugStats.renderedOpenTargetCount, initialDebugStats.openTargetCount);
+
+  const hiddenOpenVisualConfig = resolveCricketVisualConfig({
+    showOpenTargets: false,
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const hiddenOpenDebugStats = {};
+  renderCricketHighlights({
+    documentRef,
+    visualConfig: hiddenOpenVisualConfig,
+    renderState: initialRenderState,
+    cache: renderCache,
+    debugStats: hiddenOpenDebugStats,
+  });
+  assert.equal(overlay?.children?.length || 0, 0);
+  assert.equal((hiddenOpenDebugStats.openTargetCount || 0) > 0, true);
+  assert.equal(hiddenOpenDebugStats.renderedOpenTargetCount || 0, 0);
 
   const initialGridFxStats = {};
   updateCricketGridFx({

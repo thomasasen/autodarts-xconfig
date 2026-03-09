@@ -365,6 +365,7 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
     fields: [
+      checkboxField("showOpenTargets", "Open-Ziele anzeigen"),
       checkboxField("showDeadTargets", "Dead-Ziele anzeigen"),
       selectField("colorTheme", "Farbthema", [
         { value: "standard", label: "Standard" },

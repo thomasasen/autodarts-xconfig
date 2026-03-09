@@ -42,7 +42,7 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
   ".ad-ext-cricket-mark",
 ]);
 
-const PRESENTATION_KEYS = new Set(["offense", "danger", "pressure", "closed", "dead"]);
+const PRESENTATION_KEYS = new Set(["open", "offense", "danger", "pressure", "closed", "dead"]);
 const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
 
 function isNodeVisible(node) {
@@ -1025,6 +1025,8 @@ export function renderCricketHighlights(options = {}) {
       debugStats.renderedShapeCount = 0;
       debugStats.highlightedTargetCount = 0;
       debugStats.nonOpenTargetCount = 0;
+      debugStats.openTargetCount = 0;
+      debugStats.renderedOpenTargetCount = 0;
     }
     return false;
   }
@@ -1037,6 +1039,8 @@ export function renderCricketHighlights(options = {}) {
   let renderedShapeCount = 0;
   let highlightedTargetCount = 0;
   let nonOpenTargetCount = 0;
+  let openTargetCount = 0;
+  let renderedOpenTargetCount = 0;
 
   renderState.stateMap.forEach((stateEntry, targetLabel) => {
     const presentation = String(
@@ -1047,6 +1051,11 @@ export function renderCricketHighlights(options = {}) {
     }
     if (presentation !== "open") {
       nonOpenTargetCount += 1;
+    } else {
+      openTargetCount += 1;
+    }
+    if (presentation === "open" && visualConfig.showOpenTargets === false) {
+      return;
     }
     if (presentation === "dead" && !visualConfig.showDeadTargets) {
       return;
@@ -1065,6 +1074,9 @@ export function renderCricketHighlights(options = {}) {
     });
     if (shapes.length > 0) {
       highlightedTargetCount += 1;
+      if (presentation === "open") {
+        renderedOpenTargetCount += 1;
+      }
     }
   });
 
@@ -1072,6 +1084,8 @@ export function renderCricketHighlights(options = {}) {
     debugStats.renderedShapeCount = renderedShapeCount;
     debugStats.highlightedTargetCount = highlightedTargetCount;
     debugStats.nonOpenTargetCount = nonOpenTargetCount;
+    debugStats.openTargetCount = openTargetCount;
+    debugStats.renderedOpenTargetCount = renderedOpenTargetCount;
   }
 
   return true;
