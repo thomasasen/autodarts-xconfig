@@ -47,3 +47,41 @@ Beispiel:
 `what: added structural board/content hooks and shared css rules, removed fragile primary anchors.`
 `how: updated shared mount + common css, extended lifecycle/parity/theme tests.`
 `validation: npm test`
+
+## 4) Build-Umgebung und Ausführungskontext
+
+- Dieses Repository verwendet Node.js und npm für Build und Tests.
+- Die lokale Entwicklungsumgebung kann eine portable Node-Installation sein.
+- In einigen Ausführungsumgebungen (z.B. Codex-Sandbox) sind `node` oder `npm` eventuell nicht verfügbar.
+
+Regeln:
+
+- Wenn Node verfügbar ist, müssen folgende Schritte lokal ausgeführt werden:
+
+  npm run build
+  npm test
+
+- Wenn Node in der aktuellen Umgebung nicht verfügbar ist:
+  - keine falschen Build-Ergebnisse behaupten
+  - statische Analyse durchführen
+  - klar kennzeichnen, dass Build/Test nicht ausgeführt werden konnten
+  - den Entwickler anweisen, lokal auszuführen
+
+Typische lokale Ausführung:
+
+  npm.cmd run build
+  npm.cmd test
+
+Hinweis:
+In PowerShell kann `npm` durch Execution Policies blockiert sein.
+In diesem Fall muss `npm.cmd` verwendet werden.
+
+## 5) Dist-Datei ist Build-Artefakt
+
+- Die Datei `dist/autodarts-xconfig.user.js` ist ein generiertes Build-Artefakt.
+- Änderungen dürfen niemals direkt in `dist/` vorgenommen werden.
+- Änderungen müssen immer in `src/` erfolgen und anschließend neu gebaut werden.
+
+Regel:
+
+src ändern → build ausführen → dist committen

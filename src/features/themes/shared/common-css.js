@@ -311,6 +311,8 @@ div.css-y3hfdd > .css-1igwmid{
   position: absolute !important;
   top: 0.5rem !important;
   right: 0.5rem !important;
+  bottom: auto !important;
+  left: auto !important;
   z-index: 2 !important;
   pointer-events: auto !important;
 }
@@ -338,15 +340,28 @@ div.css-y3hfdd > .css-1igwmid{
   overflow: hidden !important;
 }
 
-.ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{
-  width: auto !important;
+.ad-ext-theme-board-canvas > *{
+  width: 100% !important;
   height: 100% !important;
-  width: min(96cqw, 96cqh) !important;
-  height: min(96cqw, 96cqh) !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+.ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{
+  width: 100% !important;
+  height: 100% !important;
   min-width: 0 !important;
   min-height: 0 !important;
   max-width: 100% !important;
   max-height: 100% !important;
+  display: block !important;
   aspect-ratio: 1 / 1;
 }
 `;

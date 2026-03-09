@@ -37,13 +37,15 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   assert.match(text, /position:\s*absolute\s*!important;/);
   assert.match(text, /top:\s*0\.5rem\s*!important;/);
   assert.match(text, /right:\s*0\.5rem\s*!important;/);
-  assert.match(text, /width:\s*auto\s*!important;/);
+  assert.match(text, /bottom:\s*auto\s*!important;/);
+  assert.match(text, /left:\s*auto\s*!important;/);
+  assert.match(text, /ad-ext-theme-board-canvas\s*>\s*\*/);
+  assert.match(text, /width:\s*100%\s*!important;/);
   assert.match(text, /height:\s*100%\s*!important;/);
-  assert.match(text, /width:\s*min\(96cqw,\s*96cqh\)\s*!important;/);
-  assert.match(text, /height:\s*min\(96cqw,\s*96cqh\)\s*!important;/);
   assert.match(text, /overflow:\s*hidden\s*!important;/);
   assert.doesNotMatch(text, /minmax\(20rem,\s*0\.95fr\)\s*minmax\(0,\s*1\.05fr\)/);
   assert.doesNotMatch(text, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
+  assert.doesNotMatch(text, /96cqw|96cqh/);
 });
 
 test("bundle, runtime API version and package version stay in sync", () => {
