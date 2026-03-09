@@ -967,8 +967,24 @@ function buildShapesForLabel(ownerDocument, radius, targetLabel, visualConfig) {
     createWedge(
       ownerDocument,
       radius,
+      RING_RATIOS.outerBullOuter,
+      RING_RATIOS.tripleInner,
+      angles,
+      visualConfig.edgePaddingPx
+    ),
+    createWedge(
+      ownerDocument,
+      radius,
       RING_RATIOS.tripleInner,
       RING_RATIOS.tripleOuter,
+      angles,
+      visualConfig.edgePaddingPx
+    ),
+    createWedge(
+      ownerDocument,
+      radius,
+      RING_RATIOS.tripleOuter,
+      RING_RATIOS.doubleInner,
       angles,
       visualConfig.edgePaddingPx
     ),
@@ -988,10 +1004,12 @@ function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
     return;
   }
   const color = visualConfig.theme[presentation] || visualConfig.theme.closed;
+  const strokeColor =
+    visualConfig.theme[`${presentation}Stroke`] || visualConfig.theme.stroke;
   const strokeWidth = `${Math.max(1, visualConfig.strokeWidthRatio * 120)}px`;
   shape.classList.add(TARGET_CLASS, `is-${presentation}`);
   shape.style.fill = color;
-  shape.style.stroke = visualConfig.theme.stroke;
+  shape.style.stroke = strokeColor;
   shape.style.strokeWidth = strokeWidth;
   shape.style.opacity = String(visualConfig.intensity.opacity);
   shape.style.setProperty("--ad-ext-cricket-opacity", String(visualConfig.intensity.opacity));
@@ -1027,6 +1045,8 @@ export function renderCricketHighlights(options = {}) {
       debugStats.nonOpenTargetCount = 0;
       debugStats.openTargetCount = 0;
       debugStats.renderedOpenTargetCount = 0;
+      debugStats.shapeCountByTarget = {};
+      debugStats.shapeCountByPresentation = {};
     }
     return false;
   }
@@ -1041,6 +1061,8 @@ export function renderCricketHighlights(options = {}) {
   let nonOpenTargetCount = 0;
   let openTargetCount = 0;
   let renderedOpenTargetCount = 0;
+  const shapeCountByTarget = {};
+  const shapeCountByPresentation = {};
 
   renderState.stateMap.forEach((stateEntry, targetLabel) => {
     const presentation = String(
@@ -1067,6 +1089,9 @@ export function renderCricketHighlights(options = {}) {
       targetLabel,
       visualConfig
     );
+    shapeCountByTarget[targetLabel] = (shapeCountByTarget[targetLabel] || 0) + shapes.length;
+    shapeCountByPresentation[presentation] =
+      (shapeCountByPresentation[presentation] || 0) + shapes.length;
     shapes.forEach((shape) => {
       applyShapeStyle(shape, presentation, visualConfig, targetLabel);
       overlay.appendChild(shape);
@@ -1086,6 +1111,8 @@ export function renderCricketHighlights(options = {}) {
     debugStats.nonOpenTargetCount = nonOpenTargetCount;
     debugStats.openTargetCount = openTargetCount;
     debugStats.renderedOpenTargetCount = renderedOpenTargetCount;
+    debugStats.shapeCountByTarget = shapeCountByTarget;
+    debugStats.shapeCountByPresentation = shapeCountByPresentation;
   }
 
   return true;

@@ -18,13 +18,19 @@ function resolveThemeCricketConfig(rawConfig = {}) {
 const cricketThemeCss = `
 :root{
   --theme-bg: #000000;
-  --theme-text-highlight-color: #9fdb58;
-  --theme-navigation-bg: #222222;
-  --theme-navigation-item-color: #666666;
-  --theme-player-badge-bg: #9fdb58;
-  --theme-current-bg: #0c343d;
-  --theme-border-color: #434343;
-  --theme-alt-bg: #274e13;
+  --theme-text-highlight-color: #9fe870;
+  --theme-navigation-bg: #111726;
+  --theme-navigation-item-color: #79829a;
+  --theme-player-badge-bg: #9fe870;
+  --theme-current-bg: #0d3f56;
+  --theme-border-color: #2f415c;
+  --theme-alt-bg: #1a3c2f;
+  --ad-ext-cricket-surface: rgba(8, 16, 30, 0.9);
+  --ad-ext-cricket-surface-strong: rgba(10, 22, 44, 0.96);
+  --ad-ext-cricket-line: rgba(148, 181, 220, 0.24);
+  --ad-ext-cricket-offense-glow: rgba(0, 178, 135, 0.36);
+  --ad-ext-cricket-danger-glow: rgba(239, 68, 68, 0.34);
+  --ad-ext-cricket-active-ring: rgba(159, 232, 112, 0.9);
 }
 
 .css-1k7iu8k {
@@ -170,6 +176,76 @@ span.chakra-switch__track.css-v4l15v {
 
 .css-1yso2z2 {
   height: 100% !important;
+}
+
+.ad-ext-theme-content-slot {
+  background:
+    radial-gradient(circle at 72% 58%, rgba(0, 178, 135, 0.14), rgba(0, 0, 0, 0) 48%),
+    radial-gradient(circle at 18% 32%, rgba(34, 197, 255, 0.1), rgba(0, 0, 0, 0) 42%);
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack {
+  background: linear-gradient(165deg, rgba(6, 15, 34, 0.96), rgba(3, 10, 24, 0.94)) !important;
+  border: 1px solid var(--ad-ext-cricket-line) !important;
+  border-radius: 0.6rem !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 26px rgba(0, 0, 0, 0.42);
+  transition: border-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack {
+  border-color: var(--ad-ext-cricket-active-ring) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(159, 232, 112, 0.24),
+    0 0 20px rgba(159, 232, 112, 0.28),
+    0 12px 28px rgba(0, 0, 0, 0.44);
+}
+
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > .chakra-stack {
+  filter: saturate(0.76) brightness(0.9);
+  opacity: 0.82;
+}
+
+#ad-ext-player-display .ad-ext-player .ad-ext-player-name {
+  letter-spacing: 0.02em;
+}
+
+p.chakra-text.css-1qlemha {
+  border: 1px solid rgba(127, 214, 247, 0.34);
+  border-radius: 0.28rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+#grid tr td,
+#grid tr th {
+  border-color: rgba(56, 74, 102, 0.78) !important;
+}
+
+#grid tr:nth-child(odd) td {
+  background: linear-gradient(90deg, rgba(12, 20, 34, 0.88), rgba(10, 17, 30, 0.86));
+}
+
+#grid tr:nth-child(even) td {
+  background: linear-gradient(90deg, rgba(8, 14, 25, 0.86), rgba(6, 12, 22, 0.84));
+}
+
+#grid .label-cell,
+#grid tr > td:first-child,
+#grid tr > th:first-child {
+  background: linear-gradient(115deg, rgba(8, 56, 78, 0.86), rgba(7, 39, 58, 0.88)) !important;
+  border-right-color: rgba(89, 170, 198, 0.48) !important;
+}
+
+.css-rfeml4 > div {
+  border: 1px solid rgba(54, 72, 98, 0.78) !important;
+}
+
+.css-rfeml4 > div:nth-child(odd) {
+  background: linear-gradient(120deg, rgba(8, 56, 78, 0.84), rgba(8, 38, 56, 0.9)) !important;
+}
+
+.css-rfeml4 > div:nth-child(even) {
+  background: linear-gradient(120deg, rgba(11, 18, 32, 0.88), rgba(8, 15, 28, 0.9)) !important;
 }
 `;
 

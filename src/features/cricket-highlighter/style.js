@@ -5,21 +5,33 @@ export const TARGET_CLASS = "ad-ext-cricket-target";
 
 const THEME_PRESETS = Object.freeze({
   standard: {
-    open: "rgba(148, 163, 184, 0.1)",
-    offense: "rgba(0, 178, 135, 0.42)",
-    danger: "rgba(239, 68, 68, 0.42)",
-    pressure: "rgba(249, 115, 22, 0.44)",
-    closed: "rgba(120, 120, 120, 0.28)",
-    dead: "rgba(90, 90, 90, 0.2)",
+    open: "rgba(124, 208, 242, 0.08)",
+    openStroke: "rgba(164, 221, 247, 0.22)",
+    offense: "rgba(0, 178, 135, 0.46)",
+    offenseStroke: "rgba(82, 255, 203, 0.68)",
+    danger: "rgba(239, 68, 68, 0.44)",
+    dangerStroke: "rgba(255, 130, 130, 0.7)",
+    pressure: "rgba(249, 115, 22, 0.46)",
+    pressureStroke: "rgba(255, 190, 138, 0.68)",
+    closed: "rgba(125, 143, 168, 0.24)",
+    closedStroke: "rgba(202, 216, 236, 0.3)",
+    dead: "rgba(90, 98, 110, 0.2)",
+    deadStroke: "rgba(166, 178, 194, 0.26)",
     stroke: "rgba(255, 255, 255, 0.72)",
   },
   ["high-contrast"]: {
     open: "rgba(148, 163, 184, 0.14)",
-    offense: "rgba(34, 197, 94, 0.5)",
-    danger: "rgba(239, 68, 68, 0.5)",
-    pressure: "rgba(245, 158, 11, 0.52)",
+    openStroke: "rgba(207, 223, 245, 0.32)",
+    offense: "rgba(34, 197, 94, 0.56)",
+    offenseStroke: "rgba(118, 255, 164, 0.8)",
+    danger: "rgba(239, 68, 68, 0.54)",
+    dangerStroke: "rgba(255, 154, 154, 0.8)",
+    pressure: "rgba(245, 158, 11, 0.56)",
+    pressureStroke: "rgba(255, 213, 150, 0.78)",
     closed: "rgba(148, 163, 184, 0.34)",
+    closedStroke: "rgba(221, 231, 245, 0.42)",
     dead: "rgba(71, 85, 105, 0.28)",
+    deadStroke: "rgba(168, 181, 201, 0.4)",
     stroke: "rgba(255, 255, 255, 0.86)",
   },
 });
@@ -68,6 +80,19 @@ export function buildStyleText() {
 .${TARGET_CLASS}.is-closed,
 .${TARGET_CLASS}.is-open {
   animation: none;
+}
+
+.${TARGET_CLASS}.is-open {
+  filter: saturate(0.92) brightness(0.94);
+}
+
+.${TARGET_CLASS}.is-offense {
+  filter: drop-shadow(0 0 4px rgba(34, 255, 179, 0.28));
+}
+
+.${TARGET_CLASS}.is-danger,
+.${TARGET_CLASS}.is-pressure {
+  filter: drop-shadow(0 0 4px rgba(255, 132, 132, 0.24));
 }
 
 @keyframes ad-ext-cricket-target-pulse {

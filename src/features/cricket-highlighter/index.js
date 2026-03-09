@@ -115,6 +115,25 @@ function formatMarksByLabelDebug(marksByLabelDebug, maxEntries = 4) {
   return entries.length > maxEntries ? `${compact}|…` : compact;
 }
 
+function formatShapeCountByTarget(shapeCountByTarget, maxEntries = 5) {
+  if (!shapeCountByTarget || typeof shapeCountByTarget !== "object") {
+    return "-";
+  }
+
+  const entries = Object.entries(shapeCountByTarget)
+    .filter(([label, count]) => Boolean(label) && Number(count) > 0)
+    .sort((left, right) => left[0].localeCompare(right[0]));
+  if (!entries.length) {
+    return "-";
+  }
+
+  const compact = entries
+    .slice(0, Math.max(1, maxEntries))
+    .map(([label, count]) => `${label}:${Number(count) || 0}`)
+    .join("|");
+  return entries.length > maxEntries ? `${compact}|...` : compact;
+}
+
 function resolveOverlayStructuralHealth(documentRef, cache = null) {
   const cachedBoard = cache?.board;
   const board =
@@ -287,12 +306,13 @@ export function initializeCricketHighlighter(context = {}) {
       renderState.discoveredLabelCount || 0,
       renderState.labelCellMarkSourceCount || 0,
       renderState.shortfallRepairCount || 0,
+      formatShapeCountByTarget(debugStats.shapeCountByTarget),
     ].join("::");
 
     emitDebugLog(
       debugState,
       debugSignature,
-      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} showOpen=${showOpenTargets ? "on" : "off"} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} shapes=${Number(debugStats.renderedShapeCount) || 0} highlighted=${Number(debugStats.highlightedTargetCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0}`
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} showOpen=${showOpenTargets ? "on" : "off"} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} shapes=${Number(debugStats.renderedShapeCount) || 0} highlighted=${Number(debugStats.highlightedTargetCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0} shapeTargets=${formatShapeCountByTarget(debugStats.shapeCountByTarget)} shapeByPresentation=${formatShapeCountByTarget(debugStats.shapeCountByPresentation)}`
     );
 
     if (!rendered) {
@@ -313,6 +333,17 @@ export function initializeCricketHighlighter(context = {}) {
         debugState,
         `${signature}::zero-shapes::${forcedStructuralRefresh ? "forced" : "normal"}`,
         `${warningPrefix} variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
+      );
+    }
+    if (
+      (Number(debugStats.nonOpenTargetCount) || 0) > 0 &&
+      (Number(debugStats.renderedShapeCount) || 0) <
+        (Number(debugStats.nonOpenTargetCount) || 0) * 2
+    ) {
+      emitDebugWarning(
+        debugState,
+        `${signature}::low-shapes::${forcedStructuralRefresh ? "forced" : "normal"}::${Number(debugStats.renderedShapeCount) || 0}`,
+        `warn Shapes unerwartet niedrig variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} shapes=${Number(debugStats.renderedShapeCount) || 0} byTarget=${formatShapeCountByTarget(debugStats.shapeCountByTarget)}`
       );
     }
     if (

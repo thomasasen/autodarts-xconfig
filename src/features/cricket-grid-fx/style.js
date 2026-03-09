@@ -8,6 +8,8 @@ export const DEAD_CLASS = "ad-ext-crfx-dead";
 export const PRESSURE_CLASS = "ad-ext-crfx-pressure";
 export const LABEL_CLASS = "ad-ext-crfx-label-cell";
 export const BADGE_BEACON_CLASS = "ad-ext-crfx-badge-beacon";
+export const ACTIVE_CELL_CLASS = "ad-ext-crfx-cell-active";
+export const INACTIVE_CELL_CLASS = "ad-ext-crfx-cell-inactive";
 export const MARK_PROGRESS_CLASS = "ad-ext-crfx-mark-progress";
 export const MARK_L1_CLASS = "ad-ext-crfx-mark-l1";
 export const MARK_L2_CLASS = "ad-ext-crfx-mark-l2";
@@ -111,6 +113,20 @@ export function buildStyleText() {
   position: relative;
   overflow: visible;
   transition: filter 160ms ease, opacity 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_CELL_CLASS} {
+  z-index: 2;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.45));
+  filter: saturate(1.12) brightness(1.05);
+}
+
+.${ROOT_CLASS} .${CELL_CLASS}.${INACTIVE_CELL_CLASS} {
+  z-index: 1;
+  opacity: 0.78;
+  filter: saturate(0.72) brightness(0.88);
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS} {

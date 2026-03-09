@@ -244,6 +244,53 @@ test("active throws merge with the active player turn baseline instead of ignori
   assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "pressure,offense");
 });
 
+test("board presentation follows the active player perspective for the same cricket row", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const offensiveState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+    }),
+  });
+
+  setDomActivePlayer(documentRef, 1);
+  const defensiveState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 1,
+    }),
+  });
+
+  assert.equal(offensiveState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(defensiveState?.stateMap.get("20")?.boardPresentation, "pressure");
+  assert.equal(offensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "offense,pressure");
+  assert.equal(defensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "offense,pressure");
+});
+
 test("unknown scoring mode falls back to standard for cricket overlays", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";

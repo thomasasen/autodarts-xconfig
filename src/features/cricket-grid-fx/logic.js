@@ -18,6 +18,9 @@
   WIPE_CLASS,
 } from "./style.js";
 
+const ACTIVE_CELL_CLASS = "ad-ext-crfx-cell-active";
+const INACTIVE_CELL_CLASS = "ad-ext-crfx-cell-inactive";
+
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
   ".ad-ext-cricket-grid",
@@ -343,6 +346,8 @@ function clearCellClasses(node) {
     SCORE_CLASS,
     DEAD_CLASS,
     PRESSURE_CLASS,
+    ACTIVE_CELL_CLASS,
+    INACTIVE_CELL_CLASS,
     MARK_PROGRESS_CLASS,
     MARK_L1_CLASS,
     MARK_L2_CLASS,
@@ -588,6 +593,12 @@ export function updateCricketGridFx(options = {}) {
     debugStats.dangerRowCount = 0;
     debugStats.pressureRowCount = 0;
     debugStats.scoreCellCount = 0;
+    debugStats.activeCellCount = 0;
+    debugStats.inactiveCellCount = 0;
+    debugStats.rowsWithoutPlayerCells = 0;
+    debugStats.activeColumnResolvedCount = 0;
+    debugStats.activeColumnMissingCount = 0;
+    debugStats.activeColumnMissingLabels = [];
   }
 
   if (!documentRef || !cricketRules || !renderState || !state || !visualConfig) {
@@ -675,11 +686,34 @@ export function updateCricketGridFx(options = {}) {
   let dangerRowCount = 0;
   let pressureRowCount = 0;
   let scoreCellCount = 0;
+  let activeCellCount = 0;
+  let inactiveCellCount = 0;
+  let rowsWithoutPlayerCells = 0;
+  let activeColumnResolvedCount = 0;
+  let activeColumnMissingCount = 0;
+  const activeColumnMissingLabels = [];
 
   rows.forEach((row) => {
     const stateEntry = renderState.stateMap.get(row.label);
     if (!stateEntry) {
       return;
+    }
+    const activePlayerIndex = Number(stateEntry.activePlayerIndex);
+    const hasPlayerCells = Array.isArray(row.playerCells) && row.playerCells.length > 0;
+    if (!hasPlayerCells) {
+      rowsWithoutPlayerCells += 1;
+    }
+    if (hasPlayerCells) {
+      if (
+        Number.isFinite(activePlayerIndex) &&
+        activePlayerIndex >= 0 &&
+        activePlayerIndex < row.playerCells.length
+      ) {
+        activeColumnResolvedCount += 1;
+      } else {
+        activeColumnMissingCount += 1;
+        activeColumnMissingLabels.push(row.label);
+      }
     }
 
     const presentation = String(
@@ -724,6 +758,22 @@ export function updateCricketGridFx(options = {}) {
       const cellPresentation = String(cellState?.presentation || "neutral").toLowerCase();
       const marks = Number(stateEntry.marksByPlayer?.[index] || 0);
       const scoreCell = visualConfig.scoringLane && cellPresentation === "offense";
+      const isActiveCell =
+        hasPlayerCells &&
+        Number.isFinite(activePlayerIndex) &&
+        activePlayerIndex >= 0 &&
+        index === activePlayerIndex;
+      const hasDualFocus = hasPlayerCells && row.playerCells.length > 1;
+
+      toggleClass(cellNode, ACTIVE_CELL_CLASS, hasDualFocus && isActiveCell);
+      toggleClass(cellNode, INACTIVE_CELL_CLASS, hasDualFocus && !isActiveCell);
+      if (hasDualFocus) {
+        if (isActiveCell) {
+          activeCellCount += 1;
+        } else {
+          inactiveCellCount += 1;
+        }
+      }
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
       applyMarkProgressClasses(cellNode, marks, visualConfig);
@@ -755,5 +805,11 @@ export function updateCricketGridFx(options = {}) {
     debugStats.dangerRowCount = dangerRowCount;
     debugStats.pressureRowCount = pressureRowCount;
     debugStats.scoreCellCount = scoreCellCount;
+    debugStats.activeCellCount = activeCellCount;
+    debugStats.inactiveCellCount = inactiveCellCount;
+    debugStats.rowsWithoutPlayerCells = rowsWithoutPlayerCells;
+    debugStats.activeColumnResolvedCount = activeColumnResolvedCount;
+    debugStats.activeColumnMissingCount = activeColumnMissingCount;
+    debugStats.activeColumnMissingLabels = activeColumnMissingLabels;
   }
 }

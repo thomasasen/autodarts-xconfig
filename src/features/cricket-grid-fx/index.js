@@ -242,6 +242,10 @@ export function initializeCricketGridFx(context = {}) {
       debugStats.status || "unknown",
       Number(debugStats.rowCount) || 0,
       Number(debugStats.scoreCellCount) || 0,
+      Number(debugStats.activeCellCount) || 0,
+      Number(debugStats.inactiveCellCount) || 0,
+      Number(debugStats.activeColumnResolvedCount) || 0,
+      Number(debugStats.activeColumnMissingCount) || 0,
       renderState.discoveredRawLabelCount || 0,
       renderState.discoveredLabelCount || 0,
       renderState.labelCellMarkSourceCount || 0,
@@ -252,7 +256,7 @@ export function initializeCricketGridFx(context = {}) {
       emitDebugLog(
         debugState,
         debugSignature,
-        `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} rows=${Number(debugStats.rowCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0}`
+        `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} rows=${Number(debugStats.rowCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} activeCells=${Number(debugStats.activeCellCount) || 0} inactiveCells=${Number(debugStats.inactiveCellCount) || 0} activeMap=${Number(debugStats.activeColumnResolvedCount) || 0}/${(Number(debugStats.activeColumnResolvedCount) || 0) + (Number(debugStats.activeColumnMissingCount) || 0)}`
       );
       lastDebugRenderSignature = renderSignature;
     }
@@ -274,6 +278,20 @@ export function initializeCricketGridFx(context = {}) {
         debugState,
         `${renderSignature || "no-signature"}::no-score-cells`,
         `warn offense rows ohne score-cells variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
+      );
+    }
+    if ((Number(debugStats.rowsWithoutPlayerCells) || 0) > 0) {
+      emitDebugWarning(
+        debugState,
+        `${renderSignature || "no-signature"}::rows-without-player-cells::${Number(debugStats.rowsWithoutPlayerCells) || 0}`,
+        `warn Grid-Row ohne verwertbare Player-Cells variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" rows=${Number(debugStats.rowsWithoutPlayerCells) || 0}`
+      );
+    }
+    if ((Number(debugStats.activeColumnMissingCount) || 0) > 0) {
+      emitDebugWarning(
+        debugState,
+        `${renderSignature || "no-signature"}::active-column-missing::${Number(debugStats.activeColumnMissingCount) || 0}`,
+        `warn aktive Spalte nicht eindeutig variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" missing=${Number(debugStats.activeColumnMissingCount) || 0} labels=${formatLabelList(debugStats.activeColumnMissingLabels, 4)}`
       );
     }
   }

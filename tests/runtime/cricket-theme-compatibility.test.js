@@ -23,6 +23,8 @@ import {
   updateCricketGridFx,
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
+  ACTIVE_CELL_CLASS,
+  INACTIVE_CELL_CLASS,
   SCORE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
@@ -335,13 +337,107 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(markedGridFxStats.status, "ok");
   assert.equal(markedGridFxStats.offenseRowCount || 0, 1);
   assert.equal((markedGridFxStats.scoreCellCount || 0) > 0, true);
+  assert.equal((markedGridFxStats.activeCellCount || 0) > 0, true);
+  assert.equal((markedGridFxStats.inactiveCellCount || 0) > 0, true);
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(playerCell20?.classList?.contains(ACTIVE_CELL_CLASS), true);
+  const opponentCell20 = rowsByLabel.get("20")?.playerCells?.[1] || null;
+  assert.equal(Boolean(opponentCell20), true);
+  assert.equal(opponentCell20?.classList?.contains(INACTIVE_CELL_CLASS), true);
 
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);
 
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-targets")), false);
+});
+
+test("cricket highlighter renders full lane geometry for numeric targets and bull geometry", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketVisualConfig({
+    showOpenTargets: false,
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const renderCache = { grid: null, board: null };
+  const gameState = createGameState({
+    scoringModeNormalized: "unknown",
+    scoringMode: "",
+  });
+
+  const laneRenderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  const laneStats = {};
+  renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState: laneRenderState,
+    cache: renderCache,
+    debugStats: laneStats,
+  });
+
+  const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(overlay), true);
+  assert.equal(laneRenderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(overlay?.children?.length || 0, 4);
+  assert.equal(laneStats.shapeCountByTarget?.["20"] || 0, 4);
+  assert.equal(
+    Array.from(overlay?.children || []).every((node) => String(node?.dataset?.targetLabel || "") === "20"),
+    true
+  );
+
+  const playerIcon20 = rowsByLabel.get("20")?.playerIcons?.[0] || null;
+  const playerIconBull = rowsByLabel.get("BULL")?.playerIcons?.[0] || null;
+  assert.equal(Boolean(playerIcon20), true);
+  assert.equal(Boolean(playerIconBull), true);
+  playerIcon20.setAttribute("alt", "0");
+  playerIconBull.setAttribute("alt", "3");
+
+  const bullRenderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  const bullStats = {};
+  renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState: bullRenderState,
+    cache: renderCache,
+    debugStats: bullStats,
+  });
+  assert.equal(bullRenderState?.stateMap.get("BULL")?.boardPresentation, "offense");
+  assert.equal(overlay?.children?.length || 0, 2);
+  assert.equal(bullStats.shapeCountByTarget?.BULL || 0, 2);
+  assert.equal(
+    Array.from(overlay?.children || []).every((node) => String(node?.dataset?.targetLabel || "") === "BULL"),
+    true
+  );
 });
 
 test("theme-like cricket highlighter restores overlay after external removal and cleanup stays clean", () => {
