@@ -203,6 +203,74 @@ test("active throws merge with the active player turn baseline instead of ignori
   assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "pressure,offense");
 });
 
+test("unknown scoring mode falls back to standard for cricket overlays", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "unknown",
+      getCricketScoringMode: () => "",
+    }),
+  });
+
+  assert.equal(renderState?.scoringModeRaw, "unknown");
+  assert.equal(renderState?.scoringModeNormalized, "standard");
+  assert.equal(renderState?.scoringModeSource, "fallback-standard-for-unknown");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+});
+
+test("explicit neutral scoring mode remains neutral and suppresses offense", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "neutral",
+      getCricketScoringMode: () => "neutral",
+    }),
+  });
+
+  assert.equal(renderState?.scoringModeNormalized, "neutral");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "closed");
+  assert.equal(
+    renderState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","),
+    "closed,open"
+  );
+});
+
 test("numeric cricket row labels are not interpreted as player marks", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";

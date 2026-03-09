@@ -467,9 +467,25 @@ export function updateCricketGridFx(options = {}) {
   const renderState = options.renderState;
   const state = options.state;
   const visualConfig = options.visualConfig;
+  const debugStats = options.debugStats && typeof options.debugStats === "object"
+    ? options.debugStats
+    : null;
+
+  if (debugStats) {
+    debugStats.status = "init";
+    debugStats.rowCount = 0;
+    debugStats.stateTargetCount = 0;
+    debugStats.offenseRowCount = 0;
+    debugStats.dangerRowCount = 0;
+    debugStats.pressureRowCount = 0;
+    debugStats.scoreCellCount = 0;
+  }
 
   if (!documentRef || !cricketRules || !renderState || !state || !visualConfig) {
     clearCricketGridFxState(state);
+    if (debugStats) {
+      debugStats.status = "invalid-input";
+    }
     return;
   }
 
@@ -477,12 +493,22 @@ export function updateCricketGridFx(options = {}) {
   const targetSet = new Set(targetOrder);
   if (!targetOrder.length || !(renderState.stateMap instanceof Map)) {
     clearCricketGridFxState(state);
+    if (debugStats) {
+      debugStats.status = "invalid-state";
+    }
     return;
+  }
+
+  if (debugStats) {
+    debugStats.stateTargetCount = renderState.stateMap.size;
   }
 
   const gridRoot = resolveGridRoot(documentRef, cricketRules, targetOrder);
   if (!gridRoot) {
     clearCricketGridFxState(state);
+    if (debugStats) {
+      debugStats.status = "missing-grid";
+    }
     return;
   }
 
@@ -493,6 +519,9 @@ export function updateCricketGridFx(options = {}) {
       playerCells: collectPlayerCells(row.labelNode, cricketRules, targetSet),
     };
   });
+  if (debugStats) {
+    debugStats.rowCount = rows.length;
+  }
 
   clearPersistentState(state);
 
@@ -524,8 +553,13 @@ export function updateCricketGridFx(options = {}) {
     Number.isFinite(renderState.activePlayerIndex) &&
     state.previousActivePlayerIndex !== renderState.activePlayerIndex
   ) {
-    appendTransientNode(state, state.gridRoot, WIPE_CLASS, 760);
+      appendTransientNode(state, state.gridRoot, WIPE_CLASS, 760);
   }
+
+  let offenseRowCount = 0;
+  let dangerRowCount = 0;
+  let pressureRowCount = 0;
+  let scoreCellCount = 0;
 
   rows.forEach((row) => {
     const stateEntry = renderState.stateMap.get(row.label);
@@ -536,6 +570,13 @@ export function updateCricketGridFx(options = {}) {
     const presentation = String(
       stateEntry.boardPresentation || stateEntry.presentation || "open"
     ).toLowerCase();
+    if (presentation === "offense") {
+      offenseRowCount += 1;
+    } else if (presentation === "danger") {
+      dangerRowCount += 1;
+    } else if (presentation === "pressure") {
+      pressureRowCount += 1;
+    }
 
     const labelNode = row.labelNode;
     if (labelNode?.classList) {
@@ -567,9 +608,13 @@ export function updateCricketGridFx(options = {}) {
         : null;
       const cellPresentation = String(cellState?.presentation || "neutral").toLowerCase();
       const marks = Number(stateEntry.marksByPlayer?.[index] || 0);
+      const scoreCell = visualConfig.scoringLane && cellPresentation === "offense";
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
       applyMarkProgressClasses(cellNode, marks, visualConfig);
+      if (scoreCell) {
+        scoreCellCount += 1;
+      }
 
       const delta = Number(diffEntry?.playerDeltas?.[index] || 0);
       if (delta > 0 && visualConfig.deltaChips) {
@@ -589,4 +634,11 @@ export function updateCricketGridFx(options = {}) {
   state.previousMarksByLabel = cloneMarksByLabel(renderState.marksByLabel);
   state.previousStateMap = new Map(renderState.stateMap);
   state.previousActivePlayerIndex = Number(renderState.activePlayerIndex);
+  if (debugStats) {
+    debugStats.status = "ok";
+    debugStats.offenseRowCount = offenseRowCount;
+    debugStats.dangerRowCount = dangerRowCount;
+    debugStats.pressureRowCount = pressureRowCount;
+    debugStats.scoreCellCount = scoreCellCount;
+  }
 }

@@ -43,6 +43,7 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
 ]);
 
 const PRESENTATION_KEYS = new Set(["offense", "danger", "pressure", "closed", "dead"]);
+const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
 
 function isNodeVisible(node) {
   if (!node || typeof node !== "object") {
@@ -370,25 +371,51 @@ function resolveGameModeNormalized(gameState, variantRules, documentRef) {
   return "";
 }
 
-function resolveScoringModeNormalized(gameState, variantRules) {
-  if (typeof gameState?.getCricketScoringModeNormalized === "function") {
-    const normalized = String(gameState.getCricketScoringModeNormalized() || "").trim().toLowerCase();
-    if (normalized) {
-      return normalized;
-    }
+function classifyScoringMode(value, variantRules) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (KNOWN_SCORING_MODES.has(normalized)) {
+    return normalized;
   }
-
-  const rawMode = typeof gameState?.getCricketScoringMode === "function"
-    ? String(gameState.getCricketScoringMode() || "")
-    : typeof gameState?.getCricketMode === "function"
-      ? String(gameState.getCricketMode() || "")
-      : "";
 
   if (variantRules && typeof variantRules.classifyCricketScoringMode === "function") {
-    return variantRules.classifyCricketScoringMode(rawMode);
+    return variantRules.classifyCricketScoringMode(value);
   }
 
-  return "unknown";
+  return normalized || "unknown";
+}
+
+function resolveScoringModeState(gameState, variantRules, gameModeNormalized) {
+  const rawNormalizedInput =
+    typeof gameState?.getCricketScoringModeNormalized === "function"
+      ? String(gameState.getCricketScoringModeNormalized() || "").trim()
+      : "";
+
+  const rawMode =
+    typeof gameState?.getCricketScoringMode === "function"
+      ? String(gameState.getCricketScoringMode() || "").trim()
+      : typeof gameState?.getCricketMode === "function"
+        ? String(gameState.getCricketMode() || "").trim()
+        : "";
+
+  const rawScoringMode = rawNormalizedInput || rawMode || "unknown";
+  const classified = classifyScoringMode(rawScoringMode, variantRules);
+
+  if (
+    classified === "unknown" &&
+    (gameModeNormalized === "cricket" || gameModeNormalized === "tactics")
+  ) {
+    return {
+      rawScoringMode,
+      normalizedScoringMode: "standard",
+      scoringModeSource: "fallback-standard-for-unknown",
+    };
+  }
+
+  return {
+    rawScoringMode,
+    normalizedScoringMode: classified || "unknown",
+    scoringModeSource: rawNormalizedInput ? "game-state-normalized" : "classified",
+  };
 }
 
 function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder) {
@@ -550,7 +577,12 @@ function buildMarksByLabelSnapshot(options = {}) {
     }
   });
 
-  const scoringModeNormalized = resolveScoringModeNormalized(gameState, variantRules);
+  const scoringModeState = resolveScoringModeState(
+    gameState,
+    variantRules,
+    gameModeNormalized
+  );
+  const scoringModeNormalized = scoringModeState.normalizedScoringMode;
   const enrichedMarksByLabel = cricketRules.applyThrowsToMarksByLabel({
     targetOrder,
     playerIndex: activePlayerIndex,
@@ -567,9 +599,13 @@ function buildMarksByLabelSnapshot(options = {}) {
 
   return {
     gameModeNormalized,
+    scoringModeRaw: scoringModeState.rawScoringMode,
     scoringModeNormalized,
+    scoringModeSource: scoringModeState.scoringModeSource,
     targetOrder,
     activePlayerIndex,
+    discoveredLabelCount: grid.labels.length,
+    discoveredUniqueLabelCount: new Set(grid.labels.map((entry) => entry.label)).size,
     marksByLabel: enrichedMarksByLabel,
     stateMap,
   };
@@ -737,8 +773,17 @@ export function renderCricketHighlights(options = {}) {
     return false;
   }
 
+  const debugStats = options.debugStats && typeof options.debugStats === "object"
+    ? options.debugStats
+    : null;
+
   const board = resolveBoardSnapshot(documentRef, options.cache);
   if (!board?.group || !board.radius) {
+    if (debugStats) {
+      debugStats.renderedShapeCount = 0;
+      debugStats.highlightedTargetCount = 0;
+      debugStats.nonOpenTargetCount = 0;
+    }
     return false;
   }
 
@@ -747,6 +792,9 @@ export function renderCricketHighlights(options = {}) {
     return false;
   }
   clearNodeChildren(overlay);
+  let renderedShapeCount = 0;
+  let highlightedTargetCount = 0;
+  let nonOpenTargetCount = 0;
 
   renderState.stateMap.forEach((stateEntry, targetLabel) => {
     const presentation = String(
@@ -754,6 +802,9 @@ export function renderCricketHighlights(options = {}) {
     ).toLowerCase();
     if (!PRESENTATION_KEYS.has(presentation)) {
       return;
+    }
+    if (presentation !== "open") {
+      nonOpenTargetCount += 1;
     }
     if (presentation === "dead" && !visualConfig.showDeadTargets) {
       return;
@@ -768,8 +819,18 @@ export function renderCricketHighlights(options = {}) {
     shapes.forEach((shape) => {
       applyShapeStyle(shape, presentation, visualConfig, targetLabel);
       overlay.appendChild(shape);
+      renderedShapeCount += 1;
     });
+    if (shapes.length > 0) {
+      highlightedTargetCount += 1;
+    }
   });
+
+  if (debugStats) {
+    debugStats.renderedShapeCount = renderedShapeCount;
+    debugStats.highlightedTargetCount = highlightedTargetCount;
+    debugStats.nonOpenTargetCount = nonOpenTargetCount;
+  }
 
   return true;
 }

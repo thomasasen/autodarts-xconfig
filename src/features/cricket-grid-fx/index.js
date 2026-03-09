@@ -23,6 +23,61 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
 
+function readVariantText(documentRef) {
+  return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
+}
+
+function buildRenderSignature(renderState) {
+  if (!renderState || !renderState.stateMap) {
+    return "";
+  }
+
+  const entries = [];
+  renderState.stateMap.forEach((entry, label) => {
+    entries.push(
+      `${label}:${entry?.boardPresentation || "open"}:${(entry?.marksByPlayer || []).join(",")}`
+    );
+  });
+  entries.sort();
+
+  return [
+    renderState.gameModeNormalized,
+    renderState.scoringModeNormalized,
+    renderState.activePlayerIndex,
+    entries.join("|"),
+  ].join("::");
+}
+
+function createDebugState(featureDebug) {
+  return {
+    featureDebug,
+    lastLogSignature: "",
+    lastWarningSignature: "",
+  };
+}
+
+function emitDebugLog(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastLogSignature === signature) {
+    return;
+  }
+  debugState.lastLogSignature = signature;
+  debugState.featureDebug.log(message);
+}
+
+function emitDebugWarning(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastWarningSignature === signature) {
+    return;
+  }
+  debugState.lastWarningSignature = signature;
+  debugState.featureDebug.warn(message);
+}
+
 function isCricketActive(gameState, documentRef, variantRules) {
   if (gameState && typeof gameState.isCricketVariant === "function") {
     return gameState.isCricketVariant({
@@ -54,6 +109,7 @@ export function initializeCricketGridFx(context = {}) {
   const variantRules = context.domain?.variantRules;
   const cricketRules = context.domain?.cricketRules;
   const config = context.config;
+  const featureDebug = context.featureDebug || null;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
   if (!documentRef || !domGuards || !cricketRules || typeof schedulerFactory !== "function") {
@@ -82,6 +138,8 @@ export function initializeCricketGridFx(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   const state = createCricketGridFxState(windowRef);
+  const debugState = createDebugState(featureDebug);
+  let lastDebugRenderSignature = "";
   const invalidateRenderCache = () => {
     if (state.renderCache && typeof state.renderCache === "object") {
       state.renderCache.grid = null;
@@ -89,7 +147,14 @@ export function initializeCricketGridFx(context = {}) {
   };
 
   function update() {
+    const variantText = readVariantText(documentRef);
     if (!isCricketActive(gameState, documentRef, variantRules)) {
+      emitDebugLog(
+        debugState,
+        `inactive::${variantText}`,
+        `state inactive variant="${variantText || "-"}"`
+      );
+      lastDebugRenderSignature = "";
       clearCricketGridFxState(state);
       return;
     }
@@ -104,17 +169,62 @@ export function initializeCricketGridFx(context = {}) {
     });
 
     if (!renderState) {
+      emitDebugWarning(
+        debugState,
+        `missing-grid::${variantText}`,
+        `warn kein Grid variant="${variantText || "-"}"`
+      );
+      lastDebugRenderSignature = "";
       clearCricketGridFxState(state);
       return;
     }
 
+    const renderSignature = buildRenderSignature(renderState);
+    const debugStats = {};
     updateCricketGridFx({
       documentRef,
       cricketRules,
       renderState,
       state,
       visualConfig,
+      debugStats,
     });
+
+    const debugSignature = [
+      renderSignature || "no-signature",
+      debugStats.status || "unknown",
+      Number(debugStats.rowCount) || 0,
+      Number(debugStats.scoreCellCount) || 0,
+    ].join("::");
+
+    if (renderSignature && renderSignature !== lastDebugRenderSignature) {
+      emitDebugLog(
+        debugState,
+        debugSignature,
+        `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} labels=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} rows=${Number(debugStats.rowCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0}`
+      );
+      lastDebugRenderSignature = renderSignature;
+    }
+
+    if (debugStats.status === "missing-grid") {
+      emitDebugWarning(
+        debugState,
+        `${renderSignature || "no-signature"}::missing-grid`,
+        `warn kein Grid variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}"`
+      );
+      return;
+    }
+
+    if (
+      (Number(debugStats.offenseRowCount) || 0) > 0 &&
+      (Number(debugStats.scoreCellCount) || 0) === 0
+    ) {
+      emitDebugWarning(
+        debugState,
+        `${renderSignature || "no-signature"}::no-score-cells`,
+        `warn offense rows ohne score-cells variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
+      );
+    }
   }
 
   const scheduler = schedulerFactory(update, { windowRef });

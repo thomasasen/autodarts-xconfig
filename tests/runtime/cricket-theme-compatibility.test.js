@@ -68,7 +68,7 @@ function createNumericCricketGrid(documentRef, marksByLabel) {
   const table = documentRef.createElement("table");
   table.id = "grid";
   const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
-  const cellsByLabel = new Map();
+  const rowStateByLabel = new Map();
 
   targetOrder.forEach((label) => {
     const row = documentRef.createElement("tr");
@@ -80,42 +80,52 @@ function createNumericCricketGrid(documentRef, marksByLabel) {
 
     const marks = Array.isArray(marksByLabel?.[label]) ? marksByLabel[label] : [0, 0];
     const playerCells = [];
+    const playerIcons = [];
     marks.forEach((value, index) => {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
       cell.setAttribute("data-player-index", String(index));
-      cell.setAttribute("data-marks", String(value));
-      cell.textContent = String(value);
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(value));
+      cell.appendChild(icon);
       row.appendChild(cell);
       playerCells.push(cell);
+      playerIcons.push(icon);
     });
 
     table.appendChild(row);
-    cellsByLabel.set(label, playerCells);
+    rowStateByLabel.set(label, {
+      row,
+      labelCell,
+      playerCells,
+      playerIcons,
+    });
   });
 
   documentRef.main.appendChild(table);
-  return cellsByLabel;
+  return rowStateByLabel;
 }
 
-function createGameState() {
+function createGameState(options = {}) {
+  const scoringModeNormalized = String(options.scoringModeNormalized || "unknown");
+  const scoringMode = String(options.scoringMode || "");
   return {
     getCricketGameModeNormalized: () => "cricket",
     getCricketGameMode: () => "Cricket",
-    getCricketScoringModeNormalized: () => "standard",
-    getCricketScoringMode: () => "standard",
+    getCricketScoringModeNormalized: () => scoringModeNormalized,
+    getCricketScoringMode: () => scoringMode,
     getActivePlayerIndex: () => 0,
     getActiveThrows: () => [],
     getSnapshot: () => ({ match: { players: [{ id: "player-a" }, { id: "player-b" }] } }),
   };
 }
 
-test("theme-like cricket layout keeps highlighter and grid-fx stable with numeric labels", () => {
+test("theme-like cricket layout keeps highlighter and grid-fx stable with numeric labels and unknown scoring fallback", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
   createThemeLikeBoardFixture(documentRef);
-  const playerCellsByLabel = createNumericCricketGrid(documentRef, {
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
     "20": [0, 0],
     "19": [0, 0],
     "18": [0, 0],
@@ -146,7 +156,10 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   });
   const renderCache = { grid: null, board: null };
   const gridFxState = createCricketGridFxState();
-  const gameState = createGameState();
+  const gameState = createGameState({
+    scoringModeNormalized: "unknown",
+    scoringMode: "",
+  });
 
   const initialRenderState = buildCricketRenderState({
     documentRef,
@@ -157,15 +170,20 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     cache: renderCache,
   });
 
+  assert.equal(initialRenderState?.scoringModeRaw, "unknown");
+  assert.equal(initialRenderState?.scoringModeNormalized, "standard");
+  assert.equal(initialRenderState?.scoringModeSource, "fallback-standard-for-unknown");
   assert.equal(initialRenderState?.marksByLabel["20"].join(","), "0,0");
   assert.equal(initialRenderState?.stateMap.get("20")?.boardPresentation, "open");
 
+  const initialDebugStats = {};
   assert.equal(
     renderCricketHighlights({
       documentRef,
       visualConfig,
       renderState: initialRenderState,
       cache: renderCache,
+      debugStats: initialDebugStats,
     }),
     true
   );
@@ -173,20 +191,26 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   const overlay = documentRef.getElementById("ad-ext-cricket-targets");
   assert.equal(Boolean(overlay), true);
   assert.equal(overlay?.children?.length || 0, 0);
+  assert.equal(initialDebugStats.nonOpenTargetCount || 0, 0);
 
+  const initialGridFxStats = {};
   updateCricketGridFx({
     documentRef,
     cricketRules,
     renderState: initialRenderState,
     state: gridFxState,
     visualConfig: gridFxVisualConfig,
+    debugStats: initialGridFxStats,
   });
+  assert.equal(initialGridFxStats.status, "ok");
+  assert.equal(initialGridFxStats.offenseRowCount || 0, 0);
   assert.equal(documentRef.querySelectorAll(`.${SCORE_CLASS}`).length, 0);
 
-  const playerCell20 = playerCellsByLabel.get("20")?.[0] || null;
+  const playerCell20 = rowsByLabel.get("20")?.playerCells?.[0] || null;
+  const playerIcon20 = rowsByLabel.get("20")?.playerIcons?.[0] || null;
   assert.equal(Boolean(playerCell20), true);
-  playerCell20.setAttribute("data-marks", "3");
-  playerCell20.textContent = "3";
+  assert.equal(Boolean(playerIcon20), true);
+  playerIcon20.setAttribute("alt", "3");
 
   const markedRenderState = buildCricketRenderState({
     documentRef,
@@ -198,28 +222,38 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   });
 
   assert.equal(markedRenderState?.marksByLabel["20"].join(","), "3,0");
+  assert.equal(markedRenderState?.scoringModeNormalized, "standard");
   assert.equal(markedRenderState?.stateMap.get("20")?.boardPresentation, "offense");
 
+  const markedDebugStats = {};
   renderCricketHighlights({
     documentRef,
     visualConfig,
     renderState: markedRenderState,
     cache: renderCache,
+    debugStats: markedDebugStats,
   });
+  assert.equal(markedDebugStats.nonOpenTargetCount || 0, 1);
+  assert.equal((markedDebugStats.renderedShapeCount || 0) > 0, true);
 
   const hasLabel20Shape = Array.from(overlay?.children || []).some((node) => {
     return String(node?.dataset?.targetLabel || "") === "20";
   });
   assert.equal(hasLabel20Shape, true);
 
+  const markedGridFxStats = {};
   updateCricketGridFx({
     documentRef,
     cricketRules,
     renderState: markedRenderState,
     state: gridFxState,
     visualConfig: gridFxVisualConfig,
+    debugStats: markedGridFxStats,
   });
 
+  assert.equal(markedGridFxStats.status, "ok");
+  assert.equal(markedGridFxStats.offenseRowCount || 0, 1);
+  assert.equal((markedGridFxStats.scoreCellCount || 0) > 0, true);
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), true);
 
   clearCricketGridFxState(gridFxState);

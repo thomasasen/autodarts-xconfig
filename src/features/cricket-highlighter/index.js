@@ -14,6 +14,10 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
 
+function readVariantText(documentRef) {
+  return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
+}
+
 function isCricketActive(gameState, documentRef, variantRules) {
   if (gameState && typeof gameState.isCricketVariant === "function") {
     return gameState.isCricketVariant({
@@ -53,6 +57,36 @@ function buildRenderSignature(renderState) {
   ].join("::");
 }
 
+function createDebugState(featureDebug) {
+  return {
+    featureDebug,
+    lastLogSignature: "",
+    lastWarningSignature: "",
+  };
+}
+
+function emitDebugLog(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastLogSignature === signature) {
+    return;
+  }
+  debugState.lastLogSignature = signature;
+  debugState.featureDebug.log(message);
+}
+
+function emitDebugWarning(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastWarningSignature === signature) {
+    return;
+  }
+  debugState.lastWarningSignature = signature;
+  debugState.featureDebug.warn(message);
+}
+
 export function initializeCricketHighlighter(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -63,6 +97,7 @@ export function initializeCricketHighlighter(context = {}) {
   const variantRules = context.domain?.variantRules;
   const cricketRules = context.domain?.cricketRules;
   const config = context.config;
+  const featureDebug = context.featureDebug || null;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
   if (
@@ -87,6 +122,7 @@ export function initializeCricketHighlighter(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   let lastSignature = "";
+  const debugState = createDebugState(featureDebug);
   const renderCache = {
     grid: null,
     board: null,
@@ -99,8 +135,14 @@ export function initializeCricketHighlighter(context = {}) {
 
   function update() {
     const active = isCricketActive(gameState, documentRef, variantRules);
+    const variantText = readVariantText(documentRef);
     if (!active) {
       lastSignature = "";
+      emitDebugLog(
+        debugState,
+        `inactive::${variantText}`,
+        `state inactive variant="${variantText || "-"}"`
+      );
       clearCricketHighlights(documentRef);
       return;
     }
@@ -113,19 +155,66 @@ export function initializeCricketHighlighter(context = {}) {
       visualConfig,
       cache: renderCache,
     });
-
-    const signature = buildRenderSignature(renderState);
-    if (!signature || signature === lastSignature) {
+    if (!renderState) {
+      lastSignature = "";
+      emitDebugWarning(
+        debugState,
+        `missing-grid::${variantText}`,
+        `warn kein Grid variant="${variantText || "-"}"`
+      );
       return;
     }
-    lastSignature = signature;
 
-    renderCricketHighlights({
+    const signature = buildRenderSignature(renderState);
+    if (!signature) {
+      lastSignature = "";
+      return;
+    }
+    if (signature === lastSignature) {
+      return;
+    }
+
+    const debugStats = {};
+    const rendered = renderCricketHighlights({
       documentRef,
       visualConfig,
       renderState,
       cache: renderCache,
+      debugStats,
     });
+
+    const debugSignature = [
+      signature,
+      rendered ? "rendered" : "no-board",
+      debugStats.renderedShapeCount || 0,
+      debugStats.nonOpenTargetCount || 0,
+    ].join("::");
+
+    emitDebugLog(
+      debugState,
+      debugSignature,
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} labels=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} shapes=${Number(debugStats.renderedShapeCount) || 0} highlighted=${Number(debugStats.highlightedTargetCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0}`
+    );
+
+    if (!rendered) {
+      lastSignature = "";
+      emitDebugWarning(
+        debugState,
+        `${signature}::no-board`,
+        `warn kein Board variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}"`
+      );
+      return;
+    }
+
+    if ((Number(debugStats.nonOpenTargetCount) || 0) > 0 && (Number(debugStats.renderedShapeCount) || 0) === 0) {
+      emitDebugWarning(
+        debugState,
+        `${signature}::zero-shapes`,
+        `warn 0 Shapes trotz non-open Targets variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
+      );
+    }
+
+    lastSignature = signature;
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
