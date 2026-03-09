@@ -166,8 +166,41 @@ span.chakra-switch__track.css-v4l15v {
   grid-template-columns: 0.92fr 1.08fr !important;
 }
 
-/* Stable board targeting without Chakra hash-class dependency. */
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]){
+[data-ad-theme-layout-root="true"]{
+  --cricket-board-safe-height: calc(100dvh - 132px);
+  --cricket-board-safe-width: calc(100dvw - 72px);
+}
+
+@media (max-height: 980px){
+  [data-ad-theme-layout-root="true"]{
+    --cricket-board-safe-height: calc(100dvh - 150px);
+  }
+}
+
+@media (max-height: 820px){
+  [data-ad-theme-layout-root="true"]{
+    --cricket-board-safe-height: calc(100dvh - 170px);
+  }
+}
+
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="footer"]{
+  grid-column-start: 1 !important;
+  grid-column-end: 3 !important;
+  grid-row-start: 2 !important;
+  grid-row-end: 3 !important;
+  grid-area: footer !important;
+}
+
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="players"]{
+  grid-column-start: 1 !important;
+  grid-column-end: 2 !important;
+  grid-row-start: 3 !important;
+  grid-row-end: 4 !important;
+  grid-area: players !important;
+  min-width: 0 !important;
+}
+
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"]{
   grid-column-start: 2 !important;
   grid-column-end: 3 !important;
   grid-row-start: 3 !important;
@@ -182,12 +215,16 @@ span.chakra-switch__track.css-v4l15v {
   margin: 0 !important;
 }
 
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) > *{
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] > *{
   width: 100% !important;
   height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
 }
 
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) .css-tqsk66{
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] .css-tqsk66{
+  width: 100% !important;
+  height: 100% !important;
   min-height: 0 !important;
   padding: 0 0 8px 0 !important;
   display: grid !important;
@@ -197,22 +234,22 @@ span.chakra-switch__track.css-v4l15v {
   row-gap: 8px !important;
 }
 
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) .css-7bjx6y,
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) .css-1wegtvo{
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] .css-7bjx6y,
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] .css-1wegtvo{
   top: auto;
   bottom: 0;
 }
 
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) svg,
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) canvas,
-.css-tkevr6 > .chakra-stack > *:has(svg[viewBox="0 0 1000 1000"]) img{
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] svg,
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] canvas,
+[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] img{
   display: block;
   margin-left: auto;
   margin-right: auto;
-  width: min(100%, calc(100dvh - 132px)) !important;
+  width: min(100%, var(--cricket-board-safe-height), var(--cricket-board-safe-width)) !important;
   height: auto !important;
-  max-height: calc(100dvh - 132px) !important;
-  max-width: 100%;
+  max-height: var(--cricket-board-safe-height) !important;
+  max-width: var(--cricket-board-safe-width);
   object-fit: contain;
 }
 `;
