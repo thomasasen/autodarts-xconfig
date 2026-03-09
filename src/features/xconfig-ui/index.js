@@ -102,11 +102,10 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-field select{width:100%;max-width:20rem;padding:.45rem .55rem;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(12,17,36,.9);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-field--checkbox{display:flex;align-items:center;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-onoff{position:relative;display:inline-flex;flex:0 0 auto;width:5.2rem;min-width:5.2rem;max-width:5.2rem;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,32,.45)}
-#${PANEL_HOST_ID} .ad-xconfig-onoff-btn{appearance:none;border:none;background:transparent;color:rgba(255,255,255,.9);width:50%;min-width:2.6rem;height:2.2rem;padding:0 .45rem;cursor:pointer;font-weight:700;font-size:.86rem;line-height:1;white-space:nowrap;text-align:center;flex:1 1 50%}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn{appearance:none;border:none;background:transparent;color:rgba(230,240,255,.84);width:50%;min-width:2.6rem;height:2.2rem;padding:0 .45rem;cursor:pointer;font-weight:700;font-size:.86rem;line-height:1;white-space:nowrap;text-align:center;flex:1 1 50%}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn{box-shadow:inset 1px 0 0 rgba(255,255,255,.14)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn:hover{background:rgba(255,255,255,.16)}
-#${PANEL_HOST_ID} .ad-xconfig-onoff-btn--on{color:rgba(198,255,220,.94)}
-#${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off{color:rgba(255,216,216,.94)}
+#${PANEL_HOST_ID} .ad-xconfig-onoff-btn[data-active="false"]{color:rgba(210,224,244,.62)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--on[data-active="true"]{background:rgba(44,170,90,.44);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off[data-active="true"]{background:rgba(199,63,63,.42);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-note{margin:.5rem 0 0;color:rgba(234,244,255,.9);font-size:.82rem}

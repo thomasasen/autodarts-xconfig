@@ -357,6 +357,14 @@ test("xConfig shell renders mapped preview backgrounds and compact legacy back b
     String(styleNode.textContent || "").includes(".ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn"),
     true
   );
+  assert.equal(
+    String(styleNode.textContent || "").includes('.ad-xconfig-onoff-btn[data-active="false"]'),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes('.ad-xconfig-onoff-btn--off[data-active="true"]'),
+    true
+  );
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await wait(5);
