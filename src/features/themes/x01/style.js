@@ -1,5 +1,5 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
-import { buildPreviewPlacementCss, clampNumber, normalizeBoolean } from "../shared/theme-utils.js";
+import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-x01-style";
 
@@ -9,11 +9,17 @@ const PREVIEW_PLACEMENT = Object.freeze({
   previewGapPx: 8,
 });
 
+const STAT_AVG_FONT_SIZE_PX = 36;
+const STAT_LEG_FONT_SIZE_PX = 38;
+const STAT_AVG_LINE_HEIGHT = 1.15;
+const STAT_AVG_ARROW_WIDTH_PX = 12;
+const STAT_AVG_ARROW_HEIGHT_PX = 23;
+const STAT_AVG_ARROW_MARGIN_LEFT_PX = 8;
+const INACTIVE_STAT_SCALE = 0.6;
+
 function resolveThemeX01Config(rawConfig = {}) {
   return {
     showAvg: normalizeBoolean(rawConfig.showAvg, true),
-    avgFontSizePx: clampNumber(rawConfig.avgFontSizePx, 20, 48, 36),
-    legFontSizePx: clampNumber(rawConfig.legFontSizePx, 24, 52, 38),
   };
 }
 
@@ -46,7 +52,7 @@ div.ad-ext-player.ad-ext-player-active p.chakra-text.css-11cuipc {
 }
 
 div.css-y3hfdd{
-  gap: 0 !important;
+  gap: 0px !important;
   height: 25%;
 }
 `;
@@ -60,16 +66,44 @@ div.chakra-stack.navigation.css-ege71s,
 `;
 
   const statsSizingCss = `
+.ad-ext-player {
+  --ad-ext-stat-scale: 1;
+}
+
+.ad-ext-player.ad-ext-player-inactive {
+  --ad-ext-stat-scale: ${INACTIVE_STAT_SCALE};
+}
+
 p.chakra-text.css-1j0bqop {
-  font-size: ${Math.round(resolved.avgFontSizePx)}px;
-  line-height: 1.15;
+  font-size: calc(${STAT_AVG_FONT_SIZE_PX}px * var(--ad-ext-stat-scale));
+  line-height: ${STAT_AVG_LINE_HEIGHT};
 }
 
 span.css-3fr5p8 > p,
 span.chakra-badge.css-n2903v,
 span.chakra-badge.css-1j1ty0z,
 span.chakra-badge.css-1c4630i {
-  font-size: ${Math.round(resolved.legFontSizePx)}px;
+  font-size: calc(${STAT_LEG_FONT_SIZE_PX}px * var(--ad-ext-stat-scale));
+}
+
+.ad-ext-player.ad-ext-player-inactive span.css-3fr5p8 > p {
+  font-size: calc(${STAT_LEG_FONT_SIZE_PX}px * var(--ad-ext-stat-scale)) !important;
+}
+
+.ad-ext-avg-trend-arrow {
+  margin-left: calc(${STAT_AVG_ARROW_MARGIN_LEFT_PX}px * var(--ad-ext-stat-scale));
+}
+
+.ad-ext-avg-trend-arrow.ad-ext-avg-trend-up {
+  border-left: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
+  border-right: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
+  border-bottom: calc(${STAT_AVG_ARROW_HEIGHT_PX}px * var(--ad-ext-stat-scale)) solid #9fdb58;
+}
+
+.ad-ext-avg-trend-arrow.ad-ext-avg-trend-down {
+  border-left: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
+  border-right: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
+  border-top: calc(${STAT_AVG_ARROW_HEIGHT_PX}px * var(--ad-ext-stat-scale)) solid #f87171;
 }
 `;
 
@@ -80,4 +114,3 @@ span.chakra-badge.css-1c4630i {
 }
 
 export { PREVIEW_PLACEMENT };
-

@@ -38,6 +38,10 @@ const cricketThemeCss = `
 }
 
 #ad-ext-player-display{
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
   gap: 0.35rem !important;
 }
 

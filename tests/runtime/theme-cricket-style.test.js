@@ -17,6 +17,10 @@ test("cricket theme uses standard preview placement with oldrepo-aligned layout 
   assert.match(css, /\.css-1f26ant\s*>\s*div\s*\{\s*height:\s*80%\s*!important;/);
   assert.match(
     css,
+    /#ad-ext-player-display\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-auto-flow:\s*column\s*!important;[^}]*grid-auto-columns:\s*minmax\(0,\s*1fr\)\s*!important;/s
+  );
+  assert.match(
+    css,
     /grid-template-areas:\s*"header header"\s*"footer footer"\s*"players board"/
   );
   assert.match(css, /\.css-1kejrvi,\s*\.css-14xtjvc\s*\{/);
