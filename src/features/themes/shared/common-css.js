@@ -304,7 +304,7 @@ div.css-y3hfdd > .css-1igwmid{
   height: 100% !important;
   max-height: 100% !important;
   position: relative !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .ad-ext-theme-board-controls{
@@ -324,7 +324,7 @@ div.css-y3hfdd > .css-1igwmid{
   padding-bottom: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .ad-ext-theme-board-canvas{
@@ -341,7 +341,7 @@ div.css-y3hfdd > .css-1igwmid{
   justify-self: center !important;
   aspect-ratio: 1 / 1;
   container-type: size !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .ad-ext-theme-board-canvas > *{
@@ -355,7 +355,7 @@ div.css-y3hfdd > .css-1igwmid{
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{

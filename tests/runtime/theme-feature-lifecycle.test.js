@@ -255,7 +255,7 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   assertThemeHookState(boardNodes, true);
   assert.equal(
     boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
-    "520px"
+    "620px"
   );
 
   documentRef.flushMutations();
@@ -309,7 +309,7 @@ test("theme-x01 keeps info-style content slot layout hooks stable across mutatio
   assertThemeHookState(boardNodes, true);
   assert.equal(
     boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
-    "571px"
+    "680px"
   );
   assert.equal(
     documentRef.querySelectorAll(".ad-ext-theme-content-slot").length,

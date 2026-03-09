@@ -17,9 +17,6 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardSvg: "ad-ext-theme-board-svg",
 });
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
-const BOARD_GLOW_MARGIN_RATIO = 0.08;
-const BOARD_GLOW_MARGIN_MIN_PX = 20;
-const BOARD_GLOW_MARGIN_MAX_PX = 72;
 
 function getElementChildren(node) {
   if (!node || typeof node !== "object" || !node.children) {
@@ -228,27 +225,6 @@ function getElementHeight(node) {
   }
 }
 
-function clampNumber(value, min, max) {
-  if (!Number.isFinite(value)) {
-    return min;
-  }
-  return Math.max(min, Math.min(max, value));
-}
-
-function calculateBoardCanvasSize(availableSize) {
-  if (!Number.isFinite(availableSize) || availableSize <= 0) {
-    return 0;
-  }
-
-  const glowMargin = clampNumber(
-    availableSize * BOARD_GLOW_MARGIN_RATIO,
-    BOARD_GLOW_MARGIN_MIN_PX,
-    BOARD_GLOW_MARGIN_MAX_PX
-  );
-  const boardSize = Math.floor(availableSize - glowMargin * 2);
-  return boardSize > 0 ? boardSize : 0;
-}
-
 function clearBoardSizeVariable(node) {
   if (!node || !node.style || typeof node.style.removeProperty !== "function") {
     return;
@@ -264,7 +240,7 @@ function updateBoardSizeVariable(node, sizingNode = null) {
   const measurementNode = sizingNode || node;
   const width = getElementWidth(measurementNode);
   const height = getElementHeight(measurementNode);
-  const boardSize = calculateBoardCanvasSize(Math.min(width, height));
+  const boardSize = Math.floor(Math.min(width, height));
   if (!Number.isFinite(boardSize) || boardSize <= 0) {
     clearBoardSizeVariable(node);
     return;
