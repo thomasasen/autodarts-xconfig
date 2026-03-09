@@ -5,10 +5,15 @@ import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createEventBus } from "../../src/core/event-bus.js";
 import { createGameStateStore } from "../../src/core/game-state-store.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
+import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { initializeCheckoutBoardTargets } from "../../src/features/checkout-board-targets/index.js";
-import { OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
+import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
+import { OVERLAY_ID as CHECKOUT_OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
+import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
 import { initializeRemoveDartsNotification } from "../../src/features/remove-darts-notification/index.js";
 import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
+import * as cricketRules from "../../src/domain/cricket-rules.js";
+import * as variantRules from "../../src/domain/variant-rules.js";
 import {
   FakeDocument,
   FakeMessageEvent,
@@ -82,7 +87,7 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
   assert.ok(observer);
 
   const managedOverlay = documentRef.createElement("div");
-  managedOverlay.id = OVERLAY_ID;
+  managedOverlay.id = CHECKOUT_OVERLAY_ID;
 
   observer.callback([
     {
@@ -103,6 +108,128 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
     },
   ]);
   assert.equal(scheduleCounter.count, 2);
+
+  cleanup();
+});
+
+test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(group);
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+
+  documentRef.main.appendChild(svg);
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    for (let index = 0; index < 2; index += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.setAttribute("data-player-index", String(index));
+      cell.setAttribute("data-marks", label === "20" && index === 0 ? "3" : "0");
+      cell.textContent = label === "20" && index === 0 ? "3" : "0";
+      row.appendChild(cell);
+    }
+
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const initialOverlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(initialOverlay), true);
+  assert.equal((initialOverlay?.children?.length || 0) > 0, true);
+
+  initialOverlay.parentNode?.removeChild(initialOverlay);
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: group,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [initialOverlay],
+    },
+  ]);
+
+  const restoredOverlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(restoredOverlay), true);
+  assert.equal((restoredOverlay?.children?.length || 0) > 0, true);
+  assert.equal(scheduleCounter.count >= 2, true);
 
   cleanup();
 });

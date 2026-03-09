@@ -8,7 +8,15 @@ import {
   clearCricketHighlights,
   renderCricketHighlights,
 } from "../../src/features/cricket-highlighter/logic.js";
-import { resolveCricketVisualConfig } from "../../src/features/cricket-highlighter/style.js";
+import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
+import {
+  OVERLAY_ID as CRICKET_OVERLAY_ID,
+  STYLE_ID as CRICKET_STYLE_ID,
+  resolveCricketVisualConfig,
+} from "../../src/features/cricket-highlighter/style.js";
+import { createDomGuards } from "../../src/core/dom-guards.js";
+import { createObserverRegistry } from "../../src/core/observer-registry.js";
+import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import {
   clearCricketGridFxState,
   createCricketGridFxState,
@@ -18,7 +26,7 @@ import {
   SCORE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
-import { FakeDocument } from "./fake-dom.js";
+import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function createThemeLikeBoardFixture(documentRef) {
   const contentSlot = documentRef.createElement("div");
@@ -261,4 +269,96 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
 
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-targets")), false);
+});
+
+test("theme-like cricket highlighter restores overlay after external removal and cleanup stays clean", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const gameState = createGameState({
+    scoringModeNormalized: "unknown",
+    scoringMode: "",
+  });
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      ...gameState,
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+          debug: true,
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const initialOverlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(initialOverlay), true);
+  assert.equal((initialOverlay?.children?.length || 0) > 0, true);
+
+  initialOverlay.parentNode?.removeChild(initialOverlay);
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [initialOverlay],
+    },
+  ]);
+
+  const restoredOverlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(restoredOverlay), true);
+  assert.equal((restoredOverlay?.children?.length || 0) > 0, true);
+
+  cleanupHighlighter();
+
+  assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
+  assert.equal(Boolean(documentRef.getElementById(CRICKET_STYLE_ID)), false);
 });

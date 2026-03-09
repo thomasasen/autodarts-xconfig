@@ -5,6 +5,7 @@ import {
 } from "./logic.js";
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveCricketVisualConfig } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
 
 const FEATURE_KEY = "cricket-highlighter";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -85,6 +86,35 @@ function emitDebugWarning(debugState, signature, message) {
   }
   debugState.lastWarningSignature = signature;
   debugState.featureDebug.warn(message);
+}
+
+function resolveOverlayStructuralHealth(documentRef, cache = null) {
+  const cachedBoard = cache?.board;
+  const board =
+    cachedBoard?.group?.isConnected !== false
+      ? cachedBoard
+      : findBoardSvgGroup(documentRef);
+  if (cache && typeof cache === "object") {
+    cache.board = board;
+  }
+
+  if (!board?.group) {
+    return {
+      hasBoard: false,
+      overlayPresent: false,
+      healthy: false,
+    };
+  }
+
+  const overlay = board.group.querySelector?.(`#${OVERLAY_ID}`) || null;
+  const overlayPresent = Boolean(overlay);
+  const overlayConnected = Boolean(overlayPresent && overlay.isConnected !== false);
+
+  return {
+    hasBoard: true,
+    overlayPresent,
+    healthy: overlayConnected,
+  };
 }
 
 export function initializeCricketHighlighter(context = {}) {
@@ -170,8 +200,21 @@ export function initializeCricketHighlighter(context = {}) {
       lastSignature = "";
       return;
     }
-    if (signature === lastSignature) {
-      return;
+
+    const signatureUnchanged = signature === lastSignature;
+    let forcedStructuralRefresh = false;
+    if (signatureUnchanged) {
+      const structuralHealth = resolveOverlayStructuralHealth(documentRef, renderCache);
+      if (structuralHealth.healthy) {
+        return;
+      }
+
+      forcedStructuralRefresh = true;
+      emitDebugWarning(
+        debugState,
+        `${signature}::overlay-missing::${structuralHealth.hasBoard ? "board" : "no-board"}`,
+        `warn overlay missing -> forced re-render variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" board=${structuralHealth.hasBoard ? "yes" : "no"}`
+      );
     }
 
     const debugStats = {};
@@ -185,6 +228,7 @@ export function initializeCricketHighlighter(context = {}) {
 
     const debugSignature = [
       signature,
+      forcedStructuralRefresh ? "forced" : "normal",
       rendered ? "rendered" : "no-board",
       debugStats.renderedShapeCount || 0,
       debugStats.nonOpenTargetCount || 0,
@@ -207,10 +251,13 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     if ((Number(debugStats.nonOpenTargetCount) || 0) > 0 && (Number(debugStats.renderedShapeCount) || 0) === 0) {
+      const warningPrefix = forcedStructuralRefresh
+        ? "warn forced re-render: weiterhin 0 Shapes trotz non-open Targets"
+        : "warn 0 Shapes trotz non-open Targets";
       emitDebugWarning(
         debugState,
-        `${signature}::zero-shapes`,
-        `warn 0 Shapes trotz non-open Targets variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
+        `${signature}::zero-shapes::${forcedStructuralRefresh ? "forced" : "normal"}`,
+        `${warningPrefix} variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
       );
     }
 
