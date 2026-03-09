@@ -20,6 +20,8 @@ export const ROW_WAVE_CLASS = "ad-ext-crfx-row-wave";
 export const DELTA_CLASS = "ad-ext-crfx-delta";
 export const SPARK_CLASS = "ad-ext-crfx-spark";
 export const WIPE_CLASS = "ad-ext-crfx-wipe";
+export const SYNTHETIC_BADGE_ATTRIBUTE = "data-ad-ext-crfx-synthetic-badge";
+export const HIDDEN_LABEL_ATTRIBUTE = "data-ad-ext-crfx-label-hidden";
 
 export const LABEL_STATE_CLASS = Object.freeze({
   neutral: "ad-ext-crfx-label-state-neutral",
@@ -126,17 +128,12 @@ export function buildStyleText() {
 
 .${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_CELL_CLASS} {
   z-index: 2;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 0 0 20px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.16)),
-    0 0 16px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.46));
-  filter: saturate(1.12) brightness(1.06);
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${INACTIVE_CELL_CLASS} {
   z-index: 1;
-  opacity: 0.74;
-  filter: saturate(0.68) brightness(0.84);
+  opacity: 1;
+  filter: none;
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS},
@@ -181,6 +178,11 @@ export function buildStyleText() {
   --ad-ext-crfx-badge-border: rgba(195, 203, 214, 0.42);
   --ad-ext-crfx-badge-text: rgba(206, 214, 224, 0.8);
   --ad-ext-crfx-badge-glow: rgba(173, 181, 189, 0.36);
+}
+
+.${ROOT_CLASS} [${HIDDEN_LABEL_ATTRIBUTE}="true"] {
+  color: transparent !important;
+  text-shadow: none !important;
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS}::before {
@@ -314,7 +316,7 @@ export function buildStyleText() {
   right: 6px;
   padding: 1px 7px;
   border-radius: 999px;
-  font-size: clamp(0.92rem, 1.4vw, 1.48rem);
+  font-size: 2.22rem;
   font-weight: 800;
   line-height: 1.3;
   letter-spacing: 0.02em;

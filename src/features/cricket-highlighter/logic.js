@@ -44,6 +44,10 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
 
 const PRESENTATION_KEYS = new Set(["open", "offense", "danger", "pressure", "closed", "dead"]);
 const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
+const ALL_BOARD_TARGETS = Object.freeze([
+  ...Array.from({ length: 20 }, (_value, index) => String(index + 1)),
+  "BULL",
+]);
 
 function isNodeVisible(node) {
   if (!node || typeof node !== "object") {
@@ -1006,45 +1010,85 @@ function setStyleVar(node, name, value) {
   node.style.setProperty(name, String(value ?? ""));
 }
 
-function applyOverlayStyleVars(overlay, visualConfig) {
+function clampAlpha(value, fallback = 0) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return Math.max(0, Math.min(1, Number(fallback) || 0));
+  }
+  return Math.max(0, Math.min(1, numeric));
+}
+
+function rgbaColor(color, alpha) {
+  const r = Number.isFinite(color?.r) ? Math.round(color.r) : 0;
+  const g = Number.isFinite(color?.g) ? Math.round(color.g) : 0;
+  const b = Number.isFinite(color?.b) ? Math.round(color.b) : 0;
+  return `rgba(${r}, ${g}, ${b}, ${clampAlpha(alpha)})`;
+}
+
+function applyOverlayStyleVars(overlay, visualConfig, radius) {
   if (!overlay || !visualConfig) {
     return;
   }
 
   const theme = visualConfig.theme || {};
-  const opacityByPresentation = visualConfig.intensity?.opacityByPresentation || {};
-  const strokeWidth = `${Math.max(1, visualConfig.strokeWidthRatio * 120)}px`;
+  const intensity = visualConfig.intensity || {};
+  const baseColor = visualConfig.baseColor || { r: 90, g: 90, b: 90 };
+  const mutedColor = visualConfig.mutedColor || { r: 33, g: 33, b: 33 };
+  const showOpenTargets = visualConfig.showOpenTargets === true;
+  const highlightOpacity = clampAlpha(intensity.highlightOpacity, 0.45);
+  const strokeBoost = clampAlpha(intensity.strokeBoost, 0.2);
+  const openOpacity = showOpenTargets ? clampAlpha(intensity.open, 0.3) : 0;
 
-  setStyleVar(overlay, "--ad-ext-cricket-open-fill", theme.open || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-open-stroke", theme.openStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-open-opacity", opacityByPresentation.open ?? 0.5);
+  setStyleVar(overlay, "--ad-ext-cricket-open-fill", rgbaColor(baseColor, openOpacity));
+  setStyleVar(overlay, "--ad-ext-cricket-open-stroke", rgbaColor(baseColor, showOpenTargets ? Math.min(1, openOpacity + 0.12) : 0));
+  setStyleVar(overlay, "--ad-ext-cricket-open-opacity", showOpenTargets ? "1" : "0");
 
-  setStyleVar(overlay, "--ad-ext-cricket-closed-fill", theme.closed || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-closed-stroke", theme.closedStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-closed-opacity", opacityByPresentation.closed ?? 0.82);
+  setStyleVar(overlay, "--ad-ext-cricket-closed-fill", rgbaColor(baseColor, clampAlpha(intensity.closed, 0.8)));
+  setStyleVar(
+    overlay,
+    "--ad-ext-cricket-closed-stroke",
+    rgbaColor(baseColor, Math.min(1, clampAlpha(intensity.closed, 0.8) + 0.11))
+  );
+  setStyleVar(overlay, "--ad-ext-cricket-closed-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-dead-fill", theme.dead || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", theme.deadStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-dead-opacity", opacityByPresentation.dead ?? 0.78);
+  setStyleVar(overlay, "--ad-ext-cricket-dead-fill", rgbaColor(mutedColor, clampAlpha(intensity.dead, 0.98)));
+  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", rgbaColor(mutedColor, 0));
+  setStyleVar(overlay, "--ad-ext-cricket-dead-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-inactive-fill", theme.inactive || theme.dead || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-inactive-stroke", theme.inactiveStroke || theme.deadStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-inactive-opacity", opacityByPresentation.inactive ?? 0.68);
+  setStyleVar(
+    overlay,
+    "--ad-ext-cricket-inactive-fill",
+    rgbaColor(mutedColor, clampAlpha(intensity.inactive, 0.8))
+  );
+  setStyleVar(overlay, "--ad-ext-cricket-inactive-stroke", rgbaColor(mutedColor, 0));
+  setStyleVar(overlay, "--ad-ext-cricket-inactive-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-offense-fill", theme.offense || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-offense-stroke", theme.offenseStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-offense-opacity", opacityByPresentation.offense ?? 1);
+  setStyleVar(overlay, "--ad-ext-cricket-offense-fill", rgbaColor(theme.offense, highlightOpacity));
+  setStyleVar(
+    overlay,
+    "--ad-ext-cricket-offense-stroke",
+    rgbaColor(theme.offense, Math.min(1, highlightOpacity + strokeBoost))
+  );
+  setStyleVar(overlay, "--ad-ext-cricket-offense-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-danger-fill", theme.danger || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-danger-stroke", theme.dangerStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-danger-opacity", opacityByPresentation.danger ?? 0.98);
+  setStyleVar(overlay, "--ad-ext-cricket-danger-fill", rgbaColor(theme.danger, highlightOpacity));
+  setStyleVar(
+    overlay,
+    "--ad-ext-cricket-danger-stroke",
+    rgbaColor(theme.danger, Math.min(1, highlightOpacity + strokeBoost))
+  );
+  setStyleVar(overlay, "--ad-ext-cricket-danger-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-pressure-fill", theme.pressure || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-pressure-stroke", theme.pressureStroke || theme.stroke || "transparent");
-  setStyleVar(overlay, "--ad-ext-cricket-pressure-opacity", opacityByPresentation.pressure ?? 0.96);
+  setStyleVar(overlay, "--ad-ext-cricket-pressure-fill", rgbaColor(theme.danger, highlightOpacity));
+  setStyleVar(
+    overlay,
+    "--ad-ext-cricket-pressure-stroke",
+    rgbaColor(theme.danger, Math.min(1, highlightOpacity + strokeBoost))
+  );
+  setStyleVar(overlay, "--ad-ext-cricket-pressure-opacity", "1");
 
+  const strokeWidth = `${Math.max(1, Number(radius) * Number(visualConfig.strokeWidthRatio || 0.006))}px`;
   setStyleVar(overlay, "--ad-ext-cricket-stroke-width", strokeWidth);
-  setStyleVar(overlay, "--ad-ext-cricket-pulse-ms", `${visualConfig.intensity?.pulseMs || 1100}ms`);
 }
 
 function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
@@ -1094,41 +1138,51 @@ export function renderCricketHighlights(options = {}) {
   if (!overlay) {
     return false;
   }
-  applyOverlayStyleVars(overlay, visualConfig);
+  applyOverlayStyleVars(overlay, visualConfig, board.radius);
   clearNodeChildren(overlay);
   let renderedShapeCount = 0;
   let highlightedTargetCount = 0;
   let nonOpenTargetCount = 0;
   let openTargetCount = 0;
   let renderedOpenTargetCount = 0;
+  let inactiveTargetCount = 0;
   const shapeCountByTarget = {};
   const shapeCountByPresentation = {};
 
-  renderState.stateMap.forEach((stateEntry, targetLabel) => {
+  const activeTargetSet = new Set(
+    Array.isArray(renderState.targetOrder) && renderState.targetOrder.length
+      ? renderState.targetOrder
+      : Array.from(renderState.stateMap.keys())
+  );
+
+  ALL_BOARD_TARGETS.forEach((targetLabel) => {
+    const isRelevantTarget = activeTargetSet.has(targetLabel);
+    const stateEntry = renderState.stateMap.get(targetLabel) || null;
     const presentation = String(
-      stateEntry?.boardPresentation || stateEntry?.presentation || "open"
+      isRelevantTarget
+        ? stateEntry?.boardPresentation || stateEntry?.presentation || "open"
+        : "inactive"
     ).toLowerCase();
-    if (!PRESENTATION_KEYS.has(presentation)) {
+    if (!PRESENTATION_KEYS.has(presentation) && presentation !== "inactive") {
       return;
     }
-    if (presentation !== "open") {
+
+    if (!isRelevantTarget) {
+      inactiveTargetCount += 1;
+    } else if (presentation !== "open") {
       nonOpenTargetCount += 1;
     } else {
       openTargetCount += 1;
     }
-    if (presentation === "open" && visualConfig.showOpenTargets === false) {
+
+    if (isRelevantTarget && presentation === "open" && visualConfig.showOpenTargets === false) {
       return;
     }
-    if (presentation === "dead" && !visualConfig.showDeadTargets) {
+    if (isRelevantTarget && presentation === "dead" && !visualConfig.showDeadTargets) {
       return;
     }
 
-    const shapes = buildShapesForLabel(
-      overlay.ownerDocument,
-      board.radius,
-      targetLabel,
-      visualConfig
-    );
+    const shapes = buildShapesForLabel(overlay.ownerDocument, board.radius, targetLabel, visualConfig);
     shapeCountByTarget[targetLabel] = (shapeCountByTarget[targetLabel] || 0) + shapes.length;
     shapeCountByPresentation[presentation] =
       (shapeCountByPresentation[presentation] || 0) + shapes.length;
@@ -1139,7 +1193,7 @@ export function renderCricketHighlights(options = {}) {
     });
     if (shapes.length > 0) {
       highlightedTargetCount += 1;
-      if (presentation === "open") {
+      if (isRelevantTarget && presentation === "open") {
         renderedOpenTargetCount += 1;
       }
     }
@@ -1151,6 +1205,7 @@ export function renderCricketHighlights(options = {}) {
     debugStats.nonOpenTargetCount = nonOpenTargetCount;
     debugStats.openTargetCount = openTargetCount;
     debugStats.renderedOpenTargetCount = renderedOpenTargetCount;
+    debugStats.inactiveTargetCount = inactiveTargetCount;
     debugStats.shapeCountByTarget = shapeCountByTarget;
     debugStats.shapeCountByPresentation = shapeCountByPresentation;
   }

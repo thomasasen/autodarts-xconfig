@@ -44,7 +44,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.bermuda"], false);
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
-  assert.equal(config.features.cricketHighlighter.showOpenTargets, true);
+  assert.equal(config.features.cricketHighlighter.showOpenTargets, false);
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {

@@ -26,10 +26,17 @@ import {
   ACTIVE_CELL_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
+  DELTA_CLASS,
+  HIDDEN_LABEL_ATTRIBUTE,
   INACTIVE_CELL_CLASS,
   LABEL_CLASS,
   LABEL_STATE_CLASS,
+  MARK_PROGRESS_CLASS,
+  ROW_WAVE_CLASS,
   SCORE_CLASS,
+  SPARK_CLASS,
+  SYNTHETIC_BADGE_ATTRIBUTE,
+  WIPE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
@@ -241,6 +248,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(initialRenderState?.stateMap.get("20")?.boardPresentation, "open");
   assert.equal(initialRenderState?.labelCellMarkSourceCount || 0, 0);
   assert.equal(initialRenderState?.shortfallRepairCount || 0, 0);
+  assert.equal(visualConfig.showOpenTargets, false);
 
   const initialDebugStats = {};
   assert.equal(
@@ -259,25 +267,30 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal((overlay?.children?.length || 0) > 0, true);
   assert.equal(initialDebugStats.nonOpenTargetCount || 0, 0);
   assert.equal((initialDebugStats.openTargetCount || 0) > 0, true);
-  assert.equal(initialDebugStats.renderedOpenTargetCount, initialDebugStats.openTargetCount);
+  assert.equal(initialDebugStats.renderedOpenTargetCount || 0, 0);
+  assert.equal(initialDebugStats.inactiveTargetCount || 0, 14);
+  assert.equal(initialDebugStats.shapeCountByPresentation?.inactive || 0, 56);
+  assert.equal(initialDebugStats.shapeCountByPresentation?.open || 0, 0);
 
-  const hiddenOpenVisualConfig = resolveCricketVisualConfig({
-    showOpenTargets: false,
+  const visibleOpenVisualConfig = resolveCricketVisualConfig({
+    showOpenTargets: true,
     showDeadTargets: true,
     colorTheme: "standard",
     intensity: "normal",
   });
-  const hiddenOpenDebugStats = {};
+  const visibleOpenDebugStats = {};
   renderCricketHighlights({
     documentRef,
-    visualConfig: hiddenOpenVisualConfig,
+    visualConfig: visibleOpenVisualConfig,
     renderState: initialRenderState,
     cache: renderCache,
-    debugStats: hiddenOpenDebugStats,
+    debugStats: visibleOpenDebugStats,
   });
-  assert.equal(overlay?.children?.length || 0, 0);
-  assert.equal((hiddenOpenDebugStats.openTargetCount || 0) > 0, true);
-  assert.equal(hiddenOpenDebugStats.renderedOpenTargetCount || 0, 0);
+  assert.equal(visibleOpenDebugStats.openTargetCount || 0, 7);
+  assert.equal(visibleOpenDebugStats.renderedOpenTargetCount || 0, 7);
+  assert.equal(visibleOpenDebugStats.shapeCountByPresentation?.inactive || 0, 56);
+  assert.equal(visibleOpenDebugStats.shapeCountByPresentation?.open || 0, 26);
+  assert.equal(overlay?.children?.length || 0, 82);
 
   const initialGridFxStats = {};
   updateCricketGridFx({
@@ -322,7 +335,9 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     debugStats: markedDebugStats,
   });
   assert.equal(markedDebugStats.nonOpenTargetCount || 0, 1);
-  assert.equal((markedDebugStats.renderedShapeCount || 0) > 0, true);
+  assert.equal(markedDebugStats.shapeCountByPresentation?.inactive || 0, 56);
+  assert.equal(markedDebugStats.shapeCountByPresentation?.offense || 0, 4);
+  assert.equal(markedDebugStats.renderedShapeCount || 0, 60);
 
   const hasLabel20Shape = Array.from(overlay?.children || []).some((node) => {
     return String(node?.dataset?.targetLabel || "") === "20";
@@ -413,10 +428,14 @@ test("cricket highlighter renders full lane geometry for numeric targets and bul
   const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
   assert.equal(Boolean(overlay), true);
   assert.equal(laneRenderState?.stateMap.get("20")?.boardPresentation, "offense");
-  assert.equal(overlay?.children?.length || 0, 4);
+  assert.equal(overlay?.children?.length || 0, 60);
   assert.equal(laneStats.shapeCountByTarget?.["20"] || 0, 4);
+  assert.equal(laneStats.shapeCountByPresentation?.inactive || 0, 56);
+  assert.equal(laneStats.shapeCountByPresentation?.offense || 0, 4);
   assert.equal(
-    Array.from(overlay?.children || []).every((node) => String(node?.dataset?.targetLabel || "") === "20"),
+    Array.from(overlay?.children || [])
+      .filter((node) => String(node?.dataset?.targetLabel || "") === "20")
+      .every((node) => String(node?.dataset?.targetPresentation || "") === "offense"),
     true
   );
 
@@ -445,10 +464,14 @@ test("cricket highlighter renders full lane geometry for numeric targets and bul
     debugStats: bullStats,
   });
   assert.equal(bullRenderState?.stateMap.get("BULL")?.boardPresentation, "offense");
-  assert.equal(overlay?.children?.length || 0, 2);
+  assert.equal(overlay?.children?.length || 0, 58);
   assert.equal(bullStats.shapeCountByTarget?.BULL || 0, 2);
+  assert.equal(bullStats.shapeCountByPresentation?.inactive || 0, 56);
+  assert.equal(bullStats.shapeCountByPresentation?.offense || 0, 2);
   assert.equal(
-    Array.from(overlay?.children || []).every((node) => String(node?.dataset?.targetLabel || "") === "BULL"),
+    Array.from(overlay?.children || [])
+      .filter((node) => String(node?.dataset?.targetLabel || "") === "BULL")
+      .every((node) => String(node?.dataset?.targetPresentation || "") === "offense"),
     true
   );
 });

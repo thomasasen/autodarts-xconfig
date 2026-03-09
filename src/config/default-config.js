@@ -75,7 +75,7 @@ export const defaultConfig = {
     },
     cricketHighlighter: {
       enabled: false,
-      showOpenTargets: true,
+      showOpenTargets: false,
       showDeadTargets: true,
       colorTheme: "standard",
       intensity: "normal",

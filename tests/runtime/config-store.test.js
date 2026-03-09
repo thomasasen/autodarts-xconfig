@@ -140,6 +140,32 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(secondRun.reason, "existing-current-config");
 });
 
+test("config store falls back to hidden open-target overlays for legacy cricket imports without explicit setting", async () => {
+  const localStorage = new FakeStorage({
+    [LEGACY_CONFIG_STORAGE_KEY]: JSON.stringify({
+      features: {
+        "a-cricket-target": {
+          enabled: true,
+          settings: {
+            DEAD_ZIELE_ANZEIGEN: true,
+            FARBTHEMA: "standard",
+            INTENSITAET: "normal",
+          },
+        },
+      },
+    }),
+  });
+  const windowRef = createFakeWindow({ localStorage });
+  const store = createConfigStore({ windowRef, localStorageRef: localStorage });
+
+  const result = await store.importLegacyConfigIfAvailable();
+  const importedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(result.imported, true);
+  assert.equal(importedConfig.features.cricketHighlighter.showOpenTargets, false);
+  assert.equal(importedConfig.features.cricketHighlighter.showDeadTargets, true);
+});
+
 test("config store prefers GM storage when available and falls back safely", async () => {
   const gmState = new Map();
   const localStorage = new FakeStorage();

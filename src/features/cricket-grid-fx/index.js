@@ -5,6 +5,7 @@ import {
   updateCricketGridFx,
 } from "./logic.js";
 import {
+  BADGE_CLASS,
   DELTA_CLASS,
   ROW_WAVE_CLASS,
   SPARK_CLASS,
@@ -300,7 +301,7 @@ export function initializeCricketGridFx(context = {}) {
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   const isManagedNode = createManagedNodeMatcher({
-    classNames: [ROW_WAVE_CLASS, DELTA_CLASS, SPARK_CLASS, WIPE_CLASS],
+    classNames: [BADGE_CLASS, ROW_WAVE_CLASS, DELTA_CLASS, SPARK_CLASS, WIPE_CLASS],
   });
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {

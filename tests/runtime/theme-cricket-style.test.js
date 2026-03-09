@@ -120,6 +120,7 @@ test("cricket highlighter style exposes full presentation contract", () => {
   assert.match(css, /\.ad-ext-cricket-target\.is-offense\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-offense-fill\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-danger\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-danger-fill\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-pressure\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-pressure-fill\);/s);
+  assert.doesNotMatch(css, /ad-ext-cricket-target-pulse/);
 });
 
 test("cricket grid fx style exposes badge and state hierarchy", () => {
@@ -127,7 +128,9 @@ test("cricket grid fx style exposes badge and state hierarchy", () => {
 
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell,\s*\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{[^}]*position:\s*absolute\s*!important;[^}]*left:\s*8px\s*!important;/s);
+  assert.match(css, /\[data-ad-ext-crfx-label-hidden="true"\]\s*\{[^}]*color:\s*transparent\s*!important;/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst 700ms ease;/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*background-image:\s*linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*background-image:\s*repeating-linear-gradient\(/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-delta\s*\{[^}]*font-size:\s*2\.22rem;/s);
 });

@@ -6,6 +6,7 @@
   CELL_CLASS,
   DEAD_CLASS,
   DELTA_CLASS,
+  HIDDEN_LABEL_ATTRIBUTE,
   LABEL_CLASS,
   LABEL_STATE_CLASS,
   MARK_L1_CLASS,
@@ -17,6 +18,7 @@
   ROW_WAVE_CLASS,
   SCORE_CLASS,
   SPARK_CLASS,
+  SYNTHETIC_BADGE_ATTRIBUTE,
   THREAT_CLASS,
   WIPE_CLASS,
 } from "./style.js";
@@ -130,6 +132,9 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet) {
   const rows = [];
   const pushRow = (node) => {
     if (!node || seen.has(node)) {
+      return;
+    }
+    if (node.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true") {
       return;
     }
 
@@ -315,7 +320,7 @@ function isDecoratableBadgeNode(badgeNode, labelCell, cricketRules, label) {
     return false;
   }
 
-  return badgeRect.width < cellRect.width * 0.96 && badgeRect.height <= cellRect.height;
+  return badgeRect.width < cellRect.width * 0.78 && badgeRect.height < cellRect.height * 0.9;
 }
 
 function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
@@ -347,6 +352,10 @@ function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
       return isDecoratableBadgeNode(candidate, labelCell, cricketRules, label);
     }) || null
   );
+}
+
+function getDisplayLabel(label) {
+  return String(label || "").toUpperCase() === "BULL" ? "Bull" : String(label || "");
 }
 
 function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {
@@ -436,11 +445,7 @@ function clearCellClasses(node) {
     DEAD_CLASS,
     PRESSURE_CLASS,
     ACTIVE_CELL_CLASS,
-    INACTIVE_CELL_CLASS,
-    MARK_PROGRESS_CLASS,
-    MARK_L1_CLASS,
-    MARK_L2_CLASS,
-    MARK_L3_CLASS
+    INACTIVE_CELL_CLASS
   );
 }
 
@@ -464,6 +469,18 @@ function clearLabelClasses(node) {
   );
 }
 
+function clearProgressClasses(node) {
+  if (!node?.classList) {
+    return;
+  }
+  node.classList.remove(
+    MARK_PROGRESS_CLASS,
+    MARK_L1_CLASS,
+    MARK_L2_CLASS,
+    MARK_L3_CLASS
+  );
+}
+
 function appendTransientNode(state, parentNode, className, timeoutMs, options = {}) {
   if (!state || !parentNode || !className || typeof parentNode.appendChild !== "function") {
     return null;
@@ -475,7 +492,11 @@ function appendTransientNode(state, parentNode, className, timeoutMs, options = 
   }
 
   const node = ownerDocument.createElement("span");
-  node.className = className;
+  if (node.classList?.add) {
+    node.classList.add(className);
+  } else {
+    node.className = className;
+  }
   if (typeof options.textContent === "string") {
     node.textContent = options.textContent;
   }
@@ -501,6 +522,19 @@ function appendTransientNode(state, parentNode, className, timeoutMs, options = 
 
   state.timeoutHandles.add(handle);
   return node;
+}
+
+function removeTransientNodes(parentNode, className, state = null) {
+  if (!parentNode || !className || typeof parentNode.querySelectorAll !== "function") {
+    return;
+  }
+
+  queryAll(parentNode, `.${className}`).forEach((node) => {
+    state?.transientNodes?.delete?.(node);
+    if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
+      node.parentNode.removeChild(node);
+    }
+  });
 }
 
 function clearTransientState(state) {
@@ -531,6 +565,18 @@ function clearPersistentState(state) {
 
   state.trackedCells.forEach((node) => clearCellClasses(node));
   state.trackedLabels.forEach((node) => clearLabelClasses(node));
+  state.trackedProgressTargets.forEach((node) => clearProgressClasses(node));
+
+  state.syntheticBadges.forEach((node) => {
+    if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
+      node.parentNode.removeChild(node);
+    }
+  });
+  state.hiddenLabelNodes.forEach((node) => {
+    if (typeof node?.removeAttribute === "function") {
+      node.removeAttribute(HIDDEN_LABEL_ATTRIBUTE);
+    }
+  });
 
   if (state.gridRoot?.classList) {
     state.gridRoot.classList.remove(ROOT_CLASS);
@@ -538,6 +584,9 @@ function clearPersistentState(state) {
 
   state.trackedCells.clear();
   state.trackedLabels.clear();
+  state.trackedProgressTargets.clear();
+  state.syntheticBadges.clear();
+  state.hiddenLabelNodes.clear();
   state.gridRoot = null;
 }
 
@@ -623,6 +672,64 @@ function toggleTimedClass(state, node, className, timeoutMs = 700) {
   state.timeoutHandles.add(handle);
 }
 
+function getMarkProgressTarget(cellNode) {
+  if (!cellNode || typeof cellNode.querySelector !== "function") {
+    return cellNode;
+  }
+
+  return (
+    cellNode.querySelector(
+      "img, svg, .chakra-image, [data-marks], [data-mark], [data-hits], [data-hit]"
+    ) || cellNode
+  );
+}
+
+function triggerMarkProgress(state, cellNode, marks, visualConfig) {
+  if (!visualConfig.markProgress || !cellNode) {
+    return;
+  }
+
+  const targetNode = getMarkProgressTarget(cellNode);
+  if (!targetNode?.classList) {
+    return;
+  }
+
+  clearProgressClasses(targetNode);
+  void targetNode.offsetWidth;
+  targetNode.classList.add(MARK_PROGRESS_CLASS);
+  const clampedMarks = Math.max(0, Math.min(3, Number(marks) || 0));
+  targetNode.classList.add(
+    clampedMarks <= 1 ? MARK_L1_CLASS : clampedMarks === 2 ? MARK_L2_CLASS : MARK_L3_CLASS
+  );
+  state.trackedProgressTargets.add(targetNode);
+
+  const timeoutRef =
+    state.windowRef && typeof state.windowRef.setTimeout === "function"
+      ? state.windowRef.setTimeout.bind(state.windowRef)
+      : setTimeout;
+
+  const handle = timeoutRef(() => {
+    state.timeoutHandles.delete(handle);
+    clearProgressClasses(targetNode);
+  }, 520);
+
+  state.timeoutHandles.add(handle);
+}
+
+function triggerRowWave(state, row, visualConfig) {
+  if (!visualConfig.rowWave || !Array.isArray(row?.playerCells)) {
+    return;
+  }
+
+  row.playerCells.forEach((cellNode) => {
+    if (!cellNode) {
+      return;
+    }
+    removeTransientNodes(cellNode, ROW_WAVE_CLASS, state);
+    appendTransientNode(state, cellNode, ROW_WAVE_CLASS, 760);
+  });
+}
+
 function applyRootCssVars(gridRoot, visualConfig) {
   if (!gridRoot || !gridRoot.style || !visualConfig) {
     return;
@@ -679,25 +786,17 @@ function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
   );
 }
 
-function applyMarkProgressClasses(cellNode, marks, visualConfig) {
-  if (!cellNode) {
-    return;
-  }
-
-  toggleClass(cellNode, MARK_PROGRESS_CLASS, visualConfig.markProgress);
-  toggleClass(cellNode, MARK_L1_CLASS, visualConfig.markProgress && marks >= 1);
-  toggleClass(cellNode, MARK_L2_CLASS, visualConfig.markProgress && marks >= 2);
-  toggleClass(cellNode, MARK_L3_CLASS, visualConfig.markProgress && marks >= 3);
-}
-
 export function createCricketGridFxState(windowRef = null) {
   return {
     windowRef,
     gridRoot: null,
     trackedCells: new Set(),
     trackedLabels: new Set(),
+    trackedProgressTargets: new Set(),
     transientNodes: new Set(),
     timeoutHandles: new Set(),
+    syntheticBadges: new Set(),
+    hiddenLabelNodes: new Set(),
     previousMarksByLabel: {},
     previousStateMap: new Map(),
     previousActivePlayerIndex: null,
@@ -830,7 +929,8 @@ export function updateCricketGridFx(options = {}) {
     Number.isFinite(renderState.activePlayerIndex) &&
     state.previousActivePlayerIndex !== renderState.activePlayerIndex
   ) {
-      appendTransientNode(state, state.gridRoot, WIPE_CLASS, 760);
+    removeTransientNodes(state.gridRoot, WIPE_CLASS, state);
+    appendTransientNode(state, state.gridRoot, WIPE_CLASS, 760);
   }
 
   let offenseRowCount = 0;
@@ -842,6 +942,7 @@ export function updateCricketGridFx(options = {}) {
   let rowsWithoutPlayerCells = 0;
   let activeColumnResolvedCount = 0;
   let activeColumnMissingCount = 0;
+  let badgeCount = 0;
   const activeColumnMissingLabels = [];
 
   rows.forEach((row) => {
@@ -879,41 +980,61 @@ export function updateCricketGridFx(options = {}) {
     }
 
     const labelCellNode = row.labelCell || row.labelNode || null;
+    let badgeNode = null;
+    if (
+      row.badgeNode?.classList &&
+      row.badgeNode !== labelCellNode &&
+      row.badgeNode.isConnected !== false
+    ) {
+      badgeNode = row.badgeNode;
+    }
+    if (!badgeNode && labelCellNode?.ownerDocument?.createElement) {
+      badgeNode = labelCellNode.ownerDocument.createElement("span");
+      badgeNode.setAttribute(SYNTHETIC_BADGE_ATTRIBUTE, "true");
+      badgeNode.textContent = getDisplayLabel(row.label);
+      labelCellNode.appendChild(badgeNode);
+      state.syntheticBadges.add(badgeNode);
+      if (typeof labelCellNode.setAttribute === "function") {
+        labelCellNode.setAttribute(HIDDEN_LABEL_ATTRIBUTE, "true");
+        state.hiddenLabelNodes.add(labelCellNode);
+      }
+    }
     if (labelCellNode?.classList) {
       labelCellNode.classList.add(LABEL_CLASS);
       setLabelStateClasses(labelCellNode, presentation);
       toggleClass(
         labelCellNode,
         BADGE_BEACON_CLASS,
-        !row.badgeNode &&
+        !badgeNode &&
           visualConfig.badgeBeacon &&
           (presentation === "offense" || presentation === "danger" || presentation === "pressure")
       );
       state.trackedLabels.add(labelCellNode);
     }
 
-    if (row.badgeNode?.classList) {
-      row.badgeNode.classList.add(BADGE_CLASS);
-      setBadgeStateClasses(row.badgeNode, presentation);
+    if (badgeNode?.classList) {
+      badgeNode.classList.add(BADGE_CLASS);
+      setBadgeStateClasses(badgeNode, presentation);
       toggleClass(
-        row.badgeNode,
+        badgeNode,
         BADGE_BEACON_CLASS,
         visualConfig.badgeBeacon &&
           (presentation === "offense" || presentation === "danger" || presentation === "pressure")
       );
-      state.trackedLabels.add(row.badgeNode);
+      state.trackedLabels.add(badgeNode);
+      badgeCount += 1;
     }
 
     const diffEntry = marksDiff.get(row.label) || null;
     const transition = transitions.get(row.label) || null;
     const hasIncrease = Boolean(diffEntry?.hasIncrease);
 
-    if (visualConfig.rowWave && row.rowNode && (hasIncrease || transition?.presentationChanged)) {
-      appendTransientNode(state, row.rowNode, ROW_WAVE_CLASS, 760);
+    if (hasIncrease || transition?.presentationChanged) {
+      triggerRowWave(state, row, visualConfig);
     }
 
-    if (row.badgeNode?.classList && hasIncrease) {
-      toggleTimedClass(state, row.badgeNode, BADGE_BURST_CLASS, 700);
+    if (badgeNode?.classList && hasIncrease) {
+      toggleTimedClass(state, badgeNode, BADGE_BURST_CLASS, 700);
     }
 
     row.playerCells.forEach((cellNode, index) => {
@@ -945,7 +1066,6 @@ export function updateCricketGridFx(options = {}) {
       }
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
-      applyMarkProgressClasses(cellNode, marks, visualConfig);
       if (scoreCell) {
         scoreCellCount += 1;
       }
@@ -958,7 +1078,12 @@ export function updateCricketGridFx(options = {}) {
       }
 
       if (delta > 0 && visualConfig.hitSpark) {
+        removeTransientNodes(cellNode, SPARK_CLASS, state);
         appendTransientNode(state, cellNode, SPARK_CLASS, 460);
+      }
+
+       if (delta > 0) {
+        triggerMarkProgress(state, cellNode, marks, visualConfig);
       }
 
       state.trackedCells.add(cellNode);
@@ -980,5 +1105,6 @@ export function updateCricketGridFx(options = {}) {
     debugStats.activeColumnResolvedCount = activeColumnResolvedCount;
     debugStats.activeColumnMissingCount = activeColumnMissingCount;
     debugStats.activeColumnMissingLabels = activeColumnMissingLabels;
+    debugStats.badgeCount = badgeCount;
   }
 }
