@@ -39,8 +39,10 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   assert.match(text, /right:\s*0\.5rem\s*!important;/);
   assert.match(text, /bottom:\s*auto\s*!important;/);
   assert.match(text, /left:\s*auto\s*!important;/);
-  assert.match(text, /ad-ext-theme-board-canvas\s*>\s*\*/);
+  assert.match(text, /ad-ext-theme-board-canvas\s*\{/);
+  assert.match(text, /flex:\s*0\s+0\s+auto\s*!important;/);
   assert.match(text, /--ad-ext-theme-board-size,\s*100%/);
+  assert.match(text, /ad-ext-theme-board-canvas\s*>\s*\*/);
   assert.match(text, /height:\s*100%\s*!important;/);
   assert.match(text, /overflow:\s*hidden\s*!important;/);
   assert.doesNotMatch(text, /minmax\(20rem,\s*0\.95fr\)\s*minmax\(0,\s*1\.05fr\)/);

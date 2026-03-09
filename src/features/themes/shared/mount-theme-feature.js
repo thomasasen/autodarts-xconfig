@@ -232,13 +232,14 @@ function clearBoardSizeVariable(node) {
   node.style.removeProperty(BOARD_SIZE_CSS_VARIABLE);
 }
 
-function updateBoardSizeVariable(node) {
+function updateBoardSizeVariable(node, sizingNode = null) {
   if (!node || !node.style || typeof node.style.setProperty !== "function") {
     return;
   }
 
-  const width = getElementWidth(node);
-  const height = getElementHeight(node);
+  const measurementNode = sizingNode || node;
+  const width = getElementWidth(measurementNode);
+  const height = getElementHeight(measurementNode);
   const boardSize = Math.floor(Math.min(width, height));
   if (!Number.isFinite(boardSize) || boardSize <= 0) {
     clearBoardSizeVariable(node);
@@ -463,7 +464,10 @@ function updateBoardLayoutHooks(documentRef, state) {
     addClass(nextTargets[key], className);
   });
 
-  updateBoardSizeVariable(nextTargets.boardCanvas);
+  updateBoardSizeVariable(
+    nextTargets.boardCanvas,
+    nextTargets.boardViewport || nextTargets.boardPanel || nextTargets.boardCanvas
+  );
 
   state.layoutHookTargets = nextTargets;
 }

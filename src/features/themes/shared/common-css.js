@@ -329,20 +329,24 @@ div.css-y3hfdd > .css-1igwmid{
 
 .ad-ext-theme-board-canvas{
   min-height: 0 !important;
-  flex: 1 1 auto !important;
-  height: 100% !important;
+  flex: 0 0 auto !important;
+  height: var(--ad-ext-theme-board-size, 100%) !important;
   max-height: 100% !important;
-  width: 100% !important;
+  width: var(--ad-ext-theme-board-size, 100%) !important;
+  max-width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  align-self: center !important;
+  justify-self: center !important;
+  aspect-ratio: 1 / 1;
   container-type: size !important;
   overflow: hidden !important;
 }
 
 .ad-ext-theme-board-canvas > *{
-  width: var(--ad-ext-theme-board-size, 100%) !important;
-  height: var(--ad-ext-theme-board-size, 100%) !important;
+  width: 100% !important;
+  height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
   min-width: 0 !important;

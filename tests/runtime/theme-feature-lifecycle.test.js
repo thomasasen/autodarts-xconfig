@@ -51,6 +51,7 @@ function createBoardFixture(documentRef, options = {}) {
   boardControls.appendChild(undoButton);
 
   boardCanvas.classList.add("showAnimations");
+  boardViewport.__rect = { width: 780, height: 620 };
   boardCanvas.__rect = { width: 780, height: 620 };
   boardSvg.setAttribute("viewBox", "0 0 1000 1000");
 
@@ -119,6 +120,7 @@ function createInfoStyleBoardFixture(documentRef) {
   contentSlot.__rect = { width: 1320, height: 680 };
   contentLeft.__rect = { width: 420, height: 680 };
   contentBoard.__rect = { width: 900, height: 680 };
+  boardViewport.__rect = { width: 900, height: 680 };
   boardCanvas.__rect = { width: 900, height: 680 };
 
   const undoButton = documentRef.createElement("button");
