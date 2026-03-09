@@ -290,7 +290,7 @@ function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
   const row = labelNode.closest?.("tr");
   if (row) {
     const cells = queryAll(row, "td, .player-cell, [data-player-index], [data-marks]").filter((node) => {
-      return node !== labelNode;
+      return node !== labelNode && node !== labelCell;
     });
     return maybeIncludeLabelCellAsPlayerCell(cells, labelCell, options.expectedPlayerCount);
   }
@@ -298,7 +298,7 @@ function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
   const parent = labelNode.parentElement;
   if (parent) {
     const fromParent = queryAll(parent, ".player-cell, [data-player-index], [data-marks]").filter((node) => {
-      return node !== labelNode;
+      return node !== labelNode && node !== labelCell;
     });
     if (fromParent.length) {
       return maybeIncludeLabelCellAsPlayerCell(fromParent, labelCell, options.expectedPlayerCount);

@@ -351,6 +351,8 @@ test("numeric cricket row labels are not interpreted as player marks", () => {
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "0,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "open");
+  assert.equal(renderState?.labelCellMarkSourceCount || 0, 0);
+  assert.equal(renderState?.shortfallRepairCount || 0, 0);
 });
 
 test("merged label+mark cells keep explicit marks and ignore wrapper label noise", () => {
@@ -388,4 +390,11 @@ test("merged label+mark cells keep explicit marks and ignore wrapper label noise
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
   assert.equal(renderState?.discoveredUniqueLabelCount, 7);
+  assert.equal((renderState?.discoveredRawUniqueLabelCount || 0) >= (renderState?.discoveredUniqueLabelCount || 0), true);
+  assert.equal(Number.isFinite(renderState?.labelDiagnostics?.multiLabelContainerDropCount), true);
+  assert.equal(renderState?.labelCellMarkSourceCount, 1);
+  assert.deepEqual(renderState?.labelCellMarkSourceLabels, ["20"]);
+  assert.equal(renderState?.shortfallRepairCount, 1);
+  assert.deepEqual(renderState?.shortfallRepairLabels, ["20"]);
+  assert.equal(renderState?.marksByLabelDebug?.["20"], "3,0");
 });

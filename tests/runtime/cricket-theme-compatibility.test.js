@@ -232,6 +232,8 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(initialRenderState?.scoringModeSource, "fallback-standard-for-unknown");
   assert.equal(initialRenderState?.marksByLabel["20"].join(","), "0,0");
   assert.equal(initialRenderState?.stateMap.get("20")?.boardPresentation, "open");
+  assert.equal(initialRenderState?.labelCellMarkSourceCount || 0, 0);
+  assert.equal(initialRenderState?.shortfallRepairCount || 0, 0);
 
   const initialDebugStats = {};
   assert.equal(
@@ -281,6 +283,8 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(markedRenderState?.marksByLabel["20"].join(","), "3,0");
   assert.equal(markedRenderState?.scoringModeNormalized, "standard");
   assert.equal(markedRenderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(markedRenderState?.labelCellMarkSourceCount || 0, 0);
+  assert.equal(markedRenderState?.shortfallRepairCount || 0, 0);
 
   const markedDebugStats = {};
   renderCricketHighlights({
@@ -465,6 +469,11 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
+  assert.equal(Number.isFinite(renderState?.labelDiagnostics?.multiLabelContainerDropCount), true);
+  assert.equal(renderState?.labelCellMarkSourceCount, 1);
+  assert.deepEqual(renderState?.labelCellMarkSourceLabels, ["20"]);
+  assert.equal(renderState?.shortfallRepairCount, 1);
+  assert.deepEqual(renderState?.shortfallRepairLabels, ["20"]);
 
   const debugStats = {};
   renderCricketHighlights({
