@@ -100,6 +100,8 @@ export const commonLayoutCss = `
     "footer footer"
     "players board" !important;
   max-width: 100% !important;
+  min-height: 0 !important;
+  height: 100% !important;
 }
 
 .css-tkevr6 > .chakra-stack > div.css-0:first-child:not(.chakra-wrap){
@@ -300,6 +302,8 @@ div.css-y3hfdd > .css-1igwmid{
   grid-template-rows: auto minmax(0, 1fr) !important;
   min-height: 0 !important;
   height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
 }
 
 .ad-ext-theme-board-controls{
@@ -311,23 +315,29 @@ div.css-y3hfdd > .css-1igwmid{
 .ad-ext-theme-board-viewport{
   min-height: 0 !important;
   height: 100% !important;
+  max-height: 100% !important;
   padding-bottom: 0 !important;
   display: flex !important;
   flex-direction: column !important;
+  overflow: hidden !important;
 }
 
 .ad-ext-theme-board-canvas{
   min-height: 0 !important;
   flex: 1 1 auto !important;
   height: 100% !important;
+  max-height: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  overflow: hidden !important;
 }
 
 .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{
-  width: min(100%, 100vh) !important;
-  height: min(100%, 100vh) !important;
+  width: auto !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   max-width: 100% !important;
   max-height: 100% !important;
   aspect-ratio: 1 / 1;

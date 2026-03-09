@@ -33,7 +33,11 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   );
   assert.match(text, /grid-column:\s*1 \/ -1\s*!important;/);
   assert.match(text, /grid-row:\s*3\s*!important;/);
+  assert.match(text, /width:\s*auto\s*!important;/);
+  assert.match(text, /height:\s*100%\s*!important;/);
+  assert.match(text, /overflow:\s*hidden\s*!important;/);
   assert.doesNotMatch(text, /minmax\(20rem,\s*0\.95fr\)\s*minmax\(0,\s*1\.05fr\)/);
+  assert.doesNotMatch(text, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
 });
 
 test("bundle, runtime API version and package version stay in sync", () => {

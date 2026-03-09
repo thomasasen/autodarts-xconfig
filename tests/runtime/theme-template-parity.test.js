@@ -95,7 +95,8 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   );
   assert.match(
     commonLayoutCss,
-    /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*aspect-ratio:\s*1 \/ 1;/s
+    /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*width:\s*auto\s*!important;[^}]*height:\s*100%\s*!important;[^}]*aspect-ratio:\s*1 \/ 1;/s
   );
+  assert.doesNotMatch(commonLayoutCss, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
   assertNoFragileLayoutSelectors(commonLayoutCss);
 });
