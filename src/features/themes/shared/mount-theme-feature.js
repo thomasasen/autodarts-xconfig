@@ -196,6 +196,114 @@ function findDirectChildContaining(rootNode, targetNode) {
   return parent === rootNode ? current : null;
 }
 
+function getElementWidth(node) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return 0;
+  }
+
+  try {
+    const rect = node.getBoundingClientRect();
+    const width = Number.parseFloat(rect?.width);
+    return Number.isFinite(width) && width > 0 ? width : 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function resolveContentLayoutCandidate(contentSlot, playerDisplay, boardSvg) {
+  if (!contentSlot || !playerDisplay || !boardSvg) {
+    return null;
+  }
+
+  const contentLeft = findDirectChildContaining(contentSlot, playerDisplay);
+  const contentBoard = findDirectChildContaining(contentSlot, boardSvg);
+  if (!contentLeft || !contentBoard || contentLeft === contentBoard) {
+    return null;
+  }
+
+  const slotChildren = getElementChildren(contentSlot);
+  if (!slotChildren.includes(contentLeft) || !slotChildren.includes(contentBoard)) {
+    return null;
+  }
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+  };
+}
+
+export function selectWidestContentLayoutCandidate(candidates = []) {
+  if (!Array.isArray(candidates) || !candidates.length) {
+    return null;
+  }
+
+  let bestCandidate = null;
+  let bestMeta = null;
+
+  candidates.forEach((candidate, index) => {
+    if (!candidate || !candidate.contentSlot || !candidate.contentLeft || !candidate.contentBoard) {
+      return;
+    }
+
+    const meta = {
+      width: Number.isFinite(candidate.width) ? candidate.width : getElementWidth(candidate.contentSlot),
+      ancestorDepth: Number.isFinite(candidate.ancestorDepth) ? candidate.ancestorDepth : Number.POSITIVE_INFINITY,
+      collapseDepth: Number.isFinite(candidate.collapseDepth) ? candidate.collapseDepth : Number.POSITIVE_INFINITY,
+      index,
+    };
+
+    if (!bestCandidate) {
+      bestCandidate = candidate;
+      bestMeta = meta;
+      return;
+    }
+
+    if (meta.width > bestMeta.width) {
+      bestCandidate = candidate;
+      bestMeta = meta;
+      return;
+    }
+
+    if (meta.width < bestMeta.width) {
+      return;
+    }
+
+    if (meta.ancestorDepth < bestMeta.ancestorDepth) {
+      bestCandidate = candidate;
+      bestMeta = meta;
+      return;
+    }
+
+    if (meta.ancestorDepth > bestMeta.ancestorDepth) {
+      return;
+    }
+
+    if (meta.collapseDepth < bestMeta.collapseDepth) {
+      bestCandidate = candidate;
+      bestMeta = meta;
+      return;
+    }
+
+    if (meta.collapseDepth > bestMeta.collapseDepth) {
+      return;
+    }
+
+    if (meta.index < bestMeta.index) {
+      bestCandidate = candidate;
+      bestMeta = meta;
+    }
+  });
+
+  return bestCandidate
+    ? {
+        contentSlot: bestCandidate.contentSlot,
+        contentLeft: bestCandidate.contentLeft,
+        contentBoard: bestCandidate.contentBoard,
+      }
+    : null;
+}
+
 function resolveContentLayoutTargets(documentRef, boardSvg) {
   const playerDisplay = documentRef?.getElementById?.("ad-ext-player-display");
   if (!playerDisplay || !boardSvg) {
@@ -203,35 +311,51 @@ function resolveContentLayoutTargets(documentRef, boardSvg) {
   }
 
   const stopNode = documentRef?.body || null;
-  let contentSlot = findSharedAncestor(playerDisplay, boardSvg, stopNode);
-  if (!contentSlot || contentSlot === documentRef?.body || contentSlot === documentRef?.documentElement) {
+  const sharedAncestor = findSharedAncestor(playerDisplay, boardSvg, stopNode);
+  if (
+    !sharedAncestor ||
+    sharedAncestor === documentRef?.body ||
+    sharedAncestor === documentRef?.documentElement
+  ) {
     return null;
   }
 
-  for (let depth = 0; depth < 8 && contentSlot; depth += 1) {
-    const contentLeft = findDirectChildContaining(contentSlot, playerDisplay);
-    const contentBoard = findDirectChildContaining(contentSlot, boardSvg);
-    if (!contentLeft || !contentBoard) {
-      return null;
-    }
-    if (contentLeft === contentBoard) {
+  const candidates = [];
+  const seenSlots = new Set();
+  let ancestor = sharedAncestor;
+  for (
+    let ancestorDepth = 0;
+    ancestorDepth < 12 && ancestor && ancestor !== documentRef?.body && ancestor !== documentRef?.documentElement;
+    ancestorDepth += 1
+  ) {
+    let contentSlot = ancestor;
+    for (let collapseDepth = 0; collapseDepth < 12 && contentSlot; collapseDepth += 1) {
+      const directCandidate = resolveContentLayoutCandidate(contentSlot, playerDisplay, boardSvg);
+      if (directCandidate) {
+        if (!seenSlots.has(directCandidate.contentSlot)) {
+          seenSlots.add(directCandidate.contentSlot);
+          candidates.push({
+            ...directCandidate,
+            width: getElementWidth(directCandidate.contentSlot),
+            ancestorDepth,
+            collapseDepth,
+          });
+        }
+        break;
+      }
+
+      const contentLeft = findDirectChildContaining(contentSlot, playerDisplay);
+      const contentBoard = findDirectChildContaining(contentSlot, boardSvg);
+      if (!contentLeft || !contentBoard || contentLeft !== contentBoard) {
+        break;
+      }
+
       contentSlot = contentLeft;
-      continue;
     }
-
-    const slotChildren = getElementChildren(contentSlot);
-    if (!slotChildren.includes(contentLeft) || !slotChildren.includes(contentBoard)) {
-      return null;
-    }
-
-    return {
-      contentSlot,
-      contentLeft,
-      contentBoard,
-    };
+    ancestor = ancestor.parentElement || ancestor.parentNode || null;
   }
 
-  return null;
+  return selectWidestContentLayoutCandidate(candidates);
 }
 
 function resolveBoardLayoutTargets(documentRef) {
@@ -241,13 +365,17 @@ function resolveBoardLayoutTargets(documentRef) {
   }
 
   const contentTargets = resolveContentLayoutTargets(documentRef, boardSvg) || {};
+  const hasCompleteContentTargets =
+    Boolean(contentTargets.contentSlot) &&
+    Boolean(contentTargets.contentLeft) &&
+    Boolean(contentTargets.contentBoard);
   const boardCanvas = boardSvg.closest?.(".showAnimations") || boardSvg.parentElement || null;
   const boardViewport = boardCanvas?.parentElement || boardSvg.parentElement || null;
   const boardPanel = resolveBoardPanel(boardSvg, documentRef);
   const boardControls = boardPanel ? resolveBoardControls(boardPanel, boardSvg) : null;
 
   return {
-    ...contentTargets,
+    ...(hasCompleteContentTargets ? contentTargets : {}),
     boardPanel,
     boardControls,
     boardViewport,

@@ -262,6 +262,24 @@ div.css-y3hfdd > .css-1igwmid{
   width: 100% !important;
 }
 
+.css-tkevr6 > .chakra-stack > .ad-ext-theme-content-slot,
+.css-tkevr6 .ad-ext-theme-content-slot{
+  justify-self: stretch !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.css-tkevr6 .ad-ext-theme-content-slot > .ad-ext-theme-content-left,
+.css-tkevr6 .ad-ext-theme-content-slot > .ad-ext-theme-content-board{
+  min-width: 0 !important;
+}
+
+.css-tkevr6 .ad-ext-theme-content-slot > .ad-ext-theme-content-board{
+  justify-self: stretch !important;
+}
+
 .ad-ext-theme-content-left{
   grid-column: 1 !important;
   min-width: 0 !important;

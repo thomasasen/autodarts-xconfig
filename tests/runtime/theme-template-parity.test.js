@@ -87,6 +87,10 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   );
   assert.match(
     commonLayoutCss,
+    /\.css-tkevr6\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-theme-content-slot,\s*\.css-tkevr6\s+\.ad-ext-theme-content-slot\s*\{[^}]*justify-self:\s*stretch\s*!important;[^}]*max-width:\s*100%\s*!important;/s
+  );
+  assert.match(
+    commonLayoutCss,
     /\.ad-ext-theme-content-board\s*\{[^}]*grid-column:\s*2\s*!important;[^}]*display:\s*flex\s*!important;/s
   );
   assert.match(

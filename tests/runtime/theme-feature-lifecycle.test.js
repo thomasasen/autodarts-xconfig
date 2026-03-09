@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 
 import { createBootstrap } from "../../src/core/bootstrap.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
-import { THEME_LAYOUT_HOOK_CLASSES } from "../../src/features/themes/shared/mount-theme-feature.js";
+import {
+  THEME_LAYOUT_HOOK_CLASSES,
+  selectWidestContentLayoutCandidate,
+} from "../../src/features/themes/shared/mount-theme-feature.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -88,6 +91,72 @@ function createBoardFixture(documentRef, options = {}) {
   };
 }
 
+function createInfoStyleBoardFixture(documentRef) {
+  const contentSlot = documentRef.createElement("div");
+  const contentLeft = documentRef.createElement("div");
+  const contentBoard = documentRef.createElement("div");
+  const playerDisplay = documentRef.createElement("div");
+  const boardShell = documentRef.createElement("div");
+  const boardStack = documentRef.createElement("div");
+  const boardPanel = documentRef.createElement("div");
+  const boardControls = documentRef.createElement("div");
+  const boardViewport = documentRef.createElement("div");
+  const boardCanvas = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  contentSlot.classList.add("css-u5v8bq");
+  contentLeft.classList.add("css-rc3vw3");
+  contentBoard.classList.add("css-vo3506");
+  boardShell.classList.add("css-tkevr6");
+  boardStack.classList.add("css-7ls08l");
+  boardPanel.classList.add("css-jbngkd");
+  boardControls.classList.add("chakra-stack", "css-7bjx6y");
+  boardViewport.classList.add("css-tqsk66");
+  boardCanvas.classList.add("showAnimations", "css-1cdcn26");
+  playerDisplay.id = "ad-ext-player-display";
+
+  contentSlot.__rect = { width: 1320, height: 680 };
+  contentLeft.__rect = { width: 420, height: 680 };
+  contentBoard.__rect = { width: 900, height: 680 };
+
+  const undoButton = documentRef.createElement("button");
+  undoButton.textContent = "Undo";
+  boardControls.appendChild(undoButton);
+
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  boardSvg.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardSvg.appendChild(labelNode);
+  }
+
+  boardCanvas.appendChild(boardSvg);
+  boardViewport.appendChild(boardCanvas);
+  boardPanel.appendChild(boardControls);
+  boardPanel.appendChild(boardViewport);
+  boardStack.appendChild(boardPanel);
+  boardShell.appendChild(boardStack);
+  contentBoard.appendChild(boardShell);
+  contentLeft.appendChild(playerDisplay);
+  contentSlot.appendChild(contentLeft);
+  contentSlot.appendChild(contentBoard);
+  documentRef.main.appendChild(contentSlot);
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+    boardPanel,
+    boardControls,
+    boardViewport,
+    boardCanvas,
+    boardSvg,
+  };
+}
+
 function assertThemeHookState(nodes, expectedActive) {
   const expectations = [
     [nodes.contentSlot, THEME_LAYOUT_HOOK_CLASSES.contentSlot],
@@ -107,6 +176,34 @@ function assertThemeHookState(nodes, expectedActive) {
     assert.equal(node.classList.contains(className), expectedActive);
   });
 }
+
+test("selectWidestContentLayoutCandidate prefers widest slot and keeps deterministic tie-breaking", () => {
+  const makeCandidate = (width, ancestorDepth, collapseDepth) => ({
+    contentSlot: { getBoundingClientRect: () => ({ width }) },
+    contentLeft: {},
+    contentBoard: {},
+    width,
+    ancestorDepth,
+    collapseDepth,
+  });
+
+  const narrow = makeCandidate(900, 0, 0);
+  const wide = makeCandidate(1280, 3, 4);
+  const tieA = makeCandidate(1280, 2, 2);
+  const tieB = makeCandidate(1280, 2, 3);
+
+  assert.equal(
+    selectWidestContentLayoutCandidate([narrow, wide])?.contentSlot,
+    wide.contentSlot
+  );
+
+  assert.equal(
+    selectWidestContentLayoutCandidate([tieB, tieA])?.contentSlot,
+    tieA.contentSlot
+  );
+
+  assert.equal(selectWidestContentLayoutCandidate([]), null);
+});
 
 test("theme-x01 mounts idempotently and cleans up style plus preview spacing", async () => {
   const documentRef = new FakeDocument();
@@ -176,6 +273,36 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
       .filter((value) => value === className).length;
     assert.equal(count, 1);
   });
+
+  runtime.stop();
+  assertThemeHookState(boardNodes, false);
+});
+
+test("theme-x01 keeps info-style content slot layout hooks stable across mutations", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createInfoStyleBoardFixture(documentRef);
+  const windowRef = createFakeWindow({ documentRef });
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    documentRef.querySelectorAll(".ad-ext-theme-content-slot").length,
+    1
+  );
+
+  documentRef.flushMutations();
+  await wait(5);
+  assertThemeHookState(boardNodes, true);
 
   runtime.stop();
   assertThemeHookState(boardNodes, false);
