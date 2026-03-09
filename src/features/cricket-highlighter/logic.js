@@ -3,7 +3,7 @@ import {
   ensureOverlayGroup,
   findBoardSvgGroup,
 } from "../../shared/dartboard-svg.js";
-import { OVERLAY_ID, SVG_NS, TARGET_CLASS } from "./style.js";
+import { OVERLAY_ID, PRESENTATION_CLASS, SVG_NS, TARGET_CLASS } from "./style.js";
 
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -999,21 +999,60 @@ function buildShapesForLabel(ownerDocument, radius, targetLabel, visualConfig) {
   ];
 }
 
+function setStyleVar(node, name, value) {
+  if (!node?.style || typeof node.style.setProperty !== "function") {
+    return;
+  }
+  node.style.setProperty(name, String(value ?? ""));
+}
+
+function applyOverlayStyleVars(overlay, visualConfig) {
+  if (!overlay || !visualConfig) {
+    return;
+  }
+
+  const theme = visualConfig.theme || {};
+  const opacityByPresentation = visualConfig.intensity?.opacityByPresentation || {};
+  const strokeWidth = `${Math.max(1, visualConfig.strokeWidthRatio * 120)}px`;
+
+  setStyleVar(overlay, "--ad-ext-cricket-open-fill", theme.open || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-open-stroke", theme.openStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-open-opacity", opacityByPresentation.open ?? 0.5);
+
+  setStyleVar(overlay, "--ad-ext-cricket-closed-fill", theme.closed || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-closed-stroke", theme.closedStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-closed-opacity", opacityByPresentation.closed ?? 0.82);
+
+  setStyleVar(overlay, "--ad-ext-cricket-dead-fill", theme.dead || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", theme.deadStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-dead-opacity", opacityByPresentation.dead ?? 0.78);
+
+  setStyleVar(overlay, "--ad-ext-cricket-inactive-fill", theme.inactive || theme.dead || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-inactive-stroke", theme.inactiveStroke || theme.deadStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-inactive-opacity", opacityByPresentation.inactive ?? 0.68);
+
+  setStyleVar(overlay, "--ad-ext-cricket-offense-fill", theme.offense || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-offense-stroke", theme.offenseStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-offense-opacity", opacityByPresentation.offense ?? 1);
+
+  setStyleVar(overlay, "--ad-ext-cricket-danger-fill", theme.danger || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-danger-stroke", theme.dangerStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-danger-opacity", opacityByPresentation.danger ?? 0.98);
+
+  setStyleVar(overlay, "--ad-ext-cricket-pressure-fill", theme.pressure || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-pressure-stroke", theme.pressureStroke || theme.stroke || "transparent");
+  setStyleVar(overlay, "--ad-ext-cricket-pressure-opacity", opacityByPresentation.pressure ?? 0.96);
+
+  setStyleVar(overlay, "--ad-ext-cricket-stroke-width", strokeWidth);
+  setStyleVar(overlay, "--ad-ext-cricket-pulse-ms", `${visualConfig.intensity?.pulseMs || 1100}ms`);
+}
+
 function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
   if (!shape || !shape.classList || !shape.style) {
     return;
   }
-  const color = visualConfig.theme[presentation] || visualConfig.theme.closed;
-  const strokeColor =
-    visualConfig.theme[`${presentation}Stroke`] || visualConfig.theme.stroke;
-  const strokeWidth = `${Math.max(1, visualConfig.strokeWidthRatio * 120)}px`;
-  shape.classList.add(TARGET_CLASS, `is-${presentation}`);
-  shape.style.fill = color;
-  shape.style.stroke = strokeColor;
-  shape.style.strokeWidth = strokeWidth;
-  shape.style.opacity = String(visualConfig.intensity.opacity);
-  shape.style.setProperty("--ad-ext-cricket-opacity", String(visualConfig.intensity.opacity));
-  shape.style.setProperty("--ad-ext-cricket-pulse-ms", `${visualConfig.intensity.pulseMs}ms`);
+  const presentationClass = PRESENTATION_CLASS[presentation] || PRESENTATION_CLASS.closed;
+  shape.classList.add(TARGET_CLASS, presentationClass);
   if (shape.dataset) {
     shape.dataset.targetLabel = String(targetLabel || "");
     shape.dataset.targetPresentation = String(presentation || "");
@@ -1055,6 +1094,7 @@ export function renderCricketHighlights(options = {}) {
   if (!overlay) {
     return false;
   }
+  applyOverlayStyleVars(overlay, visualConfig);
   clearNodeChildren(overlay);
   let renderedShapeCount = 0;
   let highlightedTargetCount = 0;

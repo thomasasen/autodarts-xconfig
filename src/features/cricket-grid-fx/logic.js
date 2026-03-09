@@ -1,5 +1,8 @@
 ﻿import {
   BADGE_BEACON_CLASS,
+  BADGE_BURST_CLASS,
+  BADGE_CLASS,
+  BADGE_STATE_CLASS,
   CELL_CLASS,
   DEAD_CLASS,
   DELTA_CLASS,
@@ -36,6 +39,8 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   ".label-cell",
   ".ad-ext-cricket-label",
   ".ad-ext-crfx-badge",
+  ".chakra-text",
+  "p",
   "th",
   "td",
   "div",
@@ -138,9 +143,12 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet) {
     }
 
     seen.add(node);
+    const labelCell = resolveLabelCell(node);
     rows.push({
       label,
       labelNode: node,
+      labelCell,
+      badgeNode: resolveBadgeNode(node, labelCell, cricketRules, label),
     });
   };
 
@@ -260,6 +268,87 @@ function resolveLabelCell(labelNode) {
   return labelNode.closest("td, th, [role='cell']") || labelNode.parentElement || labelNode;
 }
 
+function getElementRect(element) {
+  if (!element || typeof element.getBoundingClientRect !== "function") {
+    return null;
+  }
+  return element.getBoundingClientRect();
+}
+
+function isDecoratableBadgeNode(badgeNode, labelCell, cricketRules, label) {
+  if (!badgeNode || !labelCell || badgeNode === labelCell) {
+    return false;
+  }
+
+  const normalizedLabel = normalizeLabel(cricketRules, badgeNode.textContent || "");
+  if (!normalizedLabel || normalizedLabel !== label) {
+    return false;
+  }
+
+  const compactText = String(badgeNode.textContent || "").trim().length <= 12;
+  const directChild = badgeNode.parentElement === labelCell || labelCell.contains(badgeNode);
+  if (!compactText || !directChild) {
+    return false;
+  }
+
+  const badgeRect = getElementRect(badgeNode);
+  const cellRect = getElementRect(labelCell);
+  if (!badgeRect || !cellRect) {
+    return true;
+  }
+
+  if (
+    !Number.isFinite(badgeRect.width) ||
+    !Number.isFinite(badgeRect.height) ||
+    !Number.isFinite(cellRect.width) ||
+    !Number.isFinite(cellRect.height)
+  ) {
+    return true;
+  }
+
+  if (
+    badgeRect.width <= 0 ||
+    badgeRect.height <= 0 ||
+    cellRect.width <= 0 ||
+    cellRect.height <= 0
+  ) {
+    return false;
+  }
+
+  return badgeRect.width < cellRect.width * 0.96 && badgeRect.height <= cellRect.height;
+}
+
+function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
+  if (!labelCell) {
+    return null;
+  }
+
+  if (
+    labelNode &&
+    labelNode !== labelCell &&
+    normalizeLabel(cricketRules, labelNode.textContent || "") === label
+  ) {
+    return labelNode;
+  }
+
+  const candidates = [];
+
+  queryAll(
+    labelCell,
+    ".ad-ext-crfx-badge, .chakra-text, [data-row-label], [data-target-label], p, span, strong, b"
+  ).forEach((candidate) => {
+    if (!candidates.includes(candidate)) {
+      candidates.push(candidate);
+    }
+  });
+
+  return (
+    candidates.find((candidate) => {
+      return isDecoratableBadgeNode(candidate, labelCell, cricketRules, label);
+    }) || null
+  );
+}
+
 function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {
   const normalizedCells = Array.isArray(playerCells)
     ? playerCells.filter((cell) => Boolean(cell))
@@ -360,12 +449,18 @@ function clearLabelClasses(node) {
     return;
   }
   node.classList.remove(
+    BADGE_CLASS,
+    BADGE_BURST_CLASS,
     LABEL_CLASS,
     BADGE_BEACON_CLASS,
     LABEL_STATE_CLASS.neutral,
     LABEL_STATE_CLASS.offense,
     LABEL_STATE_CLASS.danger,
-    LABEL_STATE_CLASS.dead
+    LABEL_STATE_CLASS.dead,
+    BADGE_STATE_CLASS.neutral,
+    BADGE_STATE_CLASS.offense,
+    BADGE_STATE_CLASS.danger,
+    BADGE_STATE_CLASS.dead
   );
 }
 
@@ -474,6 +569,58 @@ function setLabelStateClasses(labelNode, stateToken) {
   }
 
   labelNode.classList.add(LABEL_STATE_CLASS.neutral);
+}
+
+function setBadgeStateClasses(badgeNode, stateToken) {
+  if (!badgeNode || !badgeNode.classList) {
+    return;
+  }
+
+  badgeNode.classList.remove(
+    BADGE_STATE_CLASS.neutral,
+    BADGE_STATE_CLASS.offense,
+    BADGE_STATE_CLASS.danger,
+    BADGE_STATE_CLASS.dead
+  );
+
+  if (stateToken === "offense") {
+    badgeNode.classList.add(BADGE_STATE_CLASS.offense);
+    return;
+  }
+
+  if (stateToken === "danger" || stateToken === "pressure") {
+    badgeNode.classList.add(BADGE_STATE_CLASS.danger);
+    return;
+  }
+
+  if (stateToken === "dead") {
+    badgeNode.classList.add(BADGE_STATE_CLASS.dead);
+    return;
+  }
+
+  badgeNode.classList.add(BADGE_STATE_CLASS.neutral);
+}
+
+function toggleTimedClass(state, node, className, timeoutMs = 700) {
+  if (!state || !node?.classList || !className) {
+    return;
+  }
+
+  node.classList.remove(className);
+  void node.offsetWidth;
+  node.classList.add(className);
+
+  const timeoutRef =
+    state.windowRef && typeof state.windowRef.setTimeout === "function"
+      ? state.windowRef.setTimeout.bind(state.windowRef)
+      : setTimeout;
+
+  const handle = timeoutRef(() => {
+    state.timeoutHandles.delete(handle);
+    node.classList.remove(className);
+  }, Math.max(120, Number(timeoutMs) || 700));
+
+  state.timeoutHandles.add(handle);
 }
 
 function applyRootCssVars(gridRoot, visualConfig) {
@@ -589,6 +736,8 @@ export function updateCricketGridFx(options = {}) {
     debugStats.status = "init";
     debugStats.rowCount = 0;
     debugStats.stateTargetCount = 0;
+    debugStats.labelCellCount = 0;
+    debugStats.badgeCount = 0;
     debugStats.offenseRowCount = 0;
     debugStats.dangerRowCount = 0;
     debugStats.pressureRowCount = 0;
@@ -647,6 +796,8 @@ export function updateCricketGridFx(options = {}) {
   });
   if (debugStats) {
     debugStats.rowCount = rows.length;
+    debugStats.labelCellCount = rows.filter((row) => Boolean(row.labelCell)).length;
+    debugStats.badgeCount = rows.filter((row) => Boolean(row.badgeNode)).length;
   }
 
   clearPersistentState(state);
@@ -727,16 +878,30 @@ export function updateCricketGridFx(options = {}) {
       pressureRowCount += 1;
     }
 
-    const labelNode = row.labelNode;
-    if (labelNode?.classList) {
-      labelNode.classList.add(LABEL_CLASS);
-      setLabelStateClasses(labelNode, presentation);
+    const labelCellNode = row.labelCell || row.labelNode || null;
+    if (labelCellNode?.classList) {
+      labelCellNode.classList.add(LABEL_CLASS);
+      setLabelStateClasses(labelCellNode, presentation);
       toggleClass(
-        labelNode,
+        labelCellNode,
         BADGE_BEACON_CLASS,
-        visualConfig.badgeBeacon && (presentation === "offense" || presentation === "danger" || presentation === "pressure")
+        !row.badgeNode &&
+          visualConfig.badgeBeacon &&
+          (presentation === "offense" || presentation === "danger" || presentation === "pressure")
       );
-      state.trackedLabels.add(labelNode);
+      state.trackedLabels.add(labelCellNode);
+    }
+
+    if (row.badgeNode?.classList) {
+      row.badgeNode.classList.add(BADGE_CLASS);
+      setBadgeStateClasses(row.badgeNode, presentation);
+      toggleClass(
+        row.badgeNode,
+        BADGE_BEACON_CLASS,
+        visualConfig.badgeBeacon &&
+          (presentation === "offense" || presentation === "danger" || presentation === "pressure")
+      );
+      state.trackedLabels.add(row.badgeNode);
     }
 
     const diffEntry = marksDiff.get(row.label) || null;
@@ -745,6 +910,10 @@ export function updateCricketGridFx(options = {}) {
 
     if (visualConfig.rowWave && row.rowNode && (hasIncrease || transition?.presentationChanged)) {
       appendTransientNode(state, row.rowNode, ROW_WAVE_CLASS, 760);
+    }
+
+    if (row.badgeNode?.classList && hasIncrease) {
+      toggleTimedClass(state, row.badgeNode, BADGE_BURST_CLASS, 700);
     }
 
     row.playerCells.forEach((cellNode, index) => {

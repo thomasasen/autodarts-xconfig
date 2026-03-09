@@ -24,7 +24,11 @@ import {
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
   ACTIVE_CELL_CLASS,
+  BADGE_CLASS,
+  BADGE_STATE_CLASS,
   INACTIVE_CELL_CLASS,
+  LABEL_CLASS,
+  LABEL_STATE_CLASS,
   SCORE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
@@ -156,6 +160,7 @@ function createMergedLabelMarkCricketGrid(documentRef, marksByLabel) {
     grid.appendChild(secondCell);
     rowStateByLabel.set(label, {
       labelCell,
+      labelText,
       playerCells: [secondCell],
     });
   });
@@ -323,6 +328,14 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     return String(node?.dataset?.targetLabel || "") === "20";
   });
   assert.equal(hasLabel20Shape, true);
+  assert.equal(
+    Array.from(overlay?.children || []).filter((node) => {
+      return String(node?.dataset?.targetLabel || "") === "20";
+    }).every((node) => {
+      return node?.classList?.contains("is-offense") && String(node?.dataset?.targetPresentation || "") === "offense";
+    }),
+    true
+  );
 
   const markedGridFxStats = {};
   updateCricketGridFx({
@@ -622,7 +635,18 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
 
   assert.equal(gridFxStats.status, "ok");
   assert.equal(gridFxStats.offenseRowCount || 0, 1);
+  assert.equal(gridFxStats.badgeCount || 0, 7);
+  const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
+  const labelText20 = rowsByLabel.get("20")?.labelText || null;
+  assert.equal(Boolean(labelCell20), true);
+  assert.equal(Boolean(labelText20), true);
+  assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), true);
+  assert.equal(labelCell20?.classList?.contains(LABEL_STATE_CLASS.offense), true);
+  assert.equal(labelText20?.classList?.contains(BADGE_CLASS), true);
+  assert.equal(labelText20?.classList?.contains(BADGE_STATE_CLASS.offense), true);
 
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);
+  assert.equal(labelText20?.classList?.contains(BADGE_CLASS), false);
+  assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), false);
 });

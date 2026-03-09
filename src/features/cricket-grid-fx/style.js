@@ -7,7 +7,9 @@ export const SCORE_CLASS = "ad-ext-crfx-score";
 export const DEAD_CLASS = "ad-ext-crfx-dead";
 export const PRESSURE_CLASS = "ad-ext-crfx-pressure";
 export const LABEL_CLASS = "ad-ext-crfx-label-cell";
+export const BADGE_CLASS = "ad-ext-crfx-badge";
 export const BADGE_BEACON_CLASS = "ad-ext-crfx-badge-beacon";
+export const BADGE_BURST_CLASS = "ad-ext-crfx-badge-burst";
 export const ACTIVE_CELL_CLASS = "ad-ext-crfx-cell-active";
 export const INACTIVE_CELL_CLASS = "ad-ext-crfx-cell-inactive";
 export const MARK_PROGRESS_CLASS = "ad-ext-crfx-mark-progress";
@@ -24,6 +26,13 @@ export const LABEL_STATE_CLASS = Object.freeze({
   offense: "ad-ext-crfx-label-state-offense",
   danger: "ad-ext-crfx-label-state-danger",
   dead: "ad-ext-crfx-label-state-dead",
+});
+
+export const BADGE_STATE_CLASS = Object.freeze({
+  neutral: "ad-ext-crfx-badge-state-neutral",
+  offense: "ad-ext-crfx-badge-state-offense",
+  danger: "ad-ext-crfx-badge-state-danger",
+  dead: "ad-ext-crfx-badge-state-dead",
 });
 
 const THEME_PRESETS = Object.freeze({
@@ -112,63 +121,127 @@ export function buildStyleText() {
 .${ROOT_CLASS} .${CELL_CLASS} {
   position: relative;
   overflow: visible;
-  transition: filter 160ms ease, opacity 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  transition: filter 180ms ease, opacity 180ms ease, box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_CELL_CLASS} {
   z-index: 2;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    0 0 12px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.45));
-  filter: saturate(1.12) brightness(1.05);
+    inset 0 0 20px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.16)),
+    0 0 16px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.46));
+  filter: saturate(1.12) brightness(1.06);
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${INACTIVE_CELL_CLASS} {
   z-index: 1;
-  opacity: 0.78;
-  filter: saturate(0.72) brightness(0.88);
+  opacity: 0.74;
+  filter: saturate(0.68) brightness(0.84);
+}
+
+.${ROOT_CLASS} .${LABEL_CLASS},
+.${ROOT_CLASS} .${BADGE_CLASS} {
+  --ad-ext-crfx-badge-bg: rgba(6, 58, 74, 0.72);
+  --ad-ext-crfx-badge-border: rgba(127, 214, 247, 0.4);
+  --ad-ext-crfx-badge-text: rgba(233, 247, 255, 0.92);
+  --ad-ext-crfx-badge-glow: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.48));
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS} {
   position: relative;
-  transition: box-shadow 180ms ease, background-color 180ms ease, color 180ms ease;
+  overflow: hidden;
+  transition: box-shadow 180ms ease, background-color 180ms ease, color 180ms ease, filter 180ms ease, opacity 180ms ease;
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.neutral} {
-  box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.22);
+.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.neutral},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.neutral} {
+  --ad-ext-crfx-badge-bg: rgba(6, 58, 74, 0.72);
+  --ad-ext-crfx-badge-border: rgba(127, 214, 247, 0.4);
+  --ad-ext-crfx-badge-text: rgba(233, 247, 255, 0.92);
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.offense} {
-  box-shadow: inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.16));
-  background-color: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3));
+.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.offense},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.offense} {
+  --ad-ext-crfx-badge-bg: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.42));
+  --ad-ext-crfx-badge-border: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.36));
+  --ad-ext-crfx-badge-text: #ffffff;
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.danger} {
-  box-shadow: inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.18));
-  background-color: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.28));
+.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.danger},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.danger} {
+  --ad-ext-crfx-badge-bg: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.4));
+  --ad-ext-crfx-badge-border: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.38));
+  --ad-ext-crfx-badge-text: #ffe5e5;
+  --ad-ext-crfx-badge-glow: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.56));
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.dead} {
-  filter: grayscale(0.82);
-  opacity: 0.72;
+.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.dead},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.dead} {
+  --ad-ext-crfx-badge-bg: rgba(78, 85, 94, 0.48);
+  --ad-ext-crfx-badge-border: rgba(195, 203, 214, 0.42);
+  --ad-ext-crfx-badge-text: rgba(206, 214, 224, 0.8);
+  --ad-ext-crfx-badge-glow: rgba(173, 181, 189, 0.36);
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${BADGE_BEACON_CLASS} {
-  box-shadow:
-    inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.28)),
-    0 0 14px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.7));
+.${ROOT_CLASS} .${LABEL_CLASS}::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--ad-ext-crfx-badge-border);
+  opacity: 1;
+}
+
+.${ROOT_CLASS} .${LABEL_CLASS}::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--ad-ext-crfx-badge-bg) 0%,
+    rgba(0, 0, 0, 0) 74%
+  );
+  opacity: 1;
+}
+
+.${ROOT_CLASS} .${LABEL_CLASS}.${BADGE_BEACON_CLASS},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_BEACON_CLASS} {
+  box-shadow: 0 0 0 1px var(--ad-ext-crfx-badge-border), 0 0 14px var(--ad-ext-crfx-badge-glow);
+}
+
+.${ROOT_CLASS} .${BADGE_CLASS} {
+  position: absolute !important;
+  left: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%);
+  z-index: 12;
+  margin: 0 !important;
+  padding: 0.12rem 0.6rem;
+  border-radius: 0.28rem;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--ad-ext-crfx-badge-text) !important;
+  background-color: var(--ad-ext-crfx-badge-bg) !important;
+  border: 1px solid var(--ad-ext-crfx-badge-border);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_BURST_CLASS} {
+  animation: ad-ext-crfx-badge-burst 700ms ease;
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${THREAT_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
-    inset 0 0 26px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.75));
+    inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3));
   background-image: repeating-linear-gradient(
     135deg,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.62)) 0px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.62)) 7px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.26)) 7px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.26)) 14px
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 0px,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 8px,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 8px,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 16px
   );
 }
 
@@ -191,7 +264,14 @@ export function buildStyleText() {
 .${ROOT_CLASS} .${CELL_CLASS}.${PRESSURE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
-    inset 0 0 20px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.64));
+    inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3));
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 0px,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 8px,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 8px,
+    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 16px
+  );
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${MARK_PROGRESS_CLASS} {
@@ -234,7 +314,7 @@ export function buildStyleText() {
   right: 6px;
   padding: 1px 7px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: clamp(0.92rem, 1.4vw, 1.48rem);
   font-weight: 800;
   line-height: 1.3;
   letter-spacing: 0.02em;
@@ -286,6 +366,12 @@ export function buildStyleText() {
   0% { transform: translateX(-110%); opacity: 0; }
   15% { opacity: 1; }
   100% { transform: translateX(110%); opacity: 0; }
+}
+
+@keyframes ad-ext-crfx-badge-burst {
+  0% { transform: translateY(-50%) scale(1); }
+  24% { transform: translateY(-50%) scale(1.09); }
+  100% { transform: translateY(-50%) scale(1); }
 }
 
 @keyframes ad-ext-crfx-mark {

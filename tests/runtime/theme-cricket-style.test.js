@@ -5,6 +5,8 @@ import {
   PREVIEW_PLACEMENT,
   buildCricketThemeCss,
 } from "../../src/features/themes/cricket/style.js";
+import { buildStyleText as buildCricketHighlighterStyleText } from "../../src/features/cricket-highlighter/style.js";
+import { buildStyleText as buildCricketGridFxStyleText } from "../../src/features/cricket-grid-fx/style.js";
 
 test("cricket theme keeps standard preview placement and uses stable board layout hooks", () => {
   const css = buildCricketThemeCss({ showAvg: true });
@@ -87,4 +89,45 @@ test("cricket theme keeps row labels fully visible inside viewport", () => {
 
   assert.match(css, /p\.chakra-text\.css-1qlemha\s*\{[^}]*left:\s*0\s*!important;/s);
   assert.doesNotMatch(css, /left:\s*calc\(var\(--chakra-space-2\)\s*\*\s*-5\)/);
+});
+
+test("cricket theme strengthens tactical hierarchy without leaving stable hooks", () => {
+  const css = buildCricketThemeCss({ showAvg: true });
+
+  assert.match(css, /--ad-ext-cricket-card-glow:\s*rgba\(159,\s*232,\s*112,\s*0\.22\)/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack::before\s*\{[^}]*background:\s*linear-gradient\(135deg,\s*rgba\(255,\s*255,\s*255,\s*0\.06\),\s*rgba\(255,\s*255,\s*255,\s*0\)\s*32%\),/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack::after\s*\{[^}]*box-shadow:\s*inset 0 0 18px rgba\(159,\s*232,\s*112,\s*0\.08\),\s*0 0 24px var\(--ad-ext-cricket-card-glow\);/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\s*\{[^}]*background:\s*radial-gradient\(circle at 60% 78%, rgba\(168,\s*28,\s*28,\s*0\.22\), rgba\(0,\s*0,\s*0,\s*0\) 42%\),/s
+  );
+});
+
+test("cricket highlighter style exposes full presentation contract", () => {
+  const css = buildCricketHighlighterStyleText();
+
+  assert.match(css, /\.ad-ext-cricket-target\s*\{[^}]*fill:\s*var\(--ad-ext-cricket-fill,\s*transparent\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-open\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-open-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-closed\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-closed-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-dead\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-dead-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-inactive\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-inactive-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-offense\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-offense-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-danger\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-danger-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-pressure\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-pressure-fill\);/s);
+});
+
+test("cricket grid fx style exposes badge and state hierarchy", () => {
+  const css = buildCricketGridFxStyleText();
+
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell,\s*\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{[^}]*position:\s*absolute\s*!important;[^}]*left:\s*8px\s*!important;/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst 700ms ease;/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*background-image:\s*linear-gradient\(/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*background-image:\s*repeating-linear-gradient\(/s);
 });

@@ -31,6 +31,10 @@ const cricketThemeCss = `
   --ad-ext-cricket-offense-glow: rgba(0, 178, 135, 0.36);
   --ad-ext-cricket-danger-glow: rgba(239, 68, 68, 0.34);
   --ad-ext-cricket-active-ring: rgba(159, 232, 112, 0.9);
+  --ad-ext-cricket-card-glow: rgba(159, 232, 112, 0.22);
+  --ad-ext-cricket-card-sheen: rgba(127, 214, 247, 0.12);
+  --ad-ext-cricket-board-shell: rgba(6, 12, 22, 0.92);
+  --ad-ext-cricket-board-rail: rgba(91, 133, 170, 0.3);
 }
 
 .css-1k7iu8k {
@@ -185,11 +189,24 @@ span.chakra-switch__track.css-v4l15v {
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack {
+  position: relative !important;
+  overflow: hidden !important;
   background: linear-gradient(165deg, rgba(6, 15, 34, 0.96), rgba(3, 10, 24, 0.94)) !important;
   border: 1px solid var(--ad-ext-cricket-line) !important;
   border-radius: 0.6rem !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 26px rgba(0, 0, 0, 0.42);
   transition: border-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 32%),
+    radial-gradient(circle at 12% 20%, var(--ad-ext-cricket-card-sheen), rgba(0, 0, 0, 0) 42%);
+  opacity: 0.9;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack {
@@ -201,9 +218,26 @@ span.chakra-switch__track.css-v4l15v {
     0 12px 28px rgba(0, 0, 0, 0.44);
 }
 
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(159, 232, 112, 0.3);
+  box-shadow: inset 0 0 18px rgba(159, 232, 112, 0.08), 0 0 24px var(--ad-ext-cricket-card-glow);
+}
+
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > .chakra-stack {
   filter: saturate(0.76) brightness(0.9);
   opacity: 0.82;
+}
+
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > .chakra-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(1, 6, 15, 0.18) 100%);
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name {
@@ -211,14 +245,18 @@ span.chakra-switch__track.css-v4l15v {
 }
 
 p.chakra-text.css-1qlemha {
+  color: rgba(236, 248, 255, 0.96);
+  background: linear-gradient(115deg, rgba(6, 58, 74, 0.84), rgba(8, 45, 62, 0.9));
   border: 1px solid rgba(127, 214, 247, 0.34);
   border-radius: 0.28rem;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 8px 18px rgba(0, 0, 0, 0.18);
+  letter-spacing: 0.02em;
 }
 
 #grid tr td,
 #grid tr th {
   border-color: rgba(56, 74, 102, 0.78) !important;
+  position: relative;
 }
 
 #grid tr:nth-child(odd) td {
@@ -234,9 +272,11 @@ p.chakra-text.css-1qlemha {
 #grid tr > th:first-child {
   background: linear-gradient(115deg, rgba(8, 56, 78, 0.86), rgba(7, 39, 58, 0.88)) !important;
   border-right-color: rgba(89, 170, 198, 0.48) !important;
+  box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.08);
 }
 
 .css-rfeml4 > div {
+  position: relative;
   border: 1px solid rgba(54, 72, 98, 0.78) !important;
 }
 
@@ -246,6 +286,35 @@ p.chakra-text.css-1qlemha {
 
 .css-rfeml4 > div:nth-child(even) {
   background: linear-gradient(120deg, rgba(11, 18, 32, 0.88), rgba(8, 15, 28, 0.9)) !important;
+}
+
+.ad-ext-theme-content-board {
+  position: relative;
+}
+
+.ad-ext-theme-board-panel {
+  background:
+    radial-gradient(circle at 60% 78%, rgba(168, 28, 28, 0.22), rgba(0, 0, 0, 0) 42%),
+    linear-gradient(165deg, rgba(8, 14, 26, 0.96), rgba(2, 8, 18, 0.94)) !important;
+  border: 1px solid var(--ad-ext-cricket-board-rail) !important;
+  border-radius: 1.1rem !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 20px 50px rgba(0, 0, 0, 0.34);
+}
+
+.ad-ext-theme-board-panel::after {
+  content: "";
+  position: absolute;
+  inset: 16% 14% 6%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(197, 31, 31, 0.34), rgba(197, 31, 31, 0) 68%);
+  filter: blur(26px);
+  opacity: 0.78;
+}
+
+.ad-ext-theme-board-controls,
+.ad-ext-theme-board-viewport {
+  position: relative;
+  z-index: 1;
 }
 `;
 
