@@ -35,6 +35,47 @@ function createGrid(documentRef, labels, marksByRow) {
   return table;
 }
 
+function createMergedLabelCellGrid(documentRef, labels, marksByRow) {
+  const wrapper = documentRef.createElement("div");
+  wrapper.className = "chakra-stack";
+  const grid = documentRef.createElement("div");
+  grid.className = "css-rfeml4";
+
+  labels.forEach((label, index) => {
+    const className = index % 2 === 0 ? "css-1yso2z2" : "css-jpb1ox";
+    const labelCell = documentRef.createElement("div");
+    labelCell.className = className;
+    const labelText = documentRef.createElement("p");
+    labelText.className = "chakra-text css-1qlemha";
+    labelText.textContent = label === "BULL" ? "Bull" : label;
+    labelCell.appendChild(labelText);
+
+    const marks = Array.isArray(marksByRow[label]) ? marksByRow[label] : [];
+    const labelCellMarks = Number(marks[0] || 0);
+    if (labelCellMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(labelCellMarks));
+      labelCell.appendChild(icon);
+    }
+
+    const playerCell = documentRef.createElement("div");
+    playerCell.className = className;
+    const secondMarks = Number(marks[1] || 0);
+    if (secondMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(secondMarks));
+      playerCell.appendChild(icon);
+    }
+
+    grid.appendChild(labelCell);
+    grid.appendChild(playerCell);
+  });
+
+  wrapper.appendChild(grid);
+  documentRef.main.appendChild(wrapper);
+  return grid;
+}
+
 function setDomActivePlayer(documentRef, activeIndex) {
   documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
   documentRef.winnerNode.classList.remove("ad-ext-player-active");
@@ -310,4 +351,41 @@ test("numeric cricket row labels are not interpreted as player marks", () => {
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "0,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "open");
+});
+
+test("merged label+mark cells keep explicit marks and ignore wrapper label noise", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createMergedLabelCellGrid(
+    documentRef,
+    ["20", "19", "18", "17", "16", "15", "BULL"],
+    {
+      "20": [3, 0],
+      "19": [0, 0],
+      "18": [0, 0],
+      "17": [0, 0],
+      "16": [0, 0],
+      "15": [0, 0],
+      BULL: [0, 0],
+    }
+  );
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "unknown",
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
+  assert.equal(renderState?.discoveredUniqueLabelCount, 7);
 });

@@ -114,6 +114,55 @@ function createNumericCricketGrid(documentRef, marksByLabel) {
   return rowStateByLabel;
 }
 
+function createMergedLabelMarkCricketGrid(documentRef, marksByLabel) {
+  const wrapper = documentRef.createElement("div");
+  wrapper.classList.add("chakra-stack");
+  const grid = documentRef.createElement("div");
+  grid.classList.add("chakra-grid", "css-rfeml4");
+  const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
+  const rowStateByLabel = new Map();
+
+  targetOrder.forEach((label, index) => {
+    const className = index % 2 === 0 ? "css-1yso2z2" : "css-jpb1ox";
+    const labelCell = documentRef.createElement("div");
+    labelCell.classList.add(className);
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+
+    const labelText = documentRef.createElement("p");
+    labelText.classList.add("chakra-text", "css-1qlemha");
+    labelText.textContent = label === "BULL" ? "Bull" : label;
+    labelCell.appendChild(labelText);
+
+    const marks = Array.isArray(marksByLabel?.[label]) ? marksByLabel[label] : [0, 0];
+    const firstMarks = Number(marks[0] || 0);
+    if (firstMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(firstMarks));
+      labelCell.appendChild(icon);
+    }
+
+    const secondCell = documentRef.createElement("div");
+    secondCell.classList.add(className);
+    const secondMarks = Number(marks[1] || 0);
+    if (secondMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(secondMarks));
+      secondCell.appendChild(icon);
+    }
+
+    grid.appendChild(labelCell);
+    grid.appendChild(secondCell);
+    rowStateByLabel.set(label, {
+      labelCell,
+      playerCells: [secondCell],
+    });
+  });
+
+  wrapper.appendChild(grid);
+  documentRef.main.appendChild(wrapper);
+  return rowStateByLabel;
+}
+
 function createGameState(options = {}) {
   const scoringModeNormalized = String(options.scoringModeNormalized || "unknown");
   const scoringMode = String(options.scoringMode || "");
@@ -361,4 +410,94 @@ test("theme-like cricket highlighter restores overlay after external removal and
 
   assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
   assert.equal(Boolean(documentRef.getElementById(CRICKET_STYLE_ID)), false);
+});
+
+test("merged label+mark theme layout keeps offense highlights and grid-fx mapping stable", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  const rowsByLabel = createMergedLabelMarkCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketVisualConfig({
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxVisualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const renderCache = { grid: null, board: null };
+  const gridFxState = createCricketGridFxState();
+  const gameState = createGameState({
+    scoringModeNormalized: "unknown",
+    scoringMode: "",
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
+
+  const debugStats = {};
+  renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState,
+    cache: renderCache,
+    debugStats,
+  });
+
+  const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(overlay), true);
+  assert.equal(debugStats.nonOpenTargetCount || 0, 1);
+  assert.equal((debugStats.renderedShapeCount || 0) > 0, true);
+
+  const has20Shape = Array.from(overlay?.children || []).some((node) => {
+    return String(node?.dataset?.targetLabel || "") === "20";
+  });
+  assert.equal(has20Shape, true);
+
+  const gridFxStats = {};
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state: gridFxState,
+    visualConfig: gridFxVisualConfig,
+    debugStats: gridFxStats,
+  });
+
+  assert.equal(gridFxStats.status, "ok");
+  assert.equal(gridFxStats.offenseRowCount || 0, 1);
+
+  clearCricketGridFxState(gridFxState);
+  clearCricketHighlights(documentRef);
 });

@@ -106,26 +106,7 @@ function getNormalizedLabel(cricketRules, node) {
 function collectLabelNodes(rootNode, cricketRules, targetSet) {
   const seen = new Set();
   const labels = [];
-
-  LABEL_NODE_SELECTORS.forEach((selector) => {
-    queryAll(rootNode, selector).forEach((node) => {
-      if (!node || seen.has(node)) {
-        return;
-      }
-      const label = getNormalizedLabel(cricketRules, node);
-      if (!label || !targetSet.has(label)) {
-        return;
-      }
-      seen.add(node);
-      labels.push({ node, label });
-    });
-  });
-
-  if (labels.length >= 4) {
-    return labels;
-  }
-
-  queryAll(rootNode, "div, td, th, span, p").forEach((node) => {
+  const pushLabelNode = (node) => {
     if (!node || seen.has(node)) {
       return;
     }
@@ -135,9 +116,93 @@ function collectLabelNodes(rootNode, cricketRules, targetSet) {
     }
     seen.add(node);
     labels.push({ node, label });
+  };
+
+  LABEL_NODE_SELECTORS.forEach((selector) => {
+    queryAll(rootNode, selector).forEach((node) => {
+      pushLabelNode(node);
+    });
   });
 
-  return labels;
+  if (labels.length >= 4) {
+    return filterAtomicLabelNodes(labels);
+  }
+
+  queryAll(rootNode, "div, td, th, span, p").forEach((node) => {
+    pushLabelNode(node);
+  });
+
+  return filterAtomicLabelNodes(labels);
+}
+
+function filterAtomicLabelNodes(labelEntries) {
+  const entries = Array.isArray(labelEntries) ? labelEntries : [];
+  if (!entries.length) {
+    return [];
+  }
+
+  const filtered = entries.filter((entry) => {
+    const node = entry?.node;
+    const label = entry?.label;
+    if (!node || !label || typeof node.contains !== "function") {
+      return false;
+    }
+
+    let hasSameLabelDescendant = false;
+    const descendantLabels = new Set();
+
+    entries.forEach((candidate) => {
+      if (!candidate || candidate === entry || !candidate.node) {
+        return;
+      }
+      if (!node.contains(candidate.node)) {
+        return;
+      }
+      descendantLabels.add(candidate.label);
+      if (candidate.label === label) {
+        hasSameLabelDescendant = true;
+      }
+    });
+
+    if (hasSameLabelDescendant) {
+      return false;
+    }
+
+    // Prevent large wrapper containers from being interpreted as a row label.
+    if (descendantLabels.size > 1) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return filtered.length ? filtered : entries;
+}
+
+function hasExplicitMarkHints(node) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return false;
+  }
+
+  if (
+    node.getAttribute("data-marks") !== null ||
+    node.getAttribute("data-mark") !== null ||
+    node.getAttribute("data-hits") !== null ||
+    node.getAttribute("data-hit") !== null
+  ) {
+    return true;
+  }
+
+  if (typeof node.querySelector === "function") {
+    if (node.querySelector("img[alt], [data-marks], [data-mark], [data-hits], [data-hit]")) {
+      return true;
+    }
+    if (node.querySelector("svg[aria-label], svg[title], svg[alt]")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function getRootScore(rootNode, cricketRules, targetSet) {
@@ -322,6 +387,43 @@ function collectPlayerCellsForLabel(labelNode, cricketRules, targetSet) {
   }
 
   return collectSiblingPlayerCells(labelNode, cricketRules, targetSet);
+}
+
+function resolveLabelCell(labelNode) {
+  if (!labelNode || typeof labelNode.closest !== "function") {
+    return labelNode?.parentElement || null;
+  }
+
+  const tableCell = labelNode.closest("td, th, [role='cell']");
+  if (tableCell) {
+    return tableCell;
+  }
+
+  return labelNode.parentElement || labelNode;
+}
+
+function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {
+  const normalizedCells = Array.isArray(playerCells)
+    ? playerCells.filter((cell) => Boolean(cell))
+    : [];
+  if (!labelCell || normalizedCells.includes(labelCell)) {
+    return normalizedCells;
+  }
+
+  if (!hasExplicitMarkHints(labelCell)) {
+    return normalizedCells;
+  }
+
+  const expectedCount = Number.isFinite(Number(expectedPlayerCount))
+    ? Math.max(0, Math.round(Number(expectedPlayerCount)))
+    : 0;
+  const shouldInclude =
+    expectedCount > 0 ? normalizedCells.length < expectedCount : normalizedCells.length === 0;
+  if (!shouldInclude) {
+    return normalizedCells;
+  }
+
+  return [labelCell, ...normalizedCells];
 }
 
 function resolveActivePlayerIndex(gameState, documentRef, playerCount) {
@@ -514,6 +616,8 @@ function buildMarksByLabelSnapshot(options = {}) {
   const targetSet = new Set(targetOrder);
   const marksByLabel = cricketRules.createEmptyMarksByLabel(targetOrder, 0);
   let maxPlayerCount = 0;
+  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
+  const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
 
   grid.labels.forEach(({ node, label }) => {
     if (!targetSet.has(label)) {
@@ -521,11 +625,14 @@ function buildMarksByLabelSnapshot(options = {}) {
     }
 
     const playerCells = collectPlayerCellsForLabel(node, cricketRules, targetSet);
+    const labelCell = resolveLabelCell(node);
+    const markSourceCells = maybeIncludeLabelCellAsPlayerCell(
+      playerCells,
+      labelCell,
+      playerCountFromMatch
+    );
     const marks = [];
-    if (hasOwnMarkValue(node, { allowTextMarkValue: false })) {
-      marks.push(parseMarksValue(node));
-    }
-    playerCells.forEach((cell) => {
+    markSourceCells.forEach((cell) => {
       marks.push(parseMarksValue(cell));
     });
     if (!marks.length) {
@@ -535,8 +642,6 @@ function buildMarksByLabelSnapshot(options = {}) {
     maxPlayerCount = Math.max(maxPlayerCount, marks.length);
   });
 
-  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
-  const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
   const playerCount = Math.max(maxPlayerCount, playerCountFromMatch, 1);
 
   targetOrder.forEach((label) => {

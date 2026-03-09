@@ -120,31 +120,76 @@ function resolveGridRoot(documentRef, cricketRules, targetOrder) {
 function collectLabelNodes(gridRoot, cricketRules, targetSet) {
   const seen = new Set();
   const rows = [];
+  const pushRow = (node) => {
+    if (!node || seen.has(node)) {
+      return;
+    }
+
+    const explicitLabel =
+      node.getAttribute?.("data-row-label") ||
+      node.getAttribute?.("data-target-label") ||
+      "";
+    const label = normalizeLabel(cricketRules, explicitLabel || node.textContent || "");
+    if (!label || !targetSet.has(label)) {
+      return;
+    }
+
+    seen.add(node);
+    rows.push({
+      label,
+      labelNode: node,
+    });
+  };
 
   LABEL_NODE_SELECTORS.forEach((selector) => {
     queryAll(gridRoot, selector).forEach((node) => {
-      if (!node || seen.has(node)) {
-        return;
-      }
-
-      const explicitLabel =
-        node.getAttribute?.("data-row-label") ||
-        node.getAttribute?.("data-target-label") ||
-        "";
-      const label = normalizeLabel(cricketRules, explicitLabel || node.textContent || "");
-      if (!label || !targetSet.has(label)) {
-        return;
-      }
-
-      seen.add(node);
-      rows.push({
-        label,
-        labelNode: node,
-      });
+      pushRow(node);
     });
   });
 
-  return rows;
+  return filterAtomicRows(rows);
+}
+
+function filterAtomicRows(rows) {
+  const entries = Array.isArray(rows) ? rows : [];
+  if (!entries.length) {
+    return [];
+  }
+
+  const filtered = entries.filter((entry) => {
+    const node = entry?.labelNode;
+    const label = entry?.label;
+    if (!node || !label || typeof node.contains !== "function") {
+      return false;
+    }
+
+    let hasSameLabelDescendant = false;
+    const descendantLabels = new Set();
+
+    entries.forEach((candidate) => {
+      if (!candidate || candidate === entry || !candidate.labelNode) {
+        return;
+      }
+      if (!node.contains(candidate.labelNode)) {
+        return;
+      }
+      descendantLabels.add(candidate.label);
+      if (candidate.label === label) {
+        hasSameLabelDescendant = true;
+      }
+    });
+
+    if (hasSameLabelDescendant) {
+      return false;
+    }
+    if (descendantLabels.size > 1) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return filtered.length ? filtered : entries;
 }
 
 function parseMarksValue(node, cricketRules) {
@@ -178,16 +223,76 @@ function parseMarksValue(node, cricketRules) {
   return 0;
 }
 
-function collectPlayerCells(labelNode, cricketRules, targetSet) {
+function hasExplicitMarkHints(node) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return false;
+  }
+
+  if (
+    node.getAttribute("data-marks") !== null ||
+    node.getAttribute("data-mark") !== null ||
+    node.getAttribute("data-hits") !== null ||
+    node.getAttribute("data-hit") !== null
+  ) {
+    return true;
+  }
+
+  if (typeof node.querySelector === "function") {
+    if (node.querySelector("img[alt], [data-marks], [data-mark], [data-hits], [data-hit]")) {
+      return true;
+    }
+    if (node.querySelector("svg[aria-label], svg[title], svg[alt]")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function resolveLabelCell(labelNode) {
+  if (!labelNode || typeof labelNode.closest !== "function") {
+    return labelNode?.parentElement || null;
+  }
+
+  return labelNode.closest("td, th, [role='cell']") || labelNode.parentElement || labelNode;
+}
+
+function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {
+  const normalizedCells = Array.isArray(playerCells)
+    ? playerCells.filter((cell) => Boolean(cell))
+    : [];
+  if (!labelCell || normalizedCells.includes(labelCell)) {
+    return normalizedCells;
+  }
+
+  if (!hasExplicitMarkHints(labelCell)) {
+    return normalizedCells;
+  }
+
+  const expectedCount = Number.isFinite(Number(expectedPlayerCount))
+    ? Math.max(0, Math.round(Number(expectedPlayerCount)))
+    : 0;
+  const shouldInclude =
+    expectedCount > 0 ? normalizedCells.length < expectedCount : normalizedCells.length === 0;
+  if (!shouldInclude) {
+    return normalizedCells;
+  }
+
+  return [labelCell, ...normalizedCells];
+}
+
+function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
   if (!labelNode) {
     return [];
   }
+  const labelCell = resolveLabelCell(labelNode);
 
   const row = labelNode.closest?.("tr");
   if (row) {
-    return queryAll(row, "td, .player-cell, [data-player-index], [data-marks]").filter((node) => {
+    const cells = queryAll(row, "td, .player-cell, [data-player-index], [data-marks]").filter((node) => {
       return node !== labelNode;
     });
+    return maybeIncludeLabelCellAsPlayerCell(cells, labelCell, options.expectedPlayerCount);
   }
 
   const parent = labelNode.parentElement;
@@ -196,7 +301,7 @@ function collectPlayerCells(labelNode, cricketRules, targetSet) {
       return node !== labelNode;
     });
     if (fromParent.length) {
-      return fromParent;
+      return maybeIncludeLabelCellAsPlayerCell(fromParent, labelCell, options.expectedPlayerCount);
     }
   }
 
@@ -214,7 +319,11 @@ function collectPlayerCells(labelNode, cricketRules, targetSet) {
     cursor = cursor.nextElementSibling;
   }
 
-  return result;
+  return maybeIncludeLabelCellAsPlayerCell(
+    result,
+    labelCell,
+    options.expectedPlayerCount
+  );
 }
 
 function toggleClass(node, className, enabled) {
@@ -513,10 +622,16 @@ export function updateCricketGridFx(options = {}) {
   }
 
   const rows = collectLabelNodes(gridRoot, cricketRules, targetSet).map((row) => {
+    const stateEntry = renderState.stateMap.get(row.label);
+    const expectedPlayerCount = Array.isArray(stateEntry?.marksByPlayer)
+      ? stateEntry.marksByPlayer.length
+      : 0;
     return {
       ...row,
       rowNode: getRowNode(row.labelNode),
-      playerCells: collectPlayerCells(row.labelNode, cricketRules, targetSet),
+      playerCells: collectPlayerCells(row.labelNode, cricketRules, targetSet, {
+        expectedPlayerCount,
+      }),
     };
   });
   if (debugStats) {
