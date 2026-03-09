@@ -6,32 +6,28 @@ import {
   buildCricketThemeCss,
 } from "../../src/features/themes/cricket/style.js";
 
-test("cricket theme uses standard preview placement and board-first layout rules", () => {
+test("cricket theme uses standard preview placement with oldrepo-aligned layout rules", () => {
   const css = buildCricketThemeCss({ showAvg: true });
 
   assert.equal(PREVIEW_PLACEMENT.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
-  assert.match(css, /grid-template-columns:\s*0\.92fr 1\.08fr\s*!important;/);
-  assert.match(css, /\[data-ad-theme-layout-root="true"\]/);
-  assert.match(css, /\[data-ad-theme-slot="board"\]/);
-  assert.match(css, /--cricket-board-safe-height:\s*calc\(100dvh - 132px\);/);
+  assert.match(css, /\.css-1k7iu8k\s*\{\s*max-width:\s*96%/);
+  assert.match(css, /\.css-c04tlr\s*\{\s*height:\s*calc\(92%\s*-\s*185px\)\s*!important;/);
+  assert.match(css, /\.css-1f26ant\s*\{\s*height:\s*calc\(100%\s*-\s*230px\)/);
+  assert.match(css, /\.css-1f26ant\s*>\s*div\s*\{\s*height:\s*80%\s*!important;/);
   assert.match(
     css,
-    /width:\s*min\(100%,\s*var\(--cricket-board-safe-height\),\s*var\(--cricket-board-safe-width\)\)\s*!important;/
+    /grid-template-areas:\s*"header header"\s*"footer footer"\s*"players board"/
   );
-  assert.match(css, /grid-column-start:\s*2\s*!important;/);
-  assert.doesNotMatch(
-    css,
-    /grid-template-areas:\s*"header header"\s*"footer board"\s*"players board"/
-  );
-  assert.doesNotMatch(css, /:has\(svg\[viewBox="0 0 1000 1000"\]\)/);
+  assert.match(css, /\.css-1kejrvi,\s*\.css-14xtjvc\s*\{/);
+  assert.doesNotMatch(css, /\[data-ad-theme-slot=/);
+  assert.doesNotMatch(css, /\[data-ad-theme-layout-root=/);
+  assert.doesNotMatch(css, /:has\(/);
 });
 
-test("cricket theme css no longer contains fragile legacy layout hardcodes", () => {
+test("cricket theme keeps row labels fully visible inside viewport", () => {
   const css = buildCricketThemeCss({ showAvg: true });
 
-  assert.doesNotMatch(css, /calc\(92%\s*-\s*185px\)/);
-  assert.doesNotMatch(css, /calc\(100%\s*-\s*230px\)/);
-  assert.doesNotMatch(css, /height:\s*80%\s*!important/);
+  assert.match(css, /p\.chakra-text\.css-1qlemha\s*\{[^}]*left:\s*0\s*!important;/s);
   assert.doesNotMatch(css, /left:\s*calc\(var\(--chakra-space-2\)\s*\*\s*-5\)/);
 });

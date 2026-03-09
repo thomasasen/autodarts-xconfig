@@ -27,27 +27,26 @@ const cricketThemeCss = `
   --theme-alt-bg: #274e13;
 }
 
+.css-1k7iu8k {
+  max-width: 96%;
+}
+
 #ad-ext-turn > .ad-ext-turn-throw,
 #ad-ext-turn > .score,
 #ad-ext-turn > .suggestion{
   height: 100px !important;
-  width: 100% !important;
 }
 
 #ad-ext-player-display{
-  display: grid !important;
-  grid-auto-flow: column !important;
-  grid-auto-columns: minmax(0, 1fr) !important;
-  align-items: stretch !important;
-  gap: 0.45rem !important;
+  gap: 0.35rem !important;
 }
 
 #ad-ext-player-display .ad-ext-player{
-  min-height: 172px !important;
+  min-height: 185px !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
-  min-height: 172px !important;
+  min-height: 185px !important;
   padding-top: 0.3rem !important;
   padding-bottom: 0.3rem !important;
 }
@@ -92,6 +91,10 @@ div.ad-ext-player.ad-ext-player-active.css-1en42kf p.chakra-text.css-11cuipc{
   scrollbar-width: none !important;
 }
 
+.css-tkevr6{
+  height: 99%;
+}
+
 div.css-gmuwbf,
 div.css-tkevr6,
 div.css-nfhdnc {
@@ -106,6 +109,10 @@ div.css-nfhdnc {
   border: 2px solid #9fdb58 !important;
 }
 
+.css-c04tlr {
+  height: calc(92% - 185px) !important;
+}
+
 .chakra-stack.navigation {
   background-color: var(--theme-navigation-bg);
 }
@@ -114,12 +121,11 @@ p.chakra-text.css-1qlemha {
   background-color: var(--theme-current-bg);
   left: 0 !important;
   margin-left: 0 !important;
-  font-size: clamp(1.6rem, 2vw, 2.2rem);
+  font-size: 36px;
   white-space: nowrap;
   line-height: 1.1;
-  padding: 0 0.5rem 0 0.45rem;
-  width: max-content;
-  max-width: 100%;
+  padding: 0 0.5rem;
+  width: fit-content;
 }
 
 span.css-elma0c {
@@ -162,95 +168,17 @@ span.chakra-switch__track.css-v4l15v {
   background-color: #38761d;
 }
 
-.css-tkevr6 > .chakra-stack{
-  grid-template-columns: 0.92fr 1.08fr !important;
-}
-
-[data-ad-theme-layout-root="true"]{
-  --cricket-board-safe-height: calc(100dvh - 132px);
-  --cricket-board-safe-width: calc(100dvw - 72px);
-}
-
-@media (max-height: 980px){
-  [data-ad-theme-layout-root="true"]{
-    --cricket-board-safe-height: calc(100dvh - 150px);
-  }
-}
-
-@media (max-height: 820px){
-  [data-ad-theme-layout-root="true"]{
-    --cricket-board-safe-height: calc(100dvh - 170px);
-  }
-}
-
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="footer"]{
-  grid-column-start: 1 !important;
-  grid-column-end: 3 !important;
-  grid-row-start: 2 !important;
-  grid-row-end: 3 !important;
-  grid-area: footer !important;
-}
-
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="players"]{
-  grid-column-start: 1 !important;
-  grid-column-end: 2 !important;
-  grid-row-start: 3 !important;
-  grid-row-end: 4 !important;
-  grid-area: players !important;
-  min-width: 0 !important;
-}
-
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"]{
-  grid-column-start: 2 !important;
-  grid-column-end: 3 !important;
-  grid-row-start: 3 !important;
-  grid-row-end: 4 !important;
-  grid-area: board !important;
-  justify-self: stretch !important;
-  align-self: stretch !important;
-  width: 100% !important;
+.css-1yso2z2 {
   height: 100% !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  margin: 0 !important;
 }
 
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] > *{
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
+.css-1f26ant {
+  height: calc(100% - 230px);
 }
 
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] .css-tqsk66{
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  padding: 0 0 8px 0 !important;
-  display: grid !important;
-  grid-template-rows: minmax(0, 1fr) auto !important;
-  align-items: stretch !important;
-  justify-items: center !important;
-  row-gap: 8px !important;
-}
-
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] .css-7bjx6y,
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] .css-1wegtvo{
-  top: auto;
-  bottom: 0;
-}
-
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] svg,
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] canvas,
-[data-ad-theme-layout-root="true"] > [data-ad-theme-slot="board"] img{
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: min(100%, var(--cricket-board-safe-height), var(--cricket-board-safe-width)) !important;
-  height: auto !important;
-  max-height: var(--cricket-board-safe-height) !important;
-  max-width: var(--cricket-board-safe-width);
-  object-fit: contain;
+.css-1f26ant > div {
+  height: 80% !important;
+  margin-bottom: 1px !important;
 }
 `;
 

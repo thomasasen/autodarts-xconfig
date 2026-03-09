@@ -5,140 +5,6 @@ import {
   togglePreviewSpace,
 } from "./theme-utils.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
-import { findBoardSvgGroup } from "../../../shared/dartboard-svg.js";
-
-const THEME_LAYOUT_ROOT_ATTR = "data-ad-theme-layout-root";
-const THEME_LAYOUT_ROOT_OWNER_ATTR = "data-ad-theme-layout-root-owner";
-const THEME_SLOT_ATTR = "data-ad-theme-slot";
-const THEME_SLOT_OWNER_ATTR = "data-ad-theme-slot-owner";
-
-function getDirectChildContainer(rootNode, nestedNode) {
-  if (!rootNode || !nestedNode) {
-    return null;
-  }
-
-  let current = nestedNode;
-  while (current && current.parentElement && current.parentElement !== rootNode) {
-    current = current.parentElement;
-  }
-
-  return current && current.parentElement === rootNode ? current : null;
-}
-
-function resolveLayoutRoot(documentRef) {
-  if (!documentRef || typeof documentRef.getElementById !== "function") {
-    return null;
-  }
-
-  const turnNode = documentRef.getElementById("ad-ext-turn");
-  const playersNode = documentRef.getElementById("ad-ext-player-display");
-  if (!turnNode || !playersNode) {
-    return null;
-  }
-
-  let cursor = turnNode.parentElement || null;
-  while (cursor) {
-    if (typeof cursor.contains === "function" && cursor.contains(playersNode)) {
-      return cursor;
-    }
-    cursor = cursor.parentElement || null;
-  }
-
-  return null;
-}
-
-function resolveBoardSlot(layoutRoot, documentRef) {
-  if (!layoutRoot || !documentRef) {
-    return null;
-  }
-
-  const boardInfo = findBoardSvgGroup(documentRef);
-  const boardSvgSlot = getDirectChildContainer(layoutRoot, boardInfo?.svg || boardInfo?.group || null);
-  if (boardSvgSlot) {
-    return boardSvgSlot;
-  }
-
-  const fallbackBoardNode =
-    typeof layoutRoot.querySelector === "function"
-      ? layoutRoot.querySelector('.css-1kejrvi, .css-14xtjvc, svg[viewBox="0 0 1000 1000"]')
-      : null;
-  const fallbackSlot = getDirectChildContainer(layoutRoot, fallbackBoardNode);
-  if (fallbackSlot) {
-    return fallbackSlot;
-  }
-
-  if (!Array.isArray(layoutRoot.children)) {
-    return null;
-  }
-
-  return (
-    layoutRoot.children.find((child) => {
-      return (
-        child &&
-        typeof child.querySelector === "function" &&
-        child.querySelector('svg[viewBox="0 0 1000 1000"]')
-      );
-    }) || null
-  );
-}
-
-function clearOwnedLayoutSlots(documentRef, featureKey) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function" || !featureKey) {
-    return;
-  }
-
-  const ownedSlots = Array.from(
-    documentRef.querySelectorAll(`[${THEME_SLOT_OWNER_ATTR}="${featureKey}"]`)
-  );
-  ownedSlots.forEach((node) => {
-    if (!node || typeof node.removeAttribute !== "function") {
-      return;
-    }
-    node.removeAttribute(THEME_SLOT_ATTR);
-    node.removeAttribute(THEME_SLOT_OWNER_ATTR);
-  });
-
-  const ownedRoots = Array.from(
-    documentRef.querySelectorAll(`[${THEME_LAYOUT_ROOT_OWNER_ATTR}="${featureKey}"]`)
-  );
-  ownedRoots.forEach((node) => {
-    if (!node || typeof node.removeAttribute !== "function") {
-      return;
-    }
-    node.removeAttribute(THEME_LAYOUT_ROOT_ATTR);
-    node.removeAttribute(THEME_LAYOUT_ROOT_OWNER_ATTR);
-  });
-}
-
-function assignLayoutSlot(node, slotName, featureKey) {
-  if (!node || typeof node.setAttribute !== "function" || !slotName || !featureKey) {
-    return;
-  }
-  node.setAttribute(THEME_SLOT_ATTR, slotName);
-  node.setAttribute(THEME_SLOT_OWNER_ATTR, featureKey);
-}
-
-function applyLayoutSlots(documentRef, featureKey) {
-  clearOwnedLayoutSlots(documentRef, featureKey);
-
-  const layoutRoot = resolveLayoutRoot(documentRef);
-  if (!layoutRoot || typeof layoutRoot.setAttribute !== "function") {
-    return;
-  }
-
-  layoutRoot.setAttribute(THEME_LAYOUT_ROOT_ATTR, "true");
-  layoutRoot.setAttribute(THEME_LAYOUT_ROOT_OWNER_ATTR, featureKey);
-
-  const turnNode = documentRef.getElementById("ad-ext-turn");
-  const playersNode = documentRef.getElementById("ad-ext-player-display");
-  const footerSlot = getDirectChildContainer(layoutRoot, turnNode);
-  const playersSlot = getDirectChildContainer(layoutRoot, playersNode);
-  const boardSlot = resolveBoardSlot(layoutRoot, documentRef);
-
-  assignLayoutSlot(footerSlot, "footer", featureKey);
-  assignLayoutSlot(playersSlot, "players", featureKey);
-  assignLayoutSlot(boardSlot, "board", featureKey);
-}
 
 export function mountThemeFeature(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -185,7 +51,6 @@ export function mountThemeFeature(context = {}, options = {}) {
     });
 
     if (!isActive) {
-      clearOwnedLayoutSlots(documentRef, featureKey);
       domGuards.removeNodeById(styleId);
       togglePreviewSpace(documentRef, previewPlacement, false);
       return;
@@ -193,13 +58,11 @@ export function mountThemeFeature(context = {}, options = {}) {
 
     const cssText = String(buildThemeCss(featureConfig) || "").trim();
     if (!cssText) {
-      clearOwnedLayoutSlots(documentRef, featureKey);
       domGuards.removeNodeById(styleId);
       togglePreviewSpace(documentRef, previewPlacement, false);
       return;
     }
 
-    applyLayoutSlots(documentRef, featureKey);
     domGuards.ensureStyle(styleId, cssText);
     togglePreviewSpace(documentRef, previewPlacement, true);
   }
@@ -265,7 +128,6 @@ export function mountThemeFeature(context = {}, options = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
-    clearOwnedLayoutSlots(documentRef, featureKey);
     togglePreviewSpace(
       documentRef,
       { ...previewPlacement, previewSpaceClass },
