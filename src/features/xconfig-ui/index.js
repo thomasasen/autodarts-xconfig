@@ -1407,8 +1407,15 @@ function ensureXConfigShell(options = {}) {
     if (!actionNode) {
       return;
     }
+    const insideMenuButton = actionNode.id === MENU_ITEM_ID || Boolean(actionNode.closest(`#${MENU_ITEM_ID}`));
+    const insidePanelHost = Boolean(actionNode.closest(`#${PANEL_HOST_ID}`));
+    if (!insideMenuButton && !insidePanelHost) {
+      return;
+    }
 
-    if (actionNode.getAttribute("data-adxconfig-action") === "close-settings-backdrop") {
+    const action = actionNode.getAttribute("data-adxconfig-action");
+
+    if (action === "close-settings-backdrop") {
       const insideModal = target.closest("[data-adxconfig-modal='true']");
       if (insideModal) {
         return;
@@ -1418,7 +1425,7 @@ function ensureXConfigShell(options = {}) {
     event.preventDefault?.();
     const featureKey = actionNode.getAttribute("data-feature-key");
     const feature = getFeatures().find((entry) => entry.featureKey === featureKey) || null;
-    handleAction(actionNode.getAttribute("data-adxconfig-action"), actionNode, feature);
+    handleAction(action, actionNode, feature);
   }
 
   function onDocumentChange(event) {

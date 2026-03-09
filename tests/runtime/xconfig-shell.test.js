@@ -9,6 +9,17 @@ function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function waitFor(check, { timeoutMs = 120, intervalMs = 4 } = {}) {
+  const deadline = Date.now() + Math.max(0, Number(timeoutMs) || 0);
+  while (Date.now() < deadline) {
+    if (check()) {
+      return true;
+    }
+    await wait(intervalMs);
+  }
+  return Boolean(check());
+}
+
 function clickFeatureToggle(documentRef, featureKey, enabled) {
   const selector = `[data-adxconfig-action='set-feature'][data-feature-key='${featureKey}'][data-feature-enabled='${enabled ? "true" : "false"}']`;
   const button = documentRef.querySelector(selector);
@@ -59,6 +70,42 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(panelHost.style.display, "none");
   assert.equal(documentRef.variantElement.style.display, "");
+
+  runtime.stop();
+});
+
+test("xConfig shell does not hijack external links that accidentally reuse xConfig action attributes", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  const toolsLink = documentRef.createElement("a");
+  toolsLink.id = "autodarts-tools-menu-item";
+  toolsLink.classList.add("chakra-link");
+  toolsLink.setAttribute("href", "/tools");
+  toolsLink.setAttribute("data-adxconfig-action", "open");
+  toolsLink.setAttribute("aria-label", "AD xConfig");
+  toolsLink.setAttribute("title", "AD xConfig");
+  toolsLink.textContent = "Tools";
+  documentRef.sidebar.appendChild(toolsLink);
+  documentRef.flushMutations();
+  await wait(5);
+
+  const clickEvent = new FakeEvent("click", { bubbles: true, cancelable: true, target: toolsLink });
+  const clickAllowed = toolsLink.dispatchEvent(clickEvent);
+  await wait(5);
+
+  assert.equal(clickAllowed, true);
+  assert.equal(clickEvent.defaultPrevented, false);
+  assert.equal(windowRef.location.pathname, "/lobbies");
+
+  const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
+  assert.ok(menuButton);
+  menuButton.click();
+  await wait(5);
+  assert.equal(windowRef.location.pathname, "/ad-xconfig");
 
   runtime.stop();
 });
@@ -399,7 +446,7 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const originalSetTimeout = windowRef.setTimeout.bind(windowRef);
   windowRef.setTimeout = (callback, ms, ...args) => {
-    return originalSetTimeout(callback, Math.min(Number(ms) || 0, 20), ...args);
+    return originalSetTimeout(callback, Math.min(Number(ms) || 0, 60), ...args);
   };
   windowRef.confetti = function fakeConfetti() {};
 
@@ -418,14 +465,21 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   openSettings.click();
   await wait(5);
 
-  const previewButton = documentRef.getElementById(
+  const firstPreviewButton = documentRef.getElementById(
     "ad-xconfig-field-winner-fireworks-run-feature-action"
   );
-  assert.ok(previewButton);
-  previewButton.click();
-  await wait(5);
-
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), true);
+  assert.ok(firstPreviewButton);
+  const firstPreviewClick = new FakeEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    target: firstPreviewButton,
+  });
+  firstPreviewButton.dispatchEvent(firstPreviewClick);
+  assert.equal(firstPreviewClick.defaultPrevented, true);
+  assert.equal(
+    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview"))),
+    true
+  );
 
   windowRef.dispatchEvent(new FakeEvent("pointerdown", { bubbles: true }));
   await wait(5);
@@ -433,10 +487,22 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-style-preview")), false);
 
-  previewButton.click();
-  await wait(5);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), true);
-  await wait(40);
+  const secondPreviewButton = documentRef.getElementById(
+    "ad-xconfig-field-winner-fireworks-run-feature-action"
+  );
+  assert.ok(secondPreviewButton);
+  const secondPreviewClick = new FakeEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    target: secondPreviewButton,
+  });
+  secondPreviewButton.dispatchEvent(secondPreviewClick);
+  assert.equal(secondPreviewClick.defaultPrevented, true);
+  assert.equal(
+    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview"))),
+    true
+  );
+  await wait(90);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
 
   runtime.stop();

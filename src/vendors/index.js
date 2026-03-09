@@ -34,13 +34,13 @@ const importAnimeModule = createSafeImporter(() => import("./anime.min.cjs"));
 const importConfettiModule = createSafeImporter(() => import("./canvas-confetti.browser.js"));
 
 export function getAnime(windowRef = null) {
-  if (typeof vendorLoadState.anime.cached === "function") {
-    return vendorLoadState.anime.cached;
-  }
-
   const resolvedWindow = getWindowRef(windowRef);
   if (resolvedWindow && typeof resolvedWindow.anime === "function") {
     vendorLoadState.anime.cached = resolvedWindow.anime;
+    return vendorLoadState.anime.cached;
+  }
+
+  if (typeof vendorLoadState.anime.cached === "function") {
     return vendorLoadState.anime.cached;
   }
 
@@ -48,13 +48,13 @@ export function getAnime(windowRef = null) {
 }
 
 export function getConfetti(windowRef = null) {
-  if (typeof vendorLoadState.confetti.cached === "function") {
-    return vendorLoadState.confetti.cached;
-  }
-
   const resolvedWindow = getWindowRef(windowRef);
   if (resolvedWindow && typeof resolvedWindow.confetti === "function") {
     vendorLoadState.confetti.cached = resolvedWindow.confetti;
+    return vendorLoadState.confetti.cached;
+  }
+
+  if (typeof vendorLoadState.confetti.cached === "function") {
     return vendorLoadState.confetti.cached;
   }
 
