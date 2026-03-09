@@ -354,7 +354,27 @@ test("xConfig shell renders mapped preview backgrounds and compact legacy back b
   assert.ok(styleNode);
   assert.equal(String(styleNode.textContent || "").includes("flex-direction:column"), true);
   assert.equal(
+    String(styleNode.textContent || "").includes(".ad-xconfig-card-head{display:flex;justify-content:space-between;align-items:flex-start"),
+    true
+  );
+  assert.equal(
     String(styleNode.textContent || "").includes(".ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn"),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes(".ad-xconfig-onoff{position:relative;display:inline-flex;align-self:flex-start"),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes("height:2.2rem;min-height:2.2rem"),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes("height:100%;padding:0 .45rem"),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes("display:flex;align-items:center;justify-content:center"),
     true
   );
   assert.equal(
