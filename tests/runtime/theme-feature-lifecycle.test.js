@@ -51,6 +51,7 @@ function createBoardFixture(documentRef, options = {}) {
   boardControls.appendChild(undoButton);
 
   boardCanvas.classList.add("showAnimations");
+  boardCanvas.__rect = { width: 780, height: 620 };
   boardSvg.setAttribute("viewBox", "0 0 1000 1000");
 
   const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -118,6 +119,7 @@ function createInfoStyleBoardFixture(documentRef) {
   contentSlot.__rect = { width: 1320, height: 680 };
   contentLeft.__rect = { width: 420, height: 680 };
   contentBoard.__rect = { width: 900, height: 680 };
+  boardCanvas.__rect = { width: 900, height: 680 };
 
   const undoButton = documentRef.createElement("button");
   undoButton.textContent = "Undo";
@@ -249,6 +251,10 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   await wait(5);
 
   assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
 
   documentRef.flushMutations();
   await wait(5);
@@ -276,6 +282,10 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
 
   runtime.stop();
   assertThemeHookState(boardNodes, false);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    ""
+  );
 });
 
 test("theme-x01 keeps info-style content slot layout hooks stable across mutations", async () => {
@@ -296,6 +306,10 @@ test("theme-x01 keeps info-style content slot layout hooks stable across mutatio
 
   assertThemeHookState(boardNodes, true);
   assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "680px"
+  );
+  assert.equal(
     documentRef.querySelectorAll(".ad-ext-theme-content-slot").length,
     1
   );
@@ -306,6 +320,10 @@ test("theme-x01 keeps info-style content slot layout hooks stable across mutatio
 
   runtime.stop();
   assertThemeHookState(boardNodes, false);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    ""
+  );
 });
 
 test("theme-shanghai mounts idempotently and cleans up style", async () => {

@@ -341,8 +341,8 @@ div.css-y3hfdd > .css-1igwmid{
 }
 
 .ad-ext-theme-board-canvas > *{
-  width: 100% !important;
-  height: 100% !important;
+  width: var(--ad-ext-theme-board-size, 100%) !important;
+  height: var(--ad-ext-theme-board-size, 100%) !important;
   max-width: 100% !important;
   max-height: 100% !important;
   min-width: 0 !important;

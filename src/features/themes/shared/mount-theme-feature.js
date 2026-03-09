@@ -16,6 +16,7 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardCanvas: "ad-ext-theme-board-canvas",
   boardSvg: "ad-ext-theme-board-svg",
 });
+const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 
 function getElementChildren(node) {
   if (!node || typeof node !== "object" || !node.children) {
@@ -210,6 +211,43 @@ function getElementWidth(node) {
   }
 }
 
+function getElementHeight(node) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return 0;
+  }
+
+  try {
+    const rect = node.getBoundingClientRect();
+    const height = Number.parseFloat(rect?.height);
+    return Number.isFinite(height) && height > 0 ? height : 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function clearBoardSizeVariable(node) {
+  if (!node || !node.style || typeof node.style.removeProperty !== "function") {
+    return;
+  }
+  node.style.removeProperty(BOARD_SIZE_CSS_VARIABLE);
+}
+
+function updateBoardSizeVariable(node) {
+  if (!node || !node.style || typeof node.style.setProperty !== "function") {
+    return;
+  }
+
+  const width = getElementWidth(node);
+  const height = getElementHeight(node);
+  const boardSize = Math.floor(Math.min(width, height));
+  if (!Number.isFinite(boardSize) || boardSize <= 0) {
+    clearBoardSizeVariable(node);
+    return;
+  }
+
+  node.style.setProperty(BOARD_SIZE_CSS_VARIABLE, `${boardSize}px`);
+}
+
 function resolveContentLayoutCandidate(contentSlot, playerDisplay, boardSvg) {
   if (!contentSlot || !playerDisplay || !boardSvg) {
     return null;
@@ -400,6 +438,7 @@ function addClass(node, className) {
 
 function clearBoardLayoutHooks(state) {
   const previous = state?.layoutHookTargets || {};
+  clearBoardSizeVariable(previous.boardCanvas);
   Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
     removeClass(previous[key], className);
   });
@@ -410,6 +449,9 @@ function updateBoardLayoutHooks(documentRef, state) {
   const targets = resolveBoardLayoutTargets(documentRef);
   const nextTargets = targets || {};
   const previous = state.layoutHookTargets || {};
+  if (previous.boardCanvas && previous.boardCanvas !== nextTargets.boardCanvas) {
+    clearBoardSizeVariable(previous.boardCanvas);
+  }
 
   Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
     if (previous[key] && previous[key] !== nextTargets[key]) {
@@ -420,6 +462,8 @@ function updateBoardLayoutHooks(documentRef, state) {
   Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
     addClass(nextTargets[key], className);
   });
+
+  updateBoardSizeVariable(nextTargets.boardCanvas);
 
   state.layoutHookTargets = nextTargets;
 }
