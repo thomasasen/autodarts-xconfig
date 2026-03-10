@@ -1,4 +1,4 @@
-﻿import { buildCricketRenderState } from "../cricket-highlighter/logic.js";
+import { buildCricketRenderState, CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
 import {
   clearCricketGridFxState,
   createCricketGridFxState,
@@ -24,29 +24,21 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
 
+const SURFACE_SELECTOR = [
+  "#grid",
+  ".ad-ext-cricket-grid",
+  ".chakra-grid",
+  ".label-cell",
+  ".player-cell",
+  "[data-row-label]",
+  "[data-target-label]",
+  "#ad-ext-game-variant",
+  "#ad-ext-player-display",
+  ".ad-ext-player",
+].join(",");
+
 function readVariantText(documentRef) {
   return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
-}
-
-function buildRenderSignature(renderState) {
-  if (!renderState || !renderState.stateMap) {
-    return "";
-  }
-
-  const entries = [];
-  renderState.stateMap.forEach((entry, label) => {
-    entries.push(
-      `${label}:${entry?.boardPresentation || "open"}:${(entry?.marksByPlayer || []).join(",")}`
-    );
-  });
-  entries.sort();
-
-  return [
-    renderState.gameModeNormalized,
-    renderState.scoringModeNormalized,
-    renderState.activePlayerIndex,
-    entries.join("|"),
-  ].join("::");
 }
 
 function createDebugState(featureDebug) {
@@ -79,86 +71,42 @@ function emitDebugWarning(debugState, signature, message) {
   debugState.featureDebug.warn(message);
 }
 
-function formatLabelList(labels, maxEntries = 3) {
-  if (!Array.isArray(labels) || labels.length === 0) {
-    return "-";
+function isSurfaceMutationNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
   }
-  const compact = labels.slice(0, Math.max(1, maxEntries)).join(",");
-  return labels.length > maxEntries ? `${compact},…` : compact;
+  if (typeof node.closest === "function" && node.closest("#ad-xconfig-panel-host")) {
+    return false;
+  }
+  if (typeof node.matches === "function" && node.matches(SURFACE_SELECTOR)) {
+    return true;
+  }
+  if (typeof node.querySelector === "function" && node.querySelector(SURFACE_SELECTOR)) {
+    return true;
+  }
+  return false;
 }
 
-function formatMarksByLabelDebug(marksByLabelDebug, maxEntries = 4) {
-  if (!marksByLabelDebug || typeof marksByLabelDebug !== "object") {
-    return "-";
-  }
-
-  const entries = Object.entries(marksByLabelDebug)
-    .filter(([label, value]) => Boolean(label) && Boolean(value))
-    .sort((left, right) => left[0].localeCompare(right[0]));
-  if (!entries.length) {
-    return "-";
-  }
-
-  const compact = entries
-    .slice(0, Math.max(1, maxEntries))
-    .map(([label, value]) => `${label}=${value}`)
-    .join("|");
-  return entries.length > maxEntries ? `${compact}|…` : compact;
-}
-
-function isCricketActive(gameState, documentRef, variantRules) {
-  if (gameState && typeof gameState.isCricketVariant === "function") {
-    return gameState.isCricketVariant({
-      allowMissing: false,
-      allowEmpty: false,
-      includeHiddenCricket: false,
-    });
-  }
-
-  const variantText = String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "");
-  if (!variantRules || typeof variantRules.isCricketVariantText !== "function") {
+function hasRelevantCricketMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
     return false;
   }
 
-  return variantRules.isCricketVariantText(variantText, {
-    allowMissing: false,
-    allowEmpty: false,
-    includeHiddenCricket: false,
+  return mutations.some((mutation) => {
+    const target = mutation?.target || null;
+    if (isSurfaceMutationNode(target)) {
+      return true;
+    }
+    const touchedNodes = [
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ];
+    return touchedNodes.some((node) => isSurfaceMutationNode(node));
   });
 }
 
-function hasThemeCricketContext(documentRef) {
-  if (!documentRef || typeof documentRef.querySelector !== "function") {
-    return false;
-  }
-
-  const contentSlot = documentRef.querySelector(".ad-ext-theme-content-slot");
-  const contentBoard = documentRef.querySelector(".ad-ext-theme-content-board");
-  const boardPanel =
-    documentRef.querySelector(".ad-ext-theme-board-panel") ||
-    documentRef.querySelector(".ad-ext-theme-board-viewport");
-
-  return Boolean(contentSlot && contentBoard && boardPanel);
-}
-
-function buildTurnToken(gameState, activePlayerIndex = 0) {
-  const turn =
-    gameState && typeof gameState.getActiveTurn === "function"
-      ? gameState.getActiveTurn()
-      : null;
-
-  if (turn && typeof turn === "object") {
-    const round = Number.isFinite(turn.round) ? turn.round : "";
-    const part = Number.isFinite(turn.turn) ? turn.turn : "";
-    return `${turn.id || ""}|${turn.playerId || ""}|${round}|${part}|${turn.createdAt || ""}`;
-  }
-
-  const throws =
-    gameState && typeof gameState.getActiveThrows === "function"
-      ? gameState.getActiveThrows()
-      : [];
-  const throwCount = Array.isArray(throws) ? throws.length : 0;
-  return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}:${throwCount}`;
+function buildStatusSignature(renderState) {
+  return `${renderState?.surfaceStatus || "unknown"}::${renderState?.variantText || "-"}`;
 }
 
 export function initializeCricketGridFx(context = {}) {
@@ -182,163 +130,134 @@ export function initializeCricketGridFx(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("cricketGridFx")
       : {
-          rowWave: true,
-          badgeBeacon: true,
-          markProgress: true,
-          threatEdge: true,
-          scoringLane: true,
-          deadRowCollapse: true,
-          deltaChips: true,
-          hitSpark: true,
-          roundTransitionWipe: true,
-          opponentPressureOverlay: true,
-          colorTheme: "standard",
-          intensity: "normal",
-        };
+        rowWave: true,
+        badgeBeacon: true,
+        markProgress: true,
+        threatEdge: true,
+        scoringLane: true,
+        deadRowCollapse: true,
+        deltaChips: true,
+        hitSpark: true,
+        roundTransitionWipe: true,
+        opponentPressureOverlay: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      };
 
   const visualConfig = resolveCricketGridFxConfig(featureConfig);
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   const state = createCricketGridFxState(windowRef);
   const debugState = createDebugState(featureDebug);
-  let lastDebugRenderSignature = "";
+  let lastTransitionSignature = "";
+
   const invalidateRenderCache = () => {
     if (state.renderCache && typeof state.renderCache === "object") {
       state.renderCache.grid = null;
+      state.renderCache.board = null;
     }
   };
 
-  function update() {
-    const variantText = readVariantText(documentRef);
-    const themeContextActive = hasThemeCricketContext(documentRef);
-    if (!isCricketActive(gameState, documentRef, variantRules) || !themeContextActive) {
-      emitDebugLog(
-        debugState,
-        `inactive::${variantText}::theme=${themeContextActive ? "on" : "off"}`,
-        `state inactive variant="${variantText || "-"}" theme="${themeContextActive ? "on" : "off"}"`
-      );
-      lastDebugRenderSignature = "";
-      clearCricketGridFxState(state);
-      return;
-    }
+  function clearAndReset() {
+    lastTransitionSignature = "";
+    clearCricketGridFxState(state);
+  }
 
+  function update() {
     const renderState = buildCricketRenderState({
       documentRef,
+      windowRef,
       gameState,
       cricketRules,
       variantRules,
+      enforceVariantGuard: true,
       visualConfig,
       cache: state.renderCache,
     });
+    const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
+    const statusSignature = buildStatusSignature(renderState);
+    const variantText = renderState?.variantText || readVariantText(documentRef);
 
-    if (!renderState) {
-      emitDebugWarning(
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
+      clearAndReset();
+      emitDebugLog(
         debugState,
-        `missing-grid::${variantText}`,
-        `warn kein Grid variant="${variantText || "-"}"`
+        statusSignature,
+        `state paused route variant="${variantText || "-"}"`
       );
-      lastDebugRenderSignature = "";
-      clearCricketGridFxState(state);
       return;
     }
 
-    const renderSignature = buildRenderSignature(renderState);
-    const turnToken = buildTurnToken(gameState, Number(renderState.activePlayerIndex));
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
+      clearAndReset();
+      emitDebugLog(
+        debugState,
+        statusSignature,
+        `state inactive variant="${variantText || "-"}"`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
+      clearAndReset();
+      emitDebugWarning(
+        debugState,
+        statusSignature,
+        `warn kein Grid variant="${variantText || "-"}"`
+      );
+      return;
+    }
+
+    const transitionSignature = String(renderState?.transitionSignature || "");
+    if (!transitionSignature) {
+      clearAndReset();
+      return;
+    }
+    if (transitionSignature === lastTransitionSignature) {
+      return;
+    }
+
     const debugStats = {};
-
-    const multiLabelContainerDropCount = Number(
-      renderState.labelDiagnostics?.multiLabelContainerDropCount
-    ) || 0;
-    const shortfallRepairCount = Number(renderState.shortfallRepairCount) || 0;
-    if (multiLabelContainerDropCount > 0) {
-      emitDebugWarning(
-        debugState,
-        `${renderSignature || "no-signature"}::multi-label-wrapper::${multiLabelContainerDropCount}`,
-        `warn mehrere Labels in einem Container erkannt variant="${variantText || "-"}" count=${multiLabelContainerDropCount} raw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} atomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0}`
-      );
-    }
-    if (shortfallRepairCount > 0) {
-      emitDebugWarning(
-        debugState,
-        `${renderSignature || "no-signature"}::shortfall-repair::${shortfallRepairCount}::${formatLabelList(renderState.shortfallRepairLabels)}`,
-        `warn Shortfall-Reparatur aktiv variant="${variantText || "-"}" labels=${formatLabelList(renderState.shortfallRepairLabels)} count=${shortfallRepairCount}`
-      );
-    }
-
     updateCricketGridFx({
       documentRef,
       cricketRules,
       renderState,
       state,
       visualConfig,
-      turnToken,
+      turnToken: renderState.turnToken || "",
       debugStats,
     });
 
-    const debugSignature = [
-      renderSignature || "no-signature",
-      debugStats.status || "unknown",
-      Number(debugStats.rowCount) || 0,
-      Number(debugStats.scoreCellCount) || 0,
-      Number(debugStats.activeColumnResolvedCount) || 0,
-      Number(debugStats.activeColumnMissingCount) || 0,
-      Number(debugStats.badgeCount) || 0,
-      Number(debugStats.badgeFallbackCount) || 0,
-      Number(debugStats.rowWaveDeltaCount) || 0,
-      Number(debugStats.rowWaveTacticalCount) || 0,
-      debugStats.turnTokenChanged ? 1 : 0,
-      renderState.discoveredRawLabelCount || 0,
-      renderState.discoveredLabelCount || 0,
-      renderState.labelCellMarkSourceCount || 0,
-      renderState.shortfallRepairCount || 0,
-    ].join("::");
-
-    if (renderSignature && renderSignature !== lastDebugRenderSignature) {
-      emitDebugLog(
-        debugState,
-        debugSignature,
-        `state variant="${variantText || "-"}" theme="on" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} turn="${turnToken || "-"}" labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} rows=${Number(debugStats.rowCount) || 0} labelCells=${Number(debugStats.labelCellCount) || 0} badges=${Number(debugStats.badgeCount) || 0}/${Number(debugStats.badgeFallbackCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} rowWaveDelta=${Number(debugStats.rowWaveDeltaCount) || 0} rowWaveTactical=${Number(debugStats.rowWaveTacticalCount) || 0} activeMap=${Number(debugStats.activeColumnResolvedCount) || 0}/${(Number(debugStats.activeColumnResolvedCount) || 0) + (Number(debugStats.activeColumnMissingCount) || 0)} wipe=${debugStats.turnTokenChanged ? "1" : "0"}`
-      );
-      lastDebugRenderSignature = renderSignature;
-    }
-
     if (debugStats.status === "missing-grid") {
+      clearAndReset();
       emitDebugWarning(
         debugState,
-        `${renderSignature || "no-signature"}::missing-grid`,
+        `${transitionSignature}::missing-grid`,
         `warn kein Grid variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}"`
       );
       return;
     }
 
-    if (
-      (Number(debugStats.offenseRowCount) || 0) > 0 &&
-      (Number(debugStats.scoreCellCount) || 0) === 0
-    ) {
-      emitDebugWarning(
-        debugState,
-        `${renderSignature || "no-signature"}::no-score-cells`,
-        `warn offense rows ohne score-cells variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
-      );
-    }
-    if ((Number(debugStats.rowsWithoutPlayerCells) || 0) > 0) {
-      emitDebugWarning(
-        debugState,
-        `${renderSignature || "no-signature"}::rows-without-player-cells::${Number(debugStats.rowsWithoutPlayerCells) || 0}`,
-        `warn Grid-Row ohne verwertbare Player-Cells variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" rows=${Number(debugStats.rowsWithoutPlayerCells) || 0}`
-      );
-    }
-    if ((Number(debugStats.activeColumnMissingCount) || 0) > 0) {
-      emitDebugWarning(
-        debugState,
-        `${renderSignature || "no-signature"}::active-column-missing::${Number(debugStats.activeColumnMissingCount) || 0}`,
-        `warn aktive Spalte nicht eindeutig variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" missing=${Number(debugStats.activeColumnMissingCount) || 0} labels=${formatLabelList(debugStats.activeColumnMissingLabels, 4)}`
-      );
-    }
+    lastTransitionSignature = transitionSignature;
+    const logSignature = [
+      transitionSignature,
+      debugStats.status || "unknown",
+      Number(debugStats.rowCount) || 0,
+      Number(debugStats.scoreCellCount) || 0,
+      Number(debugStats.rowWaveDeltaCount) || 0,
+      Number(debugStats.rowWaveTacticalCount) || 0,
+      debugStats.turnTokenChanged ? 1 : 0,
+    ].join("::");
+
+    emitDebugLog(
+      debugState,
+      logSignature,
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" rows=${Number(debugStats.rowCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} waveDelta=${Number(debugStats.rowWaveDeltaCount) || 0} waveTransition=${Number(debugStats.rowWaveTacticalCount) || 0} wipe=${debugStats.turnTokenChanged ? "1" : "0"}`
+    );
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
-  const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const rootNode = documentRef.getElementById?.("root") || documentRef.body || documentRef.documentElement || documentRef;
   const isManagedNode = createManagedNodeMatcher({
     classNames: [BADGE_CLASS, ROW_WAVE_CLASS, DELTA_CLASS, SPARK_CLASS, WIPE_CLASS],
   });
@@ -349,6 +268,9 @@ export function initializeCricketGridFx(context = {}) {
       target: rootNode,
       callback: (mutations = []) => {
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        if (!hasRelevantCricketMutation(mutations)) {
           return;
         }
         invalidateRenderCache();

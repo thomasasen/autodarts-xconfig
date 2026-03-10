@@ -4,6 +4,7 @@ import {
   findBoardSvgGroup,
 } from "../../shared/dartboard-svg.js";
 import { OVERLAY_ID, PRESENTATION_CLASS, SVG_NS, TARGET_CLASS } from "./style.js";
+import { buildCricketRenderState as buildCricketRenderStateFromPipeline } from "../cricket-surface/pipeline.js";
 
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -1230,6 +1231,9 @@ function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
     return;
   }
   const presentationClass = PRESENTATION_CLASS[presentation] || PRESENTATION_CLASS.closed;
+  Object.values(PRESENTATION_CLASS).forEach((className) => {
+    shape.classList.remove(className);
+  });
   shape.classList.add(TARGET_CLASS, presentationClass);
   if (shape.dataset) {
     shape.dataset.targetLabel = String(targetLabel || "");
@@ -1237,8 +1241,48 @@ function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
   }
 }
 
+function ensureOverlayShapeCache(overlay, board, visualConfig, cache = null) {
+  if (!overlay || !board?.radius) {
+    return null;
+  }
+
+  const geometryKey = [
+    Number(board.radius).toFixed(2),
+    Number(visualConfig?.edgePaddingPx || 0).toFixed(2),
+  ].join("|");
+
+  const cacheContainer = cache && typeof cache === "object" ? cache : null;
+  const cachedShapeState = cacheContainer?.overlayShapeState || null;
+  const canReuse =
+    cachedShapeState &&
+    cachedShapeState.overlay === overlay &&
+    cachedShapeState.geometryKey === geometryKey;
+  if (canReuse) {
+    return cachedShapeState;
+  }
+
+  clearNodeChildren(overlay);
+  const shapesByTarget = new Map();
+  ALL_BOARD_TARGETS.forEach((targetLabel) => {
+    const shapes = buildShapesForLabel(overlay.ownerDocument, board.radius, targetLabel, visualConfig);
+    shapes.forEach((shape) => overlay.appendChild(shape));
+    shapesByTarget.set(targetLabel, shapes);
+  });
+
+  const nextState = {
+    overlay,
+    geometryKey,
+    shapesByTarget,
+  };
+
+  if (cacheContainer) {
+    cacheContainer.overlayShapeState = nextState;
+  }
+  return nextState;
+}
+
 export function buildCricketRenderState(options = {}) {
-  return buildMarksByLabelSnapshot(options);
+  return buildCricketRenderStateFromPipeline(options);
 }
 
 export function renderCricketHighlights(options = {}) {
@@ -1273,7 +1317,10 @@ export function renderCricketHighlights(options = {}) {
     return false;
   }
   applyOverlayStyleVars(overlay, visualConfig, board.radius);
-  clearNodeChildren(overlay);
+  const overlayShapeState = ensureOverlayShapeCache(overlay, board, visualConfig, options.cache);
+  if (!overlayShapeState?.shapesByTarget) {
+    return false;
+  }
   let renderedShapeCount = 0;
   let highlightedTargetCount = 0;
   let nonOpenTargetCount = 0;
@@ -1309,23 +1356,26 @@ export function renderCricketHighlights(options = {}) {
       openTargetCount += 1;
     }
 
-    if (isRelevantTarget && presentation === "open" && visualConfig.showOpenTargets === false) {
-      return;
-    }
-    if (isRelevantTarget && presentation === "dead" && !visualConfig.showDeadTargets) {
-      return;
+    const shouldRenderTarget =
+      !(isRelevantTarget && presentation === "open" && visualConfig.showOpenTargets === false) &&
+      !(isRelevantTarget && presentation === "dead" && !visualConfig.showDeadTargets);
+    const shapes = overlayShapeState.shapesByTarget.get(targetLabel) || [];
+
+    shapeCountByTarget[targetLabel] = (shapeCountByTarget[targetLabel] || 0) + shapes.length;
+    if (shouldRenderTarget) {
+      shapeCountByPresentation[presentation] =
+        (shapeCountByPresentation[presentation] || 0) + shapes.length;
     }
 
-    const shapes = buildShapesForLabel(overlay.ownerDocument, board.radius, targetLabel, visualConfig);
-    shapeCountByTarget[targetLabel] = (shapeCountByTarget[targetLabel] || 0) + shapes.length;
-    shapeCountByPresentation[presentation] =
-      (shapeCountByPresentation[presentation] || 0) + shapes.length;
     shapes.forEach((shape) => {
       applyShapeStyle(shape, presentation, visualConfig, targetLabel);
-      overlay.appendChild(shape);
-      renderedShapeCount += 1;
+      shape.style.display = shouldRenderTarget ? "" : "none";
+      if (shouldRenderTarget) {
+        renderedShapeCount += 1;
+      }
     });
-    if (shapes.length > 0) {
+
+    if (shouldRenderTarget && shapes.length > 0) {
       highlightedTargetCount += 1;
       if (isRelevantTarget && presentation === "open") {
         renderedOpenTargetCount += 1;

@@ -539,7 +539,9 @@ test("cricket highlighter renders full lane geometry for numeric targets and bul
   const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
   assert.equal(Boolean(overlay), true);
   assert.equal(laneRenderState?.stateMap.get("20")?.boardPresentation, "offense");
-  assert.equal(overlay?.children?.length || 0, 60);
+  const pooledShapeCount = overlay?.children?.length || 0;
+  assert.equal(laneStats.renderedShapeCount || 0, 60);
+  assert.equal(pooledShapeCount >= (laneStats.renderedShapeCount || 0), true);
   assert.equal(laneStats.shapeCountByTarget?.["20"] || 0, 4);
   assert.equal(laneStats.shapeCountByPresentation?.inactive || 0, 56);
   assert.equal(laneStats.shapeCountByPresentation?.offense || 0, 4);
@@ -575,7 +577,8 @@ test("cricket highlighter renders full lane geometry for numeric targets and bul
     debugStats: bullStats,
   });
   assert.equal(bullRenderState?.stateMap.get("BULL")?.boardPresentation, "offense");
-  assert.equal(overlay?.children?.length || 0, 58);
+  assert.equal(bullStats.renderedShapeCount || 0, 58);
+  assert.equal(overlay?.children?.length || 0, pooledShapeCount);
   assert.equal(bullStats.shapeCountByTarget?.BULL || 0, 2);
   assert.equal(bullStats.shapeCountByPresentation?.inactive || 0, 56);
   assert.equal(bullStats.shapeCountByPresentation?.offense || 0, 2);
@@ -786,7 +789,7 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), false);
 });
 
-test("cricket grid fx only activates inside stable theme-cricket hooks", () => {
+test("cricket grid fx runs in cricket/tactics without requiring theme-cricket hooks", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -866,8 +869,15 @@ test("cricket grid fx only activates inside stable theme-cricket hooks", () => {
     },
   });
 
-  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
-  assert.equal(Boolean(rowsByLabel.get("20")?.labelCell?.querySelector?.(`.${BADGE_CLASS}`)), false);
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
+  const initialLabelCell20 = rowsByLabel.get("20")?.labelCell || null;
+  assert.equal(
+    Boolean(
+      initialLabelCell20?.classList?.contains(BADGE_CLASS) ||
+        initialLabelCell20?.querySelector?.(`.${BADGE_CLASS}`)
+    ),
+    true
+  );
 
   createThemeLikeBoardFixture(documentRef);
   const observer = observers.get("cricket-grid-fx:dom-observer");
@@ -893,4 +903,132 @@ test("cricket grid fx only activates inside stable theme-cricket hooks", () => {
 
   cleanupGridFx();
   assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
+});
+
+test("cricket highlighter and grid fx pause on /ad-xconfig and resume on match routes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  windowRef.history.pushState({}, "", "/ad-xconfig");
+
+  createThemeLikeBoardFixture(documentRef);
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const gameState = createGameState({
+    scoringModeNormalized: "standard",
+    scoringMode: "standard",
+    activeTurn: {
+      id: "turn-a",
+      playerId: "player-a",
+      round: 1,
+      turn: 1,
+      createdAt: "2026-03-10T20:30:00.000Z",
+    },
+  });
+
+  const helperScheduler = {
+    createRafScheduler(callback) {
+      return {
+        schedule() {
+          callback();
+        },
+        cancel() {},
+        isScheduled() {
+          return false;
+        },
+      };
+    },
+  };
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers, listeners },
+    gameState: {
+      ...gameState,
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: { cricketRules, variantRules },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: helperScheduler,
+  });
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers, listeners },
+    gameState: {
+      ...gameState,
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: { cricketRules, variantRules },
+    config: {
+      getFeatureConfig() {
+        return {
+          rowWave: true,
+          badgeBeacon: true,
+          markProgress: true,
+          threatEdge: true,
+          scoringLane: true,
+          deadRowCollapse: true,
+          deltaChips: true,
+          hitSpark: true,
+          roundTransitionWipe: true,
+          opponentPressureOverlay: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: helperScheduler,
+  });
+
+  assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
+  assert.equal(rowsByLabel.get("20")?.labelCell?.classList?.contains(LABEL_CLASS), false);
+
+  windowRef.history.pushState({}, "", "/lobbies");
+  const mutation = [
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ];
+
+  const highlighterObserver = observers.get("cricket-highlighter:dom-observer");
+  const gridFxObserver = observers.get("cricket-grid-fx:dom-observer");
+  assert.ok(highlighterObserver);
+  assert.ok(gridFxObserver);
+  highlighterObserver.callback(mutation);
+  gridFxObserver.callback(mutation);
+
+  assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), true);
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
+
+  cleanupGridFx();
+  cleanupHighlighter();
 });

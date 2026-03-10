@@ -151,6 +151,63 @@ test("xConfig observer ignores self-managed menu/panel mutations and only syncs 
   runtime.stop();
 });
 
+test("xConfig settings modal preserves node identity and scroll offsets during external sync", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(8);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(8);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(8);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-fx']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await wait(8);
+
+  const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+  const shell = panelHost?.querySelector?.(".ad-xconfig-shell") || null;
+  const modal = panelHost?.querySelector?.(".ad-xconfig-modal") || null;
+  const modalBody = panelHost?.querySelector?.(".ad-xconfig-modal-body") || null;
+  assert.ok(panelHost);
+  assert.ok(shell);
+  assert.ok(modal);
+  assert.ok(modalBody);
+
+  panelHost.scrollTop = 120;
+  modal.scrollTop = 180;
+  modalBody.scrollTop = 260;
+
+  documentRef.flushMutations([
+    {
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+  await wait(8);
+
+  const panelHostAfter = documentRef.getElementById("ad-xconfig-panel-host");
+  const shellAfter = panelHostAfter?.querySelector?.(".ad-xconfig-shell") || null;
+  const modalAfter = panelHostAfter?.querySelector?.(".ad-xconfig-modal") || null;
+  const modalBodyAfter = panelHostAfter?.querySelector?.(".ad-xconfig-modal-body") || null;
+
+  assert.equal(panelHostAfter, panelHost);
+  assert.equal(shellAfter, shell);
+  assert.equal(modalAfter, modal);
+  assert.equal(modalBodyAfter, modalBody);
+  assert.equal(Number(panelHostAfter?.scrollTop || 0), 120);
+  assert.equal(Number(modalAfter?.scrollTop || 0), 180);
+  assert.equal(Number(modalBodyAfter?.scrollTop || 0), 260);
+
+  runtime.stop();
+});
+
 test("xConfig menu injection stays idempotent and label collapses on narrow sidebar", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
-import { FakeDocument } from "./fake-dom.js";
+import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function createGrid(documentRef, labels, marksByRow) {
   const table = documentRef.createElement("table");
@@ -103,6 +103,40 @@ function createGameState(overrides = {}) {
 }
 
 const VISUAL_CONFIG = { showDeadTargets: true };
+
+test("buildCricketRenderState pauses cricket surfaces on /ad-xconfig route", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.history.pushState({}, "", "/ad-xconfig");
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    windowRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+    }),
+  });
+
+  assert.equal(renderState?.surfaceStatus, "paused-route");
+  assert.equal(String(renderState?.pipelineSignature || "").includes("paused-route"), true);
+  assert.equal(renderState?.stateMap instanceof Map, false);
+});
 
 test("buildCricketRenderState infers tactics from 10..14 when no explicit mode exists", () => {
   const documentRef = new FakeDocument();

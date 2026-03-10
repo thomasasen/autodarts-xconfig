@@ -889,6 +889,28 @@ function buildShellContent(documentRef, state, features) {
   page.appendChild(shell);
   return page;
 }
+
+function buildShellRenderSignature(state, features, routeActive) {
+  const normalizedFeatures = Array.isArray(features)
+    ? features.map((feature) => {
+      return {
+        featureKey: feature.featureKey || "",
+        enabled: Boolean(feature.enabled),
+        mounted: Boolean(feature.mounted),
+        config: feature.config || null,
+      };
+    })
+    : [];
+
+  return JSON.stringify({
+    routeActive: Boolean(routeActive),
+    activeTab: String(state?.activeTab || ""),
+    activeSettingsFeatureKey: String(state?.activeSettingsFeatureKey || ""),
+    noticeType: String(state?.notice?.type || ""),
+    noticeMessage: String(state?.notice?.message || ""),
+    features: normalizedFeatures,
+  });
+}
 function ensureXConfigShell(options = {}) {
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   if (!windowRef) {
@@ -922,6 +944,8 @@ function ensureXConfigShell(options = {}) {
     syncScheduled: false,
     notice: { type: "", message: "" },
     noticeTimer: null,
+    shellNode: null,
+    renderSignature: "",
   };
 
   function isConfigRoute() {
@@ -1093,8 +1117,52 @@ function ensureXConfigShell(options = {}) {
     if (!host) {
       return;
     }
+    const features = getFeatures();
+    const routeActive = isConfigRoute();
+    const nextSignature = buildShellRenderSignature(state, features, routeActive);
 
-    host.replaceChildren(buildShellContent(documentRef, state, getFeatures()));
+    if (
+      state.shellNode &&
+      state.shellNode.parentNode === host &&
+      state.renderSignature === nextSignature
+    ) {
+      return;
+    }
+
+    const previousShellNode =
+      state.shellNode && state.shellNode.parentNode === host ? state.shellNode : null;
+    const hostScrollTop = Number(host.scrollTop || 0);
+    const previousModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
+    const previousModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+    const previousModalScrollTop = Number(previousModal?.scrollTop || 0);
+    const previousModalBodyScrollTop = Number(previousModalBody?.scrollTop || 0);
+
+    const nextShellNode = buildShellContent(documentRef, state, features);
+
+    if (!previousShellNode) {
+      host.appendChild(nextShellNode);
+      state.shellNode = nextShellNode;
+    } else {
+      while (previousShellNode.firstChild) {
+        previousShellNode.removeChild(previousShellNode.firstChild);
+      }
+      Array.from(nextShellNode.children).forEach((child) => {
+        previousShellNode.appendChild(child);
+      });
+      state.shellNode = previousShellNode;
+    }
+
+    state.renderSignature = nextSignature;
+    host.scrollTop = hostScrollTop;
+
+    const nextModal = state.shellNode?.querySelector?.(".ad-xconfig-modal") || null;
+    const nextModalBody = state.shellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+    if (nextModal) {
+      nextModal.scrollTop = previousModalScrollTop;
+    }
+    if (nextModalBody) {
+      nextModalBody.scrollTop = previousModalBodyScrollTop;
+    }
   }
 
   function syncVisibility() {
@@ -1533,6 +1601,8 @@ function ensureXConfigShell(options = {}) {
   function teardown() {
     state.started = false;
     state.activeSettingsFeatureKey = "";
+    state.shellNode = null;
+    state.renderSignature = "";
     clearNoticeTimer();
     state.notice = { type: "", message: "" };
     restoreContent();

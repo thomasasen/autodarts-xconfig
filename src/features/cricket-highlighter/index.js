@@ -4,6 +4,7 @@ import {
   renderCricketHighlights,
 } from "./logic.js";
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveCricketVisualConfig } from "./style.js";
+import { CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
 
@@ -15,47 +16,26 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
 
+const SURFACE_SELECTOR = [
+  "#grid",
+  ".ad-ext-cricket-grid",
+  ".chakra-grid",
+  ".label-cell",
+  ".player-cell",
+  "[data-row-label]",
+  "[data-target-label]",
+  "#ad-ext-game-variant",
+  "#ad-ext-player-display",
+  ".ad-ext-player",
+  ".ad-ext-theme-content-slot",
+  ".ad-ext-theme-content-board",
+  ".ad-ext-theme-board-panel",
+  ".ad-ext-theme-board-viewport",
+  ".ad-ext-theme-board-svg",
+].join(",");
+
 function readVariantText(documentRef) {
   return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
-}
-
-function isCricketActive(gameState, documentRef, variantRules) {
-  if (gameState && typeof gameState.isCricketVariant === "function") {
-    return gameState.isCricketVariant({
-      allowMissing: false,
-      allowEmpty: false,
-      includeHiddenCricket: false,
-    });
-  }
-
-  const variantText = String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "");
-  if (!variantRules || typeof variantRules.isCricketVariantText !== "function") {
-    return false;
-  }
-  return variantRules.isCricketVariantText(variantText, {
-    allowMissing: false,
-    allowEmpty: false,
-    includeHiddenCricket: false,
-  });
-}
-
-function buildRenderSignature(renderState) {
-  if (!renderState || !renderState.stateMap) {
-    return "";
-  }
-  const entries = [];
-  renderState.stateMap.forEach((entry, label) => {
-    entries.push(
-      `${label}:${entry?.boardPresentation || "open"}:${(entry?.marksByPlayer || []).join(",")}`
-    );
-  });
-  entries.sort();
-  return [
-    renderState.gameModeNormalized,
-    renderState.scoringModeNormalized,
-    renderState.activePlayerIndex,
-    entries.join("|"),
-  ].join("::");
 }
 
 function createDebugState(featureDebug) {
@@ -88,53 +68,54 @@ function emitDebugWarning(debugState, signature, message) {
   debugState.featureDebug.warn(message);
 }
 
-function formatLabelList(labels, maxEntries = 3) {
-  if (!Array.isArray(labels) || labels.length === 0) {
-    return "-";
+function isSurfaceMutationNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
   }
-  const compact = labels.slice(0, Math.max(1, maxEntries)).join(",");
-  return labels.length > maxEntries ? `${compact},…` : compact;
+  if (typeof node.closest === "function" && node.closest("#ad-xconfig-panel-host")) {
+    return false;
+  }
+  if (typeof node.matches === "function" && node.matches(SURFACE_SELECTOR)) {
+    return true;
+  }
+  if (typeof node.closest === "function" && node.closest(".ad-ext-theme-board-canvas, .ad-ext-theme-content-board")) {
+    return true;
+  }
+  if (typeof node.querySelector === "function" && node.querySelector(SURFACE_SELECTOR)) {
+    return true;
+  }
+  return false;
 }
 
-function formatMarksByLabelDebug(marksByLabelDebug, maxEntries = 4) {
-  if (!marksByLabelDebug || typeof marksByLabelDebug !== "object") {
-    return "-";
+function hasOverlayRemovalMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
   }
-
-  const entries = Object.entries(marksByLabelDebug)
-    .filter(([label, value]) => Boolean(label) && Boolean(value))
-    .sort((left, right) => left[0].localeCompare(right[0]));
-  if (!entries.length) {
-    return "-";
-  }
-
-  const compact = entries
-    .slice(0, Math.max(1, maxEntries))
-    .map(([label, value]) => `${label}=${value}`)
-    .join("|");
-  return entries.length > maxEntries ? `${compact}|…` : compact;
+  return mutations.some((mutation) => {
+    const removedNodes = Array.from(mutation?.removedNodes || []);
+    return removedNodes.some((node) => String(node?.id || "") === OVERLAY_ID);
+  });
 }
 
-function formatShapeCountByTarget(shapeCountByTarget, maxEntries = 5) {
-  if (!shapeCountByTarget || typeof shapeCountByTarget !== "object") {
-    return "-";
+function hasRelevantCricketMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
   }
 
-  const entries = Object.entries(shapeCountByTarget)
-    .filter(([label, count]) => Boolean(label) && Number(count) > 0)
-    .sort((left, right) => left[0].localeCompare(right[0]));
-  if (!entries.length) {
-    return "-";
-  }
-
-  const compact = entries
-    .slice(0, Math.max(1, maxEntries))
-    .map(([label, count]) => `${label}:${Number(count) || 0}`)
-    .join("|");
-  return entries.length > maxEntries ? `${compact}|...` : compact;
+  return mutations.some((mutation) => {
+    const target = mutation?.target || null;
+    if (isSurfaceMutationNode(target)) {
+      return true;
+    }
+    const touchedNodes = [
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ];
+    return touchedNodes.some((node) => isSurfaceMutationNode(node));
+  });
 }
 
-function resolveOverlayStructuralHealth(documentRef, cache = null) {
+function resolveOverlayHealth(documentRef, cache = null) {
   const cachedBoard = cache?.board;
   const board =
     cachedBoard?.group?.isConnected !== false
@@ -143,24 +124,16 @@ function resolveOverlayStructuralHealth(documentRef, cache = null) {
   if (cache && typeof cache === "object") {
     cache.board = board;
   }
-
   if (!board?.group) {
-    return {
-      hasBoard: false,
-      overlayPresent: false,
-      healthy: false,
-    };
+    return false;
   }
 
   const overlay = board.group.querySelector?.(`#${OVERLAY_ID}`) || null;
-  const overlayPresent = Boolean(overlay);
-  const overlayConnected = Boolean(overlayPresent && overlay.isConnected !== false);
+  return Boolean(overlay && overlay.isConnected !== false);
+}
 
-  return {
-    hasBoard: true,
-    overlayPresent,
-    healthy: overlayConnected,
-  };
+function buildStatusSignature(renderState) {
+  return `${renderState?.surfaceStatus || "unknown"}::${renderState?.variantText || "-"}`;
 }
 
 export function initializeCricketHighlighter(context = {}) {
@@ -176,12 +149,7 @@ export function initializeCricketHighlighter(context = {}) {
   const featureDebug = context.featureDebug || null;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
-  if (
-    !documentRef ||
-    !domGuards ||
-    !cricketRules ||
-    typeof schedulerFactory !== "function"
-  ) {
+  if (!documentRef || !domGuards || !cricketRules || typeof schedulerFactory !== "function") {
     return () => {};
   }
 
@@ -189,99 +157,99 @@ export function initializeCricketHighlighter(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("cricketHighlighter")
       : {
-          showOpenTargets: false,
-          showDeadTargets: true,
-          colorTheme: "standard",
-          intensity: "normal",
-        };
+        showOpenTargets: false,
+        showDeadTargets: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      };
   const visualConfig = resolveCricketVisualConfig(featureConfig);
-  const showOpenTargets = visualConfig.showOpenTargets !== false;
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
-  let lastSignature = "";
+  let lastPipelineSignature = "";
   const debugState = createDebugState(featureDebug);
   const renderCache = {
     grid: null,
     board: null,
+    overlayShapeState: null,
   };
 
   function invalidateRenderCache() {
     renderCache.grid = null;
     renderCache.board = null;
+    renderCache.overlayShapeState = null;
+  }
+
+  function clearAndReset() {
+    lastPipelineSignature = "";
+    clearCricketHighlights(documentRef);
+    renderCache.overlayShapeState = null;
   }
 
   function update() {
-    const active = isCricketActive(gameState, documentRef, variantRules);
-    const variantText = readVariantText(documentRef);
-    if (!active) {
-      lastSignature = "";
-      emitDebugLog(
-        debugState,
-        `inactive::${variantText}`,
-        `state inactive variant="${variantText || "-"}"`
-      );
-      clearCricketHighlights(documentRef);
-      return;
-    }
-
     const renderState = buildCricketRenderState({
       documentRef,
+      windowRef,
       gameState,
       cricketRules,
       variantRules,
+      enforceVariantGuard: true,
       visualConfig,
       cache: renderCache,
     });
-    if (!renderState) {
-      lastSignature = "";
+    const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
+    const statusSignature = buildStatusSignature(renderState);
+    const variantText = renderState?.variantText || readVariantText(documentRef);
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
+      clearAndReset();
+      emitDebugLog(
+        debugState,
+        statusSignature,
+        `state paused route variant="${variantText || "-"}"`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
+      clearAndReset();
+      emitDebugLog(
+        debugState,
+        statusSignature,
+        `state inactive variant="${variantText || "-"}"`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
+      clearAndReset();
       emitDebugWarning(
         debugState,
-        `missing-grid::${variantText}`,
+        statusSignature,
         `warn kein Grid variant="${variantText || "-"}"`
       );
       return;
     }
 
-    const signature = buildRenderSignature(renderState);
-    if (!signature) {
-      lastSignature = "";
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+      clearAndReset();
+      emitDebugWarning(
+        debugState,
+        statusSignature,
+        `warn kein Board variant="${variantText || "-"}"`
+      );
       return;
     }
 
-    const signatureUnchanged = signature === lastSignature;
-    let forcedStructuralRefresh = false;
-    if (signatureUnchanged) {
-      const structuralHealth = resolveOverlayStructuralHealth(documentRef, renderCache);
-      if (structuralHealth.healthy) {
-        return;
-      }
-
-      forcedStructuralRefresh = true;
-      emitDebugWarning(
-        debugState,
-        `${signature}::overlay-missing::${structuralHealth.hasBoard ? "board" : "no-board"}`,
-        `warn overlay missing -> forced re-render variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" board=${structuralHealth.hasBoard ? "yes" : "no"}`
-      );
+    const signature = String(renderState?.pipelineSignature || "");
+    if (!signature) {
+      clearAndReset();
+      return;
     }
 
-    const multiLabelContainerDropCount = Number(
-      renderState.labelDiagnostics?.multiLabelContainerDropCount
-    ) || 0;
-    const shortfallRepairCount = Number(renderState.shortfallRepairCount) || 0;
-    if (multiLabelContainerDropCount > 0) {
-      emitDebugWarning(
-        debugState,
-        `${signature}::multi-label-wrapper::${multiLabelContainerDropCount}`,
-        `warn mehrere Labels in einem Container erkannt variant="${variantText || "-"}" count=${multiLabelContainerDropCount} raw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} atomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0}`
-      );
-    }
-    if (shortfallRepairCount > 0) {
-      emitDebugWarning(
-        debugState,
-        `${signature}::shortfall-repair::${shortfallRepairCount}::${formatLabelList(renderState.shortfallRepairLabels)}`,
-        `warn Shortfall-Reparatur aktiv variant="${variantText || "-"}" labels=${formatLabelList(renderState.shortfallRepairLabels)} count=${shortfallRepairCount}`
-      );
+    const overlayHealthy = resolveOverlayHealth(documentRef, renderCache);
+    if (signature === lastPipelineSignature && overlayHealthy) {
+      return;
     }
 
     const debugStats = {};
@@ -293,76 +261,34 @@ export function initializeCricketHighlighter(context = {}) {
       debugStats,
     });
 
-    const debugSignature = [
-      signature,
-      forcedStructuralRefresh ? "forced" : "normal",
-      rendered ? "rendered" : "no-board",
-      showOpenTargets ? "open-on" : "open-off",
-      debugStats.renderedShapeCount || 0,
-      debugStats.nonOpenTargetCount || 0,
-      debugStats.openTargetCount || 0,
-      debugStats.renderedOpenTargetCount || 0,
-      renderState.discoveredRawLabelCount || 0,
-      renderState.discoveredLabelCount || 0,
-      renderState.labelCellMarkSourceCount || 0,
-      renderState.shortfallRepairCount || 0,
-      formatShapeCountByTarget(debugStats.shapeCountByTarget),
-    ].join("::");
-
-    emitDebugLog(
-      debugState,
-      debugSignature,
-      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} showOpen=${showOpenTargets ? "on" : "off"} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} shapes=${Number(debugStats.renderedShapeCount) || 0} highlighted=${Number(debugStats.highlightedTargetCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0} shapeTargets=${formatShapeCountByTarget(debugStats.shapeCountByTarget)} shapeByPresentation=${formatShapeCountByTarget(debugStats.shapeCountByPresentation)}`
-    );
-
     if (!rendered) {
-      lastSignature = "";
+      clearAndReset();
       emitDebugWarning(
         debugState,
-        `${signature}::no-board`,
-        `warn kein Board variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}"`
+        `${signature}::render-failed`,
+        `warn render fehlgeschlagen variant="${variantText || "-"}"`
       );
       return;
     }
 
-    if ((Number(debugStats.nonOpenTargetCount) || 0) > 0 && (Number(debugStats.renderedShapeCount) || 0) === 0) {
-      const warningPrefix = forcedStructuralRefresh
-        ? "warn forced re-render: weiterhin 0 Shapes trotz non-open Targets"
-        : "warn 0 Shapes trotz non-open Targets";
-      emitDebugWarning(
-        debugState,
-        `${signature}::zero-shapes::${forcedStructuralRefresh ? "forced" : "normal"}`,
-        `${warningPrefix} variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
-      );
-    }
-    if (
-      (Number(debugStats.nonOpenTargetCount) || 0) > 0 &&
-      (Number(debugStats.renderedShapeCount) || 0) <
-        (Number(debugStats.nonOpenTargetCount) || 0) * 2
-    ) {
-      emitDebugWarning(
-        debugState,
-        `${signature}::low-shapes::${forcedStructuralRefresh ? "forced" : "normal"}::${Number(debugStats.renderedShapeCount) || 0}`,
-        `warn Shapes unerwartet niedrig variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} shapes=${Number(debugStats.renderedShapeCount) || 0} byTarget=${formatShapeCountByTarget(debugStats.shapeCountByTarget)}`
-      );
-    }
-    if (
-      showOpenTargets &&
-      (Number(debugStats.openTargetCount) || 0) > 0 &&
-      (Number(debugStats.renderedOpenTargetCount) || 0) === 0
-    ) {
-      emitDebugWarning(
-        debugState,
-        `${signature}::zero-open-shapes::${forcedStructuralRefresh ? "forced" : "normal"}`,
-        `warn 0 Shapes trotz Open-Targets variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "unknown"}"`
-      );
-    }
+    lastPipelineSignature = signature;
+    const logSignature = [
+      signature,
+      debugStats.renderedShapeCount || 0,
+      debugStats.nonOpenTargetCount || 0,
+      debugStats.openTargetCount || 0,
+      debugStats.renderedOpenTargetCount || 0,
+    ].join("::");
 
-    lastSignature = signature;
+    emitDebugLog(
+      debugState,
+      logSignature,
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" shapes=${Number(debugStats.renderedShapeCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0}`
+    );
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
-  const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const rootNode = documentRef.getElementById?.("root") || documentRef.body || documentRef.documentElement || documentRef;
   const isManagedNode = createManagedNodeMatcher({
     ids: [OVERLAY_ID],
   });
@@ -372,7 +298,15 @@ export function initializeCricketHighlighter(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
+        if (hasOverlayRemovalMutation(mutations)) {
+          invalidateRenderCache();
+          scheduler.schedule();
+          return;
+        }
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        if (!hasRelevantCricketMutation(mutations)) {
           return;
         }
         invalidateRenderCache();

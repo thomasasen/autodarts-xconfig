@@ -1,54 +1,54 @@
 ﻿# Cricket/Tactics Soll-Ist-Abweichungsmatrix
 
-Stand: 2026-03-10 (Baseline + Post-Fix-Verifikation)
+Stand: 2026-03-10 (nach Implementierung)
 
-## Methodik
+## Quellenbasis
 
-- Soll-Referenz:
-  - README: [Cricket Target Highlighter](../README.md#animation-autodarts-animate-cricket-target-highlighter)
-  - README: [Cricket Grid FX](../README.md#animation-autodarts-animate-cricket-grid-fx)
-  - README: [Theme Cricket](../README.md#template-autodarts-theme-cricket)
-  - Screenshots:
-    - `docs/screenshots/animation-cricket-target-highlighter.png`
-    - `docs/screenshots/animation-cricket-grid-fx.png`
-    - `docs/screenshots/template-theme-cricket-xConfig.png`
-- Ist-Referenz:
-  - Runtime-Tests (`npm.cmd test`) Baseline: grün
-  - Codepfade:
-    - `src/domain/cricket-rules.js`
-    - `src/features/cricket-highlighter/logic.js`
-    - `src/features/cricket-grid-fx/logic.js`
-    - `src/features/themes/cricket/style.js`
-  - reproduzierbare Node-/Harness-Repros
+- README-Soll:
+  - [Theme Cricket](../README.md#template-autodarts-theme-cricket)
+  - [Cricket Target Highlighter](../README.md#animation-autodarts-animate-cricket-target-highlighter)
+  - [Cricket Grid FX](../README.md#animation-autodarts-animate-cricket-grid-fx)
+- Screenshot-Soll:
+  - `docs/screenshots/animation-cricket-target-highlighter.png`
+  - `docs/screenshots/animation-cricket-grid-fx.png`
+  - `docs/screenshots/template-theme-cricket-xConfig.png`
+  - Laufzeit-Screenshot (Settings-Scroll/Jump): User-Anhang 2026-03-10
+- Runtime-Ist (vor Fix):
+  - `C:\Users\t.asen\Downloads\play.autodarts.io-1773147718872.log`
 
-## Abweichungen (Vorher)
+## Abweichungsmatrix
 
-| ID | Soll (README/Screenshot) | Ist (Runtime) | Repro | Kategorie | Ursache-Hypothese | Fix-Ansatz | Post-Fix-Check | Status |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CTC-001 | Mark-Fortschritt in Cricket/Tactics muss korrekt aus den echten Grid-Zeichen gelesen werden; Screenshots zeigen Symbolmarkierungen (`/`, `X`, `⊗`) | Symbolmarkierungen wurden als `0` gelesen, wenn keine numerischen `data-marks`/`alt`-Werte vorlagen | Node-Repro: Grid-Zelle `⊗` ergab vorher `marksByLabel['20'] = [0,0]` | Logikfehler | DOM-/Parser-Fehler in Mark-Parsing | Zentrales Mark-Parsing in Domain erweitert und in Highlighter/Grid-FX angebunden | `tests/domain/cricket-rules.test.js` (`parseCricketMarkValue...`) und `tests/runtime/cricket-render-state.test.js` (`symbolic mark glyphs...`) grün | resolved |
-| CTC-002 | Aktiver vs. inaktiver Spieler muss farblich sofort korrekt sein (Board + Grid), auch bei UI-Reihenfolgewechseln | Aktiver Spielerindex wurde primär aus sichtbarer DOM-Reihenfolge aufgelöst; Konflikte konnten falsche Perspektive erzeugen | Repro-Fall DOM-Order vs. State-Index | Logikfehler | Player-State-Mapping (DOM-Reihenfolge statt stabile Zuordnung) | Active-Index-Auflösung mit Priorität auf Game-State, wenn Grid-Spalten explizit indexiert sind (`data-player-index`) | `tests/runtime/cricket-render-state.test.js` (`state index wins over DOM order...`) grün | resolved |
-| CTC-003 | Grid-/Board-Zustände müssen aus derselben fachlichen Quelle stammen, ohne doppelte Parser-Semantik | Highlighter und Grid FX hatten lokale Mark-Parser-Details (Duplikatrisiko) | Codeinspektion `parseMarksValue` in beiden Features | Logikfehler | Verteilte Parserlogik | Mark-Parselogik zentral in `src/domain/cricket-rules.js` (`parseCricketMarkValue`) eingeführt und konsumiert | Domain- + Runtime-Suiten grün (`npm.cmd test`) | resolved |
-| CTC-004 | Tactics darf keine neue erfundene Semantik erhalten; `strict/slop` muss mindestens kompatibel eingeordnet sein | `strict/slop` war nicht explizit als Tactics-Submodus normalisiert | Codeinspektion `variant-rules.js` | Logik-/Dokulücke | Unvollständige Variantenklassifikation | Kompatible Submodus-Klassifikation ergänzt (ohne Gameplay-Änderung) und in Render-State sichtbar gemacht | `tests/domain/variant-rules.test.js` + `tests/runtime/cricket-render-state.test.js` (`tactics precision token...`) grün | resolved |
-| CTC-005 | Grid FX soll `danger` und `pressure` fachlich trennbar darstellen (README: Gegnerdruck explizit) | Label-/Badge-State behandelte `pressure` als `danger`-Alias | Codeinspektion `setLabelStateClasses`/`setBadgeStateClasses` | UI-/Stylingfehler | Fehlende dedizierte State-Klasse | Dedizierte `pressure`-State-Klassen und CSS-Kontrakt ergänzt | `tests/runtime/cricket-grid-fx-effects.test.js` (`dedicated pressure state classes...`) grün | resolved |
-| CTC-006 | Zustandsmodell soll explizit und testbar sein (`open/closed/own/dead/scorable/offense/danger/pressure`) | Teile waren implizit nur über `presentation` ableitbar | Codeinspektion `computeTargetStates` | Logik-/Testbarkeitslücke | Unvollständiges State-Interface | Zustandsobjekt um explizite Felder ergänzt (`open`, `own`, `scorable`, `threatenedByOpponents`, Gegnerzählungen) | Zusatztests in `tests/domain/cricket-rules.test.js` grün | resolved |
-| CTC-007 | Theme Cricket muss mit Cricket-Overlays kollisionsfrei bleiben | Theme enthielt fragile Hash-Selektoren (`.css-*`) mit Risiko bei DOM-Klassenänderungen | Codeinspektion `src/features/themes/cricket/style.js` | UI-/Stylingrisiko | Theme-/CSS-Kollisionen durch volatile Selektoren | Stabile Fallback-Selektoren auf Hook-Basis (`#ad-ext-player-display`, `#grid`, `.ad-ext-crfx-badge`) ergänzt | Theme-/Runtime-Tests grün; Rest-Risiko bleibt für externe Chakra-Klassenwechsel außerhalb der stabilen Hooks | resolved |
+| ID | Soll | Ist vor Fix | Ursache | Fix | Status | Verifikation |
+| --- | --- | --- | --- | --- | --- | --- |
+| `CTC-LOOP-001` | Keine dauerhaften Renderzyklen ohne echte State-Änderung | Endlosschleife aus Observer → Update → eigener DOM-Mutation | Self-Mutations + Forced-Refresh-Pfad | Observer-Filter + Overlay-Removal-Only-Recovery + Signature-Gating | `resolved` | `tests/runtime/runtime-performance.test.js` (`cricket-highlighter rebuilds overlay...`) |
+| `CTC-GRID-001` | GridFX erhält stabile Cricket/Tactics-Griddaten | `warn kein Grid`, `rows=0` trotz aktivem Match | Fragile Root-/Row-Erkennung | Shared Pipeline mit `findCricketGrid`, `gridSnapshot.rows`, strikter Strukturprüfung | `resolved` | `tests/runtime/cricket-render-state.test.js`, `tests/runtime/cricket-grid-fx-effects.test.js` |
+| `CTC-HL-001` | Board-Hervorhebung entspricht echten Target-Zuständen | Falsche/offene vs. geschlossene Ziele, Overlay-Churn | Instabile Overlay-Lifecycle + unklare Renderquelle | Persistentes Overlay, shape-state cache, state-gesteuerte Updates | `resolved` | `tests/runtime/cricket-theme-compatibility.test.js` |
+| `CTC-ACTIVE-001` | Aktiver/inaktiver Spieler farblich sofort korrekt | Perspektivwechsel nicht zuverlässig | Player-State- und Grid-Mapping nicht zentral | Zentrale Ableitung `activePlayerIndex`, `stateMap`, `targetStates` im Pipeline-State | `resolved` | `tests/runtime/cricket-render-state.test.js` (`board presentation follows active player perspective`) |
+| `CTC-FX-001` | GridFX reagiert nur auf echte Transitions | Fehlendes Grid + wiederholte Warn-/Update-Versuche | Kein stabiler Snapshot als Quelle | GridFX liest nur `renderState.gridSnapshot.rows`, transition-signature-gated | `resolved` | `tests/runtime/cricket-grid-fx-effects.test.js` |
+| `CTC-ROUTE-001` | Cricket-UI pausiert auf `/ad-xconfig` | Module liefen in xConfig-Kontext weiter | Fehlender harter Route-Guard | Pipeline-Status `paused-route`, Consumer respektieren Status | `resolved` | `tests/runtime/cricket-render-state.test.js` + `tests/runtime/cricket-theme-compatibility.test.js` |
+| `CTC-UI-001` | Settings-Modal bleibt scrollbar ohne Jump-to-top | Scroll sprang zurück | Voll-Re-Render bei Sync/Mutation | Shell-Node persistent, Render-Signature-Gate, ScrollTop-Erhalt | `resolved` | `tests/runtime/xconfig-shell.test.js` (`preserves node identity and scroll offsets`) |
+| `CTC-LOG-001` | Debug-Logs nur bei echten Änderungen | Dauerhafte Log-Spam-Flut | Logging nicht an Signaturen gekoppelt | `pipelineSignature`/Status-signature-gated Logs, one-shot Warnungen | `resolved` | Highlighter-/GridFX-Lifecycle + Performance-Tests (keine Loop-Reproduktion) |
+| `CTC-ARCH-001` | Pipeline `DOM -> State -> UI`; keine doppelte UI-Regellogik | Divergierende Parserpfade in Highlighter/GridFX | Verteilte, redundante Extraktion | Neues Shared-Modul `src/features/cricket-surface/pipeline.js` | `resolved` | Modul- und Integrationstests in `tests/runtime/*cricket*` |
 
-## Abgrenzung / Nicht-Ziel
+## Hauptursache (final)
 
-- Keine neue Tactics-Gameplay-Semantik.
-- Keine direkte Bearbeitung von `dist/`.
-- Kein Entfernen funktionaler Features außerhalb Cricket/Tactics.
+Hauptursache war eine Kombination aus:
 
-## Verifikation nach Implementierung
+1. Regellogik-/State-Ableitungsstreuung in mehreren UI-Modulen,
+2. Player-State-Mapping-Instabilität bei heterogenen Grid-Strukturen,
+3. DOM-/Parser-Fehlern (inkl. Fallback-Root-Problemen),
+4. Übergangslogik ohne harte Signatur-Gates,
+5. xConfig-UI-Renderstrategie mit unnötigen Rebuilds.
 
-Jede ID wird auf `resolved` oder `open` gesetzt, inklusive:
+## Technische Fix-Hotspots
 
-- konkrete Testreferenz
-- ggf. verbleibendes Restrisiko
-- Ursache-Hauptklasse:
-  - Regellogik
-  - Player-State-Mapping
-  - DOM-/Parser-Fehler
-  - Übergangslogik
-  - Theme-/CSS-Kollisionen
-  - Kombination
+- `src/features/cricket-surface/pipeline.js`
+- `src/features/cricket-highlighter/index.js`
+- `src/features/cricket-highlighter/logic.js`
+- `src/features/cricket-grid-fx/index.js`
+- `src/features/cricket-grid-fx/logic.js`
+- `src/features/xconfig-ui/index.js`
+
+## Offenes Restrisiko
+
+- Sehr exotische, stark vom aktuellen DOM abweichende Scoreboard-Strukturen können weitere Grid-Selector-Härtungen erfordern. Der aktuelle Stand ist durch die Runtime- und Kompatibilitätstests abgesichert.

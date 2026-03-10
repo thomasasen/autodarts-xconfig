@@ -840,6 +840,7 @@ export function createCricketGridFxState(windowRef = null) {
     previousTurnToken: "",
     renderCache: {
       grid: null,
+      board: null,
     },
   };
 }
@@ -857,6 +858,7 @@ export function clearCricketGridFxState(state) {
   state.previousTurnToken = "";
   if (state.renderCache && typeof state.renderCache === "object") {
     state.renderCache.grid = null;
+    state.renderCache.board = null;
   }
 }
 
@@ -913,7 +915,10 @@ export function updateCricketGridFx(options = {}) {
     debugStats.stateTargetCount = renderState.stateMap.size;
   }
 
-  const gridRoot = resolveGridRoot(documentRef, cricketRules, targetOrder);
+  const gridSnapshot = renderState.gridSnapshot && typeof renderState.gridSnapshot === "object"
+    ? renderState.gridSnapshot
+    : null;
+  const gridRoot = gridSnapshot?.root || null;
   if (!gridRoot) {
     clearCricketGridFxState(state);
     if (debugStats) {
@@ -922,19 +927,26 @@ export function updateCricketGridFx(options = {}) {
     return;
   }
 
-  const rows = collectLabelNodes(gridRoot, cricketRules, targetSet).map((row) => {
-    const stateEntry = renderState.stateMap.get(row.label);
-    const expectedPlayerCount = Array.isArray(stateEntry?.marksByPlayer)
-      ? stateEntry.marksByPlayer.length
-      : 0;
-    return {
-      ...row,
-      rowNode: getRowNode(row.labelNode),
-      playerCells: collectPlayerCells(row.labelNode, cricketRules, targetSet, {
-        expectedPlayerCount,
-      }),
-    };
-  });
+  const sourceRows = Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [];
+  const rows = sourceRows
+    .filter((row) => targetSet.has(row?.label))
+    .map((row) => {
+      return {
+        label: row?.label || "",
+        labelNode: row?.labelNode || row?.badgeNode || null,
+        labelCell: row?.labelCell || null,
+        badgeNode: row?.badgeNode || null,
+        rowNode: row?.rowNode || getRowNode(row?.labelNode || row?.labelCell || null),
+        playerCells: Array.isArray(row?.playerCells) ? row.playerCells.filter(Boolean) : [],
+      };
+    });
+  if (!rows.length) {
+    clearCricketGridFxState(state);
+    if (debugStats) {
+      debugStats.status = "missing-grid";
+    }
+    return;
+  }
   if (debugStats) {
     debugStats.rowCount = rows.length;
     debugStats.labelCellCount = rows.filter((row) => Boolean(row.labelCell)).length;
