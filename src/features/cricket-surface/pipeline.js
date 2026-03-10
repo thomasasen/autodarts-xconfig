@@ -323,6 +323,21 @@ function hasExplicitMarkHints(node) {
   return false;
 }
 
+function hasTextualMarkHints(node) {
+  const text = String(node?.textContent || "").trim();
+  if (!text) {
+    return false;
+  }
+
+  // Support textual cricket marks rendered directly in the merged label cell.
+  if (/[\u2A02\u2297\u29BB\u00D7\u2715\u2716\u2573Xx/|]/u.test(text)) {
+    return true;
+  }
+
+  // Numeric mark tokens (1..3) must be standalone, not part of target labels like 13/20.
+  return /(^|[^0-9])[1-3]([^0-9]|$)/.test(text);
+}
+
 function isInsideXConfigPanel(node) {
   if (!node || typeof node.closest !== "function") {
     return false;
@@ -830,9 +845,12 @@ function maybeIncludeLabelCellAsPlayerCell(
     return normalizedCells;
   }
 
-  const hasHints = hasExplicitMarkHints(labelCell);
+  const hasExplicitHints = hasExplicitMarkHints(labelCell);
+  const hasTextHints = hasTextualMarkHints(labelCell);
+  const hasHints = hasExplicitHints || hasTextHints;
   if (diagnostics && typeof diagnostics === "object") {
-    diagnostics.labelCellHasExplicitMarkHints = hasHints;
+    diagnostics.labelCellHasExplicitMarkHints = hasExplicitHints;
+    diagnostics.labelCellHasTextMarkHints = hasTextHints;
   }
   if (!hasHints) {
     return normalizedCells;

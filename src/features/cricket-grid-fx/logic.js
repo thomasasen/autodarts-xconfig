@@ -264,6 +264,30 @@ function parseMarksValue(node, cricketRules) {
   return 0;
 }
 
+function readCellPlayerIndex(cellNode) {
+  if (!cellNode || typeof cellNode.getAttribute !== "function") {
+    return null;
+  }
+
+  const candidates = [
+    cellNode.getAttribute("data-player-index"),
+    cellNode.getAttribute("data-player"),
+    cellNode.getAttribute("data-index"),
+    cellNode.dataset?.playerIndex,
+    cellNode.dataset?.player,
+    cellNode.dataset?.index,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = Number.parseInt(String(candidate || "").trim(), 10);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
 function hasExplicitMarkHints(node) {
   if (!node || typeof node.getAttribute !== "function") {
     return false;
@@ -1019,6 +1043,11 @@ export function updateCricketGridFx(options = {}) {
           targetOrder,
         })
       : new Map();
+  const labelCellMarkSourceSet = new Set(
+    Array.isArray(renderState.labelCellMarkSourceLabels)
+      ? renderState.labelCellMarkSourceLabels.map((entry) => String(entry || ""))
+      : []
+  );
 
   if (
     visualConfig.roundTransitionWipe &&
@@ -1051,16 +1080,42 @@ export function updateCricketGridFx(options = {}) {
       return;
     }
     const activePlayerIndex = Number(stateEntry.activePlayerIndex);
+    const playerStateCount = Array.isArray(stateEntry.cellStates)
+      ? stateEntry.cellStates.length
+      : 0;
+    const indexOffset =
+      labelCellMarkSourceSet.has(String(row.label || "")) &&
+      row.playerCells.length < playerStateCount
+        ? 1
+        : 0;
+    const cellDescriptors = row.playerCells
+      .map((cellNode, index) => {
+        const explicitPlayerIndex = readCellPlayerIndex(cellNode);
+        const playerIndex = Number.isFinite(explicitPlayerIndex)
+          ? explicitPlayerIndex
+          : index + indexOffset;
+        return {
+          cellNode,
+          playerIndex,
+        };
+      })
+      .filter((entry) => {
+        return (
+          entry.cellNode?.classList &&
+          Number.isFinite(entry.playerIndex) &&
+          entry.playerIndex >= 0 &&
+          entry.playerIndex < playerStateCount
+        );
+      });
     const hasPlayerCells = Array.isArray(row.playerCells) && row.playerCells.length > 0;
     if (!hasPlayerCells) {
       rowsWithoutPlayerCells += 1;
     }
     if (hasPlayerCells) {
-      if (
-        Number.isFinite(activePlayerIndex) &&
-        activePlayerIndex >= 0 &&
-        activePlayerIndex < row.playerCells.length
-      ) {
+      const hasActiveColumn = cellDescriptors.some((entry) => {
+        return entry.playerIndex === activePlayerIndex;
+      });
+      if (Number.isFinite(activePlayerIndex) && hasActiveColumn) {
         activeColumnResolvedCount += 1;
       } else {
         activeColumnMissingCount += 1;
@@ -1141,16 +1196,12 @@ export function updateCricketGridFx(options = {}) {
       toggleTimedClass(state, badgeNode, BADGE_BURST_CLASS, 700);
     }
 
-    row.playerCells.forEach((cellNode, index) => {
-      if (!cellNode?.classList) {
-        return;
-      }
-
+    cellDescriptors.forEach(({ cellNode, playerIndex }) => {
       const cellState = Array.isArray(stateEntry.cellStates)
-        ? stateEntry.cellStates[index]
+        ? stateEntry.cellStates[playerIndex]
         : null;
       const cellPresentation = normalizePresentationToken(cellState?.presentation || "open");
-      const marks = Number(stateEntry.marksByPlayer?.[index] || 0);
+      const marks = Number(stateEntry.marksByPlayer?.[playerIndex] || 0);
       const scoreCell =
         (visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true) &&
         cellPresentation === "scoring";
@@ -1160,7 +1211,7 @@ export function updateCricketGridFx(options = {}) {
         scoreCellCount += 1;
       }
 
-      const delta = Number(diffEntry?.playerDeltas?.[index] || 0);
+      const delta = Number(diffEntry?.playerDeltas?.[playerIndex] || 0);
       if (delta > 0 && visualConfig.deltaChips) {
         appendTransientNode(state, cellNode, DELTA_CLASS, 940, {
           textContent: `+${delta}`,

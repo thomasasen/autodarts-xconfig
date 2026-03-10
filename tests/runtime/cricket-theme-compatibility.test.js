@@ -31,11 +31,13 @@ import {
   LABEL_CLASS,
   LABEL_STATE_CLASS,
   MARK_PROGRESS_CLASS,
+  PRESSURE_CLASS,
   ROOT_CLASS,
   ROW_WAVE_CLASS,
   SCORE_CLASS,
   SPARK_CLASS,
   SYNTHETIC_BADGE_ATTRIBUTE,
+  THREAT_CLASS,
   WIPE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
@@ -776,12 +778,17 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(gridFxStats.badgeCount || 0, 7);
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
   const labelText20 = rowsByLabel.get("20")?.labelText || null;
+  const opponentCell20 = rowsByLabel.get("20")?.playerCells?.[0] || null;
   assert.equal(Boolean(labelCell20), true);
   assert.equal(Boolean(labelText20), true);
+  assert.equal(Boolean(opponentCell20), true);
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), true);
   assert.equal(labelCell20?.classList?.contains(LABEL_STATE_CLASS.scoring), true);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), true);
   assert.equal(labelText20?.classList?.contains(BADGE_STATE_CLASS.scoring), true);
+  assert.equal(opponentCell20?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(opponentCell20?.classList?.contains(THREAT_CLASS), true);
+  assert.equal(opponentCell20?.classList?.contains(PRESSURE_CLASS), true);
 
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);
