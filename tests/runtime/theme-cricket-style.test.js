@@ -130,10 +130,27 @@ test("cricket grid fx style exposes badge and state hierarchy", () => {
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{[^}]*position:\s*absolute\s*!important;[^}]*left:\s*8px\s*!important;/s);
   assert.match(css, /\[data-ad-ext-crfx-label-hidden="true"\]\s*\{[^}]*color:\s*transparent\s*!important;/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst 700ms ease;/s);
-  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*background-image:\s*linear-gradient\(/s);
-  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*background-image:\s*repeating-linear-gradient\(/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*background:\s*linear-gradient\(/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*repeating-linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-mark-progress\s*\{[^}]*animation:\s*ad-ext-crfx-mark 420ms cubic-bezier\(0\.2,\s*0\.8,\s*0\.2,\s*1\);/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-delta\s*\{[^}]*font-size:\s*2\.22rem;/s);
   assert.doesNotMatch(css, /ad-ext-crfx-cell-active/);
   assert.doesNotMatch(css, /ad-ext-crfx-cell-inactive/);
+});
+
+test("cricket grid fx player-cell states override theme row backgrounds", () => {
+  const css = buildCricketGridFxStyleText();
+
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*background:\s*linear-gradient\([^}]*\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-threat\s*\{[^}]*background:\s*linear-gradient\([^}]*repeating-linear-gradient\([^}]*\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*background:\s*linear-gradient\([^}]*repeating-linear-gradient\([^}]*\)\s*!important;/s
+  );
 });

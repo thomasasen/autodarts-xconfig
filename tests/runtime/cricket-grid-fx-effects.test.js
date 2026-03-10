@@ -18,9 +18,12 @@ import {
   LABEL_STATE_CLASS,
   MARK_L2_CLASS,
   MARK_PROGRESS_CLASS,
+  PRESSURE_CLASS,
   ROW_WAVE_CLASS,
+  SCORE_CLASS,
   SPARK_CLASS,
   SYNTHETIC_BADGE_ATTRIBUTE,
+  THREAT_CLASS,
   WIPE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
@@ -68,16 +71,24 @@ function createNumericCricketGrid(documentRef, marksByLabel) {
   return rowStateByLabel;
 }
 
-function createGameState(activePlayerIndex = 0) {
+function createGameState(activePlayerIndex = 0, playerCount = 2, options = {}) {
+  const scoringModeNormalized = String(options.scoringModeNormalized || "unknown");
+  const scoringMode = String(options.scoringMode || "");
   return {
     getCricketGameModeNormalized: () => "cricket",
     getCricketGameMode: () => "Cricket",
-    getCricketScoringModeNormalized: () => "unknown",
-    getCricketScoringMode: () => "",
+    getCricketScoringModeNormalized: () => scoringModeNormalized,
+    getCricketScoringMode: () => scoringMode,
     getActivePlayerIndex: () => activePlayerIndex,
     getActiveThrows: () => [],
     getActiveTurn: () => null,
-    getSnapshot: () => ({ match: { players: [{ id: "player-a" }, { id: "player-b" }] } }),
+    getSnapshot: () => ({
+      match: {
+        players: Array.from({ length: Math.max(1, Number(playerCount) || 0) }, (_, index) => ({
+          id: `player-${index + 1}`,
+        })),
+      },
+    }),
   };
 }
 
@@ -356,6 +367,134 @@ test("cricket grid fx applies dedicated pressure state classes on label and badg
   if (syntheticBadge) {
     assert.equal(syntheticBadge.classList.contains(BADGE_STATE_CLASS.pressure), true);
   }
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx colors scoring owner green and open opponents red", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0, 0],
+    "19": [0, 0, 0],
+    "18": [0, 0, 0],
+    "17": [0, 0, 0],
+    "16": [0, 0, 0],
+    "15": [0, 0, 0],
+    BULL: [0, 0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0, 3, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  const row20 = rowsByLabel.get("20");
+  assert.equal(row20?.playerCells?.[0]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(row20?.playerCells?.[0]?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(row20?.playerCells?.[1]?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(row20?.playerCells?.[1]?.classList?.contains(THREAT_CLASS), true);
+  assert.equal(row20?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(row20?.playerCells?.[2]?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(row20?.playerCells?.[2]?.classList?.contains(THREAT_CLASS), true);
+  assert.equal(row20?.playerCells?.[2]?.classList?.contains(PRESSURE_CLASS), true);
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx keeps additionally closed opponents out of the red threat state", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 3, 0],
+    "19": [0, 0, 0],
+    "18": [0, 0, 0],
+    "17": [0, 0, 0],
+    "16": [0, 0, 0],
+    "15": [0, 0, 0],
+    BULL: [0, 0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0, 3, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  const row20 = rowsByLabel.get("20");
+  assert.equal(row20?.playerCells?.[0]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(row20?.playerCells?.[1]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(row20?.playerCells?.[1]?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(row20?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(row20?.playerCells?.[2]?.classList?.contains(THREAT_CLASS), true);
+  assert.equal(row20?.playerCells?.[2]?.classList?.contains(PRESSURE_CLASS), true);
 
   clearCricketGridFxState(state);
 });

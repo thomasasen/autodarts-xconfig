@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      1.1.25
+// @version      1.1.26
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -51,3 +51,4 @@ import { initializeTampermonkeyRuntime } from "../src/runtime/bootstrap-runtime.
     console.error("[autodarts-xconfig] userscript bootstrap failed", error);
   }
 })();
+

@@ -329,6 +329,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 **Einstellungen einfach erklärt**
 
 - `Gemeinsamer Render-State`: Grid FX verwendet denselben Cricket-/Tactics-Render-State wie der Board-Highlighter.
+- `Spielerzellen-Farben`: Aktive Scoring-Zellen leuchten grün, offene Gegnerzellen rot. Hat ein anderer Spieler das Ziel ebenfalls geschlossen, bleibt seine Zelle aus dem roten Druckzustand heraus.
 - `Zeilen-Sweep`: Kurzer Lichtlauf über geänderte Zeilen.
 - `Ziel-Badge-Hinweis`: Macht wichtige Ziel-Badges auffälliger.
 - `Mark-Fortschritt`: Verdeutlicht neue Treffer in der Matrix.

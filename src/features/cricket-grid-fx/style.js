@@ -235,25 +235,33 @@ export function buildStyleText() {
 .${ROOT_CLASS} .${CELL_CLASS}.${THREAT_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
-    inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3));
-  background-image: repeating-linear-gradient(
-    135deg,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 0px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 8px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 8px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 16px
-  );
+    inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.28)) 0%,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 0px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 8px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 8px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 16px
+    ) !important;
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${SCORE_CLASS} {
-  box-shadow: inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost)));
-  background-image: linear-gradient(
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
+    inset 0 0 24px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.24)) !important;
+  background: linear-gradient(
     90deg,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.62)) 0%,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.22)) 28%,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.22)) 72%,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.62)) 100%
-  );
+    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.82)) 0%,
+    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 28%,
+    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 72%,
+    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.82)) 100%
+  ) !important;
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${DEAD_CLASS} {
@@ -264,14 +272,20 @@ export function buildStyleText() {
 .${ROOT_CLASS} .${CELL_CLASS}.${PRESSURE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
-    inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3));
-  background-image: repeating-linear-gradient(
-    135deg,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 0px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) 8px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 8px,
-    rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.1)) 16px
-  );
+    inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.32)) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 0%,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.16)) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 0px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 8px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 8px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 16px
+    ) !important;
 }
 
 .${ROOT_CLASS} .${MARK_PROGRESS_CLASS} {
