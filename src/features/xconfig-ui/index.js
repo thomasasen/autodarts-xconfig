@@ -911,6 +911,20 @@ function buildShellRenderSignature(state, features, routeActive) {
     features: normalizedFeatures,
   });
 }
+
+function parseShellRenderSignature(signature) {
+  if (!signature) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(signature);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function ensureXConfigShell(options = {}) {
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   if (!windowRef) {
@@ -1120,6 +1134,12 @@ function ensureXConfigShell(options = {}) {
     const features = getFeatures();
     const routeActive = isConfigRoute();
     const nextSignature = buildShellRenderSignature(state, features, routeActive);
+    const previousSignaturePayload = parseShellRenderSignature(state.renderSignature);
+    const keepModalStable =
+      Boolean(previousSignaturePayload?.routeActive) &&
+      String(previousSignaturePayload?.activeSettingsFeatureKey || "") !== "" &&
+      String(previousSignaturePayload?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
+      Boolean(routeActive);
 
     if (
       state.shellNode &&
@@ -1142,6 +1162,18 @@ function ensureXConfigShell(options = {}) {
     if (!previousShellNode) {
       host.appendChild(nextShellNode);
       state.shellNode = nextShellNode;
+    } else if (keepModalStable) {
+      state.renderSignature = nextSignature;
+      host.scrollTop = hostScrollTop;
+      const stableModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
+      const stableModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+      if (stableModal) {
+        stableModal.scrollTop = previousModalScrollTop;
+      }
+      if (stableModalBody) {
+        stableModalBody.scrollTop = previousModalBodyScrollTop;
+      }
+      return;
     } else {
       while (previousShellNode.firstChild) {
         previousShellNode.removeChild(previousShellNode.firstChild);
@@ -1405,6 +1437,20 @@ function ensureXConfigShell(options = {}) {
       const settingValue = String(actionNode?.getAttribute?.("data-setting-value")) === "true";
       if (!configKey || !settingKey) {
         return;
+      }
+      const toggleButtons = Array.from(
+        actionNode?.parentElement?.querySelectorAll?.(
+          `[data-adxconfig-action='set-setting-toggle'][data-setting-key='${settingKey}']`
+        ) || []
+      );
+      toggleButtons.forEach((buttonNode) => {
+        buttonNode.setAttribute("data-active", buttonNode === actionNode ? "true" : "false");
+      });
+      const hiddenInput = actionNode?.parentElement?.querySelector?.(
+        `input[data-adxconfig-setting='true'][data-setting-key='${settingKey}']`
+      );
+      if (hiddenInput) {
+        hiddenInput.checked = settingValue;
       }
       withRuntimeCall(
         runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, settingValue)),

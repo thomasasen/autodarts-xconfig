@@ -3,7 +3,14 @@ import {
   ensureOverlayGroup,
   findBoardSvgGroup,
 } from "../../shared/dartboard-svg.js";
-import { OVERLAY_ID, PRESENTATION_CLASS, SVG_NS, TARGET_CLASS } from "./style.js";
+import {
+  OVERLAY_ID,
+  PRESENTATION_CLASS,
+  PRESSURE_SUPPRESSED_CLASS,
+  SVG_NS,
+  TARGET_CLASS,
+  TARGET_SLOT_CLASS_PREFIX,
+} from "./style.js";
 import { buildCricketRenderState as buildCricketRenderStateFromPipeline } from "../cricket-surface/pipeline.js";
 
 const SEGMENT_ORDER = Object.freeze([
@@ -48,6 +55,11 @@ const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknow
 const ALL_BOARD_TARGETS = Object.freeze([
   ...Array.from({ length: 20 }, (_value, index) => String(index + 1)),
   "BULL",
+]);
+const PRESSURE_VISIBLE_SLOTS = new Set([
+  "double-ring",
+  "triple-ring",
+  "bull-outer-ring",
 ]);
 
 function isNodeVisible(node) {
@@ -1072,24 +1084,27 @@ function buildShapesForLabel(ownerDocument, radius, targetLabel, visualConfig) {
   }
 
   if (String(targetLabel).toUpperCase() === "BULL") {
-    return [
-      createBull(
-        ownerDocument,
-        radius,
-        RING_RATIOS.outerBullInner,
-        RING_RATIOS.outerBullOuter,
-        false,
-        visualConfig.edgePaddingPx
-      ),
-      createBull(
-        ownerDocument,
-        radius,
-        0,
-        RING_RATIOS.outerBullInner,
-        true,
-        visualConfig.edgePaddingPx
-      ),
-    ];
+    const outerBullRing = createBull(
+      ownerDocument,
+      radius,
+      RING_RATIOS.outerBullInner,
+      RING_RATIOS.outerBullOuter,
+      false,
+      visualConfig.edgePaddingPx
+    );
+    outerBullRing.dataset.targetSlot = "bull-outer-ring";
+
+    const innerBullCore = createBull(
+      ownerDocument,
+      radius,
+      0,
+      RING_RATIOS.outerBullInner,
+      true,
+      visualConfig.edgePaddingPx
+    );
+    innerBullCore.dataset.targetSlot = "bull-core";
+
+    return [outerBullRing, innerBullCore];
   }
 
   const numericLabel = Number.parseInt(String(targetLabel || ""), 10);
@@ -1102,40 +1117,47 @@ function buildShapesForLabel(ownerDocument, radius, targetLabel, visualConfig) {
     return [];
   }
 
-  return [
-    createWedge(
-      ownerDocument,
-      radius,
-      RING_RATIOS.outerBullOuter,
-      RING_RATIOS.tripleInner,
-      angles,
-      visualConfig.edgePaddingPx
-    ),
-    createWedge(
-      ownerDocument,
-      radius,
-      RING_RATIOS.tripleInner,
-      RING_RATIOS.tripleOuter,
-      angles,
-      visualConfig.edgePaddingPx
-    ),
-    createWedge(
-      ownerDocument,
-      radius,
-      RING_RATIOS.tripleOuter,
-      RING_RATIOS.doubleInner,
-      angles,
-      visualConfig.edgePaddingPx
-    ),
-    createWedge(
-      ownerDocument,
-      radius,
-      RING_RATIOS.doubleInner,
-      RING_RATIOS.doubleOuter,
-      angles,
-      visualConfig.edgePaddingPx
-    ),
-  ];
+  const singleInner = createWedge(
+    ownerDocument,
+    radius,
+    RING_RATIOS.outerBullOuter,
+    RING_RATIOS.tripleInner,
+    angles,
+    visualConfig.edgePaddingPx
+  );
+  singleInner.dataset.targetSlot = "single-inner";
+
+  const tripleRing = createWedge(
+    ownerDocument,
+    radius,
+    RING_RATIOS.tripleInner,
+    RING_RATIOS.tripleOuter,
+    angles,
+    visualConfig.edgePaddingPx
+  );
+  tripleRing.dataset.targetSlot = "triple-ring";
+
+  const singleOuter = createWedge(
+    ownerDocument,
+    radius,
+    RING_RATIOS.tripleOuter,
+    RING_RATIOS.doubleInner,
+    angles,
+    visualConfig.edgePaddingPx
+  );
+  singleOuter.dataset.targetSlot = "single-outer";
+
+  const doubleRing = createWedge(
+    ownerDocument,
+    radius,
+    RING_RATIOS.doubleInner,
+    RING_RATIOS.doubleOuter,
+    angles,
+    visualConfig.edgePaddingPx
+  );
+  doubleRing.dataset.targetSlot = "double-ring";
+
+  return [singleInner, tripleRing, singleOuter, doubleRing];
 }
 
 function setStyleVar(node, name, value) {
@@ -1206,19 +1228,22 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   );
   setStyleVar(overlay, "--ad-ext-cricket-offense-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-danger-fill", rgbaColor(theme.danger, highlightOpacity));
+  const subtlePressureFill = Math.max(0.04, highlightOpacity * 0.14);
+  const subtlePressureStroke = Math.max(0.24, Math.min(1, highlightOpacity + strokeBoost * 0.48));
+
+  setStyleVar(overlay, "--ad-ext-cricket-danger-fill", rgbaColor(theme.danger, subtlePressureFill));
   setStyleVar(
     overlay,
     "--ad-ext-cricket-danger-stroke",
-    rgbaColor(theme.danger, Math.min(1, highlightOpacity + strokeBoost))
+    rgbaColor(theme.danger, subtlePressureStroke)
   );
   setStyleVar(overlay, "--ad-ext-cricket-danger-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-pressure-fill", rgbaColor(theme.danger, highlightOpacity));
+  setStyleVar(overlay, "--ad-ext-cricket-pressure-fill", rgbaColor(theme.danger, subtlePressureFill));
   setStyleVar(
     overlay,
     "--ad-ext-cricket-pressure-stroke",
-    rgbaColor(theme.danger, Math.min(1, highlightOpacity + strokeBoost))
+    rgbaColor(theme.danger, subtlePressureStroke)
   );
   setStyleVar(overlay, "--ad-ext-cricket-pressure-opacity", "1");
 
@@ -1234,11 +1259,48 @@ function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
   Object.values(PRESENTATION_CLASS).forEach((className) => {
     shape.classList.remove(className);
   });
+  shape.classList.remove(PRESSURE_SUPPRESSED_CLASS);
   shape.classList.add(TARGET_CLASS, presentationClass);
+  const targetSlot = String(shape?.dataset?.targetSlot || "").trim().toLowerCase();
+  if (targetSlot) {
+    shape.classList.add(`${TARGET_SLOT_CLASS_PREFIX}${targetSlot}`);
+    if (
+      (presentation === "pressure" || presentation === "danger") &&
+      !PRESSURE_VISIBLE_SLOTS.has(targetSlot)
+    ) {
+      shape.classList.add(PRESSURE_SUPPRESSED_CLASS);
+    }
+  }
   if (shape.dataset) {
     shape.dataset.targetLabel = String(targetLabel || "");
     shape.dataset.targetPresentation = String(presentation || "");
   }
+}
+
+function resolvePresentationForStateEntry(stateEntry, isRelevantTarget) {
+  if (!isRelevantTarget) {
+    return "inactive";
+  }
+
+  const uiBucket = String(stateEntry?.uiBucket || "").trim().toLowerCase();
+  if (uiBucket === "scorable" || uiBucket === "offense") {
+    return "offense";
+  }
+  if (uiBucket === "pressure") {
+    const pressureLevel = String(stateEntry?.pressureLevel || "").toLowerCase();
+    return pressureLevel === "danger" ? "danger" : "pressure";
+  }
+  if (uiBucket === "dead") {
+    return "dead";
+  }
+  if (uiBucket === "closed") {
+    return "closed";
+  }
+
+  const fallbackPresentation = String(
+    stateEntry?.boardPresentation || stateEntry?.presentation || "open"
+  ).toLowerCase();
+  return PRESENTATION_KEYS.has(fallbackPresentation) ? fallbackPresentation : "open";
 }
 
 function ensureOverlayShapeCache(overlay, board, visualConfig, cache = null) {
@@ -1339,11 +1401,7 @@ export function renderCricketHighlights(options = {}) {
   ALL_BOARD_TARGETS.forEach((targetLabel) => {
     const isRelevantTarget = activeTargetSet.has(targetLabel);
     const stateEntry = renderState.stateMap.get(targetLabel) || null;
-    const presentation = String(
-      isRelevantTarget
-        ? stateEntry?.boardPresentation || stateEntry?.presentation || "open"
-        : "inactive"
-    ).toLowerCase();
+    const presentation = resolvePresentationForStateEntry(stateEntry, isRelevantTarget);
     if (!PRESENTATION_KEYS.has(presentation) && presentation !== "inactive") {
       return;
     }
@@ -1356,9 +1414,13 @@ export function renderCricketHighlights(options = {}) {
       openTargetCount += 1;
     }
 
-    const shouldRenderTarget =
-      !(isRelevantTarget && presentation === "open" && visualConfig.showOpenTargets === false) &&
-      !(isRelevantTarget && presentation === "dead" && !visualConfig.showDeadTargets);
+    const highlightActive = Boolean(stateEntry?.isHighlightActive);
+    const shouldRenderTarget = !(
+      (isRelevantTarget && presentation === "open" && visualConfig.showOpenTargets === false) ||
+      (isRelevantTarget && presentation === "dead" && !visualConfig.showDeadTargets) ||
+      (isRelevantTarget && presentation === "closed" && !stateEntry?.scorable) ||
+      (isRelevantTarget && presentation !== "dead" && !highlightActive)
+    );
     const shapes = overlayShapeState.shapesByTarget.get(targetLabel) || [];
 
     shapeCountByTarget[targetLabel] = (shapeCountByTarget[targetLabel] || 0) + shapes.length;

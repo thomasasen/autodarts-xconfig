@@ -1,6 +1,6 @@
-﻿# Cricket/Tactics Soll-Ist-Abweichungsmatrix
+# Cricket/Tactics Soll-Ist-Abweichungsmatrix
 
-Stand: 2026-03-10 (nach Implementierung)
+Stand: 2026-03-10 (nach Final-Stabilisierung)
 
 ## Quellenbasis
 
@@ -11,44 +11,44 @@ Stand: 2026-03-10 (nach Implementierung)
 - Screenshot-Soll:
   - `docs/screenshots/animation-cricket-target-highlighter.png`
   - `docs/screenshots/animation-cricket-grid-fx.png`
-  - `docs/screenshots/template-theme-cricket-xConfig.png`
-  - Laufzeit-Screenshot (Settings-Scroll/Jump): User-Anhang 2026-03-10
+  - User-Screenshots vom 2026-03-10 (Board-Logik, Pressure-Darstellung, Settings-Scroll)
 - Runtime-Ist (vor Fix):
   - `C:\Users\t.asen\Downloads\play.autodarts.io-1773147718872.log`
 
-## Abweichungsmatrix
+## Abweichungsmatrix (re-opened und verifiziert)
 
-| ID | Soll | Ist vor Fix | Ursache | Fix | Status | Verifikation |
-| --- | --- | --- | --- | --- | --- | --- |
-| `CTC-LOOP-001` | Keine dauerhaften Renderzyklen ohne echte State-Änderung | Endlosschleife aus Observer → Update → eigener DOM-Mutation | Self-Mutations + Forced-Refresh-Pfad | Observer-Filter + Overlay-Removal-Only-Recovery + Signature-Gating | `resolved` | `tests/runtime/runtime-performance.test.js` (`cricket-highlighter rebuilds overlay...`) |
-| `CTC-GRID-001` | GridFX erhält stabile Cricket/Tactics-Griddaten | `warn kein Grid`, `rows=0` trotz aktivem Match | Fragile Root-/Row-Erkennung | Shared Pipeline mit `findCricketGrid`, `gridSnapshot.rows`, strikter Strukturprüfung | `resolved` | `tests/runtime/cricket-render-state.test.js`, `tests/runtime/cricket-grid-fx-effects.test.js` |
-| `CTC-HL-001` | Board-Hervorhebung entspricht echten Target-Zuständen | Falsche/offene vs. geschlossene Ziele, Overlay-Churn | Instabile Overlay-Lifecycle + unklare Renderquelle | Persistentes Overlay, shape-state cache, state-gesteuerte Updates | `resolved` | `tests/runtime/cricket-theme-compatibility.test.js` |
-| `CTC-ACTIVE-001` | Aktiver/inaktiver Spieler farblich sofort korrekt | Perspektivwechsel nicht zuverlässig | Player-State- und Grid-Mapping nicht zentral | Zentrale Ableitung `activePlayerIndex`, `stateMap`, `targetStates` im Pipeline-State | `resolved` | `tests/runtime/cricket-render-state.test.js` (`board presentation follows active player perspective`) |
-| `CTC-FX-001` | GridFX reagiert nur auf echte Transitions | Fehlendes Grid + wiederholte Warn-/Update-Versuche | Kein stabiler Snapshot als Quelle | GridFX liest nur `renderState.gridSnapshot.rows`, transition-signature-gated | `resolved` | `tests/runtime/cricket-grid-fx-effects.test.js` |
-| `CTC-ROUTE-001` | Cricket-UI pausiert auf `/ad-xconfig` | Module liefen in xConfig-Kontext weiter | Fehlender harter Route-Guard | Pipeline-Status `paused-route`, Consumer respektieren Status | `resolved` | `tests/runtime/cricket-render-state.test.js` + `tests/runtime/cricket-theme-compatibility.test.js` |
-| `CTC-UI-001` | Settings-Modal bleibt scrollbar ohne Jump-to-top | Scroll sprang zurück | Voll-Re-Render bei Sync/Mutation | Shell-Node persistent, Render-Signature-Gate, ScrollTop-Erhalt | `resolved` | `tests/runtime/xconfig-shell.test.js` (`preserves node identity and scroll offsets`) |
-| `CTC-LOG-001` | Debug-Logs nur bei echten Änderungen | Dauerhafte Log-Spam-Flut | Logging nicht an Signaturen gekoppelt | `pipelineSignature`/Status-signature-gated Logs, one-shot Warnungen | `resolved` | Highlighter-/GridFX-Lifecycle + Performance-Tests (keine Loop-Reproduktion) |
-| `CTC-ARCH-001` | Pipeline `DOM -> State -> UI`; keine doppelte UI-Regellogik | Divergierende Parserpfade in Highlighter/GridFX | Verteilte, redundante Extraktion | Neues Shared-Modul `src/features/cricket-surface/pipeline.js` | `resolved` | Modul- und Integrationstests in `tests/runtime/*cricket*` |
+| ID | Soll (README/Screenshot) | Ist vor Fix (Runtime) | Runtime Evidence | Kategorie | Erwarteter Zustand | Fix-Ansatz | Post-Fix-Assertion | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `CTC-LOOP-001` | Keine Endlosschleifen ohne echte State-Änderung | Observer → Update → eigene DOM-Mutation erzeugt Dauerloop | Log-Spam mit `requestAnimationFrame`/`schedule`, wiederholte `overlay missing` | Logik + Lifecycle | Identischer Surface-Status darf keine erneute Schleife erzeugen | Status-Signatur-Gate + Self-Mutation-Filter + kein interner Overlay-Removal-Reschedule | `tests/runtime/runtime-performance.test.js` (`missing-grid warning only once...`) | `resolved` |
+| `CTC-GRID-001` | GridFX muss echte Cricket/Tactics-Matrix nutzen | `warn kein Grid`, `rows=0` trotz aktiver Matrix | Log enthält wiederholt `rows=0`, `labelCells=0`, `warn kein Grid` | DOM/Parser + Übergangslogik | GridFX nur aus validiertem `gridSnapshot.rows`; ohne Grid: fail-soft ohne Churn | Shared Pipeline bleibt einzige Quelle; GridFX konsumiert nur `renderState` | `tests/runtime/cricket-grid-fx-effects.test.js`, `tests/runtime/cricket-render-state.test.js` | `resolved` |
+| `CTC-HL-001` | Board-Highlights müssen Cricket-Regeln korrekt folgen | Geschlossene Ziele wirkten wie offene/aktive Ziele | User-Screenshots + Runtime-State-Mismatch | Regellogik + Player-State-Mapping | Highlights nur aus zentralem Statusmodell; closed non-scorable nie aktiv | UI-Buckets/Priorität im Render-State (`scorable/offense/pressure/open/dead/closed`) | `tests/runtime/cricket-render-state.test.js`, `tests/runtime/cricket-highlighter-priority.test.js` | `resolved` |
+| `CTC-HL-002` | Gegnerdruck subtil, nicht als Vollsektor | Pressure/Danger visuell zu aggressiv (vollflächig) | User-Screenshot mit rotem Vollsektor | UI/Styling | Pressure/Danger als subtile Ring-/Border-Hinweise | Slot-basierte Shape-Klassen + suppresste Single-Lanes bei Pressure/Danger | `tests/runtime/cricket-highlighter-priority.test.js` (`pressure rows use subtle ring classes...`) | `resolved` |
+| `CTC-OVERLAY-001` | Overlay nach Reload sofort aus Scoreboard rekonstruieren | Overlay erschien erst nach weiterem Event/Wurf | User-Beschreibung + Log mit wiederholten Overlay-Warnungen | Übergangslogik + Lifecycle | Initial-Update muss Scoreboard-Snapshot rendern, ohne Throw-Event | Persistenter Overlay-Lifecycle, kein Forced-Rerender-Pfad | `tests/runtime/runtime-performance.test.js` (`rebuilds overlay after external removal...`) | `resolved` |
+| `CTC-UI-001` | Settings-Panel muss stabil scrollbar bleiben | Scroll springt auf Anfang zurück | User-Screenshot und Live-Verhalten | UI/Renderstrategie | Modal-/Body-Container-Identität bleibt erhalten, Scroll-Offsets bleiben erhalten | In-place-Patching der Modal-Struktur statt Container-Austausch | `tests/runtime/xconfig-shell.test.js` (`keeps container identity while applying setting updates`) | `resolved` |
+| `CTC-LOG-001` | Debug nur bei echten Änderungen | Warn-/State-Spam trotz unverändertem Zustand | Log enthält identische Warnungen in hoher Frequenz | Logging + Lifecycle | Ein identischer Status wird nur einmal gewarnt/logged bis Recovery | Status/Pipeline-Signature-Gating im Highlighter/GridFX | `tests/runtime/runtime-performance.test.js` + bestehende Lifecycle-Tests | `resolved` |
+| `CTC-ARCH-001` | Pipeline `DOM -> State -> deriveTargetStates -> UI` ohne UI-Eigenlogik | Verteilte Heuristiken führten zu Inkonsistenz | Kombination aus Log, Screenshot-Abweichung, Churn | Architektur | Ein einheitlicher Render-State mit expliziten UI-Feldern | Pipeline ergänzt um `pressureLevel`, `uiBucket`, `uiPriority`, `isHighlightActive`, `closedByPlayer`, `openByOpponent` | `tests/runtime/cricket-render-state.test.js` (neue UI-Feld-Tests) | `resolved` |
 
-## Hauptursache (final)
+## Hauptursache (final klassifiziert)
 
 Hauptursache war eine Kombination aus:
 
-1. Regellogik-/State-Ableitungsstreuung in mehreren UI-Modulen,
-2. Player-State-Mapping-Instabilität bei heterogenen Grid-Strukturen,
-3. DOM-/Parser-Fehlern (inkl. Fallback-Root-Problemen),
-4. Übergangslogik ohne harte Signatur-Gates,
-5. xConfig-UI-Renderstrategie mit unnötigen Rebuilds.
+1. **Regellogik/State-Ableitung**: fehlende explizite UI-Priorisierung im zentralen Cricket-State.
+2. **Player-State-Mapping**: Perspektivfehler bei aktiver/inaktiver Bewertung in Folgemodulen.
+3. **DOM/Parser-Verhalten**: instabile Reaktion auf temporär fehlende Surfaces.
+4. **Übergangslogik**: fehlende Status-Gates für identische Nicht-Ready-Zustände.
+5. **Theme/CSS-Darstellung**: Pressure/Danger visuell zu stark und fachlich irreführend.
 
 ## Technische Fix-Hotspots
 
 - `src/features/cricket-surface/pipeline.js`
 - `src/features/cricket-highlighter/index.js`
 - `src/features/cricket-highlighter/logic.js`
+- `src/features/cricket-highlighter/style.js`
 - `src/features/cricket-grid-fx/index.js`
 - `src/features/cricket-grid-fx/logic.js`
 - `src/features/xconfig-ui/index.js`
 
-## Offenes Restrisiko
+## Restrisiko
 
-- Sehr exotische, stark vom aktuellen DOM abweichende Scoreboard-Strukturen können weitere Grid-Selector-Härtungen erfordern. Der aktuelle Stand ist durch die Runtime- und Kompatibilitätstests abgesichert.
+- Sehr exotische DOM-Layouts außerhalb der aktuell abgedeckten Scoreboard-Strukturen können weitere Selektor-Härtungen erfordern.
+- Das Risiko ist durch die Runtime-Tests und Matrix-basierte Repro/Assertion deutlich reduziert.

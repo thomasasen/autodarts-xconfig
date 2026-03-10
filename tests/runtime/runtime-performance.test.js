@@ -234,6 +234,95 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   cleanup();
 });
 
+test("cricket-highlighter emits missing-grid warning only once for unchanged status", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const observers = createObserverRegistry();
+  const warnings = [];
+  const scheduleCounter = { count: 0 };
+
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log() {},
+      warn(message) {
+        warnings.push(String(message || ""));
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count >= 3, true);
+  assert.equal(warnings.filter((entry) => entry.includes("warn kein Grid")).length, 1);
+
+  cleanup();
+});
+
 test("remove-darts-notification uses only the direct game-state subscription", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

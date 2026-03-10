@@ -2,6 +2,8 @@ export const SVG_NS = "http://www.w3.org/2000/svg";
 export const STYLE_ID = "ad-ext-cricket-highlighter-style";
 export const OVERLAY_ID = "ad-ext-cricket-targets";
 export const TARGET_CLASS = "ad-ext-cricket-target";
+export const TARGET_SLOT_CLASS_PREFIX = "ad-ext-cricket-slot-";
+export const PRESSURE_SUPPRESSED_CLASS = "ad-ext-cricket-pressure-muted";
 export const PRESENTATION_CLASS = Object.freeze({
   open: "is-open",
   closed: "is-closed",
@@ -122,6 +124,13 @@ export function buildStyleText() {
   --ad-ext-cricket-fill: var(--ad-ext-cricket-pressure-fill);
   --ad-ext-cricket-stroke: var(--ad-ext-cricket-pressure-stroke);
   --ad-ext-cricket-opacity: var(--ad-ext-cricket-pressure-opacity);
+}
+
+.${TARGET_CLASS}.${PRESENTATION_CLASS.danger}.${PRESSURE_SUPPRESSED_CLASS},
+.${TARGET_CLASS}.${PRESENTATION_CLASS.pressure}.${PRESSURE_SUPPRESSED_CLASS} {
+  --ad-ext-cricket-fill: transparent;
+  --ad-ext-cricket-stroke: transparent;
+  --ad-ext-cricket-opacity: 0;
 }
 `;
 }

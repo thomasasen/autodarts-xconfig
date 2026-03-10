@@ -309,6 +309,9 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 **Einstellungen einfach erklärt**
 
 - `Dead-Ziele anzeigen`: Zeigt auch vollständig erledigte Ziele weiter an.
+- `State-Priorität`: Scorable-Ziele haben Vorrang, danach Offense, Pressure, offene und dead Ziele.
+- `Geschlossene Ziele`: Scorable geschlossene Ziele bleiben sichtbar; nicht-scorable geschlossene Ziele erscheinen nicht als aktive Highlights.
+- `Pressure/Danger`: Gegnerdruck wird bewusst subtil als Ring-/Randhinweis dargestellt, nicht als Vollsektor.
 - `Farbthema`: Passt das Farbschema an Helligkeit und Kontrast deines Setups an.
 - `Intensität`: Regelt die Sichtbarkeit der Overlays.
 - `Debug`: Nur für Fehlersuche.
@@ -325,6 +328,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 **Einstellungen einfach erklärt**
 
+- `Gemeinsamer Render-State`: Grid FX verwendet denselben Cricket-/Tactics-Render-State wie der Board-Highlighter.
 - `Zeilen-Sweep`: Kurzer Lichtlauf über geänderte Zeilen.
 - `Ziel-Badge-Hinweis`: Macht wichtige Ziel-Badges auffälliger.
 - `Mark-Fortschritt`: Verdeutlicht neue Treffer in der Matrix.

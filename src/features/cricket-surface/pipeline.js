@@ -8,6 +8,24 @@ export const CRICKET_SURFACE_STATUS = Object.freeze({
   INACTIVE_VARIANT: "inactive-variant",
 });
 
+const UI_BUCKET = Object.freeze({
+  SCORABLE: "scorable",
+  OFFENSE: "offense",
+  PRESSURE: "pressure",
+  OPEN: "open",
+  DEAD: "dead",
+  CLOSED: "closed",
+});
+
+const UI_PRIORITY_BY_BUCKET = Object.freeze({
+  [UI_BUCKET.SCORABLE]: 1,
+  [UI_BUCKET.OFFENSE]: 2,
+  [UI_BUCKET.PRESSURE]: 3,
+  [UI_BUCKET.OPEN]: 4,
+  [UI_BUCKET.DEAD]: 5,
+  [UI_BUCKET.CLOSED]: 5,
+});
+
 const PAUSED_ROUTE_PATH = "/ad-xconfig";
 const GRID_MIN_UNIQUE_LABELS = 4;
 const GRID_MIN_ROWS_WITH_PLAYER_CELLS = 2;
@@ -1330,7 +1348,7 @@ function buildPipelineSignature(extracted, stateMap) {
   const entries = [];
   stateMap.forEach((entry, label) => {
     entries.push(
-      `${label}:${entry?.boardPresentation || entry?.presentation || "open"}:${(entry?.marksByPlayer || []).join(",")}`
+      `${label}:${entry?.boardPresentation || entry?.presentation || "open"}:${entry?.uiBucket || ""}:${entry?.isHighlightActive ? "1" : "0"}:${(entry?.marksByPlayer || []).join(",")}`
     );
   });
   entries.sort();
@@ -1357,6 +1375,78 @@ function buildTurnToken(gameState, activePlayerIndex = 0) {
   return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}:${throwCount}`;
 }
 
+function resolvePressureLevel(entry = null) {
+  if (entry?.pressure) {
+    return "pressure";
+  }
+  if (entry?.danger) {
+    return "danger";
+  }
+  return "none";
+}
+
+function resolveUiBucket(entry = null, pressureLevel = "none") {
+  if (entry?.scorable || entry?.scorableForPlayer || entry?.offense) {
+    return entry?.scorable || entry?.scorableForPlayer
+      ? UI_BUCKET.SCORABLE
+      : UI_BUCKET.OFFENSE;
+  }
+  if (pressureLevel !== "none") {
+    return UI_BUCKET.PRESSURE;
+  }
+  if (entry?.open) {
+    return UI_BUCKET.OPEN;
+  }
+  if (entry?.dead) {
+    return UI_BUCKET.DEAD;
+  }
+  if (entry?.closed || entry?.own) {
+    return UI_BUCKET.CLOSED;
+  }
+  return UI_BUCKET.OPEN;
+}
+
+function resolveHighlightActive(uiBucket) {
+  return (
+    uiBucket === UI_BUCKET.SCORABLE ||
+    uiBucket === UI_BUCKET.OFFENSE ||
+    uiBucket === UI_BUCKET.PRESSURE ||
+    uiBucket === UI_BUCKET.OPEN
+  );
+}
+
+function enrichStateMapForUi(stateMap) {
+  if (!(stateMap instanceof Map) || stateMap.size === 0) {
+    return new Map();
+  }
+
+  const enriched = new Map();
+  stateMap.forEach((entry, label) => {
+    const pressureLevel = resolvePressureLevel(entry);
+    const uiBucket = resolveUiBucket(entry, pressureLevel);
+    const uiPriority = Number(UI_PRIORITY_BY_BUCKET[uiBucket] || UI_PRIORITY_BY_BUCKET.open || 4);
+    const closedByPlayer = Boolean(entry?.closed || entry?.own);
+    const openByOpponent = Number(entry?.openOpponentCount || 0) > 0;
+    const dead = Boolean(entry?.dead);
+    const scorable = Boolean(entry?.scorable || entry?.scorableForPlayer);
+    const isHighlightActive = resolveHighlightActive(uiBucket);
+
+    enriched.set(label, {
+      ...entry,
+      closedByPlayer,
+      openByOpponent,
+      scorable,
+      dead,
+      pressureLevel,
+      uiBucket,
+      uiPriority,
+      isHighlightActive,
+    });
+  });
+
+  return enriched;
+}
+
 export function deriveTargetStates(renderState = null) {
   const sourceStateMap = renderState?.stateMap instanceof Map ? renderState.stateMap : new Map();
   const derived = {
@@ -1368,6 +1458,13 @@ export function deriveTargetStates(renderState = null) {
     offenseTargets: [],
     dangerTargets: [],
     pressureTargets: [],
+    scorableBucketTargets: [],
+    offenseBucketTargets: [],
+    pressureBucketTargets: [],
+    openBucketTargets: [],
+    deadBucketTargets: [],
+    closedBucketTargets: [],
+    activeHighlightTargets: [],
   };
 
   sourceStateMap.forEach((entry, label) => {
@@ -1395,6 +1492,25 @@ export function deriveTargetStates(renderState = null) {
     }
     if (presentation === "pressure" || entry?.pressure) {
       derived.pressureTargets.push(label);
+    }
+
+    const uiBucket = String(entry?.uiBucket || "").toLowerCase();
+    if (uiBucket === UI_BUCKET.SCORABLE) {
+      derived.scorableBucketTargets.push(label);
+    } else if (uiBucket === UI_BUCKET.OFFENSE) {
+      derived.offenseBucketTargets.push(label);
+    } else if (uiBucket === UI_BUCKET.PRESSURE) {
+      derived.pressureBucketTargets.push(label);
+    } else if (uiBucket === UI_BUCKET.OPEN) {
+      derived.openBucketTargets.push(label);
+    } else if (uiBucket === UI_BUCKET.DEAD) {
+      derived.deadBucketTargets.push(label);
+    } else if (uiBucket === UI_BUCKET.CLOSED) {
+      derived.closedBucketTargets.push(label);
+    }
+
+    if (entry?.isHighlightActive) {
+      derived.activeHighlightTargets.push(label);
     }
   });
 
@@ -1482,9 +1598,10 @@ export function buildCricketRenderState(input = {}, options = {}) {
     };
   }
 
-  const stateMap = extracted.stateMap instanceof Map
+  const rawStateMap = extracted.stateMap instanceof Map
     ? extracted.stateMap
     : new Map();
+  const stateMap = enrichStateMapForUi(rawStateMap);
   const pipelineSignature = buildPipelineSignature(extracted, stateMap);
   const turnToken = buildTurnToken(
     extracted.gameState || input?.gameState || options?.gameState,

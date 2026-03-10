@@ -208,6 +208,53 @@ test("xConfig settings modal preserves node identity and scroll offsets during e
   runtime.stop();
 });
 
+test("xConfig settings modal keeps container identity while applying setting updates", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(8);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(8);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(8);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-fx']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await wait(8);
+
+  const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+  const modal = panelHost?.querySelector?.(".ad-xconfig-modal") || null;
+  const modalBody = panelHost?.querySelector?.(".ad-xconfig-modal-body") || null;
+  assert.ok(panelHost);
+  assert.ok(modal);
+  assert.ok(modalBody);
+
+  panelHost.scrollTop = 64;
+  modal.scrollTop = 96;
+  modalBody.scrollTop = 192;
+
+  clickSettingToggle(documentRef, "cricket-grid-fx", "rowWave", false);
+  await wait(12);
+
+  const panelHostAfter = documentRef.getElementById("ad-xconfig-panel-host");
+  const modalAfter = panelHostAfter?.querySelector?.(".ad-xconfig-modal") || null;
+  const modalBodyAfter = panelHostAfter?.querySelector?.(".ad-xconfig-modal-body") || null;
+
+  assert.equal(panelHostAfter, panelHost);
+  assert.equal(modalAfter, modal);
+  assert.equal(modalBodyAfter, modalBody);
+  assert.equal(Number(panelHostAfter?.scrollTop || 0), 64);
+  assert.equal(Number(modalAfter?.scrollTop || 0), 96);
+  assert.equal(Number(modalBodyAfter?.scrollTop || 0), 192);
+
+  runtime.stop();
+});
+
 test("xConfig menu injection stays idempotent and label collapses on narrow sidebar", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

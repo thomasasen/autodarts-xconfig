@@ -634,3 +634,98 @@ test("state index wins over DOM order when cricket cells expose explicit player 
   assert.equal(renderState?.activePlayerIndex, 1);
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "pressure");
 });
+
+test("render state exposes deterministic ui buckets and highlight activity flags", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 3],
+    "17": [0, 0],
+    "16": [3, 3],
+    "15": [1, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  const twentyState = renderState?.stateMap.get("20");
+  const eighteenState = renderState?.stateMap.get("18");
+  const sixteenState = renderState?.stateMap.get("16");
+  const fifteenState = renderState?.stateMap.get("15");
+  const nineteenState = renderState?.stateMap.get("19");
+
+  assert.equal(twentyState?.closedByPlayer, true);
+  assert.equal(twentyState?.openByOpponent, true);
+  assert.equal(twentyState?.scorable, true);
+  assert.equal(twentyState?.uiBucket, "scorable");
+  assert.equal(twentyState?.uiPriority, 1);
+  assert.equal(twentyState?.isHighlightActive, true);
+
+  assert.equal(eighteenState?.pressureLevel, "danger");
+  assert.equal(eighteenState?.uiBucket, "pressure");
+  assert.equal(eighteenState?.uiPriority, 3);
+  assert.equal(eighteenState?.isHighlightActive, true);
+
+  assert.equal(nineteenState?.uiBucket, "open");
+  assert.equal(nineteenState?.uiPriority, 4);
+  assert.equal(nineteenState?.isHighlightActive, true);
+
+  assert.equal(sixteenState?.dead, true);
+  assert.equal(sixteenState?.uiBucket, "dead");
+  assert.equal(sixteenState?.uiPriority, 5);
+  assert.equal(sixteenState?.isHighlightActive, false);
+
+  assert.equal(fifteenState?.uiBucket, "open");
+  assert.equal(fifteenState?.isHighlightActive, true);
+});
+
+test("single-player closed rows are marked as closed and not active highlights", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3],
+    "19": [0],
+    "18": [0],
+    "17": [0],
+    "16": [0],
+    "15": [0],
+    BULL: [0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "solo" }] } }),
+    }),
+  });
+
+  const state20 = renderState?.stateMap.get("20");
+  assert.equal(state20?.closedByPlayer, true);
+  assert.equal(state20?.openByOpponent, false);
+  assert.equal(state20?.uiBucket, "closed");
+  assert.equal(state20?.uiPriority, 5);
+  assert.equal(state20?.isHighlightActive, false);
+});

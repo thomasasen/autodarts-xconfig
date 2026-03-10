@@ -167,6 +167,7 @@ export function initializeCricketHighlighter(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   let lastPipelineSignature = "";
+  let lastStatusSignature = "";
   const debugState = createDebugState(featureDebug);
   const renderCache = {
     grid: null,
@@ -180,10 +181,13 @@ export function initializeCricketHighlighter(context = {}) {
     renderCache.overlayShapeState = null;
   }
 
-  function clearAndReset() {
+  function clearAndReset(options = {}) {
+    const clearOverlay = options.clearOverlay !== false;
     lastPipelineSignature = "";
-    clearCricketHighlights(documentRef);
     renderCache.overlayShapeState = null;
+    if (clearOverlay) {
+      clearCricketHighlights(documentRef);
+    }
   }
 
   function update() {
@@ -202,7 +206,11 @@ export function initializeCricketHighlighter(context = {}) {
     const variantText = renderState?.variantText || readVariantText(documentRef);
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
-      clearAndReset();
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: true });
       emitDebugLog(
         debugState,
         statusSignature,
@@ -212,7 +220,11 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
-      clearAndReset();
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: true });
       emitDebugLog(
         debugState,
         statusSignature,
@@ -222,7 +234,11 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
-      clearAndReset();
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: false });
       emitDebugWarning(
         debugState,
         statusSignature,
@@ -232,7 +248,11 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-      clearAndReset();
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: false });
       emitDebugWarning(
         debugState,
         statusSignature,
@@ -241,9 +261,10 @@ export function initializeCricketHighlighter(context = {}) {
       return;
     }
 
+    lastStatusSignature = "";
     const signature = String(renderState?.pipelineSignature || "");
     if (!signature) {
-      clearAndReset();
+      clearAndReset({ clearOverlay: false });
       return;
     }
 
@@ -262,7 +283,7 @@ export function initializeCricketHighlighter(context = {}) {
     });
 
     if (!rendered) {
-      clearAndReset();
+      clearAndReset({ clearOverlay: false });
       emitDebugWarning(
         debugState,
         `${signature}::render-failed`,
@@ -298,12 +319,12 @@ export function initializeCricketHighlighter(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
         if (hasOverlayRemovalMutation(mutations)) {
           invalidateRenderCache();
           scheduler.schedule();
-          return;
-        }
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
         if (!hasRelevantCricketMutation(mutations)) {

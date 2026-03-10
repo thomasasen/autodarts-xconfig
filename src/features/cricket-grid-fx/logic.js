@@ -823,6 +823,23 @@ function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
   );
 }
 
+function resolveRowPresentation(stateEntry) {
+  const uiBucket = String(stateEntry?.uiBucket || "").toLowerCase();
+  if (uiBucket === "scorable" || uiBucket === "offense") {
+    return "offense";
+  }
+  if (uiBucket === "pressure") {
+    return "pressure";
+  }
+  if (uiBucket === "dead") {
+    return "dead";
+  }
+  if (uiBucket === "closed") {
+    return "dead";
+  }
+  return String(stateEntry?.boardPresentation || stateEntry?.presentation || "open").toLowerCase();
+}
+
 export function createCricketGridFxState(windowRef = null) {
   return {
     windowRef,
@@ -1026,13 +1043,13 @@ export function updateCricketGridFx(options = {}) {
       }
     }
 
-    const presentation = String(
-      stateEntry.boardPresentation || stateEntry.presentation || "open"
-    ).toLowerCase();
+    const presentation = resolveRowPresentation(stateEntry);
+    const pressureLevel = String(stateEntry?.pressureLevel || "").toLowerCase();
     if (presentation === "offense") {
       offenseRowCount += 1;
-    } else if (presentation === "danger") {
+    } else if (pressureLevel === "danger") {
       dangerRowCount += 1;
+      pressureRowCount += 1;
     } else if (presentation === "pressure") {
       pressureRowCount += 1;
     }
@@ -1066,7 +1083,7 @@ export function updateCricketGridFx(options = {}) {
         BADGE_BEACON_CLASS,
         !badgeNode &&
           visualConfig.badgeBeacon &&
-          (presentation === "offense" || presentation === "danger" || presentation === "pressure")
+          (presentation === "offense" || presentation === "pressure")
       );
       state.trackedLabels.add(labelCellNode);
     }
@@ -1078,7 +1095,7 @@ export function updateCricketGridFx(options = {}) {
         badgeNode,
         BADGE_BEACON_CLASS,
         visualConfig.badgeBeacon &&
-          (presentation === "offense" || presentation === "danger" || presentation === "pressure")
+          (presentation === "offense" || presentation === "pressure")
       );
       state.trackedLabels.add(badgeNode);
       badgeCount += 1;

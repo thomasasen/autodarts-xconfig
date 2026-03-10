@@ -150,6 +150,7 @@ export function initializeCricketGridFx(context = {}) {
   const state = createCricketGridFxState(windowRef);
   const debugState = createDebugState(featureDebug);
   let lastTransitionSignature = "";
+  let lastStatusSignature = "";
 
   const invalidateRenderCache = () => {
     if (state.renderCache && typeof state.renderCache === "object") {
@@ -179,6 +180,10 @@ export function initializeCricketGridFx(context = {}) {
     const variantText = renderState?.variantText || readVariantText(documentRef);
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
       clearAndReset();
       emitDebugLog(
         debugState,
@@ -189,6 +194,10 @@ export function initializeCricketGridFx(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
       clearAndReset();
       emitDebugLog(
         debugState,
@@ -199,6 +208,10 @@ export function initializeCricketGridFx(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
       clearAndReset();
       emitDebugWarning(
         debugState,
@@ -208,6 +221,7 @@ export function initializeCricketGridFx(context = {}) {
       return;
     }
 
+    lastStatusSignature = "";
     const transitionSignature = String(renderState?.transitionSignature || "");
     if (!transitionSignature) {
       clearAndReset();
