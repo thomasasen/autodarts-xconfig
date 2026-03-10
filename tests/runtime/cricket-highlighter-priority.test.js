@@ -16,6 +16,26 @@ import {
 } from "../../src/features/cricket-highlighter/style.js";
 import { FakeDocument } from "./fake-dom.js";
 
+function expectedPresentationByRule(marksByPlayer, playerIndex) {
+  const normalized = Array.isArray(marksByPlayer)
+    ? marksByPlayer.map((value) => cricketRules.clampMarks(value))
+    : [];
+  const ownMarks = normalized[playerIndex] || 0;
+  const opponents = normalized.filter((_, index) => index !== playerIndex);
+  const allClosed = normalized.length > 0 && normalized.every((value) => value >= 3);
+
+  if (allClosed) {
+    return "dead";
+  }
+  if (ownMarks >= 3 && opponents.some((value) => value < 3)) {
+    return "scoring";
+  }
+  if (ownMarks < 3 && opponents.some((value) => value >= 3)) {
+    return "pressure";
+  }
+  return "open";
+}
+
 function createBoard(documentRef) {
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 1000 1000");
@@ -262,6 +282,131 @@ test("tactics DOUBLE/TRIPLE objectives use the same scoring and pressure semanti
   );
   assert.equal(
     tripleShapes.every((shape) => shape.classList?.contains(`${TARGET_SLOT_CLASS_PREFIX}triple-ring`)),
+    true
+  );
+});
+
+test("board perspective keeps screenshot regression rows open until a target is actually closed", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: true,
+      showDeadTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+  assert.equal(rendered, true);
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+
+  [
+    ["20", [3, 0]],
+    ["19", [1, 0]],
+    ["18", [2, 0]],
+  ].forEach(([label, marksByPlayer]) => {
+    const expected = expectedPresentationByRule(marksByPlayer, 0);
+    const shapes = Array.from(overlay.children || []).filter((node) => {
+      return String(node?.dataset?.targetLabel || "") === label;
+    });
+    assert.equal(shapes.length > 0, true, `${label} shapes rendered`);
+    assert.equal(
+      shapes.every((shape) => String(shape?.dataset?.targetPresentation || "") === expected),
+      true,
+      `${label} board presentation`
+    );
+  });
+});
+
+test("board scoring stays in the scoring bucket while open rows stay neutral", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: true,
+      showDeadTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+  const scoring20Shapes = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "20";
+  });
+  const open18Shapes = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "18";
+  });
+
+  assert.equal(
+    scoring20Shapes.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    true
+  );
+  assert.equal(
+    scoring20Shapes.every((shape) => {
+      return String(shape?.dataset?.scoringPattern || "").startsWith("url(#ad-ext-cricket-scoring-pattern)");
+    }),
+    true
+  );
+  assert.equal(
+    scoring20Shapes.every((shape) => {
+      return String(shape?.style?.fill || "").startsWith("url(#ad-ext-cricket-scoring-pattern)");
+    }),
+    true
+  );
+  assert.equal(
+    open18Shapes.every((shape) => String(shape?.dataset?.targetPresentation || "") === "open"),
     true
   );
 });

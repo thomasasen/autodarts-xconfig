@@ -172,6 +172,7 @@ export function initializeCricketHighlighter(context = {}) {
   const renderCache = {
     grid: null,
     board: null,
+    gridStableRowsByLabel: null,
     overlayShapeState: null,
   };
 

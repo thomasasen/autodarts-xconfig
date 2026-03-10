@@ -6,6 +6,26 @@ import * as variantRules from "../../src/domain/variant-rules.js";
 import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
+function expectedPresentationByRule(marksByPlayer, playerIndex) {
+  const normalized = Array.isArray(marksByPlayer)
+    ? marksByPlayer.map((value) => cricketRules.clampMarks(value))
+    : [];
+  const ownMarks = normalized[playerIndex] || 0;
+  const opponents = normalized.filter((_, index) => index !== playerIndex);
+  const allClosed = normalized.length > 0 && normalized.every((value) => value >= 3);
+
+  if (allClosed) {
+    return "dead";
+  }
+  if (ownMarks >= 3 && opponents.some((value) => value < 3)) {
+    return "scoring";
+  }
+  if (ownMarks < 3 && opponents.some((value) => value >= 3)) {
+    return "pressure";
+  }
+  return "open";
+}
+
 function createGrid(documentRef, labels, marksByRow) {
   const table = documentRef.createElement("table");
   table.id = "grid";
@@ -74,6 +94,48 @@ function createMergedLabelCellGrid(documentRef, labels, marksByRow) {
   wrapper.appendChild(grid);
   documentRef.main.appendChild(wrapper);
   return grid;
+}
+
+function installTransientLabelDiscoveryFilter(gridRoot, suppressedLabels) {
+  const originalQuerySelectorAll = gridRoot.querySelectorAll.bind(gridRoot);
+
+  gridRoot.querySelectorAll = (selector) => {
+    const results = Array.from(originalQuerySelectorAll(selector));
+    if (!(suppressedLabels instanceof Set) || suppressedLabels.size === 0) {
+      return results;
+    }
+
+    const selectorText = String(selector || "");
+    const mayContainLabels = [
+      ".chakra-text",
+      "[data-row-label]",
+      "[data-target-label]",
+      "p",
+      "div",
+      "td",
+      "th",
+      "span",
+      "strong",
+      "b",
+    ].some((token) => selectorText.includes(token));
+    if (!mayContainLabels) {
+      return results;
+    }
+
+    return results.filter((node) => {
+      const normalized = cricketRules.normalizeCricketLabel(
+        node?.getAttribute?.("data-row-label") ||
+          node?.getAttribute?.("data-target-label") ||
+          node?.textContent ||
+          ""
+      );
+      return !suppressedLabels.has(normalized);
+    });
+  };
+
+  return () => {
+    gridRoot.querySelectorAll = originalQuerySelectorAll;
+  };
 }
 
 function setDomActivePlayer(documentRef, activeIndex) {
@@ -651,6 +713,215 @@ test("mixed badge and plain label cells keep complete objective discovery across
     assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
     assert.equal(renderState?.stateMap.get("15")?.boardPresentation, "scoring");
   }
+});
+
+test("render state keeps all cricket rows stable across invalidated partial-discovery update sequences", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const grid = createMergedLabelCellGrid(
+    documentRef,
+    ["20", "19", "18", "17", "16", "15", "BULL"],
+    {
+      "20": [3, 0],
+      "19": [1, 0],
+      "18": [2, 0],
+      "17": [0, 0],
+      "16": [0, 0],
+      "15": [0, 0],
+      BULL: [0, 0],
+    }
+  );
+
+  Array.from(grid?.children || [])
+    .filter((_, index) => index % 2 === 0)
+    .slice(0, 4)
+    .forEach((labelCell) => {
+      const labelTextNode = labelCell?.querySelector?.(".chakra-text");
+      labelTextNode?.classList?.add("ad-ext-crfx-badge");
+    });
+
+  const suppressedLabels = new Set();
+  const restoreDiscovery = installTransientLabelDiscoveryFilter(grid, suppressedLabels);
+  const cache = { grid: null, board: null };
+  const gameState = createGameState({
+    getCricketGameModeNormalized: () => "cricket",
+    getCricketGameMode: () => "Cricket",
+    getCricketScoringModeNormalized: () => "standard",
+    getActivePlayerIndex: () => 0,
+    getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+  });
+
+  [
+    [],
+    ["19"],
+    ["19", "18"],
+  ].forEach((labelsToSuppress, index) => {
+    suppressedLabels.clear();
+    labelsToSuppress.forEach((label) => suppressedLabels.add(label));
+    cache.grid = null;
+
+    const renderState = buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState,
+      cache,
+    });
+
+    assert.equal(renderState?.discoveredUniqueLabelCount, 7, `stage ${index} unique coverage`);
+    assert.equal(renderState?.gridSnapshot?.rows?.length, 7, `stage ${index} row coverage`);
+    assert.equal(renderState?.marksByLabel["20"]?.join(","), "3,0", `stage ${index} marks 20`);
+    assert.equal(renderState?.marksByLabel["19"]?.join(","), "1,0", `stage ${index} marks 19`);
+    assert.equal(renderState?.marksByLabel["18"]?.join(","), "2,0", `stage ${index} marks 18`);
+    assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring", `stage ${index} board 20`);
+    assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open", `stage ${index} board 19`);
+    assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open", `stage ${index} board 18`);
+  });
+
+  restoreDiscovery();
+});
+
+test("render state keeps cricket screenshot regression rows in the correct open/pressure/scoring buckets", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByRow = {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  };
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], marksByRow);
+
+  const active0State = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  const active1State = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 1,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const marksByPlayer = marksByRow[label];
+    assert.equal(
+      active0State?.stateMap.get(label)?.cellStates?.[0]?.presentation,
+      expectedPresentationByRule(marksByPlayer, 0),
+      `${label} active0 owner state`
+    );
+    assert.equal(
+      active0State?.stateMap.get(label)?.cellStates?.[1]?.presentation,
+      expectedPresentationByRule(marksByPlayer, 1),
+      `${label} active0 opponent state`
+    );
+    assert.equal(
+      active1State?.stateMap.get(label)?.cellStates?.[0]?.presentation,
+      expectedPresentationByRule(marksByPlayer, 0),
+      `${label} active1 owner state remains factual`
+    );
+    assert.equal(
+      active1State?.stateMap.get(label)?.cellStates?.[1]?.presentation,
+      expectedPresentationByRule(marksByPlayer, 1),
+      `${label} active1 opponent state remains factual`
+    );
+    assert.equal(
+      active0State?.stateMap.get(label)?.boardPresentation,
+      expectedPresentationByRule(marksByPlayer, 0),
+      `${label} board active0`
+    );
+    assert.equal(
+      active1State?.stateMap.get(label)?.boardPresentation,
+      expectedPresentationByRule(marksByPlayer, 1),
+      `${label} board active1`
+    );
+  });
+});
+
+test("render state keeps tactics numeric, bull and special objectives on the same 4-state model", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  const labels = ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"];
+  const marksByRow = {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 3],
+    "16": [3, 3],
+    "15": [0, 0],
+    Double: [3, 0],
+    Triple: [0, 3],
+    BULL: [3, 3],
+  };
+
+  createGrid(documentRef, labels, marksByRow);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "tactics",
+      getCricketGameMode: () => "Tactics",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  [
+    ["20", [3, 0]],
+    ["19", [1, 0]],
+    ["18", [2, 0]],
+    ["17", [0, 3]],
+    ["16", [3, 3]],
+    ["15", [0, 0]],
+    ["DOUBLE", [3, 0]],
+    ["TRIPLE", [0, 3]],
+    ["BULL", [3, 3]],
+  ].forEach(([label, marksByPlayer]) => {
+    assert.equal(
+      renderState?.stateMap.get(label)?.cellStates?.[0]?.presentation,
+      expectedPresentationByRule(marksByPlayer, 0),
+      `${label} tactics owner`
+    );
+    assert.equal(
+      renderState?.stateMap.get(label)?.cellStates?.[1]?.presentation,
+      expectedPresentationByRule(marksByPlayer, 1),
+      `${label} tactics opponent`
+    );
+    assert.equal(
+      renderState?.stateMap.get(label)?.boardPresentation,
+      expectedPresentationByRule(marksByPlayer, 0),
+      `${label} tactics board`
+    );
+  });
 });
 
 test("active throws do not double-count rows that the DOM already reflects", () => {

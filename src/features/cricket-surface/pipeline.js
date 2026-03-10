@@ -911,6 +911,24 @@ function readCellPlayerIndex(cellNode) {
   return null;
 }
 
+function resolveStableRowLabelNode(rowMeta, cricketRules, label) {
+  const candidates = [
+    rowMeta?.labelNode || null,
+    rowMeta?.badgeNode || null,
+    rowMeta?.labelCell || null,
+  ];
+
+  return (
+    candidates.find((node) => {
+      if (!node || node.isConnected === false) {
+        return false;
+      }
+      const normalized = getNormalizedLabel(cricketRules, node);
+      return !normalized || normalized === label;
+    }) || null
+  );
+}
+
 function resolveActivePlayerIndex(gameState, documentRef, playerCount, options = {}) {
   const stateIndex = Number.isFinite(gameState?.getActivePlayerIndex?.())
     ? Number(gameState.getActivePlayerIndex())
@@ -1145,28 +1163,40 @@ function buildMarksByLabelSnapshot(options = {}) {
   let maxPlayerCount = 0;
   const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
   const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
+  const cachedStableRows =
+    options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
   const rowMetaByLabel = new Map();
   const labelCellMarkSourceLabels = [];
   const labelCellMarkSourceSet = new Set();
   const shortfallRepairLabels = [];
   const shortfallRepairSet = new Set();
   let hasIndexedPlayerColumns = false;
+  const recoveredStableLabels = [];
 
-  grid.labels.forEach(({ node, label }) => {
-    if (!targetSet.has(label)) {
+  const applyRowMetaForLabel = (label, node, fallbackRowMeta = null) => {
+    if (!targetSet.has(label) || rowMetaByLabel.has(label) || !node || node.isConnected === false) {
       return;
     }
 
-    const playerCells = collectPlayerCellsForLabel(node, cricketRules, targetSet);
-    const labelCell = resolveLabelCell(node);
+    const labelCell = resolveLabelCell(node) || fallbackRowMeta?.labelCell || null;
+    const discoveredPlayerCells = collectPlayerCellsForLabel(node, cricketRules, targetSet).filter(Boolean);
+    const fallbackPlayerCells = Array.isArray(fallbackRowMeta?.playerCells)
+      ? fallbackRowMeta.playerCells.filter((cell) => cell && cell.isConnected !== false)
+      : [];
+    const playerCells = discoveredPlayerCells.length > 0 ? discoveredPlayerCells : fallbackPlayerCells;
+    const badgeNode =
+      resolveBadgeNode(node, labelCell, cricketRules, label) ||
+      (fallbackRowMeta?.badgeNode?.isConnected === false ? null : fallbackRowMeta?.badgeNode || null);
+
     rowMetaByLabel.set(label, {
       label,
       labelNode: node,
       labelCell,
-      badgeNode: resolveBadgeNode(node, labelCell, cricketRules, label),
-      rowNode: getRowNode(node),
-      playerCells: Array.isArray(playerCells) ? playerCells.filter(Boolean) : [],
+      badgeNode,
+      rowNode: getRowNode(node) || fallbackRowMeta?.rowNode || null,
+      playerCells,
     });
+
     const markSourceMeta = {};
     const markSourceCells = maybeIncludeLabelCellAsPlayerCell(
       playerCells,
@@ -1182,6 +1212,7 @@ function buildMarksByLabelSnapshot(options = {}) {
       shortfallRepairSet.add(label);
       shortfallRepairLabels.push(label);
     }
+
     const parsedCells = markSourceCells.map((cell) => {
       const marks = cricketRules.clampMarks(parseMarksValue(cell, cricketRules));
       const explicitPlayerIndex = readCellPlayerIndex(cell);
@@ -1264,7 +1295,28 @@ function buildMarksByLabelSnapshot(options = {}) {
 
     marksByLabel[label] = marksByPlayer.map((value) => cricketRules.clampMarks(value));
     maxPlayerCount = Math.max(maxPlayerCount, marksByLabel[label].length);
+  };
+
+  grid.labels.forEach(({ node, label }) => {
+    applyRowMetaForLabel(label, node);
   });
+
+  if (cachedStableRows) {
+    targetOrder.forEach((label) => {
+      if (rowMetaByLabel.has(label)) {
+        return;
+      }
+      const fallbackRowMeta = cachedStableRows.get(label);
+      const stableLabelNode = resolveStableRowLabelNode(fallbackRowMeta, cricketRules, label);
+      if (!stableLabelNode) {
+        return;
+      }
+      applyRowMetaForLabel(label, stableLabelNode, fallbackRowMeta);
+      if (rowMetaByLabel.has(label)) {
+        recoveredStableLabels.push(label);
+      }
+    });
+  }
 
   const playerCount = Math.max(maxPlayerCount, playerCountFromMatch, 1);
 
@@ -1364,7 +1416,30 @@ function buildMarksByLabelSnapshot(options = {}) {
     })
     .filter(Boolean);
 
+  if (options.cache && typeof options.cache === "object") {
+    const previousStableCount =
+      options.cache.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel.size : 0;
+    if (gridRows.length >= previousStableCount) {
+      options.cache.gridStableRowsByLabel = new Map(
+        gridRows.map((row) => {
+          return [row.label, row];
+        })
+      );
+    }
+  }
+
   const boardSnapshot = resolveBoardSnapshot(documentRef, options.cache);
+  const discoveredLabelCount = Math.max(grid.labels.length, rowMetaByLabel.size);
+  const discoveredUniqueLabelCount = Math.max(
+    new Set(grid.labels.map((entry) => entry.label)).size,
+    rowMetaByLabel.size
+  );
+  if (labelDiagnostics.atomicLabelCount < discoveredLabelCount) {
+    labelDiagnostics.atomicLabelCount = discoveredLabelCount;
+  }
+  if (labelDiagnostics.atomicUniqueLabelCount < discoveredUniqueLabelCount) {
+    labelDiagnostics.atomicUniqueLabelCount = discoveredUniqueLabelCount;
+  }
 
   return {
     documentRef,
@@ -1376,11 +1451,13 @@ function buildMarksByLabelSnapshot(options = {}) {
     tacticsPrecisionMode,
     targetOrder,
     activePlayerIndex,
-    discoveredLabelCount: grid.labels.length,
-    discoveredUniqueLabelCount: new Set(grid.labels.map((entry) => entry.label)).size,
+    discoveredLabelCount,
+    discoveredUniqueLabelCount,
     discoveredRawLabelCount: labelDiagnostics.rawLabelCount,
     discoveredRawUniqueLabelCount: labelDiagnostics.rawUniqueLabelCount,
     labelDiagnostics,
+    recoveredStableLabelCount: recoveredStableLabels.length,
+    recoveredStableLabels,
     labelCellMarkSourceCount: labelCellMarkSourceLabels.length,
     labelCellMarkSourceLabels,
     shortfallRepairCount: shortfallRepairLabels.length,

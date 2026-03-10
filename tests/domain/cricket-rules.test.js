@@ -22,6 +22,40 @@ import {
   resolveTargetOrderByGameModeAndLabels,
 } from "../../src/domain/cricket-rules.js";
 
+const MARK_VALUES = [0, 1, 2, 3];
+const SCORING_MODES = ["standard", "cutthroat", "neutral"];
+
+function expectedPresentationByRule(marksByPlayer, playerIndex) {
+  const normalized = Array.isArray(marksByPlayer) ? marksByPlayer.map((value) => clampMarks(value)) : [];
+  const ownMarks = normalized[playerIndex] || 0;
+  const opponents = normalized.filter((_, index) => index !== playerIndex);
+  const allClosed = normalized.length > 0 && normalized.every((value) => value >= 3);
+  const hasOpenOpponent = opponents.some((value) => value < 3);
+  const hasClosedOpponent = opponents.some((value) => value >= 3);
+
+  if (allClosed) {
+    return "dead";
+  }
+  if (ownMarks >= 3 && hasOpenOpponent) {
+    return "scoring";
+  }
+  if (ownMarks < 3 && hasClosedOpponent) {
+    return "pressure";
+  }
+  return "open";
+}
+
+function expectedFlagsByRule(marksByPlayer, playerIndex) {
+  const presentation = expectedPresentationByRule(marksByPlayer, playerIndex);
+  return {
+    presentation,
+    open: presentation === "open",
+    pressure: presentation === "pressure",
+    scoring: presentation === "scoring",
+    dead: presentation === "dead",
+  };
+}
+
 test("normalizeCricketLabel supports bull aliases and tactics labels", () => {
   assert.equal(normalizeCricketLabel("Bullseye"), "BULL");
   assert.equal(normalizeCricketLabel("25"), "BULL");
@@ -464,6 +498,148 @@ test("tactics DOUBLE and TRIPLE use the same four-state semantics as numeric tar
   assert.equal(states.get("TRIPLE")?.boardPresentation, "pressure");
   assert.equal(states.get("TRIPLE")?.cellStates?.[0]?.presentation, "pressure");
   assert.equal(states.get("TRIPLE")?.cellStates?.[1]?.presentation, "scoring");
+});
+
+test("cricket and tactics state engine matches the independent 4-state oracle across objective families", () => {
+  const objectiveCases = [
+    {
+      label: "20",
+      gameMode: "Cricket",
+      targetOrder: ["20"],
+    },
+    {
+      label: "BULL",
+      gameMode: "Cricket",
+      targetOrder: ["BULL"],
+    },
+    {
+      label: "DOUBLE",
+      gameMode: "Tactics",
+      targetOrder: ["DOUBLE"],
+    },
+    {
+      label: "TRIPLE",
+      gameMode: "Tactics",
+      targetOrder: ["TRIPLE"],
+    },
+  ];
+
+  objectiveCases.forEach(({ label, gameMode, targetOrder }) => {
+    SCORING_MODES.forEach((scoringModeNormalized) => {
+      MARK_VALUES.forEach((leftMarks) => {
+        MARK_VALUES.forEach((rightMarks) => {
+          const marksByPlayer = [leftMarks, rightMarks];
+
+          marksByPlayer.forEach((_, playerIndex) => {
+            const expected = expectedFlagsByRule(marksByPlayer, playerIndex);
+            const actual = evaluatePlayerTargetState(marksByPlayer, playerIndex, {
+              activePlayerIndex: playerIndex,
+              scoringModeNormalized,
+            });
+
+            assert.equal(
+              actual.presentation,
+              expected.presentation,
+              `${label} ${scoringModeNormalized} 2p ${marksByPlayer.join(",")} player ${playerIndex}`
+            );
+            assert.equal(actual.pressure, expected.pressure, `${label} ${scoringModeNormalized} 2p pressure ${marksByPlayer.join(",")} player ${playerIndex}`);
+            assert.equal(actual.scoring, expected.scoring, `${label} ${scoringModeNormalized} 2p scoring ${marksByPlayer.join(",")} player ${playerIndex}`);
+            assert.equal(actual.dead, expected.dead, `${label} ${scoringModeNormalized} 2p dead ${marksByPlayer.join(",")} player ${playerIndex}`);
+          });
+
+          const stateMap = computeTargetStates(
+            {
+              [label]: marksByPlayer,
+            },
+            {
+              gameMode,
+              targetOrder,
+              scoringModeNormalized,
+              activePlayerIndex: 0,
+            }
+          );
+          const stateEntry = stateMap.get(label);
+          assert.ok(stateEntry, `${label} state entry missing for ${scoringModeNormalized} 2p ${marksByPlayer.join(",")}`);
+          marksByPlayer.forEach((_, playerIndex) => {
+            assert.equal(
+              stateEntry?.cellStates?.[playerIndex]?.presentation,
+              expectedPresentationByRule(marksByPlayer, playerIndex),
+              `${label} ${scoringModeNormalized} 2p cellStates ${marksByPlayer.join(",")} player ${playerIndex}`
+            );
+          });
+          assert.equal(
+            stateEntry?.boardPresentation,
+            expectedPresentationByRule(marksByPlayer, 0),
+            `${label} ${scoringModeNormalized} 2p board ${marksByPlayer.join(",")} active 0`
+          );
+        });
+      });
+    });
+  });
+});
+
+test("cricket and tactics 3-player state engine matches the independent 4-state oracle", () => {
+  const objectiveCases = [
+    {
+      label: "20",
+      gameMode: "Cricket",
+      targetOrder: ["20"],
+    },
+    {
+      label: "BULL",
+      gameMode: "Cricket",
+      targetOrder: ["BULL"],
+    },
+    {
+      label: "DOUBLE",
+      gameMode: "Tactics",
+      targetOrder: ["DOUBLE"],
+    },
+    {
+      label: "TRIPLE",
+      gameMode: "Tactics",
+      targetOrder: ["TRIPLE"],
+    },
+  ];
+
+  objectiveCases.forEach(({ label, gameMode, targetOrder }) => {
+    SCORING_MODES.forEach((scoringModeNormalized) => {
+      MARK_VALUES.forEach((firstMarks) => {
+        MARK_VALUES.forEach((secondMarks) => {
+          MARK_VALUES.forEach((thirdMarks) => {
+            const marksByPlayer = [firstMarks, secondMarks, thirdMarks];
+            const stateMap = computeTargetStates(
+              {
+                [label]: marksByPlayer,
+              },
+              {
+                gameMode,
+                targetOrder,
+                scoringModeNormalized,
+                activePlayerIndex: 1,
+              }
+            );
+            const stateEntry = stateMap.get(label);
+            assert.ok(stateEntry, `${label} state entry missing for ${scoringModeNormalized} 3p ${marksByPlayer.join(",")}`);
+
+            marksByPlayer.forEach((_, playerIndex) => {
+              assert.equal(
+                stateEntry?.cellStates?.[playerIndex]?.presentation,
+                expectedPresentationByRule(marksByPlayer, playerIndex),
+                `${label} ${scoringModeNormalized} 3p cellStates ${marksByPlayer.join(",")} player ${playerIndex}`
+              );
+            });
+
+            assert.equal(
+              stateEntry?.boardPresentation,
+              expectedPresentationByRule(marksByPlayer, 1),
+              `${label} ${scoringModeNormalized} 3p board ${marksByPlayer.join(",")} active 1`
+            );
+          });
+        });
+      });
+    });
+  });
 });
 
 test("evaluateCricketWinState resolves standard, cut-throat and neutral winners", () => {

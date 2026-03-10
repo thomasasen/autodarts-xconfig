@@ -905,6 +905,7 @@ export function createCricketGridFxState(windowRef = null) {
     renderCache: {
       grid: null,
       board: null,
+      gridStableRowsByLabel: null,
     },
   };
 }
@@ -923,6 +924,7 @@ export function clearCricketGridFxState(state) {
   if (state.renderCache && typeof state.renderCache === "object") {
     state.renderCache.grid = null;
     state.renderCache.board = null;
+    state.renderCache.gridStableRowsByLabel = null;
   }
 }
 
