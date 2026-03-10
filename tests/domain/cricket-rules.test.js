@@ -169,6 +169,19 @@ test("solo target follows dead-state when all players are closed", () => {
   assert.equal(soloState.presentation, "dead");
 });
 
+test("evaluatePlayerTargetState keeps marks=2 under opponent close in pressure", () => {
+  const pressureState = evaluatePlayerTargetState([2, 3, 0], 0, {
+    activePlayerIndex: 0,
+    scoringMode: "standard",
+  });
+
+  assert.equal(pressureState.open, true);
+  assert.equal(pressureState.closed, false);
+  assert.equal(pressureState.presentation, "pressure");
+  assert.equal(pressureState.pressure, true);
+  assert.equal(pressureState.scorableAgainstPlayer, true);
+});
+
 test("computeTargetStates keeps board perspective and cell states aligned", () => {
   const marksByLabel = {
     "20": [3, 0],
@@ -429,6 +442,28 @@ test("computeTargetStates follows 4-state formula for multi-player scenarios", (
   assert.equal(states.get("20")?.cellStates?.[2]?.presentation, "scoring");
   assert.equal(states.get("19")?.boardPresentation, "dead");
   assert.equal(states.get("18")?.boardPresentation, "open");
+});
+
+test("tactics DOUBLE and TRIPLE use the same four-state semantics as numeric targets", () => {
+  const states = computeTargetStates(
+    {
+      DOUBLE: [3, 0],
+      TRIPLE: [0, 3],
+    },
+    {
+      gameMode: "Tactics",
+      scoringMode: "standard",
+      activePlayerIndex: 0,
+      targetOrder: ["DOUBLE", "TRIPLE"],
+    }
+  );
+
+  assert.equal(states.get("DOUBLE")?.boardPresentation, "scoring");
+  assert.equal(states.get("DOUBLE")?.cellStates?.[0]?.presentation, "scoring");
+  assert.equal(states.get("DOUBLE")?.cellStates?.[1]?.presentation, "pressure");
+  assert.equal(states.get("TRIPLE")?.boardPresentation, "pressure");
+  assert.equal(states.get("TRIPLE")?.cellStates?.[0]?.presentation, "pressure");
+  assert.equal(states.get("TRIPLE")?.cellStates?.[1]?.presentation, "scoring");
 });
 
 test("evaluateCricketWinState resolves standard, cut-throat and neutral winners", () => {

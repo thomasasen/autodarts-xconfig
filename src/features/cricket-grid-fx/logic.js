@@ -993,18 +993,94 @@ export function updateCricketGridFx(options = {}) {
   }
 
   const sourceRows = Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [];
-  const rows = sourceRows
-    .filter((row) => targetSet.has(row?.label))
-    .map((row) => {
-      return {
-        label: row?.label || "",
-        labelNode: row?.labelNode || row?.badgeNode || null,
-        labelCell: row?.labelCell || null,
-        badgeNode: row?.badgeNode || null,
-        rowNode: row?.rowNode || getRowNode(row?.labelNode || row?.labelCell || null),
-        playerCells: Array.isArray(row?.playerCells) ? row.playerCells.filter(Boolean) : [],
-      };
+  const rowByLabel = new Map();
+
+  const upsertRow = (candidateRow) => {
+    const label = String(candidateRow?.label || "");
+    if (!label || !targetSet.has(label)) {
+      return;
+    }
+
+    const normalizedRow = {
+      label,
+      labelNode: candidateRow?.labelNode || candidateRow?.badgeNode || null,
+      labelCell: candidateRow?.labelCell || null,
+      badgeNode: candidateRow?.badgeNode || null,
+      rowNode:
+        candidateRow?.rowNode ||
+        getRowNode(candidateRow?.labelNode || candidateRow?.labelCell || null),
+      playerCells: Array.isArray(candidateRow?.playerCells)
+        ? candidateRow.playerCells.filter(Boolean)
+        : [],
+    };
+
+    const isConnectedAnchor = (node) => {
+      return Boolean(node && node.isConnected !== false);
+    };
+    const hasAnchorNode =
+      isConnectedAnchor(normalizedRow.labelNode) ||
+      isConnectedAnchor(normalizedRow.labelCell) ||
+      isConnectedAnchor(normalizedRow.rowNode);
+    if (!hasAnchorNode) {
+      return;
+    }
+
+    const existing = rowByLabel.get(label);
+    if (!existing) {
+      rowByLabel.set(label, normalizedRow);
+      return;
+    }
+
+    const existingPlayerCellCount = Array.isArray(existing.playerCells)
+      ? existing.playerCells.length
+      : 0;
+    const nextPlayerCellCount = normalizedRow.playerCells.length;
+    const shouldReplace =
+      (!existing.labelCell && Boolean(normalizedRow.labelCell)) ||
+      (!existing.badgeNode && Boolean(normalizedRow.badgeNode)) ||
+      (existingPlayerCellCount === 0 && nextPlayerCellCount > 0);
+
+    if (shouldReplace) {
+      rowByLabel.set(label, normalizedRow);
+    }
+  };
+
+  sourceRows.forEach((row) => {
+    upsertRow(row);
+  });
+
+  if (rowByLabel.size < targetSet.size) {
+    const fallbackLabelRows = collectLabelNodes(gridRoot, cricketRules, targetSet);
+    fallbackLabelRows.forEach((entry) => {
+      const label = String(entry?.label || "");
+      if (!label || !targetSet.has(label)) {
+        return;
+      }
+
+      const stateEntry = renderState.stateMap.get(label);
+      const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
+        ? stateEntry.cellStates.length
+        : 0;
+      const labelNode = entry?.labelNode || null;
+      const labelCell = resolveLabelCell(labelNode);
+      const fallbackPlayerCells = collectPlayerCells(labelNode, cricketRules, targetSet, {
+        expectedPlayerCount,
+      });
+
+      upsertRow({
+        label,
+        labelNode,
+        labelCell,
+        badgeNode: resolveBadgeNode(labelNode, labelCell, cricketRules, label),
+        rowNode: getRowNode(labelNode || labelCell || null),
+        playerCells: fallbackPlayerCells,
+      });
     });
+  }
+
+  const rows = targetOrder
+    .map((label) => rowByLabel.get(label))
+    .filter(Boolean);
   if (!rows.length) {
     clearCricketGridFxState(state);
     if (debugStats) {

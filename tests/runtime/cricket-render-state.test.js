@@ -597,6 +597,62 @@ test("merged shortfall rows ignore row-relative player indexes across all cricke
   assert.equal(renderState?.labelCellMarkSourceCount >= 3, true);
 });
 
+test("mixed badge and plain label cells keep complete objective discovery across repeated snapshots", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const grid = createMergedLabelCellGrid(
+    documentRef,
+    ["20", "19", "18", "17", "16", "15", "BULL"],
+    {
+      "20": [3, 0],
+      "19": [0, 0],
+      "18": [2, 0],
+      "17": [0, 0],
+      "16": [0, 0],
+      "15": [3, 0],
+      BULL: [0, 0],
+    }
+  );
+
+  Array.from(grid?.children || [])
+    .filter((_, index) => index % 2 === 0)
+    .slice(0, 4)
+    .forEach((labelCell) => {
+      const labelTextNode = labelCell?.querySelector?.(".chakra-text");
+      labelTextNode?.classList?.add("ad-ext-crfx-badge");
+    });
+
+  const cache = { grid: null, board: null };
+  const gameState = createGameState({
+    getCricketGameModeNormalized: () => "cricket",
+    getCricketGameMode: () => "Cricket",
+    getCricketScoringModeNormalized: () => "standard",
+    getActivePlayerIndex: () => 0,
+    getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+  });
+
+  for (let iteration = 0; iteration < 3; iteration += 1) {
+    const renderState = buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState,
+      cache,
+    });
+
+    assert.equal(renderState?.discoveredUniqueLabelCount, 7);
+    assert.equal(renderState?.gridSnapshot?.rows?.length, 7);
+    assert.equal(renderState?.marksByLabel["20"]?.join(","), "3,0");
+    assert.equal(renderState?.marksByLabel["18"]?.join(","), "2,0");
+    assert.equal(renderState?.marksByLabel["15"]?.join(","), "3,0");
+    assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
+    assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
+    assert.equal(renderState?.stateMap.get("15")?.boardPresentation, "scoring");
+  }
+});
+
 test("active throws do not double-count rows that the DOM already reflects", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";

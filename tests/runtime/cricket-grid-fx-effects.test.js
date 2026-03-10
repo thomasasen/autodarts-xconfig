@@ -250,6 +250,81 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), false);
 });
 
+test("cricket grid fx backfills missing snapshot rows from grid root in merged discovery layouts", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 3],
+    "18": [3, 0],
+    "17": [0, 3],
+    "16": [0, 0],
+    "15": [3, 3],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const truncatedRows = (renderState?.gridSnapshot?.rows || []).filter((row) => {
+    return ["20", "19", "18", "17"].includes(String(row?.label || ""));
+  });
+  const truncatedRenderState = {
+    ...renderState,
+    gridSnapshot: {
+      ...(renderState?.gridSnapshot || {}),
+      rows: truncatedRows,
+    },
+  };
+
+  const state = createCricketGridFxState(windowRef);
+  const debugStats = {};
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: truncatedRenderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+    debugStats,
+  });
+
+  const opponent20 = rowsByLabel.get("20")?.playerCells?.[1] || null;
+  const opponent19 = rowsByLabel.get("19")?.playerCells?.[1] || null;
+  const opponent15 = rowsByLabel.get("15")?.playerCells?.[1] || null;
+  assert.equal(debugStats.status, "ok");
+  assert.equal(debugStats.rowCount, 7);
+  assert.equal(Boolean(opponent20?.classList?.contains(THREAT_CLASS)), true);
+  assert.equal(Boolean(opponent20?.classList?.contains(PRESSURE_CLASS)), true);
+  assert.equal(Boolean(opponent19?.classList?.contains(SCORE_CLASS)), true);
+  assert.equal(Boolean(opponent15?.classList?.contains(DEAD_CLASS)), true);
+
+  clearCricketGridFxState(state);
+});
+
 test("cricket grid fx pulses rows only for mark increases or tactical transitions", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

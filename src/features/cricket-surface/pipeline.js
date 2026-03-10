@@ -26,6 +26,7 @@ const PAUSED_ROUTE_PATH = "/ad-xconfig";
 const GRID_MIN_UNIQUE_LABELS = 4;
 const GRID_MIN_ROWS_WITH_PLAYER_CELLS = 2;
 const GRID_MIN_COVERAGE = 0;
+const BASE_CRICKET_OBJECTIVE_COUNT = 7;
 
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
@@ -43,9 +44,12 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   ".label-cell",
   ".ad-ext-cricket-label",
   ".ad-ext-crfx-badge",
+  ".chakra-text",
   "[data-row-label]",
   "[data-target-label]",
 ]);
+
+const LABEL_NODE_FALLBACK_SELECTOR = "div, td, th, span, p, strong, b";
 
 const PLAYER_CELL_SELECTORS = Object.freeze([
   ".player-cell",
@@ -207,22 +211,37 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
     labels.push({ node, label });
   };
 
-  LABEL_NODE_SELECTORS.forEach((selector) => {
-    queryAll(rootNode, selector).forEach((node) => {
-      pushLabelNode(node);
+  const scanSelectors = (selectors) => {
+    selectors.forEach((selector) => {
+      queryAll(rootNode, selector).forEach((node) => {
+        pushLabelNode(node);
+      });
     });
-  });
+  };
+
+  const keepEntriesWithPlayerCells = (entries) => {
+    const scopedEntries = entries.filter((entry) => {
+      const cells = collectPlayerCellsForLabel(entry?.node, cricketRules, targetSet);
+      return cells.length > 0;
+    });
+    return scopedEntries.length > 0 ? scopedEntries : entries;
+  };
+
+  scanSelectors(LABEL_NODE_SELECTORS);
 
   if (diagnostics && typeof diagnostics === "object") {
     diagnostics.rawLabelCount = labels.length;
     diagnostics.rawUniqueLabelCount = new Set(labels.map((entry) => entry.label)).size;
   }
 
-  if (labels.length >= 4) {
-    return filterAtomicLabelNodes(labels, diagnostics);
+  let scopedLabels = keepEntriesWithPlayerCells(labels);
+  const uniqueLabelCount = new Set(scopedLabels.map((entry) => entry.label)).size;
+  if (uniqueLabelCount >= BASE_CRICKET_OBJECTIVE_COUNT) {
+    return filterAtomicLabelNodes(scopedLabels, diagnostics);
   }
 
-  queryAll(rootNode, "div, td, th, span, p").forEach((node) => {
+  // Fallback scan is only needed when the fast selectors yield an incomplete set.
+  queryAll(rootNode, LABEL_NODE_FALLBACK_SELECTOR).forEach((node) => {
     pushLabelNode(node);
   });
 
@@ -231,7 +250,8 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
     diagnostics.rawUniqueLabelCount = new Set(labels.map((entry) => entry.label)).size;
   }
 
-  return filterAtomicLabelNodes(labels, diagnostics);
+  scopedLabels = keepEntriesWithPlayerCells(labels);
+  return filterAtomicLabelNodes(scopedLabels, diagnostics);
 }
 
 function filterAtomicLabelNodes(labelEntries, diagnostics = null) {
