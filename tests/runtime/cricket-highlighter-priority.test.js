@@ -410,3 +410,47 @@ test("board scoring stays in the scoring bucket while open rows stay neutral", (
     true
   );
 });
+
+test("board renderer prioritizes boardPresentation over stale ui buckets", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+
+  const overlayRendered = renderCricketHighlights({
+    documentRef,
+    renderState: {
+      targetOrder: ["18"],
+      stateMap: new Map([
+        [
+          "18",
+          {
+            label: "18",
+            uiBucket: "scoring",
+            boardPresentation: "open",
+            presentation: "open",
+            isHighlightActive: true,
+          },
+        ],
+      ]),
+    },
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: true,
+      showDeadTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+
+  assert.equal(overlayRendered, true);
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+  const shapes18 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "18";
+  });
+  assert.equal(shapes18.length, 4);
+  assert.equal(
+    shapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "open"),
+    true
+  );
+});

@@ -22,6 +22,10 @@
   THREAT_CLASS,
   WIPE_CLASS,
 } from "./style.js";
+import {
+  normalizeCricketPresentationToken,
+  resolveCricketRowPresentation,
+} from "../cricket-surface/presentation.js";
 
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
@@ -638,20 +642,7 @@ function clearPersistentState(state) {
 }
 
 function normalizePresentationToken(value) {
-  const token = String(value || "").toLowerCase();
-  if (token === "offense" || token === "scorable") {
-    return "scoring";
-  }
-  if (token === "danger") {
-    return "pressure";
-  }
-  if (token === "closed") {
-    return "dead";
-  }
-  if (token === "dead" || token === "pressure" || token === "scoring" || token === "open") {
-    return token;
-  }
-  return "open";
+  return normalizeCricketPresentationToken(value);
 }
 
 function setLabelStateClasses(labelNode, stateToken) {
@@ -868,23 +859,7 @@ function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
 }
 
 function resolveRowPresentation(stateEntry) {
-  const cellStates = Array.isArray(stateEntry?.cellStates) ? stateEntry.cellStates : [];
-  if (cellStates.length > 0) {
-    const tokens = cellStates.map((entry) => normalizePresentationToken(entry?.presentation));
-    if (tokens.every((token) => token === "dead")) {
-      return "dead";
-    }
-    if (tokens.some((token) => token === "scoring")) {
-      return "scoring";
-    }
-    if (tokens.some((token) => token === "pressure")) {
-      return "pressure";
-    }
-    return "open";
-  }
-  return normalizePresentationToken(
-    stateEntry?.boardPresentation || stateEntry?.presentation || "open"
-  );
+  return resolveCricketRowPresentation(stateEntry);
 }
 
 export function createCricketGridFxState(windowRef = null) {

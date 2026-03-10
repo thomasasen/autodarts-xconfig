@@ -1282,6 +1282,131 @@ test("cricket grid fx runs in cricket/tactics without requiring theme-cricket ho
   assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
 });
 
+test("cricket highlighter rerenders the board when merged crfx grid rows update", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  const rowsByLabel = createMergedLabelMarkCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [3, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const gridRoot = documentRef.querySelector(".css-rfeml4");
+  assert.ok(gridRoot);
+  gridRoot.classList.remove("chakra-grid");
+  gridRoot.classList.add("ad-ext-crfx-root");
+
+  rowsByLabel.forEach((rowState) => {
+    rowState?.labelCell?.classList?.add("ad-ext-crfx-label-cell");
+    rowState?.labelText?.classList?.remove("chakra-text");
+    Array.isArray(rowState?.playerCells) &&
+      rowState.playerCells.forEach((cellNode) => {
+        cellNode?.classList?.add("ad-ext-crfx-cell");
+      });
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers, listeners },
+    gameState: {
+      ...createGameState({
+        scoringModeNormalized: "standard",
+        scoringMode: "standard",
+        activePlayerIndex: 0,
+      }),
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: { cricketRules, variantRules },
+    config: {
+      getFeatureConfig() {
+        return {
+          showOpenTargets: true,
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const initialOverlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.ok(initialOverlay);
+  const initialShapes18 = Array.from(initialOverlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "18";
+  });
+  assert.equal(initialShapes18.length, 4);
+  assert.equal(
+    initialShapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    true
+  );
+
+  const row18 = rowsByLabel.get("18");
+  const previousIcon18 = row18?.labelCell?.querySelector?.("img") || null;
+  assert.ok(previousIcon18);
+  previousIcon18.parentNode?.removeChild?.(previousIcon18);
+
+  const nextIcon18 = documentRef.createElement("img");
+  nextIcon18.setAttribute("alt", "2");
+  row18?.labelCell?.appendChild?.(nextIcon18);
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: row18?.labelCell || gridRoot,
+      addedNodes: [nextIcon18],
+      removedNodes: [previousIcon18],
+    },
+  ]);
+
+  const updatedOverlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.ok(updatedOverlay);
+  const updatedShapes18 = Array.from(updatedOverlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "18";
+  });
+  const updatedShapes20 = Array.from(updatedOverlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "20";
+  });
+
+  assert.equal(updatedShapes18.length, 4);
+  assert.equal(
+    updatedShapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "open"),
+    true
+  );
+  assert.equal(
+    updatedShapes20.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    true
+  );
+
+  cleanupHighlighter();
+});
+
 test("cricket highlighter and grid fx pause on /ad-xconfig and resume on match routes", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

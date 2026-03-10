@@ -285,12 +285,17 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
   const playerCell20 = rowsByLabel.get("20")?.playerCells?.[0] || null;
   const playerIcon20 = rowsByLabel.get("20")?.playerIcons?.[0] || null;
+  const resolveEffectiveBadge = () => {
+    const syntheticBadge =
+      labelCell20?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`) || null;
+    return syntheticBadge || labelCell20;
+  };
   assert.equal(Boolean(labelCell20), true);
   assert.equal(Boolean(playerCell20), true);
   assert.equal(Boolean(playerIcon20), true);
 
   const syntheticBadge = labelCell20?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`) || null;
-  const effectiveBadge = syntheticBadge || labelCell20;
+  const effectiveBadge = resolveEffectiveBadge();
   assert.equal(Boolean(effectiveBadge), true);
   assert.equal(effectiveBadge?.classList?.contains(BADGE_CLASS), true);
   if (syntheticBadge) {
@@ -323,7 +328,7 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 2);
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), true);
   assert.equal(playerIcon20?.classList?.contains(MARK_L2_CLASS), true);
-  assert.equal(effectiveBadge?.classList?.contains(BADGE_BURST_CLASS), true);
+  assert.equal(resolveEffectiveBadge()?.classList?.contains(BADGE_BURST_CLASS), true);
 
   updateCricketGridFx({
     documentRef,

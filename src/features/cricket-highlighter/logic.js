@@ -12,6 +12,7 @@ import {
   TARGET_SLOT_CLASS_PREFIX,
 } from "./style.js";
 import { buildCricketRenderState as buildCricketRenderStateFromPipeline } from "../cricket-surface/pipeline.js";
+import { normalizeCricketPresentationToken } from "../cricket-surface/presentation.js";
 
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -39,20 +40,7 @@ const PRESSURE_VISIBLE_SLOTS = new Set([
 ]);
 
 function resolvePresentationToken(value) {
-  const token = String(value || "").trim().toLowerCase();
-  if (token === "offense" || token === "scorable") {
-    return "scoring";
-  }
-  if (token === "danger") {
-    return "pressure";
-  }
-  if (token === "closed") {
-    return "dead";
-  }
-  if (PRESENTATION_KEYS.has(token)) {
-    return token;
-  }
-  return "open";
+  return normalizeCricketPresentationToken(value);
 }
 
 function resolveBoardTargets(renderState) {
@@ -429,21 +417,7 @@ function resolvePresentationForStateEntry(stateEntry, isRelevantTarget) {
   if (!isRelevantTarget) {
     return "inactive";
   }
-
-  const uiBucket = String(stateEntry?.uiBucket || "").trim().toLowerCase();
-  if (uiBucket === "scoring" || uiBucket === "offense" || uiBucket === "scorable") {
-    return "scoring";
-  }
-  if (uiBucket === "pressure") {
-    return "pressure";
-  }
-  if (uiBucket === "dead") {
-    return "dead";
-  }
-  if (uiBucket === "open") {
-    return "open";
-  }
-
+  // Board colors are always derived from active-player board perspective.
   return resolvePresentationToken(stateEntry?.boardPresentation || stateEntry?.presentation || "open");
 }
 

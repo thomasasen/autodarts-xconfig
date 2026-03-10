@@ -1,4 +1,10 @@
 import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
+import {
+  CRICKET_UI_BUCKET,
+  normalizeCricketPresentationToken,
+  resolveCricketHighlightActive,
+  resolveCricketUiBucket,
+} from "./presentation.js";
 
 export const CRICKET_SURFACE_STATUS = Object.freeze({
   READY: "ready",
@@ -8,12 +14,7 @@ export const CRICKET_SURFACE_STATUS = Object.freeze({
   INACTIVE_VARIANT: "inactive-variant",
 });
 
-const UI_BUCKET = Object.freeze({
-  SCORING: "scoring",
-  PRESSURE: "pressure",
-  OPEN: "open",
-  DEAD: "dead",
-});
+const UI_BUCKET = CRICKET_UI_BUCKET;
 
 const UI_PRIORITY_BY_BUCKET = Object.freeze({
   [UI_BUCKET.SCORING]: 1,
@@ -1519,53 +1520,6 @@ function buildTurnToken(gameState, activePlayerIndex = 0) {
   return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}:${throwCount}`;
 }
 
-function resolvePressureLevel(entry = null) {
-  if (entry?.pressure) {
-    return "pressure";
-  }
-  return "none";
-}
-
-function resolveUiBucket(entry = null, pressureLevel = "none") {
-  const presentation = String(entry?.presentation || entry?.boardPresentation || "").toLowerCase();
-
-  if (
-    presentation === "scoring" ||
-    presentation === "offense" ||
-    entry?.scoring ||
-    entry?.scorable ||
-    entry?.scorableForPlayer ||
-    entry?.offense
-  ) {
-    return UI_BUCKET.SCORING;
-  }
-  if (
-    presentation === "pressure" ||
-    presentation === "danger" ||
-    pressureLevel !== "none" ||
-    entry?.danger ||
-    entry?.threatenedByOpponents ||
-    entry?.scorableAgainstPlayer
-  ) {
-    return UI_BUCKET.PRESSURE;
-  }
-  if (presentation === "dead" || entry?.dead) {
-    return UI_BUCKET.DEAD;
-  }
-  if (entry?.open) {
-    return UI_BUCKET.OPEN;
-  }
-  return UI_BUCKET.OPEN;
-}
-
-function resolveHighlightActive(uiBucket) {
-  return (
-    uiBucket === UI_BUCKET.SCORING ||
-    uiBucket === UI_BUCKET.PRESSURE ||
-    uiBucket === UI_BUCKET.OPEN
-  );
-}
-
 function enrichStateMapForUi(stateMap) {
   if (!(stateMap instanceof Map) || stateMap.size === 0) {
     return new Map();
@@ -1573,14 +1527,13 @@ function enrichStateMapForUi(stateMap) {
 
   const enriched = new Map();
   stateMap.forEach((entry, label) => {
-    const pressureLevel = resolvePressureLevel(entry);
-    const uiBucket = resolveUiBucket(entry, pressureLevel);
+    const uiBucket = resolveCricketUiBucket(entry);
     const uiPriority = Number(UI_PRIORITY_BY_BUCKET[uiBucket] || UI_PRIORITY_BY_BUCKET.open || 4);
     const closedByPlayer = Boolean(entry?.closed || entry?.own);
     const openByOpponent = Number(entry?.openOpponentCount || 0) > 0;
     const dead = Boolean(entry?.dead);
     const scorable = Boolean(entry?.scorable || entry?.scorableForPlayer);
-    const isHighlightActive = resolveHighlightActive(uiBucket);
+    const isHighlightActive = resolveCricketHighlightActive(uiBucket);
 
     enriched.set(label, {
       ...entry,
@@ -1588,7 +1541,7 @@ function enrichStateMapForUi(stateMap) {
       openByOpponent,
       scorable,
       dead,
-      pressureLevel,
+      pressureLevel: uiBucket === UI_BUCKET.PRESSURE ? "pressure" : "none",
       uiBucket,
       uiPriority,
       isHighlightActive,
@@ -1618,9 +1571,9 @@ export function deriveTargetStates(renderState = null) {
   };
 
   sourceStateMap.forEach((entry, label) => {
-    const presentation = String(
+    const presentation = normalizeCricketPresentationToken(
       entry?.boardPresentation || entry?.presentation || "open"
-    ).toLowerCase();
+    );
 
     if (presentation === "open") {
       derived.openTargets.push(label);

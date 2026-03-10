@@ -165,6 +165,14 @@ function splitSelectorChain(selector) {
     .filter(Boolean);
 }
 
+function matchesSelectorList(node, selector) {
+  const selectors = splitSelectorList(selector);
+  if (!selectors.length) {
+    return false;
+  }
+  return selectors.some((entry) => matchesSelector(node, entry));
+}
+
 function normalizeDatasetKey(attrName) {
   return String(attrName || "")
     .replace(/^data-/, "")
@@ -468,7 +476,7 @@ class FakeElement extends FakeEventTarget {
   closest(selector) {
     let current = this;
     while (current) {
-      if (matchesSelector(current, selector)) {
+      if (matchesSelectorList(current, selector)) {
         return current;
       }
       current = current.parentNode || null;
@@ -477,7 +485,7 @@ class FakeElement extends FakeEventTarget {
   }
 
   matches(selector) {
-    return matchesSelector(this, selector);
+    return matchesSelectorList(this, selector);
   }
 
   click() {

@@ -19,6 +19,10 @@ const LISTENER_KEYS = Object.freeze({
 const SURFACE_SELECTOR = [
   "#grid",
   ".ad-ext-cricket-grid",
+  ".ad-ext-crfx-root",
+  ".ad-ext-crfx-cell",
+  ".ad-ext-crfx-label-cell",
+  ".ad-ext-crfx-badge",
   ".chakra-grid",
   ".label-cell",
   ".player-cell",
