@@ -35,11 +35,15 @@ function createBoard(documentRef) {
   documentRef.main.appendChild(svg);
 }
 
-function createGrid(documentRef, marksByRow) {
+function createGrid(
+  documentRef,
+  marksByRow,
+  labels = ["20", "19", "18", "17", "16", "15", "BULL"]
+) {
   const table = documentRef.createElement("table");
   table.id = "grid";
 
-  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+  labels.forEach((label) => {
     const row = documentRef.createElement("tr");
 
     const labelCell = documentRef.createElement("td");
@@ -122,7 +126,7 @@ test("pressure rows use subtle ring classes instead of full-lane emphasis", () =
   });
   assert.equal(shapes18.length, 4);
   assert.equal(
-    shapes18.some((shape) => shape.classList?.contains(PRESENTATION_CLASS.danger)),
+    shapes18.some((shape) => shape.classList?.contains(PRESENTATION_CLASS.pressure)),
     true
   );
   assert.equal(
@@ -139,7 +143,7 @@ test("pressure rows use subtle ring classes instead of full-lane emphasis", () =
   );
 });
 
-test("closed non-scorable targets are not rendered as active highlights", () => {
+test("dead targets stay visible when showDeadTargets is enabled", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
   createBoard(documentRef);
@@ -183,7 +187,81 @@ test("closed non-scorable targets are not rendered as active highlights", () => 
   });
   assert.equal(shapes20.length, 4);
   assert.equal(
-    shapes20.every((shape) => String(shape?.style?.display || "") === "none"),
+    shapes20.every((shape) => String(shape?.style?.display || "") !== "none"),
+    true
+  );
+  assert.equal(
+    shapes20.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.dead)),
+    true
+  );
+});
+
+test("tactics DOUBLE/TRIPLE objectives use the same scoring and pressure semantics on board", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  createBoard(documentRef);
+  createGrid(
+    documentRef,
+    {
+      "20": [0, 0],
+      "19": [0, 0],
+      Double: [3, 0],
+      Triple: [0, 3],
+      BULL: [0, 0],
+    },
+    ["20", "19", "Double", "Triple", "BULL"]
+  );
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "tactics",
+      getCricketGameMode: () => "Tactics",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: false,
+      showDeadTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+  assert.equal(rendered, true);
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+  const doubleShapes = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "DOUBLE";
+  });
+  const tripleShapes = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "TRIPLE";
+  });
+
+  assert.equal(doubleShapes.length, 20);
+  assert.equal(tripleShapes.length, 20);
+  assert.equal(
+    doubleShapes.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.scoring)),
+    true
+  );
+  assert.equal(
+    tripleShapes.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.pressure)),
+    true
+  );
+  assert.equal(
+    doubleShapes.every((shape) => shape.classList?.contains(`${TARGET_SLOT_CLASS_PREFIX}double-ring`)),
+    true
+  );
+  assert.equal(
+    tripleShapes.every((shape) => shape.classList?.contains(`${TARGET_SLOT_CLASS_PREFIX}triple-ring`)),
     true
   );
 });

@@ -329,7 +329,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
 
   assert.equal(markedRenderState?.marksByLabel["20"].join(","), "3,0");
   assert.equal(markedRenderState?.scoringModeNormalized, "standard");
-  assert.equal(markedRenderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(markedRenderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(markedRenderState?.labelCellMarkSourceCount || 0, 0);
   assert.equal(markedRenderState?.shortfallRepairCount || 0, 0);
 
@@ -343,7 +343,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   });
   assert.equal(markedDebugStats.nonOpenTargetCount || 0, 1);
   assert.equal(markedDebugStats.shapeCountByPresentation?.inactive || 0, 56);
-  assert.equal(markedDebugStats.shapeCountByPresentation?.offense || 0, 4);
+  assert.equal(markedDebugStats.shapeCountByPresentation?.scoring || 0, 4);
   assert.equal(markedDebugStats.renderedShapeCount || 0, 60);
 
   const hasLabel20Shape = Array.from(overlay?.children || []).some((node) => {
@@ -354,7 +354,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     Array.from(overlay?.children || []).filter((node) => {
       return String(node?.dataset?.targetLabel || "") === "20";
     }).every((node) => {
-      return node?.classList?.contains("is-offense") && String(node?.dataset?.targetPresentation || "") === "offense";
+      return node?.classList?.contains("is-scoring") && String(node?.dataset?.targetPresentation || "") === "scoring";
     }),
     true
   );
@@ -390,7 +390,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-targets")), false);
 });
 
-test("theme-like cricket layout does not turn reflected two-hit rows into offense", () => {
+test("theme-like cricket layout does not turn reflected two-hit rows into scoring", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -473,7 +473,7 @@ test("theme-like cricket layout does not turn reflected two-hit rows into offens
     cache: renderCache,
     debugStats: highlightStats,
   });
-  assert.equal(highlightStats.shapeCountByPresentation?.offense || 0, 0);
+  assert.equal(highlightStats.shapeCountByPresentation?.scoring || 0, 0);
 
   const gridFxStats = {};
   updateCricketGridFx({
@@ -538,17 +538,17 @@ test("cricket highlighter renders full lane geometry for numeric targets and bul
 
   const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
   assert.equal(Boolean(overlay), true);
-  assert.equal(laneRenderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(laneRenderState?.stateMap.get("20")?.boardPresentation, "scoring");
   const pooledShapeCount = overlay?.children?.length || 0;
   assert.equal(laneStats.renderedShapeCount || 0, 60);
   assert.equal(pooledShapeCount >= (laneStats.renderedShapeCount || 0), true);
   assert.equal(laneStats.shapeCountByTarget?.["20"] || 0, 4);
   assert.equal(laneStats.shapeCountByPresentation?.inactive || 0, 56);
-  assert.equal(laneStats.shapeCountByPresentation?.offense || 0, 4);
+  assert.equal(laneStats.shapeCountByPresentation?.scoring || 0, 4);
   assert.equal(
     Array.from(overlay?.children || [])
       .filter((node) => String(node?.dataset?.targetLabel || "") === "20")
-      .every((node) => String(node?.dataset?.targetPresentation || "") === "offense"),
+      .every((node) => String(node?.dataset?.targetPresentation || "") === "scoring"),
     true
   );
 
@@ -576,16 +576,16 @@ test("cricket highlighter renders full lane geometry for numeric targets and bul
     cache: renderCache,
     debugStats: bullStats,
   });
-  assert.equal(bullRenderState?.stateMap.get("BULL")?.boardPresentation, "offense");
+  assert.equal(bullRenderState?.stateMap.get("BULL")?.boardPresentation, "scoring");
   assert.equal(bullStats.renderedShapeCount || 0, 58);
   assert.equal(overlay?.children?.length || 0, pooledShapeCount);
   assert.equal(bullStats.shapeCountByTarget?.BULL || 0, 2);
   assert.equal(bullStats.shapeCountByPresentation?.inactive || 0, 56);
-  assert.equal(bullStats.shapeCountByPresentation?.offense || 0, 2);
+  assert.equal(bullStats.shapeCountByPresentation?.scoring || 0, 2);
   assert.equal(
     Array.from(overlay?.children || [])
       .filter((node) => String(node?.dataset?.targetLabel || "") === "BULL")
-      .every((node) => String(node?.dataset?.targetPresentation || "") === "offense"),
+      .every((node) => String(node?.dataset?.targetPresentation || "") === "scoring"),
     true
   );
 });
@@ -682,7 +682,7 @@ test("theme-like cricket highlighter restores overlay after external removal and
   assert.equal(Boolean(documentRef.getElementById(CRICKET_STYLE_ID)), false);
 });
 
-test("merged label+mark theme layout keeps offense highlights and grid-fx mapping stable", () => {
+test("merged label+mark theme layout keeps scoring highlights and grid-fx mapping stable", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -733,7 +733,7 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
   });
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
   assert.equal(Number.isFinite(renderState?.labelDiagnostics?.multiLabelContainerDropCount), true);
   assert.equal(renderState?.labelCellMarkSourceCount, 1);
@@ -779,9 +779,9 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
   assert.equal(Boolean(labelCell20), true);
   assert.equal(Boolean(labelText20), true);
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), true);
-  assert.equal(labelCell20?.classList?.contains(LABEL_STATE_CLASS.offense), true);
+  assert.equal(labelCell20?.classList?.contains(LABEL_STATE_CLASS.scoring), true);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), true);
-  assert.equal(labelText20?.classList?.contains(BADGE_STATE_CLASS.offense), true);
+  assert.equal(labelText20?.classList?.contains(BADGE_STATE_CLASS.scoring), true);
 
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);

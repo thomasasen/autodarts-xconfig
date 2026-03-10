@@ -114,11 +114,9 @@ test("cricket highlighter style exposes full presentation contract", () => {
 
   assert.match(css, /\.ad-ext-cricket-target\s*\{[^}]*fill:\s*var\(--ad-ext-cricket-fill,\s*transparent\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-open\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-open-fill\);/s);
-  assert.match(css, /\.ad-ext-cricket-target\.is-closed\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-closed-fill\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-dead\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-dead-fill\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-inactive\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-inactive-fill\);/s);
-  assert.match(css, /\.ad-ext-cricket-target\.is-offense\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-offense-fill\);/s);
-  assert.match(css, /\.ad-ext-cricket-target\.is-danger\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-danger-fill\);/s);
+  assert.match(css, /\.ad-ext-cricket-target\.is-scoring\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-scoring-fill\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-pressure\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-pressure-fill\);/s);
   assert.doesNotMatch(css, /ad-ext-cricket-target-pulse/);
 });

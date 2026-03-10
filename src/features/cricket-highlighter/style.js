@@ -6,11 +6,12 @@ export const TARGET_SLOT_CLASS_PREFIX = "ad-ext-cricket-slot-";
 export const PRESSURE_SUPPRESSED_CLASS = "ad-ext-cricket-pressure-muted";
 export const PRESENTATION_CLASS = Object.freeze({
   open: "is-open",
-  closed: "is-closed",
+  closed: "is-dead",
   dead: "is-dead",
   inactive: "is-inactive",
-  offense: "is-offense",
-  danger: "is-danger",
+  scoring: "is-scoring",
+  offense: "is-scoring",
+  danger: "is-pressure",
   pressure: "is-pressure",
 });
 
@@ -90,12 +91,6 @@ export function buildStyleText() {
   --ad-ext-cricket-opacity: var(--ad-ext-cricket-open-opacity);
 }
 
-.${TARGET_CLASS}.${PRESENTATION_CLASS.closed} {
-  --ad-ext-cricket-fill: var(--ad-ext-cricket-closed-fill);
-  --ad-ext-cricket-stroke: var(--ad-ext-cricket-closed-stroke);
-  --ad-ext-cricket-opacity: var(--ad-ext-cricket-closed-opacity);
-}
-
 .${TARGET_CLASS}.${PRESENTATION_CLASS.dead} {
   --ad-ext-cricket-fill: var(--ad-ext-cricket-dead-fill);
   --ad-ext-cricket-stroke: var(--ad-ext-cricket-dead-stroke);
@@ -108,16 +103,10 @@ export function buildStyleText() {
   --ad-ext-cricket-opacity: var(--ad-ext-cricket-inactive-opacity);
 }
 
-.${TARGET_CLASS}.${PRESENTATION_CLASS.offense} {
-  --ad-ext-cricket-fill: var(--ad-ext-cricket-offense-fill);
-  --ad-ext-cricket-stroke: var(--ad-ext-cricket-offense-stroke);
-  --ad-ext-cricket-opacity: var(--ad-ext-cricket-offense-opacity);
-}
-
-.${TARGET_CLASS}.${PRESENTATION_CLASS.danger} {
-  --ad-ext-cricket-fill: var(--ad-ext-cricket-danger-fill);
-  --ad-ext-cricket-stroke: var(--ad-ext-cricket-danger-stroke);
-  --ad-ext-cricket-opacity: var(--ad-ext-cricket-danger-opacity);
+.${TARGET_CLASS}.${PRESENTATION_CLASS.scoring} {
+  --ad-ext-cricket-fill: var(--ad-ext-cricket-scoring-fill);
+  --ad-ext-cricket-stroke: var(--ad-ext-cricket-scoring-stroke);
+  --ad-ext-cricket-opacity: var(--ad-ext-cricket-scoring-opacity);
 }
 
 .${TARGET_CLASS}.${PRESENTATION_CLASS.pressure} {
@@ -126,7 +115,6 @@ export function buildStyleText() {
   --ad-ext-cricket-opacity: var(--ad-ext-cricket-pressure-opacity);
 }
 
-.${TARGET_CLASS}.${PRESENTATION_CLASS.danger}.${PRESSURE_SUPPRESSED_CLASS},
 .${TARGET_CLASS}.${PRESENTATION_CLASS.pressure}.${PRESSURE_SUPPRESSED_CLASS} {
   --ad-ext-cricket-fill: transparent;
   --ad-ext-cricket-stroke: transparent;

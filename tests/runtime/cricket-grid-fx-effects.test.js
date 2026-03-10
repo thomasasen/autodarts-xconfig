@@ -261,10 +261,14 @@ test("cricket grid fx pulses rows only for mark increases or tactical transition
   });
 
   const closedStateMap = new Map(baseRenderState.stateMap);
+  const closedEntry = closedStateMap.get("20");
   closedStateMap.set("20", {
-    ...closedStateMap.get("20"),
-    boardPresentation: "closed",
-    presentation: "closed",
+    ...closedEntry,
+    boardPresentation: "dead",
+    presentation: "dead",
+    cellStates: Array.isArray(closedEntry?.cellStates)
+      ? closedEntry.cellStates.map((entry) => ({ ...entry, presentation: "dead", dead: true }))
+      : closedEntry?.cellStates,
   });
 
   updateCricketGridFx({
@@ -282,10 +286,18 @@ test("cricket grid fx pulses rows only for mark increases or tactical transition
   assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 0);
 
   const tacticalStateMap = new Map(closedStateMap);
+  const tacticalEntry = tacticalStateMap.get("20");
   tacticalStateMap.set("20", {
-    ...tacticalStateMap.get("20"),
-    boardPresentation: "danger",
-    presentation: "danger",
+    ...tacticalEntry,
+    boardPresentation: "scoring",
+    presentation: "scoring",
+    cellStates: Array.isArray(tacticalEntry?.cellStates)
+      ? tacticalEntry.cellStates.map((entry, index) => ({
+          ...entry,
+          presentation: index === 0 ? "scoring" : "pressure",
+          dead: false,
+        }))
+      : tacticalEntry?.cellStates,
   });
 
   updateCricketGridFx({
@@ -307,7 +319,7 @@ test("cricket grid fx pulses rows only for mark increases or tactical transition
   clearCricketGridFxState(state);
 });
 
-test("cricket grid fx applies dedicated pressure state classes on label and badge", () => {
+test("cricket grid fx applies scoring-priority state classes on label and badge", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -359,13 +371,13 @@ test("cricket grid fx applies dedicated pressure state classes on label and badg
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
   const syntheticBadge =
     labelCell20?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`) || null;
-  const labelOrBadgePressure = Boolean(
-    labelCell20?.classList?.contains(LABEL_STATE_CLASS.pressure) ||
-      labelCell20?.classList?.contains(BADGE_STATE_CLASS.pressure)
+  const labelOrBadgeScoring = Boolean(
+    labelCell20?.classList?.contains(LABEL_STATE_CLASS.scoring) ||
+      labelCell20?.classList?.contains(BADGE_STATE_CLASS.scoring)
   );
-  assert.equal(labelOrBadgePressure, true);
+  assert.equal(labelOrBadgeScoring, true);
   if (syntheticBadge) {
-    assert.equal(syntheticBadge.classList.contains(BADGE_STATE_CLASS.pressure), true);
+    assert.equal(syntheticBadge.classList.contains(BADGE_STATE_CLASS.scoring), true);
   }
 
   clearCricketGridFxState(state);
@@ -495,6 +507,94 @@ test("cricket grid fx keeps additionally closed opponents out of the red threat 
   assert.equal(row20?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS), false);
   assert.equal(row20?.playerCells?.[2]?.classList?.contains(THREAT_CLASS), true);
   assert.equal(row20?.playerCells?.[2]?.classList?.contains(PRESSURE_CLASS), true);
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx cell semantics stay stable when active player changes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderStateActive0 = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: renderStateActive0,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  const row20 = rowsByLabel.get("20");
+  const ownerIsScoringBefore = row20?.playerCells?.[0]?.classList?.contains(SCORE_CLASS);
+  const opponentIsPressureBefore = row20?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS);
+
+  const renderStateActive1 = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(1, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: renderStateActive1,
+    state,
+    visualConfig,
+    turnToken: "fallback:1:0",
+  });
+
+  const ownerIsScoringAfter = row20?.playerCells?.[0]?.classList?.contains(SCORE_CLASS);
+  const opponentIsPressureAfter = row20?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS);
+
+  assert.equal(ownerIsScoringBefore, true);
+  assert.equal(opponentIsPressureBefore, true);
+  assert.equal(ownerIsScoringAfter, true);
+  assert.equal(opponentIsPressureAfter, true);
 
   clearCricketGridFxState(state);
 });

@@ -20,8 +20,15 @@ export const TACTICS_TARGET_ORDER = [
   "BULL",
 ];
 
-const TARGET_SET = new Set(TACTICS_TARGET_ORDER);
+export const TACTICS_EXTRA_TARGETS = ["DOUBLE", "TRIPLE"];
+export const CRICKET_DISCOVERY_TARGET_ORDER = [
+  ...TACTICS_TARGET_ORDER,
+  ...TACTICS_EXTRA_TARGETS,
+];
+
+const TARGET_SET = new Set(CRICKET_DISCOVERY_TARGET_ORDER);
 const TACTICS_ONLY_TARGETS = new Set(["14", "13", "12", "11", "10"]);
+const TACTICS_EXTRA_TARGET_SET = new Set(TACTICS_EXTRA_TARGETS);
 
 function toSafePlayerCount(value) {
   const numeric = Number(value);
@@ -178,7 +185,10 @@ function getResolvedModeFamily(gameMode, targetOrder) {
     return normalized;
   }
 
-  if (Array.isArray(targetOrder) && targetOrder.some((label) => TACTICS_ONLY_TARGETS.has(label))) {
+  if (
+    Array.isArray(targetOrder) &&
+    targetOrder.some((label) => TACTICS_ONLY_TARGETS.has(label) || TACTICS_EXTRA_TARGET_SET.has(label))
+  ) {
     return "tactics";
   }
 
@@ -262,6 +272,29 @@ export function normalizeCricketLabel(value) {
     return "BULL";
   }
 
+  if (
+    text === "DOUBLE" ||
+    text === "DOUBLES" ||
+    text === "DOPPEL" ||
+    text === "DOPPELT" ||
+    text.includes("DOUBLE") ||
+    text.includes("DOPPEL")
+  ) {
+    return "DOUBLE";
+  }
+
+  if (
+    text === "TRIPLE" ||
+    text === "TRIPLES" ||
+    text === "TREBLE" ||
+    text === "DREIFACH" ||
+    text.includes("TRIPLE") ||
+    text.includes("TREBLE") ||
+    text.includes("DREIFACH")
+  ) {
+    return "TRIPLE";
+  }
+
   const numberMatch = text.match(
     /(?:^|[^0-9])(20|19|18|17|16|15|14|13|12|11|10)(?:[^0-9]|$)/
   );
@@ -278,7 +311,11 @@ export function inferCricketGameModeByLabels(labels) {
     return "";
   }
 
-  if (normalizedLabels.some((label) => TACTICS_ONLY_TARGETS.has(label))) {
+  if (
+    normalizedLabels.some(
+      (label) => TACTICS_ONLY_TARGETS.has(label) || TACTICS_EXTRA_TARGET_SET.has(label)
+    )
+  ) {
     return "tactics";
   }
 
@@ -288,6 +325,26 @@ export function inferCricketGameModeByLabels(labels) {
 export function getTargetOrderByGameMode(gameMode) {
   const mode = classifyCricketGameMode(gameMode);
   return mode === "tactics" ? TACTICS_TARGET_ORDER : CRICKET_TARGET_ORDER;
+}
+
+export function resolveTargetOrderByGameModeAndLabels(gameMode, labels) {
+  const mode = classifyCricketGameMode(gameMode) || inferCricketGameModeByLabels(labels);
+  if (mode !== "tactics") {
+    return CRICKET_TARGET_ORDER.slice();
+  }
+
+  const normalizedLabels = Array.isArray(labels)
+    ? labels.map((label) => normalizeCricketLabel(label)).filter(Boolean)
+    : [];
+  if (!normalizedLabels.length) {
+    return TACTICS_TARGET_ORDER.slice();
+  }
+
+  const labelSet = new Set(normalizedLabels);
+  const numericAndBull = TACTICS_TARGET_ORDER.filter((label) => labelSet.has(label));
+  const tacticalExtras = TACTICS_EXTRA_TARGETS.filter((label) => labelSet.has(label));
+  const dynamicOrder = [...numericAndBull, ...tacticalExtras];
+  return dynamicOrder.length ? dynamicOrder : TACTICS_TARGET_ORDER.slice();
 }
 
 export function createEmptyMarksByLabel(targetOrder, playerCount = 0) {
@@ -465,28 +522,24 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
   const open = marks < 3;
   const closed = marks >= 3;
   const allClosed = resolvedMarks.length > 0 && resolvedMarks.every((mark) => mark >= 3);
-  const dead = resolvedMarks.length > 1 && allClosed;
+  const dead = allClosed;
   const opponentMarks = resolvedMarks.filter((_, index) => index !== resolvedIndex);
   const openOpponentCount = opponentMarks.filter((mark) => mark < 3).length;
   const closedOpponentCount = opponentMarks.filter((mark) => mark >= 3).length;
   const scorableForPlayer = closed && opponentMarks.some((mark) => mark < 3) && !allClosed;
   const scorableAgainstPlayer = !closed && opponentMarks.some((mark) => mark >= 3) && !allClosed;
-  const supportsTacticalHighlights = resolveSupportsTacticalHighlights(options);
-  const offense = supportsTacticalHighlights && scorableForPlayer;
-  const danger = supportsTacticalHighlights && scorableAgainstPlayer;
-  const pressure = danger && marks <= 1;
+  const offense = scorableForPlayer;
+  const danger = scorableAgainstPlayer;
+  const pressure = scorableAgainstPlayer;
+  const scoring = scorableForPlayer;
 
   let presentation = "open";
   if (dead) {
     presentation = "dead";
-  } else if (offense) {
-    presentation = "offense";
+  } else if (scoring) {
+    presentation = "scoring";
   } else if (pressure) {
     presentation = "pressure";
-  } else if (danger) {
-    presentation = "danger";
-  } else if (closed) {
-    presentation = "closed";
   }
 
   return {
@@ -496,6 +549,7 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
     isActivePlayer: resolvedIndex === options.activePlayerIndex,
     presentation,
     own: closed,
+    scoring,
     offense,
     danger,
     pressure,
@@ -520,7 +574,6 @@ export function computeTargetStates(marksByLabel, options = {}) {
     ? options.targetOrder.filter(Boolean)
     : getTargetOrderByGameMode(modeFamily);
   const scoringModeNormalized = resolveScoringModeNormalized(options);
-  const supportsTacticalHighlights = resolveSupportsTacticalHighlights(options);
 
   targetOrder.forEach((targetLabel) => {
     const marksByPlayer = (Array.isArray(marksByLabel?.[targetLabel]) ? marksByLabel[targetLabel] : [])
@@ -541,7 +594,6 @@ export function computeTargetStates(marksByLabel, options = {}) {
     const cellStates = marksByPlayer.map((_, index) =>
       evaluatePlayerTargetState(marksByPlayer, index, {
         activePlayerIndex,
-        supportsTacticalHighlights,
         scoringModeNormalized,
       })
     );
@@ -550,7 +602,6 @@ export function computeTargetStates(marksByLabel, options = {}) {
       cellStates[activePlayerIndex] ||
       evaluatePlayerTargetState(marksByPlayer, activePlayerIndex, {
         activePlayerIndex,
-        supportsTacticalHighlights,
         scoringModeNormalized,
       });
 
@@ -570,6 +621,7 @@ export function computeTargetStates(marksByLabel, options = {}) {
       marksByPlayer,
       activeMarks: boardState.marks,
       open: boardState.open,
+      scoring: boardState.scoring,
       offense: boardState.offense,
       danger: boardState.danger,
       pressure: boardState.pressure,
@@ -781,10 +833,11 @@ export function deriveTargetTransitions(options = {}) {
       previousPresentation,
       nextPresentation,
       presentationChanged: previousPresentation !== nextPresentation,
-      becameOffense: previousPresentation !== "offense" && nextPresentation === "offense",
-      becameDanger: previousPresentation !== "danger" && nextPresentation === "danger",
+      becameScoring: previousPresentation !== "scoring" && nextPresentation === "scoring",
+      becameOffense: previousPresentation !== "scoring" && nextPresentation === "scoring",
+      becameDanger: previousPresentation !== "pressure" && nextPresentation === "pressure",
       becamePressure: previousPresentation !== "pressure" && nextPresentation === "pressure",
-      becameClosed: previousPresentation !== "closed" && nextPresentation === "closed",
+      becameClosed: previousPresentation !== "dead" && nextPresentation === "dead",
       becameDead: previousPresentation !== "dead" && nextPresentation === "dead",
     });
   });

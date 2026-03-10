@@ -23,16 +23,18 @@ export const HIDDEN_LABEL_ATTRIBUTE = "data-ad-ext-crfx-label-hidden";
 
 export const LABEL_STATE_CLASS = Object.freeze({
   neutral: "ad-ext-crfx-label-state-neutral",
-  offense: "ad-ext-crfx-label-state-offense",
-  danger: "ad-ext-crfx-label-state-danger",
+  scoring: "ad-ext-crfx-label-state-scoring",
+  offense: "ad-ext-crfx-label-state-scoring",
+  danger: "ad-ext-crfx-label-state-pressure",
   pressure: "ad-ext-crfx-label-state-pressure",
   dead: "ad-ext-crfx-label-state-dead",
 });
 
 export const BADGE_STATE_CLASS = Object.freeze({
   neutral: "ad-ext-crfx-badge-state-neutral",
-  offense: "ad-ext-crfx-badge-state-offense",
-  danger: "ad-ext-crfx-badge-state-danger",
+  scoring: "ad-ext-crfx-badge-state-scoring",
+  offense: "ad-ext-crfx-badge-state-scoring",
+  danger: "ad-ext-crfx-badge-state-pressure",
   pressure: "ad-ext-crfx-badge-state-pressure",
   dead: "ad-ext-crfx-badge-state-dead",
 });
@@ -147,19 +149,11 @@ export function buildStyleText() {
   --ad-ext-crfx-badge-text: rgba(233, 247, 255, 0.92);
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.offense},
-.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.offense} {
+.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.scoring},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.scoring} {
   --ad-ext-crfx-badge-bg: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.42));
   --ad-ext-crfx-badge-border: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.36));
   --ad-ext-crfx-badge-text: #ffffff;
-}
-
-.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.danger},
-.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.danger} {
-  --ad-ext-crfx-badge-bg: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.4));
-  --ad-ext-crfx-badge-border: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.38));
-  --ad-ext-crfx-badge-text: #ffe5e5;
-  --ad-ext-crfx-badge-glow: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.56));
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.pressure},
@@ -255,13 +249,19 @@ export function buildStyleText() {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
     inset 0 0 24px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.24)) !important;
-  background: linear-gradient(
-    90deg,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.82)) 0%,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 28%,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 72%,
-    rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.82)) 100%
-  ) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.64)) 0%,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.26)) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.88)) 0px,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.88)) 8px,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.38)) 8px,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.38)) 16px
+    ) !important;
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${DEAD_CLASS} {

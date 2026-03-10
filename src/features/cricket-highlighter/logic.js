@@ -50,17 +50,52 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
   ".ad-ext-cricket-mark",
 ]);
 
-const PRESENTATION_KEYS = new Set(["open", "offense", "danger", "pressure", "closed", "dead"]);
+const PRESENTATION_KEYS = new Set(["open", "scoring", "pressure", "dead"]);
 const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
-const ALL_BOARD_TARGETS = Object.freeze([
+const BASE_BOARD_TARGETS = Object.freeze([
   ...Array.from({ length: 20 }, (_value, index) => String(index + 1)),
   "BULL",
 ]);
+const SPECIAL_OBJECTIVE_TARGETS = Object.freeze(["DOUBLE", "TRIPLE"]);
 const PRESSURE_VISIBLE_SLOTS = new Set([
   "double-ring",
   "triple-ring",
   "bull-outer-ring",
 ]);
+
+function resolvePresentationToken(value) {
+  const token = String(value || "").trim().toLowerCase();
+  if (token === "offense" || token === "scorable") {
+    return "scoring";
+  }
+  if (token === "danger") {
+    return "pressure";
+  }
+  if (token === "closed") {
+    return "dead";
+  }
+  if (PRESENTATION_KEYS.has(token)) {
+    return token;
+  }
+  return "open";
+}
+
+function resolveBoardTargets(renderState) {
+  const targets = BASE_BOARD_TARGETS.slice();
+  const labelSet = new Set(
+    Array.isArray(renderState?.targetOrder)
+      ? renderState.targetOrder.map((entry) => String(entry || "").trim().toUpperCase())
+      : []
+  );
+
+  SPECIAL_OBJECTIVE_TARGETS.forEach((label) => {
+    if (labelSet.has(label)) {
+      targets.push(label);
+    }
+  });
+
+  return targets;
+}
 
 function isNodeVisible(node) {
   if (!node || typeof node !== "object") {
@@ -1083,7 +1118,9 @@ function buildShapesForLabel(ownerDocument, radius, targetLabel, visualConfig) {
     return [];
   }
 
-  if (String(targetLabel).toUpperCase() === "BULL") {
+  const normalizedLabel = String(targetLabel || "").trim().toUpperCase();
+
+  if (normalizedLabel === "BULL") {
     const outerBullRing = createBull(
       ownerDocument,
       radius,
@@ -1107,7 +1144,35 @@ function buildShapesForLabel(ownerDocument, radius, targetLabel, visualConfig) {
     return [outerBullRing, innerBullCore];
   }
 
-  const numericLabel = Number.parseInt(String(targetLabel || ""), 10);
+  if (normalizedLabel === "DOUBLE" || normalizedLabel === "TRIPLE") {
+    const innerRatio =
+      normalizedLabel === "DOUBLE" ? RING_RATIOS.doubleInner : RING_RATIOS.tripleInner;
+    const outerRatio =
+      normalizedLabel === "DOUBLE" ? RING_RATIOS.doubleOuter : RING_RATIOS.tripleOuter;
+    const slotName = normalizedLabel === "DOUBLE" ? "double-ring" : "triple-ring";
+    const rings = [];
+
+    SEGMENT_ORDER.forEach((segmentValue) => {
+      const angles = segmentAngles(segmentValue);
+      if (!angles) {
+        return;
+      }
+      const ring = createWedge(
+        ownerDocument,
+        radius,
+        innerRatio,
+        outerRatio,
+        angles,
+        visualConfig.edgePaddingPx
+      );
+      ring.dataset.targetSlot = slotName;
+      rings.push(ring);
+    });
+
+    return rings;
+  }
+
+  const numericLabel = Number.parseInt(normalizedLabel, 10);
   if (!(numericLabel >= 1 && numericLabel <= 20)) {
     return [];
   }
@@ -1200,14 +1265,6 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(overlay, "--ad-ext-cricket-open-stroke", rgbaColor(baseColor, showOpenTargets ? Math.min(1, openOpacity + 0.12) : 0));
   setStyleVar(overlay, "--ad-ext-cricket-open-opacity", showOpenTargets ? "1" : "0");
 
-  setStyleVar(overlay, "--ad-ext-cricket-closed-fill", rgbaColor(baseColor, clampAlpha(intensity.closed, 0.8)));
-  setStyleVar(
-    overlay,
-    "--ad-ext-cricket-closed-stroke",
-    rgbaColor(baseColor, Math.min(1, clampAlpha(intensity.closed, 0.8) + 0.11))
-  );
-  setStyleVar(overlay, "--ad-ext-cricket-closed-opacity", "1");
-
   setStyleVar(overlay, "--ad-ext-cricket-dead-fill", rgbaColor(mutedColor, clampAlpha(intensity.dead, 0.98)));
   setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", rgbaColor(mutedColor, 0));
   setStyleVar(overlay, "--ad-ext-cricket-dead-opacity", "1");
@@ -1220,24 +1277,16 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(overlay, "--ad-ext-cricket-inactive-stroke", rgbaColor(mutedColor, 0));
   setStyleVar(overlay, "--ad-ext-cricket-inactive-opacity", "1");
 
-  setStyleVar(overlay, "--ad-ext-cricket-offense-fill", rgbaColor(theme.offense, highlightOpacity));
+  setStyleVar(overlay, "--ad-ext-cricket-scoring-fill", rgbaColor(theme.offense, highlightOpacity));
   setStyleVar(
     overlay,
-    "--ad-ext-cricket-offense-stroke",
+    "--ad-ext-cricket-scoring-stroke",
     rgbaColor(theme.offense, Math.min(1, highlightOpacity + strokeBoost))
   );
-  setStyleVar(overlay, "--ad-ext-cricket-offense-opacity", "1");
+  setStyleVar(overlay, "--ad-ext-cricket-scoring-opacity", "1");
 
   const subtlePressureFill = Math.max(0.04, highlightOpacity * 0.14);
   const subtlePressureStroke = Math.max(0.24, Math.min(1, highlightOpacity + strokeBoost * 0.48));
-
-  setStyleVar(overlay, "--ad-ext-cricket-danger-fill", rgbaColor(theme.danger, subtlePressureFill));
-  setStyleVar(
-    overlay,
-    "--ad-ext-cricket-danger-stroke",
-    rgbaColor(theme.danger, subtlePressureStroke)
-  );
-  setStyleVar(overlay, "--ad-ext-cricket-danger-opacity", "1");
 
   setStyleVar(overlay, "--ad-ext-cricket-pressure-fill", rgbaColor(theme.danger, subtlePressureFill));
   setStyleVar(
@@ -1251,11 +1300,56 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(overlay, "--ad-ext-cricket-stroke-width", strokeWidth);
 }
 
+function ensureScoringPattern(overlay, visualConfig) {
+  const ownerDocument = overlay?.ownerDocument;
+  const svgRoot = overlay?.ownerSVGElement;
+  if (!ownerDocument || !svgRoot) {
+    return "";
+  }
+
+  let defs = svgRoot.querySelector("defs");
+  if (!defs) {
+    defs = ownerDocument.createElementNS(SVG_NS, "defs");
+    svgRoot.insertBefore(defs, svgRoot.firstChild || null);
+  }
+
+  const patternId = "ad-ext-cricket-scoring-pattern";
+  let pattern = defs.querySelector(`#${patternId}`);
+  if (!pattern) {
+    pattern = ownerDocument.createElementNS(SVG_NS, "pattern");
+    pattern.setAttribute("id", patternId);
+    pattern.setAttribute("patternUnits", "userSpaceOnUse");
+    pattern.setAttribute("width", "8");
+    pattern.setAttribute("height", "8");
+    pattern.setAttribute("patternTransform", "rotate(135)");
+    defs.appendChild(pattern);
+  }
+
+  while (pattern.firstChild) {
+    pattern.removeChild(pattern.firstChild);
+  }
+
+  const offense = visualConfig?.theme?.offense || { r: 0, g: 178, b: 135 };
+  const baseRect = ownerDocument.createElementNS(SVG_NS, "rect");
+  baseRect.setAttribute("width", "8");
+  baseRect.setAttribute("height", "8");
+  baseRect.setAttribute("fill", rgbaColor(offense, 0.72));
+  pattern.appendChild(baseRect);
+
+  const stripe = ownerDocument.createElementNS(SVG_NS, "path");
+  stripe.setAttribute("d", "M0 0 H8 V4 H0 Z");
+  stripe.setAttribute("fill", rgbaColor(offense, 0.32));
+  pattern.appendChild(stripe);
+
+  return `url(#${patternId})`;
+}
+
 function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
   if (!shape || !shape.classList || !shape.style) {
     return;
   }
-  const presentationClass = PRESENTATION_CLASS[presentation] || PRESENTATION_CLASS.closed;
+  const normalizedPresentation = resolvePresentationToken(presentation);
+  const presentationClass = PRESENTATION_CLASS[normalizedPresentation] || PRESENTATION_CLASS.open;
   Object.values(PRESENTATION_CLASS).forEach((className) => {
     shape.classList.remove(className);
   });
@@ -1264,16 +1358,18 @@ function applyShapeStyle(shape, presentation, visualConfig, targetLabel) {
   const targetSlot = String(shape?.dataset?.targetSlot || "").trim().toLowerCase();
   if (targetSlot) {
     shape.classList.add(`${TARGET_SLOT_CLASS_PREFIX}${targetSlot}`);
-    if (
-      (presentation === "pressure" || presentation === "danger") &&
-      !PRESSURE_VISIBLE_SLOTS.has(targetSlot)
-    ) {
+    if (normalizedPresentation === "pressure" && !PRESSURE_VISIBLE_SLOTS.has(targetSlot)) {
       shape.classList.add(PRESSURE_SUPPRESSED_CLASS);
     }
   }
+  if (normalizedPresentation === "scoring" && String(shape.dataset?.scoringPattern || "")) {
+    shape.style.fill = String(shape.dataset.scoringPattern);
+  } else {
+    shape.style.removeProperty("fill");
+  }
   if (shape.dataset) {
     shape.dataset.targetLabel = String(targetLabel || "");
-    shape.dataset.targetPresentation = String(presentation || "");
+    shape.dataset.targetPresentation = normalizedPresentation;
   }
 }
 
@@ -1283,27 +1379,26 @@ function resolvePresentationForStateEntry(stateEntry, isRelevantTarget) {
   }
 
   const uiBucket = String(stateEntry?.uiBucket || "").trim().toLowerCase();
-  if (uiBucket === "scorable" || uiBucket === "offense") {
-    return "offense";
+  if (uiBucket === "scoring" || uiBucket === "scorable" || uiBucket === "offense") {
+    return "scoring";
   }
   if (uiBucket === "pressure") {
-    const pressureLevel = String(stateEntry?.pressureLevel || "").toLowerCase();
-    return pressureLevel === "danger" ? "danger" : "pressure";
+    return "pressure";
   }
   if (uiBucket === "dead") {
     return "dead";
   }
-  if (uiBucket === "closed") {
-    return "closed";
+  if (uiBucket === "open") {
+    return "open";
   }
 
-  const fallbackPresentation = String(
+  const fallbackPresentation = resolvePresentationToken(
     stateEntry?.boardPresentation || stateEntry?.presentation || "open"
-  ).toLowerCase();
+  );
   return PRESENTATION_KEYS.has(fallbackPresentation) ? fallbackPresentation : "open";
 }
 
-function ensureOverlayShapeCache(overlay, board, visualConfig, cache = null) {
+function ensureOverlayShapeCache(overlay, board, visualConfig, boardTargets, cache = null) {
   if (!overlay || !board?.radius) {
     return null;
   }
@@ -1311,6 +1406,7 @@ function ensureOverlayShapeCache(overlay, board, visualConfig, cache = null) {
   const geometryKey = [
     Number(board.radius).toFixed(2),
     Number(visualConfig?.edgePaddingPx || 0).toFixed(2),
+    Array.isArray(boardTargets) ? boardTargets.join(",") : "",
   ].join("|");
 
   const cacheContainer = cache && typeof cache === "object" ? cache : null;
@@ -1325,7 +1421,7 @@ function ensureOverlayShapeCache(overlay, board, visualConfig, cache = null) {
 
   clearNodeChildren(overlay);
   const shapesByTarget = new Map();
-  ALL_BOARD_TARGETS.forEach((targetLabel) => {
+  (Array.isArray(boardTargets) ? boardTargets : BASE_BOARD_TARGETS).forEach((targetLabel) => {
     const shapes = buildShapesForLabel(overlay.ownerDocument, board.radius, targetLabel, visualConfig);
     shapes.forEach((shape) => overlay.appendChild(shape));
     shapesByTarget.set(targetLabel, shapes);
@@ -1379,7 +1475,15 @@ export function renderCricketHighlights(options = {}) {
     return false;
   }
   applyOverlayStyleVars(overlay, visualConfig, board.radius);
-  const overlayShapeState = ensureOverlayShapeCache(overlay, board, visualConfig, options.cache);
+  const boardTargets = resolveBoardTargets(renderState);
+  const scoringPattern = ensureScoringPattern(overlay, visualConfig);
+  const overlayShapeState = ensureOverlayShapeCache(
+    overlay,
+    board,
+    visualConfig,
+    boardTargets,
+    options.cache
+  );
   if (!overlayShapeState?.shapesByTarget) {
     return false;
   }
@@ -1398,7 +1502,7 @@ export function renderCricketHighlights(options = {}) {
       : Array.from(renderState.stateMap.keys())
   );
 
-  ALL_BOARD_TARGETS.forEach((targetLabel) => {
+  boardTargets.forEach((targetLabel) => {
     const isRelevantTarget = activeTargetSet.has(targetLabel);
     const stateEntry = renderState.stateMap.get(targetLabel) || null;
     const presentation = resolvePresentationForStateEntry(stateEntry, isRelevantTarget);
@@ -1418,7 +1522,6 @@ export function renderCricketHighlights(options = {}) {
     const shouldRenderTarget = !(
       (isRelevantTarget && presentation === "open" && visualConfig.showOpenTargets === false) ||
       (isRelevantTarget && presentation === "dead" && !visualConfig.showDeadTargets) ||
-      (isRelevantTarget && presentation === "closed" && !stateEntry?.scorable) ||
       (isRelevantTarget && presentation !== "dead" && !highlightActive)
     );
     const shapes = overlayShapeState.shapesByTarget.get(targetLabel) || [];
@@ -1430,6 +1533,9 @@ export function renderCricketHighlights(options = {}) {
     }
 
     shapes.forEach((shape) => {
+      if (shape?.dataset) {
+        shape.dataset.scoringPattern = scoringPattern;
+      }
       applyShapeStyle(shape, presentation, visualConfig, targetLabel);
       shape.style.display = shouldRenderTarget ? "" : "none";
       if (shouldRenderTarget) {

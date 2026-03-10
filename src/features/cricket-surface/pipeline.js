@@ -9,21 +9,17 @@ export const CRICKET_SURFACE_STATUS = Object.freeze({
 });
 
 const UI_BUCKET = Object.freeze({
-  SCORABLE: "scorable",
-  OFFENSE: "offense",
+  SCORING: "scoring",
   PRESSURE: "pressure",
   OPEN: "open",
   DEAD: "dead",
-  CLOSED: "closed",
 });
 
 const UI_PRIORITY_BY_BUCKET = Object.freeze({
-  [UI_BUCKET.SCORABLE]: 1,
-  [UI_BUCKET.OFFENSE]: 2,
-  [UI_BUCKET.PRESSURE]: 3,
+  [UI_BUCKET.SCORING]: 1,
+  [UI_BUCKET.PRESSURE]: 2,
   [UI_BUCKET.OPEN]: 4,
   [UI_BUCKET.DEAD]: 5,
-  [UI_BUCKET.CLOSED]: 5,
 });
 
 const PAUSED_ROUTE_PATH = "/ad-xconfig";
@@ -1083,16 +1079,22 @@ function buildMarksByLabelSnapshot(options = {}) {
   }
 
   const explicitGameModeNormalized = resolveGameModeNormalized(gameState, variantRules, documentRef);
-  const discoveryTargetOrder = cricketRules.getTargetOrderByGameMode("tactics");
+  const discoveryTargetOrder = Array.isArray(cricketRules.CRICKET_DISCOVERY_TARGET_ORDER)
+    ? cricketRules.CRICKET_DISCOVERY_TARGET_ORDER
+    : cricketRules.getTargetOrderByGameMode("tactics");
   const grid = resolveGridSnapshot(documentRef, cricketRules, discoveryTargetOrder, options.cache);
   if (!grid) {
     return null;
   }
 
+  const discoveredLabels = grid.labels.map((entry) => entry.label);
   const inferredGameModeNormalized = explicitGameModeNormalized ||
-    cricketRules.inferCricketGameModeByLabels(grid.labels.map((entry) => entry.label));
+    cricketRules.inferCricketGameModeByLabels(discoveredLabels);
   const gameModeNormalized = inferredGameModeNormalized || "cricket";
-  const targetOrder = cricketRules.getTargetOrderByGameMode(gameModeNormalized);
+  const targetOrder =
+    typeof cricketRules.resolveTargetOrderByGameModeAndLabels === "function"
+      ? cricketRules.resolveTargetOrderByGameModeAndLabels(gameModeNormalized, discoveredLabels)
+      : cricketRules.getTargetOrderByGameMode(gameModeNormalized);
   const targetSet = new Set(targetOrder);
   const labelDiagnostics = cloneLabelDiagnostics(grid.diagnostics);
   if (!(labelDiagnostics.atomicLabelCount > 0)) {
@@ -1254,6 +1256,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     gameMode: gameModeNormalized,
     scoringModeNormalized,
     activePlayerIndex,
+    targetOrder,
   });
   const marksByLabelDebug = {};
   targetOrder.forEach((label) => {
@@ -1379,37 +1382,44 @@ function resolvePressureLevel(entry = null) {
   if (entry?.pressure) {
     return "pressure";
   }
-  if (entry?.danger) {
-    return "danger";
-  }
   return "none";
 }
 
 function resolveUiBucket(entry = null, pressureLevel = "none") {
-  if (entry?.scorable || entry?.scorableForPlayer || entry?.offense) {
-    return entry?.scorable || entry?.scorableForPlayer
-      ? UI_BUCKET.SCORABLE
-      : UI_BUCKET.OFFENSE;
+  const presentation = String(entry?.presentation || entry?.boardPresentation || "").toLowerCase();
+
+  if (
+    presentation === "scoring" ||
+    presentation === "offense" ||
+    entry?.scoring ||
+    entry?.scorable ||
+    entry?.scorableForPlayer ||
+    entry?.offense
+  ) {
+    return UI_BUCKET.SCORING;
   }
-  if (pressureLevel !== "none") {
+  if (
+    presentation === "pressure" ||
+    presentation === "danger" ||
+    pressureLevel !== "none" ||
+    entry?.danger ||
+    entry?.threatenedByOpponents ||
+    entry?.scorableAgainstPlayer
+  ) {
     return UI_BUCKET.PRESSURE;
+  }
+  if (presentation === "dead" || entry?.dead) {
+    return UI_BUCKET.DEAD;
   }
   if (entry?.open) {
     return UI_BUCKET.OPEN;
-  }
-  if (entry?.dead) {
-    return UI_BUCKET.DEAD;
-  }
-  if (entry?.closed || entry?.own) {
-    return UI_BUCKET.CLOSED;
   }
   return UI_BUCKET.OPEN;
 }
 
 function resolveHighlightActive(uiBucket) {
   return (
-    uiBucket === UI_BUCKET.SCORABLE ||
-    uiBucket === UI_BUCKET.OFFENSE ||
+    uiBucket === UI_BUCKET.SCORING ||
     uiBucket === UI_BUCKET.PRESSURE ||
     uiBucket === UI_BUCKET.OPEN
   );
@@ -1452,18 +1462,17 @@ export function deriveTargetStates(renderState = null) {
   const derived = {
     stateMap: sourceStateMap,
     openTargets: [],
-    closedTargets: [],
     deadTargets: [],
+    scoringTargets: [],
     scorableTargets: [],
     offenseTargets: [],
-    dangerTargets: [],
     pressureTargets: [],
+    scoringBucketTargets: [],
     scorableBucketTargets: [],
     offenseBucketTargets: [],
     pressureBucketTargets: [],
     openBucketTargets: [],
     deadBucketTargets: [],
-    closedBucketTargets: [],
     activeHighlightTargets: [],
   };
 
@@ -1475,29 +1484,26 @@ export function deriveTargetStates(renderState = null) {
     if (presentation === "open") {
       derived.openTargets.push(label);
     }
-    if (presentation === "closed") {
-      derived.closedTargets.push(label);
-    }
     if (presentation === "dead") {
       derived.deadTargets.push(label);
+    }
+    if (presentation === "scoring" || presentation === "offense" || entry?.scoring) {
+      derived.scoringTargets.push(label);
     }
     if (entry?.scorable) {
       derived.scorableTargets.push(label);
     }
-    if (presentation === "offense" || entry?.offense) {
+    if (presentation === "scoring" || presentation === "offense" || entry?.offense) {
       derived.offenseTargets.push(label);
-    }
-    if (presentation === "danger" || entry?.danger) {
-      derived.dangerTargets.push(label);
     }
     if (presentation === "pressure" || entry?.pressure) {
       derived.pressureTargets.push(label);
     }
 
     const uiBucket = String(entry?.uiBucket || "").toLowerCase();
-    if (uiBucket === UI_BUCKET.SCORABLE) {
+    if (uiBucket === UI_BUCKET.SCORING) {
+      derived.scoringBucketTargets.push(label);
       derived.scorableBucketTargets.push(label);
-    } else if (uiBucket === UI_BUCKET.OFFENSE) {
       derived.offenseBucketTargets.push(label);
     } else if (uiBucket === UI_BUCKET.PRESSURE) {
       derived.pressureBucketTargets.push(label);
@@ -1505,8 +1511,6 @@ export function deriveTargetStates(renderState = null) {
       derived.openBucketTargets.push(label);
     } else if (uiBucket === UI_BUCKET.DEAD) {
       derived.deadBucketTargets.push(label);
-    } else if (uiBucket === UI_BUCKET.CLOSED) {
-      derived.closedBucketTargets.push(label);
     }
 
     if (entry?.isHighlightActive) {

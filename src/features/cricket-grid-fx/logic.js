@@ -482,13 +482,13 @@ function clearLabelClasses(node) {
     LABEL_CLASS,
     BADGE_BEACON_CLASS,
     LABEL_STATE_CLASS.neutral,
+    LABEL_STATE_CLASS.scoring,
     LABEL_STATE_CLASS.offense,
-    LABEL_STATE_CLASS.danger,
     LABEL_STATE_CLASS.pressure,
     LABEL_STATE_CLASS.dead,
     BADGE_STATE_CLASS.neutral,
+    BADGE_STATE_CLASS.scoring,
     BADGE_STATE_CLASS.offense,
-    BADGE_STATE_CLASS.danger,
     BADGE_STATE_CLASS.pressure,
     BADGE_STATE_CLASS.dead
   );
@@ -615,35 +615,49 @@ function clearPersistentState(state) {
   state.gridRoot = null;
 }
 
+function normalizePresentationToken(value) {
+  const token = String(value || "").toLowerCase();
+  if (token === "offense" || token === "scorable") {
+    return "scoring";
+  }
+  if (token === "danger") {
+    return "pressure";
+  }
+  if (token === "closed") {
+    return "dead";
+  }
+  if (token === "dead" || token === "pressure" || token === "scoring" || token === "open") {
+    return token;
+  }
+  return "open";
+}
+
 function setLabelStateClasses(labelNode, stateToken) {
   if (!labelNode || !labelNode.classList) {
     return;
   }
 
+  const normalizedState = normalizePresentationToken(stateToken);
+
   labelNode.classList.remove(
     LABEL_STATE_CLASS.neutral,
+    LABEL_STATE_CLASS.scoring,
     LABEL_STATE_CLASS.offense,
-    LABEL_STATE_CLASS.danger,
     LABEL_STATE_CLASS.pressure,
     LABEL_STATE_CLASS.dead
   );
 
-  if (stateToken === "offense") {
-    labelNode.classList.add(LABEL_STATE_CLASS.offense);
+  if (normalizedState === "scoring") {
+    labelNode.classList.add(LABEL_STATE_CLASS.scoring);
     return;
   }
 
-  if (stateToken === "pressure") {
+  if (normalizedState === "pressure") {
     labelNode.classList.add(LABEL_STATE_CLASS.pressure);
     return;
   }
 
-  if (stateToken === "danger") {
-    labelNode.classList.add(LABEL_STATE_CLASS.danger);
-    return;
-  }
-
-  if (stateToken === "dead") {
+  if (normalizedState === "dead") {
     labelNode.classList.add(LABEL_STATE_CLASS.dead);
     return;
   }
@@ -656,30 +670,27 @@ function setBadgeStateClasses(badgeNode, stateToken) {
     return;
   }
 
+  const normalizedState = normalizePresentationToken(stateToken);
+
   badgeNode.classList.remove(
     BADGE_STATE_CLASS.neutral,
+    BADGE_STATE_CLASS.scoring,
     BADGE_STATE_CLASS.offense,
-    BADGE_STATE_CLASS.danger,
     BADGE_STATE_CLASS.pressure,
     BADGE_STATE_CLASS.dead
   );
 
-  if (stateToken === "offense") {
-    badgeNode.classList.add(BADGE_STATE_CLASS.offense);
+  if (normalizedState === "scoring") {
+    badgeNode.classList.add(BADGE_STATE_CLASS.scoring);
     return;
   }
 
-  if (stateToken === "pressure") {
+  if (normalizedState === "pressure") {
     badgeNode.classList.add(BADGE_STATE_CLASS.pressure);
     return;
   }
 
-  if (stateToken === "danger") {
-    badgeNode.classList.add(BADGE_STATE_CLASS.danger);
-    return;
-  }
-
-  if (stateToken === "dead") {
+  if (normalizedState === "dead") {
     badgeNode.classList.add(BADGE_STATE_CLASS.dead);
     return;
   }
@@ -808,36 +819,40 @@ function getRowNode(labelNode) {
 }
 
 function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
+  const normalizedPresentation = normalizePresentationToken(presentation);
   toggleClass(cellNode, CELL_CLASS, true);
   toggleClass(
     cellNode,
     THREAT_CLASS,
-    visualConfig.threatEdge && (presentation === "danger" || presentation === "pressure")
+    visualConfig.threatEdge && normalizedPresentation === "pressure"
   );
-  toggleClass(cellNode, SCORE_CLASS, visualConfig.scoringLane && presentation === "offense");
-  toggleClass(cellNode, DEAD_CLASS, visualConfig.deadRowCollapse && presentation === "dead");
+  toggleClass(cellNode, SCORE_CLASS, visualConfig.scoringLane && normalizedPresentation === "scoring");
+  toggleClass(cellNode, DEAD_CLASS, visualConfig.deadRowCollapse && normalizedPresentation === "dead");
   toggleClass(
     cellNode,
     PRESSURE_CLASS,
-    visualConfig.opponentPressureOverlay && presentation === "pressure"
+    visualConfig.opponentPressureOverlay && normalizedPresentation === "pressure"
   );
 }
 
 function resolveRowPresentation(stateEntry) {
-  const uiBucket = String(stateEntry?.uiBucket || "").toLowerCase();
-  if (uiBucket === "scorable" || uiBucket === "offense") {
-    return "offense";
+  const cellStates = Array.isArray(stateEntry?.cellStates) ? stateEntry.cellStates : [];
+  if (cellStates.length > 0) {
+    const tokens = cellStates.map((entry) => normalizePresentationToken(entry?.presentation));
+    if (tokens.every((token) => token === "dead")) {
+      return "dead";
+    }
+    if (tokens.some((token) => token === "scoring")) {
+      return "scoring";
+    }
+    if (tokens.some((token) => token === "pressure")) {
+      return "pressure";
+    }
+    return "open";
   }
-  if (uiBucket === "pressure") {
-    return "pressure";
-  }
-  if (uiBucket === "dead") {
-    return "dead";
-  }
-  if (uiBucket === "closed") {
-    return "dead";
-  }
-  return String(stateEntry?.boardPresentation || stateEntry?.presentation || "open").toLowerCase();
+  return normalizePresentationToken(
+    stateEntry?.boardPresentation || stateEntry?.presentation || "open"
+  );
 }
 
 export function createCricketGridFxState(windowRef = null) {
@@ -896,6 +911,7 @@ export function updateCricketGridFx(options = {}) {
     debugStats.stateTargetCount = 0;
     debugStats.labelCellCount = 0;
     debugStats.badgeCount = 0;
+    debugStats.scoringRowCount = 0;
     debugStats.offenseRowCount = 0;
     debugStats.dangerRowCount = 0;
     debugStats.pressureRowCount = 0;
@@ -1007,8 +1023,8 @@ export function updateCricketGridFx(options = {}) {
     }
   }
 
+  let scoringRowCount = 0;
   let offenseRowCount = 0;
-  let dangerRowCount = 0;
   let pressureRowCount = 0;
   let scoreCellCount = 0;
   let rowsWithoutPlayerCells = 0;
@@ -1044,12 +1060,9 @@ export function updateCricketGridFx(options = {}) {
     }
 
     const presentation = resolveRowPresentation(stateEntry);
-    const pressureLevel = String(stateEntry?.pressureLevel || "").toLowerCase();
-    if (presentation === "offense") {
+    if (presentation === "scoring") {
+      scoringRowCount += 1;
       offenseRowCount += 1;
-    } else if (pressureLevel === "danger") {
-      dangerRowCount += 1;
-      pressureRowCount += 1;
     } else if (presentation === "pressure") {
       pressureRowCount += 1;
     }
@@ -1083,7 +1096,7 @@ export function updateCricketGridFx(options = {}) {
         BADGE_BEACON_CLASS,
         !badgeNode &&
           visualConfig.badgeBeacon &&
-          (presentation === "offense" || presentation === "pressure")
+          (presentation === "scoring" || presentation === "pressure")
       );
       state.trackedLabels.add(labelCellNode);
     }
@@ -1095,7 +1108,7 @@ export function updateCricketGridFx(options = {}) {
         badgeNode,
         BADGE_BEACON_CLASS,
         visualConfig.badgeBeacon &&
-          (presentation === "offense" || presentation === "pressure")
+          (presentation === "scoring" || presentation === "pressure")
       );
       state.trackedLabels.add(badgeNode);
       badgeCount += 1;
@@ -1105,8 +1118,8 @@ export function updateCricketGridFx(options = {}) {
     const transition = transitions.get(row.label) || null;
     const hasIncrease = Boolean(diffEntry?.hasIncrease);
     const becameTactical =
+      Boolean(transition?.becameScoring) ||
       Boolean(transition?.becameOffense) ||
-      Boolean(transition?.becameDanger) ||
       Boolean(transition?.becamePressure);
 
     if (hasIncrease) {
@@ -1129,9 +1142,9 @@ export function updateCricketGridFx(options = {}) {
       const cellState = Array.isArray(stateEntry.cellStates)
         ? stateEntry.cellStates[index]
         : null;
-      const cellPresentation = String(cellState?.presentation || "neutral").toLowerCase();
+      const cellPresentation = normalizePresentationToken(cellState?.presentation || "open");
       const marks = Number(stateEntry.marksByPlayer?.[index] || 0);
-      const scoreCell = visualConfig.scoringLane && cellPresentation === "offense";
+      const scoreCell = visualConfig.scoringLane && cellPresentation === "scoring";
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
       if (scoreCell) {
@@ -1150,7 +1163,7 @@ export function updateCricketGridFx(options = {}) {
         appendTransientNode(state, cellNode, SPARK_CLASS, 460);
       }
 
-       if (delta > 0) {
+      if (delta > 0) {
         triggerMarkProgress(state, cellNode, marks, visualConfig);
       }
 
@@ -1164,8 +1177,9 @@ export function updateCricketGridFx(options = {}) {
   state.previousTurnToken = turnToken;
   if (debugStats) {
     debugStats.status = "ok";
+    debugStats.scoringRowCount = scoringRowCount;
     debugStats.offenseRowCount = offenseRowCount;
-    debugStats.dangerRowCount = dangerRowCount;
+    debugStats.dangerRowCount = 0;
     debugStats.pressureRowCount = pressureRowCount;
     debugStats.scoreCellCount = scoreCellCount;
     debugStats.rowsWithoutPlayerCells = rowsWithoutPlayerCells;

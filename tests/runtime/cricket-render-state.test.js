@@ -166,6 +166,38 @@ test("buildCricketRenderState infers tactics from 10..14 when no explicit mode e
   assert.equal(renderState?.stateMap.has("10"), true);
 });
 
+test("buildCricketRenderState keeps dynamic tactics objectives from visible grid labels", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  createGrid(documentRef, ["20", "19", "Double", "Triple", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    Double: [0, 3],
+    Triple: [3, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "tactics",
+      getCricketGameMode: () => "Tactics",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.targetOrder.includes("DOUBLE"), true);
+  assert.equal(renderState?.targetOrder.includes("TRIPLE"), true);
+  assert.equal(renderState?.stateMap.get("DOUBLE")?.boardPresentation, "pressure");
+  assert.equal(renderState?.stateMap.get("TRIPLE")?.boardPresentation, "scoring");
+});
+
 test("buildCricketRenderState exposes tactics precision token without changing scoring semantics", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
@@ -261,7 +293,7 @@ test("buildCricketRenderState uses completed match turns as stale-DOM preview", 
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "pressure");
-  assert.equal(renderState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "offense,pressure");
+  assert.equal(renderState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "scoring,pressure");
 });
 
 test("active throws merge with the active player turn baseline instead of ignoring prior turn marks", () => {
@@ -302,8 +334,8 @@ test("active throws merge with the active player turn baseline instead of ignori
   });
 
   assert.equal(renderState?.marksByLabel["17"].join(","), "1,3");
-  assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "offense");
-  assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "pressure,offense");
+  assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "pressure,scoring");
 });
 
 test("board presentation follows the active player perspective for the same cricket row", () => {
@@ -347,10 +379,10 @@ test("board presentation follows the active player perspective for the same cric
     }),
   });
 
-  assert.equal(offensiveState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(offensiveState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(defensiveState?.stateMap.get("20")?.boardPresentation, "pressure");
-  assert.equal(offensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "offense,pressure");
-  assert.equal(defensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "offense,pressure");
+  assert.equal(offensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "scoring,pressure");
+  assert.equal(defensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "scoring,pressure");
 });
 
 test("unknown scoring mode falls back to standard for cricket overlays", () => {
@@ -383,10 +415,10 @@ test("unknown scoring mode falls back to standard for cricket overlays", () => {
   assert.equal(renderState?.scoringModeRaw, "unknown");
   assert.equal(renderState?.scoringModeNormalized, "standard");
   assert.equal(renderState?.scoringModeSource, "fallback-standard-for-unknown");
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
 });
 
-test("explicit neutral scoring mode remains neutral and suppresses offense", () => {
+test("explicit neutral scoring mode keeps the same tactical state semantics", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -414,10 +446,10 @@ test("explicit neutral scoring mode remains neutral and suppresses offense", () 
   });
 
   assert.equal(renderState?.scoringModeNormalized, "neutral");
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "closed");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(
     renderState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","),
-    "closed,open"
+    "scoring,pressure"
   );
 });
 
@@ -496,7 +528,7 @@ test("merged label+mark cells keep explicit marks and ignore wrapper label noise
   });
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
   assert.equal(renderState?.discoveredUniqueLabelCount, 7);
   assert.equal((renderState?.discoveredRawUniqueLabelCount || 0) >= (renderState?.discoveredUniqueLabelCount || 0), true);
@@ -599,7 +631,7 @@ test("symbolic mark glyphs are parsed for cricket rows", () => {
   });
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
 });
 
 test("state index wins over DOM order when cricket cells expose explicit player indexes", () => {
@@ -672,13 +704,13 @@ test("render state exposes deterministic ui buckets and highlight activity flags
   assert.equal(twentyState?.closedByPlayer, true);
   assert.equal(twentyState?.openByOpponent, true);
   assert.equal(twentyState?.scorable, true);
-  assert.equal(twentyState?.uiBucket, "scorable");
+  assert.equal(twentyState?.uiBucket, "scoring");
   assert.equal(twentyState?.uiPriority, 1);
   assert.equal(twentyState?.isHighlightActive, true);
 
-  assert.equal(eighteenState?.pressureLevel, "danger");
+  assert.equal(eighteenState?.pressureLevel, "pressure");
   assert.equal(eighteenState?.uiBucket, "pressure");
-  assert.equal(eighteenState?.uiPriority, 3);
+  assert.equal(eighteenState?.uiPriority, 2);
   assert.equal(eighteenState?.isHighlightActive, true);
 
   assert.equal(nineteenState?.uiBucket, "open");
@@ -694,7 +726,7 @@ test("render state exposes deterministic ui buckets and highlight activity flags
   assert.equal(fifteenState?.isHighlightActive, true);
 });
 
-test("single-player closed rows are marked as closed and not active highlights", () => {
+test("single-player fully closed rows are dead and not active highlights", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -725,7 +757,7 @@ test("single-player closed rows are marked as closed and not active highlights",
   const state20 = renderState?.stateMap.get("20");
   assert.equal(state20?.closedByPlayer, true);
   assert.equal(state20?.openByOpponent, false);
-  assert.equal(state20?.uiBucket, "closed");
+  assert.equal(state20?.uiBucket, "dead");
   assert.equal(state20?.uiPriority, 5);
   assert.equal(state20?.isHighlightActive, false);
 });

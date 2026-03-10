@@ -19,6 +19,7 @@ import {
   normalizeCricketLabel,
   parseCricketMarkValue,
   parseCricketThrowSegment,
+  resolveTargetOrderByGameModeAndLabels,
 } from "../../src/domain/cricket-rules.js";
 
 test("normalizeCricketLabel supports bull aliases and tactics labels", () => {
@@ -26,6 +27,8 @@ test("normalizeCricketLabel supports bull aliases and tactics labels", () => {
   assert.equal(normalizeCricketLabel("25"), "BULL");
   assert.equal(normalizeCricketLabel("Target 14"), "14");
   assert.equal(normalizeCricketLabel("11 geschlossen"), "11");
+  assert.equal(normalizeCricketLabel("Double"), "DOUBLE");
+  assert.equal(normalizeCricketLabel("Triple"), "TRIPLE");
   assert.equal(normalizeCricketLabel("foo"), "");
 });
 
@@ -34,7 +37,19 @@ test("target order and mode inference separate cricket from tactics", () => {
   assert.deepEqual(getTargetOrderByGameMode("Tactics"), TACTICS_TARGET_ORDER);
   assert.equal(inferCricketGameModeByLabels(["20", "19", "BULL"]), "cricket");
   assert.equal(inferCricketGameModeByLabels(["20", "14", "10", "BULL"]), "tactics");
+  assert.equal(inferCricketGameModeByLabels(["20", "Double", "Bull"]), "tactics");
   assert.equal(inferCricketGameModeByLabels(["foo", "bar"]), "");
+});
+
+test("resolveTargetOrderByGameModeAndLabels keeps dynamic tactics extras from visible labels", () => {
+  assert.deepEqual(
+    resolveTargetOrderByGameModeAndLabels("tactics", ["20", "19", "Double", "Triple", "Bull"]),
+    ["20", "19", "BULL", "DOUBLE", "TRIPLE"]
+  );
+  assert.deepEqual(
+    resolveTargetOrderByGameModeAndLabels("cricket", ["20", "19", "Double", "Triple", "Bull"]),
+    CRICKET_TARGET_ORDER
+  );
 });
 
 test("clampMarks normalizes values to range 0..3", () => {
@@ -108,7 +123,7 @@ test("evaluatePlayerTargetState derives offense, pressure and dead independent o
     activePlayerIndex: 0,
     scoringMode: "standard",
   });
-  assert.equal(offenseState.presentation, "offense");
+  assert.equal(offenseState.presentation, "scoring");
   assert.equal(offenseState.scorableForPlayer, true);
 
   const pressureState = evaluatePlayerTargetState([0, 3], 0, {
@@ -142,16 +157,16 @@ test("evaluatePlayerTargetState exposes explicit own/open/scorable helper fields
   assert.equal(state.closedOpponentCount, 0);
 });
 
-test("solo target can be closed without becoming dead", () => {
+test("solo target follows dead-state when all players are closed", () => {
   const soloState = evaluatePlayerTargetState([3], 0, {
     activePlayerIndex: 0,
     scoringMode: "standard",
   });
 
   assert.equal(soloState.closed, true);
-  assert.equal(soloState.dead, false);
+  assert.equal(soloState.dead, true);
   assert.equal(soloState.allClosed, true);
-  assert.equal(soloState.presentation, "closed");
+  assert.equal(soloState.presentation, "dead");
 });
 
 test("computeTargetStates keeps board perspective and cell states aligned", () => {
@@ -170,7 +185,7 @@ test("computeTargetStates keeps board perspective and cell states aligned", () =
   });
 
   assert.equal(states.get("20").boardPresentation, "pressure");
-  assert.equal(states.get("20").cellStates[0].presentation, "offense");
+  assert.equal(states.get("20").cellStates[0].presentation, "scoring");
   assert.equal(states.get("20").cellStates[1].presentation, "pressure");
   assert.equal(states.get("20").scorable, false);
   assert.equal(states.get("20").threatenedByOpponents, true);
@@ -180,7 +195,7 @@ test("computeTargetStates keeps board perspective and cell states aligned", () =
   assert.equal(states.has("10"), true);
 });
 
-test("neutral or unknown scoring mode suppresses tactical offense and danger signals", () => {
+test("neutral or unknown scoring mode follows the same tactical state machine", () => {
   const neutralStates = computeTargetStates(
     {
       "20": [3, 0],
@@ -193,8 +208,8 @@ test("neutral or unknown scoring mode suppresses tactical offense and danger sig
     }
   );
 
-  assert.equal(neutralStates.get("20").presentation, "closed");
-  assert.equal(neutralStates.get("20").offense, false);
+  assert.equal(neutralStates.get("20").presentation, "scoring");
+  assert.equal(neutralStates.get("20").offense, true);
   assert.equal(neutralStates.get("20").danger, false);
   assert.equal(neutralStates.get("BULL").presentation, "dead");
 
@@ -209,8 +224,8 @@ test("neutral or unknown scoring mode suppresses tactical offense and danger sig
     }
   );
 
-  assert.equal(unknownStates.get("20").presentation, "open");
-  assert.equal(unknownStates.get("20").danger, false);
+  assert.equal(unknownStates.get("20").presentation, "pressure");
+  assert.equal(unknownStates.get("20").danger, true);
 });
 
 test("applyThrowsToMarksByLabel applies capped marks per player", () => {
@@ -372,11 +387,11 @@ test("diffMarksByLabel reports deltas and increases per target", () => {
 test("deriveTargetTransitions exposes board presentation changes", () => {
   const previousStates = new Map([
     ["20", { boardPresentation: "open" }],
-    ["19", { boardPresentation: "danger" }],
-    ["BULL", { boardPresentation: "closed" }],
+    ["19", { boardPresentation: "open" }],
+    ["BULL", { boardPresentation: "open" }],
   ]);
   const nextStates = new Map([
-    ["20", { boardPresentation: "offense" }],
+    ["20", { boardPresentation: "scoring" }],
     ["19", { boardPresentation: "pressure" }],
     ["BULL", { boardPresentation: "dead" }],
   ]);
@@ -388,10 +403,32 @@ test("deriveTargetTransitions exposes board presentation changes", () => {
   });
 
   assert.equal(transitions.get("20")?.presentationChanged, true);
-  assert.equal(transitions.get("20")?.becameOffense, true);
+  assert.equal(transitions.get("20")?.becameScoring, true);
   assert.equal(transitions.get("19")?.becamePressure, true);
   assert.equal(transitions.get("BULL")?.becameDead, true);
-  assert.equal(transitions.get("BULL")?.becameClosed, false);
+  assert.equal(transitions.get("BULL")?.becameClosed, true);
+});
+
+test("computeTargetStates follows 4-state formula for multi-player scenarios", () => {
+  const states = computeTargetStates(
+    {
+      "20": [3, 2, 3],
+      "19": [3, 3, 3],
+      "18": [2, 1, 0],
+    },
+    {
+      gameMode: "Cricket",
+      scoringMode: "standard",
+      activePlayerIndex: 1,
+      targetOrder: ["20", "19", "18"],
+    }
+  );
+
+  assert.equal(states.get("20")?.cellStates?.[0]?.presentation, "scoring");
+  assert.equal(states.get("20")?.cellStates?.[1]?.presentation, "pressure");
+  assert.equal(states.get("20")?.cellStates?.[2]?.presentation, "scoring");
+  assert.equal(states.get("19")?.boardPresentation, "dead");
+  assert.equal(states.get("18")?.boardPresentation, "open");
 });
 
 test("evaluateCricketWinState resolves standard, cut-throat and neutral winners", () => {
