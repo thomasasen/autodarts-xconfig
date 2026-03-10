@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   classifyCricketGameMode,
   classifyCricketScoringMode,
+  classifyCricketTacticsPrecision,
   classifyVariantFamily,
   isCricketVariantText,
   isX01VariantText,
@@ -29,6 +30,15 @@ test("classifyCricketScoringMode separates standard, cut-throat and neutral fami
   assert.equal(classifyCricketScoringMode("practice"), "neutral");
   assert.equal(classifyCricketScoringMode("no-score"), "neutral");
   assert.equal(classifyCricketScoringMode("mystery"), "unknown");
+});
+
+test("classifyCricketTacticsPrecision supports strict/slop compatibility tokens", () => {
+  assert.equal(classifyCricketTacticsPrecision("strict"), "strict");
+  assert.equal(classifyCricketTacticsPrecision("strict mode"), "strict");
+  assert.equal(classifyCricketTacticsPrecision("slop"), "slop");
+  assert.equal(classifyCricketTacticsPrecision("sloppy"), "slop");
+  assert.equal(classifyCricketTacticsPrecision(""), "unknown");
+  assert.equal(classifyCricketTacticsPrecision("standard"), "unknown");
 });
 
 test("isX01VariantText supports direct and numeric X01 modes", () => {

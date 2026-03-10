@@ -119,6 +119,24 @@ div.css-nfhdnc {
   font-size: 1rem !important;
 }
 
+#ad-ext-player-display .ad-ext-player .ad-ext-player-name {
+  font-size: 1rem !important;
+}
+
+#ad-ext-player-display .ad-ext-player .ad-ext-player-score {
+  color: var(--theme-text-highlight-color);
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
+  font-size: 1.8rem !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
+  font-size: 3em !important;
+  color: gray !important;
+}
+
 .css-rtn29s {
   border: 2px solid #9fdb58 !important;
 }
@@ -250,6 +268,14 @@ p.chakra-text.css-1qlemha {
   border: 1px solid rgba(127, 214, 247, 0.34);
   border-radius: 0.28rem;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 8px 18px rgba(0, 0, 0, 0.18);
+  letter-spacing: 0.02em;
+}
+
+#grid .label-cell,
+#grid [data-row-label],
+#grid [data-target-label],
+.ad-ext-crfx-badge {
+  color: rgba(236, 248, 255, 0.96);
   letter-spacing: 0.02em;
 }
 

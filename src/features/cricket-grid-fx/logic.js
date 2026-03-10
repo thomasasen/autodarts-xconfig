@@ -210,29 +210,57 @@ function parseMarksValue(node, cricketRules) {
     return 0;
   }
 
-  const dataMarks = node.getAttribute?.("data-marks");
-  const dataMarksNumeric = Number.parseInt(String(dataMarks || "").trim(), 10);
-  if (Number.isFinite(dataMarksNumeric)) {
-    return typeof cricketRules?.clampMarks === "function"
-      ? cricketRules.clampMarks(dataMarksNumeric)
-      : Math.max(0, Math.min(3, dataMarksNumeric));
+  const parseMark = (value) => {
+    if (cricketRules && typeof cricketRules.parseCricketMarkValue === "function") {
+      const parsed = cricketRules.parseCricketMarkValue(value);
+      return Number.isFinite(parsed) ? cricketRules.clampMarks(parsed) : null;
+    }
+    const parsed = Number.parseInt(String(value || "").trim(), 10);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    return Math.max(0, Math.min(3, parsed));
+  };
+
+  const directCandidates = [
+    node.getAttribute?.("data-marks"),
+    node.getAttribute?.("data-mark"),
+    node.getAttribute?.("data-hits"),
+    node.getAttribute?.("data-hit"),
+    node.getAttribute?.("aria-label"),
+    node.getAttribute?.("title"),
+    node.getAttribute?.("alt"),
+  ];
+  for (const candidate of directCandidates) {
+    const parsed = parseMark(candidate);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
   }
 
-  const iconAlt = node.querySelector?.("img[alt]")?.getAttribute?.("alt");
-  const iconNumeric = Number.parseInt(String(iconAlt || "").trim(), 10);
-  if (Number.isFinite(iconNumeric)) {
-    return typeof cricketRules?.clampMarks === "function"
-      ? cricketRules.clampMarks(iconNumeric)
-      : Math.max(0, Math.min(3, iconNumeric));
+  const iconNode = node.querySelector?.(
+    "img[alt], img[title], [data-marks], [data-mark], [data-hits], [data-hit], [aria-label], [title]"
+  );
+  if (iconNode) {
+    const parsed = parseMark(
+      iconNode.getAttribute?.("data-marks") ||
+        iconNode.getAttribute?.("data-mark") ||
+        iconNode.getAttribute?.("data-hits") ||
+        iconNode.getAttribute?.("data-hit") ||
+        iconNode.getAttribute?.("aria-label") ||
+        iconNode.getAttribute?.("title") ||
+        iconNode.getAttribute?.("alt") ||
+        ""
+    );
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
   }
 
-  const textNumeric = Number.parseInt(String(node.textContent || "").trim(), 10);
+  const textNumeric = parseMark(node.textContent || "");
   if (Number.isFinite(textNumeric)) {
-    return typeof cricketRules?.clampMarks === "function"
-      ? cricketRules.clampMarks(textNumeric)
-      : Math.max(0, Math.min(3, textNumeric));
+    return textNumeric;
   }
-
   return 0;
 }
 
@@ -456,10 +484,12 @@ function clearLabelClasses(node) {
     LABEL_STATE_CLASS.neutral,
     LABEL_STATE_CLASS.offense,
     LABEL_STATE_CLASS.danger,
+    LABEL_STATE_CLASS.pressure,
     LABEL_STATE_CLASS.dead,
     BADGE_STATE_CLASS.neutral,
     BADGE_STATE_CLASS.offense,
     BADGE_STATE_CLASS.danger,
+    BADGE_STATE_CLASS.pressure,
     BADGE_STATE_CLASS.dead
   );
 }
@@ -594,6 +624,7 @@ function setLabelStateClasses(labelNode, stateToken) {
     LABEL_STATE_CLASS.neutral,
     LABEL_STATE_CLASS.offense,
     LABEL_STATE_CLASS.danger,
+    LABEL_STATE_CLASS.pressure,
     LABEL_STATE_CLASS.dead
   );
 
@@ -602,7 +633,12 @@ function setLabelStateClasses(labelNode, stateToken) {
     return;
   }
 
-  if (stateToken === "danger" || stateToken === "pressure") {
+  if (stateToken === "pressure") {
+    labelNode.classList.add(LABEL_STATE_CLASS.pressure);
+    return;
+  }
+
+  if (stateToken === "danger") {
     labelNode.classList.add(LABEL_STATE_CLASS.danger);
     return;
   }
@@ -624,6 +660,7 @@ function setBadgeStateClasses(badgeNode, stateToken) {
     BADGE_STATE_CLASS.neutral,
     BADGE_STATE_CLASS.offense,
     BADGE_STATE_CLASS.danger,
+    BADGE_STATE_CLASS.pressure,
     BADGE_STATE_CLASS.dead
   );
 
@@ -632,7 +669,12 @@ function setBadgeStateClasses(badgeNode, stateToken) {
     return;
   }
 
-  if (stateToken === "danger" || stateToken === "pressure") {
+  if (stateToken === "pressure") {
+    badgeNode.classList.add(BADGE_STATE_CLASS.pressure);
+    return;
+  }
+
+  if (stateToken === "danger") {
     badgeNode.classList.add(BADGE_STATE_CLASS.danger);
     return;
   }

@@ -91,13 +91,18 @@ function queryAll(rootNode, selector) {
   }
 }
 
-function parseTextMarkValue(value) {
+function parseTextMarkValue(value, cricketRules) {
+  if (cricketRules && typeof cricketRules.parseCricketMarkValue === "function") {
+    const parsed = cricketRules.parseCricketMarkValue(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
   const normalized = String(value || "").trim();
-  if (!/^[0-3]$/.test(normalized)) {
+  const numeric = Number.parseInt(normalized, 10);
+  if (!Number.isFinite(numeric)) {
     return null;
   }
-  const numeric = Number.parseInt(normalized, 10);
-  return Number.isFinite(numeric) ? numeric : null;
+  return Math.max(0, Math.min(3, numeric));
 }
 
 function getNormalizedLabel(cricketRules, node) {
@@ -351,6 +356,7 @@ function hasOwnMarkValue(node, options = {}) {
   if (!node) {
     return false;
   }
+  const cricketRules = options.cricketRules;
   const allowTextMarkValue = options.allowTextMarkValue !== false;
   if (typeof node.getAttribute === "function" && node.getAttribute("data-marks") !== null) {
     return true;
@@ -365,33 +371,63 @@ function hasOwnMarkValue(node, options = {}) {
     return false;
   }
 
-  return Number.isFinite(parseTextMarkValue(node.textContent));
+  return Number.isFinite(parseTextMarkValue(node.textContent, cricketRules));
 }
 
-function parseMarksValue(node) {
+function parseMarksValue(node, cricketRules) {
   if (!node) {
     return 0;
   }
 
-  const rawDataMarks =
-    typeof node.getAttribute === "function" ? node.getAttribute("data-marks") : null;
-  const dataMarksValue = Number.parseInt(String(rawDataMarks || "").trim(), 10);
-  if (Number.isFinite(dataMarksValue)) {
-    return dataMarksValue;
+  const readMark = (value) => {
+    const parsed = parseTextMarkValue(value, cricketRules);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const dataCandidates = [];
+  if (typeof node.getAttribute === "function") {
+    dataCandidates.push(
+      node.getAttribute("data-marks"),
+      node.getAttribute("data-mark"),
+      node.getAttribute("data-hits"),
+      node.getAttribute("data-hit"),
+      node.getAttribute("aria-label"),
+      node.getAttribute("title"),
+      node.getAttribute("alt")
+    );
+  }
+  for (const candidate of dataCandidates) {
+    const parsed = readMark(candidate);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
   }
 
   if (typeof node.querySelectorAll === "function") {
-    const icons = Array.from(node.querySelectorAll("img[alt]"));
+    const icons = Array.from(
+      node.querySelectorAll("img[alt], img[title], [data-marks], [data-mark], [aria-label], [title]")
+    );
     if (icons.length > 0) {
-      const altValue = Number.parseInt(String(icons[0]?.getAttribute?.("alt") || "").trim(), 10);
-      if (Number.isFinite(altValue)) {
-        return altValue;
+      const best = icons
+        .map((icon) => {
+          return readMark(
+            icon?.getAttribute?.("data-marks") ||
+              icon?.getAttribute?.("data-mark") ||
+              icon?.getAttribute?.("aria-label") ||
+              icon?.getAttribute?.("title") ||
+              icon?.getAttribute?.("alt") ||
+              ""
+          );
+        })
+        .find((value) => Number.isFinite(value));
+      if (Number.isFinite(best)) {
+        return best;
       }
       return icons.length;
     }
   }
 
-  const textValue = parseTextMarkValue(node.textContent);
+  const textValue = parseTextMarkValue(node.textContent, cricketRules);
   return Number.isFinite(textValue) ? textValue : 0;
 }
 
@@ -406,7 +442,7 @@ function isLikelyPlayerCell(node, cricketRules, targetSet) {
   ) {
     return true;
   }
-  if (hasOwnMarkValue(node)) {
+  if (hasOwnMarkValue(node, { cricketRules })) {
     const label = getNormalizedLabel(cricketRules, node);
     return !label || !targetSet.has(label);
   }
@@ -519,8 +555,29 @@ function maybeIncludeLabelCellAsPlayerCell(
   return [labelCell, ...normalizedCells];
 }
 
-function resolveActivePlayerIndex(gameState, documentRef, playerCount) {
-  const fallbackIndex = Number.isFinite(gameState?.getActivePlayerIndex?.())
+function readCellPlayerIndex(cellNode) {
+  if (!cellNode || typeof cellNode.getAttribute !== "function") {
+    return null;
+  }
+
+  const candidates = [
+    cellNode.getAttribute("data-player-index"),
+    cellNode.getAttribute("data-column-index"),
+    cellNode.getAttribute("data-player"),
+  ];
+
+  for (const candidate of candidates) {
+    const numeric = Number.parseInt(String(candidate || "").trim(), 10);
+    if (Number.isFinite(numeric) && numeric >= 0) {
+      return numeric;
+    }
+  }
+
+  return null;
+}
+
+function resolveActivePlayerIndex(gameState, documentRef, playerCount, options = {}) {
+  const stateIndex = Number.isFinite(gameState?.getActivePlayerIndex?.())
     ? Number(gameState.getActivePlayerIndex())
     : 0;
 
@@ -530,7 +587,13 @@ function resolveActivePlayerIndex(gameState, documentRef, playerCount) {
     return Boolean(node.classList?.contains("ad-ext-player-active"));
   });
 
-  const candidate = domActiveIndex >= 0 ? domActiveIndex : fallbackIndex;
+  const preferGameStateIndex = options.preferGameStateIndex === true;
+  const candidate = preferGameStateIndex && Number.isFinite(stateIndex)
+    ? stateIndex
+    : domActiveIndex >= 0
+      ? domActiveIndex
+      : stateIndex;
+
   if (!Number.isFinite(candidate) || playerCount <= 0) {
     return 0;
   }
@@ -611,6 +674,28 @@ function resolveScoringModeState(gameState, variantRules, gameModeNormalized) {
     normalizedScoringMode: classified || "unknown",
     scoringModeSource: rawNormalizedInput ? "game-state-normalized" : "classified",
   };
+}
+
+function resolveTacticsPrecisionMode(gameState, variantRules, documentRef) {
+  if (!variantRules || typeof variantRules.classifyCricketTacticsPrecision !== "function") {
+    return "unknown";
+  }
+
+  const candidates = [
+    typeof gameState?.getCricketMode === "function" ? gameState.getCricketMode() : "",
+    typeof gameState?.getCricketScoringMode === "function" ? gameState.getCricketScoringMode() : "",
+    typeof gameState?.getCricketGameMode === "function" ? gameState.getCricketGameMode() : "",
+    String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || ""),
+  ];
+
+  for (const candidate of candidates) {
+    const precision = variantRules.classifyCricketTacticsPrecision(candidate);
+    if (precision === "strict" || precision === "slop") {
+      return precision;
+    }
+  }
+
+  return "unknown";
 }
 
 function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder) {
@@ -726,6 +811,7 @@ function buildMarksByLabelSnapshot(options = {}) {
   const labelCellMarkSourceSet = new Set();
   const shortfallRepairLabels = [];
   const shortfallRepairSet = new Set();
+  let hasIndexedPlayerColumns = false;
 
   grid.labels.forEach(({ node, label }) => {
     if (!targetSet.has(label)) {
@@ -749,15 +835,62 @@ function buildMarksByLabelSnapshot(options = {}) {
       shortfallRepairSet.add(label);
       shortfallRepairLabels.push(label);
     }
-    const marks = [];
+    const sequentialMarks = [];
+    const indexedMarks = [];
     markSourceCells.forEach((cell) => {
-      marks.push(parseMarksValue(cell));
+      const marks = cricketRules.clampMarks(parseMarksValue(cell, cricketRules));
+      const playerIndex = readCellPlayerIndex(cell);
+      if (Number.isFinite(playerIndex)) {
+        indexedMarks.push({ playerIndex, marks });
+      } else {
+        sequentialMarks.push(marks);
+      }
     });
-    if (!marks.length) {
+    if (!sequentialMarks.length && !indexedMarks.length) {
       return;
     }
-    marksByLabel[label] = marks.map((value) => cricketRules.clampMarks(value));
-    maxPlayerCount = Math.max(maxPlayerCount, marks.length);
+
+    if (indexedMarks.length > 0) {
+      hasIndexedPlayerColumns = true;
+      const maxIndexedColumn = indexedMarks.reduce((max, entry) => {
+        return entry.playerIndex > max ? entry.playerIndex : max;
+      }, -1);
+      const rowLength = Math.max(
+        playerCountFromMatch,
+        maxIndexedColumn + 1,
+        sequentialMarks.length + indexedMarks.length
+      );
+      const marksByPlayer = Array.from({ length: rowLength }, () => 0);
+      const occupiedColumns = new Set();
+      indexedMarks.forEach((entry) => {
+        if (entry.playerIndex < rowLength) {
+          marksByPlayer[entry.playerIndex] = cricketRules.clampMarks(entry.marks);
+          occupiedColumns.add(entry.playerIndex);
+        }
+      });
+
+      let cursor = 0;
+      sequentialMarks.forEach((marks) => {
+        while (occupiedColumns.has(cursor) && cursor < marksByPlayer.length) {
+          cursor += 1;
+        }
+        if (cursor >= marksByPlayer.length) {
+          marksByPlayer.push(cricketRules.clampMarks(marks));
+          cursor = marksByPlayer.length;
+          return;
+        }
+        marksByPlayer[cursor] = cricketRules.clampMarks(marks);
+        occupiedColumns.add(cursor);
+        cursor += 1;
+      });
+
+      marksByLabel[label] = marksByPlayer;
+      maxPlayerCount = Math.max(maxPlayerCount, marksByPlayer.length);
+      return;
+    }
+
+    marksByLabel[label] = sequentialMarks.map((value) => cricketRules.clampMarks(value));
+    maxPlayerCount = Math.max(maxPlayerCount, sequentialMarks.length);
   });
 
   const playerCount = Math.max(maxPlayerCount, playerCountFromMatch, 1);
@@ -771,7 +904,9 @@ function buildMarksByLabelSnapshot(options = {}) {
     }
   });
 
-  const activePlayerIndex = resolveActivePlayerIndex(gameState, documentRef, playerCount);
+  const activePlayerIndex = resolveActivePlayerIndex(gameState, documentRef, playerCount, {
+    preferGameStateIndex: hasIndexedPlayerColumns,
+  });
   const turnMarksByLabel = readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount);
   const activeThrowPreview = readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder);
 
@@ -804,6 +939,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     variantRules,
     gameModeNormalized
   );
+  const tacticsPrecisionMode = resolveTacticsPrecisionMode(gameState, variantRules, documentRef);
   const scoringModeNormalized = scoringModeState.normalizedScoringMode;
   const enrichedMarksByLabel = marksByLabel;
 
@@ -837,6 +973,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     scoringModeRaw: scoringModeState.rawScoringMode,
     scoringModeNormalized,
     scoringModeSource: scoringModeState.scoringModeSource,
+    tacticsPrecisionMode,
     targetOrder,
     activePlayerIndex,
     discoveredLabelCount: grid.labels.length,

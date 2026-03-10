@@ -39,6 +39,7 @@ Dieses Dokument hält die fachliche Regelbasis für Cricket und Tactics fest und
 - `standard`: aktive Spieler sammeln Overflow-Punkte selbst.
 - `cutthroat`: Overflow-Punkte gehen an offene Gegner.
 - `neutral` / `no-score`: Marks und Closure bleiben aktiv, Punktewertung nicht.
+- `strict` / `slop` (Tactics): werden kompatibel als Submodus-Tokens erkannt, ohne eigene zusätzliche Scoring-Semantik im Projekt zu erzwingen.
 
 ### Gewinnerlogik
 

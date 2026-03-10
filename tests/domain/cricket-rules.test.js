@@ -17,6 +17,7 @@ import {
   getTargetOrderByGameMode,
   inferCricketGameModeByLabels,
   normalizeCricketLabel,
+  parseCricketMarkValue,
   parseCricketThrowSegment,
 } from "../../src/domain/cricket-rules.js";
 
@@ -40,6 +41,19 @@ test("clampMarks normalizes values to range 0..3", () => {
   assert.equal(clampMarks(-1), 0);
   assert.equal(clampMarks(1.8), 2);
   assert.equal(clampMarks(9), 3);
+});
+
+test("parseCricketMarkValue supports numeric and symbolic cricket mark notations", () => {
+  assert.equal(parseCricketMarkValue("0"), 0);
+  assert.equal(parseCricketMarkValue("2"), 2);
+  assert.equal(parseCricketMarkValue("3"), 3);
+  assert.equal(parseCricketMarkValue("/"), 1);
+  assert.equal(parseCricketMarkValue("|"), 1);
+  assert.equal(parseCricketMarkValue("X"), 2);
+  assert.equal(parseCricketMarkValue("✕"), 2);
+  assert.equal(parseCricketMarkValue("⊗"), 3);
+  assert.equal(parseCricketMarkValue(""), null);
+  assert.equal(parseCricketMarkValue("foo"), null);
 });
 
 test("parseCricketThrowSegment normalizes cricket hits, bull aliases and points", () => {
@@ -113,6 +127,21 @@ test("evaluatePlayerTargetState derives offense, pressure and dead independent o
   assert.equal(deadState.presentation, "dead");
 });
 
+test("evaluatePlayerTargetState exposes explicit own/open/scorable helper fields", () => {
+  const state = evaluatePlayerTargetState([3, 1], 0, {
+    activePlayerIndex: 0,
+    scoringMode: "standard",
+  });
+
+  assert.equal(state.open, false);
+  assert.equal(state.own, true);
+  assert.equal(state.opponentsOpen, true);
+  assert.equal(state.scorable, true);
+  assert.equal(state.threatenedByOpponents, false);
+  assert.equal(state.openOpponentCount, 1);
+  assert.equal(state.closedOpponentCount, 0);
+});
+
 test("solo target can be closed without becoming dead", () => {
   const soloState = evaluatePlayerTargetState([3], 0, {
     activePlayerIndex: 0,
@@ -143,6 +172,10 @@ test("computeTargetStates keeps board perspective and cell states aligned", () =
   assert.equal(states.get("20").boardPresentation, "pressure");
   assert.equal(states.get("20").cellStates[0].presentation, "offense");
   assert.equal(states.get("20").cellStates[1].presentation, "pressure");
+  assert.equal(states.get("20").scorable, false);
+  assert.equal(states.get("20").threatenedByOpponents, true);
+  assert.equal(states.get("20").open, true);
+  assert.equal(states.get("20").own, false);
   assert.equal(states.get("18").boardPresentation, "dead");
   assert.equal(states.has("10"), true);
 });

@@ -202,6 +202,44 @@ export function clampMarks(value) {
   return Math.max(0, Math.min(3, Math.round(numeric)));
 }
 
+export function parseCricketMarkValue(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return null;
+  }
+
+  const direct = Number.parseInt(raw, 10);
+  if (Number.isFinite(direct) && direct >= 0 && direct <= 3) {
+    return clampMarks(direct);
+  }
+
+  const normalized = raw
+    .replace(/\s+/g, "")
+    .toUpperCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  // Dedicated symbols used in legacy and current cricket scoreboards.
+  if (/[\u2A02\u2297\u29BB]/u.test(normalized)) {
+    return 3;
+  }
+  if (/[\u00D7\u2715\u2716\u2573X]/u.test(normalized)) {
+    return 2;
+  }
+  if (normalized.includes("/") || normalized.includes("|")) {
+    return 1;
+  }
+
+  const digit = normalized.match(/([0-3])/);
+  if (digit) {
+    return clampMarks(Number.parseInt(digit[1], 10));
+  }
+
+  return null;
+}
+
 export function normalizeCricketLabel(value) {
   const text = String(value || "")
     .replace(/\s+/g, " ")
@@ -424,10 +462,13 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
       : 0;
 
   const marks = resolvedMarks[resolvedIndex] || 0;
+  const open = marks < 3;
   const closed = marks >= 3;
   const allClosed = resolvedMarks.length > 0 && resolvedMarks.every((mark) => mark >= 3);
   const dead = resolvedMarks.length > 1 && allClosed;
   const opponentMarks = resolvedMarks.filter((_, index) => index !== resolvedIndex);
+  const openOpponentCount = opponentMarks.filter((mark) => mark < 3).length;
+  const closedOpponentCount = opponentMarks.filter((mark) => mark >= 3).length;
   const scorableForPlayer = closed && opponentMarks.some((mark) => mark < 3) && !allClosed;
   const scorableAgainstPlayer = !closed && opponentMarks.some((mark) => mark >= 3) && !allClosed;
   const supportsTacticalHighlights = resolveSupportsTacticalHighlights(options);
@@ -451,14 +492,21 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
   return {
     index: resolvedIndex,
     marks,
+    open,
     isActivePlayer: resolvedIndex === options.activePlayerIndex,
     presentation,
+    own: closed,
     offense,
     danger,
     pressure,
     closed,
     dead,
     allClosed,
+    opponentsOpen: openOpponentCount > 0,
+    openOpponentCount,
+    closedOpponentCount,
+    scorable: scorableForPlayer,
+    threatenedByOpponents: scorableAgainstPlayer,
     scorableForPlayer,
     scorableAgainstPlayer,
   };
@@ -507,6 +555,8 @@ export function computeTargetStates(marksByLabel, options = {}) {
       });
 
     const presentation = boardState.presentation || "open";
+    const openOpponentCount = Number(boardState?.openOpponentCount || 0);
+    const closedOpponentCount = Number(boardState?.closedOpponentCount || 0);
 
     stateMap.set(targetLabel, {
       label: targetLabel,
@@ -519,12 +569,19 @@ export function computeTargetStates(marksByLabel, options = {}) {
       activePlayerIndex,
       marksByPlayer,
       activeMarks: boardState.marks,
+      open: boardState.open,
       offense: boardState.offense,
       danger: boardState.danger,
       pressure: boardState.pressure,
+      own: boardState.own,
       closed: boardState.closed,
       dead: boardState.dead,
       allClosed: boardState.allClosed,
+      opponentsOpen: boardState.opponentsOpen,
+      openOpponentCount,
+      closedOpponentCount,
+      scorable: boardState.scorable,
+      threatenedByOpponents: boardState.threatenedByOpponents,
       scorableForPlayer: boardState.scorableForPlayer,
       scorableAgainstPlayer: boardState.scorableAgainstPlayer,
       presentation,

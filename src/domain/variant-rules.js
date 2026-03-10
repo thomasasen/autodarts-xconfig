@@ -58,6 +58,23 @@ export function classifyCricketScoringMode(value) {
   return "unknown";
 }
 
+export function classifyCricketTacticsPrecision(value) {
+  const normalized = normalizeVariant(value).replace(/[_\s]+/g, "-");
+  if (!normalized) {
+    return "unknown";
+  }
+
+  if (["strict", "strict-mode", "strict-rules"].includes(normalized)) {
+    return "strict";
+  }
+
+  if (["slop", "slop-mode", "sloppy", "sloppy-rules"].includes(normalized)) {
+    return "slop";
+  }
+
+  return "unknown";
+}
+
 export function isX01VariantText(value, options = {}) {
   const normalized = normalizeVariant(value);
   if (!normalized) {

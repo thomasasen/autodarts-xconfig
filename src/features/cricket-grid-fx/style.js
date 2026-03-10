@@ -25,6 +25,7 @@ export const LABEL_STATE_CLASS = Object.freeze({
   neutral: "ad-ext-crfx-label-state-neutral",
   offense: "ad-ext-crfx-label-state-offense",
   danger: "ad-ext-crfx-label-state-danger",
+  pressure: "ad-ext-crfx-label-state-pressure",
   dead: "ad-ext-crfx-label-state-dead",
 });
 
@@ -32,6 +33,7 @@ export const BADGE_STATE_CLASS = Object.freeze({
   neutral: "ad-ext-crfx-badge-state-neutral",
   offense: "ad-ext-crfx-badge-state-offense",
   danger: "ad-ext-crfx-badge-state-danger",
+  pressure: "ad-ext-crfx-badge-state-pressure",
   dead: "ad-ext-crfx-badge-state-dead",
 });
 
@@ -158,6 +160,14 @@ export function buildStyleText() {
   --ad-ext-crfx-badge-border: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.38));
   --ad-ext-crfx-badge-text: #ffe5e5;
   --ad-ext-crfx-badge-glow: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.56));
+}
+
+.${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.pressure},
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_STATE_CLASS.pressure} {
+  --ad-ext-crfx-badge-bg: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.52));
+  --ad-ext-crfx-badge-border: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.44));
+  --ad-ext-crfx-badge-text: #ffffff;
+  --ad-ext-crfx-badge-glow: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.74));
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.dead},

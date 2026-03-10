@@ -12,8 +12,10 @@ import {
 import {
   BADGE_BURST_CLASS,
   BADGE_CLASS,
+  BADGE_STATE_CLASS,
   DELTA_CLASS,
   HIDDEN_LABEL_ATTRIBUTE,
+  LABEL_STATE_CLASS,
   MARK_L2_CLASS,
   MARK_PROGRESS_CLASS,
   ROW_WAVE_CLASS,
@@ -290,6 +292,70 @@ test("cricket grid fx pulses rows only for mark increases or tactical transition
   assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 2);
   assert.equal(Boolean(documentRef.querySelector(`.${DELTA_CLASS}`)), false);
   assert.equal(Boolean(documentRef.querySelector(`.${BADGE_BURST_CLASS}`)), false);
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx applies dedicated pressure state classes on label and badge", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [0, 3],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
+  const syntheticBadge =
+    labelCell20?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`) || null;
+  const labelOrBadgePressure = Boolean(
+    labelCell20?.classList?.contains(LABEL_STATE_CLASS.pressure) ||
+      labelCell20?.classList?.contains(BADGE_STATE_CLASS.pressure)
+  );
+  assert.equal(labelOrBadgePressure, true);
+  if (syntheticBadge) {
+    assert.equal(syntheticBadge.classList.contains(BADGE_STATE_CLASS.pressure), true);
+  }
 
   clearCricketGridFxState(state);
 });

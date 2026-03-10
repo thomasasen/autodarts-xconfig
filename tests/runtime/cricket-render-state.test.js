@@ -132,6 +132,34 @@ test("buildCricketRenderState infers tactics from 10..14 when no explicit mode e
   assert.equal(renderState?.stateMap.has("10"), true);
 });
 
+test("buildCricketRenderState exposes tactics precision token without changing scoring semantics", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  createGrid(documentRef, ["20", "14", "10", "BULL"], {
+    "20": [0, 0],
+    "14": [0, 0],
+    "10": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "tactics",
+      getCricketGameMode: () => "Tactics",
+      getCricketMode: () => "strict",
+      getCricketScoringModeNormalized: () => "standard",
+    }),
+  });
+
+  assert.equal(renderState?.tacticsPrecisionMode, "strict");
+  assert.equal(renderState?.scoringModeNormalized, "standard");
+});
+
 test("explicit cricket mode filters tactics-only targets from the grid", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "";
@@ -497,4 +525,78 @@ test("active throws do not double-count rows that the DOM already reflects", () 
     renderState?.stateMap.get("18")?.cellStates.map((entry) => entry.presentation).join(","),
     "open,open"
   );
+});
+
+test("symbolic mark glyphs are parsed for cricket rows", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const row20 = Array.from(documentRef.querySelectorAll("#grid tr")).find((row) => {
+    const label = row?.querySelector?.(".label-cell")?.textContent || "";
+    return String(label).toUpperCase().includes("20");
+  });
+  const playerCell = row20?.querySelectorAll?.("td")?.[1] || null;
+  playerCell?.removeAttribute?.("data-marks");
+  if (playerCell) {
+    playerCell.textContent = "⊗";
+  }
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "offense");
+});
+
+test("state index wins over DOM order when cricket cells expose explicit player indexes", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  // FakeDocument starts with DOM-active player index 0 by class.
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 1,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.activePlayerIndex, 1);
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "pressure");
 });
