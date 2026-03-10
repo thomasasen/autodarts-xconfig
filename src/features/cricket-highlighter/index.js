@@ -157,8 +157,8 @@ export function initializeCricketHighlighter(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("cricketHighlighter")
       : {
-        showOpenTargets: false,
-        showDeadTargets: true,
+        showOpenObjectives: false,
+        showDeadObjectives: true,
         colorTheme: "standard",
         intensity: "normal",
       };

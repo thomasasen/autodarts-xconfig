@@ -332,10 +332,16 @@ function normalizeTripleDoubleBullHitsConfig(rawConfig = {}) {
 }
 
 function normalizeCricketHighlighterConfig(rawConfig = {}) {
+  const showOpenValue = Object.prototype.hasOwnProperty.call(rawConfig, "showOpenTargets")
+    ? rawConfig.showOpenTargets
+    : rawConfig.showOpenObjectives;
+  const showDeadValue = Object.prototype.hasOwnProperty.call(rawConfig, "showDeadTargets")
+    ? rawConfig.showDeadTargets
+    : rawConfig.showDeadObjectives;
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
-    showOpenTargets: normalizeBoolean(rawConfig.showOpenTargets, false),
-    showDeadTargets: normalizeBoolean(rawConfig.showDeadTargets, true),
+    showOpenObjectives: normalizeBoolean(showOpenValue, false),
+    showDeadObjectives: normalizeBoolean(showDeadValue, true),
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES),
     intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES),
     debug: normalizeBoolean(rawConfig.debug, false),
@@ -343,18 +349,30 @@ function normalizeCricketHighlighterConfig(rawConfig = {}) {
 }
 
 function normalizeCricketGridFxConfig(rawConfig = {}) {
+  const pressureEdgeValue = Object.prototype.hasOwnProperty.call(rawConfig, "threatEdge")
+    ? rawConfig.threatEdge
+    : rawConfig.pressureEdge;
+  const scoringStripeValue = Object.prototype.hasOwnProperty.call(rawConfig, "scoringLane")
+    ? rawConfig.scoringLane
+    : rawConfig.scoringStripe;
+  const deadRowMutedValue = Object.prototype.hasOwnProperty.call(rawConfig, "deadRowCollapse")
+    ? rawConfig.deadRowCollapse
+    : rawConfig.deadRowMuted;
+  const pressureOverlayValue = Object.prototype.hasOwnProperty.call(rawConfig, "opponentPressureOverlay")
+    ? rawConfig.opponentPressureOverlay
+    : rawConfig.pressureOverlay;
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     rowWave: normalizeBoolean(rawConfig.rowWave, true),
     badgeBeacon: normalizeBoolean(rawConfig.badgeBeacon, true),
     markProgress: normalizeBoolean(rawConfig.markProgress, true),
-    threatEdge: normalizeBoolean(rawConfig.threatEdge, true),
-    scoringLane: normalizeBoolean(rawConfig.scoringLane, true),
-    deadRowCollapse: normalizeBoolean(rawConfig.deadRowCollapse, true),
+    pressureEdge: normalizeBoolean(pressureEdgeValue, true),
+    scoringStripe: normalizeBoolean(scoringStripeValue, true),
+    deadRowMuted: normalizeBoolean(deadRowMutedValue, true),
     deltaChips: normalizeBoolean(rawConfig.deltaChips, true),
     hitSpark: normalizeBoolean(rawConfig.hitSpark, true),
     roundTransitionWipe: normalizeBoolean(rawConfig.roundTransitionWipe, true),
-    opponentPressureOverlay: normalizeBoolean(rawConfig.opponentPressureOverlay, true),
+    pressureOverlay: normalizeBoolean(pressureOverlayValue, true),
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES),
     intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES),
     debug: normalizeBoolean(rawConfig.debug, false),

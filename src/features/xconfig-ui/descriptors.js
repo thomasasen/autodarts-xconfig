@@ -365,8 +365,8 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
     fields: [
-      checkboxField("showOpenTargets", "Open-Ziele anzeigen"),
-      checkboxField("showDeadTargets", "Dead-Ziele anzeigen"),
+      checkboxField("showOpenObjectives", "OPEN-Ziele anzeigen"),
+      checkboxField("showDeadObjectives", "DEAD-Ziele anzeigen"),
       selectField("colorTheme", "Farbthema", [
         { value: "standard", label: "Standard" },
         { value: "high-contrast", label: "High Contrast" },
@@ -388,13 +388,13 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("rowWave", "Zeilen-Sweep"),
       checkboxField("badgeBeacon", "Ziel-Badge-Hinweis"),
       checkboxField("markProgress", "Mark-Fortschritt"),
-      checkboxField("threatEdge", "Gefahrenkante"),
-      checkboxField("scoringLane", "Offensiv-Lane"),
-      checkboxField("deadRowCollapse", "Geschlossene Zeilen abdunkeln"),
+      checkboxField("pressureEdge", "PRESSURE-Kante"),
+      checkboxField("scoringStripe", "SCORING-Streifen"),
+      checkboxField("deadRowMuted", "DEAD-Zeilen abdunkeln"),
       checkboxField("deltaChips", "Delta-Chips"),
       checkboxField("hitSpark", "Treffer-Impuls"),
       checkboxField("roundTransitionWipe", "Zugwechsel-Übergang"),
-      checkboxField("opponentPressureOverlay", "Gegnerdruck-Overlay"),
+      checkboxField("pressureOverlay", "PRESSURE-Overlay"),
       selectField("colorTheme", "Farbthema", [
         { value: "standard", label: "Standard" },
         { value: "high-contrast", label: "High Contrast" },

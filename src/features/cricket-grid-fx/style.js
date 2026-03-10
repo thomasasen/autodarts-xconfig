@@ -41,12 +41,12 @@ export const BADGE_STATE_CLASS = Object.freeze({
 
 const THEME_PRESETS = Object.freeze({
   standard: {
-    offense: "0, 178, 135",
-    danger: "239, 68, 68",
+    scoring: "0, 178, 135",
+    pressure: "239, 68, 68",
   },
   "high-contrast": {
-    offense: "34, 197, 94",
-    danger: "239, 68, 68",
+    scoring: "34, 197, 94",
+    pressure: "239, 68, 68",
   },
 });
 
@@ -92,21 +92,45 @@ function normalizeIntensityKey(value) {
 export function resolveCricketGridFxConfig(featureConfig = {}) {
   const themeKey = normalizeThemeKey(featureConfig.colorTheme);
   const intensityKey = normalizeIntensityKey(featureConfig.intensity);
+  const pressureEdgeValue = Object.prototype.hasOwnProperty.call(featureConfig, "pressureEdge")
+    ? featureConfig.pressureEdge
+    : featureConfig.threatEdge;
+  const scoringStripeValue = Object.prototype.hasOwnProperty.call(featureConfig, "scoringStripe")
+    ? featureConfig.scoringStripe
+    : featureConfig.scoringLane;
+  const deadRowMutedValue = Object.prototype.hasOwnProperty.call(featureConfig, "deadRowMuted")
+    ? featureConfig.deadRowMuted
+    : featureConfig.deadRowCollapse;
+  const pressureOverlayValue = Object.prototype.hasOwnProperty.call(featureConfig, "pressureOverlay")
+    ? featureConfig.pressureOverlay
+    : featureConfig.opponentPressureOverlay;
+  const themePreset = THEME_PRESETS[themeKey];
+  const theme = {
+    scoring: themePreset.scoring,
+    pressure: themePreset.pressure,
+    offense: themePreset.scoring,
+    danger: themePreset.pressure,
+  };
 
   return {
     rowWave: normalizeBoolean(featureConfig.rowWave, true),
     badgeBeacon: normalizeBoolean(featureConfig.badgeBeacon, true),
     markProgress: normalizeBoolean(featureConfig.markProgress, true),
-    threatEdge: normalizeBoolean(featureConfig.threatEdge, true),
-    scoringLane: normalizeBoolean(featureConfig.scoringLane, true),
-    deadRowCollapse: normalizeBoolean(featureConfig.deadRowCollapse, true),
+    pressureEdge: normalizeBoolean(pressureEdgeValue, true),
+    scoringStripe: normalizeBoolean(scoringStripeValue, true),
+    deadRowMuted: normalizeBoolean(deadRowMutedValue, true),
     deltaChips: normalizeBoolean(featureConfig.deltaChips, true),
     hitSpark: normalizeBoolean(featureConfig.hitSpark, true),
     roundTransitionWipe: normalizeBoolean(featureConfig.roundTransitionWipe, true),
-    opponentPressureOverlay: normalizeBoolean(featureConfig.opponentPressureOverlay, true),
+    pressureOverlay: normalizeBoolean(pressureOverlayValue, true),
+    // Runtime aliases for compatibility with legacy callsites.
+    threatEdge: normalizeBoolean(pressureEdgeValue, true),
+    scoringLane: normalizeBoolean(scoringStripeValue, true),
+    deadRowCollapse: normalizeBoolean(deadRowMutedValue, true),
+    opponentPressureOverlay: normalizeBoolean(pressureOverlayValue, true),
     themeKey,
     intensityKey,
-    theme: THEME_PRESETS[themeKey],
+    theme,
     intensity: INTENSITY_PRESETS[intensityKey],
   };
 }

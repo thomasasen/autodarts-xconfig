@@ -20,12 +20,12 @@ const MUTED_COLOR = Object.freeze({ r: 33, g: 33, b: 33 });
 
 const THEME_PRESETS = Object.freeze({
   standard: {
-    offense: { r: 0, g: 178, b: 135 },
-    danger: { r: 239, g: 68, b: 68 },
+    scoring: { r: 0, g: 178, b: 135 },
+    pressure: { r: 239, g: 68, b: 68 },
   },
   ["high-contrast"]: {
-    offense: { r: 34, g: 197, b: 94 },
-    danger: { r: 239, g: 68, b: 68 },
+    scoring: { r: 34, g: 197, b: 94 },
+    pressure: { r: 239, g: 68, b: 68 },
   },
 });
 
@@ -61,6 +61,12 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
   const intensityKey = String(featureConfig.intensity || "").trim().toLowerCase();
   const theme = THEME_PRESETS[themeKey] || THEME_PRESETS.standard;
   const intensity = INTENSITY_PRESETS[intensityKey] || INTENSITY_PRESETS.normal;
+  const showOpenObjectives =
+    featureConfig.showOpenObjectives === true ||
+    featureConfig.showOpenTargets === true;
+  const showDeadObjectives =
+    featureConfig.showDeadObjectives !== false &&
+    featureConfig.showDeadTargets !== false;
 
   return {
     theme,
@@ -69,8 +75,11 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
     mutedColor: MUTED_COLOR,
     strokeWidthRatio: 0.006,
     edgePaddingPx: 0.8,
-    showOpenTargets: featureConfig.showOpenTargets === true,
-    showDeadTargets: featureConfig.showDeadTargets !== false,
+    showOpenObjectives,
+    showDeadObjectives,
+    // Runtime aliases for compatibility with legacy callsites/tests.
+    showOpenTargets: showOpenObjectives,
+    showDeadTargets: showDeadObjectives,
   };
 }
 

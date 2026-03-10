@@ -252,8 +252,8 @@ function importTripleDoubleBullHits(legacyFeatureState) {
 function importCricketHighlighter(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
   return buildFeatureImport("cricketHighlighter", legacyFeatureState, {
-    showOpenTargets: readLegacySetting(settings, "OPEN_ZIELE_ANZEIGEN", false),
-    showDeadTargets: readLegacySetting(settings, "DEAD_ZIELE_ANZEIGEN", true),
+    showOpenObjectives: readLegacySetting(settings, "OPEN_ZIELE_ANZEIGEN", false),
+    showDeadObjectives: readLegacySetting(settings, "DEAD_ZIELE_ANZEIGEN", true),
     colorTheme: readLegacySetting(settings, "FARBTHEMA", "standard"),
     intensity: readLegacySetting(settings, "INTENSITAET", "normal"),
     debug: readLegacySetting(settings, "DEBUG", false),
@@ -266,13 +266,13 @@ function importCricketGridFx(legacyFeatureState) {
     rowWave: readLegacySetting(settings, "ROW_RAIL_PULSE", true),
     badgeBeacon: readLegacySetting(settings, "BADGE_BEACON", true),
     markProgress: readLegacySetting(settings, "MARK_PROGRESS_ANIMATOR", true),
-    threatEdge: readLegacySetting(settings, "THREAT_EDGE", true),
-    scoringLane: readLegacySetting(settings, "SCORING_LANE_HIGHLIGHT", true),
-    deadRowCollapse: readLegacySetting(settings, "DEAD_ROW_COLLAPSE", true),
+    pressureEdge: readLegacySetting(settings, "THREAT_EDGE", true),
+    scoringStripe: readLegacySetting(settings, "SCORING_LANE_HIGHLIGHT", true),
+    deadRowMuted: readLegacySetting(settings, "DEAD_ROW_COLLAPSE", true),
     deltaChips: readLegacySetting(settings, "DELTA_CHIPS", true),
     hitSpark: readLegacySetting(settings, "HIT_SPARK", true),
     roundTransitionWipe: readLegacySetting(settings, "ROUND_TRANSITION_WIPE", true),
-    opponentPressureOverlay: readLegacySetting(settings, "OPPONENT_PRESSURE_OVERLAY", true),
+    pressureOverlay: readLegacySetting(settings, "OPPONENT_PRESSURE_OVERLAY", true),
     colorTheme: readLegacySetting(settings, "FARBTHEMA", "standard"),
     intensity: readLegacySetting(settings, "INTENSITAET", "normal"),
     debug: readLegacySetting(settings, "DEBUG", false),

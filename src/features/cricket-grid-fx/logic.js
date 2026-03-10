@@ -783,8 +783,10 @@ function applyRootCssVars(gridRoot, visualConfig) {
     return;
   }
 
-  gridRoot.style.setProperty("--ad-ext-crfx-offense-rgb", visualConfig.theme.offense);
-  gridRoot.style.setProperty("--ad-ext-crfx-danger-rgb", visualConfig.theme.danger);
+  const scoringColor = visualConfig?.theme?.scoring || visualConfig?.theme?.offense || "0, 178, 135";
+  const pressureColor = visualConfig?.theme?.pressure || visualConfig?.theme?.danger || "239, 68, 68";
+  gridRoot.style.setProperty("--ad-ext-crfx-offense-rgb", scoringColor);
+  gridRoot.style.setProperty("--ad-ext-crfx-danger-rgb", pressureColor);
   gridRoot.style.setProperty(
     "--ad-ext-crfx-highlight-opacity",
     String(visualConfig.intensity.highlightOpacity)
@@ -820,18 +822,26 @@ function getRowNode(labelNode) {
 
 function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
   const normalizedPresentation = normalizePresentationToken(presentation);
+  const pressureEdgeEnabled =
+    visualConfig?.pressureEdge ?? visualConfig?.threatEdge ?? true;
+  const scoringStripeEnabled =
+    visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true;
+  const deadRowMutedEnabled =
+    visualConfig?.deadRowMuted ?? visualConfig?.deadRowCollapse ?? true;
+  const pressureOverlayEnabled =
+    visualConfig?.pressureOverlay ?? visualConfig?.opponentPressureOverlay ?? true;
   toggleClass(cellNode, CELL_CLASS, true);
   toggleClass(
     cellNode,
     THREAT_CLASS,
-    visualConfig.threatEdge && normalizedPresentation === "pressure"
+    pressureEdgeEnabled && normalizedPresentation === "pressure"
   );
-  toggleClass(cellNode, SCORE_CLASS, visualConfig.scoringLane && normalizedPresentation === "scoring");
-  toggleClass(cellNode, DEAD_CLASS, visualConfig.deadRowCollapse && normalizedPresentation === "dead");
+  toggleClass(cellNode, SCORE_CLASS, scoringStripeEnabled && normalizedPresentation === "scoring");
+  toggleClass(cellNode, DEAD_CLASS, deadRowMutedEnabled && normalizedPresentation === "dead");
   toggleClass(
     cellNode,
     PRESSURE_CLASS,
-    visualConfig.opponentPressureOverlay && normalizedPresentation === "pressure"
+    pressureOverlayEnabled && normalizedPresentation === "pressure"
   );
 }
 
@@ -1024,7 +1034,6 @@ export function updateCricketGridFx(options = {}) {
   }
 
   let scoringRowCount = 0;
-  let offenseRowCount = 0;
   let pressureRowCount = 0;
   let scoreCellCount = 0;
   let rowsWithoutPlayerCells = 0;
@@ -1062,7 +1071,6 @@ export function updateCricketGridFx(options = {}) {
     const presentation = resolveRowPresentation(stateEntry);
     if (presentation === "scoring") {
       scoringRowCount += 1;
-      offenseRowCount += 1;
     } else if (presentation === "pressure") {
       pressureRowCount += 1;
     }
@@ -1119,7 +1127,6 @@ export function updateCricketGridFx(options = {}) {
     const hasIncrease = Boolean(diffEntry?.hasIncrease);
     const becameTactical =
       Boolean(transition?.becameScoring) ||
-      Boolean(transition?.becameOffense) ||
       Boolean(transition?.becamePressure);
 
     if (hasIncrease) {
@@ -1144,7 +1151,9 @@ export function updateCricketGridFx(options = {}) {
         : null;
       const cellPresentation = normalizePresentationToken(cellState?.presentation || "open");
       const marks = Number(stateEntry.marksByPlayer?.[index] || 0);
-      const scoreCell = visualConfig.scoringLane && cellPresentation === "scoring";
+      const scoreCell =
+        (visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true) &&
+        cellPresentation === "scoring";
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
       if (scoreCell) {
@@ -1178,8 +1187,9 @@ export function updateCricketGridFx(options = {}) {
   if (debugStats) {
     debugStats.status = "ok";
     debugStats.scoringRowCount = scoringRowCount;
-    debugStats.offenseRowCount = offenseRowCount;
-    debugStats.dangerRowCount = 0;
+    // Legacy debug aliases remain populated for compatibility output.
+    debugStats.offenseRowCount = scoringRowCount;
+    debugStats.dangerRowCount = pressureRowCount;
     debugStats.pressureRowCount = pressureRowCount;
     debugStats.scoreCellCount = scoreCellCount;
     debugStats.rowsWithoutPlayerCells = rowsWithoutPlayerCells;

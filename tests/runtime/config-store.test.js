@@ -86,6 +86,17 @@ test("config store imports migrated legacy feature and theme settings once witho
             DEBUG: true,
           },
         },
+        "a-cricket-grid-fx": {
+          enabled: true,
+          settings: {
+            THREAT_EDGE: false,
+            SCORING_LANE_HIGHLIGHT: true,
+            DEAD_ROW_COLLAPSE: false,
+            OPPONENT_PRESSURE_OVERLAY: true,
+            FARBTHEMA: "high-contrast",
+            INTENSITAET: "strong",
+          },
+        },
         "theme-x01": {
           enabled: true,
           settings: {
@@ -121,11 +132,19 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.winnerFireworks.debug, true);
   assert.equal(importedConfig.featureToggles.cricketHighlighter, true);
   assert.equal(importedConfig.features.cricketHighlighter.enabled, true);
-  assert.equal(importedConfig.features.cricketHighlighter.showOpenTargets, false);
-  assert.equal(importedConfig.features.cricketHighlighter.showDeadTargets, true);
+  assert.equal(importedConfig.features.cricketHighlighter.showOpenObjectives, false);
+  assert.equal(importedConfig.features.cricketHighlighter.showDeadObjectives, true);
   assert.equal(importedConfig.features.cricketHighlighter.colorTheme, "high-contrast");
   assert.equal(importedConfig.features.cricketHighlighter.intensity, "strong");
   assert.equal(importedConfig.features.cricketHighlighter.debug, true);
+  assert.equal(importedConfig.featureToggles.cricketGridFx, true);
+  assert.equal(importedConfig.features.cricketGridFx.enabled, true);
+  assert.equal(importedConfig.features.cricketGridFx.pressureEdge, false);
+  assert.equal(importedConfig.features.cricketGridFx.scoringStripe, true);
+  assert.equal(importedConfig.features.cricketGridFx.deadRowMuted, false);
+  assert.equal(importedConfig.features.cricketGridFx.pressureOverlay, true);
+  assert.equal(importedConfig.features.cricketGridFx.colorTheme, "high-contrast");
+  assert.equal(importedConfig.features.cricketGridFx.intensity, "strong");
   assert.equal(importedConfig.featureToggles["themes.x01"], true);
   assert.equal(importedConfig.features.themes.x01.enabled, true);
   assert.equal(importedConfig.features.themes.x01.showAvg, false);
@@ -162,8 +181,8 @@ test("config store falls back to hidden open-target overlays for legacy cricket 
   const importedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
 
   assert.equal(result.imported, true);
-  assert.equal(importedConfig.features.cricketHighlighter.showOpenTargets, false);
-  assert.equal(importedConfig.features.cricketHighlighter.showDeadTargets, true);
+  assert.equal(importedConfig.features.cricketHighlighter.showOpenObjectives, false);
+  assert.equal(importedConfig.features.cricketHighlighter.showDeadObjectives, true);
 });
 
 test("config store prefers GM storage when available and falls back safely", async () => {

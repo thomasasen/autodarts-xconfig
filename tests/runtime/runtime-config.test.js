@@ -44,7 +44,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.bermuda"], false);
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
-  assert.equal(config.features.cricketHighlighter.showOpenTargets, false);
+  assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -182,13 +182,17 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").highlightDouble, true);
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").highlightBull, true);
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").pollIntervalMs, 0);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenTargets, false);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadTargets, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenObjectives, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadObjectives, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").colorTheme, "high-contrast");
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").intensity, "strong");
   assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").rowWave, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").badgeBeacon, true);
   assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").markProgress, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").pressureEdge, true);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").scoringStripe, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").deadRowMuted, true);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").pressureOverlay, true);
   assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").colorTheme, "high-contrast");
   assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").intensity, "strong");
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerEmphasis").size, 9);

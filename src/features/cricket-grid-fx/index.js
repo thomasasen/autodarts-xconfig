@@ -133,13 +133,13 @@ export function initializeCricketGridFx(context = {}) {
         rowWave: true,
         badgeBeacon: true,
         markProgress: true,
-        threatEdge: true,
-        scoringLane: true,
-        deadRowCollapse: true,
+        pressureEdge: true,
+        scoringStripe: true,
+        deadRowMuted: true,
         deltaChips: true,
         hitSpark: true,
         roundTransitionWipe: true,
-        opponentPressureOverlay: true,
+        pressureOverlay: true,
         colorTheme: "standard",
         intensity: "normal",
       };
@@ -266,7 +266,7 @@ export function initializeCricketGridFx(context = {}) {
     emitDebugLog(
       debugState,
       logSignature,
-      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" rows=${Number(debugStats.rowCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} waveDelta=${Number(debugStats.rowWaveDeltaCount) || 0} waveTransition=${Number(debugStats.rowWaveTacticalCount) || 0} wipe=${debugStats.turnTokenChanged ? "1" : "0"}`
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" rows=${Number(debugStats.rowCount) || 0} scoringRows=${Number(debugStats.scoringRowCount) || 0} pressureRows=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} waveDelta=${Number(debugStats.rowWaveDeltaCount) || 0} waveTransition=${Number(debugStats.rowWaveTacticalCount) || 0} wipe=${debugStats.turnTokenChanged ? "1" : "0"}`
     );
   }
 
