@@ -1162,62 +1162,88 @@ function buildMarksByLabelSnapshot(options = {}) {
       shortfallRepairSet.add(label);
       shortfallRepairLabels.push(label);
     }
-    const sequentialMarks = [];
-    const indexedMarks = [];
-    markSourceCells.forEach((cell) => {
+    const parsedCells = markSourceCells.map((cell) => {
       const marks = cricketRules.clampMarks(parseMarksValue(cell, cricketRules));
-      const playerIndex = readCellPlayerIndex(cell);
-      if (Number.isFinite(playerIndex)) {
-        indexedMarks.push({ playerIndex, marks });
-      } else {
-        sequentialMarks.push(marks);
-      }
+      const explicitPlayerIndex = readCellPlayerIndex(cell);
+      return {
+        marks,
+        explicitPlayerIndex: Number.isFinite(explicitPlayerIndex)
+          ? Math.round(explicitPlayerIndex)
+          : null,
+      };
     });
-    if (!sequentialMarks.length && !indexedMarks.length) {
+    if (!parsedCells.length) {
       return;
     }
 
-    if (indexedMarks.length > 0) {
-      hasIndexedPlayerColumns = true;
-      const maxIndexedColumn = indexedMarks.reduce((max, entry) => {
-        return entry.playerIndex > max ? entry.playerIndex : max;
-      }, -1);
-      const rowLength = Math.max(
-        playerCountFromMatch,
-        maxIndexedColumn + 1,
-        sequentialMarks.length + indexedMarks.length
-      );
-      const marksByPlayer = Array.from({ length: rowLength }, () => 0);
-      const occupiedColumns = new Set();
-      indexedMarks.forEach((entry) => {
-        if (entry.playerIndex < rowLength) {
-          marksByPlayer[entry.playerIndex] = cricketRules.clampMarks(entry.marks);
-          occupiedColumns.add(entry.playerIndex);
-        }
-      });
+    const expectedRowLength = Math.max(playerCountFromMatch, parsedCells.length);
+    const shortfallOffset =
+      parsedCells.length < expectedRowLength
+        ? Math.max(0, expectedRowLength - parsedCells.length)
+        : 0;
+    const explicitPlayerIndexes = parsedCells
+      .map((entry) => entry.explicitPlayerIndex)
+      .filter((value) => Number.isFinite(value));
+    const explicitCoverageComplete =
+      explicitPlayerIndexes.length === parsedCells.length && parsedCells.length > 0;
+    const explicitUnique = new Set(explicitPlayerIndexes).size === explicitPlayerIndexes.length;
+    const explicitInBounds = explicitPlayerIndexes.every((value) => {
+      return value >= 0 && value < expectedRowLength;
+    });
+    const explicitRespectsShortfall =
+      parsedCells.length >= expectedRowLength ||
+      explicitPlayerIndexes.every((value) => value >= shortfallOffset);
+    const useExplicitPlayerIndexes =
+      explicitCoverageComplete &&
+      explicitUnique &&
+      explicitInBounds &&
+      explicitRespectsShortfall;
 
-      let cursor = 0;
-      sequentialMarks.forEach((marks) => {
+    if (useExplicitPlayerIndexes) {
+      hasIndexedPlayerColumns = true;
+    }
+
+    const maxExplicitColumn = useExplicitPlayerIndexes
+      ? explicitPlayerIndexes.reduce((max, value) => {
+        return value > max ? value : max;
+      }, -1)
+      : -1;
+    const marksByPlayer = Array.from(
+      {
+        length: Math.max(expectedRowLength, maxExplicitColumn + 1, 1),
+      },
+      () => 0
+    );
+    const occupiedColumns = new Set();
+    let cursor = shortfallOffset;
+
+    parsedCells.forEach((entry) => {
+      let targetIndex =
+        useExplicitPlayerIndexes && Number.isFinite(entry.explicitPlayerIndex)
+          ? entry.explicitPlayerIndex
+          : null;
+
+      if (!Number.isFinite(targetIndex)) {
         while (occupiedColumns.has(cursor) && cursor < marksByPlayer.length) {
           cursor += 1;
         }
         if (cursor >= marksByPlayer.length) {
-          marksByPlayer.push(cricketRules.clampMarks(marks));
-          cursor = marksByPlayer.length;
-          return;
+          marksByPlayer.push(0);
         }
-        marksByPlayer[cursor] = cricketRules.clampMarks(marks);
-        occupiedColumns.add(cursor);
-        cursor += 1;
-      });
+        targetIndex = Math.max(0, Math.min(cursor, marksByPlayer.length - 1));
+        cursor = targetIndex + 1;
+      } else if (targetIndex >= marksByPlayer.length) {
+        while (marksByPlayer.length <= targetIndex) {
+          marksByPlayer.push(0);
+        }
+      }
 
-      marksByLabel[label] = marksByPlayer;
-      maxPlayerCount = Math.max(maxPlayerCount, marksByPlayer.length);
-      return;
-    }
+      marksByPlayer[targetIndex] = cricketRules.clampMarks(entry.marks);
+      occupiedColumns.add(targetIndex);
+    });
 
-    marksByLabel[label] = sequentialMarks.map((value) => cricketRules.clampMarks(value));
-    maxPlayerCount = Math.max(maxPlayerCount, sequentialMarks.length);
+    marksByLabel[label] = marksByPlayer.map((value) => cricketRules.clampMarks(value));
+    maxPlayerCount = Math.max(maxPlayerCount, marksByLabel[label].length);
   });
 
   const playerCount = Math.max(maxPlayerCount, playerCountFromMatch, 1);

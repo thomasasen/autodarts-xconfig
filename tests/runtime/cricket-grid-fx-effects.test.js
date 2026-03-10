@@ -13,6 +13,7 @@ import {
   BADGE_BURST_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
+  DEAD_CLASS,
   DELTA_CLASS,
   HIDDEN_LABEL_ATTRIBUTE,
   LABEL_STATE_CLASS,
@@ -64,6 +65,45 @@ function createNumericCricketGrid(documentRef, marksByLabel) {
       labelCell,
       playerCells,
       playerIcons,
+    });
+  });
+
+  documentRef.main.appendChild(table);
+  return rowStateByLabel;
+}
+
+function createObjectiveGrid(documentRef, labels, marksByLabel) {
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  const rowStateByLabel = new Map();
+
+  labels.forEach((rawLabel) => {
+    const label = String(rawLabel || "").toUpperCase();
+    const row = documentRef.createElement("tr");
+
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    const marks = Array.isArray(marksByLabel?.[label]) ? marksByLabel[label] : [0, 0];
+    const playerCells = [];
+    marks.forEach((value, index) => {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.setAttribute("data-player-index", String(index));
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(value));
+      cell.appendChild(icon);
+      row.appendChild(cell);
+      playerCells.push(cell);
+    });
+
+    table.appendChild(row);
+    rowStateByLabel.set(label, {
+      row,
+      labelCell,
+      playerCells,
     });
   });
 
@@ -595,6 +635,83 @@ test("cricket grid fx cell semantics stay stable when active player changes", ()
   assert.equal(opponentIsPressureBefore, true);
   assert.equal(ownerIsScoringAfter, true);
   assert.equal(opponentIsPressureAfter, true);
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx uses the same owner-perspective states for tactics objectives", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Tactics";
+
+  const rowsByLabel = createObjectiveGrid(
+    documentRef,
+    ["20", "19", "DOUBLE", "TRIPLE", "BULL"],
+    {
+      "20": [3, 0],
+      "19": [0, 3],
+      DOUBLE: [3, 0],
+      TRIPLE: [0, 3],
+      BULL: [3, 3],
+    }
+  );
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: {
+      getCricketGameModeNormalized: () => "tactics",
+      getCricketGameMode: () => "Tactics",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getActiveTurn: () => null,
+      getSnapshot: () => ({
+        match: {
+          players: [{ id: "player-a" }, { id: "player-b" }],
+        },
+      }),
+    },
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  const rowDouble = rowsByLabel.get("DOUBLE");
+  const rowTriple = rowsByLabel.get("TRIPLE");
+  const rowBull = rowsByLabel.get("BULL");
+  assert.equal(rowDouble?.playerCells?.[0]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(rowDouble?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(rowTriple?.playerCells?.[0]?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(rowTriple?.playerCells?.[1]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(rowBull?.playerCells?.[0]?.classList?.contains(DEAD_CLASS), true);
+  assert.equal(rowBull?.playerCells?.[1]?.classList?.contains(DEAD_CLASS), true);
 
   clearCricketGridFxState(state);
 });

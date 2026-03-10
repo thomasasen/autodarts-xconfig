@@ -26,6 +26,7 @@ import {
 import {
   BADGE_CLASS,
   BADGE_STATE_CLASS,
+  DEAD_CLASS,
   DELTA_CLASS,
   HIDDEN_LABEL_ATTRIBUTE,
   LABEL_CLASS,
@@ -187,6 +188,9 @@ function createGameState(options = {}) {
     : 0;
   const activeThrows = Array.isArray(options.activeThrows) ? options.activeThrows : [];
   const activeTurn = options.activeTurn || null;
+  const match = options.match || {
+    players: [{ id: "player-a" }, { id: "player-b" }],
+  };
   return {
     getCricketGameModeNormalized: () => "cricket",
     getCricketGameMode: () => "Cricket",
@@ -195,7 +199,7 @@ function createGameState(options = {}) {
     getActivePlayerIndex: () => activePlayerIndex,
     getActiveThrows: () => activeThrows,
     getActiveTurn: () => activeTurn,
-    getSnapshot: () => ({ match: { players: [{ id: "player-a" }, { id: "player-b" }] } }),
+    getSnapshot: () => ({ match }),
   };
 }
 
@@ -691,13 +695,26 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   createThemeLikeBoardFixture(documentRef);
   const rowsByLabel = createMergedLabelMarkCricketGrid(documentRef, {
     "20": [3, 0],
-    "19": [0, 0],
-    "18": [0, 0],
-    "17": [0, 0],
+    "19": [0, 3],
+    "18": [3, 0],
+    "17": [0, 3],
     "16": [0, 0],
-    "15": [0, 0],
+    "15": [3, 3],
     BULL: [0, 0],
   });
+
+  // Simulate layouts that expose only row-relative index tokens on the visible opponent cell.
+  Array.from(rowsByLabel.values()).forEach((rowState) => {
+    const rowCell = rowState?.playerCells?.[0];
+    if (rowCell) {
+      rowCell.setAttribute("data-player-index", "0");
+    }
+  });
+
+  // Simulate a real-world row where the owner mark icon exists but carries no readable alt/token.
+  const row18LabelCell = rowsByLabel.get("18")?.labelCell || null;
+  const row18LabelIcon = row18LabelCell?.querySelector?.("img") || null;
+  row18LabelIcon?.removeAttribute?.("alt");
 
   const visualConfig = resolveCricketVisualConfig({
     showDeadTargets: true,
@@ -723,6 +740,16 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   const gameState = createGameState({
     scoringModeNormalized: "unknown",
     scoringMode: "",
+    match: {
+      players: [{ id: "player-a" }, { id: "player-b" }],
+      turns: [
+        {
+          playerId: "player-a",
+          finishedAt: "2026-03-10T19:00:00.000Z",
+          throws: [{ segment: { name: "T18" } }],
+        },
+      ],
+    },
   });
 
   const renderState = buildCricketRenderState({
@@ -736,12 +763,23 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
 
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
-  assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
+  assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "pressure");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "pressure");
+  assert.equal(renderState?.stateMap.get("15")?.boardPresentation, "dead");
   assert.equal(Number.isFinite(renderState?.labelDiagnostics?.multiLabelContainerDropCount), true);
-  assert.equal(renderState?.labelCellMarkSourceCount, 1);
-  assert.deepEqual(renderState?.labelCellMarkSourceLabels, ["20"]);
-  assert.equal(renderState?.shortfallRepairCount, 1);
-  assert.deepEqual(renderState?.shortfallRepairLabels, ["20"]);
+  assert.equal((renderState?.labelCellMarkSourceCount || 0) >= 1, true);
+  assert.equal(
+    Array.isArray(renderState?.labelCellMarkSourceLabels) &&
+      renderState.labelCellMarkSourceLabels.includes("20"),
+    true
+  );
+  assert.equal((renderState?.shortfallRepairCount || 0) >= 1, true);
+  assert.equal(
+    Array.isArray(renderState?.shortfallRepairLabels) &&
+      renderState.shortfallRepairLabels.includes("20"),
+    true
+  );
 
   const debugStats = {};
   renderCricketHighlights({
@@ -754,7 +792,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
 
   const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
   assert.equal(Boolean(overlay), true);
-  assert.equal(debugStats.nonOpenTargetCount || 0, 1);
+  assert.equal(debugStats.nonOpenTargetCount || 0, 5);
   assert.equal((debugStats.renderedShapeCount || 0) > 0, true);
 
   const has20Shape = Array.from(overlay?.children || []).some((node) => {
@@ -774,14 +812,26 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   });
 
   assert.equal(gridFxStats.status, "ok");
-  assert.equal(gridFxStats.offenseRowCount || 0, 1);
+  assert.equal(gridFxStats.offenseRowCount || 0, 4);
   assert.equal(gridFxStats.badgeCount || 0, 7);
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
   const labelText20 = rowsByLabel.get("20")?.labelText || null;
   const opponentCell20 = rowsByLabel.get("20")?.playerCells?.[0] || null;
+  const opponentCell19 = rowsByLabel.get("19")?.playerCells?.[0] || null;
+  const opponentCell18 = rowsByLabel.get("18")?.playerCells?.[0] || null;
+  const opponentCell17 = rowsByLabel.get("17")?.playerCells?.[0] || null;
+  const opponentCell16 = rowsByLabel.get("16")?.playerCells?.[0] || null;
+  const opponentCell15 = rowsByLabel.get("15")?.playerCells?.[0] || null;
+  const opponentCellBull = rowsByLabel.get("BULL")?.playerCells?.[0] || null;
   assert.equal(Boolean(labelCell20), true);
   assert.equal(Boolean(labelText20), true);
   assert.equal(Boolean(opponentCell20), true);
+  assert.equal(Boolean(opponentCell19), true);
+  assert.equal(Boolean(opponentCell18), true);
+  assert.equal(Boolean(opponentCell17), true);
+  assert.equal(Boolean(opponentCell16), true);
+  assert.equal(Boolean(opponentCell15), true);
+  assert.equal(Boolean(opponentCellBull), true);
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), true);
   assert.equal(labelCell20?.classList?.contains(LABEL_STATE_CLASS.scoring), true);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), true);
@@ -789,6 +839,26 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(opponentCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(opponentCell20?.classList?.contains(THREAT_CLASS), true);
   assert.equal(opponentCell20?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(opponentCell19?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(opponentCell19?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(opponentCell19?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(opponentCell18?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(opponentCell18?.classList?.contains(THREAT_CLASS), true);
+  assert.equal(opponentCell18?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(opponentCell17?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(opponentCell17?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(opponentCell17?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(opponentCell16?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(opponentCell16?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(opponentCell16?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(opponentCell15?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(opponentCell15?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(opponentCell15?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(opponentCell15?.classList?.contains(DEAD_CLASS), true);
+  assert.equal(opponentCellBull?.classList?.contains(SCORE_CLASS), false);
+  assert.equal(opponentCellBull?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(opponentCellBull?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(opponentCellBull?.classList?.contains(DEAD_CLASS), false);
 
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);

@@ -272,10 +272,8 @@ function readCellPlayerIndex(cellNode) {
   const candidates = [
     cellNode.getAttribute("data-player-index"),
     cellNode.getAttribute("data-player"),
-    cellNode.getAttribute("data-index"),
     cellNode.dataset?.playerIndex,
     cellNode.dataset?.player,
-    cellNode.dataset?.index,
   ];
 
   for (const candidate of candidates) {
@@ -1043,11 +1041,6 @@ export function updateCricketGridFx(options = {}) {
           targetOrder,
         })
       : new Map();
-  const labelCellMarkSourceSet = new Set(
-    Array.isArray(renderState.labelCellMarkSourceLabels)
-      ? renderState.labelCellMarkSourceLabels.map((entry) => String(entry || ""))
-      : []
-  );
 
   if (
     visualConfig.roundTransitionWipe &&
@@ -1084,16 +1077,35 @@ export function updateCricketGridFx(options = {}) {
       ? stateEntry.cellStates.length
       : 0;
     const indexOffset =
-      labelCellMarkSourceSet.has(String(row.label || "")) &&
       row.playerCells.length < playerStateCount
-        ? 1
+        ? Math.max(0, playerStateCount - row.playerCells.length)
         : 0;
+    const explicitPlayerIndexes = row.playerCells.map((cellNode) => {
+      const explicitIndex = readCellPlayerIndex(cellNode);
+      return Number.isFinite(explicitIndex) ? Math.round(explicitIndex) : null;
+    });
+    const explicitIndexValues = explicitPlayerIndexes.filter((value) => Number.isFinite(value));
+    const explicitCoverageComplete =
+      row.playerCells.length > 0 && explicitIndexValues.length === row.playerCells.length;
+    const explicitUnique = new Set(explicitIndexValues).size === explicitIndexValues.length;
+    const explicitInBounds = explicitIndexValues.every((value) => {
+      return value >= 0 && value < playerStateCount;
+    });
+    const explicitRespectsShortfall =
+      row.playerCells.length >= playerStateCount ||
+      explicitIndexValues.every((value) => value >= indexOffset);
+    const useExplicitPlayerIndexes =
+      explicitCoverageComplete &&
+      explicitUnique &&
+      explicitInBounds &&
+      explicitRespectsShortfall;
     const cellDescriptors = row.playerCells
       .map((cellNode, index) => {
-        const explicitPlayerIndex = readCellPlayerIndex(cellNode);
-        const playerIndex = Number.isFinite(explicitPlayerIndex)
-          ? explicitPlayerIndex
-          : index + indexOffset;
+        const explicitPlayerIndex = explicitPlayerIndexes[index];
+        const playerIndex =
+          useExplicitPlayerIndexes && Number.isFinite(explicitPlayerIndex)
+            ? explicitPlayerIndex
+            : index + indexOffset;
         return {
           cellNode,
           playerIndex,
