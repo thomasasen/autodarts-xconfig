@@ -23,9 +23,6 @@
   WIPE_CLASS,
 } from "./style.js";
 
-const ACTIVE_CELL_CLASS = "ad-ext-crfx-cell-active";
-const INACTIVE_CELL_CLASS = "ad-ext-crfx-cell-inactive";
-
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
   ".ad-ext-cricket-grid",
@@ -443,9 +440,7 @@ function clearCellClasses(node) {
     THREAT_CLASS,
     SCORE_CLASS,
     DEAD_CLASS,
-    PRESSURE_CLASS,
-    ACTIVE_CELL_CLASS,
-    INACTIVE_CELL_CLASS
+    PRESSURE_CLASS
   );
 }
 
@@ -800,6 +795,7 @@ export function createCricketGridFxState(windowRef = null) {
     previousMarksByLabel: {},
     previousStateMap: new Map(),
     previousActivePlayerIndex: null,
+    previousTurnToken: "",
     renderCache: {
       grid: null,
     },
@@ -816,6 +812,7 @@ export function clearCricketGridFxState(state) {
   state.previousMarksByLabel = {};
   state.previousStateMap = new Map();
   state.previousActivePlayerIndex = null;
+  state.previousTurnToken = "";
   if (state.renderCache && typeof state.renderCache === "object") {
     state.renderCache.grid = null;
   }
@@ -827,6 +824,7 @@ export function updateCricketGridFx(options = {}) {
   const renderState = options.renderState;
   const state = options.state;
   const visualConfig = options.visualConfig;
+  const turnToken = String(options.turnToken || "");
   const debugStats = options.debugStats && typeof options.debugStats === "object"
     ? options.debugStats
     : null;
@@ -841,12 +839,14 @@ export function updateCricketGridFx(options = {}) {
     debugStats.dangerRowCount = 0;
     debugStats.pressureRowCount = 0;
     debugStats.scoreCellCount = 0;
-    debugStats.activeCellCount = 0;
-    debugStats.inactiveCellCount = 0;
     debugStats.rowsWithoutPlayerCells = 0;
     debugStats.activeColumnResolvedCount = 0;
     debugStats.activeColumnMissingCount = 0;
     debugStats.activeColumnMissingLabels = [];
+    debugStats.rowWaveDeltaCount = 0;
+    debugStats.rowWaveTacticalCount = 0;
+    debugStats.badgeFallbackCount = 0;
+    debugStats.turnTokenChanged = false;
   }
 
   if (!documentRef || !cricketRules || !renderState || !state || !visualConfig) {
@@ -925,24 +925,28 @@ export function updateCricketGridFx(options = {}) {
 
   if (
     visualConfig.roundTransitionWipe &&
-    Number.isFinite(state.previousActivePlayerIndex) &&
-    Number.isFinite(renderState.activePlayerIndex) &&
-    state.previousActivePlayerIndex !== renderState.activePlayerIndex
+    state.previousTurnToken &&
+    turnToken &&
+    state.previousTurnToken !== turnToken
   ) {
     removeTransientNodes(state.gridRoot, WIPE_CLASS, state);
     appendTransientNode(state, state.gridRoot, WIPE_CLASS, 760);
+    if (debugStats) {
+      debugStats.turnTokenChanged = true;
+    }
   }
 
   let offenseRowCount = 0;
   let dangerRowCount = 0;
   let pressureRowCount = 0;
   let scoreCellCount = 0;
-  let activeCellCount = 0;
-  let inactiveCellCount = 0;
   let rowsWithoutPlayerCells = 0;
   let activeColumnResolvedCount = 0;
   let activeColumnMissingCount = 0;
   let badgeCount = 0;
+  let badgeFallbackCount = 0;
+  let rowWaveDeltaCount = 0;
+  let rowWaveTacticalCount = 0;
   const activeColumnMissingLabels = [];
 
   rows.forEach((row) => {
@@ -998,6 +1002,7 @@ export function updateCricketGridFx(options = {}) {
         labelCellNode.setAttribute(HIDDEN_LABEL_ATTRIBUTE, "true");
         state.hiddenLabelNodes.add(labelCellNode);
       }
+      badgeFallbackCount += 1;
     }
     if (labelCellNode?.classList) {
       labelCellNode.classList.add(LABEL_CLASS);
@@ -1028,9 +1033,17 @@ export function updateCricketGridFx(options = {}) {
     const diffEntry = marksDiff.get(row.label) || null;
     const transition = transitions.get(row.label) || null;
     const hasIncrease = Boolean(diffEntry?.hasIncrease);
+    const becameTactical =
+      Boolean(transition?.becameOffense) ||
+      Boolean(transition?.becameDanger) ||
+      Boolean(transition?.becamePressure);
 
-    if (hasIncrease || transition?.presentationChanged) {
+    if (hasIncrease) {
       triggerRowWave(state, row, visualConfig);
+      rowWaveDeltaCount += 1;
+    } else if (becameTactical) {
+      triggerRowWave(state, row, visualConfig);
+      rowWaveTacticalCount += 1;
     }
 
     if (badgeNode?.classList && hasIncrease) {
@@ -1048,22 +1061,6 @@ export function updateCricketGridFx(options = {}) {
       const cellPresentation = String(cellState?.presentation || "neutral").toLowerCase();
       const marks = Number(stateEntry.marksByPlayer?.[index] || 0);
       const scoreCell = visualConfig.scoringLane && cellPresentation === "offense";
-      const isActiveCell =
-        hasPlayerCells &&
-        Number.isFinite(activePlayerIndex) &&
-        activePlayerIndex >= 0 &&
-        index === activePlayerIndex;
-      const hasDualFocus = hasPlayerCells && row.playerCells.length > 1;
-
-      toggleClass(cellNode, ACTIVE_CELL_CLASS, hasDualFocus && isActiveCell);
-      toggleClass(cellNode, INACTIVE_CELL_CLASS, hasDualFocus && !isActiveCell);
-      if (hasDualFocus) {
-        if (isActiveCell) {
-          activeCellCount += 1;
-        } else {
-          inactiveCellCount += 1;
-        }
-      }
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
       if (scoreCell) {
@@ -1093,18 +1090,20 @@ export function updateCricketGridFx(options = {}) {
   state.previousMarksByLabel = cloneMarksByLabel(renderState.marksByLabel);
   state.previousStateMap = new Map(renderState.stateMap);
   state.previousActivePlayerIndex = Number(renderState.activePlayerIndex);
+  state.previousTurnToken = turnToken;
   if (debugStats) {
     debugStats.status = "ok";
     debugStats.offenseRowCount = offenseRowCount;
     debugStats.dangerRowCount = dangerRowCount;
     debugStats.pressureRowCount = pressureRowCount;
     debugStats.scoreCellCount = scoreCellCount;
-    debugStats.activeCellCount = activeCellCount;
-    debugStats.inactiveCellCount = inactiveCellCount;
     debugStats.rowsWithoutPlayerCells = rowsWithoutPlayerCells;
     debugStats.activeColumnResolvedCount = activeColumnResolvedCount;
     debugStats.activeColumnMissingCount = activeColumnMissingCount;
     debugStats.activeColumnMissingLabels = activeColumnMissingLabels;
     debugStats.badgeCount = badgeCount;
+    debugStats.badgeFallbackCount = badgeFallbackCount;
+    debugStats.rowWaveDeltaCount = rowWaveDeltaCount;
+    debugStats.rowWaveTacticalCount = rowWaveTacticalCount;
   }
 }

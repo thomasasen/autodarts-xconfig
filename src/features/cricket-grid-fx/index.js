@@ -127,6 +127,40 @@ function isCricketActive(gameState, documentRef, variantRules) {
   });
 }
 
+function hasThemeCricketContext(documentRef) {
+  if (!documentRef || typeof documentRef.querySelector !== "function") {
+    return false;
+  }
+
+  const contentSlot = documentRef.querySelector(".ad-ext-theme-content-slot");
+  const contentBoard = documentRef.querySelector(".ad-ext-theme-content-board");
+  const boardPanel =
+    documentRef.querySelector(".ad-ext-theme-board-panel") ||
+    documentRef.querySelector(".ad-ext-theme-board-viewport");
+
+  return Boolean(contentSlot && contentBoard && boardPanel);
+}
+
+function buildTurnToken(gameState, activePlayerIndex = 0) {
+  const turn =
+    gameState && typeof gameState.getActiveTurn === "function"
+      ? gameState.getActiveTurn()
+      : null;
+
+  if (turn && typeof turn === "object") {
+    const round = Number.isFinite(turn.round) ? turn.round : "";
+    const part = Number.isFinite(turn.turn) ? turn.turn : "";
+    return `${turn.id || ""}|${turn.playerId || ""}|${round}|${part}|${turn.createdAt || ""}`;
+  }
+
+  const throws =
+    gameState && typeof gameState.getActiveThrows === "function"
+      ? gameState.getActiveThrows()
+      : [];
+  const throwCount = Array.isArray(throws) ? throws.length : 0;
+  return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}:${throwCount}`;
+}
+
 export function initializeCricketGridFx(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -176,11 +210,12 @@ export function initializeCricketGridFx(context = {}) {
 
   function update() {
     const variantText = readVariantText(documentRef);
-    if (!isCricketActive(gameState, documentRef, variantRules)) {
+    const themeContextActive = hasThemeCricketContext(documentRef);
+    if (!isCricketActive(gameState, documentRef, variantRules) || !themeContextActive) {
       emitDebugLog(
         debugState,
-        `inactive::${variantText}`,
-        `state inactive variant="${variantText || "-"}"`
+        `inactive::${variantText}::theme=${themeContextActive ? "on" : "off"}`,
+        `state inactive variant="${variantText || "-"}" theme="${themeContextActive ? "on" : "off"}"`
       );
       lastDebugRenderSignature = "";
       clearCricketGridFxState(state);
@@ -208,6 +243,7 @@ export function initializeCricketGridFx(context = {}) {
     }
 
     const renderSignature = buildRenderSignature(renderState);
+    const turnToken = buildTurnToken(gameState, Number(renderState.activePlayerIndex));
     const debugStats = {};
 
     const multiLabelContainerDropCount = Number(
@@ -235,6 +271,7 @@ export function initializeCricketGridFx(context = {}) {
       renderState,
       state,
       visualConfig,
+      turnToken,
       debugStats,
     });
 
@@ -243,11 +280,13 @@ export function initializeCricketGridFx(context = {}) {
       debugStats.status || "unknown",
       Number(debugStats.rowCount) || 0,
       Number(debugStats.scoreCellCount) || 0,
-      Number(debugStats.activeCellCount) || 0,
-      Number(debugStats.inactiveCellCount) || 0,
       Number(debugStats.activeColumnResolvedCount) || 0,
       Number(debugStats.activeColumnMissingCount) || 0,
       Number(debugStats.badgeCount) || 0,
+      Number(debugStats.badgeFallbackCount) || 0,
+      Number(debugStats.rowWaveDeltaCount) || 0,
+      Number(debugStats.rowWaveTacticalCount) || 0,
+      debugStats.turnTokenChanged ? 1 : 0,
       renderState.discoveredRawLabelCount || 0,
       renderState.discoveredLabelCount || 0,
       renderState.labelCellMarkSourceCount || 0,
@@ -258,7 +297,7 @@ export function initializeCricketGridFx(context = {}) {
       emitDebugLog(
         debugState,
         debugSignature,
-        `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} rows=${Number(debugStats.rowCount) || 0} labelCells=${Number(debugStats.labelCellCount) || 0} badges=${Number(debugStats.badgeCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} activeCells=${Number(debugStats.activeCellCount) || 0} inactiveCells=${Number(debugStats.inactiveCellCount) || 0} activeMap=${Number(debugStats.activeColumnResolvedCount) || 0}/${(Number(debugStats.activeColumnResolvedCount) || 0) + (Number(debugStats.activeColumnMissingCount) || 0)}`
+        `state variant="${variantText || "-"}" theme="on" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeRaw || "unknown"}->${renderState.scoringModeNormalized || "unknown"}(${renderState.scoringModeSource || "-"})" active=${Number(renderState.activePlayerIndex) || 0} turn="${turnToken || "-"}" labelsRaw=${Number(renderState.discoveredRawUniqueLabelCount) || 0}/${Number(renderState.discoveredRawLabelCount) || 0} labelsAtomic=${Number(renderState.discoveredUniqueLabelCount) || 0}/${Number(renderState.discoveredLabelCount) || 0} labelCellSrc=${Number(renderState.labelCellMarkSourceCount) || 0}[${formatLabelList(renderState.labelCellMarkSourceLabels)}] shortfall=${Number(renderState.shortfallRepairCount) || 0}[${formatLabelList(renderState.shortfallRepairLabels)}] marks=${formatMarksByLabelDebug(renderState.marksByLabelDebug)} rows=${Number(debugStats.rowCount) || 0} labelCells=${Number(debugStats.labelCellCount) || 0} badges=${Number(debugStats.badgeCount) || 0}/${Number(debugStats.badgeFallbackCount) || 0} offense=${Number(debugStats.offenseRowCount) || 0} danger=${Number(debugStats.dangerRowCount) || 0} pressure=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} rowWaveDelta=${Number(debugStats.rowWaveDeltaCount) || 0} rowWaveTactical=${Number(debugStats.rowWaveTacticalCount) || 0} activeMap=${Number(debugStats.activeColumnResolvedCount) || 0}/${(Number(debugStats.activeColumnResolvedCount) || 0) + (Number(debugStats.activeColumnMissingCount) || 0)} wipe=${debugStats.turnTokenChanged ? "1" : "0"}`
       );
       lastDebugRenderSignature = renderSignature;
     }

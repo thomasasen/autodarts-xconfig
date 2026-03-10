@@ -9,6 +9,7 @@ import {
   renderCricketHighlights,
 } from "../../src/features/cricket-highlighter/logic.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
+import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import {
   OVERLAY_ID as CRICKET_OVERLAY_ID,
   STYLE_ID as CRICKET_STYLE_ID,
@@ -23,15 +24,14 @@ import {
   updateCricketGridFx,
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
-  ACTIVE_CELL_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
   DELTA_CLASS,
   HIDDEN_LABEL_ATTRIBUTE,
-  INACTIVE_CELL_CLASS,
   LABEL_CLASS,
   LABEL_STATE_CLASS,
   MARK_PROGRESS_CLASS,
+  ROOT_CLASS,
   ROW_WAVE_CLASS,
   SCORE_CLASS,
   SPARK_CLASS,
@@ -180,13 +180,19 @@ function createMergedLabelMarkCricketGrid(documentRef, marksByLabel) {
 function createGameState(options = {}) {
   const scoringModeNormalized = String(options.scoringModeNormalized || "unknown");
   const scoringMode = String(options.scoringMode || "");
+  const activePlayerIndex = Number.isFinite(Number(options.activePlayerIndex))
+    ? Number(options.activePlayerIndex)
+    : 0;
+  const activeThrows = Array.isArray(options.activeThrows) ? options.activeThrows : [];
+  const activeTurn = options.activeTurn || null;
   return {
     getCricketGameModeNormalized: () => "cricket",
     getCricketGameMode: () => "Cricket",
     getCricketScoringModeNormalized: () => scoringModeNormalized,
     getCricketScoringMode: () => scoringMode,
-    getActivePlayerIndex: () => 0,
-    getActiveThrows: () => [],
+    getActivePlayerIndex: () => activePlayerIndex,
+    getActiveThrows: () => activeThrows,
+    getActiveTurn: () => activeTurn,
     getSnapshot: () => ({ match: { players: [{ id: "player-a" }, { id: "player-b" }] } }),
   };
 }
@@ -299,6 +305,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     renderState: initialRenderState,
     state: gridFxState,
     visualConfig: gridFxVisualConfig,
+    turnToken: "fallback:0:0",
     debugStats: initialGridFxStats,
   });
   assert.equal(initialGridFxStats.status, "ok");
@@ -359,19 +366,22 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     renderState: markedRenderState,
     state: gridFxState,
     visualConfig: gridFxVisualConfig,
+    turnToken: "fallback:0:1",
     debugStats: markedGridFxStats,
   });
 
   assert.equal(markedGridFxStats.status, "ok");
   assert.equal(markedGridFxStats.offenseRowCount || 0, 1);
   assert.equal((markedGridFxStats.scoreCellCount || 0) > 0, true);
-  assert.equal((markedGridFxStats.activeCellCount || 0) > 0, true);
-  assert.equal((markedGridFxStats.inactiveCellCount || 0) > 0, true);
+  assert.equal(markedGridFxStats.rowWaveDeltaCount || 0, 1);
+  assert.equal((markedGridFxStats.badgeCount || 0) > 0, true);
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), true);
-  assert.equal(playerCell20?.classList?.contains(ACTIVE_CELL_CLASS), true);
   const opponentCell20 = rowsByLabel.get("20")?.playerCells?.[1] || null;
   assert.equal(Boolean(opponentCell20), true);
-  assert.equal(opponentCell20?.classList?.contains(INACTIVE_CELL_CLASS), true);
+  assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 2);
+  assert.equal(Boolean(playerCell20?.querySelector?.(`.${DELTA_CLASS}`)), true);
+  assert.equal(Boolean(playerCell20?.querySelector?.(`.${SPARK_CLASS}`)), true);
+  assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), true);
 
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);
@@ -472,6 +482,7 @@ test("theme-like cricket layout does not turn reflected two-hit rows into offens
     renderState,
     state: gridFxState,
     visualConfig: gridFxVisualConfig,
+    turnToken: "fallback:0:2",
     debugStats: gridFxStats,
   });
   assert.equal(gridFxStats.offenseRowCount || 0, 0);
@@ -753,6 +764,7 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
     renderState,
     state: gridFxState,
     visualConfig: gridFxVisualConfig,
+    turnToken: "fallback:0:1",
     debugStats: gridFxStats,
   });
 
@@ -772,4 +784,113 @@ test("merged label+mark theme layout keeps offense highlights and grid-fx mappin
   clearCricketHighlights(documentRef);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), false);
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), false);
+});
+
+test("cricket grid fx only activates inside stable theme-cricket hooks", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const gameState = createGameState({
+    scoringModeNormalized: "standard",
+    scoringMode: "standard",
+    activeTurn: {
+      id: "turn-a",
+      playerId: "player-a",
+      round: 1,
+      turn: 1,
+      createdAt: "2026-03-10T20:00:00.000Z",
+    },
+  });
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      ...gameState,
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          rowWave: true,
+          badgeBeacon: true,
+          markProgress: true,
+          threatEdge: true,
+          scoringLane: true,
+          deadRowCollapse: true,
+          deltaChips: true,
+          hitSpark: true,
+          roundTransitionWipe: true,
+          opponentPressureOverlay: true,
+          colorTheme: "standard",
+          intensity: "normal",
+          debug: true,
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
+  assert.equal(Boolean(rowsByLabel.get("20")?.labelCell?.querySelector?.(`.${BADGE_CLASS}`)), false);
+
+  createThemeLikeBoardFixture(documentRef);
+  const observer = observers.get("cricket-grid-fx:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.querySelector(".ad-ext-theme-content-slot")],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
+  const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
+  assert.equal(
+    Boolean(
+      labelCell20?.classList?.contains(BADGE_CLASS) ||
+        labelCell20?.querySelector?.(`.${BADGE_CLASS}`)
+    ),
+    true
+  );
+
+  cleanupGridFx();
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
 });

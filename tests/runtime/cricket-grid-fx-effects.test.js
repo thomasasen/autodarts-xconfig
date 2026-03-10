@@ -74,6 +74,7 @@ function createGameState(activePlayerIndex = 0) {
     getCricketScoringMode: () => "",
     getActivePlayerIndex: () => activePlayerIndex,
     getActiveThrows: () => [],
+    getActiveTurn: () => null,
     getSnapshot: () => ({ match: { players: [{ id: "player-a" }, { id: "player-b" }] } }),
   };
 }
@@ -126,6 +127,7 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
     renderState: initialRenderState,
     state,
     visualConfig,
+    turnToken: "fallback:0:0",
   });
 
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
@@ -159,6 +161,7 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
     renderState: increasedRenderState,
     state,
     visualConfig,
+    turnToken: "fallback:0:2",
   });
 
   const deltaChip = playerCell20?.querySelector?.(`.${DELTA_CLASS}`) || null;
@@ -170,17 +173,13 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(playerIcon20?.classList?.contains(MARK_L2_CLASS), true);
   assert.equal(effectiveBadge?.classList?.contains(BADGE_BURST_CLASS), true);
 
-  const switchedRenderState = {
-    ...increasedRenderState,
-    activePlayerIndex: 1,
-  };
-
   updateCricketGridFx({
     documentRef,
     cricketRules,
-    renderState: switchedRenderState,
+    renderState: increasedRenderState,
     state,
     visualConfig,
+    turnToken: "fallback:0:0",
   });
 
   assert.equal(Boolean(documentRef.querySelector(`.${WIPE_CLASS}`)), true);
@@ -196,4 +195,101 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(Boolean(documentRef.querySelector(`.${ROW_WAVE_CLASS}`)), false);
   assert.equal(Boolean(documentRef.querySelector(`.${WIPE_CLASS}`)), false);
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), false);
+});
+
+test("cricket grid fx pulses rows only for mark increases or tactical transitions", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderCache = { grid: null, board: null };
+  const baseRenderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: baseRenderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  const closedStateMap = new Map(baseRenderState.stateMap);
+  closedStateMap.set("20", {
+    ...closedStateMap.get("20"),
+    boardPresentation: "closed",
+    presentation: "closed",
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: {
+      ...baseRenderState,
+      stateMap: closedStateMap,
+    },
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 0);
+
+  const tacticalStateMap = new Map(closedStateMap);
+  tacticalStateMap.set("20", {
+    ...tacticalStateMap.get("20"),
+    boardPresentation: "danger",
+    presentation: "danger",
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: {
+      ...baseRenderState,
+      stateMap: tacticalStateMap,
+    },
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 2);
+  assert.equal(Boolean(documentRef.querySelector(`.${DELTA_CLASS}`)), false);
+  assert.equal(Boolean(documentRef.querySelector(`.${BADGE_BURST_CLASS}`)), false);
+
+  clearCricketGridFxState(state);
 });

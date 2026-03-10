@@ -10,8 +10,6 @@ export const LABEL_CLASS = "ad-ext-crfx-label-cell";
 export const BADGE_CLASS = "ad-ext-crfx-badge";
 export const BADGE_BEACON_CLASS = "ad-ext-crfx-badge-beacon";
 export const BADGE_BURST_CLASS = "ad-ext-crfx-badge-burst";
-export const ACTIVE_CELL_CLASS = "ad-ext-crfx-cell-active";
-export const INACTIVE_CELL_CLASS = "ad-ext-crfx-cell-inactive";
 export const MARK_PROGRESS_CLASS = "ad-ext-crfx-mark-progress";
 export const MARK_L1_CLASS = "ad-ext-crfx-mark-l1";
 export const MARK_L2_CLASS = "ad-ext-crfx-mark-l2";
@@ -126,16 +124,6 @@ export function buildStyleText() {
   transition: filter 180ms ease, opacity 180ms ease, box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_CELL_CLASS} {
-  z-index: 2;
-}
-
-.${ROOT_CLASS} .${CELL_CLASS}.${INACTIVE_CELL_CLASS} {
-  z-index: 1;
-  opacity: 1;
-  filter: none;
-}
-
 .${ROOT_CLASS} .${LABEL_CLASS},
 .${ROOT_CLASS} .${BADGE_CLASS} {
   --ad-ext-crfx-badge-bg: rgba(6, 58, 74, 0.72);
@@ -219,14 +207,14 @@ export function buildStyleText() {
   transform: translateY(-50%);
   z-index: 12;
   margin: 0 !important;
-  padding: 0.12rem 0.6rem;
-  border-radius: 0.28rem;
+  padding: 0 !important;
+  border-radius: 0 !important;
   white-space: nowrap;
   pointer-events: none;
   color: var(--ad-ext-crfx-badge-text) !important;
   background-color: var(--ad-ext-crfx-badge-bg) !important;
   border: 1px solid var(--ad-ext-crfx-badge-border);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: none;
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -276,20 +264,20 @@ export function buildStyleText() {
   );
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${MARK_PROGRESS_CLASS} {
+.${ROOT_CLASS} .${MARK_PROGRESS_CLASS} {
   transform-origin: center;
   animation: ad-ext-crfx-mark 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${MARK_PROGRESS_CLASS}.${MARK_L1_CLASS} {
+.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L1_CLASS} {
   filter: drop-shadow(0 0 4px rgba(var(--ad-ext-crfx-offense-rgb), 0.62));
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${MARK_PROGRESS_CLASS}.${MARK_L2_CLASS} {
+.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L2_CLASS} {
   filter: drop-shadow(0 0 6px rgba(var(--ad-ext-crfx-offense-rgb), 0.76));
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${MARK_PROGRESS_CLASS}.${MARK_L3_CLASS} {
+.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L3_CLASS} {
   filter: drop-shadow(0 0 8px rgba(var(--ad-ext-crfx-offense-rgb), 0.92));
 }
 
@@ -307,7 +295,7 @@ export function buildStyleText() {
   );
   transform: translateX(-110%);
   animation: ad-ext-crfx-row-wave 760ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  z-index: 5;
+  z-index: 6;
 }
 
 .${ROOT_CLASS} .${DELTA_CLASS} {
@@ -324,7 +312,7 @@ export function buildStyleText() {
   background: rgba(var(--ad-ext-crfx-offense-rgb), 0.95);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.38);
   pointer-events: none;
-  z-index: 8;
+  z-index: 10;
   animation: ad-ext-crfx-delta 920ms ease forwards;
 }
 
@@ -343,7 +331,7 @@ export function buildStyleText() {
     rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 1.08)) 34%,
     rgba(var(--ad-ext-crfx-offense-rgb), 0) 72%
   );
-  z-index: 7;
+  z-index: 9;
   animation: ad-ext-crfx-spark 420ms ease-out forwards;
 }
 
@@ -351,7 +339,7 @@ export function buildStyleText() {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 9;
+  z-index: 11;
   background: linear-gradient(
     110deg,
     rgba(0, 0, 0, 0) 0%,
