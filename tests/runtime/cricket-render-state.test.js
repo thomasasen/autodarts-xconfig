@@ -445,3 +445,56 @@ test("merged label+mark cells keep explicit marks and ignore wrapper label noise
   assert.deepEqual(renderState?.shortfallRepairLabels, ["20"]);
   assert.equal(renderState?.marksByLabelDebug?.["20"], "3,0");
 });
+
+test("active throws do not double-count rows that the DOM already reflects", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [
+        { segment: { name: "S18" } },
+        { segment: { name: "S18" } },
+      ],
+      getSnapshot: () => ({
+        match: {
+          players: [{ id: "a" }, { id: "b" }],
+          turns: [
+            {
+              playerId: "a",
+              throws: [
+                { segment: { name: "S18" } },
+                { segment: { name: "S18" } },
+              ],
+            },
+          ],
+        },
+      }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel["18"].join(","), "2,0");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
+  assert.equal(
+    renderState?.stateMap.get("18")?.cellStates.map((entry) => entry.presentation).join(","),
+    "open,open"
+  );
+});

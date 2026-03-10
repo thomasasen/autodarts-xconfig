@@ -380,6 +380,106 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-targets")), false);
 });
 
+test("theme-like cricket layout does not turn reflected two-hit rows into offense", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketVisualConfig({
+    showOpenTargets: false,
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxVisualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const renderCache = { grid: null, board: null };
+  const gridFxState = createCricketGridFxState();
+  const gameState = {
+    getCricketGameModeNormalized: () => "cricket",
+    getCricketGameMode: () => "Cricket",
+    getCricketScoringModeNormalized: () => "standard",
+    getCricketScoringMode: () => "standard",
+    getActivePlayerIndex: () => 0,
+    getActiveThrows: () => [
+      { segment: { name: "S18" } },
+      { segment: { name: "S18" } },
+    ],
+    getSnapshot: () => ({
+      match: {
+        players: [{ id: "player-a" }, { id: "player-b" }],
+        turns: [
+          {
+            playerId: "player-a",
+            throws: [
+              { segment: { name: "S18" } },
+              { segment: { name: "S18" } },
+            ],
+          },
+        ],
+      },
+    }),
+  };
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  assert.equal(renderState?.marksByLabel["18"].join(","), "2,0");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
+
+  const highlightStats = {};
+  renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState,
+    cache: renderCache,
+    debugStats: highlightStats,
+  });
+  assert.equal(highlightStats.shapeCountByPresentation?.offense || 0, 0);
+
+  const gridFxStats = {};
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state: gridFxState,
+    visualConfig: gridFxVisualConfig,
+    debugStats: gridFxStats,
+  });
+  assert.equal(gridFxStats.offenseRowCount || 0, 0);
+
+  clearCricketGridFxState(gridFxState);
+  clearCricketHighlights(documentRef);
+});
+
 test("cricket highlighter renders full lane geometry for numeric targets and bull geometry", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";

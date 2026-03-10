@@ -663,6 +663,10 @@ function readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount)
     if (!turn || typeof turn !== "object" || !Array.isArray(turn.throws) || !turn.throws.length) {
       return;
     }
+    // The active unfinished turn is previewed separately via getActiveThrows().
+    if (!String(turn.finishedAt || "").trim()) {
+      return;
+    }
 
     const playerIndex = playerIndexById.get(String(turn.playerId || ""));
     if (!Number.isFinite(playerIndex)) {
@@ -773,25 +777,24 @@ function buildMarksByLabelSnapshot(options = {}) {
 
   targetOrder.forEach((label) => {
     const domMarks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
-    const rowHasAnyDomMarks = domMarks.some((mark) => cricketRules.clampMarks(mark) > 0);
     const turnMarks = Array.isArray(turnMarksByLabel?.[label]) ? turnMarksByLabel[label] : [];
     const activeThrowMarks = activeThrowPreview.marksByLabel.get(label) || 0;
 
-    if (!rowHasAnyDomMarks && turnMarks.length) {
-      for (let index = 0; index < playerCount; index += 1) {
-        domMarks[index] = Math.max(
-          cricketRules.clampMarks(domMarks[index] || 0),
-          cricketRules.clampMarks(turnMarks[index] || 0)
-        );
-      }
-    } else if (
-      activeThrowMarks > 0 &&
-      Array.isArray(turnMarks) &&
-      cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0) > 0
-    ) {
+    for (let index = 0; index < playerCount; index += 1) {
+      domMarks[index] = Math.max(
+        cricketRules.clampMarks(domMarks[index] || 0),
+        cricketRules.clampMarks(turnMarks[index] || 0)
+      );
+    }
+
+    if (activeThrowMarks > 0) {
+      const historicalActiveMarks = cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0);
+      const projectedActiveMarks = cricketRules.clampMarks(
+        historicalActiveMarks + activeThrowMarks
+      );
       domMarks[activePlayerIndex] = Math.max(
         cricketRules.clampMarks(domMarks[activePlayerIndex] || 0),
-        cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0)
+        projectedActiveMarks
       );
     }
   });
@@ -802,13 +805,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     gameModeNormalized
   );
   const scoringModeNormalized = scoringModeState.normalizedScoringMode;
-  const enrichedMarksByLabel = cricketRules.applyThrowsToMarksByLabel({
-    targetOrder,
-    playerIndex: activePlayerIndex,
-    baseMarksByLabel: marksByLabel,
-    throws: activeThrowPreview.throws,
-    scoringModeNormalized,
-  });
+  const enrichedMarksByLabel = marksByLabel;
 
   const stateMap = cricketRules.computeTargetStates(enrichedMarksByLabel, {
     gameMode: gameModeNormalized,

@@ -10,6 +10,7 @@ const bundlePath = path.resolve(
 );
 const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const bootstrapPath = path.resolve(process.cwd(), "src", "core", "bootstrap.js");
+const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
 
 test("checked-in userscript bundle contains metadata header and runtime bootstrap entry", () => {
   const text = readFileSync(bundlePath, "utf8");
@@ -71,12 +72,15 @@ test("bundle, runtime API version and package version stay in sync", () => {
   const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
   const sourceBootstrap = readFileSync(bootstrapPath, "utf8");
   const bundle = readFileSync(bundlePath, "utf8");
+  const loader = readFileSync(loaderPath, "utf8");
 
   const sourceApiVersion = sourceBootstrap.match(/const API_VERSION = "([^"]+)";/)?.[1] || "";
   const bundleApiVersion = bundle.match(/var API_VERSION = "([^"]+)";/)?.[1] || "";
   const metadataVersion = bundle.match(/@version\s+([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] || "";
+  const loaderMetadataVersion = loader.match(/@version\s+([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] || "";
 
   assert.equal(sourceApiVersion, packageVersion);
   assert.equal(bundleApiVersion, packageVersion);
   assert.equal(metadataVersion, packageVersion);
+  assert.equal(loaderMetadataVersion, packageVersion);
 });
