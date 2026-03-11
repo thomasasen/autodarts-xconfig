@@ -14,6 +14,9 @@
   MARK_L2_CLASS,
   MARK_L3_CLASS,
   MARK_PROGRESS_CLASS,
+  OPEN_ACTIVE_CLASS,
+  OPEN_CLASS,
+  OPEN_INACTIVE_CLASS,
   PRESSURE_CLASS,
   ROOT_CLASS,
   ROW_WAVE_CLASS,
@@ -164,7 +167,7 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet) {
     }
 
     seen.add(node);
-    const labelCell = resolveLabelCell(node);
+    const labelCell = resolveLabelCell(node, cricketRules, targetSet, label);
     rows.push({
       label,
       labelNode: node,
@@ -230,11 +233,28 @@ function parseMarksValue(node, cricketRules) {
   }
 
   const parseMark = (value) => {
+    const rawValue = String(value || "").trim();
+    if (!rawValue) {
+      return null;
+    }
+    const hasExplicitMarkToken = (() => {
+      if (/[/Xx\u2A02\u2297\u29BB|\u2715\u2716\u2573]/u.test(rawValue)) {
+        return true;
+      }
+      if (/^(?:0|1|2|3)$/.test(rawValue)) {
+        return true;
+      }
+      return /(^|[^0-9])(?:0|1|2|3)([^0-9]|$)/.test(rawValue);
+    })();
+    if (!hasExplicitMarkToken) {
+      return null;
+    }
+
     if (cricketRules && typeof cricketRules.parseCricketMarkValue === "function") {
-      const parsed = cricketRules.parseCricketMarkValue(value);
+      const parsed = cricketRules.parseCricketMarkValue(rawValue);
       return Number.isFinite(parsed) ? cricketRules.clampMarks(parsed) : null;
     }
-    const parsed = Number.parseInt(String(value || "").trim(), 10);
+    const parsed = Number.parseInt(rawValue, 10);
     if (!Number.isFinite(parsed)) {
       return null;
     }
@@ -305,6 +325,17 @@ function readCellPlayerIndex(cellNode) {
   return null;
 }
 
+function getClassTokens(node) {
+  if (!node || typeof node !== "object") {
+    return [];
+  }
+  const className = String(node.className || node.getAttribute?.("class") || "").trim();
+  if (!className) {
+    return [];
+  }
+  return className.split(/\s+/).filter(Boolean);
+}
+
 function hasExplicitMarkHints(node) {
   if (!node || typeof node.getAttribute !== "function") {
     return false;
@@ -331,12 +362,126 @@ function hasExplicitMarkHints(node) {
   return false;
 }
 
-function resolveLabelCell(labelNode) {
+function collectTargetLabelsInNode(node, cricketRules, targetSet, fallbackLabel = "") {
+  const labels = new Set();
+  if (!node || !cricketRules || typeof cricketRules.normalizeCricketLabel !== "function") {
+    return labels;
+  }
+
+  const candidates = [node];
+  queryAll(
+    node,
+    "[data-row-label], [data-target-label], .label-cell, .ad-ext-crfx-badge, .chakra-text, p, span, strong, b"
+  ).forEach((candidate) => {
+    if (!candidates.includes(candidate)) {
+      candidates.push(candidate);
+    }
+  });
+
+  candidates.forEach((candidate) => {
+    const normalized = normalizeLabel(
+      cricketRules,
+      candidate?.getAttribute?.("data-row-label") ||
+        candidate?.getAttribute?.("data-target-label") ||
+        candidate?.textContent ||
+        ""
+    );
+    if (!normalized) {
+      return;
+    }
+    if (targetSet instanceof Set && targetSet.size > 0 && !targetSet.has(normalized)) {
+      return;
+    }
+    labels.add(normalized);
+  });
+
+  const normalizedFallback = normalizeLabel(cricketRules, fallbackLabel);
+  if (normalizedFallback) {
+    labels.add(normalizedFallback);
+  }
+
+  return labels;
+}
+
+function hasPeerLikeSibling(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+  const nodeTag = String(node.tagName || "").toUpperCase();
+  const nodeClassTokens = new Set(getClassTokens(node));
+  const siblings = [node.previousElementSibling, node.nextElementSibling].filter(Boolean);
+  if (!siblings.length) {
+    return false;
+  }
+
+  return siblings.some((sibling) => {
+    if (!sibling) {
+      return false;
+    }
+    const siblingTag = String(sibling.tagName || "").toUpperCase();
+    if (nodeTag && siblingTag && siblingTag === nodeTag) {
+      return true;
+    }
+    const siblingClassTokens = getClassTokens(sibling);
+    if (!nodeClassTokens.size || !siblingClassTokens.length) {
+      return false;
+    }
+    return siblingClassTokens.some((token) => nodeClassTokens.has(token));
+  });
+}
+
+function resolveLabelCell(labelNode, cricketRules = null, targetSet = null, fallbackLabel = "") {
   if (!labelNode || typeof labelNode.closest !== "function") {
     return labelNode?.parentElement || null;
   }
 
-  return labelNode.closest("td, th, [role='cell']") || labelNode.parentElement || labelNode;
+  const tableCell = labelNode.closest("td, th, [role='cell']");
+  if (tableCell) {
+    return tableCell;
+  }
+
+  const normalizedLabel = normalizeLabel(
+    cricketRules,
+    fallbackLabel || labelNode?.getAttribute?.("data-row-label") || labelNode?.textContent || ""
+  );
+
+  let cursor = labelNode?.parentElement || null;
+  let fallback = labelNode?.parentElement || labelNode;
+  let depth = 0;
+
+  while (cursor && depth < 8) {
+    fallback = cursor;
+    if (!isInsideTurnPreview(cursor)) {
+      const parent = cursor.parentElement || null;
+      const hasSiblings = Boolean(parent && parent.children && parent.children.length > 1);
+      if (hasSiblings) {
+        const hasCellPeer = hasPeerLikeSibling(cursor);
+        if (!hasCellPeer && !hasExplicitMarkHints(cursor)) {
+          cursor = cursor.parentElement;
+          depth += 1;
+          continue;
+        }
+        const labels = collectTargetLabelsInNode(
+          cursor,
+          cricketRules,
+          targetSet,
+          normalizedLabel
+        );
+        const containsOnlyOwnLabel =
+          labels.size <= 1 ||
+          (labels.size === 2 &&
+            normalizedLabel &&
+            labels.has(normalizedLabel));
+        if (containsOnlyOwnLabel) {
+          return cursor;
+        }
+      }
+    }
+    cursor = cursor.parentElement;
+    depth += 1;
+  }
+
+  return fallback || labelNode;
 }
 
 function getElementRect(element) {
@@ -436,9 +581,19 @@ function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlaye
     ? Math.max(0, Math.round(Number(expectedPlayerCount)))
     : 0;
   const missingExpectedCells = expectedCount > 0 && normalizedCells.length < expectedCount;
+  const shortfallGap = expectedCount > 0 ? Math.max(0, expectedCount - normalizedCells.length) : 0;
   const shouldInclude =
     expectedCount > 0 ? normalizedCells.length < expectedCount : normalizedCells.length === 0;
-  const hasMarkHints = hasExplicitMarkHints(labelCell) || missingExpectedCells;
+  const labelParent = labelCell?.parentElement || null;
+  const nonSemanticMergedShortfall =
+    shortfallGap === 1 &&
+    normalizedCells.length > 0 &&
+    Boolean(labelParent) &&
+    typeof labelCell?.closest === "function" &&
+    !labelCell.closest("tr") &&
+    normalizedCells.every((cellNode) => cellNode?.parentElement === labelParent);
+  const hasMarkHints =
+    hasExplicitMarkHints(labelCell) || missingExpectedCells || nonSemanticMergedShortfall;
   if (!hasMarkHints) {
     return normalizedCells;
   }
@@ -456,7 +611,7 @@ function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
   if (isInsideTurnPreview(labelNode)) {
     return [];
   }
-  const labelCell = resolveLabelCell(labelNode);
+  const labelCell = resolveLabelCell(labelNode, cricketRules, targetSet);
 
   const row = labelNode.closest?.("tr");
   if (row) {
@@ -527,6 +682,9 @@ function clearCellClasses(node) {
   node.classList.remove(
     CELL_CLASS,
     ACTIVE_COLUMN_CLASS,
+    OPEN_CLASS,
+    OPEN_ACTIVE_CLASS,
+    OPEN_INACTIVE_CLASS,
     THREAT_CLASS,
     SCORE_CLASS,
     DEAD_CLASS,
@@ -648,6 +806,31 @@ function clearTransientState(state) {
 function clearPersistentState(state) {
   if (!state) {
     return;
+  }
+
+  if (state.gridRoot) {
+    queryAll(
+      state.gridRoot,
+      `.${CELL_CLASS}, .${ACTIVE_COLUMN_CLASS}, .${THREAT_CLASS}, .${SCORE_CLASS}, .${DEAD_CLASS}, .${PRESSURE_CLASS}, .${OPEN_CLASS}, .${OPEN_ACTIVE_CLASS}, .${OPEN_INACTIVE_CLASS}`
+    ).forEach((node) => clearCellClasses(node));
+    queryAll(
+      state.gridRoot,
+      `.${LABEL_CLASS}, .${BADGE_CLASS}, .${BADGE_BEACON_CLASS}, .${BADGE_BURST_CLASS}`
+    ).forEach((node) => clearLabelClasses(node));
+    queryAll(
+      state.gridRoot,
+      `.${MARK_PROGRESS_CLASS}, .${MARK_L1_CLASS}, .${MARK_L2_CLASS}, .${MARK_L3_CLASS}`
+    ).forEach((node) => clearProgressClasses(node));
+    queryAll(state.gridRoot, `[${HIDDEN_LABEL_ATTRIBUTE}="true"]`).forEach((node) => {
+      if (typeof node?.removeAttribute === "function") {
+        node.removeAttribute(HIDDEN_LABEL_ATTRIBUTE);
+      }
+    });
+    queryAll(state.gridRoot, `[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`).forEach((node) => {
+      if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
+        node.parentNode.removeChild(node);
+      }
+    });
   }
 
   state.trackedCells.forEach((node) => clearCellClasses(node));
@@ -880,6 +1063,9 @@ function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
   const pressureOverlayEnabled =
     visualConfig?.pressureOverlay ?? visualConfig?.opponentPressureOverlay ?? true;
   toggleClass(cellNode, CELL_CLASS, true);
+  toggleClass(cellNode, OPEN_CLASS, normalizedPresentation === "open");
+  toggleClass(cellNode, OPEN_ACTIVE_CLASS, false);
+  toggleClass(cellNode, OPEN_INACTIVE_CLASS, false);
   toggleClass(
     cellNode,
     THREAT_CLASS,
@@ -1019,7 +1205,7 @@ export function updateCricketGridFx(options = {}) {
 
     const labelNode = candidateRow?.labelNode || null;
     const labelCell = candidateRow?.labelCell || null;
-    const rowNode = candidateRow?.rowNode || getRowNode(labelCell || labelNode || null);
+    const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
     const playerCells = Array.isArray(candidateRow?.playerCells)
       ? candidateRow.playerCells.filter(Boolean)
       : [];
@@ -1074,7 +1260,7 @@ export function updateCricketGridFx(options = {}) {
     const labelNode = candidateRow?.labelNode || null;
     const label = String(candidateRow?.label || "");
     const labelCell = candidateRow?.labelCell || null;
-    const rowNode = candidateRow?.rowNode || getRowNode(labelCell || labelNode || null);
+    const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
     if (!rowNode || typeof rowNode.querySelectorAll !== "function") {
       return [];
     }
@@ -1125,7 +1311,7 @@ export function updateCricketGridFx(options = {}) {
   const resolveBestPlayerCells = (candidateRow, expectedPlayerCount = 0) => {
     const labelNode = candidateRow?.labelNode || null;
     const labelCell = candidateRow?.labelCell || null;
-    const rowNode = candidateRow?.rowNode || getRowNode(labelCell || labelNode || null);
+    const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
     const baseCells = maybeIncludeLabelCellAsPlayerCell(
       Array.isArray(candidateRow?.playerCells) ? candidateRow.playerCells.filter(Boolean) : [],
       labelCell,
@@ -1183,7 +1369,7 @@ export function updateCricketGridFx(options = {}) {
       badgeNode: candidateRow?.badgeNode || null,
       rowNode:
         candidateRow?.rowNode ||
-        getRowNode(candidateRow?.labelCell || candidateRow?.labelNode || null),
+        getRowNode(candidateRow?.labelNode || candidateRow?.labelCell || null),
       playerCells: Array.isArray(candidateRow?.playerCells)
         ? candidateRow.playerCells.filter(Boolean)
         : [],
@@ -1282,7 +1468,7 @@ export function updateCricketGridFx(options = {}) {
       ? stateEntry.cellStates.length
       : 0;
     const labelNode = entry?.labelNode || null;
-    const labelCell = resolveLabelCell(labelNode);
+    const labelCell = resolveLabelCell(labelNode, cricketRules, targetSet, label);
     const fallbackPlayerCells = collectPlayerCells(labelNode, cricketRules, targetSet, {
       expectedPlayerCount,
     });
@@ -1292,7 +1478,7 @@ export function updateCricketGridFx(options = {}) {
       labelNode,
       labelCell,
       badgeNode: resolveBadgeNode(labelNode, labelCell, cricketRules, label),
-      rowNode: getRowNode(labelCell || labelNode || null),
+      rowNode: getRowNode(labelNode || labelCell || null),
       playerCells: fallbackPlayerCells,
     });
   });
@@ -1323,7 +1509,7 @@ export function updateCricketGridFx(options = {}) {
             labelNode: row.labelNode || null,
             labelCell: row.labelCell || null,
             badgeNode: row.badgeNode || null,
-            rowNode: row.rowNode || getRowNode(row.labelCell || row.labelNode || null),
+            rowNode: row.rowNode || getRowNode(row.labelNode || row.labelCell || null),
             playerCells: Array.isArray(row.playerCells) ? row.playerCells.filter(Boolean) : [],
             playerCellsByIndex: Array.isArray(row.playerCellsByIndex)
               ? row.playerCellsByIndex.map((cell) => (cell && cell.isConnected !== false ? cell : null))
@@ -1477,7 +1663,15 @@ export function updateCricketGridFx(options = {}) {
       labelCellNode,
       playerStateCount
     );
-    const resolvedRowNode = row.rowNode || getRowNode(row.labelCell || row.labelNode || null);
+    const resolvedRowNode = row.rowNode || getRowNode(row.labelNode || row.labelCell || null);
+    const rowScoreNode =
+      resolvedRowNode &&
+      labelCellNode &&
+      typeof resolvedRowNode.contains === "function" &&
+      resolvedRowNode !== labelCellNode &&
+      resolvedRowNode.contains(labelCellNode)
+        ? resolvedRowNode
+        : null;
     const strictRowCells = buildRowCellsFromRowNode(
       {
         label: row.label,
@@ -1524,7 +1718,7 @@ export function updateCricketGridFx(options = {}) {
           score -= 4;
           return;
         }
-        if (!isCellInsideRow(cellNode, resolvedRowNode)) {
+        if (!isCellInsideRow(cellNode, rowScoreNode)) {
           score -= 6;
         }
         const expectedMarks = Number(stateEntry.marksByPlayer?.[playerIndex] || 0);
@@ -1712,27 +1906,141 @@ export function updateCricketGridFx(options = {}) {
       toggleTimedClass(state, badgeNode, BADGE_BURST_CLASS, 700);
     }
 
-    cellDescriptors.forEach(({ cellNode, playerIndex }) => {
+    const rowPresentation = normalizePresentationToken(presentation);
+    const mergedOwnerLabelColumn =
+      playerStateCount >= 2 &&
+      Boolean(labelCellNode?.classList) &&
+      typeof labelCellNode?.closest === "function" &&
+      !labelCellNode.closest("tr");
+
+    const uniqueByPlayerIndex = new Map();
+    cellDescriptors.forEach((entry) => {
+      const playerIndex = Number(entry?.playerIndex);
+      const cellNode = entry?.cellNode || null;
+      if (!cellNode?.classList || !Number.isFinite(playerIndex)) {
+        return;
+      }
+      if (!uniqueByPlayerIndex.has(playerIndex)) {
+        uniqueByPlayerIndex.set(playerIndex, {
+          cellNode,
+          playerIndex,
+        });
+        return;
+      }
+
+      const currentEntry = uniqueByPlayerIndex.get(playerIndex);
+      const currentInsideRow = isCellInsideRow(currentEntry?.cellNode || null, resolvedRowNode);
+      const nextInsideRow = isCellInsideRow(cellNode, resolvedRowNode);
+      if (nextInsideRow && !currentInsideRow) {
+        uniqueByPlayerIndex.set(playerIndex, {
+          cellNode,
+          playerIndex,
+        });
+      }
+    });
+
+    if (mergedOwnerLabelColumn) {
+      const hasOwnerLabelDescriptor = Array.from(uniqueByPlayerIndex.values()).some((entry) => {
+        return entry?.cellNode === labelCellNode;
+      });
+      const descriptorAtZero = uniqueByPlayerIndex.get(0);
+      const hasDescriptorAtOne = uniqueByPlayerIndex.has(1);
+      const descriptorAtZeroIsForeignCell =
+        descriptorAtZero?.cellNode && descriptorAtZero.cellNode !== labelCellNode;
+      if (!hasOwnerLabelDescriptor) {
+        if (
+          descriptorAtZeroIsForeignCell &&
+          !hasDescriptorAtOne &&
+          Number.isFinite(playerStateCount) &&
+          playerStateCount > 1
+        ) {
+          uniqueByPlayerIndex.delete(0);
+          uniqueByPlayerIndex.set(1, {
+            cellNode: descriptorAtZero.cellNode,
+            playerIndex: 1,
+          });
+        }
+
+        if (!uniqueByPlayerIndex.has(0)) {
+          uniqueByPlayerIndex.set(0, {
+            cellNode: labelCellNode,
+            playerIndex: 0,
+          });
+        }
+      }
+    }
+
+    if (
+      rowPresentation === "open" &&
+      Number.isFinite(activePlayerIndex) &&
+      activePlayerIndex === 0 &&
+      !uniqueByPlayerIndex.has(activePlayerIndex) &&
+      labelCellNode?.classList
+    ) {
+      uniqueByPlayerIndex.set(activePlayerIndex, {
+        cellNode: labelCellNode,
+        playerIndex: activePlayerIndex,
+      });
+    }
+
+    const resolvedCellDescriptors = Array.from(uniqueByPlayerIndex.values()).sort((left, right) => {
+      return Number(left?.playerIndex || 0) - Number(right?.playerIndex || 0);
+    });
+
+    const enforceLabelOwnerOpen =
+      rowPresentation === "open" &&
+      mergedOwnerLabelColumn &&
+      Boolean(labelCellNode?.classList);
+    let activeOpenAssigned = false;
+    if (enforceLabelOwnerOpen) {
+      const labelActiveOpen = Number.isFinite(activePlayerIndex) && activePlayerIndex === 0;
+      applyCellPresentationClasses(labelCellNode, "open", visualConfig);
+      toggleClass(labelCellNode, ACTIVE_COLUMN_CLASS, labelActiveOpen);
+      toggleClass(labelCellNode, OPEN_ACTIVE_CLASS, labelActiveOpen);
+      toggleClass(labelCellNode, OPEN_INACTIVE_CLASS, !labelActiveOpen);
+      state.trackedCells.add(labelCellNode);
+      activeOpenAssigned = labelActiveOpen;
+    }
+    resolvedCellDescriptors.forEach(({ cellNode, playerIndex }) => {
+      if (enforceLabelOwnerOpen && cellNode === labelCellNode) {
+        return;
+      }
+      const normalizedPlayerIndex =
+        enforceLabelOwnerOpen && playerIndex === 0 ? 1 : playerIndex;
       const cellState = Array.isArray(stateEntry.cellStates)
-        ? stateEntry.cellStates[playerIndex]
+        ? stateEntry.cellStates[normalizedPlayerIndex]
         : null;
       const cellPresentation = normalizePresentationToken(cellState?.presentation || "open");
-      const marks = Number(stateEntry.marksByPlayer?.[playerIndex] || 0);
+      const marks = Number(stateEntry.marksByPlayer?.[normalizedPlayerIndex] || 0);
       const scoreCell =
         (visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true) &&
         cellPresentation === "scoring";
       const activeOpenCell =
         Number.isFinite(activePlayerIndex) &&
-        playerIndex === activePlayerIndex &&
-        cellPresentation === "open";
+        normalizedPlayerIndex === activePlayerIndex &&
+        cellPresentation === "open" &&
+        !activeOpenAssigned;
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
       toggleClass(cellNode, ACTIVE_COLUMN_CLASS, activeOpenCell);
+      toggleClass(
+        cellNode,
+        OPEN_ACTIVE_CLASS,
+        cellPresentation === "open" && activeOpenCell
+      );
+      toggleClass(
+        cellNode,
+        OPEN_INACTIVE_CLASS,
+        cellPresentation === "open" && !activeOpenCell
+      );
+      if (activeOpenCell) {
+        activeOpenAssigned = true;
+      }
       if (scoreCell) {
         scoreCellCount += 1;
       }
 
-      const delta = Number(diffEntry?.playerDeltas?.[playerIndex] || 0);
+      const delta = Number(diffEntry?.playerDeltas?.[normalizedPlayerIndex] || 0);
       if (delta > 0 && visualConfig.deltaChips) {
         appendTransientNode(state, cellNode, DELTA_CLASS, 940, {
           textContent: `+${delta}`,

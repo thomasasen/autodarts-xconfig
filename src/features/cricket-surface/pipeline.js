@@ -153,13 +153,30 @@ function isCricketFamilyActive(gameState, documentRef, variantRules) {
 }
 
 function parseTextMarkValue(value, cricketRules) {
+  const rawValue = String(value || "").trim();
+  if (!rawValue) {
+    return null;
+  }
+
+  const hasExplicitMarkToken = (() => {
+    if (/[/Xx\u2A02\u2297\u29BB|\u2715\u2716\u2573]/u.test(rawValue)) {
+      return true;
+    }
+    if (/^(?:0|1|2|3)$/.test(rawValue)) {
+      return true;
+    }
+    return /(^|[^0-9])(?:0|1|2|3)([^0-9]|$)/.test(rawValue);
+  })();
+  if (!hasExplicitMarkToken) {
+    return null;
+  }
+
   if (cricketRules && typeof cricketRules.parseCricketMarkValue === "function") {
-    const parsed = cricketRules.parseCricketMarkValue(value);
+    const parsed = cricketRules.parseCricketMarkValue(rawValue);
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  const normalized = String(value || "").trim();
-  const numeric = Number.parseInt(normalized, 10);
+  const numeric = Number.parseInt(rawValue, 10);
   if (!Number.isFinite(numeric)) {
     return null;
   }
@@ -643,6 +660,34 @@ function getClassTokens(node) {
   return className.split(/\s+/).filter(Boolean);
 }
 
+function hasPeerLikeSibling(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  const nodeTag = String(node.tagName || "").toUpperCase();
+  const nodeClassTokens = new Set(getClassTokens(node));
+  const siblings = [node.previousElementSibling, node.nextElementSibling].filter(Boolean);
+  if (!siblings.length) {
+    return false;
+  }
+
+  return siblings.some((sibling) => {
+    if (!sibling) {
+      return false;
+    }
+    const siblingTag = String(sibling.tagName || "").toUpperCase();
+    if (nodeTag && siblingTag && siblingTag === nodeTag) {
+      return true;
+    }
+    const siblingClassTokens = getClassTokens(sibling);
+    if (!nodeClassTokens.size || !siblingClassTokens.length) {
+      return false;
+    }
+    return siblingClassTokens.some((token) => nodeClassTokens.has(token));
+  });
+}
+
 function hasAnyTargetDescendant(node, cricketRules, targetSet) {
   if (!node || typeof node.querySelectorAll !== "function") {
     return false;
@@ -725,7 +770,7 @@ function collectPlayerCellsForLabel(labelNode, cricketRules, targetSet) {
     return [];
   }
 
-  const labelCell = resolveLabelCell(labelNode);
+  const labelCell = resolveLabelCell(labelNode, cricketRules, targetSet);
   const directRow = labelNode.closest?.("tr");
   if (directRow) {
     return queryAll(directRow, "td, .player-cell, [data-player-index], [data-marks]").filter((node) => {
@@ -757,7 +802,41 @@ function getRowNode(labelNode) {
   return labelNode?.closest?.("tr") || labelNode?.parentElement || labelNode || null;
 }
 
-function resolveLabelCell(labelNode) {
+function collectTargetLabelsInNode(node, cricketRules, targetSet, fallbackLabel = "") {
+  const labels = new Set();
+  if (!node || !cricketRules || typeof cricketRules.normalizeCricketLabel !== "function") {
+    return labels;
+  }
+
+  const candidates = [node];
+  queryAll(
+    node,
+    "[data-row-label], [data-target-label], .label-cell, .ad-ext-crfx-badge, .chakra-text, p, span, strong, b"
+  ).forEach((candidate) => {
+    if (!candidates.includes(candidate)) {
+      candidates.push(candidate);
+    }
+  });
+
+  candidates.forEach((candidate) => {
+    const normalized = getNormalizedLabel(cricketRules, candidate);
+    if (!normalized) {
+      return;
+    }
+    if (targetSet instanceof Set && targetSet.size > 0 && !targetSet.has(normalized)) {
+      return;
+    }
+    labels.add(normalized);
+  });
+
+  const normalizedFallback = cricketRules.normalizeCricketLabel(fallbackLabel || "");
+  if (normalizedFallback) {
+    labels.add(normalizedFallback);
+  }
+  return labels;
+}
+
+function resolveLabelCell(labelNode, cricketRules = null, targetSet = null, fallbackLabel = "") {
   if (!labelNode || typeof labelNode.closest !== "function") {
     return labelNode?.parentElement || null;
   }
@@ -767,7 +846,47 @@ function resolveLabelCell(labelNode) {
     return tableCell;
   }
 
-  return labelNode.parentElement || labelNode;
+  const normalizedLabel = cricketRules?.normalizeCricketLabel?.(
+    fallbackLabel || labelNode?.getAttribute?.("data-row-label") || labelNode?.textContent || ""
+  );
+
+  let cursor = labelNode?.parentElement || null;
+  let fallback = labelNode?.parentElement || labelNode;
+  let depth = 0;
+
+  while (cursor && depth < 8) {
+    fallback = cursor;
+    if (!isInsideTurnPreview(cursor)) {
+      const parent = cursor.parentElement || null;
+      const hasSiblings = Boolean(parent && parent.children && parent.children.length > 1);
+      if (hasSiblings) {
+        const hasCellPeer = hasPeerLikeSibling(cursor);
+        if (!hasCellPeer && !hasExplicitMarkHints(cursor)) {
+          cursor = cursor.parentElement;
+          depth += 1;
+          continue;
+        }
+        const labels = collectTargetLabelsInNode(
+          cursor,
+          cricketRules,
+          targetSet,
+          normalizedLabel
+        );
+        const containsOnlyOwnLabel =
+          labels.size <= 1 ||
+          (labels.size === 2 &&
+            normalizedLabel &&
+            labels.has(normalizedLabel));
+        if (containsOnlyOwnLabel) {
+          return cursor;
+        }
+      }
+    }
+    cursor = cursor.parentElement;
+    depth += 1;
+  }
+
+  return fallback || labelNode;
 }
 
 function getElementRect(element) {
@@ -863,6 +982,7 @@ function maybeIncludeLabelCellAsPlayerCell(
     ? Math.max(0, Math.round(Number(expectedPlayerCount)))
     : 0;
   const shortfallLikely = expectedCount > 0 && normalizedCells.length < expectedCount;
+  const shortfallGap = expectedCount > 0 ? Math.max(0, expectedCount - normalizedCells.length) : 0;
 
   if (diagnostics && typeof diagnostics === "object") {
     diagnostics.playerCellCountBefore = normalizedCells.length;
@@ -879,10 +999,19 @@ function maybeIncludeLabelCellAsPlayerCell(
 
   const hasExplicitHints = hasExplicitMarkHints(labelCell);
   const hasTextHints = hasTextualMarkHints(labelCell);
-  const hasHints = hasExplicitHints || hasTextHints;
+  const labelParent = labelCell?.parentElement || null;
+  const mergedShortfallOwnerFallback =
+    shortfallGap === 1 &&
+    normalizedCells.length > 0 &&
+    Boolean(labelParent) &&
+    typeof labelCell?.closest === "function" &&
+    !labelCell.closest("tr") &&
+    normalizedCells.every((cellNode) => cellNode?.parentElement === labelParent);
+  const hasHints = hasExplicitHints || hasTextHints || mergedShortfallOwnerFallback;
   if (diagnostics && typeof diagnostics === "object") {
     diagnostics.labelCellHasExplicitMarkHints = hasExplicitHints;
     diagnostics.labelCellHasTextMarkHints = hasTextHints;
+    diagnostics.labelCellMergedShortfallFallback = mergedShortfallOwnerFallback;
   }
   if (!hasHints) {
     return normalizedCells;
@@ -1398,7 +1527,7 @@ function buildMarksByLabelSnapshot(options = {}) {
       return;
     }
 
-    const labelCell = resolveLabelCell(node) || fallbackRowMeta?.labelCell || null;
+    const labelCell = resolveLabelCell(node, cricketRules, targetSet, label) || fallbackRowMeta?.labelCell || null;
     const discoveredPlayerCells = collectPlayerCellsForLabel(node, cricketRules, targetSet).filter(Boolean);
     const fallbackPlayerCells = Array.isArray(fallbackRowMeta?.playerCells)
       ? fallbackRowMeta.playerCells.filter((cell) => cell && cell.isConnected !== false)
@@ -1415,11 +1544,22 @@ function buildMarksByLabelSnapshot(options = {}) {
       expectedPlayerCount,
       markSourceMeta
     );
-    if (markSourceMeta.labelCellIncluded && !labelCellMarkSourceSet.has(label)) {
+    const hasConcreteLabelMarkHints =
+      Boolean(markSourceMeta.labelCellHasExplicitMarkHints) ||
+      Boolean(markSourceMeta.labelCellHasTextMarkHints);
+    if (
+      markSourceMeta.labelCellIncluded &&
+      hasConcreteLabelMarkHints &&
+      !labelCellMarkSourceSet.has(label)
+    ) {
       labelCellMarkSourceSet.add(label);
       labelCellMarkSourceLabels.push(label);
     }
-    if (markSourceMeta.shortfallRepairApplied && !shortfallRepairSet.has(label)) {
+    if (
+      markSourceMeta.shortfallRepairApplied &&
+      hasConcreteLabelMarkHints &&
+      !shortfallRepairSet.has(label)
+    ) {
       shortfallRepairSet.add(label);
       shortfallRepairLabels.push(label);
     }

@@ -7,6 +7,9 @@ export const SCORE_CLASS = "ad-ext-crfx-score";
 export const DEAD_CLASS = "ad-ext-crfx-dead";
 export const PRESSURE_CLASS = "ad-ext-crfx-pressure";
 export const ACTIVE_COLUMN_CLASS = "ad-ext-crfx-active-column";
+export const OPEN_CLASS = "ad-ext-crfx-open";
+export const OPEN_ACTIVE_CLASS = "ad-ext-crfx-open-active";
+export const OPEN_INACTIVE_CLASS = "ad-ext-crfx-open-inactive";
 export const LABEL_CLASS = "ad-ext-crfx-label-cell";
 export const BADGE_CLASS = "ad-ext-crfx-badge";
 export const BADGE_BEACON_CLASS = "ad-ext-crfx-badge-beacon";
@@ -151,6 +154,30 @@ export function buildStyleText() {
   position: relative;
   overflow: visible;
   transition: filter 180ms ease, opacity 180ms ease, box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.${ROOT_CLASS} .${CELL_CLASS}.${OPEN_CLASS} {
+  box-shadow:
+    inset 0 0 0 1px rgba(127, 214, 247, 0.2),
+    inset 0 0 10px rgba(5, 24, 36, 0.16) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8, 35, 52, 0.24) 0%,
+      rgba(8, 35, 52, 0.08) 100%
+    ) !important;
+}
+
+.${ROOT_CLASS} .${CELL_CLASS}.${OPEN_INACTIVE_CLASS} {
+  box-shadow:
+    inset 0 0 0 1px rgba(110, 138, 154, 0.26),
+    inset 0 0 10px rgba(3, 16, 24, 0.2) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 26, 38, 0.28) 0%,
+      rgba(9, 26, 38, 0.1) 100%
+    ) !important;
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS},
@@ -314,6 +341,18 @@ export function buildStyleText() {
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_COLUMN_CLASS} {
+  box-shadow:
+    inset 0 0 0 1px rgba(127, 214, 247, 0.36),
+    inset 0 0 16px rgba(127, 214, 247, 0.12) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 197, 255, 0.12) 0%,
+      rgba(34, 197, 255, 0.04) 100%
+    ) !important;
+}
+
+.${ROOT_CLASS} .${CELL_CLASS}.${OPEN_ACTIVE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(127, 214, 247, 0.36),
     inset 0 0 16px rgba(127, 214, 247, 0.12) !important;

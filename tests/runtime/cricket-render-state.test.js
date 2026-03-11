@@ -116,6 +116,54 @@ function createMergedLabelCellGrid(documentRef, labels, marksByRow) {
   return grid;
 }
 
+function createMergedNestedLabelCellGrid(documentRef, labels, marksByRow) {
+  const wrapper = documentRef.createElement("div");
+  wrapper.className = "chakra-stack";
+  const grid = documentRef.createElement("div");
+  grid.className = "css-rfeml4";
+
+  labels.forEach((label, index) => {
+    const className = index % 2 === 0 ? "css-1yso2z2" : "css-jpb1ox";
+    const labelCell = documentRef.createElement("div");
+    labelCell.className = className;
+
+    const labelShell = documentRef.createElement("div");
+    labelShell.className = "css-label-shell";
+    const labelInner = documentRef.createElement("span");
+    labelInner.className = "css-label-inner";
+    const labelText = documentRef.createElement("p");
+    labelText.className = "chakra-text css-1qlemha";
+    labelText.textContent = label === "BULL" ? "Bull" : label;
+    labelInner.appendChild(labelText);
+    labelShell.appendChild(labelInner);
+    labelCell.appendChild(labelShell);
+
+    const marks = Array.isArray(marksByRow[label]) ? marksByRow[label] : [];
+    const labelCellMarks = Number(marks[0] || 0);
+    if (labelCellMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(labelCellMarks));
+      labelCell.appendChild(icon);
+    }
+
+    const playerCell = documentRef.createElement("div");
+    playerCell.className = className;
+    const secondMarks = Number(marks[1] || 0);
+    if (secondMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(secondMarks));
+      playerCell.appendChild(icon);
+    }
+
+    grid.appendChild(labelCell);
+    grid.appendChild(playerCell);
+  });
+
+  wrapper.appendChild(grid);
+  documentRef.main.appendChild(wrapper);
+  return grid;
+}
+
 function installTransientLabelDiscoveryFilter(gridRoot, suppressedLabels) {
   const originalQuerySelectorAll = gridRoot.querySelectorAll.bind(gridRoot);
 
@@ -2093,4 +2141,91 @@ test("single-player fully closed rows are dead and not active highlights", () =>
   assert.equal(state20?.uiBucket, "dead");
   assert.equal(state20?.uiPriority, 5);
   assert.equal(state20?.isHighlightActive, false);
+});
+
+test("merged non-semantic open rows keep owner/opponent cell indexing complete for bull without mark hints", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const labels = ["20", "19", "18", "17", "16", "15", "BULL"];
+  const marksByRow = {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  };
+  const mergedGrid = createMergedLabelCellGrid(documentRef, labels, marksByRow);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getActiveTurn: () => null,
+      getSnapshot: () => ({ match: { players: [{ id: "p1" }, { id: "p2" }] } }),
+    }),
+  });
+
+  const bullRow = renderState?.gridSnapshot?.rowMap?.get("BULL") || null;
+  assert.ok(bullRow, "bull row exists");
+  assert.equal((renderState?.marksByLabel?.BULL || []).join(","), "0,0");
+  assert.ok(mergedGrid);
+  assert.ok(bullRow?.labelCell, "bull label cell exists");
+  assert.equal(bullRow?.playerCellsByIndex?.[0], bullRow?.labelCell);
+  assert.ok(bullRow?.playerCellsByIndex?.[1], "bull opponent cell exists");
+});
+
+test("merged nested label wrappers keep bull and numeric rows fully indexed without F5 rehydrate", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  setDomActivePlayer(documentRef, 0);
+
+  const labels = ["20", "19", "18", "17", "16", "15", "BULL"];
+  createMergedNestedLabelCellGrid(documentRef, labels, {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "p1" }, { id: "p2" }] } }),
+    }),
+  });
+
+  const state20 = renderState?.stateMap?.get("20");
+  const state19 = renderState?.stateMap?.get("19");
+  const state18 = renderState?.stateMap?.get("18");
+  const bullRow = renderState?.gridSnapshot?.rowMap?.get("BULL") || null;
+
+  assert.equal((renderState?.marksByLabel?.BULL || []).join(","), "0,0");
+  assert.ok(bullRow, "bull row exists");
+  assert.ok(bullRow?.labelCell, "bull label cell exists");
+  assert.ok(bullRow?.playerCellsByIndex?.[1], "bull opponent cell exists");
+  assert.equal(state20?.cellStates?.map((entry) => entry.presentation).join(","), "scoring,pressure");
+  assert.equal(state19?.cellStates?.map((entry) => entry.presentation).join(","), "open,open");
+  assert.equal(state18?.cellStates?.map((entry) => entry.presentation).join(","), "open,open");
 });
