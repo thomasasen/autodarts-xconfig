@@ -1348,24 +1348,17 @@ test("cricket grid fx repairs contaminated same-length rows so active-player ope
   clearCricketGridFxState(state);
 });
 
-test("cricket grid fx keeps closed 19 scoring after degraded updates via stable row cache", () => {
+test("cricket grid fx repairs same-length contamination for every cricket row and both columns", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
 
-  const rowsByLabel = createNumericCricketGrid(documentRef, {
-    "20": [3, 0],
-    "19": [1, 2],
-    "18": [2, 0],
-    "17": [0, 0],
-    "16": [0, 0],
-    "15": [0, 0],
-    BULL: [0, 0],
-  });
-
-  const gridRoot = documentRef.getElementById("grid");
-  const suppressedLabels = new Set();
-  const restoreDiscovery = installTransientLabelDiscoveryFilter(gridRoot, suppressedLabels);
+  const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
+  const marksByLabel = targetOrder.reduce((acc, label) => {
+    acc[label] = [0, 0];
+    return acc;
+  }, {});
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, marksByLabel);
 
   const visualConfig = resolveCricketGridFxConfig({
     rowWave: false,
@@ -1384,81 +1377,96 @@ test("cricket grid fx keeps closed 19 scoring after degraded updates via stable 
 
   const state = createCricketGridFxState(windowRef);
   const cache = { grid: null, board: null };
-
-  const initialRenderState = buildCricketRenderState({
-    documentRef,
-    gameState: createGameState(1, 2, {
-      scoringModeNormalized: "standard",
-      scoringMode: "standard",
-    }),
-    cricketRules,
-    variantRules,
-    visualConfig,
-    cache,
-  });
-
-  updateCricketGridFx({
-    documentRef,
-    cricketRules,
-    renderState: initialRenderState,
-    state,
-    visualConfig,
-    turnToken: "stable:before",
-  });
-
-  assertGridCellPresentation(rowsByLabel.get("19")?.playerCells?.[0] || null, "open", "before 19 p0");
-  assertGridCellPresentation(rowsByLabel.get("19")?.playerCells?.[1] || null, "open", "before 19 p1");
-
-  rowsByLabel.get("19")?.playerIcons?.[1]?.setAttribute("alt", "3");
-  suppressedLabels.add("19");
-
-  const nextRenderState = buildCricketRenderState({
-    documentRef,
-    gameState: createGameState(1, 2, {
-      scoringModeNormalized: "standard",
-      scoringMode: "standard",
-    }),
-    cricketRules,
-    variantRules,
-    visualConfig,
-    cache,
-  });
-
-  const degradedRows = (nextRenderState?.gridSnapshot?.rows || []).map((row) => {
-    if (String(row?.label || "") !== "19") {
-      return row;
-    }
-    return {
-      ...row,
-      playerCells: [rowsByLabel.get("19")?.playerCells?.[0]].filter(Boolean),
-    };
-  });
-
-  const degradedRenderState = {
-    ...nextRenderState,
-    gridSnapshot: {
-      ...(nextRenderState?.gridSnapshot || {}),
-      rows: degradedRows,
-      rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
-    },
+  const getNeighborLabel = (label) => {
+    const index = targetOrder.indexOf(label);
+    return targetOrder[(index + 1) % targetOrder.length];
   };
 
-  const debugStats = {};
-  updateCricketGridFx({
-    documentRef,
-    cricketRules,
-    renderState: degradedRenderState,
-    state,
-    visualConfig,
-    turnToken: "stable:after",
-    debugStats,
+  targetOrder.forEach((focusLabel, stage) => {
+    targetOrder.forEach((label) => {
+      const row = rowsByLabel.get(label);
+      const marks = label === focusLabel ? [1, 3] : [0, 0];
+      row?.ownerCell?.setAttribute?.("data-marks", String(marks[0]));
+      row?.opponentCell?.setAttribute?.("data-marks", String(marks[1]));
+      if (row?.ownerMarksNode) {
+        row.ownerMarksNode.textContent = marksToSymbol(marks[0]);
+      }
+      if (row?.opponentMarksNode) {
+        row.opponentMarksNode.textContent = marksToSymbol(marks[1]);
+      }
+    });
+
+    const renderState = buildCricketRenderState({
+      documentRef,
+      gameState: createGameState(1, 2, {
+        scoringModeNormalized: "standard",
+        scoringMode: "standard",
+      }),
+      cricketRules,
+      variantRules,
+      visualConfig,
+      cache,
+    });
+
+    const contaminatedRows = targetOrder.map((label) => {
+      const rowState = rowsByLabel.get(label);
+      if (label !== focusLabel) {
+        return {
+          label,
+          labelNode: rowState?.labelNode || rowState?.ownerCell || null,
+          labelCell: rowState?.ownerCell || null,
+          badgeNode: rowState?.labelNode || null,
+          rowNode: rowState?.row || null,
+          playerCells: [rowState?.ownerCell, rowState?.opponentCell].filter(Boolean),
+        };
+      }
+
+      const neighborLabel = getNeighborLabel(label);
+      const neighborState = rowsByLabel.get(neighborLabel);
+      return {
+        label,
+        labelNode: rowState?.labelNode || rowState?.ownerCell || null,
+        labelCell: rowState?.ownerCell || null,
+        badgeNode: rowState?.labelNode || null,
+        rowNode: rowState?.row || null,
+        playerCells: [rowState?.ownerCell, neighborState?.ownerCell].filter(Boolean),
+      };
+    });
+
+    const degradedRenderState = {
+      ...renderState,
+      gridSnapshot: {
+        ...(renderState?.gridSnapshot || {}),
+        rows: contaminatedRows,
+        rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
+      },
+    };
+
+    updateCricketGridFx({
+      documentRef,
+      cricketRules,
+      renderState: degradedRenderState,
+      state,
+      visualConfig,
+      turnToken: `all-labels:${stage}`,
+    });
+
+    targetOrder.forEach((label) => {
+      const row = rowsByLabel.get(label);
+      const expectedMarks = label === focusLabel ? [1, 3] : [0, 0];
+      assertGridCellPresentation(
+        row?.ownerCell || null,
+        expectedPresentationByRule(expectedMarks, 0),
+        `${focusLabel} -> ${label} owner`
+      );
+      assertGridCellPresentation(
+        row?.opponentCell || null,
+        expectedPresentationByRule(expectedMarks, 1),
+        `${focusLabel} -> ${label} opponent`
+      );
+    });
   });
 
-  assertGridCellPresentation(rowsByLabel.get("19")?.playerCells?.[0] || null, "pressure", "after 19 p0");
-  assertGridCellPresentation(rowsByLabel.get("19")?.playerCells?.[1] || null, "scoring", "after 19 p1");
-  assert.equal((debugStats.activeColumnMissingLabels || []).includes("19"), false);
-
-  restoreDiscovery();
   clearCricketGridFxState(state);
 });
 
@@ -1952,6 +1960,126 @@ test("cricket grid fx keeps every cricket+tactics objective in scoring/pressure 
     const row = rowsByLabel.get(label);
     assertGridCellPresentation(row?.playerCells?.[0] || null, "pressure", `${label} player0 pressure`);
     assertGridCellPresentation(row?.playerCells?.[1] || null, "scoring", `${label} player1 scoring`);
+  });
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx keeps all objectives and all 3 player columns stable under row contamination", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Tactics";
+
+  const labels = ["20", "19", "18", "17", "16", "15", "DOUBLE", "TRIPLE", "BULL"];
+  const marksByLabel = labels.reduce((acc, label) => {
+    acc[label] = [0, 0, 0];
+    return acc;
+  }, {});
+  const rowsByLabel = createObjectiveGrid(documentRef, labels, marksByLabel);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const tacticsGameState = {
+    getCricketGameModeNormalized: () => "tactics",
+    getCricketGameMode: () => "Tactics",
+    getCricketScoringModeNormalized: () => "standard",
+    getCricketScoringMode: () => "standard",
+    getActivePlayerIndex: () => 1,
+    getActiveThrows: () => [],
+    getActiveTurn: () => null,
+    getSnapshot: () => ({
+      match: {
+        players: [{ id: "player-a" }, { id: "player-b" }, { id: "player-c" }],
+      },
+    }),
+  };
+
+  const state = createCricketGridFxState(windowRef);
+  const cache = { grid: null, board: null };
+  const getNeighborLabel = (label) => {
+    const index = labels.indexOf(label);
+    return labels[(index + 1) % labels.length];
+  };
+
+  labels.forEach((focusLabel, stage) => {
+    labels.forEach((label) => {
+      const row = rowsByLabel.get(label);
+      const marks = label === focusLabel ? [0, 3, 0] : [0, 0, 0];
+      marks.forEach((value, playerIndex) => {
+        row?.playerCells?.[playerIndex]
+          ?.querySelector?.("img")
+          ?.setAttribute?.("alt", String(cricketRules.clampMarks(value)));
+      });
+    });
+
+    const renderState = buildCricketRenderState({
+      documentRef,
+      gameState: tacticsGameState,
+      cricketRules,
+      variantRules,
+      visualConfig,
+      cache,
+    });
+
+    const contaminatedRows = labels.map((label) => {
+      const rowState = rowsByLabel.get(label);
+      if (label !== focusLabel) {
+        return renderState?.gridSnapshot?.rows?.find?.((row) => String(row?.label || "") === label) || null;
+      }
+
+      const neighborState = rowsByLabel.get(getNeighborLabel(label));
+      return {
+        label,
+        labelNode: rowState?.labelCell || null,
+        labelCell: rowState?.labelCell || null,
+        badgeNode: rowState?.labelCell?.querySelector?.(".chakra-text") || null,
+        rowNode: rowState?.row || null,
+        playerCells: [rowState?.playerCells?.[0], neighborState?.playerCells?.[0]].filter(Boolean),
+      };
+    }).filter(Boolean);
+
+    const degradedRenderState = {
+      ...renderState,
+      gridSnapshot: {
+        ...(renderState?.gridSnapshot || {}),
+        rows: contaminatedRows,
+        rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
+      },
+    };
+
+    updateCricketGridFx({
+      documentRef,
+      cricketRules,
+      renderState: degradedRenderState,
+      state,
+      visualConfig,
+      turnToken: `all-cols:${stage}`,
+    });
+
+    labels.forEach((label) => {
+      const row = rowsByLabel.get(label);
+      const marks = label === focusLabel ? [0, 3, 0] : [0, 0, 0];
+      marks.forEach((_, playerIndex) => {
+        assertGridCellPresentation(
+          row?.playerCells?.[playerIndex] || null,
+          expectedPresentationByRule(marks, playerIndex),
+          `${focusLabel} -> ${label} p${playerIndex}`
+        );
+      });
+    });
   });
 
   clearCricketGridFxState(state);

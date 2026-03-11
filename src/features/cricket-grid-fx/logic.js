@@ -1070,12 +1070,111 @@ export function updateCricketGridFx(options = {}) {
 
     return score;
   };
+  const buildRowCellsFromRowNode = (candidateRow, expectedPlayerCount = 0) => {
+    const labelNode = candidateRow?.labelNode || null;
+    const label = String(candidateRow?.label || "");
+    const labelCell = candidateRow?.labelCell || null;
+    const rowNode = candidateRow?.rowNode || getRowNode(labelCell || labelNode || null);
+    if (!rowNode || typeof rowNode.querySelectorAll !== "function") {
+      return [];
+    }
+    const tagName = String(rowNode?.tagName || "").toUpperCase();
+    const isSemanticRow =
+      tagName === "TR" || String(rowNode?.getAttribute?.("role") || "").toLowerCase() === "row";
+    if (!isSemanticRow) {
+      const discoveredLabels = new Set();
+      queryAll(
+        rowNode,
+        "[data-row-label], [data-target-label], .label-cell, .ad-ext-crfx-badge, .chakra-text, p, th, td, div, span"
+      ).forEach((node) => {
+        const normalized = normalizeLabel(
+          cricketRules,
+          node?.getAttribute?.("data-row-label") ||
+            node?.getAttribute?.("data-target-label") ||
+            node?.textContent ||
+            ""
+        );
+        if (normalized && targetSet.has(normalized)) {
+          discoveredLabels.add(normalized);
+        }
+      });
+      if (discoveredLabels.size > 1 || (discoveredLabels.size === 1 && !discoveredLabels.has(label))) {
+        return [];
+      }
+    }
+
+    const rowCellCandidates = queryAll(
+      rowNode,
+      "td, th, [role='cell'], .player-cell, [data-player-index], [data-marks]"
+    ).filter((cellNode) => {
+      if (!cellNode || cellNode === labelNode || cellNode === labelCell) {
+        return false;
+      }
+      if (isInsideTurnPreview(cellNode)) {
+        return false;
+      }
+      return true;
+    });
+
+    return maybeIncludeLabelCellAsPlayerCell(
+      rowCellCandidates,
+      labelCell,
+      expectedPlayerCount
+    );
+  };
+  const resolveBestPlayerCells = (candidateRow, expectedPlayerCount = 0) => {
+    const labelNode = candidateRow?.labelNode || null;
+    const labelCell = candidateRow?.labelCell || null;
+    const rowNode = candidateRow?.rowNode || getRowNode(labelCell || labelNode || null);
+    const baseCells = maybeIncludeLabelCellAsPlayerCell(
+      Array.isArray(candidateRow?.playerCells) ? candidateRow.playerCells.filter(Boolean) : [],
+      labelCell,
+      expectedPlayerCount
+    );
+    const rowCells = buildRowCellsFromRowNode(
+      { label: candidateRow?.label || "", labelNode, labelCell, rowNode },
+      expectedPlayerCount
+    );
+    if (!rowCells.length) {
+      return baseCells;
+    }
+
+    const baseScore = computeRowIntegrityScore({
+      label: candidateRow?.label || "",
+      labelNode,
+      labelCell,
+      rowNode,
+      playerCells: baseCells,
+    });
+    const rowScore = computeRowIntegrityScore({
+      label: candidateRow?.label || "",
+      labelNode,
+      labelCell,
+      rowNode,
+      playerCells: rowCells,
+    });
+
+    const expectedCount = Number.isFinite(Number(expectedPlayerCount))
+      ? Math.max(0, Math.round(Number(expectedPlayerCount)))
+      : 0;
+    const rowMeetsExpected = expectedCount > 0 ? rowCells.length >= expectedCount : rowCells.length > 0;
+    const baseMeetsExpected = expectedCount > 0 ? baseCells.length >= expectedCount : baseCells.length > 0;
+    if ((rowMeetsExpected && !baseMeetsExpected) || rowScore > baseScore) {
+      return rowCells;
+    }
+
+    return baseCells;
+  };
 
   const upsertRow = (candidateRow) => {
     const label = String(candidateRow?.label || "");
     if (!label || !targetSet.has(label)) {
       return;
     }
+    const stateEntry = renderState.stateMap.get(label);
+    const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
+      ? stateEntry.cellStates.length
+      : 0;
 
     const normalizedRow = {
       label,
@@ -1089,6 +1188,7 @@ export function updateCricketGridFx(options = {}) {
         ? candidateRow.playerCells.filter(Boolean)
         : [],
     };
+    normalizedRow.playerCells = resolveBestPlayerCells(normalizedRow, expectedPlayerCount);
 
     const isConnectedAnchor = (node) => {
       return Boolean(node && node.isConnected !== false);
@@ -1118,9 +1218,6 @@ export function updateCricketGridFx(options = {}) {
       ? existing.playerCells.length
       : 0;
     const nextPlayerCellCount = normalizedRow.playerCells.length;
-    const expectedPlayerCount = Array.isArray(renderState.stateMap.get(label)?.cellStates)
-      ? renderState.stateMap.get(label).cellStates.length
-      : 0;
     const existingMeetsExpected =
       expectedPlayerCount > 0 && existingPlayerCellCount >= expectedPlayerCount;
     const nextMeetsExpected =
