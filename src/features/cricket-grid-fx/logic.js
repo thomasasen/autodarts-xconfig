@@ -1102,7 +1102,15 @@ export function updateCricketGridFx(options = {}) {
     return false;
   });
 
-  if (rowByLabel.size < targetSet.size || hasRecoverableRowShortfall) {
+  const hasMissingLabelAnchor = targetOrder.some((label) => {
+    const row = rowByLabel.get(label);
+    if (!row) {
+      return true;
+    }
+    return !(row.labelCell || row.labelNode);
+  });
+
+  if (rowByLabel.size < targetSet.size || hasRecoverableRowShortfall || hasMissingLabelAnchor) {
     const fallbackLabelRows = collectLabelNodes(gridRoot, cricketRules, targetSet);
     fallbackLabelRows.forEach((entry) => {
       const label = String(entry?.label || "");
@@ -1201,6 +1209,7 @@ export function updateCricketGridFx(options = {}) {
     if (!stateEntry) {
       return;
     }
+    const labelCellNode = row.labelCell || row.labelNode || null;
     const activePlayerIndex = Number(stateEntry.activePlayerIndex);
     const playerStateCount = Array.isArray(stateEntry.cellStates)
       ? stateEntry.cellStates.length
@@ -1210,9 +1219,12 @@ export function updateCricketGridFx(options = {}) {
       row.labelCell || row.labelNode || null,
       playerStateCount
     );
+    const labelCellIncluded = Boolean(labelCellNode) && resolvedPlayerCells.includes(labelCellNode);
     const indexOffset =
       resolvedPlayerCells.length < playerStateCount
-        ? Math.max(0, playerStateCount - resolvedPlayerCells.length)
+        ? labelCellIncluded
+          ? 0
+          : Math.max(0, playerStateCount - resolvedPlayerCells.length)
         : 0;
     const explicitPlayerIndexes = resolvedPlayerCells.map((cellNode) => {
       const explicitIndex = readCellPlayerIndex(cellNode);
@@ -1276,7 +1288,6 @@ export function updateCricketGridFx(options = {}) {
       pressureRowCount += 1;
     }
 
-    const labelCellNode = row.labelCell || row.labelNode || null;
     const labelCellDescriptor = cellDescriptors.find((entry) => {
       return entry.cellNode === labelCellNode;
     });

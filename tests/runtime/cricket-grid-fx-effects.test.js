@@ -1122,6 +1122,118 @@ test("cricket grid fx repairs complete-but-incomplete row snapshots and restores
   clearCricketGridFxState(state);
 });
 
+test("cricket grid fx repairs missing label anchors so open 15 keeps owner-aligned styling", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByLabel = {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [1, 0],
+    BULL: [0, 0],
+  };
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, marksByLabel);
+  const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const discoveredRenderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const canonicalStateMap = cricketRules.computeTargetStates(marksByLabel, {
+    gameMode: "cricket",
+    scoringModeNormalized: "standard",
+    activePlayerIndex: 0,
+    targetOrder,
+  });
+
+  const contaminatedRows = targetOrder.map((label) => {
+    const rowState = rowsByLabel.get(label);
+    if (label === "15") {
+      return {
+        label,
+        labelNode: null,
+        labelCell: null,
+        badgeNode: null,
+        rowNode: rowState?.row || null,
+        playerCells: [rowState?.opponentCell, rowsByLabel.get("BULL")?.ownerCell].filter(Boolean),
+      };
+    }
+
+    return {
+      label,
+      labelNode: rowState?.labelNode || rowState?.ownerCell || null,
+      labelCell: rowState?.ownerCell || null,
+      badgeNode: rowState?.labelNode || null,
+      rowNode: rowState?.row || null,
+      playerCells: [rowState?.ownerCell, rowState?.opponentCell].filter(Boolean),
+    };
+  });
+
+  const renderState = {
+    ...discoveredRenderState,
+    targetOrder,
+    marksByLabel,
+    activePlayerIndex: 0,
+    stateMap: canonicalStateMap,
+    gridSnapshot: {
+      ...(discoveredRenderState?.gridSnapshot || {}),
+      root: discoveredRenderState?.gridSnapshot?.root || documentRef.getElementById("grid"),
+      rows: contaminatedRows,
+      rowMap: new Map(contaminatedRows.map((row) => [row.label, row])),
+    },
+  };
+
+  const debugStats = {};
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+    debugStats,
+  });
+
+  const row15 = rowsByLabel.get("15");
+  assertGridCellPresentation(row15?.ownerCell || null, "open", "15 owner repaired");
+  assertGridCellPresentation(row15?.opponentCell || null, "open", "15 opponent repaired");
+  assert.equal(Boolean(row15?.ownerCell?.classList?.contains(LABEL_CLASS)), true);
+  assert.equal(Boolean(row15?.labelNode?.classList?.contains(BADGE_CLASS)), true);
+  assert.equal(Boolean(row15?.ownerCell?.classList?.contains(ACTIVE_COLUMN_CLASS)), true);
+  assert.equal(debugStats.status, "ok");
+  assert.equal(debugStats.rowCount, 7);
+
+  clearCricketGridFxState(state);
+});
+
 test("cricket grid fx never decorates #ad-ext-turn preview cards and keeps 18=X vs 0 neutral", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
