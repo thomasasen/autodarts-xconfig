@@ -923,6 +923,23 @@ function readCellPlayerIndex(cellNode) {
   return null;
 }
 
+function resolveVisiblePlayerCount(documentRef) {
+  if (!documentRef) {
+    return 0;
+  }
+
+  const playerNodes = [
+    ...queryAll(documentRef, "#ad-ext-player-display .ad-ext-player"),
+    ...queryAll(documentRef, ".ad-ext-player"),
+  ].filter((node, index, nodes) => nodes.indexOf(node) === index);
+  if (!playerNodes.length) {
+    return 0;
+  }
+
+  const visiblePlayers = playerNodes.filter((node) => isNodeVisible(node));
+  return visiblePlayers.length > 0 ? visiblePlayers.length : playerNodes.length;
+}
+
 function resolveStableRowLabelNode(rowMeta, cricketRules, label) {
   const candidates = [
     rowMeta?.labelNode || null,
@@ -1360,6 +1377,9 @@ function buildMarksByLabelSnapshot(options = {}) {
   let maxPlayerCount = 0;
   const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
   const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
+  const playerCountFromDom = resolveVisiblePlayerCount(documentRef);
+  const expectedPlayerCount =
+    playerCountFromMatch > 0 ? playerCountFromMatch : playerCountFromDom;
   const cachedStableRows =
     options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
   const rowMetaByLabel = new Map();
@@ -1392,7 +1412,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     const markSourceCells = maybeIncludeLabelCellAsPlayerCell(
       playerCells,
       labelCell,
-      playerCountFromMatch,
+      expectedPlayerCount,
       markSourceMeta
     );
     if (markSourceMeta.labelCellIncluded && !labelCellMarkSourceSet.has(label)) {
@@ -1429,7 +1449,7 @@ function buildMarksByLabelSnapshot(options = {}) {
       return;
     }
 
-    const expectedRowLength = Math.max(playerCountFromMatch, parsedCells.length);
+    const expectedRowLength = Math.max(expectedPlayerCount, parsedCells.length);
     const shortfallOffset =
       parsedCells.length < expectedRowLength
         ? Math.max(0, expectedRowLength - parsedCells.length)
@@ -1534,7 +1554,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     });
   }
 
-  const playerCount = Math.max(maxPlayerCount, playerCountFromMatch, 1);
+  const playerCount = Math.max(maxPlayerCount, expectedPlayerCount, 1);
 
   targetOrder.forEach((label) => {
     if (!Array.isArray(marksByLabel[label])) {

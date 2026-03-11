@@ -14,6 +14,7 @@ import {
   BADGE_BURST_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
+  CELL_CLASS,
   DEAD_CLASS,
   DELTA_CLASS,
   HIDDEN_LABEL_ATTRIBUTE,
@@ -1999,6 +2000,81 @@ test("cricket grid fx cell semantics stay stable when active player changes", ()
   assert.equal(opponentIsPressureBefore, true);
   assert.equal(ownerIsScoringAfter, true);
   assert.equal(opponentIsPressureAfter, true);
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx decorates both player columns in merged rows after reload when match roster is temporarily empty", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
+  documentRef.winnerNode.classList.add("ad-ext-player-active");
+
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, {
+    "20": [3, 3],
+    "19": [0, 0],
+    "18": [2, 3],
+    "17": [0, 2],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [2, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    gameState: {
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      // Stale value on purpose; DOM active marker is TEST2.
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getActiveTurn: () => null,
+      getSnapshot: () => ({ match: { players: [] } }),
+    },
+    cache: { grid: null, board: null },
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:reload:0",
+  });
+
+  const row20 = rowsByLabel.get("20");
+  const row18 = rowsByLabel.get("18");
+  assert.equal(Boolean(row20?.ownerCell?.classList?.contains(CELL_CLASS)), true);
+  assert.equal(Boolean(row20?.opponentCell?.classList?.contains(CELL_CLASS)), true);
+  assert.equal(Boolean(row18?.ownerCell?.classList?.contains(CELL_CLASS)), true);
+  assert.equal(Boolean(row18?.opponentCell?.classList?.contains(CELL_CLASS)), true);
+
+  assertGridCellPresentation(row20?.ownerCell || null, "dead", "20 owner dead");
+  assertGridCellPresentation(row20?.opponentCell || null, "dead", "20 opponent dead");
+  assertGridCellPresentation(row18?.ownerCell || null, "pressure", "18 owner pressure");
+  assertGridCellPresentation(row18?.opponentCell || null, "scoring", "18 opponent scoring");
 
   clearCricketGridFxState(state);
 });

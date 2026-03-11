@@ -11,7 +11,11 @@ import { initializeCricketHighlighter } from "../../src/features/cricket-highlig
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import { OVERLAY_ID as CHECKOUT_OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
 import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
-import { SCORE_CLASS } from "../../src/features/cricket-grid-fx/style.js";
+import {
+  PRESSURE_CLASS,
+  SCORE_CLASS,
+  THREAT_CLASS,
+} from "../../src/features/cricket-grid-fx/style.js";
 import { initializeRemoveDartsNotification } from "../../src/features/remove-darts-notification/index.js";
 import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
@@ -386,6 +390,161 @@ test("cricket-highlighter rerenders on throw updates even when board state stays
   cleanup();
 });
 
+test("cricket-highlighter reacts to attribute-only hydration updates for marks and active-player class", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(group);
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+  documentRef.main.appendChild(svg);
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+    for (let index = 0; index < 2; index += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.setAttribute("data-player-index", String(index));
+      let marks = "0";
+      if (label === "18") {
+        marks = "3";
+      }
+      cell.setAttribute("data-marks", marks);
+      cell.textContent = marks;
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const getRow = (label) => {
+    return Array.from(table.children || []).find((candidate) => {
+      const text = String(candidate?.children?.[0]?.textContent || "").trim().toUpperCase();
+      const normalized = label === "BULL" ? "BULL" : String(label).toUpperCase();
+      return text === normalized;
+    }) || null;
+  };
+  const row18 = getRow("18");
+  const row18Player0 = row18?.children?.[1] || null;
+  assert.ok(row18Player0);
+
+  const readPresentation = (label) => {
+    const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+    const shapes = Array.from(overlay?.children || []).filter((node) => {
+      return String(node?.dataset?.targetLabel || "") === label;
+    });
+    return String(shapes[0]?.dataset?.targetPresentation || "");
+  };
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+  documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
+  documentRef.winnerNode.classList.add("ad-ext-player-active");
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      // Deliberately stale index: class-mutation observer must correct perspective.
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showOpenTargets: true,
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  assert.ok(observer);
+  const observeOptions = observer.observeCalls?.[0]?.options || {};
+  assert.equal(observeOptions.attributes, true);
+  assert.equal(Array.isArray(observeOptions.attributeFilter), true);
+  assert.equal(observeOptions.attributeFilter.includes("data-marks"), true);
+  assert.equal(observeOptions.attributeFilter.includes("class"), true);
+
+  assert.equal(readPresentation("18"), "dead");
+
+  row18Player0?.setAttribute?.("data-marks", "2");
+  row18Player0.textContent = "2";
+  documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
+  documentRef.winnerNode.classList.add("ad-ext-player-active");
+
+  observer.callback([
+    {
+      type: "attributes",
+      target: row18Player0,
+      attributeName: "data-marks",
+      addedNodes: [],
+      removedNodes: [],
+    },
+    {
+      type: "attributes",
+      target: documentRef.winnerNode,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.notEqual(readPresentation("18"), "dead");
+  assert.equal(scheduleCounter.count >= 2, true);
+
+  cleanup();
+});
+
 test("cricket-highlighter emits missing-grid warning only once for unchanged status", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -605,6 +764,390 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
   assert.equal(Boolean(replacementOwner20?.classList?.contains(SCORE_CLASS)), true);
   assert.equal(scheduleCounter.count >= 2, true);
 
+  cleanup();
+});
+
+test("cricket-grid-fx reacts to attribute-only mark updates and ignores self class churn", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    for (let playerIndex = 0; playerIndex < 2; playerIndex += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.setAttribute("data-player-index", String(playerIndex));
+      let marks = "0";
+      if (label === "18") {
+        marks = "3";
+      }
+      cell.setAttribute("data-marks", marks);
+      cell.textContent = marks;
+      row.appendChild(cell);
+    }
+
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const getRow = (label) => {
+    return Array.from(table.children || []).find((candidate) => {
+      const text = String(candidate?.children?.[0]?.textContent || "").trim().toUpperCase();
+      const normalized = label === "BULL" ? "BULL" : String(label).toUpperCase();
+      return text === normalized;
+    }) || null;
+  };
+  const row18 = getRow("18");
+  const row18Player0 = row18?.children?.[1] || null;
+  const row18Player1 = row18?.children?.[2] || null;
+  assert.ok(row18Player0);
+  assert.ok(row18Player1);
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanup = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          rowWave: true,
+          badgeBeacon: true,
+          markProgress: true,
+          pressureEdge: true,
+          scoringStripe: true,
+          deadRowMuted: true,
+          deltaChips: true,
+          hitSpark: true,
+          roundTransitionWipe: true,
+          pressureOverlay: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-grid-fx:dom-observer");
+  assert.ok(observer);
+  const observeOptions = observer.observeCalls?.[0]?.options || {};
+  assert.equal(observeOptions.attributes, true);
+  assert.equal(Array.isArray(observeOptions.attributeFilter), true);
+  assert.equal(observeOptions.attributeFilter.includes("data-marks"), true);
+  assert.equal(observeOptions.attributeFilter.includes("class"), true);
+
+  const countAfterInit = scheduleCounter.count;
+  observer.callback([
+    {
+      type: "attributes",
+      target: row18Player0,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, countAfterInit);
+
+  row18Player0?.setAttribute?.("data-marks", "2");
+  row18Player0.textContent = "2";
+  observer.callback([
+    {
+      type: "attributes",
+      target: row18Player0,
+      attributeName: "data-marks",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(Boolean(row18Player0?.classList?.contains(PRESSURE_CLASS)), true);
+  assert.equal(Boolean(row18Player0?.classList?.contains(THREAT_CLASS)), true);
+  assert.equal(Boolean(row18Player1?.classList?.contains(SCORE_CLASS)), true);
+  assert.equal(scheduleCounter.count >= countAfterInit + 1, true);
+
+  cleanup();
+});
+
+test("cricket-grid-fx schedules for alt-attribute mutations on mark icons inside the grid", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    for (let playerIndex = 0; playerIndex < 2; playerIndex += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", label === "18" ? "3" : "0");
+      cell.appendChild(icon);
+      row.appendChild(cell);
+    }
+
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          rowWave: true,
+          badgeBeacon: true,
+          markProgress: true,
+          pressureEdge: true,
+          scoringStripe: true,
+          deadRowMuted: true,
+          deltaChips: true,
+          hitSpark: true,
+          roundTransitionWipe: true,
+          pressureOverlay: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-grid-fx:dom-observer");
+  assert.ok(observer);
+
+  const row18Icon = Array.from(table.querySelectorAll("tr")).find((row) => {
+    return String(row?.children?.[0]?.textContent || "").trim() === "18";
+  })?.children?.[1]?.querySelector?.("img");
+  assert.ok(row18Icon);
+
+  const countAfterInit = scheduleCounter.count;
+  row18Icon?.setAttribute?.("alt", "2");
+  observer.callback([
+    {
+      type: "attributes",
+      target: row18Icon,
+      attributeName: "alt",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count >= countAfterInit + 1, true);
+  cleanup();
+});
+
+test("cricket-highlighter schedules for alt-attribute mutations on mark icons inside the grid", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(group);
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+  documentRef.main.appendChild(svg);
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    for (let playerIndex = 0; playerIndex < 2; playerIndex += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", label === "18" ? "3" : "0");
+      cell.appendChild(icon);
+      row.appendChild(cell);
+    }
+
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const readPresentation = (label) => {
+    const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+    const shapes = Array.from(overlay?.children || []).filter((node) => {
+      return String(node?.dataset?.targetLabel || "") === label;
+    });
+    return String(shapes[0]?.dataset?.targetPresentation || "");
+  };
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 1,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showOpenTargets: true,
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  assert.ok(observer);
+  assert.equal(readPresentation("18"), "dead");
+
+  const row18OwnerIcon = Array.from(table.querySelectorAll("tr")).find((row) => {
+    return String(row?.children?.[0]?.textContent || "").trim() === "18";
+  })?.children?.[1]?.querySelector?.("img");
+  assert.ok(row18OwnerIcon);
+
+  const countAfterInit = scheduleCounter.count;
+  row18OwnerIcon?.setAttribute?.("alt", "2");
+  observer.callback([
+    {
+      type: "attributes",
+      target: row18OwnerIcon,
+      attributeName: "alt",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.notEqual(readPresentation("18"), "dead");
+  assert.equal(scheduleCounter.count >= countAfterInit + 1, true);
   cleanup();
 });
 

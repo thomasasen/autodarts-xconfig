@@ -38,6 +38,31 @@ const SURFACE_SELECTOR = [
   ".ad-ext-player",
 ].join(",");
 
+const SURFACE_SCOPE_SELECTOR = [
+  "#grid",
+  ".ad-ext-cricket-grid",
+  ".ad-ext-crfx-root",
+  ".chakra-grid",
+  "#ad-ext-player-display",
+  "#ad-ext-game-variant",
+].join(",");
+
+const SURFACE_ATTRIBUTE_FILTER = Object.freeze([
+  "class",
+  "alt",
+  "title",
+  "aria-label",
+  "data-marks",
+  "data-mark",
+  "data-hits",
+  "data-hit",
+  "data-player-index",
+  "data-player",
+  "data-column-index",
+  "data-row-label",
+  "data-target-label",
+]);
+
 function readVariantText(documentRef) {
   return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
 }
@@ -79,6 +104,13 @@ function isSurfaceMutationNode(node) {
   if (typeof node.closest === "function" && node.closest("#ad-xconfig-panel-host")) {
     return false;
   }
+  const anchorNode =
+    typeof node.closest === "function"
+      ? node
+      : node.parentElement || node.parentNode || null;
+  if (anchorNode && typeof anchorNode.closest === "function" && anchorNode.closest(SURFACE_SCOPE_SELECTOR)) {
+    return true;
+  }
   if (typeof node.matches === "function" && node.matches(SURFACE_SELECTOR)) {
     return true;
   }
@@ -93,7 +125,34 @@ function hasRelevantCricketMutation(mutations = []) {
     return false;
   }
 
+  const isRelevantAttributeMutation = (mutation) => {
+    if (String(mutation?.type || "") !== "attributes") {
+      return true;
+    }
+
+    const attributeName = String(mutation?.attributeName || "").trim().toLowerCase();
+    if (!attributeName) {
+      return false;
+    }
+
+    if (attributeName !== "class") {
+      return SURFACE_ATTRIBUTE_FILTER.includes(attributeName);
+    }
+
+    const target = mutation?.target || null;
+    if (!target || typeof target.matches !== "function") {
+      return false;
+    }
+
+    // Avoid feedback loops from our own class toggles on grid cells.
+    return target.matches(".ad-ext-player, #ad-ext-player-display, #ad-ext-game-variant");
+  };
+
   return mutations.some((mutation) => {
+    if (!isRelevantAttributeMutation(mutation)) {
+      return false;
+    }
+
     const target = mutation?.target || null;
     if (isSurfaceMutationNode(target)) {
       return true;
@@ -330,6 +389,8 @@ export function initializeCricketGridFx(context = {}) {
         childList: true,
         subtree: true,
         characterData: true,
+        attributes: true,
+        attributeFilter: SURFACE_ATTRIBUTE_FILTER.slice(),
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });

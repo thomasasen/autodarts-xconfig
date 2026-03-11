@@ -562,6 +562,46 @@ test("board perspective follows DOM active player switch even when game-state in
   assert.equal(active1State?.stateMap.get("18")?.boardPresentation, "open");
 });
 
+test("merged cricket grid resolves both player columns from visible roster when match players are not hydrated yet", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  setDomActivePlayer(documentRef, 1);
+
+  createMergedLabelCellGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 3],
+    "19": [0, 0],
+    "18": [2, 3],
+    "17": [0, 2],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [2, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      // Deliberately stale state index; DOM marker must still win.
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [] } }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel?.["20"]?.join(","), "3,3");
+  assert.equal(renderState?.marksByLabel?.["18"]?.join(","), "2,3");
+  assert.equal(
+    renderState?.stateMap?.get("18")?.cellStates?.map((entry) => entry.presentation).join(","),
+    "pressure,scoring"
+  );
+  assert.equal(renderState?.stateMap?.get("18")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap?.get("20")?.boardPresentation, "dead");
+});
+
 test("unknown scoring mode falls back to standard for cricket overlays", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
