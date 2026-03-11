@@ -1119,6 +1119,14 @@ function resolveActivePlayerIndex(gameState, documentRef, playerCount, options =
 }
 
 function resolveGameModeNormalized(gameState, variantRules, documentRef) {
+  const variantText = String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "");
+  if (variantRules && typeof variantRules.classifyCricketGameMode === "function") {
+    const classifiedVariant = variantRules.classifyCricketGameMode(variantText);
+    if (classifiedVariant === "cricket" || classifiedVariant === "tactics") {
+      return classifiedVariant;
+    }
+  }
+
   if (typeof gameState?.getCricketGameModeNormalized === "function") {
     const normalized = String(gameState.getCricketGameModeNormalized() || "").trim().toLowerCase();
     if (normalized === "cricket" || normalized === "tactics") {
@@ -1133,14 +1141,6 @@ function resolveGameModeNormalized(gameState, variantRules, documentRef) {
     const classified = variantRules.classifyCricketGameMode(rawMode);
     if (classified === "cricket" || classified === "tactics") {
       return classified;
-    }
-  }
-
-  const variantText = String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "");
-  if (variantRules && typeof variantRules.classifyCricketGameMode === "function") {
-    const classifiedVariant = variantRules.classifyCricketGameMode(variantText);
-    if (classifiedVariant === "cricket" || classifiedVariant === "tactics") {
-      return classifiedVariant;
     }
   }
 

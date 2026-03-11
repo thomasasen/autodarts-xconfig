@@ -400,6 +400,42 @@ test("buildCricketRenderState exposes tactics precision token without changing s
   assert.equal(renderState?.scoringModeNormalized, "standard");
 });
 
+test("DOM tactics variant overrides stale cricket game-state mode for target discovery", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "14", "13", "12", "11", "10", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    "14": [0, 0],
+    "13": [0, 0],
+    "12": [0, 0],
+    "11": [0, 0],
+    "10": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+    }),
+  });
+
+  assert.equal(renderState?.gameModeNormalized, "tactics");
+  assert.equal(renderState?.stateMap.has("14"), true);
+  assert.equal(renderState?.stateMap.has("10"), true);
+});
+
 test("explicit cricket mode filters tactics-only targets from the grid", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "";
