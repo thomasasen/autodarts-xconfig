@@ -381,7 +381,7 @@ test("explicit cricket mode filters tactics-only targets from the grid", () => {
   assert.equal(renderState?.stateMap.has("20"), true);
 });
 
-test("buildCricketRenderState uses completed match turns as stale-DOM preview", () => {
+test("buildCricketRenderState keeps grid marks authoritative even when completed turns exist", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
   setDomActivePlayer(documentRef, 1);
@@ -417,12 +417,14 @@ test("buildCricketRenderState uses completed match turns as stale-DOM preview", 
     }),
   });
 
-  assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "pressure");
-  assert.equal(renderState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "scoring,pressure");
+  assert.equal(renderState?.marksByLabel["20"].join(","), "0,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "open");
+  assert.equal(renderState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "open,open");
+  assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
+  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason, "grid-authoritative");
 });
 
-test("active throws merge with the active player turn baseline instead of ignoring prior turn marks", () => {
+test("active throws never override grid marks in render-state derivation", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
   setDomActivePlayer(documentRef, 1);
@@ -459,9 +461,11 @@ test("active throws merge with the active player turn baseline instead of ignori
     }),
   });
 
-  assert.equal(renderState?.marksByLabel["17"].join(","), "1,3");
-  assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "scoring");
-  assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "pressure,scoring");
+  assert.equal(renderState?.marksByLabel["17"].join(","), "1,0");
+  assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "open");
+  assert.equal(renderState?.stateMap.get("17")?.cellStates.map((entry) => entry.presentation).join(","), "open,open");
+  assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
+  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason, "grid-authoritative");
 });
 
 test("board presentation follows the active player perspective for the same cricket row", () => {
@@ -1295,9 +1299,9 @@ test("active throws do not double-count rows that the DOM already reflects", () 
     renderState?.stateMap.get("18")?.cellStates.map((entry) => entry.presentation).join(","),
     "open,open"
   );
-  assert.equal(renderState?.activeThrowPreviewDebug?.applied, true);
-  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason || "", "");
-  assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, true);
+  assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
+  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason || "", "grid-authoritative");
+  assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, false);
 });
 
 test("transition signature changes on each throw even when active turn id and board state stay the same", () => {
@@ -1366,7 +1370,7 @@ test("transition signature changes on each throw even when active turn id and bo
   assert.equal(stateThrow1?.stateMap.get("20")?.boardPresentation, "scoring");
 });
 
-test("active throw preview is suppressed when getActiveTurn already points to a finished turn", () => {
+test("active throw debug stays grid-authoritative when active turn is finished", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -1410,11 +1414,11 @@ test("active throw preview is suppressed when getActiveTurn already points to a 
   assert.equal(renderState?.marksByLabel["18"].join(","), "2,0");
   assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
   assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
-  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason, "active-turn-finished");
+  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason, "grid-authoritative");
   assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, false);
 });
 
-test("active throw preview is suppressed when it matches the latest finished turn and no unfinished turn exists", () => {
+test("active throw debug stays grid-authoritative when preview matches latest finished turn", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -1459,9 +1463,9 @@ test("active throw preview is suppressed when it matches the latest finished tur
   assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
   assert.equal(
     renderState?.activeThrowPreviewDebug?.suppressionReason,
-    "matches-last-finished-turn"
+    "grid-authoritative"
   );
-  assert.equal(renderState?.activeThrowPreviewDebug?.matchedFinishedTurn, true);
+  assert.equal(renderState?.activeThrowPreviewDebug?.matchedFinishedTurn || false, false);
   assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, false);
 });
 

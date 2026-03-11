@@ -860,6 +860,8 @@ test("cricket grid fx keeps owner scoring classes in merged owner-label rows for
     BULL: [0, 0],
   };
   const rowsByLabel = createMergedOwnerLabelGrid(documentRef, marksByLabel);
+  // Force state-index perspective in this fixture to validate column mapping deterministically.
+  documentRef.winnerNode.classList.remove("ad-ext-player");
   const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
 
   const visualConfig = resolveCricketGridFxConfig({
@@ -939,6 +941,107 @@ test("cricket grid fx keeps owner scoring classes in merged owner-label rows for
   assertGridCellPresentation(rowsByLabel.get("17")?.opponentCell || null, "pressure", "17 opponent");
   assertGridCellPresentation(rowsByLabel.get("18")?.ownerCell || null, "open", "18 owner");
   assertGridCellPresentation(rowsByLabel.get("18")?.opponentCell || null, "open", "18 opponent");
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx keeps merged owner-label rows aligned for every cricket objective and both columns", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByLabel = {
+    "20": [3, 0],
+    "19": [0, 3],
+    "18": [2, 0],
+    "17": [1, 3],
+    "16": [0, 0],
+    "15": [3, 3],
+    BULL: [0, 1],
+  };
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, marksByLabel);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(1, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+  const resolvedActivePlayerIndex = Number(renderState?.activePlayerIndex) || 0;
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:1:0",
+  });
+
+  Object.entries(marksByLabel).forEach(([label, marks]) => {
+    const row = rowsByLabel.get(label);
+    assertGridCellPresentation(
+      row?.ownerCell || null,
+      expectedPresentationByRule(marks, 0),
+      `${label} owner`
+    );
+    assertGridCellPresentation(
+      row?.opponentCell || null,
+      expectedPresentationByRule(marks, 1),
+      `${label} opponent`
+    );
+  });
+
+  ["16", "18", "BULL"].forEach((label) => {
+    const row = rowsByLabel.get(label);
+    assert.equal(
+      row?.ownerCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+      resolvedActivePlayerIndex === 0,
+      `${label} owner active-open`
+    );
+    assert.equal(
+      row?.opponentCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+      resolvedActivePlayerIndex === 1,
+      `${label} opponent active-open`
+    );
+  });
+  assert.equal(
+    rowsByLabel.get("20")?.ownerCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+    false
+  );
+  assert.equal(
+    rowsByLabel.get("20")?.opponentCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+    false
+  );
+  assert.equal(
+    rowsByLabel.get("19")?.ownerCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+    false
+  );
+  assert.equal(
+    rowsByLabel.get("19")?.opponentCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+    false
+  );
 
   clearCricketGridFxState(state);
 });

@@ -224,14 +224,6 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
     });
   };
 
-  const keepEntriesWithPlayerCells = (entries) => {
-    const scopedEntries = entries.filter((entry) => {
-      const cells = collectPlayerCellsForLabel(entry?.node, cricketRules, targetSet);
-      return cells.length > 0;
-    });
-    return scopedEntries.length > 0 ? scopedEntries : entries;
-  };
-
   scanSelectors(LABEL_NODE_SELECTORS);
 
   if (diagnostics && typeof diagnostics === "object") {
@@ -239,8 +231,8 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
     diagnostics.rawUniqueLabelCount = new Set(labels.map((entry) => entry.label)).size;
   }
 
-  let scopedLabels = keepEntriesWithPlayerCells(labels);
-  const uniqueLabelCount = new Set(scopedLabels.map((entry) => entry.label)).size;
+  let scopedLabels = labels;
+  const uniqueLabelCount = new Set(labels.map((entry) => entry.label)).size;
   if (uniqueLabelCount >= BASE_CRICKET_OBJECTIVE_COUNT) {
     return filterAtomicLabelNodes(scopedLabels, diagnostics);
   }
@@ -255,7 +247,7 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
     diagnostics.rawUniqueLabelCount = new Set(labels.map((entry) => entry.label)).size;
   }
 
-  scopedLabels = keepEntriesWithPlayerCells(labels);
+  scopedLabels = labels;
   return filterAtomicLabelNodes(scopedLabels, diagnostics);
 }
 
@@ -601,7 +593,9 @@ function parseMarksValue(node, cricketRules) {
       if (Number.isFinite(best)) {
         return best;
       }
-      return icons.length;
+      if (icons.length > 1) {
+        return cricketRules?.clampMarks?.(icons.length) ?? Math.max(0, Math.min(3, icons.length));
+      }
     }
   }
 
@@ -1394,15 +1388,6 @@ function buildMarksByLabelSnapshot(options = {}) {
       resolveBadgeNode(node, labelCell, cricketRules, label) ||
       (fallbackRowMeta?.badgeNode?.isConnected === false ? null : fallbackRowMeta?.badgeNode || null);
 
-    rowMetaByLabel.set(label, {
-      label,
-      labelNode: node,
-      labelCell,
-      badgeNode,
-      rowNode: getRowNode(node) || fallbackRowMeta?.rowNode || null,
-      playerCells,
-    });
-
     const markSourceMeta = {};
     const markSourceCells = maybeIncludeLabelCellAsPlayerCell(
       playerCells,
@@ -1423,13 +1408,24 @@ function buildMarksByLabelSnapshot(options = {}) {
       const marks = cricketRules.clampMarks(parseMarksValue(cell, cricketRules));
       const explicitPlayerIndex = readCellPlayerIndex(cell);
       return {
+        cellNode: cell,
         marks,
         explicitPlayerIndex: Number.isFinite(explicitPlayerIndex)
           ? Math.round(explicitPlayerIndex)
           : null,
       };
     });
+    const rowNode = getRowNode(node) || fallbackRowMeta?.rowNode || null;
     if (!parsedCells.length) {
+      rowMetaByLabel.set(label, {
+        label,
+        labelNode: node,
+        labelCell,
+        badgeNode,
+        rowNode,
+        playerCells,
+        playerCellsByIndex: [],
+      });
       return;
     }
 
@@ -1471,6 +1467,7 @@ function buildMarksByLabelSnapshot(options = {}) {
       },
       () => 0
     );
+    const playerCellsByIndex = Array.from({ length: marksByPlayer.length }, () => null);
     const occupiedColumns = new Set();
     let cursor = shortfallOffset;
 
@@ -1496,7 +1493,20 @@ function buildMarksByLabelSnapshot(options = {}) {
       }
 
       marksByPlayer[targetIndex] = cricketRules.clampMarks(entry.marks);
+      if (entry.cellNode && entry.cellNode.isConnected !== false) {
+        playerCellsByIndex[targetIndex] = entry.cellNode;
+      }
       occupiedColumns.add(targetIndex);
+    });
+
+    rowMetaByLabel.set(label, {
+      label,
+      labelNode: node,
+      labelCell,
+      badgeNode,
+      rowNode,
+      playerCells,
+      playerCellsByIndex,
     });
 
     marksByLabel[label] = marksByPlayer.map((value) => cricketRules.clampMarks(value));
@@ -1538,51 +1548,36 @@ function buildMarksByLabelSnapshot(options = {}) {
   const activePlayerIndex = resolveActivePlayerIndex(gameState, documentRef, playerCount, {
     preferGameStateIndex: hasIndexedPlayerColumns,
   });
-  const turnMarksByLabel = readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount);
-  const activeThrowPreview = readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder, {
-    activePlayerIndex,
-    snapshotMatch: snapshot?.match || null,
-  });
+  const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
+  const activeThrowPreview = {
+    marksByLabel: new Map(),
+    throws: activeThrows,
+    debug: {
+      applied: false,
+      suppressionReason: "grid-authoritative",
+      throwCount: activeThrows.length,
+      targetCount: targetOrder.length,
+      activePlayerIndex,
+    },
+  };
   const marksMergeByLabelDebug = {};
 
   targetOrder.forEach((label) => {
     const domMarks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
     const domMarksBeforeMerge = domMarks.map((value) => cricketRules.clampMarks(value || 0));
-    const turnMarks = Array.isArray(turnMarksByLabel?.[label]) ? turnMarksByLabel[label] : [];
-    const turnMarksNormalized = turnMarks.map((value) => cricketRules.clampMarks(value || 0));
-    const activeThrowMarks = activeThrowPreview.marksByLabel.get(label) || 0;
-    let projectedActiveMarks = 0;
 
     for (let index = 0; index < playerCount; index += 1) {
-      domMarks[index] = Math.max(
-        cricketRules.clampMarks(domMarks[index] || 0),
-        cricketRules.clampMarks(turnMarks[index] || 0)
-      );
-    }
-
-    if (activeThrowMarks > 0) {
-      const historicalActiveMarks = cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0);
-      projectedActiveMarks = cricketRules.clampMarks(
-        historicalActiveMarks + activeThrowMarks
-      );
-      domMarks[activePlayerIndex] = Math.max(
-        cricketRules.clampMarks(domMarks[activePlayerIndex] || 0),
-        projectedActiveMarks
-      );
+      domMarks[index] = cricketRules.clampMarks(domMarks[index] || 0);
     }
 
     const relevantDebugEntry =
       domMarksBeforeMerge.some((value) => value > 0) ||
-      turnMarksNormalized.some((value) => value > 0) ||
-      activeThrowMarks > 0 ||
       domMarks.some((value) => cricketRules.clampMarks(value || 0) > 0);
     if (relevantDebugEntry) {
       marksMergeByLabelDebug[label] = {
         domBefore: domMarksBeforeMerge.join(","),
-        turn: turnMarksNormalized.join(","),
-        activeThrowMarks: cricketRules.clampMarks(activeThrowMarks),
-        projectedActiveMarks: cricketRules.clampMarks(projectedActiveMarks),
-        activeThrowApplied: Boolean(activeThrowPreview?.debug?.applied && activeThrowMarks > 0),
+        mergeSource: "grid",
+        activeThrowApplied: false,
         final: domMarks.map((value) => cricketRules.clampMarks(value || 0)).join(","),
       };
     }
@@ -1637,6 +1632,9 @@ function buildMarksByLabelSnapshot(options = {}) {
         rowNode: rowMeta.rowNode || null,
         playerCells: Array.isArray(rowMeta.playerCells)
           ? rowMeta.playerCells.filter(Boolean)
+          : [],
+        playerCellsByIndex: Array.isArray(rowMeta.playerCellsByIndex)
+          ? rowMeta.playerCellsByIndex.map((cell) => (cell && cell.isConnected !== false ? cell : null))
           : [],
         marksByPlayer: Array.isArray(enrichedMarksByLabel?.[label])
           ? enrichedMarksByLabel[label].map((value) => cricketRules.clampMarks(value))

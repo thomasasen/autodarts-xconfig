@@ -808,7 +808,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(renderState?.marksByLabel["20"].join(","), "3,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "pressure");
-  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
   assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "pressure");
   assert.equal(renderState?.stateMap.get("15")?.boardPresentation, "dead");
   assert.equal(Number.isFinite(renderState?.labelDiagnostics?.multiLabelContainerDropCount), true);
@@ -836,7 +836,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
 
   const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
   assert.equal(Boolean(overlay), true);
-  assert.equal(debugStats.nonOpenTargetCount || 0, 5);
+  assert.equal(debugStats.nonOpenTargetCount || 0, 4);
   assert.equal((debugStats.renderedShapeCount || 0) > 0, true);
 
   const has20Shape = Array.from(overlay?.children || []).some((node) => {
@@ -856,7 +856,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   });
 
   assert.equal(gridFxStats.status, "ok");
-  assert.equal(gridFxStats.offenseRowCount || 0, 4);
+  assert.equal(gridFxStats.offenseRowCount || 0, 3);
   assert.equal(gridFxStats.badgeCount || 0, 7);
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
   const labelText20 = rowsByLabel.get("20")?.labelText || null;
@@ -887,8 +887,8 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(opponentCell19?.classList?.contains(THREAT_CLASS), false);
   assert.equal(opponentCell19?.classList?.contains(PRESSURE_CLASS), false);
   assert.equal(opponentCell18?.classList?.contains(SCORE_CLASS), false);
-  assert.equal(opponentCell18?.classList?.contains(THREAT_CLASS), true);
-  assert.equal(opponentCell18?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(opponentCell18?.classList?.contains(THREAT_CLASS), false);
+  assert.equal(opponentCell18?.classList?.contains(PRESSURE_CLASS), false);
   assert.equal(opponentCell17?.classList?.contains(SCORE_CLASS), true);
   assert.equal(opponentCell17?.classList?.contains(THREAT_CLASS), false);
   assert.equal(opponentCell17?.classList?.contains(PRESSURE_CLASS), false);
