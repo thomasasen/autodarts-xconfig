@@ -974,6 +974,57 @@ test("render state keeps cricket screenshot regression rows in the correct open/
   });
 });
 
+test("render state keeps 19=[1,3] as pressure/scoring and board follows active player", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByRow = {
+    "20": [3, 0],
+    "19": [1, 3],
+    "18": [2, 3],
+    "17": [1, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  };
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], marksByRow);
+
+  const buildForActive = (activeIndex) => {
+    setDomActivePlayer(documentRef, activeIndex);
+    return buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState: createGameState({
+        getCricketGameModeNormalized: () => "cricket",
+        getCricketGameMode: () => "Cricket",
+        getCricketScoringModeNormalized: () => "standard",
+        getActivePlayerIndex: () => activeIndex,
+        getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      }),
+    });
+  };
+
+  const active0 = buildForActive(0);
+  const active1 = buildForActive(1);
+
+  const state19Active0 = active0?.stateMap.get("19");
+  const state19Active1 = active1?.stateMap.get("19");
+  assert.equal(state19Active0?.cellStates?.[0]?.presentation, "pressure");
+  assert.equal(state19Active0?.cellStates?.[1]?.presentation, "scoring");
+  assert.equal(state19Active1?.cellStates?.[0]?.presentation, "pressure");
+  assert.equal(state19Active1?.cellStates?.[1]?.presentation, "scoring");
+  assert.equal(state19Active0?.boardPresentation, "pressure");
+  assert.equal(state19Active1?.boardPresentation, "scoring");
+
+  const state18Active0 = active0?.stateMap.get("18");
+  const state18Active1 = active1?.stateMap.get("18");
+  assert.equal(state18Active0?.cellStates?.[0]?.presentation, "pressure");
+  assert.equal(state18Active0?.cellStates?.[1]?.presentation, "scoring");
+  assert.equal(state18Active1?.boardPresentation, "scoring");
+});
+
 test("hit progression '/' -> 'X' -> '⊗' keeps grid and board colors rule-correct after each hit", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";

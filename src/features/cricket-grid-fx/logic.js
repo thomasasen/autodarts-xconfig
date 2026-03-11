@@ -1007,6 +1007,10 @@ export function updateCricketGridFx(options = {}) {
 
   const sourceRows = Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [];
   const rowByLabel = new Map();
+  const stableRowsByLabel =
+    state?.renderCache?.gridStableRowsByLabel instanceof Map
+      ? state.renderCache.gridStableRowsByLabel
+      : null;
   const computeRowIntegrityScore = (candidateRow) => {
     const label = String(candidateRow?.label || "");
     if (!label) {
@@ -1114,6 +1118,13 @@ export function updateCricketGridFx(options = {}) {
       ? existing.playerCells.length
       : 0;
     const nextPlayerCellCount = normalizedRow.playerCells.length;
+    const expectedPlayerCount = Array.isArray(renderState.stateMap.get(label)?.cellStates)
+      ? renderState.stateMap.get(label).cellStates.length
+      : 0;
+    const existingMeetsExpected =
+      expectedPlayerCount > 0 && existingPlayerCellCount >= expectedPlayerCount;
+    const nextMeetsExpected =
+      expectedPlayerCount > 0 && nextPlayerCellCount >= expectedPlayerCount;
     const existingAnchorScore =
       (existing.labelCell ? 1 : 0) +
       (existing.labelNode ? 1 : 0) +
@@ -1125,11 +1136,13 @@ export function updateCricketGridFx(options = {}) {
     const existingIntegrityScore = computeRowIntegrityScore(existing);
     const nextIntegrityScore = computeRowIntegrityScore(normalizedRow);
     const shouldReplace =
+      (nextMeetsExpected && !existingMeetsExpected) ||
       (!existing.labelCell && Boolean(normalizedRow.labelCell)) ||
       (!existing.badgeNode && Boolean(normalizedRow.badgeNode)) ||
       (existingPlayerCellCount === 0 && nextPlayerCellCount > 0) ||
       (nextPlayerCellCount > existingPlayerCellCount) ||
-      (nextAnchorScore > existingAnchorScore) ||
+      (nextAnchorScore > existingAnchorScore &&
+        nextIntegrityScore >= existingIntegrityScore) ||
       (nextIntegrityScore > existingIntegrityScore);
 
     if (shouldReplace) {
@@ -1141,36 +1154,14 @@ export function updateCricketGridFx(options = {}) {
     upsertRow(row);
   });
 
-  const hasRecoverableRowShortfall = targetOrder.some((label) => {
-    const row = rowByLabel.get(label);
-    if (!row) {
-      return true;
-    }
-
-    const stateEntry = renderState.stateMap.get(label);
-    const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
-      ? stateEntry.cellStates.length
-      : 0;
-    const playerCells = Array.isArray(row.playerCells) ? row.playerCells.filter(Boolean) : [];
-    const hasRowAnchor = Boolean(row.labelCell || row.labelNode || row.rowNode);
-
-    if (!hasRowAnchor) {
-      return true;
-    }
-    if (expectedPlayerCount > 0 && playerCells.length < expectedPlayerCount) {
-      return true;
-    }
-
-    return false;
-  });
-
-  const hasMissingLabelAnchor = targetOrder.some((label) => {
-    const row = rowByLabel.get(label);
-    if (!row) {
-      return true;
-    }
-    return !(row.labelCell || row.labelNode);
-  });
+  if (stableRowsByLabel) {
+    targetOrder.forEach((label) => {
+      const stableRow = stableRowsByLabel.get(label);
+      if (stableRow) {
+        upsertRow(stableRow);
+      }
+    });
+  }
 
   const fallbackLabelRows = collectLabelNodes(gridRoot, cricketRules, targetSet);
   fallbackLabelRows.forEach((entry) => {
@@ -1213,6 +1204,24 @@ export function updateCricketGridFx(options = {}) {
     debugStats.rowCount = rows.length;
     debugStats.labelCellCount = rows.filter((row) => Boolean(row.labelCell)).length;
     debugStats.badgeCount = rows.filter((row) => Boolean(row.badgeNode)).length;
+  }
+
+  if (state?.renderCache && typeof state.renderCache === "object") {
+    state.renderCache.gridStableRowsByLabel = new Map(
+      rows.map((row) => {
+        return [
+          row.label,
+          {
+            label: row.label,
+            labelNode: row.labelNode || null,
+            labelCell: row.labelCell || null,
+            badgeNode: row.badgeNode || null,
+            rowNode: row.rowNode || getRowNode(row.labelCell || row.labelNode || null),
+            playerCells: Array.isArray(row.playerCells) ? row.playerCells.filter(Boolean) : [],
+          },
+        ];
+      })
+    );
   }
 
   clearPersistentState(state);
