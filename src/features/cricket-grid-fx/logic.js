@@ -1382,6 +1382,66 @@ export function updateCricketGridFx(options = {}) {
   let rowWaveDeltaCount = 0;
   let rowWaveTacticalCount = 0;
   const activeColumnMissingLabels = [];
+  const toCellDescriptors = (cells, labelCellNode, playerStateCount) => {
+    const normalizedCells = Array.isArray(cells) ? cells.filter(Boolean) : [];
+    if (!normalizedCells.length || playerStateCount <= 0) {
+      return [];
+    }
+
+    const labelCellIncluded = Boolean(labelCellNode) && normalizedCells.includes(labelCellNode);
+    const indexOffset =
+      normalizedCells.length < playerStateCount
+        ? labelCellIncluded
+          ? 0
+          : Math.max(0, playerStateCount - normalizedCells.length)
+        : 0;
+    const explicitPlayerIndexes = normalizedCells.map((cellNode) => {
+      const explicitIndex = readCellPlayerIndex(cellNode);
+      return Number.isFinite(explicitIndex) ? Math.round(explicitIndex) : null;
+    });
+    const explicitIndexValues = explicitPlayerIndexes.filter((value) => Number.isFinite(value));
+    const explicitCoverageComplete =
+      normalizedCells.length > 0 && explicitIndexValues.length === normalizedCells.length;
+    const explicitUnique = new Set(explicitIndexValues).size === explicitIndexValues.length;
+    const explicitInBounds = explicitIndexValues.every((value) => {
+      return value >= 0 && value < playerStateCount;
+    });
+    const explicitRespectsShortfall =
+      normalizedCells.length >= playerStateCount ||
+      explicitIndexValues.every((value) => value >= indexOffset);
+    const useExplicitPlayerIndexes =
+      explicitCoverageComplete &&
+      explicitUnique &&
+      explicitInBounds &&
+      explicitRespectsShortfall;
+
+    return normalizedCells
+      .map((cellNode, index) => {
+        const explicitPlayerIndex = explicitPlayerIndexes[index];
+        const playerIndex =
+          useExplicitPlayerIndexes && Number.isFinite(explicitPlayerIndex)
+            ? explicitPlayerIndex
+            : index + indexOffset;
+        return {
+          cellNode,
+          playerIndex,
+        };
+      })
+      .filter((entry) => {
+        return (
+          entry.cellNode?.classList &&
+          Number.isFinite(entry.playerIndex) &&
+          entry.playerIndex >= 0 &&
+          entry.playerIndex < playerStateCount
+        );
+      });
+  };
+  const isCellInsideRow = (cellNode, rowNode) => {
+    if (!cellNode || !rowNode || typeof rowNode.contains !== "function") {
+      return true;
+    }
+    return rowNode === cellNode || rowNode.contains(cellNode);
+  };
 
   rows.forEach((row) => {
     const stateEntry = renderState.stateMap.get(row.label);
@@ -1416,54 +1476,48 @@ export function updateCricketGridFx(options = {}) {
         row.labelCell || row.labelNode || null,
         playerStateCount
       );
-      const labelCellIncluded = Boolean(labelCellNode) && resolvedPlayerCells.includes(labelCellNode);
-      const indexOffset =
-        resolvedPlayerCells.length < playerStateCount
-          ? labelCellIncluded
-            ? 0
-            : Math.max(0, playerStateCount - resolvedPlayerCells.length)
-          : 0;
-      const explicitPlayerIndexes = resolvedPlayerCells.map((cellNode) => {
-        const explicitIndex = readCellPlayerIndex(cellNode);
-        return Number.isFinite(explicitIndex) ? Math.round(explicitIndex) : null;
-      });
-      const explicitIndexValues = explicitPlayerIndexes.filter((value) => Number.isFinite(value));
-      const explicitCoverageComplete =
-        resolvedPlayerCells.length > 0 && explicitIndexValues.length === resolvedPlayerCells.length;
-      const explicitUnique = new Set(explicitIndexValues).size === explicitIndexValues.length;
-      const explicitInBounds = explicitIndexValues.every((value) => {
-        return value >= 0 && value < playerStateCount;
-      });
-      const explicitRespectsShortfall =
-        resolvedPlayerCells.length >= playerStateCount ||
-        explicitIndexValues.every((value) => value >= indexOffset);
-      const useExplicitPlayerIndexes =
-        explicitCoverageComplete &&
-        explicitUnique &&
-        explicitInBounds &&
-        explicitRespectsShortfall;
-      cellDescriptors = resolvedPlayerCells
-        .map((cellNode, index) => {
-          const explicitPlayerIndex = explicitPlayerIndexes[index];
-          const playerIndex =
-            useExplicitPlayerIndexes && Number.isFinite(explicitPlayerIndex)
-              ? explicitPlayerIndex
-              : index + indexOffset;
-          return {
-            cellNode,
-            playerIndex,
-          };
-        })
-        .filter((entry) => {
-          return (
-            entry.cellNode?.classList &&
-            Number.isFinite(entry.playerIndex) &&
-            entry.playerIndex >= 0 &&
-            entry.playerIndex < playerStateCount
-          );
-        });
+      cellDescriptors = toCellDescriptors(
+        resolvedPlayerCells,
+        labelCellNode,
+        playerStateCount
+      );
     } else {
       resolvedPlayerCells = cellDescriptors.map((entry) => entry.cellNode);
+    }
+    const resolvedRowNode = row.rowNode || getRowNode(row.labelCell || row.labelNode || null);
+    if (Number.isFinite(activePlayerIndex) && playerStateCount > 0) {
+      const hasActiveDescriptor = cellDescriptors.some((entry) => {
+        return (
+          entry.playerIndex === activePlayerIndex &&
+          isCellInsideRow(entry.cellNode, resolvedRowNode)
+        );
+      });
+      const hasForeignDescriptors = cellDescriptors.some((entry) => {
+        return !isCellInsideRow(entry.cellNode, resolvedRowNode);
+      });
+      if (!hasActiveDescriptor || hasForeignDescriptors) {
+        const strictRowCells = buildRowCellsFromRowNode(
+          {
+            label: row.label,
+            labelNode: row.labelNode || null,
+            labelCell: row.labelCell || null,
+            rowNode: resolvedRowNode,
+          },
+          playerStateCount
+        );
+        const strictDescriptors = toCellDescriptors(
+          strictRowCells,
+          labelCellNode,
+          playerStateCount
+        );
+        const strictHasActive = strictDescriptors.some((entry) => {
+          return entry.playerIndex === activePlayerIndex;
+        });
+        if (strictHasActive) {
+          cellDescriptors = strictDescriptors;
+          resolvedPlayerCells = strictDescriptors.map((entry) => entry.cellNode);
+        }
+      }
     }
     const hasPlayerCells = Array.isArray(resolvedPlayerCells) && resolvedPlayerCells.length > 0;
     if (!hasPlayerCells) {

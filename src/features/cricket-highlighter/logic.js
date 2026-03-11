@@ -272,6 +272,7 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   const intensity = visualConfig.intensity || {};
   const baseColor = visualConfig.baseColor || { r: 90, g: 90, b: 90 };
   const mutedColor = visualConfig.mutedColor || { r: 33, g: 33, b: 33 };
+  const deadColor = visualConfig.deadColor || { r: 112, g: 118, b: 128 };
   const showOpenObjectives = visualConfig.showOpenObjectives === true;
   const highlightOpacity = clampAlpha(intensity.highlightOpacity, 0.45);
   const strokeBoost = clampAlpha(intensity.strokeBoost, 0.2);
@@ -292,9 +293,9 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(
     overlay,
     "--ad-ext-cricket-dead-fill",
-    rgbaColor(mutedColor, deadAlpha)
+    rgbaColor(deadColor, deadAlpha)
   );
-  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", rgbaColor(mutedColor, mutedStrokeAlpha));
+  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", rgbaColor(deadColor, mutedStrokeAlpha));
   setStyleVar(overlay, "--ad-ext-cricket-dead-opacity", "1");
 
   setStyleVar(
@@ -393,6 +394,7 @@ function ensurePresentationPatterns(overlay, visualConfig) {
   const scoringColor = visualConfig?.theme?.scoring || { r: 0, g: 178, b: 135 };
   const pressureColor = visualConfig?.theme?.pressure || { r: 239, g: 68, b: 68 };
   const mutedColor = visualConfig?.mutedColor || { r: 33, g: 33, b: 33 };
+  const deadColor = visualConfig?.deadColor || { r: 112, g: 118, b: 128 };
   return {
     scoring: ensureStripedPattern(overlay, {
       patternId: "ad-ext-cricket-scoring-pattern",
@@ -408,9 +410,9 @@ function ensurePresentationPatterns(overlay, visualConfig) {
     }),
     dead: ensureStripedPattern(overlay, {
       patternId: "ad-ext-cricket-dead-pattern",
-      color: mutedColor,
-      baseAlpha: 0.34,
-      stripeAlpha: 0.16,
+      color: deadColor,
+      baseAlpha: 0.46,
+      stripeAlpha: 0.22,
     }),
     inactive: ensureStripedPattern(overlay, {
       patternId: "ad-ext-cricket-inactive-pattern",

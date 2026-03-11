@@ -340,6 +340,8 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
+  // Force state-index perspective for deterministic active-column assertions.
+  documentRef.winnerNode.classList.remove("ad-ext-player");
 
   const rowsByLabel = createNumericCricketGrid(documentRef, {
     "20": [0, 0],
@@ -1569,6 +1571,102 @@ test("cricket grid fx repairs same-length contamination for every cricket row an
       );
     });
   });
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx repairs contaminated bull row mapping so active open column stays aligned", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  // Force state-index perspective for deterministic active-column assertions.
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 3],
+    "19": [3, 3],
+    "18": [3, 3],
+    "17": [3, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const cache = { grid: null, board: null };
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(1, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache,
+  });
+
+  const contaminatedRows = (renderState?.gridSnapshot?.rows || []).map((row) => {
+    if (String(row?.label || "") !== "BULL") {
+      return row;
+    }
+    return {
+      label: "BULL",
+      labelNode: row?.labelNode || row?.labelCell || null,
+      labelCell: row?.labelCell || null,
+      badgeNode: row?.badgeNode || null,
+      rowNode: row?.rowNode || null,
+      playerCells: [
+        rowsByLabel.get("BULL")?.playerCells?.[0],
+        rowsByLabel.get("15")?.playerCells?.[0],
+      ].filter(Boolean),
+    };
+  });
+
+  const degradedRenderState = {
+    ...renderState,
+    gridSnapshot: {
+      ...(renderState?.gridSnapshot || {}),
+      rows: contaminatedRows,
+      rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
+    },
+  };
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: degradedRenderState,
+    state,
+    visualConfig,
+    turnToken: "bull:contaminated:active1",
+  });
+
+  const bullRow = rowsByLabel.get("BULL");
+  assertGridCellPresentation(bullRow?.playerCells?.[0] || null, "open", "BULL owner open");
+  assertGridCellPresentation(bullRow?.playerCells?.[1] || null, "open", "BULL opponent open");
+  assert.equal(
+    Boolean(bullRow?.playerCells?.[0]?.classList?.contains(ACTIVE_COLUMN_CLASS)),
+    false
+  );
+  assert.equal(
+    Boolean(bullRow?.playerCells?.[1]?.classList?.contains(ACTIVE_COLUMN_CLASS)),
+    true
+  );
 
   clearCricketGridFxState(state);
 });

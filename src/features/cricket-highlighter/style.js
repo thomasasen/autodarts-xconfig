@@ -17,6 +17,7 @@ export const PRESENTATION_CLASS = Object.freeze({
 
 const BASE_COLOR = Object.freeze({ r: 90, g: 90, b: 90 });
 const MUTED_COLOR = Object.freeze({ r: 33, g: 33, b: 33 });
+const DEAD_COLOR = Object.freeze({ r: 112, g: 118, b: 128 });
 
 const THEME_PRESETS = Object.freeze({
   standard: {
@@ -73,6 +74,7 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
     intensity,
     baseColor: BASE_COLOR,
     mutedColor: MUTED_COLOR,
+    deadColor: DEAD_COLOR,
     strokeWidthRatio: 0.006,
     edgePaddingPx: 0.8,
     showOpenObjectives,

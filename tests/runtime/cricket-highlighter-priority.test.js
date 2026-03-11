@@ -771,7 +771,7 @@ test("board scoring stays in the scoring bucket while open rows stay neutral", (
   );
 });
 
-test("board active-player switch keeps pressure sectors visible and dead sectors use black stripe patterns", () => {
+test("board active-player switch keeps pressure sectors visible and dead sectors use grey stripe patterns", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
   createBoard(documentRef);
@@ -873,6 +873,14 @@ test("board active-player switch keeps pressure sectors visible and dead sectors
     dead18.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-dead-pattern")),
     true
   );
+
+  const deadPatternBaseFill = String(
+    overlay
+      ?.ownerSVGElement
+      ?.querySelector?.("#ad-ext-cricket-dead-pattern rect")
+      ?.getAttribute?.("fill") || ""
+  );
+  assert.equal(deadPatternBaseFill.includes("112, 118, 128"), true);
 });
 
 test("board renderer prioritizes boardPresentation over stale ui buckets", () => {
