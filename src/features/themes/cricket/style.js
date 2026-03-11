@@ -296,9 +296,9 @@ p.chakra-text.css-1qlemha {
 #grid .label-cell,
 #grid tr > td:first-child,
 #grid tr > th:first-child {
-  background: linear-gradient(115deg, rgba(8, 56, 78, 0.86), rgba(7, 39, 58, 0.88)) !important;
-  border-right-color: rgba(89, 170, 198, 0.48) !important;
-  box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.08);
+  background: linear-gradient(90deg, rgba(10, 17, 30, 0.88), rgba(8, 14, 25, 0.86)) !important;
+  border-right-color: rgba(56, 74, 102, 0.78) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .css-rfeml4 > div {
@@ -307,7 +307,7 @@ p.chakra-text.css-1qlemha {
 }
 
 .css-rfeml4 > div:nth-child(odd) {
-  background: linear-gradient(120deg, rgba(8, 56, 78, 0.84), rgba(8, 38, 56, 0.9)) !important;
+  background: linear-gradient(120deg, rgba(10, 18, 32, 0.88), rgba(8, 15, 28, 0.9)) !important;
 }
 
 .css-rfeml4 > div:nth-child(even) {

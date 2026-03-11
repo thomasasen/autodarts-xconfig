@@ -25,8 +25,13 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#grid\s+\.label-cell,[^}]*#grid\s+tr\s*>\s*td:first-child,[^}]*#grid\s+tr\s*>\s*th:first-child\s*\{[^}]*background:\s*linear-gradient\(115deg,\s*rgba\(8,\s*56,\s*78,\s*0\.86\),\s*rgba\(7,\s*39,\s*58,\s*0\.88\)\)\s*!important;/s
+    /#grid\s+\.label-cell,[^}]*#grid\s+tr\s*>\s*td:first-child,[^}]*#grid\s+tr\s*>\s*th:first-child\s*\{[^}]*background:\s*linear-gradient\(90deg,\s*rgba\(10,\s*17,\s*30,\s*0\.88\),\s*rgba\(8,\s*14,\s*25,\s*0\.86\)\)\s*!important;/s
   );
+  assert.match(
+    css,
+    /\.css-rfeml4\s*>\s*div:nth-child\(odd\)\s*\{[^}]*background:\s*linear-gradient\(120deg,\s*rgba\(10,\s*18,\s*32,\s*0\.88\),\s*rgba\(8,\s*15,\s*28,\s*0\.9\)\)\s*!important;/s
+  );
+  assert.doesNotMatch(css, /rgba\(8,\s*56,\s*78,\s*0\.86\)/);
   assert.match(
     css,
     /\.ad-ext-theme-board-panel\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)\s*!important;[^}]*position:\s*relative\s*!important;[^}]*overflow:\s*visible\s*!important;/s
@@ -130,6 +135,7 @@ test("cricket grid fx style exposes badge and state hierarchy", () => {
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst 700ms ease;/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*repeating-linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*repeating-linear-gradient\(/s);
+  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-active-column\s*\{[^}]*linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-mark-progress\s*\{[^}]*animation:\s*ad-ext-crfx-mark 420ms cubic-bezier\(0\.2,\s*0\.8,\s*0\.2,\s*1\);/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-delta\s*\{[^}]*font-size:\s*2\.22rem;/s);
   assert.doesNotMatch(css, /ad-ext-crfx-cell-active/);

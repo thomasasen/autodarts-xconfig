@@ -24,6 +24,7 @@ import {
   updateCricketGridFx,
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
+  ACTIVE_COLUMN_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
   DEAD_CLASS,
@@ -1162,6 +1163,100 @@ test("theme-like combined cricket surface stays stable across invalidated partia
   });
 
   restoreDiscovery();
+  clearCricketGridFxState(gridFxState);
+  clearCricketHighlights(documentRef);
+});
+
+test("theme-like merged grid keeps 18 owner pressure-red while active opponent scoring stays green", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  const rowsByLabel = createMergedLabelMarkCricketGrid(documentRef, {
+    "20": [3, 3],
+    "19": [0, 0],
+    "18": [2, 3],
+    "17": [1, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketVisualConfig({
+    showOpenTargets: true,
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxVisualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const renderCache = { grid: null, board: null };
+  const gridFxState = createCricketGridFxState();
+  const gameState = createGameState({
+    scoringModeNormalized: "standard",
+    scoringMode: "standard",
+    activePlayerIndex: 1,
+    match: {
+      players: [{ id: "player-a" }, { id: "player-b" }],
+    },
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  assert.equal(
+    renderState?.stateMap.get("18")?.cellStates.map((entry) => entry.presentation).join(","),
+    "pressure,scoring"
+  );
+  const activePlayerIndex = Number(renderState?.activePlayerIndex) || 0;
+  const expectedBoardPresentation =
+    renderState?.stateMap.get("18")?.cellStates?.[activePlayerIndex]?.presentation || "open";
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, expectedBoardPresentation);
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state: gridFxState,
+    visualConfig: gridFxVisualConfig,
+    turnToken: "fallback:1:0",
+  });
+
+  const owner18 = rowsByLabel.get("18")?.labelCell || null;
+  const owner18Badge = rowsByLabel.get("18")?.labelText || null;
+  const opponent18 = rowsByLabel.get("18")?.playerCells?.[0] || null;
+  const owner17 = rowsByLabel.get("17")?.labelCell || null;
+  const opponent17 = rowsByLabel.get("17")?.playerCells?.[0] || null;
+
+  assert.equal(owner18?.classList?.contains(LABEL_STATE_CLASS.pressure), true);
+  assert.equal(owner18?.classList?.contains(LABEL_STATE_CLASS.scoring), false);
+  assert.equal(owner18Badge?.classList?.contains(BADGE_STATE_CLASS.pressure), true);
+  assert.equal(owner18Badge?.classList?.contains(BADGE_STATE_CLASS.scoring), false);
+  assert.equal(owner18?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(owner18?.classList?.contains(THREAT_CLASS), true);
+  assert.equal(opponent18?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(opponent18?.classList?.contains(PRESSURE_CLASS), false);
+  assert.equal(owner17?.classList?.contains(ACTIVE_COLUMN_CLASS), activePlayerIndex === 0);
+  assert.equal(opponent17?.classList?.contains(ACTIVE_COLUMN_CLASS), activePlayerIndex === 1);
+
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);
 });

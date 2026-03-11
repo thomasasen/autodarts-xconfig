@@ -6,6 +6,7 @@ export const THREAT_CLASS = "ad-ext-crfx-threat";
 export const SCORE_CLASS = "ad-ext-crfx-score";
 export const DEAD_CLASS = "ad-ext-crfx-dead";
 export const PRESSURE_CLASS = "ad-ext-crfx-pressure";
+export const ACTIVE_COLUMN_CLASS = "ad-ext-crfx-active-column";
 export const LABEL_CLASS = "ad-ext-crfx-label-cell";
 export const BADGE_CLASS = "ad-ext-crfx-badge";
 export const BADGE_BEACON_CLASS = "ad-ext-crfx-badge-beacon";
@@ -309,6 +310,18 @@ export function buildStyleText() {
       rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 8px,
       rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 8px,
       rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 16px
+    ) !important;
+}
+
+.${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_COLUMN_CLASS} {
+  box-shadow:
+    inset 0 0 0 1px rgba(127, 214, 247, 0.36),
+    inset 0 0 16px rgba(127, 214, 247, 0.12) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 197, 255, 0.12) 0%,
+      rgba(34, 197, 255, 0.04) 100%
     ) !important;
 }
 

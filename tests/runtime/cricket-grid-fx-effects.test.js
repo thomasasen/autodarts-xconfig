@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 
 import * as cricketRules from "../../src/domain/cricket-rules.js";
@@ -10,6 +10,7 @@ import {
   updateCricketGridFx,
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
+  ACTIVE_COLUMN_CLASS,
   BADGE_BURST_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
@@ -237,6 +238,7 @@ function createMergedOwnerLabelGrid(documentRef, marksByLabel) {
 
     const ownerCell = documentRef.createElement("td");
     ownerCell.classList.add("label-cell");
+    ownerCell.setAttribute("data-marks", String(cricketRules.clampMarks(marks[0])));
 
     const labelNode = documentRef.createElement("p");
     labelNode.classList.add("chakra-text");
@@ -252,6 +254,7 @@ function createMergedOwnerLabelGrid(documentRef, marksByLabel) {
     const opponentCell = documentRef.createElement("td");
     opponentCell.classList.add("score");
     opponentCell.setAttribute("data-player-index", "1");
+    opponentCell.setAttribute("data-marks", String(cricketRules.clampMarks(marks[1])));
     const opponentMarksNode = documentRef.createElement("p");
     opponentMarksNode.classList.add("chakra-text");
     opponentMarksNode.textContent = marksToSymbol(marks[1]);
@@ -936,6 +939,79 @@ test("cricket grid fx keeps owner scoring classes in merged owner-label rows for
   assertGridCellPresentation(rowsByLabel.get("17")?.opponentCell || null, "pressure", "17 opponent");
   assertGridCellPresentation(rowsByLabel.get("18")?.ownerCell || null, "open", "18 owner");
   assertGridCellPresentation(rowsByLabel.get("18")?.opponentCell || null, "open", "18 opponent");
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx keeps owner label/badge red when owner is pressure and opponent is scoring", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByLabel = {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [2, 3],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  };
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, marksByLabel);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(1, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:1:0",
+  });
+
+  const row18 = rowsByLabel.get("18");
+  assertGridCellPresentation(row18?.ownerCell || null, "pressure", "18 owner");
+  assertGridCellPresentation(row18?.opponentCell || null, "scoring", "18 opponent");
+  assert.equal(row18?.ownerCell?.classList?.contains(LABEL_STATE_CLASS.pressure), true);
+  assert.equal(row18?.ownerCell?.classList?.contains(LABEL_STATE_CLASS.scoring), false);
+  assert.equal(row18?.labelNode?.classList?.contains(BADGE_STATE_CLASS.pressure), true);
+  assert.equal(row18?.labelNode?.classList?.contains(BADGE_STATE_CLASS.scoring), false);
+  const resolvedActiveIndex = Number(renderState?.activePlayerIndex) || 0;
+  assert.equal(
+    rowsByLabel.get("17")?.ownerCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+    resolvedActiveIndex === 0
+  );
+  assert.equal(
+    rowsByLabel.get("17")?.opponentCell?.classList?.contains(ACTIVE_COLUMN_CLASS),
+    resolvedActiveIndex === 1
+  );
 
   clearCricketGridFxState(state);
 });
@@ -1651,3 +1727,4 @@ test("cricket grid fx multi-round color scenarios keep owner perspective, includ
 
   clearCricketGridFxState(state);
 });
+

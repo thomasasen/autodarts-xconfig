@@ -3,6 +3,7 @@
   BADGE_BURST_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
+  ACTIVE_COLUMN_CLASS,
   CELL_CLASS,
   DEAD_CLASS,
   DELTA_CLASS,
@@ -525,6 +526,7 @@ function clearCellClasses(node) {
   }
   node.classList.remove(
     CELL_CLASS,
+    ACTIVE_COLUMN_CLASS,
     THREAT_CLASS,
     SCORE_CLASS,
     DEAD_CLASS,
@@ -1275,6 +1277,17 @@ export function updateCricketGridFx(options = {}) {
     }
 
     const labelCellNode = row.labelCell || row.labelNode || null;
+    const labelCellDescriptor = cellDescriptors.find((entry) => {
+      return entry.cellNode === labelCellNode;
+    });
+    const labelCellState =
+      Number.isFinite(labelCellDescriptor?.playerIndex) &&
+      Array.isArray(stateEntry.cellStates)
+        ? stateEntry.cellStates[labelCellDescriptor.playerIndex]
+        : null;
+    const labelPresentation = normalizePresentationToken(
+      labelCellState?.presentation || presentation
+    );
     let badgeNode = null;
     if (
       row.badgeNode?.classList &&
@@ -1297,25 +1310,25 @@ export function updateCricketGridFx(options = {}) {
     }
     if (labelCellNode?.classList) {
       labelCellNode.classList.add(LABEL_CLASS);
-      setLabelStateClasses(labelCellNode, presentation);
+      setLabelStateClasses(labelCellNode, labelPresentation);
       toggleClass(
         labelCellNode,
         BADGE_BEACON_CLASS,
         !badgeNode &&
           visualConfig.badgeBeacon &&
-          (presentation === "scoring" || presentation === "pressure")
+          (labelPresentation === "scoring" || labelPresentation === "pressure")
       );
       state.trackedLabels.add(labelCellNode);
     }
 
     if (badgeNode?.classList) {
       badgeNode.classList.add(BADGE_CLASS);
-      setBadgeStateClasses(badgeNode, presentation);
+      setBadgeStateClasses(badgeNode, labelPresentation);
       toggleClass(
         badgeNode,
         BADGE_BEACON_CLASS,
         visualConfig.badgeBeacon &&
-          (presentation === "scoring" || presentation === "pressure")
+          (labelPresentation === "scoring" || labelPresentation === "pressure")
       );
       state.trackedLabels.add(badgeNode);
       badgeCount += 1;
@@ -1349,8 +1362,13 @@ export function updateCricketGridFx(options = {}) {
       const scoreCell =
         (visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true) &&
         cellPresentation === "scoring";
+      const activeOpenCell =
+        Number.isFinite(activePlayerIndex) &&
+        playerIndex === activePlayerIndex &&
+        cellPresentation === "open";
 
       applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
+      toggleClass(cellNode, ACTIVE_COLUMN_CLASS, activeOpenCell);
       if (scoreCell) {
         scoreCellCount += 1;
       }
