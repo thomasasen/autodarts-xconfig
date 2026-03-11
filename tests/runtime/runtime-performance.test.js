@@ -234,6 +234,156 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   cleanup();
 });
 
+test("cricket-highlighter rerenders on throw updates even when board state stays the same", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(group);
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+  documentRef.main.appendChild(svg);
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+    for (let index = 0; index < 2; index += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.setAttribute("data-player-index", String(index));
+      const marks = label === "20" && index === 0 ? "3" : "0";
+      cell.setAttribute("data-marks", marks);
+      cell.textContent = marks;
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  let activePlayerIndex = 0;
+  let activeThrows = [];
+  let onStateChange = () => {};
+  const fixedTurn = {
+    id: "turn-live",
+    playerId: "a",
+    round: 1,
+    turn: 1,
+    createdAt: "2026-03-11T21:00:00.000Z",
+  };
+  const logs = [];
+
+  const setDomActivePlayer = (index) => {
+    documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
+    documentRef.winnerNode.classList.remove("ad-ext-player-active");
+    if (index === 0) {
+      documentRef.activePlayerRow.classList.add("ad-ext-player-active");
+    } else {
+      documentRef.winnerNode.classList.add("ad-ext-player-active");
+    }
+  };
+
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => activePlayerIndex,
+      getActiveThrows: () => activeThrows,
+      getActiveTurn: () => fixedTurn,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe(handler) {
+        onStateChange = typeof handler === "function" ? handler : () => {};
+        return () => {
+          onStateChange = () => {};
+        };
+      },
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showOpenTargets: true,
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(message) {
+        logs.push(String(message || ""));
+      },
+      warn() {},
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const readPresentation = (label) => {
+    const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+    const shapes = Array.from(overlay?.children || []).filter((node) => {
+      return String(node?.dataset?.targetLabel || "") === label;
+    });
+    return String(shapes[0]?.dataset?.targetPresentation || "");
+  };
+
+  assert.equal(readPresentation("20"), "scoring");
+  const logsAfterInit = logs.length;
+
+  activePlayerIndex = 1;
+  setDomActivePlayer(1);
+  onStateChange();
+  assert.equal(readPresentation("20"), "pressure");
+  const logsAfterPlayerSwitch = logs.length;
+  assert.equal(logsAfterPlayerSwitch > logsAfterInit, true);
+
+  // S5 changes active throw count but not any cricket objective state.
+  activeThrows = [{ segment: { name: "S5" } }];
+  onStateChange();
+  assert.equal(readPresentation("20"), "pressure");
+  assert.equal(logs.length > logsAfterPlayerSwitch, true);
+
+  cleanup();
+});
+
 test("cricket-highlighter emits missing-grid warning only once for unchanged status", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

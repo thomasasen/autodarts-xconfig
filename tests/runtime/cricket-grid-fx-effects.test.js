@@ -1287,3 +1287,96 @@ test("cricket grid fx keeps 3-player owner colors stable across active-player sw
 
   clearCricketGridFxState(state);
 });
+
+test("cricket grid fx multi-round color scenarios keep owner perspective, including DEAD when all players close", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByLabel = {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  };
+  const rowsByLabel = createNumericCricketGrid(documentRef, marksByLabel);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: false,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const setRowMarks = (label, marks) => {
+    const row = rowsByLabel.get(label);
+    (marks || []).forEach((mark, playerIndex) => {
+      const normalized = cricketRules.clampMarks(mark);
+      row?.playerIcons?.[playerIndex]?.setAttribute("alt", String(normalized));
+    });
+  };
+
+  const state = createCricketGridFxState(windowRef);
+  const rounds = [
+    { name: "r1-open", marks: { "20": [0, 0], "19": [0, 0] } },
+    { name: "r2-slash-open", marks: { "20": [1, 0], "19": [0, 0] } },
+    { name: "r3-x-open", marks: { "20": [2, 0], "19": [0, 0] } },
+    { name: "r4-scoring-pressure", marks: { "20": [3, 0], "19": [0, 0] } },
+    { name: "r5-dead", marks: { "20": [3, 3], "19": [0, 0] } },
+  ];
+
+  rounds.forEach((round, roundIndex) => {
+    Object.entries(round.marks).forEach(([label, marks]) => {
+      marksByLabel[label] = marks.slice();
+      setRowMarks(label, marks);
+    });
+
+    [0, 1].forEach((activePlayerIndex) => {
+      const renderState = buildCricketRenderState({
+        documentRef,
+        gameState: createGameState(activePlayerIndex, 2, {
+          scoringModeNormalized: "standard",
+          scoringMode: "standard",
+        }),
+        cricketRules,
+        variantRules,
+        visualConfig,
+        cache: { grid: null, board: null },
+      });
+
+      updateCricketGridFx({
+        documentRef,
+        cricketRules,
+        renderState,
+        state,
+        visualConfig,
+        turnToken: `round:${roundIndex}:active:${activePlayerIndex}`,
+      });
+
+      ["20", "19"].forEach((label) => {
+        const row = rowsByLabel.get(label);
+        const marks = marksByLabel[label];
+        marks.forEach((_, playerIndex) => {
+          assertGridCellPresentation(
+            row?.playerCells?.[playerIndex] || null,
+            expectedPresentationByRule(marks, playerIndex),
+            `${round.name} ${label} p${playerIndex} active${activePlayerIndex}`
+          );
+        });
+      });
+    });
+  });
+
+  clearCricketGridFxState(state);
+});

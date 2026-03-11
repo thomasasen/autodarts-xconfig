@@ -26,6 +26,25 @@ function expectedPresentationByRule(marksByPlayer, playerIndex) {
   return "open";
 }
 
+const HIT_SYMBOL_TO_MARKS = Object.freeze({
+  "/": 1,
+  X: 2,
+  "⊗": 3,
+});
+
+function presentationToColorName(presentation) {
+  if (presentation === "scoring") {
+    return "green-striped";
+  }
+  if (presentation === "pressure") {
+    return "red";
+  }
+  if (presentation === "dead") {
+    return "grey";
+  }
+  return "neutral";
+}
+
 function createGrid(documentRef, labels, marksByRow) {
   const table = documentRef.createElement("table");
   table.id = "grid";
@@ -491,6 +510,53 @@ test("board presentation follows the active player perspective for the same cric
   assert.equal(defensiveState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","), "scoring,pressure");
 });
 
+test("board perspective follows DOM active player switch even when game-state index lags", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const staleStateGameState = createGameState({
+    getCricketGameModeNormalized: () => "cricket",
+    getCricketGameMode: () => "Cricket",
+    getCricketScoringModeNormalized: () => "standard",
+    getActivePlayerIndex: () => 0,
+    getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+  });
+
+  setDomActivePlayer(documentRef, 0);
+  const active0State = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: staleStateGameState,
+  });
+  assert.equal(active0State?.activePlayerIndex, 0);
+  assert.equal(active0State?.stateMap.get("20")?.boardPresentation, "scoring");
+  assert.equal(active0State?.stateMap.get("18")?.boardPresentation, "open");
+
+  setDomActivePlayer(documentRef, 1);
+  const active1State = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: staleStateGameState,
+  });
+  assert.equal(active1State?.activePlayerIndex, 1);
+  assert.equal(active1State?.stateMap.get("20")?.boardPresentation, "pressure");
+  assert.equal(active1State?.stateMap.get("18")?.boardPresentation, "open");
+});
+
 test("unknown scoring mode falls back to standard for cricket overlays", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
@@ -857,6 +923,7 @@ test("render state keeps cricket screenshot regression rows in the correct open/
     }),
   });
 
+  setDomActivePlayer(documentRef, 1);
   const active1State = buildCricketRenderState({
     documentRef,
     cricketRules,
@@ -904,6 +971,114 @@ test("render state keeps cricket screenshot regression rows in the correct open/
       `${label} board active1`
     );
   });
+});
+
+test("hit progression '/' -> 'X' -> '⊗' keeps grid and board colors rule-correct after each hit", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const labels = ["20", "19", "18", "17", "16", "15", "BULL"];
+  const marksByRow = {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  };
+  createGrid(documentRef, labels, marksByRow);
+
+  const row18 = Array.from(documentRef.querySelectorAll("#grid tr")).find((row) => {
+    const label = row?.querySelector?.(".label-cell")?.textContent || "";
+    return cricketRules.normalizeCricketLabel(label) === "18";
+  });
+  const row18Cells = Array.from(row18?.querySelectorAll?.("td") || []).slice(1);
+  assert.equal(row18Cells.length, 2);
+
+  const setRow18BySymbol = (symbol) => {
+    const marks = Number(HIT_SYMBOL_TO_MARKS[symbol] || 0);
+    marksByRow["18"] = [marks, 0];
+    row18Cells[0].setAttribute("data-marks", String(marks));
+    row18Cells[0].textContent = symbol;
+    row18Cells[1].setAttribute("data-marks", "0");
+    row18Cells[1].textContent = "";
+  };
+
+  const buildForActive = (activeIndex) => {
+    setDomActivePlayer(documentRef, activeIndex);
+    return buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState: createGameState({
+        getCricketGameModeNormalized: () => "cricket",
+        getCricketGameMode: () => "Cricket",
+        getCricketScoringModeNormalized: () => "standard",
+        getActivePlayerIndex: () => activeIndex,
+        getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      }),
+    });
+  };
+
+  [
+    { symbol: "/", expected: ["open", "open"] },
+    { symbol: "X", expected: ["open", "open"] },
+    { symbol: "⊗", expected: ["scoring", "pressure"] },
+  ].forEach(({ symbol, expected }) => {
+    setRow18BySymbol(symbol);
+    const active0 = buildForActive(0);
+    const active1 = buildForActive(1);
+
+    const active0CellStates = active0?.stateMap.get("18")?.cellStates || [];
+    const active1CellStates = active1?.stateMap.get("18")?.cellStates || [];
+
+    assert.equal(active0CellStates[0]?.presentation, expected[0], `symbol ${symbol} player0 state`);
+    assert.equal(active0CellStates[1]?.presentation, expected[1], `symbol ${symbol} player1 state`);
+    assert.equal(active1CellStates[0]?.presentation, expected[0], `symbol ${symbol} player0 state stable`);
+    assert.equal(active1CellStates[1]?.presentation, expected[1], `symbol ${symbol} player1 state stable`);
+
+    assert.equal(
+      presentationToColorName(active0?.stateMap.get("18")?.boardPresentation),
+      presentationToColorName(expected[0]),
+      `symbol ${symbol} board active0 color`
+    );
+    assert.equal(
+      presentationToColorName(active1?.stateMap.get("18")?.boardPresentation),
+      presentationToColorName(expected[1]),
+      `symbol ${symbol} board active1 color`
+    );
+    assert.equal(
+      presentationToColorName(active0CellStates[0]?.presentation),
+      presentationToColorName(expected[0]),
+      `symbol ${symbol} grid player0 color`
+    );
+    assert.equal(
+      presentationToColorName(active0CellStates[1]?.presentation),
+      presentationToColorName(expected[1]),
+      `symbol ${symbol} grid player1 color`
+    );
+  });
+
+  // All players closed -> DEAD (grey) for grid and board regardless of active player.
+  marksByRow["18"] = [3, 3];
+  row18Cells[0].setAttribute("data-marks", "3");
+  row18Cells[0].textContent = "⊗";
+  row18Cells[1].setAttribute("data-marks", "3");
+  row18Cells[1].textContent = "⊗";
+
+  const deadActive0 = buildForActive(0);
+  const deadActive1 = buildForActive(1);
+  const deadActive0Cells = deadActive0?.stateMap.get("18")?.cellStates || [];
+  const deadActive1Cells = deadActive1?.stateMap.get("18")?.cellStates || [];
+
+  assert.equal(deadActive0Cells[0]?.presentation, "dead");
+  assert.equal(deadActive0Cells[1]?.presentation, "dead");
+  assert.equal(deadActive1Cells[0]?.presentation, "dead");
+  assert.equal(deadActive1Cells[1]?.presentation, "dead");
+  assert.equal(presentationToColorName(deadActive0?.stateMap.get("18")?.boardPresentation), "grey");
+  assert.equal(presentationToColorName(deadActive1?.stateMap.get("18")?.boardPresentation), "grey");
 });
 
 test("render state ignores objective-like labels inside #ad-ext-turn preview cards", () => {
@@ -1073,6 +1248,72 @@ test("active throws do not double-count rows that the DOM already reflects", () 
   assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, true);
 });
 
+test("transition signature changes on each throw even when active turn id and board state stay the same", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const fixedTurn = {
+    id: "turn-fixed",
+    playerId: "a",
+    round: 3,
+    turn: 1,
+    createdAt: "2026-03-11T20:30:00.000Z",
+    finishedAt: "2026-03-11T20:30:30.000Z",
+    throws: [{ segment: { name: "S20" } }],
+  };
+
+  const baseOverrides = {
+    getCricketGameModeNormalized: () => "cricket",
+    getCricketGameMode: () => "Cricket",
+    getCricketScoringModeNormalized: () => "standard",
+    getActivePlayerIndex: () => 0,
+    getActiveTurn: () => fixedTurn,
+    getSnapshot: () => ({
+      match: {
+        players: [{ id: "a" }, { id: "b" }],
+        turns: [fixedTurn],
+      },
+    }),
+  };
+
+  const stateThrow0 = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      ...baseOverrides,
+      getActiveThrows: () => [],
+    }),
+  });
+
+  const stateThrow1 = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      ...baseOverrides,
+      getActiveThrows: () => [{ segment: { name: "S5" } }],
+    }),
+  });
+
+  assert.equal(stateThrow0?.pipelineSignature, stateThrow1?.pipelineSignature);
+  assert.notEqual(stateThrow0?.transitionSignature, stateThrow1?.transitionSignature);
+  assert.equal(stateThrow0?.stateMap.get("20")?.boardPresentation, "scoring");
+  assert.equal(stateThrow1?.stateMap.get("20")?.boardPresentation, "scoring");
+});
+
 test("active throw preview is suppressed when getActiveTurn already points to a finished turn", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
@@ -1213,7 +1454,7 @@ test("symbolic mark glyphs are parsed for cricket rows", () => {
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
 });
 
-test("state index wins over DOM order when cricket cells expose explicit player indexes", () => {
+test("DOM active marker wins over state index when cricket player roster is fully visible", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -1242,8 +1483,341 @@ test("state index wins over DOM order when cricket cells expose explicit player 
     }),
   });
 
-  assert.equal(renderState?.activePlayerIndex, 1);
-  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "pressure");
+  assert.equal(renderState?.activePlayerIndex, 0);
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
+});
+
+test("state index is used when visible DOM player roster is incomplete", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  createGrid(documentRef, ["20", "18", "Double", "Triple", "BULL"], {
+    "20": [3, 0, 3],
+    "18": [2, 0, 1],
+    Double: [0, 3, 2],
+    Triple: [3, 0, 0],
+    BULL: [3, 3, 3],
+  });
+
+  // FakeDocument exposes only two .ad-ext-player nodes by default.
+  // With three logical players, state index must remain authoritative.
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "tactics",
+      getCricketGameMode: () => "Tactics",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 2,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }, { id: "c" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.activePlayerIndex, 2);
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap.get("DOUBLE")?.boardPresentation, "pressure");
+});
+
+test("virtual 3-player cricket+tactics match keeps grid owner states stable and board perspective dynamic", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  const uiLabels = ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"];
+  const normalizedTargets = cricketRules.resolveTargetOrderByGameModeAndLabels("tactics", uiLabels);
+  const marksByLabel = normalizedTargets.reduce((acc, label) => {
+    acc[label] = [0, 0, 0];
+    return acc;
+  }, {});
+
+  createGrid(
+    documentRef,
+    uiLabels,
+    uiLabels.reduce((acc, label) => {
+      acc[label] = [0, 0, 0];
+      return acc;
+    }, {})
+  );
+
+  const rowsByLabel = new Map();
+  Array.from(documentRef.querySelectorAll("#grid tr")).forEach((row) => {
+    const labelText = String(row?.querySelector?.(".label-cell")?.textContent || "");
+    const normalized = cricketRules.normalizeCricketLabel(labelText);
+    if (normalized) {
+      rowsByLabel.set(normalized, row);
+    }
+  });
+
+  const writeDomMarks = (label) => {
+    const row = rowsByLabel.get(label);
+    const marks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
+    const cells = Array.from(row?.querySelectorAll?.("td") || []).slice(1);
+    cells.forEach((cell, index) => {
+      const value = cricketRules.clampMarks(marks[index] || 0);
+      cell.setAttribute("data-marks", String(value));
+      cell.textContent = String(value);
+    });
+  };
+
+  const writeAllDomMarks = () => {
+    normalizedTargets.forEach((label) => writeDomMarks(label));
+  };
+
+  const applyVisit = (playerIndex, throws) => {
+    const result = cricketRules.applyCricketThrowsToState({
+      targetOrder: normalizedTargets,
+      baseMarksByLabel: marksByLabel,
+      playerIndex,
+      playerCount: 3,
+      throws,
+      scoringModeNormalized: "standard",
+    });
+    Object.entries(result.nextMarksByLabel || {}).forEach(([label, marks]) => {
+      marksByLabel[label] = Array.isArray(marks) ? marks.map((value) => cricketRules.clampMarks(value)) : [0, 0, 0];
+    });
+    writeAllDomMarks();
+  };
+
+  const setMarksDirect = (label, marks) => {
+    marksByLabel[label] = marks.map((value) => cricketRules.clampMarks(value));
+    writeDomMarks(label);
+  };
+
+  const buildState = (activePlayerIndex) => {
+    return buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState: createGameState({
+        getCricketGameModeNormalized: () => "tactics",
+        getCricketGameMode: () => "Tactics",
+        getCricketScoringModeNormalized: () => "standard",
+        getActivePlayerIndex: () => activePlayerIndex,
+        getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }, { id: "c" }] } }),
+      }),
+    });
+  };
+
+  const assertLabel = (renderState, label, activePlayerIndex) => {
+    const marks = marksByLabel[label] || [0, 0, 0];
+    marks.forEach((_, playerIndex) => {
+      assert.equal(
+        renderState?.stateMap.get(label)?.cellStates?.[playerIndex]?.presentation,
+        expectedPresentationByRule(marks, playerIndex),
+        `${label} player ${playerIndex}`
+      );
+    });
+    assert.equal(
+      renderState?.stateMap.get(label)?.boardPresentation,
+      expectedPresentationByRule(marks, activePlayerIndex),
+      `${label} board active ${activePlayerIndex}`
+    );
+  };
+
+  // Start: all open.
+  let state = buildState(0);
+  assertLabel(state, "20", 0);
+  assertLabel(state, "18", 0);
+
+  // P0 hits T20 => 20 closes for P0 only.
+  applyVisit(0, [{ segment: { name: "T20" } }]);
+  state = buildState(0);
+  assertLabel(state, "20", 0); // scoring / pressure / pressure
+
+  // Active switches to P1 without new marks: board flips, grid stays factual.
+  const switchedState = buildState(1);
+  assertLabel(switchedState, "20", 1); // board pressure for P1
+  assert.equal(
+    switchedState?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","),
+    state?.stateMap.get("20")?.cellStates.map((entry) => entry.presentation).join(","),
+    "grid owner-perspective is unchanged by active-player switch"
+  );
+
+  // P1 hits D18 => 18 is still open for everyone (X vs 0/0).
+  applyVisit(1, [{ segment: { name: "D18" } }]);
+  state = buildState(1);
+  assertLabel(state, "18", 1);
+
+  // P2 hits T20 => two scorers, one pressure.
+  applyVisit(2, [{ segment: { name: "T20" } }]);
+  state = buildState(2);
+  assertLabel(state, "20", 2); // scoring / pressure / scoring
+
+  // P1 closes 20 => all closed -> dead.
+  applyVisit(1, [{ segment: { name: "T20" } }]);
+  state = buildState(1);
+  assertLabel(state, "20", 1); // dead / dead / dead
+
+  // Tactics extras follow the same 4-state semantics.
+  setMarksDirect("DOUBLE", [0, 3, 2]);
+  setMarksDirect("TRIPLE", [3, 0, 0]);
+  state = buildState(1);
+  assertLabel(state, "DOUBLE", 1); // pressure / scoring / pressure
+  assertLabel(state, "TRIPLE", 1); // scoring / pressure / pressure
+});
+
+test("multi-round 3-player cricket+tactics color scenarios stay rule-correct across active-player switches", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+
+  const labels = ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"];
+  const marksByRow = labels.reduce((acc, label) => {
+    acc[label] = [0, 0, 0];
+    return acc;
+  }, {});
+  createGrid(documentRef, labels, marksByRow);
+
+  const rowMap = new Map();
+  Array.from(documentRef.querySelectorAll("#grid tr")).forEach((row) => {
+    const labelText = String(row?.querySelector?.(".label-cell")?.textContent || "");
+    const normalized = cricketRules.normalizeCricketLabel(labelText);
+    if (normalized) {
+      rowMap.set(normalized, row);
+    }
+  });
+
+  const setRowMarks = (label, marks) => {
+    const row = rowMap.get(label);
+    const cells = Array.from(row?.querySelectorAll?.("td") || []).slice(1);
+    marks.forEach((mark, index) => {
+      const normalized = cricketRules.clampMarks(mark);
+      cells[index]?.setAttribute("data-marks", String(normalized));
+      cells[index].textContent = String(normalized);
+    });
+  };
+
+  const applyRoundMarks = (roundMarks) => {
+    Object.entries(roundMarks || {}).forEach(([label, marks]) => {
+      setRowMarks(label, marks);
+      marksByRow[label] = Array.isArray(marks) ? marks.map((value) => cricketRules.clampMarks(value)) : [0, 0, 0];
+    });
+  };
+
+  const buildState = (activePlayerIndex) => {
+    setDomActivePlayer(documentRef, activePlayerIndex);
+    return buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState: createGameState({
+        getCricketGameModeNormalized: () => "tactics",
+        getCricketGameMode: () => "Tactics",
+        getCricketScoringModeNormalized: () => "standard",
+        getActivePlayerIndex: () => activePlayerIndex,
+        getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }, { id: "c" }] } }),
+      }),
+    });
+  };
+
+  const assertLabels = (renderState, activePlayerIndex, labelSet) => {
+    labelSet.forEach((label) => {
+      const marks = marksByRow[label] || [0, 0, 0];
+      marks.forEach((_, playerIndex) => {
+        const expected = expectedPresentationByRule(marks, playerIndex);
+        assert.equal(
+          renderState?.stateMap.get(label)?.cellStates?.[playerIndex]?.presentation,
+          expected,
+          `round label=${label} player=${playerIndex} active=${activePlayerIndex}`
+        );
+      });
+      assert.equal(
+        renderState?.stateMap.get(label)?.boardPresentation,
+        expectedPresentationByRule(marks, activePlayerIndex),
+        `round label=${label} board active=${activePlayerIndex}`
+      );
+    });
+  };
+
+  const rounds = [
+    {
+      name: "r1-all-open-active-p1",
+      active: 0,
+      marks: {
+        "20": [0, 0, 0],
+        "19": [0, 0, 0],
+        "18": [0, 0, 0],
+        "17": [0, 0, 0],
+        "DOUBLE": [0, 0, 0],
+        "TRIPLE": [0, 0, 0],
+        BULL: [0, 0, 0],
+      },
+      labels: ["20", "19", "18", "17", "DOUBLE", "TRIPLE", "BULL"],
+    },
+    {
+      name: "r2-single-hit-stays-open-active-p2",
+      active: 1,
+      marks: {
+        "20": [1, 0, 0],
+        "19": [0, 0, 0],
+        "18": [0, 0, 0],
+        "17": [0, 0, 0],
+      },
+      labels: ["20", "19", "18", "17"],
+    },
+    {
+      name: "r3-double-hit-stays-open-active-p3",
+      active: 2,
+      marks: {
+        "20": [2, 0, 0],
+        "19": [0, 0, 0],
+        "18": [0, 0, 0],
+        "17": [0, 0, 0],
+      },
+      labels: ["20", "19", "18", "17"],
+    },
+    {
+      name: "r4-scoring-pressure-and-dead-mix-active-p1",
+      active: 0,
+      marks: {
+        "20": [3, 0, 0],
+        "19": [3, 3, 0],
+        "18": [2, 0, 0],
+        "17": [3, 3, 3],
+        BULL: [3, 3, 3],
+      },
+      labels: ["20", "19", "18", "17", "BULL"],
+    },
+    {
+      name: "r5-same-marks-player-switch-active-p2",
+      active: 1,
+      marks: {},
+      labels: ["20", "19", "18", "17", "BULL"],
+    },
+    {
+      name: "r6-all-closed-on-20-active-p3",
+      active: 2,
+      marks: {
+        "20": [3, 3, 3],
+      },
+      labels: ["20", "19", "17"],
+    },
+    {
+      name: "r7-tactics-mixed-states-active-p2",
+      active: 1,
+      marks: {
+        "DOUBLE": [0, 3, 2],
+        "TRIPLE": [3, 0, 0],
+      },
+      labels: ["DOUBLE", "TRIPLE", "20", "19"],
+    },
+    {
+      name: "r8-tactics-dead-active-p1",
+      active: 0,
+      marks: {
+        "DOUBLE": [3, 3, 3],
+      },
+      labels: ["DOUBLE", "TRIPLE", "20"],
+    },
+  ];
+
+  rounds.forEach((round) => {
+    applyRoundMarks(round.marks);
+    const renderState = buildState(round.active);
+    assertLabels(renderState, round.active, round.labels);
+  });
 });
 
 test("render state exposes deterministic ui buckets and highlight activity flags", () => {

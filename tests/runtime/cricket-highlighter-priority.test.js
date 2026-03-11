@@ -102,6 +102,27 @@ function createGameState(overrides = {}) {
   };
 }
 
+function ensureDomPlayerRoster(documentRef, playerCount) {
+  const desired = Math.max(0, Number(playerCount) || 0);
+  const playerNodes = Array.from(documentRef.querySelectorAll(".ad-ext-player"));
+  let current = playerNodes.length;
+  while (current < desired) {
+    const node = documentRef.createElement("div");
+    node.classList.add("ad-ext-player");
+    documentRef.main.appendChild(node);
+    current += 1;
+  }
+}
+
+function setDomActivePlayer(documentRef, activeIndex, playerCount = 2) {
+  ensureDomPlayerRoster(documentRef, playerCount);
+  const players = Array.from(documentRef.querySelectorAll(".ad-ext-player"));
+  players.forEach((node) => node.classList?.remove("ad-ext-player-active"));
+  if (activeIndex >= 0 && activeIndex < players.length) {
+    players[activeIndex].classList?.add("ad-ext-player-active");
+  }
+}
+
 function injectTurnPreviewWithCricketLikeText(documentRef) {
   const turnContainer = documentRef.getElementById("ad-ext-turn") || documentRef.turnContainer || null;
   if (!turnContainer) {
@@ -444,6 +465,157 @@ test("board ignores objective-like #ad-ext-turn preview cards and keeps 18=X vs 
   );
 });
 
+test("board hit progression '/' -> 'X' -> '⊗' stays neutral until close, then scoring/pressure by active player", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const row18 = Array.from(documentRef.querySelectorAll("#grid tr")).find((row) => {
+    const label = String(row?.querySelector?.(".label-cell")?.textContent || "");
+    return cricketRules.normalizeCricketLabel(label) === "18";
+  });
+  const row18Cells = Array.from(row18?.querySelectorAll?.("td") || []).slice(1);
+  assert.equal(row18Cells.length, 2);
+
+  const setMarks = (symbol, marksValue) => {
+    row18Cells[0].setAttribute("data-marks", String(marksValue));
+    row18Cells[0].textContent = symbol;
+    row18Cells[1].setAttribute("data-marks", "0");
+    row18Cells[1].textContent = "";
+  };
+
+  const renderFor = (activeIndex) => {
+    setDomActivePlayer(documentRef, activeIndex, 2);
+    const renderState = buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      gameState: createGameState({
+        getActivePlayerIndex: () => activeIndex,
+        getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      }),
+    });
+    const rendered = renderCricketHighlights({
+      documentRef,
+      renderState,
+      visualConfig: resolveCricketVisualConfig({
+        showOpenTargets: true,
+        showDeadTargets: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      }),
+      cache: {},
+    });
+    assert.equal(rendered, true);
+    const overlay = documentRef.getElementById(OVERLAY_ID);
+    const shapes18 = Array.from(overlay?.children || []).filter((node) => {
+      return String(node?.dataset?.targetLabel || "") === "18";
+    });
+    assert.equal(shapes18.length, 4);
+    return { renderState, shapes18 };
+  };
+
+  [
+    { symbol: "/", marks: 1, expected: ["open", "open"] },
+    { symbol: "X", marks: 2, expected: ["open", "open"] },
+    { symbol: "⊗", marks: 3, expected: ["scoring", "pressure"] },
+  ].forEach(({ symbol, marks, expected }) => {
+    setMarks(symbol, marks);
+
+    const active0 = renderFor(0);
+    const active1 = renderFor(1);
+
+    assert.equal(active0.renderState?.stateMap.get("18")?.boardPresentation, expected[0], `${symbol} board active0`);
+    assert.equal(active1.renderState?.stateMap.get("18")?.boardPresentation, expected[1], `${symbol} board active1`);
+
+    assert.equal(
+      active0.shapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === expected[0]),
+      true,
+      `${symbol} overlay active0 presentation`
+    );
+    assert.equal(
+      active1.shapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === expected[1]),
+      true,
+      `${symbol} overlay active1 presentation`
+    );
+
+    if (expected[0] === "open") {
+      assert.equal(
+        active0.shapes18.every((shape) => !shape.classList?.contains(PRESENTATION_CLASS.scoring)),
+        true,
+        `${symbol} active0 no scoring class`
+      );
+      assert.equal(
+        active0.shapes18.every((shape) => !shape.classList?.contains(PRESENTATION_CLASS.pressure)),
+        true,
+        `${symbol} active0 no pressure class`
+      );
+    }
+    if (expected[1] === "open") {
+      assert.equal(
+        active1.shapes18.every((shape) => !shape.classList?.contains(PRESENTATION_CLASS.scoring)),
+        true,
+        `${symbol} active1 no scoring class`
+      );
+      assert.equal(
+        active1.shapes18.every((shape) => !shape.classList?.contains(PRESENTATION_CLASS.pressure)),
+        true,
+        `${symbol} active1 no pressure class`
+      );
+    }
+    if (expected[0] === "scoring") {
+      assert.equal(
+        active0.shapes18.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.scoring)),
+        true,
+        `${symbol} active0 scoring class`
+      );
+    }
+    if (expected[1] === "pressure") {
+      assert.equal(
+        active1.shapes18.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.pressure)),
+        true,
+        `${symbol} active1 pressure class`
+      );
+    }
+  });
+
+  // All players closed -> DEAD / grey regardless of active player.
+  row18Cells[0].setAttribute("data-marks", "3");
+  row18Cells[0].textContent = "⊗";
+  row18Cells[1].setAttribute("data-marks", "3");
+  row18Cells[1].textContent = "⊗";
+
+  const dead0 = renderFor(0);
+  const dead1 = renderFor(1);
+  assert.equal(dead0.renderState?.stateMap.get("18")?.boardPresentation, "dead");
+  assert.equal(dead1.renderState?.stateMap.get("18")?.boardPresentation, "dead");
+  assert.equal(
+    dead0.shapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "dead"),
+    true
+  );
+  assert.equal(
+    dead1.shapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "dead"),
+    true
+  );
+  assert.equal(
+    dead0.shapes18.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.dead)),
+    true
+  );
+  assert.equal(
+    dead1.shapes18.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.dead)),
+    true
+  );
+});
+
 test("board perspective remains active-player based for 3 players across cricket+tactics objectives", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
@@ -469,6 +641,7 @@ test("board perspective remains active-player based for 3 players across cricket
   };
 
   [0, 1, 2].forEach((activePlayerIndex) => {
+    setDomActivePlayer(documentRef, activePlayerIndex, 3);
     const renderState = buildCricketRenderState({
       documentRef,
       cricketRules,

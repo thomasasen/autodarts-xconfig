@@ -170,7 +170,7 @@ export function initializeCricketHighlighter(context = {}) {
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
-  let lastPipelineSignature = "";
+  let lastTransitionSignature = "";
   let lastStatusSignature = "";
   const debugState = createDebugState(featureDebug);
   const renderCache = {
@@ -188,7 +188,7 @@ export function initializeCricketHighlighter(context = {}) {
 
   function clearAndReset(options = {}) {
     const clearOverlay = options.clearOverlay !== false;
-    lastPipelineSignature = "";
+    lastTransitionSignature = "";
     renderCache.overlayShapeState = null;
     if (clearOverlay) {
       clearCricketHighlights(documentRef);
@@ -267,14 +267,14 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     lastStatusSignature = "";
-    const signature = String(renderState?.pipelineSignature || "");
+    const signature = String(renderState?.transitionSignature || renderState?.pipelineSignature || "");
     if (!signature) {
       clearAndReset({ clearOverlay: false });
       return;
     }
 
     const overlayHealthy = resolveOverlayHealth(documentRef, renderCache);
-    if (signature === lastPipelineSignature && overlayHealthy) {
+    if (signature === lastTransitionSignature && overlayHealthy) {
       return;
     }
 
@@ -297,7 +297,7 @@ export function initializeCricketHighlighter(context = {}) {
       return;
     }
 
-    lastPipelineSignature = signature;
+    lastTransitionSignature = signature;
     const logSignature = [
       signature,
       debugStats.renderedShapeCount || 0,

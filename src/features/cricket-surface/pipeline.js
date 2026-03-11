@@ -958,12 +958,19 @@ function resolveActivePlayerIndex(gameState, documentRef, playerCount, options =
     return Boolean(node.classList?.contains("ad-ext-player-active"));
   });
 
-  const preferGameStateIndex = options.preferGameStateIndex === true;
-  const candidate = preferGameStateIndex && Number.isFinite(stateIndex)
-    ? stateIndex
-    : domActiveIndex >= 0
-      ? domActiveIndex
-      : stateIndex;
+  // Board perspective should react immediately to the visible active-player switch.
+  // Trust the DOM active marker only when the visible roster is complete; otherwise
+  // fall back to game-state index to avoid pinning to an incomplete DOM snapshot.
+  const hasCompleteVisibleRoster =
+    Number.isFinite(playerCount) && playerCount > 0
+      ? visiblePlayerNodes.length >= playerCount
+      : visiblePlayerNodes.length > 0;
+  const canTrustDomActive = domActiveIndex >= 0 && hasCompleteVisibleRoster;
+  const candidate = canTrustDomActive
+    ? domActiveIndex
+    : Number.isFinite(stateIndex)
+      ? stateIndex
+      : domActiveIndex;
 
   if (!Number.isFinite(candidate) || playerCount <= 0) {
     return 0;
@@ -1727,6 +1734,12 @@ function buildPipelineSignature(extracted, stateMap) {
 }
 
 function buildTurnToken(gameState, activePlayerIndex = 0) {
+  const throws =
+    gameState && typeof gameState.getActiveThrows === "function"
+      ? gameState.getActiveThrows()
+      : [];
+  const throwCount = Array.isArray(throws) ? throws.length : 0;
+
   const turn =
     gameState && typeof gameState.getActiveTurn === "function"
       ? gameState.getActiveTurn()
@@ -1735,14 +1748,9 @@ function buildTurnToken(gameState, activePlayerIndex = 0) {
   if (turn && typeof turn === "object") {
     const round = Number.isFinite(turn.round) ? turn.round : "";
     const part = Number.isFinite(turn.turn) ? turn.turn : "";
-    return `${turn.id || ""}|${turn.playerId || ""}|${round}|${part}|${turn.createdAt || ""}`;
+    return `${turn.id || ""}|${turn.playerId || ""}|${round}|${part}|${turn.createdAt || ""}|${throwCount}`;
   }
 
-  const throws =
-    gameState && typeof gameState.getActiveThrows === "function"
-      ? gameState.getActiveThrows()
-      : [];
-  const throwCount = Array.isArray(throws) ? throws.length : 0;
   return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}:${throwCount}`;
 }
 
