@@ -1,113 +1,85 @@
-# .agents/skills/oldrepo-parity-recovery/SKILL.md
+# .agents/skills/oldrepo_parity_recovery/SKILL.md
 ---
-name: oldrepo-parity-recovery
-description: Use when the new architecture in autodarts-xconfig diverges from known-good behavior in `.oldrepo`, especially for Cricket/Tactics, board overlays, grid FX, trigger timing, or tactical hierarchy. Do not use for greenfield features that have no oldrepo predecessor.
+name: oldrepo_parity_recovery
+description: Use when the current modular implementation in autodarts-xconfig diverges from known-good behavior in .oldrepo and the task is to recover that behavior without reintroducing monolithic structure. Do not use for greenfield features with no legacy predecessor.
 ---
 
 # Goal
 
-Recover proven behavior from `.oldrepo` without blindly copying legacy structure.
-
-This repository contains `.oldrepo` and commit history shows repeated parity work against legacy Cricket/Tactics behavior. Use this skill when the new modular architecture behaves differently from the old implementation and the old behavior is believed to be correct.
+Recover proven legacy behavior from `.oldrepo` while preserving the current modular architecture.
 
 # Core rule
 
 Migrate behavior, not mess.
 
-Do not port legacy code wholesale.
-Extract:
-- the invariant
-- the heuristic
-- the trigger condition
-- the rendering decision
-Then re-express that behavior inside the current architecture.
+Do not copy large legacy blocks blindly.
+Extract the invariant, heuristic, trigger, or fallback that made the old behavior correct, then re-express it in the current structure.
 
 # Use this skill when
 
-- a feature used to work in `.oldrepo` but is wrong in the current modular code
-- a regression mentions “restore oldrepo parity”
-- the board/grid/highlighter/overlay behavior was previously correct in legacy code
-- a heuristic in old code explains a repeated modern regression
-- the problem is a migration gap, not a brand-new feature request
+- the current implementation regressed from `.oldrepo`
+- the prompt explicitly mentions `.oldrepo`
+- a legacy heuristic explains a repeated regression
+- the desired behavior is known from the old implementation
+- a migration gap exists between old and new architecture
 
 # Do not use this skill when
 
-- there is no meaningful oldrepo precedent
-- the requested behavior is intentionally new
-- the issue is just build/version/release
-- the issue is only documentation wording
-
-# Repository anchors
-
-Inspect:
-- `.oldrepo/`
-- current modules under `src/`
-- related tests under `tests/`
+- the feature is genuinely new
+- there is no useful legacy precedent
+- the task is only release/build/version
+- the task is only docs or naming
 
 # Workflow
 
 ## 1. Define the parity target precisely
 
-Before editing anything, answer:
-- what exact user-visible behavior existed in `.oldrepo`
-- under what conditions it triggered
-- what the modern code currently does instead
-- whether the legacy behavior is truly desired or only accidentally tolerated
+Before editing, state:
+- what the old implementation did
+- under which conditions it did it
+- what the new code does instead
+- whether the legacy behavior is actually desired
 
-## 2. Locate the minimal transferable heuristic
+## 2. Extract the minimum transferable behavior
 
-Do not copy large blocks from `.oldrepo`.
-Extract only the minimal useful parts:
+Look for:
 - state interpretation rules
-- owner/row heuristics
+- mapping heuristics
 - trigger timing
-- observer lifecycle assumptions
-- fallback behavior for noisy snapshots
+- lifecycle or fallback behavior
+- degraded-input handling
 
-## 3. Map legacy behavior onto current architecture
+Extract the smallest correct idea, not the whole old design.
 
-Place the recovered behavior in the correct modern layer:
-- domain logic stays in domain
-- runtime/mount/observer logic stays in runtime
-- UI rendering stays in feature/render code
+## 3. Reapply it in the right layer
 
-Do not collapse layers just because legacy code was monolithic.
+Keep layer boundaries intact:
+- semantics in domain-like modules
+- lifecycle and mapping in runtime-like modules
+- visuals in feature/render code
 
-## 4. Add a parity note in code comments when needed
+## 4. Add a regression test for the recovered contract
 
-If the fix depends on a non-obvious legacy heuristic, add a short comment that explains:
+The test should describe the preserved behavior, not the old code shape.
+
+## 5. Comment only when the heuristic is non-obvious
+
+If needed, add a short comment explaining:
 - what legacy behavior is preserved
-- why the heuristic exists
+- why this heuristic exists
 - what regression it prevents
-
-Keep comments technical and brief.
-
-## 5. Add regression tests that describe the legacy contract
-
-Tests should encode the behavior, not the old implementation shape.
-
-Good examples:
-- “restores oldrepo-style tactical hierarchy”
-- “preserves legacy trigger timing under rebuilt grid”
-- “matches known-good owner mapping for merged rows”
 
 # Output requirements
 
 A valid result from this skill must:
-- preserve the desired old behavior
-- keep the current modular architecture intact
-- add tests that lock the recovered behavior
+- restore the intended legacy behavior
+- preserve the modular architecture
+- add regression coverage
 - avoid large-scale copy-paste from `.oldrepo`
 
-# Validation checklist
+# Commit guidance
 
-Run or instruct the following:
-- `npm test`
-- compare old vs new behavior in the narrow scenario being recovered
-- if source changed in a shipped path, later use `$userscript-release-build`
-
-# Preferred commit style
-
-Good examples:
-- `fix(cricket-stack): restore oldrepo tactical hierarchy in modular state pipeline`
-- `fix(cricket-grid-fx): recover legacy row-anchor heuristic without reintroducing monolithic runtime`
+Prefer commit titles like:
+- `fix(runtime): restore oldrepo parity for rebuilt grid mapping`
+- `fix(cricket): recover legacy target-state behavior in modular pipeline`
+- `test(parity): lock oldrepo-equivalent behavior for owner mapping`

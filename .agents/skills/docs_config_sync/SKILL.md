@@ -1,85 +1,77 @@
-# .agents/skills/docs-config-sync/SKILL.md
+# .agents/skills/docs_config_sync/SKILL.md
 ---
-name: docs-config-sync
-description: Use when changing feature names, module descriptions, config labels, README anchors, or user-facing explanations in autodarts-xconfig so UI wording, README wording, and shipped behavior stay aligned. Do not use for pure internal refactors with no user-facing text impact.
+name: docs_config_sync
+description: Use when feature names, config labels, defaults, README sections, user-facing descriptions, or module wording in autodarts-xconfig must stay aligned with shipped behavior. Do not use for pure internal refactors with no user-facing text impact.
 ---
 
 # Goal
 
-Keep feature behavior and user-facing wording aligned.
-
-This repository exposes features directly to users through the in-game AD xConfig UI and README navigation. When feature names, settings, or behavior drift, the repo becomes harder to use even if the code technically works.
+Keep user-facing wording, config naming, and documentation aligned with actual shipped behavior.
 
 # Use this skill when
 
-- a feature or module name changes
+- a feature name changes
+- a module label changes
 - a setting label or option meaning changes
-- a README section for a module becomes outdated
-- new user-facing behavior needs short, accurate explanation
-- install notes, module descriptions, or anchors need updating
+- a default value changes in a user-visible way
+- README text becomes outdated after a feature change
+- menu wording and documentation drift apart
 
 # Do not use this skill when
 
-- the task is a purely internal refactor with no user-visible wording impact
+- the task is a pure internal refactor with no user-facing text impact
 - the task is only release/build/version
-- the task is only deep Cricket/Tactics semantics with no user-facing text change
+- the task is only deep debugging without any text or naming changes
 
-# Repository anchors
+# Core rule
 
-Inspect:
-- `README.md`
-- config definitions and defaults
-- feature registry and user-facing labels
-- any help text surfaced through the menu
+Use one term for one thing.
 
-The README already acts as a user manual for modules and settings, including themes, effects, in-game configuration, persistent settings, and README-linked module explanations. :contentReference[oaicite:2]{index=2}
+Do not let code-adjacent labels, menu text, README headings, and feature descriptions use near-duplicate names for the same behavior.
 
 # Workflow
 
 ## 1. Trace the user-facing name
 
-For any changed feature, identify:
-- internal module key
-- visible feature name
-- visible setting labels
+For each changed feature, identify:
+- internal key
+- visible label
+- visible option names
 - README section title
-- any screenshots or anchors that rely on the old name
+- any short description or module explanation
 
-## 2. Keep terminology exact
+## 2. Document observable behavior only
 
-Use one term consistently across:
-- code-adjacent labels
-- config text
-- README headings
-- changelog or release notes if present
-
-Do not create near-duplicates for the same feature.
-
-## 3. Document what the user can actually observe
-
-Describe:
+Explain what the user can actually notice:
 - what changes on screen
-- when it is useful
-- any major setting choices
-- any caveat that changes gameplay interpretation
+- when it appears
+- what the setting controls
+- any relevant caveat
 
-Do not document internals unless they matter to the user.
+Do not document internal implementation unless the user needs it.
 
-## 4. Update only what changed
+## 3. Update the smallest honest surface
 
-Avoid broad README rewrites for small code changes.
-Touch the smallest set of sections needed to keep docs honest.
+Do not rewrite large parts of the README for small changes.
+Update only the affected sections, but make them fully accurate.
+
+## 4. Keep labels and defaults consistent
+
+When defaults change, confirm:
+- config text still matches reality
+- README examples still match reality
+- feature/module naming is still coherent
 
 # Output requirements
 
 A valid result from this skill must:
-- keep UI text and README text aligned
-- avoid stale feature names
-- explain only real shipped behavior
-- leave navigation and headings coherent
+- keep UI wording and README wording aligned
+- avoid stale names or misleading option descriptions
+- describe real shipped behavior, not planned behavior
 
-# Preferred commit style
+# Commit guidance
 
-Good examples:
-- `docs(readme): align cricket-grid-fx wording with active-player board behavior`
-- `docs(config): rename module labels to match shipped feature names`
+Prefer commit titles like:
+- `docs(readme): align tactics wording with shipped behavior`
+- `docs(config): rename labels to match module behavior`
+- `docs(feature): update option descriptions after default change`
