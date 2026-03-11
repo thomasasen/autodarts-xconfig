@@ -60,6 +60,7 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
 ]);
 
 const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
+const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
 
 function isNodeVisible(node) {
   if (!node || typeof node !== "object") {
@@ -202,6 +203,9 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
   const labels = [];
   const pushLabelNode = (node) => {
     if (!node || seen.has(node)) {
+      return;
+    }
+    if (isInsideTurnPreview(node)) {
       return;
     }
     const label = getNormalizedLabel(cricketRules, node);
@@ -370,6 +374,13 @@ function isInsideXConfigPanel(node) {
   );
 }
 
+function isInsideTurnPreview(node) {
+  if (!node || typeof node.closest !== "function") {
+    return false;
+  }
+  return Boolean(node.closest(TURN_PREVIEW_ROOT_SELECTOR));
+}
+
 function isCandidateGridRoot(node) {
   if (!node || typeof node !== "object") {
     return false;
@@ -378,6 +389,9 @@ function isCandidateGridRoot(node) {
     return false;
   }
   if (isInsideXConfigPanel(node)) {
+    return false;
+  }
+  if (isInsideTurnPreview(node)) {
     return false;
   }
   return true;
@@ -711,6 +725,9 @@ function collectSiblingPlayerCells(labelNode, cricketRules, targetSet) {
 
 function collectPlayerCellsForLabel(labelNode, cricketRules, targetSet) {
   if (!labelNode) {
+    return [];
+  }
+  if (isInsideTurnPreview(labelNode)) {
     return [];
   }
 
@@ -1052,9 +1069,186 @@ function resolveTacticsPrecisionMode(gameState, variantRules, documentRef) {
   return "unknown";
 }
 
-function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder) {
+function parseTurnTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function selectNewestTurnCandidate(turns = []) {
+  if (!Array.isArray(turns) || !turns.length) {
+    return null;
+  }
+
+  return turns.reduce((best, candidate) => {
+    if (!candidate || typeof candidate !== "object") {
+      return best;
+    }
+    if (!best) {
+      return candidate;
+    }
+
+    const candidateRound = Number.isFinite(candidate?.round) ? candidate.round : -1;
+    const bestRound = Number.isFinite(best?.round) ? best.round : -1;
+    if (candidateRound !== bestRound) {
+      return candidateRound > bestRound ? candidate : best;
+    }
+
+    const candidateTurn = Number.isFinite(candidate?.turn) ? candidate.turn : -1;
+    const bestTurn = Number.isFinite(best?.turn) ? best.turn : -1;
+    if (candidateTurn !== bestTurn) {
+      return candidateTurn > bestTurn ? candidate : best;
+    }
+
+    const candidateTs = parseTurnTimestamp(candidate?.createdAt);
+    const bestTs = parseTurnTimestamp(best?.createdAt);
+    return candidateTs >= bestTs ? candidate : best;
+  }, null);
+}
+
+function getPlayerIdByIndex(match, playerIndex) {
+  if (!match || !Array.isArray(match.players)) {
+    return "";
+  }
+  const resolvedIndex = Number.isFinite(Number(playerIndex))
+    ? Math.max(0, Math.round(Number(playerIndex)))
+    : -1;
+  if (!(resolvedIndex >= 0 && resolvedIndex < match.players.length)) {
+    return "";
+  }
+  const player = match.players[resolvedIndex] || null;
+  return String(player?.id || player?.userId || player?.playerId || "").trim();
+}
+
+function toThrowSignatureParts(throws, cricketRules, targetOrder) {
+  if (!Array.isArray(throws) || !throws.length) {
+    return [];
+  }
+  const targetSet = new Set(Array.isArray(targetOrder) ? targetOrder : []);
+  return throws.map((throwEntry, index) => {
+    const parsed = cricketRules.parseCricketThrowSegment(throwEntry);
+    if (!parsed || (targetSet.size > 0 && !targetSet.has(parsed.label))) {
+      return `unknown-${index}`;
+    }
+    return `${parsed.ring}${parsed.value}`;
+  });
+}
+
+function haveEquivalentThrowSignatures(leftThrows, rightThrows, cricketRules, targetOrder) {
+  const left = toThrowSignatureParts(leftThrows, cricketRules, targetOrder);
+  const right = toThrowSignatureParts(rightThrows, cricketRules, targetOrder);
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((entry, index) => entry === right[index]);
+}
+
+function shouldApplyActiveThrowPreview(options = {}) {
+  const gameState = options.gameState;
+  const cricketRules = options.cricketRules;
+  const targetOrder = options.targetOrder;
+  const activeThrows = Array.isArray(options.activeThrows) ? options.activeThrows : [];
+  const activePlayerIndex = Number.isFinite(Number(options.activePlayerIndex))
+    ? Math.max(0, Math.round(Number(options.activePlayerIndex)))
+    : 0;
+  const snapshotMatch = options.snapshotMatch || null;
+
+  const debug = {
+    throwCount: activeThrows.length,
+    applied: false,
+    suppressionReason: "",
+    activeTurnFinished: false,
+    matchedFinishedTurn: false,
+    activeThrowsSignature: toThrowSignatureParts(activeThrows, cricketRules, targetOrder).join(","),
+    activeTurnSignature: "",
+  };
+
+  if (!activeThrows.length) {
+    debug.suppressionReason = "no-active-throws";
+    return debug;
+  }
+
+  const activeTurn =
+    gameState && typeof gameState.getActiveTurn === "function"
+      ? gameState.getActiveTurn()
+      : null;
+
+  if (activeTurn && typeof activeTurn === "object") {
+    debug.activeTurnSignature = toThrowSignatureParts(
+      Array.isArray(activeTurn.throws) ? activeTurn.throws : [],
+      cricketRules,
+      targetOrder
+    ).join(",");
+    debug.activeTurnFinished = Boolean(String(activeTurn.finishedAt || "").trim());
+  }
+
+  if (debug.activeTurnFinished) {
+    debug.suppressionReason = "active-turn-finished";
+    return debug;
+  }
+
+  if (snapshotMatch && Array.isArray(snapshotMatch.turns)) {
+    const activePlayerId = getPlayerIdByIndex(snapshotMatch, activePlayerIndex);
+    const turns = snapshotMatch.turns.filter((turn) => turn && typeof turn === "object");
+    const unfinishedTurnsForActivePlayer = turns.filter((turn) => {
+      return (
+        String(turn.playerId || "").trim() === activePlayerId &&
+        !String(turn.finishedAt || "").trim()
+      );
+    });
+
+    if (activePlayerId && unfinishedTurnsForActivePlayer.length === 0) {
+      const finishedTurnsForActivePlayer = turns.filter((turn) => {
+        return (
+          String(turn.playerId || "").trim() === activePlayerId &&
+          String(turn.finishedAt || "").trim() &&
+          Array.isArray(turn.throws) &&
+          turn.throws.length > 0
+        );
+      });
+
+      const newestFinishedTurn = selectNewestTurnCandidate(finishedTurnsForActivePlayer);
+      if (
+        newestFinishedTurn &&
+        haveEquivalentThrowSignatures(
+          newestFinishedTurn.throws,
+          activeThrows,
+          cricketRules,
+          targetOrder
+        )
+      ) {
+        debug.matchedFinishedTurn = true;
+        debug.suppressionReason = "matches-last-finished-turn";
+        return debug;
+      }
+    }
+  }
+
+  debug.applied = true;
+  return debug;
+}
+
+function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder, options = {}) {
   const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
   const marksByLabel = new Map();
+  const previewDecision = shouldApplyActiveThrowPreview({
+    gameState,
+    cricketRules,
+    targetOrder,
+    activeThrows,
+    activePlayerIndex: options.activePlayerIndex,
+    snapshotMatch: options.snapshotMatch || null,
+  });
+
+  if (!previewDecision.applied) {
+    return {
+      throws: activeThrows,
+      marksByLabel,
+      debug: previewDecision,
+    };
+  }
 
   activeThrows.forEach((throwEntry) => {
     const parsed = cricketRules.parseCricketThrowSegment(throwEntry);
@@ -1071,6 +1265,7 @@ function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder) {
   return {
     throws: activeThrows,
     marksByLabel,
+    debug: previewDecision,
   };
 }
 
@@ -1176,6 +1371,9 @@ function buildMarksByLabelSnapshot(options = {}) {
 
   const applyRowMetaForLabel = (label, node, fallbackRowMeta = null) => {
     if (!targetSet.has(label) || rowMetaByLabel.has(label) || !node || node.isConnected === false) {
+      return;
+    }
+    if (isInsideTurnPreview(node)) {
       return;
     }
 
@@ -1334,12 +1532,19 @@ function buildMarksByLabelSnapshot(options = {}) {
     preferGameStateIndex: hasIndexedPlayerColumns,
   });
   const turnMarksByLabel = readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount);
-  const activeThrowPreview = readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder);
+  const activeThrowPreview = readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder, {
+    activePlayerIndex,
+    snapshotMatch: snapshot?.match || null,
+  });
+  const marksMergeByLabelDebug = {};
 
   targetOrder.forEach((label) => {
     const domMarks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
+    const domMarksBeforeMerge = domMarks.map((value) => cricketRules.clampMarks(value || 0));
     const turnMarks = Array.isArray(turnMarksByLabel?.[label]) ? turnMarksByLabel[label] : [];
+    const turnMarksNormalized = turnMarks.map((value) => cricketRules.clampMarks(value || 0));
     const activeThrowMarks = activeThrowPreview.marksByLabel.get(label) || 0;
+    let projectedActiveMarks = 0;
 
     for (let index = 0; index < playerCount; index += 1) {
       domMarks[index] = Math.max(
@@ -1350,13 +1555,29 @@ function buildMarksByLabelSnapshot(options = {}) {
 
     if (activeThrowMarks > 0) {
       const historicalActiveMarks = cricketRules.clampMarks(turnMarks[activePlayerIndex] || 0);
-      const projectedActiveMarks = cricketRules.clampMarks(
+      projectedActiveMarks = cricketRules.clampMarks(
         historicalActiveMarks + activeThrowMarks
       );
       domMarks[activePlayerIndex] = Math.max(
         cricketRules.clampMarks(domMarks[activePlayerIndex] || 0),
         projectedActiveMarks
       );
+    }
+
+    const relevantDebugEntry =
+      domMarksBeforeMerge.some((value) => value > 0) ||
+      turnMarksNormalized.some((value) => value > 0) ||
+      activeThrowMarks > 0 ||
+      domMarks.some((value) => cricketRules.clampMarks(value || 0) > 0);
+    if (relevantDebugEntry) {
+      marksMergeByLabelDebug[label] = {
+        domBefore: domMarksBeforeMerge.join(","),
+        turn: turnMarksNormalized.join(","),
+        activeThrowMarks: cricketRules.clampMarks(activeThrowMarks),
+        projectedActiveMarks: cricketRules.clampMarks(projectedActiveMarks),
+        activeThrowApplied: Boolean(activeThrowPreview?.debug?.applied && activeThrowMarks > 0),
+        final: domMarks.map((value) => cricketRules.clampMarks(value || 0)).join(","),
+      };
     }
   });
 
@@ -1464,6 +1685,11 @@ function buildMarksByLabelSnapshot(options = {}) {
     shortfallRepairCount: shortfallRepairLabels.length,
     shortfallRepairLabels,
     marksByLabelDebug,
+    marksMergeByLabelDebug,
+    activeThrowPreviewDebug: {
+      ...(activeThrowPreview?.debug || {}),
+      labels: Array.from(activeThrowPreview?.marksByLabel?.keys?.() || []),
+    },
     marksByLabel: enrichedMarksByLabel,
     stateMap,
     gridSnapshot: {

@@ -16,6 +16,7 @@ import {
   DEAD_CLASS,
   DELTA_CLASS,
   HIDDEN_LABEL_ATTRIBUTE,
+  LABEL_CLASS,
   LABEL_STATE_CLASS,
   MARK_L2_CLASS,
   MARK_PROGRESS_CLASS,
@@ -228,6 +229,43 @@ function createGameState(activePlayerIndex = 0, playerCount = 2, options = {}) {
         })),
       },
     }),
+  };
+}
+
+function injectTurnPreviewWithCricketLikeText(documentRef) {
+  const turnContainer = documentRef.getElementById("ad-ext-turn") || documentRef.turnContainer || null;
+  if (!turnContainer) {
+    return null;
+  }
+
+  turnContainer.replaceChildren();
+
+  const throwNode = documentRef.createElement("div");
+  throwNode.classList.add("ad-ext-turn-throw");
+
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("chakra-text");
+  scoreNode.textContent = "36";
+  throwNode.appendChild(scoreNode);
+
+  const hitNode = documentRef.createElement("p");
+  hitNode.classList.add("chakra-text");
+  hitNode.textContent = "D18";
+  throwNode.appendChild(hitNode);
+
+  const pressureNode = documentRef.createElement("div");
+  pressureNode.classList.add("score");
+  pressureNode.textContent = "0";
+
+  turnContainer.appendChild(throwNode);
+  turnContainer.appendChild(pressureNode);
+
+  return {
+    turnContainer,
+    throwNode,
+    scoreNode,
+    hitNode,
+    pressureNode,
   };
 }
 
@@ -740,6 +778,82 @@ test("cricket grid fx keeps open rows neutral for single and double marks until 
   clearCricketGridFxState(state);
 });
 
+test("cricket grid fx never decorates #ad-ext-turn preview cards and keeps 18=X vs 0 neutral", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const turnFixture = injectTurnPreviewWithCricketLikeText(documentRef);
+  assert.ok(turnFixture?.turnContainer);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+
+  assertGridCellPresentation(rowsByLabel.get("20")?.playerCells?.[0] || null, "scoring", "20 player 0");
+  assertGridCellPresentation(rowsByLabel.get("20")?.playerCells?.[1] || null, "pressure", "20 player 1");
+  assertGridCellPresentation(rowsByLabel.get("19")?.playerCells?.[0] || null, "open", "19 player 0");
+  assertGridCellPresentation(rowsByLabel.get("19")?.playerCells?.[1] || null, "open", "19 player 1");
+  assertGridCellPresentation(rowsByLabel.get("18")?.playerCells?.[0] || null, "open", "18 player 0");
+  assertGridCellPresentation(rowsByLabel.get("18")?.playerCells?.[1] || null, "open", "18 player 1");
+
+  assert.equal(turnFixture.throwNode.classList.contains(LABEL_CLASS), false);
+  assert.equal(turnFixture.throwNode.classList.contains(LABEL_STATE_CLASS.scoring), false);
+  assert.equal(turnFixture.throwNode.classList.contains(LABEL_STATE_CLASS.pressure), false);
+  assert.equal(turnFixture.throwNode.classList.contains(LABEL_STATE_CLASS.dead), false);
+  assert.equal(turnFixture.hitNode.classList.contains(BADGE_CLASS), false);
+  assert.equal(turnFixture.hitNode.classList.contains(BADGE_STATE_CLASS.scoring), false);
+  assert.equal(turnFixture.hitNode.classList.contains(BADGE_STATE_CLASS.pressure), false);
+  assert.equal(turnFixture.pressureNode.classList.contains(SCORE_CLASS), false);
+  assert.equal(turnFixture.pressureNode.classList.contains(PRESSURE_CLASS), false);
+  assert.equal(turnFixture.pressureNode.classList.contains(THREAT_CLASS), false);
+
+  clearCricketGridFxState(state);
+});
+
 test("cricket grid fx keeps all rows and owner-perspective classes stable across invalidated partial-discovery updates", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -1069,6 +1183,107 @@ test("cricket grid fx uses the same owner-perspective states for tactics objecti
   assert.equal(rowTriple?.playerCells?.[1]?.classList?.contains(SCORE_CLASS), true);
   assert.equal(rowBull?.playerCells?.[0]?.classList?.contains(DEAD_CLASS), true);
   assert.equal(rowBull?.playerCells?.[1]?.classList?.contains(DEAD_CLASS), true);
+
+  clearCricketGridFxState(state);
+});
+
+test("cricket grid fx keeps 3-player owner colors stable across active-player switches for cricket+tactics rows", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Tactics";
+
+  const labels = ["20", "19", "18", "DOUBLE", "TRIPLE", "BULL"];
+  const marksByLabel = {
+    "20": [3, 1, 3],
+    "19": [1, 3, 0],
+    "18": [2, 0, 1],
+    DOUBLE: [0, 3, 2],
+    TRIPLE: [3, 0, 0],
+    BULL: [3, 3, 3],
+  };
+
+  const rowsByLabel = createObjectiveGrid(documentRef, labels, marksByLabel);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const createTacticsGameState = (activePlayerIndex) => ({
+    getCricketGameModeNormalized: () => "tactics",
+    getCricketGameMode: () => "Tactics",
+    getCricketScoringModeNormalized: () => "standard",
+    getCricketScoringMode: () => "standard",
+    getActivePlayerIndex: () => activePlayerIndex,
+    getActiveThrows: () => [],
+    getActiveTurn: () => null,
+    getSnapshot: () => ({
+      match: {
+        players: [{ id: "player-a" }, { id: "player-b" }, { id: "player-c" }],
+      },
+    }),
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const validateRows = (messageSuffix) => {
+    labels.forEach((label) => {
+      const marks = marksByLabel[label];
+      const row = rowsByLabel.get(label);
+      marks.forEach((_, playerIndex) => {
+        assertGridCellPresentation(
+          row?.playerCells?.[playerIndex] || null,
+          expectedPresentationByRule(marks, playerIndex),
+          `${label} p${playerIndex} ${messageSuffix}`
+        );
+      });
+    });
+  };
+
+  const renderStateActive0 = buildCricketRenderState({
+    documentRef,
+    gameState: createTacticsGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: renderStateActive0,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:0",
+  });
+  validateRows("active0");
+
+  const renderStateActive2 = buildCricketRenderState({
+    documentRef,
+    gameState: createTacticsGameState(2),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: renderStateActive2,
+    state,
+    visualConfig,
+    turnToken: "fallback:2:0",
+  });
+  validateRows("active2");
 
   clearCricketGridFxState(state);
 });

@@ -241,8 +241,13 @@ export function parseCricketMarkValue(value) {
   if (normalized.includes("/") || normalized.includes("|")) {
     return 1;
   }
+  // Guard against throw/score tokens like "D18", "T20", "36", "60".
+  if (/^[SDT]\s*\d{1,2}$/i.test(normalized)) {
+    return null;
+  }
 
-  const digit = normalized.match(/([0-3])/);
+  // Accept a single standalone mark digit wrapped by non-digits.
+  const digit = normalized.match(/^[^0-9]*([0-3])[^0-9]*$/);
   if (digit) {
     return clampMarks(Number.parseInt(digit[1], 10));
   }

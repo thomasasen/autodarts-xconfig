@@ -24,6 +24,12 @@ import {
 
 const MARK_VALUES = [0, 1, 2, 3];
 const SCORING_MODES = ["standard", "cutthroat", "neutral"];
+const COLOR_BY_PRESENTATION = Object.freeze({
+  scoring: "gruen-gestreift",
+  pressure: "rot",
+  dead: "grau",
+  open: "neutral",
+});
 
 function expectedPresentationByRule(marksByPlayer, playerIndex) {
   const normalized = Array.isArray(marksByPlayer) ? marksByPlayer.map((value) => clampMarks(value)) : [];
@@ -54,6 +60,11 @@ function expectedFlagsByRule(marksByPlayer, playerIndex) {
     scoring: presentation === "scoring",
     dead: presentation === "dead",
   };
+}
+
+function expectedColorByRule(marksByPlayer, playerIndex) {
+  const presentation = expectedPresentationByRule(marksByPlayer, playerIndex);
+  return COLOR_BY_PRESENTATION[presentation] || COLOR_BY_PRESENTATION.open;
 }
 
 test("normalizeCricketLabel supports bull aliases and tactics labels", () => {
@@ -96,9 +107,16 @@ test("parseCricketMarkValue supports numeric and symbolic cricket mark notations
   assert.equal(parseCricketMarkValue("0"), 0);
   assert.equal(parseCricketMarkValue("2"), 2);
   assert.equal(parseCricketMarkValue("3"), 3);
+  assert.equal(parseCricketMarkValue("(3)"), 3);
+  assert.equal(parseCricketMarkValue("marks:2"), 2);
   assert.equal(parseCricketMarkValue("/"), 1);
   assert.equal(parseCricketMarkValue("|"), 1);
   assert.equal(parseCricketMarkValue("X"), 2);
+  assert.equal(parseCricketMarkValue("D18"), null);
+  assert.equal(parseCricketMarkValue("T20"), null);
+  assert.equal(parseCricketMarkValue("S19"), null);
+  assert.equal(parseCricketMarkValue("36"), null);
+  assert.equal(parseCricketMarkValue("60"), null);
   assert.equal(parseCricketMarkValue("✕"), 2);
   assert.equal(parseCricketMarkValue("⊗"), 3);
   assert.equal(parseCricketMarkValue(""), null);
@@ -635,6 +653,86 @@ test("cricket and tactics 3-player state engine matches the independent 4-state 
               expectedPresentationByRule(marksByPlayer, 1),
               `${label} ${scoringModeNormalized} 3p board ${marksByPlayer.join(",")} active 1`
             );
+          });
+        });
+      });
+    });
+  });
+});
+
+test("3-player color contract uses one deterministic mapping for cricket+tactics grid(owner) and board(active)", () => {
+  const objectiveCases = [
+    { label: "20", gameMode: "Cricket", targetOrder: ["20"] },
+    { label: "BULL", gameMode: "Cricket", targetOrder: ["BULL"] },
+    { label: "DOUBLE", gameMode: "Tactics", targetOrder: ["DOUBLE"] },
+    { label: "TRIPLE", gameMode: "Tactics", targetOrder: ["TRIPLE"] },
+  ];
+
+  objectiveCases.forEach(({ label, gameMode, targetOrder }) => {
+    SCORING_MODES.forEach((scoringModeNormalized) => {
+      MARK_VALUES.forEach((firstMarks) => {
+        MARK_VALUES.forEach((secondMarks) => {
+          MARK_VALUES.forEach((thirdMarks) => {
+            const marksByPlayer = [firstMarks, secondMarks, thirdMarks];
+
+            [0, 1, 2].forEach((activePlayerIndex) => {
+              const stateMap = computeTargetStates(
+                { [label]: marksByPlayer },
+                {
+                  gameMode,
+                  targetOrder,
+                  scoringModeNormalized,
+                  activePlayerIndex,
+                }
+              );
+              const stateEntry = stateMap.get(label);
+              assert.ok(
+                stateEntry,
+                `${label} missing state for ${scoringModeNormalized} ${marksByPlayer.join(",")} active ${activePlayerIndex}`
+              );
+
+              marksByPlayer.forEach((_, playerIndex) => {
+                const expectedPresentation = expectedPresentationByRule(marksByPlayer, playerIndex);
+                const expectedColor = expectedColorByRule(marksByPlayer, playerIndex);
+                const actualPresentation = String(
+                  stateEntry?.cellStates?.[playerIndex]?.presentation || "open"
+                );
+                const actualColor =
+                  COLOR_BY_PRESENTATION[actualPresentation] || COLOR_BY_PRESENTATION.open;
+
+                assert.equal(
+                  actualPresentation,
+                  expectedPresentation,
+                  `${label} grid presentation ${scoringModeNormalized} ${marksByPlayer.join(",")} player ${playerIndex} active ${activePlayerIndex}`
+                );
+                assert.equal(
+                  actualColor,
+                  expectedColor,
+                  `${label} grid color ${scoringModeNormalized} ${marksByPlayer.join(",")} player ${playerIndex} active ${activePlayerIndex}`
+                );
+              });
+
+              const expectedBoardPresentation = expectedPresentationByRule(
+                marksByPlayer,
+                activePlayerIndex
+              );
+              const expectedBoardColor =
+                COLOR_BY_PRESENTATION[expectedBoardPresentation] || COLOR_BY_PRESENTATION.open;
+              const actualBoardPresentation = String(stateEntry?.boardPresentation || "open");
+              const actualBoardColor =
+                COLOR_BY_PRESENTATION[actualBoardPresentation] || COLOR_BY_PRESENTATION.open;
+
+              assert.equal(
+                actualBoardPresentation,
+                expectedBoardPresentation,
+                `${label} board presentation ${scoringModeNormalized} ${marksByPlayer.join(",")} active ${activePlayerIndex}`
+              );
+              assert.equal(
+                actualBoardColor,
+                expectedBoardColor,
+                `${label} board color ${scoringModeNormalized} ${marksByPlayer.join(",")} active ${activePlayerIndex}`
+              );
+            });
           });
         });
       });

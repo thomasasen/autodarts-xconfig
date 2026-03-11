@@ -159,8 +159,52 @@ function createGameState(overrides = {}) {
     getCricketScoringMode: overrides.getCricketScoringMode,
     getCricketMode: overrides.getCricketMode,
     getActivePlayerIndex: overrides.getActivePlayerIndex || (() => 0),
+    getActiveTurn: overrides.getActiveTurn || (() => null),
     getActiveThrows: overrides.getActiveThrows || (() => []),
     getSnapshot: overrides.getSnapshot || (() => ({ match })),
+  };
+}
+
+function injectTurnPreviewWithCricketLikeText(documentRef) {
+  const turnContainer = documentRef.getElementById("ad-ext-turn") || documentRef.turnContainer || null;
+  if (!turnContainer) {
+    return null;
+  }
+
+  turnContainer.replaceChildren();
+
+  const buildThrow = (valueText, hitText) => {
+    const throwNode = documentRef.createElement("div");
+    throwNode.classList.add("ad-ext-turn-throw");
+
+    const valueNode = documentRef.createElement("p");
+    valueNode.classList.add("chakra-text");
+    valueNode.textContent = String(valueText || "");
+    throwNode.appendChild(valueNode);
+
+    const hitNode = documentRef.createElement("p");
+    hitNode.classList.add("chakra-text");
+    hitNode.textContent = String(hitText || "");
+    throwNode.appendChild(hitNode);
+
+    return { throwNode, valueNode, hitNode };
+  };
+
+  const first = buildThrow("60", "T20");
+  const second = buildThrow("36", "D18");
+  const third = documentRef.createElement("div");
+  third.classList.add("score");
+  third.textContent = "0";
+
+  turnContainer.appendChild(first.throwNode);
+  turnContainer.appendChild(second.throwNode);
+  turnContainer.appendChild(third);
+
+  return {
+    turnContainer,
+    first,
+    second,
+    third,
   };
 }
 
@@ -862,6 +906,55 @@ test("render state keeps cricket screenshot regression rows in the correct open/
   });
 });
 
+test("render state ignores objective-like labels inside #ad-ext-turn preview cards", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [1, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const turnFixture = injectTurnPreviewWithCricketLikeText(documentRef);
+  assert.ok(turnFixture?.turnContainer);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.discoveredUniqueLabelCount, 7);
+  assert.equal(renderState?.gridSnapshot?.rows?.length, 7);
+  assert.equal(renderState?.marksByLabel["20"]?.join(","), "3,0");
+  assert.equal(renderState?.marksByLabel["19"]?.join(","), "1,0");
+  assert.equal(renderState?.marksByLabel["18"]?.join(","), "2,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
+  assert.equal(
+    renderState?.gridSnapshot?.rows?.some((row) => row?.labelNode?.closest?.("#ad-ext-turn")),
+    false
+  );
+  assert.equal(
+    renderState?.gridSnapshot?.rows?.some((row) => row?.labelCell?.closest?.("#ad-ext-turn")),
+    false
+  );
+});
+
 test("render state keeps tactics numeric, bull and special objectives on the same 4-state model", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
@@ -975,6 +1068,108 @@ test("active throws do not double-count rows that the DOM already reflects", () 
     renderState?.stateMap.get("18")?.cellStates.map((entry) => entry.presentation).join(","),
     "open,open"
   );
+  assert.equal(renderState?.activeThrowPreviewDebug?.applied, true);
+  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason || "", "");
+  assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, true);
+});
+
+test("active throw preview is suppressed when getActiveTurn already points to a finished turn", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const finishedTurn = {
+    playerId: "a",
+    finishedAt: "2026-03-11T18:12:00.000Z",
+    throws: [{ segment: { name: "D18" } }],
+  };
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveTurn: () => finishedTurn,
+      getActiveThrows: () => [{ segment: { name: "D18" } }],
+      getSnapshot: () => ({
+        match: {
+          players: [{ id: "a" }, { id: "b" }],
+          turns: [finishedTurn],
+        },
+      }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel["18"].join(","), "2,0");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
+  assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
+  assert.equal(renderState?.activeThrowPreviewDebug?.suppressionReason, "active-turn-finished");
+  assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, false);
+});
+
+test("active throw preview is suppressed when it matches the latest finished turn and no unfinished turn exists", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [{ segment: { name: "D18" } }],
+      getSnapshot: () => ({
+        match: {
+          players: [{ id: "a" }, { id: "b" }],
+          turns: [
+            {
+              playerId: "a",
+              finishedAt: "2026-03-11T18:12:00.000Z",
+              throws: [{ segment: { name: "D18" } }],
+            },
+          ],
+        },
+      }),
+    }),
+  });
+
+  assert.equal(renderState?.marksByLabel["18"].join(","), "2,0");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "open");
+  assert.equal(renderState?.activeThrowPreviewDebug?.applied, false);
+  assert.equal(
+    renderState?.activeThrowPreviewDebug?.suppressionReason,
+    "matches-last-finished-turn"
+  );
+  assert.equal(renderState?.activeThrowPreviewDebug?.matchedFinishedTurn, true);
+  assert.equal(renderState?.marksMergeByLabelDebug?.["18"]?.activeThrowApplied, false);
 });
 
 test("symbolic mark glyphs are parsed for cricket rows", () => {

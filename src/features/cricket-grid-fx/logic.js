@@ -49,6 +49,7 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   "div",
   "span",
 ]);
+const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
 
 function queryAll(rootNode, selector) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
@@ -93,6 +94,13 @@ function isVisible(node) {
   return true;
 }
 
+function isInsideTurnPreview(node) {
+  if (!node || typeof node.closest !== "function") {
+    return false;
+  }
+  return Boolean(node.closest(TURN_PREVIEW_ROOT_SELECTOR));
+}
+
 function resolveGridRoot(documentRef, cricketRules, targetOrder) {
   if (!documentRef) {
     return null;
@@ -110,6 +118,9 @@ function resolveGridRoot(documentRef, cricketRules, targetOrder) {
       const labelHits = new Set();
       LABEL_NODE_SELECTORS.forEach((labelSelector) => {
         queryAll(candidate, labelSelector).forEach((node) => {
+          if (isInsideTurnPreview(node)) {
+            return;
+          }
           const normalized = normalizeLabel(cricketRules, node?.getAttribute?.("data-row-label") || node?.textContent || "");
           if (normalized && targetSet.has(normalized)) {
             labelHits.add(normalized);
@@ -133,6 +144,9 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet) {
   const rows = [];
   const pushRow = (node) => {
     if (!node || seen.has(node)) {
+      return;
+    }
+    if (isInsideTurnPreview(node)) {
       return;
     }
     if (node.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true") {
@@ -435,6 +449,9 @@ function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlaye
 
 function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
   if (!labelNode) {
+    return [];
+  }
+  if (isInsideTurnPreview(labelNode)) {
     return [];
   }
   const labelCell = resolveLabelCell(labelNode);
@@ -999,6 +1016,13 @@ export function updateCricketGridFx(options = {}) {
       isConnectedAnchor(normalizedRow.labelCell) ||
       isConnectedAnchor(normalizedRow.rowNode);
     if (!hasAnchorNode) {
+      return;
+    }
+    if (
+      isInsideTurnPreview(normalizedRow.labelNode) ||
+      isInsideTurnPreview(normalizedRow.labelCell) ||
+      isInsideTurnPreview(normalizedRow.rowNode)
+    ) {
       return;
     }
 
