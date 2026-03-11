@@ -8,8 +8,10 @@ import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { initializeCheckoutBoardTargets } from "../../src/features/checkout-board-targets/index.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
+import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import { OVERLAY_ID as CHECKOUT_OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
 import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
+import { SCORE_CLASS } from "../../src/features/cricket-grid-fx/style.js";
 import { initializeRemoveDartsNotification } from "../../src/features/remove-darts-notification/index.js";
 import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
@@ -469,6 +471,139 @@ test("cricket-highlighter emits missing-grid warning only once for unchanged sta
 
   assert.equal(scheduleCounter.count >= 3, true);
   assert.equal(warnings.filter((entry) => entry.includes("warn kein Grid")).length, 1);
+
+  cleanup();
+});
+
+test("cricket-grid-fx rerenders after grid DOM replacement even when transition signature is unchanged", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const targetOrder = ["20", "19", "18", "17", "16", "15", "BULL"];
+  const createGridTable = () => {
+    const table = documentRef.createElement("table");
+    table.id = "grid";
+
+    targetOrder.forEach((label) => {
+      const row = documentRef.createElement("tr");
+
+      const labelCell = documentRef.createElement("td");
+      labelCell.classList.add("label-cell");
+      labelCell.textContent = label === "BULL" ? "Bull" : label;
+      row.appendChild(labelCell);
+
+      for (let playerIndex = 0; playerIndex < 2; playerIndex += 1) {
+        const cell = documentRef.createElement("td");
+        cell.classList.add("player-cell");
+        cell.setAttribute("data-player-index", String(playerIndex));
+        const marks = label === "20" && playerIndex === 0 ? 3 : 0;
+        cell.setAttribute("data-marks", String(marks));
+        row.appendChild(cell);
+      }
+
+      table.appendChild(row);
+    });
+
+    return table;
+  };
+
+  const getOwnerCellForLabel = (table, label) => {
+    const row = Array.from(table.children || []).find((candidate) => {
+      const cellText = String(candidate?.children?.[0]?.textContent || "")
+        .trim()
+        .toUpperCase();
+      const normalized = label === "BULL" ? "BULL" : String(label);
+      return cellText === normalized;
+    });
+    return row?.children?.[1] || null;
+  };
+
+  const initialGrid = createGridTable();
+  documentRef.main.appendChild(initialGrid);
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanup = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          rowWave: true,
+          badgeBeacon: true,
+          markProgress: true,
+          pressureEdge: true,
+          scoringStripe: true,
+          deadRowMuted: true,
+          deltaChips: true,
+          hitSpark: true,
+          roundTransitionWipe: true,
+          pressureOverlay: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const initialOwner20 = getOwnerCellForLabel(initialGrid, "20");
+  assert.equal(Boolean(initialOwner20?.classList?.contains(SCORE_CLASS)), true);
+
+  const replacementGrid = createGridTable();
+  documentRef.main.removeChild(initialGrid);
+  documentRef.main.appendChild(replacementGrid);
+
+  const observer = observers.get("cricket-grid-fx:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [replacementGrid],
+      removedNodes: [initialGrid],
+    },
+  ]);
+
+  const replacementOwner20 = getOwnerCellForLabel(replacementGrid, "20");
+  assert.equal(Boolean(replacementOwner20?.classList?.contains(SCORE_CLASS)), true);
+  assert.equal(scheduleCounter.count >= 2, true);
 
   cleanup();
 });

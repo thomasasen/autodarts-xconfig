@@ -6,6 +6,7 @@ import {
 } from "./logic.js";
 import {
   BADGE_CLASS,
+  CELL_CLASS,
   DELTA_CLASS,
   ROW_WAVE_CLASS,
   SPARK_CLASS,
@@ -107,6 +108,38 @@ function hasRelevantCricketMutation(mutations = []) {
 
 function buildStatusSignature(renderState) {
   return `${renderState?.surfaceStatus || "unknown"}::${renderState?.variantText || "-"}`;
+}
+
+function hasLiveGridRenderContract(state, renderState) {
+  if (!state || typeof state !== "object") {
+    return false;
+  }
+
+  const currentRoot = state.gridRoot || null;
+  const expectedRoot = renderState?.gridSnapshot?.root || null;
+  if (!currentRoot || currentRoot.isConnected === false) {
+    return false;
+  }
+  if (expectedRoot && currentRoot !== expectedRoot) {
+    return false;
+  }
+
+  const trackedCells = state.trackedCells instanceof Set ? Array.from(state.trackedCells) : [];
+  const trackedLabels = state.trackedLabels instanceof Set ? Array.from(state.trackedLabels) : [];
+  if (!trackedCells.length && !trackedLabels.length) {
+    return false;
+  }
+
+  const allNodesConnected = [...trackedCells, ...trackedLabels].every((node) => {
+    return Boolean(node) && node.isConnected !== false;
+  });
+  if (!allNodesConnected) {
+    return false;
+  }
+
+  return trackedCells.length > 0
+    ? trackedCells.some((node) => node?.classList?.contains(CELL_CLASS))
+    : true;
 }
 
 export function initializeCricketGridFx(context = {}) {
@@ -227,7 +260,8 @@ export function initializeCricketGridFx(context = {}) {
       clearAndReset();
       return;
     }
-    if (transitionSignature === lastTransitionSignature) {
+    const renderContractLive = hasLiveGridRenderContract(state, renderState);
+    if (transitionSignature === lastTransitionSignature && renderContractLive) {
       return;
     }
 
