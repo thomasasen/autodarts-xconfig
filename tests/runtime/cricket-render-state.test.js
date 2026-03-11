@@ -54,6 +54,7 @@ function createGrid(documentRef, labels, marksByRow) {
 
     const labelCell = documentRef.createElement("td");
     labelCell.classList.add("label-cell");
+    labelCell.setAttribute("data-row-label", label === "BULL" ? "Bull" : String(label));
     labelCell.textContent = label === "BULL" ? "Bull" : `Ziel ${label}`;
     row.appendChild(labelCell);
 
@@ -1817,6 +1818,90 @@ test("multi-round 3-player cricket+tactics color scenarios stay rule-correct acr
     applyRoundMarks(round.marks);
     const renderState = buildState(round.active);
     assertLabels(renderState, round.active, round.labels);
+  });
+});
+
+test("render state keeps full cricket objective coverage rule-correct for 3 players", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const labels = ["20", "19", "18", "17", "16", "15", "BULL"];
+  const marksByRow = {
+    "20": [3, 0, 0],
+    "19": [0, 3, 0],
+    "18": [2, 0, 0],
+    "17": [3, 3, 0],
+    "16": [3, 3, 3],
+    "15": [0, 0, 0],
+    BULL: [1, 1, 1],
+  };
+  createGrid(documentRef, labels, marksByRow);
+
+  const expectedByLabel = {
+    "20": [3, 0, 0],
+    "19": [0, 3, 0],
+    "18": [2, 0, 0],
+    "17": [3, 3, 0],
+    "16": [3, 3, 3],
+    "15": [0, 0, 0],
+    BULL: [1, 1, 1],
+  };
+
+  [0, 1, 2].forEach((activePlayerIndex) => {
+    const renderState = buildCricketRenderState({
+      documentRef,
+      cricketRules,
+      variantRules,
+      visualConfig: VISUAL_CONFIG,
+      gameState: createGameState({
+        getCricketGameModeNormalized: () => "tactics",
+        getCricketGameMode: () => "Cricket",
+        getCricketScoringModeNormalized: () => "standard",
+        getActivePlayerIndex: () => activePlayerIndex,
+        getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }, { id: "c" }] } }),
+      }),
+    });
+
+    assert.equal(renderState?.targetOrder?.length, 7);
+    assert.equal(renderState?.discoveredUniqueLabelCount, 7);
+
+    Object.entries(expectedByLabel).forEach(([label, marksByPlayer]) => {
+      marksByPlayer.forEach((_, playerIndex) => {
+        const expectedPresentation = expectedPresentationByRule(marksByPlayer, playerIndex);
+        const expectedColor = presentationToColorName(expectedPresentation);
+        const actualPresentation = String(
+          renderState?.stateMap.get(label)?.cellStates?.[playerIndex]?.presentation || "open"
+        );
+        const actualColor = presentationToColorName(actualPresentation);
+
+        assert.equal(
+          actualPresentation,
+          expectedPresentation,
+          `${label} cell presentation player=${playerIndex} active=${activePlayerIndex}`
+        );
+        assert.equal(
+          actualColor,
+          expectedColor,
+          `${label} cell color player=${playerIndex} active=${activePlayerIndex}`
+        );
+      });
+
+      const expectedBoardPresentation = expectedPresentationByRule(marksByPlayer, activePlayerIndex);
+      const expectedBoardColor = presentationToColorName(expectedBoardPresentation);
+      const actualBoardPresentation = String(renderState?.stateMap.get(label)?.boardPresentation || "open");
+      const actualBoardColor = presentationToColorName(actualBoardPresentation);
+
+      assert.equal(
+        actualBoardPresentation,
+        expectedBoardPresentation,
+        `${label} board presentation active=${activePlayerIndex}`
+      );
+      assert.equal(
+        actualBoardColor,
+        expectedBoardColor,
+        `${label} board color active=${activePlayerIndex}`
+      );
+    });
   });
 });
 

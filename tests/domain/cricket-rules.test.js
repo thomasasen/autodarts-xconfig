@@ -660,6 +660,97 @@ test("cricket and tactics 3-player state engine matches the independent 4-state 
   });
 });
 
+test("cricket and tactics 4-player state engine matches the independent 4-state oracle", () => {
+  const objectiveCases = [
+    {
+      label: "20",
+      gameMode: "Cricket",
+      targetOrder: ["20"],
+    },
+    {
+      label: "BULL",
+      gameMode: "Cricket",
+      targetOrder: ["BULL"],
+    },
+    {
+      label: "DOUBLE",
+      gameMode: "Tactics",
+      targetOrder: ["DOUBLE"],
+    },
+    {
+      label: "TRIPLE",
+      gameMode: "Tactics",
+      targetOrder: ["TRIPLE"],
+    },
+  ];
+
+  objectiveCases.forEach(({ label, gameMode, targetOrder }) => {
+    SCORING_MODES.forEach((scoringModeNormalized) => {
+      MARK_VALUES.forEach((m0) => {
+        MARK_VALUES.forEach((m1) => {
+          MARK_VALUES.forEach((m2) => {
+            MARK_VALUES.forEach((m3) => {
+              const marksByPlayer = [m0, m1, m2, m3];
+
+              [0, 1, 2, 3].forEach((activePlayerIndex) => {
+                const stateMap = computeTargetStates(
+                  { [label]: marksByPlayer },
+                  {
+                    gameMode,
+                    targetOrder,
+                    scoringModeNormalized,
+                    activePlayerIndex,
+                  }
+                );
+                const stateEntry = stateMap.get(label);
+                assert.ok(
+                  stateEntry,
+                  `${label} 4p entry missing for ${scoringModeNormalized} ${marksByPlayer.join(",")} active ${activePlayerIndex}`
+                );
+
+                marksByPlayer.forEach((_, playerIndex) => {
+                  const expected = expectedFlagsByRule(marksByPlayer, playerIndex);
+                  const cellState = stateEntry?.cellStates?.[playerIndex] || {};
+                  assert.equal(
+                    cellState.presentation,
+                    expected.presentation,
+                    `${label} 4p cell presentation ${scoringModeNormalized} ${marksByPlayer.join(",")} player ${playerIndex} active ${activePlayerIndex}`
+                  );
+                  assert.equal(
+                    Boolean(cellState.scoring),
+                    expected.scoring,
+                    `${label} 4p cell scoring ${scoringModeNormalized} ${marksByPlayer.join(",")} player ${playerIndex}`
+                  );
+                  assert.equal(
+                    Boolean(cellState.pressure),
+                    expected.pressure,
+                    `${label} 4p cell pressure ${scoringModeNormalized} ${marksByPlayer.join(",")} player ${playerIndex}`
+                  );
+                  assert.equal(
+                    Boolean(cellState.dead),
+                    expected.dead,
+                    `${label} 4p cell dead ${scoringModeNormalized} ${marksByPlayer.join(",")} player ${playerIndex}`
+                  );
+                });
+
+                const expectedBoardPresentation = expectedPresentationByRule(
+                  marksByPlayer,
+                  activePlayerIndex
+                );
+                assert.equal(
+                  stateEntry?.boardPresentation,
+                  expectedBoardPresentation,
+                  `${label} 4p board ${scoringModeNormalized} ${marksByPlayer.join(",")} active ${activePlayerIndex}`
+                );
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
 test("3-player color contract uses one deterministic mapping for cricket+tactics grid(owner) and board(active)", () => {
   const objectiveCases = [
     { label: "20", gameMode: "Cricket", targetOrder: ["20"] },

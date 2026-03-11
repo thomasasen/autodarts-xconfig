@@ -624,18 +624,26 @@ test("board perspective remains active-player based for 3 players across cricket
     documentRef,
     {
       "20": [3, 1, 3],
+      "19": [1, 3, 0],
       "18": [2, 0, 1],
-      BULL: [3, 3, 3],
+      "17": [3, 3, 0],
+      "16": [3, 3, 3],
+      "15": [0, 0, 0],
+      BULL: [1, 1, 1],
       Double: [0, 3, 2],
       Triple: [3, 0, 0],
     },
-    ["20", "18", "Double", "Triple", "BULL"]
+    ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"]
   );
 
   const marksByLabel = {
     "20": [3, 1, 3],
+    "19": [1, 3, 0],
     "18": [2, 0, 1],
-    BULL: [3, 3, 3],
+    "17": [3, 3, 0],
+    "16": [3, 3, 3],
+    "15": [0, 0, 0],
+    BULL: [1, 1, 1],
     DOUBLE: [0, 3, 2],
     TRIPLE: [3, 0, 0],
   };
