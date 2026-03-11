@@ -1007,6 +1007,65 @@ export function updateCricketGridFx(options = {}) {
 
   const sourceRows = Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [];
   const rowByLabel = new Map();
+  const computeRowIntegrityScore = (candidateRow) => {
+    const label = String(candidateRow?.label || "");
+    if (!label) {
+      return Number.NEGATIVE_INFINITY;
+    }
+
+    const labelNode = candidateRow?.labelNode || null;
+    const labelCell = candidateRow?.labelCell || null;
+    const rowNode = candidateRow?.rowNode || getRowNode(labelCell || labelNode || null);
+    const playerCells = Array.isArray(candidateRow?.playerCells)
+      ? candidateRow.playerCells.filter(Boolean)
+      : [];
+    const rowContainer = rowNode || labelCell?.parentElement || labelNode?.parentElement || null;
+    let score = 0;
+
+    if (labelCell) {
+      score += 2;
+    }
+    if (labelNode) {
+      score += 2;
+    }
+    if (
+      labelCell &&
+      labelNode &&
+      typeof labelCell.contains === "function" &&
+      labelCell.contains(labelNode)
+    ) {
+      score += 2;
+    }
+    if (labelCell && playerCells.includes(labelCell)) {
+      score += 2;
+    }
+
+    playerCells.forEach((cellNode) => {
+      if (!cellNode) {
+        return;
+      }
+      if (cellNode === labelCell) {
+        score += 1;
+        return;
+      }
+      if (rowContainer && typeof rowContainer.contains === "function" && rowContainer.contains(cellNode)) {
+        score += 2;
+      }
+
+      const candidateLabel = normalizeLabel(
+        cricketRules,
+        cellNode.getAttribute?.("data-row-label") ||
+          cellNode.getAttribute?.("data-target-label") ||
+          cellNode.textContent ||
+          ""
+      );
+      if (candidateLabel && candidateLabel !== label && targetSet.has(candidateLabel)) {
+        score -= 4;
+      }
+    });
+
+    return score;
+  };
 
   const upsertRow = (candidateRow) => {
     const label = String(candidateRow?.label || "");
@@ -1021,7 +1080,7 @@ export function updateCricketGridFx(options = {}) {
       badgeNode: candidateRow?.badgeNode || null,
       rowNode:
         candidateRow?.rowNode ||
-        getRowNode(candidateRow?.labelNode || candidateRow?.labelCell || null),
+        getRowNode(candidateRow?.labelCell || candidateRow?.labelNode || null),
       playerCells: Array.isArray(candidateRow?.playerCells)
         ? candidateRow.playerCells.filter(Boolean)
         : [],
@@ -1063,12 +1122,15 @@ export function updateCricketGridFx(options = {}) {
       (normalizedRow.labelCell ? 1 : 0) +
       (normalizedRow.labelNode ? 1 : 0) +
       (normalizedRow.badgeNode ? 1 : 0);
+    const existingIntegrityScore = computeRowIntegrityScore(existing);
+    const nextIntegrityScore = computeRowIntegrityScore(normalizedRow);
     const shouldReplace =
       (!existing.labelCell && Boolean(normalizedRow.labelCell)) ||
       (!existing.badgeNode && Boolean(normalizedRow.badgeNode)) ||
       (existingPlayerCellCount === 0 && nextPlayerCellCount > 0) ||
       (nextPlayerCellCount > existingPlayerCellCount) ||
-      (nextAnchorScore > existingAnchorScore);
+      (nextAnchorScore > existingAnchorScore) ||
+      (nextIntegrityScore > existingIntegrityScore);
 
     if (shouldReplace) {
       rowByLabel.set(label, normalizedRow);
@@ -1110,34 +1172,32 @@ export function updateCricketGridFx(options = {}) {
     return !(row.labelCell || row.labelNode);
   });
 
-  if (rowByLabel.size < targetSet.size || hasRecoverableRowShortfall || hasMissingLabelAnchor) {
-    const fallbackLabelRows = collectLabelNodes(gridRoot, cricketRules, targetSet);
-    fallbackLabelRows.forEach((entry) => {
-      const label = String(entry?.label || "");
-      if (!label || !targetSet.has(label)) {
-        return;
-      }
+  const fallbackLabelRows = collectLabelNodes(gridRoot, cricketRules, targetSet);
+  fallbackLabelRows.forEach((entry) => {
+    const label = String(entry?.label || "");
+    if (!label || !targetSet.has(label)) {
+      return;
+    }
 
-      const stateEntry = renderState.stateMap.get(label);
-      const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
-        ? stateEntry.cellStates.length
-        : 0;
-      const labelNode = entry?.labelNode || null;
-      const labelCell = resolveLabelCell(labelNode);
-      const fallbackPlayerCells = collectPlayerCells(labelNode, cricketRules, targetSet, {
-        expectedPlayerCount,
-      });
-
-      upsertRow({
-        label,
-        labelNode,
-        labelCell,
-        badgeNode: resolveBadgeNode(labelNode, labelCell, cricketRules, label),
-        rowNode: getRowNode(labelNode || labelCell || null),
-        playerCells: fallbackPlayerCells,
-      });
+    const stateEntry = renderState.stateMap.get(label);
+    const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
+      ? stateEntry.cellStates.length
+      : 0;
+    const labelNode = entry?.labelNode || null;
+    const labelCell = resolveLabelCell(labelNode);
+    const fallbackPlayerCells = collectPlayerCells(labelNode, cricketRules, targetSet, {
+      expectedPlayerCount,
     });
-  }
+
+    upsertRow({
+      label,
+      labelNode,
+      labelCell,
+      badgeNode: resolveBadgeNode(labelNode, labelCell, cricketRules, label),
+      rowNode: getRowNode(labelCell || labelNode || null),
+      playerCells: fallbackPlayerCells,
+    });
+  });
 
   const rows = targetOrder
     .map((label) => rowByLabel.get(label))

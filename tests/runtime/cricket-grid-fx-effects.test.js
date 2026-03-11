@@ -1234,6 +1234,120 @@ test("cricket grid fx repairs missing label anchors so open 15 keeps owner-align
   clearCricketGridFxState(state);
 });
 
+test("cricket grid fx repairs contaminated same-length rows so active-player open 19 stays aligned", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const marksByLabel = {
+    "20": [3, 1],
+    "19": [0, 1],
+    "18": [2, 2],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [1, 0],
+    BULL: [0, 0],
+  };
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, marksByLabel);
+  const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const discoveredRenderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(1, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const canonicalStateMap = cricketRules.computeTargetStates(marksByLabel, {
+    gameMode: "cricket",
+    scoringModeNormalized: "standard",
+    activePlayerIndex: 1,
+    targetOrder,
+  });
+
+  const contaminatedRows = targetOrder.map((label) => {
+    const rowState = rowsByLabel.get(label);
+    if (label === "19") {
+      return {
+        label,
+        labelNode: rowState?.labelNode || rowState?.ownerCell || null,
+        labelCell: rowState?.ownerCell || null,
+        badgeNode: rowState?.labelNode || null,
+        rowNode: rowState?.row || null,
+        playerCells: [rowState?.ownerCell, rowsByLabel.get("18")?.ownerCell].filter(Boolean),
+      };
+    }
+
+    return {
+      label,
+      labelNode: rowState?.labelNode || rowState?.ownerCell || null,
+      labelCell: rowState?.ownerCell || null,
+      badgeNode: rowState?.labelNode || null,
+      rowNode: rowState?.row || null,
+      playerCells: [rowState?.ownerCell, rowState?.opponentCell].filter(Boolean),
+    };
+  });
+
+  const renderState = {
+    ...discoveredRenderState,
+    targetOrder,
+    marksByLabel,
+    activePlayerIndex: 1,
+    stateMap: canonicalStateMap,
+    gridSnapshot: {
+      ...(discoveredRenderState?.gridSnapshot || {}),
+      root: discoveredRenderState?.gridSnapshot?.root || documentRef.getElementById("grid"),
+      rows: contaminatedRows,
+      rowMap: new Map(contaminatedRows.map((row) => [row.label, row])),
+    },
+  };
+
+  const debugStats = {};
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:1:0",
+    debugStats,
+  });
+
+  const row19 = rowsByLabel.get("19");
+  assertGridCellPresentation(row19?.ownerCell || null, "open", "19 owner repaired");
+  assertGridCellPresentation(row19?.opponentCell || null, "open", "19 opponent repaired");
+  assert.equal(Boolean(row19?.ownerCell?.classList?.contains(LABEL_CLASS)), true);
+  assert.equal(Boolean(row19?.labelNode?.classList?.contains(BADGE_CLASS)), true);
+  assert.equal(Boolean(row19?.opponentCell?.classList?.contains(ACTIVE_COLUMN_CLASS)), true);
+  assert.equal(Boolean(row19?.ownerCell?.classList?.contains(ACTIVE_COLUMN_CLASS)), false);
+  assert.equal(debugStats.status, "ok");
+  assert.equal(debugStats.rowCount, 7);
+  assert.equal((debugStats.activeColumnMissingLabels || []).includes("19"), false);
+
+  clearCricketGridFxState(state);
+});
+
 test("cricket grid fx never decorates #ad-ext-turn preview cards and keeps 18=X vs 0 neutral", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
