@@ -110,7 +110,7 @@ test("cricket theme strengthens tactical hierarchy without leaving stable hooks"
   );
   assert.match(
     css,
-    /\.ad-ext-theme-board-panel\s*\{[^}]*background:\s*radial-gradient\(circle at 60% 78%, rgba\(168,\s*28,\s*28,\s*0\.22\), rgba\(0,\s*0,\s*0,\s*0\) 42%\),/s
+    /\.ad-ext-theme-board-panel\s*\{[^}]*background:\s*transparent\s*!important;[^}]*border:\s*none\s*!important;[^}]*box-shadow:\s*none\s*!important;/s
   );
 });
 

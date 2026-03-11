@@ -319,12 +319,10 @@ p.chakra-text.css-1qlemha {
 }
 
 .ad-ext-theme-board-panel {
-  background:
-    radial-gradient(circle at 60% 78%, rgba(168, 28, 28, 0.22), rgba(0, 0, 0, 0) 42%),
-    linear-gradient(165deg, rgba(8, 14, 26, 0.96), rgba(2, 8, 18, 0.94)) !important;
-  border: 1px solid var(--ad-ext-cricket-board-rail) !important;
-  border-radius: 1.1rem !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 20px 50px rgba(0, 0, 0, 0.34);
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .ad-ext-theme-board-panel::after {
