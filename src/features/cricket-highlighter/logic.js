@@ -33,11 +33,6 @@ const BASE_BOARD_TARGETS = Object.freeze([
   "BULL",
 ]);
 const SPECIAL_OBJECTIVE_TARGETS = Object.freeze(["DOUBLE", "TRIPLE"]);
-const PRESSURE_VISIBLE_SLOTS = new Set([
-  "double-ring",
-  "triple-ring",
-  "bull-outer-ring",
-]);
 
 function resolvePresentationToken(value) {
   return normalizeCricketPresentationToken(value);
@@ -290,20 +285,28 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   );
   setStyleVar(overlay, "--ad-ext-cricket-open-opacity", showOpenObjectives ? "1" : "0");
 
+  const deadAlpha = Math.max(0.2, clampAlpha(intensity.dead, 0.98) * 0.42);
+  const inactiveAlpha = Math.max(0.16, clampAlpha(intensity.inactive, 0.8) * 0.44);
+  const mutedStrokeAlpha = Math.max(0.18, Math.min(1, deadAlpha + 0.14));
+
   setStyleVar(
     overlay,
     "--ad-ext-cricket-dead-fill",
-    rgbaColor(mutedColor, clampAlpha(intensity.dead, 0.98))
+    rgbaColor(mutedColor, deadAlpha)
   );
-  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", rgbaColor(mutedColor, 0));
+  setStyleVar(overlay, "--ad-ext-cricket-dead-stroke", rgbaColor(mutedColor, mutedStrokeAlpha));
   setStyleVar(overlay, "--ad-ext-cricket-dead-opacity", "1");
 
   setStyleVar(
     overlay,
     "--ad-ext-cricket-inactive-fill",
-    rgbaColor(mutedColor, clampAlpha(intensity.inactive, 0.8))
+    rgbaColor(mutedColor, inactiveAlpha)
   );
-  setStyleVar(overlay, "--ad-ext-cricket-inactive-stroke", rgbaColor(mutedColor, 0));
+  setStyleVar(
+    overlay,
+    "--ad-ext-cricket-inactive-stroke",
+    rgbaColor(mutedColor, Math.max(0.14, Math.min(1, inactiveAlpha + 0.1)))
+  );
   setStyleVar(overlay, "--ad-ext-cricket-inactive-opacity", "1");
 
   setStyleVar(
@@ -318,8 +321,8 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   );
   setStyleVar(overlay, "--ad-ext-cricket-scoring-opacity", "1");
 
-  const subtlePressureFill = Math.max(0.04, highlightOpacity * 0.14);
-  const subtlePressureStroke = Math.max(0.24, Math.min(1, highlightOpacity + strokeBoost * 0.48));
+  const subtlePressureFill = Math.max(0.12, highlightOpacity * 0.38);
+  const subtlePressureStroke = Math.max(0.34, Math.min(1, highlightOpacity + strokeBoost * 0.74));
 
   setStyleVar(
     overlay,
@@ -337,7 +340,7 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(overlay, "--ad-ext-cricket-stroke-width", strokeWidth);
 }
 
-function ensureScoringPattern(overlay, visualConfig) {
+function ensureStripedPattern(overlay, options = {}) {
   const ownerDocument = overlay?.ownerDocument;
   const svgRoot = overlay?.ownerSVGElement;
   if (!ownerDocument || !svgRoot) {
@@ -350,7 +353,10 @@ function ensureScoringPattern(overlay, visualConfig) {
     svgRoot.insertBefore(defs, svgRoot.firstChild || null);
   }
 
-  const patternId = "ad-ext-cricket-scoring-pattern";
+  const patternId = String(options.patternId || "").trim();
+  if (!patternId) {
+    return "";
+  }
   let pattern = defs.querySelector(`#${patternId}`);
   if (!pattern) {
     pattern = ownerDocument.createElementNS(SVG_NS, "pattern");
@@ -366,19 +372,53 @@ function ensureScoringPattern(overlay, visualConfig) {
     pattern.removeChild(pattern.firstChild);
   }
 
-  const scoringColor = visualConfig?.theme?.scoring || { r: 0, g: 178, b: 135 };
+  const baseColor = options.color || { r: 0, g: 0, b: 0 };
+  const baseAlpha = clampAlpha(options.baseAlpha, 0.6);
+  const stripeAlpha = clampAlpha(options.stripeAlpha, 0.3);
   const baseRect = ownerDocument.createElementNS(SVG_NS, "rect");
   baseRect.setAttribute("width", "8");
   baseRect.setAttribute("height", "8");
-  baseRect.setAttribute("fill", rgbaColor(scoringColor, 0.72));
+  baseRect.setAttribute("fill", rgbaColor(baseColor, baseAlpha));
   pattern.appendChild(baseRect);
 
   const stripe = ownerDocument.createElementNS(SVG_NS, "path");
   stripe.setAttribute("d", "M0 0 H8 V4 H0 Z");
-  stripe.setAttribute("fill", rgbaColor(scoringColor, 0.32));
+  stripe.setAttribute("fill", rgbaColor(baseColor, stripeAlpha));
   pattern.appendChild(stripe);
 
   return `url(#${patternId})`;
+}
+
+function ensurePresentationPatterns(overlay, visualConfig) {
+  const scoringColor = visualConfig?.theme?.scoring || { r: 0, g: 178, b: 135 };
+  const pressureColor = visualConfig?.theme?.pressure || { r: 239, g: 68, b: 68 };
+  const mutedColor = visualConfig?.mutedColor || { r: 33, g: 33, b: 33 };
+  return {
+    scoring: ensureStripedPattern(overlay, {
+      patternId: "ad-ext-cricket-scoring-pattern",
+      color: scoringColor,
+      baseAlpha: 0.72,
+      stripeAlpha: 0.32,
+    }),
+    pressure: ensureStripedPattern(overlay, {
+      patternId: "ad-ext-cricket-pressure-pattern",
+      color: pressureColor,
+      baseAlpha: 0.64,
+      stripeAlpha: 0.28,
+    }),
+    dead: ensureStripedPattern(overlay, {
+      patternId: "ad-ext-cricket-dead-pattern",
+      color: mutedColor,
+      baseAlpha: 0.34,
+      stripeAlpha: 0.16,
+    }),
+    inactive: ensureStripedPattern(overlay, {
+      patternId: "ad-ext-cricket-inactive-pattern",
+      color: mutedColor,
+      baseAlpha: 0.3,
+      stripeAlpha: 0.12,
+    }),
+  };
 }
 
 function applyShapeStyle(shape, presentation, targetLabel) {
@@ -396,13 +436,22 @@ function applyShapeStyle(shape, presentation, targetLabel) {
   const targetSlot = String(shape?.dataset?.targetSlot || "").trim().toLowerCase();
   if (targetSlot) {
     shape.classList.add(`${TARGET_SLOT_CLASS_PREFIX}${targetSlot}`);
-    if (normalizedPresentation === "pressure" && !PRESSURE_VISIBLE_SLOTS.has(targetSlot)) {
-      shape.classList.add(PRESSURE_SUPPRESSED_CLASS);
-    }
   }
 
-  if (normalizedPresentation === "scoring" && String(shape.dataset?.scoringPattern || "")) {
-    shape.style.fill = String(shape.dataset.scoringPattern);
+  if (normalizedPresentation === "scoring" && String(shape.dataset?.patternScoring || "")) {
+    shape.style.fill = String(shape.dataset.patternScoring);
+  } else if (
+    normalizedPresentation === "pressure" &&
+    String(shape.dataset?.patternPressure || "")
+  ) {
+    shape.style.fill = String(shape.dataset.patternPressure);
+  } else if (normalizedPresentation === "dead" && String(shape.dataset?.patternDead || "")) {
+    shape.style.fill = String(shape.dataset.patternDead);
+  } else if (
+    normalizedPresentation === "inactive" &&
+    String(shape.dataset?.patternInactive || "")
+  ) {
+    shape.style.fill = String(shape.dataset.patternInactive);
   } else {
     shape.style.removeProperty("fill");
   }
@@ -514,7 +563,7 @@ export function renderCricketHighlights(options = {}) {
 
   applyOverlayStyleVars(overlay, visualConfig, board.radius);
   const boardTargets = resolveBoardTargets(renderState);
-  const scoringPattern = ensureScoringPattern(overlay, visualConfig);
+  const patterns = ensurePresentationPatterns(overlay, visualConfig);
   const overlayShapeState = ensureOverlayShapeCache(
     overlay,
     board,
@@ -576,7 +625,10 @@ export function renderCricketHighlights(options = {}) {
 
     shapes.forEach((shape) => {
       if (shape?.dataset) {
-        shape.dataset.scoringPattern = scoringPattern;
+        shape.dataset.patternScoring = patterns.scoring;
+        shape.dataset.patternPressure = patterns.pressure;
+        shape.dataset.patternDead = patterns.dead;
+        shape.dataset.patternInactive = patterns.inactive;
       }
       applyShapeStyle(shape, presentation, targetLabel);
       shape.style.display = shouldRenderTarget ? "" : "none";

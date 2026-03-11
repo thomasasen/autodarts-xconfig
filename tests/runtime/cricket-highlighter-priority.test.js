@@ -160,7 +160,7 @@ function injectTurnPreviewWithCricketLikeText(documentRef) {
   };
 }
 
-test("pressure rows use subtle ring classes instead of full-lane emphasis", () => {
+test("pressure rows stay fully visible on board and are not muted to ring-only overlays", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
   createBoard(documentRef);
@@ -216,7 +216,17 @@ test("pressure rows use subtle ring classes instead of full-lane emphasis", () =
     true
   );
   assert.equal(
-    shapes18.filter((shape) => shape.classList?.contains(PRESSURE_SUPPRESSED_CLASS)).length >= 2,
+    shapes18.filter((shape) => shape.classList?.contains(PRESSURE_SUPPRESSED_CLASS)).length,
+    0
+  );
+  assert.equal(
+    shapes18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
+    true
+  );
+  assert.equal(
+    shapes18.every((shape) => {
+      return String(shape?.style?.fill || "").includes("ad-ext-cricket-pressure-pattern");
+    }),
     true
   );
 });
@@ -745,7 +755,7 @@ test("board scoring stays in the scoring bucket while open rows stay neutral", (
   );
   assert.equal(
     scoring20Shapes.every((shape) => {
-      return String(shape?.dataset?.scoringPattern || "").startsWith("url(#ad-ext-cricket-scoring-pattern)");
+      return String(shape?.dataset?.patternScoring || "").startsWith("url(#ad-ext-cricket-scoring-pattern)");
     }),
     true
   );
@@ -757,6 +767,110 @@ test("board scoring stays in the scoring bucket while open rows stay neutral", (
   );
   assert.equal(
     open18Shapes.every((shape) => String(shape?.dataset?.targetPresentation || "") === "open"),
+    true
+  );
+});
+
+test("board active-player switch keeps pressure sectors visible and dead sectors use black stripe patterns", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [3, 3],
+    "19": [0, 0],
+    "18": [3, 3],
+    "17": [3, 0],
+    "16": [0, 0],
+    "15": [3, 0],
+    BULL: [0, 0],
+  });
+  setDomActivePlayer(documentRef, 1, 2);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getActivePlayerIndex: () => 1,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.stateMap.get("17")?.boardPresentation, "pressure");
+  assert.equal(renderState?.stateMap.get("15")?.boardPresentation, "pressure");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "dead");
+  assert.equal(renderState?.stateMap.get("18")?.boardPresentation, "dead");
+
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: true,
+      showDeadTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+  assert.equal(rendered, true);
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+
+  const pressure17 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "17";
+  });
+  const pressure15 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "15";
+  });
+  const dead20 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "20";
+  });
+  const dead18 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "18";
+  });
+
+  assert.equal(pressure17.length, 4);
+  assert.equal(pressure15.length, 4);
+  assert.equal(
+    pressure17.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
+    true
+  );
+  assert.equal(
+    pressure15.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
+    true
+  );
+  assert.equal(
+    pressure17.filter((shape) => shape.classList?.contains(PRESSURE_SUPPRESSED_CLASS)).length,
+    0
+  );
+  assert.equal(
+    pressure15.filter((shape) => shape.classList?.contains(PRESSURE_SUPPRESSED_CLASS)).length,
+    0
+  );
+  assert.equal(
+    pressure17.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-pressure-pattern")),
+    true
+  );
+  assert.equal(
+    pressure15.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-pressure-pattern")),
+    true
+  );
+
+  assert.equal(
+    dead20.every((shape) => String(shape?.dataset?.targetPresentation || "") === "dead"),
+    true
+  );
+  assert.equal(
+    dead18.every((shape) => String(shape?.dataset?.targetPresentation || "") === "dead"),
+    true
+  );
+  assert.equal(
+    dead20.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-dead-pattern")),
+    true
+  );
+  assert.equal(
+    dead18.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-dead-pattern")),
     true
   );
 });
