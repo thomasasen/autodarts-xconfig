@@ -1467,58 +1467,152 @@ export function updateCricketGridFx(options = {}) {
             );
           })
       : [];
-    let resolvedPlayerCells = [];
-    let cellDescriptors = indexedCellDescriptors;
-
-    if (!cellDescriptors.length) {
-      resolvedPlayerCells = maybeIncludeLabelCellAsPlayerCell(
-        row.playerCells,
-        row.labelCell || row.labelNode || null,
-        playerStateCount
-      );
-      cellDescriptors = toCellDescriptors(
-        resolvedPlayerCells,
-        labelCellNode,
-        playerStateCount
-      );
-    } else {
-      resolvedPlayerCells = cellDescriptors.map((entry) => entry.cellNode);
-    }
+    const inferredRowCells = maybeIncludeLabelCellAsPlayerCell(
+      row.playerCells,
+      row.labelCell || row.labelNode || null,
+      playerStateCount
+    );
+    const inferredCellDescriptors = toCellDescriptors(
+      inferredRowCells,
+      labelCellNode,
+      playerStateCount
+    );
     const resolvedRowNode = row.rowNode || getRowNode(row.labelCell || row.labelNode || null);
-    if (Number.isFinite(activePlayerIndex) && playerStateCount > 0) {
-      const hasActiveDescriptor = cellDescriptors.some((entry) => {
-        return (
-          entry.playerIndex === activePlayerIndex &&
-          isCellInsideRow(entry.cellNode, resolvedRowNode)
-        );
+    const strictRowCells = buildRowCellsFromRowNode(
+      {
+        label: row.label,
+        labelNode: row.labelNode || null,
+        labelCell: row.labelCell || null,
+        rowNode: resolvedRowNode,
+      },
+      playerStateCount
+    );
+    const strictCellDescriptors = toCellDescriptors(
+      strictRowCells,
+      labelCellNode,
+      playerStateCount
+    );
+    const candidateDescriptorSets = [];
+    if (indexedCellDescriptors.length) {
+      candidateDescriptorSets.push({
+        source: "indexed",
+        descriptors: indexedCellDescriptors,
       });
-      const hasForeignDescriptors = cellDescriptors.some((entry) => {
-        return !isCellInsideRow(entry.cellNode, resolvedRowNode);
+    }
+    if (inferredCellDescriptors.length) {
+      candidateDescriptorSets.push({
+        source: "inferred",
+        descriptors: inferredCellDescriptors,
       });
-      if (!hasActiveDescriptor || hasForeignDescriptors) {
-        const strictRowCells = buildRowCellsFromRowNode(
-          {
-            label: row.label,
-            labelNode: row.labelNode || null,
-            labelCell: row.labelCell || null,
-            rowNode: resolvedRowNode,
-          },
-          playerStateCount
-        );
-        const strictDescriptors = toCellDescriptors(
-          strictRowCells,
-          labelCellNode,
-          playerStateCount
-        );
-        const strictHasActive = strictDescriptors.some((entry) => {
-          return entry.playerIndex === activePlayerIndex;
-        });
-        if (strictHasActive) {
-          cellDescriptors = strictDescriptors;
-          resolvedPlayerCells = strictDescriptors.map((entry) => entry.cellNode);
+    }
+    if (strictCellDescriptors.length) {
+      candidateDescriptorSets.push({
+        source: "strict",
+        descriptors: strictCellDescriptors,
+      });
+    }
+    const getDescriptorScore = (descriptors) => {
+      if (!Array.isArray(descriptors) || descriptors.length === 0) {
+        return Number.NEGATIVE_INFINITY;
+      }
+      const usedPlayerIndexes = new Set();
+      let score = 0;
+      descriptors.forEach((entry) => {
+        const cellNode = entry?.cellNode || null;
+        const playerIndex = Number(entry?.playerIndex);
+        if (!cellNode?.classList || !Number.isFinite(playerIndex)) {
+          score -= 4;
+          return;
+        }
+        if (!isCellInsideRow(cellNode, resolvedRowNode)) {
+          score -= 6;
+        }
+        const expectedMarks = Number(stateEntry.marksByPlayer?.[playerIndex] || 0);
+        const observedMarks = parseMarksValue(cellNode, cricketRules);
+        score -= Math.abs(expectedMarks - observedMarks) * 3;
+        if (expectedMarks === observedMarks) {
+          score += 2;
+        }
+        const explicitPlayerIndex = readCellPlayerIndex(cellNode);
+        if (Number.isFinite(explicitPlayerIndex) && explicitPlayerIndex === playerIndex) {
+          score += 4;
+        }
+        if (usedPlayerIndexes.has(playerIndex)) {
+          score -= 5;
+        }
+        usedPlayerIndexes.add(playerIndex);
+      });
+      if (labelCellNode) {
+        const labelDescriptor = descriptors.find((entry) => entry?.cellNode === labelCellNode);
+        if (labelDescriptor) {
+          if (Number(labelDescriptor.playerIndex) === 0) {
+            score += 2;
+          } else {
+            score -= 2;
+          }
         }
       }
-    }
+      score -= Math.max(0, playerStateCount - usedPlayerIndexes.size) * 4;
+      if (
+        Number.isFinite(activePlayerIndex) &&
+        descriptors.some((entry) => Number(entry?.playerIndex) === activePlayerIndex)
+      ) {
+        score += 1;
+      }
+      return score;
+    };
+    const getDescriptorPreference = (candidate) => {
+      if (!candidate || !Array.isArray(candidate.descriptors)) {
+        return Number.NEGATIVE_INFINITY;
+      }
+      const descriptors = candidate.descriptors;
+      const allExplicit = descriptors.every((entry) => {
+        const explicit = readCellPlayerIndex(entry?.cellNode || null);
+        return Number.isFinite(explicit) && explicit === Number(entry?.playerIndex);
+      });
+      const labelAsOwner = Boolean(
+        labelCellNode &&
+          descriptors.some((entry) => {
+            return entry?.cellNode === labelCellNode && Number(entry?.playerIndex) === 0;
+          })
+      );
+      return (allExplicit ? 10 : 0) + (labelAsOwner ? 3 : 0) + (candidate.source === "strict" ? 1 : 0);
+    };
+    let selectedCandidate = null;
+    candidateDescriptorSets.forEach((candidate) => {
+      const descriptorScore = getDescriptorScore(candidate.descriptors);
+      const descriptorPreference = getDescriptorPreference(candidate);
+      if (!selectedCandidate) {
+        selectedCandidate = {
+          ...candidate,
+          descriptorScore,
+          descriptorPreference,
+        };
+        return;
+      }
+      if (descriptorScore > selectedCandidate.descriptorScore) {
+        selectedCandidate = {
+          ...candidate,
+          descriptorScore,
+          descriptorPreference,
+        };
+        return;
+      }
+      if (
+        descriptorScore === selectedCandidate.descriptorScore &&
+        descriptorPreference > selectedCandidate.descriptorPreference
+      ) {
+        selectedCandidate = {
+          ...candidate,
+          descriptorScore,
+          descriptorPreference,
+        };
+      }
+    });
+    const cellDescriptors = Array.isArray(selectedCandidate?.descriptors)
+      ? selectedCandidate.descriptors
+      : [];
+    const resolvedPlayerCells = cellDescriptors.map((entry) => entry.cellNode);
     const hasPlayerCells = Array.isArray(resolvedPlayerCells) && resolvedPlayerCells.length > 0;
     if (!hasPlayerCells) {
       rowsWithoutPlayerCells += 1;

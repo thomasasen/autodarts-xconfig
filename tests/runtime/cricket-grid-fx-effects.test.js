@@ -1672,6 +1672,96 @@ test("cricket grid fx repairs contaminated bull row mapping so active open colum
   clearCricketGridFxState(state);
 });
 
+test("cricket grid fx prefers row-local owner mapping over stale indexed snapshots for open bull rows", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const rowsByLabel = createMergedOwnerLabelGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [2, 0],
+    "17": [1, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0, 2, {
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const bullOwnerCell = rowsByLabel.get("BULL")?.ownerCell || null;
+  const bullOpponentCell = rowsByLabel.get("BULL")?.opponentCell || null;
+  assert.ok(bullOwnerCell);
+  assert.ok(bullOpponentCell);
+
+  const contaminatedRows = (renderState?.gridSnapshot?.rows || []).map((row) => {
+    if (String(row?.label || "") !== "BULL") {
+      return row;
+    }
+    return {
+      ...row,
+      label: "BULL",
+      labelNode: row?.labelNode || bullOwnerCell,
+      labelCell: row?.labelCell || bullOwnerCell,
+      rowNode: row?.rowNode || rowsByLabel.get("BULL")?.row || null,
+      playerCells: [bullOwnerCell, bullOpponentCell],
+      // Simulate stale mirrored index mapping that can appear during turn hydration.
+      playerCellsByIndex: [bullOpponentCell, bullOwnerCell],
+    };
+  });
+
+  const degradedRenderState = {
+    ...renderState,
+    gridSnapshot: {
+      ...(renderState?.gridSnapshot || {}),
+      rows: contaminatedRows,
+      rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
+    },
+  };
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: degradedRenderState,
+    state,
+    visualConfig,
+    turnToken: "bull:stale-indexed:owner0",
+  });
+
+  assertGridCellPresentation(bullOwnerCell, "open", "BULL owner open");
+  assertGridCellPresentation(bullOpponentCell, "open", "BULL opponent open");
+  assert.equal(Boolean(bullOwnerCell.classList.contains(ACTIVE_COLUMN_CLASS)), true);
+  assert.equal(Boolean(bullOpponentCell.classList.contains(ACTIVE_COLUMN_CLASS)), false);
+
+  clearCricketGridFxState(state);
+});
+
 test("cricket grid fx never decorates #ad-ext-turn preview cards and keeps 18=X vs 0 neutral", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
