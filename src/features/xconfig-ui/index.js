@@ -706,6 +706,51 @@ function buildSelectOptionNotes(documentRef, feature, field) {
   return list;
 }
 
+function syncSelectOptionNotes(documentRef, selectNode) {
+  if (!selectNode || typeof selectNode.getAttribute !== "function") {
+    return;
+  }
+
+  const settingKey = String(selectNode.getAttribute("data-setting-key") || "").trim();
+  if (!settingKey) {
+    return;
+  }
+
+  const inputWrap =
+    selectNode.closest?.(".ad-xconfig-setting-input") ||
+    selectNode.parentElement ||
+    null;
+  if (!inputWrap || typeof inputWrap.querySelectorAll !== "function") {
+    return;
+  }
+
+  const selectedValue = String(selectNode.value ?? "");
+  const optionNotes = Array.from(inputWrap.querySelectorAll(
+    `[data-adxconfig-option-note='true'][data-setting-key='${settingKey}']`
+  ));
+  optionNotes.forEach((optionNode) => {
+    const optionValue = String(optionNode.getAttribute("data-option-value") || "");
+    const isActive = optionValue === selectedValue;
+    optionNode.setAttribute("data-active", isActive ? "true" : "false");
+
+    const head = optionNode.querySelector?.(".ad-xconfig-option-head");
+    if (!head) {
+      return;
+    }
+    const activeBadge = head.querySelector?.(".ad-xconfig-option-active");
+    if (isActive) {
+      if (!activeBadge) {
+        head.appendChild(createElement(documentRef, "span", {
+          className: "ad-xconfig-option-active",
+          text: "Aktuell",
+        }));
+      }
+      return;
+    }
+    activeBadge?.remove?.();
+  });
+}
+
 function buildFeatureCard(documentRef, feature) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
   const card = createElement(documentRef, "article", {
@@ -1723,6 +1768,9 @@ function ensureXConfigShell(options = {}) {
     const descriptor = getXConfigDescriptor(featureKey);
     const field = descriptor?.fields?.find((entry) => entry.key === settingKey) || null;
     const nextValue = parseFieldValue(field, target.value, target.checked);
+    if (field?.control === "select") {
+      syncSelectOptionNotes(documentRef, target);
+    }
     withRuntimeCall(
       runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextValue)),
       "Einstellung gespeichert.",

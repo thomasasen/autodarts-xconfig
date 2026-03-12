@@ -493,6 +493,20 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     /gekachelt wie ein Muster/
   );
 
+  const displayModeSelect = documentRef.getElementById("ad-xconfig-field-theme-x01-backgroundDisplayMode");
+  assert.ok(displayModeSelect);
+  displayModeSelect.value = "tile";
+  displayModeSelect.dispatchEvent(new FakeEvent("change", { bubbles: true, target: displayModeSelect }));
+  await wait(5);
+
+  assert.equal(fillOption.getAttribute("data-active"), "false");
+  assert.equal(tileOption.getAttribute("data-active"), "true");
+  const tileActiveBadge = tileOption.querySelector(".ad-xconfig-option-active");
+  const fillActiveBadge = fillOption.querySelector(".ad-xconfig-option-active");
+  assert.ok(tileActiveBadge);
+  assert.equal(String(tileActiveBadge.textContent || "").trim(), "Aktuell");
+  assert.equal(fillActiveBadge, null);
+
   assert.equal(
     documentRef.querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='showAvg']").length,
     0,
