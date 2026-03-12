@@ -110,6 +110,7 @@ A valid result from this skill must:
 - regenerate `dist/autodarts-xconfig.user.js`
 - report build/test status truthfully
 - leave the repository in a commit-ready state
+- include a ready-to-use commit message in the required repository format whenever a build was run
 
 # Preferred commit style
 

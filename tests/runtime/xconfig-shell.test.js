@@ -62,9 +62,7 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.ok(panelHost);
   assert.equal(panelHost.style.display, "block");
 
-  const closeButton = documentRef.querySelector("[data-adxconfig-action='close']");
-  assert.ok(closeButton);
-  closeButton.click();
+  windowRef.history.pushState({}, "", "/lobbies");
   await wait(5);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
@@ -103,9 +101,7 @@ test("xConfig shell keeps sidebar visible when layout has no main element", asyn
   assert.notEqual(documentRef.main.style.display, "none");
   assert.equal(documentRef.variantElement.style.display, "none");
 
-  const closeButton = documentRef.querySelector("[data-adxconfig-action='close']");
-  assert.ok(closeButton);
-  closeButton.click();
+  windowRef.history.pushState({}, "", "/lobbies");
   await wait(5);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
@@ -364,9 +360,7 @@ test("xConfig shell keeps listener and observer counts stable across open/close 
   for (let cycle = 0; cycle < 4; cycle += 1) {
     menuButton.click();
     await wait(5);
-    const closeButton = documentRef.querySelector("[data-adxconfig-action='close']");
-    assert.ok(closeButton);
-    closeButton.click();
+    windowRef.history.pushState({}, "", "/lobbies");
     documentRef.flushMutations();
     await wait(5);
   }
@@ -484,7 +478,7 @@ test("xConfig shell links cards and settings modal to the matching README anchor
   runtime.stop();
 });
 
-test("xConfig shell renders mapped preview backgrounds and compact legacy back button", async () => {
+test("xConfig shell renders mapped preview backgrounds and compact shell header", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -494,9 +488,6 @@ test("xConfig shell renders mapped preview backgrounds and compact legacy back b
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await wait(5);
 
-  const backButton = documentRef.querySelector("[data-adxconfig-action='close']");
-  assert.ok(backButton);
-  assert.equal(backButton.classList.contains("ad-xconfig-back-btn"), true);
   const styleNode = documentRef.getElementById("ad-xconfig-shell-style");
   assert.ok(styleNode);
   assert.equal(String(styleNode.textContent || "").includes("flex-direction:column"), true);

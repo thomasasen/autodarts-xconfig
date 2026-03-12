@@ -67,7 +67,6 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{border:1px solid rgba(255,255,255,.24);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{padding:.55rem .85rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn:hover,#${PANEL_HOST_ID} .ad-xconfig-tab:hover{background:rgba(255,255,255,.16)}
-#${PANEL_HOST_ID} .ad-xconfig-back-btn{width:2.1rem;min-width:2.1rem;height:2.1rem;padding:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:.92rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
 #${PANEL_HOST_ID} .ad-xconfig-tab{border-color:rgba(166,196,255,.52);border-radius:11px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(74,178,255,.14));padding:.86rem .82rem;min-height:4.1rem;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.22rem;text-align:left;box-shadow:0 6px 18px rgba(12,31,72,.28),inset 0 0 0 1px rgba(255,255,255,.06);transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease}
@@ -860,15 +859,6 @@ function buildShellContent(documentRef, state, features) {
   const headingMain = createElement(documentRef, "div", {
     className: "ad-xconfig-header-main",
   });
-  headingMain.appendChild(createElement(documentRef, "button", {
-    type: "button",
-    className: "ad-xconfig-btn ad-xconfig-back-btn",
-    text: "←",
-    attributes: {
-      "data-adxconfig-action": "close",
-      "aria-label": "Zurück",
-    },
-  }));
   headingMain.appendChild(createElement(documentRef, "h1", {
     className: "ad-xconfig-title",
     text: MENU_LABEL,

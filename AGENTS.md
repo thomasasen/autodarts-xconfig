@@ -79,6 +79,7 @@ Every commit should clearly state:
 - why it changed
 - how it was implemented
 - how it was validated
+- if a build was executed in the task, provide a ready-to-use commit message in this format before handoff
 
 Preferred format:
 

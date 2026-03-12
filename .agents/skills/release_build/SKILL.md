@@ -90,6 +90,7 @@ A valid result from this skill must:
 - include version bump when needed
 - regenerate shipped output through the build flow
 - report validation truthfully
+- include a ready-to-use commit message in the required repository format whenever a build was run
 
 # Commit guidance
 
