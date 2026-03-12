@@ -33,6 +33,25 @@ function createThemeConfig(themeConfigKey, themeFeatureConfig = {}) {
   };
 }
 
+function createDartsZoomPreviewFixture(documentRef) {
+  const zoomHost = documentRef.createElement("autodarts-tools-zoom");
+  const shadowRoot = documentRef.createElement("div");
+  const previewWrapper = documentRef.createElement("div");
+  const previewImage = documentRef.createElement("img");
+
+  previewImage.setAttribute("src", "https://play.autodarts.io/images/board.png");
+  previewWrapper.appendChild(previewImage);
+  shadowRoot.appendChild(previewWrapper);
+  zoomHost.shadowRoot = shadowRoot;
+  documentRef.main.appendChild(zoomHost);
+
+  return {
+    zoomHost,
+    shadowRoot,
+    previewImage,
+  };
+}
+
 function createBoardFixture(documentRef, options = {}) {
   const withContentSlot = options.withContentSlot === true;
   const boardPanel = documentRef.createElement("div");
@@ -226,7 +245,7 @@ test("theme-x01 mounts idempotently and cleans up style plus preview spacing", a
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), true);
-  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), true);
+  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
   assert.equal(documentRef.querySelectorAll(".ad-ext-theme-board-panel").length, 0);
   assert.equal(documentRef.querySelectorAll(".ad-ext-theme-content-slot").length, 0);
 
@@ -345,7 +364,7 @@ test("theme-shanghai mounts idempotently and cleans up style", async () => {
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-shanghai-style")), true);
-  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), true);
+  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-shanghai-style")), false);
@@ -367,11 +386,39 @@ test("theme-bermuda applies includes matching and cleans up on stop", async () =
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-bermuda-style")), true);
-  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), true);
+  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-bermuda-style")), false);
   assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
+});
+
+test("under-throws themes enable preview spacing when visible darts-zoom previews exist", async () => {
+  const cases = [
+    { configKey: "x01", variant: "501", featureConfig: { showAvg: true } },
+    { configKey: "shanghai", variant: "Shanghai", featureConfig: { showAvg: false } },
+    { configKey: "bermuda", variant: "Bermuda 701", featureConfig: {} },
+  ];
+
+  for (const entry of cases) {
+    const documentRef = new FakeDocument();
+    documentRef.variantElement.textContent = entry.variant;
+    createDartsZoomPreviewFixture(documentRef);
+    const windowRef = createFakeWindow({ documentRef });
+    const runtime = createBootstrap({
+      windowRef,
+      documentRef,
+      config: createThemeConfig(entry.configKey, entry.featureConfig),
+    });
+
+    runtime.start();
+    await wait(5);
+
+    assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), true);
+
+    runtime.stop();
+    assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
+  }
 });
 
 test("theme-cricket activates for tactics and cleans style on cleanup", async () => {

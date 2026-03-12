@@ -5,6 +5,7 @@ export const STYLE_ID = "ad-ext-theme-shanghai-style";
 
 const PREVIEW_PLACEMENT = Object.freeze({
   mode: "under-throws",
+  activationMode: "autodarts-tools-zoom",
   previewHeightPx: 128,
   previewGapPx: 8,
 });

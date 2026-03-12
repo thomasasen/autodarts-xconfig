@@ -5,6 +5,7 @@ export const STYLE_ID = "ad-ext-theme-x01-style";
 
 const PREVIEW_PLACEMENT = Object.freeze({
   mode: "under-throws",
+  activationMode: "autodarts-tools-zoom",
   previewHeightPx: 128,
   previewGapPx: 8,
 });
@@ -53,7 +54,6 @@ div.ad-ext-player.ad-ext-player-active p.chakra-text.css-11cuipc {
 
 div.css-y3hfdd{
   gap: 0px !important;
-  height: 25%;
 }
 `;
 

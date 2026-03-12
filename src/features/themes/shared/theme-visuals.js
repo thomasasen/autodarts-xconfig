@@ -54,7 +54,12 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
   const backgroundDataUrl = sanitizeBackgroundDataUrl(featureConfig.backgroundImageDataUrl);
 
   const playerFieldCss = `
+#ad-ext-player-display .ad-ext-player{
+  min-height: 100% !important;
+}
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
+  min-height: 100% !important;
+  height: 100% !important;
   background: rgba(8, 12, 24, ${playerFieldAlpha.toFixed(3)}) !important;
 }
 #ad-ext-player-display .ad-ext-player > .chakra-stack > *{

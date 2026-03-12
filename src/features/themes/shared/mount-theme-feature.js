@@ -1,6 +1,7 @@
 import { createRafScheduler } from "../../../shared/raf-scheduler.js";
 import {
   PREVIEW_SPACE_CLASS,
+  isPreviewPlacementEnabled,
   isThemeVariantActive,
   togglePreviewSpace,
 } from "./theme-utils.js";
@@ -533,7 +534,12 @@ export function mountThemeFeature(context = {}, options = {}) {
     }
 
     domGuards.ensureStyle(styleId, cssText);
-    togglePreviewSpace(documentRef, previewPlacement, true);
+    const previewSpaceEnabled = isPreviewPlacementEnabled(
+      documentRef,
+      previewPlacement,
+      windowRef
+    );
+    togglePreviewSpace(documentRef, previewPlacement, previewSpaceEnabled);
     updateBoardLayoutHooks(documentRef, themeState);
   }
 

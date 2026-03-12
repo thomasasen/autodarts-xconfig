@@ -143,6 +143,81 @@ export function buildPreviewPlacementCss(previewOptions = {}) {
 `;
 }
 
+function isElementVisible(node, windowRef = null, options = {}) {
+  const allowDisconnected = options.allowDisconnected === true;
+  if (!node || (!allowDisconnected && node.isConnected === false)) {
+    return false;
+  }
+
+  if (typeof node.getClientRects === "function" && node.getClientRects().length === 0) {
+    return false;
+  }
+
+  const ownerWindow = windowRef || node.ownerDocument?.defaultView || null;
+  if (ownerWindow && typeof ownerWindow.getComputedStyle === "function") {
+    const style = ownerWindow.getComputedStyle(node);
+    if (style) {
+      if (style.display === "none" || style.visibility === "hidden") {
+        return false;
+      }
+      if (String(style.opacity || "1") === "0") {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function hasVisibleDartsZoomPreviewCard(shadowRoot, windowRef = null) {
+  if (!shadowRoot || typeof shadowRoot.querySelectorAll !== "function") {
+    return false;
+  }
+
+  const previewImages = Array.from(shadowRoot.querySelectorAll("img"));
+  if (!previewImages.length) {
+    return false;
+  }
+
+  return previewImages.some((imageNode) => {
+    const source = String(imageNode?.getAttribute?.("src") || imageNode?.src || "");
+    if (!source.includes("/images/board.png")) {
+      return false;
+    }
+    return isElementVisible(imageNode, windowRef, { allowDisconnected: true });
+  });
+}
+
+export function isPreviewPlacementEnabled(documentRef, previewOptions = {}, windowRef = null) {
+  const mode = String(previewOptions.mode || "standard").trim().toLowerCase();
+  if (mode !== "under-throws") {
+    return false;
+  }
+
+  const activationMode = String(previewOptions.activationMode || "always")
+    .trim()
+    .toLowerCase();
+  if (activationMode !== "autodarts-tools-zoom") {
+    return true;
+  }
+
+  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+    return false;
+  }
+
+  const zoomNodes = Array.from(documentRef.querySelectorAll("autodarts-tools-zoom"));
+  if (!zoomNodes.length) {
+    return false;
+  }
+
+  return zoomNodes.some((zoomNode) => {
+    if (!isElementVisible(zoomNode, windowRef)) {
+      return false;
+    }
+    return hasVisibleDartsZoomPreviewCard(zoomNode.shadowRoot || null, windowRef);
+  });
+}
+
 export function togglePreviewSpace(documentRef, previewOptions = {}, enabled = false) {
   const mode = String(previewOptions.mode || "standard").trim().toLowerCase();
   if (mode !== "under-throws") {

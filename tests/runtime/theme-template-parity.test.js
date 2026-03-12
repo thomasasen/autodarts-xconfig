@@ -18,6 +18,7 @@ import {
   buildBullOffThemeCss,
 } from "../../src/features/themes/bull-off/style.js";
 import { commonLayoutCss } from "../../src/features/themes/shared/common-css.js";
+import { buildThemeVisualSettingsCss } from "../../src/features/themes/shared/theme-visuals.js";
 
 function assertNoFragileLayoutSelectors(cssText) {
   assert.doesNotMatch(cssText, /\[data-ad-theme-slot=/);
@@ -29,12 +30,14 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   const css = buildX01ThemeCss({ showAvg: true });
 
   assert.equal(PREVIEW_X01.mode, "under-throws");
+  assert.equal(PREVIEW_X01.activationMode, "autodarts-tools-zoom");
   assert.match(css, /ad-ext-turn-preview-space/);
   assert.match(css, /--ad-ext-stat-scale:\s*0\.6/);
   assert.match(
     css,
     /ad-ext-avg-trend-arrow\.ad-ext-avg-trend-up\s*\{[^}]*border-bottom:\s*calc\(23px \* var\(--ad-ext-stat-scale\)\)\s*solid\s*#9fdb58;/s
   );
+  assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
   assertNoFragileLayoutSelectors(css);
 });
 
@@ -44,6 +47,8 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
 
   assert.equal(PREVIEW_SHANGHAI.mode, "under-throws");
   assert.equal(PREVIEW_BERMUDA.mode, "under-throws");
+  assert.equal(PREVIEW_SHANGHAI.activationMode, "autodarts-tools-zoom");
+  assert.equal(PREVIEW_BERMUDA.activationMode, "autodarts-tools-zoom");
   assert.match(shanghaiCss, /ad-ext-turn-preview-space/);
   assert.match(bermudaCss, /ad-ext-turn-preview-space/);
   assert.match(shanghaiCss, /ad-ext-avg-trend-arrow\s*\{\s*display:\s*none\s*!important;/);
@@ -116,4 +121,19 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   assert.doesNotMatch(commonLayoutCss, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
   assert.doesNotMatch(commonLayoutCss, /96cqw|96cqh/);
   assertNoFragileLayoutSelectors(commonLayoutCss);
+});
+
+test("shared theme visual settings keep player cards full-height to avoid active-row split lines", () => {
+  const visualCss = buildThemeVisualSettingsCss({
+    playerFieldTransparency: 10,
+  });
+
+  assert.match(
+    visualCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*min-height:\s*100%\s*!important;/s
+  );
+  assert.match(
+    visualCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*min-height:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;/s
+  );
 });
