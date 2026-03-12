@@ -459,32 +459,32 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Triple/Double/Bull Hits
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` springen in der Wurfliste deutlich schneller ins Auge.
-- Grafisch: Die betroffenen Wurffelder erhalten einen konfigurierbaren Farbbalken mit Trefferanimation. `25` (Single Bull) wird bewusst ruhiger markiert, `BULL` (Bullseye) sichtbar stärker.
-- Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort auffallen sollen, ohne viele Einzelschalter zu pflegen.
+- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Broadcast-Highlights mit deutlicherem Text und sichtbarerem Hit-Burst.
+- Grafisch: Die betroffenen Wurffelder erhalten animierte Verlaeufe, leuchtende Raender und textbezogene Trefferimpulse. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets duerfen danach subtil weiterlaufen.
+- Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar und deutlich stylischer wirken sollen, ohne weitere Einzelschalter zu pflegen.
 
 **Einstellungen einfach erklärt**
 
-- `Farbstil`: Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer markiert werden. Die Trefferlogik bleibt gleich, nur die visuelle Tonalität wechselt.
-  - `Ember Rush`: Die Treffer-Highlights wirken wie glühende Ember-Farben mit hohem Kontrast. Das ist warm, energisch und in schnellen Legs sehr auffällig.
-  - `Ice Circuit`: Treffer erscheinen in klaren Eis- und Circuit-Farben. Das wirkt technisch, sauber und ruhig, bleibt aber gut sichtbar.
-  - `Volt Lime`: Die Highlights leuchten grün-gelb und ziehen den Blick sofort an. Das ist die aggressivste Farbvariante für hohe Sichtbarkeit.
-  - `Crimson Steel`: Treffer wirken härter und sportlicher mit tieferen Rotwerten und kühleren dunklen Gegentönen. Das ist markant ohne Neon-Look.
-  - `Arctic Mint`: Die Highlights wirken frisch und luftig mit kühler Mint-Tonalität. Das ist klar sichtbar, aber entspannter als Neon.
-  - `Champagne Night`: Treffer erhalten eine edlere, warme Nachtwirkung mit champagnerähnlichem Glow. Das wirkt premium statt knallig.
-- `Animationsstil`: Bestimmt, welche Einblend- und Impulsbewegung bei neu erkannten Treffern abgespielt wird. Die Treffererkennung bleibt unverändert, nur der Bewegungscharakter wechselt.
-  - `Impact Pop`: Das Wurffeld skaliert knapp nach vorne und fällt sauber zurück. Ein direkter Standardeffekt mit klarer Trefferwirkung.
-  - `Shockwave`: Der Treffer sendet einen sichtbaren Wellenimpuls durch das Feld. Das wirkt energischer als ein einfacher Pop.
-  - `Sweep Shine`: Ein heller Sweep läuft kurz über den Trefferbereich und verschwindet wieder. Das wirkt TV-artig und sauber.
-  - `Neon Pulse`: Die Highlight-Fläche pulsiert mit kräftigem Glow und fällt dann weich zurück. Das ist lebendig, ohne hektisch zu wirken.
-  - `Snap Bounce`: Das Feld springt kurz an und federt präzise zurück. Die Bewegung wirkt sportlich und rhythmisch.
-  - `Card Slam`: Die Trefferkarte wirkt wie ein schneller, kontrollierter Einschlag. Das erzeugt klaren Impact ohne Dauerbewegung.
-  - `Signal Blink`: Der Treffer blinkt kontrolliert an und aus, ohne die Karte dauerhaft zu überlagern. Das ist klar und kompakt.
-  - `Stagger Wave`: Treffer werden mit einer kurzen Wellenbewegung inklusive kleiner Verzögerung animiert. Das wirkt lebendig und modern.
-  - `Flip Edge`: Die Trefferkarte kippt minimal an der Kante und stabilisiert sich sofort. Dadurch wirkt der Treffer räumlicher.
-  - `Outline Trace`: Die Umrandung wird kurz sichtbar nachgezogen und blendet wieder aus. Das wirkt präzise und grafisch klar.
-  - `Charge Release`: Die Fläche baut in einem Moment Spannung auf und löst sie als Lichtimpuls. Das wirkt dramatischer als Standard-Pulse.
-  - `Alternate Flick`: Der Treffer erhält eine kurze alternierende Bewegung, die sofort zur Ruhe kommt. Das ist lebhaft, aber kompakt.
+- `Farbstil`: Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer erscheinen. Geaendert werden Hintergrundverlauf, Randlicht, Textglow und die generelle Tonalitaet des Trefferfelds; die Trefferlogik bleibt unveraendert.
+  - `Solar Flare`: Der Verlauf kippt von heissem Orange ueber Rot bis Gold und wirkt dadurch wie ein aufgeladener Feuerstreifen. Das ist die waermste und aggressivste Palettenvariante.
+  - `Ice Reactor`: Die Trefferflaeche wirkt wie ein sauberer Reaktor aus Cyan, Blau und eisigem Licht. Das ist praezise, modern und trotz der Kaelte gut sichtbar.
+  - `Venom Lime`: Das Trefferfeld leuchtet in toxischen Lime-, Gruen- und Gelbwerten. Das ist die lauteste und plakativste Variante fuer maximale Sichtbarkeit.
+  - `Crimson Velocity`: Die Flaeche wirkt schneller und haerter als die warmen Themes: roter Kern, dunklere Seiten und ein technischer Metall-Unterton. Das ist sportlich, ernst und markant ohne Neon-Look.
+  - `Polar Mint`: Das Trefferfeld wirkt klar, luftig und trotzdem sichtbar geladen. Die Palette ist heller und entspannter als Venom Lime, bleibt aber sehr lesbar.
+  - `Midnight Gold`: Die Treffer wirken wie warme Nachtlichter mit goldener Kante und hellerem Textkern. Das ist edel, sichtbar und weniger schrill als Neon.
+- `Animationsstil`: Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Einige Presets bleiben reine One-Shot-Bursts, andere kombinieren den Burst mit einem subtilen Idle-Loop auf markierten Feldern.
+  - `Slam Punch`: Das frisch erkannte Trefferfeld springt kompakt nach vorn, der Score zieht sichtbar mit und alles faellt sauber zurueck. Das ist ein starker One-Shot-Burst ohne Dauerloop.
+  - `Shock Ring`: Der Rand expandiert staerker, der Score oeffnet sich kurz und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein One-Shot-Burst.
+  - `Laser Sweep`: Der Burst fuehlt sich wie ein schneller TV-Sweep an: Lichtzug ueber Verlauf und Text, klar sichtbar, aber sauber. Das bleibt ein One-Shot-Burst.
+  - `Reactor Pulse`: Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop.
+  - `Turbo Bounce`: Das Trefferfeld hebt sichtbar ab, federt praezise zurück und gibt dem Score einen sportlichen Kick. Das bleibt ein One-Shot-Burst.
+  - `Card Hammer`: Das Feld knallt kurz in die Flaeche, der Score schiebt nach und das Segment folgt mit kleiner Verzogerung. Das bleibt ein One-Shot-Burst mit viel Impact.
+  - `Glitch Blink`: Der Treffer blinkt bewusst digital, ohne in Dauerflackern zu kippen. Das ist ein kompakter One-Shot-Burst fuer einen technoideren Look.
+  - `Cascade Split`: Der Burst laeuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig und bleibt ein One-Shot-Burst.
+  - `Rotor Flip`: Das Wurffeld dreht kurz an, kippt wieder zurueck und verleiht dem Burst eine staerkere Raumwirkung. Das bleibt ein One-Shot-Burst.
+  - `Edge Runner`: Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop fuer einen grafischeren Look.
+  - `Charge Burst`: Vor dem Peak baut das Trefferfeld Spannung auf, dann entlaedt sich Verlauf, Rand und Score gemeinsam. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.
+  - `Beacon Flicker`: Der Burst wirft das Feld kurz seitlich an und laesst danach ein diskretes Beacon-Flackern auf markierten Feldern zurueck. Das ist Burst plus Idle-Loop.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Triple Double Bull Hits](docs/screenshots/animation-triple-double-bull-hits.gif)

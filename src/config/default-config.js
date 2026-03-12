@@ -67,8 +67,8 @@ export const defaultConfig = {
     },
     tripleDoubleBullHits: {
       enabled: false,
-      colorTheme: "volt-lime",
-      animationStyle: "neon-pulse",
+      colorTheme: "champagne-night",
+      animationStyle: "charge-release",
       debug: false,
     },
     cricketHighlighter: {

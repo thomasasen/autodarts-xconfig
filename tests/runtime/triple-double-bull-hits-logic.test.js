@@ -7,8 +7,81 @@ import {
   clearHitDecoration,
   updateHitDecorations,
 } from "../../src/features/triple-double-bull-hits/logic.js";
-import { HIT_BASE_CLASS, HIT_KIND_CLASS } from "../../src/features/triple-double-bull-hits/style.js";
+import {
+  HIT_BASE_CLASS,
+  HIT_IDLE_LOOP_CLASS,
+  HIT_KIND_CLASS,
+  HIT_SCORE_CLASS,
+  HIT_SEGMENT_CLASS,
+} from "../../src/features/triple-double-bull-hits/style.js";
 import { FakeDocument } from "./fake-dom.js";
+
+function createAnimeStub() {
+  const calls = [];
+  const removes = [];
+
+  function anime(params = {}) {
+    calls.push({ type: "single", params });
+    return {
+      pause() {
+        calls.push({ type: "single-pause", params });
+      },
+    };
+  }
+
+  anime.remove = (targets) => {
+    removes.push([].concat(targets || []).filter(Boolean));
+  };
+
+  anime.timeline = (options = {}) => {
+    const steps = [];
+    const instance = {
+      add(step, offset = 0) {
+        steps.push({ step, offset });
+        return instance;
+      },
+      play() {
+        calls.push({ type: "timeline-play", options, steps: steps.slice() });
+        return instance;
+      },
+      pause() {
+        calls.push({ type: "timeline-pause", options, steps: steps.slice() });
+      },
+    };
+    calls.push({ type: "timeline-create", options });
+    return instance;
+  };
+
+  anime._calls = calls;
+  anime._removes = removes;
+  return anime;
+}
+
+function appendThrowRow(documentRef, scoreText, segmentText) {
+  const row = documentRef.createElement("div");
+  row.classList.add("ad-ext-turn-throw");
+
+  const textNode = documentRef.createElement("p");
+  textNode.classList.add("chakra-text");
+  const wrapper = documentRef.createElement("div");
+  const scoreNode = documentRef.createElement("div");
+  const segmentNode = documentRef.createElement("div");
+
+  scoreNode.textContent = String(scoreText || "");
+  segmentNode.textContent = String(segmentText || "");
+  wrapper.appendChild(scoreNode);
+  wrapper.appendChild(segmentNode);
+  textNode.appendChild(wrapper);
+  row.appendChild(textNode);
+  documentRef.turnContainer.appendChild(row);
+
+  return {
+    row,
+    textNode,
+    scoreNode,
+    segmentNode,
+  };
+}
 
 test("classifyThrowText resolves mixed throw text by containment priority", () => {
   const triple = classifyThrowText("60 T20");
@@ -28,84 +101,6 @@ test("classifyThrowText resolves mixed throw text by containment priority", () =
   assert.equal(innerBull?.segment, "BULL");
 
   assert.equal(classifyThrowText("alpha beta gamma"), null);
-});
-
-test("updateHitDecorations decorates rows and differentiates single bull vs bullseye", () => {
-  const documentRef = new FakeDocument();
-  const trackedRows = new Set();
-  const signatureByRow = new Map();
-
-  const tripleRow = documentRef.throwRow;
-  const tripleNode = documentRef.throwTextElement;
-  tripleNode.textContent = "60 T20";
-  tripleRow.textContent = "60 T20";
-
-  const doubleRow = documentRef.createElement("div");
-  doubleRow.classList.add("ad-ext-turn-throw");
-  const doubleNode = documentRef.createElement("p");
-  doubleNode.classList.add("chakra-text");
-  doubleNode.textContent = "36 D18";
-  doubleRow.textContent = "36 D18";
-  doubleRow.appendChild(doubleNode);
-  documentRef.turnContainer.appendChild(doubleRow);
-
-  const outerBullRow = documentRef.createElement("div");
-  outerBullRow.classList.add("ad-ext-turn-throw");
-  const outerBullNode = documentRef.createElement("p");
-  outerBullNode.classList.add("chakra-text");
-  outerBullNode.textContent = "25 S25";
-  outerBullRow.textContent = "25 S25";
-  outerBullRow.appendChild(outerBullNode);
-  documentRef.turnContainer.appendChild(outerBullRow);
-
-  const innerBullRow = documentRef.createElement("div");
-  innerBullRow.classList.add("ad-ext-turn-throw");
-  const innerBullNode = documentRef.createElement("p");
-  innerBullNode.classList.add("chakra-text");
-  innerBullNode.textContent = "50 BULL";
-  innerBullRow.textContent = "50 BULL";
-  innerBullRow.appendChild(innerBullNode);
-  documentRef.turnContainer.appendChild(innerBullRow);
-
-  const stats = updateHitDecorations({
-    documentRef,
-    trackedRows,
-    signatureByRow,
-    featureConfig: {
-      colorTheme: "volt-lime",
-      animationStyle: "neon-pulse",
-    },
-    debugRows: true,
-  });
-
-  assert.equal(tripleRow.classList.contains(HIT_KIND_CLASS.triple), true);
-  assert.equal(doubleRow.classList.contains(HIT_KIND_CLASS.double), true);
-  assert.equal(outerBullRow.classList.contains(HIT_KIND_CLASS.bullOuter), true);
-  assert.equal(innerBullRow.classList.contains(HIT_KIND_CLASS.bullInner), true);
-  assert.equal(stats.rowCount, 4);
-  assert.equal(stats.decoratedCount, 4);
-  assert.equal(stats.replayedCount, 4);
-  assert.equal(stats.removedCount, 0);
-  assert.equal(stats.rowSource, "turn-container");
-  assert.equal(stats.kindCounts.triple, 1);
-  assert.equal(stats.kindCounts.double, 1);
-  assert.equal(stats.kindCounts.bullOuter, 1);
-  assert.equal(stats.kindCounts.bullInner, 1);
-  assert.equal(Array.isArray(stats.rows), true);
-  assert.equal(stats.rows.length, 4);
-});
-
-test("clearHitDecoration removes all triple/double/bull classes from row", () => {
-  const documentRef = new FakeDocument();
-  const rowNode = documentRef.throwRow;
-  rowNode.classList.add(HIT_KIND_CLASS.triple, HIT_KIND_CLASS.double, HIT_KIND_CLASS.bullOuter);
-
-  clearHitDecoration(rowNode, new Map([[rowNode, "triple|T20|volt-lime|neon-pulse"]]));
-
-  assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.triple), false);
-  assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.double), false);
-  assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.bullOuter), false);
-  assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.bullInner), false);
 });
 
 test("collectThrowRows scopes to #ad-ext-turn and prefers direct throw rows", () => {
@@ -128,85 +123,143 @@ test("collectThrowRows scopes to #ad-ext-turn and prefers direct throw rows", ()
   assert.deepEqual(rows, [directRow]);
 });
 
-test("updateHitDecorations replays a repeated hit when turn points token changes", () => {
+test("updateHitDecorations decorates rows, differentiates bulls, and assigns text roles", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
-  const rowNode = documentRef.throwRow;
-  const textNode = documentRef.throwTextElement;
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
 
-  textNode.textContent = "40 D20";
-  rowNode.textContent = "40 D20";
-  documentRef.turnPointsElement.textContent = "40";
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+
+  const triple = appendThrowRow(documentRef, "60", "T20");
+  const double = appendThrowRow(documentRef, "36", "D18");
+  const outerBull = appendThrowRow(documentRef, "25", "S25");
+  const innerBull = appendThrowRow(documentRef, "50", "BULL");
+
+  const stats = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "charge-release",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(triple.row.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(double.row.classList.contains(HIT_KIND_CLASS.double), true);
+  assert.equal(outerBull.row.classList.contains(HIT_KIND_CLASS.bullOuter), true);
+  assert.equal(innerBull.row.classList.contains(HIT_KIND_CLASS.bullInner), true);
+  assert.equal(triple.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(triple.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
+  assert.equal(innerBull.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(innerBull.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
+  assert.equal(stats.rowCount, 5);
+  assert.equal(stats.decoratedCount, 4);
+  assert.equal(stats.burstCount, 4);
+  assert.equal(stats.idleLoopCount, 4);
+  assert.equal(stats.kindCounts.triple, 1);
+  assert.equal(stats.kindCounts.double, 1);
+  assert.equal(stats.kindCounts.bullOuter, 1);
+  assert.equal(stats.kindCounts.bullInner, 1);
+  assert.equal(Array.isArray(stats.rows), true);
+  assert.equal(stats.rows.some((entry) => entry.scoreRole && entry.segmentRole), true);
+});
+
+test("updateHitDecorations bursts only the newly changed slot and keeps prior rows stable", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  const row2 = appendThrowRow(documentRef, "", "");
+  const row3 = appendThrowRow(documentRef, "", "");
 
   const first = updateHitDecorations({
     documentRef,
     trackedRows,
     signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
     featureConfig: {
-      colorTheme: "champagne-night",
+      colorTheme: "ember-rush",
       animationStyle: "impact-pop",
     },
+    debugRows: true,
   });
-  const firstSignature = rowNode.getAttribute("data-ad-ext-hit-signature");
 
-  assert.equal(first.decoratedCount, 1);
-  assert.equal(first.replayedCount, 1);
-  assert.equal(typeof firstSignature, "string");
-  assert.equal(firstSignature.includes("tp:40"), true);
+  assert.equal(first.burstCount, 1);
+  assert.equal(animeRef._calls.filter((entry) => entry.type === "timeline-play").length, 1);
 
-  documentRef.turnPointsElement.textContent = "80";
+  row2.scoreNode.textContent = "22";
+  row2.segmentNode.textContent = "D11";
+
   const second = updateHitDecorations({
     documentRef,
     trackedRows,
     signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
     featureConfig: {
-      colorTheme: "champagne-night",
+      colorTheme: "ember-rush",
       animationStyle: "impact-pop",
     },
+    debugRows: true,
   });
-  const secondSignature = rowNode.getAttribute("data-ad-ext-hit-signature");
 
-  assert.equal(second.decoratedCount, 1);
-  assert.equal(second.replayedCount, 1);
-  assert.equal(secondSignature.includes("tp:80"), true);
-  assert.notEqual(secondSignature, firstSignature);
-});
+  assert.equal(second.burstCount, 1);
+  assert.equal(second.rows[0].burst, false);
+  assert.equal(second.rows[1].burst, true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(row2.row.classList.contains(HIT_KIND_CLASS.double), true);
+  assert.equal(animeRef._calls.filter((entry) => entry.type === "timeline-play").length, 2);
 
-test("updateHitDecorations prefers scoped turn points token over global fallback token", () => {
-  const documentRef = new FakeDocument();
-  const trackedRows = new Set();
-  const signatureByRow = new Map();
-
-  documentRef.throwTextElement.textContent = "36 D18";
-  documentRef.throwRow.textContent = "36 D18";
-  documentRef.turnPointsElement.textContent = "999";
-
-  const scopedTurnPoints = documentRef.createElement("p");
-  scopedTurnPoints.classList.add("ad-ext-turn-points");
-  scopedTurnPoints.textContent = "36";
-  documentRef.turnContainer.appendChild(scopedTurnPoints);
-
-  updateHitDecorations({
+  row3.scoreNode.textContent = "18";
+  row3.segmentNode.textContent = "S18";
+  const third = updateHitDecorations({
     documentRef,
     trackedRows,
     signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
     featureConfig: {
-      colorTheme: "volt-lime",
-      animationStyle: "neon-pulse",
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
     },
+    debugRows: true,
   });
 
-  const signature = documentRef.throwRow.getAttribute("data-ad-ext-hit-signature");
-  assert.equal(typeof signature, "string");
-  assert.equal(signature.includes("tp:36"), true);
-  assert.equal(signature.includes("tp:999"), false);
+  assert.equal(third.burstCount, 0);
+  assert.equal(third.rows[0].burst, false);
+  assert.equal(third.rows[1].burst, false);
+  assert.equal(animeRef._calls.filter((entry) => entry.type === "timeline-play").length, 2);
 });
 
-test("updateHitDecorations counts removals only when a row actually had hit decoration", () => {
+test("same-slot changes re-burst only that slot and a cleared slot can burst again", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
 
   documentRef.throwTextElement.textContent = "18 S18";
   documentRef.throwRow.textContent = "18 S18";
@@ -215,38 +268,188 @@ test("updateHitDecorations counts removals only when a row actually had hit deco
     documentRef,
     trackedRows,
     signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
     featureConfig: {
-      colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
     },
   });
-  assert.equal(first.removedCount, 0);
-  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(first.burstCount, 0);
 
-  documentRef.throwTextElement.textContent = "36 D18";
-  documentRef.throwRow.textContent = "36 D18";
-  updateHitDecorations({
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  const second = updateHitDecorations({
     documentRef,
     trackedRows,
     signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
     featureConfig: {
-      colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
     },
   });
-  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), true);
+  assert.equal(second.burstCount, 1);
 
-  documentRef.throwTextElement.textContent = "18 S18";
-  documentRef.throwRow.textContent = "18 S18";
+  documentRef.throwTextElement.textContent = "40 D20";
+  documentRef.throwRow.textContent = "40 D20";
   const third = updateHitDecorations({
     documentRef,
     trackedRows,
     signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
     featureConfig: {
-      colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
     },
   });
-  assert.equal(third.removedCount, 1);
-  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(third.burstCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.double), true);
+
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+  const cleared = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
+    },
+  });
+  assert.equal(cleared.removedCount, 1);
+  assert.equal(burstKeyBySlot.has(0), false);
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  const fourth = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
+    },
+  });
+  assert.equal(fourth.burstCount, 1);
+});
+
+test("loop-capable presets keep idle loops on marked rows without re-bursting older rows", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  const row2 = appendThrowRow(documentRef, "", "");
+
+  const first = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "charge-release",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(first.burstCount, 1);
+  assert.equal(first.idleLoopCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), true);
+
+  row2.scoreNode.textContent = "22";
+  row2.segmentNode.textContent = "D11";
+  const second = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "charge-release",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(second.burstCount, 1);
+  assert.equal(second.idleLoopCount, 2);
+  assert.equal(second.rows[0].burst, false);
+  assert.equal(second.rows[1].burst, true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), true);
+  assert.equal(row2.row.classList.contains(HIT_IDLE_LOOP_CLASS), true);
+});
+
+test("clearHitDecoration removes row classes, text roles, and active anime state", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  const decorated = appendThrowRow(documentRef, "50", "BULL");
+  const stats = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "alternate-flick",
+    },
+  });
+
+  assert.equal(stats.burstCount >= 1, true);
+  assert.equal(decorated.row.classList.contains(HIT_BASE_CLASS), true);
+  assert.equal(decorated.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(activeAnimeByRow.has(decorated.row), true);
+
+  const wasCleared = clearHitDecoration(decorated.row, signatureByRow, {
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+  });
+
+  assert.equal(wasCleared, true);
+  assert.equal(decorated.row.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(decorated.row.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+  assert.equal(decorated.scoreNode.classList.contains(HIT_SCORE_CLASS), false);
+  assert.equal(decorated.segmentNode.classList.contains(HIT_SEGMENT_CLASS), false);
+  assert.equal(activeAnimeByRow.has(decorated.row), false);
+  assert.equal(roleStateByRow.has(decorated.row), false);
+  assert.equal(signatureByRow.has(decorated.row), false);
+  assert.equal(animeRef._calls.some((entry) => entry.type === "timeline-pause"), true);
+  assert.equal(animeRef._removes.length >= 1, true);
 });

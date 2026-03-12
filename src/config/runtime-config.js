@@ -343,12 +343,12 @@ function normalizeTripleDoubleBullHitsConfig(rawConfig = {}) {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     colorTheme: normalizeStringChoice(
       rawConfig.colorTheme,
-      "volt-lime",
+      "champagne-night",
       TRIPLE_DOUBLE_BULL_COLOR_THEMES
     ),
     animationStyle: normalizeStringChoice(
       rawConfig.animationStyle,
-      "neon-pulse",
+      "charge-release",
       TRIPLE_DOUBLE_BULL_ANIMATION_STYLES
     ),
     debug: normalizeBoolean(rawConfig.debug, false),

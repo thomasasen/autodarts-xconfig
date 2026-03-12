@@ -159,8 +159,8 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.cricketGridFx.intensity, "strong");
   assert.equal(importedConfig.featureToggles.tripleDoubleBullHits, true);
   assert.equal(importedConfig.features.tripleDoubleBullHits.enabled, true);
-  assert.equal(importedConfig.features.tripleDoubleBullHits.colorTheme, "volt-lime");
-  assert.equal(importedConfig.features.tripleDoubleBullHits.animationStyle, "neon-pulse");
+  assert.equal(importedConfig.features.tripleDoubleBullHits.colorTheme, "champagne-night");
+  assert.equal(importedConfig.features.tripleDoubleBullHits.animationStyle, "charge-release");
   assert.equal(importedConfig.features.tripleDoubleBullHits.debug, true);
   assert.equal(importedConfig.featureToggles["themes.x01"], true);
   assert.equal(importedConfig.features.themes.x01.enabled, true);

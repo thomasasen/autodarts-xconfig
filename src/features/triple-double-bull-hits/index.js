@@ -1,4 +1,5 @@
-import { updateHitDecorations, clearHitDecoration } from "./logic.js";
+import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
+import { clearHitDecoration, updateHitDecorations } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 
 const FEATURE_KEY = "triple-double-bull-hits";
@@ -12,7 +13,7 @@ function createDebugState(featureDebug) {
     featureDebug,
     lastLogSignature: "",
     lastWarningSignature: "",
-    runtimeLogged: false,
+    lastRuntimeSignature: "",
   };
 }
 
@@ -24,6 +25,17 @@ function emitDebugLog(debugState, signature, message) {
     return;
   }
   debugState.lastLogSignature = signature;
+  debugState.featureDebug.log(message);
+}
+
+function emitRuntimeLog(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastRuntimeSignature === signature) {
+    return;
+  }
+  debugState.lastRuntimeSignature = signature;
   debugState.featureDebug.log(message);
 }
 
@@ -55,9 +67,11 @@ function formatRowDebug(rows) {
     .map((entry) => {
       const index = Number(entry?.index) || 0;
       const hit = String(entry?.hit || "none");
-      const replayed = entry?.replayed ? "r1" : "r0";
+      const burst = entry?.burst ? "b1" : "b0";
+      const idle = entry?.idle ? "i1" : "i0";
+      const roles = `${entry?.scoreRole ? "s1" : "s0"}/${entry?.segmentRole ? "g1" : "g0"}`;
       const text = String(entry?.text || "-");
-      return `#${index}:${hit}:${replayed}:${text}`;
+      return `#${index}:${hit}:${burst}:${idle}:${roles}:${text}`;
     })
     .join(" || ");
 }
@@ -81,13 +95,18 @@ export function initializeTripleDoubleBullHits(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("tripleDoubleBullHits")
       : {
-          colorTheme: "volt-lime",
-          animationStyle: "neon-pulse",
+          colorTheme: "champagne-night",
+          animationStyle: "charge-release",
           debug: false,
         };
   const debugState = createDebugState(featureDebug);
   const trackedRows = new Set();
   const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  let animeRef = getAnime(windowRef);
+  let disposed = false;
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
@@ -97,6 +116,11 @@ export function initializeTripleDoubleBullHits(context = {}) {
       featureConfig,
       trackedRows,
       signatureByRow,
+      burstKeyBySlot,
+      activeAnimeByRow,
+      roleStateByRow,
+      animeRef,
+      windowRef,
       debugRows: Boolean(featureDebug?.enabled),
     });
 
@@ -105,13 +129,13 @@ export function initializeTripleDoubleBullHits(context = {}) {
     }
 
     const runtimeApiVersion = String(windowRef?.__adXConfig?.apiVersion || "unknown");
-    if (!debugState.runtimeLogged) {
-      debugState.runtimeLogged = true;
-      const animeGlobal = typeof windowRef?.anime === "function" ? "available" : "not-present";
-      featureDebug.log(
-        `runtime apiVersion="${runtimeApiVersion}" animeGlobal="${animeGlobal}" renderer="css-keyframes"`
-      );
-    }
+    const animeReady = typeof animeRef === "function" ? "yes" : "no";
+    const animeGlobal = typeof windowRef?.anime === "function" ? "available" : "not-present";
+    emitRuntimeLog(
+      debugState,
+      [runtimeApiVersion, animeReady, animeGlobal].join("|"),
+      `runtime apiVersion="${runtimeApiVersion}" animeReady="${animeReady}" animeGlobal="${animeGlobal}" renderer="css+anime"`
+    );
 
     const kindSummary = formatKindCounts(stats.kindCounts);
     const rowDebug = formatRowDebug(stats.rows);
@@ -123,7 +147,8 @@ export function initializeTripleDoubleBullHits(context = {}) {
       stats.turnContainerFound ? 1 : 0,
       Number(stats.rowCount) || 0,
       Number(stats.decoratedCount) || 0,
-      Number(stats.replayedCount) || 0,
+      Number(stats.burstCount) || 0,
+      Number(stats.idleLoopCount) || 0,
       Number(stats.removedCount) || 0,
       String(stats.turnPointsToken || ""),
       kindSummary,
@@ -135,9 +160,13 @@ export function initializeTripleDoubleBullHits(context = {}) {
       stateSignature,
       `state apiVersion="${runtimeApiVersion}" rowSource="${stats.rowSource}" turnContainer=${
         stats.turnContainerFound ? "ok" : "missing"
-      } rows=${Number(stats.rowCount) || 0} decorated=${Number(stats.decoratedCount) || 0} replayed=${
-        Number(stats.replayedCount) || 0
-      } removed=${Number(stats.removedCount) || 0} turnPoints="${stats.turnPointsToken || "-"}" kinds="${kindSummary}" theme="${featureConfig.colorTheme}" animation="${featureConfig.animationStyle}" rowsDebug="${rowDebug}"`
+      } rows=${Number(stats.rowCount) || 0} decorated=${Number(stats.decoratedCount) || 0} bursts=${
+        Number(stats.burstCount) || 0
+      } idleLoops=${Number(stats.idleLoopCount) || 0} removed=${Number(stats.removedCount) || 0} turnPoints="${
+        stats.turnPointsToken || "-"
+      }" kinds="${kindSummary}" theme="${featureConfig.colorTheme}" animation="${
+        featureConfig.animationStyle
+      }" rowsDebug="${rowDebug}"`
     );
 
     if (!stats.turnContainerFound) {
@@ -186,6 +215,25 @@ export function initializeTripleDoubleBullHits(context = {}) {
       ? gameState.subscribe(() => scheduler.schedule())
       : () => {};
 
+  ensureAnimeLoaded(windowRef).then((loadedAnime) => {
+    if (disposed) {
+      return;
+    }
+    if (loadedAnime) {
+      animeRef = loadedAnime;
+      scheduler.schedule();
+      return;
+    }
+
+    if (featureDebug?.enabled) {
+      emitDebugWarning(
+        debugState,
+        "warn:anime-loader-unavailable",
+        `warn anime loader "${FEATURE_KEY}" nicht verfuegbar; fallback="css-only"`
+      );
+    }
+  });
+
   scheduler.schedule();
   let cleanedUp = false;
 
@@ -194,6 +242,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       return;
     }
     cleanedUp = true;
+    disposed = true;
 
     scheduler.cancel();
     try {
@@ -210,10 +259,17 @@ export function initializeTripleDoubleBullHits(context = {}) {
     }
 
     trackedRows.forEach((rowNode) => {
-      clearHitDecoration(rowNode, signatureByRow);
+      clearHitDecoration(rowNode, signatureByRow, {
+        activeAnimeByRow,
+        roleStateByRow,
+        animeRef,
+      });
     });
     trackedRows.clear();
     signatureByRow.clear();
+    burstKeyBySlot.clear();
+    activeAnimeByRow.clear();
+    roleStateByRow.clear();
 
     domGuards.removeNodeById(STYLE_ID);
   };

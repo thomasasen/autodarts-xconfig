@@ -242,8 +242,8 @@ function importTripleDoubleBullHits(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
   return buildFeatureImport("tripleDoubleBullHits", legacyFeatureState, {
     // Hard-reset migration: legacy hit toggles/polling are intentionally ignored in v2.
-    colorTheme: "volt-lime",
-    animationStyle: "neon-pulse",
+    colorTheme: "champagne-night",
+    animationStyle: "charge-release",
     debug: readLegacySetting(settings, "DEBUG", false),
   });
 }

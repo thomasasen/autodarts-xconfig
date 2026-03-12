@@ -44,8 +44,8 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.bermuda"], false);
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
-  assert.equal(config.features.tripleDoubleBullHits.colorTheme, "volt-lime");
-  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "neon-pulse");
+  assert.equal(config.features.tripleDoubleBullHits.colorTheme, "champagne-night");
+  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "charge-release");
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
   assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "smoke");
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
@@ -277,8 +277,11 @@ test("triple-double-bull-hits falls back to defaults for invalid theme/style val
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "volt-lime");
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "neon-pulse");
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "champagne-night");
+  assert.equal(
+    runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
+    "charge-release"
+  );
 });
 
 test("cricket highlighter dim style supports enum values and legacy boolean mapping", () => {

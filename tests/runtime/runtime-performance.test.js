@@ -380,6 +380,25 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   windowRef.__adXConfig = { apiVersion: "test-runtime" };
+  windowRef.anime = Object.assign(
+    () => ({
+      pause() {},
+    }),
+    {
+      remove() {},
+      timeline() {
+        return {
+          add() {
+            return this;
+          },
+          play() {
+            return this;
+          },
+          pause() {},
+        };
+      },
+    }
+  );
   documentRef.throwTextElement.textContent = "36 D18";
   documentRef.throwRow.textContent = "36 D18";
   documentRef.turnPointsElement.textContent = "36";
@@ -458,7 +477,9 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
   assert.equal(scheduleCounter.count >= 3, true);
   assert.equal(logs.some((entry) => entry.includes('runtime apiVersion="test-runtime"')), true);
   assert.equal(logs.filter((entry) => entry.includes("state apiVersion=")).length, 2);
-  assert.equal(logs.some((entry) => entry.includes('rowsDebug="#0:double:D18:')), true);
+  assert.equal(logs.some((entry) => entry.includes('renderer="css+anime"')), true);
+  assert.equal(logs.some((entry) => entry.includes("bursts=1")), true);
+  assert.equal(logs.some((entry) => entry.includes('rowsDebug="#0:double:D18:b1:i0:s0/g0:')), true);
   assert.equal(warnings.length, 0);
 
   cleanup();
