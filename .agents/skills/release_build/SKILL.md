@@ -26,9 +26,11 @@ Produce a shippable repository state after source changes.
 
 - never hand-edit generated output
 - bump the version when shipped behavior changes
+- keep the old version during implementation; bump only in the final release-packaging step
 - rebuild from source
 - report build and test status honestly
 - if build tools are unavailable, say so plainly
+- if version was already bumped, run `npm run build` before any `npm test` to avoid expected userscript version-sync failures
 
 # Workflow
 
@@ -39,6 +41,10 @@ Bump the version when:
 - config behavior changed
 - runtime or feature logic changed
 - shipped assets changed
+
+Timing rule:
+- do not bump early during debugging/iteration
+- bump immediately before rebuild + final verification
 
 ## 2. Rebuild from source
 

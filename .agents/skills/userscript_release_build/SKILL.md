@@ -35,7 +35,8 @@ Check:
 # Release rules
 
 - Never hand-edit `dist/autodarts-xconfig.user.js`
-- Bump version in `package.json` before rebuilding when shipped behavior changed
+- Keep the old version during implementation; bump version in `package.json` only in final release packaging
+- If version is already bumped, run `npm run build` before any `npm test` to avoid expected userscript version-sync failures
 - Ensure the generated userscript header matches the package version
 - Keep build/test reporting honest. If commands cannot run, say so explicitly
 
@@ -50,6 +51,10 @@ Bump the version when:
 - assets shipped in the bundle changed
 
 Do not bump only for notes or comments unless the shipped artifact changed for a reason.
+
+Timing rule:
+- do not bump early during debugging/iteration
+- bump immediately before rebuild + final verification
 
 ## 2. Rebuild from source
 
