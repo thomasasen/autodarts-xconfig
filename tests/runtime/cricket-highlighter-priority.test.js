@@ -927,6 +927,168 @@ test("board renderer prioritizes boardPresentation over stale ui buckets", () =>
   );
 });
 
+test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enabled", () => {
+  const documentRef = new FakeDocument();
+  createBoard(documentRef);
+
+  const renderState = {
+    targetOrder: ["20"],
+    stateMap: new Map([
+      [
+        "20",
+        {
+          label: "20",
+          boardPresentation: "scoring",
+          presentation: "scoring",
+          isHighlightActive: true,
+        },
+      ],
+    ]),
+  };
+
+  const debugStats = {};
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: false,
+      showDeadTargets: true,
+      dimIrrelevantBoardTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+    debugStats,
+  });
+  assert.equal(rendered, true);
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+
+  const shapes20 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "20";
+  });
+  assert.equal(shapes20.length, 4);
+  assert.equal(
+    shapes20.every((shape) => String(shape?.style?.display || "") !== "none"),
+    true
+  );
+  assert.equal(
+    shapes20.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    true
+  );
+
+  const shapes1 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "1";
+  });
+  assert.equal(shapes1.length, 4);
+  assert.equal(
+    shapes1.every((shape) => String(shape?.style?.display || "") !== "none"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => String(shape?.dataset?.targetPresentation || "") === "inactive"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.inactive)),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-inactive-pattern")),
+    true
+  );
+  assert.equal((debugStats.shapeCountByPresentation?.inactive || 0) > 0, true);
+});
+
+test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enabled", () => {
+  const documentRef = new FakeDocument();
+  createBoard(documentRef);
+
+  const renderState = {
+    targetOrder: ["DOUBLE", "TRIPLE"],
+    stateMap: new Map([
+      [
+        "DOUBLE",
+        {
+          label: "DOUBLE",
+          boardPresentation: "scoring",
+          presentation: "scoring",
+          isHighlightActive: true,
+        },
+      ],
+      [
+        "TRIPLE",
+        {
+          label: "TRIPLE",
+          boardPresentation: "pressure",
+          presentation: "pressure",
+          isHighlightActive: true,
+        },
+      ],
+    ]),
+  };
+
+  const debugStats = {};
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: false,
+      showDeadTargets: true,
+      dimIrrelevantBoardTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+    debugStats,
+  });
+  assert.equal(rendered, true);
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+
+  const shapesDouble = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "DOUBLE";
+  });
+  assert.equal(shapesDouble.length, 20);
+  assert.equal(
+    shapesDouble.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    true
+  );
+
+  const shapesTriple = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "TRIPLE";
+  });
+  assert.equal(shapesTriple.length, 20);
+  assert.equal(
+    shapesTriple.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
+    true
+  );
+
+  const shapes1 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "1";
+  });
+  assert.equal(shapes1.length, 4);
+  assert.equal(
+    shapes1.every((shape) => String(shape?.style?.display || "") !== "none"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => String(shape?.dataset?.targetPresentation || "") === "inactive"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.inactive)),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-inactive-pattern")),
+    true
+  );
+  assert.equal((debugStats.shapeCountByPresentation?.inactive || 0) > 0, true);
+});
+
 test("cricket board hides inactive sectors when dimIrrelevantBoardTargets is disabled", () => {
   const documentRef = new FakeDocument();
   createBoard(documentRef);
@@ -980,6 +1142,14 @@ test("cricket board hides inactive sectors when dimIrrelevantBoardTargets is dis
   assert.equal(shapes1.length, 4);
   assert.equal(
     shapes1.every((shape) => String(shape?.style?.display || "") === "none"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => String(shape?.dataset?.targetPresentation || "") === "inactive"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.inactive)),
     true
   );
   assert.equal((debugStats.inactiveTargetCount || 0) > 0, true);
@@ -1065,6 +1235,14 @@ test("tactics board hides inactive sectors when dimIrrelevantBoardTargets is dis
   assert.equal(shapes1.length, 4);
   assert.equal(
     shapes1.every((shape) => String(shape?.style?.display || "") === "none"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => String(shape?.dataset?.targetPresentation || "") === "inactive"),
+    true
+  );
+  assert.equal(
+    shapes1.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.inactive)),
     true
   );
   assert.equal(debugStats.shapeCountByPresentation?.inactive || 0, 0);

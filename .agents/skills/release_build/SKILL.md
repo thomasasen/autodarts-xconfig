@@ -80,3 +80,17 @@ Prefer commit titles like:
 - `build(release): bump version and rebuild userscript`
 - `fix(cricket): correct tactics support and ship updated dist`
 - `feat(feature): add option and prepare release build`
+
+Use this commit message structure (required by repository convention):
+- `type(scope): short summary`
+- `why: ...`
+- `what: ...`
+- `how: ...`
+- `validation: ...`
+
+Example:
+- `build(release): bump to 1.1.55 and rebuild userscript dist`
+- `why: shipped cricket-highlighter behavior changed and required a synchronized release artifact.`
+- `what: updated version metadata and regenerated dist userscript output from source.`
+- `how: bumped package version, synced loader/runtime version markers, and rebuilt through npm scripts.`
+- `validation: npm run build && npm test && npm run verify`

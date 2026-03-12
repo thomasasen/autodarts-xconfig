@@ -93,6 +93,20 @@ Prefer commit titles like:
 - `fix(runtime): rebind observer after mount replacement`
 - `refactor(config): simplify feature defaults without behavior drift`
 
+Use this commit message structure (required by repository convention):
+- `type(scope): short summary`
+- `why: ...`
+- `what: ...`
+- `how: ...`
+- `validation: ...`
+
+Example:
+- `fix(cricket): render inactive board sectors with dedicated presentation token`
+- `why: irrelevant cricket/tactics sectors were normalized to open and not visibly dimmed.`
+- `what: kept inactive handling local to cricket-highlighter and preserved configurable hide/dim behavior.`
+- `how: adjusted local presentation token resolution and extended runtime regression coverage.`
+- `validation: npm run verify`
+
 Avoid vague titles like:
 - `update`
 - `fix stuff`

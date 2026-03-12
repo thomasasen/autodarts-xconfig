@@ -35,7 +35,11 @@ const BASE_BOARD_TARGETS = Object.freeze([
 const SPECIAL_OBJECTIVE_TARGETS = Object.freeze(["DOUBLE", "TRIPLE"]);
 
 function resolvePresentationToken(value) {
-  return normalizeCricketPresentationToken(value);
+  const token = String(value || "").trim().toLowerCase();
+  if (token === "inactive") {
+    return "inactive";
+  }
+  return normalizeCricketPresentationToken(token);
 }
 
 function resolveBoardTargets(renderState) {
