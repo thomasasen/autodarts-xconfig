@@ -484,10 +484,6 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     "missing select explanation note"
   );
   assert.ok(
-    noteTexts.includes("Hinweis: Pro Einstellung kann nur eine Option aktiv sein."),
-    "missing select single-choice hint note"
-  );
-  assert.ok(
     noteTexts.includes("Öffnet die Dateiauswahl und speichert ein eigenes Bild nur für dieses Theme."),
     "missing action explanation note"
   );
@@ -516,6 +512,14 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     String(tileOption.getAttribute("data-option-description") || ""),
     /gekachelt wie ein Muster/
   );
+  const displayModeOptionList = modal.querySelector(
+    "[data-adxconfig-setting='true'][data-setting-control='select'][data-setting-key='backgroundDisplayMode']"
+  );
+  assert.ok(displayModeOptionList);
+  const displayModeInputWrap = displayModeOptionList.closest(".ad-xconfig-setting-input");
+  assert.ok(displayModeInputWrap);
+  assert.equal(displayModeInputWrap.children[0].classList.contains("ad-xconfig-note"), true);
+  assert.equal(displayModeInputWrap.children[1].classList.contains("ad-xconfig-option-list"), true);
 
   clickSelectSettingOption(documentRef, "theme-x01", "backgroundDisplayMode", "tile");
   await wait(5);

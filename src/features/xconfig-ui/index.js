@@ -11,7 +11,6 @@ const STYLE_ID = "ad-xconfig-shell-style";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
-const SELECT_SINGLE_CHOICE_HINT = "Hinweis: Pro Einstellung kann nur eine Option aktiv sein.";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -118,7 +117,6 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-option-label{font-size:.75rem;font-weight:700;color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
 #${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
-#${PANEL_HOST_ID} .ad-xconfig-select-hint{margin-top:.42rem;color:rgba(216,235,255,.9);font-size:.77rem}
 #${PANEL_HOST_ID} .ad-xconfig-empty{border-radius:10px;border:1px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.03);padding:1rem;color:rgba(255,255,255,.75);font-size:.88rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
@@ -1116,9 +1114,6 @@ function buildSettingsModal(documentRef, state, features) {
         className: "ad-xconfig-setting-label",
         text: field.label,
       }));
-    }
-    inputWrap.appendChild(buildFeatureField(documentRef, feature, field));
-    if (field.control !== "action") {
       const noteText = getFieldNoteText(field);
       if (noteText) {
         inputWrap.appendChild(createElement(documentRef, "p", {
@@ -1126,13 +1121,8 @@ function buildSettingsModal(documentRef, state, features) {
           text: noteText,
         }));
       }
-      if (field.control === "select") {
-        inputWrap.appendChild(createElement(documentRef, "p", {
-          className: "ad-xconfig-note ad-xconfig-select-hint",
-          text: SELECT_SINGLE_CHOICE_HINT,
-        }));
-      }
     }
+    inputWrap.appendChild(buildFeatureField(documentRef, feature, field));
     row.appendChild(inputWrap);
     body.appendChild(row);
   });
