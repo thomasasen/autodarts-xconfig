@@ -367,7 +367,12 @@ export const xconfigDescriptors = Object.freeze([
     fields: [
       checkboxField("showOpenObjectives", "OPEN-Ziele anzeigen"),
       checkboxField("showDeadObjectives", "DEAD-Ziele anzeigen"),
-      checkboxField("dimIrrelevantBoardTargets", "Irrelevante Felder abdunkeln"),
+      selectField("irrelevantBoardDimStyle", "Irrelevante Felder abdunkeln", [
+        { value: "off", label: "Aus" },
+        { value: "smoke", label: "Smoke" },
+        { value: "hatch", label: "Hatch+" },
+        { value: "mask", label: "Mask" },
+      ]),
       selectField("colorTheme", "Farbthema", [
         { value: "standard", label: "Standard" },
         { value: "high-contrast", label: "High Contrast" },

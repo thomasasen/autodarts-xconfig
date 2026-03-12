@@ -77,7 +77,7 @@ export const defaultConfig = {
       enabled: false,
       showOpenObjectives: false,
       showDeadObjectives: true,
-      dimIrrelevantBoardTargets: true,
+      irrelevantBoardDimStyle: "smoke",
       colorTheme: "standard",
       intensity: "normal",
       debug: false,

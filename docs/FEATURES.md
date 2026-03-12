@@ -74,6 +74,8 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
 
 ### Cricket Highlighter
 
+- Optionen: OPEN/DEAD-Ziele, Abdunkelungsstil fÃ¼r irrelevante Felder (`Aus`, `Smoke`, `Hatch+`, `Mask`), Farbthema, IntensitÃ¤t
+
 ![Cricket Highlighter](screenshots/animation-cricket-target-highlighter.png)
 
 ### Cricket Grid FX

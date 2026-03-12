@@ -26,6 +26,8 @@ const STYLE_CONTRACT_SELECTORS = Object.freeze([
 const BASE_COLOR = Object.freeze({ r: 90, g: 90, b: 90 });
 const MUTED_COLOR = Object.freeze({ r: 33, g: 33, b: 33 });
 const DEAD_COLOR = Object.freeze({ r: 112, g: 118, b: 128 });
+const MASK_COLOR = Object.freeze({ r: 9, g: 10, b: 13 });
+const IRRELEVANT_DIM_STYLES = new Set(["off", "smoke", "hatch", "mask"]);
 
 const THEME_PRESETS = Object.freeze({
   standard: {
@@ -68,6 +70,12 @@ const INTENSITY_PRESETS = Object.freeze({
 export function resolveCricketVisualConfig(featureConfig = {}) {
   const themeKey = String(featureConfig.colorTheme || "").trim().toLowerCase();
   const intensityKey = String(featureConfig.intensity || "").trim().toLowerCase();
+  const rawDimStyle = String(featureConfig.irrelevantBoardDimStyle || "").trim().toLowerCase();
+  const irrelevantBoardDimStyle = IRRELEVANT_DIM_STYLES.has(rawDimStyle)
+    ? rawDimStyle
+    : featureConfig.dimIrrelevantBoardTargets === false
+      ? "off"
+      : "smoke";
   const theme = THEME_PRESETS[themeKey] || THEME_PRESETS.standard;
   const intensity = INTENSITY_PRESETS[intensityKey] || INTENSITY_PRESETS.normal;
   const showOpenObjectives =
@@ -76,18 +84,20 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
   const showDeadObjectives =
     featureConfig.showDeadObjectives !== false &&
     featureConfig.showDeadTargets !== false;
-  const dimIrrelevantBoardTargets = featureConfig.dimIrrelevantBoardTargets !== false;
+  const dimIrrelevantBoardTargets = irrelevantBoardDimStyle !== "off";
 
   return {
     theme,
     intensity,
     baseColor: BASE_COLOR,
     mutedColor: MUTED_COLOR,
+    maskColor: MASK_COLOR,
     deadColor: DEAD_COLOR,
     strokeWidthRatio: 0.006,
     edgePaddingPx: 0.8,
     showOpenObjectives,
     showDeadObjectives,
+    irrelevantBoardDimStyle,
     dimIrrelevantBoardTargets,
     // Runtime aliases for compatibility with legacy callsites/tests.
     showOpenTargets: showOpenObjectives,

@@ -267,6 +267,46 @@ function rgbaColor(color, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${clampAlpha(alpha)})`;
 }
 
+function resolveInactiveDimStyle(visualConfig, intensity) {
+  const inactiveBase = clampAlpha(intensity?.inactive, 0.8);
+  const rawStyle = String(visualConfig?.irrelevantBoardDimStyle || "").trim().toLowerCase();
+  const dimStyle = ["off", "smoke", "hatch", "mask"].includes(rawStyle) ? rawStyle : "smoke";
+
+  if (dimStyle === "mask") {
+    return {
+      dimStyle,
+      color: visualConfig?.maskColor || { r: 9, g: 10, b: 13 },
+      fillAlpha: Math.max(0.56, inactiveBase * 0.9),
+      strokeAlpha: Math.max(0.62, Math.min(1, inactiveBase * 0.98)),
+      usePattern: false,
+      patternBaseAlpha: 0,
+      patternStripeAlpha: 0,
+    };
+  }
+
+  if (dimStyle === "hatch") {
+    return {
+      dimStyle,
+      color: visualConfig?.mutedColor || { r: 33, g: 33, b: 33 },
+      fillAlpha: Math.max(0.34, inactiveBase * 0.58),
+      strokeAlpha: Math.max(0.4, Math.min(1, inactiveBase * 0.72)),
+      usePattern: true,
+      patternBaseAlpha: 0.74,
+      patternStripeAlpha: 0.44,
+    };
+  }
+
+  return {
+    dimStyle,
+    color: visualConfig?.mutedColor || { r: 33, g: 33, b: 33 },
+    fillAlpha: Math.max(0.42, inactiveBase * 0.68),
+    strokeAlpha: Math.max(0.5, Math.min(1, inactiveBase * 0.86)),
+    usePattern: false,
+    patternBaseAlpha: 0,
+    patternStripeAlpha: 0,
+  };
+}
+
 function applyOverlayStyleVars(overlay, visualConfig, radius) {
   if (!overlay || !visualConfig) {
     return;
@@ -280,6 +320,7 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   const showOpenObjectives = visualConfig.showOpenObjectives === true;
   const highlightOpacity = clampAlpha(intensity.highlightOpacity, 0.45);
   const strokeBoost = clampAlpha(intensity.strokeBoost, 0.2);
+  const inactiveDimStyle = resolveInactiveDimStyle(visualConfig, intensity);
   const openOpacity = showOpenObjectives ? clampAlpha(intensity.open, 0.3) : 0;
 
   setStyleVar(overlay, "--ad-ext-cricket-open-fill", rgbaColor(baseColor, openOpacity));
@@ -291,7 +332,6 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(overlay, "--ad-ext-cricket-open-opacity", showOpenObjectives ? "1" : "0");
 
   const deadAlpha = Math.max(0.2, clampAlpha(intensity.dead, 0.98) * 0.42);
-  const inactiveAlpha = Math.max(0.16, clampAlpha(intensity.inactive, 0.8) * 0.44);
   const mutedStrokeAlpha = Math.max(0.18, Math.min(1, deadAlpha + 0.14));
 
   setStyleVar(
@@ -305,12 +345,12 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   setStyleVar(
     overlay,
     "--ad-ext-cricket-inactive-fill",
-    rgbaColor(mutedColor, inactiveAlpha)
+    rgbaColor(inactiveDimStyle.color, inactiveDimStyle.fillAlpha)
   );
   setStyleVar(
     overlay,
     "--ad-ext-cricket-inactive-stroke",
-    rgbaColor(mutedColor, Math.max(0.14, Math.min(1, inactiveAlpha + 0.1)))
+    rgbaColor(inactiveDimStyle.color, inactiveDimStyle.strokeAlpha)
   );
   setStyleVar(overlay, "--ad-ext-cricket-inactive-opacity", "1");
 
@@ -397,8 +437,8 @@ function ensureStripedPattern(overlay, options = {}) {
 function ensurePresentationPatterns(overlay, visualConfig) {
   const scoringColor = visualConfig?.theme?.scoring || { r: 0, g: 178, b: 135 };
   const pressureColor = visualConfig?.theme?.pressure || { r: 239, g: 68, b: 68 };
-  const mutedColor = visualConfig?.mutedColor || { r: 33, g: 33, b: 33 };
   const deadColor = visualConfig?.deadColor || { r: 112, g: 118, b: 128 };
+  const inactiveDimStyle = resolveInactiveDimStyle(visualConfig, visualConfig?.intensity || {});
   return {
     scoring: ensureStripedPattern(overlay, {
       patternId: "ad-ext-cricket-scoring-pattern",
@@ -418,12 +458,14 @@ function ensurePresentationPatterns(overlay, visualConfig) {
       baseAlpha: 0.46,
       stripeAlpha: 0.22,
     }),
-    inactive: ensureStripedPattern(overlay, {
-      patternId: "ad-ext-cricket-inactive-pattern",
-      color: mutedColor,
-      baseAlpha: 0.3,
-      stripeAlpha: 0.12,
-    }),
+    inactive: inactiveDimStyle.usePattern
+      ? ensureStripedPattern(overlay, {
+        patternId: "ad-ext-cricket-inactive-pattern",
+        color: inactiveDimStyle.color,
+        baseAlpha: inactiveDimStyle.patternBaseAlpha,
+        stripeAlpha: inactiveDimStyle.patternStripeAlpha,
+      })
+      : "",
   };
 }
 
@@ -671,6 +713,7 @@ export function renderCricketHighlights(options = {}) {
       showOpenObjectives: visualConfig.showOpenObjectives === true,
       showDeadObjectives: visualConfig.showDeadObjectives !== false,
       dimIrrelevantBoardTargets: visualConfig.dimIrrelevantBoardTargets !== false,
+      irrelevantBoardDimStyle: String(visualConfig.irrelevantBoardDimStyle || "smoke"),
     });
   }
 

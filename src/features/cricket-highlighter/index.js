@@ -221,6 +221,7 @@ function formatPresentationCounts(counts) {
 function buildVisualDebugContext(visualConfig, styleContractState) {
   return [
     `dim=${visualConfig?.dimIrrelevantBoardTargets !== false ? "on" : "off"}`,
+    `dimStyle="${String(visualConfig?.irrelevantBoardDimStyle || "smoke")}"`,
     `showOpen=${visualConfig?.showOpenObjectives === true ? "on" : "off"}`,
     `showDead=${visualConfig?.showDeadObjectives !== false ? "on" : "off"}`,
     `styleContractOk=${styleContractState?.ok ? "true" : "false"}`,
@@ -281,6 +282,7 @@ export function initializeCricketHighlighter(context = {}) {
       : {
         showOpenObjectives: false,
         showDeadObjectives: true,
+        irrelevantBoardDimStyle: "smoke",
         dimIrrelevantBoardTargets: true,
         colorTheme: "standard",
         intensity: "normal",
@@ -415,6 +417,7 @@ export function initializeCricketHighlighter(context = {}) {
           warning?.dimIrrelevantBoardTargets === false ? 0 : 1,
           warning?.showOpenObjectives === true ? 1 : 0,
           warning?.showDeadObjectives === false ? 0 : 1,
+          String(warning?.irrelevantBoardDimStyle || visualConfig?.irrelevantBoardDimStyle || "smoke"),
           targetOrder,
           styleContractState.ok ? 1 : 0,
           styleContractState.version || STYLE_CONTRACT_VERSION,
@@ -422,7 +425,7 @@ export function initializeCricketHighlighter(context = {}) {
         emitDebugWarning(
           debugState,
           signatureParts.join("::"),
-          `warn invariant type="${warning?.type || "unknown"}" inactiveTargets=${Number(warning?.inactiveTargetCount) || 0} presentationCounts="${presentationCounts}" targetOrder="${targetOrder || "-"}" dim=${warning?.dimIrrelevantBoardTargets === false ? "off" : "on"} showOpen=${warning?.showOpenObjectives === true ? "on" : "off"} showDead=${warning?.showDeadObjectives === false ? "off" : "on"} ${visualDebugContext}`
+          `warn invariant type="${warning?.type || "unknown"}" inactiveTargets=${Number(warning?.inactiveTargetCount) || 0} presentationCounts="${presentationCounts}" targetOrder="${targetOrder || "-"}" dim=${warning?.dimIrrelevantBoardTargets === false ? "off" : "on"} dimStyle="${String(warning?.irrelevantBoardDimStyle || visualConfig?.irrelevantBoardDimStyle || "smoke")}" showOpen=${warning?.showOpenObjectives === true ? "on" : "off"} showDead=${warning?.showDeadObjectives === false ? "off" : "on"} ${visualDebugContext}`
         );
       },
     });
@@ -450,6 +453,7 @@ export function initializeCricketHighlighter(context = {}) {
       visualConfig.dimIrrelevantBoardTargets === false ? 0 : 1,
       visualConfig.showOpenObjectives === true ? 1 : 0,
       visualConfig.showDeadObjectives === false ? 0 : 1,
+      String(visualConfig.irrelevantBoardDimStyle || "smoke"),
       styleContractState.ok ? 1 : 0,
       styleContractState.version || STYLE_CONTRACT_VERSION,
       renderState?.activeThrowPreviewDebug?.applied ? 1 : 0,

@@ -251,9 +251,16 @@ function importTripleDoubleBullHits(legacyFeatureState) {
 
 function importCricketHighlighter(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
+  const legacyDimIrrelevantBoardTargets = readLegacySetting(
+    settings,
+    "IRRELEVANTE_FELDER_ABDUNKELN",
+    true
+  );
   return buildFeatureImport("cricketHighlighter", legacyFeatureState, {
     showOpenObjectives: readLegacySetting(settings, "OPEN_ZIELE_ANZEIGEN", false),
     showDeadObjectives: readLegacySetting(settings, "DEAD_ZIELE_ANZEIGEN", true),
+    irrelevantBoardDimStyle: legacyDimIrrelevantBoardTargets === false ? "off" : "smoke",
+    dimIrrelevantBoardTargets: legacyDimIrrelevantBoardTargets !== false,
     colorTheme: readLegacySetting(settings, "FARBTHEMA", "standard"),
     intensity: readLegacySetting(settings, "INTENSITAET", "normal"),
     debug: readLegacySetting(settings, "DEBUG", false),

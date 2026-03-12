@@ -45,6 +45,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
+  assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "smoke");
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
 });
 
@@ -81,6 +82,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       cricketHighlighter: {
         showOpenTargets: "false",
         showDeadTargets: "false",
+        irrelevantBoardDimStyle: "MASK",
         dimIrrelevantBoardTargets: "false",
         colorTheme: "HIGH-CONTRAST",
         intensity: "STRONG",
@@ -186,9 +188,10 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").pollIntervalMs, 0);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenObjectives, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadObjectives, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "mask");
   assert.equal(
     runtimeConfig.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets,
-    false
+    true
   );
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").colorTheme, "high-contrast");
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").intensity, "strong");
@@ -261,4 +264,50 @@ test("normalized feature configs expose a boolean debug flag for every registere
       `missing debug boolean for ${definition.configKey}`
     );
   });
+});
+
+test("cricket highlighter dim style supports enum values and legacy boolean mapping", () => {
+  const defaults = createRuntimeConfig();
+  assert.equal(defaults.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
+  assert.equal(defaults.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
+
+  const explicitOff = createRuntimeConfig({
+    features: {
+      cricketHighlighter: {
+        irrelevantBoardDimStyle: "off",
+      },
+    },
+  });
+  assert.equal(explicitOff.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "off");
+  assert.equal(explicitOff.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, false);
+
+  const invalidStyle = createRuntimeConfig({
+    features: {
+      cricketHighlighter: {
+        irrelevantBoardDimStyle: "unknown-style",
+      },
+    },
+  });
+  assert.equal(invalidStyle.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
+  assert.equal(invalidStyle.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
+
+  const legacyDisabled = createRuntimeConfig({
+    features: {
+      cricketHighlighter: {
+        dimIrrelevantBoardTargets: false,
+      },
+    },
+  });
+  assert.equal(legacyDisabled.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "off");
+  assert.equal(legacyDisabled.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, false);
+
+  const legacyEnabled = createRuntimeConfig({
+    features: {
+      cricketHighlighter: {
+        dimIrrelevantBoardTargets: true,
+      },
+    },
+  });
+  assert.equal(legacyEnabled.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
+  assert.equal(legacyEnabled.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
 });

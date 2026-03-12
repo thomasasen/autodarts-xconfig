@@ -36,6 +36,15 @@ function expectedPresentationByRule(marksByPlayer, playerIndex) {
   return "open";
 }
 
+function parseRgbaAlpha(value) {
+  const match = String(value || "").match(/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*([0-9.]+)\s*\)/i);
+  if (!match) {
+    return 0;
+  }
+  const parsed = Number.parseFloat(match[1]);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function createBoard(documentRef) {
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 1000 1000");
@@ -927,7 +936,7 @@ test("board renderer prioritizes boardPresentation over stale ui buckets", () =>
   );
 });
 
-test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enabled", () => {
+test("cricket board dims inactive sectors with smoke style", () => {
   const documentRef = new FakeDocument();
   createBoard(documentRef);
 
@@ -954,7 +963,7 @@ test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enab
     visualConfig: resolveCricketVisualConfig({
       showOpenTargets: false,
       showDeadTargets: true,
-      dimIrrelevantBoardTargets: true,
+      irrelevantBoardDimStyle: "smoke",
       colorTheme: "standard",
       intensity: "normal",
     }),
@@ -999,14 +1008,24 @@ test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enab
     true
   );
   assert.equal(
-    shapes1.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-inactive-pattern")),
+    shapes1.every((shape) => String(shape?.style?.fill || "") === ""),
     true
+  );
+  assert.equal(
+    parseRgbaAlpha(
+      overlay.style.getPropertyValue("--ad-ext-cricket-inactive-fill")
+    ) >= 0.42,
+    true
+  );
+  assert.equal(
+    overlay.style.getPropertyValue("--ad-ext-cricket-inactive-fill").includes("9, 10, 13"),
+    false
   );
   assert.equal((debugStats.shapeCountByPresentation?.inactive || 0) > 0, true);
   assert.equal(invariantWarnings.length, 0);
 });
 
-test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enabled", () => {
+test("tactics board dims inactive sectors with smoke style", () => {
   const documentRef = new FakeDocument();
   createBoard(documentRef);
 
@@ -1042,7 +1061,7 @@ test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enab
     visualConfig: resolveCricketVisualConfig({
       showOpenTargets: false,
       showDeadTargets: true,
-      dimIrrelevantBoardTargets: true,
+      irrelevantBoardDimStyle: "smoke",
       colorTheme: "standard",
       intensity: "normal",
     }),
@@ -1092,11 +1111,131 @@ test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enab
     true
   );
   assert.equal(
-    shapes1.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-inactive-pattern")),
+    shapes1.every((shape) => String(shape?.style?.fill || "") === ""),
     true
   );
   assert.equal((debugStats.shapeCountByPresentation?.inactive || 0) > 0, true);
   assert.equal(invariantWarnings.length, 0);
+});
+
+test("cricket board dims inactive sectors with hatch style using stronger pattern", () => {
+  const documentRef = new FakeDocument();
+  createBoard(documentRef);
+
+  const renderState = {
+    targetOrder: ["20"],
+    stateMap: new Map([
+      [
+        "20",
+        {
+          label: "20",
+          boardPresentation: "scoring",
+          presentation: "scoring",
+          isHighlightActive: true,
+        },
+      ],
+    ]),
+  };
+
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: false,
+      showDeadTargets: true,
+      irrelevantBoardDimStyle: "hatch",
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+  assert.equal(rendered, true);
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+  const shapes1 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "1";
+  });
+  assert.equal(shapes1.length, 4);
+  assert.equal(
+    shapes1.every((shape) => String(shape?.style?.fill || "").includes("ad-ext-cricket-inactive-pattern")),
+    true
+  );
+});
+
+test("cricket board dims inactive sectors with mask style stronger than smoke", () => {
+  const documentRefSmoke = new FakeDocument();
+  const documentRefMask = new FakeDocument();
+  createBoard(documentRefSmoke);
+  createBoard(documentRefMask);
+
+  const renderState = {
+    targetOrder: ["20"],
+    stateMap: new Map([
+      [
+        "20",
+        {
+          label: "20",
+          boardPresentation: "scoring",
+          presentation: "scoring",
+          isHighlightActive: true,
+        },
+      ],
+    ]),
+  };
+
+  const smokeRendered = renderCricketHighlights({
+    documentRef: documentRefSmoke,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: false,
+      showDeadTargets: true,
+      irrelevantBoardDimStyle: "smoke",
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+  const maskRendered = renderCricketHighlights({
+    documentRef: documentRefMask,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: false,
+      showDeadTargets: true,
+      irrelevantBoardDimStyle: "mask",
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  });
+  assert.equal(smokeRendered, true);
+  assert.equal(maskRendered, true);
+
+  const overlaySmoke = documentRefSmoke.getElementById(OVERLAY_ID);
+  const overlayMask = documentRefMask.getElementById(OVERLAY_ID);
+  assert.ok(overlaySmoke);
+  assert.ok(overlayMask);
+
+  const smokeAlpha = parseRgbaAlpha(
+    overlaySmoke.style.getPropertyValue("--ad-ext-cricket-inactive-fill")
+  );
+  const maskAlpha = parseRgbaAlpha(
+    overlayMask.style.getPropertyValue("--ad-ext-cricket-inactive-fill")
+  );
+  assert.equal(maskAlpha > smokeAlpha, true);
+  assert.equal(
+    overlayMask.style.getPropertyValue("--ad-ext-cricket-inactive-fill").includes("9, 10, 13"),
+    true
+  );
+
+  const maskShapes1 = Array.from(overlayMask.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "1";
+  });
+  assert.equal(maskShapes1.length, 4);
+  assert.equal(
+    maskShapes1.every((shape) => String(shape?.style?.fill || "") === ""),
+    true
+  );
 });
 
 test("cricket board emits invariant warning when dimming is enabled but inactive shapes cannot be rendered", () => {
@@ -1171,6 +1310,7 @@ test("cricket board emits invariant warning when dimming is enabled but inactive
   assert.equal(invariantWarnings[0]?.inactiveTargetCount > 0, true);
   assert.equal(invariantWarnings[0]?.shapeCountByPresentation?.inactive || 0, 0);
   assert.equal(invariantWarnings[0]?.dimIrrelevantBoardTargets, true);
+  assert.equal(invariantWarnings[0]?.irrelevantBoardDimStyle, "smoke");
   assert.equal(invariantWarnings[0]?.showOpenObjectives, false);
   assert.equal(invariantWarnings[0]?.showDeadObjectives, true);
   assert.equal((debugStats.invariantWarnings || []).length, 1);

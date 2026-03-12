@@ -28,6 +28,7 @@ const TURN_START_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
 const TRIPLE_DOUBLE_BULL_POLL_INTERVALS = new Set([0, 3000]);
 const CRICKET_HIGHLIGHT_THEMES = new Set(["standard", "high-contrast"]);
 const CRICKET_HIGHLIGHT_INTENSITIES = new Set(["subtle", "normal", "strong"]);
+const CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES = new Set(["off", "smoke", "hatch", "mask"]);
 const DART_MARKER_EMPHASIS_SIZES = new Set([4, 6, 9]);
 const DART_MARKER_EMPHASIS_COLORS = new Set([
   "rgb(49, 130, 206)",
@@ -338,11 +339,27 @@ function normalizeCricketHighlighterConfig(rawConfig = {}) {
   const showDeadValue = Object.prototype.hasOwnProperty.call(rawConfig, "showDeadTargets")
     ? rawConfig.showDeadTargets
     : rawConfig.showDeadObjectives;
+  const normalizedDimStyle = normalizeStringChoice(
+    rawConfig.irrelevantBoardDimStyle,
+    "smoke",
+    CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES
+  );
+  const hasLegacyDimSetting = Object.prototype.hasOwnProperty.call(
+    rawConfig,
+    "dimIrrelevantBoardTargets"
+  );
+  const irrelevantBoardDimStyle =
+    hasLegacyDimSetting && normalizedDimStyle === "smoke"
+      ? normalizeBoolean(rawConfig.dimIrrelevantBoardTargets, true)
+        ? "smoke"
+        : "off"
+      : normalizedDimStyle;
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     showOpenObjectives: normalizeBoolean(showOpenValue, false),
     showDeadObjectives: normalizeBoolean(showDeadValue, true),
-    dimIrrelevantBoardTargets: normalizeBoolean(rawConfig.dimIrrelevantBoardTargets, true),
+    irrelevantBoardDimStyle,
+    dimIrrelevantBoardTargets: irrelevantBoardDimStyle !== "off",
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES),
     intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES),
     debug: normalizeBoolean(rawConfig.debug, false),
