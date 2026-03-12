@@ -70,6 +70,10 @@ function normalizeRawText(value) {
     .trim();
 }
 
+function escapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function truncateDebugText(value) {
   const text = normalizeRawText(value);
   if (text.length <= ROW_DEBUG_TEXT_LIMIT) {
@@ -196,7 +200,7 @@ function findBestRoleNode(rowNode, matcher) {
       return;
     }
     const candidateText = normalizeRawText(candidate.textContent || "");
-    if (!candidateText || !matcher(candidateText)) {
+    if (!candidateText || !matcher(candidateText, candidate)) {
       return;
     }
 
@@ -296,12 +300,44 @@ function annotateHitTextRoles(rowNode, hitMeta, roleStateByRow = null) {
 
   const expectedScore = deriveHitScore(hitMeta);
   const expectedSegment = normalizeSegmentLabel(hitMeta?.segment || hitMeta?.label || "");
+  const scorePattern = expectedScore
+    ? new RegExp(`(?:^|\\D)${escapeRegExp(expectedScore)}(?:\\D|$)`, "i")
+    : null;
+  const segmentPattern = expectedSegment ? new RegExp(escapeRegExp(expectedSegment), "i") : null;
 
   const scoreNode = expectedScore
-    ? findBestRoleNode(rowNode, (text) => normalizeRawText(text) === expectedScore)
+    ? findBestRoleNode(rowNode, (text) => {
+        const normalized = normalizeRawText(text);
+        if (!normalized || !scorePattern) {
+          return false;
+        }
+        return scorePattern.test(normalized);
+      })
     : null;
   const segmentNode = expectedSegment
-    ? findBestRoleNode(rowNode, (text) => normalizeSegmentLabel(text) === expectedSegment)
+    ? findBestRoleNode(rowNode, (text, candidate) => {
+        if (scoreNode && candidate === scoreNode) {
+          return false;
+        }
+        const normalized = normalizeRawText(text);
+        if (!normalized) {
+          return false;
+        }
+        if (normalizeSegmentLabel(normalized) === expectedSegment) {
+          return true;
+        }
+        return Boolean(segmentPattern?.test(normalized));
+      }) ||
+      findBestRoleNode(rowNode, (text) => {
+        const normalized = normalizeRawText(text);
+        if (!normalized) {
+          return false;
+        }
+        if (normalizeSegmentLabel(normalized) === expectedSegment) {
+          return true;
+        }
+        return Boolean(segmentPattern?.test(normalized));
+      })
     : null;
 
   if (scoreNode?.classList) {
@@ -443,6 +479,25 @@ function isRowDecorated(rowNode, signatureByRow = null) {
     signatureByRow.has(rowNode);
 
   return hasBaseClass || hasSignatureAttribute || hasTrackedSignature;
+}
+
+function setExclusiveClass(rowNode, classNames, activeClassName) {
+  if (!rowNode || !rowNode.classList || !Array.isArray(classNames)) {
+    return;
+  }
+
+  classNames.forEach((className) => {
+    if (!className || className === activeClassName) {
+      return;
+    }
+    if (rowNode.classList.contains(className)) {
+      rowNode.classList.remove(className);
+    }
+  });
+
+  if (activeClassName && !rowNode.classList.contains(activeClassName)) {
+    rowNode.classList.add(activeClassName);
+  }
 }
 
 function collectAnimationTargets(rowNode, roleStateByRow = null) {
@@ -1247,12 +1302,9 @@ export function applyHitDecoration(rowNode, options = {}) {
   const burst = Boolean(burstKey) && burstKey !== lastBurstKey;
 
   rowNode.classList.add(HIT_BASE_CLASS);
-  rowNode.classList.remove(...KIND_CLASS_NAMES);
-  rowNode.classList.remove(...THEME_CLASS_NAMES);
-  rowNode.classList.remove(...ANIMATION_CLASS_NAMES);
-  rowNode.classList.add(kindClassName);
-  rowNode.classList.add(themeClassName);
-  rowNode.classList.add(animationClassName);
+  setExclusiveClass(rowNode, KIND_CLASS_NAMES, kindClassName);
+  setExclusiveClass(rowNode, THEME_CLASS_NAMES, themeClassName);
+  setExclusiveClass(rowNode, ANIMATION_CLASS_NAMES, animationClassName);
   rowNode.classList.toggle(HIT_IDLE_LOOP_CLASS, idleLoopActive);
   rowNode.style.setProperty("--ad-ext-hit-delay-ms", `${Math.max(0, Math.min(8, rowIndex)) * 65}ms`);
   rowNode.setAttribute("data-ad-ext-hit-signature", signature);

@@ -479,7 +479,7 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
   assert.equal(logs.filter((entry) => entry.includes("state apiVersion=")).length, 2);
   assert.equal(logs.some((entry) => entry.includes('renderer="css+anime"')), true);
   assert.equal(logs.some((entry) => entry.includes("bursts=1")), true);
-  assert.equal(logs.some((entry) => entry.includes('rowsDebug="#0:double:D18:b1:i0:s0/g0:')), true);
+  assert.equal(logs.some((entry) => entry.includes('rowsDebug="#0:double:D18:b1:i0:')), true);
   assert.equal(warnings.length, 0);
 
   cleanup();

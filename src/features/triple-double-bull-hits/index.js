@@ -226,10 +226,12 @@ export function initializeTripleDoubleBullHits(context = {}) {
     }
 
     if (featureDebug?.enabled) {
+      const animeWindowState = typeof windowRef?.anime === "function" ? "window" : "none";
+      const animeGlobalState = typeof globalThis?.anime === "function" ? "globalThis" : "none";
       emitDebugWarning(
         debugState,
         "warn:anime-loader-unavailable",
-        `warn anime loader "${FEATURE_KEY}" nicht verfuegbar; fallback="css-only"`
+        `warn anime loader "${FEATURE_KEY}" nicht verfügbar; fallback="css-only" windowAnime="${animeWindowState}" globalAnime="${animeGlobalState}"`
       );
     }
   });

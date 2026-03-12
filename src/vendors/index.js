@@ -22,10 +22,9 @@ const vendorLoadState = {
 function createSafeImporter(loader) {
   return async function safeImport() {
     try {
-      await loader();
-      return true;
+      return await loader();
     } catch (_) {
-      return false;
+      return null;
     }
   };
 }
@@ -37,6 +36,10 @@ export function getAnime(windowRef = null) {
   const resolvedWindow = getWindowRef(windowRef);
   if (resolvedWindow && typeof resolvedWindow.anime === "function") {
     vendorLoadState.anime.cached = resolvedWindow.anime;
+    return vendorLoadState.anime.cached;
+  }
+  if (typeof globalThis !== "undefined" && typeof globalThis.anime === "function") {
+    vendorLoadState.anime.cached = globalThis.anime;
     return vendorLoadState.anime.cached;
   }
 
@@ -51,6 +54,10 @@ export function getConfetti(windowRef = null) {
   const resolvedWindow = getWindowRef(windowRef);
   if (resolvedWindow && typeof resolvedWindow.confetti === "function") {
     vendorLoadState.confetti.cached = resolvedWindow.confetti;
+    return vendorLoadState.confetti.cached;
+  }
+  if (typeof globalThis !== "undefined" && typeof globalThis.confetti === "function") {
+    vendorLoadState.confetti.cached = globalThis.confetti;
     return vendorLoadState.confetti.cached;
   }
 
@@ -77,7 +84,14 @@ export async function ensureAnimeLoaded(windowRef = null) {
   if (!vendorLoadState.anime.promise) {
     vendorLoadState.anime.promise = importAnimeModule();
   }
-  await vendorLoadState.anime.promise;
+  const importedAnimeModule = await vendorLoadState.anime.promise;
+  if (importedAnimeModule && typeof vendorLoadState.anime.cached !== "function") {
+    const importedAnimeCandidate =
+      importedAnimeModule.default || importedAnimeModule.anime || importedAnimeModule;
+    if (typeof importedAnimeCandidate === "function") {
+      vendorLoadState.anime.cached = importedAnimeCandidate;
+    }
+  }
 
   const loadedAnime = getAnime(resolvedWindow);
   if (
@@ -111,7 +125,14 @@ export async function ensureConfettiLoaded(windowRef = null) {
   if (!vendorLoadState.confetti.promise) {
     vendorLoadState.confetti.promise = importConfettiModule();
   }
-  await vendorLoadState.confetti.promise;
+  const importedConfettiModule = await vendorLoadState.confetti.promise;
+  if (importedConfettiModule && typeof vendorLoadState.confetti.cached !== "function") {
+    const importedConfettiCandidate =
+      importedConfettiModule.default || importedConfettiModule.confetti || importedConfettiModule;
+    if (typeof importedConfettiCandidate === "function") {
+      vendorLoadState.confetti.cached = importedConfettiCandidate;
+    }
+  }
 
   const loadedConfetti = getConfetti(resolvedWindow);
   if (

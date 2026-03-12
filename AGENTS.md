@@ -117,3 +117,4 @@ Example:
 For German user-facing wording in code, config labels, xConfig copy, README, and docs:
 - use proper German umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
 - do not transliterate as `ae`, `oe`, `ue`, or `ss` unless a technical system explicitly requires ASCII-only output
+

@@ -91,3 +91,4 @@ Prefer commit titles like:
 - `docs(readme): align tactics wording with shipped behavior`
 - `docs(config): rename labels to match module behavior`
 - `docs(feature): update option descriptions after default change`
+
