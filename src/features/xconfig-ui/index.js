@@ -11,6 +11,7 @@ const STYLE_ID = "ad-xconfig-shell-style";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
+const SELECT_SINGLE_CHOICE_HINT = "Hinweis: Pro Einstellung kann nur eine Option aktiv sein.";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -98,7 +99,6 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-fields{display:grid;gap:.65rem}
 #${PANEL_HOST_ID} .ad-xconfig-field{display:grid;gap:.32rem}
 #${PANEL_HOST_ID} .ad-xconfig-field label{font-weight:600;font-size:.86rem}
-#${PANEL_HOST_ID} .ad-xconfig-field select{width:100%;max-width:20rem;padding:.45rem .55rem;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(12,17,36,.9);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-field--checkbox{display:flex;align-items:center;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-onoff{position:relative;display:inline-flex;align-self:flex-start;flex:0 0 auto;width:5.2rem;min-width:5.2rem;max-width:5.2rem;height:2.2rem;min-height:2.2rem;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,32,.45)}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn{appearance:none;border:none;background:transparent;color:rgba(230,240,255,.84);width:50%;min-width:2.6rem;height:100%;padding:0 .45rem;cursor:pointer;font-weight:700;font-size:.86rem;line-height:1;white-space:nowrap;text-align:center;display:flex;align-items:center;justify-content:center;flex:1 1 50%}
@@ -109,12 +109,16 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off[data-active="true"]{background:rgba(199,63,63,.42);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-note{margin:.5rem 0 0;color:rgba(234,244,255,.9);font-size:.82rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-list{margin:.55rem 0 0;padding:0;list-style:none;display:grid;gap:.4rem}
-#${PANEL_HOST_ID} .ad-xconfig-option-item{padding:.42rem .5rem;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item{appearance:none;display:block;width:100%;text-align:left;padding:.42rem .5rem;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:#fff;cursor:pointer;font:inherit}
+#${PANEL_HOST_ID} .ad-xconfig-option-item:hover{border-color:rgba(154,227,255,.56);background:rgba(74,178,255,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item:focus-visible{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.4)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-active="true"]{border-color:rgba(126,216,255,.56);background:rgba(58,148,255,.16);box-shadow:0 0 0 1px rgba(126,216,255,.16) inset}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-active="false"] .ad-xconfig-option-label{color:rgba(232,244,255,.92)}
 #${PANEL_HOST_ID} .ad-xconfig-option-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-label{font-size:.75rem;font-weight:700;color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
 #${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
+#${PANEL_HOST_ID} .ad-xconfig-select-hint{margin-top:.42rem;color:rgba(216,235,255,.9);font-size:.77rem}
 #${PANEL_HOST_ID} .ad-xconfig-empty{border-radius:10px;border:1px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.03);padding:1rem;color:rgba(255,255,255,.75);font-size:.88rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
@@ -127,7 +131,6 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-setting-row--debug{border-color:rgba(255,128,128,.36);background:linear-gradient(145deg,rgba(255,96,96,.14),rgba(255,120,120,.07))}
 #${PANEL_HOST_ID} .ad-xconfig-setting-label{display:block;font-weight:700;font-size:.86rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-input{margin-top:.58rem}
-#${PANEL_HOST_ID} .ad-xconfig-setting-select{width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.28);background:rgba(12,17,36,.9);color:#fff;font-size:.84rem;padding:.45rem .55rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action{display:grid;gap:.45rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn{border:1px solid rgba(255,255,255,.3);border-radius:10px;min-height:2.65rem;padding:.55rem .8rem;background:rgba(22,38,82,.72);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary{border-color:rgba(126,216,255,.92);background:linear-gradient(145deg,rgba(58,148,255,.52),rgba(88,200,255,.34));box-shadow:0 0 0 1px rgba(126,216,255,.24),0 4px 14px rgba(58,148,255,.24)}
@@ -766,80 +769,40 @@ function buildFeatureField(documentRef, feature, field) {
     return wrapper;
   }
 
-  const wrapper = createElement(documentRef, "div", {
-    className: "ad-xconfig-field",
-  });
-  wrapper.appendChild(createElement(documentRef, "label", { text: field.label, attributes: { for: fieldId } }));
-
-  const select = createElement(documentRef, "select", {
+  const selectedOptionValue = resolveSelectFieldValue(feature, field);
+  const list = createElement(documentRef, "div", {
     id: fieldId,
-    className: "ad-xconfig-setting-select",
+    className: "ad-xconfig-option-list",
     attributes: {
       "data-adxconfig-setting": "true",
       "data-feature-key": feature.featureKey,
       "data-config-key": feature.configKey,
       "data-setting-key": field.key,
-      "data-setting-control": field.control,
+      "data-setting-control": "select",
+      "data-selected-value": selectedOptionValue,
     },
   });
 
-  const selectedValue = feature.config?.[field.key];
   field.options.forEach((option) => {
-    const optionNode = createElement(documentRef, "option", {
-      text: option.label,
-      attributes: {
-        value: String(option.value),
-      },
-    });
-    optionNode.value = String(option.value);
-    if (String(option.value) === String(selectedValue)) {
-      optionNode.selected = true;
-      select.value = String(option.value);
-    }
-    select.appendChild(optionNode);
-  });
-
-  wrapper.appendChild(select);
-  return wrapper;
-}
-
-function getFieldNoteText(field) {
-  return String(field?.description || "").trim();
-}
-
-function buildSelectOptionNotes(documentRef, feature, field) {
-  if (field?.control !== "select" || !Array.isArray(field.options) || !field.options.length) {
-    return null;
-  }
-
-  const describedOptions = field.options.filter((option) =>
-    String(option?.description || "").trim()
-  );
-  if (!describedOptions.length) {
-    return null;
-  }
-
-  const selectedValue = String(feature?.config?.[field.key] ?? "").trim();
-  const list = createElement(documentRef, "ul", {
-    className: "ad-xconfig-option-list",
-    attributes: {
-      "data-setting-key": field.key,
-    },
-  });
-
-  describedOptions.forEach((option) => {
-    const optionValue = String(option?.value ?? "").trim();
-    const isActive = optionValue === selectedValue;
-    const item = createElement(documentRef, "li", {
+    const optionValue = String(option?.value ?? "");
+    const isActive = optionValue === selectedOptionValue;
+    const optionButton = createElement(documentRef, "button", {
+      type: "button",
       className: "ad-xconfig-option-item",
       attributes: {
+        "data-adxconfig-action": "set-setting-select-option",
         "data-adxconfig-option-note": "true",
+        "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey,
         "data-setting-key": field.key,
+        "data-setting-value": optionValue,
         "data-option-value": optionValue,
-        "data-option-description": String(option.description || "").trim(),
+        "data-option-description": String(option?.description || "").trim(),
         "data-active": isActive ? "true" : "false",
+        "aria-pressed": isActive ? "true" : "false",
       },
     });
+
     const head = createElement(documentRef, "div", {
       className: "ad-xconfig-option-head",
     });
@@ -853,60 +816,105 @@ function buildSelectOptionNotes(documentRef, feature, field) {
         text: "Aktuell",
       }));
     }
-    item.appendChild(head);
-    item.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-option-copy",
-      text: String(option.description || "").trim(),
-    }));
-    list.appendChild(item);
+    optionButton.appendChild(head);
+
+    const optionDescription = String(option?.description || "").trim();
+    if (optionDescription) {
+      optionButton.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-option-copy",
+        text: optionDescription,
+      }));
+    }
+
+    list.appendChild(optionButton);
   });
 
   return list;
 }
 
-function syncSelectOptionNotes(documentRef, selectNode) {
-  if (!selectNode || typeof selectNode.getAttribute !== "function") {
+function getFieldNoteText(field) {
+  return String(field?.description || "").trim();
+}
+
+function resolveSelectFieldValue(feature, field) {
+  const options = Array.isArray(field?.options) ? field.options : [];
+  if (!options.length) {
+    return "";
+  }
+
+  const configuredValue = String(feature?.config?.[field.key] ?? "");
+  const hasConfiguredValue = options.some(
+    (option) => String(option?.value ?? "") === configuredValue
+  );
+  if (hasConfiguredValue) {
+    return configuredValue;
+  }
+
+  return String(options[0]?.value ?? "");
+}
+
+function setSelectOptionActiveState(documentRef, optionNode, isActive) {
+  if (!optionNode || typeof optionNode.setAttribute !== "function") {
     return;
   }
 
-  const settingKey = String(selectNode.getAttribute("data-setting-key") || "").trim();
+  optionNode.setAttribute("data-active", isActive ? "true" : "false");
+  optionNode.setAttribute("aria-pressed", isActive ? "true" : "false");
+
+  const head = optionNode.querySelector?.(".ad-xconfig-option-head");
+  if (!head) {
+    return;
+  }
+
+  const activeBadge = head.querySelector?.(".ad-xconfig-option-active") || null;
+  if (isActive) {
+    if (!activeBadge) {
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-option-active",
+        text: "Aktuell",
+      }));
+    }
+    return;
+  }
+
+  activeBadge?.remove?.();
+}
+
+function syncSelectOptionButtons(documentRef, actionNode, selectedValue) {
+  if (!actionNode || typeof actionNode.getAttribute !== "function") {
+    return;
+  }
+
+  const settingKey = String(actionNode.getAttribute("data-setting-key") || "").trim();
   if (!settingKey) {
     return;
   }
 
   const inputWrap =
-    selectNode.closest?.(".ad-xconfig-setting-input") ||
-    selectNode.parentElement ||
+    actionNode.closest?.(".ad-xconfig-setting-input") ||
+    actionNode.parentElement ||
     null;
   if (!inputWrap || typeof inputWrap.querySelectorAll !== "function") {
     return;
   }
 
-  const selectedValue = String(selectNode.value ?? "");
-  const optionNotes = Array.from(inputWrap.querySelectorAll(
-    `[data-adxconfig-option-note='true'][data-setting-key='${settingKey}']`
-  ));
-  optionNotes.forEach((optionNode) => {
-    const optionValue = String(optionNode.getAttribute("data-option-value") || "");
-    const isActive = optionValue === selectedValue;
-    optionNode.setAttribute("data-active", isActive ? "true" : "false");
+  const optionButtons = Array.from(
+    inputWrap.querySelectorAll(
+      `[data-adxconfig-action='set-setting-select-option'][data-setting-key='${settingKey}']`
+    )
+  );
 
-    const head = optionNode.querySelector?.(".ad-xconfig-option-head");
-    if (!head) {
-      return;
-    }
-    const activeBadge = head.querySelector?.(".ad-xconfig-option-active");
-    if (isActive) {
-      if (!activeBadge) {
-        head.appendChild(createElement(documentRef, "span", {
-          className: "ad-xconfig-option-active",
-          text: "Aktuell",
-        }));
-      }
-      return;
-    }
-    activeBadge?.remove?.();
+  optionButtons.forEach((optionNode) => {
+    const optionValue = String(optionNode.getAttribute("data-setting-value") ?? "");
+    setSelectOptionActiveState(documentRef, optionNode, optionValue === selectedValue);
   });
+
+  const optionList = inputWrap.querySelector?.(
+    `[data-adxconfig-setting='true'][data-setting-control='select'][data-setting-key='${settingKey}']`
+  );
+  if (optionList) {
+    optionList.setAttribute("data-selected-value", selectedValue);
+  }
 }
 
 function buildFeatureCard(documentRef, feature) {
@@ -1103,7 +1111,7 @@ function buildSettingsModal(documentRef, state, features) {
     const inputWrap = createElement(documentRef, "div", {
       className: "ad-xconfig-setting-input",
     });
-    if (field.control !== "select") {
+    if (field.control !== "action") {
       row.appendChild(createElement(documentRef, "label", {
         className: "ad-xconfig-setting-label",
         text: field.label,
@@ -1119,10 +1127,10 @@ function buildSettingsModal(documentRef, state, features) {
         }));
       }
       if (field.control === "select") {
-        const optionNotes = buildSelectOptionNotes(documentRef, feature, field);
-        if (optionNotes) {
-          inputWrap.appendChild(optionNotes);
-        }
+        inputWrap.appendChild(createElement(documentRef, "p", {
+          className: "ad-xconfig-note ad-xconfig-select-hint",
+          text: SELECT_SINGLE_CHOICE_HINT,
+        }));
       }
     }
     row.appendChild(inputWrap);
@@ -1892,6 +1900,32 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
+    if (action === "set-setting-select-option" && feature && typeof runtimeApi.saveConfig === "function") {
+      const configKey = actionNode?.getAttribute?.("data-config-key") || feature.configKey;
+      const settingKey = String(actionNode?.getAttribute?.("data-setting-key") || "").trim();
+      const settingRawValue = String(actionNode?.getAttribute?.("data-setting-value") ?? "");
+      if (!configKey || !settingKey) {
+        return;
+      }
+
+      const descriptor = getXConfigDescriptor(feature.featureKey);
+      const field = descriptor?.fields?.find(
+        (entry) => entry.control === "select" && entry.key === settingKey
+      ) || null;
+      if (!field) {
+        return;
+      }
+
+      syncSelectOptionButtons(documentRef, actionNode, settingRawValue);
+      const nextValue = parseFieldValue(field, settingRawValue, false);
+      withRuntimeCall(
+        runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextValue)),
+        "Einstellung gespeichert.",
+        "Einstellung konnte nicht gespeichert werden."
+      );
+      return;
+    }
+
     if (!feature) {
       return;
     }
@@ -2012,9 +2046,6 @@ function ensureXConfigShell(options = {}) {
     const descriptor = getXConfigDescriptor(featureKey);
     const field = descriptor?.fields?.find((entry) => entry.key === settingKey) || null;
     const nextValue = parseFieldValue(field, target.value, target.checked);
-    if (field?.control === "select") {
-      syncSelectOptionNotes(documentRef, target);
-    }
     withRuntimeCall(
       runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextValue)),
       "Einstellung gespeichert.",

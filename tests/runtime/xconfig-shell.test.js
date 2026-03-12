@@ -34,6 +34,13 @@ function clickSettingToggle(documentRef, featureKey, settingKey, enabled) {
   button.click();
 }
 
+function clickSelectSettingOption(documentRef, featureKey, settingKey, settingValue) {
+  const selector = `[data-adxconfig-action='set-setting-select-option'][data-feature-key='${featureKey}'][data-setting-key='${settingKey}'][data-setting-value='${String(settingValue)}']`;
+  const button = documentRef.querySelector(selector);
+  assert.ok(button, `missing select option button for ${featureKey}.${settingKey}.${settingValue}`);
+  button.click();
+}
+
 test("xConfig shell injects one menu entry, opens route and closes back safely", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -400,14 +407,27 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   openCheckoutSettings.click();
   await wait(5);
 
-  const effectSelect = documentRef.getElementById("ad-xconfig-field-checkout-score-pulse-effect");
-  assert.ok(effectSelect);
-  effectSelect.value = "blink";
-  effectSelect.dispatchEvent(new FakeEvent("change", { bubbles: true, target: effectSelect }));
+  const effectOptionsBefore = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
+  );
+  assert.equal(
+    effectOptionsBefore.filter((node) => node.getAttribute("data-active") === "true").length,
+    1
+  );
+
+  clickSelectSettingOption(documentRef, "checkout-score-pulse", "effect", "blink");
   await wait(5);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.checkoutScorePulse.effect, "blink");
+  const effectOptionsAfter = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
+  );
+  const activeEffectOptions = effectOptionsAfter.filter(
+    (node) => node.getAttribute("data-active") === "true"
+  );
+  assert.equal(activeEffectOptions.length, 1);
+  assert.equal(activeEffectOptions[0].getAttribute("data-setting-value"), "blink");
 
   const closeSettings = documentRef.querySelector("[data-adxconfig-action='close-settings']");
   assert.ok(closeSettings);
@@ -464,6 +484,10 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     "missing select explanation note"
   );
   assert.ok(
+    noteTexts.includes("Hinweis: Pro Einstellung kann nur eine Option aktiv sein."),
+    "missing select single-choice hint note"
+  );
+  assert.ok(
     noteTexts.includes("Öffnet die Dateiauswahl und speichert ein eigenes Bild nur für dieses Theme."),
     "missing action explanation note"
   );
@@ -493,14 +517,15 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     /gekachelt wie ein Muster/
   );
 
-  const displayModeSelect = documentRef.getElementById("ad-xconfig-field-theme-x01-backgroundDisplayMode");
-  assert.ok(displayModeSelect);
-  displayModeSelect.value = "tile";
-  displayModeSelect.dispatchEvent(new FakeEvent("change", { bubbles: true, target: displayModeSelect }));
+  clickSelectSettingOption(documentRef, "theme-x01", "backgroundDisplayMode", "tile");
   await wait(5);
 
   assert.equal(fillOption.getAttribute("data-active"), "false");
   assert.equal(tileOption.getAttribute("data-active"), "true");
+  const activeDisplayModeOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-option-note='true'][data-setting-key='backgroundDisplayMode'][data-active='true']"
+  );
+  assert.equal(activeDisplayModeOptions.length, 1);
   const tileActiveBadge = tileOption.querySelector(".ad-xconfig-option-active");
   const fillActiveBadge = fillOption.querySelector(".ad-xconfig-option-active");
   assert.ok(tileActiveBadge);
@@ -925,10 +950,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   openSettings.click();
   await wait(5);
 
-  const effectSelect = firstDocument.getElementById("ad-xconfig-field-checkout-score-pulse-effect");
-  assert.ok(effectSelect);
-  effectSelect.value = "glow";
-  effectSelect.dispatchEvent(new FakeEvent("change", { bubbles: true, target: effectSelect }));
+  clickSelectSettingOption(firstDocument, "checkout-score-pulse", "effect", "glow");
   await wait(5);
 
   await firstWindow.__adXConfig.setThemeBackgroundImage("x01", "data:image/png;base64,cGVyc2lzdGVk");
@@ -977,9 +999,14 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   openSecondSettings.click();
   await wait(5);
 
-  const restoredEffect = secondDocument.getElementById("ad-xconfig-field-checkout-score-pulse-effect");
-  assert.ok(restoredEffect);
-  assert.equal(restoredEffect.value, "glow");
+  const restoredEffectOptions = secondDocument.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
+  );
+  const restoredActiveEffects = restoredEffectOptions.filter(
+    (node) => node.getAttribute("data-active") === "true"
+  );
+  assert.equal(restoredActiveEffects.length, 1);
+  assert.equal(restoredActiveEffects[0].getAttribute("data-setting-value"), "glow");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
