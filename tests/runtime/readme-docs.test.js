@@ -5,6 +5,11 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import {
+  buildFeaturesDocSection,
+  buildReadmeFeatureSection,
+} from "../../src/features/xconfig-ui/copy.js";
+import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 
 const readmePath = path.resolve(process.cwd(), "README.md");
 const featuresDocPath = path.resolve(process.cwd(), "docs", "FEATURES.md");
@@ -16,6 +21,9 @@ const migrationStatusDocPath = path.resolve(process.cwd(), "docs", "MIGRATION-ST
 const releaseQaDocPath = path.resolve(process.cwd(), "docs", "RELEASE-QA-REPORT.md");
 const runtimeEntrypointsDocPath = path.resolve(process.cwd(), "docs", "RUNTIME-ENTRYPOINTS.md");
 const performanceAuditDocPath = path.resolve(process.cwd(), "docs", "PERFORMANCE-AUDIT.md");
+const featureDefinitionByKey = new Map(
+  defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
+);
 
 test("README references the canonical userscript install target", () => {
   const readme = readFileSync(readmePath, "utf8");
@@ -71,6 +79,39 @@ test("README contains stable anchors for every xConfig module entry", () => {
   });
 });
 
+test("every xConfig field carries UI and docs descriptions", () => {
+  xconfigDescriptors.forEach((descriptor) => {
+    assert.ok(descriptor.description, `missing card description for ${descriptor.featureKey}`);
+    descriptor.fields.forEach((field) => {
+      const fieldId = field.key || field.action;
+      assert.ok(field.description, `missing UI description for ${descriptor.featureKey}.${fieldId}`);
+      assert.ok(
+        field.docsDescription,
+        `missing README description for ${descriptor.featureKey}.${fieldId}`
+      );
+      assert.ok(
+        field.featuresDescription,
+        `missing FEATURES description for ${descriptor.featureKey}.${fieldId}`
+      );
+    });
+  });
+});
+
+test("README contains the generated xConfig feature sections and all setting explanations", () => {
+  const readme = readFileSync(readmePath, "utf8");
+
+  xconfigDescriptors.forEach((descriptor) => {
+    const definition = featureDefinitionByKey.get(descriptor.featureKey);
+    assert.ok(definition, `missing feature definition for ${descriptor.featureKey}`);
+    const expectedSection = buildReadmeFeatureSection(descriptor, definition).trim();
+    assert.match(
+      readme,
+      new RegExp(expectedSection.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      `README drift for ${descriptor.featureKey}`
+    );
+  });
+});
+
 test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
   const featuresDoc = readFileSync(featuresDocPath, "utf8");
   const imageMatches = Array.from(featuresDoc.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g));
@@ -83,6 +124,21 @@ test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
       existsSync(screenshotPath),
       true,
       `missing screenshot in FEATURES.md: ${match[1]}`
+    );
+  });
+});
+
+test("FEATURES doc contains the generated xConfig feature sections and all setting explanations", () => {
+  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+
+  xconfigDescriptors.forEach((descriptor) => {
+    const definition = featureDefinitionByKey.get(descriptor.featureKey);
+    assert.ok(definition, `missing feature definition for ${descriptor.featureKey}`);
+    const expectedSection = buildFeaturesDocSection(descriptor, definition).trim();
+    assert.match(
+      featuresDoc,
+      new RegExp(expectedSection.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      `FEATURES drift for ${descriptor.featureKey}`
     );
   });
 });

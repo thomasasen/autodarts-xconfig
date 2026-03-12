@@ -29,6 +29,12 @@ Use one term for one thing.
 
 Do not let code-adjacent labels, menu text, README headings, and feature descriptions use near-duplicate names for the same behavior.
 
+For xConfig settings specifically:
+- verify the actual behavior in code before writing or changing explanatory text
+- keep the same core statement in xConfig and docs
+- keep the xConfig wording shorter than the docs wording
+- describe visual effects in concrete text form when the user needs to imagine what changes on screen
+
 # Workflow
 
 ## 1. Trace the user-facing name
@@ -39,6 +45,8 @@ For each changed feature, identify:
 - visible option names
 - README section title
 - any short description or module explanation
+- every setting-level explanation shown in xConfig
+- the matching setting-level explanation in docs
 
 ## 2. Document observable behavior only
 
@@ -49,6 +57,10 @@ Explain what the user can actually notice:
 - any relevant caveat
 
 Do not document internal implementation unless the user needs it.
+
+At setting level, prefer this shape:
+- xConfig: one short honest sentence
+- docs: same claim, but expanded with context and visual effect
 
 ## 3. Update the smallest honest surface
 

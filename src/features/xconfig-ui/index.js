@@ -638,6 +638,10 @@ function buildFeatureField(documentRef, feature, field) {
   return wrapper;
 }
 
+function getFieldNoteText(field) {
+  return String(field?.description || "").trim();
+}
+
 function buildFeatureCard(documentRef, feature) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
   const card = createElement(documentRef, "article", {
@@ -835,6 +839,15 @@ function buildSettingsModal(documentRef, state, features) {
       }));
     }
     inputWrap.appendChild(buildFeatureField(documentRef, feature, field));
+    if (field.control !== "action") {
+      const noteText = getFieldNoteText(field);
+      if (noteText) {
+        inputWrap.appendChild(createElement(documentRef, "p", {
+          className: "ad-xconfig-note",
+          text: noteText,
+        }));
+      }
+    }
     row.appendChild(inputWrap);
     body.appendChild(row);
   });

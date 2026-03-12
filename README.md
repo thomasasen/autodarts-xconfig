@@ -56,8 +56,8 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 - [Style Checkout Suggestions](#animation-autodarts-style-checkout-suggestions)
 - [Average Trend Arrow](#animation-autodarts-animate-average-trend-arrow)
 - [Turn Start Sweep](#animation-autodarts-animate-turn-start-sweep)
-- [Triple / Double / Bull Hits](#animation-autodarts-animate-triple-double-bull-hits)
-- [Cricket Target Highlighter](#animation-autodarts-animate-cricket-target-highlighter)
+- [Triple/Double/Bull Hits](#animation-autodarts-animate-triple-double-bull-hits)
+- [Cricket Highlighter](#animation-autodarts-animate-cricket-target-highlighter)
 - [Cricket Grid FX](#animation-autodarts-animate-cricket-grid-fx)
 - [Dart Marker Emphasis](#animation-autodarts-animate-dart-marker-emphasis)
 - [Dart Marker Darts](#animation-autodarts-animate-dart-marker-darts)
@@ -73,20 +73,19 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Theme X01
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Ein ruhiges, klar gegliedertes X01-Layout mit optionaler AVG-Anzeige.
-- Wann sinnvoll? Wenn dir das Standardlayout zu unruhig ist oder du ein eigenes Hintergrundbild nutzen möchtest.
+- Was macht es sichtbar? Ein ruhiges X01-Layout mit eigener Bildfläche und optionaler AVG-Zeile.
+- Grafisch: Farben, Flächen und Karten werden neu gestaltet; ein eigenes Hintergrundbild liegt hinter dem Spielbereich, während die Grundstruktur des X01-Layouts erhalten bleibt.
+- Wann sinnvoll? Wenn dir das Standardlayout zu unruhig ist oder du X01 optisch personalisieren möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `AVG anzeigen`: Blendet die AVG-Anzeige ein oder aus.
-- `Hintergrund-Darstellung`: Legt fest, ob dein Bild gefüllt, eingepasst, gestreckt, zentriert oder gekachelt wird.
-- `Hintergrundbild-Deckkraft`: Steuert, wie stark das Bild durchscheint.
-- `Spielerfelder-Transparenz`: Macht die Spielerkarten transparenter, ohne den Text unlesbar zu machen.
-- `Debug`: Nur für Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild direkt für dieses Theme.
-- `Hintergrundbild entfernen`: Löscht nur das gespeicherte Bild dieses Themes.
-
-**Vorschau**
+- `AVG anzeigen`: Schaltet die AVG-Anzeige im X01-Theme sichtbar an oder aus. Grafisch bleibt das Layout gleich, nur der AVG-Bereich erscheint oder verschwindet.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal gesichert und nach Reloads wieder für genau dieses Theme verwendet.
+- `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
 
 ![Theme X01 in AD xConfig](docs/screenshots/template-theme-x01-xConfig.png)
 ![Theme X01 Vorschau Standard](docs/screenshots/template-theme-x01-preview-standard-readme.png)
@@ -97,18 +96,19 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Theme Shanghai
 
 - Gilt für: `Shanghai`
-- Was macht es sichtbar? Ein aufgeräumtes Shanghai-Theme mit klarerem Lesefluss.
+- Was macht es sichtbar? Ein aufgeräumtes Shanghai-Layout mit optionaler AVG-Zeile und ruhigerem Kontrast.
+- Grafisch: Das Theme ordnet Flächen und Farben neu, ohne den Spielaufbau zu verändern. Ein eigenes Hintergrundbild liegt hinter der Oberfläche und kann die Wirkung zusätzlich prägen.
 - Wann sinnvoll? Wenn du in Shanghai mehr Struktur und weniger visuelle Unruhe möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `AVG anzeigen`: Zeigt den Schnitt an oder blendet ihn bewusst aus.
-- `Hintergrund-Darstellung`: Definiert das Verhalten deines Hintergrundbilds.
-- `Hintergrundbild-Deckkraft`: Reduziert die Bildintensität für bessere Lesbarkeit.
-- `Spielerfelder-Transparenz`: Öffnet die Flächen optisch etwas stärker.
-- `Debug`: Nur für Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild für Shanghai.
-- `Hintergrundbild entfernen`: Stellt den Theme-Standard wieder her.
+- `AVG anzeigen`: Schaltet die AVG-Anzeige im Shanghai-Theme sichtbar an oder aus. Das restliche Theme bleibt unverändert; nur der AVG-Bereich wird ein- oder ausgeblendet.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal gesichert und nach Reloads wieder für genau dieses Theme verwendet.
+- `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
 
 ![Theme Shanghai in AD xConfig](docs/screenshots/template-theme-shanghai-xConfig.png)
 
@@ -117,17 +117,18 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Theme Bermuda
 
 - Gilt für: `Bermuda`
-- Was macht es sichtbar? Ruhigere Flächen, klarere Trennung wichtiger Bereiche und optional eigenes Hintergrundbild.
-- Wann sinnvoll? Wenn Bermuda besser lesbar sein soll, ohne viele Zusatzoptionen zu benötigen.
+- Was macht es sichtbar? Ein ruhigeres Bermuda-Layout mit eigener Bildfläche im Hintergrund.
+- Grafisch: Das Theme passt Farben und Flächen für Bermuda an; ein gespeichertes Hintergrundbild liegt hinter dem Spielbereich, während die Bermuda-Anordnung selbst erhalten bleibt.
+- Wann sinnvoll? Wenn Bermuda besser lesbar sein soll, ohne viele Zusatzschalter zu benötigen.
 
 **Einstellungen einfach erklärt**
 
-- `Hintergrund-Darstellung`: Bestimmt die Platzierung des Hintergrundbilds.
-- `Hintergrundbild-Deckkraft`: Regelt, wie präsent das Bild im Hintergrund bleibt.
-- `Spielerfelder-Transparenz`: Mischt die Karten stärker mit dem Hintergrund.
-- `Debug`: Nur für Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bermuda-Hintergrundbild.
-- `Hintergrundbild entfernen`: Löscht das gespeicherte Bild wieder.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal gesichert und nach Reloads wieder für genau dieses Theme verwendet.
+- `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
 
 ![Theme Bermuda in AD xConfig](docs/screenshots/template-theme-bermuda-xConfig.png)
 
@@ -136,18 +137,19 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Theme Cricket
 
 - Gilt für: `Cricket`, `Tactics`
-- Was macht es sichtbar? Ein gemeinsames Theme für Cricket und Tactics mit ruhigerer Grundoptik.
-- Wann sinnvoll? Als visuelle Basis für Cricket-/Tactics-Matches, besonders zusammen mit den Cricket-Effekten.
+- Was macht es sichtbar? Ein gemeinsames Theme für Cricket und Tactics mit ruhigerer Grundoptik und optionaler AVG-Zeile.
+- Grafisch: Farben, Karten und Hintergründe werden auf eine gemeinsame Cricket-/Tactics-Optik gezogen. Ein eigenes Bild kann hinter dem Spielbereich liegen, ohne die Board- oder Grid-Logik zu verändern.
+- Wann sinnvoll? Wenn du für Cricket und Tactics eine einheitliche visuelle Basis möchtest, besonders zusammen mit den Cricket-Effekten.
 
 **Einstellungen einfach erklärt**
 
-- `AVG anzeigen`: Aktiviert oder deaktiviert die AVG-Anzeige.
-- `Hintergrund-Darstellung`: Legt die Darstellungsart des Hintergrundbilds fest.
-- `Hintergrundbild-Deckkraft`: Reduziert die Bildstärke zugunsten der Lesbarkeit.
-- `Spielerfelder-Transparenz`: Öffnet die Karten optisch etwas mehr.
-- `Debug`: Nur für Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild für Cricket und Tactics.
-- `Hintergrundbild entfernen`: Löscht das gespeicherte Bild wieder.
+- `AVG anzeigen`: Schaltet die AVG-Anzeige im Cricket-/Tactics-Theme an oder aus. Grafisch bleibt das Theme gleich; nur der AVG-Bereich erscheint oder verschwindet.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal gesichert und nach Reloads wieder für genau dieses Theme verwendet.
+- `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
 
 ![Theme Cricket in AD xConfig](docs/screenshots/template-theme-cricket-xConfig.png)
 
@@ -156,18 +158,19 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Theme Bull-off
 
 - Gilt für: `Bull-off`
-- Was macht es sichtbar? Ein kontraststärkeres Layout für Bull-off mit eigenem Hintergrundbild.
-- Wann sinnvoll? Wenn Bull-off aus der Distanz oder auf helleren Displays besser lesbar sein soll.
+- Was macht es sichtbar? Ein kontrastbetontes Bull-off-Layout mit wählbarer Stärke und eigener Bildfläche.
+- Grafisch: Das Theme verändert Farben, Kontrast und Flächen speziell für Bull-off. Ein optionales Hintergrundbild liegt dahinter, während der Spielaufbau gleich bleibt.
+- Wann sinnvoll? Wenn Bull-off auf helleren Displays oder aus der Distanz klarer lesbar sein soll.
 
 **Einstellungen einfach erklärt**
 
-- `Kontrast-Preset`: Schaltet zwischen sanfter, normaler und kräftiger Darstellung um.
-- `Hintergrund-Darstellung`: Bestimmt, wie das Hintergrundbild eingefügt wird.
-- `Hintergrundbild-Deckkraft`: Legt die Stärke des Bildes fest.
-- `Spielerfelder-Transparenz`: Macht die Flächen leichter oder dichter.
-- `Debug`: Nur für Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bull-off-Bild.
-- `Hintergrundbild entfernen`: Entfernt das gespeicherte Bild wieder.
+- `Kontrast-Preset`: Wählt, wie stark Texte, Flächen und Hervorhebungen im Bull-off-Theme voneinander abgesetzt werden. Grafisch wirkt `Sanft` zurückhaltender, `Kräftig` zeichnet Kanten und Kontraste deutlich härter.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal gesichert und nach Reloads wieder für genau dieses Theme verwendet.
+- `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
 
 ![Theme Bull-off in AD xConfig](docs/screenshots/template-theme-bull-off-xConfig.png)
 
@@ -178,16 +181,17 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Checkout Score Pulse
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Finishfähige Restwerte werden deutlich hervorgehoben.
-- Wann sinnvoll? Wenn du Checkout-Momente schneller erkennen möchtest.
+- Was macht es sichtbar? Finishfähige Restwerte werden direkt an der aktiven Punktzahl hervorgehoben.
+- Grafisch: Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.
+- Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Effekt`: Wählt, ob die Hervorhebung pulsiert, glüht, skaliert oder blinkt.
-- `Farbthema`: Legt die Highlight-Farbe fest.
-- `Intensität`: Regelt, wie dezent oder stark der Effekt wirkt.
-- `Trigger-Quelle`: Steuert, ob Vorschlag, Score oder nur eine Quelle den Effekt auslöst.
-- `Debug`: Nur für Fehlersuche.
+- `Effekt`: Legt fest, wie die aktive Restpunktzahl hervorgehoben wird, sobald das Modul ein Checkout erkennt. Grafisch ändert sich nur die Animationsart des Score-Elements.
+- `Farbthema`: Bestimmt die Farbe, mit der die aktive Restpunktzahl hervorgehoben wird. Die gewählte Farbe steuert Glanz, Schatten und das visuelle Gewicht des Effekts.
+- `Intensität`: Steuert Skalierung, Leuchtstärke und Sichtbarkeit des Checkout-Score-Effekts. `Dezent` bleibt zurückhaltend, `Stark` wirkt deutlich auffälliger.
+- `Trigger-Quelle`: Bestimmt, woran das Modul das Checkout erkennt. `Vorschlag zuerst` nutzt den sichtbaren Checkout-Vorschlag bevorzugt und fällt nur ohne Vorschlag auf die reine Score-Prüfung zurück; die anderen Modi erzwingen ausschließlich Score- oder Vorschlagslogik.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Checkout Score Pulse](docs/screenshots/animation-checkout-score-pulse.gif)
 
@@ -197,16 +201,17 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Mögliche Checkout-Ziele werden direkt am virtuellen Board markiert.
+- Grafisch: Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist.
 - Wann sinnvoll? Wenn du Finish-Wege nicht nur lesen, sondern direkt am Board sehen willst.
 
 **Einstellungen einfach erklärt**
 
-- `Effekt`: Legt fest, wie die Ziele markiert werden.
-- `Zielumfang`: Zeigt nur das erste Ziel oder alle sinnvollen Ziele an.
-- `Single-Ring`: Bestimmt, welcher Single-Ring markiert wird.
-- `Farbthema`: Passt die Markierung an Theme und Geschmack an.
-- `Kontur-Intensität`: Regelt die Stärke der Umrandung.
-- `Debug`: Nur für Fehlersuche.
+- `Effekt`: Wählt die Animationsart der markierten Board-Segmente. Die Segmentauswahl bleibt gleich; nur die Bewegung und Leuchtwirkung ändern sich.
+- `Zielumfang`: Bestimmt, wie viele Board-Ziele gleichzeitig hervorgehoben werden. `Erstes Ziel` fokussiert den nächsten Wurf, `Alle Ziele` zeigt die komplette aktuell sinnvolle Checkout-Kette, soweit das Modul sie am Board abbildet.
+- `Single-Ring`: Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.
+- `Farbthema`: Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.
+- `Kontur-Intensität`: Steuert Deckkraft, Breite und Animation der weißen Umrandung. Hohe Stufen zeichnen die Zielkontur sichtbarer und mit kräftigerem Puls.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Checkout Board Targets](docs/screenshots/animation-checkout-board-targets.gif)
 
@@ -215,15 +220,16 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### TV Board Zoom
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Bei klaren Checkout-Situationen zoomt die Ansicht TV-artig auf relevante Bereiche.
-- Wann sinnvoll? Wenn du beim dritten Dart mehr Fokus auf Zielbereiche willst.
+- Was macht es sichtbar? Bei klaren X01-Zielsituationen zoomt die Ansicht kurz auf relevante Board-Bereiche.
+- Grafisch: Das Board wird temporär vergrößert, damit relevante Segmente mehr Platz bekommen. Die Kamera springt nicht hart, sondern fährt mit einer kurzen Ein- und Ausblendung hinein und zurück.
+- Wann sinnvoll? Wenn du beim dritten Dart oder bei klaren Finishes mehr Fokus auf den Zielbereich möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Zoom-Stufe`: Bestimmt, wie weit in das Board gezoomt wird.
-- `Zoom-Geschwindigkeit`: Regelt, wie schnell der Zoom ein- und ausläuft.
-- `Checkout-Zoom`: Aktiviert den Effekt gezielt für klare Finish-Situationen.
-- `Debug`: Nur für Fehlersuche.
+- `Zoom-Stufe`: Legt fest, wie weit das Modul in den relevanten Board-Bereich hineinzoomt. Hohe Stufen zeigen weniger Umgebung und mehr Zielsegment.
+- `Zoom-Geschwindigkeit`: Wählt die Geschwindigkeits- und Easing-Vorgabe für Ein- und Auszoomung. `Schnell` wirkt direkter, `Langsam` fährt sichtbar weicher ein und aus.
+- `Checkout-Zoom`: Aktiviert oder deaktiviert den Zoom auf eindeutige Ein-Dart-Checkout-Situationen in den ersten beiden Würfen. Andere Zoom-Fälle, etwa der spezielle `T20`-Setup-Fokus nach zwei `T20`, werden dadurch nicht grundsätzlich abgeschaltet.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![TV Board Zoom](docs/screenshots/animation-tv-board-zoom.gif)
 
@@ -232,15 +238,16 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Style Checkout Suggestions
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar.
-- Wann sinnvoll? Wenn du Suggestionen schneller scannen möchtest.
+- Was macht es sichtbar? Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.
+- Grafisch: Der sichtbare Vorschlagsblock erhält je nach Stil eine Badge-, Ribbon-, Stripe-, Ticket- oder Outline-Optik. Optional sitzt darüber ein eigenes Label wie `CHECKOUT` oder `FINISH`.
+- Wann sinnvoll? Wenn du Suggestionen schneller scannen möchtest oder der Standard-Look zu unauffällig ist.
 
 **Einstellungen einfach erklärt**
 
-- `Stil`: Wechselt zwischen Badge-, Ribbon-, Stripe-, Ticket- und Outline-Look.
-- `Labeltext`: Setzt den Text oberhalb der Empfehlung oder blendet ihn aus.
-- `Farbthema`: Passt Farbe und Kontrast an.
-- `Debug`: Nur für Fehlersuche.
+- `Stil`: Legt die Grundform des Suggestions-Containers fest. Grafisch ändert sich die Hülle des vorhandenen Vorschlags, nicht sein Inhalt.
+- `Labeltext`: Bestimmt, welcher feste Labeltext über dem gestylten Checkout-Vorschlag erscheint. `Kein Label` blendet diese Zusatzmarke vollständig aus.
+- `Farbthema`: Steuert Akzentfarbe, Hintergründe und Leuchteffekte des Suggestion-Styles. Die inhaltliche Checkout-Empfehlung bleibt unverändert.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Style Checkout Suggestions](docs/screenshots/animation-style-checkout-suggestions.png)
 ![Format Badge](docs/screenshots/animation-style-checkout-suggestions-format-badge-readme.png)
@@ -253,14 +260,15 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Average Trend Arrow
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Ein Pfeil direkt am AVG zeigt kurz die Trendrichtung.
-- Wann sinnvoll? Wenn du Formwechsel schnell erfassen möchtest.
+- Was macht es sichtbar? Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.
+- Grafisch: Bei einer AVG-Änderung erscheint neben dem Wert kurz ein grüner Aufwärtspfeil oder roter Abwärtspfeil und verschwindet nach der eingestellten Zeit wieder.
+- Wann sinnvoll? Wenn du Formwechsel während eines Legs schnell am AVG erkennen möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Animationsdauer`: Legt fest, wie lange der Pfeil sichtbar bleibt.
-- `Pfeil-Größe`: Passt den Pfeil an Monitorgröße und Abstand an.
-- `Debug`: Nur für Fehlersuche.
+- `Animationsdauer`: Bestimmt die Laufzeit der einmaligen Pfeil-Animation nach einer AVG-Änderung. Längere Stufen lassen den Richtungsimpuls spürbar länger stehen.
+- `Pfeil-Größe`: Steuert Breite, Höhe und Abstand des Pfeils direkt neben der AVG-Anzeige. Größere Stufen sind aus mehr Abstand leichter erkennbar.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Average Trend Arrow](docs/screenshots/animation-average-trend-arrow.png)
 
@@ -270,56 +278,53 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.
-- Wann sinnvoll? Wenn du in schnellen Matches einen klareren Zugwechsel sehen willst.
+- Grafisch: Eine helle, halbtransparente Bahn zieht einmal quer über die aktive Karte. So springt der neue Zugwechsel schneller ins Auge.
+- Wann sinnvoll? Wenn du in schnellen Matches einen klareren Wechsel zwischen den Spielern sehen willst.
 
 **Einstellungen einfach erklärt**
 
-- `Sweep-Geschwindigkeit`: Bestimmt das Tempo des Sweeps.
-- `Sweep-Stil`: Schaltet zwischen dezentem, normalem und kräftigem Effekt um.
-- `Debug`: Nur für Fehlersuche.
+- `Sweep-Geschwindigkeit`: Legt die Gesamtdauer des Lichtlaufs fest. Kürzere Stufen wirken direkter, längere Stufen betonen den Wechsel stärker.
+- `Sweep-Stil`: Wählt die optische Stärke des Sweeps. `Dezent` nutzt eine schmalere und schwächere Lichtbahn, `Kräftig` zeichnet sie breiter und heller.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Turn Start Sweep](docs/screenshots/animation-turn-start-sweep.gif)
 
 <a id="animation-autodarts-animate-triple-double-bull-hits"></a>
 
-### Triple / Double / Bull Hits
+### Triple/Double/Bull Hits
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer wie `T20`, `D16` oder `BULL` springen in der Wurfliste sofort ins Auge.
+- Was macht es sichtbar? Treffer wie `T20`, `D16` oder `BULL` springen in der Wurfliste schneller ins Auge.
+- Grafisch: Die betroffenen Einträge in der Wurfliste erhalten eine zusätzliche Hervorhebung, sobald das Modul sie erkennt. So lassen sich starke Treffer in schnellen Legs leichter nachverfolgen.
 - Wann sinnvoll? Für Training, Checkout-Fokus und mehr Lesbarkeit in schnellen Legs.
 
 **Einstellungen einfach erklärt**
 
-- `Triple hervorheben`: Markiert Triple-Treffer besonders stark.
-- `Double hervorheben`: Betont Doubles in der Wurfliste.
-- `Bull hervorheben`: Hebt Bull-Treffer gesondert hervor.
-- `Aktualisierungsmodus`: Wechselt zwischen direkter Live-Reaktion und robusterem Fallback.
-- `Debug`: Nur für Fehlersuche.
+- `Triple hervorheben`: Bestimmt, ob Einträge wie `T20` oder andere Triple-Treffer in der Wurfliste gesondert hervorgehoben werden.
+- `Double hervorheben`: Bestimmt, ob Double-Einträge wie `D16` oder `D20` in der Wurfliste gesondert hervorgehoben werden.
+- `Bull hervorheben`: Bestimmt, ob `BULL`-Treffer in der Wurfliste zusätzlich markiert werden.
+- `Aktualisierungsmodus`: `Nur live` reagiert ausschließlich auf erkannte DOM- und State-Updates. `Kompatibel` ergänzt dazu einen Polling-Fallback alle 3000 ms, falls der Live-Trigger in bestimmten Umgebungen nicht zuverlässig genug feuert.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Triple Double Bull Hits](docs/screenshots/animation-triple-double-bull-hits.gif)
 
 <a id="animation-autodarts-animate-cricket-target-highlighter"></a>
 
-### Cricket Target Highlighter
+### Cricket Highlighter
 
 - Gilt für: `Cricket`, `Tactics`
 - Was macht es sichtbar? Zielzustände und Drucksituationen werden direkt am Board sichtbar.
-- Wann sinnvoll? Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, gefährlich oder bereits tot sind.
+- Grafisch: Board-Segmente erhalten je nach Zustand farbige Overlays. Relevante Ziele leuchten grün oder rot, irrelevante Felder werden je nach Stil abgeschwächt, geschraffiert oder maskiert.
+- Wann sinnvoll? Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, scorable, unter Druck oder bereits erledigt sind.
 
 **Einstellungen einfach erklärt**
 
-- `Dead-Ziele anzeigen`: Zeigt auch vollständig erledigte Ziele weiter an.
-- `Irrelevante Felder abdunkeln`: Wählt den Stil für irrelevante Board-Bereiche:
-  - `Aus`: Keine Abdunkelung, irrelevante Overlays bleiben verborgen.
-  - `Smoke`: Neutrale, kräftige Abdunkelung ohne Schraffur.
-  - `Hatch+`: Deutliche Schraffur für irrelevante Felder.
-  - `Mask`: Maximale dunkle Maskierung, um den Fokus stark auf relevante Ziele zu legen.
-- `State-Priorität`: Scorable-Ziele haben Vorrang, danach Offense, Pressure, offene und dead Ziele.
-- `Geschlossene Ziele`: Scorable geschlossene Ziele bleiben sichtbar; nicht-scorable geschlossene Ziele erscheinen nicht als aktive Highlights.
-- `Pressure/Danger`: Gegnerdruck wird bewusst subtil als Ring-/Randhinweis dargestellt, nicht als Vollsektor.
-- `Farbthema`: Passt das Farbschema an Helligkeit und Kontrast deines Setups an.
-- `Intensität`: Regelt die Sichtbarkeit der Overlays.
-- `Debug`: Nur für Fehlersuche.
+- `OPEN-Ziele anzeigen`: Aktiviert sichtbare Open-Overlays für Ziele, die noch nicht geschlossen sind. Ohne diese Option konzentriert sich das Board stärker auf scorable, Druck- und Dead-Zustände.
+- `DEAD-Ziele anzeigen`: Bestimmt, ob bereits erledigte Ziele weiterhin als tote Segmente sichtbar bleiben. Ist die Option aus, verschwinden diese Hinweise vom Board.
+- `Irrelevante Felder abdunkeln`: Wählt den Stil für Felder, die im aktuellen Cricket-/Tactics-Zustand keine aktive Rolle spielen. `Aus` blendet die Abdunkelung ab, `Smoke` dämpft neutral, `Hatch+` ergänzt Schraffur und `Mask` legt eine besonders harte dunkle Maske darüber.
+- `Farbthema`: Wechselt zwischen dem normalen Farbschema und einer kontraststärkeren Variante. Die Zustände bleiben gleich, nur Grün- und Rotwirkung werden optisch kräftiger.
+- `Intensität`: Steuert Füllung, Kontur und Opazität der Zustands-Overlays. Hohe Stufen zeichnen offene, tote und druckrelevante Ziele sichtbarer.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Cricket Target Highlighter](docs/screenshots/animation-cricket-target-highlighter.png)
 
@@ -329,25 +334,24 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - Gilt für: `Cricket`, `Tactics`
 - Was macht es sichtbar? Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
+- Grafisch: Zellen, Zeilen, Labels und Badges reagieren mit grünen und roten Zuständen, kurzen Chips, Kanten und Übergängen. So werden Fortschritt, Gegnerdruck und Zugwechsel in der Matrix selbst sichtbarer.
 - Wann sinnvoll? Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.
 
 **Einstellungen einfach erklärt**
 
-- `Gemeinsamer Render-State`: Grid FX verwendet denselben Cricket-/Tactics-Render-State wie der Board-Highlighter.
-- `Spielerzellen-Farben`: Aktive Scoring-Zellen leuchten grün, offene Gegnerzellen rot. Hat ein anderer Spieler das Ziel ebenfalls geschlossen, bleibt seine Zelle aus dem roten Druckzustand heraus.
-- `Zeilen-Sweep`: Kurzer Lichtlauf über geänderte Zeilen.
-- `Ziel-Badge-Hinweis`: Macht wichtige Ziel-Badges auffälliger.
-- `Mark-Fortschritt`: Verdeutlicht neue Treffer in der Matrix.
-- `Gefahrenkante`: Warnt bei relevanten Drucksituationen.
-- `Offensiv-Lane`: Hebt offensiv sinnvolle Zeilen hervor.
-- `Geschlossene Zeilen abdunkeln`: Nimmt irrelevante Ziele optisch zurück.
-- `Delta-Chips`: Zeigt kurze `+1`, `+2` oder `+3`-Hinweise an.
-- `Treffer-Impuls`: Ergänzt einen punktuellen Treffer-Effekt.
-- `Zugwechsel-Übergang`: Kennzeichnet den Wechsel zwischen Spielern.
-- `Gegnerdruck-Overlay`: Macht defensiven Druck schneller sichtbar.
-- `Farbthema`: Wechselt zwischen Standard und kontraststärkerer Optik.
-- `Intensität`: Regelt die Stärke des Gesamtpakets.
-- `Debug`: Nur für Fehlersuche.
+- `Zeilen-Sweep`: Startet nach einer relevanten Zustandsänderung einen kurzen Zeilen-Sweep. Grafisch zieht eine helle Welle einmal über die betroffene Matrixzeile.
+- `Ziel-Badge-Hinweis`: Verstärkt den Glow und die Sichtbarkeit der Ziel-Badges beziehungsweise Labelzellen, wenn sie für Scoring oder Druck relevant sind.
+- `Mark-Fortschritt`: Hebt neue oder relevante Mark-Stufen in Spielerzellen sichtbar hervor. Grafisch werden die Mark-Level deutlicher ausgemalt und leichter voneinander unterscheidbar.
+- `PRESSURE-Kante`: Ergänzt eine deutliche Druckkante, wenn eine Zeile oder Zelle unter relevantem Gegnerdruck steht. Die Kante dient als schneller Warnhinweis, ohne die komplette Zelle umzufärben.
+- `SCORING-Streifen`: Zeichnet offensiv sinnvolle Scoring-Zeilen oder Zellen mit einer gut sichtbaren grünen Akzentfläche nach. So springen potenzielle Punkteziele schneller ins Auge.
+- `DEAD-Zeilen abdunkeln`: Nimmt Zeilen, die im aktuellen Zustand als `DEAD` gelten, sichtbar zurück. Grafisch werden diese Bereiche matter und konkurrieren weniger mit aktiven Zielen.
+- `Delta-Chips`: Blendet nach einer relevanten Änderung kurze Delta-Chips direkt an der Matrix ein. So ist sofort erkennbar, wie viele Marks gerade dazugekommen sind.
+- `Treffer-Impuls`: Setzt auf der gerade betroffenen Zelle einen kleinen optischen Trefferfunken. Das ist ein punktueller Impuls und keine dauerhafte Färbung.
+- `Zugwechsel-Übergang`: Legt beim Wechsel auf den nächsten Spieler einen sichtbaren Wipe über den betroffenen Matrixbereich. So wird der Turn-Übergang schneller lesbar.
+- `PRESSURE-Overlay`: Ergänzt bei relevantem Gegnerdruck ein sichtbares Overlay zusätzlich zur Kante. So springt defensiver Druck auch dann ins Auge, wenn man nicht auf jede Zellfarbe achtet.
+- `Farbthema`: Wechselt zwischen Standard und kontraststärkerer Farbpalette für offensive und druckbezogene Grid-Effekte. Die Zustandslogik selbst bleibt identisch.
+- `Intensität`: Steuert Opazität, Leuchtkraft und Sichtbarkeit des gesamten Grid-FX-Pakets. Höhere Stufen lassen grüne und rote Zustände markanter erscheinen.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Cricket Grid FX](docs/screenshots/animation-cricket-grid-fx.png)
 
@@ -356,17 +360,18 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Dart Marker Emphasis
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer-Marker auf dem virtuellen Board werden deutlich kräftiger dargestellt.
-- Wann sinnvoll? Wenn die Marker im Standardzustand zu klein oder zu unauffällig sind.
+- Was macht es sichtbar? Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
+- Grafisch: Die bestehenden Marker werden größer, farbiger und auf Wunsch mit Pulse, Glow oder Outline versehen. Das Modul ersetzt die Marker nicht, sondern betont sie.
+- Wann sinnvoll? Wenn die Standardmarker zu klein oder zu unauffällig sind.
 
 **Einstellungen einfach erklärt**
 
-- `Marker-Größe`: Vergrößert oder verkleinert die Marker.
-- `Marker-Farbe`: Wählt die Hauptfarbe des Markers.
-- `Effekt`: Ergänzt Glow, Pulse oder eine ruhige Darstellung ohne Effekt.
-- `Marker-Sichtbarkeit`: Regelt die Deckkraft der Marker.
-- `Outline-Farbe`: Fügt einen weißen oder schwarzen Rand hinzu.
-- `Debug`: Nur für Fehlersuche.
+- `Marker-Größe`: Steuert die Grundgröße der bestehenden Board-Marker. Hohe Stufen machen Treffer aus mehr Abstand leichter erkennbar.
+- `Marker-Farbe`: Legt die Farbwirkung der Marker-Betonung fest. Die gewählte Farbe wird für Füllung beziehungsweise visuelle Hervorhebung der Marker genutzt.
+- `Effekt`: Legt fest, ob die Marker weich glühen, leicht pulsieren oder ohne Zusatzanimation ruhig sichtbar bleiben.
+- `Marker-Sichtbarkeit`: Bestimmt, wie kräftig die Marker gezeichnet werden. Höhere Werte machen die Treffer präsenter, niedrigere wirken unaufdringlicher.
+- `Outline-Farbe`: Legt fest, ob die Marker zusätzlich mit einer hellen oder dunklen Outline gezeichnet werden. Das verbessert die Abgrenzung je nach Board- und Hintergrundfarbe.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Dart Marker Emphasis](docs/screenshots/animation-dart-marker-emphasis.gif)
 
@@ -376,16 +381,17 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Standardmarker können durch kleine Dart-Grafiken ersetzt werden.
+- Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
 - Wann sinnvoll? Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Dart Design`: Wählt das Dart-Motiv.
-- `Dart Fluganimation`: Schaltet eine zusätzliche Fluganimation ein oder aus.
-- `Dart-Größe`: Passt die Größe der Dart-Grafik an.
-- `Original-Marker ausblenden`: Verhindert Doppelanzeigen.
-- `Fluggeschwindigkeit`: Regelt das Tempo der Fluganimation.
-- `Debug`: Nur für Fehlersuche.
+- `Dart Design`: Legt fest, welches Dart-Motiv anstelle des Standardmarkers verwendet wird. Die Trefferposition bleibt gleich, nur die Grafik ändert sich.
+- `Dart-Fluganimation`: Bestimmt, ob neu gesetzte Dart-Bilder mit einer kurzen Flugbewegung ins Segment einlaufen oder sofort an ihrer Endposition erscheinen.
+- `Dart-Größe`: Skaliert die eingeblendeten Dart-Bilder relativ zur Standardgröße. Große Stufen füllen das Segment stärker aus.
+- `Original-Marker ausblenden`: Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist.
+- `Fluggeschwindigkeit`: Wählt die Dauer der Einfluganimation neuer Dart-Bilder. `Schnell` landet zügig, `Cinematic` hält die Flugphase sichtbar länger.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Dart Marker Darts](docs/screenshots/animation-dart-marker-darts.png)
 
@@ -394,15 +400,16 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Remove Darts Notification
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Der Hinweis zum Entfernen der Darts wird deutlich präsenter dargestellt.
+- Was macht es sichtbar? Der Hinweis zum Entfernen der Darts wird als große Grafik deutlich präsenter dargestellt.
+- Grafisch: Der normale Hinweis wird durch eine zentrierte Bildkarte ersetzt. Optional pulsiert die Grafik leicht, damit sie im Spielablauf nicht übersehen wird.
 - Wann sinnvoll? Wenn der Standardhinweis zu leicht übersehen wird.
 
 **Einstellungen einfach erklärt**
 
-- `Bildgröße`: Passt die Größe der Grafik an.
-- `Pulse-Animation`: Aktiviert eine zusätzliche Bewegungsbetonung.
-- `Pulse-Stärke`: Regelt die Stärke des Pulses.
-- `Debug`: Nur für Fehlersuche.
+- `Bildgröße`: Legt fest, wie groß die Hinweisgrafik auf dem Bildschirm erscheinen darf. Hohe Stufen nutzen mehr Platz und ziehen den Blick stärker an.
+- `Pulse-Animation`: Bestimmt, ob die Hinweisgrafik mit einer ruhigen Ein- und Ausbewegung pulsiert oder statisch bleibt.
+- `Pulse-Stärke`: Steuert die Stärke der Pulsbewegung. Höhere Stufen vergrößern die Grafik in der Mitte der Animation deutlicher.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Remove Darts Notification](docs/screenshots/animation-remove-darts-notification.png)
 
@@ -411,28 +418,30 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Single Bull Sound
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Kein visueller Effekt, sondern ein kurzes Audio-Feedback bei Single Bull.
-- Wann sinnvoll? Wenn du zusätzlich zum Bild ein akustisches Signal möchtest.
+- Was macht es sichtbar? Bei Single Bull hörst du einen kurzen Ton; grafisch bleibt das Spiel unverändert.
+- Grafisch: Es wird keine zusätzliche Grafik eingeblendet. Die Rückmeldung ist rein akustisch und reagiert auf erkannte Single-Bull-Treffer.
+- Wann sinnvoll? Wenn du Single Bull akustisch schneller bestätigen möchtest, ohne auf eine zusätzliche Animation zu achten.
 
 **Einstellungen einfach erklärt**
 
-- `Lautstärke`: Stellt die Stärke des Tons ein.
-- `Wiederholsperre`: Verhindert zu schnelle Mehrfachauslösung.
-- `Fallback-Scan`: Nutzt bei Bedarf einen zusätzlichen Scan statt nur Live-Events.
-- `Debug`: Nur für Fehlersuche.
+- `Lautstärke`: Bestimmt die Wiedergabelautstärke des Single-Bull-Sounds. An der Treffererkennung ändert sich dadurch nichts.
+- `Wiederholsperre`: Legt die Sperrzeit zwischen zwei Sound-Auslösungen fest. So wird verhindert, dass derselbe Single-Bull mehrfach zu dicht nacheinander hörbar wird.
+- `Fallback-Scan`: `Nur live` verlässt sich ausschließlich auf erkannte DOM- und State-Änderungen. `1200 ms` ergänzt einen regelmäßigen Fallback-Scan, falls Treffer in bestimmten Setups nicht zuverlässig sofort erkannt werden.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="animation-autodarts-animate-turn-points-count"></a>
 
 ### Turn Points Count
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Punkteänderungen zählen sichtbar hoch oder runter, statt hart zu springen.
-- Wann sinnvoll? Wenn du Punktedifferenzen während des Zuges besser nachvollziehen willst.
+- Was macht es sichtbar? Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
+- Grafisch: Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.
+- Wann sinnvoll? Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Animationsdauer`: Bestimmt, wie schnell die Punkte hoch- oder herunterzählen.
-- `Debug`: Nur für Fehlersuche.
+- `Animationsdauer`: Legt die Dauer der Zählanimation fest. Kurze Stufen springen schneller zum Zielwert, längere machen den Zwischenverlauf deutlicher sichtbar.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Turn Points Count](docs/screenshots/animation-turn-points-count.gif)
 ![Turn Points Count Detail](docs/screenshots/animation-turn-points-count-detail-readme.gif)
@@ -442,17 +451,19 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Winner Fireworks
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Ein Sieger-Effekt mit verschiedenen Stilen, Farben und Intensitäten.
-- Wann sinnvoll? Wenn Leg- oder Match-Siege einen klaren Abschlussmoment bekommen sollen.
+- Was macht es sichtbar? Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
+- Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Dichte und Geschwindigkeit folgen dem gewählten Stil und der Intensität.
+- Wann sinnvoll? Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Style`: Wählt die Art des Feuerwerks.
-- `Farbe`: Legt die Farbpalette fest.
-- `Intensität`: Regelt, wie dicht und präsent der Effekt wirkt.
-- `Bei Bull-Out aktiv`: Aktiviert den Effekt auch in Bull-off-Situationen.
-- `Klick beendet Effekt`: Erlaubt das sofortige Beenden per Klick oder Tap.
-- `Debug`: Nur für Fehlersuche.
+- `Style`: Legt fest, ob der Siegereffekt eher wie klassisches Feuerwerk, Kanonenschuss, Sternenregen, Seitenbeschuss oder eine andere Variante wirkt. Die Farbpalette bleibt davon unabhängig.
+- `Farbe`: Bestimmt, aus welchen Farben der Effekt zusammengesetzt ist. Die Partikelmuster bleiben gleich, nur die Palette wird gewechselt.
+- `Intensität`: Steuert über Voreinstellungen, wie viele Partikel entstehen, wie häufig Schüsse ausgelöst werden und wie energisch sich der Effekt bewegt. `Stark` wirkt dichter und lebhafter, `Dezent` ruhiger.
+- `Test-Button`: Löst den aktuell konfigurierten Winner-Fireworks-Effekt direkt als Vorschau aus, ohne auf einen echten Sieg warten zu müssen. Das ist nur ein Testlauf und ändert keine gespeicherten Werte.
+- `Bei Bull-Out aktiv`: Bestimmt, ob der Siegereffekt auch dann startet, wenn der erkannte Spielmodus eine Bull-Out-Variante ist. Ist die Option aus, bleiben diese Varianten stumm.
+- `Klick beendet Effekt`: Bestimmt, ob ein linker Mausklick den aktuell laufenden Winner-Fireworks-Effekt vorzeitig schließen darf.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Winner Fireworks](docs/screenshots/animation-winner-fireworks.gif)
 ![xConfig Test-Button](docs/screenshots/xConfig-testbutton.png)

@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
@@ -432,6 +432,45 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   runtime.stop();
 });
 
+test("xConfig settings modal renders explanatory notes for checkbox, select and action fields", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+
+  const openThemeSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
+  );
+  assert.ok(openThemeSettings);
+  openThemeSettings.click();
+  await wait(5);
+
+  const modal = documentRef.querySelector("[data-adxconfig-modal='true']");
+  assert.ok(modal);
+  const noteTexts = documentRef
+    .querySelectorAll(".ad-xconfig-modal .ad-xconfig-note")
+    .map((node) => String(node.textContent || ""));
+
+  assert.ok(
+    noteTexts.includes("Blendet die AVG-Anzeige im Theme ein oder aus."),
+    "missing checkbox explanation note"
+  );
+  assert.ok(
+    noteTexts.includes("Legt fest, wie ein eigenes Hintergrundbild im Spielbereich platziert wird."),
+    "missing select explanation note"
+  );
+  assert.ok(
+    noteTexts.includes("Öffnet die Dateiauswahl und speichert ein eigenes Bild nur für dieses Theme."),
+    "missing action explanation note"
+  );
+
+  runtime.stop();
+});
+
 test("xConfig shell links cards and settings modal to the matching README anchor", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -764,3 +803,4 @@ test("xConfig shell restores persisted toggle, setting and background state afte
 
   secondRuntime.stop();
 });
+

@@ -1,3 +1,5 @@
+import { getXConfigFeatureCopy, getXConfigFieldCopy } from "./copy.js";
+
 function checkboxField(key, label) {
   return Object.freeze({
     key,
@@ -37,9 +39,26 @@ function actionField(action, label, options = {}) {
 }
 
 function descriptorEntry(definition) {
+  const featureKey = String(definition.featureKey || "").trim();
+  const featureCopy = getXConfigFeatureCopy(featureKey);
   return Object.freeze({
     ...definition,
-    fields: Object.freeze(definition.fields || []),
+    description: featureCopy?.cardDescription || definition.description,
+    visibleDescription: featureCopy?.visibleDescription || "",
+    visualDescription: featureCopy?.visualDescription || "",
+    usefulWhen: featureCopy?.usefulWhen || "",
+    fields: Object.freeze(
+      (definition.fields || []).map((field) => {
+        const fieldKey = String(field.key || field.action || "").trim();
+        const fieldCopy = getXConfigFieldCopy(featureKey, fieldKey);
+        return Object.freeze({
+          ...field,
+          description: fieldCopy?.description || field.description || "",
+          docsDescription: fieldCopy?.docsDescription || "",
+          featuresDescription: fieldCopy?.featuresDescription || "",
+        });
+      })
+    ),
   });
 }
 
