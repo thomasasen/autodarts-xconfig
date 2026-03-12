@@ -630,7 +630,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   runtime.stop();
 });
 
-test("xConfig shell theme background upload and clear actions are clickable and persisted", async () => {
+test("xConfig shell theme background upload and clear actions persist and expose status feedback", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -676,6 +676,15 @@ test("xConfig shell theme background upload and clear actions are clickable and 
   openThemeSettings.click();
   await wait(5);
 
+  let status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "empty");
+  const emptySummary = status.querySelector(".ad-xconfig-theme-image-status-summary");
+  assert.ok(emptySummary);
+  assert.equal(String(emptySummary.textContent || "").trim(), "Aktuelles Bild: keines.");
+
   const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
   assert.ok(uploadButton);
   uploadButton.click();
@@ -683,6 +692,38 @@ test("xConfig shell theme background upload and clear actions are clickable and 
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,ZmFrZS1kYXRh");
+  const uploadFeedback = documentRef.querySelector(
+    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
+  );
+  assert.ok(uploadFeedback);
+  assert.match(String(uploadFeedback.textContent || ""), /bg\.png/);
+  assert.equal(
+    uploadFeedback.classList.contains("ad-xconfig-theme-action-feedback--success"),
+    true
+  );
+
+  status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "present");
+  assert.equal(status.getAttribute("data-theme-image-type"), "image/png");
+  assert.equal(status.getAttribute("data-theme-image-size"), "9");
+
+  const uploadedSummary = status.querySelector(".ad-xconfig-theme-image-status-summary");
+  assert.ok(uploadedSummary);
+  assert.match(String(uploadedSummary.textContent || ""), /image\/png/);
+  assert.match(String(uploadedSummary.textContent || ""), /9 B/);
+
+  const preview = status.querySelector(".ad-xconfig-theme-image-preview");
+  assert.ok(preview);
+  assert.equal(preview.getAttribute("src"), "data:image/png;base64,ZmFrZS1kYXRh");
+
+  const themeCardNote = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-x01'] .ad-xconfig-note"
+  );
+  assert.ok(themeCardNote);
+  assert.match(String(themeCardNote.textContent || ""), /image\/png/);
 
   const clearButton = documentRef.getElementById("ad-xconfig-field-theme-x01-clearThemeBackground");
   assert.ok(clearButton);
@@ -691,6 +732,99 @@ test("xConfig shell theme background upload and clear actions are clickable and 
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+  assert.match(String(uploadFeedback.textContent || ""), /entfernt/);
+  assert.equal(
+    uploadFeedback.classList.contains("ad-xconfig-theme-action-feedback--info"),
+    true
+  );
+
+  status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "empty");
+
+  const clearedCardNote = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-x01'] .ad-xconfig-note"
+  );
+  assert.ok(clearedCardNote);
+  assert.equal(
+    String(clearedCardNote.textContent || "").trim(),
+    "Kein eigenes Hintergrundbild gespeichert."
+  );
+
+  runtime.stop();
+});
+
+test("xConfig shell reports invalid theme upload payloads as error and keeps previous state", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  const originalCreateElement = documentRef.createElement.bind(documentRef);
+  documentRef.createElement = (tagName) => {
+    const node = originalCreateElement(tagName);
+    if (String(tagName || "").toLowerCase() === "input") {
+      const originalClick = typeof node.click === "function" ? node.click.bind(node) : null;
+      node.click = () => {
+        if (node.type === "file") {
+          node.files = [{ name: "not-an-image.txt" }];
+          if (typeof node.onchange === "function") {
+            node.onchange();
+          }
+          return;
+        }
+        if (originalClick) {
+          originalClick();
+        }
+      };
+    }
+    return node;
+  };
+  windowRef.FileReader = class FakeFileReader {
+    readAsDataURL() {
+      this.result = "data:text/plain;base64,QUJDRA==";
+      if (typeof this.onload === "function") {
+        this.onload();
+      }
+    }
+  };
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+
+  const openThemeSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
+  );
+  assert.ok(openThemeSettings);
+  openThemeSettings.click();
+  await wait(5);
+
+  const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
+  assert.ok(uploadButton);
+  uploadButton.click();
+  await wait(5);
+
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+
+  const errorFeedback = documentRef.querySelector(
+    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
+  );
+  assert.ok(errorFeedback);
+  assert.match(String(errorFeedback.textContent || ""), /kein unterstütztes Bild/);
+  assert.equal(
+    errorFeedback.classList.contains("ad-xconfig-theme-action-feedback--error"),
+    true
+  );
+
+  const status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "empty");
 
   runtime.stop();
 });

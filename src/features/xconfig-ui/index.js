@@ -135,6 +135,14 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn:disabled{opacity:.55;cursor:not-allowed}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-state{margin:0;font-size:.74rem;color:rgba(234,244,255,.9)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-state--disabled{color:rgba(255,212,212,.9)}
+#${PANEL_HOST_ID} .ad-xconfig-theme-image-status{margin-top:.2rem;max-width:22rem;padding:.5rem .6rem;border-radius:9px;border:1px solid rgba(126,216,255,.45);background:rgba(58,148,255,.14);display:grid;gap:.4rem}
+#${PANEL_HOST_ID} .ad-xconfig-theme-image-status--empty{border-color:rgba(255,255,255,.26);background:rgba(255,255,255,.06)}
+#${PANEL_HOST_ID} .ad-xconfig-theme-image-status-summary{margin:0;font-size:.75rem;line-height:1.35;color:rgba(240,248,255,.95)}
+#${PANEL_HOST_ID} .ad-xconfig-theme-image-preview{width:100%;max-height:8rem;object-fit:cover;border-radius:7px;border:1px solid rgba(255,255,255,.24);background:rgba(9,16,34,.8)}
+#${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback{margin:.15rem 0 0;font-size:.75rem;line-height:1.35}
+#${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--success{color:rgba(152,244,195,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--error{color:rgba(255,198,198,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--info{color:rgba(187,232,255,.98)}
 #${PANEL_HOST_ID} .ad-xconfig-hidden-input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -191,6 +199,146 @@ function formatVariantLabel(variants = []) {
   }
 
   return variants.map((variant) => toTitleCase(variant)).join(" / ");
+}
+
+function isThemeFeature(feature) {
+  return String(feature?.configKey || "").startsWith("themes.");
+}
+
+function estimateBase64ByteSize(rawPayload) {
+  const payload = String(rawPayload || "").replace(/\s+/g, "");
+  if (!payload) {
+    return 0;
+  }
+  const padding = payload.endsWith("==") ? 2 : payload.endsWith("=") ? 1 : 0;
+  return Math.max(0, Math.floor((payload.length * 3) / 4) - padding);
+}
+
+function formatByteSize(byteSize) {
+  const bytes = Number(byteSize) || 0;
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "";
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  const kiloBytes = bytes / 1024;
+  if (kiloBytes < 1024) {
+    const fixed = kiloBytes < 10 ? 1 : 0;
+    return `${kiloBytes.toFixed(fixed)} KB`;
+  }
+
+  return `${(kiloBytes / 1024).toFixed(1)} MB`;
+}
+
+function readThemeBackgroundImageInfo(feature) {
+  const dataUrl = String(feature?.config?.backgroundImageDataUrl || "").trim();
+  if (!dataUrl.startsWith("data:image/")) {
+    return {
+      hasImage: false,
+      mimeType: "",
+      byteSize: 0,
+      dataUrl: "",
+    };
+  }
+
+  const separatorIndex = dataUrl.indexOf(",");
+  if (separatorIndex <= 0 || separatorIndex >= dataUrl.length - 1) {
+    return {
+      hasImage: false,
+      mimeType: "",
+      byteSize: 0,
+      dataUrl: "",
+    };
+  }
+
+  const header = dataUrl.slice(0, separatorIndex);
+  const payload = dataUrl.slice(separatorIndex + 1);
+  const mimeTypeMatch = header.match(/^data:([^;,]+)(?:;.*)?$/i);
+  const mimeType = String(mimeTypeMatch?.[1] || "image/*").toLowerCase();
+  const isBase64 = /;base64/i.test(header);
+
+  return {
+    hasImage: true,
+    mimeType,
+    byteSize: isBase64 ? estimateBase64ByteSize(payload) : payload.length,
+    dataUrl,
+  };
+}
+
+function formatThemeBackgroundSummary(feature) {
+  const imageInfo = readThemeBackgroundImageInfo(feature);
+  if (!imageInfo.hasImage) {
+    return "Kein eigenes Hintergrundbild gespeichert.";
+  }
+
+  const sizeText = formatByteSize(imageInfo.byteSize);
+  const detailText = sizeText ? `${imageInfo.mimeType}, ${sizeText}` : imageInfo.mimeType;
+  return `Eigenes Hintergrundbild: ${detailText}.`;
+}
+
+function applyThemeBackgroundStatusNode(documentRef, statusNode, feature) {
+  if (!statusNode) {
+    return;
+  }
+
+  const imageInfo = readThemeBackgroundImageInfo(feature);
+  statusNode.setAttribute(
+    "class",
+    imageInfo.hasImage
+      ? "ad-xconfig-theme-image-status"
+      : "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty"
+  );
+  statusNode.setAttribute("data-theme-image-state", imageInfo.hasImage ? "present" : "empty");
+  statusNode.setAttribute("data-theme-image-type", imageInfo.mimeType || "");
+  statusNode.setAttribute("data-theme-image-size", imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : "");
+
+  const summaryText = imageInfo.hasImage
+    ? `Aktuelles Bild: ${imageInfo.mimeType}${imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : ""}.`
+    : "Aktuelles Bild: keines.";
+
+  let summaryNode = statusNode.querySelector?.(".ad-xconfig-theme-image-status-summary") || null;
+  if (!summaryNode) {
+    summaryNode = createElement(documentRef, "p", {
+      className: "ad-xconfig-theme-image-status-summary",
+    });
+    statusNode.appendChild(summaryNode);
+  }
+  summaryNode.textContent = summaryText;
+
+  const existingPreview = statusNode.querySelector?.(".ad-xconfig-theme-image-preview") || null;
+  if (imageInfo.hasImage) {
+    if (existingPreview) {
+      existingPreview.setAttribute("src", imageInfo.dataUrl);
+      existingPreview.setAttribute("alt", `${feature.title} Hintergrundbild`);
+      return;
+    }
+    statusNode.appendChild(createElement(documentRef, "img", {
+      className: "ad-xconfig-theme-image-preview",
+      attributes: {
+        src: imageInfo.dataUrl,
+        alt: `${feature.title} Hintergrundbild`,
+        loading: "lazy",
+        decoding: "async",
+      },
+    }));
+    return;
+  }
+
+  existingPreview?.remove?.();
+}
+
+function buildThemeBackgroundStatus(documentRef, feature) {
+  const status = createElement(documentRef, "div", {
+    className: "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty",
+    attributes: {
+      "data-adxconfig-theme-image-status": "true",
+      "data-feature-key": feature.featureKey,
+    },
+  });
+  applyThemeBackgroundStatusNode(documentRef, status, feature);
+  return status;
 }
 
 function createElement(documentRef, tagName, options = {}) {
@@ -558,6 +706,16 @@ function buildFeatureField(documentRef, feature, field) {
         text: noteText,
       }));
     }
+    if (isThemeFeature(feature) && field.action === "uploadThemeBackground") {
+      wrapper.appendChild(buildThemeBackgroundStatus(documentRef, feature));
+      wrapper.appendChild(createElement(documentRef, "p", {
+        className: "ad-xconfig-note ad-xconfig-theme-action-feedback",
+        attributes: {
+          "data-adxconfig-theme-action-feedback": "true",
+          "data-feature-key": feature.featureKey,
+        },
+      }));
+    }
     return wrapper;
   }
 
@@ -856,10 +1014,14 @@ function buildFeatureCard(documentRef, feature) {
 
   cardContent.appendChild(createElement(documentRef, "p", {
     className: "ad-xconfig-note",
-    text: feature.configKey.startsWith("themes.")
-      ? feature.config?.backgroundImageDataUrl
-        ? "Eigenes Hintergrundbild gespeichert."
-        : "Kein eigenes Hintergrundbild gespeichert."
+    attributes: isThemeFeature(feature)
+      ? {
+          "data-adxconfig-theme-card-status": "true",
+          "data-feature-key": feature.featureKey,
+        }
+      : {},
+    text: isThemeFeature(feature)
+      ? formatThemeBackgroundSummary(feature)
       : "Änderungen werden sofort gespeichert und direkt angewendet.",
   }));
 
@@ -1180,6 +1342,57 @@ function ensureXConfigShell(options = {}) {
       ? runtimeApi.listFeatures()
       : [];
     return Array.isArray(features) ? features : [];
+  }
+
+  function setThemeActionFeedback(featureKey, type, message) {
+    const normalizedFeatureKey = String(featureKey || "").trim();
+    if (!normalizedFeatureKey) {
+      return;
+    }
+
+    const feedbackNodes = Array.from(documentRef.querySelectorAll(
+      `[data-adxconfig-theme-action-feedback='true'][data-feature-key='${normalizedFeatureKey}']`
+    ));
+    if (!feedbackNodes.length) {
+      return;
+    }
+
+    const normalizedMessage = String(message || "").trim();
+    const normalizedType = String(type || "info").trim() || "info";
+    const feedbackClassName =
+      `ad-xconfig-note ad-xconfig-theme-action-feedback ad-xconfig-theme-action-feedback--${normalizedType}`;
+
+    feedbackNodes.forEach((node) => {
+      node.setAttribute("class", feedbackClassName);
+      node.textContent = normalizedMessage;
+    });
+  }
+
+  function syncThemeBackgroundIndicators(featureKey) {
+    const normalizedFeatureKey = String(featureKey || "").trim();
+    if (!normalizedFeatureKey) {
+      return;
+    }
+
+    const feature = getFeatures().find((entry) => entry?.featureKey === normalizedFeatureKey) || null;
+    if (!feature || !isThemeFeature(feature)) {
+      return;
+    }
+
+    const cardStatusNodes = Array.from(documentRef.querySelectorAll(
+      `[data-adxconfig-theme-card-status='true'][data-feature-key='${normalizedFeatureKey}']`
+    ));
+    const cardStatusText = formatThemeBackgroundSummary(feature);
+    cardStatusNodes.forEach((node) => {
+      node.textContent = cardStatusText;
+    });
+
+    const modalStatusNodes = Array.from(documentRef.querySelectorAll(
+      `[data-adxconfig-theme-image-status='true'][data-feature-key='${normalizedFeatureKey}']`
+    ));
+    modalStatusNodes.forEach((node) => {
+      applyThemeBackgroundStatusNode(documentRef, node, feature);
+    });
   }
 
   function restoreContent() {
@@ -1533,8 +1746,10 @@ function ensureXConfigShell(options = {}) {
     if (!themeKey || typeof runtimeApi.setThemeBackgroundImage !== "function") {
       return;
     }
+    const featureKey = String(feature?.featureKey || "").trim();
     if (typeof documentRef.createElement !== "function" || typeof windowRef.FileReader !== "function") {
       setNotice("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+      setThemeActionFeedback(featureKey, "error", "Upload fehlgeschlagen: Diese Umgebung unterstützt keinen Bild-Upload.");
       return;
     }
 
@@ -1552,16 +1767,38 @@ function ensureXConfigShell(options = {}) {
 
       const reader = new windowRef.FileReader();
       reader.onload = () => {
-        withRuntimeCall(
-          runtimeApi.setThemeBackgroundImage(themeKey, String(reader.result || "")),
-          "Hintergrundbild gespeichert.",
-          "Hintergrundbild konnte nicht gespeichert werden."
-        );
+        const dataUrl = String(reader.result || "").trim();
+        if (!dataUrl.startsWith("data:image/")) {
+          const errorMessage = "Upload fehlgeschlagen: Die ausgewählte Datei ist kein unterstütztes Bild.";
+          setNotice("error", errorMessage);
+          setThemeActionFeedback(featureKey, "error", errorMessage);
+          input.onchange = null;
+          input.remove?.();
+          return;
+        }
+        const fileName = String(file.name || "").trim();
+        const successMessage = fileName
+          ? `Hintergrundbild gespeichert: ${fileName}.`
+          : "Hintergrundbild gespeichert.";
+        const errorMessage = "Hintergrundbild konnte nicht gespeichert werden.";
+        Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, dataUrl))
+          .then(() => {
+            setNotice("success", successMessage);
+            setThemeActionFeedback(featureKey, "success", successMessage);
+            syncThemeBackgroundIndicators(featureKey);
+          })
+          .catch(() => {
+            setNotice("error", errorMessage);
+            setThemeActionFeedback(featureKey, "error", errorMessage);
+          })
+          .finally(() => queueSync());
         input.onchange = null;
         input.remove?.();
       };
       reader.onerror = () => {
-        setNotice("error", "Bild konnte nicht gelesen werden.");
+        const errorMessage = "Upload fehlgeschlagen: Bild konnte nicht gelesen werden.";
+        setNotice("error", errorMessage);
+        setThemeActionFeedback(featureKey, "error", errorMessage);
         input.onchange = null;
         input.remove?.();
       };
@@ -1680,12 +1917,19 @@ function ensureXConfigShell(options = {}) {
 
     const themeKey = themeKeyFromConfigKey(feature.configKey);
     if (action === "clearThemeBackground" && themeKey && typeof runtimeApi.clearThemeBackgroundImage === "function") {
-      withRuntimeCall(
-        runtimeApi.clearThemeBackgroundImage(themeKey),
-        "Hintergrundbild entfernt.",
-        "Hintergrundbild konnte nicht entfernt werden.",
-        "info"
-      );
+      const successMessage = "Hintergrundbild entfernt.";
+      const errorMessage = "Hintergrundbild konnte nicht entfernt werden.";
+      Promise.resolve(runtimeApi.clearThemeBackgroundImage(themeKey))
+        .then(() => {
+          setNotice("info", successMessage);
+          setThemeActionFeedback(feature.featureKey, "info", successMessage);
+          syncThemeBackgroundIndicators(feature.featureKey);
+        })
+        .catch(() => {
+          setNotice("error", errorMessage);
+          setThemeActionFeedback(feature.featureKey, "error", errorMessage);
+        })
+        .finally(() => queueSync());
       return;
     }
 
