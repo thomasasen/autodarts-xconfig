@@ -134,6 +134,7 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.cricketHighlighter.enabled, true);
   assert.equal(importedConfig.features.cricketHighlighter.showOpenObjectives, false);
   assert.equal(importedConfig.features.cricketHighlighter.showDeadObjectives, true);
+  assert.equal(importedConfig.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
   assert.equal(importedConfig.features.cricketHighlighter.colorTheme, "high-contrast");
   assert.equal(importedConfig.features.cricketHighlighter.intensity, "strong");
   assert.equal(importedConfig.features.cricketHighlighter.debug, true);
@@ -183,6 +184,7 @@ test("config store falls back to hidden open-target overlays for legacy cricket 
   assert.equal(result.imported, true);
   assert.equal(importedConfig.features.cricketHighlighter.showOpenObjectives, false);
   assert.equal(importedConfig.features.cricketHighlighter.showDeadObjectives, true);
+  assert.equal(importedConfig.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
 });
 
 test("config store prefers GM storage when available and falls back safely", async () => {

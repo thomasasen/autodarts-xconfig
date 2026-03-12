@@ -367,6 +367,7 @@ export const xconfigDescriptors = Object.freeze([
     fields: [
       checkboxField("showOpenObjectives", "OPEN-Ziele anzeigen"),
       checkboxField("showDeadObjectives", "DEAD-Ziele anzeigen"),
+      checkboxField("dimIrrelevantBoardTargets", "Irrelevante Felder abdunkeln"),
       selectField("colorTheme", "Farbthema", [
         { value: "standard", label: "Standard" },
         { value: "high-contrast", label: "High Contrast" },

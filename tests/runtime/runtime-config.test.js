@@ -45,6 +45,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
+  assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -80,6 +81,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       cricketHighlighter: {
         showOpenTargets: "false",
         showDeadTargets: "false",
+        dimIrrelevantBoardTargets: "false",
         colorTheme: "HIGH-CONTRAST",
         intensity: "STRONG",
       },
@@ -184,6 +186,10 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").pollIntervalMs, 0);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenObjectives, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadObjectives, false);
+  assert.equal(
+    runtimeConfig.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets,
+    false
+  );
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").colorTheme, "high-contrast");
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").intensity, "strong");
   assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").rowWave, false);

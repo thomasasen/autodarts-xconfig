@@ -342,6 +342,7 @@ function normalizeCricketHighlighterConfig(rawConfig = {}) {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     showOpenObjectives: normalizeBoolean(showOpenValue, false),
     showDeadObjectives: normalizeBoolean(showDeadValue, true),
+    dimIrrelevantBoardTargets: normalizeBoolean(rawConfig.dimIrrelevantBoardTargets, true),
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES),
     intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES),
     debug: normalizeBoolean(rawConfig.debug, false),

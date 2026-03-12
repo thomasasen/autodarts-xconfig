@@ -309,6 +309,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 **Einstellungen einfach erklärt**
 
 - `Dead-Ziele anzeigen`: Zeigt auch vollständig erledigte Ziele weiter an.
+- `Irrelevante Felder abdunkeln`: Dimmt Board-Bereiche, die nicht zu den aktuellen Cricket-/Tactics-Zielen gehören.
 - `State-Priorität`: Scorable-Ziele haben Vorrang, danach Offense, Pressure, offene und dead Ziele.
 - `Geschlossene Ziele`: Scorable geschlossene Ziele bleiben sichtbar; nicht-scorable geschlossene Ziele erscheinen nicht als aktive Highlights.
 - `Pressure/Danger`: Gegnerdruck wird bewusst subtil als Ring-/Randhinweis dargestellt, nicht als Vollsektor.

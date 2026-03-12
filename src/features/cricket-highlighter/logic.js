@@ -612,6 +612,7 @@ export function renderCricketHighlights(options = {}) {
 
     const highlightActive = Boolean(stateEntry?.isHighlightActive);
     const shouldRenderTarget = !(
+      (!isRelevantTarget && visualConfig.dimIrrelevantBoardTargets === false) ||
       (isRelevantTarget && presentation === "open" && visualConfig.showOpenObjectives === false) ||
       (isRelevantTarget && presentation === "dead" && !visualConfig.showDeadObjectives) ||
       (isRelevantTarget && presentation !== "dead" && !highlightActive)

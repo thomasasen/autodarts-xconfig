@@ -227,6 +227,7 @@ export function initializeCricketHighlighter(context = {}) {
       : {
         showOpenObjectives: false,
         showDeadObjectives: true,
+        dimIrrelevantBoardTargets: true,
         colorTheme: "standard",
         intensity: "normal",
       };

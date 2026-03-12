@@ -68,6 +68,7 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
   const showDeadObjectives =
     featureConfig.showDeadObjectives !== false &&
     featureConfig.showDeadTargets !== false;
+  const dimIrrelevantBoardTargets = featureConfig.dimIrrelevantBoardTargets !== false;
 
   return {
     theme,
@@ -79,6 +80,7 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
     edgePaddingPx: 0.8,
     showOpenObjectives,
     showDeadObjectives,
+    dimIrrelevantBoardTargets,
     // Runtime aliases for compatibility with legacy callsites/tests.
     showOpenTargets: showOpenObjectives,
     showDeadTargets: showDeadObjectives,
