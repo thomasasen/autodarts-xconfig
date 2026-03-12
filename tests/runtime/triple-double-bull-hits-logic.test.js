@@ -407,6 +407,64 @@ test("loop-capable presets keep idle loops on marked rows without re-bursting ol
   assert.equal(row2.row.classList.contains(HIT_IDLE_LOOP_CLASS), true);
 });
 
+test("flip-edge and card-slam timelines keep the promised 360 degree spins", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "flip-edge",
+    },
+  });
+
+  const flipPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const flipRowStep = flipPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  assert.equal(
+    flipRowStep?.step?.keyframes?.some((frame) => frame.rotateY === 360),
+    true
+  );
+
+  documentRef.throwTextElement.textContent = "40 D20";
+  documentRef.throwRow.textContent = "40 D20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "crimson-steel",
+      animationStyle: "card-slam",
+    },
+  });
+
+  const cardPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const cardRowStep = cardPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  assert.equal(
+    cardRowStep?.step?.keyframes?.some((frame) => frame.rotateX === -360),
+    true
+  );
+});
+
 test("clearHitDecoration removes row classes, text roles, and active anime state", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();

@@ -591,7 +591,11 @@ function buildBurstTimeline(animeRef, context = {}) {
   }
 
   const timeline = createTimeline(animeRef);
-  const baseDuration = context.reducedMotion ? 180 : 520;
+  const reducedMotion = Boolean(context.reducedMotion);
+  const baseDuration = reducedMotion ? 180 : 520;
+  const spinY = reducedMotion ? 18 : 360;
+  const spinX = reducedMotion ? -22 : -360;
+  const heavyWobble = reducedMotion ? 3 : 11;
 
   switch (animationStyle) {
     case "impact-pop":
@@ -599,9 +603,14 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: rowNode,
-          duration: baseDuration,
+          duration: reducedMotion ? baseDuration : 620,
           easing: "easeOutBack(1.7)",
-          keyframes: [{ scale: 1.085 }, { scale: 1 }],
+          keyframes: [
+            { scale: 0.96, translateY: 3, rotateZ: -0.5 },
+            { scale: 1.135, translateY: -10, rotateZ: 1.1 },
+            { scale: 1.02, translateY: 2, rotateZ: -0.3 },
+            { scale: 1, translateY: 0, rotateZ: 0 },
+          ],
         },
         0
       );
@@ -609,9 +618,13 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: scoreNode || rowNode,
-          duration: baseDuration - 80,
+          duration: reducedMotion ? baseDuration - 40 : 540,
           easing: "easeOutBack(2.1)",
-          keyframes: [{ scale: 1.18, translateY: -3 }, { scale: 1, translateY: 0 }],
+          keyframes: [
+            { scale: 1.26, translateY: -10, letterSpacing: "0.06em" },
+            { scale: 0.98, translateY: 2, letterSpacing: "0.02em" },
+            { scale: 1, translateY: 0, letterSpacing: "0em" },
+          ],
         },
         0
       );
@@ -619,9 +632,12 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: segmentNode || rowNode,
-          duration: 300,
+          duration: reducedMotion ? 200 : 360,
           easing: "easeOutQuad",
-          keyframes: [{ translateY: -4, opacity: 1 }, { translateY: 0, opacity: 1 }],
+          keyframes: [
+            { translateY: -7, opacity: 1, letterSpacing: "0.18em" },
+            { translateY: 0, opacity: 1, letterSpacing: "0.1em" },
+          ],
         },
         70
       );
@@ -631,285 +647,12 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: rowNode,
-          duration: 620,
-          easing: "easeOutExpo",
-          keyframes: [{ scale: 0.98 }, { scale: 1.065 }, { scale: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 440,
-          easing: "easeOutExpo",
-          keyframes: [{ scale: 1.16, letterSpacing: "0.06em" }, { scale: 1, letterSpacing: "0em" }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
-          duration: 360,
-          easing: "easeOutQuad",
-          keyframes: [{ scale: 1.08, opacity: 1 }, { scale: 1, opacity: 1 }],
-        },
-        90
-      );
-      break;
-    case "sweep-shine":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 580,
-          easing: "easeOutCubic",
-          keyframes: [{ translateX: -8 }, { translateX: 6 }, { translateX: 0 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 360,
-          easing: "easeOutQuad",
-          keyframes: [{ translateX: 10, scale: 1.12 }, { translateX: 0, scale: 1 }],
-        },
-        60
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
-          duration: 300,
-          easing: "easeOutQuad",
-          keyframes: [{ translateX: 14, opacity: 1 }, { translateX: 0, opacity: 1 }],
-        },
-        110
-      );
-      break;
-    case "neon-pulse":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 640,
-          easing: "easeOutExpo",
-          keyframes: [{ scale: 1.03 }, { scale: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 520,
-          easing: "easeOutExpo",
-          keyframes: [{ scale: 1.2, opacity: 1 }, { scale: 1, opacity: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
-          duration: 460,
-          easing: "easeOutSine",
-          keyframes: [{ scale: 1.08, opacity: 1 }, { scale: 1, opacity: 1 }],
-        },
-        80
-      );
-      break;
-    case "snap-bounce":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 520,
-          easing: "easeOutElastic(1, .55)",
-          keyframes: [
-            { translateY: -8, scale: 1.05 },
-            { translateY: 2, scale: 0.985 },
-            { translateY: 0, scale: 1 },
-          ],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 380,
-          easing: "easeOutBack(2.2)",
-          keyframes: [{ translateY: -6, scale: 1.14 }, { translateY: 0, scale: 1 }],
-        },
-        0
-      );
-      break;
-    case "card-slam":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 500,
-          easing: "easeOutCubic",
-          keyframes: [
-            { translateY: -12, scale: 1.035 },
-            { translateY: 1, scale: 0.992 },
-            { translateY: 0, scale: 1 },
-          ],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 360,
-          easing: "easeOutQuad",
-          keyframes: [{ translateY: -10, scale: 1.14 }, { translateY: 0, scale: 1 }],
-        },
-        25
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
-          duration: 300,
-          easing: "easeOutQuad",
-          keyframes: [{ translateY: 6, opacity: 1 }, { translateY: 0, opacity: 1 }],
-        },
-        85
-      );
-      break;
-    case "signal-blink":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 560,
-          easing: "linear",
-          keyframes: [{ opacity: 0.8 }, { opacity: 1 }, { opacity: 0.88 }, { opacity: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 420,
-          easing: "linear",
-          keyframes: [{ scale: 1.14 }, { scale: 1 }, { scale: 1.08 }, { scale: 1 }],
-        },
-        0
-      );
-      break;
-    case "stagger-wave":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 660,
-          easing: "easeOutQuart",
-          keyframes: [
-            { translateX: -10, rotateZ: -0.65 },
-            { translateX: 6, rotateZ: 0.45 },
-            { translateX: 0, rotateZ: 0 },
-          ],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 360,
-          easing: "easeOutBack(1.8)",
-          keyframes: [{ translateY: -8, scale: 1.14 }, { translateY: 0, scale: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
-          duration: 340,
-          easing: "easeOutBack(1.5)",
-          keyframes: [{ translateY: 6, scale: 1.08 }, { translateY: 0, scale: 1 }],
-        },
-        120
-      );
-      break;
-    case "flip-edge":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 620,
-          easing: "easeOutBack(1.4)",
-          keyframes: [
-            { rotateY: 12, scale: 1.02 },
-            { rotateY: -5, scale: 1.01 },
-            { rotateY: 0, scale: 1 },
-          ],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 380,
-          easing: "easeOutQuad",
-          keyframes: [{ scale: 1.12, translateY: -4 }, { scale: 1, translateY: 0 }],
-        },
-        45
-      );
-      break;
-    case "outline-trace":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 580,
-          easing: "easeOutCubic",
-          keyframes: [{ scale: 1.02 }, { scale: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
-          duration: 360,
-          easing: "easeOutQuad",
-          keyframes: [{ letterSpacing: "0.08em", scale: 1.12 }, { letterSpacing: "0em", scale: 1 }],
-        },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
-          duration: 300,
-          easing: "easeOutQuad",
-          keyframes: [{ letterSpacing: "0.12em", opacity: 1 }, { letterSpacing: "0.04em", opacity: 1 }],
-        },
-        90
-      );
-      break;
-    case "charge-release":
-      addTimelineStep(
-        timeline,
-        {
-          targets: rowNode,
-          duration: 720,
+          duration: reducedMotion ? 260 : 720,
           easing: "easeOutExpo",
           keyframes: [
-            { scale: 0.985, translateY: 3 },
-            { scale: 1.075, translateY: -5 },
+            { scale: 0.95, translateZ: 0 },
+            { scale: 1.11, translateY: -4 },
+            { scale: 1.02, translateY: 2 },
             { scale: 1, translateY: 0 },
           ],
         },
@@ -919,9 +662,54 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: scoreNode || rowNode,
-          duration: 520,
-          easing: "easeOutBack(2)",
-          keyframes: [{ scale: 1.24, translateY: -5 }, { scale: 1, translateY: 0 }],
+          duration: reducedMotion ? 240 : 500,
+          easing: "easeOutExpo",
+          keyframes: [
+            { scale: 1.24, letterSpacing: "0.12em", translateY: -6 },
+            { scale: 1, letterSpacing: "0em", translateY: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 220 : 420,
+          easing: "easeOutQuad",
+          keyframes: [
+            { scale: 1.14, opacity: 1, translateY: 3 },
+            { scale: 1, opacity: 1, translateY: 0 },
+          ],
+        },
+        90
+      );
+      break;
+    case "sweep-shine":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 240 : 660,
+          easing: "easeOutCubic",
+          keyframes: [
+            { translateX: -18, skewX: "-4deg", scale: 1.02 },
+            { translateX: 14, skewX: "2deg", scale: 1.06 },
+            { translateX: 0, skewX: "0deg", scale: 1 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 220 : 430,
+          easing: "easeOutQuad",
+          keyframes: [
+            { translateX: 18, scale: 1.18, letterSpacing: "0.08em" },
+            { translateX: 0, scale: 1, letterSpacing: "0em" },
+          ],
         },
         60
       );
@@ -929,24 +717,187 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: segmentNode || rowNode,
-          duration: 420,
+          duration: reducedMotion ? 180 : 320,
           easing: "easeOutQuad",
-          keyframes: [{ scale: 1.1, translateY: -2, opacity: 1 }, { scale: 1, translateY: 0, opacity: 1 }],
+          keyframes: [
+            { translateX: 24, opacity: 1, letterSpacing: "0.16em" },
+            { translateX: 0, opacity: 1, letterSpacing: "0.1em" },
+          ],
         },
-        130
+        110
       );
       break;
-    case "alternate-flick":
+    case "neon-pulse":
       addTimelineStep(
         timeline,
         {
           targets: rowNode,
-          duration: 620,
+          duration: reducedMotion ? 260 : 720,
+          easing: "easeOutExpo",
+          keyframes: [
+            { scale: 0.97, translateY: 4 },
+            { scale: 1.08, translateY: -6 },
+            { scale: 1.03, translateY: 0 },
+            { scale: 1, translateY: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 240 : 560,
+          easing: "easeOutExpo",
+          keyframes: [
+            { scale: 1.28, opacity: 1, letterSpacing: "0.08em" },
+            { scale: 1, opacity: 1, letterSpacing: "0em" },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 220 : 500,
+          easing: "easeOutSine",
+          keyframes: [
+            { scale: 1.12, opacity: 1, translateY: -2 },
+            { scale: 1, opacity: 1, translateY: 0 },
+          ],
+        },
+        80
+      );
+      break;
+    case "snap-bounce":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 220 : 620,
+          easing: "easeOutElastic(1, .55)",
+          keyframes: [
+            { translateY: -14, scale: 1.1, rotateZ: -1.2 },
+            { translateY: 5, scale: 0.97, rotateZ: 0.7 },
+            { translateY: 0, scale: 1 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 220 : 420,
+          easing: "easeOutBack(2.2)",
+          keyframes: [
+            { translateY: -9, scale: 1.2, rotateZ: -1 },
+            { translateY: 0, scale: 1, rotateZ: 0 },
+          ],
+        },
+        0
+      );
+      break;
+    case "card-slam":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 260 : 760,
+          easing: "easeOutExpo",
+          keyframes: [
+            { rotateX: spinX, translateY: -18, scale: 1.08 },
+            { rotateX: reducedMotion ? -8 : -138, translateY: 8, scale: 0.96 },
+            { rotateX: 0, translateY: 0, scale: 1 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 220 : 460,
+          easing: "easeOutBack(2.3)",
+          keyframes: [
+            { translateY: -14, scale: 1.24, rotateZ: -1.5 },
+            { translateY: 2, scale: 0.98, rotateZ: 0.5 },
+            { translateY: 0, scale: 1, rotateZ: 0 },
+          ],
+        },
+        25
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 180 : 340,
+          easing: "easeOutQuad",
+          keyframes: [
+            { translateY: 8, opacity: 1, letterSpacing: "0.18em" },
+            { translateY: 0, opacity: 1, letterSpacing: "0.1em" },
+          ],
+        },
+        85
+      );
+      break;
+    case "signal-blink":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 220 : 620,
+          easing: "linear",
+          keyframes: [
+            { opacity: 0.76, translateX: -5 },
+            { opacity: 1, translateX: 5 },
+            { opacity: 0.84, translateX: -3 },
+            { opacity: 1, translateX: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 200 : 520,
+          easing: "linear",
+          keyframes: [
+            { scale: 1.18, translateX: heavyWobble, rotateZ: 1.5 },
+            { scale: 0.98, translateX: -heavyWobble, rotateZ: -1.8 },
+            { scale: 1.12, translateX: reducedMotion ? 2 : 7, rotateZ: 1.1 },
+            { scale: 1, translateX: 0, rotateZ: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 180 : 400,
+          easing: "linear",
+          keyframes: [
+            { translateX: reducedMotion ? -2 : -6, letterSpacing: "0.16em" },
+            { translateX: reducedMotion ? 2 : 6, letterSpacing: "0.08em" },
+            { translateX: 0, letterSpacing: "0.1em" },
+          ],
+        },
+        80
+      );
+      break;
+    case "stagger-wave":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 280 : 720,
           easing: "easeOutQuart",
           keyframes: [
-            { translateX: -9, rotateZ: -0.8 },
-            { translateX: 6, rotateZ: 0.55 },
-            { translateX: -4, rotateZ: -0.35 },
+            { translateX: -14, rotateZ: -1.1, scale: 1.02 },
+            { translateX: 10, rotateZ: 0.8, scale: 1.05 },
             { translateX: 0, rotateZ: 0 },
           ],
         },
@@ -956,9 +907,176 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: scoreNode || rowNode,
-          duration: 420,
+          duration: reducedMotion ? 220 : 420,
+          easing: "easeOutBack(1.8)",
+          keyframes: [{ translateY: -10, scale: 1.2, rotateZ: -1 }, { translateY: 0, scale: 1, rotateZ: 0 }],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 220 : 400,
+          easing: "easeOutBack(1.5)",
+          keyframes: [
+            { translateY: 7, scale: 1.12, letterSpacing: "0.16em" },
+            { translateY: 0, scale: 1, letterSpacing: "0.1em" },
+          ],
+        },
+        120
+      );
+      break;
+    case "flip-edge":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 300 : 860,
+          easing: "easeOutExpo",
+          keyframes: [
+            { rotateY: spinY, scale: 1.08, translateZ: 0 },
+            { rotateY: reducedMotion ? -8 : -36, scale: 0.98, translateY: 3 },
+            { rotateY: 0, scale: 1, translateY: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 220 : 460,
+          easing: "easeOutBack(2.1)",
+          keyframes: [
+            { scale: 1.18, translateY: -7, rotateZ: 1.2 },
+            { scale: 1, translateY: 0, rotateZ: 0 },
+          ],
+        },
+        45
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 180 : 360,
+          easing: "easeOutQuad",
+          keyframes: [
+            { letterSpacing: "0.18em", translateY: 4, opacity: 1 },
+            { letterSpacing: "0.1em", translateY: 0, opacity: 1 },
+          ],
+        },
+        90
+      );
+      break;
+    case "outline-trace":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 220 : 640,
+          easing: "easeOutCubic",
+          keyframes: [{ scale: 1.04, translateY: -2 }, { scale: 1, translateY: 0 }],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 220 : 420,
+          easing: "easeOutQuad",
+          keyframes: [
+            { letterSpacing: "0.14em", scale: 1.18, translateY: -4 },
+            { letterSpacing: "0em", scale: 1, translateY: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 180 : 340,
+          easing: "easeOutQuad",
+          keyframes: [
+            { letterSpacing: "0.18em", opacity: 1, translateX: 8 },
+            { letterSpacing: "0.04em", opacity: 1, translateX: 0 },
+          ],
+        },
+        90
+      );
+      break;
+    case "charge-release":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 280 : 860,
+          easing: "easeOutExpo",
+          keyframes: [
+            { scale: 0.94, translateY: 10 },
+            { scale: 1.12, translateY: -10 },
+            { scale: 1.03, translateY: 2 },
+            { scale: 1, translateY: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 240 : 620,
+          easing: "easeOutBack(2)",
+          keyframes: [
+            { scale: 1.32, translateY: -12, letterSpacing: "0.08em" },
+            { scale: 0.98, translateY: 2, letterSpacing: "0.02em" },
+            { scale: 1, translateY: 0, letterSpacing: "0em" },
+          ],
+        },
+        60
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 220 : 460,
+          easing: "easeOutQuad",
+          keyframes: [
+            { scale: 1.16, translateY: -5, opacity: 1, letterSpacing: "0.18em" },
+            { scale: 1, translateY: 0, opacity: 1, letterSpacing: "0.1em" },
+          ],
+        },
+        130
+      );
+      break;
+    case "alternate-flick":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 260 : 720,
+          easing: "easeOutQuart",
+          keyframes: [
+            { translateX: -13, rotateZ: -1.4, scale: 1.04 },
+            { translateX: 10, rotateZ: 0.9, scale: 1.07 },
+            { translateX: -5, rotateZ: -0.45, scale: 1.02 },
+            { translateX: 0, rotateZ: 0 },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 220 : 480,
           easing: "easeOutBack(1.9)",
-          keyframes: [{ translateX: 5, scale: 1.14 }, { translateX: 0, scale: 1 }],
+          keyframes: [
+            { translateX: 8, scale: 1.2, rotateZ: 1.3 },
+            { translateX: 0, scale: 1, rotateZ: 0 },
+          ],
         },
         20
       );
@@ -966,9 +1084,12 @@ function buildBurstTimeline(animeRef, context = {}) {
         timeline,
         {
           targets: segmentNode || rowNode,
-          duration: 380,
+          duration: reducedMotion ? 200 : 420,
           easing: "easeOutBack(1.6)",
-          keyframes: [{ translateX: -7, opacity: 1 }, { translateX: 0, opacity: 1 }],
+          keyframes: [
+            { translateX: -10, opacity: 1, letterSpacing: "0.16em" },
+            { translateX: 0, opacity: 1, letterSpacing: "0.1em" },
+          ],
         },
         90
       );
