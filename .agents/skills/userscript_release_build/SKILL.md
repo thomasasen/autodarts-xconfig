@@ -71,6 +71,21 @@ Use:
 
 This repo defines `build`, `test`, and `verify` scripts in `package.json`. :contentReference[oaicite:1]{index=1}
 
+### Handling hanging test runs (required)
+
+If `npm test` appears stuck (for example, no meaningful new output for several minutes or the run exceeds normal repo duration), treat this as a failure state, not as a successful validation.
+
+Use this recovery sequence:
+- do not start parallel `npm test` runs
+- inspect running test processes (`npm`, `run-tests.mjs`, `node --test`)
+- stop only the matching stale test processes
+- rerun verification from a clean state: `npm.cmd test`, then `npm.cmd run verify`
+- report the incident and cleanup transparently in the final summary
+
+PowerShell helpers:
+- `Get-CimInstance Win32_Process -Filter "name = 'node.exe'" | Where-Object { $_.CommandLine -match 'run-tests\\.mjs' -or $_.CommandLine -match 'npm\\\\bin\\\\npm-cli\\.js\" test' -or $_.CommandLine -match '--test C:\\\\dev\\\\repos\\\\autodarts-xconfig' }`
+- `Stop-Process -Id <PID> -Force`
+
 ## 4. Final sanity checks
 
 Confirm:

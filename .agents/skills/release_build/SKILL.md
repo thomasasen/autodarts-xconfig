@@ -56,6 +56,17 @@ Do not patch `dist` manually.
 Run the available verification steps for this repository.
 At minimum, use the project test flow when available.
 
+### Handling hanging test runs (required)
+
+If `npm test` hangs or runs far beyond normal repo duration, treat this as an execution failure.
+
+Required handling:
+- do not start additional parallel test runs
+- identify stale test processes (`npm`, `run-tests.mjs`, `node --test`)
+- terminate only the matching stale processes
+- rerun validation from a clean process state
+- state clearly in reporting that a timeout/hang happened and how it was resolved
+
 ## 4. Final sanity checks
 
 Confirm:
