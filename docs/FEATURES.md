@@ -382,27 +382,27 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
 ### Triple/Double/Bull Hits
 
 - Gilt für: `alle Modi`
-- Kurz: Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, staerkeren Text-Fokus und klar sichtbare Burst-Moves.
-- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flaechen mit animierten Verlaeufen, Pattern-Layern, leuchtenden Raendern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewaehlte Presets duerfen danach subtil weiterlaufen.
-- `Farbstil`: Waehlt die visuelle Farbwelt fuer Verlauf, Glow und Rand der Treffer-Highlights.
-  - `Solar Flare`: Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtoene mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und praesent.
-  - `Ice Reactor`: Ice Reactor baut einen kuehlen Cyan-Blau-Look mit Grid-Muster und technischem Randlicht auf. Das Ergebnis wirkt praezise, futuristisch und deutlich weniger weich als warme Themes.
-  - `Venom Lime`: Venom Lime mischt neonige Cyberpunk-Farben mit Hazard-Stripes und hartem Glow. Verlauf, Rand und Text springen damit am staerksten ins Auge.
-  - `Crimson Velocity`: Crimson Velocity kombiniert schnelle Rottoene mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look.
-  - `Polar Mint`: Polar Mint mischt Mint, Aqua und Tuerkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten.
-  - `Midnight Gold`: Midnight Gold legt Gold, Amber und Elfenbein ueber eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar.
-- `Animationsstil`: Waehlt den Burst-Stil fuer das frisch erkannte Trefferfeld.
-  - `Slam Punch`: Slam Punch ist der direkte Standard-Impact: kurzer Vorwaertsschub, klarer Zahlen-Burst und sofortige Rueckkehr in den Ruhezustand.
-  - `Shock Ring`: Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit staerkerem Ringimpuls und sichtbarem Textschub.
-  - `Laser Sweep`: Laser Sweep setzt auf einen schnellen Lichtlauf ueber Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe.
+- Kurz: Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
+- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets dürfen danach subtil weiterlaufen.
+- `Farbstil`: Wählt die visuelle Farbwelt für Verlauf, Glow und Rand der Treffer-Highlights.
+  - `Solar Flare`: Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtöne mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und präsent.
+  - `Ice Reactor`: Ice Reactor baut einen kühlen Cyan-Blau-Look mit Grid-Muster und technischem Randlicht auf. Das Ergebnis wirkt präzise, futuristisch und deutlich weniger weich als warme Themes.
+  - `Venom Lime`: Venom Lime mischt neonige Cyberpunk-Farben mit Hazard-Stripes und hartem Glow. Verlauf, Rand und Text springen damit am stärksten ins Auge.
+  - `Crimson Velocity`: Crimson Velocity kombiniert schnelle Rottöne mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look.
+  - `Polar Mint`: Polar Mint mischt Mint, Aqua und Türkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten.
+  - `Midnight Gold`: Midnight Gold legt Gold, Amber und Elfenbein über eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar.
+- `Animationsstil`: Wählt den Burst-Stil für das frisch erkannte Trefferfeld.
+  - `Slam Punch`: Slam Punch ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand.
+  - `Shock Ring`: Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
+  - `Laser Sweep`: Laser Sweep setzt auf einen schnellen Lichtlauf über Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe.
   - `Reactor Pulse`: Reactor Pulse kombiniert einen deutlichen Neon-Burst mit einem sanften Weiteratmen von Verlauf, Glow und Zahl. Das markierte Feld bleibt also auch nach dem Burst leicht lebendig.
   - `Turbo Bounce`: Turbo Bounce kombiniert einen schnellen Lift mit kurzem Nachfedern. Dadurch wirkt der Treffer rhythmisch und sportlich, ohne im Leerlauf weiterzubewegen.
-  - `Card Hammer`: Card Hammer behandelt das Trefferfeld wie eine kleine Broadcast-Karte, die kurz hart einschlaegt und per vertikalem Flip wieder einrastet.
+  - `Card Hammer`: Card Hammer behandelt das Trefferfeld wie eine kleine Broadcast-Karte, die kurz hart einschlägt und per vertikalem Flip wieder einrastet.
   - `Glitch Blink`: Glitch Blink nutzt kurze Blinkwechsel, seitliches Zahlenshake und digitales Jittern. Der Treffer wirkt damit wie ein Signalimpuls statt wie ein klassischer Pop.
   - `Cascade Split`: Cascade Split gibt dem Treffer eine kurze, versetzte Wellenbewegung. Zahl und Segment reagieren leicht nacheinander und erzeugen so einen dynamischeren Burst.
-  - `Rotor Flip`: Rotor Flip ergaenzt den Treffer um einen horizontalen 360-Spin und eine nachlaufende Textbewegung. Dadurch wirkt der Hit raeumlicher und auffaelliger als ein reiner Scale-Pop.
-  - `Edge Runner`: Edge Runner startet mit einer sichtbaren Konturverfolgung und behaelt danach ein leicht laufendes Randlicht auf markierten Feldern. So bleibt der Treffer technisch und praezise praesent.
-  - `Charge Burst`: Charge Burst kombiniert einen deutlichen Auflade-Moment mit einer hellen Entladung und laesst markierte Felder anschliessend leicht weiteratmen. Das ist der dramatischste Preset im Paket.
+  - `Rotor Flip`: Rotor Flip ergänzt den Treffer um einen horizontalen 360-Spin und eine nachlaufende Textbewegung. Dadurch wirkt der Hit räumlicher und auffälliger als ein reiner Scale-Pop.
+  - `Edge Runner`: Edge Runner startet mit einer sichtbaren Konturverfolgung und behält danach ein leicht laufendes Randlicht auf markierten Feldern. So bleibt der Treffer technisch und präzise präsent.
+  - `Charge Burst`: Charge Burst kombiniert einen deutlichen Auflade-Moment mit einer hellen Entladung und lässt markierte Felder anschließend leicht weiteratmen. Das ist der dramatischste Preset im Paket.
   - `Beacon Flicker`: Beacon Flicker mischt einen kurzen Richtungs-Flick im Burst mit einem dezenten Beacon-Effekt im Idle. Das Feld bleibt damit leicht lebendig, ohne permanent chaotisch zu werden.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 

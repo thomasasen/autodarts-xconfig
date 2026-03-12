@@ -56,6 +56,10 @@ Do not patch `dist` manually.
 Run the available verification steps for this repository.
 At minimum, use the project test flow when available.
 
+Syntax gate order:
+- run `npm run check:syntax` before build/test verification
+- if syntax check fails, do not continue to release packaging
+
 ### Handling hanging test runs (required)
 
 If `npm test` hangs or runs far beyond normal repo duration, treat this as an execution failure.
@@ -89,6 +93,7 @@ A valid result from this skill must:
 - leave the repo in a releasable state
 - include version bump when needed
 - regenerate shipped output through the build flow
+- pass `npm run check:syntax` before final test reporting
 - report validation truthfully
 - include a ready-to-use commit message in the required repository format whenever a build was run
 

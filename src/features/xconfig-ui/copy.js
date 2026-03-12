@@ -405,24 +405,24 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "triple-double-bull-hits": featureCopy({
     cardDescription:
-      "Setzt Triple-, Double- und Bull-Treffer mit auffaelligen Stripe-/Glow-Looks, Text-Effekten und slot-genauen Burst-Bewegungen in Szene.",
+      "Setzt Triple-, Double- und Bull-Treffer mit auffälligen Stripe-/Glow-Looks, Text-Effekten und slot-genauen Burst-Bewegungen in Szene.",
     visibleDescription:
-      "Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, staerkeren Text-Fokus und klar sichtbare Burst-Moves.",
+      "Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.",
     visualDescription:
-      "Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flaechen mit animierten Verlaeufen, Pattern-Layern, leuchtenden Raendern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewaehlte Presets duerfen danach subtil weiterlaufen.",
+      "Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets dürfen danach subtil weiterlaufen.",
     usefulWhen:
       "Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.",
     images: [image("Triple Double Bull Hits", "animation-triple-double-bull-hits.gif")],
     fields: {
       colorTheme: fieldCopy(
-        "Waehlt die visuelle Farbwelt fuer Verlauf, Glow und Rand des Trefferfelds.",
-        "Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer erscheinen. Geaendert werden Hintergrundverlauf, Randlicht, Textglow und die generelle Tonalitaet des Trefferfelds; die Trefferlogik bleibt unveraendert.",
-        "Waehlt die visuelle Farbwelt fuer Verlauf, Glow und Rand der Treffer-Highlights."
+        "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand des Trefferfelds.",
+        "Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer erscheinen. Geändert werden Hintergrundverlauf, Randlicht, Textglow und die generelle Tonalität des Trefferfelds; die Trefferlogik bleibt unverändert.",
+        "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand der Treffer-Highlights."
       ),
       animationStyle: fieldCopy(
-        "Waehlt den Burst-Stil fuer das frisch erkannte Trefferfeld.",
+        "Wählt den Burst-Stil für das frisch erkannte Trefferfeld.",
         "Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Einige Presets bleiben reine One-Shot-Bursts, andere kombinieren den Burst mit einem subtilen Idle-Loop auf markierten Feldern.",
-        "Waehlt den Burst-Stil fuer das frisch erkannte Trefferfeld."
+        "Wählt den Burst-Stil für das frisch erkannte Trefferfeld."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1209,96 +1209,96 @@ const TURN_START_STYLE_OPTION_COPY = deepFreeze({
 
 const TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY = deepFreeze({
   "ember-rush": optionCopy(
-    "Solar Flare setzt auf heisse Orange-Rot-Gold-Verlaeufe mit diagonalem Flame-Stripe-Look.",
-    "Der Look arbeitet mit warmen Feuerfarben, auffaelligen Diagonalstreifen und starkem Broadcast-Glow. Das ist die aggressivste warme Palette im Paket und wirkt wie ein laufender Hitzeimpuls.",
-    "Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtoene mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und praesent."
+    "Solar Flare setzt auf heiße Orange-Rot-Gold-Verläufe mit diagonalem Flame-Stripe-Look.",
+    "Der Look arbeitet mit warmen Feuerfarben, auffälligen Diagonalstreifen und starkem Broadcast-Glow. Das ist die aggressivste warme Palette im Paket und wirkt wie ein laufender Hitzeimpuls.",
+    "Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtöne mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und präsent."
   ),
   "ice-circuit": optionCopy(
     "Ice Reactor kombiniert Cyan-Blau mit technischem Grid und kaltem Reaktor-Glow.",
     "Der Look mischt eisige Cyan-/Blautone mit sichtbaren Horizontal- und Vertikallinien. Das Trefferfeld wirkt dadurch wie ein heller Sci-Fi-Reaktor mit klarer technischer Struktur.",
-    "Ice Reactor baut einen kuehlen Cyan-Blau-Look mit Grid-Muster und technischem Randlicht auf. Das Ergebnis wirkt praezise, futuristisch und deutlich weniger weich als warme Themes."
+    "Ice Reactor baut einen kühlen Cyan-Blau-Look mit Grid-Muster und technischem Randlicht auf. Das Ergebnis wirkt präzise, futuristisch und deutlich weniger weich als warme Themes."
   ),
   "volt-lime": optionCopy(
-    "Venom Lime setzt auf Cyberpunk-Hazard-Stripes in Neon-Lime, Gruen und Signalgelb.",
-    "Das Trefferfeld leuchtet in toxischen Lime-, Gruen- und Gelbwerten und kombiniert das mit sichtbarer Warnstreifen-Optik. Das ist die lauteste und plakativste Variante fuer maximale Signalwirkung.",
-    "Venom Lime mischt neonige Cyberpunk-Farben mit Hazard-Stripes und hartem Glow. Verlauf, Rand und Text springen damit am staerksten ins Auge."
+    "Venom Lime setzt auf Cyberpunk-Hazard-Stripes in Neon-Lime, Grün und Signalgelb.",
+    "Das Trefferfeld leuchtet in toxischen Lime-, Grün- und Gelbwerten und kombiniert das mit sichtbarer Warnstreifen-Optik. Das ist die lauteste und plakativste Variante für maximale Signalwirkung.",
+    "Venom Lime mischt neonige Cyberpunk-Farben mit Hazard-Stripes und hartem Glow. Verlauf, Rand und Text springen damit am stärksten ins Auge."
   ),
   "crimson-steel": optionCopy(
     "Crimson Velocity kombiniert Rennrot mit dunklem Stahl, Scanlines und Metall-Kante.",
-    "Die Flaeche wirkt schneller und haerter als die warmen Themes: roter Kern, dunklere Seiten, feine Scanlines und ein metallischer Unterton. Das ist sportlich, ernst und markant ohne Neon-Giftlook.",
-    "Crimson Velocity kombiniert schnelle Rottoene mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look."
+    "Die Fläche wirkt schneller und härter als die warmen Themes: roter Kern, dunklere Seiten, feine Scanlines und ein metallischer Unterton. Das ist sportlich, ernst und markant ohne Neon-Giftlook.",
+    "Crimson Velocity kombiniert schnelle Rottöne mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look."
   ),
   "arctic-mint": optionCopy(
-    "Polar Mint setzt auf Mint, Aqua und Tuerkis mit hellen Streifen und klarer Frische.",
+    "Polar Mint setzt auf Mint, Aqua und Türkis mit hellen Streifen und klarer Frische.",
     "Das Trefferfeld wirkt klar, luftig und trotzdem sichtbar geladen. Helle Stripe- und Line-Layer geben der Palette Struktur, ohne so aggressiv zu werden wie Venom Lime.",
-    "Polar Mint mischt Mint, Aqua und Tuerkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten."
+    "Polar Mint mischt Mint, Aqua und Türkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten."
   ),
   "champagne-night": optionCopy(
     "Midnight Gold setzt auf Vintage-Nachtlook mit Gold, Elfenbein und eleganten Deco-Streifen.",
     "Die Treffer wirken wie warme Nachtlichter mit goldener Kante, dunkler Basis und feinen Art-Deco-Stripe-Layern. Das ist edel, sichtbar und weniger schrill als Neon.",
-    "Midnight Gold legt Gold, Amber und Elfenbein ueber eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar."
+    "Midnight Gold legt Gold, Amber und Elfenbein über eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar."
   ),
 });
 
 const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY = deepFreeze({
   "impact-pop": optionCopy(
     "Slam Punch spielt einen kurzen, druckvollen Front-Punch mit klarer Zahlenspitze.",
-    "Das frisch erkannte Trefferfeld drueckt sichtbar nach vorn, die Zahl overshootet kurz und alles faellt sauber zurueck. Das ist ein starker One-Shot-Burst ohne Dauerloop.",
-    "Slam Punch ist der direkte Standard-Impact: kurzer Vorwaertsschub, klarer Zahlen-Burst und sofortige Rueckkehr in den Ruhezustand."
+    "Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist ein starker One-Shot-Burst ohne Dauerloop.",
+    "Slam Punch ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand."
   ),
   shockwave: optionCopy(
     "Shock Ring schickt eine deutliche Druckwelle durch Rand, Feld und Zahl.",
-    "Der Rand expandiert sichtbar, der Score oeffnet sich staerker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.",
-    "Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit staerkerem Ringimpuls und sichtbarem Textschub."
+    "Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.",
+    "Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub."
   ),
   "sweep-shine": optionCopy(
-    "Laser Sweep zieht einen harten Lichtzug quer ueber Feld, Rand und Text.",
-    "Der Burst fuehlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug ueber Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.",
-    "Laser Sweep setzt auf einen schnellen Lichtlauf ueber Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe."
+    "Laser Sweep zieht einen harten Lichtzug quer über Feld, Rand und Text.",
+    "Der Burst fühlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug über Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.",
+    "Laser Sweep setzt auf einen schnellen Lichtlauf über Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe."
   ),
   "neon-pulse": optionCopy(
-    "Reactor Pulse laesst den Treffer hell aufgluehen und danach neonartig weiteratmen.",
+    "Reactor Pulse lässt den Treffer hell aufglühen und danach neonartig weiteratmen.",
     "Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop mit klarer Cyberpunk-Anmutung.",
     "Reactor Pulse kombiniert einen deutlichen Neon-Burst mit einem sanften Weiteratmen von Verlauf, Glow und Zahl. Das markierte Feld bleibt also auch nach dem Burst leicht lebendig."
   ),
   "snap-bounce": optionCopy(
-    "Turbo Bounce spielt einen knackigen Lift mit sichtbarem Rueckfeder-Effekt.",
-    "Das Trefferfeld hebt sichtbar ab, federt praezise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.",
+    "Turbo Bounce spielt einen knackigen Lift mit sichtbarem Rückfeder-Effekt.",
+    "Das Trefferfeld hebt sichtbar ab, federt präzise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.",
     "Turbo Bounce kombiniert einen schnellen Lift mit kurzem Nachfedern. Dadurch wirkt der Treffer rhythmisch und sportlich, ohne im Leerlauf weiterzubewegen."
   ),
   "card-slam": optionCopy(
     "Card Hammer setzt das Wurffeld wie einen harten Einschlag mit vertikalem 360-Flip in Szene.",
-    "Das Feld knallt nicht nur in die Flaeche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzogert. Das bleibt ein One-Shot-Burst mit viel Impact.",
-    "Card Hammer behandelt das Trefferfeld wie eine kleine Broadcast-Karte, die kurz hart einschlaegt und per vertikalem Flip wieder einrastet."
+    "Das Feld knallt nicht nur in die Fläche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzögert. Das bleibt ein One-Shot-Burst mit viel Impact.",
+    "Card Hammer behandelt das Trefferfeld wie eine kleine Broadcast-Karte, die kurz hart einschlägt und per vertikalem Flip wieder einrastet."
   ),
   "signal-blink": optionCopy(
     "Glitch Blink setzt einen digitalen Signal-Blitz mit Zahlenzittern und kurzem HUD-Fehlerbild.",
-    "Der Treffer blinkt bewusst digital, die Zahl wackelt seitlich und das Feld bekommt kurze Signalstoerungen. Das ist ein kompakter One-Shot-Burst fuer einen deutlich technoideren Look.",
+    "Der Treffer blinkt bewusst digital, die Zahl wackelt seitlich und das Feld bekommt kurze Signalstörungen. Das ist ein kompakter One-Shot-Burst für einen deutlich technoideren Look.",
     "Glitch Blink nutzt kurze Blinkwechsel, seitliches Zahlenshake und digitales Jittern. Der Treffer wirkt damit wie ein Signalimpuls statt wie ein klassischer Pop."
   ),
   "stagger-wave": optionCopy(
     "Cascade Split schickt eine gestaffelte Welle durch Feld, Zahl und Segment.",
-    "Der Burst laeuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig, etwas groesser und bleibt ein One-Shot-Burst.",
+    "Der Burst läuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig, etwas größer und bleibt ein One-Shot-Burst.",
     "Cascade Split gibt dem Treffer eine kurze, versetzte Wellenbewegung. Zahl und Segment reagieren leicht nacheinander und erzeugen so einen dynamischeren Burst."
   ),
   "flip-edge": optionCopy(
     "Rotor Flip dreht das Trefferfeld sichtbar per horizontalem 360-Spin in den Raum.",
-    "Das Wurffeld dreht deutlich auf der Y-Achse, faengt sich wieder und verleiht dem Burst eine echte Raumwirkung. Das bleibt ein One-Shot-Burst mit klar erkennbarem Spin.",
-    "Rotor Flip ergaenzt den Treffer um einen horizontalen 360-Spin und eine nachlaufende Textbewegung. Dadurch wirkt der Hit raeumlicher und auffaelliger als ein reiner Scale-Pop."
+    "Das Wurffeld dreht deutlich auf der Y-Achse, fängt sich wieder und verleiht dem Burst eine echte Raumwirkung. Das bleibt ein One-Shot-Burst mit klar erkennbarem Spin.",
+    "Rotor Flip ergänzt den Treffer um einen horizontalen 360-Spin und eine nachlaufende Textbewegung. Dadurch wirkt der Hit räumlicher und auffälliger als ein reiner Scale-Pop."
   ),
   "outline-trace": optionCopy(
-    "Edge Runner zeichnet die Kontur sichtbar nach und laesst sie danach technisch weiterlaufen.",
-    "Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop fuer einen grafischeren HUD-Look.",
-    "Edge Runner startet mit einer sichtbaren Konturverfolgung und behaelt danach ein leicht laufendes Randlicht auf markierten Feldern. So bleibt der Treffer technisch und praezise praesent."
+    "Edge Runner zeichnet die Kontur sichtbar nach und lässt sie danach technisch weiterlaufen.",
+    "Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop für einen grafischeren HUD-Look.",
+    "Edge Runner startet mit einer sichtbaren Konturverfolgung und behält danach ein leicht laufendes Randlicht auf markierten Feldern. So bleibt der Treffer technisch und präzise präsent."
   ),
   "charge-release": optionCopy(
-    "Charge Burst laedt das Feld sichtbar auf und entlaedt den Treffer mit grossem Zahlenkick.",
-    "Vor dem Peak baut das Trefferfeld Spannung auf, dann entlaedt sich Verlauf, Rand und Score gemeinsam mit deutlich groesserem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.",
-    "Charge Burst kombiniert einen deutlichen Auflade-Moment mit einer hellen Entladung und laesst markierte Felder anschliessend leicht weiteratmen. Das ist der dramatischste Preset im Paket."
+    "Charge Burst lädt das Feld sichtbar auf und entlädt den Treffer mit großem Zahlenkick.",
+    "Vor dem Peak baut das Trefferfeld Spannung auf, dann entlädt sich Verlauf, Rand und Score gemeinsam mit deutlich größerem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.",
+    "Charge Burst kombiniert einen deutlichen Auflade-Moment mit einer hellen Entladung und lässt markierte Felder anschließend leicht weiteratmen. Das ist der dramatischste Preset im Paket."
   ),
   "alternate-flick": optionCopy(
-    "Beacon Flicker kombiniert einen kurzen Seiten-Flick mit spaeterem Signal-Flackern.",
-    "Der Burst wirft das Feld kurz seitlich an und laesst danach ein diskretes Beacon-Flackern auf markierten Feldern zurueck. Das ist Burst plus Idle-Loop mit mehr Richtungsgefuehl.",
+    "Beacon Flicker kombiniert einen kurzen Seiten-Flick mit späterem Signal-Flackern.",
+    "Der Burst wirft das Feld kurz seitlich an und lässt danach ein diskretes Beacon-Flackern auf markierten Feldern zurück. Das ist Burst plus Idle-Loop mit mehr Richtungsgefühl.",
     "Beacon Flicker mischt einen kurzen Richtungs-Flick im Burst mit einem dezenten Beacon-Effekt im Idle. Das Feld bleibt damit leicht lebendig, ohne permanent chaotisch zu werden."
   ),
 });

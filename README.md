@@ -459,32 +459,32 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Triple/Double/Bull Hits
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, staerkeren Text-Fokus und klar sichtbare Burst-Moves.
-- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flaechen mit animierten Verlaeufen, Pattern-Layern, leuchtenden Raendern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewaehlte Presets duerfen danach subtil weiterlaufen.
+- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
+- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets dürfen danach subtil weiterlaufen.
 - Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.
 
 **Einstellungen einfach erklärt**
 
-- `Farbstil`: Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer erscheinen. Geaendert werden Hintergrundverlauf, Randlicht, Textglow und die generelle Tonalitaet des Trefferfelds; die Trefferlogik bleibt unveraendert.
-  - `Solar Flare`: Der Look arbeitet mit warmen Feuerfarben, auffaelligen Diagonalstreifen und starkem Broadcast-Glow. Das ist die aggressivste warme Palette im Paket und wirkt wie ein laufender Hitzeimpuls.
+- `Farbstil`: Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer erscheinen. Geändert werden Hintergrundverlauf, Randlicht, Textglow und die generelle Tonalität des Trefferfelds; die Trefferlogik bleibt unverändert.
+  - `Solar Flare`: Der Look arbeitet mit warmen Feuerfarben, auffälligen Diagonalstreifen und starkem Broadcast-Glow. Das ist die aggressivste warme Palette im Paket und wirkt wie ein laufender Hitzeimpuls.
   - `Ice Reactor`: Der Look mischt eisige Cyan-/Blautone mit sichtbaren Horizontal- und Vertikallinien. Das Trefferfeld wirkt dadurch wie ein heller Sci-Fi-Reaktor mit klarer technischer Struktur.
-  - `Venom Lime`: Das Trefferfeld leuchtet in toxischen Lime-, Gruen- und Gelbwerten und kombiniert das mit sichtbarer Warnstreifen-Optik. Das ist die lauteste und plakativste Variante fuer maximale Signalwirkung.
-  - `Crimson Velocity`: Die Flaeche wirkt schneller und haerter als die warmen Themes: roter Kern, dunklere Seiten, feine Scanlines und ein metallischer Unterton. Das ist sportlich, ernst und markant ohne Neon-Giftlook.
+  - `Venom Lime`: Das Trefferfeld leuchtet in toxischen Lime-, Grün- und Gelbwerten und kombiniert das mit sichtbarer Warnstreifen-Optik. Das ist die lauteste und plakativste Variante für maximale Signalwirkung.
+  - `Crimson Velocity`: Die Fläche wirkt schneller und härter als die warmen Themes: roter Kern, dunklere Seiten, feine Scanlines und ein metallischer Unterton. Das ist sportlich, ernst und markant ohne Neon-Giftlook.
   - `Polar Mint`: Das Trefferfeld wirkt klar, luftig und trotzdem sichtbar geladen. Helle Stripe- und Line-Layer geben der Palette Struktur, ohne so aggressiv zu werden wie Venom Lime.
   - `Midnight Gold`: Die Treffer wirken wie warme Nachtlichter mit goldener Kante, dunkler Basis und feinen Art-Deco-Stripe-Layern. Das ist edel, sichtbar und weniger schrill als Neon.
 - `Animationsstil`: Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Einige Presets bleiben reine One-Shot-Bursts, andere kombinieren den Burst mit einem subtilen Idle-Loop auf markierten Feldern.
-  - `Slam Punch`: Das frisch erkannte Trefferfeld drueckt sichtbar nach vorn, die Zahl overshootet kurz und alles faellt sauber zurueck. Das ist ein starker One-Shot-Burst ohne Dauerloop.
-  - `Shock Ring`: Der Rand expandiert sichtbar, der Score oeffnet sich staerker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
-  - `Laser Sweep`: Der Burst fuehlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug ueber Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.
+  - `Slam Punch`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist ein starker One-Shot-Burst ohne Dauerloop.
+  - `Shock Ring`: Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
+  - `Laser Sweep`: Der Burst fühlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug über Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.
   - `Reactor Pulse`: Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop mit klarer Cyberpunk-Anmutung.
-  - `Turbo Bounce`: Das Trefferfeld hebt sichtbar ab, federt praezise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.
-  - `Card Hammer`: Das Feld knallt nicht nur in die Flaeche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzogert. Das bleibt ein One-Shot-Burst mit viel Impact.
-  - `Glitch Blink`: Der Treffer blinkt bewusst digital, die Zahl wackelt seitlich und das Feld bekommt kurze Signalstoerungen. Das ist ein kompakter One-Shot-Burst fuer einen deutlich technoideren Look.
-  - `Cascade Split`: Der Burst laeuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig, etwas groesser und bleibt ein One-Shot-Burst.
-  - `Rotor Flip`: Das Wurffeld dreht deutlich auf der Y-Achse, faengt sich wieder und verleiht dem Burst eine echte Raumwirkung. Das bleibt ein One-Shot-Burst mit klar erkennbarem Spin.
-  - `Edge Runner`: Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop fuer einen grafischeren HUD-Look.
-  - `Charge Burst`: Vor dem Peak baut das Trefferfeld Spannung auf, dann entlaedt sich Verlauf, Rand und Score gemeinsam mit deutlich groesserem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.
-  - `Beacon Flicker`: Der Burst wirft das Feld kurz seitlich an und laesst danach ein diskretes Beacon-Flackern auf markierten Feldern zurueck. Das ist Burst plus Idle-Loop mit mehr Richtungsgefuehl.
+  - `Turbo Bounce`: Das Trefferfeld hebt sichtbar ab, federt präzise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.
+  - `Card Hammer`: Das Feld knallt nicht nur in die Fläche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzögert. Das bleibt ein One-Shot-Burst mit viel Impact.
+  - `Glitch Blink`: Der Treffer blinkt bewusst digital, die Zahl wackelt seitlich und das Feld bekommt kurze Signalstörungen. Das ist ein kompakter One-Shot-Burst für einen deutlich technoideren Look.
+  - `Cascade Split`: Der Burst läuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig, etwas größer und bleibt ein One-Shot-Burst.
+  - `Rotor Flip`: Das Wurffeld dreht deutlich auf der Y-Achse, fängt sich wieder und verleiht dem Burst eine echte Raumwirkung. Das bleibt ein One-Shot-Burst mit klar erkennbarem Spin.
+  - `Edge Runner`: Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop für einen grafischeren HUD-Look.
+  - `Charge Burst`: Vor dem Peak baut das Trefferfeld Spannung auf, dann entlädt sich Verlauf, Rand und Score gemeinsam mit deutlich größerem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.
+  - `Beacon Flicker`: Der Burst wirft das Feld kurz seitlich an und lässt danach ein diskretes Beacon-Flackern auf markierten Feldern zurück. Das ist Burst plus Idle-Loop mit mehr Richtungsgefühl.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Triple Double Bull Hits](docs/screenshots/animation-triple-double-bull-hits.gif)

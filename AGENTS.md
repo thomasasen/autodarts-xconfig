@@ -20,7 +20,12 @@ Prefer the repository verification flow:
 - `npm run verify`
 
 If a narrower check is appropriate during iteration, use:
+- `npm run check:syntax`
 - `npm test`
+
+Syntax gate requirement:
+- run `npm run check:syntax` before release validation
+- the check must pass for all JavaScript entry points (`src`, `scripts`, `loader`, `tests`, `dist`) and package JSON files
 
 ## Required release steps for shipped source changes
 
@@ -103,5 +108,12 @@ Example:
 
 - install dependencies: `npm install`
 - build userscript: `npm run build`
+- run syntax checks: `npm run check:syntax`
 - run tests: `npm test`
 - run full verification: `npm run verify`
+
+## Language quality for German text
+
+For German user-facing wording in code, config labels, xConfig copy, README, and docs:
+- use proper German umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
+- do not transliterate as `ae`, `oe`, `ue`, or `ss` unless a technical system explicitly requires ASCII-only output

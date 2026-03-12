@@ -1,6 +1,6 @@
 {
   "name": "autodarts-xconfig",
-  "version": "1.1.74",
+  "version": "1.1.75",
   "description": "Clean successor architecture for autodarts xConfig userscript modules",
   "type": "module",
   "imports": {
@@ -16,7 +16,8 @@
   "scripts": {
     "build": "npm run build:userscript",
     "build:userscript": "node ./scripts/build-userscript.mjs",
-    "test": "node ./scripts/run-tests.mjs",
+    "check:syntax": "node ./scripts/check-syntax.mjs",
+    "test": "npm run check:syntax && node ./scripts/run-tests.mjs",
     "verify": "npm run build && npm test"
   },
   "license": "MIT",

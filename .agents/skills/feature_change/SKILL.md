@@ -35,6 +35,10 @@ Respect the current layer boundaries:
 - rendering/effects in feature modules
 - user-facing defaults and labels in config/module definitions
 
+For German user-facing wording:
+- write umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
+- avoid transliterations (`ae`, `oe`, `ue`, `ss`) unless a strict ASCII interface requires it
+
 # Workflow
 
 ## 1. Locate the real change boundary
@@ -78,12 +82,20 @@ Choose the closest meaningful test layer:
 - runtime tests for lifecycle/mapping behavior
 - harness tests for DOM-driven behavior
 
+## 6. Run syntax gate before final validation
+
+Before final test/verify runs:
+- execute `npm run check:syntax`
+- resolve all reported parser/encoding errors first
+- continue with feature tests only after the syntax gate is green
+
 # Output requirements
 
 A valid result from this skill must:
 - place the change in source, not generated files
 - preserve the project architecture
 - include the necessary test updates
+- pass `npm run check:syntax`
 - leave the repository ready for final packaging through `$release_build` when needed
 
 # Commit guidance

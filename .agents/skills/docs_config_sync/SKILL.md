@@ -35,6 +35,10 @@ For xConfig settings specifically:
 - keep the xConfig wording shorter than the docs wording
 - describe visual effects in concrete text form when the user needs to imagine what changes on screen
 
+Language rule for German wording:
+- use proper umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
+- do not transliterate as `ae`, `oe`, `ue`, or `ss` unless a technical target explicitly requires ASCII
+
 # Workflow
 
 ## 1. Trace the user-facing name
