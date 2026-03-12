@@ -187,7 +187,8 @@ export const commonLayoutCss = `
 div.css-y3hfdd{
   display: grid !important;
   grid-template-columns: 1fr auto !important;
-  grid-template-rows: 1fr !important;
+  grid-template-rows: max-content minmax(0, 1fr) !important;
+  align-content: start !important;
 }
 
 .ad-ext_winner-score-wrapper{
@@ -231,6 +232,8 @@ div.css-y3hfdd > .css-1igwmid{
   grid-column-start: 1 !important;
   grid-column-end: 2 !important;
   padding-left:55px !important;
+  align-self: start !important;
+  margin-top: 0 !important;
 }
 
 .css-1kejrvi,
