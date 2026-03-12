@@ -6,6 +6,7 @@ import {
   HIT_THEME_CLASS,
 } from "./style.js";
 
+const TURN_CONTAINER_SELECTOR = "#ad-ext-turn";
 const THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
 const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
 const SUPPORTED_ANIMATION_STYLE = new Set(Object.keys(HIT_ANIMATION_CLASS));
@@ -19,15 +20,27 @@ const SINGLE_25_PATTERN = /\b25\b/;
 const TRIPLE_PATTERN = /T\s*(\d{1,2})/gi;
 const DOUBLE_PATTERN = /D\s*(\d{1,2})/gi;
 
-function collectBySelector(documentRef, selector) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+function collectBySelector(rootNode, selector) {
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return [];
   }
 
   try {
-    return Array.from(documentRef.querySelectorAll(selector));
+    return Array.from(rootNode.querySelectorAll(selector));
   } catch (_) {
     return [];
+  }
+}
+
+function findTurnContainer(documentRef) {
+  if (!documentRef || typeof documentRef.querySelector !== "function") {
+    return null;
+  }
+
+  try {
+    return documentRef.querySelector(TURN_CONTAINER_SELECTOR);
+  } catch (_) {
+    return null;
   }
 }
 
@@ -133,6 +146,21 @@ export function classifyThrowText(rawText) {
 }
 
 export function collectThrowRows(documentRef) {
+  const turnContainer = findTurnContainer(documentRef);
+  if (turnContainer) {
+    const scopedRows = collectBySelector(turnContainer, THROW_ROW_SELECTOR).filter((rowNode) => {
+      return Boolean(rowNode && rowNode.classList);
+    });
+
+    const directRows = scopedRows.filter((rowNode) => rowNode.parentElement === turnContainer);
+    if (directRows.length > 0) {
+      return directRows;
+    }
+    if (scopedRows.length > 0) {
+      return scopedRows;
+    }
+  }
+
   return collectBySelector(documentRef, THROW_ROW_SELECTOR).filter((rowNode) => {
     return Boolean(rowNode && rowNode.classList);
   });

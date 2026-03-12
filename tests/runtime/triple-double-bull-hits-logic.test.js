@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   classifyThrowText,
+  collectThrowRows,
   clearHitDecoration,
   updateHitDecorations,
 } from "../../src/features/triple-double-bull-hits/logic.js";
@@ -93,4 +94,24 @@ test("clearHitDecoration removes all triple/double/bull classes from row", () =>
   assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.double), false);
   assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.bullOuter), false);
   assert.equal(rowNode.classList.contains(HIT_KIND_CLASS.bullInner), false);
+});
+
+test("collectThrowRows scopes to #ad-ext-turn and prefers direct throw rows", () => {
+  const documentRef = new FakeDocument();
+  const directRow = documentRef.throwRow;
+
+  const nestedWrapper = documentRef.createElement("div");
+  const nestedRow = documentRef.createElement("div");
+  nestedRow.classList.add("ad-ext-turn-throw");
+  nestedRow.textContent = "T20";
+  nestedWrapper.appendChild(nestedRow);
+  documentRef.turnContainer.appendChild(nestedWrapper);
+
+  const externalRow = documentRef.createElement("div");
+  externalRow.classList.add("ad-ext-turn-throw");
+  externalRow.textContent = "D20";
+  documentRef.main.appendChild(externalRow);
+
+  const rows = collectThrowRows(documentRef);
+  assert.deepEqual(rows, [directRow]);
 });
