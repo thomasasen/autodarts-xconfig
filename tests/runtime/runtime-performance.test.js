@@ -10,7 +10,10 @@ import { initializeCheckoutBoardTargets } from "../../src/features/checkout-boar
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import { OVERLAY_ID as CHECKOUT_OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
-import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
+import {
+  OVERLAY_ID as CRICKET_OVERLAY_ID,
+  STYLE_ID as CRICKET_STYLE_ID,
+} from "../../src/features/cricket-highlighter/style.js";
 import {
   PRESSURE_CLASS,
   SCORE_CLASS,
@@ -236,6 +239,138 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   assert.equal(Boolean(restoredOverlay), true);
   assert.equal((restoredOverlay?.children?.length || 0) > 0, true);
   assert.equal(scheduleCounter.count >= 2, true);
+
+  cleanup();
+});
+
+test("cricket-highlighter repairs stale style contract at mount and logs once", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(group);
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+  documentRef.main.appendChild(svg);
+
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+    for (let index = 0; index < 2; index += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.setAttribute("data-player-index", String(index));
+      cell.setAttribute("data-marks", label === "20" && index === 0 ? "3" : "0");
+      cell.textContent = label === "20" && index === 0 ? "3" : "0";
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const baseDomGuards = createDomGuards({ documentRef });
+  const staleStyleCss = `
+.ad-ext-cricket-target {
+  fill: var(--ad-ext-cricket-fill, transparent);
+}
+.ad-ext-cricket-target.is-open {
+  --ad-ext-cricket-fill: var(--ad-ext-cricket-open-fill);
+}
+`;
+  let styleEnsureCalls = 0;
+  const domGuards = {
+    ...baseDomGuards,
+    ensureStyle(styleId, cssText, localOptions = {}) {
+      if (styleId !== CRICKET_STYLE_ID) {
+        return baseDomGuards.ensureStyle(styleId, cssText, localOptions);
+      }
+      styleEnsureCalls += 1;
+      if (styleEnsureCalls === 1) {
+        return baseDomGuards.ensureStyle(styleId, staleStyleCss, localOptions);
+      }
+      return baseDomGuards.ensureStyle(styleId, cssText, localOptions);
+    },
+  };
+
+  const warnings = [];
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+          debug: true,
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log() {},
+      warn(message) {
+        warnings.push(String(message || ""));
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const styleNode = documentRef.getElementById(CRICKET_STYLE_ID);
+  assert.ok(styleNode);
+  assert.match(String(styleNode?.textContent || ""), /\.ad-ext-cricket-target\.is-open\s*\{/);
+  assert.match(String(styleNode?.textContent || ""), /\.ad-ext-cricket-target\.is-dead\s*\{/);
+  assert.match(String(styleNode?.textContent || ""), /\.ad-ext-cricket-target\.is-inactive\s*\{/);
+  assert.match(String(styleNode?.textContent || ""), /\.ad-ext-cricket-target\.is-scoring\s*\{/);
+  assert.match(String(styleNode?.textContent || ""), /\.ad-ext-cricket-target\.is-pressure\s*\{/);
+  assert.equal(styleEnsureCalls >= 2, true);
+  assert.equal(warnings.filter((entry) => entry.includes("warn style-contract")).length, 1);
 
   cleanup();
 });

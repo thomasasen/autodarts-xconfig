@@ -101,3 +101,17 @@ A valid result from this skill must:
 Good examples:
 - `build(release): bump to 1.1.12 and rebuild userscript dist`
 - `fix(cricket): correct active-player parity and ship 1.1.12`
+
+Use this commit message structure (required by repository convention):
+- `type(scope): short summary`
+- `why: ...`
+- `what: ...`
+- `how: ...`
+- `validation: ...`
+
+Example:
+- `fix(cricket): harden style contract checks and ship 1.1.56`
+- `why: dimmed inactive board sectors could silently fail when a stale or incomplete style contract was active at runtime.`
+- `what: added fail-soft style self-check, runtime invariant diagnostics, and refreshed release artifact output.`
+- `how: repaired stale style nodes on mount, added invariant warning payloads, and extended runtime regression coverage.`
+- `validation: npm.cmd test && npm.cmd run build && npm.cmd test && npm.cmd run verify`

@@ -538,6 +538,8 @@ export function renderCricketHighlights(options = {}) {
   const documentRef = options.documentRef;
   const visualConfig = options.visualConfig;
   const renderState = options.renderState;
+  const onInvariantWarning =
+    typeof options.onInvariantWarning === "function" ? options.onInvariantWarning : null;
 
   if (!documentRef || !visualConfig || !renderState || !(renderState.stateMap instanceof Map)) {
     return false;
@@ -558,6 +560,7 @@ export function renderCricketHighlights(options = {}) {
       debugStats.inactiveTargetCount = 0;
       debugStats.shapeCountByTarget = {};
       debugStats.shapeCountByPresentation = {};
+      debugStats.invariantWarnings = [];
     }
     return false;
   }
@@ -652,6 +655,29 @@ export function renderCricketHighlights(options = {}) {
     }
   });
 
+  const inactiveRenderedShapeCount = Number(shapeCountByPresentation.inactive) || 0;
+  const hasInactivePresentationInvariantViolation =
+    visualConfig.dimIrrelevantBoardTargets !== false &&
+    inactiveTargetCount > 0 &&
+    inactiveRenderedShapeCount === 0;
+  const invariantWarnings = [];
+
+  if (hasInactivePresentationInvariantViolation) {
+    invariantWarnings.push({
+      type: "inactive-targets-not-rendered",
+      targetOrder: Array.isArray(renderState.targetOrder) ? renderState.targetOrder.slice() : [],
+      inactiveTargetCount,
+      shapeCountByPresentation: { ...shapeCountByPresentation },
+      showOpenObjectives: visualConfig.showOpenObjectives === true,
+      showDeadObjectives: visualConfig.showDeadObjectives !== false,
+      dimIrrelevantBoardTargets: visualConfig.dimIrrelevantBoardTargets !== false,
+    });
+  }
+
+  if (onInvariantWarning && invariantWarnings.length) {
+    invariantWarnings.forEach((entry) => onInvariantWarning(entry));
+  }
+
   if (debugStats) {
     debugStats.renderedShapeCount = renderedShapeCount;
     debugStats.highlightedTargetCount = highlightedTargetCount;
@@ -661,6 +687,7 @@ export function renderCricketHighlights(options = {}) {
     debugStats.inactiveTargetCount = inactiveTargetCount;
     debugStats.shapeCountByTarget = shapeCountByTarget;
     debugStats.shapeCountByPresentation = shapeCountByPresentation;
+    debugStats.invariantWarnings = invariantWarnings;
   }
 
   return true;

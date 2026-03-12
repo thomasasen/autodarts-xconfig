@@ -4,6 +4,7 @@ export const OVERLAY_ID = "ad-ext-cricket-targets";
 export const TARGET_CLASS = "ad-ext-cricket-target";
 export const TARGET_SLOT_CLASS_PREFIX = "ad-ext-cricket-slot-";
 export const PRESSURE_SUPPRESSED_CLASS = "ad-ext-cricket-pressure-muted";
+export const STYLE_CONTRACT_VERSION = "cricket-highlighter-style/v1";
 export const PRESENTATION_CLASS = Object.freeze({
   open: "is-open",
   closed: "is-dead",
@@ -14,6 +15,13 @@ export const PRESENTATION_CLASS = Object.freeze({
   danger: "is-pressure",
   pressure: "is-pressure",
 });
+const STYLE_CONTRACT_SELECTORS = Object.freeze([
+  `.${TARGET_CLASS}.${PRESENTATION_CLASS.open}`,
+  `.${TARGET_CLASS}.${PRESENTATION_CLASS.dead}`,
+  `.${TARGET_CLASS}.${PRESENTATION_CLASS.inactive}`,
+  `.${TARGET_CLASS}.${PRESENTATION_CLASS.scoring}`,
+  `.${TARGET_CLASS}.${PRESENTATION_CLASS.pressure}`,
+]);
 
 const BASE_COLOR = Object.freeze({ r: 90, g: 90, b: 90 });
 const MUTED_COLOR = Object.freeze({ r: 33, g: 33, b: 33 });
@@ -84,6 +92,19 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
     // Runtime aliases for compatibility with legacy callsites/tests.
     showOpenTargets: showOpenObjectives,
     showDeadTargets: showDeadObjectives,
+  };
+}
+
+export function readStyleContractStatus(styleNodeOrCssText) {
+  const cssText =
+    typeof styleNodeOrCssText === "string"
+      ? styleNodeOrCssText
+      : String(styleNodeOrCssText?.textContent || "");
+  const missingSelectors = STYLE_CONTRACT_SELECTORS.filter((selector) => !cssText.includes(selector));
+  return {
+    ok: missingSelectors.length === 0,
+    missingSelectors,
+    version: STYLE_CONTRACT_VERSION,
   };
 }
 

@@ -3,7 +3,14 @@ import {
   clearCricketHighlights,
   renderCricketHighlights,
 } from "./logic.js";
-import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveCricketVisualConfig } from "./style.js";
+import {
+  OVERLAY_ID,
+  STYLE_CONTRACT_VERSION,
+  STYLE_ID,
+  buildStyleText,
+  readStyleContractStatus,
+  resolveCricketVisualConfig,
+} from "./style.js";
 import { CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
@@ -204,6 +211,53 @@ function buildStatusSignature(renderState) {
   return `${renderState?.surfaceStatus || "unknown"}::${renderState?.variantText || "-"}`;
 }
 
+function formatPresentationCounts(counts) {
+  const source = counts && typeof counts === "object" ? counts : {};
+  return ["open", "scoring", "pressure", "dead", "inactive"]
+    .map((key) => `${key}:${Number(source[key]) || 0}`)
+    .join(",");
+}
+
+function buildVisualDebugContext(visualConfig, styleContractState) {
+  return [
+    `dim=${visualConfig?.dimIrrelevantBoardTargets !== false ? "on" : "off"}`,
+    `showOpen=${visualConfig?.showOpenObjectives === true ? "on" : "off"}`,
+    `showDead=${visualConfig?.showDeadObjectives !== false ? "on" : "off"}`,
+    `styleContractOk=${styleContractState?.ok ? "true" : "false"}`,
+    `styleContractVersion="${styleContractState?.version || STYLE_CONTRACT_VERSION}"`,
+  ].join(" ");
+}
+
+function ensureStyleContract({ domGuards, debugState }) {
+  const cssText = buildStyleText();
+  let styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
+  const initialStatus = readStyleContractStatus(styleNode);
+  let finalStatus = initialStatus;
+  let repaired = false;
+
+  if (!initialStatus.ok) {
+    repaired = true;
+    domGuards.removeNodeById(STYLE_ID);
+    styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
+    finalStatus = readStyleContractStatus(styleNode);
+
+    const missingBefore = initialStatus.missingSelectors.join(",");
+    const missingAfter = finalStatus.missingSelectors.join(",");
+    emitDebugWarning(
+      debugState,
+      `style-contract::${STYLE_CONTRACT_VERSION}::${missingBefore || "none"}::${missingAfter || "none"}`,
+      `warn style-contract version="${STYLE_CONTRACT_VERSION}" missingBefore="${missingBefore || "-"}" missingAfter="${missingAfter || "-"}" repaired="${finalStatus.ok ? "ok" : "failed"}"`
+    );
+  }
+
+  return {
+    ok: finalStatus.ok,
+    version: finalStatus.version || STYLE_CONTRACT_VERSION,
+    missingSelectors: finalStatus.missingSelectors,
+    repaired,
+  };
+}
+
 export function initializeCricketHighlighter(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -233,11 +287,11 @@ export function initializeCricketHighlighter(context = {}) {
       };
   const visualConfig = resolveCricketVisualConfig(featureConfig);
 
-  domGuards.ensureStyle(STYLE_ID, buildStyleText());
-
   let lastTransitionSignature = "";
   let lastStatusSignature = "";
   const debugState = createDebugState(featureDebug);
+  const styleContractState = ensureStyleContract({ domGuards, debugState });
+  const visualDebugContext = buildVisualDebugContext(visualConfig, styleContractState);
   const renderCache = {
     grid: null,
     board: null,
@@ -284,7 +338,7 @@ export function initializeCricketHighlighter(context = {}) {
       emitDebugLog(
         debugState,
         statusSignature,
-        `state paused route variant="${variantText || "-"}"`
+        `state paused route variant="${variantText || "-"}" ${visualDebugContext}`
       );
       return;
     }
@@ -298,7 +352,7 @@ export function initializeCricketHighlighter(context = {}) {
       emitDebugLog(
         debugState,
         statusSignature,
-        `state inactive variant="${variantText || "-"}"`
+        `state inactive variant="${variantText || "-"}" ${visualDebugContext}`
       );
       return;
     }
@@ -312,7 +366,7 @@ export function initializeCricketHighlighter(context = {}) {
       emitDebugWarning(
         debugState,
         statusSignature,
-        `warn kein Grid variant="${variantText || "-"}"`
+        `warn kein Grid variant="${variantText || "-"}" ${visualDebugContext}`
       );
       return;
     }
@@ -326,7 +380,7 @@ export function initializeCricketHighlighter(context = {}) {
       emitDebugWarning(
         debugState,
         statusSignature,
-        `warn kein Board variant="${variantText || "-"}"`
+        `warn kein Board variant="${variantText || "-"}" ${visualDebugContext}`
       );
       return;
     }
@@ -350,6 +404,27 @@ export function initializeCricketHighlighter(context = {}) {
       renderState,
       cache: renderCache,
       debugStats,
+      onInvariantWarning: (warning) => {
+        const presentationCounts = formatPresentationCounts(warning?.shapeCountByPresentation);
+        const targetOrder = Array.isArray(warning?.targetOrder) ? warning.targetOrder.join(",") : "";
+        const signatureParts = [
+          "invariant",
+          warning?.type || "unknown",
+          Number(warning?.inactiveTargetCount) || 0,
+          presentationCounts,
+          warning?.dimIrrelevantBoardTargets === false ? 0 : 1,
+          warning?.showOpenObjectives === true ? 1 : 0,
+          warning?.showDeadObjectives === false ? 0 : 1,
+          targetOrder,
+          styleContractState.ok ? 1 : 0,
+          styleContractState.version || STYLE_CONTRACT_VERSION,
+        ];
+        emitDebugWarning(
+          debugState,
+          signatureParts.join("::"),
+          `warn invariant type="${warning?.type || "unknown"}" inactiveTargets=${Number(warning?.inactiveTargetCount) || 0} presentationCounts="${presentationCounts}" targetOrder="${targetOrder || "-"}" dim=${warning?.dimIrrelevantBoardTargets === false ? "off" : "on"} showOpen=${warning?.showOpenObjectives === true ? "on" : "off"} showDead=${warning?.showDeadObjectives === false ? "off" : "on"} ${visualDebugContext}`
+        );
+      },
     });
 
     if (!rendered) {
@@ -357,11 +432,12 @@ export function initializeCricketHighlighter(context = {}) {
       emitDebugWarning(
         debugState,
         `${signature}::render-failed`,
-        `warn render fehlgeschlagen variant="${variantText || "-"}"`
+        `warn render fehlgeschlagen variant="${variantText || "-"}" ${visualDebugContext}`
       );
       return;
     }
 
+    const presentationCounts = formatPresentationCounts(debugStats.shapeCountByPresentation);
     lastTransitionSignature = signature;
     const logSignature = [
       signature,
@@ -369,6 +445,13 @@ export function initializeCricketHighlighter(context = {}) {
       debugStats.nonOpenTargetCount || 0,
       debugStats.openTargetCount || 0,
       debugStats.renderedOpenTargetCount || 0,
+      debugStats.inactiveTargetCount || 0,
+      presentationCounts,
+      visualConfig.dimIrrelevantBoardTargets === false ? 0 : 1,
+      visualConfig.showOpenObjectives === true ? 1 : 0,
+      visualConfig.showDeadObjectives === false ? 0 : 1,
+      styleContractState.ok ? 1 : 0,
+      styleContractState.version || STYLE_CONTRACT_VERSION,
       renderState?.activeThrowPreviewDebug?.applied ? 1 : 0,
       renderState?.activeThrowPreviewDebug?.suppressionReason || "none",
     ].join("::");
@@ -376,7 +459,7 @@ export function initializeCricketHighlighter(context = {}) {
     emitDebugLog(
       debugState,
       logSignature,
-      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" shapes=${Number(debugStats.renderedShapeCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0} activePreview=${renderState?.activeThrowPreviewDebug?.applied ? "on" : "off"} reason="${renderState?.activeThrowPreviewDebug?.suppressionReason || "none"}" labels="${(renderState?.activeThrowPreviewDebug?.labels || []).join(",")}"`
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" shapes=${Number(debugStats.renderedShapeCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0} inactiveTargets=${Number(debugStats.inactiveTargetCount) || 0} presentationCounts="${presentationCounts}" activePreview=${renderState?.activeThrowPreviewDebug?.applied ? "on" : "off"} reason="${renderState?.activeThrowPreviewDebug?.suppressionReason || "none"}" labels="${(renderState?.activeThrowPreviewDebug?.labels || []).join(",")}" ${visualDebugContext}`
     );
   }
 

@@ -947,6 +947,7 @@ test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enab
   };
 
   const debugStats = {};
+  const invariantWarnings = [];
   const rendered = renderCricketHighlights({
     documentRef,
     renderState,
@@ -959,6 +960,9 @@ test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enab
     }),
     cache: {},
     debugStats,
+    onInvariantWarning(entry) {
+      invariantWarnings.push(entry);
+    },
   });
   assert.equal(rendered, true);
 
@@ -999,6 +1003,7 @@ test("cricket board dims inactive sectors when dimIrrelevantBoardTargets is enab
     true
   );
   assert.equal((debugStats.shapeCountByPresentation?.inactive || 0) > 0, true);
+  assert.equal(invariantWarnings.length, 0);
 });
 
 test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enabled", () => {
@@ -1030,6 +1035,7 @@ test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enab
   };
 
   const debugStats = {};
+  const invariantWarnings = [];
   const rendered = renderCricketHighlights({
     documentRef,
     renderState,
@@ -1042,6 +1048,9 @@ test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enab
     }),
     cache: {},
     debugStats,
+    onInvariantWarning(entry) {
+      invariantWarnings.push(entry);
+    },
   });
   assert.equal(rendered, true);
 
@@ -1087,6 +1096,84 @@ test("tactics board dims inactive sectors when dimIrrelevantBoardTargets is enab
     true
   );
   assert.equal((debugStats.shapeCountByPresentation?.inactive || 0) > 0, true);
+  assert.equal(invariantWarnings.length, 0);
+});
+
+test("cricket board emits invariant warning when dimming is enabled but inactive shapes cannot be rendered", () => {
+  const documentRef = new FakeDocument();
+  createBoard(documentRef);
+
+  const renderState = {
+    targetOrder: ["20"],
+    stateMap: new Map([
+      [
+        "20",
+        {
+          label: "20",
+          boardPresentation: "scoring",
+          presentation: "scoring",
+          isHighlightActive: true,
+        },
+      ],
+    ]),
+  };
+
+  const visualConfig = resolveCricketVisualConfig({
+    showOpenTargets: false,
+    showDeadTargets: true,
+    dimIrrelevantBoardTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const boardGroup =
+    documentRef.querySelector("svg g") ||
+    documentRef.querySelector(".ad-ext-theme-board-svg g") ||
+    null;
+  assert.ok(boardGroup);
+  const overlay = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  overlay.id = OVERLAY_ID;
+  boardGroup.appendChild(overlay);
+
+  const scoringShape = documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  scoringShape.dataset.targetSlot = "single-inner";
+  overlay.appendChild(scoringShape);
+
+  const boardTargets = [...Array.from({ length: 20 }, (_value, index) => String(index + 1)), "BULL"];
+  const geometryKey = [
+    Number(500).toFixed(2),
+    Number(visualConfig.edgePaddingPx || 0).toFixed(2),
+    boardTargets.join(","),
+  ].join("|");
+  const cache = {
+    overlayShapeState: {
+      overlay,
+      geometryKey,
+      shapesByTarget: new Map([["20", [scoringShape]]]),
+    },
+  };
+
+  const debugStats = {};
+  const invariantWarnings = [];
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig,
+    cache,
+    debugStats,
+    onInvariantWarning(entry) {
+      invariantWarnings.push(entry);
+    },
+  });
+  assert.equal(rendered, true);
+  assert.equal(invariantWarnings.length, 1);
+  assert.equal(invariantWarnings[0]?.type, "inactive-targets-not-rendered");
+  assert.equal(invariantWarnings[0]?.inactiveTargetCount > 0, true);
+  assert.equal(invariantWarnings[0]?.shapeCountByPresentation?.inactive || 0, 0);
+  assert.equal(invariantWarnings[0]?.dimIrrelevantBoardTargets, true);
+  assert.equal(invariantWarnings[0]?.showOpenObjectives, false);
+  assert.equal(invariantWarnings[0]?.showDeadObjectives, true);
+  assert.equal((debugStats.invariantWarnings || []).length, 1);
 });
 
 test("cricket board hides inactive sectors when dimIrrelevantBoardTargets is disabled", () => {
