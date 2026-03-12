@@ -55,6 +55,11 @@ div.ad-ext-player.ad-ext-player-active p.chakra-text.css-11cuipc {
 div.css-y3hfdd{
   gap: 0px !important;
 }
+
+div.ad-ext-player.ad-ext-player-active div.css-y3hfdd {
+  grid-template-rows: max-content max-content !important;
+  align-content: center !important;
+}
 `;
 
   const navigationOverride = `

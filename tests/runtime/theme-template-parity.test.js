@@ -37,6 +37,10 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
     css,
     /ad-ext-avg-trend-arrow\.ad-ext-avg-trend-up\s*\{[^}]*border-bottom:\s*calc\(23px \* var\(--ad-ext-stat-scale\)\)\s*solid\s*#9fdb58;/s
   );
+  assert.match(
+    css,
+    /div\.ad-ext-player\.ad-ext-player-active\s+div\.css-y3hfdd\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
+  );
   assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
   assertNoFragileLayoutSelectors(css);
 });
