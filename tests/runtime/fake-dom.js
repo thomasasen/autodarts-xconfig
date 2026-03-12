@@ -637,7 +637,7 @@ function createSidebarLink(documentRef, href, label) {
 }
 
 class FakeDocument extends FakeEventTarget {
-  constructor() {
+  constructor(options = {}) {
     super();
 
     this.nodeType = 9;
@@ -680,7 +680,8 @@ class FakeDocument extends FakeEventTarget {
       this.sidebar.appendChild(createSidebarLink(this, href, label));
     });
 
-    this.main = new FakeElement("main");
+    const contentTagName = String(options.contentTagName || "main").trim() || "main";
+    this.main = new FakeElement(contentTagName);
     this.main.ownerDocument = this;
     this.main.__rect = { width: 1280, height: 720 };
 

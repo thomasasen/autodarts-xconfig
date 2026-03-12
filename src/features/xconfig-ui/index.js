@@ -302,7 +302,23 @@ function getSidebarElement(windowRef, documentRef) {
   return bestScore >= 12 ? best : null;
 }
 
-function getContentElement(documentRef) {
+function isNavigationElement(node) {
+  if (!node) {
+    return false;
+  }
+
+  if (node.classList?.contains("navigation")) {
+    return true;
+  }
+
+  if (node.matches?.("nav") || node.getAttribute?.("role") === "navigation") {
+    return true;
+  }
+
+  return false;
+}
+
+function getContentElement(windowRef, documentRef, sidebarElement) {
   const root = documentRef?.getElementById?.("root");
   if (!root) {
     return null;
@@ -313,8 +329,15 @@ function getContentElement(documentRef) {
     return main;
   }
 
+  const sidebar = sidebarElement || getSidebarElement(windowRef, documentRef);
+  const siblingCandidates = Array.from(sidebar?.parentNode?.children || []).filter((child) => child !== sidebar);
+  const contentSibling = siblingCandidates.find((child) => !isNavigationElement(child)) || null;
+  if (contentSibling) {
+    return contentSibling;
+  }
+
   const directChildren = Array.from(root.children || []);
-  return directChildren.find((child) => !child.matches?.("nav") && !child.classList?.contains("navigation")) || null;
+  return directChildren.find((child) => !isNavigationElement(child)) || null;
 }
 
 function removeNodeById(documentRef, nodeId) {
@@ -1005,7 +1028,7 @@ function ensureXConfigShell(options = {}) {
 
   function hideContent(content, host) {
     Array.from(content?.children || []).forEach((child) => {
-      if (child === host) {
+      if (child === host || isNavigationElement(child)) {
         return;
       }
 
@@ -1103,7 +1126,8 @@ function ensureXConfigShell(options = {}) {
   }
 
   function ensurePanelHost() {
-    const content = getContentElement(documentRef);
+    const sidebar = getSidebarElement(windowRef, documentRef);
+    const content = getContentElement(windowRef, documentRef, sidebar);
     if (!content) {
       return null;
     }
@@ -1198,7 +1222,8 @@ function ensureXConfigShell(options = {}) {
   }
 
   function syncVisibility() {
-    const content = getContentElement(documentRef);
+    const sidebar = getSidebarElement(windowRef, documentRef);
+    const content = getContentElement(windowRef, documentRef, sidebar);
     const host = ensurePanelHost();
 
     if (!content || !host) {

@@ -74,6 +74,44 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   runtime.stop();
 });
 
+test("xConfig shell keeps sidebar visible when layout has no main element", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument({ contentTagName: "div" });
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  await wait(5);
+
+  const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
+  assert.ok(menuButton);
+
+  menuButton.click();
+  await wait(5);
+
+  assert.equal(windowRef.location.pathname, "/ad-xconfig");
+
+  const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+  assert.ok(panelHost);
+  assert.equal(panelHost.parentNode, documentRef.main);
+  assert.equal(panelHost.style.display, "block");
+  assert.notEqual(documentRef.sidebar.style.display, "none");
+  assert.notEqual(documentRef.main.style.display, "none");
+  assert.equal(documentRef.variantElement.style.display, "none");
+
+  const closeButton = documentRef.querySelector("[data-adxconfig-action='close']");
+  assert.ok(closeButton);
+  closeButton.click();
+  await wait(5);
+
+  assert.equal(windowRef.location.pathname, "/lobbies");
+  assert.equal(panelHost.style.display, "none");
+  assert.notEqual(documentRef.sidebar.style.display, "none");
+  assert.notEqual(documentRef.main.style.display, "none");
+  assert.equal(documentRef.variantElement.style.display, "");
+
+  runtime.stop();
+});
+
 test("xConfig shell does not hijack external links that accidentally reuse xConfig action attributes", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
