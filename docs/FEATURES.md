@@ -382,14 +382,28 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
 ### Triple/Double/Bull Hits
 
 - Gilt für: `alle Modi`
-- Kurz: Treffer wie `T20`, `D16` oder `BULL` springen in der Wurfliste schneller ins Auge.
-- Grafisch: Die betroffenen Einträge in der Wurfliste erhalten eine zusätzliche Hervorhebung, sobald das Modul sie erkennt. So lassen sich starke Treffer in schnellen Legs leichter nachverfolgen.
-- `Triple hervorheben`: Schaltet die Hervorhebung für Triple-Treffer ein oder aus.
-- `Double hervorheben`: Schaltet die Hervorhebung für Double-Treffer ein oder aus.
-- `Bull hervorheben`: Schaltet die Hervorhebung für Bull-Treffer ein oder aus.
-- `Aktualisierungsmodus`: Wechselt zwischen reiner Live-Reaktion und zusätzlichem 3-Sekunden-Fallback.
-  - `Nur live`: Mit dieser Einstellung arbeitet das Modul ausschließlich eventbasiert und nutzt keinen zusätzlichen Polling-Intervall. Das ist ressourcenschonender, kann aber in problematischen Umgebungen robuster auf den 3000-ms-Fallback verzichten.
-  - `Kompatibel`: Diese Einstellung ergänzt die normale Live-Reaktion um einen 3000-ms-Fallback-Scan. Das erhöht die Robustheit in schwierigen DOM-Umgebungen, kann aber Reaktionen geringfügig verzögert nachziehen.
+- Kurz: Treffer wie `T20`, `D16`, `25` und `BULL` springen in der Wurfliste deutlich schneller ins Auge.
+- Grafisch: Die betroffenen Wurffelder erhalten einen konfigurierbaren Farbbalken mit Trefferanimation. `25` (Single Bull) wird bewusst ruhiger markiert, `BULL` (Bullseye) sichtbar stärker.
+- `Farbstil`: Wählt die Farbpalette der Treffer-Highlights.
+  - `Ember Rush`: Diese Palette legt den Fokus auf warme Orange-Rot-Gold-Töne und wirkt wie ein heißer Broadcast-Akzent.
+  - `Ice Circuit`: Diese Palette setzt auf kühle Cyan-Blau-Töne mit technischer Wirkung.
+  - `Volt Lime`: Diese Palette verwendet Neon-Lime-Töne und liefert die höchste Signalwirkung.
+  - `Crimson Steel`: Diese Palette kombiniert kräftiges Rot mit dunkleren Stahlakzenten.
+  - `Arctic Mint`: Diese Palette setzt auf arktische Mint- und Türkistöne mit ruhigerem Charakter.
+  - `Champagne Night`: Diese Palette färbt Highlights in Gold- und Elfenbein-Töne mit elegantem Look.
+- `Animationsstil`: Wählt die Bewegungsart des Treffer-Impulses.
+  - `Impact Pop`: Dieser Stil nutzt einen kurzen Pop-Impuls für einen direkten Trefferakzent.
+  - `Shockwave`: Dieser Stil arbeitet mit einer kurzen Shockwave-artigen Wellenbewegung.
+  - `Sweep Shine`: Dieser Stil setzt auf einen schnellen Shine-Sweep über die Trefferfläche.
+  - `Neon Pulse`: Dieser Stil betont Treffer über einen neonartigen Glow-Pulse.
+  - `Snap Bounce`: Dieser Stil kombiniert Snap und Bounce für einen sportlichen Trefferimpuls.
+  - `Card Slam`: Dieser Stil nutzt einen kurzen Card-Slam für harte Trefferwirkung.
+  - `Signal Blink`: Dieser Stil verwendet einen kurzen Signal-Blink als Trefferhinweis.
+  - `Stagger Wave`: Dieser Stil nutzt eine versetzte Wave-Bewegung für dynamische Treffer.
+  - `Flip Edge`: Dieser Stil ergänzt den Treffer um einen kleinen Flip-Edge-Impuls.
+  - `Outline Trace`: Dieser Stil betont Treffer über einen kurzen Outline-Trace.
+  - `Charge Release`: Dieser Stil kombiniert kurze Aufladung mit sichtbarer Entladung.
+  - `Alternate Flick`: Dieser Stil setzt auf einen kurzen Alternate-Flick-Impuls.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Triple Double Bull Hits](screenshots/animation-triple-double-bull-hits.gif)

@@ -241,10 +241,9 @@ function importTurnStartSweep(legacyFeatureState) {
 function importTripleDoubleBullHits(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
   return buildFeatureImport("tripleDoubleBullHits", legacyFeatureState, {
-    highlightTriple: readLegacySetting(settings, "TRIPLE_HERVORHEBEN", true),
-    highlightDouble: readLegacySetting(settings, "DOUBLE_HERVORHEBEN", true),
-    highlightBull: readLegacySetting(settings, "BULL_HERVORHEBEN", true),
-    pollIntervalMs: readLegacySetting(settings, "AKTUALISIERUNGSMODUS", 3000),
+    // Hard-reset migration: legacy hit toggles/polling are intentionally ignored in v2.
+    colorTheme: "volt-lime",
+    animationStyle: "neon-pulse",
     debug: readLegacySetting(settings, "DEBUG", false),
   });
 }

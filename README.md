@@ -459,18 +459,32 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Triple/Double/Bull Hits
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer wie `T20`, `D16` oder `BULL` springen in der Wurfliste schneller ins Auge.
-- Grafisch: Die betroffenen Einträge in der Wurfliste erhalten eine zusätzliche Hervorhebung, sobald das Modul sie erkennt. So lassen sich starke Treffer in schnellen Legs leichter nachverfolgen.
-- Wann sinnvoll? Für Training, Checkout-Fokus und mehr Lesbarkeit in schnellen Legs.
+- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` springen in der Wurfliste deutlich schneller ins Auge.
+- Grafisch: Die betroffenen Wurffelder erhalten einen konfigurierbaren Farbbalken mit Trefferanimation. `25` (Single Bull) wird bewusst ruhiger markiert, `BULL` (Bullseye) sichtbar stärker.
+- Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort auffallen sollen, ohne viele Einzelschalter zu pflegen.
 
 **Einstellungen einfach erklärt**
 
-- `Triple hervorheben`: Bestimmt, ob Einträge wie `T20` oder andere Triple-Treffer in der Wurfliste gesondert hervorgehoben werden.
-- `Double hervorheben`: Bestimmt, ob Double-Einträge wie `D16` oder `D20` in der Wurfliste gesondert hervorgehoben werden.
-- `Bull hervorheben`: Bestimmt, ob `BULL`-Treffer in der Wurfliste zusätzlich markiert werden.
-- `Aktualisierungsmodus`: `Nur live` reagiert ausschließlich auf erkannte DOM- und State-Updates. `Kompatibel` ergänzt dazu einen Polling-Fallback alle 3000 ms, falls der Live-Trigger in bestimmten Umgebungen nicht zuverlässig genug feuert.
-  - `Nur live`: Das Modul reagiert ausschließlich auf erkannte DOM- und State-Updates. Das ist schlanker, setzt aber voraus, dass diese Trigger sauber ankommen.
-  - `Kompatibel`: Zusätzlich zu Live-Triggern läuft regelmäßig ein Polling-Fallback. Dadurch werden Treffer auch dann eher nachgezogen, wenn Live-Updates einmal fehlen.
+- `Farbstil`: Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer markiert werden. Die Trefferlogik bleibt gleich, nur die visuelle Tonalität wechselt.
+  - `Ember Rush`: Die Treffer-Highlights wirken wie glühende Ember-Farben mit hohem Kontrast. Das ist warm, energisch und in schnellen Legs sehr auffällig.
+  - `Ice Circuit`: Treffer erscheinen in klaren Eis- und Circuit-Farben. Das wirkt technisch, sauber und ruhig, bleibt aber gut sichtbar.
+  - `Volt Lime`: Die Highlights leuchten grün-gelb und ziehen den Blick sofort an. Das ist die aggressivste Farbvariante für hohe Sichtbarkeit.
+  - `Crimson Steel`: Treffer wirken härter und sportlicher mit tieferen Rotwerten und kühleren dunklen Gegentönen. Das ist markant ohne Neon-Look.
+  - `Arctic Mint`: Die Highlights wirken frisch und luftig mit kühler Mint-Tonalität. Das ist klar sichtbar, aber entspannter als Neon.
+  - `Champagne Night`: Treffer erhalten eine edlere, warme Nachtwirkung mit champagnerähnlichem Glow. Das wirkt premium statt knallig.
+- `Animationsstil`: Bestimmt, welche Einblend- und Impulsbewegung bei neu erkannten Treffern abgespielt wird. Die Treffererkennung bleibt unverändert, nur der Bewegungscharakter wechselt.
+  - `Impact Pop`: Das Wurffeld skaliert knapp nach vorne und fällt sauber zurück. Ein direkter Standardeffekt mit klarer Trefferwirkung.
+  - `Shockwave`: Der Treffer sendet einen sichtbaren Wellenimpuls durch das Feld. Das wirkt energischer als ein einfacher Pop.
+  - `Sweep Shine`: Ein heller Sweep läuft kurz über den Trefferbereich und verschwindet wieder. Das wirkt TV-artig und sauber.
+  - `Neon Pulse`: Die Highlight-Fläche pulsiert mit kräftigem Glow und fällt dann weich zurück. Das ist lebendig, ohne hektisch zu wirken.
+  - `Snap Bounce`: Das Feld springt kurz an und federt präzise zurück. Die Bewegung wirkt sportlich und rhythmisch.
+  - `Card Slam`: Die Trefferkarte wirkt wie ein schneller, kontrollierter Einschlag. Das erzeugt klaren Impact ohne Dauerbewegung.
+  - `Signal Blink`: Der Treffer blinkt kontrolliert an und aus, ohne die Karte dauerhaft zu überlagern. Das ist klar und kompakt.
+  - `Stagger Wave`: Treffer werden mit einer kurzen Wellenbewegung inklusive kleiner Verzögerung animiert. Das wirkt lebendig und modern.
+  - `Flip Edge`: Die Trefferkarte kippt minimal an der Kante und stabilisiert sich sofort. Dadurch wirkt der Treffer räumlicher.
+  - `Outline Trace`: Die Umrandung wird kurz sichtbar nachgezogen und blendet wieder aus. Das wirkt präzise und grafisch klar.
+  - `Charge Release`: Die Fläche baut in einem Moment Spannung auf und löst sie als Lichtimpuls. Das wirkt dramatischer als Standard-Pulse.
+  - `Alternate Flick`: Der Treffer erhält eine kurze alternierende Bewegung, die sofort zur Ruhe kommt. Das ist lebhaft, aber kompakt.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Triple Double Bull Hits](docs/screenshots/animation-triple-double-bull-hits.gif)

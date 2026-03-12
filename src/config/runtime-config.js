@@ -25,7 +25,28 @@ const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
 const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
 const TURN_START_SWEEP_DURATIONS = new Set([300, 420, 620]);
 const TURN_START_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
-const TRIPLE_DOUBLE_BULL_POLL_INTERVALS = new Set([0, 3000]);
+const TRIPLE_DOUBLE_BULL_COLOR_THEMES = new Set([
+  "ember-rush",
+  "ice-circuit",
+  "volt-lime",
+  "crimson-steel",
+  "arctic-mint",
+  "champagne-night",
+]);
+const TRIPLE_DOUBLE_BULL_ANIMATION_STYLES = new Set([
+  "impact-pop",
+  "shockwave",
+  "sweep-shine",
+  "neon-pulse",
+  "snap-bounce",
+  "card-slam",
+  "signal-blink",
+  "stagger-wave",
+  "flip-edge",
+  "outline-trace",
+  "charge-release",
+  "alternate-flick",
+]);
 const CRICKET_HIGHLIGHT_THEMES = new Set(["standard", "high-contrast"]);
 const CRICKET_HIGHLIGHT_INTENSITIES = new Set(["subtle", "normal", "strong"]);
 const CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES = new Set(["off", "smoke", "hatch", "mask"]);
@@ -320,13 +341,15 @@ function normalizeTurnStartSweepConfig(rawConfig = {}) {
 function normalizeTripleDoubleBullHitsConfig(rawConfig = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
-    highlightTriple: normalizeBoolean(rawConfig.highlightTriple, true),
-    highlightDouble: normalizeBoolean(rawConfig.highlightDouble, true),
-    highlightBull: normalizeBoolean(rawConfig.highlightBull, true),
-    pollIntervalMs: normalizeNumberChoice(
-      rawConfig.pollIntervalMs,
-      3000,
-      TRIPLE_DOUBLE_BULL_POLL_INTERVALS
+    colorTheme: normalizeStringChoice(
+      rawConfig.colorTheme,
+      "volt-lime",
+      TRIPLE_DOUBLE_BULL_COLOR_THEMES
+    ),
+    animationStyle: normalizeStringChoice(
+      rawConfig.animationStyle,
+      "neon-pulse",
+      TRIPLE_DOUBLE_BULL_ANIMATION_STYLES
     ),
     debug: normalizeBoolean(rawConfig.debug, false),
   };

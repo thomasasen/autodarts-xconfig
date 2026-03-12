@@ -208,10 +208,8 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
     windowRef,
     documentRef,
     config: createSingleFeatureConfig("tripleDoubleBullHits", {
-      highlightTriple: true,
-      highlightDouble: true,
-      highlightBull: true,
-      pollIntervalMs: 0,
+      colorTheme: "volt-lime",
+      animationStyle: "neon-pulse",
     }),
   });
 
@@ -222,14 +220,14 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
   assert.equal(Boolean(documentRef.getElementById("ad-ext-triple-double-bull-hits-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(
-    documentRef.throwTextElement.classList.contains("ad-ext-hit-highlight--triple"),
+    documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"),
     true
   );
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-triple-double-bull-hits-style")), false);
   assert.equal(
-    documentRef.throwTextElement.classList.contains("ad-ext-hit-highlight--triple"),
+    documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"),
     false
   );
   assert.equal(runtime.context.registries.observers.size(), 0);

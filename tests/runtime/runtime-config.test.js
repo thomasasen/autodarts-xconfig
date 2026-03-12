@@ -44,6 +44,8 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.bermuda"], false);
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
+  assert.equal(config.features.tripleDoubleBullHits.colorTheme, "volt-lime");
+  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "neon-pulse");
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
   assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "smoke");
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
@@ -74,10 +76,8 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         sweepStyle: "STRONG",
       },
       tripleDoubleBullHits: {
-        highlightTriple: "false",
-        highlightDouble: "true",
-        highlightBull: "1",
-        pollIntervalMs: "0",
+        colorTheme: "EMBER-RUSH",
+        animationStyle: "CHARGE-RELEASE",
       },
       cricketHighlighter: {
         showOpenTargets: "false",
@@ -182,10 +182,11 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("averageTrendArrow").size, "gross");
   assert.equal(runtimeConfig.getFeatureConfig("turnStartSweep").durationMs, 620);
   assert.equal(runtimeConfig.getFeatureConfig("turnStartSweep").sweepStyle, "strong");
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").highlightTriple, false);
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").highlightDouble, true);
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").highlightBull, true);
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").pollIntervalMs, 0);
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "ember-rush");
+  assert.equal(
+    runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
+    "charge-release"
+  );
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenObjectives, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadObjectives, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "mask");
@@ -264,6 +265,20 @@ test("normalized feature configs expose a boolean debug flag for every registere
       `missing debug boolean for ${definition.configKey}`
     );
   });
+});
+
+test("triple-double-bull-hits falls back to defaults for invalid theme/style values", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      tripleDoubleBullHits: {
+        colorTheme: "invalid-theme",
+        animationStyle: "invalid-animation",
+      },
+    },
+  });
+
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "volt-lime");
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "neon-pulse");
 });
 
 test("cricket highlighter dim style supports enum values and legacy boolean mapping", () => {

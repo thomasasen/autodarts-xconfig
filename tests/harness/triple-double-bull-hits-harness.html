@@ -36,7 +36,8 @@
     <div class="ad-ext-turn-throw"><p class="chakra-text" id="throw-1">T20</p></div>
     <div class="ad-ext-turn-throw"><p class="chakra-text" id="throw-2">D16</p></div>
     <div class="ad-ext-turn-throw"><p class="chakra-text" id="throw-3">BULL</p></div>
-    <div class="ad-ext-turn-throw"><p class="chakra-text" id="throw-4">S20</p></div>
+    <div class="ad-ext-turn-throw"><p class="chakra-text" id="throw-4">25</p></div>
+    <div class="ad-ext-turn-throw"><p class="chakra-text" id="throw-5">S20</p></div>
 
     <script type="module">
       import { createDomGuards } from "../../src/core/dom-guards.js";
@@ -55,6 +56,12 @@
       const throw2 = document.getElementById("throw-2");
       const throw3 = document.getElementById("throw-3");
       const throw4 = document.getElementById("throw-4");
+      const throw5 = document.getElementById("throw-5");
+      const throwRow1 = throw1.closest(".ad-ext-turn-throw");
+      const throwRow2 = throw2.closest(".ad-ext-turn-throw");
+      const throwRow3 = throw3.closest(".ad-ext-turn-throw");
+      const throwRow4 = throw4.closest(".ad-ext-turn-throw");
+      const throwRow5 = throw5.closest(".ad-ext-turn-throw");
       const subscribers = new Set();
 
       const gameState = {
@@ -89,10 +96,8 @@
           getFeatureConfig() {
             return {
               enabled: true,
-              highlightTriple: true,
-              highlightDouble: true,
-              highlightBull: true,
-              pollIntervalMs: 0,
+              colorTheme: "volt-lime",
+              animationStyle: "neon-pulse",
             };
           },
         },
@@ -136,22 +141,24 @@
         await wait();
 
         assert(Boolean(document.getElementById(STYLE_ID)), "Style wurde injiziert");
-        assert(throw1.classList.contains(HIT_KIND_CLASS.triple), "Triple wird markiert");
-        assert(throw2.classList.contains(HIT_KIND_CLASS.double), "Double wird markiert");
-        assert(throw3.classList.contains(HIT_KIND_CLASS.bull), "Bull wird markiert");
+        assert(throwRow1.classList.contains(HIT_KIND_CLASS.triple), "Triple wird markiert");
+        assert(throwRow2.classList.contains(HIT_KIND_CLASS.double), "Double wird markiert");
+        assert(throwRow3.classList.contains(HIT_KIND_CLASS.bullInner), "Bullseye wird markiert");
+        assert(throwRow4.classList.contains(HIT_KIND_CLASS.bullOuter), "Single Bull wird markiert");
         assert(
-          !throw4.classList.contains(HIT_KIND_CLASS.triple) &&
-            !throw4.classList.contains(HIT_KIND_CLASS.double) &&
-            !throw4.classList.contains(HIT_KIND_CLASS.bull),
+          !throwRow5.classList.contains(HIT_KIND_CLASS.triple) &&
+            !throwRow5.classList.contains(HIT_KIND_CLASS.double) &&
+            !throwRow5.classList.contains(HIT_KIND_CLASS.bullOuter) &&
+            !throwRow5.classList.contains(HIT_KIND_CLASS.bullInner),
           "Single wird nicht markiert"
         );
 
         cleanup();
         await wait();
         assert(!document.getElementById(STYLE_ID), "Style wurde bei Cleanup entfernt");
-        assert(!throw1.classList.contains(HIT_KIND_CLASS.triple), "Triple Klasse bereinigt");
-        assert(!throw2.classList.contains(HIT_KIND_CLASS.double), "Double Klasse bereinigt");
-        assert(!throw3.classList.contains(HIT_KIND_CLASS.bull), "Bull Klasse bereinigt");
+        assert(!throwRow1.classList.contains(HIT_KIND_CLASS.triple), "Triple Klasse bereinigt");
+        assert(!throwRow2.classList.contains(HIT_KIND_CLASS.double), "Double Klasse bereinigt");
+        assert(!throwRow3.classList.contains(HIT_KIND_CLASS.bullInner), "Bull Klasse bereinigt");
 
         const passed = results.filter((entry) => entry.pass).length;
         summaryNode.textContent = `${passed}/${results.length} Checks erfolgreich`;

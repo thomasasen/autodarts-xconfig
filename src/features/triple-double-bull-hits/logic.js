@@ -1,121 +1,268 @@
-import { HIT_BASE_CLASS, HIT_KIND_CLASS } from "./style.js";
+import {
+  HIT_ANIMATION_CLASS,
+  HIT_ANIMATION_TRIGGER_CLASS,
+  HIT_BASE_CLASS,
+  HIT_KIND_CLASS,
+  HIT_THEME_CLASS,
+} from "./style.js";
 
-const THROW_TEXT_SELECTORS = Object.freeze([
-  ".ad-ext-turn-throw p.chakra-text",
-  ".ad-ext-turn-throw p",
-  ".ad-ext-turn-throw",
-]);
+const THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
+const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
+const SUPPORTED_ANIMATION_STYLE = new Set(Object.keys(HIT_ANIMATION_CLASS));
+const KIND_CLASS_NAMES = Object.values(HIT_KIND_CLASS);
+const THEME_CLASS_NAMES = Object.values(HIT_THEME_CLASS);
+const ANIMATION_CLASS_NAMES = Object.values(HIT_ANIMATION_CLASS);
 
-const HIT_KIND_TO_CONFIG_KEY = Object.freeze({
-  triple: "highlightTriple",
-  double: "highlightDouble",
-  bull: "highlightBull",
-});
+const INNER_BULL_PATTERN = /(BULLSEYE|BULL|DB|D\s*25|D25)/i;
+const OUTER_BULL_PATTERN = /(S\s*25|S25|SB|OB)/i;
+const SINGLE_25_PATTERN = /\b25\b/;
+const TRIPLE_PATTERN = /T\s*(\d{1,2})/gi;
+const DOUBLE_PATTERN = /D\s*(\d{1,2})/gi;
 
-function collectBySelectors(documentRef, selectors) {
+function collectBySelector(documentRef, selector) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
     return [];
   }
 
-  const result = [];
-  const seen = new Set();
+  try {
+    return Array.from(documentRef.querySelectorAll(selector));
+  } catch (_) {
+    return [];
+  }
+}
 
-  selectors.forEach((selector) => {
-    let nodes = [];
-    try {
-      nodes = Array.from(documentRef.querySelectorAll(selector));
-    } catch (_) {
-      nodes = [];
+function normalizeRawText(value) {
+  return String(value || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function collectDescendantText(rootNode) {
+  if (!rootNode || !Array.isArray(rootNode.children) || !rootNode.children.length) {
+    return "";
+  }
+
+  const chunks = [];
+  const queue = [...rootNode.children];
+
+  while (queue.length) {
+    const node = queue.shift();
+    if (!node) {
+      continue;
     }
 
-    nodes.forEach((node) => {
-      if (!node || seen.has(node)) {
-        return;
-      }
-      seen.add(node);
-      result.push(node);
-    });
-  });
+    const text = normalizeRawText(node.textContent || "");
+    if (text) {
+      chunks.push(text);
+    }
 
-  return result;
+    if (Array.isArray(node.children) && node.children.length) {
+      queue.push(...node.children);
+    }
+  }
+
+  return normalizeRawText(chunks.join(" "));
 }
 
-export function collectThrowTextNodes(documentRef) {
-  return collectBySelectors(documentRef, THROW_TEXT_SELECTORS).filter((node) => {
-    return typeof node.textContent === "string" && node.textContent.trim();
-  });
+function findNumberedHit(pattern, text) {
+  pattern.lastIndex = 0;
+  let match = pattern.exec(text);
+  while (match) {
+    const numericValue = Number(match[1]);
+    if (numericValue >= 1 && numericValue <= 20) {
+      return numericValue;
+    }
+    match = pattern.exec(text);
+  }
+
+  return null;
 }
 
-export function getHitKindFromNode(node, x01Rules) {
-  if (!node || !x01Rules || typeof x01Rules.getHighlightHitKind !== "function") {
+function resolveColorTheme(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return SUPPORTED_COLOR_THEME.has(normalized) ? normalized : "volt-lime";
+}
+
+function resolveAnimationStyle(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return SUPPORTED_ANIMATION_STYLE.has(normalized) ? normalized : "neon-pulse";
+}
+
+export function classifyThrowText(rawText) {
+  const normalizedText = normalizeRawText(rawText).toUpperCase();
+  if (!normalizedText) {
     return null;
   }
 
-  const rawText = String(node.textContent || "").trim();
-  if (!rawText) {
+  if (INNER_BULL_PATTERN.test(normalizedText)) {
+    return {
+      kind: "bullInner",
+      segment: "BULL",
+      label: "BULL",
+    };
+  }
+
+  if (OUTER_BULL_PATTERN.test(normalizedText) || SINGLE_25_PATTERN.test(normalizedText)) {
+    return {
+      kind: "bullOuter",
+      segment: "S25",
+      label: "25",
+    };
+  }
+
+  const tripleValue = findNumberedHit(TRIPLE_PATTERN, normalizedText);
+  if (Number.isFinite(tripleValue)) {
+    return {
+      kind: "triple",
+      segment: `T${tripleValue}`,
+      label: `T${tripleValue}`,
+    };
+  }
+
+  const doubleValue = findNumberedHit(DOUBLE_PATTERN, normalizedText);
+  if (Number.isFinite(doubleValue)) {
+    return {
+      kind: "double",
+      segment: `D${doubleValue}`,
+      label: `D${doubleValue}`,
+    };
+  }
+
+  return null;
+}
+
+export function collectThrowRows(documentRef) {
+  return collectBySelector(documentRef, THROW_ROW_SELECTOR).filter((rowNode) => {
+    return Boolean(rowNode && rowNode.classList);
+  });
+}
+
+export function getHitMetaFromRow(rowNode) {
+  if (!rowNode) {
     return null;
   }
 
-  return x01Rules.getHighlightHitKind(rawText);
-}
-
-export function isKindEnabled(hitKind, featureConfig = {}) {
-  if (!hitKind || !Object.prototype.hasOwnProperty.call(HIT_KIND_TO_CONFIG_KEY, hitKind)) {
-    return false;
+  const directText = normalizeRawText(rowNode.textContent || "");
+  const rowText = directText || collectDescendantText(rowNode);
+  if (!rowText) {
+    return null;
   }
 
-  const key = HIT_KIND_TO_CONFIG_KEY[hitKind];
-  return Boolean(featureConfig[key]);
+  return classifyThrowText(rowText);
 }
 
-export function clearHitDecoration(node) {
-  if (!node || !node.classList) {
+export function clearHitDecoration(rowNode, signatureByRow = null) {
+  if (!rowNode || !rowNode.classList) {
     return;
   }
 
-  node.classList.remove(HIT_BASE_CLASS);
-  node.classList.remove(HIT_KIND_CLASS.triple, HIT_KIND_CLASS.double, HIT_KIND_CLASS.bull);
+  rowNode.classList.remove(HIT_BASE_CLASS);
+  rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
+  rowNode.classList.remove(...KIND_CLASS_NAMES);
+  rowNode.classList.remove(...THEME_CLASS_NAMES);
+  rowNode.classList.remove(...ANIMATION_CLASS_NAMES);
+  rowNode.style.removeProperty("--ad-ext-hit-delay-ms");
+  rowNode.removeAttribute("data-ad-ext-hit-signature");
+
+  if (signatureByRow && typeof signatureByRow.delete === "function") {
+    signatureByRow.delete(rowNode);
+  }
 }
 
-export function applyHitDecoration(node, hitKind) {
-  if (!node || !node.classList) {
+function triggerAnimationReplay(rowNode) {
+  rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
+
+  // Force style flush so the class toggle restarts one-shot keyframes.
+  if (typeof rowNode.getBoundingClientRect === "function") {
+    rowNode.getBoundingClientRect();
+  }
+
+  rowNode.classList.add(HIT_ANIMATION_TRIGGER_CLASS);
+}
+
+export function applyHitDecoration(rowNode, options = {}) {
+  const hitMeta = options.hitMeta || null;
+  const featureConfig = options.featureConfig || {};
+  const signatureByRow = options.signatureByRow || null;
+  const rowIndex = Number(options.rowIndex) || 0;
+
+  if (!rowNode || !rowNode.classList || !hitMeta) {
     return;
   }
 
-  const className = HIT_KIND_CLASS[hitKind];
-  if (!className) {
-    clearHitDecoration(node);
+  const kindClassName = HIT_KIND_CLASS[hitMeta.kind];
+  if (!kindClassName) {
+    clearHitDecoration(rowNode, signatureByRow);
     return;
   }
 
-  node.classList.add(HIT_BASE_CLASS);
-  node.classList.remove(HIT_KIND_CLASS.triple, HIT_KIND_CLASS.double, HIT_KIND_CLASS.bull);
-  node.classList.add(className);
+  const colorTheme = resolveColorTheme(featureConfig.colorTheme);
+  const animationStyle = resolveAnimationStyle(featureConfig.animationStyle);
+  const themeClassName = HIT_THEME_CLASS[colorTheme];
+  const animationClassName = HIT_ANIMATION_CLASS[animationStyle];
+  const signature = [
+    hitMeta.kind,
+    hitMeta.segment,
+    colorTheme,
+    animationStyle,
+  ].join("|");
+
+  rowNode.classList.add(HIT_BASE_CLASS);
+  rowNode.classList.remove(...KIND_CLASS_NAMES);
+  rowNode.classList.remove(...THEME_CLASS_NAMES);
+  rowNode.classList.remove(...ANIMATION_CLASS_NAMES);
+  rowNode.classList.add(kindClassName);
+  rowNode.classList.add(themeClassName);
+  rowNode.classList.add(animationClassName);
+  rowNode.style.setProperty("--ad-ext-hit-delay-ms", `${Math.max(0, Math.min(8, rowIndex)) * 45}ms`);
+
+  const lastSignature =
+    signatureByRow && typeof signatureByRow.get === "function"
+      ? signatureByRow.get(rowNode)
+      : rowNode.getAttribute("data-ad-ext-hit-signature");
+
+  if (signature !== lastSignature) {
+    triggerAnimationReplay(rowNode);
+  }
+
+  rowNode.setAttribute("data-ad-ext-hit-signature", signature);
+  if (signatureByRow && typeof signatureByRow.set === "function") {
+    signatureByRow.set(rowNode, signature);
+  }
 }
 
 export function updateHitDecorations(options = {}) {
   const documentRef = options.documentRef;
-  const x01Rules = options.x01Rules;
   const featureConfig = options.featureConfig || {};
-  const trackedNodes = options.trackedNodes || new Set();
+  const trackedRows = options.trackedRows || new Set();
+  const signatureByRow = options.signatureByRow || new Map();
 
-  const currentNodes = new Set(collectThrowTextNodes(documentRef));
-  trackedNodes.forEach((node) => {
-    if (currentNodes.has(node)) {
+  const currentRows = collectThrowRows(documentRef);
+  const currentRowSet = new Set(currentRows);
+
+  trackedRows.forEach((rowNode) => {
+    if (currentRowSet.has(rowNode)) {
       return;
     }
-    clearHitDecoration(node);
-    trackedNodes.delete(node);
+    clearHitDecoration(rowNode, signatureByRow);
+    trackedRows.delete(rowNode);
   });
 
-  currentNodes.forEach((node) => {
-    trackedNodes.add(node);
-    const hitKind = getHitKindFromNode(node, x01Rules);
-    if (!hitKind || !isKindEnabled(hitKind, featureConfig)) {
-      clearHitDecoration(node);
+  currentRows.forEach((rowNode, index) => {
+    trackedRows.add(rowNode);
+    const hitMeta = getHitMetaFromRow(rowNode);
+
+    if (!hitMeta) {
+      clearHitDecoration(rowNode, signatureByRow);
       return;
     }
 
-    applyHitDecoration(node, hitKind);
+    applyHitDecoration(rowNode, {
+      hitMeta,
+      featureConfig,
+      signatureByRow,
+      rowIndex: index,
+    });
   });
 }

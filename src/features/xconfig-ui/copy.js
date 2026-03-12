@@ -405,34 +405,24 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "triple-double-bull-hits": featureCopy({
     cardDescription:
-      "Hebt Triple-, Double- und Bull-Treffer in der Wurfliste gezielt hervor.",
+      "Hebt Treffer mit frei wählbaren Farbstilen und Animationsstilen in der Wurfliste hervor.",
     visibleDescription:
-      "Treffer wie `T20`, `D16` oder `BULL` springen in der Wurfliste schneller ins Auge.",
+      "Treffer wie `T20`, `D16`, `25` und `BULL` springen in der Wurfliste deutlich schneller ins Auge.",
     visualDescription:
-      "Die betroffenen Einträge in der Wurfliste erhalten eine zusätzliche Hervorhebung, sobald das Modul sie erkennt. So lassen sich starke Treffer in schnellen Legs leichter nachverfolgen.",
+      "Die betroffenen Wurffelder erhalten einen konfigurierbaren Farbbalken mit Trefferanimation. `25` (Single Bull) wird bewusst ruhiger markiert, `BULL` (Bullseye) sichtbar stärker.",
     usefulWhen:
-      "Für Training, Checkout-Fokus und mehr Lesbarkeit in schnellen Legs.",
+      "Wenn wichtige Treffer auch in schnellen Legs sofort auffallen sollen, ohne viele Einzelschalter zu pflegen.",
     images: [image("Triple Double Bull Hits", "animation-triple-double-bull-hits.gif")],
     fields: {
-      highlightTriple: fieldCopy(
-        "Schaltet die Hervorhebung für Triple-Treffer ein oder aus.",
-        "Bestimmt, ob Einträge wie `T20` oder andere Triple-Treffer in der Wurfliste gesondert hervorgehoben werden.",
-        "Schaltet die Hervorhebung für Triple-Treffer ein oder aus."
+      colorTheme: fieldCopy(
+        "Wählt die Farbpalette für Treffer-Highlights.",
+        "Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer markiert werden. Die Trefferlogik bleibt gleich, nur die visuelle Tonalität wechselt.",
+        "Wählt die Farbpalette der Treffer-Highlights."
       ),
-      highlightDouble: fieldCopy(
-        "Schaltet die Hervorhebung für Double-Treffer ein oder aus.",
-        "Bestimmt, ob Double-Einträge wie `D16` oder `D20` in der Wurfliste gesondert hervorgehoben werden.",
-        "Schaltet die Hervorhebung für Double-Treffer ein oder aus."
-      ),
-      highlightBull: fieldCopy(
-        "Schaltet die Hervorhebung für Bull-Treffer ein oder aus.",
-        "Bestimmt, ob `BULL`-Treffer in der Wurfliste zusätzlich markiert werden.",
-        "Schaltet die Hervorhebung für Bull-Treffer ein oder aus."
-      ),
-      pollIntervalMs: fieldCopy(
-        "Wechselt zwischen reiner Live-Reaktion und einem robusteren Fallback-Scan.",
-        "`Nur live` reagiert ausschließlich auf erkannte DOM- und State-Updates. `Kompatibel` ergänzt dazu einen Polling-Fallback alle 3000 ms, falls der Live-Trigger in bestimmten Umgebungen nicht zuverlässig genug feuert.",
-        "Wechselt zwischen reiner Live-Reaktion und zusätzlichem 3-Sekunden-Fallback."
+      animationStyle: fieldCopy(
+        "Wählt die Bewegungsart des Treffer-Impulses.",
+        "Bestimmt, welche Einblend- und Impulsbewegung bei neu erkannten Treffern abgespielt wird. Die Treffererkennung bleibt unverändert, nur der Bewegungscharakter wechselt.",
+        "Wählt die Bewegungsart des Treffer-Impulses."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1217,16 +1207,99 @@ const TURN_START_STYLE_OPTION_COPY = deepFreeze({
   ),
 });
 
-const LIVE_OR_3000_POLL_OPTION_COPY = deepFreeze({
-  "0": optionCopy(
-    "Arbeitet nur mit Live-Änderungen ohne zusätzlichen Fallback-Timer.",
-    "Das Modul reagiert ausschließlich auf erkannte DOM- und State-Updates. Das ist schlanker, setzt aber voraus, dass diese Trigger sauber ankommen.",
-    "Mit dieser Einstellung arbeitet das Modul ausschließlich eventbasiert und nutzt keinen zusätzlichen Polling-Intervall. Das ist ressourcenschonender, kann aber in problematischen Umgebungen robuster auf den 3000-ms-Fallback verzichten."
+const TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY = deepFreeze({
+  "ember-rush": optionCopy(
+    "Nutzen eine warme Orange-Rot-Gold-Palette.",
+    "Die Treffer-Highlights wirken wie glühende Ember-Farben mit hohem Kontrast. Das ist warm, energisch und in schnellen Legs sehr auffällig.",
+    "Diese Palette legt den Fokus auf warme Orange-Rot-Gold-Töne und wirkt wie ein heißer Broadcast-Akzent."
   ),
-  "3000": optionCopy(
-    "Ergänzt alle 3000 ms einen Kompatibilitäts-Scan.",
-    "Zusätzlich zu Live-Triggern läuft regelmäßig ein Polling-Fallback. Dadurch werden Treffer auch dann eher nachgezogen, wenn Live-Updates einmal fehlen.",
-    "Diese Einstellung ergänzt die normale Live-Reaktion um einen 3000-ms-Fallback-Scan. Das erhöht die Robustheit in schwierigen DOM-Umgebungen, kann aber Reaktionen geringfügig verzögert nachziehen."
+  "ice-circuit": optionCopy(
+    "Nutzen eine kühle Cyan-Blau-Palette.",
+    "Treffer erscheinen in klaren Eis- und Circuit-Farben. Das wirkt technisch, sauber und ruhig, bleibt aber gut sichtbar.",
+    "Diese Palette setzt auf kühle Cyan-Blau-Töne mit technischer Wirkung."
+  ),
+  "volt-lime": optionCopy(
+    "Nutzen eine auffällige Neon-Lime-Palette.",
+    "Die Highlights leuchten grün-gelb und ziehen den Blick sofort an. Das ist die aggressivste Farbvariante für hohe Sichtbarkeit.",
+    "Diese Palette verwendet Neon-Lime-Töne und liefert die höchste Signalwirkung."
+  ),
+  "crimson-steel": optionCopy(
+    "Nutzen Rot mit dunklem Stahl-Akzent.",
+    "Treffer wirken härter und sportlicher mit tieferen Rotwerten und kühleren dunklen Gegentönen. Das ist markant ohne Neon-Look.",
+    "Diese Palette kombiniert kräftiges Rot mit dunkleren Stahlakzenten."
+  ),
+  "arctic-mint": optionCopy(
+    "Nutzen Mint- und Türkistöne.",
+    "Die Highlights wirken frisch und luftig mit kühler Mint-Tonalität. Das ist klar sichtbar, aber entspannter als Neon.",
+    "Diese Palette setzt auf arktische Mint- und Türkistöne mit ruhigerem Charakter."
+  ),
+  "champagne-night": optionCopy(
+    "Nutzen Gold- und Elfenbein-Töne.",
+    "Treffer erhalten eine edlere, warme Nachtwirkung mit champagnerähnlichem Glow. Das wirkt premium statt knallig.",
+    "Diese Palette färbt Highlights in Gold- und Elfenbein-Töne mit elegantem Look."
+  ),
+});
+
+const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY = deepFreeze({
+  "impact-pop": optionCopy(
+    "Spielt einen kurzen, druckvollen Pop-Impuls.",
+    "Das Wurffeld skaliert knapp nach vorne und fällt sauber zurück. Ein direkter Standardeffekt mit klarer Trefferwirkung.",
+    "Dieser Stil nutzt einen kurzen Pop-Impuls für einen direkten Trefferakzent."
+  ),
+  shockwave: optionCopy(
+    "Spielt eine kurze Druckwellen-Bewegung.",
+    "Der Treffer sendet einen sichtbaren Wellenimpuls durch das Feld. Das wirkt energischer als ein einfacher Pop.",
+    "Dieser Stil arbeitet mit einer kurzen Shockwave-artigen Wellenbewegung."
+  ),
+  "sweep-shine": optionCopy(
+    "Zieht einen Lichtlauf über das Wurffeld.",
+    "Ein heller Sweep läuft kurz über den Trefferbereich und verschwindet wieder. Das wirkt TV-artig und sauber.",
+    "Dieser Stil setzt auf einen schnellen Shine-Sweep über die Trefferfläche."
+  ),
+  "neon-pulse": optionCopy(
+    "Lässt den Treffer kurz neonartig aufglühen.",
+    "Die Highlight-Fläche pulsiert mit kräftigem Glow und fällt dann weich zurück. Das ist lebendig, ohne hektisch zu wirken.",
+    "Dieser Stil betont Treffer über einen neonartigen Glow-Pulse."
+  ),
+  "snap-bounce": optionCopy(
+    "Spielt einen knackigen Bounce mit kurzem Nachfedern.",
+    "Das Feld springt kurz an und federt präzise zurück. Die Bewegung wirkt sportlich und rhythmisch.",
+    "Dieser Stil kombiniert Snap und Bounce für einen sportlichen Trefferimpuls."
+  ),
+  "card-slam": optionCopy(
+    "Setzt den Treffer wie einen kurzen Slam.",
+    "Die Trefferkarte wirkt wie ein schneller, kontrollierter Einschlag. Das erzeugt klaren Impact ohne Dauerbewegung.",
+    "Dieser Stil nutzt einen kurzen Card-Slam für harte Trefferwirkung."
+  ),
+  "signal-blink": optionCopy(
+    "Spielt einen kurzen Doppel-Blink.",
+    "Der Treffer blinkt kontrolliert an und aus, ohne die Karte dauerhaft zu überlagern. Das ist klar und kompakt.",
+    "Dieser Stil verwendet einen kurzen Signal-Blink als Trefferhinweis."
+  ),
+  "stagger-wave": optionCopy(
+    "Spielt einen leicht versetzten Wellenimpuls.",
+    "Treffer werden mit einer kurzen Wellenbewegung inklusive kleiner Verzögerung animiert. Das wirkt lebendig und modern.",
+    "Dieser Stil nutzt eine versetzte Wave-Bewegung für dynamische Treffer."
+  ),
+  "flip-edge": optionCopy(
+    "Spielt einen kleinen 3D-Kippimpuls.",
+    "Die Trefferkarte kippt minimal an der Kante und stabilisiert sich sofort. Dadurch wirkt der Treffer räumlicher.",
+    "Dieser Stil ergänzt den Treffer um einen kleinen Flip-Edge-Impuls."
+  ),
+  "outline-trace": optionCopy(
+    "Zeichnet die Kontur des Felds kurz nach.",
+    "Die Umrandung wird kurz sichtbar nachgezogen und blendet wieder aus. Das wirkt präzise und grafisch klar.",
+    "Dieser Stil betont Treffer über einen kurzen Outline-Trace."
+  ),
+  "charge-release": optionCopy(
+    "Lädt den Treffer kurz auf und entlädt ihn.",
+    "Die Fläche baut in einem Moment Spannung auf und löst sie als Lichtimpuls. Das wirkt dramatischer als Standard-Pulse.",
+    "Dieser Stil kombiniert kurze Aufladung mit sichtbarer Entladung."
+  ),
+  "alternate-flick": optionCopy(
+    "Spielt einen schnellen Vor-zurück-Flick.",
+    "Der Treffer erhält eine kurze alternierende Bewegung, die sofort zur Ruhe kommt. Das ist lebhaft, aber kompakt.",
+    "Dieser Stil setzt auf einen kurzen Alternate-Flick-Impuls."
   ),
 });
 
@@ -1769,7 +1842,8 @@ const xconfigFieldOptionCopy = deepFreeze({
     sweepStyle: TURN_START_STYLE_OPTION_COPY,
   },
   "triple-double-bull-hits": {
-    pollIntervalMs: LIVE_OR_3000_POLL_OPTION_COPY,
+    colorTheme: TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY,
+    animationStyle: TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY,
   },
   "cricket-highlighter": {
     irrelevantBoardDimStyle: CRICKET_DIM_STYLE_OPTION_COPY,

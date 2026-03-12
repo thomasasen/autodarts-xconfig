@@ -67,10 +67,8 @@ export const defaultConfig = {
     },
     tripleDoubleBullHits: {
       enabled: false,
-      highlightTriple: true,
-      highlightDouble: true,
-      highlightBull: true,
-      pollIntervalMs: 3000,
+      colorTheme: "volt-lime",
+      animationStyle: "neon-pulse",
       debug: false,
     },
     cricketHighlighter: {

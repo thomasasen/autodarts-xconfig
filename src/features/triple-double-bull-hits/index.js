@@ -7,11 +7,6 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
 
-function resolvePollIntervalMs(value) {
-  const numeric = Number(value);
-  return numeric === 3000 ? 3000 : 0;
-}
-
 export function initializeTripleDoubleBullHits(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -19,11 +14,10 @@ export function initializeTripleDoubleBullHits(context = {}) {
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
   const gameState = context.gameState;
-  const x01Rules = context.domain?.x01Rules;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
-  if (!documentRef || !domGuards || !x01Rules || typeof schedulerFactory !== "function") {
+  if (!documentRef || !domGuards || typeof schedulerFactory !== "function") {
     return () => {};
   }
 
@@ -31,22 +25,21 @@ export function initializeTripleDoubleBullHits(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("tripleDoubleBullHits")
       : {
-          highlightTriple: true,
-          highlightDouble: true,
-          highlightBull: true,
-          pollIntervalMs: 3000,
+          colorTheme: "volt-lime",
+          animationStyle: "neon-pulse",
+          debug: false,
         };
-  const pollIntervalMs = resolvePollIntervalMs(featureConfig.pollIntervalMs);
-  const trackedNodes = new Set();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   const scheduler = schedulerFactory(() => {
     updateHitDecorations({
       documentRef,
-      x01Rules,
       featureConfig,
-      trackedNodes,
+      trackedRows,
+      signatureByRow,
     });
   }, { windowRef });
 
@@ -79,24 +72,6 @@ export function initializeTripleDoubleBullHits(context = {}) {
       ? gameState.subscribe(() => scheduler.schedule())
       : () => {};
 
-  const setIntervalRef =
-    (windowRef && typeof windowRef.setInterval === "function"
-      ? windowRef.setInterval.bind(windowRef)
-      : setInterval);
-  const clearIntervalRef =
-    (windowRef && typeof windowRef.clearInterval === "function"
-      ? windowRef.clearInterval.bind(windowRef)
-      : clearInterval);
-  const pollHandle =
-    pollIntervalMs > 0
-      ? setIntervalRef(() => {
-        if (documentRef.visibilityState === "hidden") {
-          return;
-        }
-        scheduler.schedule();
-      }, pollIntervalMs)
-      : null;
-
   scheduler.schedule();
   let cleanedUp = false;
 
@@ -120,14 +95,11 @@ export function initializeTripleDoubleBullHits(context = {}) {
       Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
     }
 
-    if (pollHandle) {
-      clearIntervalRef(pollHandle);
-    }
-
-    trackedNodes.forEach((node) => {
-      clearHitDecoration(node);
+    trackedRows.forEach((rowNode) => {
+      clearHitDecoration(rowNode, signatureByRow);
     });
-    trackedNodes.clear();
+    trackedRows.clear();
+    signatureByRow.clear();
 
     domGuards.removeNodeById(STYLE_ID);
   };

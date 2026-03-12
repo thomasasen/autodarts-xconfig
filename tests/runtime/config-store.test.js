@@ -97,6 +97,16 @@ test("config store imports migrated legacy feature and theme settings once witho
             INTENSITAET: "strong",
           },
         },
+        "a-triple-double-bull": {
+          enabled: true,
+          settings: {
+            TRIPLE_HERVORHEBEN: false,
+            DOUBLE_HERVORHEBEN: false,
+            BULL_HERVORHEBEN: false,
+            AKTUALISIERUNGSMODUS: 0,
+            DEBUG: true,
+          },
+        },
         "theme-x01": {
           enabled: true,
           settings: {
@@ -147,6 +157,11 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.cricketGridFx.pressureOverlay, true);
   assert.equal(importedConfig.features.cricketGridFx.colorTheme, "high-contrast");
   assert.equal(importedConfig.features.cricketGridFx.intensity, "strong");
+  assert.equal(importedConfig.featureToggles.tripleDoubleBullHits, true);
+  assert.equal(importedConfig.features.tripleDoubleBullHits.enabled, true);
+  assert.equal(importedConfig.features.tripleDoubleBullHits.colorTheme, "volt-lime");
+  assert.equal(importedConfig.features.tripleDoubleBullHits.animationStyle, "neon-pulse");
+  assert.equal(importedConfig.features.tripleDoubleBullHits.debug, true);
   assert.equal(importedConfig.featureToggles["themes.x01"], true);
   assert.equal(importedConfig.features.themes.x01.enabled, true);
   assert.equal(importedConfig.features.themes.x01.showAvg, false);
