@@ -9,6 +9,7 @@ import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { initializeCheckoutBoardTargets } from "../../src/features/checkout-board-targets/index.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
+import { initializeTripleDoubleBullHits } from "../../src/features/triple-double-bull-hits/index.js";
 import { OVERLAY_ID as CHECKOUT_OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
 import {
   OVERLAY_ID as CRICKET_OVERLAY_ID,
@@ -371,6 +372,94 @@ test("cricket-highlighter repairs stale style contract at mount and logs once", 
   assert.match(String(styleNode?.textContent || ""), /\.ad-ext-cricket-target\.is-pressure\s*\{/);
   assert.equal(styleEnsureCalls >= 2, true);
   assert.equal(warnings.filter((entry) => entry.includes("warn style-contract")).length, 1);
+
+  cleanup();
+});
+
+test("triple-double-bull-hits emits deduplicated debug state with row diagnostics", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.__adXConfig = { apiVersion: "test-runtime" };
+  documentRef.throwTextElement.textContent = "36 D18";
+  documentRef.throwRow.textContent = "36 D18";
+  documentRef.turnPointsElement.textContent = "36";
+
+  const logs = [];
+  const warnings = [];
+  const scheduleCounter = { count: 0 };
+  const observers = createObserverRegistry();
+
+  const cleanup = initializeTripleDoubleBullHits({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      subscribe() {
+        return () => {};
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          colorTheme: "champagne-night",
+          animationStyle: "impact-pop",
+          debug: true,
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(message) {
+        logs.push(String(message || ""));
+      },
+      warn(message) {
+        warnings.push(String(message || ""));
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("triple-double-bull-hits:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count >= 3, true);
+  assert.equal(logs.some((entry) => entry.includes('runtime apiVersion="test-runtime"')), true);
+  assert.equal(logs.filter((entry) => entry.includes("state apiVersion=")).length, 2);
+  assert.equal(logs.some((entry) => entry.includes('rowsDebug="#0:double:D18:')), true);
+  assert.equal(warnings.length, 0);
 
   cleanup();
 });

@@ -8,6 +8,8 @@ import {
 
 const TURN_CONTAINER_SELECTOR = "#ad-ext-turn";
 const THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
+const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
+const ROW_DEBUG_TEXT_LIMIT = 72;
 const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
 const SUPPORTED_ANIMATION_STYLE = new Set(Object.keys(HIT_ANIMATION_CLASS));
 const KIND_CLASS_NAMES = Object.values(HIT_KIND_CLASS);
@@ -44,11 +46,42 @@ function findTurnContainer(documentRef) {
   }
 }
 
+function readTurnPointsToken(documentRef, turnContainer = null) {
+  const scopedContainer = turnContainer || findTurnContainer(documentRef);
+  const scopedPointsNode =
+    scopedContainer && typeof scopedContainer.querySelector === "function"
+      ? scopedContainer.querySelector(TURN_POINTS_SELECTOR)
+      : null;
+
+  if (scopedPointsNode) {
+    return normalizeRawText(scopedPointsNode.textContent || "");
+  }
+
+  if (!documentRef || typeof documentRef.querySelector !== "function") {
+    return "";
+  }
+
+  try {
+    const fallbackPointsNode = documentRef.querySelector(TURN_POINTS_SELECTOR);
+    return normalizeRawText(fallbackPointsNode?.textContent || "");
+  } catch (_) {
+    return "";
+  }
+}
+
 function normalizeRawText(value) {
   return String(value || "")
     .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function truncateDebugText(value) {
+  const text = normalizeRawText(value);
+  if (text.length <= ROW_DEBUG_TEXT_LIMIT) {
+    return text;
+  }
+  return `${text.slice(0, ROW_DEBUG_TEXT_LIMIT - 3)}...`;
 }
 
 function collectDescendantText(rootNode) {
@@ -180,10 +213,28 @@ export function getHitMetaFromRow(rowNode) {
   return classifyThrowText(rowText);
 }
 
+function isRowDecorated(rowNode, signatureByRow = null) {
+  if (!rowNode || !rowNode.classList) {
+    return false;
+  }
+
+  const hasBaseClass = rowNode.classList.contains(HIT_BASE_CLASS);
+  const hasSignatureAttribute =
+    typeof rowNode.getAttribute === "function" &&
+    Boolean(rowNode.getAttribute("data-ad-ext-hit-signature"));
+  const hasTrackedSignature =
+    signatureByRow &&
+    typeof signatureByRow.has === "function" &&
+    signatureByRow.has(rowNode);
+
+  return hasBaseClass || hasSignatureAttribute || hasTrackedSignature;
+}
+
 export function clearHitDecoration(rowNode, signatureByRow = null) {
   if (!rowNode || !rowNode.classList) {
-    return;
+    return false;
   }
+  const hadDecoration = isRowDecorated(rowNode, signatureByRow);
 
   rowNode.classList.remove(HIT_BASE_CLASS);
   rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
@@ -196,6 +247,8 @@ export function clearHitDecoration(rowNode, signatureByRow = null) {
   if (signatureByRow && typeof signatureByRow.delete === "function") {
     signatureByRow.delete(rowNode);
   }
+
+  return hadDecoration;
 }
 
 function triggerAnimationReplay(rowNode) {
@@ -214,9 +267,15 @@ export function applyHitDecoration(rowNode, options = {}) {
   const featureConfig = options.featureConfig || {};
   const signatureByRow = options.signatureByRow || null;
   const rowIndex = Number(options.rowIndex) || 0;
+  const turnPointsToken = normalizeRawText(options.turnPointsToken || "");
 
   if (!rowNode || !rowNode.classList || !hitMeta) {
-    return;
+    return {
+      applied: false,
+      replayed: false,
+      kind: null,
+      signature: "",
+    };
   }
 
   const kindClassName = HIT_KIND_CLASS[hitMeta.kind];
@@ -229,12 +288,26 @@ export function applyHitDecoration(rowNode, options = {}) {
   const animationStyle = resolveAnimationStyle(featureConfig.animationStyle);
   const themeClassName = HIT_THEME_CLASS[colorTheme];
   const animationClassName = HIT_ANIMATION_CLASS[animationStyle];
-  const signature = [
+  if (!themeClassName || !animationClassName) {
+    clearHitDecoration(rowNode, signatureByRow);
+    return {
+      applied: false,
+      replayed: false,
+      kind: null,
+      signature: "",
+    };
+  }
+
+  const signatureParts = [
     hitMeta.kind,
     hitMeta.segment,
     colorTheme,
     animationStyle,
-  ].join("|");
+  ];
+  if (turnPointsToken) {
+    signatureParts.push(`tp:${turnPointsToken}`);
+  }
+  const signature = signatureParts.join("|");
 
   rowNode.classList.add(HIT_BASE_CLASS);
   rowNode.classList.remove(...KIND_CLASS_NAMES);
@@ -250,7 +323,8 @@ export function applyHitDecoration(rowNode, options = {}) {
       ? signatureByRow.get(rowNode)
       : rowNode.getAttribute("data-ad-ext-hit-signature");
 
-  if (signature !== lastSignature) {
+  const replayed = signature !== lastSignature;
+  if (replayed) {
     triggerAnimationReplay(rowNode);
   }
 
@@ -258,6 +332,13 @@ export function applyHitDecoration(rowNode, options = {}) {
   if (signatureByRow && typeof signatureByRow.set === "function") {
     signatureByRow.set(rowNode, signature);
   }
+
+  return {
+    applied: true,
+    replayed,
+    kind: hitMeta.kind,
+    signature,
+  };
 }
 
 export function updateHitDecorations(options = {}) {
@@ -265,32 +346,95 @@ export function updateHitDecorations(options = {}) {
   const featureConfig = options.featureConfig || {};
   const trackedRows = options.trackedRows || new Set();
   const signatureByRow = options.signatureByRow || new Map();
+  const includeRowDebug = options.debugRows === true;
+  const turnContainer = findTurnContainer(documentRef);
+  const turnPointsToken = readTurnPointsToken(documentRef, turnContainer);
 
   const currentRows = collectThrowRows(documentRef);
   const currentRowSet = new Set(currentRows);
+  const rowSource = turnContainer ? "turn-container" : currentRows.length > 0 ? "document-fallback" : "none";
+  const stats = {
+    rowCount: currentRows.length,
+    decoratedCount: 0,
+    replayedCount: 0,
+    removedCount: 0,
+    rowSource,
+    turnContainerFound: Boolean(turnContainer),
+    turnPointsToken,
+    kindCounts: {
+      triple: 0,
+      double: 0,
+      bullInner: 0,
+      bullOuter: 0,
+    },
+    rows: includeRowDebug ? [] : null,
+  };
 
   trackedRows.forEach((rowNode) => {
     if (currentRowSet.has(rowNode)) {
       return;
     }
-    clearHitDecoration(rowNode, signatureByRow);
+    const wasCleared = clearHitDecoration(rowNode, signatureByRow);
     trackedRows.delete(rowNode);
+    if (wasCleared) {
+      stats.removedCount += 1;
+    }
   });
 
   currentRows.forEach((rowNode, index) => {
     trackedRows.add(rowNode);
+    const rowText = normalizeRawText(rowNode.textContent || "");
     const hitMeta = getHitMetaFromRow(rowNode);
 
     if (!hitMeta) {
-      clearHitDecoration(rowNode, signatureByRow);
+      const wasCleared = clearHitDecoration(rowNode, signatureByRow);
+      if (wasCleared) {
+        stats.removedCount += 1;
+      }
+      if (includeRowDebug) {
+        stats.rows.push({
+          index,
+          text: truncateDebugText(rowText),
+          hit: "none",
+          applied: false,
+          replayed: false,
+          signature: "",
+        });
+      }
       return;
     }
 
-    applyHitDecoration(rowNode, {
+    const applyResult = applyHitDecoration(rowNode, {
       hitMeta,
       featureConfig,
       signatureByRow,
       rowIndex: index,
+      turnPointsToken,
     });
+
+    if (includeRowDebug) {
+      stats.rows.push({
+        index,
+        text: truncateDebugText(rowText),
+        hit: `${hitMeta.kind}:${hitMeta.segment}`,
+        applied: Boolean(applyResult?.applied),
+        replayed: Boolean(applyResult?.replayed),
+        signature: applyResult?.signature || "",
+      });
+    }
+
+    if (!applyResult?.applied) {
+      return;
+    }
+
+    stats.decoratedCount += 1;
+    if (applyResult.replayed) {
+      stats.replayedCount += 1;
+    }
+    if (stats.kindCounts[applyResult.kind] !== undefined) {
+      stats.kindCounts[applyResult.kind] += 1;
+    }
   });
+
+  return stats;
 }

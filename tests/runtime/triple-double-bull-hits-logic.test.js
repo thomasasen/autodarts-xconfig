@@ -7,7 +7,7 @@ import {
   clearHitDecoration,
   updateHitDecorations,
 } from "../../src/features/triple-double-bull-hits/logic.js";
-import { HIT_KIND_CLASS } from "../../src/features/triple-double-bull-hits/style.js";
+import { HIT_BASE_CLASS, HIT_KIND_CLASS } from "../../src/features/triple-double-bull-hits/style.js";
 import { FakeDocument } from "./fake-dom.js";
 
 test("classifyThrowText resolves mixed throw text by containment priority", () => {
@@ -67,7 +67,7 @@ test("updateHitDecorations decorates rows and differentiates single bull vs bull
   innerBullRow.appendChild(innerBullNode);
   documentRef.turnContainer.appendChild(innerBullRow);
 
-  updateHitDecorations({
+  const stats = updateHitDecorations({
     documentRef,
     trackedRows,
     signatureByRow,
@@ -75,12 +75,24 @@ test("updateHitDecorations decorates rows and differentiates single bull vs bull
       colorTheme: "volt-lime",
       animationStyle: "neon-pulse",
     },
+    debugRows: true,
   });
 
   assert.equal(tripleRow.classList.contains(HIT_KIND_CLASS.triple), true);
   assert.equal(doubleRow.classList.contains(HIT_KIND_CLASS.double), true);
   assert.equal(outerBullRow.classList.contains(HIT_KIND_CLASS.bullOuter), true);
   assert.equal(innerBullRow.classList.contains(HIT_KIND_CLASS.bullInner), true);
+  assert.equal(stats.rowCount, 4);
+  assert.equal(stats.decoratedCount, 4);
+  assert.equal(stats.replayedCount, 4);
+  assert.equal(stats.removedCount, 0);
+  assert.equal(stats.rowSource, "turn-container");
+  assert.equal(stats.kindCounts.triple, 1);
+  assert.equal(stats.kindCounts.double, 1);
+  assert.equal(stats.kindCounts.bullOuter, 1);
+  assert.equal(stats.kindCounts.bullInner, 1);
+  assert.equal(Array.isArray(stats.rows), true);
+  assert.equal(stats.rows.length, 4);
 });
 
 test("clearHitDecoration removes all triple/double/bull classes from row", () => {
@@ -114,4 +126,127 @@ test("collectThrowRows scopes to #ad-ext-turn and prefers direct throw rows", ()
 
   const rows = collectThrowRows(documentRef);
   assert.deepEqual(rows, [directRow]);
+});
+
+test("updateHitDecorations replays a repeated hit when turn points token changes", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const rowNode = documentRef.throwRow;
+  const textNode = documentRef.throwTextElement;
+
+  textNode.textContent = "40 D20";
+  rowNode.textContent = "40 D20";
+  documentRef.turnPointsElement.textContent = "40";
+
+  const first = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "impact-pop",
+    },
+  });
+  const firstSignature = rowNode.getAttribute("data-ad-ext-hit-signature");
+
+  assert.equal(first.decoratedCount, 1);
+  assert.equal(first.replayedCount, 1);
+  assert.equal(typeof firstSignature, "string");
+  assert.equal(firstSignature.includes("tp:40"), true);
+
+  documentRef.turnPointsElement.textContent = "80";
+  const second = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "impact-pop",
+    },
+  });
+  const secondSignature = rowNode.getAttribute("data-ad-ext-hit-signature");
+
+  assert.equal(second.decoratedCount, 1);
+  assert.equal(second.replayedCount, 1);
+  assert.equal(secondSignature.includes("tp:80"), true);
+  assert.notEqual(secondSignature, firstSignature);
+});
+
+test("updateHitDecorations prefers scoped turn points token over global fallback token", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "36 D18";
+  documentRef.throwRow.textContent = "36 D18";
+  documentRef.turnPointsElement.textContent = "999";
+
+  const scopedTurnPoints = documentRef.createElement("p");
+  scopedTurnPoints.classList.add("ad-ext-turn-points");
+  scopedTurnPoints.textContent = "36";
+  documentRef.turnContainer.appendChild(scopedTurnPoints);
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "neon-pulse",
+    },
+  });
+
+  const signature = documentRef.throwRow.getAttribute("data-ad-ext-hit-signature");
+  assert.equal(typeof signature, "string");
+  assert.equal(signature.includes("tp:36"), true);
+  assert.equal(signature.includes("tp:999"), false);
+});
+
+test("updateHitDecorations counts removals only when a row actually had hit decoration", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+
+  const first = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+  assert.equal(first.removedCount, 0);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), false);
+
+  documentRef.throwTextElement.textContent = "36 D18";
+  documentRef.throwRow.textContent = "36 D18";
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), true);
+
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+  const third = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+  assert.equal(third.removedCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), false);
 });
