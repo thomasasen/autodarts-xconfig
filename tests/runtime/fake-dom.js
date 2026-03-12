@@ -214,6 +214,14 @@ function prepareChildForInsertion(parent, child) {
   }
 }
 
+function createHierarchyRequestError() {
+  const error = new Error(
+    "Failed to execute 'appendChild' on 'Node': The new child element contains the parent."
+  );
+  error.name = "HierarchyRequestError";
+  return error;
+}
+
 class FakeElement extends FakeEventTarget {
   constructor(tagName = "div") {
     super();
@@ -246,6 +254,13 @@ class FakeElement extends FakeEventTarget {
       return child;
     }
 
+    if (
+      child === this ||
+      (typeof child.contains === "function" && child.contains(this))
+    ) {
+      throw createHierarchyRequestError();
+    }
+
     if (child.parentNode && child.parentNode !== this) {
       child.parentNode.removeChild(child);
     }
@@ -260,6 +275,13 @@ class FakeElement extends FakeEventTarget {
   insertBefore(child, referenceNode) {
     if (!child) {
       return child;
+    }
+
+    if (
+      child === this ||
+      (typeof child.contains === "function" && child.contains(this))
+    ) {
+      throw createHierarchyRequestError();
     }
 
     if (!referenceNode || referenceNode.parentNode !== this) {

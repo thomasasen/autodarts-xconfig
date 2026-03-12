@@ -318,6 +318,54 @@ function isNavigationElement(node) {
   return false;
 }
 
+function isPanelHostElement(node) {
+  return Boolean(node) && node.id === PANEL_HOST_ID;
+}
+
+function isVisibleElement(node) {
+  if (!node || !node.style) {
+    return true;
+  }
+  return String(node.style.display || "").toLowerCase() !== "none";
+}
+
+function scoreContentCandidate(node) {
+  if (!node || isNavigationElement(node) || isPanelHostElement(node)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = 0;
+  if (node.matches?.("main")) {
+    score += 100;
+  }
+  if (isVisibleElement(node)) {
+    score += 20;
+  }
+
+  const rect = node.getBoundingClientRect?.();
+  const width = Number(rect?.width || 0);
+  const height = Number(rect?.height || 0);
+  score += Math.min(width, 2000) / 10;
+  score += Math.min(height, 2000) / 20;
+
+  return score;
+}
+
+function findBestContentCandidate(candidates = []) {
+  let best = null;
+  let bestScore = Number.NEGATIVE_INFINITY;
+
+  candidates.forEach((candidate) => {
+    const score = scoreContentCandidate(candidate);
+    if (score > bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  });
+
+  return best;
+}
+
 function getContentElement(windowRef, documentRef, sidebarElement) {
   const root = documentRef?.getElementById?.("root");
   if (!root) {
@@ -331,13 +379,13 @@ function getContentElement(windowRef, documentRef, sidebarElement) {
 
   const sidebar = sidebarElement || getSidebarElement(windowRef, documentRef);
   const siblingCandidates = Array.from(sidebar?.parentNode?.children || []).filter((child) => child !== sidebar);
-  const contentSibling = siblingCandidates.find((child) => !isNavigationElement(child)) || null;
+  const contentSibling = findBestContentCandidate(siblingCandidates);
   if (contentSibling) {
     return contentSibling;
   }
 
   const directChildren = Array.from(root.children || []);
-  return directChildren.find((child) => !isNavigationElement(child)) || null;
+  return findBestContentCandidate(directChildren);
 }
 
 function removeNodeById(documentRef, nodeId) {
@@ -1137,6 +1185,10 @@ function ensureXConfigShell(options = {}) {
       host = createElement(documentRef, "section", {
         id: PANEL_HOST_ID,
       });
+    }
+
+    if (content === host || host.contains?.(content)) {
+      return host;
     }
 
     if (host.parentNode !== content) {

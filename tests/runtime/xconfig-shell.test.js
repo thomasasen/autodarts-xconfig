@@ -77,6 +77,10 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
 test("xConfig shell keeps sidebar visible when layout has no main element", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument({ contentTagName: "div" });
+  const preexistingHost = documentRef.createElement("section");
+  preexistingHost.id = "ad-xconfig-panel-host";
+  preexistingHost.style.display = "none";
+  documentRef.layoutShell.insertBefore(preexistingHost, documentRef.sidebar);
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
@@ -92,6 +96,7 @@ test("xConfig shell keeps sidebar visible when layout has no main element", asyn
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   assert.ok(panelHost);
+  assert.equal(panelHost, preexistingHost);
   assert.equal(panelHost.parentNode, documentRef.main);
   assert.equal(panelHost.style.display, "block");
   assert.notEqual(documentRef.sidebar.style.display, "none");
