@@ -345,6 +345,11 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
 - Gilt für: `alle Modi`
 - Kurz: Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.
 - Grafisch: Bei einer AVG-Änderung erscheint neben dem Wert kurz ein grüner Aufwärtspfeil oder roter Abwärtspfeil und verschwindet nach der eingestellten Zeit wieder.
+- Trendberechnung: Vergleich von `AVG_aktuell` mit `AVG_vorher` aus der AutoDarts-Anzeige.
+- Bei einer Anzeige wie `55.0 / 55.0` wird der linke Wert vor dem `/` verwendet.
+- Formel: `AVG_Delta = AVG_aktuell - AVG_vorher`; `> 0` = Aufwärtspfeil, `< 0` = Abwärtspfeil, `= 0` = keine neue Pfeilrichtung.
+- Beispiel: `ø 52.50 / 51.80` -> `ø 53.10 / 52.00` ergibt `+0.60`, also Pfeil nach oben.
+- Einordnung: X01 nutzt den 3-Dart-Average `((Punkte / Darts) * 3)`, Cricket nutzt `MPR = Marks / Runden`.
 - `Animationsdauer`: Legt fest, wie lange der Pfeil sichtbar bleibt.
   - `Kurz`: Diese Stufe hält die Bounce-Animation sehr kurz. Der Pfeil markiert die AVG-Änderung nur als schnellen Impuls und verschwindet fast sofort wieder.
   - `Standard`: Diese Stufe bietet einen guten Mittelweg: Der Pfeil ist klar wahrnehmbar, verschwindet aber noch zügig genug, um die AVG-Anzeige nicht zu blockieren.

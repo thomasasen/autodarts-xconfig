@@ -347,6 +347,23 @@ export const xconfigFeatureCopy = deepFreeze({
       "Bei einer AVG-Änderung erscheint neben dem Wert kurz ein grüner Aufwärtspfeil oder roter Abwärtspfeil und verschwindet nach der eingestellten Zeit wieder.",
     usefulWhen:
       "Wenn du Formwechsel während eines Legs schnell am AVG erkennen möchtest.",
+    readmeDetailHeading: "Wie der Trend berechnet wird",
+    readmeDetails: [
+      "Der Pfeil vergleicht den zuletzt gelesenen mit dem aktuell gelesenen AutoDarts-AVG-Wert. xConfig berechnet den AVG nicht selbst neu.",
+      "Falls AutoDarts den AVG als Paar zeigt (z. B. `55.0 / 55.0`), nutzt das Modul den linken Wert vor dem `/`.",
+      "Formel: `AVG_Delta = AVG_aktuell - AVG_vorher`.",
+      "Interpretation: `AVG_Delta > 0` zeigt einen grünen Pfeil nach oben, `AVG_Delta < 0` einen roten Pfeil nach unten, `AVG_Delta = 0` keine neue Pfeilrichtung.",
+      "Beispiel: `ø 52.50 / 51.80` -> `ø 53.10 / 52.00` ergibt `+0.60`, also einen Aufwärtspfeil.",
+      "Einordnung des angezeigten Werts: X01 nutzt `3-Dart-Average = (geworfene Punkte / geworfene Darts) * 3` (gleichwertig zu `PPD * 3`), Cricket nutzt `MPR = Marks / Runden`.",
+      "Der Trendpfeil folgt immer genau dem von AutoDarts angezeigten Wert.",
+    ],
+    featuresDetails: [
+      "Trendberechnung: Vergleich von `AVG_aktuell` mit `AVG_vorher` aus der AutoDarts-Anzeige.",
+      "Bei einer Anzeige wie `55.0 / 55.0` wird der linke Wert vor dem `/` verwendet.",
+      "Formel: `AVG_Delta = AVG_aktuell - AVG_vorher`; `> 0` = Aufwärtspfeil, `< 0` = Abwärtspfeil, `= 0` = keine neue Pfeilrichtung.",
+      "Beispiel: `ø 52.50 / 51.80` -> `ø 53.10 / 52.00` ergibt `+0.60`, also Pfeil nach oben.",
+      "Einordnung: X01 nutzt den 3-Dart-Average `((Punkte / Darts) * 3)`, Cricket nutzt `MPR = Marks / Runden`.",
+    ],
     images: [image("Average Trend Arrow", "animation-average-trend-arrow.png")],
     fields: {
       durationMs: fieldCopy(
@@ -1893,9 +1910,23 @@ export function buildReadmeFeatureSection(descriptor, definition) {
     `- Grafisch: ${copy.visualDescription}`,
     `- Wann sinnvoll? ${copy.usefulWhen}`,
     "",
-    "**Einstellungen einfach erklärt**",
-    "",
   ];
+
+  const readmeDetails = Array.isArray(copy.readmeDetails)
+    ? copy.readmeDetails.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : [];
+  if (readmeDetails.length) {
+    const readmeDetailHeading = String(copy.readmeDetailHeading || "").trim();
+    if (readmeDetailHeading) {
+      lines.push(`**${readmeDetailHeading}**`, "");
+    }
+    readmeDetails.forEach((entry) => {
+      lines.push(`- ${entry}`);
+    });
+    lines.push("");
+  }
+
+  lines.push("**Einstellungen einfach erklärt**", "");
 
   (descriptor.fields || []).forEach((field) => {
     const docsDescription = String(field.docsDescription || "").trim();
@@ -1926,6 +1957,13 @@ export function buildFeaturesDocSection(descriptor, definition) {
     `- Kurz: ${copy.visibleDescription}`,
     `- Grafisch: ${copy.visualDescription}`,
   ];
+
+  const featuresDetails = Array.isArray(copy.featuresDetails)
+    ? copy.featuresDetails.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : [];
+  featuresDetails.forEach((entry) => {
+    lines.push(`- ${entry}`);
+  });
 
   (descriptor.fields || []).forEach((field) => {
     const featuresDescription = String(field.featuresDescription || field.docsDescription || "").trim();
