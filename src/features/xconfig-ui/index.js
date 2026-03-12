@@ -108,6 +108,13 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--on[data-active="true"]{background:rgba(44,170,90,.44);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off[data-active="true"]{background:rgba(199,63,63,.42);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-note{margin:.5rem 0 0;color:rgba(234,244,255,.9);font-size:.82rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-list{margin:.55rem 0 0;padding:0;list-style:none;display:grid;gap:.4rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-item{padding:.42rem .5rem;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-active="true"]{border-color:rgba(126,216,255,.56);background:rgba(58,148,255,.16);box-shadow:0 0 0 1px rgba(126,216,255,.16) inset}
+#${PANEL_HOST_ID} .ad-xconfig-option-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-label{font-size:.75rem;font-weight:700;color:#fff}
+#${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
+#${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
 #${PANEL_HOST_ID} .ad-xconfig-empty{border-radius:10px;border:1px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.03);padding:1rem;color:rgba(255,255,255,.75);font-size:.88rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
@@ -642,6 +649,63 @@ function getFieldNoteText(field) {
   return String(field?.description || "").trim();
 }
 
+function buildSelectOptionNotes(documentRef, feature, field) {
+  if (field?.control !== "select" || !Array.isArray(field.options) || !field.options.length) {
+    return null;
+  }
+
+  const describedOptions = field.options.filter((option) =>
+    String(option?.description || "").trim()
+  );
+  if (!describedOptions.length) {
+    return null;
+  }
+
+  const selectedValue = String(feature?.config?.[field.key] ?? "").trim();
+  const list = createElement(documentRef, "ul", {
+    className: "ad-xconfig-option-list",
+    attributes: {
+      "data-setting-key": field.key,
+    },
+  });
+
+  describedOptions.forEach((option) => {
+    const optionValue = String(option?.value ?? "").trim();
+    const isActive = optionValue === selectedValue;
+    const item = createElement(documentRef, "li", {
+      className: "ad-xconfig-option-item",
+      attributes: {
+        "data-adxconfig-option-note": "true",
+        "data-setting-key": field.key,
+        "data-option-value": optionValue,
+        "data-option-description": String(option.description || "").trim(),
+        "data-active": isActive ? "true" : "false",
+      },
+    });
+    const head = createElement(documentRef, "div", {
+      className: "ad-xconfig-option-head",
+    });
+    head.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-label",
+      text: option.label,
+    }));
+    if (isActive) {
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-option-active",
+        text: "Aktuell",
+      }));
+    }
+    item.appendChild(head);
+    item.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: String(option.description || "").trim(),
+    }));
+    list.appendChild(item);
+  });
+
+  return list;
+}
+
 function buildFeatureCard(documentRef, feature) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
   const card = createElement(documentRef, "article", {
@@ -846,6 +910,12 @@ function buildSettingsModal(documentRef, state, features) {
           className: "ad-xconfig-note",
           text: noteText,
         }));
+      }
+      if (field.control === "select") {
+        const optionNotes = buildSelectOptionNotes(documentRef, feature, field);
+        if (optionNotes) {
+          inputWrap.appendChild(optionNotes);
+        }
       }
     }
     row.appendChild(inputWrap);

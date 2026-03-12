@@ -468,6 +468,42 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     "missing action explanation note"
   );
 
+  const displayModeOptionNotes = documentRef.querySelectorAll(
+    "[data-adxconfig-option-note='true'][data-setting-key='backgroundDisplayMode']"
+  );
+  assert.equal(displayModeOptionNotes.length, 5, "missing select option explanations");
+
+  const fillOption = documentRef.querySelector(
+    "[data-adxconfig-option-note='true'][data-setting-key='backgroundDisplayMode'][data-option-value='fill']"
+  );
+  assert.ok(fillOption);
+  assert.equal(fillOption.getAttribute("data-active"), "true");
+  assert.match(
+    String(fillOption.getAttribute("data-option-description") || ""),
+    /Füllt die Fläche komplett/
+  );
+
+  const tileOption = documentRef.querySelector(
+    "[data-adxconfig-option-note='true'][data-setting-key='backgroundDisplayMode'][data-option-value='tile']"
+  );
+  assert.ok(tileOption);
+  assert.equal(tileOption.getAttribute("data-active"), "false");
+  assert.match(
+    String(tileOption.getAttribute("data-option-description") || ""),
+    /gekachelt wie ein Muster/
+  );
+
+  assert.equal(
+    documentRef.querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='showAvg']").length,
+    0,
+    "checkboxes should not render select option explanation lists"
+  );
+  assert.equal(
+    documentRef.querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='uploadThemeBackground']").length,
+    0,
+    "actions should not render select option explanation lists"
+  );
+
   runtime.stop();
 });
 

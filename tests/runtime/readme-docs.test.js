@@ -97,6 +97,23 @@ test("every xConfig field carries UI and docs descriptions", () => {
   });
 });
 
+test("every xConfig select option carries UI and docs descriptions", () => {
+  xconfigDescriptors.forEach((descriptor) => {
+    descriptor.fields
+      .filter((field) => field.control === "select")
+      .forEach((field) => {
+        assert.ok(Array.isArray(field.options) && field.options.length > 0);
+        field.options.forEach((option) => {
+          const optionValue = String(option.value ?? "");
+          const optionId = `${descriptor.featureKey}.${field.key}.${optionValue || "<empty>"}`;
+          assert.ok(option.description, `missing UI option description for ${optionId}`);
+          assert.ok(option.docsDescription, `missing README option description for ${optionId}`);
+          assert.ok(option.featuresDescription, `missing FEATURES option description for ${optionId}`);
+        });
+      });
+  });
+});
+
 test("README contains the generated xConfig feature sections and all setting explanations", () => {
   const readme = readFileSync(readmePath, "utf8");
 

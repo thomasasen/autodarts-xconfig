@@ -1,4 +1,4 @@
-import { getXConfigFeatureCopy, getXConfigFieldCopy } from "./copy.js";
+import { getXConfigFeatureCopy, getXConfigFieldCopy, getXConfigFieldOptionCopy } from "./copy.js";
 
 function checkboxField(key, label) {
   return Object.freeze({
@@ -51,11 +51,25 @@ function descriptorEntry(definition) {
       (definition.fields || []).map((field) => {
         const fieldKey = String(field.key || field.action || "").trim();
         const fieldCopy = getXConfigFieldCopy(featureKey, fieldKey);
+        const nextOptions = Array.isArray(field.options)
+          ? Object.freeze(
+              field.options.map((option) => {
+                const optionCopy = getXConfigFieldOptionCopy(featureKey, fieldKey, option.value);
+                return Object.freeze({
+                  ...option,
+                  description: optionCopy?.description || "",
+                  docsDescription: optionCopy?.docsDescription || "",
+                  featuresDescription: optionCopy?.featuresDescription || "",
+                });
+              })
+            )
+          : field.options;
         return Object.freeze({
           ...field,
           description: fieldCopy?.description || field.description || "",
           docsDescription: fieldCopy?.docsDescription || "",
           featuresDescription: fieldCopy?.featuresDescription || "",
+          options: nextOptions,
         });
       })
     ),
