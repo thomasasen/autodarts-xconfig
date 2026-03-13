@@ -17,11 +17,13 @@ const STYLE_ID = "ad-xconfig-shell-style";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
+const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
   change: "xconfig-shell:document-change",
   keydown: "xconfig-shell:document-keydown",
+  visibilitychange: "xconfig-shell:document-visibilitychange",
 });
 const TAB_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -1486,6 +1488,7 @@ function ensureXConfigShell(options = {}) {
       installedVersion,
     }),
     updateCheckPromise: null,
+    updateCheckIntervalHandle: null,
   };
 
   function isConfigRoute() {
@@ -1555,6 +1558,39 @@ function ensureXConfigShell(options = {}) {
 
     state.updateCheckPromise = updatePromise;
     return updatePromise;
+  }
+
+  function stopAutoUpdateChecks() {
+    if (state.updateCheckIntervalHandle && typeof windowRef.clearInterval === "function") {
+      windowRef.clearInterval(state.updateCheckIntervalHandle);
+    }
+    state.updateCheckIntervalHandle = null;
+  }
+
+  function startAutoUpdateChecks() {
+    stopAutoUpdateChecks();
+    if (!state.updateStatus.capable || typeof windowRef.setInterval !== "function") {
+      return;
+    }
+    state.updateCheckIntervalHandle = windowRef.setInterval(() => {
+      if (!state.started || documentRef?.visibilityState === "hidden") {
+        return;
+      }
+      refreshUpdateStatus({
+        force: false,
+        announce: false,
+      });
+    }, UPDATE_AUTO_CHECK_INTERVAL_MS);
+  }
+
+  function onVisibilityChange() {
+    if (!state.started || documentRef?.visibilityState === "hidden") {
+      return;
+    }
+    refreshUpdateStatus({
+      force: false,
+      announce: false,
+    });
   }
 
   function setNotice(type, message) {
@@ -2378,10 +2414,17 @@ function ensureXConfigShell(options = {}) {
         type: "keydown",
         handler: onDocumentKeydown,
       });
+      listenerRegistry.register({
+        key: LISTENER_KEYS.visibilitychange,
+        target: documentRef,
+        type: "visibilitychange",
+        handler: onVisibilityChange,
+      });
     }
 
     observeRoot();
     queueSync();
+    startAutoUpdateChecks();
     refreshUpdateStatus({
       force: false,
       announce: false,
@@ -2394,6 +2437,7 @@ function ensureXConfigShell(options = {}) {
     state.shellNode = null;
     state.renderSignature = "";
     clearNoticeTimer();
+    stopAutoUpdateChecks();
     state.notice = { type: "", message: "" };
     restoreContent();
 

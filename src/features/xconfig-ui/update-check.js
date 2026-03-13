@@ -3,7 +3,7 @@ const USERSCRIPT_DOWNLOAD_URL =
 const USERSCRIPT_UPDATE_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js";
 const UPDATE_STATUS_STORAGE_KEY = "autodarts-xconfig:update-status:v1";
-const UPDATE_CHECK_TTL_MS = 6 * 60 * 60 * 1000;
+const UPDATE_CHECK_TTL_MS = 60 * 60 * 1000;
 
 function normalizeVersion(value) {
   return String(value || "").trim();

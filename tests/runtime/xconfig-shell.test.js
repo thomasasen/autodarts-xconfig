@@ -487,6 +487,51 @@ test("xConfig shell can recheck update status and promote a current build to upd
   runtime.stop();
 });
 
+test("xConfig shell checks update status in the background without manual recheck clicks", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const originalDateNow = Date.now;
+  let fakeNow = 1_770_000_000_000;
+  Date.now = () => fakeNow;
+
+  const originalSetInterval = windowRef.setInterval.bind(windowRef);
+  windowRef.setInterval = (callback, ms, ...args) => {
+    return originalSetInterval(() => {
+      fakeNow += 61 * 60 * 1000;
+      callback(...args);
+    }, Math.min(Number(ms) || 0, 10));
+  };
+
+  let runtime = null;
+  let callCount = 0;
+  windowRef.fetch = async () => {
+    callCount += 1;
+    const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
+    const remoteVersion = callCount === 1 ? installedVersion : incrementPatchVersion(installedVersion);
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return buildUserscriptMeta(remoteVersion);
+      },
+    };
+  };
+
+  try {
+    runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+    await waitFor(() => callCount >= 2, { timeoutMs: 260, intervalMs: 5 });
+    await waitFor(
+      () => documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available") === "true",
+      { timeoutMs: 260, intervalMs: 5 }
+    );
+    assert.equal(documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available"), "true");
+  } finally {
+    runtime?.stop();
+    Date.now = originalDateNow;
+  }
+});
+
 test("xConfig shell wires tabs, settings modal, toggles and save actions", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
