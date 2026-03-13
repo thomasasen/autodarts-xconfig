@@ -1,8 +1,17 @@
-
 import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
-import { buildMarkerKey, collectBoardMarkers, readMarkerPosition } from "../../shared/dartboard-markers.js";
+import {
+  buildMarkerKey,
+  collectBoardMarkers,
+  readMarkerPosition,
+} from "../../shared/dartboard-markers.js";
 import { resolveDartDesignAsset } from "#feature-assets";
-import { DART_CLASS, DART_NEW_CLASS, OVERLAY_ID, OVERLAY_SCENE_ID } from "./style.js";
+import {
+  DART_CLASS,
+  DART_CONTAINER_CLASS,
+  DART_ROTATE_CLASS,
+  OVERLAY_ID,
+  OVERLAY_SCENE_ID,
+} from "./style.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XLINK_NS = "http://www.w3.org/1999/xlink";
@@ -11,9 +20,14 @@ const DART_ASPECT_RATIO = 472 / 198;
 const TIP_OFFSET_X_RATIO = 0;
 const TIP_OFFSET_Y_RATIO = 130 / 198;
 const MAX_MARKER_RECT_SIZE = 96;
-const TIP_ERROR_WARN_PX = 8;
+const RENDER_ERROR_WARN_PX = 10;
 const MARKER_SCAN_HEARTBEAT_TICKS = 30;
 const RETRY_DELAY_MS = 90;
+const FLIGHT_DISTANCE_RATIO = 1.2;
+const FLIGHT_ARC_HEIGHT_RATIO = 0.16;
+const FLIGHT_EASING = "cubic-bezier(0.15, 0.7, 0.2, 1)";
+const FLIGHT_SETTLE_BUFFER_MS = 140;
+const FLIGHT_TIMEOUT_BUFFER_MS = 220;
 
 function getTimerFns(windowRef) {
   return {
@@ -28,6 +42,13 @@ function getTimerFns(windowRef) {
   };
 }
 
+function nowMs(windowRef) {
+  if (windowRef?.performance && typeof windowRef.performance.now === "function") {
+    return windowRef.performance.now();
+  }
+  return Date.now();
+}
+
 function toFiniteNumber(value, fallbackValue = 0) {
   return Number.isFinite(value) ? Number(value) : Number(fallbackValue);
 }
@@ -37,6 +58,51 @@ function getCurrentHref(windowRef) {
     return "";
   }
   return String(windowRef.location.href || "").trim();
+}
+
+function buildRectPayload(rect) {
+  return {
+    left: toFiniteNumber(rect?.left, 0),
+    top: toFiniteNumber(rect?.top, 0),
+    width: toFiniteNumber(rect?.width, 0),
+    height: toFiniteNumber(rect?.height, 0),
+  };
+}
+
+function normalizeRect(rect) {
+  if (!rect) {
+    return null;
+  }
+
+  const left = Number(rect.left);
+  const top = Number(rect.top);
+  const width = Number(rect.width);
+  const height = Number(rect.height);
+
+  if (
+    !Number.isFinite(left) ||
+    !Number.isFinite(top) ||
+    !Number.isFinite(width) ||
+    !Number.isFinite(height)
+  ) {
+    return null;
+  }
+
+  return {
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+  };
+}
+
+function getNodeRect(node) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return null;
+  }
+  return normalizeRect(node.getBoundingClientRect());
 }
 
 function emitDebug(state, featureDebug, eventName, payload = {}, options = {}) {
@@ -62,11 +128,13 @@ function emitDebugWarn(state, featureDebug, eventName, payload = {}) {
   if (!featureDebug?.enabled || !state) {
     return;
   }
+
   const signature = `${eventName}:${JSON.stringify(payload)}`;
   const lastSignature = state.debugWarningSignatures.get(eventName) || "";
   if (lastSignature === signature) {
     return;
   }
+
   state.debugWarningSignatures.set(eventName, signature);
   featureDebug.warn(eventName, payload);
 }
@@ -75,15 +143,18 @@ function getSvgScale(svgNode) {
   if (!svgNode || typeof svgNode.getScreenCTM !== "function") {
     return 1;
   }
+
   const matrix = svgNode.getScreenCTM();
   if (!matrix) {
     return 1;
   }
+
   const scaleX = Math.hypot(Number(matrix.a) || 0, Number(matrix.b) || 0);
   const scaleY = Math.hypot(Number(matrix.c) || 0, Number(matrix.d) || 0);
   if (!Number.isFinite(scaleX) || !Number.isFinite(scaleY) || scaleX <= 0 || scaleY <= 0) {
     return 1;
   }
+
   return Math.min(scaleX, scaleY);
 }
 
@@ -99,22 +170,26 @@ function isBoardVisible(boardSvg, boardRect) {
   }
 
   const styleRef =
-    boardSvg.ownerDocument?.defaultView && typeof boardSvg.ownerDocument.defaultView.getComputedStyle === "function"
+    boardSvg.ownerDocument?.defaultView &&
+    typeof boardSvg.ownerDocument.defaultView.getComputedStyle === "function"
       ? boardSvg.ownerDocument.defaultView.getComputedStyle(boardSvg)
       : null;
   if (!styleRef) {
     return true;
   }
+
   if (styleRef.display === "none") {
     return false;
   }
   if (styleRef.visibility === "hidden" || styleRef.visibility === "collapse") {
     return false;
   }
+
   const opacity = Number.parseFloat(styleRef.opacity);
   if (Number.isFinite(opacity) && opacity <= 0) {
     return false;
   }
+
   return true;
 }
 
@@ -176,6 +251,7 @@ function clearOverlayChildren(state) {
   if (!state?.overlaySceneNode) {
     return;
   }
+
   while (state.overlaySceneNode.firstChild) {
     state.overlaySceneNode.removeChild(state.overlaySceneNode.firstChild);
   }
@@ -185,6 +261,7 @@ function removeOverlayNode(state) {
   if (!state?.overlayNode) {
     return;
   }
+
   state.overlayNode.remove?.();
   state.overlayNode = null;
   state.overlaySceneNode = null;
@@ -212,22 +289,49 @@ function updateOverlayLayout(overlay, boardRect, paddingPx) {
   overlay.setAttribute("height", String(height));
   overlay.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-  return {
-    left,
-    top,
-    width,
-    height,
-    right: left + width,
-    bottom: top + height,
-  };
+  return (
+    normalizeRect(overlay.getBoundingClientRect?.()) || {
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height,
+    }
+  );
 }
 
-function createDartImageNode(ownerDocument) {
+function createDartEntry(ownerDocument) {
+  const container = ownerDocument.createElementNS(SVG_NS, "g");
+  container.classList.add(DART_CONTAINER_CLASS);
+
+  const rotateGroup = ownerDocument.createElementNS(SVG_NS, "g");
+  rotateGroup.classList.add(DART_ROTATE_CLASS);
+
   const imageNode = ownerDocument.createElementNS(SVG_NS, "image");
   imageNode.classList.add(DART_CLASS);
   imageNode.setAttribute("preserveAspectRatio", "xMidYMid meet");
   imageNode.setAttribute("aria-hidden", "true");
-  return imageNode;
+
+  rotateGroup.appendChild(imageNode);
+  container.appendChild(rotateGroup);
+
+  return {
+    marker: null,
+    container,
+    rotateGroup,
+    imageNode,
+    dartLength: 0,
+    dartHeight: 0,
+    center: null,
+    tipPointLocal: null,
+    rotationDeg: 0,
+    flightAnimation: null,
+    flightStartedAt: 0,
+    settleUntil: 0,
+    lastTargetCenter: null,
+    lastRenderedSignature: "",
+  };
 }
 
 function setImageSource(imageNode, sourceUrl) {
@@ -236,6 +340,7 @@ function setImageSource(imageNode, sourceUrl) {
     imageNode.setAttributeNS(XLINK_NS, "href", sourceUrl);
   }
 }
+
 function setMarkerHidden(marker, shouldHide, state) {
   if (!marker || !marker.style || !state) {
     return;
@@ -267,10 +372,12 @@ function restoreHiddenMarkers(state) {
   if (!state) {
     return;
   }
+
   state.markerOpacityByMarker.forEach((opacity, marker) => {
     if (!marker || !marker.style) {
       return;
     }
+
     marker.style.opacity = opacity;
     if (
       marker.dataset &&
@@ -279,6 +386,7 @@ function restoreHiddenMarkers(state) {
       delete marker.dataset[MARKER_OPACITY_DATA_KEY];
     }
   });
+
   state.markerOpacityByMarker.clear();
 }
 
@@ -288,12 +396,9 @@ function getMarkerScreenPoint(marker) {
   }
 
   if (typeof marker.getBoundingClientRect === "function") {
-    const rect = marker.getBoundingClientRect();
+    const rect = normalizeRect(marker.getBoundingClientRect());
     if (
-      Number.isFinite(rect?.width) &&
-      Number.isFinite(rect?.height) &&
-      Number.isFinite(rect?.left) &&
-      Number.isFinite(rect?.top) &&
+      rect &&
       rect.width > 0 &&
       rect.height > 0 &&
       rect.width <= MAX_MARKER_RECT_SIZE &&
@@ -333,6 +438,7 @@ function getMarkerScreenPoint(marker) {
   const point = svg.createSVGPoint();
   point.x = cx;
   point.y = cy;
+
   const screenPoint = point.matrixTransform(matrix);
   if (!Number.isFinite(screenPoint?.x) || !Number.isFinite(screenPoint?.y)) {
     return null;
@@ -344,36 +450,61 @@ function getMarkerScreenPoint(marker) {
   };
 }
 
+function getDartOffsets(dartLength, dartHeight) {
+  return {
+    offsetX: dartLength * TIP_OFFSET_X_RATIO,
+    offsetY: dartHeight * TIP_OFFSET_Y_RATIO,
+  };
+}
+
+function getRotationDeg(center, boardCenter) {
+  const angleToCenter =
+    (Math.atan2(boardCenter.y - center.y, boardCenter.x - center.x) * 180) / Math.PI;
+  return angleToCenter - 180;
+}
+
 function setDartGeometry(entry, options = {}) {
   const imageNode = entry?.imageNode;
-  if (!imageNode) {
-    return;
+  const rotateGroup = entry?.rotateGroup;
+  if (!imageNode || !rotateGroup) {
+    return null;
   }
 
   const center = options.center;
   const boardCenter = options.boardCenter;
   const dartLength = options.dartLength;
   const dartHeight = options.dartHeight;
+  const sourceUrl = options.sourceUrl;
 
-  const offsetX = dartLength * TIP_OFFSET_X_RATIO;
-  const offsetY = dartHeight * TIP_OFFSET_Y_RATIO;
-  const x = center.x - offsetX;
-  const y = center.y - offsetY;
+  const offsets = getDartOffsets(dartLength, dartHeight);
+  const x = center.x - offsets.offsetX;
+  const y = center.y - offsets.offsetY;
+  const rotationDeg = getRotationDeg(center, boardCenter);
+
+  if (sourceUrl) {
+    setImageSource(imageNode, sourceUrl);
+  }
 
   imageNode.setAttribute("width", String(dartLength));
   imageNode.setAttribute("height", String(dartHeight));
   imageNode.setAttribute("x", String(x));
   imageNode.setAttribute("y", String(y));
-
-  const angleToCenter =
-    (Math.atan2(boardCenter.y - center.y, boardCenter.x - center.x) * 180) / Math.PI;
-  const rotation = angleToCenter - 180;
-  imageNode.setAttribute("transform", `rotate(${rotation} ${center.x} ${center.y})`);
+  imageNode.removeAttribute("transform");
+  rotateGroup.setAttribute("transform", `rotate(${rotationDeg} ${center.x} ${center.y})`);
 
   entry.center = center;
-  entry.tipPoint = {
-    x: x + offsetX,
-    y: y + offsetY,
+  entry.dartLength = dartLength;
+  entry.dartHeight = dartHeight;
+  entry.rotationDeg = rotationDeg;
+  entry.tipPointLocal = {
+    x: x + offsets.offsetX,
+    y: y + offsets.offsetY,
+  };
+
+  return {
+    x,
+    y,
+    rotationDeg,
   };
 }
 
@@ -381,10 +512,12 @@ function cancelFlightTimeout(state, marker) {
   if (!state || !marker) {
     return;
   }
+
   const handle = state.flightTimeoutByMarker.get(marker);
   if (!handle) {
     return;
   }
+
   const { clearTimeoutRef } = getTimerFns(state.windowRef);
   clearTimeoutRef(handle);
   state.flightTimeoutByMarker.delete(marker);
@@ -394,6 +527,7 @@ function clearFlightTimeouts(state) {
   if (!state) {
     return;
   }
+
   const { clearTimeoutRef } = getTimerFns(state.windowRef);
   state.flightTimeoutByMarker.forEach((handle) => clearTimeoutRef(handle));
   state.flightTimeoutByMarker.clear();
@@ -403,6 +537,7 @@ function clearRetryTimer(state) {
   if (!state?.retryTimer) {
     return;
   }
+
   const { clearTimeoutRef } = getTimerFns(state.windowRef);
   clearTimeoutRef(state.retryTimer);
   state.retryTimer = 0;
@@ -412,6 +547,7 @@ function scheduleRetry(state, scheduleUpdate, delayMs) {
   if (!state || state.retryTimer || typeof scheduleUpdate !== "function") {
     return false;
   }
+
   const { setTimeoutRef } = getTimerFns(state.windowRef);
   state.retryTimer = setTimeoutRef(() => {
     state.retryTimer = 0;
@@ -420,37 +556,173 @@ function scheduleRetry(state, scheduleUpdate, delayMs) {
   return true;
 }
 
-function triggerFlightAnimation(entry, state, visualConfig, boardCenter) {
-  if (!entry?.imageNode || !entry.center || !visualConfig?.animateDarts) {
+function clearFlightVisualState(entry) {
+  if (!entry?.container?.style) {
     return;
   }
 
-  const imageNode = entry.imageNode;
+  entry.container.style.transform = "";
+  entry.container.style.opacity = "";
+  entry.container.style.filter = "";
+}
+
+function cancelEntryFlight(state, entry) {
+  if (!entry) {
+    return;
+  }
+
   cancelFlightTimeout(state, entry.marker);
 
-  const dx = entry.center.x - boardCenter.x;
-  const dy = entry.center.y - boardCenter.y;
-  const distance = Math.max(1, Math.hypot(dx, dy));
-  const travel = Math.max(18, (entry.dartLength || 0) * 1.2);
-  const fromX = (dx / distance) * travel;
-  const fromY = (dy / distance) * travel;
+  if (entry.flightAnimation && typeof entry.flightAnimation.cancel === "function") {
+    try {
+      entry.flightAnimation.cancel();
+    } catch (_) {
+      // Keep cleanup fail-soft.
+    }
+  }
 
-  imageNode.style.setProperty("--ad-ext-dart-from-x", `${fromX.toFixed(1)}px`);
-  imageNode.style.setProperty("--ad-ext-dart-from-y", `${fromY.toFixed(1)}px`);
-  imageNode.style.setProperty(
-    "--ad-ext-dart-flight-ms",
-    `${visualConfig.flightDurationMs}ms`
-  );
+  entry.flightAnimation = null;
+  entry.flightStartedAt = 0;
+  clearFlightVisualState(entry);
+}
 
-  imageNode.classList.remove(DART_NEW_CLASS);
-  void imageNode.getAttribute("x");
-  imageNode.classList.add(DART_NEW_CLASS);
+function getFlightOffsets(center, boardCenter, dartLength) {
+  let dx = center.x - boardCenter.x;
+  let dy = center.y - boardCenter.y;
+  let length = Math.hypot(dx, dy);
+
+  if (!Number.isFinite(length) || length < 0.001) {
+    dx = 1;
+    dy = 0;
+    length = 1;
+  }
+
+  const dirX = dx / length;
+  const dirY = dy / length;
+  const startDistance = dartLength * FLIGHT_DISTANCE_RATIO;
+  const start = {
+    x: dirX * startDistance,
+    y: dirY * startDistance,
+  };
+  const mid = {
+    x: start.x * 0.5,
+    y: start.y * 0.5,
+  };
+
+  const arcHeight = dartLength * FLIGHT_ARC_HEIGHT_RATIO;
+  if (arcHeight > 0) {
+    const gravityScale = 0.35 + 0.65 * Math.abs(dirY);
+    mid.y += arcHeight * gravityScale;
+  }
+
+  return { start, mid };
+}
+
+function buildGeometryPayload(marker, index, screenPoint, overlayRect, svgRect, groupRect, entry, extra = {}) {
+  const payload = {
+    markerKey: buildMarkerKey(marker),
+    index,
+    targetCenter: {
+      x: Number(screenPoint.x.toFixed(2)),
+      y: Number(screenPoint.y.toFixed(2)),
+    },
+    overlayRect: buildRectPayload(overlayRect),
+    svgRect: buildRectPayload(svgRect),
+    groupRect: buildRectPayload(groupRect),
+    rotationDeg: Number(toFiniteNumber(entry?.rotationDeg, 0).toFixed(2)),
+  };
+
+  Object.keys(extra).forEach((key) => {
+    if (extra[key] !== undefined) {
+      payload[key] = extra[key];
+    }
+  });
+
+  return payload;
+}
+
+function triggerFlightAnimation(entry, state, visualConfig, boardCenter, featureDebug, geometryPayload) {
+  if (!entry?.container || !entry.center || !visualConfig?.animateDarts) {
+    return;
+  }
+
+  if (entry.flightAnimation) {
+    return;
+  }
+
+  const flightGroup = entry.container;
+  const offsets = getFlightOffsets(entry.center, boardCenter, entry.dartLength);
+  const duration = Math.max(0, Number(visualConfig.flightDurationMs) || 0);
+  const flightKeyframes = [
+    {
+      transform: `translate(${offsets.start.x}px, ${offsets.start.y}px) scale(0.94)`,
+      opacity: 0.22,
+      filter: "blur(2px)",
+    },
+    {
+      transform: `translate(${offsets.mid.x}px, ${offsets.mid.y}px) scale(0.97)`,
+      opacity: 0.78,
+      filter: "blur(1px)",
+    },
+    {
+      transform: "translate(0px, 0px) scale(1)",
+      opacity: 1,
+      filter: "blur(0px)",
+    },
+  ];
+
+  const startTime = nowMs(state.windowRef);
+  entry.flightStartedAt = startTime;
+  entry.settleUntil = Math.max(entry.settleUntil || 0, startTime + duration + FLIGHT_SETTLE_BUFFER_MS);
+
+  emitDebug(state, featureDebug, "flight-start", {
+    ...geometryPayload,
+    fromX: Number(offsets.start.x.toFixed(2)),
+    fromY: Number(offsets.start.y.toFixed(2)),
+  });
+
+  if (typeof flightGroup.animate !== "function") {
+    return;
+  }
+
+  const flightAnimation = flightGroup.animate(flightKeyframes, {
+    duration,
+    easing: FLIGHT_EASING,
+    fill: "both",
+  });
+
+  entry.flightAnimation = flightAnimation;
+
+  const cleanupFlight = () => {
+    if (entry.flightAnimation !== flightAnimation) {
+      return;
+    }
+
+    entry.flightAnimation = null;
+    entry.flightStartedAt = 0;
+    cancelFlightTimeout(state, entry.marker);
+    clearFlightVisualState(entry);
+  };
+
+  flightAnimation.onfinish = () => {
+    emitDebug(state, featureDebug, "flight-finish", geometryPayload);
+    cleanupFlight();
+  };
+  flightAnimation.oncancel = cleanupFlight;
 
   const { setTimeoutRef } = getTimerFns(state.windowRef);
   const handle = setTimeoutRef(() => {
-    state.flightTimeoutByMarker.delete(entry.marker);
-    imageNode.classList.remove(DART_NEW_CLASS);
-  }, visualConfig.flightDurationMs + 120);
+    if (entry.flightAnimation !== flightAnimation) {
+      return;
+    }
+
+    emitDebugWarn(state, featureDebug, "flight-timeout", geometryPayload);
+    if (typeof flightAnimation.cancel === "function") {
+      flightAnimation.cancel();
+    } else {
+      cleanupFlight();
+    }
+  }, duration + FLIGHT_TIMEOUT_BUFFER_MS);
 
   state.flightTimeoutByMarker.set(entry.marker, handle);
 }
@@ -459,13 +731,14 @@ function removeEntry(state, marker) {
   if (!state || !marker) {
     return false;
   }
+
   const entry = state.entriesByMarker.get(marker);
   if (!entry) {
     return false;
   }
 
-  cancelFlightTimeout(state, marker);
-  entry.imageNode?.remove?.();
+  cancelEntryFlight(state, entry);
+  entry.container?.remove?.();
   setMarkerHidden(marker, false, state);
   state.entriesByMarker.delete(marker);
   return true;
@@ -475,6 +748,7 @@ function clearEntries(state) {
   if (!state) {
     return;
   }
+
   Array.from(state.entriesByMarker.keys()).forEach((marker) => removeEntry(state, marker));
   state.entriesByMarker.clear();
 }
@@ -489,7 +763,7 @@ function collectDartNodesByDepth(markersWithEntries = []) {
       }
       return Number(left.index || 0) - Number(right.index || 0);
     })
-    .map((item) => item.entry?.imageNode)
+    .map((item) => item.entry?.container)
     .filter(Boolean);
 }
 
@@ -498,19 +772,25 @@ function reorderDarts(state, markersWithEntries = []) {
   if (!scene) {
     return;
   }
+
   collectDartNodesByDepth(markersWithEntries).forEach((node) => scene.appendChild(node));
 }
 
-function buildBoardSignature(board, boardRect) {
+function buildBoardSignature(board, boardRect, groupRect) {
   if (!board || !boardRect) {
     return "none";
   }
+
   return [
     toFiniteNumber(board.radius).toFixed(2),
     toFiniteNumber(boardRect.left).toFixed(1),
     toFiniteNumber(boardRect.top).toFixed(1),
     toFiniteNumber(boardRect.width).toFixed(1),
     toFiniteNumber(boardRect.height).toFixed(1),
+    toFiniteNumber(groupRect?.left).toFixed(1),
+    toFiniteNumber(groupRect?.top).toFixed(1),
+    toFiniteNumber(groupRect?.width).toFixed(1),
+    toFiniteNumber(groupRect?.height).toFixed(1),
   ].join("|");
 }
 
@@ -518,6 +798,7 @@ function buildOverlaySignature(overlayRect, dartLength) {
   if (!overlayRect) {
     return "none";
   }
+
   return [
     toFiniteNumber(overlayRect.left).toFixed(1),
     toFiniteNumber(overlayRect.top).toFixed(1),
@@ -527,18 +808,22 @@ function buildOverlaySignature(overlayRect, dartLength) {
   ].join("|");
 }
 
-function maybeEmitBoardAndOverlayDebug(state, featureDebug, board, boardRect, overlayRect, dartLength) {
-  const boardSignature = buildBoardSignature(board, boardRect);
+function maybeEmitBoardAndOverlayDebug(
+  state,
+  featureDebug,
+  board,
+  boardRect,
+  groupRect,
+  overlayRect,
+  dartLength
+) {
+  const boardSignature = buildBoardSignature(board, boardRect, groupRect);
   if (state.lastBoardSignature !== boardSignature) {
     state.lastBoardSignature = boardSignature;
     emitDebug(state, featureDebug, "board-found", {
       radius: Number(board?.radius || 0),
-      rect: {
-        left: toFiniteNumber(boardRect?.left, 0),
-        top: toFiniteNumber(boardRect?.top, 0),
-        width: toFiniteNumber(boardRect?.width, 0),
-        height: toFiniteNumber(boardRect?.height, 0),
-      },
+      svgRect: buildRectPayload(boardRect),
+      groupRect: buildRectPayload(groupRect),
     });
   }
 
@@ -546,23 +831,83 @@ function maybeEmitBoardAndOverlayDebug(state, featureDebug, board, boardRect, ov
   if (state.lastOverlaySignature !== overlaySignature) {
     state.lastOverlaySignature = overlaySignature;
     emitDebug(state, featureDebug, "overlay-layout", {
-      left: toFiniteNumber(overlayRect?.left, 0),
-      top: toFiniteNumber(overlayRect?.top, 0),
-      width: toFiniteNumber(overlayRect?.width, 0),
-      height: toFiniteNumber(overlayRect?.height, 0),
+      ...buildRectPayload(overlayRect),
       dartLength: toFiniteNumber(dartLength, 0),
     });
   }
 }
 
-function getTipErrorPx(entry, center) {
-  if (!entry || !center || !entry.tipPoint) {
+function getRenderedTipScreenPoint(entry) {
+  const overlaySvg = entry?.rotateGroup?.ownerSVGElement || entry?.imageNode?.ownerSVGElement;
+  const tipPointLocal = entry?.tipPointLocal;
+  if (
+    overlaySvg &&
+    tipPointLocal &&
+    typeof overlaySvg.createSVGPoint === "function" &&
+    entry?.rotateGroup &&
+    typeof entry.rotateGroup.getScreenCTM === "function"
+  ) {
+    const matrix = entry.rotateGroup.getScreenCTM();
+    if (matrix) {
+      const point = overlaySvg.createSVGPoint();
+      point.x = Number(tipPointLocal.x);
+      point.y = Number(tipPointLocal.y);
+      const screenPoint = point.matrixTransform(matrix);
+      if (Number.isFinite(screenPoint?.x) && Number.isFinite(screenPoint?.y)) {
+        return {
+          x: Number(screenPoint.x),
+          y: Number(screenPoint.y),
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function maybeMeasureRenderError(state, featureDebug, entry, screenPoint, geometryPayload) {
+  if (!entry || entry.flightAnimation) {
     return Number.NaN;
   }
-  const dx = Number(entry.tipPoint.x) - Number(center.x);
-  const dy = Number(entry.tipPoint.y) - Number(center.y);
-  return Math.hypot(dx, dy);
+
+  const currentTime = nowMs(state.windowRef);
+  if (currentTime < (entry.settleUntil || 0)) {
+    return Number.NaN;
+  }
+
+  const renderedTip = getRenderedTipScreenPoint(entry);
+  if (!renderedTip) {
+    return Number.NaN;
+  }
+
+  const renderErrorPx = Math.hypot(
+    Number(renderedTip.x) - Number(screenPoint.x),
+    Number(renderedTip.y) - Number(screenPoint.y)
+  );
+
+  const signature = [
+    Number(screenPoint.x).toFixed(2),
+    Number(screenPoint.y).toFixed(2),
+    Number(renderErrorPx).toFixed(2),
+    Number(entry.rotationDeg || 0).toFixed(2),
+  ].join("|");
+
+  if (entry.lastRenderedSignature === signature) {
+    return renderErrorPx;
+  }
+
+  entry.lastRenderedSignature = signature;
+
+  if (renderErrorPx > RENDER_ERROR_WARN_PX) {
+    emitDebugWarn(state, featureDebug, "render-mismatch", {
+      ...geometryPayload,
+      renderErrorPx: Number(renderErrorPx.toFixed(2)),
+    });
+  }
+
+  return renderErrorPx;
 }
+
 export function createDartMarkerDartsState(windowRef = null) {
   return {
     windowRef,
@@ -636,8 +981,8 @@ export function updateDartMarkerDarts(options = {}) {
     return;
   }
 
-  const boardRect = board.svg.getBoundingClientRect();
-  if (!isBoardVisible(board.svg, boardRect)) {
+  const boardRect = getNodeRect(board.svg);
+  if (!boardRect || !isBoardVisible(board.svg, boardRect)) {
     clearDartMarkerDartsState(state, {
       featureDebug,
       reason: "board-hidden",
@@ -645,6 +990,7 @@ export function updateDartMarkerDarts(options = {}) {
     return;
   }
 
+  const groupRect = getNodeRect(board.group) || boardRect;
   const markers = collectBoardMarkers(documentRef, { board });
   if (!markers.length) {
     clearDartMarkerDartsState(state, {
@@ -672,8 +1018,8 @@ export function updateDartMarkerDarts(options = {}) {
   const paddingPx = getOverlayPadding(dartLength, visualConfig);
   const overlayRect = updateOverlayLayout(overlay, boardRect, paddingPx);
   const boardCenter = {
-    x: Number(boardRect.width) / 2 + paddingPx,
-    y: Number(boardRect.height) / 2 + paddingPx,
+    x: boardRect.left + boardRect.width / 2 - overlayRect.left,
+    y: boardRect.top + boardRect.height / 2 - overlayRect.top,
   };
 
   maybeEmitBoardAndOverlayDebug(
@@ -681,6 +1027,7 @@ export function updateDartMarkerDarts(options = {}) {
     featureDebug,
     board,
     boardRect,
+    groupRect,
     overlayRect,
     dartLength
   );
@@ -703,7 +1050,7 @@ export function updateDartMarkerDarts(options = {}) {
   let updated = 0;
   let unresolved = 0;
   let hiddenMarkerCount = 0;
-  let maxTipErrorPx = 0;
+  let maxRenderErrorPx = 0;
 
   const markersWithEntries = [];
 
@@ -727,15 +1074,8 @@ export function updateDartMarkerDarts(options = {}) {
     const isNew = !entry;
 
     if (!entry) {
-      const imageNode = createDartImageNode(scene.ownerDocument);
-      scene.appendChild(imageNode);
-      entry = {
-        marker,
-        imageNode,
-        dartLength,
-        center,
-        tipPoint: null,
-      };
+      entry = createDartEntry(scene.ownerDocument);
+      scene.appendChild(entry.container);
       state.entriesByMarker.set(marker, entry);
       added += 1;
       emitDebug(state, featureDebug, "dart-add", {
@@ -750,29 +1090,50 @@ export function updateDartMarkerDarts(options = {}) {
     }
 
     entry.marker = marker;
-    entry.dartLength = dartLength;
+    entry.lastTargetCenter = {
+      x: Number(screenPoint.x),
+      y: Number(screenPoint.y),
+    };
 
-    setImageSource(entry.imageNode, dartImageSource);
     setDartGeometry(entry, {
       center,
       boardCenter,
       dartLength,
       dartHeight,
+      sourceUrl: dartImageSource,
     });
 
-    const tipErrorPx = getTipErrorPx(entry, center);
-    if (Number.isFinite(tipErrorPx)) {
-      maxTipErrorPx = Math.max(maxTipErrorPx, tipErrorPx);
-      if (tipErrorPx > TIP_ERROR_WARN_PX) {
-        emitDebugWarn(state, featureDebug, "tip-error", {
-          markerKey: buildMarkerKey(marker),
-          tipErrorPx: Number(tipErrorPx.toFixed(2)),
-        });
-      }
-    }
+    const geometryPayload = buildGeometryPayload(
+      marker,
+      index,
+      screenPoint,
+      overlayRect,
+      boardRect,
+      groupRect,
+      entry
+    );
+    emitDebug(state, featureDebug, "geometry-apply", geometryPayload);
 
     if (isNew) {
-      triggerFlightAnimation(entry, state, visualConfig, boardCenter);
+      triggerFlightAnimation(
+        entry,
+        state,
+        visualConfig,
+        boardCenter,
+        featureDebug,
+        geometryPayload
+      );
+    }
+
+    const renderErrorPx = maybeMeasureRenderError(
+      state,
+      featureDebug,
+      entry,
+      screenPoint,
+      geometryPayload
+    );
+    if (Number.isFinite(renderErrorPx)) {
+      maxRenderErrorPx = Math.max(maxRenderErrorPx, renderErrorPx);
     }
 
     setMarkerHidden(marker, visualConfig.hideOriginalMarkers, state);
@@ -813,7 +1174,7 @@ export function updateDartMarkerDarts(options = {}) {
       unresolved,
       hiddenMarkerCount,
       retryScheduled,
-      maxTipErrorPx: Number(maxTipErrorPx.toFixed(2)),
+      maxRenderErrorPx: Number(maxRenderErrorPx.toFixed(2)),
     },
     { heartbeat: true }
   );

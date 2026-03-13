@@ -11,7 +11,12 @@ import {
   updateDartMarkerDarts,
 } from "../../src/features/dart-marker-darts/logic.js";
 import { initializeDartMarkerDarts } from "../../src/features/dart-marker-darts/index.js";
-import { OVERLAY_ID } from "../../src/features/dart-marker-darts/style.js";
+import {
+  DART_CLASS,
+  DART_CONTAINER_CLASS,
+  DART_ROTATE_CLASS,
+  OVERLAY_ID,
+} from "../../src/features/dart-marker-darts/style.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -25,8 +30,17 @@ const VISUAL_CONFIG = Object.freeze({
   flightDurationMs: 320,
 });
 
+const ANIMATED_VISUAL_CONFIG = Object.freeze({
+  ...VISUAL_CONFIG,
+  animateDarts: true,
+});
+
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function approxEqual(actual, expected, epsilon = 0.01) {
+  assert.ok(Math.abs(Number(actual) - Number(expected)) <= epsilon, `${actual} ~= ${expected}`);
 }
 
 function createSvgPointFactory() {
@@ -61,18 +75,20 @@ function createMarker(documentRef, parentNode, spec = {}) {
     left: Number(spec.rectLeft ?? 0),
     top: Number(spec.rectTop ?? 0),
   };
-  marker.getScreenCTM = () => (typeof spec.getMatrix === "function" ? spec.getMatrix() : spec.matrix || null);
+  marker.getScreenCTM = () =>
+    (typeof spec.getMatrix === "function" ? spec.getMatrix() : spec.matrix || null);
   parentNode.appendChild(marker);
   return marker;
 }
 
-function installBoardFixture(documentRef, markerSpecs = []) {
+function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.__rect = { left: 100, top: 50, width: 600, height: 600 };
+  svg.__rect = options.svgRect || { left: 100, top: 50, width: 600, height: 600 };
   svg.getScreenCTM = () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 });
   svg.createSVGPoint = () => createSvgPointFactory();
 
   const boardGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  boardGroup.__rect = options.groupRect || svg.__rect;
   const outerCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
   outerCircle.setAttribute("cx", "0");
   outerCircle.setAttribute("cy", "0");
@@ -91,7 +107,15 @@ function installBoardFixture(documentRef, markerSpecs = []) {
 }
 
 function getDartImages(documentRef) {
-  return Array.from(documentRef.querySelectorAll("image.ad-ext-dart-image"));
+  return Array.from(documentRef.querySelectorAll(`image.${DART_CLASS}`));
+}
+
+function getFlightGroups(documentRef) {
+  return Array.from(documentRef.querySelectorAll(`g.${DART_CONTAINER_CLASS}`));
+}
+
+function getRotateGroups(documentRef) {
+  return Array.from(documentRef.querySelectorAll(`g.${DART_ROTATE_CLASS}`));
 }
 
 function createSingleFeatureRuntimeConfig() {
@@ -138,15 +162,62 @@ test("dart-marker-darts keeps separate darts for markers with identical cx/cy/r"
   });
 
   assert.equal(state.entriesByMarker.size, 2);
+  assert.equal(getFlightGroups(documentRef).length, 2);
   assert.equal(getDartImages(documentRef).length, 2);
 
   clearDartMarkerDartsState(state);
 });
 
-test("dart-marker-darts positions darts in screen space using SVG matrix fallback", () => {
+test("dart-marker-darts separates flight container, rotation group, and image node", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
-  installBoardFixture(documentRef, [
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 10,
+      cy: 20,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 360, f: 280 }),
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+  assert.equal(entry.container.parentNode?.id, "ad-ext-dart-image-overlay-scene");
+  assert.equal(entry.rotateGroup.parentNode, entry.container);
+  assert.equal(entry.imageNode.parentNode, entry.rotateGroup);
+  assert.equal(getFlightGroups(documentRef).length, 1);
+  assert.equal(getRotateGroups(documentRef).length, 1);
+  assert.match(String(entry.rotateGroup.getAttribute("transform") || ""), /^rotate\(/);
+  assert.equal(entry.imageNode.getAttribute("transform"), null);
+  assert.equal(entry.container.__animations.length, 1);
+  assert.equal(entry.imageNode.__animations.length, 0);
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts positions darts in screen space using actual overlay rect and SVG matrix fallback", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const overlay = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  overlay.id = OVERLAY_ID;
+  overlay.getBoundingClientRect = () => ({
+    left: 12,
+    top: 34,
+    width: 980,
+    height: 980,
+    right: 992,
+    bottom: 1014,
+  });
+  documentRef.body.appendChild(overlay);
+
+  const { markers } = installBoardFixture(documentRef, [
     {
       cx: 10,
       cy: 20,
@@ -162,16 +233,12 @@ test("dart-marker-darts positions darts in screen space using SVG matrix fallbac
     visualConfig: VISUAL_CONFIG,
   });
 
-  const imageNode = getDartImages(documentRef)[0];
-  assert.ok(imageNode);
-
-  const x = Number.parseFloat(imageNode.getAttribute("x"));
-  const y = Number.parseFloat(imageNode.getAttribute("y"));
-  const transform = String(imageNode.getAttribute("transform") || "");
-
-  assert.ok(Number.isFinite(x));
-  assert.ok(Number.isFinite(y));
-  assert.ok(transform.startsWith("rotate("));
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+  approxEqual(entry.center.x, 320 - 12);
+  approxEqual(entry.center.y, 240 - 34);
+  assert.ok(Number.isFinite(Number.parseFloat(entry.imageNode.getAttribute("x"))));
+  assert.ok(Number.isFinite(Number.parseFloat(entry.imageNode.getAttribute("y"))));
 
   clearDartMarkerDartsState(state);
 });
@@ -205,7 +272,7 @@ test("dart-marker-darts schedules retry when marker position is unresolved", () 
   clearDartMarkerDartsState(state);
 });
 
-test("dart-marker-darts cleanup restores marker opacity and removes overlay artifacts", () => {
+test("dart-marker-darts cleanup restores marker opacity, removes overlay artifacts, and cancels active flights", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const { markers } = installBoardFixture(documentRef, [
@@ -222,11 +289,13 @@ test("dart-marker-darts cleanup restores marker opacity and removes overlay arti
     documentRef,
     state,
     visualConfig: {
-      ...VISUAL_CONFIG,
+      ...ANIMATED_VISUAL_CONFIG,
       hideOriginalMarkers: true,
     },
   });
 
+  const entry = state.entriesByMarker.get(markers[0]);
+  const animation = entry.flightAnimation;
   assert.equal(markers[0].style.opacity, "0");
   assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), true);
 
@@ -236,9 +305,10 @@ test("dart-marker-darts cleanup restores marker opacity and removes overlay arti
   assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
   assert.equal(state.entriesByMarker.size, 0);
   assert.equal(state.markerOpacityByMarker.size, 0);
+  assert.equal(animation.playState, "idle");
 });
 
-test("dart-marker-darts reacts to scroll/resize/mutation triggers without drift", async () => {
+test("dart-marker-darts reacts to scroll, resize, and mutation triggers without drift", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const dynamicMatrix = { a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 };
@@ -342,10 +412,50 @@ test("dart-marker-darts runtime remount keeps a single overlay instance", async 
   assert.equal(documentRef.querySelectorAll(`#${OVERLAY_ID}`).length, 0);
 });
 
-test("dart-marker-darts debug logging is gated and deduplicated", () => {
+test("dart-marker-darts does not create concurrent flight animations during repeated updates", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
-  installBoardFixture(documentRef, [
+  const dynamicMatrix = { a: 1, b: 0, c: 0, d: 1, e: 360, f: 260 };
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 0,
+      cy: 0,
+      r: 5,
+      getMatrix: () => dynamicMatrix,
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  const firstAnimation = entry.flightAnimation;
+  assert.ok(firstAnimation);
+  assert.equal(entry.container.__animations.length, 1);
+
+  dynamicMatrix.e += 32;
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
+  });
+
+  const updatedEntry = state.entriesByMarker.get(markers[0]);
+  assert.equal(updatedEntry.flightAnimation, firstAnimation);
+  assert.equal(updatedEntry.container.__animations.length, 1);
+  approxEqual(updatedEntry.lastTargetCenter.x, 392);
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts debug logging is gated, deduplicated, and reports render mismatches", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [
     {
       cx: 0,
       cy: 0,
@@ -370,25 +480,47 @@ test("dart-marker-darts debug logging is gated and deduplicated", () => {
   updateDartMarkerDarts({
     documentRef,
     state,
-    visualConfig: VISUAL_CONFIG,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
     featureDebug,
   });
   updateDartMarkerDarts({
     documentRef,
     state,
-    visualConfig: VISUAL_CONFIG,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
     featureDebug,
   });
   updateDartMarkerDarts({
     documentRef,
     state,
-    visualConfig: VISUAL_CONFIG,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
     featureDebug,
   });
 
-  const markerScanLogs = logs.filter((entry) => entry[0] === "marker-scan");
-  assert.equal(markerScanLogs.length, 2);
-  assert.equal(warns.length, 0);
+  const entry = state.entriesByMarker.get(markers[0]);
+  entry.flightAnimation?.finish?.();
+  entry.settleUntil = 0;
+  entry.rotateGroup.getScreenCTM = () => ({ a: 1, b: 0, c: 0, d: 1, e: 60, f: 60 });
+
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
+    featureDebug,
+  });
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
+    featureDebug,
+  });
+
+  const markerScanLogs = logs.filter((event) => event[0] === "marker-scan");
+  const flightStartLogs = logs.filter((event) => event[0] === "flight-start");
+  const renderMismatchWarns = warns.filter((event) => event[0] === "render-mismatch");
+
+  assert.equal(markerScanLogs.length, 3);
+  assert.equal(flightStartLogs.length, 1);
+  assert.equal(renderMismatchWarns.length, 1);
 
   const disabledDebug = {
     enabled: false,

@@ -1,10 +1,15 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="de">
   <head>
     <meta charset="utf-8" />
     <title>Dart Marker Darts Harness</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 20px; background: #111827; color: #f8fafc; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #111827;
+        color: #f8fafc;
+      }
       .pass { color: #86efac; }
       .fail { color: #fca5a5; }
       svg { width: 420px; height: 420px; background: #020617; border-radius: 12px; }
@@ -20,9 +25,10 @@
         <circle cx="500" cy="500" r="460" fill="none" stroke="#334155"></circle>
         <circle cx="500" cy="500" r="320" fill="none" stroke="#334155"></circle>
       </g>
-      <g>
+      <g id="marker-layer" transform="translate(24 -18) rotate(2 500 500)">
         <circle cx="300" cy="300" r="6" style="filter:shadow-2dp" data-hit="1"></circle>
         <circle cx="500" cy="250" r="6" style="filter:shadow-2dp" data-hit="1"></circle>
+        <circle cx="640" cy="420" r="6" style="filter:shadow-2dp" data-hit="1"></circle>
       </g>
     </svg>
 
@@ -35,6 +41,7 @@
 
       const summary = document.getElementById("summary");
       const results = document.getElementById("results");
+      const TIP_OFFSET_Y_RATIO = 130 / 198;
 
       function assertStep(label, condition) {
         const item = document.createElement("li");
@@ -42,6 +49,60 @@
         item.className = condition ? "pass" : "fail";
         results.appendChild(item);
         return condition;
+      }
+
+      function markerNodes() {
+        return Array.from(document.querySelectorAll("circle[style*='shadow-2dp']"));
+      }
+
+      function dartImages(overlay) {
+        return overlay ? Array.from(overlay.querySelectorAll(".ad-ext-dart-image")) : [];
+      }
+
+      function dartFlights(overlay) {
+        return overlay ? Array.from(overlay.querySelectorAll(".ad-ext-dart-flight-group")) : [];
+      }
+
+      function getMarkerCenters() {
+        return markerNodes().map((marker) => {
+          const rect = marker.getBoundingClientRect();
+          return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          };
+        });
+      }
+
+      function getRenderedTipCenters(overlay) {
+        const overlayRect = overlay?.getBoundingClientRect();
+        if (!overlayRect) {
+          return [];
+        }
+
+        return dartImages(overlay).map((image) => {
+          const x = Number.parseFloat(image.getAttribute("x") || "0");
+          const y = Number.parseFloat(image.getAttribute("y") || "0");
+          const height = Number.parseFloat(image.getAttribute("height") || "0");
+          return {
+            x: overlayRect.left + x,
+            y: overlayRect.top + y + height * TIP_OFFSET_Y_RATIO,
+          };
+        });
+      }
+
+      function maxPairwiseError(markerCenters, dartCenters) {
+        if (markerCenters.length !== dartCenters.length) {
+          return Number.POSITIVE_INFINITY;
+        }
+
+        return markerCenters.reduce((maxError, markerCenter) => {
+          const minError = dartCenters.reduce((bestError, dartCenter) => {
+            const dx = markerCenter.x - dartCenter.x;
+            const dy = markerCenter.y - dartCenter.y;
+            return Math.min(bestError, Math.hypot(dx, dy));
+          }, Number.POSITIVE_INFINITY);
+          return Math.max(maxError, minError);
+        }, 0);
       }
 
       const cleanup = initializeDartMarkerDarts({
@@ -72,12 +133,16 @@
       const wait = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
 
       (async () => {
-        await wait(160);
+        await wait(420);
         const overlay = document.getElementById("ad-ext-dart-image-overlay");
         const style = document.getElementById("ad-ext-dart-marker-darts-style");
-        const initialDarts = overlay ? overlay.querySelectorAll(".ad-ext-dart-image").length : 0;
-        const initialFirstDartX = overlay?.querySelector(".ad-ext-dart-image")?.getAttribute("x") || "";
-        const initialMarkerCount = document.querySelectorAll("circle[style*='shadow-2dp']").length;
+        const initialMarkerCount = markerNodes().length;
+        const initialImageCount = dartImages(overlay).length;
+        const initialFlightCount = dartFlights(overlay).length;
+        const initialOverlayRect = overlay?.getBoundingClientRect();
+        const markerCenters = getMarkerCenters();
+        const dartCenters = getRenderedTipCenters(overlay);
+        const initialMaxError = maxPairwiseError(markerCenters, dartCenters);
 
         const duplicateMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         duplicateMarker.setAttribute("cx", "300");
@@ -85,31 +150,32 @@
         duplicateMarker.setAttribute("r", "6");
         duplicateMarker.setAttribute("style", "filter:shadow-2dp");
         duplicateMarker.setAttribute("data-hit", "1");
-        document.querySelector("svg > g:last-of-type").appendChild(duplicateMarker);
+        document.getElementById("marker-layer").appendChild(duplicateMarker);
 
         await wait(140);
-        const withDuplicateDarts = overlay ? overlay.querySelectorAll(".ad-ext-dart-image").length : 0;
+        const withDuplicateImageCount = dartImages(overlay).length;
 
-        const firstMarker = document.querySelector("circle[style*='shadow-2dp']");
+        const firstMarker = markerNodes()[0];
         firstMarker?.setAttribute("cx", "330");
         firstMarker?.setAttribute("cy", "330");
         await wait(140);
-        const movedFirstDartX = overlay?.querySelector(".ad-ext-dart-image")?.getAttribute("x") || "";
+        const movedMaxError = maxPairwiseError(getMarkerCenters(), getRenderedTipCenters(overlay));
 
         cleanup();
         await wait(40);
 
         const overlayAfter = document.getElementById("ad-ext-dart-image-overlay");
         const styleAfter = document.getElementById("ad-ext-dart-marker-darts-style");
-        const markerOpacityReset = Array.from(
-          document.querySelectorAll("circle[style*='shadow-2dp']")
-        ).every((node) => node.style.opacity === "");
+        const markerOpacityReset = markerNodes().every((node) => node.style.opacity === "");
 
         const checks = [
           assertStep("Overlay + Style erzeugt", Boolean(overlay) && Boolean(style)),
-          assertStep("Initiale Dart-Anzahl = Marker-Anzahl", initialDarts === initialMarkerCount),
-          assertStep("Duplicate-Key Marker erzeugt zusätzlichen Dart", withDuplicateDarts === initialDarts + 1),
-          assertStep("Dart-Position aktualisiert bei Marker-Bewegung", initialFirstDartX !== movedFirstDartX),
+          assertStep("Initiale Dart-Anzahl = Marker-Anzahl", initialImageCount === initialMarkerCount),
+          assertStep("Flight-Gruppen = Marker-Anzahl", initialFlightCount === initialMarkerCount),
+          assertStep("Overlay-Rect vorhanden", Boolean(initialOverlayRect?.width) && Boolean(initialOverlayRect?.height)),
+          assertStep("Ziele bleiben nahe an Marker-Zentren", Number.isFinite(initialMaxError) && initialMaxError < 3),
+          assertStep("Duplicate-Key Marker erzeugt zusätzlichen Dart", withDuplicateImageCount === initialImageCount + 1),
+          assertStep("Transformierte Marker bleiben nach Bewegung stabil", Number.isFinite(movedMaxError) && movedMaxError < 3),
           assertStep("Cleanup entfernt Overlay + Style", !overlayAfter && !styleAfter),
           assertStep("Cleanup stellt Marker-Opacity wieder her", markerOpacityReset),
         ];

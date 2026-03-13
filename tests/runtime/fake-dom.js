@@ -91,6 +91,59 @@ class FakeStyleDecl {
   }
 }
 
+class FakeAnimation {
+  constructor(target, keyframes = [], options = {}) {
+    this.target = target || null;
+    this.keyframes = Array.isArray(keyframes) ? keyframes : [];
+    this.options = options && typeof options === "object" ? { ...options } : {};
+    this.currentTime = 0;
+    this.playState = "running";
+    this.onfinish = null;
+    this.oncancel = null;
+    this.__finished = false;
+    this.__timer = 0;
+
+    const duration = Math.max(0, Number(this.options.duration) || 0);
+    if (duration > 0) {
+      this.__timer = setTimeout(() => this.finish(), duration);
+    }
+  }
+
+  finish() {
+    if (this.playState !== "running") {
+      return;
+    }
+
+    if (this.__timer) {
+      clearTimeout(this.__timer);
+      this.__timer = 0;
+    }
+
+    this.currentTime = Math.max(0, Number(this.options.duration) || 0);
+    this.playState = "finished";
+    this.__finished = true;
+    if (typeof this.onfinish === "function") {
+      this.onfinish();
+    }
+  }
+
+  cancel() {
+    if (this.playState !== "running") {
+      return;
+    }
+
+    if (this.__timer) {
+      clearTimeout(this.__timer);
+      this.__timer = 0;
+    }
+
+    this.playState = "idle";
+    if (typeof this.oncancel === "function") {
+      this.oncancel();
+    }
+  }
+}
+
 class FakeEventTarget {
   constructor() {
     this._listeners = [];
@@ -222,6 +275,25 @@ function createHierarchyRequestError() {
   return error;
 }
 
+function createSvgPointFactory() {
+  return {
+    x: 0,
+    y: 0,
+    matrixTransform(matrix = {}) {
+      const a = Number(matrix.a ?? 1);
+      const b = Number(matrix.b ?? 0);
+      const c = Number(matrix.c ?? 0);
+      const d = Number(matrix.d ?? 1);
+      const e = Number(matrix.e ?? 0);
+      const f = Number(matrix.f ?? 0);
+      return {
+        x: this.x * a + this.y * c + e,
+        y: this.x * b + this.y * d + f,
+      };
+    },
+  };
+}
+
 class FakeElement extends FakeEventTarget {
   constructor(tagName = "div") {
     super();
@@ -247,6 +319,7 @@ class FakeElement extends FakeEventTarget {
     this.title = "";
     this.tabIndex = 0;
     this.__rect = { width: 240, height: 48 };
+    this.__animations = [];
   }
 
   appendChild(child) {
@@ -261,7 +334,7 @@ class FakeElement extends FakeEventTarget {
       throw createHierarchyRequestError();
     }
 
-    if (child.parentNode && child.parentNode !== this) {
+    if (child.parentNode) {
       child.parentNode.removeChild(child);
     }
 
@@ -288,7 +361,7 @@ class FakeElement extends FakeEventTarget {
       return this.appendChild(child);
     }
 
-    if (child.parentNode && child.parentNode !== this) {
+    if (child.parentNode) {
       child.parentNode.removeChild(child);
     }
 
@@ -406,6 +479,10 @@ class FakeElement extends FakeEventTarget {
     this[normalizedName] = normalizedValue;
   }
 
+  setAttributeNS(_namespace, name, value) {
+    this.setAttribute(name, value);
+  }
+
   getAttribute(name) {
     const normalizedName = String(name || "");
 
@@ -514,11 +591,22 @@ class FakeElement extends FakeEventTarget {
     this.dispatchEvent(new FakeEvent("click", { bubbles: true, target: this }));
   }
 
+  animate(keyframes, options) {
+    const animation = new FakeAnimation(this, keyframes, options);
+    this.__animations.push(animation);
+    this.__lastAnimation = animation;
+    return animation;
+  }
+
   getBoundingClientRect() {
-    const left = Number(this.__rect.left || 0);
-    const top = Number(this.__rect.top || 0);
-    const width = Number(this.__rect.width || 0);
-    const height = Number(this.__rect.height || 0);
+    const styleLeft = Number.parseFloat(String(this.style.left || ""));
+    const styleTop = Number.parseFloat(String(this.style.top || ""));
+    const styleWidth = Number.parseFloat(String(this.style.width || ""));
+    const styleHeight = Number.parseFloat(String(this.style.height || ""));
+    const left = Number.isFinite(styleLeft) ? styleLeft : Number(this.__rect.left || 0);
+    const top = Number.isFinite(styleTop) ? styleTop : Number(this.__rect.top || 0);
+    const width = Number.isFinite(styleWidth) ? styleWidth : Number(this.__rect.width || 0);
+    const height = Number.isFinite(styleHeight) ? styleHeight : Number(this.__rect.height || 0);
     return {
       width,
       height,
@@ -776,6 +864,9 @@ class FakeDocument extends FakeEventTarget {
   createElementNS(_namespace, tagName) {
     const node = this.createElement(tagName);
     node.namespaceURI = _namespace || null;
+    if (String(tagName || "").toUpperCase() === "SVG") {
+      node.createSVGPoint = () => createSvgPointFactory();
+    }
     return node;
   }
 
@@ -1001,6 +1092,18 @@ function createFakeWindow(options = {}) {
     clearInterval(handle) {
       clearInterval(handle);
     },
+    performance: {
+      now() {
+        return Date.now();
+      },
+    },
+    getComputedStyle() {
+      return {
+        display: "",
+        visibility: "",
+        opacity: "1",
+      };
+    },
     open(url) {
       const normalizedUrl = String(url || "");
       this.__openedUrls.push(normalizedUrl);
@@ -1025,6 +1128,7 @@ export {
   FakeElement,
   FakeEvent,
   FakeEventTarget,
+  FakeAnimation,
   FakeMessageEvent,
   FakeMutationObserver,
   FakeStorage,
