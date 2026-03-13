@@ -500,7 +500,7 @@ export function getTurnId(turn) {
   return `fallback:${round}:${turnNumber}:${playerId}`;
 }
 
-function resolveZoomAnchor(intent, parsedSegment) {
+function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
   const reason = String(intent?.reason || "");
   const segment = String(parsedSegment?.normalized || intent?.segment || "");
 
@@ -509,7 +509,34 @@ function resolveZoomAnchor(intent, parsedSegment) {
   }
 
   if (reason === "checkout" && parsedSegment?.ring === "D") {
-    return { x: 0.5, y: 0.66 };
+    const viewBox = segmentPoint?.viewBox;
+    const pointX = Number(segmentPoint?.x);
+    const pointY = Number(segmentPoint?.y);
+    if (
+      viewBox &&
+      Number.isFinite(viewBox.width) &&
+      viewBox.width > 0 &&
+      Number.isFinite(viewBox.height) &&
+      viewBox.height > 0 &&
+      Number.isFinite(pointX) &&
+      Number.isFinite(pointY)
+    ) {
+      const centerX = viewBox.x + viewBox.width / 2;
+      const centerY = viewBox.y + viewBox.height / 2;
+      const dx = pointX - centerX;
+      const dy = pointY - centerY;
+      const distance = Math.hypot(dx, dy);
+      if (distance > 0) {
+        const vectorX = dx / distance;
+        const vectorY = dy / distance;
+        const radialStrength = 0.27;
+        return {
+          x: clamp(0.5 + vectorX * radialStrength, 0.24, 0.82),
+          y: clamp(0.56 + vectorY * radialStrength, 0.24, 0.82),
+        };
+      }
+    }
+    return { x: 0.5, y: 0.56 };
   }
 
   if (reason === "t20-setup") {
@@ -727,7 +754,7 @@ export function buildZoomTransform(options = {}) {
   const baseLeft = Number(targetNode.offsetLeft || 0);
   const baseTop = Number(targetNode.offsetTop || 0);
 
-  const anchor = resolveZoomAnchor(intent, segmentPoint.parsedSegment);
+  const anchor = resolveZoomAnchor(intent, segmentPoint.parsedSegment, segmentPoint);
   const viewportLeftInParent = viewportRect.left - offsetParentRect.left;
   const viewportTopInParent = viewportRect.top - offsetParentRect.top;
   const viewportRightInParent = viewportLeftInParent + viewportRect.width;
@@ -773,6 +800,7 @@ export function buildZoomTransform(options = {}) {
     transform,
     baseTransform,
     signature,
+    anchor,
   };
 }
 

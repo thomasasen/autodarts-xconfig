@@ -391,6 +391,35 @@ test("tv-board-zoom allows T20 setup only for 2xT20 with sensible third dart", (
   assert.deepEqual(setupIntent, { reason: "t20-setup", segment: "T20" });
 });
 
+test("tv-board-zoom does not use T20 setup when first two darts are mixed", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T20";
+  const windowRef = createFakeWindow({ documentRef });
+
+  const mixedIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 161,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "T20" } }, { segment: { name: "S20" } }],
+      activeTurn: {
+        id: "turn-mixed-t20",
+        playerId: "player-1",
+        throws: [{ segment: { name: "T20" } }, { segment: { name: "S20" } }],
+      },
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 5150,
+  });
+
+  assert.equal(mixedIntent, null);
+});
+
 test("tv-board-zoom keeps the long hold after the third dart stable", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "";

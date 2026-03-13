@@ -112,6 +112,45 @@ test("tv-board-zoom builds a clamped transform that stays within the board viewp
   assert.ok(transformedBottom >= hostRect.bottom - 0.01);
 });
 
+test("tv-board-zoom uses a corner-biased anchor for double checkout D18", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const checkoutTransform = buildZoomTransform({
+    targetNode,
+    hostNode,
+    boardSvg,
+    zoomLevel: 2.75,
+    intent: {
+      reason: "checkout",
+      segment: "D18",
+    },
+    x01Rules,
+    windowRef,
+    documentRef,
+  });
+  const neutralTransform = buildZoomTransform({
+    targetNode,
+    hostNode,
+    boardSvg,
+    zoomLevel: 2.75,
+    intent: {
+      reason: "smart-setup",
+      segment: "D18",
+    },
+    x01Rules,
+    windowRef,
+    documentRef,
+  });
+
+  assert.ok(checkoutTransform);
+  assert.ok(neutralTransform);
+  assert.ok(checkoutTransform.anchor);
+  assert.ok(neutralTransform.anchor);
+  assert.ok(checkoutTransform.anchor.x > neutralTransform.anchor.x);
+  assert.ok(checkoutTransform.anchor.y < neutralTransform.anchor.y);
+  assert.ok(checkoutTransform.anchor.x >= 0.6);
+  assert.ok(checkoutTransform.anchor.y <= 0.42);
+});
+
 test("tv-board-zoom applies host clipping and restores it on immediate cleanup", () => {
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
   const state = createZoomState();
