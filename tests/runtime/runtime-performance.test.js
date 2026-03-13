@@ -122,6 +122,124 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
   cleanup();
 });
 
+test("checkout-board-targets requests summary targets only for all-target scope", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const domGuards = createDomGuards({ documentRef });
+  const observerRegistry = createObserverRegistry();
+  documentRef.variantElement.textContent = "X01";
+  documentRef.suggestionElement.textContent = "20 D10";
+
+  const receivedOptions = [];
+  const cleanupAll = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules: {
+        parseCheckoutTargetsFromSuggestion: (_text, options) => {
+          receivedOptions.push(options);
+          return [];
+        },
+      },
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          targetScope: "all",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(receivedOptions.length > 0, true);
+  assert.deepEqual(receivedOptions[0], { includeSummaryTargets: true });
+  cleanupAll();
+
+  const cleanupFirst = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules: {
+        parseCheckoutTargetsFromSuggestion: (_text, options) => {
+          receivedOptions.push(options);
+          return [];
+        },
+      },
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          targetScope: "first",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(receivedOptions.length > 1, true);
+  assert.deepEqual(receivedOptions[1], { includeSummaryTargets: false });
+  cleanupFirst();
+});
+
 test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

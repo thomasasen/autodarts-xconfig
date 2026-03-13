@@ -186,7 +186,7 @@ test("suggestion one-dart parser accepts exactly one explicit one-dart segment",
   assert.equal(getSuggestionOneDartCheckoutSegmentForOutMode("Single 20", "straight"), "S20");
 });
 
-test("checkout target parser keeps summary filtering but maps bull semantics correctly", () => {
+test("checkout target parser keeps explicit-only default and maps bull semantics correctly", () => {
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("20 D10"), [{ ring: "D", value: 10 }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("20 10"), [
     { ring: "S", value: 20 },
@@ -201,6 +201,17 @@ test("checkout target parser keeps summary filtering but maps bull semantics cor
     { ring: "T", value: 20 },
     { ring: "D", value: 20 },
   ]);
+});
+
+test("checkout target parser includes summary numbers in all-target mode and ignores score-like numbers", () => {
+  assert.deepEqual(
+    parseCheckoutTargetsFromSuggestion("20 D10", { includeSummaryTargets: true }),
+    [{ ring: "S", value: 20 }, { ring: "D", value: 10 }]
+  );
+  assert.deepEqual(
+    parseCheckoutTargetsFromSuggestion("120 D20", { includeSummaryTargets: true }),
+    [{ ring: "D", value: 20 }]
+  );
 });
 
 test("parseCheckoutSuggestionState follows explicit finish validity per out mode", () => {

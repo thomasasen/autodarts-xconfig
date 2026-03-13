@@ -130,7 +130,9 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const targets = x01Rules.parseCheckoutTargetsFromSuggestion(suggestionText);
+    const targets = x01Rules.parseCheckoutTargetsFromSuggestion(suggestionText, {
+      includeSummaryTargets: visualConfig.targetScope === "all",
+    });
     const board = getBoard();
     if (!board) {
       return;
