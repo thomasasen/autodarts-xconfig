@@ -1,4 +1,5 @@
 ﻿import { getXConfigDescriptor, xconfigDescriptors } from "./descriptors.js";
+import { resolveDartDesignAsset } from "#feature-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
   openUserscriptInstall,
@@ -18,6 +19,8 @@ const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/RE
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
+const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
+const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -144,6 +147,13 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-option-label{font-size:.75rem;font-weight:700;color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
 #${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design{display:grid;grid-template-columns:minmax(0,1fr) 4.2rem auto;grid-template-rows:auto auto;align-items:center;column-gap:.5rem;row-gap:.14rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-head{display:block}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-copy{margin-top:.12rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-preview{grid-column:2;grid-row:1/span 2;width:3.9rem;height:1.62rem;object-fit:contain;justify-self:center;align-self:center;opacity:.96;filter:drop-shadow(0 2px 3px rgba(4,10,26,.35))}
+#${PANEL_HOST_ID} .ad-xconfig-option-active-slot{grid-column:3;grid-row:1;display:flex;justify-content:flex-end;align-self:start;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-active{margin-left:.2rem;white-space:nowrap}
 #${PANEL_HOST_ID} .ad-xconfig-empty{border-radius:10px;border:1px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.03);padding:1rem;color:rgba(255,255,255,.75);font-size:.88rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
@@ -828,6 +838,83 @@ function buildFeatureToggle(documentRef, feature) {
   return wrapper;
 }
 
+function isDartDesignSelectField(feature, field) {
+  if (field?.control !== "select") {
+    return false;
+  }
+  return feature?.featureKey === DART_MARKER_DARTS_FEATURE_KEY &&
+    String(field?.key || "").trim() === DART_MARKER_DARTS_DESIGN_SETTING_KEY;
+}
+
+function buildOptionActiveBadge(documentRef) {
+  return createElement(documentRef, "span", {
+    className: "ad-xconfig-option-active",
+    text: "Aktuell",
+  });
+}
+
+function resolveFieldOptionPreview(feature, field, optionValue) {
+  if (!isDartDesignSelectField(feature, field)) {
+    return "";
+  }
+  return resolveDartDesignAsset(optionValue);
+}
+
+function buildDartDesignOptionLayout(
+  documentRef,
+  optionLabel,
+  optionDescription,
+  optionPreviewUrl,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--dart-design",
+  });
+
+  const optionText = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-text",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+  optionText.appendChild(head);
+
+  if (optionDescription) {
+    optionText.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+  layout.appendChild(optionText);
+
+  layout.appendChild(createElement(documentRef, "img", {
+    className: "ad-xconfig-option-preview",
+    attributes: {
+      src: optionPreviewUrl,
+      alt: `${optionLabel} Dart-Vorschau`,
+      loading: "lazy",
+      decoding: "async",
+    },
+  }));
+
+  const activeSlot = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+
+  return layout;
+}
+
 function buildFeatureField(documentRef, feature, field) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
@@ -941,9 +1028,12 @@ function buildFeatureField(documentRef, feature, field) {
   field.options.forEach((option) => {
     const optionValue = String(option?.value ?? "");
     const isActive = optionValue === selectedOptionValue;
+    const isDartDesignField = isDartDesignSelectField(feature, field);
     const optionButton = createElement(documentRef, "button", {
       type: "button",
-      className: "ad-xconfig-option-item",
+      className: isDartDesignField
+        ? "ad-xconfig-option-item ad-xconfig-option-item--dart-design"
+        : "ad-xconfig-option-item",
       attributes: {
         "data-adxconfig-action": "set-setting-select-option",
         "data-adxconfig-option-note": "true",
@@ -957,28 +1047,38 @@ function buildFeatureField(documentRef, feature, field) {
         "aria-pressed": isActive ? "true" : "false",
       },
     });
-
-    const head = createElement(documentRef, "div", {
-      className: "ad-xconfig-option-head",
-    });
-    head.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-option-label",
-      text: option.label,
-    }));
-    if (isActive) {
-      head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-option-active",
-        text: "Aktuell",
-      }));
-    }
-    optionButton.appendChild(head);
-
     const optionDescription = String(option?.description || "").trim();
-    if (optionDescription) {
-      optionButton.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-option-copy",
-        text: optionDescription,
+
+    if (isDartDesignField) {
+      const optionPreviewUrl = resolveFieldOptionPreview(feature, field, optionValue);
+      optionButton.appendChild(
+        buildDartDesignOptionLayout(
+          documentRef,
+          option.label,
+          optionDescription,
+          optionPreviewUrl,
+          isActive
+        )
+      );
+    } else {
+      const head = createElement(documentRef, "div", {
+        className: "ad-xconfig-option-head",
+      });
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-option-label",
+        text: option.label,
       }));
+      if (isActive) {
+        head.appendChild(buildOptionActiveBadge(documentRef));
+      }
+      optionButton.appendChild(head);
+
+      if (optionDescription) {
+        optionButton.appendChild(createElement(documentRef, "span", {
+          className: "ad-xconfig-option-copy",
+          text: optionDescription,
+        }));
+      }
     }
 
     list.appendChild(optionButton);
@@ -1016,18 +1116,18 @@ function setSelectOptionActiveState(documentRef, optionNode, isActive) {
   optionNode.setAttribute("data-active", isActive ? "true" : "false");
   optionNode.setAttribute("aria-pressed", isActive ? "true" : "false");
 
-  const head = optionNode.querySelector?.(".ad-xconfig-option-head");
-  if (!head) {
+  const activeContainer =
+    optionNode.querySelector?.("[data-option-active-slot='true']") ||
+    optionNode.querySelector?.(".ad-xconfig-option-head") ||
+    null;
+  if (!activeContainer) {
     return;
   }
 
-  const activeBadge = head.querySelector?.(".ad-xconfig-option-active") || null;
+  const activeBadge = activeContainer.querySelector?.(".ad-xconfig-option-active") || null;
   if (isActive) {
     if (!activeBadge) {
-      head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-option-active",
-        text: "Aktuell",
-      }));
+      activeContainer.appendChild(buildOptionActiveBadge(documentRef));
     }
     return;
   }

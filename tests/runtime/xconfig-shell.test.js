@@ -703,6 +703,77 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   runtime.stop();
 });
 
+test("xConfig dart design options render split layout with preview and active badge slot", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-darts']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await wait(5);
+
+  const designOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design']"
+  );
+  assert.equal(designOptions.length, 13);
+
+  designOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--dart-design"), true);
+    const preview = optionNode.querySelector(".ad-xconfig-option-preview");
+    assert.ok(preview);
+    assert.match(String(preview.getAttribute("src") || ""), /Dart_/);
+    const activeSlot = optionNode.querySelector("[data-option-active-slot='true']");
+    assert.ok(activeSlot);
+  });
+
+  const activeBefore = designOptions.filter(
+    (node) => node.getAttribute("data-active") === "true"
+  );
+  assert.equal(activeBefore.length, 1);
+  const activeBeforeSlot = activeBefore[0].querySelector("[data-option-active-slot='true']");
+  assert.ok(activeBeforeSlot);
+  assert.ok(activeBeforeSlot.querySelector(".ad-xconfig-option-active"));
+
+  clickSelectSettingOption(documentRef, "dart-marker-darts", "design", "red");
+  await wait(5);
+
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.dartMarkerDarts.design, "red");
+
+  const activeAfter = designOptions.filter(
+    (node) => node.getAttribute("data-active") === "true"
+  );
+  assert.equal(activeAfter.length, 1);
+  assert.equal(activeAfter[0].getAttribute("data-setting-value"), "red");
+
+  const redOption = documentRef.querySelector(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design'][data-setting-value='red']"
+  );
+  assert.ok(redOption);
+  assert.ok(redOption.querySelector("[data-option-active-slot='true'] .ad-xconfig-option-active"));
+
+  const autodartsOption = documentRef.querySelector(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design'][data-setting-value='autodarts']"
+  );
+  assert.ok(autodartsOption);
+  assert.equal(
+    Boolean(autodartsOption.querySelector("[data-option-active-slot='true'] .ad-xconfig-option-active")),
+    false
+  );
+
+  runtime.stop();
+});
+
 test("xConfig shell links cards and settings modal to the matching README anchor", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
