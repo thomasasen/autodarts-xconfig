@@ -5,6 +5,7 @@ export const OVERLAY_ID = "ad-ext-dart-image-overlay";
 export const OVERLAY_SCENE_ID = "ad-ext-dart-image-overlay-scene";
 export const DART_CONTAINER_CLASS = "ad-ext-dart-flight-group";
 export const DART_ROTATE_CLASS = "ad-ext-dart-rotate-group";
+export const DART_SHADOW_CLASS = "ad-ext-dart-shadow";
 export const DART_CLASS = "ad-ext-dart-image";
 
 const SIZE_PERCENTAGES = new Set([90, 100, 115]);
@@ -46,6 +47,8 @@ export function resolveDartMarkerDartsConfig(featureConfig = {}) {
     sizePercent,
     sizeMultiplier: sizePercent / 100,
     hideOriginalMarkers: normalizeBoolean(featureConfig.hideOriginalMarkers, false),
+    enableShadow: normalizeBoolean(featureConfig.enableShadow, true),
+    enableWobble: normalizeBoolean(featureConfig.enableWobble, true),
     flightSpeed,
     flightDurationMs: flightDurationMsBySpeed[flightSpeed] || 320,
   };
@@ -62,6 +65,7 @@ export function buildStyleText() {
 
 .${DART_CONTAINER_CLASS},
 .${DART_ROTATE_CLASS},
+.${DART_SHADOW_CLASS},
 .${DART_CLASS} {
   pointer-events: none;
   user-select: none;
@@ -69,6 +73,14 @@ export function buildStyleText() {
 
 .${DART_CLASS} {
   opacity: 1;
+  transform-box: fill-box;
+  will-change: transform;
+}
+
+.${DART_SHADOW_CLASS} {
+  opacity: 0;
+  transform-box: fill-box;
+  will-change: transform, opacity;
 }
 `;
 }

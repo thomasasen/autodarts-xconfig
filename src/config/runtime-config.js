@@ -446,6 +446,8 @@ function normalizeDartMarkerDartsConfig(rawConfig = {}) {
     animateDarts: normalizeBoolean(rawConfig.animateDarts, true),
     sizePercent: normalizeNumberChoice(rawConfig.sizePercent, 100, DART_MARKER_DARTS_SIZE_PERCENT),
     hideOriginalMarkers: normalizeBoolean(rawConfig.hideOriginalMarkers, false),
+    enableShadow: normalizeBoolean(rawConfig.enableShadow, true),
+    enableWobble: normalizeBoolean(rawConfig.enableWobble, true),
     flightSpeed: normalizeStringChoice(
       rawConfig.flightSpeed,
       "standard",

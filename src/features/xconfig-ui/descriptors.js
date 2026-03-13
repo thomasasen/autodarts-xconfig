@@ -525,6 +525,8 @@ export const xconfigDescriptors = Object.freeze([
         { value: 115, label: "Groß" },
       ]),
       checkboxField("hideOriginalMarkers", "Original-Marker ausblenden"),
+      checkboxField("enableShadow", "Einschlag-Schatten"),
+      checkboxField("enableWobble", "Einschlag-Wobble"),
       selectField("flightSpeed", "Fluggeschwindigkeit", [
         { value: "schnell", label: "Schnell" },
         { value: "standard", label: "Standard" },

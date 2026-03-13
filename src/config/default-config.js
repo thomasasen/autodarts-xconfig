@@ -111,6 +111,8 @@ export const defaultConfig = {
       animateDarts: true,
       sizePercent: 100,
       hideOriginalMarkers: false,
+      enableShadow: true,
+      enableWobble: true,
       flightSpeed: "standard",
       debug: false,
     },

@@ -307,6 +307,8 @@ function importDartMarkerDarts(legacyFeatureState) {
     animateDarts: readLegacySetting(settings, "ANIMATE_DARTS", true),
     sizePercent: readLegacySetting(settings, "DART_GROESSE", 100),
     hideOriginalMarkers: readLegacySetting(settings, "ORIGINAL_MARKER_AUSBLENDEN", false),
+    enableShadow: readLegacySetting(settings, "SCHATTEN_AKTIV", true),
+    enableWobble: readLegacySetting(settings, "WOBBLE_AKTIV", true),
     flightSpeed: readLegacySetting(settings, "FLUGGESCHWINDIGKEIT", "standard"),
     debug: readLegacySetting(settings, "DEBUG", false),
   });

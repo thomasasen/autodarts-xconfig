@@ -103,9 +103,10 @@ class FakeAnimation {
     this.__finished = false;
     this.__timer = 0;
 
+    const delay = Math.max(0, Number(this.options.delay) || 0);
     const duration = Math.max(0, Number(this.options.duration) || 0);
-    if (duration > 0) {
-      this.__timer = setTimeout(() => this.finish(), duration);
+    if (duration > 0 || delay > 0) {
+      this.__timer = setTimeout(() => this.finish(), delay + duration);
     }
   }
 

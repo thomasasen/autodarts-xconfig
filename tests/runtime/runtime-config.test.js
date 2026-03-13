@@ -49,6 +49,8 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
   assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "smoke");
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
+  assert.equal(config.features.dartMarkerDarts.enableShadow, true);
+  assert.equal(config.features.dartMarkerDarts.enableWobble, true);
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -113,6 +115,8 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         animateDarts: "false",
         sizePercent: "115",
         hideOriginalMarkers: "true",
+        enableShadow: "false",
+        enableWobble: "false",
         flightSpeed: "CINEMATIC",
       },
       removeDartsNotification: {
@@ -217,6 +221,8 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").animateDarts, false);
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").sizePercent, 115);
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").hideOriginalMarkers, true);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").enableShadow, false);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").enableWobble, false);
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").flightSpeed, "cinematic");
   assert.equal(runtimeConfig.getFeatureConfig("removeDartsNotification").imageSize, "large");
   assert.equal(runtimeConfig.getFeatureConfig("removeDartsNotification").pulseAnimation, false);

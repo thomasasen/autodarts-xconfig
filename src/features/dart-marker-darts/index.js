@@ -54,6 +54,8 @@ export function initializeDartMarkerDarts(context = {}) {
           animateDarts: true,
           sizePercent: 100,
           hideOriginalMarkers: false,
+          enableShadow: true,
+          enableWobble: true,
           flightSpeed: "standard",
         };
   const visualConfig = resolveDartMarkerDartsConfig(featureConfig);
@@ -64,6 +66,8 @@ export function initializeDartMarkerDarts(context = {}) {
       animateDarts: visualConfig.animateDarts,
       sizePercent: visualConfig.sizePercent,
       hideOriginalMarkers: visualConfig.hideOriginalMarkers,
+      enableShadow: visualConfig.enableShadow,
+      enableWobble: visualConfig.enableWobble,
       flightSpeed: visualConfig.flightSpeed,
       flightDurationMs: visualConfig.flightDurationMs,
     });

@@ -612,6 +612,16 @@ export const xconfigFeatureCopy = deepFreeze({
         "Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist.",
         "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus."
       ),
+      enableShadow: fieldCopy(
+        "Schaltet den Einschlag-Schatten unter dem Dart ein oder aus.",
+        "Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt.",
+        "Schaltet den Einschlag-Schatten der Dart-Grafik ein oder aus."
+      ),
+      enableWobble: fieldCopy(
+        "Schaltet das kurze Wobble beim Einschlag ein oder aus.",
+        "Aktiviert eine kurze Wackelbewegung des Dart-Bildes direkt nach der Landung. Das verstärkt den Einschlag-Effekt visuell.",
+        "Schaltet das kurze Wobble der Dart-Grafik beim Einschlag ein oder aus."
+      ),
       flightSpeed: fieldCopy(
         "Regelt die Dauer der Fluganimation der Darts.",
         "Wählt die Dauer der Einfluganimation neuer Dart-Bilder. `Schnell` landet zügig, `Cinematic` hält die Flugphase sichtbar länger.",

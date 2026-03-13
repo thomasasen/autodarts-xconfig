@@ -15,6 +15,7 @@ import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
   DART_ROTATE_CLASS,
+  DART_SHADOW_CLASS,
   OVERLAY_ID,
 } from "../../src/features/dart-marker-darts/style.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
@@ -26,6 +27,8 @@ const VISUAL_CONFIG = Object.freeze({
   sizePercent: 100,
   sizeMultiplier: 1,
   hideOriginalMarkers: false,
+  enableShadow: true,
+  enableWobble: true,
   flightSpeed: "standard",
   flightDurationMs: 320,
 });
@@ -110,6 +113,10 @@ function getDartImages(documentRef) {
   return Array.from(documentRef.querySelectorAll(`image.${DART_CLASS}`));
 }
 
+function getShadowImages(documentRef) {
+  return Array.from(documentRef.querySelectorAll(`image.${DART_SHADOW_CLASS}`));
+}
+
 function getFlightGroups(documentRef) {
   return Array.from(documentRef.querySelectorAll(`g.${DART_CONTAINER_CLASS}`));
 }
@@ -192,11 +199,46 @@ test("dart-marker-darts separates flight container, rotation group, and image no
   assert.equal(entry.container.parentNode?.id, "ad-ext-dart-image-overlay-scene");
   assert.equal(entry.rotateGroup.parentNode, entry.container);
   assert.equal(entry.imageNode.parentNode, entry.rotateGroup);
+  assert.equal(entry.shadowNode.parentNode, entry.rotateGroup);
   assert.equal(getFlightGroups(documentRef).length, 1);
   assert.equal(getRotateGroups(documentRef).length, 1);
+  assert.equal(getShadowImages(documentRef).length, 1);
   assert.match(String(entry.rotateGroup.getAttribute("transform") || ""), /^rotate\(/);
   assert.equal(entry.imageNode.getAttribute("transform"), null);
   assert.equal(entry.container.__animations.length, 1);
+  assert.equal(entry.imageNode.__animations.length, 1);
+  assert.equal(entry.shadowNode.__animations.length, 1);
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts supports configurable shadow and wobble effects", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 10,
+      cy: 20,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 360, f: 280 }),
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: {
+      ...ANIMATED_VISUAL_CONFIG,
+      enableShadow: false,
+      enableWobble: false,
+    },
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+  assert.equal(entry.shadowNode.style.display, "none");
+  assert.equal(entry.shadowNode.__animations.length, 0);
   assert.equal(entry.imageNode.__animations.length, 0);
 
   clearDartMarkerDartsState(state);

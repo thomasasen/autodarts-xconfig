@@ -9,6 +9,7 @@ import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
   DART_ROTATE_CLASS,
+  DART_SHADOW_CLASS,
   OVERLAY_ID,
   OVERLAY_SCENE_ID,
 } from "./style.js";
@@ -28,6 +29,17 @@ const FLIGHT_ARC_HEIGHT_RATIO = 0.16;
 const FLIGHT_EASING = "cubic-bezier(0.15, 0.7, 0.2, 1)";
 const FLIGHT_SETTLE_BUFFER_MS = 140;
 const FLIGHT_TIMEOUT_BUFFER_MS = 220;
+const SHADOW_FILTER_ID = "ad-ext-dart-shadow-filter";
+const DART_OPACITY = 1;
+const SHADOW_OPACITY = 0.28;
+const SHADOW_BLUR_PX = 2;
+const SHADOW_OFFSET_X_RATIO = 0.06;
+const SHADOW_OFFSET_Y_RATIO = 0.08;
+const SHADOW_IMPACT_OPACITY_BOOST = 0.12;
+const SHADOW_IMPACT_DURATION_MS = 160;
+const WOBBLE_DURATION_MS = 280;
+const WOBBLE_ANGLE_DEG = 4;
+const IMPACT_EASING = "cubic-bezier(0.2, 0.6, 0.2, 1)";
 
 function getTimerFns(windowRef) {
   return {
@@ -247,6 +259,64 @@ function ensureOverlayScene(state, overlay) {
   return state.overlaySceneNode;
 }
 
+function ensureShadowFilter(overlay, enabled) {
+  if (!overlay || !enabled) {
+    return null;
+  }
+
+  let defs = overlay.querySelector("defs");
+  if (!defs) {
+    defs = overlay.ownerDocument?.createElementNS?.(SVG_NS, "defs") || null;
+    if (!defs) {
+      return null;
+    }
+    overlay.appendChild(defs);
+  }
+
+  let filter = overlay.querySelector(`#${SHADOW_FILTER_ID}`);
+  if (!filter) {
+    filter = overlay.ownerDocument?.createElementNS?.(SVG_NS, "filter") || null;
+    if (!filter) {
+      return null;
+    }
+    filter.id = SHADOW_FILTER_ID;
+    filter.setAttribute("x", "-50%");
+    filter.setAttribute("y", "-50%");
+    filter.setAttribute("width", "200%");
+    filter.setAttribute("height", "200%");
+    filter.setAttribute("color-interpolation-filters", "sRGB");
+
+    const colorMatrix = overlay.ownerDocument?.createElementNS?.(SVG_NS, "feColorMatrix") || null;
+    if (colorMatrix) {
+      colorMatrix.setAttribute("type", "matrix");
+      colorMatrix.setAttribute("in", "SourceGraphic");
+      colorMatrix.setAttribute("result", "shadowColor");
+      colorMatrix.setAttribute(
+        "values",
+        "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"
+      );
+      filter.appendChild(colorMatrix);
+    }
+
+    const blur = overlay.ownerDocument?.createElementNS?.(SVG_NS, "feGaussianBlur") || null;
+    if (blur) {
+      blur.setAttribute("in", "shadowColor");
+      blur.setAttribute("result", "shadowBlur");
+      blur.setAttribute("stdDeviation", String(SHADOW_BLUR_PX));
+      filter.appendChild(blur);
+    }
+
+    defs.appendChild(filter);
+  }
+
+  const blurNode = filter.querySelector("feGaussianBlur");
+  if (blurNode) {
+    blurNode.setAttribute("stdDeviation", String(SHADOW_BLUR_PX));
+  }
+
+  return filter;
+}
+
 function clearOverlayChildren(state) {
   if (!state?.overlaySceneNode) {
     return;
@@ -308,11 +378,17 @@ function createDartEntry(ownerDocument) {
   const rotateGroup = ownerDocument.createElementNS(SVG_NS, "g");
   rotateGroup.classList.add(DART_ROTATE_CLASS);
 
+  const shadowNode = ownerDocument.createElementNS(SVG_NS, "image");
+  shadowNode.classList.add(DART_SHADOW_CLASS);
+  shadowNode.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  shadowNode.setAttribute("aria-hidden", "true");
+
   const imageNode = ownerDocument.createElementNS(SVG_NS, "image");
   imageNode.classList.add(DART_CLASS);
   imageNode.setAttribute("preserveAspectRatio", "xMidYMid meet");
   imageNode.setAttribute("aria-hidden", "true");
 
+  rotateGroup.appendChild(shadowNode);
   rotateGroup.appendChild(imageNode);
   container.appendChild(rotateGroup);
 
@@ -320,6 +396,7 @@ function createDartEntry(ownerDocument) {
     marker: null,
     container,
     rotateGroup,
+    shadowNode,
     imageNode,
     dartLength: 0,
     dartHeight: 0,
@@ -327,6 +404,8 @@ function createDartEntry(ownerDocument) {
     tipPointLocal: null,
     rotationDeg: 0,
     flightAnimation: null,
+    wobbleAnimation: null,
+    shadowImpactAnimation: null,
     flightStartedAt: 0,
     settleUntil: 0,
     lastTargetCenter: null,
@@ -457,6 +536,16 @@ function getDartOffsets(dartLength, dartHeight) {
   };
 }
 
+function getShadowSettings(dartLength, dartOpacity, visualConfig) {
+  const enabled = Boolean(visualConfig?.enableShadow);
+  return {
+    enabled,
+    baseOpacity: Math.min(1, Math.max(0, SHADOW_OPACITY * dartOpacity)),
+    offsetX: dartLength * SHADOW_OFFSET_X_RATIO,
+    offsetY: dartLength * SHADOW_OFFSET_Y_RATIO,
+  };
+}
+
 function getRotationDeg(center, boardCenter) {
   const angleToCenter =
     (Math.atan2(boardCenter.y - center.y, boardCenter.x - center.x) * 180) / Math.PI;
@@ -465,6 +554,7 @@ function getRotationDeg(center, boardCenter) {
 
 function setDartGeometry(entry, options = {}) {
   const imageNode = entry?.imageNode;
+  const shadowNode = entry?.shadowNode;
   const rotateGroup = entry?.rotateGroup;
   if (!imageNode || !rotateGroup) {
     return null;
@@ -475,14 +565,20 @@ function setDartGeometry(entry, options = {}) {
   const dartLength = options.dartLength;
   const dartHeight = options.dartHeight;
   const sourceUrl = options.sourceUrl;
+  const visualConfig = options.visualConfig || {};
 
   const offsets = getDartOffsets(dartLength, dartHeight);
   const x = center.x - offsets.offsetX;
   const y = center.y - offsets.offsetY;
   const rotationDeg = getRotationDeg(center, boardCenter);
+  const dartOpacity = DART_OPACITY;
+  const shadowSettings = getShadowSettings(dartLength, dartOpacity, visualConfig);
 
   if (sourceUrl) {
     setImageSource(imageNode, sourceUrl);
+    if (shadowNode) {
+      setImageSource(shadowNode, sourceUrl);
+    }
   }
 
   imageNode.setAttribute("width", String(dartLength));
@@ -490,6 +586,47 @@ function setDartGeometry(entry, options = {}) {
   imageNode.setAttribute("x", String(x));
   imageNode.setAttribute("y", String(y));
   imageNode.removeAttribute("transform");
+  imageNode.style.opacity = String(dartOpacity);
+
+  if (dartLength > 0 && dartHeight > 0) {
+    const originX = Math.min(100, Math.max(0, (offsets.offsetX / dartLength) * 100));
+    const originY = Math.min(100, Math.max(0, (offsets.offsetY / dartHeight) * 100));
+    const origin = `${originX}% ${originY}%`;
+    imageNode.style.transformOrigin = origin;
+    if (shadowNode) {
+      shadowNode.style.transformOrigin = origin;
+    }
+  } else {
+    imageNode.style.transformOrigin = "";
+    if (shadowNode) {
+      shadowNode.style.transformOrigin = "";
+    }
+  }
+
+  if (shadowNode) {
+    shadowNode.setAttribute("width", String(dartLength));
+    shadowNode.setAttribute("height", String(dartHeight));
+    shadowNode.setAttribute("x", String(x));
+    shadowNode.setAttribute("y", String(y));
+    shadowNode.style.opacity = shadowSettings.enabled ? String(shadowSettings.baseOpacity) : "0";
+    shadowNode.style.display = shadowSettings.enabled ? "" : "none";
+    shadowNode.style.filter = "";
+    shadowNode.setAttribute("filter", shadowSettings.enabled ? `url(#${SHADOW_FILTER_ID})` : "");
+
+    if (shadowSettings.enabled) {
+      const tipRatioX = TIP_OFFSET_X_RATIO;
+      const tailLength = Math.max(1, dartLength * Math.max(0.05, Math.abs(1 - tipRatioX)));
+      const theta = (rotationDeg * Math.PI) / 180;
+      const localX = shadowSettings.offsetX * Math.cos(theta) + shadowSettings.offsetY * Math.sin(theta);
+      const localY = -shadowSettings.offsetX * Math.sin(theta) + shadowSettings.offsetY * Math.cos(theta);
+      const scaleX = Math.max(0.2, 1 + localX / tailLength);
+      const skewYDeg = (Math.atan2(localY, tailLength) * 180) / Math.PI;
+      shadowNode.style.transform = `scale(${scaleX}, 1) skewY(${skewYDeg}deg)`;
+    } else {
+      shadowNode.style.transform = "";
+    }
+  }
+
   rotateGroup.setAttribute("transform", `rotate(${rotationDeg} ${center.x} ${center.y})`);
 
   entry.center = center;
@@ -581,9 +718,33 @@ function cancelEntryFlight(state, entry) {
     }
   }
 
+  if (entry.wobbleAnimation && typeof entry.wobbleAnimation.cancel === "function") {
+    try {
+      entry.wobbleAnimation.cancel();
+    } catch (_) {
+      // Keep cleanup fail-soft.
+    }
+  }
+
+  if (entry.shadowImpactAnimation && typeof entry.shadowImpactAnimation.cancel === "function") {
+    try {
+      entry.shadowImpactAnimation.cancel();
+    } catch (_) {
+      // Keep cleanup fail-soft.
+    }
+  }
+
   entry.flightAnimation = null;
+  entry.wobbleAnimation = null;
+  entry.shadowImpactAnimation = null;
   entry.flightStartedAt = 0;
   clearFlightVisualState(entry);
+  if (entry.imageNode?.style) {
+    entry.imageNode.style.transform = "";
+  }
+  if (entry.shadowNode?.style) {
+    entry.shadowNode.style.filter = "";
+  }
 }
 
 function getFlightOffsets(center, boardCenter, dartLength) {
@@ -709,6 +870,69 @@ function triggerFlightAnimation(entry, state, visualConfig, boardCenter, feature
     cleanupFlight();
   };
   flightAnimation.oncancel = cleanupFlight;
+
+  if (
+    visualConfig.enableShadow &&
+    entry.shadowNode &&
+    typeof entry.shadowNode.animate === "function"
+  ) {
+    const baseOpacity = Number.parseFloat(entry.shadowNode.style.opacity || "0");
+    if (baseOpacity > 0 && SHADOW_IMPACT_DURATION_MS > 0 && SHADOW_IMPACT_OPACITY_BOOST > 0) {
+      const maxOpacity = Math.min(1, baseOpacity + SHADOW_IMPACT_OPACITY_BOOST);
+      const shadowAnimation = entry.shadowNode.animate(
+        [{ opacity: baseOpacity }, { opacity: maxOpacity }, { opacity: baseOpacity }],
+        {
+          duration: SHADOW_IMPACT_DURATION_MS,
+          delay: duration,
+          easing: IMPACT_EASING,
+        }
+      );
+      entry.shadowImpactAnimation = shadowAnimation;
+      const cleanupShadowImpact = () => {
+        if (entry.shadowImpactAnimation === shadowAnimation) {
+          entry.shadowImpactAnimation = null;
+        }
+      };
+      shadowAnimation.onfinish = cleanupShadowImpact;
+      shadowAnimation.oncancel = cleanupShadowImpact;
+    }
+  }
+
+  if (
+    visualConfig.enableWobble &&
+    entry.imageNode &&
+    typeof entry.imageNode.animate === "function" &&
+    WOBBLE_DURATION_MS > 0 &&
+    WOBBLE_ANGLE_DEG > 0
+  ) {
+    const wobbleAnimation = entry.imageNode.animate(
+      [
+        { transform: "rotate(0deg)" },
+        { transform: `rotate(${-WOBBLE_ANGLE_DEG}deg)` },
+        { transform: `rotate(${WOBBLE_ANGLE_DEG * 0.6}deg)` },
+        { transform: `rotate(${-WOBBLE_ANGLE_DEG * 0.35}deg)` },
+        { transform: "rotate(0deg)" },
+      ],
+      {
+        duration: WOBBLE_DURATION_MS,
+        delay: duration,
+        easing: IMPACT_EASING,
+        fill: "both",
+      }
+    );
+    entry.wobbleAnimation = wobbleAnimation;
+    const cleanupWobble = () => {
+      if (entry.wobbleAnimation !== wobbleAnimation) {
+        return;
+      }
+      entry.wobbleAnimation = null;
+      if (entry.imageNode?.style) {
+        entry.imageNode.style.transform = "";
+      }
+    };
+    wobbleAnimation.onfinish = cleanupWobble;
+    wobbleAnimation.oncancel = cleanupWobble;
+  }
 
   const { setTimeoutRef } = getTimerFns(state.windowRef);
   const handle = setTimeoutRef(() => {
@@ -1009,6 +1233,7 @@ export function updateDartMarkerDarts(options = {}) {
     });
     return;
   }
+  ensureShadowFilter(overlay, visualConfig.enableShadow);
 
   const scale = getSvgScale(board.svg);
   const radiusPx = Math.max(1, Number(board.radius) * Math.max(1, scale));
@@ -1101,6 +1326,7 @@ export function updateDartMarkerDarts(options = {}) {
       dartLength,
       dartHeight,
       sourceUrl: dartImageSource,
+      visualConfig,
     });
 
     const geometryPayload = buildGeometryPayload(

@@ -746,9 +746,15 @@ test("xConfig dart design options render split layout with preview and active ba
 
   clickSelectSettingOption(documentRef, "dart-marker-darts", "design", "red");
   await wait(5);
+  clickSettingToggle(documentRef, "dart-marker-darts", "enableShadow", false);
+  await wait(5);
+  clickSettingToggle(documentRef, "dart-marker-darts", "enableWobble", false);
+  await wait(5);
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.dartMarkerDarts.design, "red");
+  assert.equal(storedConfig.features.dartMarkerDarts.enableShadow, false);
+  assert.equal(storedConfig.features.dartMarkerDarts.enableWobble, false);
 
   const activeAfter = designOptions.filter(
     (node) => node.getAttribute("data-active") === "true"

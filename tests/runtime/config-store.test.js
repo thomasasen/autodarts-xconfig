@@ -107,6 +107,19 @@ test("config store imports migrated legacy feature and theme settings once witho
             DEBUG: true,
           },
         },
+        "a-marker-darts": {
+          enabled: true,
+          settings: {
+            DART_DESIGN: "Dart_red.png",
+            ANIMATE_DARTS: true,
+            DART_GROESSE: 115,
+            ORIGINAL_MARKER_AUSBLENDEN: true,
+            SCHATTEN_AKTIV: false,
+            WOBBLE_AKTIV: false,
+            FLUGGESCHWINDIGKEIT: "cinematic",
+            DEBUG: true,
+          },
+        },
         "theme-x01": {
           enabled: true,
           settings: {
@@ -162,6 +175,16 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.tripleDoubleBullHits.colorTheme, "champagne-night");
   assert.equal(importedConfig.features.tripleDoubleBullHits.animationStyle, "charge-release");
   assert.equal(importedConfig.features.tripleDoubleBullHits.debug, true);
+  assert.equal(importedConfig.featureToggles.dartMarkerDarts, true);
+  assert.equal(importedConfig.features.dartMarkerDarts.enabled, true);
+  assert.equal(importedConfig.features.dartMarkerDarts.design, "red");
+  assert.equal(importedConfig.features.dartMarkerDarts.animateDarts, true);
+  assert.equal(importedConfig.features.dartMarkerDarts.sizePercent, 115);
+  assert.equal(importedConfig.features.dartMarkerDarts.hideOriginalMarkers, true);
+  assert.equal(importedConfig.features.dartMarkerDarts.enableShadow, false);
+  assert.equal(importedConfig.features.dartMarkerDarts.enableWobble, false);
+  assert.equal(importedConfig.features.dartMarkerDarts.flightSpeed, "cinematic");
+  assert.equal(importedConfig.features.dartMarkerDarts.debug, true);
   assert.equal(importedConfig.featureToggles["themes.x01"], true);
   assert.equal(importedConfig.features.themes.x01.enabled, true);
   assert.equal(importedConfig.features.themes.x01.showAvg, false);
