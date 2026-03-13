@@ -207,3 +207,289 @@ test("tv-board-zoom keeps the third-dart T20 guard aligned with bust rules", () 
     segment: "T20",
   });
 });
+
+test("tv-board-zoom falls back to score checkout when suggestion is invalid or conflicting", () => {
+  const conflictDocument = new FakeDocument();
+  conflictDocument.suggestionElement.textContent = "D10";
+  const conflictWindow = createFakeWindow({ documentRef: conflictDocument });
+
+  const conflictIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef: conflictDocument,
+    windowRef: conflictWindow,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 3000,
+  });
+
+  const invalidDocument = new FakeDocument();
+  invalidDocument.suggestionElement.textContent = "ABC";
+  const invalidWindow = createFakeWindow({ documentRef: invalidDocument });
+
+  const invalidIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef: invalidDocument,
+    windowRef: invalidWindow,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 3000,
+  });
+
+  assert.deepEqual(conflictIntent, {
+    reason: "checkout",
+    segment: "D20",
+  });
+  assert.deepEqual(invalidIntent, {
+    reason: "checkout",
+    segment: "D20",
+  });
+});
+
+test("tv-board-zoom applies smart setup suggestion through the full turn", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T19";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+
+  const firstIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 121,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-setup",
+        playerId: "player-1",
+        throws: [],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 4000,
+  });
+
+  const secondIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 102,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "S19" } }],
+      activeTurn: {
+        id: "turn-setup",
+        playerId: "player-1",
+        throws: [{ segment: { name: "S19" } }],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 4100,
+  });
+
+  const thirdIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 83,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "S19" } }, { segment: { name: "S19" } }],
+      activeTurn: {
+        id: "turn-setup",
+        playerId: "player-1",
+        throws: [{ segment: { name: "S19" } }, { segment: { name: "S19" } }],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 4200,
+  });
+
+  assert.deepEqual(firstIntent, { reason: "smart-setup", segment: "T19" });
+  assert.deepEqual(secondIntent, { reason: "smart-setup", segment: "T19" });
+  assert.deepEqual(thirdIntent, { reason: "smart-setup", segment: "T19" });
+});
+
+test("tv-board-zoom uses T20 fallback only above 170 when no suggestion is present", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+
+  const highIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 171,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 5000,
+  });
+
+  const standardIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 170,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 5000,
+  });
+
+  assert.deepEqual(highIntent, { reason: "t20-setup", segment: "T20" });
+  assert.equal(standardIntent, null);
+});
+
+test("tv-board-zoom keeps the long hold after the third dart stable", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+
+  const secondDartIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 61,
+      outMode: "Straight Out",
+      activeThrows: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+      activeTurn: {
+        id: "turn-hold",
+        playerId: "player-1",
+        throws: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 6000,
+  });
+
+  const immediateThirdDartIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 1,
+      outMode: "Straight Out",
+      activeThrows: [
+        { segment: { name: "T20" } },
+        { segment: { name: "T20" } },
+        { segment: { name: "S1" } },
+      ],
+      activeTurn: {
+        id: "turn-hold",
+        playerId: "player-1",
+        throws: [
+          { segment: { name: "T20" } },
+          { segment: { name: "T20" } },
+          { segment: { name: "S1" } },
+        ],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 6050,
+  });
+
+  const heldIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 1,
+      outMode: "Straight Out",
+      activeThrows: [
+        { segment: { name: "T20" } },
+        { segment: { name: "T20" } },
+        { segment: { name: "S1" } },
+      ],
+      activeTurn: {
+        id: "turn-hold",
+        playerId: "player-1",
+        throws: [
+          { segment: { name: "T20" } },
+          { segment: { name: "T20" } },
+          { segment: { name: "S1" } },
+        ],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 7300,
+  });
+
+  const releasedIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 1,
+      outMode: "Straight Out",
+      activeThrows: [
+        { segment: { name: "T20" } },
+        { segment: { name: "T20" } },
+        { segment: { name: "S1" } },
+      ],
+      activeTurn: {
+        id: "turn-hold",
+        playerId: "player-1",
+        throws: [
+          { segment: { name: "T20" } },
+          { segment: { name: "T20" } },
+          { segment: { name: "S1" } },
+        ],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 7400,
+  });
+
+  assert.deepEqual(secondDartIntent, { reason: "t20-setup", segment: "T20" });
+  assert.deepEqual(immediateThirdDartIntent, { reason: "t20-setup", segment: "T20" });
+  assert.deepEqual(heldIntent, { reason: "t20-setup", segment: "T20" });
+  assert.equal(releasedIntent, null);
+});

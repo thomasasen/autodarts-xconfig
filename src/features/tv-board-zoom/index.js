@@ -66,6 +66,10 @@ export function initializeTvBoardZoom(context = {}) {
     holdUntilTs: 0,
     lastTurnId: "",
     lastThrowCount: -1,
+    lastAppliedSignature: "",
+    releaseTimeoutId: 0,
+    targetStyleSnapshot: null,
+    hostStyleSnapshot: null,
   };
   const boardCache = {
     svg: null,
@@ -115,7 +119,11 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     const hostNode = resolveZoomHost(targetNode);
-    applyZoom(targetNode, hostNode, zoomLevel, speedConfig, intent, zoomState);
+    applyZoom(targetNode, hostNode, boardSvg, zoomLevel, speedConfig, intent, zoomState, {
+      x01Rules,
+      windowRef,
+      documentRef,
+    });
   }, { windowRef });
   const isManagedNode = createManagedNodeMatcher({
     classNames: [ZOOM_CLASS, ZOOM_HOST_CLASS],

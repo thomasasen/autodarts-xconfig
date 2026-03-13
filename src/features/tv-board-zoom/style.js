@@ -30,8 +30,12 @@ export function resolveZoomSpeedConfig(speed) {
 
 export function buildStyleText() {
   return `
-.${ZOOM_HOST_CLASS} {
+.${ZOOM_HOST_CLASS},
+.ad-ext-theme-board-viewport.${ZOOM_HOST_CLASS},
+.css-tqsk66.${ZOOM_HOST_CLASS} {
   overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
 }
 
 .${ZOOM_CLASS} {
