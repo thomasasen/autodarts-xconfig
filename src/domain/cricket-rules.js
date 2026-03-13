@@ -29,6 +29,98 @@ export const CRICKET_DISCOVERY_TARGET_ORDER = [
 const TARGET_SET = new Set(CRICKET_DISCOVERY_TARGET_ORDER);
 const TACTICS_ONLY_TARGETS = new Set(["14", "13", "12", "11", "10"]);
 const TACTICS_EXTRA_TARGET_SET = new Set(TACTICS_EXTRA_TARGETS);
+const WIN_EVALUATORS_BY_SCORING_MODE = Object.freeze({
+  standard({ score, highestScore, allTargetsClosed }) {
+    const leading = score === highestScore;
+    return {
+      leading,
+      winner: allTargetsClosed && leading,
+    };
+  },
+  cutthroat({ score, lowestScore, allTargetsClosed }) {
+    const leading = score === lowestScore;
+    return {
+      leading,
+      winner: allTargetsClosed && leading,
+    };
+  },
+  neutral({ allTargetsClosed }) {
+    return {
+      leading: allTargetsClosed,
+      winner: allTargetsClosed,
+    };
+  },
+});
+
+function resolveCricketWinFlags(scoringModeNormalized, options = {}) {
+  const evaluateByMode = WIN_EVALUATORS_BY_SCORING_MODE[
+    String(scoringModeNormalized || "").trim().toLowerCase()
+  ];
+  if (typeof evaluateByMode !== "function") {
+    return {
+      leading: false,
+      winner: false,
+    };
+  }
+  return evaluateByMode(options);
+}
+
+function summarizeMarksByPlayer(resolvedMarks, resolvedIndex) {
+  let allClosed = resolvedMarks.length > 0;
+  let openOpponentCount = 0;
+  let closedOpponentCount = 0;
+
+  resolvedMarks.forEach((mark, index) => {
+    const isClosed = mark >= 3;
+    if (!isClosed) {
+      allClosed = false;
+    }
+    if (index === resolvedIndex) {
+      return;
+    }
+
+    if (isClosed) {
+      closedOpponentCount += 1;
+    } else {
+      openOpponentCount += 1;
+    }
+  });
+
+  return {
+    allClosed,
+    openOpponentCount,
+    closedOpponentCount,
+    hasOpenOpponent: openOpponentCount > 0,
+    hasClosedOpponent: closedOpponentCount > 0,
+  };
+}
+
+function getScoreRange(scoresByPlayer) {
+  if (!Array.isArray(scoresByPlayer) || !scoresByPlayer.length) {
+    return {
+      highestScore: 0,
+      lowestScore: 0,
+    };
+  }
+
+  let highestScore = scoresByPlayer[0];
+  let lowestScore = scoresByPlayer[0];
+
+  for (let index = 1; index < scoresByPlayer.length; index += 1) {
+    const score = scoresByPlayer[index];
+    if (score > highestScore) {
+      highestScore = score;
+    }
+    if (score < lowestScore) {
+      lowestScore = score;
+    }
+  }
+
+  return {
+    highestScore,
+    lowestScore,
+  };
+}
 
 function toSafePlayerCount(value) {
   const numeric = Number(value);
@@ -526,13 +618,13 @@ export function evaluatePlayerTargetState(marksByPlayer, playerIndex, options = 
   const marks = resolvedMarks[resolvedIndex] || 0;
   const open = marks < 3;
   const closed = marks >= 3;
-  const allClosed = resolvedMarks.length > 0 && resolvedMarks.every((mark) => mark >= 3);
+  const markSummary = summarizeMarksByPlayer(resolvedMarks, resolvedIndex);
+  const allClosed = markSummary.allClosed;
   const dead = allClosed;
-  const opponentMarks = resolvedMarks.filter((_, index) => index !== resolvedIndex);
-  const openOpponentCount = opponentMarks.filter((mark) => mark < 3).length;
-  const closedOpponentCount = opponentMarks.filter((mark) => mark >= 3).length;
-  const scorableForPlayer = closed && opponentMarks.some((mark) => mark < 3) && !allClosed;
-  const scorableAgainstPlayer = !closed && opponentMarks.some((mark) => mark >= 3) && !allClosed;
+  const openOpponentCount = markSummary.openOpponentCount;
+  const closedOpponentCount = markSummary.closedOpponentCount;
+  const scorableForPlayer = closed && markSummary.hasOpenOpponent && !allClosed;
+  const scorableAgainstPlayer = !closed && markSummary.hasClosedOpponent && !allClosed;
   const offense = scorableForPlayer;
   const danger = scorableAgainstPlayer;
   const pressure = scorableAgainstPlayer;
@@ -603,12 +695,7 @@ export function computeTargetStates(marksByLabel, options = {}) {
       })
     );
 
-    const boardState =
-      cellStates[activePlayerIndex] ||
-      evaluatePlayerTargetState(marksByPlayer, activePlayerIndex, {
-        activePlayerIndex,
-        scoringModeNormalized,
-      });
+    const boardState = cellStates[activePlayerIndex];
 
     const presentation = boardState.presentation || "open";
     const openOpponentCount = Number(boardState?.openOpponentCount || 0);
@@ -717,27 +804,19 @@ export function evaluateCricketWinState(options = {}) {
   const playerCount = resolveCricketWinPlayerCount(marksByLabel, options.scoresByPlayer);
   const scoresByPlayer = normalizePlayerScores(options.scoresByPlayer, playerCount);
 
-  const highestScore = scoresByPlayer.length ? Math.max(...scoresByPlayer) : 0;
-  const lowestScore = scoresByPlayer.length ? Math.min(...scoresByPlayer) : 0;
+  const { highestScore, lowestScore } = getScoreRange(scoresByPlayer);
 
   const playerStates = Array.from({ length: playerCount }, (_, playerIndex) => {
     const closedTargetCount = countClosedTargetsForPlayer(marksByLabel, targetOrder, playerIndex);
     const allTargetsClosed = targetOrder.length > 0 && closedTargetCount === targetOrder.length;
     const score = scoresByPlayer[playerIndex] || 0;
 
-    let leading = false;
-    let winner = false;
-
-    if (scoringModeNormalized === "standard") {
-      leading = score === highestScore;
-      winner = allTargetsClosed && leading;
-    } else if (scoringModeNormalized === "cutthroat") {
-      leading = score === lowestScore;
-      winner = allTargetsClosed && leading;
-    } else if (scoringModeNormalized === "neutral") {
-      leading = allTargetsClosed;
-      winner = allTargetsClosed;
-    }
+    const { leading, winner } = resolveCricketWinFlags(scoringModeNormalized, {
+      score,
+      highestScore,
+      lowestScore,
+      allTargetsClosed,
+    });
 
     return {
       playerIndex,

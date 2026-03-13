@@ -442,6 +442,33 @@ test("xConfig shell marks the menu and offers install action when a newer usersc
   runtime.stop();
 });
 
+test("xConfig shell renders an error update panel when the remote version lookup fails", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  windowRef.fetch = async () => {
+    throw new Error("network down");
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitFor(() => Boolean(documentRef.getElementById("ad-xconfig-menu-item")));
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitFor(() => documentRef.querySelector("[data-adxconfig-update-panel='true']")?.getAttribute("data-update-state") === "error");
+
+  const updatePanel = documentRef.querySelector("[data-adxconfig-update-panel='true']");
+  assert.ok(updatePanel);
+  assert.equal(updatePanel.getAttribute("data-update-state"), "error");
+
+  const updateTitle = updatePanel.querySelector(".ad-xconfig-update-title");
+  assert.ok(updateTitle);
+  assert.equal(String(updateTitle.textContent || "").trim(), "Update-Prüfung fehlgeschlagen");
+
+  const installButton = documentRef.querySelector("[data-adxconfig-action='install-update']");
+  assert.equal(Boolean(installButton), false);
+
+  runtime.stop();
+});
+
 test("xConfig shell can recheck update status and promote a current build to update-available", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

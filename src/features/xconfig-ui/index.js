@@ -667,19 +667,63 @@ function formatUpdateCheckedAt(checkedAt) {
   }
 }
 
+const UPDATE_PANEL_STATE_BY_STATUS = Object.freeze({
+  checking: "checking",
+  available: "available",
+  error: "error",
+});
+
+function buildUpdateVersionCopy(installedVersion, remoteVersion) {
+  let copyText = `Installiert ${installedVersion}`;
+  if (remoteVersion) {
+    copyText += ` • GitHub ${remoteVersion}`;
+  }
+  return copyText;
+}
+
+const UPDATE_PANEL_TEXT_RESOLVERS = Object.freeze({
+  checking() {
+    return {
+      titleText: "Versionsstatus wird geprüft",
+      copyText: "Vergleicht installierte Version und GitHub-Metadatei.",
+    };
+  },
+  available({ installedVersion, remoteVersion }) {
+    return {
+      titleText: "Update verfügbar",
+      copyText: `${buildUpdateVersionCopy(installedVersion, remoteVersion)} • Öffnet Tampermonkey im neuen Tab`,
+    };
+  },
+  current({ installedVersion, remoteVersion }) {
+    return {
+      titleText: "Version ist aktuell",
+      copyText: buildUpdateVersionCopy(installedVersion, remoteVersion),
+    };
+  },
+  error({ updateStatus }) {
+    return {
+      titleText: "Update-Prüfung fehlgeschlagen",
+      copyText: String(updateStatus.error || "Die GitHub-Version konnte nicht gelesen werden.").trim(),
+    };
+  },
+});
+
+function resolveUpdatePanelText(panelState, context) {
+  const resolver = UPDATE_PANEL_TEXT_RESOLVERS[panelState] || UPDATE_PANEL_TEXT_RESOLVERS.checking;
+  return resolver(context);
+}
+
 function getUpdatePanelState(updateStatus) {
   if (!updateStatus?.capable) {
     return "";
   }
-  if (updateStatus.status === "checking") {
-    return "checking";
+
+  const normalizedStatus = String(updateStatus.status || "").trim().toLowerCase();
+  const mappedState = UPDATE_PANEL_STATE_BY_STATUS[normalizedStatus];
+  if (mappedState) {
+    return mappedState;
   }
-  if (updateStatus.status === "available") {
-    return "available";
-  }
-  if (updateStatus.status === "error") {
-    return "error";
-  }
+
   return updateStatus.remoteVersion ? "current" : "checking";
 }
 
@@ -692,27 +736,11 @@ function buildUpdatePanel(documentRef, updateStatus) {
   const installedVersion = String(updateStatus.installedVersion || "unbekannt").trim() || "unbekannt";
   const remoteVersion = String(updateStatus.remoteVersion || "").trim();
   const checkedAtText = formatUpdateCheckedAt(updateStatus.checkedAt);
-
-  let titleText = "Versionsstatus wird geprüft";
-  let copyText = "Vergleicht installierte Version und GitHub-Metadatei.";
-
-  if (panelState === "available") {
-    titleText = "Update verfügbar";
-    copyText = `Installiert ${installedVersion}`;
-    if (remoteVersion) {
-      copyText += ` • GitHub ${remoteVersion}`;
-    }
-    copyText += " • Öffnet Tampermonkey im neuen Tab";
-  } else if (panelState === "current") {
-    titleText = "Version ist aktuell";
-    copyText = `Installiert ${installedVersion}`;
-    if (remoteVersion) {
-      copyText += ` • GitHub ${remoteVersion}`;
-    }
-  } else if (panelState === "error") {
-    titleText = "Update-Prüfung fehlgeschlagen";
-    copyText = String(updateStatus.error || "Die GitHub-Version konnte nicht gelesen werden.").trim();
-  }
+  let { titleText, copyText } = resolveUpdatePanelText(panelState, {
+    updateStatus,
+    installedVersion,
+    remoteVersion,
+  });
 
   if (checkedAtText) {
     copyText = `${copyText} • ${updateStatus.stale ? "letzter erfolgreicher Stand" : "geprüft"} ${checkedAtText}`;

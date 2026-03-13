@@ -157,3 +157,32 @@ test("initializeRuntime starts an existing namespace-backed runtime", () => {
 
   initialized.stop();
 });
+
+test("bootstrap resolves feature references by config key for toggle and action APIs", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    featureDefinitions: [
+      {
+        featureKey: "custom-feature",
+        configKey: "custom.group.flag",
+        mount: () => () => {},
+        runAction: ({ actionId }) => `handled:${String(actionId || "")}`,
+      },
+    ],
+  });
+
+  runtime.start();
+
+  const enabled = runtime.setFeatureEnabled("custom.group.flag", true);
+  assert.equal(enabled, true);
+  assert.equal(runtime.getSnapshot().features["custom-feature"].enabled, true);
+
+  const actionResult = await runtime.runFeatureAction("custom.group.flag", "ping");
+  assert.equal(actionResult, "handled:ping");
+
+  runtime.stop();
+});

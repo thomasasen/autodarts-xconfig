@@ -887,3 +887,31 @@ test("evaluateCricketWinState resolves standard, cut-throat and neutral winners"
   assert.equal(neutralTie.isTie, true);
   assert.deepEqual(neutralTie.winnerIndexes, [0, 1]);
 });
+
+test("evaluateCricketWinState keeps unknown scoring mode neutral for leading/winner flags", () => {
+  const unknownMode = evaluateCricketWinState({
+    targetOrder: CRICKET_TARGET_ORDER,
+    scoringMode: "mystery-mode",
+    scoresByPlayer: [120, 15],
+    marksByLabel: {
+      "20": [3, 3],
+      "19": [3, 3],
+      "18": [3, 3],
+      "17": [3, 3],
+      "16": [3, 3],
+      "15": [3, 3],
+      BULL: [3, 3],
+    },
+  });
+
+  assert.equal(unknownMode.hasWinner, false);
+  assert.equal(unknownMode.isTie, false);
+  assert.deepEqual(unknownMode.winnerIndexes, []);
+  assert.deepEqual(
+    unknownMode.playerStates.map((state) => ({ leading: state.leading, winner: state.winner })),
+    [
+      { leading: false, winner: false },
+      { leading: false, winner: false },
+    ]
+  );
+});

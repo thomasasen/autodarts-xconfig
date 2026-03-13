@@ -9,7 +9,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-const API_VERSION = "1.2.9";
+const API_VERSION = "1.2.10";
 
 function normalizeFeatureDefinitions(definitions) {
   if (!Array.isArray(definitions) || !definitions.length) {
@@ -47,15 +47,38 @@ function normalizeFeatureDefinitions(definitions) {
   }, []);
 }
 
-function featureDefinitionByConfigKey(featureDefinitions, configKey) {
-  return (
-    featureDefinitions.find((feature) => feature.configKey === configKey) || null
-  );
+function createFeatureDefinitionIndex(featureDefinitions) {
+  const byFeatureKey = new Map();
+  const byConfigKey = new Map();
+
+  featureDefinitions.forEach((definition) => {
+    if (!definition || typeof definition !== "object") {
+      return;
+    }
+    if (!byFeatureKey.has(definition.featureKey)) {
+      byFeatureKey.set(definition.featureKey, definition);
+    }
+    if (!byConfigKey.has(definition.configKey)) {
+      byConfigKey.set(definition.configKey, definition);
+    }
+  });
+
+  return {
+    byFeatureKey,
+    byConfigKey,
+  };
 }
 
-function featureDefinitionByFeatureKey(featureDefinitions, featureKey) {
+function resolveFeatureDefinitionByRef(featureDefinitionIndex, featureRef) {
+  const normalizedRef = String(featureRef || "").trim();
+  if (!normalizedRef) {
+    return null;
+  }
+
   return (
-    featureDefinitions.find((feature) => feature.featureKey === featureKey) || null
+    featureDefinitionIndex.byFeatureKey.get(normalizedRef) ||
+    featureDefinitionIndex.byConfigKey.get(normalizedRef) ||
+    null
   );
 }
 
@@ -111,6 +134,7 @@ export function createBootstrap(options = {}) {
   const featureDefinitions = normalizeFeatureDefinitions(
     options.featureDefinitions || defaultFeatureDefinitions
   );
+  const featureDefinitionIndex = createFeatureDefinitionIndex(featureDefinitions);
 
   const gameState = createGameStateStore({
     eventBus,
@@ -294,9 +318,7 @@ export function createBootstrap(options = {}) {
   }
 
   function setFeatureEnabled(featureRef, enabled) {
-    const definition =
-      featureDefinitionByFeatureKey(featureDefinitions, String(featureRef || "")) ||
-      featureDefinitionByConfigKey(featureDefinitions, String(featureRef || ""));
+    const definition = resolveFeatureDefinitionByRef(featureDefinitionIndex, featureRef);
 
     const configKey = definition ? definition.configKey : String(featureRef || "");
     config.setFeatureEnabled(configKey, enabled);
@@ -312,9 +334,7 @@ export function createBootstrap(options = {}) {
   }
 
   function runFeatureAction(featureRef, actionId) {
-    const definition =
-      featureDefinitionByFeatureKey(featureDefinitions, String(featureRef || "")) ||
-      featureDefinitionByConfigKey(featureDefinitions, String(featureRef || ""));
+    const definition = resolveFeatureDefinitionByRef(featureDefinitionIndex, featureRef);
 
     if (!definition || typeof definition.runAction !== "function") {
       return Promise.reject(new Error("Unsupported feature action."));
