@@ -71,23 +71,20 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-notice--error{background:rgba(255,84,84,.15);border-color:rgba(255,84,84,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--info{background:rgba(74,178,255,.18);border-color:rgba(74,178,255,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-header-actions{display:flex;flex-wrap:wrap;gap:.65rem}
-#${PANEL_HOST_ID} .ad-xconfig-update-panel{margin-top:1rem;padding:.95rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(7,13,33,.34);display:grid;gap:.75rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel{margin-top:1rem;padding:.85rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(7,13,33,.34);display:grid;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"]{border-color:rgba(255,146,120,.72);background:linear-gradient(145deg,rgba(255,116,86,.18),rgba(255,196,118,.12));box-shadow:inset 0 0 0 1px rgba(255,191,149,.12)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="current"]{border-color:rgba(126,216,255,.42);background:linear-gradient(145deg,rgba(58,148,255,.14),rgba(69,201,255,.08))}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="checking"]{border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.07)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="error"]{border-color:rgba(255,112,112,.48);background:linear-gradient(145deg,rgba(255,96,96,.14),rgba(255,120,120,.07))}
 #${PANEL_HOST_ID} .ad-xconfig-update-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
-#${PANEL_HOST_ID} .ad-xconfig-update-summary{display:grid;gap:.28rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-summary{display:grid;gap:.18rem}
 #${PANEL_HOST_ID} .ad-xconfig-update-title-row{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-update-dot{width:.68rem;height:.68rem;border-radius:999px;background:rgba(164,190,255,.96);box-shadow:0 0 0 3px rgba(164,190,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"] .ad-xconfig-update-dot{background:#ff8b73;box-shadow:0 0 0 3px rgba(255,139,115,.18)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="current"] .ad-xconfig-update-dot{background:#6ce0a3;box-shadow:0 0 0 3px rgba(108,224,163,.18)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="error"] .ad-xconfig-update-dot{background:#ff8a8a;box-shadow:0 0 0 3px rgba(255,138,138,.18)}
 #${PANEL_HOST_ID} .ad-xconfig-update-title{margin:0;font-size:1rem;font-weight:800;line-height:1.2}
-#${PANEL_HOST_ID} .ad-xconfig-update-copy{margin:0;font-size:.83rem;line-height:1.4;color:rgba(235,243,255,.88)}
-#${PANEL_HOST_ID} .ad-xconfig-update-meta{display:flex;flex-wrap:wrap;gap:.45rem}
-#${PANEL_HOST_ID} .ad-xconfig-update-chip{display:inline-flex;align-items:center;padding:.18rem .52rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);font-size:.72rem;line-height:1.2;color:rgba(245,249,255,.96)}
-#${PANEL_HOST_ID} .ad-xconfig-update-chip--accent{border-color:rgba(255,166,132,.48);background:rgba(255,146,118,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-update-copy{margin:0;font-size:.8rem;line-height:1.35;color:rgba(235,243,255,.88)}
 #${PANEL_HOST_ID} .ad-xconfig-update-actions{display:flex;flex-wrap:wrap;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary{border-color:rgba(255,166,132,.72);background:linear-gradient(145deg,rgba(255,126,92,.34),rgba(255,196,118,.22));box-shadow:0 0 0 1px rgba(255,186,144,.12),0 5px 16px rgba(255,126,92,.12)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary:hover{background:linear-gradient(145deg,rgba(255,141,104,.42),rgba(255,203,128,.28))}
@@ -685,23 +682,28 @@ function buildUpdatePanel(documentRef, updateStatus) {
   const checkedAtText = formatUpdateCheckedAt(updateStatus.checkedAt);
 
   let titleText = "Versionsstatus wird geprüft";
-  let copyText = "Vergleicht die installierte Userscript-Version mit der veröffentlichten GitHub-Metadatei.";
+  let copyText = "Vergleicht installierte Version und GitHub-Metadatei.";
 
   if (panelState === "available") {
     titleText = "Update verfügbar";
-    copyText = `Installiert ist ${installedVersion}, auf GitHub liegt bereits ${remoteVersion}. Der Button öffnet den Tampermonkey-Installationsdialog in einem neuen Tab.`;
+    copyText = `Installiert ${installedVersion}`;
+    if (remoteVersion) {
+      copyText += ` • GitHub ${remoteVersion}`;
+    }
+    copyText += " • Öffnet Tampermonkey im neuen Tab";
   } else if (panelState === "current") {
     titleText = "Version ist aktuell";
-    copyText = remoteVersion
-      ? `Installiert ist ${installedVersion}; GitHub meldet ebenfalls ${remoteVersion}.`
-      : `Installiert ist ${installedVersion}.`;
+    copyText = `Installiert ${installedVersion}`;
+    if (remoteVersion) {
+      copyText += ` • GitHub ${remoteVersion}`;
+    }
   } else if (panelState === "error") {
     titleText = "Update-Prüfung fehlgeschlagen";
     copyText = String(updateStatus.error || "Die GitHub-Version konnte nicht gelesen werden.").trim();
   }
 
-  if (updateStatus.stale && checkedAtText) {
-    copyText = `${copyText} Zuletzt erfolgreicher Stand: ${checkedAtText}.`;
+  if (checkedAtText) {
+    copyText = `${copyText} • ${updateStatus.stale ? "letzter erfolgreicher Stand" : "geprüft"} ${checkedAtText}`;
   }
 
   const panel = createElement(documentRef, "section", {
@@ -736,29 +738,6 @@ function buildUpdatePanel(documentRef, updateStatus) {
     className: "ad-xconfig-update-copy",
     text: copyText,
   }));
-
-  const meta = createElement(documentRef, "div", {
-    className: "ad-xconfig-update-meta",
-  });
-  meta.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-update-chip",
-    text: `Installiert: ${installedVersion}`,
-  }));
-  if (remoteVersion) {
-    meta.appendChild(createElement(documentRef, "span", {
-      className: panelState === "available"
-        ? "ad-xconfig-update-chip ad-xconfig-update-chip--accent"
-        : "ad-xconfig-update-chip",
-      text: `GitHub: ${remoteVersion}`,
-    }));
-  }
-  if (checkedAtText) {
-    meta.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-update-chip",
-      text: `Geprüft: ${checkedAtText}`,
-    }));
-  }
-  summary.appendChild(meta);
   head.appendChild(summary);
 
   const actions = createElement(documentRef, "div", {
