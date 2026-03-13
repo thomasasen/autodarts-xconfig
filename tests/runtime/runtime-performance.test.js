@@ -7,10 +7,14 @@ import { createGameStateStore } from "../../src/core/game-state-store.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { initializeCheckoutBoardTargets } from "../../src/features/checkout-board-targets/index.js";
+import { renderCheckoutTargets } from "../../src/features/checkout-board-targets/logic.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import { initializeTripleDoubleBullHits } from "../../src/features/triple-double-bull-hits/index.js";
-import { OVERLAY_ID as CHECKOUT_OVERLAY_ID } from "../../src/features/checkout-board-targets/style.js";
+import {
+  OVERLAY_ID as CHECKOUT_OVERLAY_ID,
+  resolveBoardTargetVisualConfig,
+} from "../../src/features/checkout-board-targets/style.js";
 import {
   OVERLAY_ID as CRICKET_OVERLAY_ID,
   STYLE_ID as CRICKET_STYLE_ID,
@@ -79,7 +83,6 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
       getFeatureConfig() {
         return {
           effect: "pulse",
-          targetScope: "first",
           singleRing: "both",
           colorTheme: "violet",
           outlineIntensity: "standard",
@@ -122,122 +125,39 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
   cleanup();
 });
 
-test("checkout-board-targets requests summary targets only for all-target scope", () => {
+test("checkout-board-targets renders only the next sensible target when multiple targets are available", () => {
   const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({ documentRef });
-  const domGuards = createDomGuards({ documentRef });
-  const observerRegistry = createObserverRegistry();
-  documentRef.variantElement.textContent = "X01";
-  documentRef.suggestionElement.textContent = "20 D10";
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "170");
+  group.appendChild(boardCircle);
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
 
-  const receivedOptions = [];
-  const cleanupAll = initializeCheckoutBoardTargets({
-    documentRef,
-    windowRef,
-    domGuards,
-    registries: {
-      observers: observerRegistry,
-    },
-    gameState: {
-      isX01Variant: () => true,
-      subscribe() {
-        return () => {};
-      },
-    },
-    domain: {
-      x01Rules: {
-        parseCheckoutTargetsFromSuggestion: (_text, options) => {
-          receivedOptions.push(options);
-          return [];
-        },
-      },
-      variantRules: {
-        isX01VariantText: () => true,
-      },
-    },
-    config: {
-      getFeatureConfig() {
-        return {
-          effect: "pulse",
-          targetScope: "all",
-          singleRing: "both",
-          colorTheme: "violet",
-          outlineIntensity: "standard",
-        };
-      },
-    },
-    helpers: {
-      createRafScheduler(callback) {
-        return {
-          schedule() {
-            callback();
-          },
-          cancel() {},
-          isScheduled() {
-            return false;
-          },
-        };
-      },
-    },
+  const visualConfig = resolveBoardTargetVisualConfig({
+    effect: "pulse",
+    singleRing: "both",
+    colorTheme: "violet",
+    outlineIntensity: "standard",
   });
 
-  assert.equal(receivedOptions.length > 0, true);
-  assert.deepEqual(receivedOptions[0], { includeSummaryTargets: true });
-  cleanupAll();
-
-  const cleanupFirst = initializeCheckoutBoardTargets({
-    documentRef,
-    windowRef,
-    domGuards,
-    registries: {
-      observers: observerRegistry,
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 170,
     },
-    gameState: {
-      isX01Variant: () => true,
-      subscribe() {
-        return () => {};
-      },
-    },
-    domain: {
-      x01Rules: {
-        parseCheckoutTargetsFromSuggestion: (_text, options) => {
-          receivedOptions.push(options);
-          return [];
-        },
-      },
-      variantRules: {
-        isX01VariantText: () => true,
-      },
-    },
-    config: {
-      getFeatureConfig() {
-        return {
-          effect: "pulse",
-          targetScope: "first",
-          singleRing: "both",
-          colorTheme: "violet",
-          outlineIntensity: "standard",
-        };
-      },
-    },
-    helpers: {
-      createRafScheduler(callback) {
-        return {
-          schedule() {
-            callback();
-          },
-          cancel() {},
-          isScheduled() {
-            return false;
-          },
-        };
-      },
-    },
+    checkoutTargets: [
+      { ring: "T", value: 20 },
+      { ring: "D", value: 10 },
+    ],
+    visualConfig,
   });
 
-  assert.equal(receivedOptions.length > 1, true);
-  assert.deepEqual(receivedOptions[1], { includeSummaryTargets: false });
-  cleanupFirst();
+  const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+  assert.equal(overlay.children.length, 2);
 });
 
 test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {

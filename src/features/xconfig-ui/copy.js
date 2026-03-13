@@ -240,11 +240,6 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wählt die Animationsart der markierten Board-Segmente. Die Segmentauswahl bleibt gleich; nur die Bewegung und Leuchtwirkung ändern sich.",
         "Legt die Animationsart der markierten Segmente fest."
       ),
-      targetScope: fieldCopy(
-        "Zeigt nur das erste Ziel oder alle sinnvollen Ziele der aktuellen Lösung an.",
-        "Bestimmt, wie viele Board-Ziele gleichzeitig hervorgehoben werden. `Erstes Ziel` fokussiert den nächsten Wurf, `Alle Ziele` zeigt die komplette aktuell sinnvolle Checkout-Kette, soweit das Modul sie am Board abbildet.",
-        "Legt fest, ob nur das erste oder alle aktuellen Ziele markiert werden."
-      ),
       singleRing: fieldCopy(
         "Bestimmt bei Single-Zielen, ob der innere, äußere oder beide Single-Ringe markiert werden.",
         "Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.",
@@ -978,18 +973,6 @@ const BOARD_TARGET_EFFECT_OPTION_COPY = deepFreeze({
   ),
 });
 
-const BOARD_TARGET_SCOPE_OPTION_COPY = deepFreeze({
-  first: optionCopy(
-    "Zeigt nur das nächste sinnvolle Ziel.",
-    "Am Board wird nur das erste aktuell relevante Checkout-Segment markiert. Das hält die Anzeige sehr fokussiert auf den nächsten Wurf.",
-    "Diese Stufe reduziert die Board-Hinweise auf genau das nächste Zielsegment der aktuellen Lösung. Dadurch bleibt der Blick maximal fokussiert und das Board wirkt nicht überladen."
-  ),
-  all: optionCopy(
-    "Zeigt alle aktuell sinnvollen Ziele der Checkout-Lösung.",
-    "Neben dem ersten Ziel werden auch weitere Segmente der aktuellen Checkout-Kette markiert, soweit das Modul sie abbilden kann. Das gibt mehr Kontext, wirkt aber voller.",
-    "Diese Einstellung zeigt die komplette aktuell sinnvolle Checkout-Linie am Board, nicht nur den ersten Dart. Dadurch bekommt der Nutzer mehr strategischen Kontext, sieht aber auch mehr markierte Segmente gleichzeitig."
-  ),
-});
 
 const BOARD_TARGET_SINGLE_RING_OPTION_COPY = deepFreeze({
   both: optionCopy(
@@ -1829,7 +1812,6 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "checkout-board-targets": {
     effect: BOARD_TARGET_EFFECT_OPTION_COPY,
-    targetScope: BOARD_TARGET_SCOPE_OPTION_COPY,
     singleRing: BOARD_TARGET_SINGLE_RING_OPTION_COPY,
     colorTheme: BOARD_TARGET_COLOR_OPTION_COPY,
     outlineIntensity: BOARD_TARGET_OUTLINE_OPTION_COPY,

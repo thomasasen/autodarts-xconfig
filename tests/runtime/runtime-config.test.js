@@ -58,7 +58,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     features: {
       checkoutBoardTargets: {
         effect: "GLOW",
-        targetScope: "ALL",
         singleRing: "INNER",
       },
       tvBoardZoom: {
@@ -176,7 +175,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   });
 
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").effect, "glow");
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").targetScope, "all");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "inner");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomSpeed, "schnell");

@@ -322,9 +322,6 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Pulse`: Die Zielsegmente werden rhythmisch heller und minimal größer. Das wirkt lebendig, ohne hart zu blinken.
   - `Blink`: Die Zielsegmente blinken mit klaren Helligkeitssprüngen. Das ist die direkteste und auffälligste Zielmarkierung.
   - `Glow`: Die Markierung bleibt ruhiger als bei `Blink`, bekommt aber einen stärkeren Lichtschein und sichtbaren Glow um das Zielsegment.
-- `Zielumfang`: Bestimmt, wie viele Board-Ziele gleichzeitig hervorgehoben werden. `Erstes Ziel` fokussiert den nächsten Wurf, `Alle Ziele` zeigt die komplette aktuell sinnvolle Checkout-Kette, soweit das Modul sie am Board abbildet.
-  - `Erstes Ziel`: Am Board wird nur das erste aktuell relevante Checkout-Segment markiert. Das hält die Anzeige sehr fokussiert auf den nächsten Wurf.
-  - `Alle Ziele`: Neben dem ersten Ziel werden auch weitere Segmente der aktuellen Checkout-Kette markiert, soweit das Modul sie abbilden kann. Das gibt mehr Kontext, wirkt aber voller.
 - `Single-Ring`: Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.
   - `Beide`: Wenn ein Single-Feld Ziel eines Checkouts ist, werden beide Single-Bereiche des Segments hervorgehoben. Das erzeugt die breiteste visuelle Markierung.
   - `Innen`: Die Hervorhebung sitzt ausschließlich zwischen Triple- und Bull-Bereich. Der äußere Single-Ring bleibt unbelegt.

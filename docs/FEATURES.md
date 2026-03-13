@@ -223,9 +223,6 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
   - `Pulse`: Die markierten Felder atmen sichtbar über Helligkeit und leichte Größenänderung. Dadurch bleiben die Checkout-Ziele aufmerksamkeitsstark, aber weicher als bei einem Blinkeffekt.
   - `Blink`: Diese Variante reduziert die Zwischenstufen und arbeitet mit deutlichen Sichtbarkeitssprüngen. Dadurch springen die relevanten Board-Segmente besonders schnell ins Auge.
   - `Glow`: Die Ziele werden primär über Helligkeit, Kontur und einen zusätzlichen Leuchtsaum betont. Das wirkt ruhiger als `Blink`, aber strahlender als `Pulse`.
-- `Zielumfang`: Legt fest, ob nur das erste oder alle aktuellen Ziele markiert werden.
-  - `Erstes Ziel`: Diese Stufe reduziert die Board-Hinweise auf genau das nächste Zielsegment der aktuellen Lösung. Dadurch bleibt der Blick maximal fokussiert und das Board wirkt nicht überladen.
-  - `Alle Ziele`: Diese Einstellung zeigt die komplette aktuell sinnvolle Checkout-Linie am Board, nicht nur den ersten Dart. Dadurch bekommt der Nutzer mehr strategischen Kontext, sieht aber auch mehr markierte Segmente gleichzeitig.
 - `Single-Ring`: Bestimmt, welche Single-Ringe bei Single-Zielen markiert werden.
   - `Beide`: Bei Single-Zielen werden sowohl der innere als auch der äußere Single-Ring des betreffenden Segments markiert. Das ist die flächigste und am leichtesten erkennbare Variante.
   - `Innen`: Bei Single-Zielen wird nur der innere Single-Ring sichtbar markiert. Dadurch bleibt die Zielmarkierung schmaler und konzentriert sich stärker auf den innenliegenden Bereich des Segments.

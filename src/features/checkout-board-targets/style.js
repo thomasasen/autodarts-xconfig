@@ -64,10 +64,6 @@ export function resolveBoardTargetVisualConfig(featureConfig = {}) {
 
   return {
     effect: resolvedEffect,
-    targetScope:
-      String(featureConfig.targetScope || "").trim().toLowerCase() === "all"
-        ? "all"
-        : "first",
     singleRing: ["inner", "outer", "both"].includes(
       String(featureConfig.singleRing || "").trim().toLowerCase()
     )

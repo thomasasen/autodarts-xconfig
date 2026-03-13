@@ -398,8 +398,7 @@ export function renderCheckoutTargets(options = {}) {
     return;
   }
 
-  const selectedTargets =
-    visualConfig.targetScope === "all" ? checkoutTargets : checkoutTargets.slice(0, 1);
+  const selectedTargets = checkoutTargets.slice(0, 1);
   const ownerDocument = overlay.ownerDocument;
 
   selectedTargets.forEach((target) => {

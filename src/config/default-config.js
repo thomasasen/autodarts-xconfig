@@ -33,7 +33,6 @@ export const defaultConfig = {
     checkoutBoardTargets: {
       enabled: false,
       effect: "pulse",
-      targetScope: "first",
       singleRing: "both",
       colorTheme: "violet",
       outlineIntensity: "standard",

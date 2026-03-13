@@ -192,7 +192,6 @@ function importCheckoutBoardTargets(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
   return buildFeatureImport("checkoutBoardTargets", legacyFeatureState, {
     effect: readLegacySetting(settings, "EFFEKT", "pulse"),
-    targetScope: readLegacySetting(settings, "ZIELUMFANG", "first"),
     singleRing: readLegacySetting(settings, "SINGLE_RING", "both"),
     colorTheme: readLegacySetting(settings, "FARBTHEMA", "violet"),
     outlineIntensity: readLegacySetting(settings, "KONTUR_INTENSITAET", "standard"),

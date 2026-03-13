@@ -67,7 +67,6 @@ export function initializeCheckoutBoardTargets(context = {}) {
       ? config.getFeatureConfig("checkoutBoardTargets")
       : {
           effect: "pulse",
-          targetScope: "first",
           singleRing: "both",
           colorTheme: "violet",
           outlineIntensity: "standard",
@@ -130,9 +129,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const targets = x01Rules.parseCheckoutTargetsFromSuggestion(suggestionText, {
-      includeSummaryTargets: visualConfig.targetScope === "all",
-    });
+    const targets = x01Rules.parseCheckoutTargetsFromSuggestion(suggestionText);
     const board = getBoard();
     if (!board) {
       return;

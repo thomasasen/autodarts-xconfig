@@ -13,8 +13,7 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
-const CHECKOUT_TOKEN_PATTERN =
-  /\b(?:DB|BULLSEYE|BULL|SB|OB|[TDS](?:[1-9]|1\d|20|25)|(?:[1-9]|1\d|20|25))\b/g;
+const CHECKOUT_TOKEN_PATTERN = /DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
 const EXPLICIT_SEGMENT_PATTERN =
   /\b(?:DB|BULLSEYE|BULL|SB|OB|[TDS](?:[1-9]|1\d|20|25))\b/g;
 
@@ -527,12 +526,11 @@ export function parseExplicitCheckoutSegments(text) {
     .filter(Boolean);
 }
 
-export function parseCheckoutTargetsFromSuggestion(text, options = {}) {
+export function parseCheckoutTargetsFromSuggestion(text) {
   const raw = normalizeCheckoutSuggestionText(text);
   if (!raw.trim()) {
     return [];
   }
-  const includeSummaryTargets = options?.includeSummaryTargets === true;
 
   const tokens = raw.match(CHECKOUT_TOKEN_PATTERN) || [];
   const parsedTargets = [];
@@ -611,7 +609,7 @@ export function parseCheckoutTargetsFromSuggestion(text, options = {}) {
     }
   });
 
-  return (hasExplicitTargets && !includeSummaryTargets
+  return (hasExplicitTargets
     ? parsedTargets.filter((target) => !target.isSummary)
     : parsedTargets
   ).map(({ ring, value }) => {

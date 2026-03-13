@@ -203,17 +203,6 @@ test("checkout target parser keeps explicit-only default and maps bull semantics
   ]);
 });
 
-test("checkout target parser includes summary numbers in all-target mode and ignores score-like numbers", () => {
-  assert.deepEqual(
-    parseCheckoutTargetsFromSuggestion("20 D10", { includeSummaryTargets: true }),
-    [{ ring: "S", value: 20 }, { ring: "D", value: 10 }]
-  );
-  assert.deepEqual(
-    parseCheckoutTargetsFromSuggestion("120 D20", { includeSummaryTargets: true }),
-    [{ ring: "D", value: 20 }]
-  );
-});
-
 test("parseCheckoutSuggestionState follows explicit finish validity per out mode", () => {
   assert.equal(parseCheckoutSuggestionState("No Checkout"), false);
   assert.equal(parseCheckoutSuggestionState("Bust"), false);

@@ -14,7 +14,6 @@ const CHECKOUT_COLORS = new Set([
   "248, 113, 113",
 ]);
 const BOARD_TARGET_EFFECTS = new Set(["pulse", "blink", "glow"]);
-const BOARD_TARGET_SCOPE = new Set(["first", "all"]);
 const BOARD_TARGET_SINGLE_RING = new Set(["both", "inner", "outer"]);
 const BOARD_TARGET_THEMES = new Set(["violet", "cyan", "amber"]);
 const BOARD_TARGET_OUTLINE_INTENSITY = new Set(["dezent", "standard", "stark"]);
@@ -276,7 +275,6 @@ function normalizeCheckoutBoardTargetsConfig(rawConfig = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     effect: normalizeStringChoice(rawConfig.effect, "pulse", BOARD_TARGET_EFFECTS),
-    targetScope: normalizeStringChoice(rawConfig.targetScope, "first", BOARD_TARGET_SCOPE),
     singleRing: normalizeStringChoice(rawConfig.singleRing, "both", BOARD_TARGET_SINGLE_RING),
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "violet", BOARD_TARGET_THEMES),
     outlineIntensity: normalizeStringChoice(

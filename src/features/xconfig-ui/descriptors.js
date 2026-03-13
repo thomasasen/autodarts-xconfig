@@ -270,10 +270,6 @@ export const xconfigDescriptors = Object.freeze([
         { value: "blink", label: "Blink" },
         { value: "glow", label: "Glow" },
       ]),
-      selectField("targetScope", "Zielumfang", [
-        { value: "first", label: "Erstes Ziel" },
-        { value: "all", label: "Alle Ziele" },
-      ]),
       selectField("singleRing", "Single-Ring", [
         { value: "both", label: "Beide" },
         { value: "inner", label: "Innen" },
