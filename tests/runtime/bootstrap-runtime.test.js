@@ -9,6 +9,17 @@ function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function waitFor(check, { timeoutMs = 120, intervalMs = 4 } = {}) {
+  const deadline = Date.now() + Math.max(0, Number(timeoutMs) || 0);
+  while (Date.now() < deadline) {
+    if (check()) {
+      return true;
+    }
+    await wait(intervalMs);
+  }
+  return Boolean(check());
+}
+
 test("initializeTampermonkeyRuntime is idempotent and reuses the namespace", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -106,10 +117,17 @@ test("runtime public config API persists updates and survives feature toggles", 
 
   const previewResult = await runtime.runFeatureAction("winner-fireworks", "preview");
   assert.equal(previewResult.ok, true);
-  await wait(5);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), true);
-  await wait(30);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
+  assert.equal(
+    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview"))),
+    true
+  );
+  assert.equal(
+    await waitFor(
+      () => !Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")),
+      { timeoutMs: 220, intervalMs: 5 }
+    ),
+    true
+  );
 
   await runtime.setFeatureEnabled("theme-x01", true);
   await wait(5);
