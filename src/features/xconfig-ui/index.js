@@ -1,5 +1,11 @@
 ﻿import { getXConfigDescriptor, xconfigDescriptors } from "./descriptors.js";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
+import {
+  openUserscriptInstall,
+  readStoredUpdateStatus,
+  resolveLatestUpdateStatus,
+  shouldRefreshUpdateStatus,
+} from "./update-check.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const CONFIG_PATH = "/ad-xconfig";
@@ -48,6 +54,8 @@ const shellByWindow = new WeakMap();
 const styleText = `
 #${MENU_ITEM_ID}{cursor:pointer;min-height:2.5rem}
 #${MENU_ITEM_ID}[data-active="true"]{background:rgba(32,111,185,.28)!important;border-color:rgba(255,255,255,.16)!important}
+#${MENU_ITEM_ID}[data-update-available="true"]{position:relative}
+#${MENU_ITEM_ID}[data-update-available="true"]::after{content:"";position:absolute;top:.52rem;right:.6rem;width:.62rem;height:.62rem;border-radius:999px;background:#ff8370;box-shadow:0 0 0 2px rgba(12,22,54,.92),0 0 0 4px rgba(255,131,112,.18)}
 #${MENU_ITEM_ID} .ad-xconfig-menu-icon{display:inline-flex;align-items:center;flex-shrink:0;margin-inline-end:.5rem}
 #${MENU_ITEM_ID} .ad-xconfig-menu-label{white-space:nowrap}
 #${PANEL_HOST_ID}{display:none;width:100%;position:relative;z-index:2147480000}
@@ -63,6 +71,26 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-notice--error{background:rgba(255,84,84,.15);border-color:rgba(255,84,84,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--info{background:rgba(74,178,255,.18);border-color:rgba(74,178,255,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-header-actions{display:flex;flex-wrap:wrap;gap:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel{margin-top:1rem;padding:.95rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(7,13,33,.34);display:grid;gap:.75rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"]{border-color:rgba(255,146,120,.72);background:linear-gradient(145deg,rgba(255,116,86,.18),rgba(255,196,118,.12));box-shadow:inset 0 0 0 1px rgba(255,191,149,.12)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="current"]{border-color:rgba(126,216,255,.42);background:linear-gradient(145deg,rgba(58,148,255,.14),rgba(69,201,255,.08))}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="checking"]{border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.07)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="error"]{border-color:rgba(255,112,112,.48);background:linear-gradient(145deg,rgba(255,96,96,.14),rgba(255,120,120,.07))}
+#${PANEL_HOST_ID} .ad-xconfig-update-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-update-summary{display:grid;gap:.28rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-title-row{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-update-dot{width:.68rem;height:.68rem;border-radius:999px;background:rgba(164,190,255,.96);box-shadow:0 0 0 3px rgba(164,190,255,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"] .ad-xconfig-update-dot{background:#ff8b73;box-shadow:0 0 0 3px rgba(255,139,115,.18)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="current"] .ad-xconfig-update-dot{background:#6ce0a3;box-shadow:0 0 0 3px rgba(108,224,163,.18)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="error"] .ad-xconfig-update-dot{background:#ff8a8a;box-shadow:0 0 0 3px rgba(255,138,138,.18)}
+#${PANEL_HOST_ID} .ad-xconfig-update-title{margin:0;font-size:1rem;font-weight:800;line-height:1.2}
+#${PANEL_HOST_ID} .ad-xconfig-update-copy{margin:0;font-size:.83rem;line-height:1.4;color:rgba(235,243,255,.88)}
+#${PANEL_HOST_ID} .ad-xconfig-update-meta{display:flex;flex-wrap:wrap;gap:.45rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-chip{display:inline-flex;align-items:center;padding:.18rem .52rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);font-size:.72rem;line-height:1.2;color:rgba(245,249,255,.96)}
+#${PANEL_HOST_ID} .ad-xconfig-update-chip--accent{border-color:rgba(255,166,132,.48);background:rgba(255,146,118,.16)}
+#${PANEL_HOST_ID} .ad-xconfig-update-actions{display:flex;flex-wrap:wrap;gap:.55rem}
+#${PANEL_HOST_ID} .ad-xconfig-btn--primary{border-color:rgba(255,166,132,.72);background:linear-gradient(145deg,rgba(255,126,92,.34),rgba(255,196,118,.22));box-shadow:0 0 0 1px rgba(255,186,144,.12),0 5px 16px rgba(255,126,92,.12)}
+#${PANEL_HOST_ID} .ad-xconfig-btn--primary:hover{background:linear-gradient(145deg,rgba(255,141,104,.42),rgba(255,203,128,.28))}
 #${PANEL_HOST_ID} .ad-xconfig-tabs{margin-top:1rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{border:1px solid rgba(255,255,255,.24);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{padding:.55rem .85rem}
@@ -612,6 +640,154 @@ function openReadme(windowRef, featureKey) {
   if (windowRef?.location) {
     windowRef.location.href = href;
   }
+}
+
+function formatUpdateCheckedAt(checkedAt) {
+  const timestamp = Number(checkedAt || 0);
+  if (timestamp <= 0 || !Number.isFinite(timestamp)) {
+    return "";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("de-DE", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date(timestamp));
+  } catch (_) {
+    return "";
+  }
+}
+
+function getUpdatePanelState(updateStatus) {
+  if (!updateStatus?.capable) {
+    return "";
+  }
+  if (updateStatus.status === "checking") {
+    return "checking";
+  }
+  if (updateStatus.status === "available") {
+    return "available";
+  }
+  if (updateStatus.status === "error") {
+    return "error";
+  }
+  return updateStatus.remoteVersion ? "current" : "checking";
+}
+
+function buildUpdatePanel(documentRef, updateStatus) {
+  if (!updateStatus?.capable) {
+    return null;
+  }
+
+  const panelState = getUpdatePanelState(updateStatus);
+  const installedVersion = String(updateStatus.installedVersion || "unbekannt").trim() || "unbekannt";
+  const remoteVersion = String(updateStatus.remoteVersion || "").trim();
+  const checkedAtText = formatUpdateCheckedAt(updateStatus.checkedAt);
+
+  let titleText = "Versionsstatus wird geprüft";
+  let copyText = "Vergleicht die installierte Userscript-Version mit der veröffentlichten GitHub-Metadatei.";
+
+  if (panelState === "available") {
+    titleText = "Update verfügbar";
+    copyText = `Installiert ist ${installedVersion}, auf GitHub liegt bereits ${remoteVersion}. Der Button öffnet den Tampermonkey-Installationsdialog in einem neuen Tab.`;
+  } else if (panelState === "current") {
+    titleText = "Version ist aktuell";
+    copyText = remoteVersion
+      ? `Installiert ist ${installedVersion}; GitHub meldet ebenfalls ${remoteVersion}.`
+      : `Installiert ist ${installedVersion}.`;
+  } else if (panelState === "error") {
+    titleText = "Update-Prüfung fehlgeschlagen";
+    copyText = String(updateStatus.error || "Die GitHub-Version konnte nicht gelesen werden.").trim();
+  }
+
+  if (updateStatus.stale && checkedAtText) {
+    copyText = `${copyText} Zuletzt erfolgreicher Stand: ${checkedAtText}.`;
+  }
+
+  const panel = createElement(documentRef, "section", {
+    className: "ad-xconfig-update-panel",
+    attributes: {
+      "data-adxconfig-update-panel": "true",
+      "data-update-state": panelState,
+    },
+  });
+
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-update-head",
+  });
+  const summary = createElement(documentRef, "div", {
+    className: "ad-xconfig-update-summary",
+  });
+  const titleRow = createElement(documentRef, "div", {
+    className: "ad-xconfig-update-title-row",
+  });
+  titleRow.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-update-dot",
+    attributes: {
+      "aria-hidden": "true",
+    },
+  }));
+  titleRow.appendChild(createElement(documentRef, "h2", {
+    className: "ad-xconfig-update-title",
+    text: titleText,
+  }));
+  summary.appendChild(titleRow);
+  summary.appendChild(createElement(documentRef, "p", {
+    className: "ad-xconfig-update-copy",
+    text: copyText,
+  }));
+
+  const meta = createElement(documentRef, "div", {
+    className: "ad-xconfig-update-meta",
+  });
+  meta.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-update-chip",
+    text: `Installiert: ${installedVersion}`,
+  }));
+  if (remoteVersion) {
+    meta.appendChild(createElement(documentRef, "span", {
+      className: panelState === "available"
+        ? "ad-xconfig-update-chip ad-xconfig-update-chip--accent"
+        : "ad-xconfig-update-chip",
+      text: `GitHub: ${remoteVersion}`,
+    }));
+  }
+  if (checkedAtText) {
+    meta.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-update-chip",
+      text: `Geprüft: ${checkedAtText}`,
+    }));
+  }
+  summary.appendChild(meta);
+  head.appendChild(summary);
+
+  const actions = createElement(documentRef, "div", {
+    className: "ad-xconfig-update-actions",
+  });
+  actions.appendChild(createElement(documentRef, "button", {
+    type: "button",
+    className: "ad-xconfig-btn",
+    text: panelState === "checking" ? "Prüfe..." : "Neu prüfen",
+    attributes: {
+      "data-adxconfig-action": "check-update",
+      "aria-label": "Update erneut prüfen",
+      disabled: panelState === "checking" ? "disabled" : null,
+    },
+  }));
+  if (panelState === "available") {
+    actions.appendChild(createElement(documentRef, "button", {
+      type: "button",
+      className: "ad-xconfig-btn ad-xconfig-btn--primary",
+      text: "Update installieren",
+      attributes: {
+        "data-adxconfig-action": "install-update",
+      },
+    }));
+  }
+  head.appendChild(actions);
+
+  panel.appendChild(head);
+  return panel;
 }
 
 function menuIconMarkup() {
@@ -1172,6 +1348,11 @@ function buildShellContent(documentRef, state, features) {
   header.appendChild(headerActions);
   shell.appendChild(header);
 
+  const updatePanel = buildUpdatePanel(documentRef, state.updateStatus);
+  if (updatePanel) {
+    shell.appendChild(updatePanel);
+  }
+
   if (state.notice?.type && state.notice?.message) {
     shell.appendChild(createElement(documentRef, "div", {
       className: `ad-xconfig-notice ad-xconfig-notice--${state.notice.type}`,
@@ -1257,6 +1438,16 @@ function buildShellRenderSignature(state, features, routeActive) {
     activeSettingsFeatureKey: String(state?.activeSettingsFeatureKey || ""),
     noticeType: String(state?.notice?.type || ""),
     noticeMessage: String(state?.notice?.message || ""),
+    updateStatus: {
+      capable: Boolean(state?.updateStatus?.capable),
+      status: String(state?.updateStatus?.status || ""),
+      installedVersion: String(state?.updateStatus?.installedVersion || ""),
+      remoteVersion: String(state?.updateStatus?.remoteVersion || ""),
+      available: Boolean(state?.updateStatus?.available),
+      checkedAt: Number(state?.updateStatus?.checkedAt || 0),
+      stale: Boolean(state?.updateStatus?.stale),
+      error: String(state?.updateStatus?.error || ""),
+    },
     features: normalizedFeatures,
   });
 }
@@ -1296,6 +1487,8 @@ function ensureXConfigShell(options = {}) {
     return null;
   }
 
+  const installedVersion = String(runtimeApi.apiVersion || "").trim();
+
   const state = {
     activeTab: "themes",
     activeSettingsFeatureKey: "",
@@ -1309,6 +1502,11 @@ function ensureXConfigShell(options = {}) {
     noticeTimer: null,
     shellNode: null,
     renderSignature: "",
+    updateStatus: readStoredUpdateStatus({
+      windowRef,
+      installedVersion,
+    }),
+    updateCheckPromise: null,
   };
 
   function isConfigRoute() {
@@ -1320,6 +1518,64 @@ function ensureXConfigShell(options = {}) {
       windowRef.clearTimeout(state.noticeTimer);
       state.noticeTimer = null;
     }
+  }
+
+  function setUpdateStatus(nextStatus = {}) {
+    state.updateStatus = {
+      ...state.updateStatus,
+      ...nextStatus,
+      installedVersion,
+    };
+    queueSync();
+  }
+
+  function refreshUpdateStatus(options = {}) {
+    const force = Boolean(options.force);
+    const announce = Boolean(options.announce);
+
+    if (!state.updateStatus.capable) {
+      return Promise.resolve(state.updateStatus);
+    }
+    if (state.updateCheckPromise) {
+      return state.updateCheckPromise;
+    }
+    if (!force && !shouldRefreshUpdateStatus(state.updateStatus)) {
+      return Promise.resolve(state.updateStatus);
+    }
+
+    setUpdateStatus({
+      status: "checking",
+      error: "",
+      stale: Boolean(state.updateStatus.stale && state.updateStatus.checkedAt > 0),
+    });
+
+    const updatePromise = resolveLatestUpdateStatus({
+      windowRef,
+      installedVersion,
+      force,
+    })
+      .then((nextStatus) => {
+        setUpdateStatus(nextStatus);
+        if (announce) {
+          if (nextStatus.status === "available") {
+            setNotice(
+              "info",
+              `Update gefunden: ${installedVersion} -> ${nextStatus.remoteVersion}.`
+            );
+          } else if (nextStatus.status === "current") {
+            setNotice("success", `Kein neueres Update gefunden. Aktuell installiert: ${installedVersion}.`);
+          } else if (nextStatus.status === "error" || nextStatus.error) {
+            setNotice("error", nextStatus.error || "Update-Prüfung fehlgeschlagen.");
+          }
+        }
+        return nextStatus;
+      })
+      .finally(() => {
+        state.updateCheckPromise = null;
+      });
+
+    state.updateCheckPromise = updatePromise;
+    return updatePromise;
   }
 
   function setNotice(type, message) {
@@ -1429,6 +1685,29 @@ function ensureXConfigShell(options = {}) {
     }
   }
 
+  function syncMenuUpdateState(item) {
+    const button = item || documentRef.getElementById?.(MENU_ITEM_ID);
+    if (!button) {
+      return;
+    }
+
+    const hasUpdate = Boolean(state.updateStatus?.available);
+    const remoteVersion = String(state.updateStatus?.remoteVersion || "").trim();
+    const title = hasUpdate && remoteVersion
+      ? `${MENU_LABEL} - Update verfügbar (${installedVersion} -> ${remoteVersion})`
+      : MENU_LABEL;
+
+    if (hasUpdate) {
+      button.setAttribute("data-update-available", "true");
+    } else {
+      button.removeAttribute("data-update-available");
+    }
+
+    button.setAttribute("data-update-state", String(state.updateStatus?.status || ""));
+    button.setAttribute("title", title);
+    button.setAttribute("aria-label", title);
+  }
+
   function syncMenuLabelForWidth(sidebar, item) {
     const menuItem = item || documentRef.getElementById?.(MENU_ITEM_ID);
     const sidebarElement = sidebar || getSidebarElement(windowRef, documentRef);
@@ -1498,6 +1777,7 @@ function ensureXConfigShell(options = {}) {
     }
 
     syncMenuButtonState();
+    syncMenuUpdateState(item);
     syncMenuLabelForWidth(sidebar, item);
     return item;
   }
@@ -1624,6 +1904,7 @@ function ensureXConfigShell(options = {}) {
     }
 
     syncMenuButtonState();
+    syncMenuUpdateState();
   }
 
   function queueSync() {
@@ -1837,6 +2118,23 @@ function ensureXConfigShell(options = {}) {
     }
     if (action === "open-readme") {
       openReadme(windowRef, feature?.featureKey || "");
+      return;
+    }
+    if (action === "check-update") {
+      refreshUpdateStatus({
+        force: true,
+        announce: true,
+      });
+      return;
+    }
+    if (action === "install-update") {
+      const opened = openUserscriptInstall(windowRef);
+      setNotice(
+        opened ? "info" : "error",
+        opened
+          ? "Installations-Tab geöffnet. Bestätige das Update in Tampermonkey."
+          : "Installations-Tab konnte nicht geöffnet werden."
+      );
       return;
     }
 
@@ -2105,6 +2403,10 @@ function ensureXConfigShell(options = {}) {
 
     observeRoot();
     queueSync();
+    refreshUpdateStatus({
+      force: false,
+      announce: false,
+    });
   }
 
   function teardown() {

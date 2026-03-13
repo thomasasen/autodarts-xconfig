@@ -9,6 +9,7 @@ const repoRoot = path.resolve(__dirname, "..");
 const entryFile = path.join(repoRoot, "loader", "autodarts-xconfig.user.js");
 const outDir = path.join(repoRoot, "dist");
 const outFile = path.join(outDir, "autodarts-xconfig.user.js");
+const outMetaFile = path.join(outDir, "autodarts-xconfig.meta.js");
 const packageJson = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
 const packageVersion = String(packageJson.version || "").trim() || "0.0.0";
 
@@ -23,7 +24,7 @@ const userscriptHeader = `// ==UserScript==
 // @run-at       document-start
 // @grant        none
 // @downloadURL  https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js
-// @updateURL    https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js
+// @updateURL    https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js
 // ==/UserScript==
 `;
 
@@ -50,3 +51,4 @@ await build({
 
 const builtText = await readFile(outFile, "utf8");
 await writeFile(outFile, `${userscriptHeader}\n${builtText.replace(userscriptHeader, "").trimStart()}\n`, "utf8");
+await writeFile(outMetaFile, `${userscriptHeader}\n`, "utf8");

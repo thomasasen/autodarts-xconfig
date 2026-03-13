@@ -41,6 +41,21 @@ function clickSelectSettingOption(documentRef, featureKey, settingKey, settingVa
   button.click();
 }
 
+function incrementPatchVersion(version) {
+  const [major = "0", minor = "0", patch = "0"] = String(version || "")
+    .split(".")
+    .map((part) => String(part || "").trim());
+  return `${Number.parseInt(major, 10) || 0}.${Number.parseInt(minor, 10) || 0}.${(Number.parseInt(patch, 10) || 0) + 1}`;
+}
+
+function buildUserscriptMeta(version) {
+  return `// ==UserScript==
+// @name         autodarts-xconfig
+// @version      ${version}
+// ==/UserScript==
+`;
+}
+
 test("xConfig shell injects one menu entry, opens route and closes back safely", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -375,6 +390,99 @@ test("xConfig shell keeps listener and observer counts stable across open/close 
   const currentInspect = windowRef.__adXConfig.inspect();
   assert.equal(currentInspect.observerCount, initialInspect.observerCount);
   assert.equal(currentInspect.listenerCount, initialInspect.listenerCount);
+
+  runtime.stop();
+});
+
+test("xConfig shell marks the menu and offers install action when a newer userscript version exists", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  windowRef.fetch = async () => {
+    const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return buildUserscriptMeta(incrementPatchVersion(installedVersion));
+      },
+    };
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitFor(() => documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available") === "true");
+
+  const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
+  assert.ok(menuButton);
+  assert.match(String(menuButton.getAttribute("title") || ""), /Update verfügbar/);
+
+  menuButton.click();
+  await waitFor(() => documentRef.querySelector("[data-adxconfig-update-panel='true']")?.getAttribute("data-update-state") === "available");
+
+  const updatePanel = documentRef.querySelector("[data-adxconfig-update-panel='true']");
+  assert.ok(updatePanel);
+  assert.equal(updatePanel.getAttribute("data-update-state"), "available");
+  const updateTitle = updatePanel.querySelector(".ad-xconfig-update-title");
+  assert.ok(updateTitle);
+  assert.equal(String(updateTitle.textContent || "").trim(), "Update verfügbar");
+
+  const installButton = documentRef.querySelector("[data-adxconfig-action='install-update']");
+  assert.ok(installButton);
+  installButton.click();
+  await wait(5);
+
+  assert.equal(
+    windowRef.__openedUrls.at(-1),
+    "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+  );
+  const notice = documentRef.querySelector(".ad-xconfig-notice");
+  assert.ok(notice);
+  assert.match(String(notice.textContent || ""), /Installations-Tab geöffnet/);
+
+  runtime.stop();
+});
+
+test("xConfig shell can recheck update status and promote a current build to update-available", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  let callCount = 0;
+  windowRef.fetch = async () => {
+    callCount += 1;
+    const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
+    const remoteVersion = callCount === 1 ? installedVersion : incrementPatchVersion(installedVersion);
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return buildUserscriptMeta(remoteVersion);
+      },
+    };
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitFor(() => Boolean(documentRef.getElementById("ad-xconfig-menu-item")));
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitFor(() => documentRef.querySelector("[data-adxconfig-update-panel='true']")?.getAttribute("data-update-state") === "current");
+
+  let updatePanel = documentRef.querySelector("[data-adxconfig-update-panel='true']");
+  assert.ok(updatePanel);
+  assert.equal(updatePanel.getAttribute("data-update-state"), "current");
+  assert.equal(documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available"), null);
+
+  const recheckButton = documentRef.querySelector("[data-adxconfig-action='check-update']");
+  assert.ok(recheckButton);
+  recheckButton.click();
+
+  await waitFor(() => documentRef.querySelector("[data-adxconfig-update-panel='true']")?.getAttribute("data-update-state") === "available");
+  updatePanel = documentRef.querySelector("[data-adxconfig-update-panel='true']");
+  assert.ok(updatePanel);
+  assert.equal(updatePanel.getAttribute("data-update-state"), "available");
+  assert.equal(documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available"), "true");
+
+  const notice = documentRef.querySelector(".ad-xconfig-notice");
+  assert.ok(notice);
+  assert.match(String(notice.textContent || ""), /Update gefunden/);
 
   runtime.stop();
 });

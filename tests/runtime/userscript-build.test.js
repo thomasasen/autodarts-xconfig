@@ -8,6 +8,11 @@ const bundlePath = path.resolve(
   "dist",
   "autodarts-xconfig.user.js"
 );
+const metaPath = path.resolve(
+  process.cwd(),
+  "dist",
+  "autodarts-xconfig.meta.js"
+);
 const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const bootstrapPath = path.resolve(process.cwd(), "src", "core", "bootstrap.js");
 const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
@@ -24,6 +29,10 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   assert.match(
     text,
     /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.user\.js/
+  );
+  assert.match(
+    text,
+    /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.meta\.js/
   );
   assert.match(text, /initializeTampermonkeyRuntime/);
   assert.match(text, /windowRef\.__adXConfig/);
@@ -68,19 +77,39 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   assert.doesNotMatch(text, /calculateBoardCanvasSize/);
 });
 
+test("checked-in userscript metadata file stays lightweight and version-aligned", () => {
+  const text = readFileSync(metaPath, "utf8");
+  const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
+
+  assert.match(text, /\/\/ ==UserScript==/);
+  assert.match(text, new RegExp(`@version\\s+${packageVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.match(
+    text,
+    /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.user\.js/
+  );
+  assert.match(
+    text,
+    /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.meta\.js/
+  );
+  assert.doesNotMatch(text, /initializeTampermonkeyRuntime/);
+});
+
 test("bundle, runtime API version and package version stay in sync", () => {
   const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
   const sourceBootstrap = readFileSync(bootstrapPath, "utf8");
   const bundle = readFileSync(bundlePath, "utf8");
+  const meta = readFileSync(metaPath, "utf8");
   const loader = readFileSync(loaderPath, "utf8");
 
   const sourceApiVersion = sourceBootstrap.match(/const API_VERSION = "([^"]+)";/)?.[1] || "";
   const bundleApiVersion = bundle.match(/var API_VERSION = "([^"]+)";/)?.[1] || "";
   const metadataVersion = bundle.match(/@version\s+([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] || "";
+  const metaMetadataVersion = meta.match(/@version\s+([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] || "";
   const loaderMetadataVersion = loader.match(/@version\s+([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] || "";
 
   assert.equal(sourceApiVersion, packageVersion);
   assert.equal(bundleApiVersion, packageVersion);
   assert.equal(metadataVersion, packageVersion);
+  assert.equal(metaMetadataVersion, packageVersion);
   assert.equal(loaderMetadataVersion, packageVersion);
 });
