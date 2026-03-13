@@ -529,14 +529,16 @@ function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
       if (distance > 0) {
         const vectorX = dx / distance;
         const vectorY = dy / distance;
-        const radialStrength = 0.27;
+        const maxAxis = Math.max(Math.abs(vectorX), Math.abs(vectorY));
+        const cornerFactor = Math.abs(vectorX * vectorY);
+        const radialStrength = 0.31 + 0.05 * maxAxis + 0.06 * cornerFactor;
         return {
-          x: clamp(0.5 + vectorX * radialStrength, 0.24, 0.82),
-          y: clamp(0.56 + vectorY * radialStrength, 0.24, 0.82),
+          x: clamp(0.5 + vectorX * radialStrength, 0.2, 0.86),
+          y: clamp(0.53 + vectorY * radialStrength, 0.2, 0.86),
         };
       }
     }
-    return { x: 0.5, y: 0.56 };
+    return { x: 0.5, y: 0.53 };
   }
 
   if (reason === "t20-setup") {

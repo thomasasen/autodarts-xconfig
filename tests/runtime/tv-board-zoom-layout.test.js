@@ -2,7 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import * as x01Rules from "../../src/domain/x01-rules.js";
-import { applyZoom, buildZoomTransform, resetZoom } from "../../src/features/tv-board-zoom/logic.js";
+import {
+  applyZoom,
+  buildZoomTransform,
+  resetZoom,
+  resolveSegmentPoint,
+} from "../../src/features/tv-board-zoom/logic.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -147,8 +152,73 @@ test("tv-board-zoom uses a corner-biased anchor for double checkout D18", () => 
   assert.ok(neutralTransform.anchor);
   assert.ok(checkoutTransform.anchor.x > neutralTransform.anchor.x);
   assert.ok(checkoutTransform.anchor.y < neutralTransform.anchor.y);
-  assert.ok(checkoutTransform.anchor.x >= 0.6);
-  assert.ok(checkoutTransform.anchor.y <= 0.42);
+  assert.ok(checkoutTransform.anchor.x >= 0.7);
+  assert.ok(checkoutTransform.anchor.y <= 0.3);
+  assert.ok(checkoutTransform.anchor.x - neutralTransform.anchor.x >= 0.18);
+  assert.ok(neutralTransform.anchor.y - checkoutTransform.anchor.y >= 0.2);
+});
+
+test("tv-board-zoom applies directional corner-bias across multiple checkout doubles", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const doubles = Array.from({ length: 20 }, (_, index) => `D${index + 1}`);
+
+  doubles.forEach((segment) => {
+    const checkoutTransform = buildZoomTransform({
+      targetNode,
+      hostNode,
+      boardSvg,
+      zoomLevel: 2.75,
+      intent: {
+        reason: "checkout",
+        segment,
+      },
+      x01Rules,
+      windowRef,
+      documentRef,
+    });
+    const neutralTransform = buildZoomTransform({
+      targetNode,
+      hostNode,
+      boardSvg,
+      zoomLevel: 2.75,
+      intent: {
+        reason: "smart-setup",
+        segment,
+      },
+      x01Rules,
+      windowRef,
+      documentRef,
+    });
+    const segmentPoint = resolveSegmentPoint(segment, boardSvg, x01Rules);
+
+    assert.ok(checkoutTransform, `missing checkout transform for ${segment}`);
+    assert.ok(neutralTransform, `missing neutral transform for ${segment}`);
+    assert.ok(segmentPoint, `missing segment point for ${segment}`);
+
+    const centerX = segmentPoint.viewBox.x + segmentPoint.viewBox.width / 2;
+    const centerY = segmentPoint.viewBox.y + segmentPoint.viewBox.height / 2;
+    const dx = segmentPoint.x - centerX;
+    const dy = segmentPoint.y - centerY;
+    const epsilon = 0.001;
+
+    if (Math.abs(dx) > epsilon) {
+      if (dx > 0) {
+        assert.ok(checkoutTransform.anchor.x > neutralTransform.anchor.x, `${segment} should push right`);
+      } else {
+        assert.ok(checkoutTransform.anchor.x < neutralTransform.anchor.x, `${segment} should push left`);
+      }
+    }
+    if (Math.abs(dy) > epsilon) {
+      if (dy > 0) {
+        assert.ok(checkoutTransform.anchor.y > neutralTransform.anchor.y, `${segment} should push down`);
+      } else {
+        assert.ok(checkoutTransform.anchor.y < neutralTransform.anchor.y, `${segment} should push up`);
+      }
+    }
+
+    assert.ok(checkoutTransform.anchor.x >= 0.2 && checkoutTransform.anchor.x <= 0.86);
+    assert.ok(checkoutTransform.anchor.y >= 0.2 && checkoutTransform.anchor.y <= 0.86);
+  });
 });
 
 test("tv-board-zoom applies host clipping and restores it on immediate cleanup", () => {
