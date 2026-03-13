@@ -470,6 +470,24 @@ function canFinishWithSegment(activeScore, segmentName, outMode, x01Rules) {
   return isOneDartCheckoutSegmentForMode(segmentName, outMode, x01Rules);
 }
 
+function canUseThirdDartT20Setup(throws, throwCount, activeScore, outMode, x01Rules) {
+  if (!x01Rules || throwCount !== 2) {
+    return false;
+  }
+
+  const firstSegment = getThrowSegmentName(throws[0], x01Rules);
+  const secondSegment = getThrowSegmentName(throws[1], x01Rules);
+  if (firstSegment !== "T20" || secondSegment !== "T20") {
+    return false;
+  }
+
+  if (typeof x01Rules.isSensibleThirdT20Score === "function") {
+    return Boolean(x01Rules.isSensibleThirdT20Score(activeScore, outMode));
+  }
+
+  return true;
+}
+
 export function getTurnId(turn) {
   const directId = String(turn?.id || "").trim();
   if (directId) {
@@ -657,6 +675,8 @@ export function buildZoomTransform(options = {}) {
   const x01Rules = options.x01Rules || null;
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   const documentRef = options.documentRef || (typeof document !== "undefined" ? document : null);
+  const providedBaseTransform =
+    typeof options.baseTransform === "string" ? options.baseTransform : null;
 
   if (!targetNode || !boardSvg || !hostNode || !Number.isFinite(zoomLevel) || zoomLevel <= 0 || !intent) {
     return null;
@@ -727,11 +747,13 @@ export function buildZoomTransform(options = {}) {
   const tx = clamp(rawTx, minTx, maxTx);
   const ty = clamp(rawTy, minTy, maxTy);
 
-  let baseTransform = "";
-  try {
-    baseTransform = String(windowRef?.getComputedStyle?.(targetNode)?.transform || "");
-  } catch (_) {
-    baseTransform = "";
+  let baseTransform = providedBaseTransform;
+  if (baseTransform === null) {
+    try {
+      baseTransform = String(windowRef?.getComputedStyle?.(targetNode)?.transform || "");
+    } catch (_) {
+      baseTransform = "";
+    }
   }
   if (baseTransform === "none") {
     baseTransform = "";
@@ -817,6 +839,13 @@ export function computeZoomIntent(options = {}) {
     x01Rules
   );
   const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
+  const canUseT20Setup = canUseThirdDartT20Setup(
+    throws,
+    throwCount,
+    activeScore,
+    outMode,
+    x01Rules
+  );
 
   if (config.checkoutZoomEnabled && throwCount <= 2) {
     if (
@@ -840,28 +869,17 @@ export function computeZoomIntent(options = {}) {
     const canUseSuggestionForSetup =
       Boolean(suggestionSegment) &&
       (config.checkoutZoomEnabled || !suggestionIsCheckout);
-    if (canUseSuggestionForSetup) {
-      const intent = { reason: "smart-setup", segment: suggestionSegment };
+    const canUseSuggestionSegment =
+      canUseSuggestionForSetup && (suggestionSegment !== "T20" || canUseT20Setup);
+    if (canUseSuggestionSegment) {
+      const reason = suggestionSegment === "T20" ? "t20-setup" : "smart-setup";
+      const intent = { reason, segment: suggestionSegment };
       state.activeIntent = intent;
       return intent;
     }
   }
 
-  if (throwCount === 2) {
-    const firstSegment = getThrowSegmentName(throws[0], x01Rules);
-    const secondSegment = getThrowSegmentName(throws[1], x01Rules);
-    if (
-      firstSegment === "T20" &&
-      secondSegment === "T20" &&
-      x01Rules.isSensibleThirdT20Score?.(activeScore, outMode)
-    ) {
-      const intent = { reason: "t20-setup", segment: "T20" };
-      state.activeIntent = intent;
-      return intent;
-    }
-  }
-
-  if (throwCount <= 2 && Number.isFinite(activeScore) && activeScore > 170) {
+  if (canUseT20Setup) {
     const intent = { reason: "t20-setup", segment: "T20" };
     state.activeIntent = intent;
     return intent;
@@ -892,21 +910,6 @@ export function applyZoom(
   const x01Rules = options.x01Rules || null;
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   const documentRef = options.documentRef || (typeof document !== "undefined" ? document : null);
-  const zoomData = buildZoomTransform({
-    targetNode,
-    hostNode: hostNode || targetNode,
-    boardSvg,
-    zoomLevel,
-    intent,
-    x01Rules,
-    windowRef,
-    documentRef,
-  });
-
-  if (!zoomData) {
-    return;
-  }
-
   clearPendingRelease(state);
 
   if (state.zoomedElement && state.zoomedElement !== targetNode) {
@@ -920,6 +923,25 @@ export function applyZoom(
   }
 
   cacheTargetStyle(state, targetNode);
+  const cachedBaseTransform =
+    state.targetStyleSnapshot?.node === targetNode
+      ? String(state.targetStyleSnapshot.transform || "")
+      : "";
+  const zoomData = buildZoomTransform({
+    targetNode,
+    hostNode: hostNode || targetNode,
+    boardSvg,
+    zoomLevel,
+    intent,
+    x01Rules,
+    windowRef,
+    documentRef,
+    baseTransform: cachedBaseTransform,
+  });
+
+  if (!zoomData) {
+    return;
+  }
   if (hostNode?.classList) {
     cacheHostStyle(state, hostNode);
     hostNode.classList.add(ZOOM_HOST_CLASS);

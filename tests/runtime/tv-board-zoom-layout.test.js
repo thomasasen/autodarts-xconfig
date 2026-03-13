@@ -155,6 +155,54 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   assert.equal(targetNode.style.transform, "rotate(1deg)");
 });
 
+test("tv-board-zoom keeps transform idempotent across repeated apply calls", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  // Simulate browser behavior where computed transform reflects already-applied inline transform.
+  windowRef.getComputedStyle = (node) => {
+    return {
+      display: "",
+      visibility: "",
+      opacity: "1",
+      transform: String(node?.style?.transform || "none"),
+    };
+  };
+
+  applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    { reason: "t20-setup", segment: "T20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  const firstTransform = String(targetNode.style.transform || "");
+
+  applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    { reason: "t20-setup", segment: "T20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  const secondTransform = String(targetNode.style.transform || "");
+
+  assert.equal(secondTransform, firstTransform);
+  assert.equal((secondTransform.match(/scale\(/g) || []).length, 1);
+});
+
 test("tv-board-zoom delayed reset clears zoom classes and restores host overflow", async () => {
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
   const state = createZoomState();

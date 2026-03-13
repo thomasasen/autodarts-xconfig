@@ -333,16 +333,21 @@ test("tv-board-zoom applies smart setup suggestion through the full turn", () =>
   assert.deepEqual(thirdIntent, { reason: "smart-setup", segment: "T19" });
 });
 
-test("tv-board-zoom uses T20 fallback only above 170 when no suggestion is present", () => {
+test("tv-board-zoom does not force T20 setup zoom after only one dart", () => {
   const documentRef = new FakeDocument();
-  documentRef.suggestionElement.textContent = "";
+  documentRef.suggestionElement.textContent = "T20";
   const windowRef = createFakeWindow({ documentRef });
 
-  const highIntent = computeZoomIntent({
+  const earlyIntent = computeZoomIntent({
     gameState: createX01GameState({
-      activeScore: 171,
+      activeScore: 241,
       outMode: "Double Out",
-      activeThrows: [],
+      activeThrows: [{ segment: { name: "T20" } }],
+      activeTurn: {
+        id: "turn-early-t20",
+        playerId: "player-1",
+        throws: [{ segment: { name: "T20" } }],
+      },
     }),
     x01Rules,
     state: createZoomState(),
@@ -354,11 +359,24 @@ test("tv-board-zoom uses T20 fallback only above 170 when no suggestion is prese
     nowTs: 5000,
   });
 
-  const standardIntent = computeZoomIntent({
+  assert.equal(earlyIntent, null);
+});
+
+test("tv-board-zoom allows T20 setup only for 2xT20 with sensible third dart", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T20";
+  const windowRef = createFakeWindow({ documentRef });
+
+  const setupIntent = computeZoomIntent({
     gameState: createX01GameState({
-      activeScore: 170,
+      activeScore: 121,
       outMode: "Double Out",
-      activeThrows: [],
+      activeThrows: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+      activeTurn: {
+        id: "turn-double-t20",
+        playerId: "player-1",
+        throws: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+      },
     }),
     x01Rules,
     state: createZoomState(),
@@ -367,11 +385,10 @@ test("tv-board-zoom uses T20 fallback only above 170 when no suggestion is prese
     featureConfig: {
       checkoutZoomEnabled: true,
     },
-    nowTs: 5000,
+    nowTs: 5100,
   });
 
-  assert.deepEqual(highIntent, { reason: "t20-setup", segment: "T20" });
-  assert.equal(standardIntent, null);
+  assert.deepEqual(setupIntent, { reason: "t20-setup", segment: "T20" });
 });
 
 test("tv-board-zoom keeps the long hold after the third dart stable", () => {
