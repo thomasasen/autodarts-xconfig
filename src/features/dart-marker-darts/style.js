@@ -2,6 +2,7 @@ import { DART_DESIGN_KEYS } from "#feature-assets";
 
 export const STYLE_ID = "ad-ext-dart-marker-darts-style";
 export const OVERLAY_ID = "ad-ext-dart-image-overlay";
+export const OVERLAY_SCENE_ID = "ad-ext-dart-image-overlay-scene";
 export const DART_CLASS = "ad-ext-dart-image";
 export const DART_NEW_CLASS = "ad-ext-dart-image--new";
 
@@ -52,7 +53,11 @@ export function resolveDartMarkerDartsConfig(featureConfig = {}) {
 export function buildStyleText() {
   return `
 #${OVERLAY_ID} {
+  position: fixed;
+  overflow: visible;
+  inset: 0;
   pointer-events: none;
+  z-index: 5;
 }
 
 .${DART_CLASS} {

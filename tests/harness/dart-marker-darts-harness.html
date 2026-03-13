@@ -13,6 +13,7 @@
   <body>
     <h1>Dart Marker Darts Harness</h1>
     <p id="summary">Prüfung läuft ...</p>
+    <ol id="results"></ol>
 
     <svg viewBox="0 0 1000 1000" aria-label="board">
       <g>
@@ -33,6 +34,15 @@
       import { initializeDartMarkerDarts } from "../../src/features/dart-marker-darts/index.js";
 
       const summary = document.getElementById("summary");
+      const results = document.getElementById("results");
+
+      function assertStep(label, condition) {
+        const item = document.createElement("li");
+        item.textContent = `${condition ? "PASS" : "FAIL"}: ${label}`;
+        item.className = condition ? "pass" : "fail";
+        results.appendChild(item);
+        return condition;
+      }
 
       const cleanup = initializeDartMarkerDarts({
         documentRef: document,
@@ -65,17 +75,49 @@
         await wait(160);
         const overlay = document.getElementById("ad-ext-dart-image-overlay");
         const style = document.getElementById("ad-ext-dart-marker-darts-style");
+        const initialDarts = overlay ? overlay.querySelectorAll(".ad-ext-dart-image").length : 0;
+        const initialFirstDartX = overlay?.querySelector(".ad-ext-dart-image")?.getAttribute("x") || "";
+        const initialMarkerCount = document.querySelectorAll("circle[style*='shadow-2dp']").length;
+
+        const duplicateMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        duplicateMarker.setAttribute("cx", "300");
+        duplicateMarker.setAttribute("cy", "300");
+        duplicateMarker.setAttribute("r", "6");
+        duplicateMarker.setAttribute("style", "filter:shadow-2dp");
+        duplicateMarker.setAttribute("data-hit", "1");
+        document.querySelector("svg > g:last-of-type").appendChild(duplicateMarker);
+
+        await wait(140);
+        const withDuplicateDarts = overlay ? overlay.querySelectorAll(".ad-ext-dart-image").length : 0;
+
+        const firstMarker = document.querySelector("circle[style*='shadow-2dp']");
+        firstMarker?.setAttribute("cx", "330");
+        firstMarker?.setAttribute("cy", "330");
+        await wait(140);
+        const movedFirstDartX = overlay?.querySelector(".ad-ext-dart-image")?.getAttribute("x") || "";
 
         cleanup();
         await wait(40);
 
         const overlayAfter = document.getElementById("ad-ext-dart-image-overlay");
         const styleAfter = document.getElementById("ad-ext-dart-marker-darts-style");
+        const markerOpacityReset = Array.from(
+          document.querySelectorAll("circle[style*='shadow-2dp']")
+        ).every((node) => node.style.opacity === "");
 
-        const passed = Boolean(overlay) && Boolean(style) && !overlayAfter && !styleAfter;
+        const checks = [
+          assertStep("Overlay + Style erzeugt", Boolean(overlay) && Boolean(style)),
+          assertStep("Initiale Dart-Anzahl = Marker-Anzahl", initialDarts === initialMarkerCount),
+          assertStep("Duplicate-Key Marker erzeugt zusätzlichen Dart", withDuplicateDarts === initialDarts + 1),
+          assertStep("Dart-Position aktualisiert bei Marker-Bewegung", initialFirstDartX !== movedFirstDartX),
+          assertStep("Cleanup entfernt Overlay + Style", !overlayAfter && !styleAfter),
+          assertStep("Cleanup stellt Marker-Opacity wieder her", markerOpacityReset),
+        ];
+
+        const passed = checks.every(Boolean);
         summary.textContent = passed
-          ? "PASS: Dart-Bildmarker aktiv und Cleanup korrekt."
-          : "FAIL: Dart-Bildmarker prüfen.";
+          ? "PASS: Alle Dart-Marker-Darts Harness-Szenarien erfolgreich."
+          : "FAIL: Mindestens ein Harness-Szenario ist fehlgeschlagen.";
         summary.className = passed ? "pass" : "fail";
       })();
     </script>

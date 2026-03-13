@@ -54,13 +54,14 @@ export function isLikelyBoardMarker(node) {
   return markerLike;
 }
 
-export function collectBoardMarkers(documentRef) {
-  const board = findBoardSvgGroup(documentRef);
-  if (!board?.group || typeof board.group.querySelectorAll !== "function") {
+export function collectBoardMarkers(documentRef, options = {}) {
+  const board = options.board || findBoardSvgGroup(documentRef);
+  const boardRoot = board?.svg || board?.group || null;
+  if (!boardRoot || typeof boardRoot.querySelectorAll !== "function") {
     return [];
   }
 
-  return Array.from(board.group.querySelectorAll("circle")).filter((node) => {
+  return Array.from(boardRoot.querySelectorAll("circle")).filter((node) => {
     return isLikelyBoardMarker(node);
   });
 }

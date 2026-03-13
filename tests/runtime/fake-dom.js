@@ -515,13 +515,17 @@ class FakeElement extends FakeEventTarget {
   }
 
   getBoundingClientRect() {
+    const left = Number(this.__rect.left || 0);
+    const top = Number(this.__rect.top || 0);
+    const width = Number(this.__rect.width || 0);
+    const height = Number(this.__rect.height || 0);
     return {
-      width: Number(this.__rect.width || 0),
-      height: Number(this.__rect.height || 0),
-      top: 0,
-      left: 0,
-      right: Number(this.__rect.width || 0),
-      bottom: Number(this.__rect.height || 0),
+      width,
+      height,
+      top,
+      left,
+      right: left + width,
+      bottom: top + height,
     };
   }
 

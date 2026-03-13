@@ -1,4 +1,4 @@
-﻿import {
+import {
   clearDartMarkerDartsState,
   createDartMarkerDartsState,
   updateDartMarkerDarts,
@@ -17,7 +17,19 @@ const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
   resize: `${FEATURE_KEY}:window-resize`,
+  scroll: `${FEATURE_KEY}:window-scroll`,
+  popstate: `${FEATURE_KEY}:window-popstate`,
+  hashchange: `${FEATURE_KEY}:window-hashchange`,
+  navigationCurrentEntry: `${FEATURE_KEY}:navigation-currententrychange`,
 });
+const LOCATION_POLL_INTERVAL_MS = 1000;
+
+function getCurrentHref(windowRef) {
+  if (!windowRef || !windowRef.location) {
+    return "";
+  }
+  return String(windowRef.location.href || "").trim();
+}
 
 export function initializeDartMarkerDarts(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -28,6 +40,7 @@ export function initializeDartMarkerDarts(context = {}) {
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
+  const featureDebug = context.featureDebug || null;
 
   if (!documentRef || !domGuards || typeof schedulerFactory !== "function") {
     return () => {};
@@ -45,19 +58,38 @@ export function initializeDartMarkerDarts(context = {}) {
         };
   const visualConfig = resolveDartMarkerDartsConfig(featureConfig);
 
+  if (featureDebug?.enabled) {
+    featureDebug.log("init-config", {
+      designKey: visualConfig.designKey,
+      animateDarts: visualConfig.animateDarts,
+      sizePercent: visualConfig.sizePercent,
+      hideOriginalMarkers: visualConfig.hideOriginalMarkers,
+      flightSpeed: visualConfig.flightSpeed,
+      flightDurationMs: visualConfig.flightDurationMs,
+    });
+  }
+
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   const state = createDartMarkerDartsState(windowRef);
+  state.lastHref = getCurrentHref(windowRef);
+
+  let scheduler = null;
+  function scheduleUpdate() {
+    scheduler?.schedule?.();
+  }
 
   function update() {
     updateDartMarkerDarts({
       documentRef,
       state,
       visualConfig,
+      featureDebug,
+      scheduleUpdate,
     });
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
+  scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   const isManagedNode = createManagedNodeMatcher({
     ids: [OVERLAY_ID],
@@ -72,7 +104,7 @@ export function initializeDartMarkerDarts(context = {}) {
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
-        scheduler.schedule();
+        scheduleUpdate();
       },
       observeOptions: {
         childList: true,
@@ -89,23 +121,68 @@ export function initializeDartMarkerDarts(context = {}) {
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduler.schedule(),
+      handler: () => scheduleUpdate(),
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.resize,
       target: windowRef,
       type: "resize",
-      handler: () => scheduler.schedule(),
+      handler: () => scheduleUpdate(),
       options: { passive: true },
     });
+    listenerRegistry.register({
+      key: LISTENER_KEYS.scroll,
+      target: windowRef,
+      type: "scroll",
+      handler: () => scheduleUpdate(),
+      options: { passive: true, capture: true },
+    });
+    listenerRegistry.register({
+      key: LISTENER_KEYS.popstate,
+      target: windowRef,
+      type: "popstate",
+      handler: () => scheduleUpdate(),
+    });
+    listenerRegistry.register({
+      key: LISTENER_KEYS.hashchange,
+      target: windowRef,
+      type: "hashchange",
+      handler: () => scheduleUpdate(),
+    });
+
+    const navigationApi =
+      windowRef && typeof windowRef.navigation === "object" ? windowRef.navigation : null;
+    if (
+      navigationApi &&
+      typeof navigationApi.addEventListener === "function" &&
+      typeof navigationApi.removeEventListener === "function"
+    ) {
+      listenerRegistry.register({
+        key: LISTENER_KEYS.navigationCurrentEntry,
+        target: navigationApi,
+        type: "currententrychange",
+        handler: () => scheduleUpdate(),
+      });
+    }
   }
 
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
+      ? gameState.subscribe(() => scheduleUpdate())
       : () => {};
 
-  scheduler.schedule();
+  let locationPollHandle = 0;
+  if (windowRef && typeof windowRef.setInterval === "function") {
+    locationPollHandle = windowRef.setInterval(() => {
+      const currentHref = getCurrentHref(windowRef);
+      if (!currentHref || currentHref === state.lastHref) {
+        return;
+      }
+      scheduleUpdate();
+    }, LOCATION_POLL_INTERVAL_MS);
+  }
+
+  scheduleUpdate();
   let cleanedUp = false;
 
   return function cleanup() {
@@ -114,12 +191,17 @@ export function initializeDartMarkerDarts(context = {}) {
     }
     cleanedUp = true;
 
-    scheduler.cancel();
+    scheduler?.cancel?.();
 
     try {
       unsubscribeGameState();
     } catch (_) {
       // fail-soft
+    }
+
+    if (locationPollHandle && windowRef && typeof windowRef.clearInterval === "function") {
+      windowRef.clearInterval(locationPollHandle);
+      locationPollHandle = 0;
     }
 
     if (observerRegistry && typeof observerRegistry.disconnect === "function") {
@@ -129,7 +211,10 @@ export function initializeDartMarkerDarts(context = {}) {
       Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
     }
 
-    clearDartMarkerDartsState(state);
+    clearDartMarkerDartsState(state, {
+      featureDebug,
+      reason: "feature-unmount",
+    });
     domGuards.removeNodeById(STYLE_ID);
   };
 }

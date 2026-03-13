@@ -339,7 +339,7 @@ test("dart-marker-darts mounts idempotently and removes style on cleanup", async
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-darts-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
-  assert.equal(runtime.context.registries.listeners.size(), 2);
+  assert.equal(runtime.context.registries.listeners.size(), 5);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-darts-style")), false);
