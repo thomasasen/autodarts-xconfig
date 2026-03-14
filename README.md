@@ -469,6 +469,19 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Crimson Velocity`: Die Fläche wirkt schneller und härter als die warmen Themes: roter Kern, dunklere Seiten, feine Scanlines und ein metallischer Unterton. Das ist sportlich, ernst und markant ohne Neon-Giftlook.
   - `Polar Mint`: Das Trefferfeld wirkt klar, luftig und trotzdem sichtbar geladen. Helle Stripe- und Line-Layer geben der Palette Struktur, ohne so aggressiv zu werden wie Venom Lime.
   - `Midnight Gold`: Die Treffer wirken wie warme Nachtlichter mit goldener Kante, dunkler Basis und feinen Art-Deco-Stripe-Layern. Das ist edel, sichtbar und weniger schrill als Neon.
+
+**Vorschau Farbstile**
+
+Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.
+
+| `Solar Flare` | `Ice Reactor` |
+| --- | --- |
+| ![Farbstil Solar Flare](docs/screenshots/animation-triple-double-bull-hits-color-solar-flare-readme.png) | ![Farbstil Ice Reactor](docs/screenshots/animation-triple-double-bull-hits-color-ice-reactor-readme.png) |
+| `Venom Lime` | `Crimson Velocity` |
+| ![Farbstil Venom Lime](docs/screenshots/animation-triple-double-bull-hits-color-venom-lime-readme.png) | ![Farbstil Crimson Velocity](docs/screenshots/animation-triple-double-bull-hits-color-crimson-velocity-readme.png) |
+| `Polar Mint` | `Midnight Gold` |
+| ![Farbstil Polar Mint](docs/screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](docs/screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |
+
 - `Animationsstil`: Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Einige Presets bleiben reine One-Shot-Bursts, andere kombinieren den Burst mit einem subtilen Idle-Loop auf markierten Feldern.
   - `Slam Punch`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist ein starker One-Shot-Burst ohne Dauerloop.
   - `Shock Ring`: Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
@@ -482,6 +495,25 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Edge Runner`: Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop für einen grafischeren HUD-Look.
   - `Charge Burst`: Vor dem Peak baut das Trefferfeld Spannung auf, dann entlädt sich Verlauf, Rand und Score gemeinsam mit deutlich größerem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.
   - `Beacon Flicker`: Der Burst wirft das Feld kurz seitlich an und lässt danach ein diskretes Beacon-Flackern auf markierten Feldern zurück. Das ist Burst plus Idle-Loop mit mehr Richtungsgefühl.
+
+**Vorschau Animationsstile**
+
+Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.
+
+| `Slam Punch` | `Shock Ring` |
+| --- | --- |
+| ![Animationsstil Slam Punch](docs/screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](docs/screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |
+| `Laser Sweep` | `Reactor Pulse` |
+| ![Animationsstil Laser Sweep](docs/screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](docs/screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |
+| `Turbo Bounce` | `Card Hammer` |
+| ![Animationsstil Turbo Bounce](docs/screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](docs/screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |
+| `Glitch Blink` | `Cascade Split` |
+| ![Animationsstil Glitch Blink](docs/screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](docs/screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |
+| `Rotor Flip` | `Edge Runner` |
+| ![Animationsstil Rotor Flip](docs/screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](docs/screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |
+| `Charge Burst` | `Beacon Flicker` |
+| ![Animationsstil Charge Burst](docs/screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](docs/screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |
+
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Triple Double Bull Hits](docs/screenshots/animation-triple-double-bull-hits.gif)

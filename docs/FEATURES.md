@@ -388,6 +388,19 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
   - `Crimson Velocity`: Crimson Velocity kombiniert schnelle Rottöne mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look.
   - `Polar Mint`: Polar Mint mischt Mint, Aqua und Türkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten.
   - `Midnight Gold`: Midnight Gold legt Gold, Amber und Elfenbein über eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar.
+
+**Vorschau Farbstile**
+
+Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.
+
+| `Solar Flare` | `Ice Reactor` |
+| --- | --- |
+| ![Farbstil Solar Flare](screenshots/animation-triple-double-bull-hits-color-solar-flare-readme.png) | ![Farbstil Ice Reactor](screenshots/animation-triple-double-bull-hits-color-ice-reactor-readme.png) |
+| `Venom Lime` | `Crimson Velocity` |
+| ![Farbstil Venom Lime](screenshots/animation-triple-double-bull-hits-color-venom-lime-readme.png) | ![Farbstil Crimson Velocity](screenshots/animation-triple-double-bull-hits-color-crimson-velocity-readme.png) |
+| `Polar Mint` | `Midnight Gold` |
+| ![Farbstil Polar Mint](screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |
+
 - `Animationsstil`: Wählt den Burst-Stil für das frisch erkannte Trefferfeld.
   - `Slam Punch`: Slam Punch ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand.
   - `Shock Ring`: Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
@@ -401,6 +414,25 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
   - `Edge Runner`: Edge Runner startet mit einer sichtbaren Konturverfolgung und behält danach ein leicht laufendes Randlicht auf markierten Feldern. So bleibt der Treffer technisch und präzise präsent.
   - `Charge Burst`: Charge Burst kombiniert einen deutlichen Auflade-Moment mit einer hellen Entladung und lässt markierte Felder anschließend leicht weiteratmen. Das ist der dramatischste Preset im Paket.
   - `Beacon Flicker`: Beacon Flicker mischt einen kurzen Richtungs-Flick im Burst mit einem dezenten Beacon-Effekt im Idle. Das Feld bleibt damit leicht lebendig, ohne permanent chaotisch zu werden.
+
+**Vorschau Animationsstile**
+
+Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.
+
+| `Slam Punch` | `Shock Ring` |
+| --- | --- |
+| ![Animationsstil Slam Punch](screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |
+| `Laser Sweep` | `Reactor Pulse` |
+| ![Animationsstil Laser Sweep](screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |
+| `Turbo Bounce` | `Card Hammer` |
+| ![Animationsstil Turbo Bounce](screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |
+| `Glitch Blink` | `Cascade Split` |
+| ![Animationsstil Glitch Blink](screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |
+| `Rotor Flip` | `Edge Runner` |
+| ![Animationsstil Rotor Flip](screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |
+| `Charge Burst` | `Beacon Flicker` |
+| ![Animationsstil Charge Burst](screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |
+
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Triple Double Bull Hits](screenshots/animation-triple-double-bull-hits.gif)
