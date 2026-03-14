@@ -78,13 +78,13 @@ div.ad-ext-player.ad-ext-player-active.css-1en42kf p.chakra-text.css-11cuipc{
 }
 
 .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > div > p {
-  font-size: 3em !important;
+  font-size: clamp(1rem, 1.05vw, 1.3rem) !important;
   color: gray !important;
 }
 
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
 .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p {
-  font-size: 3em !important;
+  font-size: clamp(1rem, 1.05vw, 1.3rem) !important;
   color: gray !important;
 }
 
@@ -125,15 +125,17 @@ div.css-nfhdnc {
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
   color: var(--theme-text-highlight-color);
+  font-size: clamp(1rem, 1.15vw, 1.45rem) !important;
+  line-height: 1.05 !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-  font-size: 1.8rem !important;
+  font-size: clamp(1.1rem, 1.35vw, 1.7rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-  font-size: 3em !important;
+  font-size: clamp(1rem, 1.05vw, 1.3rem) !important;
   color: gray !important;
 }
 
