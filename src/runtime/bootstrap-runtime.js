@@ -1,4 +1,4 @@
-import { createConfigStore } from "../config/config-store.js";
+import { ConfigPersistenceError, createConfigStore } from "../config/config-store.js";
 import { createBootstrap } from "../core/bootstrap.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
@@ -124,9 +124,21 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         (typeof GM_setValue === "function" ? GM_setValue : null),
     });
 
-    const importResult = await configStore.importLegacyConfigIfAvailable();
-    const initialConfig = importResult?.config || (await configStore.load());
-    await configStore.save(initialConfig);
+    let initialConfig = await configStore.load();
+    try {
+      const importResult = await configStore.importLegacyConfigIfAvailable();
+      initialConfig = importResult?.config || initialConfig;
+      await configStore.save(initialConfig);
+    } catch (error) {
+      if (!(error instanceof ConfigPersistenceError)) {
+        throw error;
+      }
+      initialConfig = await configStore.load();
+      console.warn(
+        "[autodarts-xconfig] config storage unavailable, running with non-persistent defaults",
+        error
+      );
+    }
     const featureRegistry = createFeatureRegistry({
       debug: Boolean(options.debug),
       definitions: options.featureDefinitions,

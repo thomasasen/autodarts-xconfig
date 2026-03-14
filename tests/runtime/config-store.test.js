@@ -248,3 +248,63 @@ test("config store prefers GM storage when available and falls back safely", asy
   assert.equal(gmState.get(CONFIG_STORAGE_KEY).featureToggles.checkoutScorePulse, false);
   assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).featureToggles.checkoutScorePulse, false);
 });
+
+test("config store fails loudly when no storage backend can persist writes", async () => {
+  const failingStorage = {
+    getItem() {
+      return null;
+    },
+    setItem() {
+      throw new Error("QuotaExceededError");
+    },
+  };
+  const store = createConfigStore({
+    localStorageRef: failingStorage,
+  });
+
+  await assert.rejects(() =>
+    store.save({
+      featureToggles: {
+        checkoutScorePulse: false,
+      },
+    })
+  );
+});
+
+test("config store keeps unknown feature fields during updates", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      featureToggles: {
+        "themes.x01": true,
+      },
+      features: {
+        themes: {
+          x01: {
+            enabled: true,
+            showAvg: true,
+            retiredBackgroundFlag: "keep-me",
+          },
+        },
+      },
+    }),
+  });
+  const store = createConfigStore({
+    localStorageRef: localStorage,
+  });
+
+  const nextConfig = await store.update({
+    features: {
+      themes: {
+        x01: {
+          showAvg: false,
+        },
+      },
+    },
+  });
+
+  assert.equal(nextConfig.features.themes.x01.showAvg, false);
+  assert.equal(nextConfig.features.themes.x01.retiredBackgroundFlag, "keep-me");
+
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.x01.retiredBackgroundFlag, "keep-me");
+});

@@ -22,7 +22,8 @@ const userscriptHeader = `// ==UserScript==
 // @license      MIT
 // @match        https://play.autodarts.io/*
 // @run-at       document-start
-// @grant        none
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @downloadURL  https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js
 // @updateURL    https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js
 // ==/UserScript==

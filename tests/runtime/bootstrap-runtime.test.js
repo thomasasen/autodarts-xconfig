@@ -184,3 +184,27 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
 
   runtime.stop();
 });
+
+test("runtime rejects theme background writes when persistence fails", async () => {
+  const failingStorage = {
+    _value: null,
+    getItem() {
+      return this._value;
+    },
+    setItem() {
+      throw new Error("QuotaExceededError");
+    },
+  };
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage: failingStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  await assert.rejects(() =>
+    runtime.setThemeBackgroundImage("x01", "data:image/png;base64,AAAA")
+  );
+
+  const snapshot = runtime.getSnapshot();
+  assert.equal(snapshot.features["theme-x01"].config.backgroundImageDataUrl, "");
+
+  runtime.stop();
+});

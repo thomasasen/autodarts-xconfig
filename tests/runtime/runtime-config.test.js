@@ -333,3 +333,23 @@ test("cricket highlighter dim style supports enum values and legacy boolean mapp
   assert.equal(legacyEnabled.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
   assert.equal(legacyEnabled.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
 });
+
+test("runtime config keeps unknown feature fields for forward-compatible setting removal", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      themes: {
+        x01: {
+          showAvg: false,
+          retiredBackgroundFlag: "legacy-value",
+        },
+      },
+    },
+  });
+
+  const themeConfig = runtimeConfig.getFeatureConfig("themes.x01");
+  assert.equal(themeConfig.showAvg, false);
+  assert.equal(themeConfig.retiredBackgroundFlag, "legacy-value");
+
+  const normalized = runtimeConfig.getNormalized();
+  assert.equal(normalized.features.themes.x01.retiredBackgroundFlag, "legacy-value");
+});

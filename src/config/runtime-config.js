@@ -254,6 +254,24 @@ function normalizeBoolean(value, fallbackValue) {
   return Boolean(fallbackValue);
 }
 
+function mergeFeatureConfigWithUnknownFields(rawFeatureConfig, normalizedFeatureConfig) {
+  const raw =
+    rawFeatureConfig && typeof rawFeatureConfig === "object" && !Array.isArray(rawFeatureConfig)
+      ? deepClone(rawFeatureConfig)
+      : {};
+  const normalized =
+    normalizedFeatureConfig &&
+    typeof normalizedFeatureConfig === "object" &&
+    !Array.isArray(normalizedFeatureConfig)
+      ? normalizedFeatureConfig
+      : {};
+
+  return {
+    ...raw,
+    ...normalized,
+  };
+}
+
 function normalizeCheckoutScorePulseConfig(rawConfig = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, true),
@@ -673,7 +691,7 @@ export function createRuntimeConfig(overrides = {}) {
     const rawFeatureConfig = getRawFeatureConfig(normalizedKey);
 
     if (typeof normalizer === "function") {
-      return normalizer(rawFeatureConfig);
+      return mergeFeatureConfigWithUnknownFields(rawFeatureConfig, normalizer(rawFeatureConfig));
     }
 
     return deepClone(rawFeatureConfig);

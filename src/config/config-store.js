@@ -4,6 +4,15 @@ export const CONFIG_STORAGE_KEY = "autodarts-xconfig:config:v1";
 export const LEGACY_CONFIG_STORAGE_KEY = "ad-xconfig:config";
 export const LEGACY_IMPORT_FLAG_KEY = "autodarts-xconfig:legacy-imported:v2";
 
+export class ConfigPersistenceError extends Error {
+  constructor(message, details = {}) {
+    super(String(message || "Failed to persist config state."));
+    this.name = "ConfigPersistenceError";
+    this.code = "CONFIG_PERSISTENCE_FAILED";
+    this.details = details && typeof details === "object" ? details : {};
+  }
+}
+
 const LEGACY_COLOR_THEME_ALIASES = Object.freeze({
   ["159,219,88"]: "159, 219, 88",
   ["56,189,248"]: "56, 189, 248",
@@ -115,21 +124,48 @@ function createStorageAdapter(options = {}) {
 
   async function setValue(key, value) {
     let wroteValue = false;
+    const failures = [];
 
     try {
       if (typeof gmSetValue === "function") {
         await toPromise(gmSetValue(key, value));
         wroteValue = true;
+      } else {
+        failures.push({
+          provider: "gm-storage",
+          reason: "unavailable",
+        });
       }
-    } catch (_) {
-      // Fall through to localStorage.
+    } catch (error) {
+      failures.push({
+        provider: "gm-storage",
+        reason: toErrorMessage(error),
+      });
     }
 
     try {
-      localStorageRef?.setItem?.(key, JSON.stringify(value));
-      wroteValue = true;
-    } catch (_) {
-      // Ignore local storage failures.
+      const setItem = localStorageRef?.setItem;
+      if (typeof setItem === "function") {
+        setItem.call(localStorageRef, key, JSON.stringify(value));
+        wroteValue = true;
+      } else {
+        failures.push({
+          provider: "localStorage",
+          reason: "unavailable",
+        });
+      }
+    } catch (error) {
+      failures.push({
+        provider: "localStorage",
+        reason: toErrorMessage(error),
+      });
+    }
+
+    if (!wroteValue) {
+      throw new ConfigPersistenceError("Config could not be persisted to any storage backend.", {
+        key: String(key || ""),
+        failures,
+      });
     }
 
     return wroteValue;
@@ -139,6 +175,15 @@ function createStorageAdapter(options = {}) {
     getValue,
     setValue,
   };
+}
+
+function toErrorMessage(error) {
+  if (error instanceof Error && typeof error.message === "string" && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  const fallback = String(error || "").trim();
+  return fallback || "unknown error";
 }
 
 function getLegacyFeatureSettings(legacyFeatureState) {
