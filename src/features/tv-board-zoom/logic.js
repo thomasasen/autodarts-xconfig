@@ -505,6 +505,56 @@ export function getTurnId(turn) {
   return `fallback:${round}:${turnNumber}:${playerId}`;
 }
 
+function normalizeBoundaryTokenValue(value) {
+  const normalized = String(value || "").trim();
+  return normalized || "";
+}
+
+function resolveGameBoundaryToken(gameState) {
+  if (!gameState || typeof gameState.getSnapshot !== "function") {
+    return "";
+  }
+
+  const snapshot = gameState.getSnapshot();
+  if (!snapshot || typeof snapshot !== "object") {
+    return "";
+  }
+
+  const match = snapshot.match && typeof snapshot.match === "object" ? snapshot.match : null;
+  const gameScopeCandidates = [
+    match?.currentGameId,
+    match?.gameId,
+    match?.game?.id,
+    match?.currentLegId,
+    match?.legId,
+    match?.leg?.id,
+    match?.setId,
+    match?.set?.id,
+  ];
+
+  for (const candidate of gameScopeCandidates) {
+    const token = normalizeBoundaryTokenValue(candidate);
+    if (token) {
+      return `game:${token}`;
+    }
+  }
+
+  const matchScopeCandidates = [
+    match?.id,
+    match?._id,
+    match?.matchId,
+    snapshot.topic,
+  ];
+  for (const candidate of matchScopeCandidates) {
+    const token = normalizeBoundaryTokenValue(candidate);
+    if (token) {
+      return `match:${token}`;
+    }
+  }
+
+  return "";
+}
+
 export function markManualZoomPause(state, throwCount = Number.NaN) {
   if (!state) {
     return;
@@ -858,6 +908,22 @@ export function computeZoomIntent(options = {}) {
     state.holdUntilTs = 0;
     state.activeIntent = null;
     return null;
+  }
+
+  const boundaryToken = resolveGameBoundaryToken(gameState);
+  const lastBoundaryToken = String(state.matchBoundaryToken || "");
+  if (boundaryToken && lastBoundaryToken && boundaryToken !== lastBoundaryToken) {
+    state.holdUntilTs = 0;
+    state.activeIntent = null;
+    state.stickyUntilTurnChange = false;
+    state.stickyUntilLegEnd = false;
+    state.manualPause = false;
+    state.manualPauseThrowCount = -1;
+    state.lastTurnId = "";
+    state.lastThrowCount = -1;
+  }
+  if (boundaryToken) {
+    state.matchBoundaryToken = boundaryToken;
   }
 
   const turn = typeof gameState.getActiveTurn === "function" ? gameState.getActiveTurn() : null;

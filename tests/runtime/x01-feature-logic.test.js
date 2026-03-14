@@ -11,19 +11,27 @@ function createX01GameState(overrides = {}) {
   const outMode = String(overrides.outMode || "");
   const activeScore = Number.isFinite(overrides.activeScore) ? overrides.activeScore : null;
   const activeThrows = Array.isArray(overrides.activeThrows) ? overrides.activeThrows : [];
+  const hasSnapshot = Object.prototype.hasOwnProperty.call(overrides, "snapshot");
+  const snapshot = hasSnapshot ? overrides.snapshot : null;
   const activeTurn = overrides.activeTurn || {
     id: "turn-1",
     playerId: "player-1",
     throws: activeThrows,
   };
 
-  return {
+  const gameState = {
     isX01Variant: () => true,
     getActiveScore: () => activeScore,
     getOutMode: () => outMode,
     getActiveTurn: () => activeTurn,
     getActiveThrows: () => activeThrows,
   };
+
+  if (hasSnapshot) {
+    gameState.getSnapshot = () => snapshot;
+  }
+
+  return gameState;
 }
 
 function createZoomState() {
@@ -36,6 +44,7 @@ function createZoomState() {
     stickyUntilLegEnd: false,
     manualPause: false,
     manualPauseThrowCount: -1,
+    matchBoundaryToken: "",
   };
 }
 
@@ -750,6 +759,94 @@ test("tv-board-zoom keeps checkout zoom after hit until leg end", () => {
   assert.deepEqual(checkoutHitIntent, { reason: "checkout", segment: "D20" });
   assert.deepEqual(legEndPendingIntent, { reason: "checkout", segment: "D20" });
   assert.equal(newLegIntent, null);
+});
+
+test("tv-board-zoom clears sticky checkout zoom when a new match snapshot arrives", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+
+  const checkoutSetupIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-checkout",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: {
+        topic: "match-a.state",
+        match: { id: "match-a" },
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 11300,
+  });
+
+  const checkoutStickyIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 0,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-checkout",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: {
+        topic: "match-a.state",
+        match: { id: "match-a" },
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 11400,
+  });
+
+  const nextMatchIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 0,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-checkout",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: {
+        topic: "match-b.state",
+        match: { id: "match-b" },
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 11500,
+  });
+
+  assert.deepEqual(checkoutSetupIntent, { reason: "checkout", segment: "D20" });
+  assert.deepEqual(checkoutStickyIntent, { reason: "checkout", segment: "D20" });
+  assert.equal(nextMatchIntent, null);
+  assert.equal(state.stickyUntilLegEnd, false);
+  assert.equal(state.activeIntent, null);
 });
 
 test("tv-board-zoom pauses auto zoom after manual correction until throw count progresses", () => {
