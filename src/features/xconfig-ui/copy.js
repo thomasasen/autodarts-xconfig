@@ -260,13 +260,13 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "tv-board-zoom": featureCopy({
     cardDescription:
-      "Zoomt in X01 bei klaren Zielmomenten TV-artig auf das Board.",
+      "Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board.",
     visibleDescription:
-      "Bei klaren X01-Zielsituationen zoomt die Ansicht kurz auf relevante Board-Bereiche.",
+      "Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil.",
     visualDescription:
-      "Das Board wird temporär vergrößert, damit relevante Segmente mehr Platz bekommen. Die Kamera springt nicht hart, sondern fährt mit einer kurzen Ein- und Ausblendung hinein und zurück.",
+      "Das Board wird innerhalb des rechten Board-Bereichs vergrößert, damit relevante Segmente mehr Platz bekommen. Nach `T20,T20,T20` bleibt der Fokus bis zum Spielerwechsel bestehen, nach getroffenem Checkout bis zum Leg-Ende. Klicks auf die Wurfanzeigenleiste zoomen sofort aus, damit Korrekturen auf der ganzen Scheibe möglich bleiben.",
     usefulWhen:
-      "Wenn du beim dritten Dart oder bei klaren Finishes mehr Fokus auf den Zielbereich möchtest.",
+      "Wenn du bei dritten Darts und Finishes mehr Fokus auf Zielbereiche willst, aber bei Korrekturen schnell wieder die ganze Scheibe brauchst.",
     images: [image("TV Board Zoom", "animation-tv-board-zoom.gif")],
     fields: {
       zoomLevel: fieldCopy(
@@ -281,7 +281,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       checkoutZoomEnabled: fieldCopy(
         "Schaltet den speziellen Zoom für klare Ein-Dart-Checkouts ein oder aus.",
-        "Aktiviert oder deaktiviert den Zoom auf eindeutige Ein-Dart-Checkout-Situationen in den ersten beiden Würfen. Andere Zoom-Fälle, etwa der spezielle `T20`-Setup-Fokus nach zwei `T20`, werden dadurch nicht grundsätzlich abgeschaltet.",
+        "Aktiviert oder deaktiviert den Zoom auf eindeutige Ein-Dart-Checkout-Situationen in den ersten beiden Würfen. Bei aktivem Checkout-Zoom bleibt der Fokus nach einem getroffenen Checkout bis zum Leg-Ende bestehen. Andere Zoom-Fälle, etwa der spezielle `T20`-Setup-Fokus nach zwei `T20` inklusive Hold nach `T20,T20,T20` bis zum Spielerwechsel, werden dadurch nicht grundsätzlich abgeschaltet.",
         "Schaltet den Checkout-Zoom für klare Ein-Dart-Finishes ein oder aus."
       ),
       debug: DEBUG_FIELD,

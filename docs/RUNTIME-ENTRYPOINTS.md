@@ -68,7 +68,7 @@ Features with direct game-state subscriptions:
 
 Registry-managed listeners are concentrated in the shell, themes, and layout-sensitive features:
 
-- `tv-board-zoom`: `resize`, `orientationchange`, `pointerdown`, `visibilitychange`, `beforeunload`
+- `tv-board-zoom`: `resize`, `orientationchange`, `pointerdown` (Klick auf Wurfanzeigenleiste für Korrektur-Auszoom), `visibilitychange`, `beforeunload`
 - `winner-fireworks`: `resize`, `visibilitychange`, `pointerdown`
 - `cricket-highlighter`: `resize`, `orientationchange`, `visibilitychange`
 - `cricket-grid-fx`: `resize`, `orientationchange`, `visibilitychange`

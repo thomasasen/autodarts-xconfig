@@ -30,7 +30,7 @@ Diese Inventur beschreibt den aktuellen Aufbau der neuen Architektur in `src/cor
 | `src/features/xconfig-ui/*` | Feature | AD-xConfig-Menü, Route, Settings-Modal, README-Links und Feature-Aktionen |
 | `src/features/checkout-score-pulse/*` | Feature | Checkout-Hervorhebung für X01 |
 | `src/features/checkout-board-targets/*` | Feature | Board-Targets für Checkout-Wege |
-| `src/features/tv-board-zoom/*` | Feature | Checkout-/Setup-Zoom für relevante Segmente |
+| `src/features/tv-board-zoom/*` | Feature | Checkout-/Setup-Zoom mit Sticky-Hold für Finish-Momente und Korrektur-Auszoom |
 | `src/features/style-checkout-suggestions/*` | Feature | visuelle Formatierung der Checkout-Empfehlungen |
 | `src/features/average-trend-arrow/*` | Feature | AVG-Trendanzeige |
 | `src/features/turn-start-sweep/*` | Feature | Spielerwechsel-Hervorhebung |

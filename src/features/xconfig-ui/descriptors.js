@@ -292,7 +292,7 @@ export const xconfigDescriptors = Object.freeze([
     featureKey: "tv-board-zoom",
     tab: "animations",
     readmeAnchor: "animation-autodarts-animate-tv-board-zoom",
-    description: "Zoomt bei klaren Checkout-Situationen TV-artig auf Zielbereiche.",
+    description: "Zoomt bei klaren Checkout- und Setup-Situationen TV-artig auf Zielbereiche.",
     fields: [
       selectField("zoomLevel", "Zoom-Stufe", [
         { value: 2.35, label: "2,35" },
