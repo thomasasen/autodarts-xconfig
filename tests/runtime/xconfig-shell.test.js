@@ -632,6 +632,50 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   runtime.stop();
 });
 
+test("xConfig shell enables all themes with a compact action button in the themes tab", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+
+  const enableAllThemesButton = documentRef.querySelector(
+    "[data-adxconfig-action='enable-all-themes']"
+  );
+  assert.ok(enableAllThemesButton);
+  assert.equal(enableAllThemesButton.classList.contains("ad-xconfig-btn--compact"), true);
+  enableAllThemesButton.click();
+  assert.equal(await waitFor(() => {
+    const storedSnapshot = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+    return (
+      storedSnapshot.featureToggles["themes.x01"] === true &&
+      storedSnapshot.featureToggles["themes.shanghai"] === true &&
+      storedSnapshot.featureToggles["themes.bermuda"] === true &&
+      storedSnapshot.featureToggles["themes.cricket"] === true &&
+      storedSnapshot.featureToggles["themes.bullOff"] === true
+    );
+  }, { timeoutMs: 500, intervalMs: 6 }), true);
+
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.featureToggles["themes.x01"], true);
+  assert.equal(storedConfig.featureToggles["themes.shanghai"], true);
+  assert.equal(storedConfig.featureToggles["themes.bermuda"], true);
+  assert.equal(storedConfig.featureToggles["themes.cricket"], true);
+  assert.equal(storedConfig.featureToggles["themes.bullOff"], true);
+
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+  assert.equal(
+    Boolean(documentRef.querySelector("[data-adxconfig-action='enable-all-themes']")),
+    false
+  );
+
+  runtime.stop();
+});
+
 test("xConfig settings modal renders explanatory notes for checkbox, select and action fields", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

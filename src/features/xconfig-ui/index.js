@@ -106,6 +106,9 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-tab-title{display:block;font-size:1rem;font-weight:800;line-height:1.2;letter-spacing:.01em}
 #${PANEL_HOST_ID} .ad-xconfig-tab-desc{display:block;font-size:.76rem;line-height:1.2;color:rgba(232,243,255,.92);font-weight:500}
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-content-head{display:flex;align-items:center;justify-content:space-between;gap:.55rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-content-title{margin:0;font-size:.9rem;font-weight:700;letter-spacing:.01em;color:rgba(232,243,255,.92)}
+#${PANEL_HOST_ID} .ad-xconfig-btn--compact{padding:.38rem .62rem;font-size:.74rem;line-height:1.12}
 #${PANEL_HOST_ID} .ad-xconfig-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-height:14rem;padding:.9rem;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.2);transition:transform .2s ease}
 #${PANEL_HOST_ID} .ad-xconfig-card:hover{transform:translateY(-2px)}
@@ -1494,21 +1497,41 @@ function buildShellContent(documentRef, state, features) {
   });
   shell.appendChild(tabs);
 
-  const content = createElement(documentRef, "div", {
-    className: "ad-xconfig-content",
-  });
-  const grid = createElement(documentRef, "div", {
-    className: "ad-xconfig-grid",
-  });
-  features
+  const activeTabFeatures = features
     .filter((feature) => {
       const descriptor = getXConfigDescriptor(feature.featureKey);
       return (descriptor?.tab || "animations") === state.activeTab;
     })
-    .sort(sortFeatures)
-    .forEach((feature) => {
-      grid.appendChild(buildFeatureCard(documentRef, feature));
+    .sort(sortFeatures);
+
+  const content = createElement(documentRef, "div", {
+    className: "ad-xconfig-content",
+  });
+  if (state.activeTab === "themes" && activeTabFeatures.some((feature) => isThemeFeature(feature))) {
+    const contentHead = createElement(documentRef, "div", {
+      className: "ad-xconfig-content-head",
     });
+    contentHead.appendChild(createElement(documentRef, "h2", {
+      className: "ad-xconfig-content-title",
+      text: "Themen",
+    }));
+    contentHead.appendChild(createElement(documentRef, "button", {
+      type: "button",
+      className: "ad-xconfig-btn ad-xconfig-btn--compact",
+      text: "Alle aktivieren",
+      attributes: {
+        "data-adxconfig-action": "enable-all-themes",
+        "aria-label": "Alle Themen aktivieren",
+      },
+    }));
+    content.appendChild(contentHead);
+  }
+  const grid = createElement(documentRef, "div", {
+    className: "ad-xconfig-grid",
+  });
+  activeTabFeatures.forEach((feature) => {
+    grid.appendChild(buildFeatureCard(documentRef, feature));
+  });
 
   if (grid.children.length) {
     content.appendChild(grid);
@@ -2298,6 +2321,25 @@ function ensureXConfigShell(options = {}) {
         runtimeApi.setFeatureEnabled(feature.featureKey, enabled),
         `${feature.title}: ${enabled ? "An" : "Aus"}`,
         `${feature.title}: Status konnte nicht gespeichert werden.`
+      );
+      return;
+    }
+
+    if (action === "enable-all-themes" && typeof runtimeApi.setFeatureEnabled === "function") {
+      const disabledThemeFeatures = getFeatures().filter(
+        (entry) => isThemeFeature(entry) && !entry.enabled
+      );
+      if (!disabledThemeFeatures.length) {
+        setNotice("info", "Alle Themen sind bereits aktiviert.");
+        return;
+      }
+      const enableThemesPromise = disabledThemeFeatures.reduce((chain, entry) => {
+        return chain.then(() => runtimeApi.setFeatureEnabled(entry.featureKey, true));
+      }, Promise.resolve());
+      withRuntimeCall(
+        enableThemesPromise,
+        "Alle Themen aktiviert.",
+        "Themen konnten nicht vollständig aktiviert werden."
       );
       return;
     }
