@@ -1502,11 +1502,11 @@ test("cricket highlighter rerenders the board when merged crfx grid rows update"
   cleanupHighlighter();
 });
 
-test("cricket highlighter and grid fx pause on /ad-xconfig and resume on match routes", () => {
+test("cricket highlighter and grid fx pause on hash-based xConfig route and resume on match routes", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
-  windowRef.history.pushState({}, "", "/ad-xconfig");
+  windowRef.history.pushState({}, "", "/matches/test-match#ad-xconfig");
 
   createThemeLikeBoardFixture(documentRef);
   const rowsByLabel = createNumericCricketGrid(documentRef, {

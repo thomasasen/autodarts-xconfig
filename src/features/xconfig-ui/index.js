@@ -10,6 +10,7 @@ import {
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const CONFIG_PATH = "/ad-xconfig";
+const CONFIG_HASH = "#ad-xconfig";
 const MENU_LABEL = "AD xConfig";
 const MENU_LABEL_COLLAPSE_WIDTH = 120;
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
@@ -441,6 +442,22 @@ function toRoutePathname(windowRef, hrefValue) {
 function currentRoute(windowRef) {
   const locationRef = windowRef?.location;
   return `${locationRef?.pathname || ""}${locationRef?.search || ""}${locationRef?.hash || ""}`;
+}
+
+function normalizeHashValue(hashValue) {
+  const normalized = String(hashValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.startsWith("#") ? normalized : `#${normalized}`;
+}
+
+function isLegacyConfigPath(pathValue) {
+  return normalizeRoutePath(pathValue) === CONFIG_PATH;
+}
+
+function isConfigHash(hashValue) {
+  return normalizeHashValue(hashValue) === CONFIG_HASH;
 }
 
 function scoreSidebarCandidate(windowRef, candidate) {
@@ -1620,13 +1637,16 @@ function ensureXConfigShell(options = {}) {
   }
 
   const installedVersion = String(runtimeApi.apiVersion || "").trim();
+  const initialRoutePath = normalizeRoutePath(windowRef?.location?.pathname || "");
+  const initialLastNonConfigRoute =
+    initialRoutePath && initialRoutePath !== CONFIG_PATH ? initialRoutePath : "/lobbies";
 
   const state = {
     activeTab: "themes",
     activeSettingsFeatureKey: "",
     hiddenDisplays: new Map(),
     contentHidden: false,
-    lastNonConfigRoute: normalizeRoutePath(currentRoute(windowRef)) || "/lobbies",
+    lastNonConfigRoute: initialLastNonConfigRoute,
     started: false,
     historyRestore: null,
     syncScheduled: false,
@@ -1643,7 +1663,38 @@ function ensureXConfigShell(options = {}) {
   };
 
   function isConfigRoute() {
-    return normalizeRoutePath(windowRef?.location?.pathname || "") === CONFIG_PATH;
+    const locationRef = windowRef?.location || null;
+    return (
+      isLegacyConfigPath(locationRef?.pathname || "") ||
+      isConfigHash(locationRef?.hash || "")
+    );
+  }
+
+  function resolveBaseRouteForConfigHash() {
+    const currentPath = normalizeRoutePath(windowRef?.location?.pathname || "");
+    if (currentPath && currentPath !== CONFIG_PATH) {
+      return currentPath;
+    }
+    if (state.lastNonConfigRoute && state.lastNonConfigRoute !== CONFIG_PATH) {
+      return state.lastNonConfigRoute;
+    }
+    return "/lobbies";
+  }
+
+  function buildConfigHashRoute() {
+    const search = String(windowRef?.location?.search || "");
+    return `${resolveBaseRouteForConfigHash()}${search}${CONFIG_HASH}`;
+  }
+
+  function normalizeLegacyConfigPathIfNeeded() {
+    if (!isLegacyConfigPath(windowRef?.location?.pathname || "")) {
+      return false;
+    }
+    if (typeof windowRef?.history?.replaceState !== "function") {
+      return false;
+    }
+    windowRef.history.replaceState({ adxconfig: true }, "", buildConfigHashRoute());
+    return true;
   }
 
   function clearNoticeTimer() {
@@ -2158,7 +2209,9 @@ function ensureXConfigShell(options = {}) {
   function navigateToConfigRoute() {
     if (!isConfigRoute()) {
       state.lastNonConfigRoute = normalizeRoutePath(currentRoute(windowRef)) || "/lobbies";
-      windowRef.history.pushState({ adxconfig: true }, "", CONFIG_PATH);
+      windowRef.history.pushState({ adxconfig: true }, "", buildConfigHashRoute());
+    } else if (normalizeLegacyConfigPathIfNeeded()) {
+      // Legacy /ad-xconfig URLs should be normalized once to avoid 404 on hard reload.
     }
     queueSync();
   }
@@ -2558,6 +2611,7 @@ function ensureXConfigShell(options = {}) {
     state.started = true;
     domGuards.ensureStyle(STYLE_ID, styleText);
     patchHistory();
+    normalizeLegacyConfigPathIfNeeded();
 
     if (typeof listenerRegistry?.register === "function") {
       listenerRegistry.register({

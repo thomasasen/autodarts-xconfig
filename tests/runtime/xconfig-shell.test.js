@@ -77,7 +77,8 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   menuButton.click();
   await wait(5);
 
-  assert.equal(windowRef.location.pathname, "/ad-xconfig");
+  assert.equal(windowRef.location.pathname, "/lobbies");
+  assert.equal(windowRef.location.hash, "#ad-xconfig");
   assert.equal(documentRef.variantElement.style.display, "none");
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
@@ -88,8 +89,38 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   await wait(5);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
+  assert.equal(windowRef.location.hash, "");
   assert.equal(panelHost.style.display, "none");
   assert.equal(documentRef.variantElement.style.display, "");
+
+  runtime.stop();
+});
+
+test("xConfig shell normalizes legacy /ad-xconfig path to a reload-safe hash route", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    localStorage,
+    href: "https://play.autodarts.io/ad-xconfig",
+  });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  await wait(5);
+
+  assert.equal(windowRef.location.pathname, "/lobbies");
+  assert.equal(windowRef.location.hash, "#ad-xconfig");
+  assert.equal(documentRef.variantElement.style.display, "none");
+
+  const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+  assert.ok(panelHost);
+  assert.equal(panelHost.style.display, "block");
+
+  windowRef.history.pushState({}, "", "/lobbies");
+  await wait(5);
+
+  assert.equal(windowRef.location.hash, "");
+  assert.equal(panelHost.style.display, "none");
 
   runtime.stop();
 });
@@ -112,7 +143,8 @@ test("xConfig shell keeps sidebar visible when layout has no main element", asyn
   menuButton.click();
   await wait(5);
 
-  assert.equal(windowRef.location.pathname, "/ad-xconfig");
+  assert.equal(windowRef.location.pathname, "/lobbies");
+  assert.equal(windowRef.location.hash, "#ad-xconfig");
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   assert.ok(panelHost);
@@ -166,7 +198,8 @@ test("xConfig shell does not hijack external links that accidentally reuse xConf
   assert.ok(menuButton);
   menuButton.click();
   await wait(5);
-  assert.equal(windowRef.location.pathname, "/ad-xconfig");
+  assert.equal(windowRef.location.pathname, "/lobbies");
+  assert.equal(windowRef.location.hash, "#ad-xconfig");
 
   runtime.stop();
 });

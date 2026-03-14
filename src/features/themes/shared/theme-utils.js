@@ -1,5 +1,7 @@
 export const PREVIEW_SPACE_CLASS = "ad-ext-turn-preview-space";
 const GAME_ROUTE_PREFIXES = Object.freeze(["/matches"]);
+const XCONFIG_ROUTE_PATH = "/ad-xconfig";
+const XCONFIG_ROUTE_HASH = "#ad-xconfig";
 
 export function normalizeBoolean(value, fallbackValue = false) {
   if (typeof value === "boolean") {
@@ -74,8 +76,28 @@ export function normalizeRoutePath(pathValue) {
   return normalized;
 }
 
+function normalizeHashValue(hashValue) {
+  const normalized = String(hashValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.startsWith("#") ? normalized : `#${normalized}`;
+}
+
+function isXConfigRouteActive(locationRef) {
+  if (!locationRef) {
+    return false;
+  }
+  const path = normalizeRoutePath(locationRef.pathname || "");
+  const hash = normalizeHashValue(locationRef.hash || "");
+  return path === XCONFIG_ROUTE_PATH || hash === XCONFIG_ROUTE_HASH;
+}
+
 function resolveRoutePath(windowRef, documentRef) {
   const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
+  if (isXConfigRouteActive(locationRef)) {
+    return "";
+  }
   return normalizeRoutePath(locationRef?.pathname || "");
 }
 

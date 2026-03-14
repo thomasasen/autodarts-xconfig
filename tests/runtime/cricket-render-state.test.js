@@ -278,10 +278,10 @@ function injectTurnPreviewWithCricketLikeText(documentRef) {
 
 const VISUAL_CONFIG = { showDeadTargets: true };
 
-test("buildCricketRenderState pauses cricket surfaces on /ad-xconfig route", () => {
+test("buildCricketRenderState pauses cricket surfaces on hash-based xConfig route", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
-  windowRef.history.pushState({}, "", "/ad-xconfig");
+  windowRef.history.pushState({}, "", "/lobbies#ad-xconfig");
   documentRef.variantElement.textContent = "Cricket";
 
   createGrid(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"], {

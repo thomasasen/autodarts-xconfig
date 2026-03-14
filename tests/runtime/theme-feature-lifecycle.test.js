@@ -290,6 +290,30 @@ test("theme-x01 removes style when route leaves matches even if variant state is
   runtime.stop();
 });
 
+test("theme-x01 removes style when xConfig hash route is active on a match path", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const windowRef = createMatchWindow(documentRef, "theme-x01-xconfig-route");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), true);
+
+  windowRef.history.pushState({}, "", "/matches/theme-x01-xconfig-route#ad-xconfig");
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), false);
+  runtime.stop();
+});
+
 test("theme-x01 applies board layout hooks when board exists and removes them on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";

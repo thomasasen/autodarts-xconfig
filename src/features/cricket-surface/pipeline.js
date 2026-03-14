@@ -24,6 +24,7 @@ const UI_PRIORITY_BY_BUCKET = Object.freeze({
 });
 
 const PAUSED_ROUTE_PATH = "/ad-xconfig";
+const PAUSED_ROUTE_HASH = "#ad-xconfig";
 const GRID_MIN_UNIQUE_LABELS = 4;
 const GRID_MIN_ROWS_WITH_PLAYER_CELLS = 2;
 const GRID_MIN_COVERAGE = 0;
@@ -119,17 +120,25 @@ function normalizeRoutePath(pathValue) {
   return normalized;
 }
 
+function normalizeHashValue(hashValue) {
+  const normalized = String(hashValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.startsWith("#") ? normalized : `#${normalized}`;
+}
+
 function readVariantText(documentRef) {
   return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
 }
 
 function isXConfigRoute(windowRef, documentRef) {
+  const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
   const routePath = normalizeRoutePath(
-    windowRef?.location?.pathname ||
-      documentRef?.defaultView?.location?.pathname ||
-      ""
+    locationRef?.pathname || ""
   );
-  return routePath === PAUSED_ROUTE_PATH;
+  const routeHash = normalizeHashValue(locationRef?.hash || "");
+  return routePath === PAUSED_ROUTE_PATH || routeHash === PAUSED_ROUTE_HASH;
 }
 
 function isCricketFamilyActive(gameState, documentRef, variantRules) {
