@@ -464,11 +464,17 @@ function scoreSidebarCandidate(windowRef, candidate) {
   if (!candidate || typeof candidate.querySelectorAll !== "function") {
     return -1;
   }
+  if (candidate.closest?.(`#${PANEL_HOST_ID}`)) {
+    return -1;
+  }
 
   const anchors = Array.from(candidate.querySelectorAll("a[href]"));
   const routeMatches = anchors.reduce((count, anchor) => {
     return count + (SIDEBAR_ROUTE_HINTS.has(toRoutePathname(windowRef, anchor.getAttribute("href"))) ? 1 : 0);
   }, 0);
+  if (routeMatches <= 0) {
+    return -1;
+  }
 
   let score = routeMatches * 20 + Math.min(anchors.length, 8);
   if (candidate.classList?.contains("navigation")) {
@@ -1954,35 +1960,71 @@ function ensureXConfigShell(options = {}) {
       boardsAnchor ||
       sidebarLinks.find((link) => SIDEBAR_ROUTE_HINTS.has(toRoutePathname(windowRef, link.getAttribute("href")))) ||
       null;
+    const templateCandidates = [
+      insertionAnchor,
+      ...Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []),
+      sidebar.lastElementChild,
+    ]
+      .filter(Boolean)
+      .filter((node) => node.id !== MENU_ITEM_ID)
+      .filter((node) => !node.closest?.(`#${PANEL_HOST_ID}`))
+      .filter((node) => String(node.getAttribute?.("data-adxconfig-tab") || "").trim() === "");
+    const template = templateCandidates[0] || null;
 
     let item = documentRef.getElementById?.(MENU_ITEM_ID);
+    const shouldRebuildExistingItem =
+      Boolean(item) &&
+      (
+        Boolean(item.closest?.(`#${PANEL_HOST_ID}`)) ||
+        item.getAttribute?.("data-adxconfig-tab") !== null ||
+        String(item.getAttribute?.("data-adxconfig-action") || "").trim() !== "open" ||
+        !item.querySelector?.(".ad-xconfig-menu-label")
+      );
+    if (shouldRebuildExistingItem) {
+      item.remove?.();
+      item = null;
+    }
+
     if (!item) {
-      const template =
-        insertionAnchor ||
-        sidebar.querySelector?.("a[href], button, [role='button']") ||
-        sidebar.lastElementChild ||
-        null;
       item = template ? template.cloneNode(true) : createElement(documentRef, "button", { type: "button" });
-      item.id = MENU_ITEM_ID;
-      item.setAttribute("role", "button");
-      item.setAttribute("tabindex", "0");
-      item.setAttribute("aria-label", MENU_LABEL);
-      item.setAttribute("title", MENU_LABEL);
-      item.setAttribute("data-adxconfig-action", "open");
-      item.style.cursor = "pointer";
-
-      if (String(item.tagName || "").toLowerCase() === "a") {
-        item.removeAttribute("href");
-      } else if (String(item.tagName || "").toLowerCase() === "button") {
-        item.setAttribute("type", "button");
-      }
-
       const icon = buildMenuIconElement(documentRef, template);
       const label = createElement(documentRef, "span", {
         className: "ad-xconfig-menu-label",
         text: MENU_LABEL,
       });
       item.replaceChildren(icon, label);
+    }
+
+    item.id = MENU_ITEM_ID;
+    item.classList?.remove?.("ad-xconfig-tab");
+    item.removeAttribute?.("data-adxconfig-tab");
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
+    item.setAttribute("aria-label", MENU_LABEL);
+    item.setAttribute("title", MENU_LABEL);
+    item.setAttribute("data-adxconfig-action", "open");
+    item.style.cursor = "pointer";
+
+    if (String(item.tagName || "").toLowerCase() === "a") {
+      item.removeAttribute("href");
+    } else if (String(item.tagName || "").toLowerCase() === "button") {
+      item.setAttribute("type", "button");
+    }
+
+    const labelNode = item.querySelector?.(".ad-xconfig-menu-label");
+    if (!labelNode) {
+      const icon = buildMenuIconElement(documentRef, template);
+      const label = createElement(documentRef, "span", {
+        className: "ad-xconfig-menu-label",
+        text: MENU_LABEL,
+      });
+      item.replaceChildren(icon, label);
+    } else {
+      labelNode.textContent = MENU_LABEL;
+      if (!item.querySelector?.(".ad-xconfig-menu-icon")) {
+        const icon = buildMenuIconElement(documentRef, template);
+        item.insertBefore?.(icon, item.firstChild || null);
+      }
     }
 
     if (insertionAnchor) {

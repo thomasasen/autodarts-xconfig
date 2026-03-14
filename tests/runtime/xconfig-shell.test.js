@@ -204,6 +204,41 @@ test("xConfig shell does not hijack external links that accidentally reuse xConf
   runtime.stop();
 });
 
+test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  const broken = documentRef.getElementById("ad-xconfig-menu-item");
+  assert.ok(broken);
+  broken.classList.add("ad-xconfig-tab");
+  broken.setAttribute("data-adxconfig-tab", "themes");
+  broken.removeAttribute("data-adxconfig-action");
+  broken.replaceChildren(documentRef.createElement("span"));
+
+  windowRef.history.pushState({}, "", "/boards");
+  await wait(8);
+
+  const repaired = documentRef.getElementById("ad-xconfig-menu-item");
+  assert.ok(repaired);
+  assert.equal(repaired.classList.contains("ad-xconfig-tab"), false);
+  assert.equal(repaired.getAttribute("data-adxconfig-tab"), null);
+  assert.equal(repaired.getAttribute("data-adxconfig-action"), "open");
+
+  const label = repaired.querySelector(".ad-xconfig-menu-label");
+  assert.ok(label);
+  assert.equal(String(label.textContent || "").trim(), "AD xConfig");
+
+  const boardsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
+    .find((link) => String(link.getAttribute("href") || "") === "/boards");
+  assert.ok(boardsLink);
+  assert.equal(boardsLink.nextElementSibling, repaired);
+
+  runtime.stop();
+});
+
 test("xConfig observer ignores self-managed menu/panel mutations and only syncs for external changes", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
