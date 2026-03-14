@@ -500,6 +500,24 @@ export function getTurnId(turn) {
   return `fallback:${round}:${turnNumber}:${playerId}`;
 }
 
+export function markManualZoomPause(state, throwCount = Number.NaN) {
+  if (!state) {
+    return;
+  }
+
+  state.holdUntilTs = 0;
+  state.activeIntent = null;
+  state.stickyUntilTurnChange = false;
+  state.stickyUntilLegEnd = false;
+  state.manualPause = true;
+  const baseline =
+    Number.isFinite(throwCount) && throwCount >= 0
+      ? throwCount
+      : state.lastThrowCount;
+  state.manualPauseThrowCount =
+    Number.isFinite(baseline) && baseline >= 0 ? baseline : -1;
+}
+
 function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
   const reason = String(intent?.reason || "");
   const segment = String(parsedSegment?.normalized || intent?.segment || "");
@@ -845,12 +863,27 @@ export function computeZoomIntent(options = {}) {
 
   const turnId = getTurnId(turn);
   const throwCount = throws.length;
+  const previousThrowCount =
+    Number.isFinite(state.lastThrowCount) && state.lastThrowCount >= 0
+      ? state.lastThrowCount
+      : -1;
   const turnChanged = turnId !== state.lastTurnId;
+
   if (turnChanged) {
     state.holdUntilTs = 0;
-    state.activeIntent = null;
-  } else if (state.activeIntent && state.lastThrowCount === 2 && throwCount === 3) {
-    state.holdUntilTs = nowTs + HOLD_AFTER_THIRD_MS;
+    if (!state.stickyUntilLegEnd) {
+      state.activeIntent = null;
+    }
+    state.stickyUntilTurnChange = false;
+    state.manualPause = false;
+    state.manualPauseThrowCount = -1;
+  }
+
+  if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
+    markManualZoomPause(state, throwCount);
+    state.lastTurnId = turnId;
+    state.lastThrowCount = throwCount;
+    return null;
   }
 
   state.lastTurnId = turnId;
@@ -876,6 +909,51 @@ export function computeZoomIntent(options = {}) {
     outMode,
     x01Rules
   );
+
+  if (state.manualPause) {
+    const baseline =
+      Number.isFinite(state.manualPauseThrowCount) && state.manualPauseThrowCount >= 0
+        ? state.manualPauseThrowCount
+        : -1;
+    if (throwCount <= baseline) {
+      return null;
+    }
+    state.manualPause = false;
+    state.manualPauseThrowCount = -1;
+  }
+
+  if (state.stickyUntilLegEnd && state.activeIntent) {
+    if (Number.isFinite(activeScore) && activeScore === 0) {
+      return state.activeIntent;
+    }
+    state.stickyUntilLegEnd = false;
+    state.activeIntent = null;
+  }
+
+  if (state.stickyUntilTurnChange && state.activeIntent) {
+    return state.activeIntent;
+  }
+
+  if (!turnChanged && state.activeIntent && previousThrowCount === 2 && throwCount === 3) {
+    const thirdSegment = getThrowSegmentName(throws[2], x01Rules);
+    if (state.activeIntent.reason === "t20-setup" && thirdSegment === "T20") {
+      state.holdUntilTs = 0;
+      state.stickyUntilTurnChange = true;
+      return state.activeIntent;
+    }
+    if (state.activeIntent.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
+      state.holdUntilTs = 0;
+      state.stickyUntilLegEnd = true;
+      return state.activeIntent;
+    }
+    state.holdUntilTs = nowTs + HOLD_AFTER_THIRD_MS;
+  }
+
+  if (state.activeIntent?.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
+    state.holdUntilTs = 0;
+    state.stickyUntilLegEnd = true;
+    return state.activeIntent;
+  }
 
   if (config.checkoutZoomEnabled && throwCount <= 2) {
     if (

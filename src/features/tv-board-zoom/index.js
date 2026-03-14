@@ -2,6 +2,7 @@ import {
   applyZoom,
   computeZoomIntent,
   findBoardSvg,
+  markManualZoomPause,
   resetZoom,
   resolveZoomHost,
   resolveZoomTarget,
@@ -24,6 +25,18 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
   beforeUnload: `${FEATURE_KEY}:window-beforeunload`,
 });
+const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
+  "#ad-ext-turn .ad-ext-turn-throw",
+  ".ad-ext-turn-throw",
+]);
+
+function isThrowHistoryClickTarget(targetNode) {
+  if (!targetNode || typeof targetNode.closest !== "function") {
+    return false;
+  }
+
+  return THROW_HISTORY_CLICK_SELECTORS.some((selector) => Boolean(targetNode.closest(selector)));
+}
 
 function resolveZoomLevel(zoomLevel) {
   const numeric = Number(zoomLevel);
@@ -70,6 +83,10 @@ export function initializeTvBoardZoom(context = {}) {
     releaseTimeoutId: 0,
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
+    stickyUntilTurnChange: false,
+    stickyUntilLegEnd: false,
+    manualPause: false,
+    manualPauseThrowCount: -1,
   };
   const boardCache = {
     svg: null,
@@ -190,8 +207,10 @@ export function initializeTvBoardZoom(context = {}) {
         if (event && typeof event.button === "number" && event.button !== 0) {
           return;
         }
-        zoomState.holdUntilTs = 0;
-        zoomState.activeIntent = null;
+        if (!isThrowHistoryClickTarget(event?.target)) {
+          return;
+        }
+        markManualZoomPause(zoomState);
         resetZoom(speedConfig, zoomState);
       },
       options: { passive: true, capture: true },
