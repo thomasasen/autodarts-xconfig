@@ -83,16 +83,20 @@ function runStyleBurst(state) {
 
   if (style === "sides") {
     emit(confettiRunner, visualConfig, {
-      particleCount: 2,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0, y: 0.5 },
+      particleCount: 3,
+      angle: 32,
+      spread: 40,
+      startVelocity: 46,
+      decay: 0.91,
+      origin: { x: 0.01, y: 0.78 },
     });
     emit(confettiRunner, visualConfig, {
-      particleCount: 2,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1, y: 0.5 },
+      particleCount: 3,
+      angle: 148,
+      spread: 40,
+      startVelocity: 46,
+      decay: 0.91,
+      origin: { x: 0.99, y: 0.78 },
     });
     return;
   }
