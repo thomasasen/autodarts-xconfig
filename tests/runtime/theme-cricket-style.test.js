@@ -25,15 +25,23 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2\.4rem,\s*min\(58cqh,\s*8\.2vw\),\s*8\.4rem\)\s*!important;[^}]*line-height:\s*0\.9\s*!important;[^}]*align-self:\s*stretch\s*!important;[^}]*height:\s*100%\s*!important;[^}]*display:\s*flex\s*!important;[^}]*align-items:\s*center\s*!important;[^}]*justify-content:\s*flex-end\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2rem,\s*4\.4vw,\s*5rem\)\s*!important;[^}]*line-height:\s*1\s*!important;[^}]*font-weight:\s*800\s*!important;[^}]*text-align:\s*center\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2\.8rem,\s*min\(66cqh,\s*8\.9vw\),\s*9\.4rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2\.2rem,\s*5vw,\s*5\.6rem\)\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2\.2rem,\s*min\(52cqh,\s*7\.2vw\),\s*7\.2rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.6rem,\s*3\.8vw,\s*4\.2rem\)\s*!important;/s
+  );
+  assert.doesNotMatch(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*display:\s*flex\s*!important;/s
+  );
+  assert.doesNotMatch(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*height:\s*100%\s*!important;/s
   );
   assert.doesNotMatch(
     css,
@@ -94,7 +102,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
     css,
     /#ad-ext-player-display\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-auto-flow:\s*column\s*!important;[^}]*grid-auto-columns:\s*minmax\(0,\s*1fr\)\s*!important;/s
   );
-  assert.match(css, /div\.css-y3hfdd\s*\{[^}]*container-type:\s*size\s*!important;/s);
+  assert.doesNotMatch(css, /div\.css-y3hfdd\s*\{[^}]*container-type:\s*size\s*!important;/s);
   assert.match(
     css,
     /grid-template-areas:\s*"header header"\s*"footer footer"\s*"players board"/

@@ -68,20 +68,15 @@ const cricketThemeCss = `
 div.css-y3hfdd{
   gap: 0 !important;
   min-height: 0 !important;
-  container-type: size !important;
 }
 
 p.chakra-text.css-1j0bqop{
-  font-size: 1.2rem !important;
+  font-size: clamp(0.95rem, 1.05vw, 1.2rem) !important;
+  line-height: 1.25 !important;
 }
 
 div.ad-ext-player.ad-ext-player-active.css-1en42kf p.chakra-text.css-11cuipc{
   font-size: 1.8rem !important;
-}
-
-.ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > div > p {
-  font-size: clamp(1rem, 1.05vw, 1.3rem) !important;
-  color: gray !important;
 }
 
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
@@ -99,10 +94,6 @@ div.ad-ext-player.ad-ext-player-active.css-1en42kf p.chakra-text.css-11cuipc{
   display: block !important;
 }
 
-.ad-ext-player-inactive .chakra-text.css-11cuipc {
-  font-size: x-large !important;
-}
-
 * {
   scrollbar-width: none !important;
 }
@@ -118,34 +109,30 @@ div.css-nfhdnc {
 }
 
 .ad-ext-player-name{
-  font-size: 1rem !important;
+  font-size: clamp(1.05rem, 1.3vw, 1.35rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name {
-  font-size: 1rem !important;
+  font-size: clamp(1.05rem, 1.3vw, 1.35rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
   color: var(--theme-text-highlight-color);
-  font-size: clamp(2.4rem, min(58cqh, 8.2vw), 8.4rem) !important;
-  line-height: 0.9 !important;
-  align-self: stretch !important;
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  text-align: right !important;
+  font-size: clamp(2rem, 4.4vw, 5rem) !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  text-align: center !important;
   white-space: nowrap !important;
   font-variant-numeric: tabular-nums;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-  font-size: clamp(2.8rem, min(66cqh, 8.9vw), 9.4rem) !important;
+  font-size: clamp(2.2rem, 5vw, 5.6rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-  font-size: clamp(2.2rem, min(52cqh, 7.2vw), 7.2rem) !important;
+  font-size: clamp(1.6rem, 3.8vw, 4.2rem) !important;
   color: gray !important;
 }
 
