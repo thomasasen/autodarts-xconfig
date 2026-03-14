@@ -393,8 +393,9 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
 
 Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.
 
-| `Solar Flare` | `Ice Reactor` |
+|  |  |
 | --- | --- |
+| `Solar Flare` | `Ice Reactor` |
 | ![Farbstil Solar Flare](screenshots/animation-triple-double-bull-hits-color-solar-flare-readme.png) | ![Farbstil Ice Reactor](screenshots/animation-triple-double-bull-hits-color-ice-reactor-readme.png) |
 | `Venom Lime` | `Crimson Velocity` |
 | ![Farbstil Venom Lime](screenshots/animation-triple-double-bull-hits-color-venom-lime-readme.png) | ![Farbstil Crimson Velocity](screenshots/animation-triple-double-bull-hits-color-crimson-velocity-readme.png) |
@@ -419,8 +420,9 @@ Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kon
 
 Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.
 
-| `Slam Punch` | `Shock Ring` |
+|  |  |
 | --- | --- |
+| `Slam Punch` | `Shock Ring` |
 | ![Animationsstil Slam Punch](screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |
 | `Laser Sweep` | `Reactor Pulse` |
 | ![Animationsstil Laser Sweep](screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |
@@ -434,8 +436,6 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 | ![Animationsstil Charge Burst](screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |
 
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-
-![Triple Double Bull Hits](screenshots/animation-triple-double-bull-hits.gif)
 
 ### Dart Marker Emphasis
 
