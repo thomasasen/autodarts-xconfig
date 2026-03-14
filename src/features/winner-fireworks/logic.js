@@ -1,7 +1,21 @@
 import { OVERLAY_ID } from "./style.js";
 
-const WINNER_SELECTOR =
-  ".ad-ext_winner-animation, .ad-ext-player-winner, .ad-ext-player.ad-ext-player-winner";
+const PLAYER_WINNER_SELECTOR = ".ad-ext-player-winner, .ad-ext-player.ad-ext-player-winner";
+const LEGACY_WINNER_ANIMATION_SELECTOR = ".ad-ext_winner-animation";
+const TERMINAL_STATUS_TOKENS = new Set([
+  "finished",
+  "finish",
+  "completed",
+  "complete",
+  "done",
+  "ended",
+  "end",
+  "closed",
+  "over",
+  "game-over",
+  "match-over",
+  "won",
+]);
 
 function randomInRange(min, max) {
   return Math.random() * (max - min) + min;
@@ -29,19 +43,112 @@ function scaledInterval(baseValue, intensityPreset) {
   return Math.max(16, Math.round(Number(baseValue || 16) * Number(intensityPreset?.intervalScale || 1)));
 }
 
+function parseWinnerIndex(value, playerCount) {
+  if (value === null || typeof value === "undefined" || typeof value === "boolean") {
+    return null;
+  }
+
+  if (typeof value === "string" && !value.trim()) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return null;
+  }
+
+  if (Number.isFinite(playerCount) && playerCount > 0 && parsed >= playerCount) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function normalizeStatusToken(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-");
+}
+
+function hasTerminalStatus(match) {
+  const statusKeys = [
+    "status",
+    "state",
+    "phase",
+    "matchStatus",
+    "gameStatus",
+    "lifecycle",
+  ];
+
+  return statusKeys.some((key) =>
+    TERMINAL_STATUS_TOKENS.has(normalizeStatusToken(match?.[key]))
+  );
+}
+
+function hasTerminalTimestamp(match) {
+  const timestampKeys = [
+    "finishedAt",
+    "endedAt",
+    "completedAt",
+    "closedAt",
+    "gameFinishedAt",
+    "matchFinishedAt",
+  ];
+
+  return timestampKeys.some((key) => String(match?.[key] || "").trim().length > 0);
+}
+
+function hasTerminalFlag(match) {
+  const flagKeys = [
+    "finished",
+    "isFinished",
+    "ended",
+    "isEnded",
+    "completed",
+    "isCompleted",
+    "closed",
+    "isClosed",
+    "gameFinished",
+    "isGameFinished",
+    "matchFinished",
+    "isMatchFinished",
+  ];
+
+  return flagKeys.some((key) => match?.[key] === true);
+}
+
+function hasStateWinner(match) {
+  if (!match || typeof match !== "object") {
+    return false;
+  }
+
+  const playerCount = Array.isArray(match.players) ? match.players.length : NaN;
+  const winnerIndex = parseWinnerIndex(match.winner, playerCount);
+  const gameWinnerIndex = parseWinnerIndex(match.gameWinner, playerCount);
+
+  if (winnerIndex === null && gameWinnerIndex === null) {
+    return false;
+  }
+
+  return hasTerminalTimestamp(match) || hasTerminalFlag(match) || hasTerminalStatus(match);
+}
+
 export function getWinnerSignal(options = {}) {
   const documentRef = options.documentRef;
   const gameState = options.gameState;
   const visualConfig = options.visualConfig;
 
-  const domWinnerVisible = Boolean(
-    documentRef?.querySelector?.(WINNER_SELECTOR)
+  const domPlayerWinnerVisible = Boolean(
+    documentRef?.querySelector?.(PLAYER_WINNER_SELECTOR)
+  );
+  const domLegacyWinnerAnimationVisible = Boolean(
+    documentRef?.querySelector?.(LEGACY_WINNER_ANIMATION_SELECTOR)
   );
   const match = gameState?.getSnapshot?.()?.match || null;
-  const stateWinnerVisible = Boolean(
-    match &&
-      (Number.isFinite(Number(match.winner)) || Number.isFinite(Number(match.gameWinner)))
-  );
+  const stateWinnerVisible = hasStateWinner(match);
+  const domWinnerVisible =
+    domPlayerWinnerVisible || (domLegacyWinnerAnimationVisible && stateWinnerVisible);
   const variantText = String(
     gameState?.getVariant?.() ||
       documentRef?.getElementById?.("ad-ext-game-variant")?.textContent ||
@@ -52,6 +159,8 @@ export function getWinnerSignal(options = {}) {
   return {
     active: variantAllowed && (domWinnerVisible || stateWinnerVisible),
     domWinnerVisible,
+    domPlayerWinnerVisible,
+    domLegacyWinnerAnimationVisible,
     stateWinnerVisible,
     variantText,
     variantAllowed,
