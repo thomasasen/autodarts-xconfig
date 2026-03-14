@@ -700,6 +700,76 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   runtime.stop();
 });
 
+test("xConfig shell sorts themes and groups animations by mode relevance", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+
+  const themeCardFeatureKeys = documentRef
+    .querySelectorAll(".ad-xconfig-card")
+    .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""))
+    .filter((featureKey) => featureKey.startsWith("theme-"));
+  assert.deepEqual(themeCardFeatureKeys, [
+    "theme-bull-off",
+    "theme-x01",
+    "theme-cricket",
+    "theme-shanghai",
+    "theme-bermuda",
+  ]);
+
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const groupNodes = documentRef.querySelectorAll("[data-adxconfig-animation-group]");
+  const groupIds = groupNodes.map((groupNode) =>
+    String(groupNode.getAttribute("data-adxconfig-animation-group") || "")
+  );
+  assert.deepEqual(groupIds, ["all-modes", "x01", "cricket-tactics"]);
+  assert.equal(
+    documentRef.querySelectorAll("[data-adxconfig-animation-divider='true']").length,
+    groupIds.length - 1
+  );
+
+  const readGroupCards = (groupId) => {
+    const groupNode = documentRef.querySelector(
+      `[data-adxconfig-animation-group='${groupId}']`
+    );
+    assert.ok(groupNode, `missing group ${groupId}`);
+    return groupNode
+      .querySelectorAll(".ad-xconfig-card")
+      .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""));
+  };
+
+  assert.deepEqual(readGroupCards("all-modes"), [
+    "turn-start-sweep",
+    "turn-points-count",
+    "average-trend-arrow",
+    "triple-double-bull-hits",
+    "dart-marker-darts",
+    "dart-marker-emphasis",
+    "remove-darts-notification",
+    "single-bull-sound",
+    "winner-fireworks",
+  ]);
+  assert.deepEqual(readGroupCards("x01"), [
+    "style-checkout-suggestions",
+    "checkout-score-pulse",
+    "checkout-board-targets",
+    "tv-board-zoom",
+  ]);
+  assert.deepEqual(readGroupCards("cricket-tactics"), [
+    "cricket-highlighter",
+    "cricket-grid-fx",
+  ]);
+
+  runtime.stop();
+});
+
 test("xConfig shell enables all themes with a compact action button in the themes tab", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

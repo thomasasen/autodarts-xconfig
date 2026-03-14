@@ -106,10 +106,62 @@ const PLAYER_FIELD_TRANSPARENCY_OPTIONS = Object.freeze([
 
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
+    featureKey: "theme-bull-off",
+    tab: "themes",
+    readmeAnchor: "template-autodarts-theme-bull-off",
+    description: "Bull-off-Theme mit wählbarem Kontrast und Hintergrundbild.",
+    fields: [
+      selectField("contrastPreset", "Kontrast-Preset", [
+        { value: "soft", label: "Sanft" },
+        { value: "standard", label: "Standard" },
+        { value: "high", label: "Kräftig" },
+      ]),
+      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
+      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
+      selectField(
+        "playerFieldTransparency",
+        "Spielerfelder-Transparenz",
+        PLAYER_FIELD_TRANSPARENCY_OPTIONS
+      ),
+      checkboxField("debug", "Debug"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
+    ],
+  }),
+  descriptorEntry({
     featureKey: "theme-x01",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-x01",
     description: "Klares X01-Layout mit optionalem AVG und eigenem Hintergrundbild.",
+    fields: [
+      checkboxField("showAvg", "AVG anzeigen"),
+      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
+      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
+      selectField(
+        "playerFieldTransparency",
+        "Spielerfelder-Transparenz",
+        PLAYER_FIELD_TRANSPARENCY_OPTIONS
+      ),
+      checkboxField("debug", "Debug"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
+    ],
+  }),
+  descriptorEntry({
+    featureKey: "theme-cricket",
+    tab: "themes",
+    readmeAnchor: "template-autodarts-theme-cricket",
+    description: "Gemeinsames Theme für Cricket und Tactics mit optionalem AVG.",
     fields: [
       checkboxField("showAvg", "AVG anzeigen"),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
@@ -159,58 +211,6 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "template-autodarts-theme-bermuda",
     description: "Bermuda-Theme mit ruhigerem Layout und eigenem Hintergrundbild.",
     fields: [
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
-  }),
-  descriptorEntry({
-    featureKey: "theme-cricket",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-cricket",
-    description: "Gemeinsames Theme für Cricket und Tactics mit optionalem AVG.",
-    fields: [
-      checkboxField("showAvg", "AVG anzeigen"),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
-  }),
-  descriptorEntry({
-    featureKey: "theme-bull-off",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-bull-off",
-    description: "Bull-off-Theme mit wählbarem Kontrast und Hintergrundbild.",
-    fields: [
-      selectField("contrastPreset", "Kontrast-Preset", [
-        { value: "soft", label: "Sanft" },
-        { value: "standard", label: "Standard" },
-        { value: "high", label: "Kräftig" },
-      ]),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
       selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
       selectField(

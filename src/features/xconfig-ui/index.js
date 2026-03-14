@@ -55,6 +55,49 @@ const SIDEBAR_ROUTE_HINTS = new Set([
 const descriptorOrder = new Map(
   xconfigDescriptors.map((descriptor, index) => [descriptor.featureKey, index])
 );
+const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
+  Object.freeze({
+    id: "all-modes",
+    title: "Gilt für: Alle Modi",
+    featureKeys: Object.freeze([
+      "turn-start-sweep",
+      "turn-points-count",
+      "average-trend-arrow",
+      "triple-double-bull-hits",
+      "dart-marker-darts",
+      "dart-marker-emphasis",
+      "remove-darts-notification",
+      "single-bull-sound",
+      "winner-fireworks",
+    ]),
+  }),
+  Object.freeze({
+    id: "x01",
+    title: "Gilt für: X01",
+    featureKeys: Object.freeze([
+      "style-checkout-suggestions",
+      "checkout-score-pulse",
+      "checkout-board-targets",
+      "tv-board-zoom",
+    ]),
+  }),
+  Object.freeze({
+    id: "cricket-tactics",
+    title: "Gilt für: Cricket / Tactics",
+    featureKeys: Object.freeze([
+      "cricket-highlighter",
+      "cricket-grid-fx",
+    ]),
+  }),
+]);
+const animationGroupOrder = new Map(
+  ANIMATION_GROUP_DEFINITIONS.map((group, index) => [group.id, index])
+);
+const animationFeatureOrder = new Map(
+  ANIMATION_GROUP_DEFINITIONS.flatMap((group) =>
+    group.featureKeys.map((featureKey, index) => [featureKey, [group.id, index]])
+  )
+);
 const shellByWindow = new WeakMap();
 
 const styleText = `
@@ -109,6 +152,10 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-content-head{display:flex;align-items:center;justify-content:space-between;gap:.55rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-content-title{margin:0;font-size:.9rem;font-weight:700;letter-spacing:.01em;color:rgba(232,243,255,.92)}
+#${PANEL_HOST_ID} .ad-xconfig-group{display:grid;gap:.6rem}
+#${PANEL_HOST_ID} .ad-xconfig-group + .ad-xconfig-group{margin-top:1.1rem}
+#${PANEL_HOST_ID} .ad-xconfig-group-divider{height:1px;background:linear-gradient(90deg,rgba(126,216,255,.04),rgba(126,216,255,.68),rgba(126,216,255,.04));border:0;margin:1.15rem 0 .3rem}
+#${PANEL_HOST_ID} .ad-xconfig-group-title{margin:0;font-size:.82rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(196,230,255,.96)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--compact{padding:.38rem .62rem;font-size:.74rem;line-height:1.12}
 #${PANEL_HOST_ID} .ad-xconfig-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-height:14rem;padding:.9rem;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.2);transition:transform .2s ease}
@@ -654,6 +701,37 @@ function sortFeatures(left, right) {
     return leftOrder - rightOrder;
   }
   return String(left.title || "").localeCompare(String(right.title || ""));
+}
+
+function getAnimationGroupMeta(featureKey) {
+  const groupMeta = animationFeatureOrder.get(String(featureKey || "").trim());
+  if (!groupMeta) {
+    return {
+      groupId: "other",
+      groupOrder: Number.MAX_SAFE_INTEGER,
+      featureOrder: Number.MAX_SAFE_INTEGER,
+    };
+  }
+  const [groupId, featureOrder] = groupMeta;
+  return {
+    groupId,
+    groupOrder: animationGroupOrder.has(groupId)
+      ? animationGroupOrder.get(groupId)
+      : Number.MAX_SAFE_INTEGER,
+    featureOrder,
+  };
+}
+
+function sortAnimationFeatures(left, right) {
+  const leftMeta = getAnimationGroupMeta(left?.featureKey);
+  const rightMeta = getAnimationGroupMeta(right?.featureKey);
+  if (leftMeta.groupOrder !== rightMeta.groupOrder) {
+    return leftMeta.groupOrder - rightMeta.groupOrder;
+  }
+  if (leftMeta.featureOrder !== rightMeta.featureOrder) {
+    return leftMeta.featureOrder - rightMeta.featureOrder;
+  }
+  return sortFeatures(left, right);
 }
 
 function getFeatureReadmeHref(featureKey) {
@@ -1443,6 +1521,74 @@ function buildSettingsModal(documentRef, state, features) {
   return backdrop;
 }
 
+function buildAnimationGroups(documentRef, features = []) {
+  const sortedFeatures = Array.isArray(features)
+    ? features.slice().sort(sortAnimationFeatures)
+    : [];
+  if (!sortedFeatures.length) {
+    return [];
+  }
+
+  const groupedFeatures = new Map();
+  sortedFeatures.forEach((feature) => {
+    const { groupId } = getAnimationGroupMeta(feature?.featureKey);
+    const list = groupedFeatures.get(groupId) || [];
+    list.push(feature);
+    groupedFeatures.set(groupId, list);
+  });
+
+  const sections = [];
+  ANIMATION_GROUP_DEFINITIONS.forEach((group) => {
+    const entries = groupedFeatures.get(group.id) || [];
+    if (!entries.length) {
+      return;
+    }
+    const section = createElement(documentRef, "section", {
+      className: "ad-xconfig-group",
+      attributes: {
+        "data-adxconfig-animation-group": group.id,
+      },
+    });
+    section.appendChild(createElement(documentRef, "h2", {
+      className: "ad-xconfig-group-title",
+      text: group.title,
+    }));
+    const grid = createElement(documentRef, "div", {
+      className: "ad-xconfig-grid",
+    });
+    entries.forEach((feature) => {
+      grid.appendChild(buildFeatureCard(documentRef, feature));
+    });
+    section.appendChild(grid);
+    sections.push(section);
+    groupedFeatures.delete(group.id);
+  });
+
+  const remainingFeatures = groupedFeatures.get("other") || [];
+  if (remainingFeatures.length) {
+    const fallbackSection = createElement(documentRef, "section", {
+      className: "ad-xconfig-group",
+      attributes: {
+        "data-adxconfig-animation-group": "other",
+      },
+    });
+    fallbackSection.appendChild(createElement(documentRef, "h2", {
+      className: "ad-xconfig-group-title",
+      text: "Weitere",
+    }));
+    const fallbackGrid = createElement(documentRef, "div", {
+      className: "ad-xconfig-grid",
+    });
+    remainingFeatures.forEach((feature) => {
+      fallbackGrid.appendChild(buildFeatureCard(documentRef, feature));
+    });
+    fallbackSection.appendChild(fallbackGrid);
+    sections.push(fallbackSection);
+  }
+
+  return sections;
+}
+
 function buildShellContent(documentRef, state, features) {
   const page = createElement(documentRef, "div", {
     className: "ad-xconfig-page",
@@ -1524,8 +1670,7 @@ function buildShellContent(documentRef, state, features) {
     .filter((feature) => {
       const descriptor = getXConfigDescriptor(feature.featureKey);
       return (descriptor?.tab || "animations") === state.activeTab;
-    })
-    .sort(sortFeatures);
+    });
 
   const content = createElement(documentRef, "div", {
     className: "ad-xconfig-content",
@@ -1549,20 +1694,45 @@ function buildShellContent(documentRef, state, features) {
     }));
     content.appendChild(contentHead);
   }
-  const grid = createElement(documentRef, "div", {
-    className: "ad-xconfig-grid",
-  });
-  activeTabFeatures.forEach((feature) => {
-    grid.appendChild(buildFeatureCard(documentRef, feature));
-  });
-
-  if (grid.children.length) {
-    content.appendChild(grid);
+  if (state.activeTab === "animations") {
+    const groups = buildAnimationGroups(documentRef, activeTabFeatures);
+    if (groups.length) {
+      groups.forEach((groupNode, index) => {
+        if (index > 0) {
+          content.appendChild(createElement(documentRef, "hr", {
+            className: "ad-xconfig-group-divider",
+            attributes: {
+              "aria-hidden": "true",
+              "data-adxconfig-animation-divider": "true",
+            },
+          }));
+        }
+        content.appendChild(groupNode);
+      });
+    } else {
+      content.appendChild(createElement(documentRef, "div", {
+        className: "ad-xconfig-empty",
+        text: "Für diesen Bereich wurden keine Module gefunden.",
+      }));
+    }
   } else {
-    content.appendChild(createElement(documentRef, "div", {
-      className: "ad-xconfig-empty",
-      text: "Für diesen Bereich wurden keine Module gefunden.",
-    }));
+    const grid = createElement(documentRef, "div", {
+      className: "ad-xconfig-grid",
+    });
+    activeTabFeatures
+      .slice()
+      .sort(sortFeatures)
+      .forEach((feature) => {
+        grid.appendChild(buildFeatureCard(documentRef, feature));
+      });
+    if (grid.children.length) {
+      content.appendChild(grid);
+    } else {
+      content.appendChild(createElement(documentRef, "div", {
+        className: "ad-xconfig-empty",
+        text: "Für diesen Bereich wurden keine Module gefunden.",
+      }));
+    }
   }
   shell.appendChild(content);
 
