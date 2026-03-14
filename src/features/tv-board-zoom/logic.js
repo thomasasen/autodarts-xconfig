@@ -393,18 +393,27 @@ export function resolveZoomTarget(boardSvg) {
     return null;
   }
 
+  const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
   const showAnimations = boardSvg.closest(".showAnimations");
-  if (showAnimations) {
-    return showAnimations;
+  const directParent = boardSvg.parentElement || null;
+
+  if (
+    directParent &&
+    directParent !== stableBoardCanvas &&
+    directParent !== showAnimations
+  ) {
+    return directParent;
   }
 
-  const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
   if (stableBoardCanvas) {
     return stableBoardCanvas;
   }
 
-  const fallbackParent = boardSvg.parentElement;
-  return fallbackParent || boardSvg;
+  if (showAnimations) {
+    return showAnimations;
+  }
+
+  return directParent || boardSvg;
 }
 
 export function resolveZoomHost(zoomTarget) {

@@ -82,19 +82,93 @@ function createZoomFixture() {
   };
 }
 
-test("tv-board-zoom keeps .showAnimations as primary zoom target when present", () => {
+function createZoomIsolationFixture() {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+
+  const offsetParent = documentRef.createElement("div");
+  offsetParent.__rect = { left: 0, top: 0, width: 1920, height: 1080 };
+  documentRef.main.appendChild(offsetParent);
+
+  const hostNode = documentRef.createElement("div");
+  hostNode.classList.add("ad-ext-theme-board-viewport");
+  hostNode.__rect = { left: 980, top: 40, width: 520, height: 900 };
+
+  const outerBoardCanvas = documentRef.createElement("div");
+  outerBoardCanvas.classList.add("showAnimations", "ad-ext-theme-board-canvas");
+  outerBoardCanvas.__rect = { left: 860, top: 10, width: 820, height: 1060 };
+
+  const targetNode = documentRef.createElement("div");
+  targetNode.classList.add("css-13u3cwk");
+  targetNode.__rect = { left: 860, top: 10, width: 820, height: 1060 };
+  targetNode.offsetLeft = 860;
+  targetNode.offsetTop = 10;
+  targetNode.offsetWidth = 820;
+  targetNode.offsetHeight = 1060;
+  targetNode.offsetParent = offsetParent;
+
+  const gifOverlay = documentRef.createElement("img");
+  gifOverlay.id = "gif-animation";
+  gifOverlay.__rect = { left: 900, top: 80, width: 520, height: 520 };
+
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+  boardSvg.__rect = { left: 980, top: 120, width: 520, height: 520 };
+  const outerCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerCircle.setAttribute("r", "380");
+  boardSvg.appendChild(outerCircle);
+
+  targetNode.appendChild(boardSvg);
+  outerBoardCanvas.appendChild(targetNode);
+  outerBoardCanvas.appendChild(gifOverlay);
+  hostNode.appendChild(outerBoardCanvas);
+  offsetParent.appendChild(hostNode);
+
+  return {
+    documentRef,
+    windowRef,
+    hostNode,
+    outerBoardCanvas,
+    targetNode,
+    boardSvg,
+    gifOverlay,
+  };
+}
+
+test("tv-board-zoom prefers the inner board layer over .showAnimations", () => {
   const documentRef = new FakeDocument();
   const showAnimations = documentRef.createElement("div");
   showAnimations.classList.add("showAnimations");
   const stableCanvas = documentRef.createElement("div");
   stableCanvas.classList.add("ad-ext-theme-board-canvas");
+  const innerBoardLayer = documentRef.createElement("div");
+  innerBoardLayer.classList.add("css-13u3cwk");
   const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-  stableCanvas.appendChild(boardSvg);
+  innerBoardLayer.appendChild(boardSvg);
+  stableCanvas.appendChild(innerBoardLayer);
   showAnimations.appendChild(stableCanvas);
   documentRef.main.appendChild(showAnimations);
 
-  assert.equal(resolveZoomTarget(boardSvg), showAnimations);
+  assert.equal(resolveZoomTarget(boardSvg), innerBoardLayer);
+});
+
+test("tv-board-zoom keeps gif siblings outside zoom target when .showAnimations is used", () => {
+  const documentRef = new FakeDocument();
+  const showAnimations = documentRef.createElement("div");
+  showAnimations.classList.add("showAnimations", "ad-ext-theme-board-canvas");
+  const innerBoardLayer = documentRef.createElement("div");
+  innerBoardLayer.classList.add("css-13u3cwk");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const gifOverlay = documentRef.createElement("img");
+  gifOverlay.id = "gif-animation";
+
+  innerBoardLayer.appendChild(boardSvg);
+  showAnimations.appendChild(innerBoardLayer);
+  showAnimations.appendChild(gifOverlay);
+  documentRef.main.appendChild(showAnimations);
+
+  assert.equal(resolveZoomTarget(boardSvg), innerBoardLayer);
 });
 
 test("tv-board-zoom falls back to stable board-canvas hook when .showAnimations is missing", () => {
@@ -300,6 +374,53 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   assert.equal(hostNode.style.getPropertyValue("overflow-x"), "auto");
   assert.equal(hostNode.style.getPropertyValue("overflow-y"), "scroll");
   assert.equal(targetNode.style.transform, "rotate(1deg)");
+});
+
+test("tv-board-zoom scales only inner board layer and keeps gif siblings untouched", () => {
+  const {
+    documentRef,
+    windowRef,
+    hostNode,
+    outerBoardCanvas,
+    targetNode: innerBoardLayer,
+    boardSvg,
+    gifOverlay,
+  } = createZoomIsolationFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  const targetNode = resolveZoomTarget(boardSvg);
+  assert.equal(targetNode, innerBoardLayer);
+
+  applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    { reason: "smart-setup", segment: "T20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+  assert.ok(String(targetNode.style.transform).includes("translate("));
+  assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+  assert.equal(hostNode.style.getPropertyValue("overflow"), "hidden");
+
+  assert.equal(outerBoardCanvas.classList.contains(ZOOM_CLASS), false);
+  assert.equal(String(outerBoardCanvas.style.transform || ""), "");
+  assert.equal(String(gifOverlay.style.transform || ""), "");
+  assert.equal(gifOverlay.classList.contains(ZOOM_CLASS), false);
+
+  resetZoom(speedConfig, state, true);
+  assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+  assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
 });
 
 test("tv-board-zoom keeps transform idempotent across repeated apply calls", () => {
