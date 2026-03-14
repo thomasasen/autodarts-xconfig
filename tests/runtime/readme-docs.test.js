@@ -211,6 +211,7 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
     "dart-marker-emphasis",
     "dart-marker-darts",
     "remove-darts-notification",
+    "single-bull-sound",
     "turn-points-count",
     "winner-fireworks",
   ];

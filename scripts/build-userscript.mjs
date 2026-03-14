@@ -50,6 +50,4 @@ await build({
   },
 });
 
-const builtText = await readFile(outFile, "utf8");
-await writeFile(outFile, `${userscriptHeader}\n${builtText.replace(userscriptHeader, "").trimStart()}\n`, "utf8");
 await writeFile(outMetaFile, `${userscriptHeader}\n`, "utf8");

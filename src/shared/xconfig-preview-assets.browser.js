@@ -15,6 +15,7 @@ import tripleDoubleBullHitsGif from "../../docs/screenshots/animation-triple-dou
 import dartMarkerEmphasisGif from "../../docs/screenshots/animation-dart-marker-emphasis.gif";
 import dartMarkerDartsPng from "../../docs/screenshots/animation-dart-marker-darts.png";
 import removeDartsNotificationPng from "../../docs/screenshots/animation-remove-darts-notification.png";
+import singleBullSoundGif from "../../docs/screenshots/animation-single-bull-sound.gif";
 import turnPointsCountGif from "../../docs/screenshots/animation-turn-points-count.gif";
 import winnerFireworksGif from "../../docs/screenshots/animation-winner-fireworks.gif";
 
@@ -36,6 +37,7 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "dart-marker-emphasis": dartMarkerEmphasisGif,
   "dart-marker-darts": dartMarkerDartsPng,
   "remove-darts-notification": removeDartsNotificationPng,
+  "single-bull-sound": singleBullSoundGif,
   "turn-points-count": turnPointsCountGif,
   "winner-fireworks": winnerFireworksGif,
 });

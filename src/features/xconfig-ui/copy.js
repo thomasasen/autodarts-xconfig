@@ -37,6 +37,34 @@ function featureCopy(copy) {
   return deepFreeze(copy);
 }
 
+function appendRawLines(lines, entries = []) {
+  if (!Array.isArray(entries) || !entries.length) {
+    return;
+  }
+
+  entries.forEach((entry) => {
+    lines.push(String(entry ?? ""));
+  });
+}
+
+function getFieldAppendixLines(copy, fieldKey, variant) {
+  if (!copy || !fieldKey) {
+    return [];
+  }
+
+  const propertyName =
+    variant === "features" ? "featuresFieldAppendix" : "readmeFieldAppendix";
+  const blocks = copy[propertyName];
+  if (!blocks || typeof blocks !== "object") {
+    return [];
+  }
+
+  const entries = blocks[fieldKey];
+  return Array.isArray(entries)
+    ? entries.map((entry) => String(entry ?? ""))
+    : [];
+}
+
 const DEBUG_FIELD = fieldCopy(
   "Schaltet zusätzliche Diagnoseausgaben für die Fehlersuche ein.",
   "Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.",
@@ -407,7 +435,87 @@ export const xconfigFeatureCopy = deepFreeze({
       "Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets dürfen danach subtil weiterlaufen.",
     usefulWhen:
       "Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.",
-    images: [image("Triple Double Bull Hits", "animation-triple-double-bull-hits.gif")],
+    images: [],
+    readmeFieldAppendix: {
+      colorTheme: [
+        "",
+        "**Vorschau Farbstile**",
+        "",
+        "Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.",
+        "",
+        "|  |  |",
+        "| --- | --- |",
+        "| `Solar Flare` | `Ice Reactor` |",
+        "| ![Farbstil Solar Flare](docs/screenshots/animation-triple-double-bull-hits-color-solar-flare-readme.png) | ![Farbstil Ice Reactor](docs/screenshots/animation-triple-double-bull-hits-color-ice-reactor-readme.png) |",
+        "| `Venom Lime` | `Crimson Velocity` |",
+        "| ![Farbstil Venom Lime](docs/screenshots/animation-triple-double-bull-hits-color-venom-lime-readme.png) | ![Farbstil Crimson Velocity](docs/screenshots/animation-triple-double-bull-hits-color-crimson-velocity-readme.png) |",
+        "| `Polar Mint` | `Midnight Gold` |",
+        "| ![Farbstil Polar Mint](docs/screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](docs/screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |",
+        "",
+      ],
+      animationStyle: [
+        "",
+        "**Vorschau Animationsstile**",
+        "",
+        "Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.",
+        "",
+        "|  |  |",
+        "| --- | --- |",
+        "| `Slam Punch` | `Shock Ring` |",
+        "| ![Animationsstil Slam Punch](docs/screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](docs/screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |",
+        "| `Laser Sweep` | `Reactor Pulse` |",
+        "| ![Animationsstil Laser Sweep](docs/screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](docs/screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |",
+        "| `Turbo Bounce` | `Card Hammer` |",
+        "| ![Animationsstil Turbo Bounce](docs/screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](docs/screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |",
+        "| `Glitch Blink` | `Cascade Split` |",
+        "| ![Animationsstil Glitch Blink](docs/screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](docs/screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |",
+        "| `Rotor Flip` | `Edge Runner` |",
+        "| ![Animationsstil Rotor Flip](docs/screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](docs/screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |",
+        "| `Charge Burst` | `Beacon Flicker` |",
+        "| ![Animationsstil Charge Burst](docs/screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](docs/screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |",
+        "",
+      ],
+    },
+    featuresFieldAppendix: {
+      colorTheme: [
+        "",
+        "**Vorschau Farbstile**",
+        "",
+        "Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.",
+        "",
+        "|  |  |",
+        "| --- | --- |",
+        "| `Solar Flare` | `Ice Reactor` |",
+        "| ![Farbstil Solar Flare](screenshots/animation-triple-double-bull-hits-color-solar-flare-readme.png) | ![Farbstil Ice Reactor](screenshots/animation-triple-double-bull-hits-color-ice-reactor-readme.png) |",
+        "| `Venom Lime` | `Crimson Velocity` |",
+        "| ![Farbstil Venom Lime](screenshots/animation-triple-double-bull-hits-color-venom-lime-readme.png) | ![Farbstil Crimson Velocity](screenshots/animation-triple-double-bull-hits-color-crimson-velocity-readme.png) |",
+        "| `Polar Mint` | `Midnight Gold` |",
+        "| ![Farbstil Polar Mint](screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |",
+        "",
+      ],
+      animationStyle: [
+        "",
+        "**Vorschau Animationsstile**",
+        "",
+        "Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.",
+        "",
+        "|  |  |",
+        "| --- | --- |",
+        "| `Slam Punch` | `Shock Ring` |",
+        "| ![Animationsstil Slam Punch](screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |",
+        "| `Laser Sweep` | `Reactor Pulse` |",
+        "| ![Animationsstil Laser Sweep](screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |",
+        "| `Turbo Bounce` | `Card Hammer` |",
+        "| ![Animationsstil Turbo Bounce](screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |",
+        "| `Glitch Blink` | `Cascade Split` |",
+        "| ![Animationsstil Glitch Blink](screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |",
+        "| `Rotor Flip` | `Edge Runner` |",
+        "| ![Animationsstil Rotor Flip](screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |",
+        "| `Charge Burst` | `Beacon Flicker` |",
+        "| ![Animationsstil Charge Burst](screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |",
+        "",
+      ],
+    },
     fields: {
       colorTheme: fieldCopy(
         "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand des Trefferfelds.",
@@ -1997,6 +2105,7 @@ export function buildReadmeFeatureSection(descriptor, definition) {
   (descriptor.fields || []).forEach((field) => {
     const docsDescription = String(field.docsDescription || "").trim();
     appendFieldWithOptions(lines, field, docsDescription, "docsDescription");
+    appendRawLines(lines, getFieldAppendixLines(copy, field.key, "readme"));
   });
 
   if (Array.isArray(copy.images) && copy.images.length) {
@@ -2034,6 +2143,7 @@ export function buildFeaturesDocSection(descriptor, definition) {
   (descriptor.fields || []).forEach((field) => {
     const featuresDescription = String(field.featuresDescription || field.docsDescription || "").trim();
     appendFieldWithOptions(lines, field, featuresDescription, "featuresDescription");
+    appendRawLines(lines, getFieldAppendixLines(copy, field.key, "features"));
   });
 
   if (Array.isArray(copy.images) && copy.images.length) {

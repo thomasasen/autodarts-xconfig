@@ -16,6 +16,7 @@ export const XCONFIG_PREVIEW_SCREENSHOTS = Object.freeze({
   "dart-marker-emphasis": "animation-dart-marker-emphasis.gif",
   "dart-marker-darts": "animation-dart-marker-darts.png",
   "remove-darts-notification": "animation-remove-darts-notification.png",
+  "single-bull-sound": "animation-single-bull-sound.gif",
   "turn-points-count": "animation-turn-points-count.gif",
   "winner-fireworks": "animation-winner-fireworks.gif",
 });
