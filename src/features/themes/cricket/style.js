@@ -66,8 +66,10 @@ const cricketThemeCss = `
 }
 
 div.css-y3hfdd{
+  grid-template-columns: minmax(0, 1fr) minmax(5ch, 44%) !important;
   gap: 0 !important;
   min-height: 0 !important;
+  container-type: inline-size !important;
 }
 
 p.chakra-text.css-1j0bqop{
@@ -118,22 +120,41 @@ div.css-nfhdnc {
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
   color: var(--theme-text-highlight-color);
-  font-size: clamp(2rem, 4.4vw, 5rem) !important;
-  line-height: 1 !important;
+  font-size: clamp(1.85rem, 3.2vw, 4.4rem) !important;
+  line-height: 0.94 !important;
   font-weight: 800 !important;
-  text-align: center !important;
+  text-align: right !important;
   white-space: nowrap !important;
+  max-inline-size: 100% !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  letter-spacing: -0.012em !important;
   font-variant-numeric: tabular-nums;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-  font-size: clamp(2.2rem, 5vw, 5.6rem) !important;
+  font-size: clamp(2rem, 3.6vw, 4.8rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-  font-size: clamp(1.6rem, 3.8vw, 4.2rem) !important;
+  font-size: clamp(1.45rem, 2.9vw, 3.6rem) !important;
   color: gray !important;
+}
+
+@supports (font-size: 1cqi) {
+  #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
+    font-size: clamp(1.85rem, 20cqi, 4.4rem) !important;
+  }
+
+  #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
+    font-size: clamp(2rem, 22cqi, 4.8rem) !important;
+  }
+
+  #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
+  #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
+    font-size: clamp(1.45rem, 16cqi, 3.6rem) !important;
+  }
 }
 
 .css-rtn29s {

@@ -25,15 +25,31 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2rem,\s*4\.4vw,\s*5rem\)\s*!important;[^}]*line-height:\s*1\s*!important;[^}]*font-weight:\s*800\s*!important;[^}]*text-align:\s*center\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.85rem,\s*3\.2vw,\s*4\.4rem\)\s*!important;[^}]*line-height:\s*0\.94\s*!important;[^}]*font-weight:\s*800\s*!important;[^}]*text-align:\s*right\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2\.2rem,\s*5vw,\s*5\.6rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2rem,\s*3\.6vw,\s*4\.8rem\)\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.6rem,\s*3\.8vw,\s*4\.2rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.45rem,\s*2\.9vw,\s*3\.6rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /@supports\s*\(font-size:\s*1cqi\)\s*\{[^}]*#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.85rem,\s*20cqi,\s*4\.4rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /@supports\s*\(font-size:\s*1cqi\)\s*\{[\s\S]*?#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(2rem,\s*22cqi,\s*4\.8rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /@supports\s*\(font-size:\s*1cqi\)\s*\{[\s\S]*?#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.45rem,\s*16cqi,\s*3\.6rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(5ch,\s*44%\)\s*!important;[^}]*container-type:\s*inline-size\s*!important;/s
   );
   assert.doesNotMatch(
     css,
