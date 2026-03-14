@@ -6,6 +6,7 @@ import {
   applyZoom,
   buildZoomTransform,
   resetZoom,
+  resolveZoomTarget,
   resolveSegmentPoint,
 } from "../../src/features/tv-board-zoom/logic.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
@@ -80,6 +81,43 @@ function createZoomFixture() {
     boardSvg,
   };
 }
+
+test("tv-board-zoom keeps .showAnimations as primary zoom target when present", () => {
+  const documentRef = new FakeDocument();
+  const showAnimations = documentRef.createElement("div");
+  showAnimations.classList.add("showAnimations");
+  const stableCanvas = documentRef.createElement("div");
+  stableCanvas.classList.add("ad-ext-theme-board-canvas");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  stableCanvas.appendChild(boardSvg);
+  showAnimations.appendChild(stableCanvas);
+  documentRef.main.appendChild(showAnimations);
+
+  assert.equal(resolveZoomTarget(boardSvg), showAnimations);
+});
+
+test("tv-board-zoom falls back to stable board-canvas hook when .showAnimations is missing", () => {
+  const documentRef = new FakeDocument();
+  const stableCanvas = documentRef.createElement("div");
+  stableCanvas.classList.add("ad-ext-theme-board-canvas");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  stableCanvas.appendChild(boardSvg);
+  documentRef.main.appendChild(stableCanvas);
+
+  assert.equal(resolveZoomTarget(boardSvg), stableCanvas);
+});
+
+test("tv-board-zoom keeps fail-soft parent fallback when no zoom-target selectors match", () => {
+  const documentRef = new FakeDocument();
+  const parent = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  parent.appendChild(boardSvg);
+
+  assert.equal(resolveZoomTarget(boardSvg), parent);
+  assert.equal(resolveZoomTarget(null), null);
+});
 
 test("tv-board-zoom builds a clamped transform that stays within the board viewport", () => {
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();

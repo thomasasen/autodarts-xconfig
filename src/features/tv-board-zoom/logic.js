@@ -398,6 +398,11 @@ export function resolveZoomTarget(boardSvg) {
     return showAnimations;
   }
 
+  const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
+  if (stableBoardCanvas) {
+    return stableBoardCanvas;
+  }
+
   const fallbackParent = boardSvg.parentElement;
   return fallbackParent || boardSvg;
 }
