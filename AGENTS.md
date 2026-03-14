@@ -15,6 +15,7 @@ Minimum rule:
 - run the relevant tests after the change
 - do not ignore failing tests
 - fix the cause or report clearly why validation could not be completed
+- for userscript update/version-check behavior, add or update regression coverage for startup check and cache handling (for example `tests/runtime/update-check.test.js` and `tests/runtime/xconfig-shell.test.js`)
 
 Prefer the repository verification flow:
 - `npm run verify`

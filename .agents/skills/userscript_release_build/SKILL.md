@@ -91,6 +91,7 @@ PowerShell helpers:
 Confirm:
 - `dist/autodarts-xconfig.user.js` changed only through the build
 - the userscript header version matches `package.json`
+- after pushing, the remote `dist/autodarts-xconfig.meta.js` and `dist/autodarts-xconfig.user.js` endpoints expose the same `@version` as `package.json`
 - tests passed or failures are reported plainly
 - the result is commit-ready
 

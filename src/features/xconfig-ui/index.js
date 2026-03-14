@@ -2862,7 +2862,7 @@ function ensureXConfigShell(options = {}) {
     queueSync();
     startAutoUpdateChecks();
     refreshUpdateStatus({
-      force: false,
+      force: true,
       announce: false,
     });
   }

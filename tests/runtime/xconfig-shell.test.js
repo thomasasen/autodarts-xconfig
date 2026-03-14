@@ -627,6 +627,36 @@ test("xConfig shell checks update status in the background without manual rechec
   }
 });
 
+test("xConfig shell forces one remote update check on startup even with fresh cached status", async () => {
+  const now = Date.now();
+  const localStorage = new FakeStorage({
+    "autodarts-xconfig:update-status:v1": JSON.stringify({
+      remoteVersion: "0.0.0",
+      checkedAt: now,
+      sourceUrl: "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+    }),
+  });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  let callCount = 0;
+  windowRef.fetch = async () => {
+    callCount += 1;
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return buildUserscriptMeta("0.0.0");
+      },
+    };
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitFor(() => callCount >= 1, { timeoutMs: 220, intervalMs: 5 });
+  assert.equal(callCount >= 1, true);
+
+  runtime.stop();
+});
+
 test("xConfig shell wires tabs, settings modal, toggles and save actions", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

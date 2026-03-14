@@ -4,6 +4,7 @@ const USERSCRIPT_UPDATE_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js";
 const UPDATE_STATUS_STORAGE_KEY = "autodarts-xconfig:update-status:v1";
 const UPDATE_CHECK_TTL_MS = 60 * 60 * 1000;
+const UPDATE_CACHE_BUST_PARAM = "_adxconfig_ts";
 
 function normalizeVersion(value) {
   return String(value || "").trim();
@@ -92,6 +93,23 @@ function parseUserscriptVersion(text) {
   return normalizeVersion(match?.[1] || "");
 }
 
+function buildCacheBustedUrl(sourceUrl, now = Date.now()) {
+  const normalizedSourceUrl = String(sourceUrl || "").trim();
+  if (!normalizedSourceUrl) {
+    return "";
+  }
+
+  const cacheBustValue = String(Math.max(0, Number(now) || 0));
+  try {
+    const parsed = new URL(normalizedSourceUrl);
+    parsed.searchParams.set(UPDATE_CACHE_BUST_PARAM, cacheBustValue);
+    return parsed.toString();
+  } catch (_) {
+    const separator = normalizedSourceUrl.includes("?") ? "&" : "?";
+    return `${normalizedSourceUrl}${separator}${UPDATE_CACHE_BUST_PARAM}=${encodeURIComponent(cacheBustValue)}`;
+  }
+}
+
 function createResolvedUpdateStatus({
   capable,
   installedVersion,
@@ -156,13 +174,14 @@ function writeStoredPayload(storageRef, payload) {
   }
 }
 
-async function fetchRemoteVersion(fetchFn) {
+async function fetchRemoteVersion(fetchFn, now = Date.now()) {
   const candidateUrls = [USERSCRIPT_UPDATE_URL, USERSCRIPT_DOWNLOAD_URL];
   let lastError = null;
 
   for (const sourceUrl of candidateUrls) {
+    const requestUrl = buildCacheBustedUrl(sourceUrl, now);
     try {
-      const response = await fetchFn(sourceUrl, {
+      const response = await fetchFn(requestUrl, {
         method: "GET",
         cache: "no-store",
       });
@@ -236,7 +255,7 @@ export async function resolveLatestUpdateStatus(options = {}) {
   }
 
   try {
-    const remoteInfo = await fetchRemoteVersion(fetchFn);
+    const remoteInfo = await fetchRemoteVersion(fetchFn, now);
     const nextStatus = createResolvedUpdateStatus({
       capable: true,
       installedVersion,
