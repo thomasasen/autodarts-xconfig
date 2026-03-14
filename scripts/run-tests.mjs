@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const testsRoot = path.join(repoRoot, "tests");
+const syntaxCheckScript = path.join(repoRoot, "scripts", "check-syntax.mjs");
 
 async function collectTestFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -41,6 +42,23 @@ function runNodeTest(testFile) {
     throw new Error(`Test failed: ${path.relative(repoRoot, testFile)}`);
   }
 }
+
+function runSyntaxGate() {
+  const result = spawnSync(process.execPath, [syntaxCheckScript], {
+    cwd: repoRoot,
+    stdio: "inherit",
+  });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    throw new Error("Syntax check failed before running tests.");
+  }
+}
+
+runSyntaxGate();
 
 const testFiles = (await collectTestFiles(testsRoot)).sort((left, right) =>
   left.localeCompare(right)
