@@ -515,6 +515,7 @@ export function mountThemeFeature(context = {}, options = {}) {
       variantName,
       matchMode,
       gameState,
+      windowRef,
       documentRef,
     });
 

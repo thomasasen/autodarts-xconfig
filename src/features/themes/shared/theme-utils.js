@@ -1,4 +1,5 @@
 export const PREVIEW_SPACE_CLASS = "ad-ext-turn-preview-space";
+const GAME_ROUTE_PREFIXES = Object.freeze(["/matches"]);
 
 export function normalizeBoolean(value, fallbackValue = false) {
   if (typeof value === "boolean") {
@@ -55,6 +56,45 @@ export function normalizeVariant(value) {
     .toLowerCase();
 }
 
+export function normalizeRoutePath(pathValue) {
+  let normalized = String(pathValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
+
+  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
+  if (normalized.length > 1) {
+    normalized = normalized.replace(/\/+$/, "");
+  }
+
+  return normalized;
+}
+
+function resolveRoutePath(windowRef, documentRef) {
+  const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
+  return normalizeRoutePath(locationRef?.pathname || "");
+}
+
+function matchesRoutePrefix(routePath, prefix) {
+  if (!routePath || !prefix) {
+    return false;
+  }
+  return routePath === prefix || routePath.startsWith(`${prefix}/`);
+}
+
+export function isThemeGameContextActive(options = {}) {
+  const routePath = resolveRoutePath(options.windowRef, options.documentRef);
+  if (!routePath) {
+    return false;
+  }
+
+  return GAME_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(routePath, prefix));
+}
+
 export function getVariantName(gameState, documentRef) {
   if (gameState && typeof gameState.getVariant === "function") {
     const variantFromState = normalizeVariant(gameState.getVariant());
@@ -83,6 +123,10 @@ function isCricketOrTactics(variantName) {
 export function isThemeVariantActive(options = {}) {
   const variantName = normalizeVariant(options.variantName);
   if (!variantName) {
+    return false;
+  }
+
+  if (!isThemeGameContextActive(options)) {
     return false;
   }
 

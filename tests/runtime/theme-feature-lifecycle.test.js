@@ -12,6 +12,13 @@ function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function createMatchWindow(documentRef, matchId = "test-match") {
+  return createFakeWindow({
+    documentRef,
+    href: `https://play.autodarts.io/matches/${matchId}`,
+  });
+}
+
 function createThemeConfig(themeConfigKey, themeFeatureConfig = {}) {
   const themeName = String(themeConfigKey || "").trim();
   return {
@@ -231,7 +238,7 @@ test("selectWidestContentLayoutCandidate prefers widest slot and keeps determini
 test("theme-x01 mounts idempotently and cleans up style plus preview spacing", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-x01-idempotent");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
@@ -254,11 +261,40 @@ test("theme-x01 mounts idempotently and cleans up style plus preview spacing", a
   assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
 });
 
+test("theme-x01 removes style when route leaves matches even if variant state is stale", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const windowRef = createMatchWindow(documentRef, "theme-x01-route-switch");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), true);
+
+  runtime.context.gameState.applyMatch({
+    variant: "501",
+    players: [],
+    turns: [],
+  });
+  windowRef.history.pushState({}, "", "/lobbies/route-switch");
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), false);
+  runtime.stop();
+});
+
 test("theme-x01 applies board layout hooks when board exists and removes them on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
   const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-x01-board-hooks");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
@@ -313,7 +349,7 @@ test("theme-x01 keeps info-style content slot layout hooks stable across mutatio
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
   const boardNodes = createInfoStyleBoardFixture(documentRef);
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-x01-info-layout");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
@@ -350,7 +386,7 @@ test("theme-x01 keeps info-style content slot layout hooks stable across mutatio
 test("theme-shanghai mounts idempotently and cleans up style", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Shanghai";
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-shanghai-idempotent");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
@@ -374,7 +410,7 @@ test("theme-shanghai mounts idempotently and cleans up style", async () => {
 test("theme-bermuda applies includes matching and cleans up on stop", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Bermuda 701";
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-bermuda-includes");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
@@ -404,7 +440,7 @@ test("under-throws themes enable preview spacing when visible darts-zoom preview
     const documentRef = new FakeDocument();
     documentRef.variantElement.textContent = entry.variant;
     createDartsZoomPreviewFixture(documentRef);
-    const windowRef = createFakeWindow({ documentRef });
+    const windowRef = createMatchWindow(documentRef, `theme-under-throws-${entry.configKey}`);
     const runtime = createBootstrap({
       windowRef,
       documentRef,
@@ -424,7 +460,7 @@ test("under-throws themes enable preview spacing when visible darts-zoom preview
 test("theme-cricket activates for tactics and cleans style on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-tactics");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
@@ -448,7 +484,7 @@ test("theme-cricket activates for tactics and cleans style on cleanup", async ()
 test("theme-bull-off applies includes matching without preview-space class", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Bull-off Finals";
-  const windowRef = createFakeWindow({ documentRef });
+  const windowRef = createMatchWindow(documentRef, "theme-bull-off-includes");
   const runtime = createBootstrap({
     windowRef,
     documentRef,
