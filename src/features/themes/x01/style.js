@@ -112,9 +112,17 @@ span.chakra-badge.css-1c4630i {
 }
 `;
 
+  const overlayPriorityCss = `
+#ad-ext-player-display,
+#ad-ext-turn {
+  position: relative !important;
+  z-index: 7 !important;
+}
+`;
+
   return buildThemeCssBundle(
     featureConfig,
-    `${navigationOverride}${previewCss}${avgVisibilityCss}${statsSizingCss}${x01LayoutOverrides}`
+    `${navigationOverride}${previewCss}${avgVisibilityCss}${statsSizingCss}${overlayPriorityCss}${x01LayoutOverrides}`
   );
 }
 
