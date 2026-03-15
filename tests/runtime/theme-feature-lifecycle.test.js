@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createBootstrap } from "../../src/core/bootstrap.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import {
+  THEME_CRICKET_READABILITY,
   THEME_LAYOUT_HOOK_CLASSES,
   selectWidestContentLayoutCandidate,
 } from "../../src/features/themes/shared/mount-theme-feature.js";
@@ -185,6 +186,33 @@ function createInfoStyleBoardFixture(documentRef) {
     boardCanvas,
     boardSvg,
   };
+}
+
+function addPlayerCards(documentRef, playerDisplayNode, count) {
+  if (!playerDisplayNode || !Number.isFinite(count) || count <= 0) {
+    return;
+  }
+
+  for (let index = 0; index < count; index += 1) {
+    const playerNode = documentRef.createElement("div");
+    playerNode.classList.add("ad-ext-player");
+    if (index === 0) {
+      playerNode.classList.add("ad-ext-player-active");
+    }
+
+    const stackNode = documentRef.createElement("div");
+    stackNode.classList.add("chakra-stack");
+    const nameNode = documentRef.createElement("p");
+    nameNode.classList.add("ad-ext-player-name");
+    nameNode.textContent = `PLAYER-${index + 1}`;
+    const scoreNode = documentRef.createElement("p");
+    scoreNode.classList.add("ad-ext-player-score");
+    scoreNode.textContent = String(index * 10);
+    stackNode.appendChild(nameNode);
+    stackNode.appendChild(scoreNode);
+    playerNode.appendChild(stackNode);
+    playerDisplayNode.appendChild(playerNode);
+  }
 }
 
 function assertThemeHookState(nodes, expectedActive) {
@@ -503,6 +531,83 @@ test("theme-cricket activates for tactics and cleans style on cleanup", async ()
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-cricket-style")), false);
   assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
+});
+
+test("theme-cricket auto-hides board for readability and supports constrained manual toggle override", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 980, height: 680 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 5);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-readability");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const noticeNode = documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId);
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass),
+    true
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    true
+  );
+  assert.equal(Boolean(noticeNode), true);
+  const noticeTextNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.noticeTextClass}`);
+  assert.equal(Boolean(noticeTextNode?.textContent?.includes("Board wurde")), true);
+  const toggleNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.toggleClass}`);
+  assert.equal(Boolean(toggleNode), true);
+  assert.equal(toggleNode?.textContent || "", "Board anzeigen");
+
+  toggleNode.click();
+  await wait(5);
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardForcedVisibleClass),
+    true
+  );
+  assert.equal(toggleNode?.textContent || "", "Board ausblenden");
+
+  toggleNode.click();
+  await wait(5);
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    true
+  );
+  assert.equal(toggleNode?.textContent || "", "Board anzeigen");
+
+  boardNodes.contentSlot.__rect = { width: 1600, height: 680 };
+  windowRef.dispatchEvent(new windowRef.Event("resize"));
+  await wait(5);
+
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass),
+    false
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
+  );
+  assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
+
+  runtime.stop();
+  assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass),
+    false
+  );
 });
 
 test("theme-bull-off applies includes matching without preview-space class", async () => {

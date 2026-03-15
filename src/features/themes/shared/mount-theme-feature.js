@@ -18,6 +18,35 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardSvg: "ad-ext-theme-board-svg",
 });
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
+const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
+const CRICKET_READABILITY_POLICY = Object.freeze({
+  playerCardMinWidthPx: 168,
+  playerCardGapPx: 6,
+  playerAreaPaddingPx: 20,
+  boardMinWidthPx: 360,
+});
+export const THEME_CRICKET_READABILITY = Object.freeze({
+  constrainedClass: "ad-ext-theme-cricket-readability-constrained",
+  boardHiddenClass: "ad-ext-theme-cricket-board-hidden",
+  boardForcedVisibleClass: "ad-ext-theme-cricket-board-forced-visible",
+  noticeId: "ad-ext-theme-cricket-readability-notice",
+  noticeClass: "ad-ext-theme-cricket-readability-notice",
+  noticeTextClass: "ad-ext-theme-cricket-readability-text",
+  toggleClass: "ad-ext-theme-cricket-readability-toggle",
+});
+
+function createCricketReadabilityState() {
+  return {
+    contentSlotNode: null,
+    manualOverride: null,
+    isConstrained: false,
+    boardHidden: false,
+    noticeNode: null,
+    noticeTextNode: null,
+    toggleNode: null,
+    toggleHandler: null,
+  };
+}
 
 function getElementChildren(node) {
   if (!node || typeof node !== "object" || !node.children) {
@@ -438,6 +467,13 @@ function addClass(node, className) {
   node.classList.add(className);
 }
 
+function toggleClass(node, className, enabled) {
+  if (!node || !className || !node.classList || typeof node.classList.toggle !== "function") {
+    return;
+  }
+  node.classList.toggle(className, Boolean(enabled));
+}
+
 function clearBoardLayoutHooks(state) {
   const previous = state?.layoutHookTargets || {};
   clearBoardSizeVariable(previous.boardCanvas);
@@ -473,6 +509,258 @@ function updateBoardLayoutHooks(documentRef, state) {
   state.layoutHookTargets = nextTargets;
 }
 
+function countCricketPlayerCards(playerDisplayNode) {
+  if (!playerDisplayNode || typeof playerDisplayNode !== "object") {
+    return 0;
+  }
+
+  const directChildren = Array.isArray(playerDisplayNode.children)
+    ? playerDisplayNode.children.filter((child) => child && child.nodeType === 1)
+    : [];
+  const directCards = directChildren.filter((child) =>
+    Boolean(child?.classList?.contains?.("ad-ext-player"))
+  );
+  if (directCards.length > 0) {
+    return directCards.length;
+  }
+
+  if (typeof playerDisplayNode.querySelectorAll === "function") {
+    try {
+      return playerDisplayNode.querySelectorAll(".ad-ext-player").length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  return 0;
+}
+
+function computeCricketRequiredPlayerWidth(playerCount) {
+  const normalizedPlayerCount = Number.isFinite(playerCount)
+    ? Math.max(1, Math.floor(playerCount))
+    : 1;
+  const totalCardWidth =
+    normalizedPlayerCount * CRICKET_READABILITY_POLICY.playerCardMinWidthPx;
+  const totalGapWidth =
+    Math.max(0, normalizedPlayerCount - 1) * CRICKET_READABILITY_POLICY.playerCardGapPx;
+  return (
+    totalCardWidth +
+    totalGapWidth +
+    CRICKET_READABILITY_POLICY.playerAreaPaddingPx
+  );
+}
+
+function removeCricketReadabilityNotice(state) {
+  const readabilityState = state?.cricketReadability;
+  if (!readabilityState || typeof readabilityState !== "object") {
+    return;
+  }
+
+  if (
+    readabilityState.toggleNode &&
+    readabilityState.toggleHandler &&
+    typeof readabilityState.toggleNode.removeEventListener === "function"
+  ) {
+    readabilityState.toggleNode.removeEventListener(
+      "click",
+      readabilityState.toggleHandler
+    );
+  }
+
+  if (readabilityState.noticeNode && typeof readabilityState.noticeNode.remove === "function") {
+    readabilityState.noticeNode.remove();
+  }
+
+  readabilityState.noticeNode = null;
+  readabilityState.noticeTextNode = null;
+  readabilityState.toggleNode = null;
+  readabilityState.toggleHandler = null;
+}
+
+function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
+  const readabilityState = state?.cricketReadability;
+  if (!readabilityState || typeof readabilityState !== "object") {
+    return;
+  }
+
+  const previousContentSlot = readabilityState.contentSlotNode;
+  if (previousContentSlot && previousContentSlot !== contentSlotNode) {
+    removeClass(previousContentSlot, THEME_CRICKET_READABILITY.constrainedClass);
+    removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardHiddenClass);
+    removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardForcedVisibleClass);
+  }
+
+  readabilityState.contentSlotNode = contentSlotNode || null;
+  if (!contentSlotNode) {
+    return;
+  }
+
+  const isConstrained = options.isConstrained === true;
+  const boardHidden = options.boardHidden === true;
+  toggleClass(contentSlotNode, THEME_CRICKET_READABILITY.constrainedClass, isConstrained);
+  toggleClass(contentSlotNode, THEME_CRICKET_READABILITY.boardHiddenClass, boardHidden);
+  toggleClass(
+    contentSlotNode,
+    THEME_CRICKET_READABILITY.boardForcedVisibleClass,
+    isConstrained && !boardHidden
+  );
+}
+
+function ensureCricketReadabilityNotice(documentRef, state, contentLeftNode, onToggleClick) {
+  const readabilityState = state?.cricketReadability;
+  if (!readabilityState || typeof readabilityState !== "object") {
+    return null;
+  }
+
+  if (!documentRef || !contentLeftNode || typeof contentLeftNode.appendChild !== "function") {
+    removeCricketReadabilityNotice(state);
+    return null;
+  }
+
+  let noticeNode = readabilityState.noticeNode;
+  let noticeTextNode = readabilityState.noticeTextNode;
+  let toggleNode = readabilityState.toggleNode;
+  if (!noticeNode || !noticeTextNode || !toggleNode) {
+    removeCricketReadabilityNotice(state);
+
+    noticeNode = documentRef.createElement("div");
+    noticeNode.id = THEME_CRICKET_READABILITY.noticeId;
+    noticeNode.classList.add(THEME_CRICKET_READABILITY.noticeClass);
+
+    noticeTextNode = documentRef.createElement("p");
+    noticeTextNode.classList.add(THEME_CRICKET_READABILITY.noticeTextClass);
+    noticeNode.appendChild(noticeTextNode);
+
+    toggleNode = documentRef.createElement("button");
+    toggleNode.classList.add(THEME_CRICKET_READABILITY.toggleClass);
+    toggleNode.type = "button";
+    noticeNode.appendChild(toggleNode);
+
+    const toggleHandler = (event) => {
+      if (event && typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+      if (typeof onToggleClick === "function") {
+        onToggleClick();
+      }
+    };
+    toggleNode.addEventListener("click", toggleHandler);
+
+    readabilityState.noticeNode = noticeNode;
+    readabilityState.noticeTextNode = noticeTextNode;
+    readabilityState.toggleNode = toggleNode;
+    readabilityState.toggleHandler = toggleHandler;
+  }
+
+  if (noticeNode.parentNode !== contentLeftNode) {
+    if (typeof contentLeftNode.insertBefore === "function") {
+      contentLeftNode.insertBefore(noticeNode, contentLeftNode.firstElementChild || null);
+    } else {
+      contentLeftNode.appendChild(noticeNode);
+    }
+  }
+
+  return noticeNode;
+}
+
+function updateCricketReadabilityNotice(state, options = {}) {
+  const readabilityState = state?.cricketReadability;
+  if (!readabilityState || typeof readabilityState !== "object") {
+    return;
+  }
+
+  const noticeTextNode = readabilityState.noticeTextNode;
+  const toggleNode = readabilityState.toggleNode;
+  if (!noticeTextNode || !toggleNode) {
+    return;
+  }
+
+  const boardHidden = options.boardHidden === true;
+  if (boardHidden) {
+    noticeTextNode.textContent = "Board wurde für bessere Lesbarkeit ausgeblendet.";
+    toggleNode.textContent = "Board anzeigen";
+    return;
+  }
+
+  noticeTextNode.textContent = "Wenig Platz: Spielerinfos haben Priorität.";
+  toggleNode.textContent = "Board ausblenden";
+}
+
+function clearCricketReadabilityPolicy(state) {
+  if (!state || typeof state !== "object") {
+    return;
+  }
+
+  const readabilityState = state.cricketReadability;
+  if (!readabilityState || typeof readabilityState !== "object") {
+    state.cricketReadability = createCricketReadabilityState();
+    return;
+  }
+
+  updateCricketReadabilityClasses(state, null, {});
+  removeCricketReadabilityNotice(state);
+  state.cricketReadability = createCricketReadabilityState();
+}
+
+function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
+  if (!state || typeof state !== "object") {
+    return;
+  }
+
+  if (!state.cricketReadability || typeof state.cricketReadability !== "object") {
+    state.cricketReadability = createCricketReadabilityState();
+  }
+  const readabilityState = state.cricketReadability;
+  const layoutTargets = state.layoutHookTargets || {};
+  const contentSlotNode = layoutTargets.contentSlot || null;
+  const contentLeftNode = layoutTargets.contentLeft || null;
+  const playerDisplayNode = documentRef?.getElementById?.("ad-ext-player-display") || null;
+
+  if (!contentSlotNode || !contentLeftNode || !playerDisplayNode) {
+    updateCricketReadabilityClasses(state, contentSlotNode, {});
+    removeCricketReadabilityNotice(state);
+    readabilityState.isConstrained = false;
+    readabilityState.boardHidden = false;
+    return;
+  }
+
+  const slotWidth = getElementWidth(contentSlotNode);
+  const playerCount = countCricketPlayerCards(playerDisplayNode);
+  const requiredPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
+  const requiredTotalWidth = requiredPlayerWidth + CRICKET_READABILITY_POLICY.boardMinWidthPx;
+  const isConstrained =
+    slotWidth > 0 &&
+    playerCount > 0 &&
+    slotWidth < requiredTotalWidth;
+
+  if (!isConstrained) {
+    readabilityState.manualOverride = null;
+    readabilityState.isConstrained = false;
+    readabilityState.boardHidden = false;
+    updateCricketReadabilityClasses(state, contentSlotNode, {
+      isConstrained: false,
+      boardHidden: false,
+    });
+    removeCricketReadabilityNotice(state);
+    return;
+  }
+
+  const boardHidden = readabilityState.manualOverride !== "show";
+  readabilityState.isConstrained = true;
+  readabilityState.boardHidden = boardHidden;
+  updateCricketReadabilityClasses(state, contentSlotNode, {
+    isConstrained: true,
+    boardHidden,
+  });
+  ensureCricketReadabilityNotice(documentRef, state, contentLeftNode, () => {
+    readabilityState.manualOverride = readabilityState.boardHidden ? "show" : "hide";
+    if (scheduler && typeof scheduler.schedule === "function") {
+      scheduler.schedule();
+    }
+  });
+  updateCricketReadabilityNotice(state, { boardHidden });
+}
+
 export function mountThemeFeature(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -503,7 +791,11 @@ export function mountThemeFeature(context = {}, options = {}) {
   const observerKey = `${featureKey}:theme-observer`;
   const resizeListenerKey = `${featureKey}:theme-resize`;
   const scrollListenerKey = `${featureKey}:theme-scroll`;
-  const themeState = { layoutHookTargets: {} };
+  const isCricketTheme = featureKey === CRICKET_THEME_FEATURE_KEY;
+  const themeState = {
+    layoutHookTargets: {},
+    cricketReadability: createCricketReadabilityState(),
+  };
 
   function evaluateThemeState() {
     const featureConfig =
@@ -523,6 +815,9 @@ export function mountThemeFeature(context = {}, options = {}) {
       domGuards.removeNodeById(styleId);
       togglePreviewSpace(documentRef, previewPlacement, false);
       clearBoardLayoutHooks(themeState);
+      if (isCricketTheme) {
+        clearCricketReadabilityPolicy(themeState);
+      }
       return;
     }
 
@@ -531,6 +826,9 @@ export function mountThemeFeature(context = {}, options = {}) {
       domGuards.removeNodeById(styleId);
       togglePreviewSpace(documentRef, previewPlacement, false);
       clearBoardLayoutHooks(themeState);
+      if (isCricketTheme) {
+        clearCricketReadabilityPolicy(themeState);
+      }
       return;
     }
 
@@ -542,17 +840,33 @@ export function mountThemeFeature(context = {}, options = {}) {
     );
     togglePreviewSpace(documentRef, previewPlacement, previewSpaceEnabled);
     updateBoardLayoutHooks(documentRef, themeState);
+    if (isCricketTheme) {
+      applyCricketReadabilityPolicy(documentRef, themeState, scheduler);
+    }
   }
 
+  const readabilityManagedClassNames = isCricketTheme
+    ? [
+        THEME_CRICKET_READABILITY.noticeClass,
+        THEME_CRICKET_READABILITY.noticeTextClass,
+        THEME_CRICKET_READABILITY.toggleClass,
+      ]
+    : [];
   const managedClassNames = Array.from(
-    new Set([previewSpaceClass, ...Object.values(THEME_LAYOUT_HOOK_CLASSES)].filter(Boolean))
+    new Set(
+      [
+        previewSpaceClass,
+        ...Object.values(THEME_LAYOUT_HOOK_CLASSES),
+        ...readabilityManagedClassNames,
+      ].filter(Boolean)
+    )
   );
   const scheduler =
     context.helpers && typeof context.helpers.createRafScheduler === "function"
       ? context.helpers.createRafScheduler(evaluateThemeState)
       : createRafScheduler(evaluateThemeState, { windowRef });
   const isManagedNode = createManagedNodeMatcher({
-    ids: [styleId],
+    ids: [styleId, isCricketTheme ? THEME_CRICKET_READABILITY.noticeId : ""].filter(Boolean),
     classNames: managedClassNames,
   });
 
@@ -614,6 +928,9 @@ export function mountThemeFeature(context = {}, options = {}) {
       false
     );
     clearBoardLayoutHooks(themeState);
+    if (isCricketTheme) {
+      clearCricketReadabilityPolicy(themeState);
+    }
     domGuards.removeNodeById(styleId);
 
     try {

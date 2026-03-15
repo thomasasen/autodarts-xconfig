@@ -15,6 +15,8 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
   assert.match(css, /\.css-1k7iu8k\s*\{\s*max-width:\s*96%/);
   assert.match(css, /--ad-ext-cricket-surface:\s*rgba\(8,\s*16,\s*30,\s*0\.9\)/);
+  assert.match(css, /--ad-ext-theme-cricket-player-card-min-width:\s*10\.5rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-board-min-width:\s*22\.5rem;/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*background:\s*linear-gradient\(165deg,\s*rgba\(6,\s*15,\s*34,\s*0\.96\),\s*rgba\(3,\s*10,\s*24,\s*0\.94\)\)\s*!important;/s
@@ -49,7 +51,15 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(5ch,\s*44%\)\s*!important;[^}]*container-type:\s*inline-size\s*!important;/s
+    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(6ch,\s*46%\)\s*!important;[^}]*container-type:\s*inline-size\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*min-width:\s*var\(--ad-ext-theme-cricket-player-card-min-width\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*min-inline-size:\s*3ch\s*!important;/s
   );
   assert.doesNotMatch(
     css,
@@ -78,7 +88,23 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /\.ad-ext-theme-content-slot\s*\{[^}]*grid-template-columns:\s*minmax\(18rem,\s*clamp\(22rem,\s*34vw,\s*38rem\)\)\s*minmax\(0,\s*1fr\)\s*!important;/s
+    /\.ad-ext-theme-content-slot\s*\{[^}]*grid-template-columns:\s*minmax\(var\(--ad-ext-theme-cricket-left-min-width\),\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-board-min-width\),\s*auto\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-slot\.ad-ext-theme-cricket-board-hidden\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-slot\.ad-ext-theme-cricket-board-hidden\s*>\s*\.ad-ext-theme-content-board\s*\{[^}]*display:\s*none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-cricket-readability-notice\s*\{[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*space-between\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-cricket-readability-toggle\s*\{[^}]*cursor:\s*pointer\s*!important;/s
   );
   assert.match(
     css,
