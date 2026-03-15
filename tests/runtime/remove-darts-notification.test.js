@@ -82,6 +82,29 @@ test("remove-darts-notification fallback recognizes board-manager takeout states
   assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
 });
 
+test("remove-darts-notification ignores fallback matches inside xConfig shell content", () => {
+  const documentRef = new FakeDocument();
+  const panelHost = documentRef.createElement("div");
+  panelHost.id = "ad-xconfig-panel-host";
+  const titleNode = documentRef.createElement("h3");
+  titleNode.textContent = "Remove Darts Notification";
+  panelHost.appendChild(titleNode);
+  documentRef.main.appendChild(panelHost);
+
+  documentRef.createTreeWalker = () => {
+    return createSingleNodeTreeWalker({
+      nodeValue: "Remove Darts Notification",
+      parentElement: titleNode,
+    });
+  };
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(titleNode.classList.contains(CARD_CLASS), false);
+  assert.equal(Boolean(titleNode.querySelector(`.${IMAGE_CLASS}`)), false);
+});
+
 test("remove-darts-notification ignores throw-only board-manager status texts", () => {
   const documentRef = new FakeDocument();
   const notice = documentRef.createElement("div");
@@ -143,6 +166,26 @@ test("remove-darts-notification prioritizes explicit takeout status over mixed s
   assert.equal(throwNode.classList.contains(CARD_CLASS), false);
   assert.equal(notice.classList.contains(CARD_CLASS), true);
   assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+});
+
+test("remove-darts-notification pauses while #ad-xconfig route is active", () => {
+  const documentRef = new FakeDocument();
+  documentRef.defaultView = {
+    location: {
+      pathname: "/matches",
+      hash: "#ad-xconfig",
+    },
+  };
+  const notice = documentRef.createElement("div");
+  notice.classList.add("adt-remove");
+  notice.textContent = "Remove Darts";
+  documentRef.main.appendChild(notice);
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(notice.classList.contains(CARD_CLASS), false);
+  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
 });
 
 test("remove-darts-notification can force fallback scan despite throttle window", () => {

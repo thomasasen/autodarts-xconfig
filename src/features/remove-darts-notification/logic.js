@@ -6,6 +6,13 @@ import {
 } from "../../shared/autodarts-doc-terms.js";
 
 const PRIMARY_SELECTOR = ".adt-remove";
+const XCONFIG_ROUTE_PATH = "/ad-xconfig";
+const XCONFIG_ROUTE_HASH = "#ad-xconfig";
+const XCONFIG_SCOPE_SELECTOR = [
+  "#ad-xconfig-panel-host",
+  "[data-adxconfig-modal='true']",
+  ".ad-xconfig-shell",
+].join(",");
 const FALLBACK_TEXTS = Object.freeze([
   "Remove Darts",
   "Removing Darts",
@@ -57,6 +64,48 @@ function includesAnyText(text, candidates) {
   return candidates.some((candidate) => text.includes(candidate));
 }
 
+function normalizeRoutePath(pathValue) {
+  let normalized = String(pathValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
+  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
+  if (normalized.length > 1) {
+    normalized = normalized.replace(/\/+$/, "");
+  }
+  return normalized;
+}
+
+function normalizeHashValue(hashValue) {
+  const normalized = String(hashValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.startsWith("#") ? normalized : `#${normalized}`;
+}
+
+function isXConfigRoute(documentRef) {
+  const locationRef = documentRef?.defaultView?.location || null;
+  if (!locationRef) {
+    return false;
+  }
+
+  const routePath = normalizeRoutePath(locationRef.pathname || "");
+  const routeHash = normalizeHashValue(locationRef.hash || "");
+  return routePath === XCONFIG_ROUTE_PATH || routeHash === XCONFIG_ROUTE_HASH;
+}
+
+function isInsideXConfigScope(node) {
+  if (!node || typeof node.closest !== "function") {
+    return false;
+  }
+
+  return Boolean(node.closest(XCONFIG_SCOPE_SELECTOR));
+}
+
 export function classifyRemoveDartsNoticeText(value) {
   const normalized = normalizeText(value);
   if (!normalized) {
@@ -86,7 +135,11 @@ function collectPrimaryNoticesInRoots(roots = []) {
       return;
     }
 
-    root.querySelectorAll(PRIMARY_SELECTOR).forEach((node) => notices.add(node));
+    root.querySelectorAll(PRIMARY_SELECTOR).forEach((node) => {
+      if (!isInsideXConfigScope(node)) {
+        notices.add(node);
+      }
+    });
   });
 
   return Array.from(notices);
@@ -159,6 +212,9 @@ function collectFallbackAreas(documentRef, state, roots) {
 
   const addCandidate = (node) => {
     if (!node || seen.has(node) || node.isConnected === false) {
+      return false;
+    }
+    if (isInsideXConfigScope(node)) {
       return false;
     }
 
@@ -284,12 +340,18 @@ function collectFallbackNotices(documentRef, state) {
 
     while (node && budget > 0) {
       budget -= 1;
+      const parentElement = node.parentElement || null;
+      if (isInsideXConfigScope(parentElement)) {
+        node = walker.nextNode();
+        continue;
+      }
+
       const matchKind = classifyRemoveDartsNoticeText(node.nodeValue);
-      if (node.parentElement && matchKind === "status") {
-        statusMatches.add(node.parentElement);
+      if (parentElement && matchKind === "status") {
+        statusMatches.add(parentElement);
         foundStatusMatch = true;
-      } else if (node.parentElement && matchKind === "fallback") {
-        fallbackMatches.add(node.parentElement);
+      } else if (parentElement && matchKind === "fallback") {
+        fallbackMatches.add(parentElement);
       }
       node = walker.nextNode();
     }
@@ -310,6 +372,9 @@ function createImageNode(documentRef) {
 
 function applyReplacement(noticeNode, documentRef) {
   if (!noticeNode || !noticeNode.classList) {
+    return;
+  }
+  if (isInsideXConfigScope(noticeNode)) {
     return;
   }
 
@@ -376,6 +441,10 @@ export function updateRemoveDartsNotification(options = {}) {
   const state = options.state;
 
   if (!documentRef || !state) {
+    clearRemoveDartsNotificationState(state);
+    return;
+  }
+  if (isXConfigRoute(documentRef)) {
     clearRemoveDartsNotificationState(state);
     return;
   }
