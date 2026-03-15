@@ -857,7 +857,13 @@ function applyGifOverlayContainment(state, targetNode, hostNode) {
   }
 
   const hostRect = hostNode.getBoundingClientRect?.();
-  if (!(hostRect?.width > 0 && hostRect?.height > 0)) {
+  const hostWidth = Number(hostRect?.width) > 0
+    ? Number(hostRect.width)
+    : Number(hostNode.clientWidth || hostNode.offsetWidth || 0);
+  const hostHeight = Number(hostRect?.height) > 0
+    ? Number(hostRect.height)
+    : Number(hostNode.clientHeight || hostNode.offsetHeight || 0);
+  if (!(hostWidth > 0 && hostHeight > 0)) {
     return;
   }
 
@@ -866,19 +872,12 @@ function applyGifOverlayContainment(state, targetNode, hostNode) {
     return;
   }
 
-  const maxWidthPx = `${hostRect.width.toFixed(2)}px`;
-  const maxHeightPx = `${hostRect.height.toFixed(2)}px`;
+  const maxWidthPx = `${hostWidth.toFixed(2)}px`;
+  const maxHeightPx = `${hostHeight.toFixed(2)}px`;
   const snapshots = [];
 
   overlays.forEach((node) => {
-    const rect = node.getBoundingClientRect?.();
-    if (!(rect?.width > 0 && rect?.height > 0)) {
-      return;
-    }
-
-    // Only override overlays that currently exceed available host space.
-    const exceedsHost = rect.width > hostRect.width + 0.5 || rect.height > hostRect.height + 0.5;
-    if (!exceedsHost) {
+    if (!node?.style) {
       return;
     }
 

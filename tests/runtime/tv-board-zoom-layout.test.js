@@ -170,7 +170,7 @@ function createZoomFixture() {
   };
 }
 
-function createZoomIsolationFixture() {
+function createZoomIsolationFixture(options = {}) {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
 
@@ -197,7 +197,7 @@ function createZoomIsolationFixture() {
 
   const gifOverlay = documentRef.createElement("img");
   gifOverlay.id = "gif-animation";
-  gifOverlay.__rect = { left: 900, top: 80, width: 960, height: 1200 };
+  gifOverlay.__rect = options.gifRect || { left: 900, top: 80, width: 960, height: 1200 };
 
   const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   boardSvg.setAttribute("viewBox", "0 0 1000 1000");
@@ -609,6 +609,50 @@ test("tv-board-zoom restores gif overlay styles on cleanup", () => {
   assert.equal(gifOverlay.style.maxWidth, "none");
   assert.equal(gifOverlay.style.maxHeight, "none");
   assert.equal(gifOverlay.style.objectFit, "fill");
+});
+
+test("tv-board-zoom applies gif containment even when overlay size is unresolved initially", () => {
+  const {
+    documentRef,
+    windowRef,
+    hostNode,
+    targetNode,
+    boardSvg,
+    gifOverlay,
+  } = createZoomIsolationFixture({
+    gifRect: { left: 900, top: 80, width: 0, height: 0 },
+  });
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    { reason: "smart-setup", segment: "T20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.equal(gifOverlay.style.width, "auto");
+  assert.equal(gifOverlay.style.height, "auto");
+  assert.equal(gifOverlay.style.objectFit, "contain");
+  assert.ok(Math.abs(Number.parseFloat(gifOverlay.style.maxWidth) - hostNode.__rect.width) < 0.01);
+  assert.ok(Math.abs(Number.parseFloat(gifOverlay.style.maxHeight) - hostNode.__rect.height) < 0.01);
+
+  resetZoom(speedConfig, state, true);
+  assert.equal(gifOverlay.style.width, "");
+  assert.equal(gifOverlay.style.height, "");
+  assert.equal(gifOverlay.style.maxWidth, "");
+  assert.equal(gifOverlay.style.maxHeight, "");
+  assert.equal(gifOverlay.style.objectFit, "");
 });
 
 test("tv-board-zoom keeps transform idempotent across repeated apply calls", () => {
