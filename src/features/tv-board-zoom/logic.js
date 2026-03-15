@@ -754,6 +754,136 @@ function restoreTargetStyle(state, targetNode) {
   targetNode.classList?.remove?.(ZOOM_CLASS);
 }
 
+function isLikelyGifOverlayNode(node) {
+  if (!node) {
+    return false;
+  }
+
+  const idToken = String(node.id || "").toLowerCase();
+  const classToken = String(node.classList?.toString?.() || "").toLowerCase();
+  const srcToken = String(
+    node.currentSrc || node.src || node.getAttribute?.("src") || ""
+  ).toLowerCase();
+
+  return (
+    idToken.includes("gif") ||
+    classToken.includes("gif") ||
+    srcToken.includes(".gif") ||
+    srcToken.includes("giphy") ||
+    srcToken.includes("tenor")
+  );
+}
+
+function collectGifOverlayNodes(targetNode, hostNode) {
+  const roots = [];
+  const showAnimationsRoot = targetNode?.closest?.(".showAnimations") || null;
+  if (showAnimationsRoot) {
+    roots.push(showAnimationsRoot);
+  }
+  if (hostNode && !roots.includes(hostNode)) {
+    roots.push(hostNode);
+  }
+
+  const seen = new Set();
+  const overlays = [];
+  roots.forEach((rootNode) => {
+    if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
+      return;
+    }
+
+    const candidates = [
+      ...Array.from(rootNode.querySelectorAll("img,video")),
+      ...Array.from(rootNode.querySelectorAll("#gif-animation,.gif-animation")),
+    ];
+
+    if (isLikelyGifOverlayNode(rootNode)) {
+      candidates.push(rootNode);
+    }
+
+    candidates.forEach((node) => {
+      if (!node || seen.has(node) || !isLikelyGifOverlayNode(node)) {
+        return;
+      }
+      seen.add(node);
+      overlays.push(node);
+    });
+  });
+
+  return overlays;
+}
+
+function restoreGifOverlayStyles(state) {
+  const snapshots = Array.isArray(state?.gifStyleSnapshots) ? state.gifStyleSnapshots : [];
+  snapshots.forEach((snapshot) => {
+    const node = snapshot?.node;
+    if (!node || !node.style) {
+      return;
+    }
+
+    node.style.width = String(snapshot.width || "");
+    node.style.height = String(snapshot.height || "");
+    node.style.maxWidth = String(snapshot.maxWidth || "");
+    node.style.maxHeight = String(snapshot.maxHeight || "");
+    node.style.objectFit = String(snapshot.objectFit || "");
+  });
+
+  if (state) {
+    state.gifStyleSnapshots = [];
+  }
+}
+
+function applyGifOverlayContainment(state, targetNode, hostNode) {
+  restoreGifOverlayStyles(state);
+
+  if (!hostNode) {
+    return;
+  }
+
+  const hostRect = hostNode.getBoundingClientRect?.();
+  if (!(hostRect?.width > 0 && hostRect?.height > 0)) {
+    return;
+  }
+
+  const overlays = collectGifOverlayNodes(targetNode, hostNode);
+  if (!overlays.length) {
+    return;
+  }
+
+  const maxWidthPx = `${hostRect.width.toFixed(2)}px`;
+  const maxHeightPx = `${hostRect.height.toFixed(2)}px`;
+  const snapshots = [];
+
+  overlays.forEach((node) => {
+    const rect = node.getBoundingClientRect?.();
+    if (!(rect?.width > 0 && rect?.height > 0)) {
+      return;
+    }
+
+    // Only override overlays that currently exceed available host space.
+    const exceedsHost = rect.width > hostRect.width + 0.5 || rect.height > hostRect.height + 0.5;
+    if (!exceedsHost) {
+      return;
+    }
+
+    snapshots.push({
+      node,
+      width: String(node.style.width || ""),
+      height: String(node.style.height || ""),
+      maxWidth: String(node.style.maxWidth || ""),
+      maxHeight: String(node.style.maxHeight || ""),
+      objectFit: String(node.style.objectFit || ""),
+    });
+
+    node.style.width = "auto";
+    node.style.height = "auto";
+    node.style.maxWidth = maxWidthPx;
+    node.style.maxHeight = maxHeightPx;
+    node.style.objectFit = "contain";
+  });
+
+  state.gifStyleSnapshots = snapshots;
+}
+
 function clearPendingRelease(state) {
   if (!state || !state.releaseTimeoutId) {
     return;
@@ -1137,6 +1267,7 @@ export function applyZoom(
     setStyleWithPriority(hostNode.style, "overflow-x", "hidden", "important");
     setStyleWithPriority(hostNode.style, "overflow-y", "hidden", "important");
   }
+  applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
 
   const composedTransform = zoomData.baseTransform
     ? `${zoomData.baseTransform} ${zoomData.transform}`
@@ -1167,6 +1298,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
     targetSnapshot?.node === targetNode ? targetSnapshot.transform : "";
 
   if (!targetNode) {
+    restoreGifOverlayStyles(state);
     if (hostNode) {
       restoreHostStyle(state, hostNode);
     }
@@ -1178,6 +1310,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
 
   if (immediate) {
     restoreTargetStyle(state, targetNode);
+    restoreGifOverlayStyles(state);
     if (hostNode) {
       restoreHostStyle(state, hostNode);
     }
@@ -1198,6 +1331,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
   const releaseDelay = Math.max(0, Number(speedConfig?.zoomOutMs || 0)) + RELEASE_PADDING_MS;
   state.releaseTimeoutId = setTimeout(() => {
     state.releaseTimeoutId = 0;
+    restoreGifOverlayStyles(state);
 
     if (state.zoomedElement === expectedTarget) {
       restoreTargetStyle(state, expectedTarget);

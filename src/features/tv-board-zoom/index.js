@@ -83,6 +83,7 @@ export function initializeTvBoardZoom(context = {}) {
     releaseTimeoutId: 0,
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
+    gifStyleSnapshots: [],
     stickyUntilTurnChange: false,
     stickyUntilLegEnd: false,
     manualPause: false,
