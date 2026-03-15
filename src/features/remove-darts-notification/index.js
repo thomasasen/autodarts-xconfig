@@ -1,6 +1,7 @@
-﻿import {
+import {
   clearRemoveDartsNotificationState,
   createRemoveDartsNotificationState,
+  requestImmediateFallbackScan,
   updateRemoveDartsNotification,
 } from "./logic.js";
 import {
@@ -62,6 +63,7 @@ export function initializeRemoveDartsNotification(context = {}) {
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
+        requestImmediateFallbackScan(state);
         scheduler.schedule();
       },
       observeOptions: {
