@@ -82,6 +82,69 @@ test("remove-darts-notification fallback recognizes board-manager takeout states
   assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
 });
 
+test("remove-darts-notification ignores throw-only board-manager status texts", () => {
+  const documentRef = new FakeDocument();
+  const notice = documentRef.createElement("div");
+  documentRef.main.appendChild(notice);
+
+  documentRef.createTreeWalker = () => {
+    return createSingleNodeTreeWalker({
+      nodeValue: "Board Manager is ready and await your throw",
+      parentElement: notice,
+    });
+  };
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(notice.classList.contains(CARD_CLASS), false);
+  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+});
+
+test("remove-darts-notification prioritizes explicit takeout status over mixed scan noise", () => {
+  const documentRef = new FakeDocument();
+  const throwNode = documentRef.createElement("div");
+  const notice = documentRef.createElement("div");
+  documentRef.main.appendChild(throwNode);
+  documentRef.main.appendChild(notice);
+
+  let index = 0;
+  const nodes = [
+    {
+      nodeValue: "Throw detected",
+      parentElement: throwNode,
+    },
+    {
+      nodeValue: "Takeout started",
+      parentElement: notice,
+    },
+  ];
+
+  documentRef.createTreeWalker = (_rootNode, nodeFilter) => {
+    if (nodeFilter !== 4) {
+      return createSingleNodeTreeWalker(null);
+    }
+
+    return {
+      nextNode() {
+        if (index >= nodes.length) {
+          return null;
+        }
+        const node = nodes[index];
+        index += 1;
+        return node;
+      },
+    };
+  };
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(throwNode.classList.contains(CARD_CLASS), false);
+  assert.equal(notice.classList.contains(CARD_CLASS), true);
+  assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+});
+
 test("remove-darts-notification can force fallback scan despite throttle window", () => {
   const documentRef = new FakeDocument();
   const notice = documentRef.createElement("div");

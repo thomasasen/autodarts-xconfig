@@ -131,6 +131,24 @@ test("checkout-score-pulse suggestion-first falls back to out-mode-aware score m
   assert.equal(shouldHighlight, true);
 });
 
+test("checkout-score-pulse does not trigger when the variant context is unknown", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "";
+  documentRef.suggestionElement.textContent = "";
+  documentRef.activeScoreElement.textContent = "20";
+
+  const shouldHighlight = computeShouldHighlight({
+    documentRef,
+    gameState: null,
+    variantRules,
+    x01Rules,
+    triggerSource: "score-only",
+    outMode: "Straight Out",
+  });
+
+  assert.equal(shouldHighlight, false);
+});
+
 test("tv-board-zoom uses out-mode-aware one-dart checkout targets", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

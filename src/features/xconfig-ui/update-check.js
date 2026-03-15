@@ -1,4 +1,4 @@
-const USERSCRIPT_DOWNLOAD_URL =
+﻿const USERSCRIPT_DOWNLOAD_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js";
 const USERSCRIPT_UPDATE_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js";
@@ -8,6 +8,93 @@ const UPDATE_CACHE_BUST_PARAM = "_adxconfig_ts";
 
 function normalizeVersion(value) {
   return String(value || "").trim();
+}
+
+function normalizeHeaderValue(value) {
+  return String(value || "").trim();
+}
+
+function normalizeValidatorEntry(entry = {}) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const remoteVersion = normalizeVersion(entry.remoteVersion);
+  const etag = normalizeHeaderValue(entry.etag);
+  const lastModified = normalizeHeaderValue(entry.lastModified);
+
+  if (!remoteVersion && !etag && !lastModified) {
+    return null;
+  }
+
+  return {
+    remoteVersion,
+    etag,
+    lastModified,
+  };
+}
+
+function normalizeValidatorsMap(values) {
+  if (!values || typeof values !== "object") {
+    return {};
+  }
+
+  return Object.keys(values).reduce((result, sourceUrl) => {
+    const normalizedSourceUrl = String(sourceUrl || "").trim();
+    if (!normalizedSourceUrl) {
+      return result;
+    }
+
+    const normalizedEntry = normalizeValidatorEntry(values[sourceUrl]);
+    if (!normalizedEntry) {
+      return result;
+    }
+
+    result[normalizedSourceUrl] = normalizedEntry;
+    return result;
+  }, {});
+}
+
+function mergeValidatorEntry(validators, sourceUrl, nextEntry) {
+  const normalizedSourceUrl = String(sourceUrl || "").trim();
+  const nextValidators = {
+    ...normalizeValidatorsMap(validators),
+  };
+
+  if (!normalizedSourceUrl) {
+    return nextValidators;
+  }
+
+  const normalizedEntry = normalizeValidatorEntry(nextEntry);
+  if (!normalizedEntry) {
+    delete nextValidators[normalizedSourceUrl];
+    return nextValidators;
+  }
+
+  nextValidators[normalizedSourceUrl] = normalizedEntry;
+  return nextValidators;
+}
+
+function getResponseHeader(response, headerName) {
+  const normalizedHeaderName = String(headerName || "").trim().toLowerCase();
+  if (!normalizedHeaderName) {
+    return "";
+  }
+
+  if (typeof response?.headers?.get === "function") {
+    return normalizeHeaderValue(response.headers.get(headerName));
+  }
+
+  if (response?.headers && typeof response.headers === "object") {
+    const match = Object.keys(response.headers).find(
+      (key) => String(key || "").trim().toLowerCase() === normalizedHeaderName
+    );
+    if (match) {
+      return normalizeHeaderValue(response.headers[match]);
+    }
+  }
+
+  return "";
 }
 
 function createBaseUpdateStatus(installedVersion, capable) {
@@ -22,6 +109,7 @@ function createBaseUpdateStatus(installedVersion, capable) {
     downloadUrl: USERSCRIPT_DOWNLOAD_URL,
     error: "",
     stale: false,
+    validators: {},
   };
 }
 
@@ -118,6 +206,7 @@ function createResolvedUpdateStatus({
   sourceUrl,
   error = "",
   stale = false,
+  validators = {},
 }) {
   const baseStatus = createBaseUpdateStatus(installedVersion, capable);
   const normalizedRemoteVersion = normalizeVersion(remoteVersion);
@@ -140,6 +229,7 @@ function createResolvedUpdateStatus({
     sourceUrl: String(sourceUrl || "").trim(),
     error: String(error || "").trim(),
     stale: Boolean(stale),
+    validators: normalizeValidatorsMap(validators),
   };
 }
 
@@ -167,6 +257,7 @@ function writeStoredPayload(storageRef, payload) {
         remoteVersion: normalizeVersion(payload?.remoteVersion),
         checkedAt: Number(payload?.checkedAt) > 0 ? Number(payload.checkedAt) : 0,
         sourceUrl: String(payload?.sourceUrl || "").trim(),
+        validators: normalizeValidatorsMap(payload?.validators),
       })
     );
   } catch (_) {
@@ -174,26 +265,71 @@ function writeStoredPayload(storageRef, payload) {
   }
 }
 
-async function fetchRemoteVersion(fetchFn, now = Date.now()) {
+async function fetchRemoteVersion(fetchFn, options = {}) {
+  const now = Number(options.now || Date.now());
+  const validators = normalizeValidatorsMap(options.validators);
   const candidateUrls = [USERSCRIPT_UPDATE_URL, USERSCRIPT_DOWNLOAD_URL];
   let lastError = null;
+  let nextValidators = validators;
 
   for (const sourceUrl of candidateUrls) {
     const requestUrl = buildCacheBustedUrl(sourceUrl, now);
+    const cachedValidator = validators[sourceUrl] || null;
+    const headers = {};
+
+    if (cachedValidator?.etag) {
+      headers["If-None-Match"] = cachedValidator.etag;
+    }
+    if (cachedValidator?.lastModified) {
+      headers["If-Modified-Since"] = cachedValidator.lastModified;
+    }
+
     try {
       const response = await fetchFn(requestUrl, {
         method: "GET",
         cache: "no-store",
+        ...(Object.keys(headers).length ? { headers } : {}),
       });
+
+      const statusCode = Number(response?.status) || 0;
+      const responseEtag = getResponseHeader(response, "etag");
+      const responseLastModified = getResponseHeader(response, "last-modified");
+
+      if (statusCode === 304) {
+        const remoteVersion = normalizeVersion(cachedValidator?.remoteVersion);
+        if (!remoteVersion) {
+          throw new Error("Version nicht gefunden.");
+        }
+
+        nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, {
+          remoteVersion,
+          etag: responseEtag || cachedValidator?.etag || "",
+          lastModified: responseLastModified || cachedValidator?.lastModified || "",
+        });
+
+        return {
+          remoteVersion,
+          sourceUrl,
+          validators: nextValidators,
+        };
+      }
+
       if (!response || !response.ok) {
-        throw new Error(`HTTP ${Number(response?.status) || 0}`);
+        throw new Error(`HTTP ${statusCode}`);
       }
 
       const version = parseUserscriptVersion(await response.text());
       if (version) {
+        nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, {
+          remoteVersion: version,
+          etag: responseEtag,
+          lastModified: responseLastModified,
+        });
+
         return {
           remoteVersion: version,
           sourceUrl,
+          validators: nextValidators,
         };
       }
 
@@ -223,6 +359,7 @@ export function readStoredUpdateStatus(options = {}) {
     remoteVersion: storedPayload.remoteVersion,
     checkedAt: storedPayload.checkedAt,
     sourceUrl: storedPayload.sourceUrl,
+    validators: storedPayload.validators,
   });
 }
 
@@ -255,34 +392,44 @@ export async function resolveLatestUpdateStatus(options = {}) {
   }
 
   try {
-    const remoteInfo = await fetchRemoteVersion(fetchFn, now);
+    const remoteInfo = await fetchRemoteVersion(fetchFn, {
+      now,
+      validators: cachedStatus.validators,
+    });
     const nextStatus = createResolvedUpdateStatus({
       capable: true,
       installedVersion,
       remoteVersion: remoteInfo.remoteVersion,
       checkedAt: now,
       sourceUrl: remoteInfo.sourceUrl,
+      validators: remoteInfo.validators,
     });
     writeStoredPayload(storageRef, nextStatus);
     return nextStatus;
   } catch (error) {
     const message = String(error?.message || "Update-Prüfung fehlgeschlagen.").trim();
-    if (cachedStatus.checkedAt > 0) {
-      return {
+    if (cachedStatus.checkedAt > 0 && cachedStatus.remoteVersion) {
+      const staleStatus = {
         ...cachedStatus,
         error: message,
         stale: true,
+        checkedAt: now,
       };
+      writeStoredPayload(storageRef, staleStatus);
+      return staleStatus;
     }
 
-    return createResolvedUpdateStatus({
+    const errorStatus = createResolvedUpdateStatus({
       capable: true,
       installedVersion,
       remoteVersion: "",
-      checkedAt: 0,
+      checkedAt: now,
       sourceUrl: "",
       error: message,
+      validators: cachedStatus.validators,
     });
+    writeStoredPayload(storageRef, errorStatus);
+    return errorStatus;
   }
 }
 

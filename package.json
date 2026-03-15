@@ -1,6 +1,6 @@
 {
   "name": "autodarts-xconfig",
-  "version": "2.0.17",
+  "version": "2.0.18",
   "description": "Clean successor architecture for autodarts xConfig userscript modules",
   "type": "module",
   "imports": {
@@ -17,6 +17,7 @@
     "build": "npm run build:userscript",
     "build:userscript": "node ./scripts/build-userscript.mjs",
     "check:syntax": "node ./scripts/check-syntax.mjs",
+    "sync:autodarts-docs-fixture": "node ./scripts/sync-autodarts-docs-fixture.mjs",
     "test": "npm run check:syntax && node ./scripts/run-tests.mjs",
     "verify": "npm run build && npm test"
   },

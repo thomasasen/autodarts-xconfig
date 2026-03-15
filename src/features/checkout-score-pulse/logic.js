@@ -83,8 +83,8 @@ export function isX01Active(context = {}) {
 
   if (gameState && typeof gameState.isX01Variant === "function") {
     return gameState.isX01Variant({
-      allowMissing: true,
-      allowEmpty: true,
+      allowMissing: false,
+      allowEmpty: false,
       allowNumeric: true,
     });
   }
@@ -100,8 +100,8 @@ export function isX01Active(context = {}) {
 
   const variantText = String(variantElement?.textContent || "");
   return variantRules.isX01VariantText(variantText, {
-    allowMissing: true,
-    allowEmpty: true,
+    allowMissing: false,
+    allowEmpty: false,
     allowNumeric: true,
   });
 }

@@ -25,6 +25,19 @@ function getUrlWithoutQuery(url) {
   return parsed.toString();
 }
 
+function createHeaders(values = {}) {
+  const normalized = Object.entries(values).reduce((result, [key, value]) => {
+    result[String(key || "").toLowerCase()] = String(value || "");
+    return result;
+  }, {});
+
+  return {
+    get(name) {
+      return normalized[String(name || "").toLowerCase()] || null;
+    },
+  };
+}
+
 test("resolveLatestUpdateStatus adds cache-busting query to remote update requests", async () => {
   const localStorage = new FakeStorage();
   const windowRef = createFakeWindow({ localStorage });
@@ -96,6 +109,125 @@ test("resolveLatestUpdateStatus falls back from meta to userscript URL with cach
   assert.equal(getUrlWithoutQuery(requests[1]), USERSCRIPT_DOWNLOAD_URL);
   assert.equal(firstRequestUrl.searchParams.get("_adxconfig_ts"), String(now));
   assert.equal(secondRequestUrl.searchParams.get("_adxconfig_ts"), String(now));
+});
+
+test("resolveLatestUpdateStatus uses conditional request headers and reuses cached version on 304", async () => {
+  const localStorage = new FakeStorage({
+    "autodarts-xconfig:update-status:v1": JSON.stringify({
+      remoteVersion: "2.0.3",
+      checkedAt: 0,
+      sourceUrl: USERSCRIPT_UPDATE_URL,
+      validators: {
+        [USERSCRIPT_UPDATE_URL]: {
+          remoteVersion: "2.0.3",
+          etag: "\"abc\"",
+          lastModified: "Mon, 01 Jan 2024 00:00:00 GMT",
+        },
+      },
+    }),
+  });
+  const windowRef = createFakeWindow({ localStorage });
+  const requests = [];
+  windowRef.fetch = async (url, options = {}) => {
+    requests.push({ url: String(url || ""), options });
+    return {
+      ok: false,
+      status: 304,
+      headers: createHeaders({
+        etag: "\"abc\"",
+        "last-modified": "Mon, 01 Jan 2024 00:00:00 GMT",
+      }),
+      async text() {
+        return "";
+      },
+    };
+  };
+
+  const status = await resolveLatestUpdateStatus({
+    windowRef,
+    installedVersion: "2.0.2",
+    force: true,
+    now: 1_770_301_000_000,
+  });
+
+  assert.equal(status.available, true);
+  assert.equal(status.remoteVersion, "2.0.3");
+  assert.equal(status.sourceUrl, USERSCRIPT_UPDATE_URL);
+  assert.equal(requests.length, 1);
+
+  const request = requests[0];
+  assert.equal(getUrlWithoutQuery(request.url), USERSCRIPT_UPDATE_URL);
+  assert.equal(request.options.headers["If-None-Match"], "\"abc\"");
+  assert.equal(request.options.headers["If-Modified-Since"], "Mon, 01 Jan 2024 00:00:00 GMT");
+});
+
+test("resolveLatestUpdateStatus persists validator metadata from successful responses", async () => {
+  const localStorage = new FakeStorage();
+  const windowRef = createFakeWindow({ localStorage });
+
+  windowRef.fetch = async () => {
+    return {
+      ok: true,
+      status: 200,
+      headers: createHeaders({
+        etag: "\"etag-xyz\"",
+        "last-modified": "Tue, 02 Jan 2024 00:00:00 GMT",
+      }),
+      async text() {
+        return buildUserscriptMeta("2.0.4");
+      },
+    };
+  };
+
+  await resolveLatestUpdateStatus({
+    windowRef,
+    installedVersion: "2.0.2",
+    force: true,
+    now: 1_770_301_100_000,
+  });
+
+  const persisted = JSON.parse(localStorage.getItem("autodarts-xconfig:update-status:v1"));
+  assert.equal(persisted.remoteVersion, "2.0.4");
+  assert.equal(persisted.sourceUrl, USERSCRIPT_UPDATE_URL);
+  assert.equal(persisted.validators[USERSCRIPT_UPDATE_URL].remoteVersion, "2.0.4");
+  assert.equal(persisted.validators[USERSCRIPT_UPDATE_URL].etag, "\"etag-xyz\"");
+  assert.equal(
+    persisted.validators[USERSCRIPT_UPDATE_URL].lastModified,
+    "Tue, 02 Jan 2024 00:00:00 GMT"
+  );
+});
+
+test("resolveLatestUpdateStatus throttles repeated failed checks within ttl window", async () => {
+  const localStorage = new FakeStorage();
+  const windowRef = createFakeWindow({ localStorage });
+  let callCount = 0;
+  windowRef.fetch = async () => {
+    callCount += 1;
+    throw new Error("network down");
+  };
+
+  const firstNow = 1_770_302_000_000;
+  const firstStatus = await resolveLatestUpdateStatus({
+    windowRef,
+    installedVersion: "2.0.2",
+    force: true,
+    now: firstNow,
+  });
+
+  assert.equal(firstStatus.status, "error");
+  assert.equal(firstStatus.checkedAt, firstNow);
+  const callsAfterFirstAttempt = callCount;
+  assert.equal(callsAfterFirstAttempt >= 1, true);
+
+  const secondStatus = await resolveLatestUpdateStatus({
+    windowRef,
+    installedVersion: "2.0.2",
+    force: false,
+    now: firstNow + 10_000,
+  });
+
+  assert.equal(callCount, callsAfterFirstAttempt);
+  assert.equal(secondStatus.checkedAt, firstNow);
 });
 
 test("shouldRefreshUpdateStatus respects ttl boundary", () => {

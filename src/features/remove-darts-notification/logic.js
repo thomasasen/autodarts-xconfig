@@ -1,5 +1,9 @@
 import { TAKEOUT_IMAGE_ASSET } from "#feature-assets";
 import { CARD_CLASS, IMAGE_CLASS } from "./style.js";
+import {
+  AUTODARTS_NON_TAKEOUT_NOTICE_TEXTS,
+  AUTODARTS_TAKEOUT_NOTICE_TEXTS,
+} from "../../shared/autodarts-doc-terms.js";
 
 const PRIMARY_SELECTOR = ".adt-remove";
 const FALLBACK_TEXTS = Object.freeze([
@@ -11,6 +15,8 @@ const FALLBACK_TEXTS = Object.freeze([
   "Takeout in Progress",
   "Board Manager await you to takeout the Darts",
 ]);
+const TAKEOUT_STATUS_TEXTS = Object.freeze(AUTODARTS_TAKEOUT_NOTICE_TEXTS);
+const NON_TAKEOUT_STATUS_TEXTS = Object.freeze(AUTODARTS_NON_TAKEOUT_NOTICE_TEXTS);
 const FALLBACK_SCAN_MIN_INTERVAL_MS = 900;
 const FALLBACK_AREA_SELECTORS = Object.freeze([
   ".v-overlay-container",
@@ -35,6 +41,41 @@ const NODE_FILTER_SHOW_ELEMENT =
 
 function normalizeText(value) {
   return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+const NORMALIZED_TAKEOUT_STATUS_TEXTS = Object.freeze(
+  TAKEOUT_STATUS_TEXTS.map((text) => normalizeText(text)).filter(Boolean)
+);
+const NORMALIZED_NON_TAKEOUT_STATUS_TEXTS = Object.freeze(
+  NON_TAKEOUT_STATUS_TEXTS.map((text) => normalizeText(text)).filter(Boolean)
+);
+const NORMALIZED_FALLBACK_TEXTS = Object.freeze(
+  FALLBACK_TEXTS.map((text) => normalizeText(text)).filter(Boolean)
+);
+
+function includesAnyText(text, candidates) {
+  return candidates.some((candidate) => text.includes(candidate));
+}
+
+export function classifyRemoveDartsNoticeText(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return "";
+  }
+
+  if (includesAnyText(normalized, NORMALIZED_NON_TAKEOUT_STATUS_TEXTS)) {
+    return "";
+  }
+
+  if (includesAnyText(normalized, NORMALIZED_TAKEOUT_STATUS_TEXTS)) {
+    return "status";
+  }
+
+  if (includesAnyText(normalized, NORMALIZED_FALLBACK_TEXTS)) {
+    return "fallback";
+  }
+
+  return "";
 }
 
 function collectPrimaryNoticesInRoots(roots = []) {
@@ -225,16 +266,17 @@ function collectFallbackNotices(documentRef, state) {
     return deepPrimary;
   }
 
-  const textMatches = FALLBACK_TEXTS.map((text) => normalizeText(text));
   const areas = collectFallbackAreas(documentRef, state, roots);
   const scanAreas = getFallbackScanAreas(state, areas);
-  const matches = new Set();
+  const statusMatches = new Set();
+  const fallbackMatches = new Set();
 
   let budget = FALLBACK_TEXT_NODE_BUDGET;
+  let foundStatusMatch = false;
 
-  scanAreas.forEach((area) => {
-    if (!area || budget <= 0) {
-      return;
+  for (const area of scanAreas) {
+    if (!area || budget <= 0 || foundStatusMatch) {
+      continue;
     }
 
     const walker = documentRef.createTreeWalker(area, NODE_FILTER_SHOW_TEXT);
@@ -242,18 +284,18 @@ function collectFallbackNotices(documentRef, state) {
 
     while (node && budget > 0) {
       budget -= 1;
-      const normalized = normalizeText(node.nodeValue);
-      if (normalized) {
-        const found = textMatches.some((needle) => normalized.includes(needle));
-        if (found && node.parentElement) {
-          matches.add(node.parentElement);
-        }
+      const matchKind = classifyRemoveDartsNoticeText(node.nodeValue);
+      if (node.parentElement && matchKind === "status") {
+        statusMatches.add(node.parentElement);
+        foundStatusMatch = true;
+      } else if (node.parentElement && matchKind === "fallback") {
+        fallbackMatches.add(node.parentElement);
       }
       node = walker.nextNode();
     }
-  });
+  }
 
-  return Array.from(matches);
+  return statusMatches.size ? Array.from(statusMatches) : Array.from(fallbackMatches);
 }
 
 function createImageNode(documentRef) {

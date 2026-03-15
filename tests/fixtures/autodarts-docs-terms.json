@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "syncedAt": "2026-03-15T00:00:00.000Z",
+  "sources": [
+    "https://raw.githubusercontent.com/autodarts/docs/main/content/en/how-to-play/BoardManager.md",
+    "https://raw.githubusercontent.com/autodarts/docs/main/content/en/how-to-play/in-game.md",
+    "https://raw.githubusercontent.com/autodarts/docs/main/content/en/Game%20Settings/X01.md",
+    "https://raw.githubusercontent.com/autodarts/docs/main/content/en/Game%20Settings/cricket.md"
+  ],
+  "removeDarts": {
+    "positive": [
+      "Remove Darts",
+      "Removing Darts",
+      "Darts entfernen",
+      "Takeout started",
+      "Takeout is in Progress",
+      "Takeout in Progress",
+      "Board Manager await you to takeout the Darts"
+    ],
+    "negative": [
+      "Throw",
+      "Throw detected",
+      "Board Manager is ready and await your throw",
+      "Takeout finished",
+      "Takeout finished successfully"
+    ]
+  },
+  "x01": {
+    "variantExamples": [
+      "X01",
+      "501"
+    ],
+    "outModes": [
+      "Straight",
+      "Double",
+      "Master"
+    ]
+  },
+  "cricket": {
+    "gameModes": [
+      "Cricket",
+      "Tactics"
+    ],
+    "scoringModes": {
+      "standard": [
+        "Normal"
+      ],
+      "cutthroat": [
+        "Cut Throat",
+        "Cut-Throat"
+      ]
+    }
+  }
+}
