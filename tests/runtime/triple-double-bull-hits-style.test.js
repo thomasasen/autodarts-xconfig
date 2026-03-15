@@ -5,6 +5,7 @@ import {
   HIT_ANIMATION_CLASS,
   HIT_BASE_CLASS,
   HIT_IDLE_LOOP_CLASS,
+  HIT_KIND_CLASS,
   buildStyleText,
 } from "../../src/features/triple-double-bull-hits/style.js";
 
@@ -30,4 +31,29 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   );
   assert.equal(css.includes("@keyframes ad-ext-hit-gradient-flow"), true);
   assert.equal(css.includes("--ad-ext-hit-surface-a:"), true);
+
+  assert.equal(
+    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.triple}`),
+    true
+  );
+  assert.equal(css.includes("--ad-ext-hit-theme-b: #7f1124;"), true);
+  assert.equal(css.includes("--ad-ext-hit-theme-c: #c62828;"), true);
+
+  assert.equal(
+    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.double}`),
+    true
+  );
+  assert.equal(css.includes("--ad-ext-hit-theme-b: #0d4f9b;"), true);
+  assert.equal(css.includes("--ad-ext-hit-theme-c: #1976d2;"), true);
+
+  assert.equal(
+    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullOuter}`),
+    true
+  );
+  assert.equal(
+    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullInner}`),
+    true
+  );
+  assert.equal(css.includes("--ad-ext-hit-theme-b: #1b7a34;"), true);
+  assert.equal(css.includes("--ad-ext-hit-theme-c: #2eaf50;"), true);
 });

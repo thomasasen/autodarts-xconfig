@@ -307,6 +307,37 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.015;
 }
 
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.triple} {
+  --ad-ext-hit-theme-a: #3b0a11;
+  --ad-ext-hit-theme-b: #7f1124;
+  --ad-ext-hit-theme-c: #c62828;
+  --ad-ext-hit-theme-d: #ff8a80;
+  --ad-ext-hit-edge: rgba(255, 128, 128, 0.94);
+  --ad-ext-hit-glow: rgba(255, 82, 82, 0.66);
+  --ad-ext-hit-soft-glow: rgba(255, 82, 82, 0.3);
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.double} {
+  --ad-ext-hit-theme-a: #0a1f45;
+  --ad-ext-hit-theme-b: #0d4f9b;
+  --ad-ext-hit-theme-c: #1976d2;
+  --ad-ext-hit-theme-d: #7ec8ff;
+  --ad-ext-hit-edge: rgba(126, 200, 255, 0.94);
+  --ad-ext-hit-glow: rgba(33, 150, 243, 0.64);
+  --ad-ext-hit-soft-glow: rgba(33, 150, 243, 0.3);
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullOuter},
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullInner} {
+  --ad-ext-hit-theme-a: #0c2a14;
+  --ad-ext-hit-theme-b: #1b7a34;
+  --ad-ext-hit-theme-c: #2eaf50;
+  --ad-ext-hit-theme-d: #9ef57e;
+  --ad-ext-hit-edge: rgba(158, 245, 126, 0.94);
+  --ad-ext-hit-glow: rgba(76, 217, 100, 0.64);
+  --ad-ext-hit-soft-glow: rgba(76, 217, 100, 0.28);
+}
+
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation: ad-ext-hit-row-impact-pop 780ms cubic-bezier(0.14, 0.92, 0.24, 1);
 }
