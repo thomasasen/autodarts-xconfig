@@ -100,12 +100,25 @@ function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
   svg.appendChild(boardGroup);
 
   const markers = markerSpecs.map((spec) => createMarker(documentRef, boardGroup, spec));
-  documentRef.main.appendChild(svg);
+  const viewportNode = options.viewportClasses
+    ? documentRef.createElement("div")
+    : null;
+  if (viewportNode) {
+    options.viewportClasses.forEach((className) => viewportNode.classList.add(className));
+    if (options.viewportRect) {
+      viewportNode.__rect = options.viewportRect;
+    }
+    viewportNode.appendChild(svg);
+    documentRef.main.appendChild(viewportNode);
+  } else {
+    documentRef.main.appendChild(svg);
+  }
 
   return {
     svg,
     boardGroup,
     markers,
+    viewportNode,
   };
 }
 
@@ -281,6 +294,95 @@ test("dart-marker-darts positions darts in screen space using actual overlay rec
   approxEqual(entry.center.y, 240 - 34);
   assert.ok(Number.isFinite(Number.parseFloat(entry.imageNode.getAttribute("x"))));
   assert.ok(Number.isFinite(Number.parseFloat(entry.imageNode.getAttribute("y"))));
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts clips overlay to board viewport boundaries", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  installBoardFixture(
+    documentRef,
+    [
+      {
+        cx: 10,
+        cy: 20,
+        r: 5,
+        getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 540, f: 320 }),
+      },
+    ],
+    {
+      svgRect: { left: 250, top: 60, width: 500, height: 500 },
+      viewportClasses: ["ad-ext-theme-board-viewport", "ad-ext-tv-board-zoom-host"],
+      viewportRect: { left: 280, top: 90, width: 420, height: 420 },
+    }
+  );
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  const clipPath = String(overlay?.style?.clipPath || "");
+  assert.match(
+    clipPath,
+    /^inset\(([\d.]+)px ([\d.]+)px ([\d.]+)px ([\d.]+)px\)$/
+  );
+
+  const values = clipPath
+    .replace(/^inset\(/, "")
+    .replace(/\)$/, "")
+    .split(" ")
+    .map((token) => Number.parseFloat(token.replace("px", "")));
+  assert.equal(values.length, 4);
+  values.forEach((value) => assert.ok(value > 0));
+  assert.equal(overlay.style.webkitClipPath, clipPath);
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts clears stale overlay clipping when viewport host is not available", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { viewportNode } = installBoardFixture(
+    documentRef,
+    [
+      {
+        cx: 10,
+        cy: 20,
+        r: 5,
+        getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 540, f: 320 }),
+      },
+    ],
+    {
+      svgRect: { left: 250, top: 60, width: 500, height: 500 },
+      viewportClasses: ["ad-ext-theme-board-viewport"],
+      viewportRect: { left: 280, top: 90, width: 420, height: 420 },
+    }
+  );
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.match(String(overlay?.style?.clipPath || ""), /^inset\(/);
+
+  viewportNode?.classList?.remove?.("ad-ext-theme-board-viewport");
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  assert.equal(String(overlay?.style?.clipPath || ""), "");
+  assert.equal(String(overlay?.style?.webkitClipPath || ""), "");
 
   clearDartMarkerDartsState(state);
 });

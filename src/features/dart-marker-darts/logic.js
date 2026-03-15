@@ -117,6 +117,80 @@ function getNodeRect(node) {
   return normalizeRect(node.getBoundingClientRect());
 }
 
+function resolveClipViewportNode(boardSvg) {
+  if (!boardSvg || typeof boardSvg.closest !== "function") {
+    return null;
+  }
+
+  return (
+    boardSvg.closest(".ad-ext-tv-board-zoom-host") ||
+    boardSvg.closest(".ad-ext-theme-board-viewport") ||
+    boardSvg.closest(".css-tqsk66") ||
+    null
+  );
+}
+
+function clearOverlayClipPath(overlay) {
+  if (!overlay?.style) {
+    return;
+  }
+  overlay.style.clipPath = "";
+  overlay.style.webkitClipPath = "";
+}
+
+function clampToRange(value, minValue, maxValue) {
+  if (!Number.isFinite(value)) {
+    return minValue;
+  }
+  return Math.min(maxValue, Math.max(minValue, value));
+}
+
+function applyOverlayViewportClip(overlay, overlayRect, viewportRect) {
+  if (!overlay?.style || !overlayRect || !viewportRect) {
+    clearOverlayClipPath(overlay);
+    return "";
+  }
+
+  const overlayWidth = Number(overlayRect.width);
+  const overlayHeight = Number(overlayRect.height);
+  if (!(overlayWidth > 0) || !(overlayHeight > 0)) {
+    clearOverlayClipPath(overlay);
+    return "";
+  }
+
+  const top = clampToRange(
+    Number(viewportRect.top) - Number(overlayRect.top),
+    0,
+    overlayHeight
+  );
+  const right = clampToRange(
+    Number(overlayRect.right) - Number(viewportRect.right),
+    0,
+    overlayWidth
+  );
+  const bottom = clampToRange(
+    Number(overlayRect.bottom) - Number(viewportRect.bottom),
+    0,
+    overlayHeight
+  );
+  const left = clampToRange(
+    Number(viewportRect.left) - Number(overlayRect.left),
+    0,
+    overlayWidth
+  );
+
+  const hasClip = top > 0.01 || right > 0.01 || bottom > 0.01 || left > 0.01;
+  if (!hasClip) {
+    clearOverlayClipPath(overlay);
+    return "";
+  }
+
+  const clipPath = `inset(${top.toFixed(2)}px ${right.toFixed(2)}px ${bottom.toFixed(2)}px ${left.toFixed(2)}px)`;
+  overlay.style.clipPath = clipPath;
+  overlay.style.webkitClipPath = clipPath;
+  return clipPath;
+}
+
 function emitDebug(state, featureDebug, eventName, payload = {}, options = {}) {
   if (!featureDebug?.enabled || !state) {
     return;
@@ -1039,7 +1113,8 @@ function maybeEmitBoardAndOverlayDebug(
   boardRect,
   groupRect,
   overlayRect,
-  dartLength
+  dartLength,
+  clipPath
 ) {
   const boardSignature = buildBoardSignature(board, boardRect, groupRect);
   if (state.lastBoardSignature !== boardSignature) {
@@ -1057,6 +1132,7 @@ function maybeEmitBoardAndOverlayDebug(
     emitDebug(state, featureDebug, "overlay-layout", {
       ...buildRectPayload(overlayRect),
       dartLength: toFiniteNumber(dartLength, 0),
+      clipPath: String(clipPath || ""),
     });
   }
 }
@@ -1242,6 +1318,8 @@ export function updateDartMarkerDarts(options = {}) {
   const dartImageSource = resolveDartDesignAsset(visualConfig.designKey);
   const paddingPx = getOverlayPadding(dartLength, visualConfig);
   const overlayRect = updateOverlayLayout(overlay, boardRect, paddingPx);
+  const clipViewportRect = getNodeRect(resolveClipViewportNode(board.svg));
+  const clipPath = applyOverlayViewportClip(overlay, overlayRect, clipViewportRect);
   const boardCenter = {
     x: boardRect.left + boardRect.width / 2 - overlayRect.left,
     y: boardRect.top + boardRect.height / 2 - overlayRect.top,
@@ -1254,7 +1332,8 @@ export function updateDartMarkerDarts(options = {}) {
     boardRect,
     groupRect,
     overlayRect,
-    dartLength
+    dartLength,
+    clipPath
   );
 
   const markerSet = new Set(markers);
