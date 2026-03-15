@@ -12,6 +12,10 @@ import {
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
+const ZOOM_LEVELS = Object.freeze([2.35, 2.75, 3.15]);
+const NUMBER_RING_PADDING_PX = 8;
+const NUMBER_RING_OUTER_OFFSET_RATIO = 0.2;
+
 function createZoomState() {
   return {
     zoomedElement: null,
@@ -39,6 +43,89 @@ function parseTransform(transform) {
     tx: Number(match[1]),
     ty: Number(match[2]),
     scale: Number(match[3]),
+  };
+}
+
+function parseViewBox(node) {
+  const parts = String(node?.getAttribute?.("viewBox") || "")
+    .trim()
+    .split(/[,\s]+/)
+    .map(Number);
+  if (parts.length === 4 && parts.every(Number.isFinite) && parts[2] > 0 && parts[3] > 0) {
+    return {
+      x: parts[0],
+      y: parts[1],
+      width: parts[2],
+      height: parts[3],
+    };
+  }
+
+  return {
+    x: 0,
+    y: 0,
+    width: 1000,
+    height: 1000,
+  };
+}
+
+function getBoardRadius(boardSvg) {
+  return Array.from(boardSvg?.querySelectorAll?.("circle") || []).reduce((max, node) => {
+    const radius = Number.parseFloat(node?.getAttribute?.("r"));
+    return Number.isFinite(radius) && radius > max ? radius : max;
+  }, 0);
+}
+
+function projectViewBoxPointToTargetLocal(boardSvg, targetNode, point) {
+  const boardRect = boardSvg.getBoundingClientRect();
+  const targetRect = targetNode.getBoundingClientRect();
+  const viewBox = parseViewBox(boardSvg);
+
+  const layoutWidth = Number(targetNode.offsetWidth || targetNode.clientWidth || targetRect.width || 0);
+  const layoutHeight = Number(targetNode.offsetHeight || targetNode.clientHeight || targetRect.height || 0);
+  if (!(layoutWidth > 0 && layoutHeight > 0 && boardRect.width > 0 && boardRect.height > 0)) {
+    return null;
+  }
+
+  const scaleX = targetRect.width / layoutWidth;
+  const scaleY = targetRect.height / layoutHeight;
+  if (!(scaleX > 0 && scaleY > 0)) {
+    return null;
+  }
+
+  const normalizedX = (point.x - viewBox.x) / viewBox.width;
+  const normalizedY = (point.y - viewBox.y) / viewBox.height;
+  const screenX = boardRect.left + normalizedX * boardRect.width;
+  const screenY = boardRect.top + normalizedY * boardRect.height;
+
+  return {
+    x: (screenX - targetRect.left) / scaleX,
+    y: (screenY - targetRect.top) / scaleY,
+  };
+}
+
+function applyTransformToLocalPoint(targetNode, transformData, point) {
+  return {
+    x: targetNode.offsetLeft + transformData.tx + transformData.scale * point.x,
+    y: targetNode.offsetTop + transformData.ty + transformData.scale * point.y,
+  };
+}
+
+function resolveEstimatedNumberRingPoint(segmentPoint, boardSvg) {
+  const viewBox = segmentPoint?.viewBox || parseViewBox(boardSvg);
+  const centerX = viewBox.x + viewBox.width / 2;
+  const centerY = viewBox.y + viewBox.height / 2;
+  const dx = segmentPoint.x - centerX;
+  const dy = segmentPoint.y - centerY;
+  const distance = Math.hypot(dx, dy);
+  if (!(distance > 0)) {
+    return { x: segmentPoint.x, y: segmentPoint.y };
+  }
+
+  const boardRadius = getBoardRadius(boardSvg);
+  const offset = (Number.isFinite(boardRadius) && boardRadius > 0 ? boardRadius : viewBox.width / 2) * NUMBER_RING_OUTER_OFFSET_RATIO;
+  return {
+    x: segmentPoint.x + (dx / distance) * offset,
+    y: segmentPoint.y + (dy / distance) * offset,
   };
 }
 
@@ -265,10 +352,10 @@ test("tv-board-zoom uses a corner-biased anchor for double checkout D18", () => 
   assert.ok(neutralTransform.anchor);
   assert.ok(checkoutTransform.anchor.x > neutralTransform.anchor.x);
   assert.ok(checkoutTransform.anchor.y < neutralTransform.anchor.y);
-  assert.ok(checkoutTransform.anchor.x >= 0.7);
-  assert.ok(checkoutTransform.anchor.y <= 0.3);
-  assert.ok(checkoutTransform.anchor.x - neutralTransform.anchor.x >= 0.18);
-  assert.ok(neutralTransform.anchor.y - checkoutTransform.anchor.y >= 0.2);
+  assert.ok(checkoutTransform.anchor.x >= 0.62);
+  assert.ok(checkoutTransform.anchor.y <= 0.38);
+  assert.ok(checkoutTransform.anchor.x - neutralTransform.anchor.x >= 0.12);
+  assert.ok(neutralTransform.anchor.y - checkoutTransform.anchor.y >= 0.18);
 });
 
 test("tv-board-zoom applies directional corner-bias across multiple checkout doubles", () => {
@@ -329,8 +416,63 @@ test("tv-board-zoom applies directional corner-bias across multiple checkout dou
       }
     }
 
-    assert.ok(checkoutTransform.anchor.x >= 0.2 && checkoutTransform.anchor.x <= 0.86);
-    assert.ok(checkoutTransform.anchor.y >= 0.2 && checkoutTransform.anchor.y <= 0.86);
+    assert.ok(checkoutTransform.anchor.x >= 0.22 && checkoutTransform.anchor.x <= 0.78);
+    assert.ok(checkoutTransform.anchor.y >= 0.25 && checkoutTransform.anchor.y <= 0.75);
+  });
+});
+
+test("tv-board-zoom keeps checkout number-ring labels visible for D5 across zoom levels", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+
+  ZOOM_LEVELS.forEach((zoomLevel) => {
+    const transformData = buildZoomTransform({
+      targetNode,
+      hostNode,
+      boardSvg,
+      zoomLevel,
+      intent: {
+        reason: "checkout",
+        segment: "D5",
+      },
+      x01Rules,
+      windowRef,
+      documentRef,
+    });
+
+    assert.ok(transformData, `missing checkout transform for zoom ${zoomLevel}`);
+    const parsed = parseTransform(transformData.transform);
+    assert.ok(parsed, `missing parsed transform for zoom ${zoomLevel}`);
+
+    const segmentPoint = resolveSegmentPoint("D5", boardSvg, x01Rules);
+    assert.ok(segmentPoint, `missing D5 segment point for zoom ${zoomLevel}`);
+
+    const numberRingPoint = resolveEstimatedNumberRingPoint(segmentPoint, boardSvg);
+    const localNumberRingPoint = projectViewBoxPointToTargetLocal(boardSvg, targetNode, numberRingPoint);
+    assert.ok(localNumberRingPoint, `missing projected number point for zoom ${zoomLevel}`);
+
+    const transformedNumberRingPoint = applyTransformToLocalPoint(targetNode, parsed, localNumberRingPoint);
+    const hostRect = hostNode.getBoundingClientRect();
+
+    assert.ok(
+      transformedNumberRingPoint.x >= hostRect.left + NUMBER_RING_PADDING_PX,
+      `D5 number ring x should stay visible at zoom ${zoomLevel}`
+    );
+    assert.ok(
+      transformedNumberRingPoint.y >= hostRect.top + NUMBER_RING_PADDING_PX,
+      `D5 number ring y should stay visible at zoom ${zoomLevel}`
+    );
+    assert.ok(
+      transformedNumberRingPoint.x <= hostRect.right - NUMBER_RING_PADDING_PX,
+      `D5 number ring x should stay inside right boundary at zoom ${zoomLevel}`
+    );
+    assert.ok(
+      transformedNumberRingPoint.y <= hostRect.bottom - NUMBER_RING_PADDING_PX,
+      `D5 number ring y should stay inside bottom boundary at zoom ${zoomLevel}`
+    );
+    assert.ok(
+      transformData.anchor.y >= 0.26,
+      `checkout anchor should keep top guard for D5 at zoom ${zoomLevel}`
+    );
   });
 });
 

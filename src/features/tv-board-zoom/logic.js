@@ -22,6 +22,10 @@ const RING_RATIOS = Object.freeze({
 const SINGLE_RING_RATIO = (RING_RATIOS.tripleOuter + RING_RATIOS.doubleInner) / 2;
 const HOLD_AFTER_THIRD_MS = 1300;
 const RELEASE_PADDING_MS = 40;
+const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
+  min: 2.35,
+  max: 3.15,
+});
 
 function parseScoreText(text) {
   const match = String(text || "").match(/-?\d+/);
@@ -585,6 +589,7 @@ export function markManualZoomPause(state, throwCount = Number.NaN) {
 function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
   const reason = String(intent?.reason || "");
   const segment = String(parsedSegment?.normalized || intent?.segment || "");
+  const numericZoomLevel = Number(intent?.zoomLevel);
 
   if (segment === "BULL") {
     return { x: 0.5, y: 0.5 };
@@ -613,14 +618,26 @@ function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
         const vectorY = dy / distance;
         const maxAxis = Math.max(Math.abs(vectorX), Math.abs(vectorY));
         const cornerFactor = Math.abs(vectorX * vectorY);
-        const radialStrength = 0.31 + 0.05 * maxAxis + 0.06 * cornerFactor;
+        const zoomProgress = clamp(
+          (numericZoomLevel - CHECKOUT_DOUBLE_ZOOM_RANGE.min) /
+            (CHECKOUT_DOUBLE_ZOOM_RANGE.max - CHECKOUT_DOUBLE_ZOOM_RANGE.min),
+          0,
+          1
+        );
+        const radialStrength = clamp(
+          0.235 + 0.045 * maxAxis + 0.04 * cornerFactor - 0.045 * zoomProgress,
+          0.18,
+          0.3
+        );
+        const xEdgeGuard = 0.22 + 0.03 * zoomProgress;
+        const yEdgeGuard = 0.25 + 0.06 * zoomProgress;
         return {
-          x: clamp(0.5 + vectorX * radialStrength, 0.2, 0.86),
-          y: clamp(0.53 + vectorY * radialStrength, 0.2, 0.86),
+          x: clamp(0.5 + vectorX * radialStrength, xEdgeGuard, 1 - xEdgeGuard),
+          y: clamp(0.54 + vectorY * radialStrength, yEdgeGuard, 1 - yEdgeGuard),
         };
       }
     }
-    return { x: 0.5, y: 0.53 };
+    return { x: 0.5, y: 0.54 };
   }
 
   if (reason === "t20-setup") {
@@ -968,7 +985,11 @@ export function buildZoomTransform(options = {}) {
   const baseLeft = Number(targetNode.offsetLeft || 0);
   const baseTop = Number(targetNode.offsetTop || 0);
 
-  const anchor = resolveZoomAnchor(intent, segmentPoint.parsedSegment, segmentPoint);
+  const anchor = resolveZoomAnchor(
+    { ...intent, zoomLevel },
+    segmentPoint.parsedSegment,
+    segmentPoint
+  );
   const viewportLeftInParent = viewportRect.left - offsetParentRect.left;
   const viewportTopInParent = viewportRect.top - offsetParentRect.top;
   const viewportRightInParent = viewportLeftInParent + viewportRect.width;
