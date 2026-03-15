@@ -33,7 +33,7 @@ function collectThrowTextNodes(documentRef) {
   return result;
 }
 
-function buildThrowKey(activeTurn, throwEntry, throwIndex) {
+function buildTurnId(activeTurn) {
   const turnId = String(
     activeTurn?.id ||
       [
@@ -42,24 +42,48 @@ function buildThrowKey(activeTurn, throwEntry, throwIndex) {
         String(activeTurn?.playerId || ""),
       ].join(":")
   );
-  const throwId = String(
-    throwEntry?.id || throwEntry?.createdAt || throwEntry?.timestamp || throwIndex
-  );
-  return `${turnId}:${throwId}:${throwIndex}`;
+  return turnId;
 }
 
-function rememberProcessedThrow(state, throwKey) {
-  if (!throwKey || state.processedThrowKeys.has(throwKey)) {
+function buildThrowKeys(activeTurn, throwEntry, throwIndex) {
+  const normalizedThrowIndex =
+    Number.isFinite(Number(throwIndex)) && Number(throwIndex) >= 0
+      ? Number(throwIndex)
+      : -1;
+  const turnId = buildTurnId(activeTurn);
+  const keys = [`${turnId}:index:${normalizedThrowIndex}`];
+
+  const throwIdentifier = throwEntry?.id || throwEntry?.createdAt || throwEntry?.timestamp;
+  const normalizedThrowIdentifier = String(throwIdentifier || "").trim();
+  if (normalizedThrowIdentifier) {
+    keys.push(`${turnId}:id:${normalizedThrowIdentifier}`);
+  }
+
+  return keys;
+}
+
+function rememberProcessedThrow(state, throwKeys) {
+  const normalizedKeys = (Array.isArray(throwKeys) ? throwKeys : [throwKeys])
+    .map((key) => String(key || "").trim())
+    .filter(Boolean);
+  if (!normalizedKeys.length) {
     return false;
   }
 
-  state.processedThrowKeys.add(throwKey);
-  if (state.processedThrowKeys.size > PROCESSED_THROW_KEY_LIMIT) {
-    const oldest = state.processedThrowKeys.values().next().value;
-    if (oldest) {
+  if (normalizedKeys.some((throwKey) => state.processedThrowKeys.has(throwKey))) {
+    return false;
+  }
+
+  normalizedKeys.forEach((throwKey) => {
+    state.processedThrowKeys.add(throwKey);
+    while (state.processedThrowKeys.size > PROCESSED_THROW_KEY_LIMIT) {
+      const oldest = state.processedThrowKeys.values().next().value;
+      if (!oldest) {
+        break;
+      }
       state.processedThrowKeys.delete(oldest);
     }
-  }
+  });
 
   return true;
 }
@@ -150,11 +174,23 @@ function unlockAudio(state) {
 function scanDomRows(options = {}) {
   const documentRef = options.documentRef;
   const x01Rules = options.x01Rules;
+  const gameState = options.gameState;
   const state = options.state;
   const config = options.config;
 
   if (!documentRef || !x01Rules || !state || !config) {
     return;
+  }
+
+  const activeTurn =
+    gameState && typeof gameState.getActiveTurn === "function"
+      ? gameState.getActiveTurn()
+      : null;
+  const rowIndexByNode = new Map();
+  if (typeof documentRef.querySelectorAll === "function") {
+    Array.from(documentRef.querySelectorAll(".ad-ext-turn-throw")).forEach((rowNode, rowIndex) => {
+      rowIndexByNode.set(rowNode, rowIndex);
+    });
   }
 
   const throwNodes = collectThrowTextNodes(documentRef);
@@ -167,7 +203,7 @@ function scanDomRows(options = {}) {
     }
   });
 
-  throwNodes.forEach((node) => {
+  throwNodes.forEach((node, fallbackThrowIndex) => {
     const normalizedText = normalizeText(node.textContent);
     if (!normalizedText) {
       return;
@@ -190,8 +226,18 @@ function scanDomRows(options = {}) {
       return;
     }
 
+    const throwRow =
+      typeof node.closest === "function"
+        ? node.closest(".ad-ext-turn-throw")
+        : null;
+    const throwIndex = rowIndexByNode.has(throwRow)
+      ? rowIndexByNode.get(throwRow)
+      : fallbackThrowIndex;
+
     if (safePlayAudio(state, config)) {
       state.lastPlayedAtByNode.set(node, now);
+      const throwKeys = buildThrowKeys(activeTurn, null, throwIndex);
+      rememberProcessedThrow(state, throwKeys);
     }
   });
 }
@@ -228,8 +274,8 @@ function scanGameStateThrows(options = {}) {
       return;
     }
 
-    const throwKey = buildThrowKey(activeTurn, throwEntry, throwIndex);
-    if (!rememberProcessedThrow(state, throwKey)) {
+    const throwKeys = buildThrowKeys(activeTurn, throwEntry, throwIndex);
+    if (!rememberProcessedThrow(state, throwKeys)) {
       return;
     }
 
