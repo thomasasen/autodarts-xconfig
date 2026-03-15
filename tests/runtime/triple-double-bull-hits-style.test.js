@@ -4,9 +4,9 @@ import assert from "node:assert/strict";
 import {
   HIT_ANIMATION_CLASS,
   HIT_BASE_CLASS,
-  HIT_COLOR_MODE_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
+  HIT_THEME_CLASS,
   buildStyleText,
 } from "../../src/features/triple-double-bull-hits/style.js";
 
@@ -35,7 +35,7 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
 
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple}`
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple}`
     ),
     true
   );
@@ -44,7 +44,7 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
 
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double}`
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double}`
     ),
     true
   );
@@ -53,13 +53,13 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
 
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter}`
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter}`
     ),
     true
   );
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner}`
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner}`
     ),
     true
   );

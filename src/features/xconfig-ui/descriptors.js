@@ -376,13 +376,10 @@ export const xconfigDescriptors = Object.freeze([
     featureKey: "triple-double-bull-hits",
     tab: "animations",
     readmeAnchor: "animation-autodarts-animate-triple-double-bull-hits",
-    description: "Setzt Treffer-Highlights mit wählbarem Farbmodus und starkem Burst-Animationsstil.",
+    description: "Setzt Treffer-Highlights mit wählbarem Farbstil und starkem Burst-Animationsstil.",
     fields: [
-      selectField("hitColorMode", "Trefferfarben", [
+      selectField("colorTheme", "Farbstil", [
         { value: "kind-signal", label: "Rot/Blau/Grün" },
-        { value: "theme-presets", label: "Preset-Farbstile" },
-      ]),
-      selectField("colorTheme", "Farbstil (Preset-Modus)", [
         { value: "ember-rush", label: "Solar Flare" },
         { value: "ice-circuit", label: "Ice Reactor" },
         { value: "volt-lime", label: "Venom Lime" },

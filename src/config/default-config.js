@@ -66,8 +66,7 @@ export const defaultConfig = {
     },
     tripleDoubleBullHits: {
       enabled: false,
-      hitColorMode: "kind-signal",
-      colorTheme: "champagne-night",
+      colorTheme: "kind-signal",
       animationStyle: "charge-release",
       debug: false,
     },

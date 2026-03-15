@@ -24,8 +24,8 @@ const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
 const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
 const TURN_START_SWEEP_DURATIONS = new Set([300, 420, 620]);
 const TURN_START_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
-const TRIPLE_DOUBLE_BULL_HIT_COLOR_MODES = new Set(["kind-signal", "theme-presets"]);
 const TRIPLE_DOUBLE_BULL_COLOR_THEMES = new Set([
+  "kind-signal",
   "ember-rush",
   "ice-circuit",
   "volt-lime",
@@ -356,16 +356,13 @@ function normalizeTurnStartSweepConfig(rawConfig = {}) {
 }
 
 function normalizeTripleDoubleBullHitsConfig(rawConfig = {}) {
+  const legacyHitColorMode = String(rawConfig.hitColorMode || "").trim().toLowerCase();
+  const fallbackColorTheme = legacyHitColorMode === "theme-presets" ? "champagne-night" : "kind-signal";
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
-    hitColorMode: normalizeStringChoice(
-      rawConfig.hitColorMode,
-      "kind-signal",
-      TRIPLE_DOUBLE_BULL_HIT_COLOR_MODES
-    ),
     colorTheme: normalizeStringChoice(
       rawConfig.colorTheme,
-      "champagne-night",
+      fallbackColorTheme,
       TRIPLE_DOUBLE_BULL_COLOR_THEMES
     ),
     animationStyle: normalizeStringChoice(

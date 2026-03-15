@@ -523,10 +523,8 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 **Einstellungen einfach erklärt**
 
-- `Trefferfarben`: Legt fest, nach welcher Logik Treffer eingefärbt werden. `Rot/Blau/Grün` erzwingt eine klare Signalzuordnung pro Trefferart (`Triple = rot`, `Double = blau`, `Bull = grün`). `Preset-Farbstile` nutzt stattdessen die darunter gewählte Farbwelt.
+- `Farbstil`: Legt fest, wie Triple-, Double- und Bull-Treffer eingefärbt werden. `Rot/Blau/Grün` erzwingt eine klare Signalzuordnung pro Trefferart (`Triple = rot`, `Double = blau`, `Bull = grün`); die anderen Einträge sind die bisherigen Preset-Farbstile.
   - `Rot/Blau/Grün`: Jede Trefferart bekommt immer dieselbe Signalfarbe. Das verbessert die schnelle Unterscheidung unabhängig vom gewählten Theme und sorgt für konsistente Farben in allen Legs.
-  - `Preset-Farbstile`: Die Trefferfarben folgen wieder dem gewählten Preset (`Solar Flare`, `Ice Reactor`, usw.). Dadurch bleibt der alte Look erhalten und du kannst zwischen den bekannten Farbstilen wechseln.
-- `Farbstil (Preset-Modus)`: Greift nur, wenn bei `Trefferfarben` der Modus `Preset-Farbstile` aktiv ist. Dann legst du fest, welche Farbwelt für Verlauf, Randlicht und Textglow verwendet wird.
   - `Solar Flare`: Der Look arbeitet mit warmen Feuerfarben, auffälligen Diagonalstreifen und starkem Broadcast-Glow. Das ist die aggressivste warme Palette im Paket und wirkt wie ein laufender Hitzeimpuls.
   - `Ice Reactor`: Der Look mischt eisige Cyan-/Blautone mit sichtbaren Horizontal- und Vertikallinien. Das Trefferfeld wirkt dadurch wie ein heller Sci-Fi-Reaktor mit klarer technischer Struktur.
   - `Venom Lime`: Das Trefferfeld leuchtet in toxischen Lime-, Grün- und Gelbwerten und kombiniert das mit sichtbarer Warnstreifen-Optik. Das ist die lauteste und plakativste Variante für maximale Signalwirkung.
@@ -537,6 +535,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 **Vorschau Farbstile**
 
 Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.
+Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine eigene Preset-Galerie.
 
 |  |  |
 | --- | --- |

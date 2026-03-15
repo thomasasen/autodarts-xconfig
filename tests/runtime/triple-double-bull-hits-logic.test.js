@@ -9,11 +9,11 @@ import {
 } from "../../src/features/triple-double-bull-hits/logic.js";
 import {
   HIT_BASE_CLASS,
-  HIT_COLOR_MODE_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
   HIT_SCORE_CLASS,
   HIT_SEGMENT_CLASS,
+  HIT_THEME_CLASS,
 } from "../../src/features/triple-double-bull-hits/style.js";
 import { FakeDocument } from "./fake-dom.js";
 
@@ -156,10 +156,10 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
   assert.equal(double.row.classList.contains(HIT_KIND_CLASS.double), true);
   assert.equal(outerBull.row.classList.contains(HIT_KIND_CLASS.bullOuter), true);
   assert.equal(innerBull.row.classList.contains(HIT_KIND_CLASS.bullInner), true);
-  assert.equal(triple.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
-  assert.equal(double.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
-  assert.equal(outerBull.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
-  assert.equal(innerBull.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
+  assert.equal(triple.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(double.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(outerBull.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(innerBull.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
   assert.equal(triple.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
   assert.equal(triple.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
   assert.equal(innerBull.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
@@ -176,7 +176,7 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
   assert.equal(stats.rows.some((entry) => entry.scoreRole && entry.segmentRole), true);
 });
 
-test("updateHitDecorations applies configured hit color mode and defaults invalid values to kind-signal", () => {
+test("updateHitDecorations applies configured color theme and defaults invalid values to kind-signal", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
@@ -191,15 +191,14 @@ test("updateHitDecorations applies configured hit color mode and defaults invali
     signatureByRow,
     roleStateByRow,
     featureConfig: {
-      hitColorMode: "theme-presets",
       colorTheme: "ember-rush",
       animationStyle: "impact-pop",
     },
   });
 
-  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["theme-presets"]), true);
-  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), false);
-  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-color-mode"), "theme-presets");
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["ember-rush"]), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["kind-signal"]), false);
+  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-theme"), "ember-rush");
 
   updateHitDecorations({
     documentRef,
@@ -207,15 +206,14 @@ test("updateHitDecorations applies configured hit color mode and defaults invali
     signatureByRow,
     roleStateByRow,
     featureConfig: {
-      hitColorMode: "invalid-mode",
-      colorTheme: "ember-rush",
+      colorTheme: "invalid-theme",
       animationStyle: "impact-pop",
     },
   });
 
-  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
-  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["theme-presets"]), false);
-  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-color-mode"), "kind-signal");
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["kind-signal"]), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["ember-rush"]), false);
+  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-theme"), "kind-signal");
 });
 
 test("updateHitDecorations bursts only the newly changed slot and keeps prior rows stable", () => {
