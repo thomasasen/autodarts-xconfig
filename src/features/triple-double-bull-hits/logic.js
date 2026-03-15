@@ -2,6 +2,7 @@ import {
   HIT_ANIMATION_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
   HIT_BASE_CLASS,
+  HIT_COLOR_MODE_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
   HIT_SCORE_CLASS,
@@ -13,6 +14,7 @@ const TURN_CONTAINER_SELECTOR = "#ad-ext-turn";
 const THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
 const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
 const ROW_DEBUG_TEXT_LIMIT = 72;
+const SUPPORTED_HIT_COLOR_MODE = new Set(Object.keys(HIT_COLOR_MODE_CLASS));
 const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
 const SUPPORTED_ANIMATION_STYLE = new Set(Object.keys(HIT_ANIMATION_CLASS));
 const LOOPABLE_ANIMATION_STYLES = new Set([
@@ -22,6 +24,7 @@ const LOOPABLE_ANIMATION_STYLES = new Set([
   "alternate-flick",
 ]);
 const KIND_CLASS_NAMES = Object.values(HIT_KIND_CLASS);
+const COLOR_MODE_CLASS_NAMES = Object.values(HIT_COLOR_MODE_CLASS);
 const THEME_CLASS_NAMES = Object.values(HIT_THEME_CLASS);
 const ANIMATION_CLASS_NAMES = Object.values(HIT_ANIMATION_CLASS);
 const RESET_STYLE_PROPERTIES = [
@@ -376,6 +379,11 @@ function isLoopAnimationStyle(value) {
   return LOOPABLE_ANIMATION_STYLES.has(String(value || "").trim().toLowerCase());
 }
 
+function resolveHitColorMode(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return SUPPORTED_HIT_COLOR_MODE.has(normalized) ? normalized : "kind-signal";
+}
+
 function resolveColorTheme(value) {
   const normalized = String(value || "").trim().toLowerCase();
   return SUPPORTED_COLOR_THEME.has(normalized) ? normalized : "champagne-night";
@@ -547,12 +555,14 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
   rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
   rowNode.classList.remove(HIT_IDLE_LOOP_CLASS);
   rowNode.classList.remove(...KIND_CLASS_NAMES);
+  rowNode.classList.remove(...COLOR_MODE_CLASS_NAMES);
   rowNode.classList.remove(...THEME_CLASS_NAMES);
   rowNode.classList.remove(...ANIMATION_CLASS_NAMES);
   rowNode.style.removeProperty("--ad-ext-hit-delay-ms");
   rowNode.removeAttribute("data-ad-ext-hit-signature");
   rowNode.removeAttribute("data-ad-ext-hit-kind");
   rowNode.removeAttribute("data-ad-ext-hit-segment");
+  rowNode.removeAttribute("data-ad-ext-hit-color-mode");
   rowNode.removeAttribute("data-ad-ext-hit-theme");
   rowNode.removeAttribute("data-ad-ext-hit-animation");
   rowNode.removeAttribute("data-ad-ext-hit-burst-key");
@@ -1271,11 +1281,13 @@ export function applyHitDecoration(rowNode, options = {}) {
     };
   }
 
+  const hitColorMode = resolveHitColorMode(featureConfig.hitColorMode);
   const colorTheme = resolveColorTheme(featureConfig.colorTheme);
   const animationStyle = resolveAnimationStyle(featureConfig.animationStyle);
+  const colorModeClassName = HIT_COLOR_MODE_CLASS[hitColorMode];
   const themeClassName = HIT_THEME_CLASS[colorTheme];
   const animationClassName = HIT_ANIMATION_CLASS[animationStyle];
-  if (!themeClassName || !animationClassName) {
+  if (!colorModeClassName || !themeClassName || !animationClassName) {
     clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
@@ -1296,13 +1308,14 @@ export function applyHitDecoration(rowNode, options = {}) {
 
   const reducedMotion = prefersReducedMotion(windowRef);
   const idleLoopActive = isLoopAnimationStyle(animationStyle) && !reducedMotion;
-  const signature = [hitMeta.kind, hitMeta.segment, colorTheme, animationStyle].join("|");
+  const signature = [hitMeta.kind, hitMeta.segment, hitColorMode, colorTheme, animationStyle].join("|");
   const burstKey = getRowBurstKey(rowNode, rowIndex) || `${rowIndex}|${rowText}`;
   const lastBurstKey = burstKeyBySlot?.get?.(rowIndex) || "";
   const burst = Boolean(burstKey) && burstKey !== lastBurstKey;
 
   rowNode.classList.add(HIT_BASE_CLASS);
   setExclusiveClass(rowNode, KIND_CLASS_NAMES, kindClassName);
+  setExclusiveClass(rowNode, COLOR_MODE_CLASS_NAMES, colorModeClassName);
   setExclusiveClass(rowNode, THEME_CLASS_NAMES, themeClassName);
   setExclusiveClass(rowNode, ANIMATION_CLASS_NAMES, animationClassName);
   rowNode.classList.toggle(HIT_IDLE_LOOP_CLASS, idleLoopActive);
@@ -1310,6 +1323,7 @@ export function applyHitDecoration(rowNode, options = {}) {
   rowNode.setAttribute("data-ad-ext-hit-signature", signature);
   rowNode.setAttribute("data-ad-ext-hit-kind", hitMeta.kind);
   rowNode.setAttribute("data-ad-ext-hit-segment", hitMeta.segment);
+  rowNode.setAttribute("data-ad-ext-hit-color-mode", hitColorMode);
   rowNode.setAttribute("data-ad-ext-hit-theme", colorTheme);
   rowNode.setAttribute("data-ad-ext-hit-animation", animationStyle);
 

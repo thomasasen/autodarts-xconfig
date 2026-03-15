@@ -44,6 +44,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.bermuda"], false);
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
+  assert.equal(config.features.tripleDoubleBullHits.hitColorMode, "kind-signal");
   assert.equal(config.features.tripleDoubleBullHits.colorTheme, "champagne-night");
   assert.equal(config.features.tripleDoubleBullHits.animationStyle, "charge-release");
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
@@ -77,6 +78,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         sweepStyle: "STRONG",
       },
       tripleDoubleBullHits: {
+        hitColorMode: "THEME-PRESETS",
         colorTheme: "EMBER-RUSH",
         animationStyle: "CHARGE-RELEASE",
       },
@@ -184,6 +186,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("averageTrendArrow").size, "gross");
   assert.equal(runtimeConfig.getFeatureConfig("turnStartSweep").durationMs, 620);
   assert.equal(runtimeConfig.getFeatureConfig("turnStartSweep").sweepStyle, "strong");
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").hitColorMode, "theme-presets");
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "ember-rush");
   assert.equal(
     runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
@@ -275,12 +278,14 @@ test("triple-double-bull-hits falls back to defaults for invalid theme/style val
   const runtimeConfig = createRuntimeConfig({
     features: {
       tripleDoubleBullHits: {
+        hitColorMode: "invalid-color-mode",
         colorTheme: "invalid-theme",
         animationStyle: "invalid-animation",
       },
     },
   });
 
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").hitColorMode, "kind-signal");
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "champagne-night");
   assert.equal(
     runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,

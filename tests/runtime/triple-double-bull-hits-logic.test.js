@@ -9,6 +9,7 @@ import {
 } from "../../src/features/triple-double-bull-hits/logic.js";
 import {
   HIT_BASE_CLASS,
+  HIT_COLOR_MODE_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
   HIT_SCORE_CLASS,
@@ -155,6 +156,10 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
   assert.equal(double.row.classList.contains(HIT_KIND_CLASS.double), true);
   assert.equal(outerBull.row.classList.contains(HIT_KIND_CLASS.bullOuter), true);
   assert.equal(innerBull.row.classList.contains(HIT_KIND_CLASS.bullInner), true);
+  assert.equal(triple.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
+  assert.equal(double.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
+  assert.equal(outerBull.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
+  assert.equal(innerBull.row.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
   assert.equal(triple.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
   assert.equal(triple.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
   assert.equal(innerBull.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
@@ -169,6 +174,48 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
   assert.equal(stats.kindCounts.bullInner, 1);
   assert.equal(Array.isArray(stats.rows), true);
   assert.equal(stats.rows.some((entry) => entry.scoreRole && entry.segmentRole), true);
+});
+
+test("updateHitDecorations applies configured hit color mode and defaults invalid values to kind-signal", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const roleStateByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    featureConfig: {
+      hitColorMode: "theme-presets",
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["theme-presets"]), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), false);
+  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-color-mode"), "theme-presets");
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    featureConfig: {
+      hitColorMode: "invalid-mode",
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["kind-signal"]), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_COLOR_MODE_CLASS["theme-presets"]), false);
+  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-color-mode"), "kind-signal");
 });
 
 test("updateHitDecorations bursts only the newly changed slot and keeps prior rows stable", () => {

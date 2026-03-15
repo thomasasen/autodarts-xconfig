@@ -517,10 +517,15 @@ export const xconfigFeatureCopy = deepFreeze({
       ],
     },
     fields: {
+      hitColorMode: fieldCopy(
+        "Wählt zwischen festen Trefferfarben (Triple rot, Double blau, Bull grün) und den bisherigen Preset-Farbstilen.",
+        "Legt fest, nach welcher Logik Treffer eingefärbt werden. `Rot/Blau/Grün` erzwingt eine klare Signalzuordnung pro Trefferart (`Triple = rot`, `Double = blau`, `Bull = grün`). `Preset-Farbstile` nutzt stattdessen die darunter gewählte Farbwelt.",
+        "Wählt zwischen fester Trefferfarblogik (`Triple rot`, `Double blau`, `Bull grün`) und den bisherigen Preset-Farbstilen."
+      ),
       colorTheme: fieldCopy(
-        "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand des Trefferfelds.",
-        "Legt fest, in welcher Farbwelt Triple-, Double- und Bull-Treffer erscheinen. Geändert werden Hintergrundverlauf, Randlicht, Textglow und die generelle Tonalität des Trefferfelds; die Trefferlogik bleibt unverändert.",
-        "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand der Treffer-Highlights."
+        "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand im Preset-Modus.",
+        "Greift nur, wenn bei `Trefferfarben` der Modus `Preset-Farbstile` aktiv ist. Dann legst du fest, welche Farbwelt für Verlauf, Randlicht und Textglow verwendet wird.",
+        "Wählt die visuelle Farbwelt für Verlauf, Glow und Rand im Preset-Modus."
       ),
       animationStyle: fieldCopy(
         "Wählt den Burst-Stil für das frisch erkannte Trefferfeld.",
@@ -1308,6 +1313,19 @@ const TURN_START_STYLE_OPTION_COPY = deepFreeze({
   ),
 });
 
+const TRIPLE_DOUBLE_BULL_HIT_COLOR_MODE_OPTION_COPY = deepFreeze({
+  "kind-signal": optionCopy(
+    "Erzwingt eine feste, sofort erkennbare Trefferfarblogik: Triple rot, Double blau, Bull grün.",
+    "Jede Trefferart bekommt immer dieselbe Signalfarbe. Das verbessert die schnelle Unterscheidung unabhängig vom gewählten Theme und sorgt für konsistente Farben in allen Legs.",
+    "Verwendet feste Signalfarben pro Trefferart: `Triple = rot`, `Double = blau`, `Bull = grün`."
+  ),
+  "theme-presets": optionCopy(
+    "Aktiviert die bisherigen Preset-Farbwelten mit frei wählbarem Farbstil darunter.",
+    "Die Trefferfarben folgen wieder dem gewählten Preset (`Solar Flare`, `Ice Reactor`, usw.). Dadurch bleibt der alte Look erhalten und du kannst zwischen den bekannten Farbstilen wechseln.",
+    "Aktiviert wieder die klassischen Preset-Farbwelten."
+  ),
+});
+
 const TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY = deepFreeze({
   "ember-rush": optionCopy(
     "Solar Flare setzt auf heiße Orange-Rot-Gold-Verläufe mit diagonalem Flame-Stripe-Look.",
@@ -1942,6 +1960,7 @@ const xconfigFieldOptionCopy = deepFreeze({
     sweepStyle: TURN_START_STYLE_OPTION_COPY,
   },
   "triple-double-bull-hits": {
+    hitColorMode: TRIPLE_DOUBLE_BULL_HIT_COLOR_MODE_OPTION_COPY,
     colorTheme: TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY,
     animationStyle: TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY,
   },

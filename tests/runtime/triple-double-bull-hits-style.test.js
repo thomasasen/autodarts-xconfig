@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   HIT_ANIMATION_CLASS,
   HIT_BASE_CLASS,
+  HIT_COLOR_MODE_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
   buildStyleText,
@@ -33,25 +34,33 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   assert.equal(css.includes("--ad-ext-hit-surface-a:"), true);
 
   assert.equal(
-    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.triple}`),
+    css.includes(
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple}`
+    ),
     true
   );
   assert.equal(css.includes("--ad-ext-hit-theme-b: #7f1124;"), true);
   assert.equal(css.includes("--ad-ext-hit-theme-c: #c62828;"), true);
 
   assert.equal(
-    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.double}`),
+    css.includes(
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double}`
+    ),
     true
   );
   assert.equal(css.includes("--ad-ext-hit-theme-b: #0d4f9b;"), true);
   assert.equal(css.includes("--ad-ext-hit-theme-c: #1976d2;"), true);
 
   assert.equal(
-    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullOuter}`),
+    css.includes(
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter}`
+    ),
     true
   );
   assert.equal(
-    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullInner}`),
+    css.includes(
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner}`
+    ),
     true
   );
   assert.equal(css.includes("--ad-ext-hit-theme-b: #1b7a34;"), true);

@@ -9,6 +9,10 @@ export const HIT_KIND_CLASS = Object.freeze({
   bullInner: "ad-ext-hit-highlight--bull-inner",
   bullOuter: "ad-ext-hit-highlight--bull-outer",
 });
+export const HIT_COLOR_MODE_CLASS = Object.freeze({
+  "kind-signal": "ad-ext-hit-color-mode--kind-signal",
+  "theme-presets": "ad-ext-hit-color-mode--theme-presets",
+});
 export const HIT_THEME_CLASS = Object.freeze({
   "ember-rush": "ad-ext-hit-theme--ember-rush",
   "ice-circuit": "ad-ext-hit-theme--ice-circuit",
@@ -307,7 +311,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.015;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.triple} {
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple} {
   --ad-ext-hit-theme-a: #3b0a11;
   --ad-ext-hit-theme-b: #7f1124;
   --ad-ext-hit-theme-c: #c62828;
@@ -317,7 +321,7 @@ export function buildStyleText() {
   --ad-ext-hit-soft-glow: rgba(255, 82, 82, 0.3);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.double} {
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double} {
   --ad-ext-hit-theme-a: #0a1f45;
   --ad-ext-hit-theme-b: #0d4f9b;
   --ad-ext-hit-theme-c: #1976d2;
@@ -327,8 +331,8 @@ export function buildStyleText() {
   --ad-ext-hit-soft-glow: rgba(33, 150, 243, 0.3);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullOuter},
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullInner} {
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter},
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_COLOR_MODE_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner} {
   --ad-ext-hit-theme-a: #0c2a14;
   --ad-ext-hit-theme-b: #1b7a34;
   --ad-ext-hit-theme-c: #2eaf50;
