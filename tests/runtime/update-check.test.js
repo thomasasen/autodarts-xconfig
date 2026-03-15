@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  openUserscriptInstall,
   USERSCRIPT_DOWNLOAD_URL,
   USERSCRIPT_UPDATE_URL,
   resolveLatestUpdateStatus,
@@ -105,4 +106,21 @@ test("shouldRefreshUpdateStatus respects ttl boundary", () => {
 
   assert.equal(shouldRefreshUpdateStatus(freshStatus, now), false);
   assert.equal(shouldRefreshUpdateStatus(expiredStatus, now), true);
+});
+
+test("openUserscriptInstall adds cache-busting query to install URL", () => {
+  const windowRef = createFakeWindow();
+  const originalNow = Date.now;
+  Date.now = () => 1_770_300_999_000;
+  try {
+    const opened = openUserscriptInstall(windowRef);
+    assert.equal(opened, true);
+  } finally {
+    Date.now = originalNow;
+  }
+
+  const installUrl = String(windowRef.__openedUrls.at(-1) || "");
+  const parsed = new URL(installUrl);
+  assert.equal(getUrlWithoutQuery(installUrl), USERSCRIPT_DOWNLOAD_URL);
+  assert.equal(parsed.searchParams.get("_adxconfig_ts"), "1770300999000");
 });

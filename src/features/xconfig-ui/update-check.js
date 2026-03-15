@@ -287,8 +287,9 @@ export async function resolveLatestUpdateStatus(options = {}) {
 }
 
 export function openUserscriptInstall(windowRef) {
+  const installUrl = buildCacheBustedUrl(USERSCRIPT_DOWNLOAD_URL, Date.now()) || USERSCRIPT_DOWNLOAD_URL;
   if (typeof windowRef?.open === "function") {
-    const openedWindow = windowRef.open(USERSCRIPT_DOWNLOAD_URL, "_blank", "noopener,noreferrer");
+    const openedWindow = windowRef.open(installUrl, "_blank", "noopener,noreferrer");
     if (openedWindow && typeof openedWindow.focus === "function") {
       openedWindow.focus();
     }
@@ -296,7 +297,7 @@ export function openUserscriptInstall(windowRef) {
   }
 
   if (windowRef?.location) {
-    windowRef.location.href = USERSCRIPT_DOWNLOAD_URL;
+    windowRef.location.href = installUrl;
     return true;
   }
 

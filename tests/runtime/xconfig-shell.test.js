@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
 
@@ -55,6 +56,13 @@ function buildUserscriptMeta(version) {
 // @version      ${version}
 // ==/UserScript==
 `;
+}
+
+function getUrlWithoutQuery(url) {
+  const parsed = new URL(String(url || ""));
+  parsed.search = "";
+  parsed.hash = "";
+  return parsed.toString();
 }
 
 test("xConfig shell injects one menu entry, opens route and closes back safely", async () => {
@@ -500,10 +508,10 @@ test("xConfig shell marks the menu and offers install action when a newer usersc
   installButton.click();
   await wait(5);
 
-  assert.equal(
-    windowRef.__openedUrls.at(-1),
-    "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
-  );
+  const installUrl = String(windowRef.__openedUrls.at(-1) || "");
+  const parsedInstallUrl = new URL(installUrl);
+  assert.equal(getUrlWithoutQuery(installUrl), USERSCRIPT_DOWNLOAD_URL);
+  assert.match(String(parsedInstallUrl.searchParams.get("_adxconfig_ts") || ""), /^\d+$/);
   const notice = documentRef.querySelector(".ad-xconfig-notice");
   assert.ok(notice);
   assert.match(String(notice.textContent || ""), /Installations-Tab geöffnet/);
