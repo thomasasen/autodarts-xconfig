@@ -533,12 +533,12 @@ test("theme-cricket activates for tactics and cleans style on cleanup", async ()
   assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
 });
 
-test("theme-cricket auto-hides board for readability and supports constrained manual toggle override", async () => {
+test("theme-cricket auto-hides board for readability and keeps player width when manually showing a narrow board", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
   const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
-  boardNodes.contentSlot.__rect = { width: 980, height: 680 };
-  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 5);
+  boardNodes.contentSlot.__rect = { width: 1400, height: 680 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 6);
 
   const windowRef = createMatchWindow(documentRef, "theme-cricket-readability");
   const runtime = createBootstrap({
@@ -561,12 +561,20 @@ test("theme-cricket auto-hides board for readability and supports constrained ma
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
     true
   );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "1202px"
+  );
   assert.equal(Boolean(noticeNode), true);
   const noticeTextNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.noticeTextClass}`);
-  assert.equal(Boolean(noticeTextNode?.textContent?.includes("Board wurde")), true);
+  assert.equal(noticeTextNode?.textContent || "", "Board wegen Lesbarkeit ausgeblendet.");
   const toggleNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.toggleClass}`);
   assert.equal(Boolean(toggleNode), true);
   assert.equal(toggleNode?.textContent || "", "Board anzeigen");
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    ""
+  );
 
   toggleNode.click();
   await wait(5);
@@ -578,6 +586,18 @@ test("theme-cricket auto-hides board for readability and supports constrained ma
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardForcedVisibleClass),
     true
   );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    "190px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "1202px"
+  );
+  assert.equal(
+    noticeTextNode?.textContent || "",
+    "Board manuell eingeblendet, Spielerinfos behalten Priorität."
+  );
   assert.equal(toggleNode?.textContent || "", "Board ausblenden");
 
   toggleNode.click();
@@ -585,6 +605,10 @@ test("theme-cricket auto-hides board for readability and supports constrained ma
   assert.equal(
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
     true
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    ""
   );
   assert.equal(toggleNode?.textContent || "", "Board anzeigen");
 
@@ -600,6 +624,10 @@ test("theme-cricket auto-hides board for readability and supports constrained ma
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
     false
   );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    ""
+  );
   assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
 
   runtime.stop();
@@ -607,6 +635,10 @@ test("theme-cricket auto-hides board for readability and supports constrained ma
   assert.equal(
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass),
     false
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    ""
   );
 });
 

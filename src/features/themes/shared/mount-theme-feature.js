@@ -18,12 +18,17 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardSvg: "ad-ext-theme-board-svg",
 });
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
+const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
+const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
+  "--ad-ext-theme-cricket-player-area-required-width";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const CRICKET_READABILITY_POLICY = Object.freeze({
-  playerCardMinWidthPx: 168,
+  playerCardMinWidthPx: 192,
   playerCardGapPx: 6,
   playerAreaPaddingPx: 20,
-  boardMinWidthPx: 360,
+  contentGapPx: 8,
+  boardAutoMinWidthPx: 288,
+  boardManualMinWidthPx: 160,
 });
 export const THEME_CRICKET_READABILITY = Object.freeze({
   constrainedClass: "ad-ext-theme-cricket-readability-constrained",
@@ -41,6 +46,10 @@ function createCricketReadabilityState() {
     manualOverride: null,
     isConstrained: false,
     boardHidden: false,
+    boardAutoHidden: false,
+    boardForcedVisible: false,
+    boardWidthPx: 0,
+    playerAreaRequiredWidthPx: 0,
     noticeNode: null,
     noticeTextNode: null,
     toggleNode: null,
@@ -277,6 +286,30 @@ function updateBoardSizeVariable(node, sizingNode = null) {
   }
 
   node.style.setProperty(BOARD_SIZE_CSS_VARIABLE, `${boardSize}px`);
+}
+
+function clearStyleVariable(node, variableName) {
+  if (
+    !node ||
+    !node.style ||
+    typeof node.style.removeProperty !== "function" ||
+    !variableName
+  ) {
+    return;
+  }
+  node.style.removeProperty(variableName);
+}
+
+function updateStyleVariable(node, variableName, value) {
+  if (
+    !node ||
+    !node.style ||
+    typeof node.style.setProperty !== "function" ||
+    !variableName
+  ) {
+    return;
+  }
+  node.style.setProperty(variableName, String(value));
 }
 
 function resolveContentLayoutCandidate(contentSlot, playerDisplay, boardSvg) {
@@ -588,6 +621,8 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     removeClass(previousContentSlot, THEME_CRICKET_READABILITY.constrainedClass);
     removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardHiddenClass);
     removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardForcedVisibleClass);
+    clearStyleVariable(previousContentSlot, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
+    clearStyleVariable(previousContentSlot, CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE);
   }
 
   readabilityState.contentSlotNode = contentSlotNode || null;
@@ -597,13 +632,38 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
 
   const isConstrained = options.isConstrained === true;
   const boardHidden = options.boardHidden === true;
+  const boardForcedVisible = options.boardForcedVisible === true;
+  const boardWidthPx =
+    Number.isFinite(options.boardWidthPx) && options.boardWidthPx > 0
+      ? Math.floor(options.boardWidthPx)
+      : 0;
+  const playerAreaRequiredWidthPx =
+    Number.isFinite(options.playerAreaRequiredWidthPx) && options.playerAreaRequiredWidthPx > 0
+      ? Math.floor(options.playerAreaRequiredWidthPx)
+      : 0;
   toggleClass(contentSlotNode, THEME_CRICKET_READABILITY.constrainedClass, isConstrained);
   toggleClass(contentSlotNode, THEME_CRICKET_READABILITY.boardHiddenClass, boardHidden);
   toggleClass(
     contentSlotNode,
     THEME_CRICKET_READABILITY.boardForcedVisibleClass,
-    isConstrained && !boardHidden
+    boardForcedVisible
   );
+
+  if (playerAreaRequiredWidthPx > 0) {
+    updateStyleVariable(
+      contentSlotNode,
+      CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE,
+      `${playerAreaRequiredWidthPx}px`
+    );
+  } else {
+    clearStyleVariable(contentSlotNode, CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE);
+  }
+
+  if (boardForcedVisible && boardWidthPx > 0) {
+    updateStyleVariable(contentSlotNode, CRICKET_BOARD_WIDTH_CSS_VARIABLE, `${boardWidthPx}px`);
+  } else {
+    clearStyleVariable(contentSlotNode, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
+  }
 }
 
 function ensureCricketReadabilityNotice(documentRef, state, contentLeftNode, onToggleClick) {
@@ -676,13 +736,16 @@ function updateCricketReadabilityNotice(state, options = {}) {
   }
 
   const boardHidden = options.boardHidden === true;
+  const boardForcedVisible = options.boardForcedVisible === true;
   if (boardHidden) {
-    noticeTextNode.textContent = "Board wurde für bessere Lesbarkeit ausgeblendet.";
+    noticeTextNode.textContent = "Board wegen Lesbarkeit ausgeblendet.";
     toggleNode.textContent = "Board anzeigen";
     return;
   }
 
-  noticeTextNode.textContent = "Wenig Platz: Spielerinfos haben Priorität.";
+  noticeTextNode.textContent = boardForcedVisible
+    ? "Board manuell eingeblendet, Spielerinfos behalten Priorität."
+    : "Wenig Platz: Spielerinfos haben Priorität.";
   toggleNode.textContent = "Board ausblenden";
 }
 
@@ -697,6 +760,11 @@ function clearCricketReadabilityPolicy(state) {
     return;
   }
 
+  clearStyleVariable(readabilityState.contentSlotNode, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
+  clearStyleVariable(
+    readabilityState.contentSlotNode,
+    CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE
+  );
   updateCricketReadabilityClasses(state, null, {});
   removeCricketReadabilityNotice(state);
   state.cricketReadability = createCricketReadabilityState();
@@ -721,36 +789,61 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     removeCricketReadabilityNotice(state);
     readabilityState.isConstrained = false;
     readabilityState.boardHidden = false;
+    readabilityState.boardAutoHidden = false;
+    readabilityState.boardForcedVisible = false;
+    readabilityState.boardWidthPx = 0;
+    readabilityState.playerAreaRequiredWidthPx = 0;
     return;
   }
 
   const slotWidth = getElementWidth(contentSlotNode);
   const playerCount = countCricketPlayerCards(playerDisplayNode);
   const requiredPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
-  const requiredTotalWidth = requiredPlayerWidth + CRICKET_READABILITY_POLICY.boardMinWidthPx;
+  const availableBoardWidth =
+    slotWidth -
+    requiredPlayerWidth -
+    (playerCount > 0 ? CRICKET_READABILITY_POLICY.contentGapPx : 0);
   const isConstrained =
     slotWidth > 0 &&
     playerCount > 0 &&
-    slotWidth < requiredTotalWidth;
+    availableBoardWidth < CRICKET_READABILITY_POLICY.boardAutoMinWidthPx;
 
   if (!isConstrained) {
     readabilityState.manualOverride = null;
     readabilityState.isConstrained = false;
     readabilityState.boardHidden = false;
+    readabilityState.boardAutoHidden = false;
+    readabilityState.boardForcedVisible = false;
+    readabilityState.boardWidthPx = 0;
+    readabilityState.playerAreaRequiredWidthPx = requiredPlayerWidth;
     updateCricketReadabilityClasses(state, contentSlotNode, {
       isConstrained: false,
       boardHidden: false,
+      boardForcedVisible: false,
+      boardWidthPx: 0,
+      playerAreaRequiredWidthPx: requiredPlayerWidth,
     });
     removeCricketReadabilityNotice(state);
     return;
   }
 
-  const boardHidden = readabilityState.manualOverride !== "show";
+  const boardForcedVisible = readabilityState.manualOverride === "show";
+  const boardHidden = !boardForcedVisible;
+  const boardWidthPx = boardForcedVisible
+    ? Math.max(CRICKET_READABILITY_POLICY.boardManualMinWidthPx, Math.floor(availableBoardWidth))
+    : 0;
   readabilityState.isConstrained = true;
   readabilityState.boardHidden = boardHidden;
+  readabilityState.boardAutoHidden = boardHidden;
+  readabilityState.boardForcedVisible = boardForcedVisible;
+  readabilityState.boardWidthPx = boardWidthPx;
+  readabilityState.playerAreaRequiredWidthPx = requiredPlayerWidth;
   updateCricketReadabilityClasses(state, contentSlotNode, {
     isConstrained: true,
     boardHidden,
+    boardForcedVisible,
+    boardWidthPx,
+    playerAreaRequiredWidthPx: requiredPlayerWidth,
   });
   ensureCricketReadabilityNotice(documentRef, state, contentLeftNode, () => {
     readabilityState.manualOverride = readabilityState.boardHidden ? "show" : "hide";
@@ -758,7 +851,7 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
       scheduler.schedule();
     }
   });
-  updateCricketReadabilityNotice(state, { boardHidden });
+  updateCricketReadabilityNotice(state, { boardHidden, boardForcedVisible });
 }
 
 export function mountThemeFeature(context = {}, options = {}) {
