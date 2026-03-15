@@ -31,6 +31,7 @@ Produce a shippable repository state after source changes.
 - report build and test status honestly
 - if build tools are unavailable, say so plainly
 - if version was already bumped, run `npm run build` before any `npm test` to avoid expected userscript version-sync failures
+- keep version markers synchronized across `package.json`, runtime API constant, loader header, and dist/meta headers
 
 # Workflow
 
@@ -76,8 +77,16 @@ Required handling:
 Confirm:
 - generated output came from the build
 - version and shipped artifact match
+- all local version markers are aligned (`package.json`, runtime API, loader, dist/meta)
 - test results are reported honestly
 - repository is left in a commit-ready state
+
+## 5. Publish-state checks (required)
+
+For userscript releases, also confirm and report:
+- local release version
+- remote GitHub version after push (or explicitly: not pushed / not verifiable)
+- implication for xConfig update panel when remote is not yet updated
 
 # If local build tools are unavailable
 
@@ -95,6 +104,7 @@ A valid result from this skill must:
 - regenerate shipped output through the build flow
 - pass `npm run check:syntax` before final test reporting
 - report validation truthfully
+- report local-vs-remote publish state for versioned userscript releases
 - include a ready-to-use commit message in the required repository format whenever a build was run
 
 # Commit guidance

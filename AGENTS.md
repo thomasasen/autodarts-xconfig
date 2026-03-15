@@ -48,6 +48,22 @@ A shipped source change is not complete until:
 - tests were run
 - generated output matches the current source state
 
+## Required publication check for userscript updates
+
+When a release changes the userscript version, the handoff must clearly distinguish:
+- local repository state
+- GitHub published state
+- installed Tampermonkey state
+
+Mandatory before final handoff:
+- confirm `package.json`, `src/core/bootstrap.js` (`API_VERSION`), `loader/autodarts-xconfig.user.js`, `dist/autodarts-xconfig.meta.js`, and `dist/autodarts-xconfig.user.js` all use the same `@version`
+- if the environment cannot push to GitHub, explicitly state that the remote version is still old and xConfig will continue to show the old GitHub version until push
+- after push, verify both remote endpoints expose the same `@version` as local
+
+Suggested PowerShell check:
+- `(Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js").Content | Select-String "@version"`
+- `(Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js").Content | Select-String "@version"`
+
 ## Generated files
 
 `dist/autodarts-xconfig.user.js` is a generated build artifact.

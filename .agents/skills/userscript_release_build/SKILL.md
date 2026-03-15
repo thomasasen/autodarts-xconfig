@@ -38,6 +38,7 @@ Check:
 - Keep the old version during implementation; bump version in `package.json` only in final release packaging
 - If version is already bumped, run `npm run build` before any `npm test` to avoid expected userscript version-sync failures
 - Ensure the generated userscript header matches the package version
+- Ensure `package.json`, `src/core/bootstrap.js` (`API_VERSION`), `loader/autodarts-xconfig.user.js`, `dist/autodarts-xconfig.meta.js`, and `dist/autodarts-xconfig.user.js` are version-synchronized
 - Keep build/test reporting honest. If commands cannot run, say so explicitly
 
 # Workflow
@@ -91,9 +92,21 @@ PowerShell helpers:
 Confirm:
 - `dist/autodarts-xconfig.user.js` changed only through the build
 - the userscript header version matches `package.json`
+- local version markers (`package.json` + runtime API + loader + dist/meta) are fully synchronized
 - after pushing, the remote `dist/autodarts-xconfig.meta.js` and `dist/autodarts-xconfig.user.js` endpoints expose the same `@version` as `package.json`
 - tests passed or failures are reported plainly
 - the result is commit-ready
+
+## 5. Publish-state reporting (required)
+
+Before handoff, report these states explicitly:
+- local release version
+- remote GitHub version (or clearly state: not pushed / not verifiable)
+- installed userscript version expectation
+
+If push was not performed in this environment, explicitly state:
+- GitHub may still show the previous version in xConfig
+- users must not expect update availability until the release commit is pushed
 
 # If Node or npm is unavailable
 
@@ -111,6 +124,7 @@ A valid result from this skill must:
 - regenerate `dist/autodarts-xconfig.user.js`
 - report build/test status truthfully
 - leave the repository in a commit-ready state
+- include explicit local-vs-remote publish-state reporting
 - include a ready-to-use commit message in the required repository format whenever a build was run
 
 # Preferred commit style
