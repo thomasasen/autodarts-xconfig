@@ -731,6 +731,8 @@ test("tv-board-zoom keeps checkout zoom after hit until leg end", () => {
     nowTs: 10100,
   });
 
+  documentRef.activeScoreElement.textContent = "0";
+
   const legEndPendingIntent = computeZoomIntent({
     gameState: createX01GameState({
       activeScore: 0,
@@ -777,6 +779,43 @@ test("tv-board-zoom keeps checkout zoom after hit until leg end", () => {
   assert.deepEqual(checkoutHitIntent, { reason: "checkout", segment: "D20" });
   assert.deepEqual(legEndPendingIntent, { reason: "checkout", segment: "D20" });
   assert.equal(newLegIntent, null);
+});
+
+test("tv-board-zoom clears sticky checkout zoom at new game start when state score is stale", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  documentRef.activeScoreElement.textContent = "501";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+  state.activeIntent = { reason: "checkout", segment: "D20" };
+  state.stickyUntilLegEnd = true;
+  state.lastTurnId = "turn-checkout";
+  state.lastThrowCount = 1;
+
+  const newGameIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 0,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-new-game",
+        playerId: "player-1",
+        throws: [],
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 11250,
+  });
+
+  assert.equal(newGameIntent, null);
+  assert.equal(state.stickyUntilLegEnd, false);
+  assert.equal(state.activeIntent, null);
 });
 
 test("tv-board-zoom clears sticky checkout zoom when a new match snapshot arrives", () => {

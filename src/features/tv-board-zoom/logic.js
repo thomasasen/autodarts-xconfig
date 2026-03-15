@@ -1119,10 +1119,21 @@ export function computeZoomIntent(options = {}) {
   state.lastTurnId = turnId;
   state.lastThrowCount = throwCount;
 
-  const activeScore =
-    Number.isFinite(gameState.getActiveScore?.()) && gameState.getActiveScore() >= 0
-      ? gameState.getActiveScore()
-      : getBestVisibleScoreFromDom(documentRef, windowRef);
+  const stateScoreCandidate = gameState.getActiveScore?.();
+  const stateActiveScore =
+    Number.isFinite(stateScoreCandidate) && stateScoreCandidate >= 0
+      ? stateScoreCandidate
+      : null;
+  let activeScore = Number.isFinite(stateActiveScore)
+    ? stateActiveScore
+    : getBestVisibleScoreFromDom(documentRef, windowRef);
+
+  if (state.stickyUntilLegEnd && stateActiveScore === 0 && throwCount === 0) {
+    const visibleScore = getBestVisibleScoreFromDom(documentRef, windowRef);
+    if (Number.isFinite(visibleScore) && visibleScore > 0) {
+      activeScore = visibleScore;
+    }
+  }
   const suggestionSegment = getSuggestionSegmentFromDom(documentRef, windowRef, x01Rules);
   const suggestionIsCheckout = isOneDartCheckoutSegmentForMode(suggestionSegment, outMode, x01Rules);
   const suggestionMatchesScore = canFinishWithSegment(
