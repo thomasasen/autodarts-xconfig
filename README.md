@@ -5,36 +5,97 @@
 
 [![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js)
 
-## Für wen ist das gedacht?
+## Was ist AD xConfig?
 
-`autodarts-xconfig` richtet sich an Spieler, die in Autodarts schneller erkennen wollen, was gerade wichtig ist: Checkouts, Spielerwechsel, Trends, Zielzustände oder einfach ein ruhigeres Theme.
+`autodarts-xconfig` ergänzt Autodarts um Themes, Animationen und kleine Komfortfunktionen. Du kannst damit das Spiel übersichtlicher machen und die Oberfläche nach deinem Geschmack anpassen.
 
-Die Module lassen sich direkt im Spiel über **AD xConfig** aktivieren, kombinieren und anpassen. In jeder Modul-Karte findest du:
+Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts programmieren und keine Dateien ändern.
 
-- `⚙ Einstellungen` für die sofort wirksame Konfiguration
-- `📖 README` für die passende Erklärung in dieser Datei
+## Was bringt es mir?
 
-## Schnellstart
+- ruhigere oder auffälligere Themes
+- besser sichtbare Hinweise für Checkouts, Spielerwechsel und Treffer
+- Einstellungen direkt im Spiel statt in einzelnen Skripten
+- eigene Hintergrundbilder für Themes
+
+## Schnell loslegen
 
 1. Tampermonkey installieren: [tampermonkey.net](https://www.tampermonkey.net/)
-2. Auf den Install-Button oben klicken
+2. Oben auf `Installieren` klicken
 3. `https://play.autodarts.io/` neu laden
-4. In der linken Navigation **AD xConfig** öffnen
-5. Module aktivieren und Einstellungen direkt im Spiel anpassen
+4. Links in der Navigation **AD xConfig** öffnen
+5. Erst `Themen` und `Animationen` in Ruhe ansehen, dann einzelne Module einschalten
 
-![AD xConfig Menü und Oberfläche](docs/screenshots/ad-xconfig.png)
+Wichtiger Hinweis nach der Installation: Alle Themes sind zuerst ausgeschaltet. Die meisten Animationen und Komfortfunktionen sind ebenfalls aus. `Checkout Score Pulse` ist standardmäßig bereits eingeschaltet. Am einfachsten ist es, wenn du Themes und Animationen einzeln ausprobierst und Autodarts Schritt für Schritt an deine Wünsche anpasst.
+
+![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
+![AD xConfig Animationenübersicht](docs/screenshots/ad-xconfig-animationen.png)
 
 Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browser-Einstellung:
 
 ![Tampermonkey Injection-Hinweis](docs/screenshots/tempermonkey-injection.png)
 
-## Was ist enthalten?
+## Wo finde ich was?
 
-- 5 Themes
-- 15 Animationen und Komfortfunktionen
-- Zentrale In-Game-Konfiguration im Menü **AD xConfig**
-- Persistente Speicherung der Einstellungen inklusive Theme-Hintergründen
-- Direkte README-Verlinkung aus der xConfig-Oberfläche
+- `Themen`: Hier findest du Farben, Layouts und Hintergründe.
+- `Animationen`: Hier findest du Effekte und Komfortfunktionen.
+- `⚙ Einstellungen`: Mit diesem Button öffnest du die Einstellungen einer Kachel.
+- `📖 README`: Mit diesem Button springst du direkt zur passenden Stelle in dieser Dokumentation.
+- An/Aus-Schalter: Hier schaltest du ein Modul direkt ein oder aus.
+
+## Der obere Bereich im Menü
+
+![AD xConfig Kopfbereich](docs/screenshots/ad-xconfig-header.png)
+
+- `↺ Zurücksetzen`: Setzt alle Einstellungen auf Standard zurück und deaktiviert alle Module.
+- Versionsstatus: Hier siehst du, ob deine Version aktuell ist, ob ein Update verfügbar ist oder ob die Update-Prüfung fehlgeschlagen ist.
+- `Neu prüfen`: Startet sofort eine neue Update-Prüfung.
+- `Themen` und `Animationen`: Mit diesen Buttons wechselst du zwischen beiden Bereichen.
+
+## Updates erkennen und installieren
+
+1. AD xConfig prüft direkt beim Start, ob auf GitHub eine neuere Version verfügbar ist.
+2. Danach wird im Hintergrund weiter geprüft. Der Hintergrund-Timer läuft alle 15 Minuten. Wegen Zwischenspeicherung wird ohne Klick auf `Neu prüfen` höchstens ungefähr einmal pro Stunde wirklich online verglichen.
+3. Wenn ein Update verfügbar ist, siehst du am Menüpunkt **AD xConfig** einen kleinen orangefarbenen Punkt.
+4. Im geöffneten Menü erscheint die Meldung `Update verfügbar` mit dem Button `Update installieren`.
+5. Ein Klick auf `Update installieren` öffnet die Userscript-Datei in einem neuen Tab. Tampermonkey übernimmt dort die Neuinstallation.
+6. Es kann ein paar Sekunden dauern, bis Tampermonkey die Aufforderung zur Re-Installation anzeigt. Danach das Update einfach bestätigen.
+
+## So ist eine Kachel aufgebaut
+
+![Beispiel für eine AD xConfig Kachel](docs/screenshots/ad-xconfig-kachel.png)
+
+- Oben steht die Überschrift des Moduls.
+- Darunter steht eine kurze Beschreibung, was das Modul macht.
+- `Gilt für` zeigt dir, in welchen Spielmodi das Modul gedacht ist.
+- Die Zahl bei `Einstellungen` zeigt, wie viele Einstellmöglichkeiten es gibt.
+- `⚙ Einstellungen` öffnet das Einstellungsfenster dieser Kachel.
+- `📖 README` öffnet direkt die passende Stelle in dieser `README.md`.
+- Der Hinweis unten zeigt bei Themes zum Beispiel an, ob schon ein eigenes Hintergrundbild gespeichert ist.
+- Der An/Aus-Schalter oben rechts ist die wichtigste Aktion: Hier schaltest du das Modul direkt ein oder aus.
+
+## So sieht das Einstellungsfenster aus
+
+![AD xConfig Einstellungsfenster](docs/screenshots/ad-xconfig-einstellungen.png)
+
+- Oben findest du wieder den Button `📖 README` für mehr Informationen zum gerade geöffneten Modul.
+- Die Einstellungen sind in Gruppen aufgeteilt, damit du nicht alles auf einmal suchen musst.
+- Viele Gruppen funktionieren wie eine Einzelauswahl. Meist ist pro Gruppe nur eine Option gleichzeitig aktiv.
+- Die aktuell ausgewählte Option ist mit `Aktuell` markiert.
+- Manche Einstellungen sind einfache An/Aus-Schalter.
+- `Debug` ist nur für Entwicklung und Fehlersuche gedacht. Diese Option nur aktivieren, wenn du ausdrücklich dazu aufgefordert wirst. Sonst kann es zu unerwünschten Nebeneffekten kommen.
+
+## Eigene Hintergrundbilder in Themes
+
+![Theme-Hintergrundbild in AD xConfig](docs/screenshots/ad-xconfig-theme-background.png)
+
+Bei den Themes kannst du ein eigenes Hintergrundbild hochladen und später auch wieder entfernen. Das Bild wird nur für das jeweilige Theme gespeichert.
+
+Je nach Theme kannst du dein Hintergrundbild zusätzlich anpassen:
+
+- `Hintergrund-Darstellung`: Hier legst du fest, wie das Bild platziert wird.
+- `Hintergrundbild-Deckkraft`: Hier regelst du, wie stark das Bild sichtbar bleibt.
+- `Spielerfelder-Transparenz`: Hier bestimmst du, wie stark die Spielerfelder den Hintergrund durchlassen.
 
 Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. Im normalen Spielbetrieb sollte sie deaktiviert bleiben.
 

@@ -21,6 +21,21 @@ const migrationStatusDocPath = path.resolve(process.cwd(), "docs", "MIGRATION-ST
 const releaseQaDocPath = path.resolve(process.cwd(), "docs", "RELEASE-QA-REPORT.md");
 const runtimeEntrypointsDocPath = path.resolve(process.cwd(), "docs", "RUNTIME-ENTRYPOINTS.md");
 const performanceAuditDocPath = path.resolve(process.cwd(), "docs", "PERFORMANCE-AUDIT.md");
+const deprecatedOverviewScreenshotPattern = /ad-xconfig\.png/;
+const requiredReadmeOverviewScreenshots = [
+  "docs/screenshots/ad-xconfig-themen.png",
+  "docs/screenshots/ad-xconfig-animationen.png",
+  "docs/screenshots/ad-xconfig-header.png",
+  "docs/screenshots/ad-xconfig-kachel.png",
+  "docs/screenshots/ad-xconfig-einstellungen.png",
+  "docs/screenshots/ad-xconfig-theme-background.png",
+];
+const requiredFeaturesOverviewScreenshots = [
+  "screenshots/ad-xconfig-themen.png",
+  "screenshots/ad-xconfig-animationen.png",
+];
+const mojibakePattern =
+  /\u00C3\u00A4|\u00C3\u00B6|\u00C3\u00BC|\u00C3\u009F|\u00C3\u0084|\u00C3\u0096|\u00C3\u009C/;
 const featureDefinitionByKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );
@@ -55,10 +70,33 @@ test("README screenshot paths exist in docs/screenshots", () => {
   });
 });
 
-test("README documents the AD xConfig UI screenshot", () => {
+test("README uses the current AD xConfig overview screenshots", () => {
   const readme = readFileSync(readmePath, "utf8");
 
-  assert.match(readme, /docs\/screenshots\/ad-xconfig\.png/);
+  requiredReadmeOverviewScreenshots.forEach((screenshotPath) => {
+    assert.match(readme, new RegExp(screenshotPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  });
+});
+
+test("README and FEATURES no longer reference the deprecated AD xConfig overview screenshot", () => {
+  const readme = readFileSync(readmePath, "utf8");
+  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+
+  assert.doesNotMatch(readme, deprecatedOverviewScreenshotPattern);
+  assert.doesNotMatch(featuresDoc, deprecatedOverviewScreenshotPattern);
+});
+
+test("README and FEATURES keep beginner-facing German text free of mojibake", () => {
+  const readme = readFileSync(readmePath, "utf8");
+  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+
+  assert.doesNotMatch(readme, mojibakePattern);
+  assert.doesNotMatch(featuresDoc, mojibakePattern);
+  assert.match(readme, /Zurücksetzen/);
+  assert.match(readme, /Neu prüfen/);
+  assert.match(readme, /Änderungen/);
+  assert.match(readme, /öffnest du/);
+  assert.match(readme, /für/);
 });
 
 test("README contains a visible install badge", () => {
@@ -142,6 +180,14 @@ test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
       true,
       `missing screenshot in FEATURES.md: ${match[1]}`
     );
+  });
+});
+
+test("FEATURES uses the current AD xConfig overview screenshots", () => {
+  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+
+  requiredFeaturesOverviewScreenshots.forEach((screenshotPath) => {
+    assert.match(featuresDoc, new RegExp(screenshotPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
 });
 

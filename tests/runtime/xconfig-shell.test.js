@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
+import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
 
@@ -1019,7 +1020,7 @@ test("xConfig dart design options render split layout with preview and active ba
   runtime.stop();
 });
 
-test("xConfig shell links cards and settings modal to the matching README anchor", async () => {
+test("xConfig shell links every card README button to the matching README anchor", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1028,39 +1029,75 @@ test("xConfig shell links cards and settings modal to the matching README anchor
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await wait(5);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
+
+  for (const descriptor of xconfigDescriptors) {
+    const tabId = descriptor.tab === "themes" ? "themes" : "animations";
+    const tabButton = documentRef.getElementById(`ad-xconfig-tab-${tabId}`);
+    assert.ok(tabButton, `missing tab button for ${descriptor.featureKey}`);
+    tabButton.click();
+    await wait(5);
+
+    const cardReadmeButton = documentRef.querySelector(
+      `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-readme'][data-feature-key='${descriptor.featureKey}']`
+    );
+    assert.ok(cardReadmeButton, `missing card README button for ${descriptor.featureKey}`);
+    cardReadmeButton.click();
+    await wait(5);
+
+    assert.equal(
+      windowRef.__openedUrls.at(-1),
+      `https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#${descriptor.readmeAnchor}`
+    );
+  }
+
+  runtime.stop();
+});
+
+test("xConfig shell links every settings modal README button to the matching README anchor", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   await wait(5);
 
-  const cardReadmeButton = documentRef.querySelector(
-    "[data-adxconfig-action='open-readme'][data-feature-key='checkout-score-pulse']"
-  );
-  assert.ok(cardReadmeButton);
-  cardReadmeButton.click();
+  documentRef.getElementById("ad-xconfig-menu-item").click();
   await wait(5);
 
-  assert.equal(
-    windowRef.__openedUrls.at(-1),
-    "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#animation-autodarts-animate-checkout-score-pulse"
-  );
+  for (const descriptor of xconfigDescriptors) {
+    if (!Array.isArray(descriptor.fields) || !descriptor.fields.length) {
+      continue;
+    }
 
-  const settingsButton = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
-  );
-  assert.ok(settingsButton);
-  settingsButton.click();
-  await wait(5);
+    const tabId = descriptor.tab === "themes" ? "themes" : "animations";
+    const tabButton = documentRef.getElementById(`ad-xconfig-tab-${tabId}`);
+    assert.ok(tabButton, `missing tab button for ${descriptor.featureKey}`);
+    tabButton.click();
+    await wait(5);
 
-  const modalReadmeButtons = documentRef.querySelectorAll(
-    "[data-adxconfig-action='open-readme'][data-feature-key='checkout-score-pulse']"
-  );
-  assert.ok(modalReadmeButtons.length >= 2);
-  modalReadmeButtons[1].click();
-  await wait(5);
+    const settingsButton = documentRef.querySelector(
+      `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-settings'][data-feature-key='${descriptor.featureKey}']`
+    );
+    assert.ok(settingsButton, `missing settings button for ${descriptor.featureKey}`);
+    settingsButton.click();
+    await wait(5);
 
-  assert.equal(
-    windowRef.__openedUrls.at(-1),
-    "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#animation-autodarts-animate-checkout-score-pulse"
-  );
+    const modalReadmeButton = documentRef.querySelector(
+      `.ad-xconfig-modal [data-adxconfig-action='open-readme'][data-feature-key='${descriptor.featureKey}']`
+    );
+    assert.ok(modalReadmeButton, `missing modal README button for ${descriptor.featureKey}`);
+    modalReadmeButton.click();
+    await wait(5);
+
+    assert.equal(
+      windowRef.__openedUrls.at(-1),
+      `https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#${descriptor.readmeAnchor}`
+    );
+
+    const closeSettingsButton = documentRef.querySelector("[data-adxconfig-action='close-settings']");
+    assert.ok(closeSettingsButton, `missing modal close button for ${descriptor.featureKey}`);
+    closeSettingsButton.click();
+    await wait(5);
+  }
 
   runtime.stop();
 });

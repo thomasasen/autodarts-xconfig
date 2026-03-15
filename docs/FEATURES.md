@@ -5,9 +5,10 @@
 - 15 Animationen und Komfortfunktionen
 - 5 Themes
 
-Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel.
+Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
-![AD xConfig](screenshots/ad-xconfig.png)
+![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
+![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)
 
 ## Themes
 
