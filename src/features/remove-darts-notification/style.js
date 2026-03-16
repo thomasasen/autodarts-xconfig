@@ -54,13 +54,17 @@ export function buildStyleText(visualConfig = {}) {
   const pulseScale = Number(visualConfig.pulseScale) || 1.04;
   const pulseDurationMs = Number(visualConfig.pulseDurationMs) || 1400;
   const pulseAnimation = visualConfig.pulseAnimation !== false;
+  const pulseAnimationRule = pulseAnimation
+    ? `ad-ext-takeout-pulse ${pulseDurationMs}ms ease-in-out infinite !important`
+    : "none !important";
 
   return `
 .${CARD_CLASS} {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   background: transparent !important;
+  background-color: transparent !important;
   background-image: none !important;
   padding: 0 !important;
   box-shadow: none !important;
@@ -71,6 +75,16 @@ export function buildStyleText(visualConfig = {}) {
   font-size: 0 !important;
   line-height: 0 !important;
   pointer-events: none;
+  isolation: isolate;
+}
+
+.${CARD_CLASS}::before,
+.${CARD_CLASS}::after {
+  content: none !important;
+  display: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .${CARD_CLASS} > :not(.${IMAGE_CLASS}) {
@@ -78,12 +92,21 @@ export function buildStyleText(visualConfig = {}) {
 }
 
 .${CARD_CLASS} .${IMAGE_CLASS} {
-  display: block;
-  width: min(${imageMaxWidthRem}rem, ${imageMaxWidthVw}vw);
-  height: auto;
-  background: transparent;
-  transform-origin: center;
-  animation: ${pulseAnimation ? `ad-ext-takeout-pulse ${pulseDurationMs}ms ease-in-out infinite` : "none"};
+  display: block !important;
+  width: min(${imageMaxWidthRem}rem, ${imageMaxWidthVw}vw) !important;
+  max-width: min(${imageMaxWidthRem}rem, ${imageMaxWidthVw}vw) !important;
+  height: auto !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  object-fit: contain !important;
+  opacity: 1 !important;
+  transform: translateZ(0);
+  transform-origin: center center !important;
+  animation: ${pulseAnimationRule};
   will-change: transform, opacity;
   pointer-events: none;
 }
@@ -95,7 +118,7 @@ export function buildStyleText(visualConfig = {}) {
 
 @media (prefers-reduced-motion: reduce) {
   .${CARD_CLASS} .${IMAGE_CLASS} {
-    animation: none;
+    animation: none !important;
   }
 }
 `;
