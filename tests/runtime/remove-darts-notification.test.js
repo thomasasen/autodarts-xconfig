@@ -44,6 +44,31 @@ test("remove-darts-notification injects hand image for primary .adt-remove notic
   assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
 });
 
+test("remove-darts-notification decorates the visible wrapper when .adt-remove is nested inside a card", () => {
+  const documentRef = new FakeDocument();
+  const overlay = documentRef.createElement("div");
+  const card = documentRef.createElement("div");
+  const notice = documentRef.createElement("div");
+  notice.classList.add("adt-remove");
+  notice.textContent = "Removing Darts";
+  card.appendChild(notice);
+  overlay.appendChild(card);
+  documentRef.main.appendChild(overlay);
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(overlay.classList.contains(CARD_CLASS), false);
+  assert.equal(card.classList.contains(CARD_CLASS), true);
+  assert.equal(notice.classList.contains(CARD_CLASS), false);
+  assert.equal(Boolean(card.querySelector(`.${IMAGE_CLASS}`)), true);
+  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+
+  clearRemoveDartsNotificationState(state);
+  assert.equal(card.classList.contains(CARD_CLASS), false);
+  assert.equal(Boolean(card.querySelector(`.${IMAGE_CLASS}`)), false);
+});
+
 test("remove-darts-notification fallback recognizes 'Remove Darts' text", () => {
   const documentRef = new FakeDocument();
   const notice = documentRef.createElement("div");

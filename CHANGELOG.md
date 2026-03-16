@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.26] - 2026-03-16
+
+### Fixed
+
+- Nutzerwirkung: Die Remove-Darts-Karte ersetzt jetzt auch im aktuellen Autodarts-Modal
+  den sichtbaren gelben Wrapper korrekt, sodass Hintergrund und Titel verschwinden, das
+  Pulsieren sichtbar greift und die Bildgröße aus xConfig wieder erkennbar wirkt.
+  Technik: Die Replacement-Logik richtet sich jetzt auf den tatsächlich sichtbaren
+  Wrapper-Host aus, wenn `.adt-remove` darin allein verschachtelt ist; eine neue
+  Runtime-Regression deckt genau diesen DOM-Snapshot-Fall samt Cleanup ab.
+
 ## [2.0.25] - 2026-03-16
 
 ### Fixed
@@ -143,8 +154,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/1f76798f0a8c495d13d5452a66d65e9d309fb470...HEAD
-[2.0.25]: https://github.com/thomasasen/autodarts-xconfig/compare/1f76798f0a8c495d13d5452a66d65e9d309fb470...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695...HEAD
+[2.0.26]: https://github.com/thomasasen/autodarts-xconfig/compare/a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695...HEAD
+[2.0.25]: https://github.com/thomasasen/autodarts-xconfig/compare/1f76798f0a8c495d13d5452a66d65e9d309fb470...a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695
 [2.0.24]: https://github.com/thomasasen/autodarts-xconfig/compare/94f648b2ef5772d813fb5201bbde2104cb41b933...1f76798f0a8c495d13d5452a66d65e9d309fb470
 [2.0.23]: https://github.com/thomasasen/autodarts-xconfig/compare/8e9251e1141c694dc81dcd527382aa08f1def821...94f648b2ef5772d813fb5201bbde2104cb41b933
 [2.0.22]: https://github.com/thomasasen/autodarts-xconfig/compare/b142ab0dace21fb76c51b440c90507c5e8a2333f...8e9251e1141c694dc81dcd527382aa08f1def821

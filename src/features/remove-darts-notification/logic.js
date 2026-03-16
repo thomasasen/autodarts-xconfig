@@ -370,20 +370,53 @@ function createImageNode(documentRef) {
   return image;
 }
 
-function applyReplacement(noticeNode, documentRef) {
-  if (!noticeNode || !noticeNode.classList) {
+function isPromotableReplacementHost(node) {
+  if (!node || typeof node.matches !== "function") {
+    return true;
+  }
+
+  return !(
+    node.matches(FALLBACK_AREA_SELECTORS.join(",")) ||
+    node.matches(MATCH_VIEW_SELECTORS.join(","))
+  );
+}
+
+function resolveReplacementHost(noticeNode) {
+  if (!noticeNode || !noticeNode.parentElement) {
+    return noticeNode || null;
+  }
+
+  const parentElement = noticeNode.parentElement;
+  const childElementCount = Array.isArray(parentElement.children)
+    ? parentElement.children.length
+    : Number(parentElement.childElementCount) || 0;
+  if (
+    parentElement &&
+    parentElement.firstElementChild === noticeNode &&
+    childElementCount === 1 &&
+    isPromotableReplacementHost(parentElement) &&
+    !isInsideXConfigScope(parentElement)
+  ) {
+    return parentElement;
+  }
+
+  return noticeNode;
+}
+
+function applyReplacement(replacementHost, documentRef) {
+  if (!replacementHost || !replacementHost.classList) {
     return;
   }
-  if (isInsideXConfigScope(noticeNode)) {
+  if (isInsideXConfigScope(replacementHost)) {
     return;
   }
 
-  noticeNode.classList.add(CARD_CLASS);
+  replacementHost.classList.add(CARD_CLASS);
 
-  let imageNode = noticeNode.querySelector?.(`.${IMAGE_CLASS}`) || null;
+  let imageNode = replacementHost.querySelector?.(`.${IMAGE_CLASS}`) || null;
   if (!imageNode) {
     imageNode = createImageNode(documentRef);
-    noticeNode.appendChild(imageNode);
+    replacementHost.appendChild(imageNode);
   } else {
     imageNode.src = TAKEOUT_IMAGE_ASSET;
     imageNode.alt = "Darts entfernen";
@@ -455,7 +488,14 @@ export function updateRemoveDartsNotification(options = {}) {
     state.needsImmediateFallbackScan = false;
   }
   const notices = primary.length ? primary : collectFallbackNotices(documentRef, state);
-  const noticeSet = new Set(notices);
+  const replacementHosts = Array.from(
+    new Set(
+      notices
+        .map((noticeNode) => resolveReplacementHost(noticeNode))
+        .filter(Boolean)
+    )
+  );
+  const noticeSet = new Set(replacementHosts);
 
   state.trackedNotices.forEach((noticeNode) => {
     if (noticeSet.has(noticeNode)) {
@@ -465,7 +505,7 @@ export function updateRemoveDartsNotification(options = {}) {
     state.trackedNotices.delete(noticeNode);
   });
 
-  notices.forEach((noticeNode) => {
+  replacementHosts.forEach((noticeNode) => {
     state.trackedNotices.add(noticeNode);
     applyReplacement(noticeNode, documentRef);
   });
