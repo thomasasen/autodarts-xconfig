@@ -25,6 +25,7 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
   beforeUnload: `${FEATURE_KEY}:window-beforeunload`,
 });
+const TRANSIENT_RESET_GRACE_MS = 120;
 const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
   "#ad-ext-turn .ad-ext-turn-throw",
   ".ad-ext-turn-throw",
@@ -88,6 +89,9 @@ export function initializeTvBoardZoom(context = {}) {
     stickyUntilLegEnd: false,
     manualPause: false,
     manualPauseThrowCount: -1,
+    transientResetReason: "",
+    transientResetUntilTs: 0,
+    transientResetTimerId: 0,
   };
   const boardCache = {
     svg: null,
@@ -109,16 +113,78 @@ export function initializeTvBoardZoom(context = {}) {
     return boardSvg;
   }
 
-  const scheduler = schedulerFactory(() => {
+  let scheduler = null;
+
+  function clearTransientResetTimer() {
+    if (!zoomState.transientResetTimerId) {
+      return;
+    }
+
+    if (typeof windowRef.clearTimeout === "function") {
+      windowRef.clearTimeout(zoomState.transientResetTimerId);
+    } else {
+      clearTimeout(zoomState.transientResetTimerId);
+    }
+    zoomState.transientResetTimerId = 0;
+  }
+
+  function clearTransientResetState() {
+    clearTransientResetTimer();
+    zoomState.transientResetReason = "";
+    zoomState.transientResetUntilTs = 0;
+  }
+
+  function scheduleTransientResetCheck() {
+    clearTransientResetTimer();
+
+    const setTimeoutRef =
+      typeof windowRef.setTimeout === "function" ? windowRef.setTimeout.bind(windowRef) : setTimeout;
+    zoomState.transientResetTimerId = setTimeoutRef(() => {
+      zoomState.transientResetTimerId = 0;
+      scheduler?.schedule?.();
+    }, TRANSIENT_RESET_GRACE_MS);
+  }
+
+  function requestZoomReset(reason, options = {}) {
+    let forceReset = Boolean(options.force);
+    if (!forceReset && reason === "intent-missing" && zoomState.manualPause) {
+      forceReset = true;
+    }
+
+    const hasActiveZoom = Boolean(zoomState.zoomedElement);
+    if (forceReset || !hasActiveZoom) {
+      clearTransientResetState();
+      resetZoom(speedConfig, zoomState);
+      return;
+    }
+
+    const nowTs = Date.now();
+    if (zoomState.transientResetReason !== reason) {
+      zoomState.transientResetReason = reason;
+      zoomState.transientResetUntilTs = nowTs + TRANSIENT_RESET_GRACE_MS;
+      scheduleTransientResetCheck();
+      return;
+    }
+
+    if (nowTs < zoomState.transientResetUntilTs) {
+      scheduleTransientResetCheck();
+      return;
+    }
+
+    clearTransientResetState();
+    resetZoom(speedConfig, zoomState);
+  }
+
+  scheduler = schedulerFactory(() => {
     const boardSvg = getBoardSvg();
     if (!boardSvg) {
-      resetZoom(speedConfig, zoomState);
+      requestZoomReset("board-missing");
       return;
     }
 
     const targetNode = resolveZoomTarget(boardSvg);
     if (!targetNode) {
-      resetZoom(speedConfig, zoomState);
+      requestZoomReset("target-missing");
       return;
     }
 
@@ -132,10 +198,11 @@ export function initializeTvBoardZoom(context = {}) {
     });
 
     if (!intent) {
-      resetZoom(speedConfig, zoomState);
+      requestZoomReset("intent-missing");
       return;
     }
 
+    clearTransientResetState();
     const hostNode = resolveZoomHost(targetNode);
     applyZoom(targetNode, hostNode, boardSvg, zoomLevel, speedConfig, intent, zoomState, {
       x01Rules,
@@ -212,6 +279,7 @@ export function initializeTvBoardZoom(context = {}) {
           return;
         }
         markManualZoomPause(zoomState);
+        clearTransientResetState();
         resetZoom(speedConfig, zoomState);
       },
       options: { passive: true, capture: true },
@@ -230,6 +298,7 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "beforeunload",
       handler: () => {
+        clearTransientResetState();
         zoomState.holdUntilTs = 0;
         zoomState.activeIntent = null;
         resetZoom(speedConfig, zoomState, true);
@@ -263,6 +332,7 @@ export function initializeTvBoardZoom(context = {}) {
       });
     }
 
+    clearTransientResetState();
     resetZoom(speedConfig, zoomState, true);
     invalidateBoardCache();
     domGuards.removeNodeById(STYLE_ID);

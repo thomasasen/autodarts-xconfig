@@ -13,6 +13,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.25] - 2026-03-16
+
+### Fixed
+
+- Nutzerwirkung: Beim X01-Checkout bleibt der TV-Board-Zoom bei kurzen
+  Übergangsphasen zwischen Würfen stabiler, wodurch sichtbares Board-Flackern
+  und kurzzeitige Scrollbalken deutlich reduziert werden.
+  Technik: Der Zoom-Reset nutzt jetzt eine kurze Hysterese für transiente
+  `board/target/intent`-Nullzustände und behält den sofortigen Korrektur-Reset
+  über `manualPause`; zusätzlich sichern neue Runtime-Regressionen den
+  Kurzunterbruch-, Persistenz- und Korrekturpfad ab.
+
 ## [2.0.24] - 2026-03-16
 
 ### Fixed
@@ -131,8 +143,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/94f648b2ef5772d813fb5201bbde2104cb41b933...HEAD
-[2.0.24]: https://github.com/thomasasen/autodarts-xconfig/compare/94f648b2ef5772d813fb5201bbde2104cb41b933...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/1f76798f0a8c495d13d5452a66d65e9d309fb470...HEAD
+[2.0.25]: https://github.com/thomasasen/autodarts-xconfig/compare/1f76798f0a8c495d13d5452a66d65e9d309fb470...HEAD
+[2.0.24]: https://github.com/thomasasen/autodarts-xconfig/compare/94f648b2ef5772d813fb5201bbde2104cb41b933...1f76798f0a8c495d13d5452a66d65e9d309fb470
 [2.0.23]: https://github.com/thomasasen/autodarts-xconfig/compare/8e9251e1141c694dc81dcd527382aa08f1def821...94f648b2ef5772d813fb5201bbde2104cb41b933
 [2.0.22]: https://github.com/thomasasen/autodarts-xconfig/compare/b142ab0dace21fb76c51b440c90507c5e8a2333f...8e9251e1141c694dc81dcd527382aa08f1def821
 [2.0.21]: https://github.com/thomasasen/autodarts-xconfig/compare/80ad4c176536d1ac4eec34f6732e04f357918d8b...b142ab0dace21fb76c51b440c90507c5e8a2333f
