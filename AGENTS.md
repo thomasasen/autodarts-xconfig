@@ -6,6 +6,10 @@ Use the matching skill from `.agents/skills/` when the task clearly fits one.
 Skills add specialized workflows.
 The rules in this file always apply.
 
+Use `.agents/skills/changelog_maintenance/SKILL.md` when work involves `CHANGELOG.md`,
+release notes, version history, or documenting relevant shipped/user-visible changes for a
+version bump or handoff.
+
 ## Required validation after changes
 
 After any code change, perform appropriate validation.
@@ -28,6 +32,10 @@ Syntax gate requirement:
 - run `npm run check:syntax` before release validation
 - the check must pass for all JavaScript entry points (`src`, `scripts`, `loader`, `tests`, `dist`) and package JSON files
 
+Changelog gate requirement:
+- run `npm run check:changelog` when relevant shipped/user-visible behavior, release metadata, or repository release workflow changed
+- do not treat a version bump as complete until `CHANGELOG.md` and the changelog consistency check are updated
+
 ## Required release steps for shipped source changes
 
 If the change affects shipped behavior or modifies files under `src/`, `loader/`, `scripts/`, or bundled assets:
@@ -47,6 +55,20 @@ A shipped source change is not complete until:
 - build succeeded
 - tests were run
 - generated output matches the current source state
+- `CHANGELOG.md` reflects the released change set
+
+## Required changelog maintenance
+
+Maintain `CHANGELOG.md` as the canonical human-readable history for this repository.
+
+Rules:
+- add or update `CHANGELOG.md` for relevant shipped/user-visible changes and for meaningful release-workflow changes
+- keep `## [Unreleased]` at the top
+- every real changelog entry must contain both `Nutzerwirkung:` and `Technik:`
+- when the version is bumped, move finalized `Unreleased` entries into a new versioned section with ISO date
+- a version increase is not complete if `CHANGELOG.md` was not updated together with the release
+- before final handoff, distinguish clearly between local working tree state, locally committed state, and GitHub-published state
+- before final handoff, verify changelog consistency against current version, working tree, and release status
 
 ## Required publication check for userscript updates
 
@@ -126,6 +148,7 @@ Example:
 - install dependencies: `npm install`
 - build userscript: `npm run build`
 - run syntax checks: `npm run check:syntax`
+- run changelog checks: `npm run check:changelog`
 - run tests: `npm test`
 - run full verification: `npm run verify`
 
