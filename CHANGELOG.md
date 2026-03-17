@@ -13,6 +13,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.34] - 2026-03-17
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme steht der Spielername jetzt in der
+  ersten Zeile über die volle Kartenbreite; darunter sind Match-Wins, MPR und Punkte
+  als klare Dreiteilung angeordnet. Der aktive Spielername bleibt einzeilig und wird
+  bewusst kleiner dargestellt, damit die Punktezahl dominant lesbar bleibt.
+  Technik: Das Player-Header-Grid wurde auf `identity` über alle drei Spalten plus
+  zweite Zeile `matches | stats | score` umgestellt, der `css-1cmgsw8`-Badge in die
+  dedizierte Matches-Spalte gelegt, MPR in Spalte 2 zentriert und die Score-Skalierung
+  für bessere Lesbarkeit angehoben; zusätzlich erzwingen neue Regeln einzeilige Namen
+  ohne Umbruch und die Style-Regressionen sichern den neuen Layout-Vertrag ab.
+
 ## [2.0.33] - 2026-03-17
 
 ### Fixed
@@ -226,8 +240,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
-[2.0.33]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...HEAD
+[2.0.34]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...HEAD
+[2.0.33]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...f62c2bb
 [2.0.32]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
 [2.0.31]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.30]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD

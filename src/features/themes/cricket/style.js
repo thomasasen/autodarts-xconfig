@@ -86,10 +86,13 @@ const cricketThemeCss = `
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
+  grid-template-columns:
+    max-content
+    minmax(0, 1fr)
+    minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
   grid-template-areas:
-    "identity score"
-    "stats score" !important;
+    "identity identity identity"
+    "matches stats score" !important;
   align-items: start !important;
   column-gap: 0.55rem !important;
   row-gap: 0.2rem !important;
@@ -100,10 +103,13 @@ const cricketThemeCss = `
 }
 
 div.css-y3hfdd{
-  grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
+  grid-template-columns:
+    max-content
+    minmax(0, 1fr)
+    minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
   grid-template-areas:
-    "identity score"
-    "stats score" !important;
+    "identity identity identity"
+    "matches stats score" !important;
   align-items: start !important;
   column-gap: 0.55rem !important;
   row-gap: 0.2rem !important;
@@ -116,7 +122,7 @@ div.css-y3hfdd{
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 {
-  grid-area: stats !important;
+  grid-area: matches !important;
   grid-column: 1 !important;
   justify-self: start !important;
   align-self: center !important;
@@ -125,6 +131,7 @@ div.css-y3hfdd{
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 {
   grid-area: identity !important;
+  grid-column: 1 / -1 !important;
   min-width: 0 !important;
   max-width: 100% !important;
   width: 100% !important;
@@ -133,13 +140,15 @@ div.css-y3hfdd{
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
   grid-area: stats !important;
-  grid-column: 1 !important;
+  grid-column: 2 !important;
+  justify-self: stretch !important;
+  align-self: center !important;
   min-width: 0 !important;
   max-width: 100% !important;
   overflow: hidden !important;
-  padding-left: clamp(1.95rem, 2.4vw, 2.35rem) !important;
   display: flex !important;
   align-items: center !important;
+  justify-content: center !important;
   gap: 0.35rem !important;
 }
 
@@ -221,8 +230,8 @@ div.css-y3hfdd{
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-score {
   grid-area: score !important;
-  grid-column: 2 !important;
-  grid-row: 1 / span 2 !important;
+  grid-column: 3 !important;
+  grid-row: 2 !important;
   justify-self: end !important;
   align-self: center !important;
   margin-left: auto !important;
@@ -233,10 +242,6 @@ div.css-y3hfdd{
 p.chakra-text.css-1j0bqop{
   font-size: clamp(0.82rem, 0.92vw, 0.98rem) !important;
   line-height: 1.15 !important;
-}
-
-div.ad-ext-player.ad-ext-player-active.css-1en42kf p.chakra-text.css-11cuipc{
-  font-size: 1.8rem !important;
 }
 
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
@@ -284,9 +289,20 @@ div.css-nfhdnc {
   line-height: 1.04 !important;
 }
 
+#ad-ext-player-display .ad-ext-player .ad-ext-player-name > p {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name > p {
+  font-size: clamp(0.63rem, 0.7vw, 0.74rem) !important;
+}
+
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
   color: var(--ad-ext-theme-cricket-score-active-color);
-  font-size: clamp(1.95rem, 3.5vw, 4.6rem) !important;
+  font-size: clamp(2.25rem, 4.2vw, 5.2rem) !important;
   line-height: 0.9 !important;
   font-weight: 800 !important;
   text-align: right !important;
@@ -302,27 +318,27 @@ div.css-nfhdnc {
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-  font-size: clamp(2.1rem, 3.9vw, 5rem) !important;
+  font-size: clamp(2.5rem, 4.7vw, 5.6rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-  font-size: clamp(1.55rem, 3vw, 3.8rem) !important;
+  font-size: clamp(1.8rem, 3.5vw, 4.2rem) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
 }
 
 @supports (font-size: 1cqi) {
   #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
-    font-size: clamp(1.95rem, 18cqi, 4.6rem) !important;
+    font-size: clamp(2.25rem, 20cqi, 5.2rem) !important;
   }
 
   #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-    font-size: clamp(2.1rem, 20cqi, 5rem) !important;
+    font-size: clamp(2.5rem, 22cqi, 5.6rem) !important;
   }
 
   #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
   #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-    font-size: clamp(1.55rem, 15cqi, 3.8rem) !important;
+    font-size: clamp(1.8rem, 17cqi, 4.2rem) !important;
   }
 }
 
@@ -346,20 +362,7 @@ div.css-nfhdnc {
   }
 
   #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
-    padding-left: 1.78rem !important;
-  }
-
-  #ad-ext-player-display .ad-ext-player .ad-ext-player-name,
-  #ad-ext-player-display .ad-ext-player .ad-ext-player-name > p {
-    white-space: normal !important;
-  }
-
-  #ad-ext-player-display .ad-ext-player .ad-ext-player-name > p {
-    display: -webkit-box !important;
-    -webkit-box-orient: vertical !important;
-    -webkit-line-clamp: 2 !important;
-    overflow: hidden !important;
-    line-height: 1.02 !important;
+    justify-content: flex-start !important;
   }
 
   #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-aa7b80 > span > .css-1igwmid > .chakra-badge {
