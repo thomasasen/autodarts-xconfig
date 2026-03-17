@@ -13,6 +13,16 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.30] - 2026-03-17
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme sind Spielername, Avatar und MPR jetzt klar
+  von der Punktezahl getrennt, sodass lange Namen nicht mehr mit dem Score kollidieren.
+  Technik: Die Player-Cards nutzen jetzt ein festes Zwei-Spalten-Grid mit reservierter
+  Score-Spalte und separatem Meta-Bereich; neue Style-Regressionen sichern die Trennung,
+  ohne die March-15-Readability- und Mehrspieler-Shrink-Logik zu verändern.
+
 ## [2.0.29] - 2026-03-17
 
 ### Fixed
@@ -180,6 +190,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
+[2.0.30]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.29]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.28]: https://github.com/thomasasen/autodarts-xconfig/compare/da6445eb2ad39d2df5c8f7781020da9b8906d787...ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963
 [2.0.27]: https://github.com/thomasasen/autodarts-xconfig/compare/a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695...HEAD

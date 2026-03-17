@@ -82,6 +82,12 @@ const cricketThemeCss = `
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
+  grid-template-areas: "meta score" !important;
+  align-items: start !important;
+  column-gap: 0.65rem !important;
+  row-gap: 0.15rem !important;
   min-height: 185px !important;
   min-width: var(--ad-ext-theme-cricket-player-card-min-width) !important;
   padding-top: 0.3rem !important;
@@ -89,10 +95,33 @@ const cricketThemeCss = `
 }
 
 div.css-y3hfdd{
-  grid-template-columns: minmax(0, 1fr) minmax(6ch, 46%) !important;
-  gap: 0 !important;
+  grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
+  grid-template-areas: "meta score" !important;
+  align-items: start !important;
+  column-gap: 0.65rem !important;
+  row-gap: 0.15rem !important;
   min-height: 0 !important;
   container-type: inline-size !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack {
+  grid-area: meta !important;
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-score {
+  grid-area: score !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  align-self: start !important;
+  margin-left: auto !important;
+  padding-left: 0.35rem !important;
+  z-index: 1 !important;
 }
 
 p.chakra-text.css-1j0bqop{
