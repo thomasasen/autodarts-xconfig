@@ -13,6 +13,19 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.31] - 2026-03-17
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme bleiben Spielername, Matchdaten und Punkte
+  jetzt auch bei langen Namen sauber getrennt; außerdem nutzen die Spielerspalten
+  definierte Mindest- und Maximalbreiten, und die Punktebreite wächst wieder passend mit
+  der Stellenzahl.
+  Technik: Die Player-Cards wurden auf getrennte Meta-/Submeta-Zeilen mit dynamischer
+  Score-Spalte umgestellt, die Cricket/Tactics-Tabellenspalten bekamen feste
+  Min-/Max-Breiten per CSS-Variablen, die Style-Regressionen wurden erweitert und die
+  Release-Metadaten auf 2.0.31 angehoben.
+
 ## [2.0.30] - 2026-03-17
 
 ### Fixed
@@ -190,6 +203,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
+[2.0.31]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.30]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.29]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.28]: https://github.com/thomasasen/autodarts-xconfig/compare/da6445eb2ad39d2df5c8f7781020da9b8906d787...ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963

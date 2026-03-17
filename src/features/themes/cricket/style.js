@@ -35,7 +35,9 @@ const cricketThemeCss = `
   --ad-ext-cricket-card-sheen: rgba(127, 214, 247, 0.12);
   --ad-ext-cricket-board-shell: rgba(6, 12, 22, 0.92);
   --ad-ext-cricket-board-rail: rgba(91, 133, 170, 0.3);
-  --ad-ext-theme-cricket-player-card-min-width: 12rem;
+  --ad-ext-theme-cricket-player-column-min-width: 12rem;
+  --ad-ext-theme-cricket-player-column-max-width: 14rem;
+  --ad-ext-theme-cricket-player-card-min-width: var(--ad-ext-theme-cricket-player-column-min-width);
   --ad-ext-theme-cricket-player-name-min-width: 6ch;
   --ad-ext-theme-cricket-score-min-width: 3ch;
   --ad-ext-theme-cricket-score-active-color: var(--theme-text-highlight-color);
@@ -96,7 +98,9 @@ const cricketThemeCss = `
 
 div.css-y3hfdd{
   grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
-  grid-template-areas: "meta score" !important;
+  grid-template-areas:
+    "meta score"
+    "submeta score" !important;
   align-items: start !important;
   column-gap: 0.65rem !important;
   row-gap: 0.15rem !important;
@@ -104,8 +108,7 @@ div.css-y3hfdd{
   container-type: inline-size !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-name,
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack {
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 {
   grid-area: meta !important;
   grid-column: 1 !important;
   min-width: 0 !important;
@@ -113,12 +116,61 @@ div.css-y3hfdd{
   overflow: hidden !important;
 }
 
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
+  grid-area: submeta !important;
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  padding-left: clamp(2.6rem, 3vw, 3.4rem) !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .css-17xejub {
+  display: none !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80,
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 > span,
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l,
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1igwmid,
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .ad-ext-player-name {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l {
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l > .css-1igwmid {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  flex: 1 1 auto !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l > .css-1igwmid > .ad-ext-player-name {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l > .css-1igwmid > .chakra-badge {
+  flex: 0 0 auto !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid > p {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
 #ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-score {
   grid-area: score !important;
   grid-column: 2 !important;
-  grid-row: 1 !important;
+  grid-row: 1 / span 2 !important;
   justify-self: end !important;
-  align-self: start !important;
+  align-self: center !important;
   margin-left: auto !important;
   padding-left: 0.35rem !important;
   z-index: 1 !important;
@@ -184,9 +236,10 @@ div.css-nfhdnc {
   font-weight: 800 !important;
   text-align: right !important;
   white-space: nowrap !important;
-  max-inline-size: 100% !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
+  inline-size: max-content !important;
+  max-inline-size: none !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
   letter-spacing: -0.012em !important;
   min-inline-size: var(--ad-ext-theme-cricket-score-min-width) !important;
   font-variant-numeric: tabular-nums;
@@ -438,6 +491,17 @@ p.chakra-text.css-1qlemha {
 #grid tr th {
   border-color: rgba(56, 74, 102, 0.78) !important;
   position: relative;
+}
+
+#grid tr > td:not(:first-child),
+#grid tr > th:not(:first-child) {
+  min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
+  max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
+  width: clamp(
+    var(--ad-ext-theme-cricket-player-column-min-width),
+    14vw,
+    var(--ad-ext-theme-cricket-player-column-max-width)
+  ) !important;
 }
 
 #grid tr:nth-child(odd) td {
