@@ -5,7 +5,9 @@ import {
   updateRemoveDartsNotification,
 } from "./logic.js";
 import {
+  CARD_CLASS,
   IMAGE_CLASS,
+  OVERLAY_ROOT_CLASS,
   STYLE_ID,
   buildStyleText,
   resolveRemoveDartsNotificationConfig,
@@ -52,7 +54,7 @@ export function initializeRemoveDartsNotification(context = {}) {
   const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   const isManagedNode = createManagedNodeMatcher({
-    classNames: [IMAGE_CLASS],
+    classNames: [OVERLAY_ROOT_CLASS, CARD_CLASS, IMAGE_CLASS],
   });
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {

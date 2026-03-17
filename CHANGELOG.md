@@ -13,16 +13,16 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
-## [2.0.26] - 2026-03-16
+## [2.0.27] - 2026-03-17
 
 ### Fixed
 
-- Nutzerwirkung: Die Remove-Darts-Karte ersetzt jetzt auch im aktuellen Autodarts-Modal
-  den sichtbaren gelben Wrapper korrekt, sodass Hintergrund und Titel verschwinden, das
-  Pulsieren sichtbar greift und die Bildgröße aus xConfig wieder erkennbar wirkt.
-  Technik: Die Replacement-Logik richtet sich jetzt auf den tatsächlich sichtbaren
-  Wrapper-Host aus, wenn `.adt-remove` darin allein verschachtelt ist; eine neue
-  Runtime-Regression deckt genau diesen DOM-Snapshot-Fall samt Cleanup ab.
+- Nutzerwirkung: Die Remove-Darts-Hand wird jetzt als eigenes xConfig-Overlay angezeigt,
+  sodass der gelbe Host-Hintergrund verschwindet, das Pulsieren ruhig bleibt und die
+  Bildgröße aus xConfig wieder die sichtbare Karte steuert.
+  Technik: Das Feature blendet erkannte Takeout-Hosts nur noch aus, rendert ein isoliertes
+  Overlay am Dokument-Root und sichert Host-Hiding, Overlay-Cleanup, Puls-Contract und
+  Größen-Presets mit neuen Runtime- und Style-Regressionen ab.
 
 ## [2.0.25] - 2026-03-16
 
@@ -155,7 +155,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695...HEAD
-[2.0.26]: https://github.com/thomasasen/autodarts-xconfig/compare/a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695...HEAD
+[2.0.27]: https://github.com/thomasasen/autodarts-xconfig/compare/a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695...HEAD
 [2.0.25]: https://github.com/thomasasen/autodarts-xconfig/compare/1f76798f0a8c495d13d5452a66d65e9d309fb470...a8ab099cf0bb8a43ea28ff8b44eebc2ad274d695
 [2.0.24]: https://github.com/thomasasen/autodarts-xconfig/compare/94f648b2ef5772d813fb5201bbde2104cb41b933...1f76798f0a8c495d13d5452a66d65e9d309fb470
 [2.0.23]: https://github.com/thomasasen/autodarts-xconfig/compare/8e9251e1141c694dc81dcd527382aa08f1def821...94f648b2ef5772d813fb5201bbde2104cb41b933

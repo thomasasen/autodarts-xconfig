@@ -1,5 +1,11 @@
 import { TAKEOUT_IMAGE_ASSET } from "#feature-assets";
-import { CARD_CLASS, IMAGE_CLASS } from "./style.js";
+import {
+  CARD_CLASS,
+  HIDDEN_NOTICE_CLASS,
+  IMAGE_CLASS,
+  OVERLAY_ROOT_CLASS,
+  OVERLAY_ROOT_ID,
+} from "./style.js";
 import {
   AUTODARTS_NON_TAKEOUT_NOTICE_TEXTS,
   AUTODARTS_TAKEOUT_NOTICE_TEXTS,
@@ -370,7 +376,20 @@ function createImageNode(documentRef) {
   return image;
 }
 
-function isPromotableReplacementHost(node) {
+function createOverlayNode(documentRef) {
+  const overlayRoot = documentRef.createElement("div");
+  overlayRoot.id = OVERLAY_ROOT_ID;
+  overlayRoot.classList?.add?.(OVERLAY_ROOT_CLASS);
+
+  const cardNode = documentRef.createElement("div");
+  cardNode.classList?.add?.(CARD_CLASS);
+  cardNode.appendChild(createImageNode(documentRef));
+  overlayRoot.appendChild(cardNode);
+
+  return overlayRoot;
+}
+
+function isPromotableNoticeHost(node) {
   if (!node || typeof node.matches !== "function") {
     return true;
   }
@@ -381,63 +400,94 @@ function isPromotableReplacementHost(node) {
   );
 }
 
-function resolveReplacementHost(noticeNode) {
-  if (!noticeNode || !noticeNode.parentElement) {
-    return noticeNode || null;
+function onlyContainsCurrentBranch(parentNode, currentNode) {
+  if (!parentNode || !currentNode || !Array.isArray(parentNode.children) || !parentNode.children.length) {
+    return false;
   }
 
-  const parentElement = noticeNode.parentElement;
-  const childElementCount = Array.isArray(parentElement.children)
-    ? parentElement.children.length
-    : Number(parentElement.childElementCount) || 0;
+  let matchesCurrentBranch = 0;
+  parentNode.children.forEach((child) => {
+    if (child === currentNode || child?.contains?.(currentNode)) {
+      matchesCurrentBranch += 1;
+    }
+  });
+
+  return matchesCurrentBranch === parentNode.children.length;
+}
+
+function resolveVisibleNoticeHost(noticeNode) {
+  if (!noticeNode || !noticeNode.parentElement) {
+    return null;
+  }
+
+  const parentNode = noticeNode.parentElement;
   if (
-    parentElement &&
-    parentElement.firstElementChild === noticeNode &&
-    childElementCount === 1 &&
-    isPromotableReplacementHost(parentElement) &&
-    !isInsideXConfigScope(parentElement)
+    parentNode &&
+    !isInsideXConfigScope(parentNode) &&
+    isPromotableNoticeHost(parentNode) &&
+    onlyContainsCurrentBranch(parentNode, noticeNode)
   ) {
-    return parentElement;
+    return parentNode;
   }
 
   return noticeNode;
 }
 
-function applyReplacement(replacementHost, documentRef) {
-  if (!replacementHost || !replacementHost.classList) {
-    return;
-  }
-  if (isInsideXConfigScope(replacementHost)) {
-    return;
+function ensureOverlayNode(state, documentRef) {
+  if (!state || !documentRef) {
+    return null;
   }
 
-  replacementHost.classList.add(CARD_CLASS);
+  const existingOverlay =
+    (typeof documentRef.getElementById === "function" && documentRef.getElementById(OVERLAY_ROOT_ID)) ||
+    null;
+  const overlayNode = existingOverlay || createOverlayNode(documentRef);
+  const mountTarget = documentRef.body || documentRef.documentElement || null;
 
-  let imageNode = replacementHost.querySelector?.(`.${IMAGE_CLASS}`) || null;
-  if (!imageNode) {
-    imageNode = createImageNode(documentRef);
-    replacementHost.appendChild(imageNode);
-  } else {
-    imageNode.src = TAKEOUT_IMAGE_ASSET;
-    imageNode.alt = "Darts entfernen";
+  if (mountTarget && overlayNode.parentNode !== mountTarget && typeof mountTarget.appendChild === "function") {
+    mountTarget.appendChild(overlayNode);
   }
+
+  state.overlayNode = overlayNode;
+  return overlayNode;
 }
 
-function cleanupNotice(noticeNode) {
-  if (!noticeNode || !noticeNode.classList) {
+function applyHiddenHost(hostNode) {
+  if (!hostNode || !hostNode.classList) {
+    return;
+  }
+  if (isInsideXConfigScope(hostNode)) {
     return;
   }
 
-  noticeNode.classList.remove(CARD_CLASS);
-  const imageNode = noticeNode.querySelector?.(`.${IMAGE_CLASS}`) || null;
-  if (imageNode && imageNode.parentNode && typeof imageNode.parentNode.removeChild === "function") {
-    imageNode.parentNode.removeChild(imageNode);
+  hostNode.classList.add(HIDDEN_NOTICE_CLASS);
+}
+
+function cleanupHostNotice(hostNode) {
+  if (!hostNode || !hostNode.classList) {
+    return;
   }
+
+  hostNode.classList.remove(HIDDEN_NOTICE_CLASS);
+}
+
+function cleanupOverlayNode(state) {
+  const overlayNode = state?.overlayNode || null;
+  if (!overlayNode || !overlayNode.parentNode || typeof overlayNode.parentNode.removeChild !== "function") {
+    if (state) {
+      state.overlayNode = null;
+    }
+    return;
+  }
+
+  overlayNode.parentNode.removeChild(overlayNode);
+  state.overlayNode = null;
 }
 
 export function createRemoveDartsNotificationState() {
   return {
     trackedNotices: new Set(),
+    overlayNode: null,
     lastFallbackScanAt: 0,
     needsImmediateFallbackScan: false,
     currentViewKey: "",
@@ -452,8 +502,9 @@ export function clearRemoveDartsNotificationState(state) {
     return;
   }
 
-  state.trackedNotices.forEach((noticeNode) => cleanupNotice(noticeNode));
+  state.trackedNotices.forEach((noticeNode) => cleanupHostNotice(noticeNode));
   state.trackedNotices.clear();
+  cleanupOverlayNode(state);
   state.needsImmediateFallbackScan = false;
   state.fallbackAreasDirty = true;
   state.fallbackAreas = [];
@@ -488,25 +539,32 @@ export function updateRemoveDartsNotification(options = {}) {
     state.needsImmediateFallbackScan = false;
   }
   const notices = primary.length ? primary : collectFallbackNotices(documentRef, state);
-  const replacementHosts = Array.from(
+  const visibleHosts = Array.from(
     new Set(
       notices
-        .map((noticeNode) => resolveReplacementHost(noticeNode))
+        .map((noticeNode) => resolveVisibleNoticeHost(noticeNode))
         .filter(Boolean)
     )
   );
-  const noticeSet = new Set(replacementHosts);
+  const noticeSet = new Set(visibleHosts);
 
   state.trackedNotices.forEach((noticeNode) => {
     if (noticeSet.has(noticeNode)) {
       return;
     }
-    cleanupNotice(noticeNode);
+    cleanupHostNotice(noticeNode);
     state.trackedNotices.delete(noticeNode);
   });
 
-  replacementHosts.forEach((noticeNode) => {
+  if (!visibleHosts.length) {
+    cleanupOverlayNode(state);
+    return;
+  }
+
+  ensureOverlayNode(state, documentRef);
+
+  visibleHosts.forEach((noticeNode) => {
     state.trackedNotices.add(noticeNode);
-    applyReplacement(noticeNode, documentRef);
+    applyHiddenHost(noticeNode);
   });
 }

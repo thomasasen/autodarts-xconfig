@@ -1,6 +1,9 @@
 ﻿export const STYLE_ID = "ad-ext-remove-darts-notification-style";
 export const CARD_CLASS = "ad-ext-takeout-card";
+export const OVERLAY_ROOT_ID = "ad-ext-takeout-overlay-root";
+export const OVERLAY_ROOT_CLASS = "ad-ext-takeout-overlay";
 export const IMAGE_CLASS = "ad-ext-takeout-image";
+export const HIDDEN_NOTICE_CLASS = "ad-ext-takeout-host-hidden";
 
 const IMAGE_SIZE_PRESETS = Object.freeze({
   compact: {
@@ -59,56 +62,56 @@ export function buildStyleText(visualConfig = {}) {
     : "none !important";
 
   return `
+.${HIDDEN_NOTICE_CLASS} {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.${HIDDEN_NOTICE_CLASS}::before,
+.${HIDDEN_NOTICE_CLASS}::after {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+}
+
+#${OVERLAY_ROOT_ID},
+.${OVERLAY_ROOT_CLASS} {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none !important;
+  z-index: 1700 !important;
+  isolation: isolate !important;
+}
+
 .${CARD_CLASS} {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  padding: 0 !important;
-  box-shadow: none !important;
-  border: 0 !important;
-  outline: 0 !important;
-  width: auto !important;
-  max-width: none !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
-  pointer-events: none;
-  isolation: isolate;
+  pointer-events: none !important;
+  transform: translateZ(0);
+  transform-origin: center center !important;
+  animation: ${pulseAnimationRule};
+  will-change: transform, opacity;
 }
 
-.${CARD_CLASS}::before,
-.${CARD_CLASS}::after {
-  content: none !important;
-  display: none !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
-
-.${CARD_CLASS} > :not(.${IMAGE_CLASS}) {
-  display: none !important;
-}
-
-.${CARD_CLASS} .${IMAGE_CLASS} {
+.${IMAGE_CLASS} {
   display: block !important;
   width: min(${imageMaxWidthRem}rem, ${imageMaxWidthVw}vw) !important;
   max-width: min(${imageMaxWidthRem}rem, ${imageMaxWidthVw}vw) !important;
   height: auto !important;
   background: transparent !important;
   background-color: transparent !important;
+  background-image: none !important;
   border: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   filter: none !important;
   object-fit: contain !important;
   opacity: 1 !important;
-  transform: translateZ(0);
-  transform-origin: center center !important;
-  animation: ${pulseAnimationRule};
-  will-change: transform, opacity;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 @keyframes ad-ext-takeout-pulse {
@@ -117,7 +120,7 @@ export function buildStyleText(visualConfig = {}) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .${CARD_CLASS} .${IMAGE_CLASS} {
+  .${CARD_CLASS} {
     animation: none !important;
   }
 }

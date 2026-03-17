@@ -8,7 +8,12 @@ import {
   requestImmediateFallbackScan,
   updateRemoveDartsNotification,
 } from "../../src/features/remove-darts-notification/logic.js";
-import { CARD_CLASS, IMAGE_CLASS } from "../../src/features/remove-darts-notification/style.js";
+import {
+  CARD_CLASS,
+  HIDDEN_NOTICE_CLASS,
+  IMAGE_CLASS,
+  OVERLAY_ROOT_CLASS,
+} from "../../src/features/remove-darts-notification/style.js";
 import { FakeDocument } from "./fake-dom.js";
 
 function createSingleNodeTreeWalker(nodeOrNull) {
@@ -24,7 +29,7 @@ function createSingleNodeTreeWalker(nodeOrNull) {
   };
 }
 
-test("remove-darts-notification injects hand image for primary .adt-remove notices", () => {
+test("remove-darts-notification hides the host notice and mounts an isolated overlay", () => {
   const documentRef = new FakeDocument();
   const notice = documentRef.createElement("div");
   notice.classList.add("adt-remove");
@@ -34,17 +39,22 @@ test("remove-darts-notification injects hand image for primary .adt-remove notic
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(notice.classList.contains(CARD_CLASS), true);
-  const imageNode = notice.querySelector(`.${IMAGE_CLASS}`);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.equal(notice.classList.contains(CARD_CLASS), false);
+  const overlayNode = documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`);
+  assert.ok(overlayNode);
+  const cardNode = overlayNode.querySelector(`.${CARD_CLASS}`);
+  assert.ok(cardNode);
+  const imageNode = overlayNode.querySelector(`.${IMAGE_CLASS}`);
   assert.ok(imageNode);
   assert.equal(String(imageNode.src || ""), String(TAKEOUT_IMAGE_ASSET));
 
   clearRemoveDartsNotificationState(state);
-  assert.equal(notice.classList.contains(CARD_CLASS), false);
-  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 });
 
-test("remove-darts-notification decorates the visible wrapper when .adt-remove is nested inside a card", () => {
+test("remove-darts-notification hides the visible wrapper when .adt-remove is nested inside a card", () => {
   const documentRef = new FakeDocument();
   const overlay = documentRef.createElement("div");
   const card = documentRef.createElement("div");
@@ -58,15 +68,15 @@ test("remove-darts-notification decorates the visible wrapper when .adt-remove i
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(overlay.classList.contains(CARD_CLASS), false);
-  assert.equal(card.classList.contains(CARD_CLASS), true);
-  assert.equal(notice.classList.contains(CARD_CLASS), false);
-  assert.equal(Boolean(card.querySelector(`.${IMAGE_CLASS}`)), true);
-  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(overlay.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(card.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(card.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), true);
 
   clearRemoveDartsNotificationState(state);
-  assert.equal(card.classList.contains(CARD_CLASS), false);
-  assert.equal(Boolean(card.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(card.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 });
 
 test("remove-darts-notification fallback recognizes 'Remove Darts' text", () => {
@@ -84,8 +94,8 @@ test("remove-darts-notification fallback recognizes 'Remove Darts' text", () => 
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(notice.classList.contains(CARD_CLASS), true);
-  assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
 });
 
 test("remove-darts-notification fallback recognizes board-manager takeout states", () => {
@@ -103,8 +113,8 @@ test("remove-darts-notification fallback recognizes board-manager takeout states
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(notice.classList.contains(CARD_CLASS), true);
-  assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
 });
 
 test("remove-darts-notification ignores fallback matches inside xConfig shell content", () => {
@@ -126,8 +136,8 @@ test("remove-darts-notification ignores fallback matches inside xConfig shell co
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(titleNode.classList.contains(CARD_CLASS), false);
-  assert.equal(Boolean(titleNode.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(titleNode.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 });
 
 test("remove-darts-notification ignores throw-only board-manager status texts", () => {
@@ -145,8 +155,8 @@ test("remove-darts-notification ignores throw-only board-manager status texts", 
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(notice.classList.contains(CARD_CLASS), false);
-  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 });
 
 test("remove-darts-notification prioritizes explicit takeout status over mixed scan noise", () => {
@@ -188,9 +198,9 @@ test("remove-darts-notification prioritizes explicit takeout status over mixed s
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(throwNode.classList.contains(CARD_CLASS), false);
-  assert.equal(notice.classList.contains(CARD_CLASS), true);
-  assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+  assert.equal(throwNode.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
 });
 
 test("remove-darts-notification pauses while #ad-xconfig route is active", () => {
@@ -209,8 +219,8 @@ test("remove-darts-notification pauses while #ad-xconfig route is active", () =>
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(notice.classList.contains(CARD_CLASS), false);
-  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 });
 
 test("remove-darts-notification can force fallback scan despite throttle window", () => {
@@ -242,17 +252,40 @@ test("remove-darts-notification can force fallback scan despite throttle window"
   updateRemoveDartsNotification({ documentRef, state });
   assert.equal(fallbackScanCount > 0, true);
   const firstScanCount = fallbackScanCount;
-  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 
   textValue = "Remove Darts";
   updateRemoveDartsNotification({ documentRef, state });
   assert.equal(fallbackScanCount, firstScanCount);
-  assert.equal(Boolean(notice.querySelector(`.${IMAGE_CLASS}`)), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 
   requestImmediateFallbackScan(state);
   updateRemoveDartsNotification({ documentRef, state });
   assert.equal(fallbackScanCount > firstScanCount, true);
-  assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
+});
+
+test("remove-darts-notification removes overlay and restores the host when the notice disappears", () => {
+  const documentRef = new FakeDocument();
+  const notice = documentRef.createElement("div");
+  notice.classList.add("adt-remove");
+  notice.textContent = "Remove Darts";
+  documentRef.main.appendChild(notice);
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
+
+  notice.classList.remove("adt-remove");
+  notice.textContent = "Ready";
+  requestImmediateFallbackScan(state);
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
 });
 
 test("remove-darts-notification scans preferred fallback areas before global body scope", () => {
@@ -277,6 +310,6 @@ test("remove-darts-notification scans preferred fallback areas before global bod
   const state = createRemoveDartsNotificationState();
   updateRemoveDartsNotification({ documentRef, state });
 
-  assert.equal(notice.classList.contains(CARD_CLASS), true);
-  assert.ok(notice.querySelector(`.${IMAGE_CLASS}`));
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
 });
