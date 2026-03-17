@@ -43,6 +43,7 @@ import {
   WIPE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
+import { THEME_LAYOUT_HOOK_CLASSES } from "../../src/features/themes/shared/mount-theme-feature.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function createThemeLikeBoardFixture(documentRef) {
@@ -98,6 +99,7 @@ function createThemeLikeNestedBoardFixture(documentRef) {
   const boardControls = documentRef.createElement("div");
   const boardViewport = documentRef.createElement("div");
   const showAnimations = documentRef.createElement("div");
+  const eventOverlay = documentRef.createElement("div");
   const innerBoardLayer = documentRef.createElement("div");
   const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
 
@@ -108,6 +110,7 @@ function createThemeLikeNestedBoardFixture(documentRef) {
   boardControls.classList.add("ad-ext-theme-board-controls");
   boardViewport.classList.add("ad-ext-theme-board-viewport");
   showAnimations.classList.add("showAnimations");
+  eventOverlay.classList.add("css-event-overlay");
   innerBoardLayer.classList.add("ad-ext-theme-board-canvas", "css-13u3cwk");
   boardSvg.classList.add("ad-ext-theme-board-svg");
 
@@ -125,6 +128,7 @@ function createThemeLikeNestedBoardFixture(documentRef) {
   }
 
   innerBoardLayer.appendChild(boardSvg);
+  showAnimations.appendChild(eventOverlay);
   showAnimations.appendChild(innerBoardLayer);
   boardViewport.appendChild(showAnimations);
   boardPanel.appendChild(boardControls);
@@ -136,6 +140,7 @@ function createThemeLikeNestedBoardFixture(documentRef) {
   documentRef.main.appendChild(contentSlot);
 
   return {
+    eventOverlay,
     showAnimations,
     innerBoardLayer,
     boardSvg,
@@ -1407,8 +1412,14 @@ test("theme-like nested board layer keeps cricket highlighter and grid-fx stable
   const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
   assert.ok(overlay);
   assert.equal(overlay.parentNode, nestedBoard.boardSvg);
-  assert.equal(nestedBoard.innerBoardLayer.classList.contains("ad-ext-theme-board-canvas"), true);
-  assert.equal(nestedBoard.showAnimations.classList.contains("ad-ext-theme-board-canvas"), false);
+  assert.equal(
+    nestedBoard.innerBoardLayer.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas),
+    true
+  );
+  assert.equal(
+    nestedBoard.showAnimations.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas),
+    false
+  );
 
   const row20 = rowsByLabel.get("20");
   assert.equal(row20?.labelCell?.classList?.contains(LABEL_CLASS), true);

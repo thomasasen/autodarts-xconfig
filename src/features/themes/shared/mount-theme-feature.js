@@ -14,7 +14,9 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardPanel: "ad-ext-theme-board-panel",
   boardControls: "ad-ext-theme-board-controls",
   boardViewport: "ad-ext-theme-board-viewport",
+  boardEventShell: "ad-ext-theme-board-event-shell",
   boardCanvas: "ad-ext-theme-board-canvas",
+  boardMediaRoot: "ad-ext-theme-board-media-root",
   boardSvg: "ad-ext-theme-board-svg",
 });
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
@@ -162,6 +164,28 @@ export function resolveThemeBoardViewportTarget(boardCanvas, boardSvg) {
   }
 
   return boardCanvas?.parentElement || boardSvg?.parentElement || null;
+}
+
+function resolveThemeBoardEventTargets(boardCanvas, boardSvg) {
+  if (!boardCanvas || !boardSvg || typeof boardSvg.closest !== "function") {
+    return {
+      boardEventShell: null,
+      boardMediaRoot: null,
+    };
+  }
+
+  const showAnimations = boardSvg.closest(".showAnimations");
+  if (!showAnimations || boardCanvas === showAnimations) {
+    return {
+      boardEventShell: null,
+      boardMediaRoot: null,
+    };
+  }
+
+  return {
+    boardEventShell: showAnimations,
+    boardMediaRoot: boardCanvas,
+  };
 }
 
 function elementContains(rootNode, targetNode) {
@@ -515,6 +539,7 @@ function resolveBoardLayoutTargets(documentRef) {
     Boolean(contentTargets.contentLeft) &&
     Boolean(contentTargets.contentBoard);
   const boardCanvas = resolveThemeBoardCanvasTarget(boardSvg);
+  const boardEventTargets = resolveThemeBoardEventTargets(boardCanvas, boardSvg);
   const boardViewport = resolveThemeBoardViewportTarget(boardCanvas, boardSvg);
   const boardPanel = resolveBoardPanel(boardSvg, documentRef);
   const boardControls = boardPanel ? resolveBoardControls(boardPanel, boardSvg) : null;
@@ -524,6 +549,7 @@ function resolveBoardLayoutTargets(documentRef) {
     boardPanel,
     boardControls,
     boardViewport,
+    ...boardEventTargets,
     boardCanvas,
     boardSvg,
   };
@@ -553,6 +579,9 @@ function toggleClass(node, className, enabled) {
 function clearBoardLayoutHooks(state) {
   const previous = state?.layoutHookTargets || {};
   clearBoardSizeVariable(previous.boardCanvas);
+  if (previous.boardEventShell && previous.boardEventShell !== previous.boardCanvas) {
+    clearBoardSizeVariable(previous.boardEventShell);
+  }
   Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
     removeClass(previous[key], className);
   });
@@ -565,6 +594,13 @@ function updateBoardLayoutHooks(documentRef, state) {
   const previous = state.layoutHookTargets || {};
   if (previous.boardCanvas && previous.boardCanvas !== nextTargets.boardCanvas) {
     clearBoardSizeVariable(previous.boardCanvas);
+  }
+  if (
+    previous.boardEventShell &&
+    previous.boardEventShell !== nextTargets.boardEventShell &&
+    previous.boardEventShell !== previous.boardCanvas
+  ) {
+    clearBoardSizeVariable(previous.boardEventShell);
   }
 
   Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
@@ -581,6 +617,15 @@ function updateBoardLayoutHooks(documentRef, state) {
     nextTargets.boardCanvas,
     nextTargets.boardViewport || nextTargets.boardPanel || nextTargets.boardCanvas
   );
+  if (
+    nextTargets.boardEventShell &&
+    nextTargets.boardEventShell !== nextTargets.boardCanvas
+  ) {
+    updateBoardSizeVariable(
+      nextTargets.boardEventShell,
+      nextTargets.boardViewport || nextTargets.boardPanel || nextTargets.boardCanvas
+    );
+  }
 
   state.layoutHookTargets = nextTargets;
 }

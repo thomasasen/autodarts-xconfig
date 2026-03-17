@@ -18,6 +18,9 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.match(css, /--ad-ext-theme-cricket-player-card-min-width:\s*12rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-name-min-width:\s*6ch;/);
   assert.match(css, /--ad-ext-theme-cricket-score-min-width:\s*3ch;/);
+  assert.match(css, /--ad-ext-theme-cricket-score-active-color:\s*var\(--theme-text-highlight-color\);/);
+  assert.match(css, /--ad-ext-theme-cricket-score-inactive-color:\s*rgba\(214,\s*229,\s*245,\s*0\.84\);/);
+  assert.match(css, /--ad-ext-theme-cricket-score-shadow:\s*0 1px 0 rgba\(4,\s*10,\s*20,\s*0\.92\),/);
   assert.match(css, /--ad-ext-theme-cricket-board-min-width-auto:\s*18rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-min-width-manual:\s*10rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-width:\s*auto;/);
@@ -31,7 +34,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.85rem,\s*3\.2vw,\s*4\.4rem\)\s*!important;[^}]*line-height:\s*0\.94\s*!important;[^}]*font-weight:\s*800\s*!important;[^}]*text-align:\s*right\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-active-color\);[^}]*font-size:\s*clamp\(1\.85rem,\s*3\.2vw,\s*4\.4rem\)\s*!important;[^}]*line-height:\s*0\.94\s*!important;[^}]*font-weight:\s*800\s*!important;[^}]*text-align:\s*right\s*!important;[^}]*text-shadow:\s*var\(--ad-ext-theme-cricket-score-shadow\)\s*!important;/s
   );
   assert.match(
     css,
@@ -39,7 +42,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.45rem,\s*2\.9vw,\s*3\.6rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s+\.ad-ext-player-score\s*\{[^}]*font-size:\s*clamp\(1\.45rem,\s*2\.9vw,\s*3\.6rem\)\s*!important;[^}]*color:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
   );
   assert.match(
     css,
@@ -69,6 +72,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*min-inline-size:\s*var\(--ad-ext-theme-cricket-score-min-width\)\s*!important;/s
   );
+  assert.doesNotMatch(css, /color:\s*gray\s*!important;/);
   assert.doesNotMatch(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*display:\s*flex\s*!important;/s
@@ -148,6 +152,14 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
+    /\.ad-ext-theme-board-event-shell\s*\{[^}]*width:\s*var\(--ad-ext-theme-board-size,\s*100%\)\s*!important;[^}]*height:\s*var\(--ad-ext-theme-board-size,\s*100%\)\s*!important;[^}]*display:\s*grid\s*!important;[^}]*place-items:\s*center\s*!important;[^}]*position:\s*relative\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-media-root\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*center\s*!important;/s
+  );
+  assert.match(
+    css,
     /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*max-height:\s*100%\s*!important;[^}]*aspect-ratio:\s*1 \/ 1;/s
   );
   assert.doesNotMatch(css, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
@@ -194,6 +206,14 @@ test("cricket theme strengthens tactical hierarchy without leaving stable hooks"
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack::after\s*\{[^}]*box-shadow:\s*inset 0 0 18px rgba\(159,\s*232,\s*112,\s*0\.08\),\s*0 0 24px var\(--ad-ext-cricket-card-glow\);/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\)\s*>\s*\.chakra-stack\s*\{[^}]*filter:\s*saturate\(0\.76\)\s*brightness\(0\.9\);/s
+  );
+  assert.doesNotMatch(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\)\s*>\s*\.chakra-stack\s*\{[^}]*opacity:\s*0\.82;/s
   );
   assert.match(
     css,

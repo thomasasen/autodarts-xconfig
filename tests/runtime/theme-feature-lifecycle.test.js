@@ -124,12 +124,16 @@ function createBoardFixture(documentRef, options = {}) {
 function createNestedShowAnimationsBoardFixture(documentRef, options = {}) {
   const nodes = createBoardFixture(documentRef, options);
   const innerBoardLayer = documentRef.createElement("div");
+  const eventOverlay = documentRef.createElement("div");
   innerBoardLayer.classList.add("css-13u3cwk");
+  eventOverlay.classList.add("css-event-overlay");
   nodes.boardCanvas.removeChild(nodes.boardSvg);
   innerBoardLayer.appendChild(nodes.boardSvg);
+  nodes.boardCanvas.appendChild(eventOverlay);
   nodes.boardCanvas.appendChild(innerBoardLayer);
   return {
     ...nodes,
+    eventOverlay,
     innerBoardLayer,
   };
 }
@@ -237,7 +241,9 @@ function assertThemeHookState(nodes, expectedActive) {
     [nodes.boardPanel, THEME_LAYOUT_HOOK_CLASSES.boardPanel],
     [nodes.boardControls, THEME_LAYOUT_HOOK_CLASSES.boardControls],
     [nodes.boardViewport, THEME_LAYOUT_HOOK_CLASSES.boardViewport],
+    [nodes.boardEventShell, THEME_LAYOUT_HOOK_CLASSES.boardEventShell],
     [nodes.boardCanvas, THEME_LAYOUT_HOOK_CLASSES.boardCanvas],
+    [nodes.boardMediaRoot, THEME_LAYOUT_HOOK_CLASSES.boardMediaRoot],
     [nodes.boardSvg, THEME_LAYOUT_HOOK_CLASSES.boardSvg],
   ];
 
@@ -404,6 +410,14 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   assert.equal(
     boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
     "620px"
+  );
+  assert.equal(
+    boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardEventShell),
+    false
+  );
+  assert.equal(
+    boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardMediaRoot),
+    false
   );
 
   documentRef.flushMutations();
@@ -705,6 +719,22 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   const noticeNode = documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId);
   assert.equal(boardNodes.innerBoardLayer.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
   assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), false);
+  assert.equal(
+    boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardEventShell),
+    true
+  );
+  assert.equal(
+    boardNodes.innerBoardLayer.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardMediaRoot),
+    true
+  );
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(
+    boardNodes.innerBoardLayer.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     "1202px"

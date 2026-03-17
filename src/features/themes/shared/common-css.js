@@ -124,13 +124,23 @@ export const commonLayoutCss = `
 
 .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > div > p {
   font-size: 3em !important;
-  color: gray !important;
+  color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
+  text-shadow: var(
+    --ad-ext-theme-cricket-score-shadow,
+    0 1px 0 rgba(4, 10, 20, 0.92),
+    0 0 16px rgba(4, 10, 20, 0.46)
+  ) !important;
 }
 
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
 .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p {
   font-size: 3em !important;
-  color: gray !important;
+  color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
+  text-shadow: var(
+    --ad-ext-theme-cricket-score-shadow,
+    0 1px 0 rgba(4, 10, 20, 0.92),
+    0 0 16px rgba(4, 10, 20, 0.46)
+  ) !important;
 }
 
 .ad-ext-player-inactive .chakra-stack.css-37hv00 {
@@ -330,6 +340,28 @@ div.css-y3hfdd > .css-1igwmid{
   overflow: visible !important;
 }
 
+.ad-ext-theme-board-event-shell{
+  min-height: 0 !important;
+  width: var(--ad-ext-theme-board-size, 100%) !important;
+  height: var(--ad-ext-theme-board-size, 100%) !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+  align-self: center !important;
+  justify-self: center !important;
+  overflow: visible !important;
+}
+
+.ad-ext-theme-board-event-shell > *{
+  grid-area: 1 / 1 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
 .ad-ext-theme-board-canvas{
   min-height: 0 !important;
   flex: 0 0 auto !important;
@@ -347,6 +379,17 @@ div.css-y3hfdd > .css-1igwmid{
   overflow: visible !important;
 }
 
+.ad-ext-theme-board-media-root{
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
 .ad-ext-theme-board-canvas > *{
   width: 100% !important;
   height: 100% !important;
@@ -359,6 +402,18 @@ div.css-y3hfdd > .css-1igwmid{
   align-items: center !important;
   justify-content: center !important;
   overflow: visible !important;
+}
+
+.ad-ext-theme-board-media-root > .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"],
+.ad-ext-theme-board-media-root > svg[viewBox="0 0 1000 1000"]{
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: block !important;
+  aspect-ratio: 1 / 1;
 }
 
 .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{
