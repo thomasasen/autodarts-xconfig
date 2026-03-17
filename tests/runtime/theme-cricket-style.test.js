@@ -61,7 +61,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*max-content\s*minmax\(0,\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-score-min-width\),\s*max-content\)\s*!important;[^}]*grid-template-areas:\s*"sets identity score"\s*"\.\s*stats score"\s*!important;[^}]*column-gap:\s*0\.55rem\s*!important;[^}]*container-type:\s*inline-size\s*!important;/s
+    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-score-min-width\),\s*max-content\)\s*!important;[^}]*grid-template-areas:\s*"identity score"\s*"stats score"\s*!important;[^}]*column-gap:\s*0\.55rem\s*!important;[^}]*container-type:\s*inline-size\s*!important;/s
   );
   assert.match(
     css,
@@ -69,7 +69,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*max-content\s*minmax\(0,\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-score-min-width\),\s*max-content\)\s*!important;[^}]*grid-template-areas:\s*"sets identity score"\s*"\.\s*stats score"\s*!important;[^}]*column-gap:\s*0\.55rem\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-score-min-width\),\s*max-content\)\s*!important;[^}]*grid-template-areas:\s*"identity score"\s*"stats score"\s*!important;[^}]*column-gap:\s*0\.55rem\s*!important;/s
   );
   assert.match(
     css,
@@ -81,11 +81,19 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*2\s*!important;[^}]*padding-left:\s*0\s*!important;[^}]*display:\s*flex\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*!important;[^}]*padding-left:\s*clamp\(1\.95rem,\s*2\.4vw,\s*2\.35rem\)\s*!important;[^}]*display:\s*flex\s*!important;/s
   );
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.css-17xejub\s*\{[^}]*display:\s*none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-37hv00\s*>\s*\.css-1cmgsw8\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*!important;[^}]*justify-self:\s*start\s*!important;[^}]*align-self:\s*center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-37hv00\s*>\s*\.css-1cmgsw8\s+\.css-1hcjh09\s*\{[^}]*font-size:\s*clamp\(0\.72rem,\s*0\.8vw,\s*0\.86rem\)\s*!important;/s
   );
   assert.match(
     css,
@@ -105,7 +113,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-player-score\s*\{[^}]*grid-area:\s*score\s*!important;[^}]*grid-column:\s*3\s*!important;[^}]*grid-row:\s*1\s*\/\s*span\s*2\s*!important;[^}]*justify-self:\s*end\s*!important;[^}]*align-self:\s*center\s*!important;[^}]*padding-left:\s*0\.45rem\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-player-score\s*\{[^}]*grid-area:\s*score\s*!important;[^}]*grid-column:\s*2\s*!important;[^}]*grid-row:\s*1\s*\/\s*span\s*2\s*!important;[^}]*justify-self:\s*end\s*!important;[^}]*align-self:\s*center\s*!important;[^}]*padding-left:\s*0\.45rem\s*!important;/s
   );
   assert.doesNotMatch(css, /color:\s*gray\s*!important;/);
   assert.doesNotMatch(

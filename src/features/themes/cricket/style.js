@@ -86,13 +86,10 @@ const cricketThemeCss = `
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
   display: grid !important;
-  grid-template-columns:
-    max-content
-    minmax(0, 1fr)
-    minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
+  grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
   grid-template-areas:
-    "sets identity score"
-    ". stats score" !important;
+    "identity score"
+    "stats score" !important;
   align-items: start !important;
   column-gap: 0.55rem !important;
   row-gap: 0.2rem !important;
@@ -103,13 +100,10 @@ const cricketThemeCss = `
 }
 
 div.css-y3hfdd{
-  grid-template-columns:
-    max-content
-    minmax(0, 1fr)
-    minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
+  grid-template-columns: minmax(0, 1fr) minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
   grid-template-areas:
-    "sets identity score"
-    ". stats score" !important;
+    "identity score"
+    "stats score" !important;
   align-items: start !important;
   column-gap: 0.55rem !important;
   row-gap: 0.2rem !important;
@@ -122,8 +116,11 @@ div.css-y3hfdd{
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 {
-  grid-area: sets !important;
-  align-self: start !important;
+  grid-area: stats !important;
+  grid-column: 1 !important;
+  justify-self: start !important;
+  align-self: center !important;
+  z-index: 2 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 {
@@ -136,11 +133,11 @@ div.css-y3hfdd{
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
   grid-area: stats !important;
-  grid-column: 2 !important;
+  grid-column: 1 !important;
   min-width: 0 !important;
   max-width: 100% !important;
   overflow: hidden !important;
-  padding-left: 0 !important;
+  padding-left: clamp(1.95rem, 2.4vw, 2.35rem) !important;
   display: flex !important;
   align-items: center !important;
   gap: 0.35rem !important;
@@ -157,6 +154,18 @@ div.css-y3hfdd{
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .ad-ext-player-name {
   min-width: 0 !important;
   max-width: 100% !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-3fr5p8 {
+  min-height: 1.02rem !important;
+  min-width: 1.14rem !important;
+  padding-inline: 0.3rem !important;
+  border-radius: 0.3rem !important;
+}
+
+#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-1hcjh09 {
+  font-size: clamp(0.72rem, 0.8vw, 0.86rem) !important;
+  line-height: 1 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 > span {
@@ -212,7 +221,7 @@ div.css-y3hfdd{
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-score {
   grid-area: score !important;
-  grid-column: 3 !important;
+  grid-column: 2 !important;
   grid-row: 1 / span 2 !important;
   justify-self: end !important;
   align-self: center !important;
@@ -261,7 +270,7 @@ div.css-nfhdnc {
 }
 
 .ad-ext-player-name{
-  font-size: clamp(0.96rem, 1.08vw, 1.14rem) !important;
+  font-size: clamp(0.9rem, 1vw, 1.06rem) !important;
   min-inline-size: var(--ad-ext-theme-cricket-player-name-min-width) !important;
   max-inline-size: 100% !important;
   overflow: hidden !important;
@@ -270,7 +279,7 @@ div.css-nfhdnc {
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name {
-  font-size: clamp(0.96rem, 1.08vw, 1.14rem) !important;
+  font-size: clamp(0.9rem, 1vw, 1.06rem) !important;
   min-inline-size: var(--ad-ext-theme-cricket-player-name-min-width) !important;
   line-height: 1.04 !important;
 }
@@ -330,6 +339,14 @@ div.css-nfhdnc {
 
   #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l > .chakra-avatar {
     --avatar-size: 1.9rem !important;
+  }
+
+  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-1hcjh09 {
+    font-size: 0.68rem !important;
+  }
+
+  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
+    padding-left: 1.78rem !important;
   }
 
   #ad-ext-player-display .ad-ext-player .ad-ext-player-name,

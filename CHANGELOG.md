@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.33] - 2026-03-17
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme steht für den Spielernamen wieder mehr
+  Breite zur Verfügung; der kleine Match-/Set-Zähler sitzt jetzt kompakter neben `MPR`,
+  und die Punkte bleiben rechts klar lesbar.
+  Technik: Das Player-Header-Layout wurde von 3 auf 2 Spalten reduziert, der
+  `css-1cmgsw8`-Badge in die Stats-Zeile verschoben und verkleinert, die MPR-Zeile
+  entsprechend eingerückt und die Style-Regressionen auf den neuen Grid-Vertrag angepasst.
+
 ## [2.0.32] - 2026-03-17
 
 ### Fixed
@@ -216,6 +227,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
+[2.0.33]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
 [2.0.32]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
 [2.0.31]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.30]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
