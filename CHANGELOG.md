@@ -13,6 +13,19 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.32] - 2026-03-17
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme nutzen Spielername, Match-Wins und Punkte
+  den vorhandenen Platz jetzt deutlich sauberer; bei schmalen Spielerkarten bleibt der
+  Score dominant lesbar, während Namen und Zusatzinfos strukturierter umbrechen und
+  weniger hart abgeschnitten werden.
+  Technik: Die Player-Cards wurden auf eine Drei-Zonen-Kopfzeile mit separatem Zähler,
+  kompaktem Identitätsblock und eigener Score-Spalte umgestellt; der Wins-Badge wurde
+  unter den Namen gezogen, enge Karten erhalten Container-spezifische Avatar-/Name-
+  Anpassungen, und die Cricket-Style-Regressionen sichern den neuen CSS-Vertrag ab.
+
 ## [2.0.31] - 2026-03-17
 
 ### Fixed
@@ -202,7 +215,8 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
+[2.0.32]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
 [2.0.31]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.30]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
 [2.0.29]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
