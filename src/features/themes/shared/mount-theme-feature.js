@@ -121,6 +121,49 @@ function findBoardSvg(documentRef) {
   return bestScore > 0 ? bestSvg : null;
 }
 
+export function resolveThemeBoardCanvasTarget(boardSvg) {
+  if (!boardSvg || typeof boardSvg.closest !== "function") {
+    return null;
+  }
+
+  const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
+  const showAnimations = boardSvg.closest(".showAnimations");
+  const directParent = boardSvg.parentElement || null;
+
+  if (
+    directParent &&
+    directParent !== stableBoardCanvas &&
+    directParent !== showAnimations
+  ) {
+    return directParent;
+  }
+
+  if (stableBoardCanvas) {
+    return stableBoardCanvas;
+  }
+
+  if (showAnimations) {
+    return showAnimations;
+  }
+
+  return directParent || boardSvg;
+}
+
+export function resolveThemeBoardViewportTarget(boardCanvas, boardSvg) {
+  if (boardSvg && typeof boardSvg.closest === "function") {
+    const showAnimations = boardSvg.closest(".showAnimations");
+    if (
+      boardCanvas &&
+      showAnimations &&
+      boardCanvas !== showAnimations
+    ) {
+      return showAnimations.parentElement || boardCanvas.parentElement || null;
+    }
+  }
+
+  return boardCanvas?.parentElement || boardSvg?.parentElement || null;
+}
+
 function elementContains(rootNode, targetNode) {
   if (!rootNode || !targetNode || typeof rootNode !== "object" || typeof targetNode !== "object") {
     return false;
@@ -471,8 +514,8 @@ function resolveBoardLayoutTargets(documentRef) {
     Boolean(contentTargets.contentSlot) &&
     Boolean(contentTargets.contentLeft) &&
     Boolean(contentTargets.contentBoard);
-  const boardCanvas = boardSvg.closest?.(".showAnimations") || boardSvg.parentElement || null;
-  const boardViewport = boardCanvas?.parentElement || boardSvg.parentElement || null;
+  const boardCanvas = resolveThemeBoardCanvasTarget(boardSvg);
+  const boardViewport = resolveThemeBoardViewportTarget(boardCanvas, boardSvg);
   const boardPanel = resolveBoardPanel(boardSvg, documentRef);
   const boardControls = boardPanel ? resolveBoardControls(boardPanel, boardSvg) : null;
 

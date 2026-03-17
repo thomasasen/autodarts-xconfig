@@ -89,6 +89,59 @@ function createThemeLikeBoardFixture(documentRef) {
   documentRef.main.appendChild(contentSlot);
 }
 
+function createThemeLikeNestedBoardFixture(documentRef) {
+  const contentSlot = documentRef.createElement("div");
+  const contentLeft = documentRef.createElement("div");
+  const contentBoard = documentRef.createElement("div");
+  const playerDisplay = documentRef.createElement("div");
+  const boardPanel = documentRef.createElement("div");
+  const boardControls = documentRef.createElement("div");
+  const boardViewport = documentRef.createElement("div");
+  const showAnimations = documentRef.createElement("div");
+  const innerBoardLayer = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  contentSlot.classList.add("ad-ext-theme-content-slot");
+  contentLeft.classList.add("ad-ext-theme-content-left");
+  contentBoard.classList.add("ad-ext-theme-content-board");
+  boardPanel.classList.add("ad-ext-theme-board-panel");
+  boardControls.classList.add("ad-ext-theme-board-controls");
+  boardViewport.classList.add("ad-ext-theme-board-viewport");
+  showAnimations.classList.add("showAnimations");
+  innerBoardLayer.classList.add("ad-ext-theme-board-canvas", "css-13u3cwk");
+  boardSvg.classList.add("ad-ext-theme-board-svg");
+
+  playerDisplay.id = "ad-ext-player-display";
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  boardSvg.appendChild(outerRing);
+
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardSvg.appendChild(labelNode);
+  }
+
+  innerBoardLayer.appendChild(boardSvg);
+  showAnimations.appendChild(innerBoardLayer);
+  boardViewport.appendChild(showAnimations);
+  boardPanel.appendChild(boardControls);
+  boardPanel.appendChild(boardViewport);
+  contentBoard.appendChild(boardPanel);
+  contentLeft.appendChild(playerDisplay);
+  contentSlot.appendChild(contentLeft);
+  contentSlot.appendChild(contentBoard);
+  documentRef.main.appendChild(contentSlot);
+
+  return {
+    showAnimations,
+    innerBoardLayer,
+    boardSvg,
+  };
+}
+
 function createNumericCricketGrid(documentRef, marksByLabel) {
   const table = documentRef.createElement("table");
   table.id = "grid";
@@ -1257,6 +1310,111 @@ test("theme-like merged grid keeps 18 owner pressure-red while active opponent s
   assert.equal(owner17?.classList?.contains(ACTIVE_COLUMN_CLASS), activePlayerIndex === 0);
   assert.equal(opponent17?.classList?.contains(ACTIVE_COLUMN_CLASS), activePlayerIndex === 1);
 
+  clearCricketGridFxState(gridFxState);
+  clearCricketHighlights(documentRef);
+});
+
+test("theme-like nested board layer keeps cricket highlighter and grid-fx stable", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const nestedBoard = createThemeLikeNestedBoardFixture(documentRef);
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers, listeners },
+    gameState: {
+      ...createGameState({
+        scoringModeNormalized: "unknown",
+        scoringMode: "",
+      }),
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: { cricketRules, variantRules },
+    config: {
+      getFeatureConfig() {
+        return {
+          showOpenTargets: true,
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState({
+      scoringModeNormalized: "unknown",
+      scoringMode: "",
+    }),
+    cricketRules,
+    variantRules,
+    cache: { grid: null, board: null },
+  });
+  const gridFxState = createCricketGridFxState();
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state: gridFxState,
+    visualConfig: resolveCricketGridFxConfig({
+      rowWave: false,
+      badgeBeacon: true,
+      markProgress: false,
+      threatEdge: true,
+      scoringLane: true,
+      deadRowCollapse: true,
+      deltaChips: false,
+      hitSpark: false,
+      roundTransitionWipe: false,
+      opponentPressureOverlay: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    turnToken: "fallback:1:0",
+  });
+
+  const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.ok(overlay);
+  assert.equal(overlay.parentNode, nestedBoard.boardSvg);
+  assert.equal(nestedBoard.innerBoardLayer.classList.contains("ad-ext-theme-board-canvas"), true);
+  assert.equal(nestedBoard.showAnimations.classList.contains("ad-ext-theme-board-canvas"), false);
+
+  const row20 = rowsByLabel.get("20");
+  assert.equal(row20?.labelCell?.classList?.contains(LABEL_CLASS), true);
+  assert.equal(row20?.labelCell?.classList?.contains(LABEL_STATE_CLASS.scoring), true);
+
+  cleanupHighlighter();
   clearCricketGridFxState(gridFxState);
   clearCricketHighlights(documentRef);
 });

@@ -6,6 +6,7 @@ import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import {
   THEME_CRICKET_READABILITY,
   THEME_LAYOUT_HOOK_CLASSES,
+  resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
 } from "../../src/features/themes/shared/mount-theme-feature.js";
 
@@ -117,6 +118,19 @@ function createBoardFixture(documentRef, options = {}) {
     boardViewport,
     boardCanvas,
     boardSvg,
+  };
+}
+
+function createNestedShowAnimationsBoardFixture(documentRef, options = {}) {
+  const nodes = createBoardFixture(documentRef, options);
+  const innerBoardLayer = documentRef.createElement("div");
+  innerBoardLayer.classList.add("css-13u3cwk");
+  nodes.boardCanvas.removeChild(nodes.boardSvg);
+  innerBoardLayer.appendChild(nodes.boardSvg);
+  nodes.boardCanvas.appendChild(innerBoardLayer);
+  return {
+    ...nodes,
+    innerBoardLayer,
   };
 }
 
@@ -261,6 +275,33 @@ test("selectWidestContentLayoutCandidate prefers widest slot and keeps determini
   );
 
   assert.equal(selectWidestContentLayoutCandidate([]), null);
+});
+
+test("theme board canvas resolver prefers inner board layer over outer .showAnimations", () => {
+  const documentRef = new FakeDocument();
+  const boardCanvas = documentRef.createElement("div");
+  const innerBoardLayer = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  boardCanvas.classList.add("showAnimations", "ad-ext-theme-board-canvas");
+  innerBoardLayer.classList.add("css-13u3cwk");
+  innerBoardLayer.appendChild(boardSvg);
+  boardCanvas.appendChild(innerBoardLayer);
+  documentRef.main.appendChild(boardCanvas);
+
+  assert.equal(resolveThemeBoardCanvasTarget(boardSvg), innerBoardLayer);
+});
+
+test("theme board canvas resolver keeps outer .showAnimations fallback when no inner layer exists", () => {
+  const documentRef = new FakeDocument();
+  const boardCanvas = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  boardCanvas.classList.add("showAnimations", "ad-ext-theme-board-canvas");
+  boardCanvas.appendChild(boardSvg);
+  documentRef.main.appendChild(boardCanvas);
+
+  assert.equal(resolveThemeBoardCanvasTarget(boardSvg), boardCanvas);
 });
 
 test("theme-x01 mounts idempotently and cleans up style plus preview spacing", async () => {
@@ -640,6 +681,76 @@ test("theme-cricket auto-hides board for readability and keeps player width when
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     ""
   );
+});
+
+test("theme-cricket keeps March 15 readability semantics with nested showAnimations board layers", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  const boardNodes = createNestedShowAnimationsBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1400, height: 680 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 6);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-readability-nested-board");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const noticeNode = documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId);
+  assert.equal(boardNodes.innerBoardLayer.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
+  assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), false);
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "1202px"
+  );
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass), true);
+  assert.equal(Boolean(noticeNode), true);
+
+  const noticeTextNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.noticeTextClass}`);
+  const toggleNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.toggleClass}`);
+  assert.equal(noticeTextNode?.textContent || "", "Board wegen Lesbarkeit ausgeblendet.");
+  assert.equal(toggleNode?.textContent || "", "Board anzeigen");
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    ""
+  );
+
+  toggleNode.click();
+  await wait(5);
+
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardForcedVisibleClass), true);
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    "190px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "1202px"
+  );
+  assert.equal(
+    noticeTextNode?.textContent || "",
+    "Board manuell eingeblendet, Spielerinfos behalten Priorität."
+  );
+
+  boardNodes.contentSlot.__rect = { width: 1600, height: 680 };
+  windowRef.dispatchEvent(new windowRef.Event("resize"));
+  await wait(5);
+
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass), false);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass), false);
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    ""
+  );
+  assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
+
+  runtime.stop();
 });
 
 test("theme-bull-off applies includes matching without preview-space class", async () => {
