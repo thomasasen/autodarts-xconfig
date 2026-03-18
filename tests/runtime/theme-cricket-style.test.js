@@ -141,7 +141,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*font-size:\s*clamp\(0\.74rem,\s*0\.82vw,\s*0\.86rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*font-size:\s*x-large\s*!important;/s
   );
   assert.doesNotMatch(
     css,
