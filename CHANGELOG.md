@@ -13,6 +13,29 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.38] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme bleibt `MPR` bei dreistelligen Punkten
+  wie `120` jetzt klar links neben den Runden und kollidiert nicht mehr mit der
+  Score-Anzeige.
+  Technik: Die Stats-Zeile behält weiterhin die Spalten `1 / 3`, nutzt jetzt aber ein
+  dynamisches linkes `padding-left` via `clamp(...)`, damit sich der Abstand für
+  unterschiedliche Kartenbreiten anpasst; die CSS-Regression deckt die neue Regel ab.
+
+## [2.0.37] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme überlappt `MPR` bei dreistelligen
+  Punktzahlen nicht mehr mit dem Score. Die Punkte bleiben groß, während `MPR` sichtbar
+  weiter links steht.
+  Technik: Die Stats-Zeile spannt jetzt über Spalte 1–2 statt nur über Spalte 2 und
+  erhält ein linkes Offset für den Match-Badge, wodurch rechts dynamisch mehr Raum für
+  dreistellige Scores entsteht; die Cricket-Style-Regressionen prüfen den neuen
+  Grid-/Spacing-Vertrag.
+
 ## [2.0.36] - 2026-03-18
 
 ### Fixed
@@ -271,6 +294,8 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.38]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.37]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.36]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.35]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.34]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...c307908

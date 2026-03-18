@@ -83,7 +83,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*2\s*!important;[^}]*justify-self:\s*start\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-stats-min-width\)\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-start\s*!important;[^}]*margin-left:\s*-0\.06rem\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*\/\s*3\s*!important;[^}]*justify-self:\s*stretch\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-stats-min-width\)\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-start\s*!important;[^}]*padding-left:\s*clamp\(0\.92rem,\s*8cqi,\s*1\.34rem\)\s*!important;/s
   );
   assert.match(
     css,

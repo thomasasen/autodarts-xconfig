@@ -143,8 +143,8 @@ div.css-y3hfdd{
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
   grid-area: stats !important;
-  grid-column: 2 !important;
-  justify-self: start !important;
+  grid-column: 1 / 3 !important;
+  justify-self: stretch !important;
   align-self: center !important;
   min-width: var(--ad-ext-theme-cricket-stats-min-width) !important;
   max-width: 100% !important;
@@ -153,7 +153,7 @@ div.css-y3hfdd{
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 0.24rem !important;
-  margin-left: -0.06rem !important;
+  padding-left: clamp(0.92rem, 8cqi, 1.34rem) !important;
   white-space: nowrap !important;
 }
 
