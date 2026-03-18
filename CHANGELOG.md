@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.44] - 2026-03-19
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-/Tactics-Theme haben aktive und inaktive Spielernamen jetzt
+  dieselbe Schriftgröße; der aktive Spielername bleibt über die grüne Hervorhebung
+  weiterhin klar erkennbar.
+  Technik: Der aktive Namens-Override auf größere Schrift wurde entfernt und durch eine
+  Farbregel auf `--ad-ext-theme-cricket-score-active-color` ersetzt; die
+  Cricket-Style-Regressionen prüfen den neuen Active-Name-Vertrag.
+
 ## [2.0.43] - 2026-03-18
 
 ### Fixed
@@ -374,6 +385,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.44]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.43]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.42]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.41]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD

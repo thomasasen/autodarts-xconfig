@@ -328,7 +328,7 @@ div.css-nfhdnc {
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name > p {
-  font-size: clamp(0.82rem, 0.94vw, 0.98rem) !important;
+  color: var(--ad-ext-theme-cricket-score-active-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
