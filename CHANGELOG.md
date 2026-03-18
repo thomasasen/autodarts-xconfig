@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.45] - 2026-03-19
+
+### Fixed
+
+- Nutzerwirkung: Der aktive Spielername wird nicht mehr kleiner dargestellt, sondern
+  bleibt jetzt exakt so groß wie die inaktiven Spielernamen; die aktive Hervorhebung
+  bleibt über die grüne Namensfarbe erhalten.
+  Technik: Für aktive Namen wird die gleiche `font-size`-Clamp wie bei inaktiven Namen
+  explizit erzwungen und weiterhin die aktive Score-Farbe genutzt; die
+  Cricket-Style-Regression prüft den identischen Größenwert plus aktive Farbe.
+
 ## [2.0.44] - 2026-03-19
 
 ### Fixed
@@ -385,6 +396,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.45]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.44]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.43]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.42]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
