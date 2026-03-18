@@ -30,6 +30,8 @@ Keep `CHANGELOG.md` accurate, understandable, and synchronized with the reposito
 - write every real changelog entry in two parts:
   - `Nutzerwirkung: ...`
   - `Technik: ...`
+- keep `CHANGELOG.md` in UTF-8 and preserve German umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
+- never ship mojibake sequences (for example `Ã`, `Â`, `â€“`, `�`) in changelog text
 - separate working-tree truth from commit-history truth
 - always check whether local changes exist that are not committed yet
 - state clearly when local state, committed state, and GitHub-published state differ
@@ -100,6 +102,8 @@ Before handoff:
 - verify that the top released version matches `package.json`
 - verify that every entry has both required parts
 - verify whether relevant local changes exist without changelog updates
+- scan `CHANGELOG.md` for mojibake markers and fix before handoff
+  - suggested check: `rg -n "Ã|Â|â€“|â€”|â€ž|â€œ|â€™|â€|�" CHANGELOG.md`
 - run `npm run check:changelog` when Node/npm is available
 
 Be explicit that this check is heuristic for semantic completeness. It can detect drift signals,

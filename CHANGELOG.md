@@ -1,17 +1,37 @@
 ﻿# Changelog
 
-Alle nennenswerten Ã„nderungen an diesem Projekt werden in dieser Datei festgehalten.
+Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei festgehalten.
 
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 und die Versionsvergabe folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Solange dieses Repository noch keine Git-Tags verwendet, verweisen die Versionslinks auf
 GitHub-Vergleiche zwischen Release-Commits. Der neueste lokale Release-Eintrag kann bis
-zum nÃ¤chsten Release-Commit vorÃ¼bergehend auf `HEAD` zeigen.
+zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
-_Noch keine Ã„nderungen erfasst._
+_Noch keine Änderungen erfasst._
+
+## [2.0.43] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-/Tactics-Layout bleibt die Felder-Tabelle unter den
+  Spielerkarten wieder sichtbar, statt bei manchen Layoutzuständen komplett
+  zu verschwinden.
+  Technik: Der linke Content-Bereich (`ad-ext-theme-content-left`) streckt sich
+  wieder über die volle Slot-Höhe (`height: 100%`, `align-self: stretch`,
+  `min-height: 0`), sodass die von Chakra auf `calc(100% - 149px)` basierte
+  Grid-Fläche (`.css-c04tlr`) eine stabile Referenzhöhe behält.
+- Nutzerwirkung: Die aktive Punktezahl bleibt innerhalb der Spielerkarte besser
+  lesbar und kollidiert nicht mehr so leicht mit der MPR-Zeile, auch bei
+  dreistelligen Scores.
+  Technik: Score-Fallbackgrößen wurden von viewport-lastigen Werten auf
+  kartenverträgliche Clamp-Werte reduziert, Score-Padding/Margen für die
+  rechte Kante neu austariert, die Stats-Zeile nach links verdichtet und die
+  Cricket-Style-Regressionen auf die neue Layout-/Typografie-Konfiguration
+  aktualisiert.
 
 ## [2.0.42] - 2026-03-18
 
@@ -52,11 +72,11 @@ _Noch keine Ã„nderungen erfasst._
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme sind Spieler-/Punktekarten jetzt
   pixelgenau an den unteren Spalten ausgerichtet. Die Namenszeile ist wirklich
-  randbÃ¼ndig ohne Seitenspalt, aktive Scores bleiben innerhalb der Karte, und
+  randbündig ohne Seitenspalt, aktive Scores bleiben innerhalb der Karte, und
   die letzte Spielerkarte wird bei knapper Breite nicht mehr rechts abgeschnitten.
   Technik: Die Player- und Grid-Spalten nutzen einen gemeinsamen Width-Token
-  (`--ad-ext-theme-cricket-player-column-width`), KartenabstÃ¤nde wurden auf `0`
-  vereinheitlicht, Bleed-Hacks der Namenszeile entfernt, Score-Containment gehÃ¤rtet
+  (`--ad-ext-theme-cricket-player-column-width`), Kartenabstände wurden auf `0`
+  vereinheitlicht, Bleed-Hacks der Namenszeile entfernt, Score-Containment gehärtet
   sowie die Cricket-Readability-Policy auf die neue Kartengeometrie synchronisiert
   (`playerCardMinWidthPx=205`, `playerCardGapPx=0`, `playerAreaPaddingPx=12`);
   dazu wurden CSS-Regressionen und Lifecycle-Regressionen inkl. 4-Spieler-Fall erweitert.
@@ -66,11 +86,11 @@ _Noch keine Ã„nderungen erfasst._
 ### Fixed
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme haben Spielerkarten jetzt etwas mehr
-  Mindestbreite, damit Name, RundenzÃƒÂ¤hler, `MPR` und Punktzahl bei 4 Spielern stabiler
+  Mindestbreite, damit Name, Rundenzähler, `MPR` und Punktzahl bei 4 Spielern stabiler
   nebeneinander bleiben und nicht sichtbar ineinanderlaufen.
   Technik: Die minimale Spaltenbreite der Player-Cards wurde auf `12.6rem` angehoben,
   die Score-Mindestbreite auf `4.2ch` erweitert und der `MPR`-Offset wieder auf einen
-  robusten festen Wert gesetzt; die Style-Regressionen prÃƒÂ¼fen die neuen Variablen und
+  robusten festen Wert gesetzt; die Style-Regressionen prüfen die neuen Variablen und
   Spacing-Werte.
 
 ## [2.0.38] - 2026-03-18
@@ -80,20 +100,20 @@ _Noch keine Ã„nderungen erfasst._
 - Nutzerwirkung: Im Cricket- und Tactics-Theme bleibt `MPR` bei dreistelligen Punkten
   wie `120` jetzt klar links neben den Runden und kollidiert nicht mehr mit der
   Score-Anzeige.
-  Technik: Die Stats-Zeile behÃ¤lt weiterhin die Spalten `1 / 3`, nutzt jetzt aber ein
-  dynamisches linkes `padding-left` via `clamp(...)`, damit sich der Abstand fÃ¼r
+  Technik: Die Stats-Zeile behält weiterhin die Spalten `1 / 3`, nutzt jetzt aber ein
+  dynamisches linkes `padding-left` via `clamp(...)`, damit sich der Abstand für
   unterschiedliche Kartenbreiten anpasst; die CSS-Regression deckt die neue Regel ab.
 
 ## [2.0.37] - 2026-03-18
 
 ### Fixed
 
-- Nutzerwirkung: Im Cricket- und Tactics-Theme Ã¼berlappt `MPR` bei dreistelligen
-  Punktzahlen nicht mehr mit dem Score. Die Punkte bleiben groÃŸ, wÃ¤hrend `MPR` sichtbar
+- Nutzerwirkung: Im Cricket- und Tactics-Theme überlappt `MPR` bei dreistelligen
+  Punktzahlen nicht mehr mit dem Score. Die Punkte bleiben groß, während `MPR` sichtbar
   weiter links steht.
-  Technik: Die Stats-Zeile spannt jetzt Ã¼ber Spalte 1â€“2 statt nur Ã¼ber Spalte 2 und
-  erhÃ¤lt ein linkes Offset fÃ¼r den Match-Badge, wodurch rechts dynamisch mehr Raum fÃ¼r
-  dreistellige Scores entsteht; die Cricket-Style-Regressionen prÃ¼fen den neuen
+  Technik: Die Stats-Zeile spannt jetzt über Spalte 1–2 statt nur über Spalte 2 und
+  erhält ein linkes Offset für den Match-Badge, wodurch rechts dynamisch mehr Raum für
+  dreistellige Scores entsteht; die Cricket-Style-Regressionen prüfen den neuen
   Grid-/Spacing-Vertrag.
 
 ## [2.0.36] - 2026-03-18
@@ -101,55 +121,55 @@ _Noch keine Ã„nderungen erfasst._
 ### Fixed
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme liegt die Namensleiste jetzt wirklich
-  randbÃ¼ndig am Spieler-/Punkte-Container ohne seitlichen Spalt. Gewonnene Runden, `MPR`
-  und Punkte sind sichtbar um rund 15% grÃ¶ÃŸer; `MPR` sitzt dabei weiter links, und
+  randbündig am Spieler-/Punkte-Container ohne seitlichen Spalt. Gewonnene Runden, `MPR`
+  und Punkte sind sichtbar um rund 15% größer; `MPR` sitzt dabei weiter links, und
   3-stellige Punkte bleiben sauber lesbar.
   Technik: Die Header-Leiste nutzt jetzt einen expliziten Inline-Bleed bis zur
-  Kartenkante, die Stats-/Score-Spalten wurden fÃ¼r grÃ¶ÃŸere Zahlen neu austariert
+  Kartenkante, die Stats-/Score-Spalten wurden für größere Zahlen neu austariert
   (u. a. Score-Minbreite, kompaktere Spaltengaps, linksverschobenes `MPR`), die
-  KartenhÃ¶he wurde erhÃ¶ht und die Cricket-Style-Regressionen wurden auf die neuen
-  GrÃ¶ÃŸen-, Ausrichtungs- und Overflow-VertrÃ¤ge erweitert.
+  Kartenhöhe wurde erhöht und die Cricket-Style-Regressionen wurden auf die neuen
+  Größen-, Ausrichtungs- und Overflow-Verträge erweitert.
 
 ## [2.0.35] - 2026-03-18
 
 ### Fixed
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme ist die Hierarchie zwischen aktivem und
-  inaktivem Spieler klarer: aktive Namen und Punkte sind sichtbar grÃ¶ÃŸer, inaktive
-  kompakter. Der Namenscontainer lÃ¤uft jetzt randlos Ã¼ber die volle Kartenbreite,
+  inaktivem Spieler klarer: aktive Namen und Punkte sind sichtbar größer, inaktive
+  kompakter. Der Namenscontainer läuft jetzt randlos über die volle Kartenbreite,
   Profil-Averages wie `35+` stehen rechts in derselben Zeile wie der Name, lange Namen
-  bleiben einzeilig mit `..`-KÃ¼rzung, und `MPR` bleibt links neben den gewonnenen Runden
-  vollstÃ¤ndig lesbar.
+  bleiben einzeilig mit `..`-Kürzung, und `MPR` bleibt links neben den gewonnenen Runden
+  vollständig lesbar.
   Technik: Das Player-Header-Layout nutzt jetzt eine einzeilige
   `avatar | name | wins`-Leiste mit randloser Vollbreite, die Stats-Spalte wurde mit
-  Mindestbreite/Linksausrichtung gegen Abschneiden gehÃ¤rtet, und die Score-Skalierung
-  fÃ¼r aktive wie inaktive Spieler wurde um rund 10% erhÃ¶ht, inklusive Regressionstests
-  fÃ¼r Grid-Vertrag, Overflow-Verhalten und GrÃ¶ÃŸenhierarchie.
+  Mindestbreite/Linksausrichtung gegen Abschneiden gehärtet, und die Score-Skalierung
+  für aktive wie inaktive Spieler wurde um rund 10% erhöht, inklusive Regressionstests
+  für Grid-Vertrag, Overflow-Verhalten und Größenhierarchie.
 
 ## [2.0.34] - 2026-03-17
 
 ### Fixed
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme steht der Spielername jetzt in der
-  ersten Zeile Ã¼ber die volle Kartenbreite; darunter sind Match-Wins, MPR und Punkte
+  ersten Zeile über die volle Kartenbreite; darunter sind Match-Wins, MPR und Punkte
   als klare Dreiteilung angeordnet. Der aktive Spielername bleibt einzeilig und wird
   bewusst kleiner dargestellt, damit die Punktezahl dominant lesbar bleibt.
-  Technik: Das Player-Header-Grid wurde auf `identity` Ã¼ber alle drei Spalten plus
+  Technik: Das Player-Header-Grid wurde auf `identity` über alle drei Spalten plus
   zweite Zeile `matches | stats | score` umgestellt, der `css-1cmgsw8`-Badge in die
   dedizierte Matches-Spalte gelegt, MPR in Spalte 2 zentriert und die Score-Skalierung
-  fÃ¼r bessere Lesbarkeit angehoben; zusÃ¤tzlich erzwingen neue Regeln einzeilige Namen
+  für bessere Lesbarkeit angehoben; zusätzlich erzwingen neue Regeln einzeilige Namen
   ohne Umbruch und die Style-Regressionen sichern den neuen Layout-Vertrag ab.
 
 ## [2.0.33] - 2026-03-17
 
 ### Fixed
 
-- Nutzerwirkung: Im Cricket- und Tactics-Theme steht fÃ¼r den Spielernamen wieder mehr
-  Breite zur VerfÃ¼gung; der kleine Match-/Set-ZÃ¤hler sitzt jetzt kompakter neben `MPR`,
+- Nutzerwirkung: Im Cricket- und Tactics-Theme steht für den Spielernamen wieder mehr
+  Breite zur Verfügung; der kleine Match-/Set-Zähler sitzt jetzt kompakter neben `MPR`,
   und die Punkte bleiben rechts klar lesbar.
   Technik: Das Player-Header-Layout wurde von 3 auf 2 Spalten reduziert, der
   `css-1cmgsw8`-Badge in die Stats-Zeile verschoben und verkleinert, die MPR-Zeile
-  entsprechend eingerÃ¼ckt und die Style-Regressionen auf den neuen Grid-Vertrag angepasst.
+  entsprechend eingerückt und die Style-Regressionen auf den neuen Grid-Vertrag angepasst.
 
 ## [2.0.32] - 2026-03-17
 
@@ -157,10 +177,10 @@ _Noch keine Ã„nderungen erfasst._
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme nutzen Spielername, Match-Wins und Punkte
   den vorhandenen Platz jetzt deutlich sauberer; bei schmalen Spielerkarten bleibt der
-  Score dominant lesbar, wÃ¤hrend Namen und Zusatzinfos strukturierter umbrechen und
+  Score dominant lesbar, während Namen und Zusatzinfos strukturierter umbrechen und
   weniger hart abgeschnitten werden.
-  Technik: Die Player-Cards wurden auf eine Drei-Zonen-Kopfzeile mit separatem ZÃ¤hler,
-  kompaktem IdentitÃ¤tsblock und eigener Score-Spalte umgestellt; der Wins-Badge wurde
+  Technik: Die Player-Cards wurden auf eine Drei-Zonen-Kopfzeile mit separatem Zähler,
+  kompaktem Identitätsblock und eigener Score-Spalte umgestellt; der Wins-Badge wurde
   unter den Namen gezogen, enge Karten erhalten Container-spezifische Avatar-/Name-
   Anpassungen, und die Cricket-Style-Regressionen sichern den neuen CSS-Vertrag ab.
 
@@ -169,8 +189,8 @@ _Noch keine Ã„nderungen erfasst._
 ### Fixed
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme bleiben Spielername, Matchdaten und Punkte
-  jetzt auch bei langen Namen sauber getrennt; auÃŸerdem nutzen die Spielerspalten
-  definierte Mindest- und Maximalbreiten, und die Punktebreite wÃ¤chst wieder passend mit
+  jetzt auch bei langen Namen sauber getrennt; außerdem nutzen die Spielerspalten
+  definierte Mindest- und Maximalbreiten, und die Punktebreite wächst wieder passend mit
   der Stellenzahl.
   Technik: Die Player-Cards wurden auf getrennte Meta-/Submeta-Zeilen mit dynamischer
   Score-Spalte umgestellt, die Cricket/Tactics-Tabellenspalten bekamen feste
@@ -185,18 +205,18 @@ _Noch keine Ã„nderungen erfasst._
   von der Punktezahl getrennt, sodass lange Namen nicht mehr mit dem Score kollidieren.
   Technik: Die Player-Cards nutzen jetzt ein festes Zwei-Spalten-Grid mit reservierter
   Score-Spalte und separatem Meta-Bereich; neue Style-Regressionen sichern die Trennung,
-  ohne die March-15-Readability- und Mehrspieler-Shrink-Logik zu verÃ¤ndern.
+  ohne die March-15-Readability- und Mehrspieler-Shrink-Logik zu verändern.
 
 ## [2.0.29] - 2026-03-17
 
 ### Fixed
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme bleiben Event-Boards jetzt sauber im
-  vorgesehenen grÃ¼nen Rahmen, und die Punkte der nicht aktiven Spieler sind trotz
-  abgeschwÃ¤chter Karten wieder deutlich besser lesbar.
+  vorgesehenen grünen Rahmen, und die Punkte der nicht aktiven Spieler sind trotz
+  abgeschwächter Karten wieder deutlich besser lesbar.
   Technik: Die Theme-Hooks markieren bei verschachtelten `.showAnimations`-Boards jetzt
-  zusÃ¤tzlich einen Event-Shell- und Media-Root-Layer fÃ¼r stabiles Inner-Fitting; auÃŸerdem
-  wurde die Inaktiv-DÃ¤mpfung der Player-Cards von globaler Opacity auf Overlay-/Kontrast-
+  zusätzlich einen Event-Shell- und Media-Root-Layer für stabiles Inner-Fitting; außerdem
+  wurde die Inaktiv-Dämpfung der Player-Cards von globaler Opacity auf Overlay-/Kontrast-
   Styling umgestellt und mit neuen Runtime-/Style-Regressionen gegen March-15-Readability,
   Board-Fit und Score-Lesbarkeit abgesichert.
 
@@ -206,11 +226,11 @@ _Noch keine Ã„nderungen erfasst._
 
 - Nutzerwirkung: Im Cricket- und Tactics-Theme bleibt das Liveboard mit virtuellem Zahlenring
   jetzt stabil im vorgesehenen Board-Bereich, sodass Ring-Overlays nicht mehr gemeinsam
-  mit dem eigentlichen Board unerwÃƒÂ¼nscht zusammenziehen.
+  mit dem eigentlichen Board unerwünscht zusammenziehen.
   Technik: Die Shared-Theme-Hooks bevorzugen bei `.showAnimations` jetzt denselben inneren
-  Board-Layer wie der TV-Zoom, statt pauschal den ÃƒÂ¤uÃƒÅ¸eren Wrapper zu skalieren; neue
-  Runtime-Regressionen sichern die Layer-PrioritÃƒÂ¤t, die unverÃƒÂ¤nderten March-15-Readability-
-  Werte und die KompatibilitÃƒÂ¤t mit Cricket-Highlighter/Grid-FX ab.
+  Board-Layer wie der TV-Zoom, statt pauschal den äußeren Wrapper zu skalieren; neue
+  Runtime-Regressionen sichern die Layer-Priorität, die unveränderten March-15-Readability-
+  Werte und die Kompatibilität mit Cricket-Highlighter/Grid-FX ab.
 
 ## [2.0.27] - 2026-03-17
 
@@ -218,21 +238,21 @@ _Noch keine Ã„nderungen erfasst._
 
 - Nutzerwirkung: Die Remove-Darts-Hand wird jetzt als eigenes xConfig-Overlay angezeigt,
   sodass der gelbe Host-Hintergrund verschwindet, das Pulsieren ruhig bleibt und die
-  BildgrÃ¶ÃŸe aus xConfig wieder die sichtbare Karte steuert.
+  Bildgröße aus xConfig wieder die sichtbare Karte steuert.
   Technik: Das Feature blendet erkannte Takeout-Hosts nur noch aus, rendert ein isoliertes
   Overlay am Dokument-Root und sichert Host-Hiding, Overlay-Cleanup, Puls-Contract und
-  GrÃ¶ÃŸen-Presets mit neuen Runtime- und Style-Regressionen ab.
+  Größen-Presets mit neuen Runtime- und Style-Regressionen ab.
 
 ## [2.0.25] - 2026-03-16
 
 ### Fixed
 
 - Nutzerwirkung: Beim X01-Checkout bleibt der TV-Board-Zoom bei kurzen
-  Ãœbergangsphasen zwischen WÃ¼rfen stabiler, wodurch sichtbares Board-Flackern
+  Übergangsphasen zwischen Würfen stabiler, wodurch sichtbares Board-Flackern
   und kurzzeitige Scrollbalken deutlich reduziert werden.
-  Technik: Der Zoom-Reset nutzt jetzt eine kurze Hysterese fÃ¼r transiente
-  `board/target/intent`-NullzustÃ¤nde und behÃ¤lt den sofortigen Korrektur-Reset
-  Ã¼ber `manualPause`; zusÃ¤tzlich sichern neue Runtime-Regressionen den
+  Technik: Der Zoom-Reset nutzt jetzt eine kurze Hysterese für transiente
+  `board/target/intent`-Nullzustände und behält den sofortigen Korrektur-Reset
+  über `manualPause`; zusätzlich sichern neue Runtime-Regressionen den
   Kurzunterbruch-, Persistenz- und Korrekturpfad ab.
 
 ## [2.0.24] - 2026-03-16
@@ -240,40 +260,40 @@ _Noch keine Ã„nderungen erfasst._
 ### Fixed
 
 - Nutzerwirkung: Die Remove-Darts-Benachrichtigung pulsiert jetzt stabiler und zeigt die
-  Hand-Grafik ohne unerwÃ¼nschte HintergrundflÃ¤chen an, auch wenn die Autodarts-OberflÃ¤che
+  Hand-Grafik ohne unerwünschte Hintergrundflächen an, auch wenn die Autodarts-Oberfläche
   oder Themes eigene Bild- und Pseudo-Element-Styles mitbringen.
   Technik: Das Feature erzwingt transparente Bilddarstellung und Animationsregeln jetzt
-  robuster per CSS, neutralisiert Pseudo-Elemente des Notice-Containers und erhÃ¤lt
-  Regressionen fÃ¼r den Stilvertrag sowie den Alpha-Kanal des TakeOut-Assets.
+  robuster per CSS, neutralisiert Pseudo-Elemente des Notice-Containers und erhält
+  Regressionen für den Stilvertrag sowie den Alpha-Kanal des TakeOut-Assets.
 
 ## [2.0.23] - 2026-03-16
 
 ### Added
 
-- Nutzerwirkung: Das Projekt besitzt jetzt ein gepflegtes Changelog mit verstÃ¤ndlichem
-  Ã„nderungstext fÃ¼r normale Nutzer und einem separaten Technikteil fÃ¼r fortgeschrittene
+- Nutzerwirkung: Das Projekt besitzt jetzt ein gepflegtes Changelog mit verständlichem
+  Änderungstext für normale Nutzer und einem separaten Technikteil für fortgeschrittene
   Leser.
   Technik: `CHANGELOG.md`, ein Konsistenzcheck unter `scripts/check-changelog-consistency.mjs`,
-  das Skill `changelog_maintenance` sowie ergÃ¤nzende Tests und Agent-Regeln wurden
-  eingefÃ¼hrt und in die Verifikationskette eingebunden.
+  das Skill `changelog_maintenance` sowie ergänzende Tests und Agent-Regeln wurden
+  eingeführt und in die Verifikationskette eingebunden.
 
 ## [2.0.22] - 2026-03-15
 
 ### Fixed
 
 - Nutzerwirkung: Der TV-Board-Zoom bleibt beim Start eines neuen Spiels nicht mehr
-  fÃ¤lschlich in einem alten Checkout-Zoom hÃ¤ngen, wenn kurzzeitig noch veraltete Scores
+  fälschlich in einem alten Checkout-Zoom hängen, wenn kurzzeitig noch veraltete Scores
   sichtbar sind.
-  Technik: Die Zoom-Entscheidung prÃ¼ft den sichtbaren aktiven Score jetzt robuster gegen
-  den Game-State und rÃ¤umt Sticky-ZustÃ¤nde bei Spielstart gezielt auf; dafÃ¼r wurde eine
-  Regression in `x01-feature-logic` ergÃ¤nzt.
+  Technik: Die Zoom-Entscheidung prüft den sichtbaren aktiven Score jetzt robuster gegen
+  den Game-State und räumt Sticky-Zustände bei Spielstart gezielt auf; dafür wurde eine
+  Regression in `x01-feature-logic` ergänzt.
 
 ## [2.0.21] - 2026-03-15
 
 ### Fixed
 
 - Nutzerwirkung: Dart-Markierungen bleiben unter TV-Zoom sauber innerhalb des Boards und
-  ragen nicht mehr sichtbar Ã¼ber den Viewport hinaus.
+  ragen nicht mehr sichtbar über den Viewport hinaus.
   Technik: Das Dart-Overlay wird an den gezoomten Board-Viewport geklammert, damit die
   Marker-Geometrie auch bei transformierten Zoom-Containern stabil begrenzt bleibt.
 
@@ -282,7 +302,7 @@ _Noch keine Ã„nderungen erfasst._
 ### Fixed
 
 - Nutzerwirkung: Der Single-Bull-Sound wird bei derselben Aktion nicht mehr doppelt
-  ausgelÃ¶st.
+  ausgelöst.
   Technik: Die Wiederholungserkennung zwischen DOM-Replay und Game-State-Replay wurde
   dedupliziert, damit derselbe Treffer nur noch einmal verarbeitet wird.
 
@@ -290,29 +310,29 @@ _Noch keine Ã„nderungen erfasst._
 
 ### Fixed
 
-- Nutzerwirkung: Die Remove-Darts-Benachrichtigung greift nicht mehr in die xConfig-OberflÃ¤che
-  ein und pausiert sauber, solange die xConfig-Ansicht geÃ¶ffnet ist.
-  Technik: Die Erkennung schlieÃŸt die xConfig-Route und deren DOM gezielt aus, damit
-  Takeout-Ersatzlogik nur noch auf den vorgesehenen SpieloberflÃ¤chen aktiv ist.
+- Nutzerwirkung: Die Remove-Darts-Benachrichtigung greift nicht mehr in die xConfig-Oberfläche
+  ein und pausiert sauber, solange die xConfig-Ansicht geöffnet ist.
+  Technik: Die Erkennung schließt die xConfig-Route und deren DOM gezielt aus, damit
+  Takeout-Ersatzlogik nur noch auf den vorgesehenen Spieloberflächen aktiv ist.
 
 ## [2.0.18] - 2026-03-15
 
 ### Changed
 
-- Nutzerwirkung: Status- und Update-Erkennung reagieren robuster auf WortlautÃ¤nderungen
-  und verursachen weniger unnÃ¶tige Online-Abfragen.
-  Technik: Gemeinsame Autodarts-Begriffe, Vertrags-/Fixture-Tests und eine widerstandsfÃ¤higere
-  Update-Check-Logik mit 304-/Fehler-TTL wurden ergÃ¤nzt; auÃŸerdem wurden X01- und
-  Remove-Darts-Heuristiken verschÃ¤rft.
+- Nutzerwirkung: Status- und Update-Erkennung reagieren robuster auf Wortlautänderungen
+  und verursachen weniger unnötige Online-Abfragen.
+  Technik: Gemeinsame Autodarts-Begriffe, Vertrags-/Fixture-Tests und eine widerstandsfähigere
+  Update-Check-Logik mit 304-/Fehler-TTL wurden ergänzt; außerdem wurden X01- und
+  Remove-Darts-Heuristiken verschärft.
 
 ## [2.0.17] - 2026-03-15
 
 ### Fixed
 
 - Nutzerwirkung: Die Remove-Darts-Erkennung trifft Spielsituationen wieder konsistenter,
-  auch wenn Board-Manager- oder Legacy-Ã¤hnliche ZustÃ¤nde auftreten.
-  Technik: Die Erkennungslogik wurde an die Ã¤ltere Zustandsauswertung und Board-Manager-Signale
-  angeglichen, damit Takeout-FÃ¤lle aus unterschiedlichen Snapshot-Varianten gleich behandelt
+  auch wenn Board-Manager- oder Legacy-ähnliche Zustände auftreten.
+  Technik: Die Erkennungslogik wurde an die ältere Zustandsauswertung und Board-Manager-Signale
+  angeglichen, damit Takeout-Fälle aus unterschiedlichen Snapshot-Varianten gleich behandelt
   werden.
 
 ## [2.0.16] - 2026-03-15
@@ -320,7 +340,7 @@ _Noch keine Ã„nderungen erfasst._
 ### Fixed
 
 - Nutzerwirkung: Im X01-Theme bleiben Spielerkacheln und Wurfzeile auch unter Zoom sauber
-  Ã¼ber der Dart-Overlay-Ebene sichtbar.
+  über der Dart-Overlay-Ebene sichtbar.
   Technik: Die Layer-Reihenfolge zwischen Theme-Layout und Dart-Overlay wurde im
   Zoom-Kontext neu ausbalanciert, damit die relevanten UI-Schichten nicht verdeckt werden.
 
@@ -328,17 +348,17 @@ _Noch keine Ã„nderungen erfasst._
 
 ### Fixed
 
-- Nutzerwirkung: Der Button `Update installieren` Ã¶ffnet nicht mehr versehentlich eine
+- Nutzerwirkung: Der Button `Update installieren` öffnet nicht mehr versehentlich eine
   veraltete, zwischengespeicherte Userscript-Datei.
-  Technik: Die Installations-URL erhÃ¤lt einen Cache-Busting-Parameter und die zugehÃ¶rigen
-  Update-Check-/Shell-Regressionen prÃ¼fen den neuen Abrufpfad mit.
+  Technik: Die Installations-URL erhält einen Cache-Busting-Parameter und die zugehörigen
+  Update-Check-/Shell-Regressionen prüfen den neuen Abrufpfad mit.
 
 ## [2.0.14] - 2026-03-15
 
 ### Changed
 
-- Nutzerwirkung: Die Farbauswahl fÃ¼r Triple/Double/Bull ist im xConfig-MenÃ¼ einfacher,
-  direkter und standardmÃ¤ÃŸig auf das gut erkennbare Rot/Blau/GrÃ¼n gesetzt.
+- Nutzerwirkung: Die Farbauswahl für Triple/Double/Bull ist im xConfig-Menü einfacher,
+  direkter und standardmäßig auf das gut erkennbare Rot/Blau/Grün gesetzt.
   Technik: Die separate Trefferfarben-Gruppe wurde entfernt, der Farbstil vereinfacht,
   `kind-signal` als Default verdrahtet und die Doku-, Descriptor- und Runtime-Tests
   wurden daran angepasst.
@@ -347,13 +367,14 @@ _Noch keine Ã„nderungen erfasst._
 
 ### Added
 
-- Nutzerwirkung: FÃ¼r Triple/Double/Bull gibt es im xConfig-MenÃ¼ jetzt einen expliziten
+- Nutzerwirkung: Für Triple/Double/Bull gibt es im xConfig-Menü jetzt einen expliziten
   Farbmodus, der zwischen klarer Trefferkodierung und Preset-Farbstilen unterscheidet.
   Technik: `hitColorMode` wurde in Konfiguration, Normalisierung, UI-Beschreibung, Styling
-  und Regressionstests eingefÃ¼hrt und die generierten README-/FEATURES-Texte wurden
+  und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.43]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.42]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.41]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.40]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
