@@ -34,6 +34,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.match(css, /--ad-ext-theme-cricket-board-min-width-auto:\s*18rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-min-width-manual:\s*10rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-width:\s*auto;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-count:\s*4;/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*background:\s*linear-gradient\(165deg,\s*rgba\(6,\s*15,\s*34,\s*0\.96\),\s*rgba\(3,\s*10,\s*24,\s*0\.94\)\)\s*!important;/s
@@ -243,6 +244,18 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.match(
     css,
     /#ad-ext-player-display\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-auto-flow:\s*column\s*!important;[^}]*grid-auto-columns:\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*!important;[^}]*gap:\s*var\(--ad-ext-theme-cricket-player-gap\)\s*!important;[^}]*min-width:\s*max-content\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\*\s*\{[^}]*margin:\s*0\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\)\s*!important;[^}]*max-width:\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*!important;[^}]*width:\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*repeat\(\s*var\(--ad-ext-theme-cricket-player-count\),\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*\)\s*!important;[^}]*column-gap:\s*0\s*!important;[^}]*width:\s*max-content\s*!important;[^}]*min-width:\s*max-content\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div\s*>\s*\.ad-ext-crfx-cell,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*>\s*\.ad-ext-crfx-cell\s*\{[^}]*min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\)\s*!important;[^}]*max-width:\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*!important;[^}]*width:\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*!important;/s
   );
   assert.match(
     css,

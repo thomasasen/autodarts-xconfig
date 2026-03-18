@@ -63,6 +63,7 @@ const cricketThemeCss = `
   --ad-ext-theme-cricket-board-min-width-auto: 18rem;
   --ad-ext-theme-cricket-board-min-width-manual: 10rem;
   --ad-ext-theme-cricket-board-width: auto;
+  --ad-ext-theme-cricket-player-count: 4;
 }
 
 .css-1k7iu8k {
@@ -83,6 +84,13 @@ const cricketThemeCss = `
   gap: var(--ad-ext-theme-cricket-player-gap) !important;
   min-width: max-content !important;
   width: 100% !important;
+}
+
+#ad-ext-player-display > * {
+  margin: 0 !important;
+  min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
+  max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
+  width: var(--ad-ext-theme-cricket-player-column-width) !important;
 }
 
 #ad-ext-player-display .ad-ext-player{
@@ -592,6 +600,28 @@ span.chakra-switch__track.css-v4l15v {
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name {
   letter-spacing: 0.02em;
+}
+
+#ad-ext-player-display + div,
+.ad-ext-theme-content-left > #ad-ext-player-display + div {
+  display: grid !important;
+  grid-auto-flow: row !important;
+  grid-template-columns:
+    repeat(
+      var(--ad-ext-theme-cricket-player-count),
+      var(--ad-ext-theme-cricket-player-column-width)
+    ) !important;
+  column-gap: 0 !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  justify-content: start !important;
+}
+
+#ad-ext-player-display + div > .ad-ext-crfx-cell,
+.ad-ext-theme-content-left > #ad-ext-player-display + div > .ad-ext-crfx-cell {
+  min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
+  max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
+  width: var(--ad-ext-theme-cricket-player-column-width) !important;
 }
 
 p.chakra-text.css-1qlemha {

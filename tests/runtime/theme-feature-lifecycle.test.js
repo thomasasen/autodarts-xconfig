@@ -620,6 +620,10 @@ test("theme-cricket auto-hides board for readability and keeps player width when
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     "1242px"
   );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
+    "6"
+  );
   assert.equal(Boolean(noticeNode), true);
   const noticeTextNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.noticeTextClass}`);
   assert.equal(noticeTextNode?.textContent || "", "Board wegen Lesbarkeit ausgeblendet.");
@@ -648,6 +652,10 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     "1242px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
+    "6"
   );
   assert.equal(
     noticeTextNode?.textContent || "",
@@ -695,6 +703,10 @@ test("theme-cricket auto-hides board for readability and keeps player width when
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     ""
   );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
+    ""
+  );
 });
 
 test("theme-cricket keeps 4-player readability width stable on narrow slots without right-side clipping pressure", async () => {
@@ -725,6 +737,10 @@ test("theme-cricket keeps 4-player readability width stable on narrow slots with
     "832px"
   );
   assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
+    "4"
+  );
+  assert.equal(
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
     true
   );
@@ -749,6 +765,10 @@ test("theme-cricket keeps 4-player readability width stable on narrow slots with
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     "832px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
+    "4"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
@@ -799,6 +819,10 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
     "1242px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
+    "6"
   );
   assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass), true);
   assert.equal(Boolean(noticeNode), true);

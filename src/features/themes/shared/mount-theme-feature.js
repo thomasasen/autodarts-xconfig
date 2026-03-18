@@ -23,6 +23,7 @@ const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
 const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
   "--ad-ext-theme-cricket-player-area-required-width";
+const CRICKET_PLAYER_COUNT_CSS_VARIABLE = "--ad-ext-theme-cricket-player-count";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const CRICKET_READABILITY_POLICY = Object.freeze({
   playerCardMinWidthPx: 205,
@@ -711,6 +712,7 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardForcedVisibleClass);
     clearStyleVariable(previousContentSlot, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
     clearStyleVariable(previousContentSlot, CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE);
+    clearStyleVariable(previousContentSlot, CRICKET_PLAYER_COUNT_CSS_VARIABLE);
   }
 
   readabilityState.contentSlotNode = contentSlotNode || null;
@@ -729,6 +731,10 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     Number.isFinite(options.playerAreaRequiredWidthPx) && options.playerAreaRequiredWidthPx > 0
       ? Math.floor(options.playerAreaRequiredWidthPx)
       : 0;
+  const playerCount =
+    Number.isFinite(options.playerCount) && options.playerCount > 0
+      ? Math.floor(options.playerCount)
+      : 0;
   toggleClass(contentSlotNode, THEME_CRICKET_READABILITY.constrainedClass, isConstrained);
   toggleClass(contentSlotNode, THEME_CRICKET_READABILITY.boardHiddenClass, boardHidden);
   toggleClass(
@@ -745,6 +751,12 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     );
   } else {
     clearStyleVariable(contentSlotNode, CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE);
+  }
+
+  if (playerCount > 0) {
+    updateStyleVariable(contentSlotNode, CRICKET_PLAYER_COUNT_CSS_VARIABLE, playerCount);
+  } else {
+    clearStyleVariable(contentSlotNode, CRICKET_PLAYER_COUNT_CSS_VARIABLE);
   }
 
   if (boardForcedVisible && boardWidthPx > 0) {
@@ -873,7 +885,7 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
   const playerDisplayNode = documentRef?.getElementById?.("ad-ext-player-display") || null;
 
   if (!contentSlotNode || !contentLeftNode || !playerDisplayNode) {
-    updateCricketReadabilityClasses(state, contentSlotNode, {});
+    updateCricketReadabilityClasses(state, contentSlotNode, { playerCount: 0 });
     removeCricketReadabilityNotice(state);
     readabilityState.isConstrained = false;
     readabilityState.boardHidden = false;
@@ -910,6 +922,7 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
       boardForcedVisible: false,
       boardWidthPx: 0,
       playerAreaRequiredWidthPx: requiredPlayerWidth,
+      playerCount,
     });
     removeCricketReadabilityNotice(state);
     return;
@@ -932,6 +945,7 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     boardForcedVisible,
     boardWidthPx,
     playerAreaRequiredWidthPx: requiredPlayerWidth,
+    playerCount,
   });
   ensureCricketReadabilityNotice(documentRef, state, contentLeftNode, () => {
     readabilityState.manualOverride = readabilityState.boardHidden ? "show" : "hide";
