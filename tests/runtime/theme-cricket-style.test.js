@@ -15,17 +15,22 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
   assert.match(css, /\.css-1k7iu8k\s*\{\s*max-width:\s*96%/);
   assert.match(css, /--ad-ext-cricket-surface:\s*rgba\(8,\s*16,\s*30,\s*0\.9\)/);
-  assert.match(css, /--ad-ext-theme-cricket-player-column-min-width:\s*12\.6rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-column-min-width:\s*12\.8rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-column-max-width:\s*14rem;/);
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-player-column-width:\s*clamp\(\s*var\(--ad-ext-theme-cricket-player-column-min-width\),\s*14vw,\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*\);/
+  );
   assert.match(css, /--ad-ext-theme-cricket-player-card-min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\);/);
   assert.match(css, /--ad-ext-theme-cricket-player-name-min-width:\s*4ch;/);
-  assert.match(css, /--ad-ext-theme-cricket-score-min-width:\s*4\.2ch;/);
+  assert.match(css, /--ad-ext-theme-cricket-score-min-width:\s*4\.6ch;/);
   assert.match(css, /--ad-ext-theme-cricket-stats-min-width:\s*5\.4ch;/);
-  assert.match(css, /--ad-ext-theme-cricket-card-inline-bleed:\s*0\.34rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-card-inline-bleed:\s*0rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-avatar-size:\s*2\.2rem;/);
   assert.match(css, /--ad-ext-theme-cricket-score-active-color:\s*var\(--theme-text-highlight-color\);/);
   assert.match(css, /--ad-ext-theme-cricket-score-inactive-color:\s*rgba\(214,\s*229,\s*245,\s*0\.84\);/);
   assert.match(css, /--ad-ext-theme-cricket-score-shadow:\s*0 1px 0 rgba\(4,\s*10,\s*20,\s*0\.92\),/);
+  assert.match(css, /--ad-ext-theme-cricket-player-gap:\s*0rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-min-width-auto:\s*18rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-min-width-manual:\s*10rem;/);
   assert.match(css, /--ad-ext-theme-cricket-board-width:\s*auto;/);
@@ -71,7 +76,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*max-content\s*minmax\(var\(--ad-ext-theme-cricket-stats-min-width\),\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-score-min-width\),\s*max-content\)\s*!important;[^}]*grid-template-areas:\s*"identity identity identity"\s*"matches stats score"\s*!important;[^}]*column-gap:\s*0\.3rem\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*max-content\s*minmax\(var\(--ad-ext-theme-cricket-stats-min-width\),\s*1fr\)\s*minmax\(var\(--ad-ext-theme-cricket-score-min-width\),\s*max-content\)\s*!important;[^}]*grid-template-areas:\s*"identity identity identity"\s*"matches stats score"\s*!important;[^}]*column-gap:\s*0\.3rem\s*!important;[^}]*padding-inline:\s*0\s*!important;/s
   );
   assert.match(
     css,
@@ -83,7 +88,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*\/\s*3\s*!important;[^}]*justify-self:\s*stretch\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-stats-min-width\)\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-start\s*!important;[^}]*padding-left:\s*1\.92rem\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*\/\s*3\s*!important;[^}]*justify-self:\s*stretch\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-stats-min-width\)\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-start\s*!important;[^}]*padding-left:\s*1\.68rem\s*!important;/s
   );
   assert.match(
     css,
@@ -107,11 +112,11 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-37hv00\s*>\s*\.css-aa7b80\s*>\s*span\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*var\(--ad-ext-theme-cricket-player-avatar-size\)\s*minmax\(0,\s*1fr\)\s*auto\s*!important;[^}]*grid-template-areas:\s*"avatar name wins"\s*!important;[^}]*border:\s*none\s*!important;[^}]*padding:\s*0\.15rem var\(--ad-ext-theme-cricket-card-inline-bleed\) 0\.2rem\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-37hv00\s*>\s*\.css-aa7b80\s*>\s*span\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*var\(--ad-ext-theme-cricket-player-avatar-size\)\s*minmax\(0,\s*1fr\)\s*auto\s*!important;[^}]*grid-template-areas:\s*"avatar name wins"\s*!important;[^}]*border:\s*none\s*!important;[^}]*padding:\s*0\.15rem 0 0\.2rem\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-37hv00\s*>\s*\.css-aa7b80\s*\{[^}]*margin-inline:\s*calc\(-1 \* var\(--ad-ext-theme-cricket-card-inline-bleed\)\)\s*!important;[^}]*width:\s*calc\(100% \+ \(2 \* var\(--ad-ext-theme-cricket-card-inline-bleed\)\)\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-37hv00\s*>\s*\.css-aa7b80\s*\{[^}]*margin-inline:\s*0\s*!important;[^}]*width:\s*100%\s*!important;/s
   );
   assert.match(
     css,
@@ -158,7 +163,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#grid\s+tr\s*>\s*td:not\(:first-child\),\s*#grid\s+tr\s*>\s*th:not\(:first-child\)\s*\{[^}]*min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\)\s*!important;[^}]*max-width:\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*!important;[^}]*width:\s*clamp\(\s*var\(--ad-ext-theme-cricket-player-column-min-width\),\s*14vw,\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*\)\s*!important;/s
+    /#grid\s+tr\s*>\s*td:not\(:first-child\),\s*#grid\s+tr\s*>\s*th:not\(:first-child\)\s*\{[^}]*min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\)\s*!important;[^}]*max-width:\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*!important;[^}]*width:\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*!important;/s
   );
   assert.match(
     css,
@@ -237,7 +242,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.doesNotMatch(css, /96cqw|96cqh/);
   assert.match(
     css,
-    /#ad-ext-player-display\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-auto-flow:\s*column\s*!important;[^}]*grid-auto-columns:\s*minmax\(var\(--ad-ext-theme-cricket-player-card-min-width\),\s*1fr\)\s*!important;[^}]*min-width:\s*max-content\s*!important;/s
+    /#ad-ext-player-display\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-auto-flow:\s*column\s*!important;[^}]*grid-auto-columns:\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*!important;[^}]*gap:\s*var\(--ad-ext-theme-cricket-player-gap\)\s*!important;[^}]*min-width:\s*max-content\s*!important;/s
   );
   assert.match(
     css,
@@ -270,6 +275,14 @@ test("cricket theme strengthens tactical hierarchy without leaving stable hooks"
   const css = buildCricketThemeCss({ showAvg: true });
 
   assert.match(css, /--ad-ext-cricket-card-glow:\s*rgba\(159,\s*232,\s*112,\s*0\.22\)/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-player-score\s*\{[^}]*max-inline-size:\s*100%\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*border-radius:\s*0\s*!important;/s
+  );
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack::before\s*\{[^}]*background:\s*linear-gradient\(135deg,\s*rgba\(255,\s*255,\s*255,\s*0\.06\),\s*rgba\(255,\s*255,\s*255,\s*0\)\s*32%\),/s

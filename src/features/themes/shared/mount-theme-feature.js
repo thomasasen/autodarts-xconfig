@@ -25,9 +25,9 @@ const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
   "--ad-ext-theme-cricket-player-area-required-width";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const CRICKET_READABILITY_POLICY = Object.freeze({
-  playerCardMinWidthPx: 192,
-  playerCardGapPx: 6,
-  playerAreaPaddingPx: 20,
+  playerCardMinWidthPx: 205,
+  playerCardGapPx: 0,
+  playerAreaPaddingPx: 12,
   contentGapPx: 8,
   boardAutoMinWidthPx: 288,
   boardManualMinWidthPx: 160,

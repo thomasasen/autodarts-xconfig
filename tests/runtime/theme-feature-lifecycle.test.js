@@ -618,7 +618,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1202px"
+    "1242px"
   );
   assert.equal(Boolean(noticeNode), true);
   const noticeTextNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.noticeTextClass}`);
@@ -643,11 +643,11 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
-    "190px"
+    "160px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1202px"
+    "1242px"
   );
   assert.equal(
     noticeTextNode?.textContent || "",
@@ -697,6 +697,67 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
 });
 
+test("theme-cricket keeps 4-player readability width stable on narrow slots without right-side clipping pressure", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1020, height: 680 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-readability-four-players");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const noticeNode = documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId);
+  const noticeTextNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.noticeTextClass}`);
+  const toggleNode = noticeNode?.querySelector?.(`.${THEME_CRICKET_READABILITY.toggleClass}`);
+
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "832px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    true
+  );
+  assert.equal(noticeTextNode?.textContent || "", "Board wegen Lesbarkeit ausgeblendet.");
+  assert.equal(toggleNode?.textContent || "", "Board anzeigen");
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    ""
+  );
+
+  toggleNode.click();
+  await wait(5);
+
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardForcedVisibleClass),
+    true
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "832px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
+    "180px"
+  );
+
+  runtime.stop();
+});
+
 test("theme-cricket keeps March 15 readability semantics with nested showAnimations board layers", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
@@ -737,7 +798,7 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1202px"
+    "1242px"
   );
   assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass), true);
   assert.equal(Boolean(noticeNode), true);
@@ -757,11 +818,11 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardForcedVisibleClass), true);
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
-    "190px"
+    "160px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1202px"
+    "1242px"
   );
   assert.equal(
     noticeTextNode?.textContent || "",

@@ -13,6 +13,21 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.40] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme sind Spieler-/Punktekarten jetzt
+  pixelgenau an den unteren Spalten ausgerichtet. Die Namenszeile ist wirklich
+  randbündig ohne Seitenspalt, aktive Scores bleiben innerhalb der Karte, und
+  die letzte Spielerkarte wird bei knapper Breite nicht mehr rechts abgeschnitten.
+  Technik: Die Player- und Grid-Spalten nutzen einen gemeinsamen Width-Token
+  (`--ad-ext-theme-cricket-player-column-width`), Kartenabstände wurden auf `0`
+  vereinheitlicht, Bleed-Hacks der Namenszeile entfernt, Score-Containment gehärtet
+  sowie die Cricket-Readability-Policy auf die neue Kartengeometrie synchronisiert
+  (`playerCardMinWidthPx=205`, `playerCardGapPx=0`, `playerAreaPaddingPx=12`);
+  dazu wurden CSS-Regressionen und Lifecycle-Regressionen inkl. 4-Spieler-Fall erweitert.
+
 ## [2.0.39] - 2026-03-18
 
 ### Fixed
@@ -306,6 +321,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.40]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.39]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.38]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.37]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
