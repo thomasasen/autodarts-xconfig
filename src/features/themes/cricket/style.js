@@ -259,10 +259,12 @@ div.css-y3hfdd{
   justify-self: end !important;
   align-self: center !important;
   margin-left: auto !important;
+  margin-right: 0.08rem !important;
   padding-left: 0.28rem !important;
-  max-inline-size: 100% !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
+  padding-right: 0.12rem !important;
+  max-inline-size: none !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
   z-index: 1 !important;
 }
 
@@ -471,23 +473,30 @@ span.chakra-switch__track.css-v4l15v {
     radial-gradient(circle at 72% 58%, rgba(0, 178, 135, 0.14), rgba(0, 0, 0, 0) 48%),
     radial-gradient(circle at 18% 32%, rgba(34, 197, 255, 0.1), rgba(0, 0, 0, 0) 42%);
   grid-template-columns:
-    minmax(var(--ad-ext-theme-cricket-player-area-required-width), 1fr)
-    minmax(var(--ad-ext-theme-cricket-board-min-width-auto), auto) !important;
+    minmax(var(--ad-ext-theme-cricket-player-area-required-width), max-content)
+    minmax(var(--ad-ext-theme-cricket-board-min-width-auto), 1fr) !important;
   gap: var(--ad-ext-theme-cricket-content-gap) !important;
 }
 
 .ad-ext-theme-content-slot > .ad-ext-theme-content-left {
   min-width: 0 !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  height: max-content !important;
+  justify-self: start !important;
+  align-self: start !important;
 }
 
 .ad-ext-theme-content-slot.ad-ext-theme-cricket-board-forced-visible {
   grid-template-columns:
-    minmax(var(--ad-ext-theme-cricket-player-area-required-width), 1fr)
+    minmax(var(--ad-ext-theme-cricket-player-area-required-width), max-content)
     minmax(0, var(--ad-ext-theme-cricket-board-width, var(--ad-ext-theme-cricket-board-min-width-manual))) !important;
 }
 
 .ad-ext-theme-content-slot.ad-ext-theme-cricket-board-hidden {
-  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-columns:
+    minmax(var(--ad-ext-theme-cricket-player-area-required-width), max-content) !important;
   gap: 0 !important;
 }
 

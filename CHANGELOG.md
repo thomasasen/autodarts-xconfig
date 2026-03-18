@@ -13,6 +13,24 @@ zum nÃ¤chsten Release-Commit vorÃ¼bergehend auf `HEAD` zeigen.
 
 _Noch keine Ã„nderungen erfasst._
 
+## [2.0.42] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme schließt der linke Inhaltsbereich
+  (`ad-ext-theme-content-left`) jetzt rechts und unten bündig mit der Tabelle ab,
+  statt bis zur Board-Höhe gestreckt zu werden.
+  Technik: Das Content-Slot-Grid nutzt für die linke Spalte jetzt
+  `minmax(player-area-required-width, max-content)` und der Left-Container wurde
+  auf `width/height: max-content` mit `justify-self/align-self: start` gestellt;
+  die Style-Regressionen decken den neuen Layout-Vertrag ab.
+- Nutzerwirkung: Die aktive Punktezahl bleibt vollständig sichtbar, auch bei
+  dreistelligen Werten.
+  Technik: Die spezifische Score-Zellenregel verwendet kein `overflow: hidden`
+  mehr, sondern sichtbaren Overflow samt rechtem Sicherheitsabstand
+  (`margin-right`/`padding-right`), abgesichert durch aktualisierte
+  CSS-Regressionstests.
+
 ## [2.0.41] - 2026-03-18
 
 ### Fixed
@@ -336,6 +354,7 @@ _Noch keine Ã„nderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.42]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.41]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.40]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.39]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
