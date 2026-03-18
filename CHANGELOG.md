@@ -13,6 +13,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.35] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme ist die Hierarchie zwischen aktivem und
+  inaktivem Spieler klarer: aktive Namen und Punkte sind sichtbar größer, inaktive
+  kompakter. Der Namenscontainer läuft jetzt randlos über die volle Kartenbreite,
+  Profil-Averages wie `35+` stehen rechts in derselben Zeile wie der Name, lange Namen
+  bleiben einzeilig mit `..`-Kürzung, und `MPR` bleibt links neben den gewonnenen Runden
+  vollständig lesbar.
+  Technik: Das Player-Header-Layout nutzt jetzt eine einzeilige
+  `avatar | name | wins`-Leiste mit randloser Vollbreite, die Stats-Spalte wurde mit
+  Mindestbreite/Linksausrichtung gegen Abschneiden gehärtet, und die Score-Skalierung
+  für aktive wie inaktive Spieler wurde um rund 10% erhöht, inklusive Regressionstests
+  für Grid-Vertrag, Overflow-Verhalten und Größenhierarchie.
+
 ## [2.0.34] - 2026-03-17
 
 ### Fixed
@@ -240,8 +256,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...HEAD
-[2.0.34]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.35]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.34]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...c307908
 [2.0.33]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...f62c2bb
 [2.0.32]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...HEAD
 [2.0.31]: https://github.com/thomasasen/autodarts-xconfig/compare/ebfd931dc5180a2eb8cbfc8dfbf017ca4fe1f963...HEAD
