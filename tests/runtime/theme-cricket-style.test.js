@@ -15,11 +15,11 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
   assert.match(css, /\.css-1k7iu8k\s*\{\s*max-width:\s*96%/);
   assert.match(css, /--ad-ext-cricket-surface:\s*rgba\(8,\s*16,\s*30,\s*0\.9\)/);
-  assert.match(css, /--ad-ext-theme-cricket-player-column-min-width:\s*12rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-column-min-width:\s*12\.6rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-column-max-width:\s*14rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-card-min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\);/);
   assert.match(css, /--ad-ext-theme-cricket-player-name-min-width:\s*4ch;/);
-  assert.match(css, /--ad-ext-theme-cricket-score-min-width:\s*3\.8ch;/);
+  assert.match(css, /--ad-ext-theme-cricket-score-min-width:\s*4\.2ch;/);
   assert.match(css, /--ad-ext-theme-cricket-stats-min-width:\s*5\.4ch;/);
   assert.match(css, /--ad-ext-theme-cricket-card-inline-bleed:\s*0\.34rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-avatar-size:\s*2\.2rem;/);
@@ -83,7 +83,7 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*\/\s*3\s*!important;[^}]*justify-self:\s*stretch\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-stats-min-width\)\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-start\s*!important;[^}]*padding-left:\s*clamp\(0\.92rem,\s*8cqi,\s*1\.34rem\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\.css-y3hfdd\s*>\s*\.chakra-stack\.css-1igwmid\s*\{[^}]*grid-area:\s*stats\s*!important;[^}]*grid-column:\s*1\s*\/\s*3\s*!important;[^}]*justify-self:\s*stretch\s*!important;[^}]*min-width:\s*var\(--ad-ext-theme-cricket-stats-min-width\)\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-start\s*!important;[^}]*padding-left:\s*1\.92rem\s*!important;/s
   );
   assert.match(
     css,

@@ -13,6 +13,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.39] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme haben Spielerkarten jetzt etwas mehr
+  Mindestbreite, damit Name, RundenzÃ¤hler, `MPR` und Punktzahl bei 4 Spielern stabiler
+  nebeneinander bleiben und nicht sichtbar ineinanderlaufen.
+  Technik: Die minimale Spaltenbreite der Player-Cards wurde auf `12.6rem` angehoben,
+  die Score-Mindestbreite auf `4.2ch` erweitert und der `MPR`-Offset wieder auf einen
+  robusten festen Wert gesetzt; die Style-Regressionen prÃ¼fen die neuen Variablen und
+  Spacing-Werte.
+
 ## [2.0.38] - 2026-03-18
 
 ### Fixed
@@ -294,6 +306,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.39]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.38]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.37]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.36]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
