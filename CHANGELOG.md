@@ -13,6 +13,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.36] - 2026-03-18
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket- und Tactics-Theme liegt die Namensleiste jetzt wirklich
+  randbündig am Spieler-/Punkte-Container ohne seitlichen Spalt. Gewonnene Runden, `MPR`
+  und Punkte sind sichtbar um rund 15% größer; `MPR` sitzt dabei weiter links, und
+  3-stellige Punkte bleiben sauber lesbar.
+  Technik: Die Header-Leiste nutzt jetzt einen expliziten Inline-Bleed bis zur
+  Kartenkante, die Stats-/Score-Spalten wurden für größere Zahlen neu austariert
+  (u. a. Score-Minbreite, kompaktere Spaltengaps, linksverschobenes `MPR`), die
+  Kartenhöhe wurde erhöht und die Cricket-Style-Regressionen wurden auf die neuen
+  Größen-, Ausrichtungs- und Overflow-Verträge erweitert.
+
 ## [2.0.35] - 2026-03-18
 
 ### Fixed
@@ -257,6 +271,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.36]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.35]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.34]: https://github.com/thomasasen/autodarts-xconfig/compare/f62c2bb...c307908
 [2.0.33]: https://github.com/thomasasen/autodarts-xconfig/compare/fffb5d2...f62c2bb

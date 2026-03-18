@@ -38,9 +38,10 @@ const cricketThemeCss = `
   --ad-ext-theme-cricket-player-column-min-width: 12rem;
   --ad-ext-theme-cricket-player-column-max-width: 14rem;
   --ad-ext-theme-cricket-player-card-min-width: var(--ad-ext-theme-cricket-player-column-min-width);
+  --ad-ext-theme-cricket-card-inline-bleed: 0.34rem;
   --ad-ext-theme-cricket-player-name-min-width: 4ch;
-  --ad-ext-theme-cricket-score-min-width: 3.3ch;
-  --ad-ext-theme-cricket-stats-min-width: 5.8ch;
+  --ad-ext-theme-cricket-score-min-width: 3.8ch;
+  --ad-ext-theme-cricket-stats-min-width: 5.4ch;
   --ad-ext-theme-cricket-player-avatar-size: 2.2rem;
   --ad-ext-theme-cricket-score-active-color: var(--theme-text-highlight-color);
   --ad-ext-theme-cricket-score-inactive-color: rgba(214, 229, 245, 0.84);
@@ -80,7 +81,7 @@ const cricketThemeCss = `
 }
 
 #ad-ext-player-display .ad-ext-player{
-  min-height: 194px !important;
+  min-height: 206px !important;
   min-width: var(--ad-ext-theme-cricket-player-card-min-width) !important;
   width: 100% !important;
 }
@@ -95,9 +96,9 @@ const cricketThemeCss = `
     "identity identity identity"
     "matches stats score" !important;
   align-items: start !important;
-  column-gap: 0.38rem !important;
-  row-gap: 0.24rem !important;
-  min-height: 194px !important;
+  column-gap: 0.3rem !important;
+  row-gap: 0.26rem !important;
+  min-height: 206px !important;
   min-width: var(--ad-ext-theme-cricket-player-card-min-width) !important;
   padding-top: 0.3rem !important;
   padding-bottom: 0.3rem !important;
@@ -112,8 +113,8 @@ div.css-y3hfdd{
     "identity identity identity"
     "matches stats score" !important;
   align-items: start !important;
-  column-gap: 0.38rem !important;
-  row-gap: 0.24rem !important;
+  column-gap: 0.3rem !important;
+  row-gap: 0.26rem !important;
   min-height: 0 !important;
   container-type: inline-size !important;
 }
@@ -133,10 +134,11 @@ div.css-y3hfdd{
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 {
   grid-area: identity !important;
   grid-column: 1 / -1 !important;
+  margin-inline: calc(-1 * var(--ad-ext-theme-cricket-card-inline-bleed)) !important;
   min-width: 0 !important;
   max-width: 100% !important;
-  width: 100% !important;
-  overflow: hidden !important;
+  width: calc(100% + (2 * var(--ad-ext-theme-cricket-card-inline-bleed))) !important;
+  overflow: visible !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
@@ -150,7 +152,8 @@ div.css-y3hfdd{
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: 0.2rem !important;
+  gap: 0.24rem !important;
+  margin-left: -0.06rem !important;
   white-space: nowrap !important;
 }
 
@@ -168,14 +171,14 @@ div.css-y3hfdd{
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-3fr5p8 {
-  min-height: 1.02rem !important;
-  min-width: 1.14rem !important;
-  padding-inline: 0.3rem !important;
-  border-radius: 0.3rem !important;
+  min-height: 1.18rem !important;
+  min-width: 1.31rem !important;
+  padding-inline: 0.35rem !important;
+  border-radius: 0.34rem !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-1hcjh09 {
-  font-size: clamp(0.72rem, 0.8vw, 0.86rem) !important;
+  font-size: clamp(0.83rem, 0.92vw, 0.99rem) !important;
   line-height: 1 !important;
 }
 
@@ -192,7 +195,7 @@ div.css-y3hfdd{
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  padding: 0.12rem 0.28rem 0.18rem 0.2rem !important;
+  padding: 0.15rem var(--ad-ext-theme-cricket-card-inline-bleed) 0.2rem !important;
   background: linear-gradient(90deg, rgba(86, 97, 116, 0.34), rgba(68, 80, 99, 0.18)) !important;
 }
 
@@ -242,12 +245,12 @@ div.css-y3hfdd{
   justify-self: end !important;
   align-self: center !important;
   margin-left: auto !important;
-  padding-left: 0.45rem !important;
+  padding-left: 0.28rem !important;
   z-index: 1 !important;
 }
 
 p.chakra-text.css-1j0bqop{
-  font-size: clamp(0.8rem, 0.9vw, 0.96rem) !important;
+  font-size: clamp(0.92rem, 1.04vw, 1.1rem) !important;
   line-height: 1.15 !important;
 }
 
@@ -311,7 +314,7 @@ div.css-nfhdnc {
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
   color: var(--ad-ext-theme-cricket-score-active-color);
-  font-size: clamp(2.48rem, 4.62vw, 5.72rem) !important;
+  font-size: clamp(2.85rem, 5.31vw, 6.58rem) !important;
   line-height: 0.9 !important;
   font-weight: 800 !important;
   text-align: right !important;
@@ -327,27 +330,27 @@ div.css-nfhdnc {
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-  font-size: clamp(2.75rem, 5.17vw, 6.16rem) !important;
+  font-size: clamp(3.16rem, 5.95vw, 7.08rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-  font-size: clamp(1.98rem, 3.85vw, 4.62rem) !important;
+  font-size: clamp(2.28rem, 4.43vw, 5.31rem) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
 }
 
 @supports (font-size: 1cqi) {
   #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
-    font-size: clamp(2.48rem, 22cqi, 5.72rem) !important;
+    font-size: clamp(2.85rem, 25.3cqi, 6.58rem) !important;
   }
 
   #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-    font-size: clamp(2.75rem, 24.2cqi, 6.16rem) !important;
+    font-size: clamp(3.16rem, 27.8cqi, 7.08rem) !important;
   }
 
   #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
   #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-    font-size: clamp(1.98rem, 18.7cqi, 4.62rem) !important;
+    font-size: clamp(2.28rem, 21.5cqi, 5.31rem) !important;
   }
 }
 
@@ -367,7 +370,7 @@ div.css-nfhdnc {
   }
 
   #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-1hcjh09 {
-    font-size: 0.68rem !important;
+    font-size: 0.78rem !important;
   }
 
   #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
@@ -379,7 +382,7 @@ div.css-nfhdnc {
   }
 
   p.chakra-text.css-1j0bqop{
-    font-size: 0.8rem !important;
+    font-size: 0.92rem !important;
   }
 }
 
