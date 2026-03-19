@@ -13,6 +13,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.52] - 2026-03-19
+
+### Fixed
+
+- Nutzerwirkung: Die Balkengrößen des X01-Restscore-Balkens unterscheiden sich
+  jetzt deutlich sichtbarer zwischen `Schmal`, `Standard`, `Breit` und
+  `Extrabreit`; zusätzlich zeigen die Effekt-Modi nun klarere, sofort
+  erkennbare visuelle Wirkung statt kaum wahrnehmbarer Unterschiede.
+  Technik: Die aktiven Höhen-Clamps wurden stärker auseinandergezogen und
+  Effektklassen erhielten permanente Keyframe-Verträge pro Modus. Außerdem wurde
+  die Active-Player-Erkennung robuster (DOM + `getActivePlayerIndex`-Fallback)
+  und die Score-Change-Erkennung um card-basierte Historie erweitert, damit
+  Effekte auch bei DOM-Rebuilds zuverlässig triggern.
+
 ## [2.0.51] - 2026-03-19
 
 ### Changed
@@ -465,6 +479,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
+[2.0.52]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.51]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.50]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.49]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...d40e59c

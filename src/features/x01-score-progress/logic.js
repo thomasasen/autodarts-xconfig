@@ -22,6 +22,10 @@ export const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
 export const PLAYER_CARD_SELECTOR = ".ad-ext-player";
 export const PLAYER_STACK_SELECTOR = ".chakra-stack";
 export const PLAYER_SCORE_SELECTOR = "p.ad-ext-player-score";
+export const ACTIVE_SCORE_SELECTORS = Object.freeze([
+  ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
+  ".ad-ext-player-active p.ad-ext-player-score",
+]);
 export const START_SCORE_PATTERN = /\b(121|170|\d+01)\b/i;
 export const WIDTH_PROPERTY = "--ad-ext-x01-score-progress-width";
 export const DEBUG_MAX_CARD_SAMPLES = 4;
@@ -565,6 +569,7 @@ export function createScoreProgressState() {
     cachedStartScore: null,
     cachedStartScoreSource: "",
     hostScores: new WeakMap(),
+    cardScores: new Map(),
   };
 }
 
@@ -579,6 +584,7 @@ export function resolveStartScoreWithDebug(context = {}, state = createScoreProg
     state.matchCacheKey = cacheKey;
     state.cachedStartScore = null;
     state.cachedStartScoreSource = "";
+    state.cardScores = new Map();
     cacheReset = true;
   }
 
@@ -719,6 +725,64 @@ function getPlayerScoreNode(cardNode) {
   }
 
   return cardNode.querySelector(PLAYER_SCORE_SELECTOR);
+}
+
+function resolveCardIdentity(cardNode, scoreNode, cardIndex) {
+  const candidateAttributes = [
+    "data-player-id",
+    "data-ad-ext-player-id",
+    "data-user-id",
+    "data-id",
+    "id",
+  ];
+
+  for (const attributeName of candidateAttributes) {
+    const cardValue = String(cardNode?.getAttribute?.(attributeName) || "").trim();
+    if (cardValue) {
+      return `card:${attributeName}:${cardValue}`;
+    }
+  }
+
+  const nameNode =
+    cardNode?.querySelector?.(".ad-ext-player-name") ||
+    cardNode?.querySelector?.(".chakra-avatar + p") ||
+    null;
+  const nameText = String(nameNode?.textContent || "").replace(/\s+/g, " ").trim();
+  if (nameText) {
+    return `name:${nameText}`;
+  }
+
+  const scoreText = String(scoreNode?.textContent || "").replace(/\s+/g, " ").trim();
+  return `slot:${cardIndex}:${scoreText || "-"}`;
+}
+
+function isPlayerCardActive(cardNode, scoreNode, documentRef, activePlayerIndex, cardIndex) {
+  if (cardNode?.classList?.contains("ad-ext-player-active")) {
+    return true;
+  }
+
+  if (scoreNode?.closest?.(".ad-ext-player-active")) {
+    return true;
+  }
+
+  if (!documentRef || !scoreNode || typeof documentRef.querySelectorAll !== "function") {
+    return false;
+  }
+
+  for (const selector of ACTIVE_SCORE_SELECTORS) {
+    const matchedNode = Array.from(documentRef.querySelectorAll(selector)).find(
+      (node) => node === scoreNode
+    );
+    if (matchedNode) {
+      return true;
+    }
+  }
+
+  if (Number.isFinite(activePlayerIndex) && Number(activePlayerIndex) === Number(cardIndex)) {
+    return true;
+  }
+
+  return false;
 }
 
 function ensureProgressChildren(hostNode, documentRef) {
@@ -1004,6 +1068,9 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   if (!state.hostScores || typeof state.hostScores.set !== "function") {
     state.hostScores = new WeakMap();
   }
+  if (!state.cardScores || typeof state.cardScores.get !== "function") {
+    state.cardScores = new Map();
+  }
 
   const debugPayload = {
     reason: "unknown",
@@ -1028,6 +1095,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
       colorTheme: normalizedColorTheme,
       barSize: normalizedBarSize,
       effect: normalizedEffect,
+      activePlayerIndex: null,
     },
     sampledCards: [],
   };
@@ -1093,6 +1161,12 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   let removedCardsMissingScore = 0;
   const sampledCards = [];
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const activePlayerIndex = Number.isFinite(context.gameState?.getActivePlayerIndex?.())
+    ? Number(context.gameState.getActivePlayerIndex())
+    : Number.NaN;
+  debugPayload.visuals.activePlayerIndex = Number.isFinite(activePlayerIndex)
+    ? activePlayerIndex
+    : null;
 
   cards.forEach((cardNode, cardIndex) => {
     const stackNode = getPlayerStack(cardNode) || cardNode;
@@ -1132,15 +1206,29 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     }
 
     const ratio = scoreValue / startScore;
-    const previousScore = state.hostScores.get(hostNode);
+    const cardIdentity = resolveCardIdentity(cardNode, scoreNode, cardIndex);
+    const previousHostScore = state.hostScores.get(hostNode);
+    const previousCardScore = state.cardScores.get(cardIdentity);
+    const previousScore =
+      isFiniteNumber(previousCardScore) && previousCardScore >= 0
+        ? previousCardScore
+        : previousHostScore;
     const scoreChanged =
       isFiniteNumber(previousScore) && previousScore !== scoreValue && scoreValue >= 0;
     state.hostScores.set(hostNode, scoreValue);
+    state.cardScores.set(cardIdentity, scoreValue);
+    const isActive = isPlayerCardActive(
+      cardNode,
+      scoreNode,
+      documentRef,
+      activePlayerIndex,
+      cardIndex
+    );
     updateProgressHost(hostNode, {
       ratio,
       score: scoreValue,
       scoreChanged,
-      active: cardNode.classList?.contains("ad-ext-player-active") === true,
+      active: isActive,
       designPreset: normalizedDesignPreset,
       colorTheme: normalizedColorTheme,
       barSize: normalizedBarSize,
@@ -1160,6 +1248,8 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
         scoreText: toCompactText(scoreNode?.textContent || ""),
         parsedScore: scoreValue,
         ratio: Number(ratio.toFixed(4)),
+        cardIdentity,
+        cardActiveDetected: isActive,
         host: summarizeNode(hostNode),
         hostState: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-state") || ""),
         hostPreset: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-preset") || ""),

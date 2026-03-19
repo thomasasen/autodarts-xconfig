@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  EFFECT_ATTRIBUTE,
   WIDTH_PROPERTY,
   createScoreProgressState,
   resolveStartScore,
@@ -539,11 +540,141 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
   );
 });
 
+test("syncScoreProgress falls back to gameState active player index when active DOM class is missing", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const firstPlayer = createPlayerCard(documentRef, 301);
+  const secondPlayer = createPlayerCard(documentRef, 251);
+  firstPlayer.cardNode.classList.remove("ad-ext-player-active");
+  secondPlayer.cardNode.classList.remove("ad-ext-player-active");
+  playerDisplay.appendChild(firstPlayer.cardNode);
+  playerDisplay.appendChild(secondPlayer.cardNode);
+
+  syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        designPreset: "signal",
+        colorTheme: "checkout-focus",
+        barSize: "extrabreit",
+        effect: "checkout-glow",
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "match-active-index-fallback",
+          match: {
+            id: "match-active-index-fallback",
+            variant: "501",
+          },
+        }),
+        getActivePlayerIndex: () => 1,
+      },
+    },
+    createScoreProgressState()
+  );
+
+  const firstHost = firstPlayer.cardNode.querySelector(HOST_SELECTOR);
+  const secondHost = secondPlayer.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(firstHost);
+  assert.ok(secondHost);
+  assert.equal(firstHost.classList.contains(INACTIVE_CLASS), true);
+  assert.equal(secondHost.classList.contains(ACTIVE_CLASS), true);
+  assert.equal(secondHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), true);
+});
+
+test("syncScoreProgress triggers score-change animation when score updates", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          designPreset: "glass",
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "charge-release",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-effect-trigger",
+            match: {
+              id: "match-effect-trigger",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "251";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  assert.ok(fillNode);
+  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "charge-release");
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-charge-release"),
+    true
+  );
+  assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
+  assert.ok(fillNode.__lastAnimation);
+});
+
 test("score-progress style reserves a dedicated player-card row for the bar", () => {
   const css = buildStyleText();
 
   assert.match(
     css,
     /\[data-ad-ext-x01-score-progress='true'\]\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*grid-row:\s*3;[^}]*flex:\s*0\s+0\s+100%;/s
+  );
+});
+
+test("score-progress style defines clearly separated active size presets", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /--size-schmal\{[^}]*height-active:clamp\(\.3rem,\s*\.62vw,\s*\.46rem\);/s
+  );
+  assert.match(
+    css,
+    /--size-standard\{[^}]*height-active:clamp\(\.72rem,\s*1\.35vw,\s*1\.02rem\);/s
+  );
+  assert.match(
+    css,
+    /--size-breit\{[^}]*height-active:clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\);/s
+  );
+  assert.match(
+    css,
+    /--size-extrabreit\{[^}]*height-active:clamp\(1\.48rem,\s*2\.52vw,\s*1\.92rem\);/s
   );
 });

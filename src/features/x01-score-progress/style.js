@@ -193,7 +193,7 @@ ${HOST_SELECTOR}.${INACTIVE_CLASS}.ad-ext-x01-score-progress--preset-minimal{
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-schmal{
-  --ad-ext-x01-score-progress-height-active:clamp(.52rem,1.02vw,.78rem);
+  --ad-ext-x01-score-progress-height-active:clamp(.3rem,.62vw,.46rem);
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-standard{
@@ -201,19 +201,39 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-standard{
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-breit{
-  --ad-ext-x01-score-progress-height-active:clamp(.92rem,1.68vw,1.24rem);
+  --ad-ext-x01-score-progress-height-active:clamp(1.08rem,1.9vw,1.4rem);
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-extrabreit{
-  --ad-ext-x01-score-progress-height-active:clamp(1.12rem,2.02vw,1.46rem);
+  --ad-ext-x01-score-progress-height-active:clamp(1.48rem,2.52vw,1.92rem);
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-pulse-on-change{
+  animation:ad-ext-x01-score-progress-pulse-on-change 1.45s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-sheen-sweep{
+  animation:ad-ext-x01-score-progress-sheen-sweep 1.75s linear infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-charge-release{
+  animation:ad-ext-x01-score-progress-charge-release 1.65s cubic-bezier(.25,.9,.2,1) infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-burn-down{
+  animation:ad-ext-x01-score-progress-burn-down 1.5s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-spark-trail{
+  animation:ad-ext-x01-score-progress-spark-trail 1.25s ease-out infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-heat-edge{
-  filter:saturate(1.08) contrast(1.04);
+  animation:ad-ext-x01-score-progress-heat-edge 1.65s ease-in-out infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-segment-pop{
-  transform-origin:left center;
+  animation:ad-ext-x01-score-progress-segment-pop 1.2s ease-out infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-danger-flicker{
@@ -232,7 +252,42 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 
 @keyframes ad-ext-x01-score-progress-checkout-glow{
   0%,100%{filter:brightness(1)}
-  50%{filter:brightness(1.18)}
+  50%{filter:brightness(1.26)}
+}
+
+@keyframes ad-ext-x01-score-progress-pulse-on-change{
+  0%,100%{transform:scaleY(1);filter:brightness(1)}
+  50%{transform:scaleY(1.18);filter:brightness(1.18)}
+}
+
+@keyframes ad-ext-x01-score-progress-sheen-sweep{
+  0%,100%{filter:brightness(1) saturate(1)}
+  50%{filter:brightness(1.24) saturate(1.22)}
+}
+
+@keyframes ad-ext-x01-score-progress-charge-release{
+  0%,100%{transform:scaleX(1);filter:brightness(1)}
+  40%{transform:scaleX(1.04);filter:brightness(1.26)}
+}
+
+@keyframes ad-ext-x01-score-progress-burn-down{
+  0%,100%{filter:brightness(1) saturate(1)}
+  35%{filter:brightness(1.24) saturate(1.36) hue-rotate(-8deg)}
+}
+
+@keyframes ad-ext-x01-score-progress-spark-trail{
+  0%,100%{transform:translateX(0);filter:brightness(1)}
+  35%{transform:translateX(3px);filter:brightness(1.24)}
+}
+
+@keyframes ad-ext-x01-score-progress-heat-edge{
+  0%,100%{filter:saturate(1.04) contrast(1.02)}
+  50%{filter:saturate(1.2) contrast(1.08) brightness(1.08)}
+}
+
+@keyframes ad-ext-x01-score-progress-segment-pop{
+  0%,100%{transform:scaleY(1)}
+  42%{transform:scaleY(1.32)}
 }
 `;
 }
