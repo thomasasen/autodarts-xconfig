@@ -34,9 +34,11 @@ ${HOST_SELECTOR}{
   min-width:0;
   margin-top:var(--ad-ext-x01-score-progress-margin-top);
   grid-column:1 / -1;
+  grid-row:3;
   justify-self:stretch;
   align-self:end;
   order:99;
+  flex:0 0 100%;
   opacity:1;
 }
 

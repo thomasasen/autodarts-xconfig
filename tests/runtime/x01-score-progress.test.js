@@ -11,6 +11,7 @@ import {
   ACTIVE_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
+  buildStyleText,
 } from "../../src/features/x01-score-progress/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -185,4 +186,13 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   assert.equal(cleared.startScore, null);
   assert.equal(cleared.renderedCards, 0);
   assert.equal(playerDisplay.querySelectorAll(HOST_SELECTOR).length, 0);
+});
+
+test("score-progress style reserves a dedicated player-card row for the bar", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-score-progress='true'\]\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*grid-row:\s*3;[^}]*flex:\s*0\s+0\s+100%;/s
+  );
 });

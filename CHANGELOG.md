@@ -13,6 +13,16 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.48] - 2026-03-19
+
+### Fixed
+
+- Nutzerwirkung: Der X01-Restscore-Balken bleibt jetzt auch im echten
+  Spieler-Grid des X01-Themes sichtbar, statt im Kartenlayout zu verschwinden.
+  Technik: Die Progress-Bar reserviert explizit eine eigene dritte Grid-Zeile
+  samt Flex-Fallback im Player-Card-Host; eine Style-Regression prüft die feste
+  Platzierung im Kartenlayout.
+
 ## [2.0.47] - 2026-03-19
 
 ### Added
@@ -415,7 +425,8 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
+[2.0.48]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
 [2.0.47]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.46]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.45]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
