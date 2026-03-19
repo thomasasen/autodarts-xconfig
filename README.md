@@ -49,6 +49,7 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 
 - `↺ Zurücksetzen`: Setzt alle Einstellungen auf Standard zurück und deaktiviert alle Module.
 - Versionsstatus: Hier siehst du, ob deine Version aktuell ist, ob ein Update verfügbar ist oder ob die Update-Prüfung fehlgeschlagen ist.
+- `Changelog` / `Was ist neu?`: Öffnet direkt die veröffentlichten Änderungen auf GitHub in einem neuen Tab.
 - `Neu prüfen`: Startet sofort eine neue Update-Prüfung.
 - `Themen` und `Animationen`: Mit diesen Buttons wechselst du zwischen beiden Bereichen.
 
@@ -58,8 +59,9 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 2. Danach wird im Hintergrund weiter geprüft. Der Hintergrund-Timer läuft alle 15 Minuten. Wegen Zwischenspeicherung wird ohne Klick auf `Neu prüfen` höchstens ungefähr einmal pro Stunde wirklich online verglichen.
 3. Wenn ein Update verfügbar ist, siehst du am Menüpunkt **AD xConfig** einen kleinen orangefarbenen Punkt.
 4. Im geöffneten Menü erscheint die Meldung `Update verfügbar` mit dem Button `Update installieren`.
-5. Ein Klick auf `Update installieren` öffnet die Userscript-Datei in einem neuen Tab. Tampermonkey übernimmt dort die Neuinstallation.
-6. Es kann ein paar Sekunden dauern, bis Tampermonkey die Aufforderung zur Re-Installation anzeigt. Danach das Update einfach bestätigen.
+5. Direkt daneben führt `Was ist neu?` zum `CHANGELOG.md`, damit du vor dem Update die Änderungen prüfen kannst.
+6. Ein Klick auf `Update installieren` öffnet die Userscript-Datei in einem neuen Tab. Tampermonkey übernimmt dort die Neuinstallation.
+7. Es kann ein paar Sekunden dauern, bis Tampermonkey die Aufforderung zur Re-Installation anzeigt. Danach das Update einfach bestätigen.
 
 ## So ist eine Kachel aufgebaut
 

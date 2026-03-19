@@ -63,13 +63,18 @@ test("resolveLatestUpdateStatus adds cache-busting query to remote update reques
 
   assert.equal(status.available, true);
   assert.equal(status.remoteVersion, "2.0.3");
-  assert.equal(requests.length, 1);
+  assert.equal(status.sourceUrl, USERSCRIPT_DOWNLOAD_URL);
+  assert.equal(requests.length, 2);
 
-  const request = requests[0];
-  const requestUrl = new URL(request.url);
-  assert.equal(getUrlWithoutQuery(request.url), USERSCRIPT_UPDATE_URL);
-  assert.equal(requestUrl.searchParams.get("_adxconfig_ts"), String(now));
-  assert.equal(request.options.cache, "no-store");
+  const [metaRequest, downloadRequest] = requests;
+  const metaRequestUrl = new URL(metaRequest.url);
+  const downloadRequestUrl = new URL(downloadRequest.url);
+  assert.equal(getUrlWithoutQuery(metaRequest.url), USERSCRIPT_UPDATE_URL);
+  assert.equal(getUrlWithoutQuery(downloadRequest.url), USERSCRIPT_DOWNLOAD_URL);
+  assert.equal(metaRequestUrl.searchParams.get("_adxconfig_ts"), String(now));
+  assert.equal(downloadRequestUrl.searchParams.get("_adxconfig_ts"), String(now));
+  assert.equal(metaRequest.options.cache, "no-store");
+  assert.equal(downloadRequest.options.cache, "no-store");
 });
 
 test("resolveLatestUpdateStatus falls back from meta to userscript URL with cache-busting query", async () => {
@@ -153,7 +158,7 @@ test("resolveLatestUpdateStatus uses conditional request headers and reuses cach
   assert.equal(status.available, true);
   assert.equal(status.remoteVersion, "2.0.3");
   assert.equal(status.sourceUrl, USERSCRIPT_UPDATE_URL);
-  assert.equal(requests.length, 1);
+  assert.equal(requests.length, 2);
 
   const request = requests[0];
   assert.equal(getUrlWithoutQuery(request.url), USERSCRIPT_UPDATE_URL);
@@ -188,13 +193,53 @@ test("resolveLatestUpdateStatus persists validator metadata from successful resp
 
   const persisted = JSON.parse(localStorage.getItem("autodarts-xconfig:update-status:v1"));
   assert.equal(persisted.remoteVersion, "2.0.4");
-  assert.equal(persisted.sourceUrl, USERSCRIPT_UPDATE_URL);
+  assert.equal(persisted.sourceUrl, USERSCRIPT_DOWNLOAD_URL);
   assert.equal(persisted.validators[USERSCRIPT_UPDATE_URL].remoteVersion, "2.0.4");
   assert.equal(persisted.validators[USERSCRIPT_UPDATE_URL].etag, "\"etag-xyz\"");
   assert.equal(
     persisted.validators[USERSCRIPT_UPDATE_URL].lastModified,
     "Tue, 02 Jan 2024 00:00:00 GMT"
   );
+  assert.equal(persisted.validators[USERSCRIPT_DOWNLOAD_URL].remoteVersion, "2.0.4");
+});
+
+test("resolveLatestUpdateStatus prefers the newest published version across meta and userscript endpoints", async () => {
+  const localStorage = new FakeStorage();
+  const windowRef = createFakeWindow({ localStorage });
+  const requests = [];
+  windowRef.fetch = async (url) => {
+    const requestUrl = String(url || "");
+    requests.push(requestUrl);
+    if (getUrlWithoutQuery(requestUrl) === USERSCRIPT_UPDATE_URL) {
+      return {
+        ok: true,
+        status: 200,
+        async text() {
+          return buildUserscriptMeta("2.0.3");
+        },
+      };
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return buildUserscriptMeta("2.0.4");
+      },
+    };
+  };
+
+  const status = await resolveLatestUpdateStatus({
+    windowRef,
+    installedVersion: "2.0.2",
+    force: true,
+    now: 1_770_301_050_000,
+  });
+
+  assert.equal(status.available, true);
+  assert.equal(status.remoteVersion, "2.0.4");
+  assert.equal(status.sourceUrl, USERSCRIPT_DOWNLOAD_URL);
+  assert.equal(requests.length, 2);
 });
 
 test("resolveLatestUpdateStatus throttles repeated failed checks within ttl window", async () => {

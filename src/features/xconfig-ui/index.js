@@ -17,6 +17,7 @@ const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
 const STYLE_ID = "ad-xconfig-shell-style";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
+const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
@@ -136,6 +137,15 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-update-title{margin:0;font-size:1rem;font-weight:800;line-height:1.2}
 #${PANEL_HOST_ID} .ad-xconfig-update-copy{margin:0;font-size:.8rem;line-height:1.35;color:rgba(235,243,255,.88)}
 #${PANEL_HOST_ID} .ad-xconfig-update-actions{display:flex;flex-wrap:wrap;gap:.55rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700}
+#${PANEL_HOST_ID} .ad-xconfig-update-link .ad-xconfig-update-link-copy{display:inline-flex;align-items:center;gap:.38rem}
+#${PANEL_HOST_ID} .ad-xconfig-update-link .ad-xconfig-update-link-kicker{display:inline-flex;padding:.14rem .42rem;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(240,246,255,.82)}
+#${PANEL_HOST_ID} .ad-xconfig-update-link .ad-xconfig-update-link-label{color:rgba(248,251,255,.96)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"] .ad-xconfig-update-link{border-color:rgba(255,214,164,.54);background:linear-gradient(145deg,rgba(255,244,224,.12),rgba(255,196,118,.12));box-shadow:0 0 0 1px rgba(255,214,164,.08),0 6px 18px rgba(18,12,8,.12)}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"] .ad-xconfig-update-link:hover{background:linear-gradient(145deg,rgba(255,248,232,.18),rgba(255,205,132,.18))}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="current"] .ad-xconfig-update-link{border-color:rgba(170,224,255,.42);background:linear-gradient(145deg,rgba(201,234,255,.12),rgba(74,178,255,.14))}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="error"] .ad-xconfig-update-link{border-color:rgba(255,176,176,.38);background:linear-gradient(145deg,rgba(255,218,218,.08),rgba(255,120,120,.1))}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="checking"] .ad-xconfig-update-link{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.08)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary{border-color:rgba(255,166,132,.72);background:linear-gradient(145deg,rgba(255,126,92,.34),rgba(255,196,118,.22));box-shadow:0 0 0 1px rgba(255,186,144,.12),0 5px 16px rgba(255,126,92,.12)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary:hover{background:linear-gradient(145deg,rgba(255,141,104,.42),rgba(255,203,128,.28))}
 #${PANEL_HOST_ID} .ad-xconfig-tabs{margin-top:1rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
@@ -741,8 +751,7 @@ function getFeatureReadmeHref(featureKey) {
   return anchor ? `${README_URL}#${anchor}` : README_URL;
 }
 
-function openReadme(windowRef, featureKey) {
-  const href = getFeatureReadmeHref(featureKey);
+function openExternalHref(windowRef, href) {
   if (typeof windowRef?.open === "function") {
     const openedWindow = windowRef.open(href, "_blank", "noopener,noreferrer");
     if (openedWindow && typeof openedWindow.focus === "function") {
@@ -754,6 +763,14 @@ function openReadme(windowRef, featureKey) {
   if (windowRef?.location) {
     windowRef.location.href = href;
   }
+}
+
+function openReadme(windowRef, featureKey) {
+  openExternalHref(windowRef, getFeatureReadmeHref(featureKey));
+}
+
+function openChangelog(windowRef) {
+  openExternalHref(windowRef, CHANGELOG_URL);
 }
 
 function formatUpdateCheckedAt(checkedAt) {
@@ -790,7 +807,7 @@ const UPDATE_PANEL_TEXT_RESOLVERS = Object.freeze({
   checking() {
     return {
       titleText: "Versionsstatus wird geprüft",
-      copyText: "Vergleicht installierte Version und GitHub-Metadatei.",
+      copyText: "Vergleicht installierte Version mit den veröffentlichten GitHub-Dateien.",
     };
   },
   available({ installedVersion, remoteVersion }) {
@@ -888,6 +905,29 @@ function buildUpdatePanel(documentRef, updateStatus) {
   const actions = createElement(documentRef, "div", {
     className: "ad-xconfig-update-actions",
   });
+  const changelogLink = createElement(documentRef, "a", {
+    className: "ad-xconfig-btn ad-xconfig-update-link",
+    attributes: {
+      href: CHANGELOG_URL,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      "data-adxconfig-action": "open-changelog",
+      "aria-label": "Changelog in neuem Tab öffnen",
+    },
+  });
+  changelogLink.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-update-link-copy",
+  }));
+  const changelogLinkCopy = changelogLink.firstElementChild;
+  changelogLinkCopy?.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-update-link-kicker",
+    text: panelState === "available" ? "Neu" : "Info",
+  }));
+  changelogLinkCopy?.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-update-link-label",
+    text: panelState === "available" ? "Was ist neu?" : "Changelog",
+  }));
+  actions.appendChild(changelogLink);
   actions.appendChild(createElement(documentRef, "button", {
     type: "button",
     className: "ad-xconfig-btn",
@@ -2550,6 +2590,10 @@ function ensureXConfigShell(options = {}) {
     }
     if (action === "open-readme") {
       openReadme(windowRef, feature?.featureKey || "");
+      return;
+    }
+    if (action === "open-changelog") {
+      openChangelog(windowRef);
       return;
     }
     if (action === "check-update") {

@@ -13,6 +13,19 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.54] - 2026-03-19
+
+### Fixed
+
+- Nutzerwirkung: Die Versionsprüfung in AD xConfig erkennt neue GitHub-Releases
+  jetzt robuster und bietet im Statusbereich direkt einen gestalteten
+  Changelog-Link (`Changelog` bzw. `Was ist neu?`), damit Änderungen vor der
+  Installation schnell geprüft werden können.
+  Technik: Der Update-Check vergleicht jetzt beide veröffentlichten GitHub-Dateien
+  (`.meta.js` und `.user.js`), bevorzugt bei Abweichungen die neueste gefundene
+  Version, erweitert die Runtime-Regressionen für Mehrquellen-/Cache-Verhalten
+  und ergänzt Shell-/README-Abdeckung für den neuen Changelog-Zugang.
+
 ## [2.0.53] - 2026-03-19
 
 ### Changed
@@ -493,6 +506,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...HEAD
+[2.0.54]: https://github.com/thomasasen/autodarts-xconfig/compare/8a31cd6...HEAD
 [2.0.53]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...HEAD
 [2.0.52]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...fec14ae
 [2.0.51]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD

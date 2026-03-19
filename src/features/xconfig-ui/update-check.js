@@ -5,6 +5,10 @@ const USERSCRIPT_UPDATE_URL =
 const UPDATE_STATUS_STORAGE_KEY = "autodarts-xconfig:update-status:v1";
 const UPDATE_CHECK_TTL_MS = 60 * 60 * 1000;
 const UPDATE_CACHE_BUST_PARAM = "_adxconfig_ts";
+const UPDATE_SOURCE_PRIORITY = Object.freeze({
+  [USERSCRIPT_UPDATE_URL]: 1,
+  [USERSCRIPT_DOWNLOAD_URL]: 2,
+});
 
 function normalizeVersion(value) {
   return String(value || "").trim();
@@ -181,6 +185,10 @@ function parseUserscriptVersion(text) {
   return normalizeVersion(match?.[1] || "");
 }
 
+function getUpdateSourcePriority(sourceUrl) {
+  return UPDATE_SOURCE_PRIORITY[String(sourceUrl || "").trim()] || 0;
+}
+
 function buildCacheBustedUrl(sourceUrl, now = Date.now()) {
   const normalizedSourceUrl = String(sourceUrl || "").trim();
   if (!normalizedSourceUrl) {
@@ -265,78 +273,118 @@ function writeStoredPayload(storageRef, payload) {
   }
 }
 
+async function fetchRemoteVersionFromSource(fetchFn, sourceUrl, options = {}) {
+  const now = Number(options.now || Date.now());
+  const validators = normalizeValidatorsMap(options.validators);
+  const requestUrl = buildCacheBustedUrl(sourceUrl, now);
+  const cachedValidator = validators[sourceUrl] || null;
+  const headers = {};
+
+  if (cachedValidator?.etag) {
+    headers["If-None-Match"] = cachedValidator.etag;
+  }
+  if (cachedValidator?.lastModified) {
+    headers["If-Modified-Since"] = cachedValidator.lastModified;
+  }
+
+  const response = await fetchFn(requestUrl, {
+    method: "GET",
+    cache: "no-store",
+    ...(Object.keys(headers).length ? { headers } : {}),
+  });
+
+  const statusCode = Number(response?.status) || 0;
+  const responseEtag = getResponseHeader(response, "etag");
+  const responseLastModified = getResponseHeader(response, "last-modified");
+
+  if (statusCode === 304) {
+    const remoteVersion = normalizeVersion(cachedValidator?.remoteVersion);
+    if (!remoteVersion) {
+      throw new Error("Version nicht gefunden.");
+    }
+
+    return {
+      remoteVersion,
+      sourceUrl,
+      validatorEntry: {
+        remoteVersion,
+        etag: responseEtag || cachedValidator?.etag || "",
+        lastModified: responseLastModified || cachedValidator?.lastModified || "",
+      },
+    };
+  }
+
+  if (!response || !response.ok) {
+    throw new Error(`HTTP ${statusCode}`);
+  }
+
+  const remoteVersion = parseUserscriptVersion(await response.text());
+  if (!remoteVersion) {
+    throw new Error("Version nicht gefunden.");
+  }
+
+  return {
+    remoteVersion,
+    sourceUrl,
+    validatorEntry: {
+      remoteVersion,
+      etag: responseEtag,
+      lastModified: responseLastModified,
+    },
+  };
+}
+
+function pickPreferredRemoteVersion(candidates = []) {
+  return candidates.reduce((bestCandidate, candidate) => {
+    if (!bestCandidate) {
+      return candidate;
+    }
+
+    const comparison = compareVersions(candidate.remoteVersion, bestCandidate.remoteVersion);
+    if (comparison > 0) {
+      return candidate;
+    }
+    if (comparison < 0) {
+      return bestCandidate;
+    }
+
+    return getUpdateSourcePriority(candidate.sourceUrl) > getUpdateSourcePriority(bestCandidate.sourceUrl)
+      ? candidate
+      : bestCandidate;
+  }, null);
+}
+
 async function fetchRemoteVersion(fetchFn, options = {}) {
   const now = Number(options.now || Date.now());
   const validators = normalizeValidatorsMap(options.validators);
   const candidateUrls = [USERSCRIPT_UPDATE_URL, USERSCRIPT_DOWNLOAD_URL];
   let lastError = null;
   let nextValidators = validators;
+  const resolvedCandidates = [];
 
   for (const sourceUrl of candidateUrls) {
-    const requestUrl = buildCacheBustedUrl(sourceUrl, now);
-    const cachedValidator = validators[sourceUrl] || null;
-    const headers = {};
-
-    if (cachedValidator?.etag) {
-      headers["If-None-Match"] = cachedValidator.etag;
-    }
-    if (cachedValidator?.lastModified) {
-      headers["If-Modified-Since"] = cachedValidator.lastModified;
-    }
-
     try {
-      const response = await fetchFn(requestUrl, {
-        method: "GET",
-        cache: "no-store",
-        ...(Object.keys(headers).length ? { headers } : {}),
+      const remoteInfo = await fetchRemoteVersionFromSource(fetchFn, sourceUrl, {
+        now,
+        validators: nextValidators,
       });
-
-      const statusCode = Number(response?.status) || 0;
-      const responseEtag = getResponseHeader(response, "etag");
-      const responseLastModified = getResponseHeader(response, "last-modified");
-
-      if (statusCode === 304) {
-        const remoteVersion = normalizeVersion(cachedValidator?.remoteVersion);
-        if (!remoteVersion) {
-          throw new Error("Version nicht gefunden.");
-        }
-
-        nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, {
-          remoteVersion,
-          etag: responseEtag || cachedValidator?.etag || "",
-          lastModified: responseLastModified || cachedValidator?.lastModified || "",
-        });
-
-        return {
-          remoteVersion,
-          sourceUrl,
-          validators: nextValidators,
-        };
-      }
-
-      if (!response || !response.ok) {
-        throw new Error(`HTTP ${statusCode}`);
-      }
-
-      const version = parseUserscriptVersion(await response.text());
-      if (version) {
-        nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, {
-          remoteVersion: version,
-          etag: responseEtag,
-          lastModified: responseLastModified,
-        });
-
-        return {
-          remoteVersion: version,
-          sourceUrl,
-          validators: nextValidators,
-        };
-      }
-
-      throw new Error("Version nicht gefunden.");
+      nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, remoteInfo.validatorEntry);
+      resolvedCandidates.push({
+        remoteVersion: remoteInfo.remoteVersion,
+        sourceUrl,
+      });
     } catch (error) {
       lastError = error;
     }
+  }
+
+  const preferredCandidate = pickPreferredRemoteVersion(resolvedCandidates);
+  if (preferredCandidate) {
+    return {
+      remoteVersion: preferredCandidate.remoteVersion,
+      sourceUrl: preferredCandidate.sourceUrl,
+      validators: nextValidators,
+    };
   }
 
   throw lastError || new Error("Versionsabgleich fehlgeschlagen.");

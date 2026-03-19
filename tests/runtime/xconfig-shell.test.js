@@ -7,6 +7,8 @@ import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-ch
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
 
+const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
+
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -503,6 +505,17 @@ test("xConfig shell marks the menu and offers install action when a newer usersc
   assert.ok(updateTitle);
   assert.equal(String(updateTitle.textContent || "").trim(), "Update verfügbar");
 
+  const changelogLink = documentRef.querySelector("[data-adxconfig-action='open-changelog']");
+  assert.ok(changelogLink);
+  assert.equal(changelogLink.getAttribute("href"), CHANGELOG_URL);
+  assert.equal(
+    String(changelogLink.querySelector(".ad-xconfig-update-link-label")?.textContent || "").trim(),
+    "Was ist neu?"
+  );
+  changelogLink.click();
+  await wait(5);
+  assert.equal(windowRef.__openedUrls.at(-1), CHANGELOG_URL);
+
   const installButton = documentRef.querySelector("[data-adxconfig-action='install-update']");
   assert.ok(installButton);
   installButton.click();
@@ -550,11 +563,16 @@ test("xConfig shell can recheck update status and promote a current build to upd
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
-  let callCount = 0;
+  let refreshCount = 0;
+  let requestsInRefresh = 0;
   windowRef.fetch = async () => {
-    callCount += 1;
     const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
-    const remoteVersion = callCount === 1 ? installedVersion : incrementPatchVersion(installedVersion);
+    const remoteVersion = refreshCount === 0 ? installedVersion : incrementPatchVersion(installedVersion);
+    requestsInRefresh += 1;
+    if (requestsInRefresh >= 2) {
+      refreshCount += 1;
+      requestsInRefresh = 0;
+    }
     return {
       ok: true,
       status: 200,
@@ -573,6 +591,15 @@ test("xConfig shell can recheck update status and promote a current build to upd
   assert.ok(updatePanel);
   assert.equal(updatePanel.getAttribute("data-update-state"), "current");
   assert.equal(documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available"), null);
+  assert.equal(
+    String(
+      documentRef
+        .querySelector("[data-adxconfig-action='open-changelog']")
+        ?.querySelector(".ad-xconfig-update-link-label")
+        ?.textContent || ""
+    ).trim(),
+    "Changelog"
+  );
 
   const recheckButton = documentRef.querySelector("[data-adxconfig-action='check-update']");
   assert.ok(recheckButton);
@@ -608,11 +635,16 @@ test("xConfig shell checks update status in the background without manual rechec
   };
 
   let runtime = null;
-  let callCount = 0;
+  let refreshCount = 0;
+  let requestsInRefresh = 0;
   windowRef.fetch = async () => {
-    callCount += 1;
     const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
-    const remoteVersion = callCount === 1 ? installedVersion : incrementPatchVersion(installedVersion);
+    const remoteVersion = refreshCount === 0 ? installedVersion : incrementPatchVersion(installedVersion);
+    requestsInRefresh += 1;
+    if (requestsInRefresh >= 2) {
+      refreshCount += 1;
+      requestsInRefresh = 0;
+    }
     return {
       ok: true,
       status: 200,
@@ -624,7 +656,7 @@ test("xConfig shell checks update status in the background without manual rechec
 
   try {
     runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-    await waitFor(() => callCount >= 2, { timeoutMs: 260, intervalMs: 5 });
+    await waitFor(() => refreshCount >= 2, { timeoutMs: 260, intervalMs: 5 });
     await waitFor(
       () => documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-update-available") === "true",
       { timeoutMs: 260, intervalMs: 5 }
