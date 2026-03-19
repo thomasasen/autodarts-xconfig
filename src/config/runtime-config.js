@@ -101,16 +101,12 @@ const X01_SCORE_PROGRESS_COLOR_THEMES = new Set([
 ]);
 const X01_SCORE_PROGRESS_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
 const X01_SCORE_PROGRESS_EFFECTS = new Set([
+  "pulse-core",
+  "glass-charge",
+  "segment-drain",
+  "ghost-trail",
+  "signal-sweep",
   "off",
-  "pulse-on-change",
-  "sheen-sweep",
-  "charge-release",
-  "burn-down",
-  "spark-trail",
-  "heat-edge",
-  "segment-pop",
-  "danger-flicker",
-  "checkout-glow",
 ]);
 const WINNER_FIREWORKS_STYLES = new Set([
   "realistic",
@@ -564,7 +560,24 @@ function normalizeX01ScoreProgressConfig(rawConfig = {}) {
     ),
     colorTheme: normalizedColorTheme,
     barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_SCORE_PROGRESS_BAR_SIZES),
-    effect: normalizeStringChoice(rawConfig.effect, "charge-release", X01_SCORE_PROGRESS_EFFECTS),
+    effect: normalizeMappedStringChoice(rawConfig.effect, "pulse-core", {
+      "": "pulse-core",
+      off: "off",
+      "pulse-core": "pulse-core",
+      "glass-charge": "glass-charge",
+      "segment-drain": "segment-drain",
+      "ghost-trail": "ghost-trail",
+      "signal-sweep": "signal-sweep",
+      "pulse-on-change": "pulse-core",
+      "charge-release": "pulse-core",
+      "sheen-sweep": "glass-charge",
+      "checkout-glow": "glass-charge",
+      "burn-down": "segment-drain",
+      "segment-pop": "segment-drain",
+      "spark-trail": "ghost-trail",
+      "heat-edge": "signal-sweep",
+      "danger-flicker": "signal-sweep",
+    }),
     debug: normalizeBoolean(rawConfig.debug, false),
   };
 }

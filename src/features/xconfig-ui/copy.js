@@ -259,7 +259,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.",
     visualDescription:
-      "Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.",
+      "Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.",
     usefulWhen:
       "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
     fields: {
@@ -279,9 +279,9 @@ export const xconfigFeatureCopy = deepFreeze({
         "Legt die Balkenhöhe des aktiven Spielers fest."
       ),
       effect: fieldCopy(
-        "Wählt den visuellen Reaktionseffekt bei Scoreänderungen.",
-        "Bestimmt, ob der Balken bei Punktänderungen ruhig bleibt oder mit Effekten wie Charge, Burn-Down, Sheen oder Checkout-Glow reagiert.",
-        "Wählt den Reaktionseffekt des Balkens bei Scoreänderungen."
+        "Wählt den sichtbaren Effekt des aktiven Balkens oder schaltet ihn aus.",
+        "Bestimmt, ob und wie stark der aktive Balken zusätzlich animiert wird. Inaktive Spieler bleiben vom gewählten Effekt unberührt und behalten ihre ruhige Standarddarstellung.",
+        "Wählt den Effekt des aktiven Balkens; inaktive Spieler bleiben unverändert."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1946,55 +1946,35 @@ const X01_SCORE_PROGRESS_SIZE_OPTION_COPY = deepFreeze({
 });
 
 const X01_SCORE_PROGRESS_EFFECT_OPTION_COPY = deepFreeze({
+  "pulse-core": optionCopy(
+    "Lässt den aktiven Balkenkern kräftig atmen.",
+    "Der Balken pulsiert mit einer klar sichtbaren inneren Kernbewegung und bleibt dadurch dauerhaft präsent.",
+    "Deutlicher Kern-Puls auf dem aktiven Balken."
+  ),
+  "glass-charge": optionCopy(
+    "Schickt eine breite, gläserne Ladung durch den Balken.",
+    "Eine helle, glatte Spiegelung läuft durch den aktiven Balken und erzeugt eine sichtbar aufgeladene Glasschicht.",
+    "Gläserner Ladeeffekt mit breiter Lichtkante."
+  ),
+  "segment-drain": optionCopy(
+    "Unterteilt den Balken in markante Segmente.",
+    "Der aktive Balken wirkt sichtbar segmentiert und verliert seine Energie in klaren, technischen Abschnitten statt als glatte Fläche.",
+    "Segmentierte Drain-Optik mit klaren Abschnitten."
+  ),
+  "ghost-trail": optionCopy(
+    "Lässt die alte Balkenlänge als Nachbild stehen.",
+    "Bei Scoreänderungen bleibt kurz eine halbtransparente Spur der vorherigen Länge sichtbar und läuft dann in den neuen Stand aus.",
+    "Nachziehender Ghost-Trail beim Scorewechsel."
+  ),
+  "signal-sweep": optionCopy(
+    "Jagt eine scharfe Signallinie über den Balken.",
+    "Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.",
+    "Schneller Signal-Sweep mit hoher Aufmerksamkeit."
+  ),
   off: optionCopy(
-    "Deaktiviert Reaktionseffekte.",
-    "Der Balken aktualisiert nur Breite und Farbe ohne zusätzliche Animation.",
-    "Keine Zusatzanimation bei Scoreänderungen."
-  ),
-  "pulse-on-change": optionCopy(
-    "Reagiert mit einem kurzen vertikalen Puls.",
-    "Bei Scoreänderungen pulsiert der Balken kompakt und kehrt direkt in den Normalzustand zurück.",
-    "Kurzer Pulsimpuls bei Änderungen."
-  ),
-  "sheen-sweep": optionCopy(
-    "Lässt einen kurzen Licht-Sweep über den Balken laufen.",
-    "Bei Änderungen entsteht ein heller Schimmerlauf mit glatter Ausblendung.",
-    "Kurzer Glanz-Sweep auf Scoreänderung."
-  ),
-  "charge-release": optionCopy(
-    "Lädt den Balken kurz auf und entlädt wieder.",
-    "Erzeugt eine kurze Verdichtung mit anschließender Entlastung und ist als Standardeffekt ausbalanciert.",
-    "Ausgewogener Charge-Burst als Standard."
-  ),
-  "burn-down": optionCopy(
-    "Setzt einen warmen Burn-Down-Impuls.",
-    "Bei Änderungen wird der Balken kurz wärmer und fällt dann kontrolliert zurück.",
-    "Warmer Burn-Impuls bei Änderungen."
-  ),
-  "spark-trail": optionCopy(
-    "Reagiert mit einem schnellen, seitlichen Spark-Versatz.",
-    "Der Balken wirkt kurz elektrisch und schnellt in die stabile Position zurück.",
-    "Kurzer Spark-Trail-Effekt."
-  ),
-  "heat-edge": optionCopy(
-    "Hebt Kanten bei Änderungen hitzeartig an.",
-    "Steigert temporär Sättigung und Helligkeit an der Balkenkante ohne große Bewegung.",
-    "Kantenbetonter Heat-Impuls."
-  ),
-  "segment-pop": optionCopy(
-    "Lässt den Balkenabschnitt kurz aufspringen.",
-    "Bei Änderungen poppt der Balken sichtbar auf und setzt sich dann wieder.",
-    "Kurzer Segment-Pop bei Änderungen."
-  ),
-  "danger-flicker": optionCopy(
-    "Reagiert mit einem kurzen Warn-Flicker.",
-    "Setzt auf einen schnellen Helligkeitswechsel mit aggressiverer Dringlichkeitswirkung.",
-    "Warnender Flicker-Impuls."
-  ),
-  "checkout-glow": optionCopy(
-    "Verstärkt den Balken mit kurzem Glow-Burst.",
-    "Der Balken leuchtet bei Änderungen sichtbar auf und fällt weich zurück.",
-    "Deutlicher Glow-Burst bei Scoreänderung."
+    "Deaktiviert Zusatzanimationen.",
+    "Der Balken zeigt nur den aktuellen Stand ohne zusätzlichen Effekt. Größe, Farben und Inaktiv-Darstellung bleiben bestehen.",
+    "Keine Zusatzanimation; nur der statische Balken bleibt sichtbar."
   ),
 });
 

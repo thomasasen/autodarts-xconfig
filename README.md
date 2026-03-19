@@ -375,7 +375,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
-- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
+- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
 - Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
 
 **Einstellungen einfach erklärt**
@@ -402,17 +402,13 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Standard`: Balanciert Präsenz und Zurückhaltung und passt in der Regel am besten zum Standardlayout.
   - `Breit`: Der aktive Balken wird deutlicher und aus größerer Distanz schneller wahrgenommen.
   - `Extrabreit`: Stellt den aktiven Balken sehr dominant dar und priorisiert maximale Sichtbarkeit.
-- `Effekt`: Bestimmt, ob der Balken bei Punktänderungen ruhig bleibt oder mit Effekten wie Charge, Burn-Down, Sheen oder Checkout-Glow reagiert.
-  - `Aus`: Der Balken aktualisiert nur Breite und Farbe ohne zusätzliche Animation.
-  - `Pulse on Change`: Bei Scoreänderungen pulsiert der Balken kompakt und kehrt direkt in den Normalzustand zurück.
-  - `Sheen Sweep`: Bei Änderungen entsteht ein heller Schimmerlauf mit glatter Ausblendung.
-  - `Charge Release`: Erzeugt eine kurze Verdichtung mit anschließender Entlastung und ist als Standardeffekt ausbalanciert.
-  - `Burn Down`: Bei Änderungen wird der Balken kurz wärmer und fällt dann kontrolliert zurück.
-  - `Spark Trail`: Der Balken wirkt kurz elektrisch und schnellt in die stabile Position zurück.
-  - `Heat Edge`: Steigert temporär Sättigung und Helligkeit an der Balkenkante ohne große Bewegung.
-  - `Segment Pop`: Bei Änderungen poppt der Balken sichtbar auf und setzt sich dann wieder.
-  - `Danger Flicker`: Setzt auf einen schnellen Helligkeitswechsel mit aggressiverer Dringlichkeitswirkung.
-  - `Checkout Glow`: Der Balken leuchtet bei Änderungen sichtbar auf und fällt weich zurück.
+- `Effekt`: Bestimmt, ob und wie stark der aktive Balken zusätzlich animiert wird. Inaktive Spieler bleiben vom gewählten Effekt unberührt und behalten ihre ruhige Standarddarstellung.
+  - `Pulse Core`: Der Balken pulsiert mit einer klar sichtbaren inneren Kernbewegung und bleibt dadurch dauerhaft präsent.
+  - `Glass Charge`: Eine helle, glatte Spiegelung läuft durch den aktiven Balken und erzeugt eine sichtbar aufgeladene Glasschicht.
+  - `Segment Drain`: Der aktive Balken wirkt sichtbar segmentiert und verliert seine Energie in klaren, technischen Abschnitten statt als glatte Fläche.
+  - `Ghost Trail`: Bei Scoreänderungen bleibt kurz eine halbtransparente Spur der vorherigen Länge sichtbar und läuft dann in den neuen Stand aus.
+  - `Signal Sweep`: Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.
+  - `Aus`: Der Balken zeigt nur den aktuellen Stand ohne zusätzlichen Effekt. Größe, Farben und Inaktiv-Darstellung bleiben bestehen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="animation-autodarts-animate-checkout-board-targets"></a>

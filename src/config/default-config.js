@@ -149,7 +149,7 @@ export const defaultConfig = {
       designPreset: "signal",
       colorTheme: "checkout-focus",
       barSize: "standard",
-      effect: "charge-release",
+      effect: "pulse-core",
       debug: false,
     },
     themes: {

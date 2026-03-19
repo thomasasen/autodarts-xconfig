@@ -14,6 +14,7 @@ import {
   FILL_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
+  TRAIL_CLASS,
   buildStyleText,
 } from "../../src/features/x01-score-progress/style.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
@@ -135,7 +136,7 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
         designPreset: "glass",
         colorTheme: "danger-endgame",
         barSize: "extrabreit",
-        effect: "checkout-glow",
+        effect: "glass-charge",
       },
       gameState: {
         getSnapshot: () => ({
@@ -161,12 +162,12 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   assert.equal(activeHost.classList.contains("ad-ext-x01-score-progress--preset-glass"), true);
   assert.equal(activeHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), true);
   assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "danger-endgame");
-  assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "checkout-glow");
+  assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "glass-charge");
   assert.equal(activeHost.style.getPropertyValue(WIDTH_PROPERTY), "33.93%");
   const activeFill = activeHost.querySelector(`.${FILL_CLASS}`);
   assert.ok(activeFill);
   assert.equal(
-    activeFill.classList.contains("ad-ext-x01-score-progress__fill--effect-checkout-glow"),
+    activeFill.classList.contains("ad-ext-x01-score-progress__fill--effect-glass-charge"),
     true
   );
 
@@ -180,12 +181,12 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
     inactiveHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"),
     "danger-endgame"
   );
-  assert.equal(inactiveHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "checkout-glow");
+  assert.equal(inactiveHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "glass-charge");
   assert.equal(inactiveHost.style.getPropertyValue(WIDTH_PROPERTY), "50.10%");
   const inactiveFill = inactiveHost.querySelector(`.${FILL_CLASS}`);
   assert.ok(inactiveFill);
   assert.equal(
-    inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-checkout-glow"),
+    inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-glass-charge"),
     false
   );
 });
@@ -315,7 +316,7 @@ test("syncScoreProgress includes sampled card diagnostics in debug mode", () => 
         designPreset: "glass",
         colorTheme: "checkout-focus",
         barSize: "standard",
-        effect: "charge-release",
+        effect: "pulse-core",
         debug: true,
       },
       gameState: {
@@ -375,7 +376,7 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
         designPreset: "signal",
         colorTheme: "checkout-focus",
         barSize: "standard",
-        effect: "charge-release",
+        effect: "pulse-core",
         debug: true,
       }),
     },
@@ -420,7 +421,7 @@ test("syncScoreProgress keeps inactive styling untouched by active-only settings
         designPreset: "signal",
         colorTheme: "ember-rush",
         barSize: "extrabreit",
-        effect: "danger-flicker",
+        effect: "signal-sweep",
       },
       gameState: {
         getSnapshot: () => ({
@@ -446,7 +447,7 @@ test("syncScoreProgress keeps inactive styling untouched by active-only settings
   const inactiveFill = inactiveHost.querySelector(`.${FILL_CLASS}`);
   assert.ok(inactiveFill);
   assert.equal(
-    inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-danger-flicker"),
+    inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-signal-sweep"),
     false
   );
 });
@@ -475,7 +476,7 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
         designPreset: "signal",
         colorTheme: "ember-rush",
         barSize: "extrabreit",
-        effect: "danger-flicker",
+        effect: "signal-sweep",
       },
       gameState: {
         getSnapshot: () => ({
@@ -496,7 +497,7 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
   let fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
   assert.equal(
-    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-danger-flicker"),
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-signal-sweep"),
     true
   );
 
@@ -509,7 +510,7 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
         designPreset: "signal",
         colorTheme: "ember-rush",
         barSize: "extrabreit",
-        effect: "danger-flicker",
+        effect: "signal-sweep",
       },
       gameState: {
         getSnapshot: () => ({
@@ -535,7 +536,7 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
   fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
   assert.equal(
-    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-danger-flicker"),
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-signal-sweep"),
     false
   );
 });
@@ -567,7 +568,7 @@ test("syncScoreProgress falls back to gameState active player index when active 
         designPreset: "signal",
         colorTheme: "checkout-focus",
         barSize: "extrabreit",
-        effect: "checkout-glow",
+        effect: "glass-charge",
       },
       gameState: {
         getSnapshot: () => ({
@@ -617,7 +618,7 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
           designPreset: "glass",
           colorTheme: "checkout-focus",
           barSize: "standard",
-          effect: "charge-release",
+          effect: "pulse-core",
         },
         gameState: {
           getSnapshot: () => ({
@@ -640,13 +641,74 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
   assert.ok(hostNode);
   const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
-  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "charge-release");
+  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "pulse-core");
   assert.equal(
-    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-charge-release"),
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-pulse-core"),
     true
   );
   assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
   assert.ok(fillNode.__lastAnimation);
+});
+
+test("syncScoreProgress animates the ghost trail on active score changes only", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          designPreset: "glass",
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "ghost-trail",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-ghost-trail",
+            match: {
+              id: "match-ghost-trail",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "201";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  const trailNode = hostNode.querySelector(`.${TRAIL_CLASS}`);
+  assert.ok(fillNode);
+  assert.ok(trailNode);
+  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "ghost-trail");
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-ghost-trail"),
+    true
+  );
+  assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
+  assert.equal(trailNode.style.getPropertyValue("--ad-ext-x01-score-progress-trail-width"), "60.08%");
+  assert.equal(trailNode.style.getPropertyValue("opacity"), "0.76");
+  assert.ok(trailNode.__lastAnimation);
 });
 
 test("score-progress style reserves a dedicated player-card row for the bar", () => {

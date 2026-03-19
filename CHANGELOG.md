@@ -13,6 +13,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.53] - 2026-03-19
+
+### Changed
+
+- Nutzerwirkung: Der X01-Restscore-Balken nutzt jetzt nur noch fünf klar
+  unterscheidbare aktive Effektprofile (`Pulse Core`, `Glass Charge`,
+  `Segment Drain`, `Ghost Trail`, `Signal Sweep`) plus `Aus`; die Effekte
+  wurden sichtbarer abgestimmt, während inaktive Spieler bewusst unverändert
+  bleiben.
+  Technik: Die X01-Effektpalette, Normalisierung, xConfig-Optionen und
+  Kopiertexte wurden auf das reduzierte Set umgestellt, inklusive
+  Legacy-Mapping bestehender Effektwerte sowie neuer Regressionen für
+  Ghost-Trail-Animation und persistente xConfig-Wiederherstellung.
+
 ## [2.0.52] - 2026-03-19
 
 ### Fixed
@@ -478,8 +492,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
-[2.0.52]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...HEAD
+[2.0.53]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...HEAD
+[2.0.52]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...fec14ae
 [2.0.51]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.50]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.49]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...d40e59c

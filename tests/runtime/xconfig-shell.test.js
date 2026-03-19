@@ -1461,6 +1461,8 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   await wait(5);
   clickFeatureToggle(firstDocument, "turn-start-sweep", true);
   await wait(5);
+  clickFeatureToggle(firstDocument, "x01-score-progress", true);
+  await wait(5);
 
   const openSettings = firstDocument.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
@@ -1472,13 +1474,25 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   clickSelectSettingOption(firstDocument, "checkout-score-pulse", "effect", "glow");
   await wait(5);
 
+  const openX01ProgressSettings = firstDocument.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+  );
+  assert.ok(openX01ProgressSettings);
+  openX01ProgressSettings.click();
+  await wait(5);
+
+  clickSelectSettingOption(firstDocument, "x01-score-progress", "effect", "ghost-trail");
+  await wait(5);
+
   await firstWindow.__adXConfig.setThemeBackgroundImage("x01", "data:image/png;base64,cGVyc2lzdGVk");
   await wait(5);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
   assert.equal(storedConfig.featureToggles.turnStartSweep, true);
+  assert.equal(storedConfig.featureToggles.x01ScoreProgress, true);
   assert.equal(storedConfig.features.checkoutScorePulse.effect, "glow");
+  assert.equal(storedConfig.features.x01ScoreProgress.effect, "ghost-trail");
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,cGVyc2lzdGVk");
 
   firstRuntime.stop();
@@ -1494,8 +1508,11 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   const secondSnapshot = secondRuntime.getSnapshot();
   assert.equal(secondSnapshot.features["theme-x01"].enabled, true);
   assert.equal(secondSnapshot.features["turn-start-sweep"].enabled, true);
+  assert.equal(secondSnapshot.features["x01-score-progress"].enabled, true);
   assert.equal(secondSnapshot.features["turn-start-sweep"].mounted, true);
   assert.equal(secondSnapshot.features["theme-x01"].mounted, true);
+  assert.equal(secondSnapshot.features["x01-score-progress"].mounted, true);
+  assert.equal(secondSnapshot.features["x01-score-progress"].config.effect, "ghost-trail");
   assert.equal(
     secondSnapshot.features["theme-x01"].config.backgroundImageDataUrl,
     "data:image/png;base64,cGVyc2lzdGVk"
@@ -1512,6 +1529,11 @@ test("xConfig shell restores persisted toggle, setting and background state afte
 
   secondDocument.getElementById("ad-xconfig-tab-animations").click();
   await wait(5);
+  const restoredX01ProgressToggle = secondDocument.querySelector(
+    "[data-adxconfig-action='set-feature'][data-feature-key='x01-score-progress'][data-feature-enabled='true']"
+  );
+  assert.ok(restoredX01ProgressToggle);
+  assert.equal(restoredX01ProgressToggle.getAttribute("data-active"), "true");
   const openSecondSettings = secondDocument.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
   );
@@ -1527,9 +1549,26 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   assert.equal(restoredActiveEffects.length, 1);
   assert.equal(restoredActiveEffects[0].getAttribute("data-setting-value"), "glow");
 
+  const openRestoredX01Settings = secondDocument.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+  );
+  assert.ok(openRestoredX01Settings);
+  openRestoredX01Settings.click();
+  await wait(5);
+
+  const restoredX01EffectOptions = secondDocument.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
+  );
+  const restoredActiveX01Effects = restoredX01EffectOptions.filter(
+    (node) => node.getAttribute("data-active") === "true"
+  );
+  assert.equal(restoredActiveX01Effects.length, 1);
+  assert.equal(restoredActiveX01Effects[0].getAttribute("data-setting-value"), "ghost-trail");
+
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
   assert.equal(storedConfig.featureToggles.turnStartSweep, true);
+  assert.equal(storedConfig.featureToggles.x01ScoreProgress, true);
 
   secondRuntime.stop();
 });

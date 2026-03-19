@@ -14,6 +14,7 @@ import {
   normalizeColorTheme,
   normalizeDesignPreset,
   normalizeEffect,
+  TRAIL_CLASS,
   TRACK_CLASS,
 } from "./style.js";
 
@@ -99,7 +100,9 @@ const STATIC_COLOR_THEME_PALETTES = Object.freeze({
   }),
 });
 const EFFECT_ANIMATION_SLOT = Symbol("adExtX01ScoreProgressEffectAnimation");
+const TRAIL_ANIMATION_SLOT = Symbol("adExtX01ScoreProgressTrailAnimation");
 const EFFECT_CHANGE_TOKEN_ATTRIBUTE = "data-ad-ext-x01-score-progress-effect-token";
+const TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-score-progress-trail-width";
 
 function isFiniteNumber(value) {
   return Number.isFinite(value);
@@ -787,22 +790,26 @@ function isPlayerCardActive(cardNode, scoreNode, documentRef, activePlayerIndex,
 
 function ensureProgressChildren(hostNode, documentRef) {
   let trackNode = hostNode.querySelector?.(`.${TRACK_CLASS}`) || null;
+  let trailNode = hostNode.querySelector?.(`.${TRAIL_CLASS}`) || null;
   let fillNode = hostNode.querySelector?.(`.${FILL_CLASS}`) || null;
 
-  if (trackNode && fillNode) {
-    return { trackNode, fillNode };
+  if (trackNode && trailNode && fillNode) {
+    return { trackNode, trailNode, fillNode };
   }
 
   hostNode.replaceChildren?.();
 
   trackNode = documentRef.createElement("div");
   trackNode.classList.add(TRACK_CLASS);
+  trailNode = documentRef.createElement("div");
+  trailNode.classList.add(TRAIL_CLASS);
   fillNode = documentRef.createElement("div");
   fillNode.classList.add(FILL_CLASS);
+  trackNode.appendChild(trailNode);
   trackNode.appendChild(fillNode);
   hostNode.appendChild(trackNode);
 
-  return { trackNode, fillNode };
+  return { trackNode, trailNode, fillNode };
 }
 
 export function ensureProgressHost(cardNode, documentRef) {
@@ -836,6 +843,10 @@ function getFillNode(hostNode) {
   return hostNode?.querySelector?.(`.${FILL_CLASS}`) || null;
 }
 
+function getTrailNode(hostNode) {
+  return hostNode?.querySelector?.(`.${TRAIL_CLASS}`) || null;
+}
+
 function clearFillEffectClasses(fillNode) {
   if (!fillNode?.classList) {
     return;
@@ -859,116 +870,112 @@ function cancelEffectAnimation(fillNode) {
   }
 }
 
+function clearTrailState(trailNode) {
+  if (!trailNode) {
+    return;
+  }
+
+  const runningAnimation = trailNode[TRAIL_ANIMATION_SLOT];
+  if (runningAnimation && typeof runningAnimation.cancel === "function") {
+    try {
+      runningAnimation.cancel();
+    } catch (_) {
+      // Ignore stale animation handles.
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(trailNode, TRAIL_ANIMATION_SLOT)) {
+    trailNode[TRAIL_ANIMATION_SLOT] = null;
+  }
+
+  trailNode.style?.setProperty?.(TRAIL_WIDTH_PROPERTY, "0%");
+  trailNode.style?.setProperty?.("opacity", "0");
+}
+
 function createEffectAnimationDefinition(effect) {
   const normalizedEffect = normalizeEffect(effect);
   if (normalizedEffect === "off") {
     return null;
   }
 
-  if (normalizedEffect === "pulse-on-change") {
+  if (normalizedEffect === "pulse-core") {
     return {
       keyframes: [
-        { transform: "scaleY(1)", filter: "brightness(1)" },
-        { transform: "scaleY(1.2)", filter: "brightness(1.22)" },
-        { transform: "scaleY(1)", filter: "brightness(1)" },
+        { transform: "scaleY(1)", filter: "brightness(1.06) saturate(1.02)" },
+        { transform: "scaleY(1.24)", filter: "brightness(1.28) saturate(1.18)" },
+        { transform: "scaleY(1)", filter: "brightness(1.02) saturate(1.02)" },
       ],
-      options: { duration: 320, easing: "ease-out" },
+      options: { duration: 360, easing: "ease-out" },
     };
   }
 
-  if (normalizedEffect === "sheen-sweep") {
+  if (normalizedEffect === "glass-charge") {
     return {
       keyframes: [
-        { filter: "brightness(1) saturate(1)", opacity: 0.92 },
-        { filter: "brightness(1.24) saturate(1.2)", opacity: 1 },
-        { filter: "brightness(1) saturate(1)", opacity: 0.96 },
+        { filter: "brightness(1.04) saturate(1.04)", opacity: 0.94 },
+        { filter: "brightness(1.26) saturate(1.16)", opacity: 1 },
+        { filter: "brightness(1.02) saturate(1.02)", opacity: 0.96 },
       ],
-      options: { duration: 360, easing: "ease-in-out" },
+      options: { duration: 420, easing: "ease-in-out" },
     };
   }
 
-  if (normalizedEffect === "charge-release") {
+  if (normalizedEffect === "segment-drain") {
     return {
       keyframes: [
-        { transform: "scaleX(1)", filter: "brightness(1)" },
-        { transform: "scaleX(1.035)", filter: "brightness(1.36)" },
-        { transform: "scaleX(1)", filter: "brightness(1)" },
+        { filter: "brightness(1.04) saturate(1.04)", transform: "scaleY(1)" },
+        { filter: "brightness(1.18) saturate(1.2)", transform: "scaleY(1.08)" },
+        { filter: "brightness(1.02) saturate(1.02)", transform: "scaleY(1)" },
       ],
-      options: { duration: 430, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+      options: { duration: 340, easing: "steps(3, end)" },
     };
   }
 
-  if (normalizedEffect === "burn-down") {
+  if (normalizedEffect === "signal-sweep") {
     return {
       keyframes: [
-        { filter: "brightness(1.24) saturate(1.35) hue-rotate(-8deg)" },
-        { filter: "brightness(1.08) saturate(1.12) hue-rotate(0deg)" },
-        { filter: "brightness(1) saturate(1)" },
-      ],
-      options: { duration: 460, easing: "ease-out" },
-    };
-  }
-
-  if (normalizedEffect === "spark-trail") {
-    return {
-      keyframes: [
-        { transform: "translateX(0)", filter: "brightness(1)" },
-        { transform: "translateX(3px)", filter: "brightness(1.25)" },
-        { transform: "translateX(0)", filter: "brightness(1)" },
+        { filter: "brightness(1.04) saturate(1.06)" },
+        { filter: "brightness(1.3) saturate(1.22)" },
+        { filter: "brightness(1.02) saturate(1.04)" },
       ],
       options: { duration: 300, easing: "ease-out" },
-    };
-  }
-
-  if (normalizedEffect === "heat-edge") {
-    return {
-      keyframes: [
-        { filter: "brightness(1.18) saturate(1.22)" },
-        { filter: "brightness(1.08) saturate(1.1)" },
-        { filter: "brightness(1) saturate(1.02)" },
-      ],
-      options: { duration: 420, easing: "ease-out" },
-    };
-  }
-
-  if (normalizedEffect === "segment-pop") {
-    return {
-      keyframes: [
-        { transform: "scaleY(1)" },
-        { transform: "scaleY(1.32)" },
-        { transform: "scaleY(1)" },
-      ],
-      options: { duration: 320, easing: "ease-out" },
-    };
-  }
-
-  if (normalizedEffect === "danger-flicker") {
-    return {
-      keyframes: [
-        { opacity: 0.94, filter: "brightness(1.1)" },
-        { opacity: 1, filter: "brightness(1.34)" },
-        { opacity: 0.88, filter: "brightness(0.92)" },
-        { opacity: 1, filter: "brightness(1.18)" },
-      ],
-      options: { duration: 420, easing: "steps(2, end)" },
-    };
-  }
-
-  if (normalizedEffect === "checkout-glow") {
-    return {
-      keyframes: [
-        { filter: "brightness(1.08) drop-shadow(0 0 4px rgba(255,255,255,.2))" },
-        { filter: "brightness(1.28) drop-shadow(0 0 14px rgba(255,255,255,.45))" },
-        { filter: "brightness(1.08) drop-shadow(0 0 5px rgba(255,255,255,.24))" },
-      ],
-      options: { duration: 620, easing: "ease-in-out" },
     };
   }
 
   return null;
 }
 
-function triggerScoreChangeEffect(fillNode, effect, shouldTrigger) {
+function triggerGhostTrail(trailNode, shouldTrigger, previousRatio, currentRatio) {
+  clearTrailState(trailNode);
+  if (!trailNode || !shouldTrigger || typeof trailNode.animate !== "function") {
+    return;
+  }
+
+  const fromWidth = formatProgressWidth(isFiniteNumber(previousRatio) ? previousRatio : currentRatio);
+  const toWidth = formatProgressWidth(currentRatio);
+  trailNode.style?.setProperty?.(TRAIL_WIDTH_PROPERTY, fromWidth);
+  trailNode.style?.setProperty?.("opacity", "0.76");
+
+  const animation = trailNode.animate(
+    [
+      { width: fromWidth, opacity: 0.76, filter: "blur(8px) brightness(1.28)" },
+      { width: toWidth, opacity: 0, filter: "blur(2px) brightness(1.02)" },
+    ],
+    {
+      duration: 620,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      fill: "none",
+      iterations: 1,
+    }
+  );
+
+  trailNode[TRAIL_ANIMATION_SLOT] = animation;
+  const finish = () => clearTrailState(trailNode);
+  animation.onfinish = finish;
+  animation.oncancel = finish;
+}
+
+function triggerScoreChangeEffect(fillNode, trailNode, effect, shouldTrigger, previousRatio, currentRatio) {
   if (!fillNode) {
     return;
   }
@@ -977,9 +984,21 @@ function triggerScoreChangeEffect(fillNode, effect, shouldTrigger) {
   fillNode.setAttribute(EFFECT_ATTRIBUTE, normalizedEffect);
   clearFillEffectClasses(fillNode);
   fillNode.classList.add(getEffectFillClass(normalizedEffect));
+  clearTrailState(trailNode);
 
   cancelEffectAnimation(fillNode);
-  if (!shouldTrigger || normalizedEffect === "off" || typeof fillNode.animate !== "function") {
+  if (!shouldTrigger || normalizedEffect === "off") {
+    return;
+  }
+
+  if (normalizedEffect === "ghost-trail") {
+    triggerGhostTrail(trailNode, shouldTrigger, previousRatio, currentRatio);
+    const token = Number(fillNode.getAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE) || 0) + 1;
+    fillNode.setAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE, String(token));
+    return;
+  }
+
+  if (typeof fillNode.animate !== "function") {
     return;
   }
 
@@ -1010,6 +1029,7 @@ export function updateProgressHost(hostNode, options = {}) {
   const colorTheme = normalizeColorTheme(options.colorTheme);
   const effect = normalizeEffect(options.effect);
   const fillNode = getFillNode(hostNode);
+  const trailNode = getTrailNode(hostNode);
 
   hostNode.classList.remove(
     `${ACTIVE_CLASS}`,
@@ -1038,13 +1058,21 @@ export function updateProgressHost(hostNode, options = {}) {
         colorTheme,
       })
     );
-    triggerScoreChangeEffect(fillNode, effect, options.scoreChanged === true);
+    triggerScoreChangeEffect(
+      fillNode,
+      trailNode,
+      effect,
+      options.scoreChanged === true,
+      options.previousRatio,
+      ratio
+    );
     return;
   }
 
   clearActiveVisualVars(hostNode);
   clearFillEffectClasses(fillNode);
   cancelEffectAnimation(fillNode);
+  clearTrailState(trailNode);
   fillNode?.removeAttribute?.(EFFECT_CHANGE_TOKEN_ATTRIBUTE);
 }
 
@@ -1226,6 +1254,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     );
     updateProgressHost(hostNode, {
       ratio,
+      previousRatio: isFiniteNumber(previousScore) ? previousScore / startScore : null,
       score: scoreValue,
       scoreChanged,
       active: isActive,

@@ -219,7 +219,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 
 - Gilt für: `X01`
 - Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
-- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
+- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
 - `Design`: Wählt die visuelle Stilrichtung des Score-Balkens.
   - `Signal`: Diese Variante priorisiert Sofortlesbarkeit mit klarer Signalwirkung.
   - `Glass`: Diese Variante wirkt ruhiger und hochwertiger durch gläserne Übergänge.
@@ -242,17 +242,13 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Standard`: Standardhöhe als neutraler Mittelweg.
   - `Breit`: Breitere Balkenhöhe mit stärkerer Präsenz.
   - `Extrabreit`: Maximal breite Balkenhöhe für höchste Sichtbarkeit.
-- `Effekt`: Wählt den Reaktionseffekt des Balkens bei Scoreänderungen.
-  - `Aus`: Keine Zusatzanimation bei Scoreänderungen.
-  - `Pulse on Change`: Kurzer Pulsimpuls bei Änderungen.
-  - `Sheen Sweep`: Kurzer Glanz-Sweep auf Scoreänderung.
-  - `Charge Release`: Ausgewogener Charge-Burst als Standard.
-  - `Burn Down`: Warmer Burn-Impuls bei Änderungen.
-  - `Spark Trail`: Kurzer Spark-Trail-Effekt.
-  - `Heat Edge`: Kantenbetonter Heat-Impuls.
-  - `Segment Pop`: Kurzer Segment-Pop bei Änderungen.
-  - `Danger Flicker`: Warnender Flicker-Impuls.
-  - `Checkout Glow`: Deutlicher Glow-Burst bei Scoreänderung.
+- `Effekt`: Wählt den Effekt des aktiven Balkens; inaktive Spieler bleiben unverändert.
+  - `Pulse Core`: Deutlicher Kern-Puls auf dem aktiven Balken.
+  - `Glass Charge`: Gläserner Ladeeffekt mit breiter Lichtkante.
+  - `Segment Drain`: Segmentierte Drain-Optik mit klaren Abschnitten.
+  - `Ghost Trail`: Nachziehender Ghost-Trail beim Scorewechsel.
+  - `Signal Sweep`: Schneller Signal-Sweep mit hoher Aufmerksamkeit.
+  - `Aus`: Keine Zusatzanimation; nur der statische Balken bleibt sichtbar.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ### Checkout Board Targets

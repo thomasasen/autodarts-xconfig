@@ -89,7 +89,7 @@ function buildDebugSignature(debugInfo = {}) {
     visuals.designPreset || "signal",
     visuals.colorTheme || "checkout-focus",
     visuals.barSize || "standard",
-    visuals.effect || "charge-release",
+    visuals.effect || "pulse-core",
     debugInfo.sampledCards
       .map(
         (card) =>
@@ -127,7 +127,7 @@ function buildDebugMessage(debugInfo = {}) {
   }" variantDom="${variant.domVariant || "-"}" variantStrip="${variantStrip || "-"}"`;
   return `${baseMessage} visuals(preset="${visuals.designPreset || "signal"}", colors="${
     visuals.colorTheme || "checkout-focus"
-  }", size="${visuals.barSize || "standard"}", effect="${visuals.effect || "charge-release"}")`;
+  }", size="${visuals.barSize || "standard"}", effect="${visuals.effect || "pulse-core"}")`;
 }
 
 function shouldWarnDebugState(debugInfo = {}) {
@@ -163,7 +163,7 @@ export function mountX01ScoreProgress(context = {}) {
           designPreset: "signal",
           colorTheme: "checkout-focus",
           barSize: "standard",
-          effect: "charge-release",
+          effect: "pulse-core",
           debug: false,
         };
 

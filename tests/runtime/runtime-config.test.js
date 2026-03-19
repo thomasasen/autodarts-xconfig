@@ -56,7 +56,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.x01ScoreProgress.designPreset, "signal");
   assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
   assert.equal(config.features.x01ScoreProgress.barSize, "standard");
-  assert.equal(config.features.x01ScoreProgress.effect, "charge-release");
+  assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -142,7 +142,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         colorTheme: "ICE-CIRCUIT",
         thresholdColorMode: "TRAFFIC-LIGHT",
         barSize: "EXTRABREIT",
-        effect: "CHECKOUT-GLOW",
+        effect: "GLASS-CHARGE",
       },
       winnerFireworks: {
         style: "FIREWORKS",
@@ -245,7 +245,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").designPreset, "glass");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "checkout-glow");
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "glass-charge");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").intensity, "stark");
@@ -394,4 +394,16 @@ test("x01-score-progress falls back to thresholdColorMode when colorTheme is mis
   });
 
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "danger-endgame");
+});
+
+test("x01-score-progress maps legacy effect keys to the reduced effect set", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      x01ScoreProgress: {
+        effect: "spark-trail",
+      },
+    },
+  });
+
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "ghost-trail");
 });
