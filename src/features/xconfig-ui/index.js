@@ -77,6 +77,7 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     featureKeys: Object.freeze([
       "style-checkout-suggestions",
       "checkout-score-pulse",
+      "x01-score-progress",
       "checkout-board-targets",
       "tv-board-zoom",
     ]),

@@ -84,6 +84,7 @@ const SINGLE_BULL_SOUND_VOLUME = new Set([0.5, 0.75, 0.9, 1]);
 const SINGLE_BULL_SOUND_COOLDOWN = new Set([400, 700, 1000]);
 const SINGLE_BULL_SOUND_POLL_INTERVAL = new Set([0, 1200]);
 const TURN_POINTS_COUNT_DURATIONS = new Set([260, 416, 650]);
+const X01_SCORE_PROGRESS_PRESETS = new Set(["signal", "glass", "minimal"]);
 const WINNER_FIREWORKS_STYLES = new Set([
   "realistic",
   "fireworks",
@@ -516,6 +517,18 @@ function normalizeTurnPointsCountConfig(rawConfig = {}) {
   };
 }
 
+function normalizeX01ScoreProgressConfig(rawConfig = {}) {
+  return {
+    enabled: normalizeBoolean(rawConfig.enabled, false),
+    designPreset: normalizeStringChoice(
+      rawConfig.designPreset,
+      "signal",
+      X01_SCORE_PROGRESS_PRESETS
+    ),
+    debug: normalizeBoolean(rawConfig.debug, false),
+  };
+}
+
 function normalizeWinnerFireworksConfig(rawConfig = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
@@ -650,6 +663,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
   removeDartsNotification: normalizeRemoveDartsNotificationConfig,
   singleBullSound: normalizeSingleBullSoundConfig,
   turnPointsCount: normalizeTurnPointsCountConfig,
+  x01ScoreProgress: normalizeX01ScoreProgressConfig,
   winnerFireworks: normalizeWinnerFireworksConfig,
   "themes.x01": normalizeThemeX01Config,
   "themes.shanghai": normalizeThemeShanghaiConfig,

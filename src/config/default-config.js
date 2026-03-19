@@ -15,6 +15,7 @@ export const defaultConfig = {
     singleBullSound: false,
     turnPointsCount: false,
     winnerFireworks: false,
+    x01ScoreProgress: false,
     "themes.x01": false,
     "themes.shanghai": false,
     "themes.bermuda": false,
@@ -141,6 +142,11 @@ export const defaultConfig = {
       intensity: "standard",
       includeBullOut: true,
       pointerDismiss: true,
+      debug: false,
+    },
+    x01ScoreProgress: {
+      enabled: false,
+      designPreset: "signal",
       debug: false,
     },
     themes: {

@@ -13,6 +13,7 @@ import { mountRemoveDartsNotification } from "./remove-darts-notification/index.
 import { mountSingleBullSound } from "./single-bull-sound/index.js";
 import { mountTurnPointsCount } from "./turn-points-count/index.js";
 import { mountWinnerFireworks, runWinnerFireworksAction } from "./winner-fireworks/index.js";
+import { mountX01ScoreProgress } from "./x01-score-progress/index.js";
 import { mountThemeX01 } from "./themes/x01/index.js";
 import { mountThemeShanghai } from "./themes/shanghai/index.js";
 import { mountThemeBermuda } from "./themes/bermuda/index.js";
@@ -261,6 +262,15 @@ export const defaultFeatureDefinitions = Object.freeze([
     initialize: mountWinnerFireworks,
     mount: mountWinnerFireworks,
     runAction: runWinnerFireworksAction,
+  }),
+  Object.freeze({
+    featureKey: "x01-score-progress",
+    configKey: "x01ScoreProgress",
+    title: "X01 Score Progress",
+    variants: ["x01"],
+    migratedFrom: "",
+    initialize: mountX01ScoreProgress,
+    mount: mountX01ScoreProgress,
   }),
   Object.freeze({
     featureKey: "theme-x01",

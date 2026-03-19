@@ -260,6 +260,20 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   descriptorEntry({
+    featureKey: "x01-score-progress",
+    tab: "animations",
+    readmeAnchor: "animation-autodarts-x01-score-progress",
+    description: "Zeigt den verbleibenden X01-Score als abnehmenden Balken pro Spielerkarte.",
+    fields: [
+      selectField("designPreset", "Design", [
+        { value: "signal", label: "Signal" },
+        { value: "glass", label: "Glass" },
+        { value: "minimal", label: "Minimal" },
+      ]),
+      checkboxField("debug", "Debug"),
+    ],
+  }),
+  descriptorEntry({
     featureKey: "checkout-board-targets",
     tab: "animations",
     readmeAnchor: "animation-autodarts-animate-checkout-board-targets",
