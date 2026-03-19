@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.47] - 2026-03-19
+
+### Added
+
+- Nutzerwirkung: In X01 zeigt jede Spielerkarte jetzt optional einen
+  Restscore-Balken direkt unter der Punktzahl, sodass der Abstand zum Startwert
+  und zwischen mehreren Spielern schneller erfassbar ist.
+  Technik: Mit `x01-score-progress` wurde ein neues Runtime-Feature samt
+  xConfig-Descriptor, Konfig-Normalisierung, README-/FEATURES-Dokumentation und
+  Regressionstests für Renderlogik sowie Lifecycle-Verhalten ergänzt.
+
 ## [2.0.46] - 2026-03-19
 
 ### Changed
@@ -405,6 +416,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
+[2.0.47]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.46]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.45]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.44]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD

@@ -112,6 +112,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Animationen und Komfort
 
 - [Checkout Score Pulse](#animation-autodarts-animate-checkout-score-pulse)
+- [X01 Score Progress](#animation-autodarts-x01-score-progress)
 - [Checkout Board Targets](#animation-autodarts-animate-checkout-board-targets)
 - [TV Board Zoom](#animation-autodarts-animate-tv-board-zoom)
 - [Style Checkout Suggestions](#animation-autodarts-style-checkout-suggestions)
@@ -367,6 +368,23 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Checkout Score Pulse](docs/screenshots/animation-checkout-score-pulse.gif)
+
+<a id="animation-autodarts-x01-score-progress"></a>
+
+### X01 Score Progress
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
+- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
+- Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
+
+**Einstellungen einfach erklärt**
+
+- `Design`: Bestimmt, wie der Score-Balken grafisch ausgeführt wird. Die Berechnung bleibt gleich; nur Höhe, Verlauf, Glow und Materialwirkung des Balkens ändern sich.
+  - `Signal`: Der Balken wirkt kräftig, kontrastreich und deutlich präsent. Gerade auf dunkleren Layouts fällt diese Variante am schnellsten ins Auge.
+  - `Glass`: Der Balken erhält weichere Verläufe, eine leicht glasige Materialwirkung und wirkt eleganter als das reine Signal-Preset.
+  - `Minimal`: Der Balken bleibt sichtbar, nimmt aber deutlich weniger Raum und Leuchtwirkung ein. Das ist die unauffälligste Darstellung.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="animation-autodarts-animate-checkout-board-targets"></a>
 

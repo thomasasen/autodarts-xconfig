@@ -215,6 +215,17 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 
 ![Checkout Score Pulse](screenshots/animation-checkout-score-pulse.gif)
 
+### X01 Score Progress
+
+- Gilt für: `X01`
+- Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
+- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
+- `Design`: Wählt die visuelle Stilrichtung des Score-Balkens.
+  - `Signal`: Diese Variante setzt auf einen klaren, signalstarken Balken mit deutlicher Präsenz und hoher Sofortlesbarkeit.
+  - `Glass`: Diese Variante gibt dem Balken eine glattere, gläserne Anmutung mit weicheren Verläufen und etwas mehr visueller Tiefe.
+  - `Minimal`: Diese Variante hält den Balken besonders flach und ruhig, damit die Zusatzinformation präsent bleibt, ohne die Spielerkarte stark zu dominieren.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
 ### Checkout Board Targets
 
 - Gilt für: `X01`

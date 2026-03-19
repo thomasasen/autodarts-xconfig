@@ -20,6 +20,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.removeDartsNotification, "object");
   assert.equal(typeof config.features.singleBullSound, "object");
   assert.equal(typeof config.features.turnPointsCount, "object");
+  assert.equal(typeof config.features.x01ScoreProgress, "object");
   assert.equal(typeof config.features.winnerFireworks, "object");
   assert.equal(typeof config.features.themes, "object");
   assert.equal(typeof config.features.themes.x01, "object");
@@ -38,6 +39,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles.removeDartsNotification, false);
   assert.equal(config.featureToggles.singleBullSound, false);
   assert.equal(config.featureToggles.turnPointsCount, false);
+  assert.equal(config.featureToggles.x01ScoreProgress, false);
   assert.equal(config.featureToggles.winnerFireworks, false);
   assert.equal(config.featureToggles["themes.x01"], false);
   assert.equal(config.featureToggles["themes.shanghai"], false);
@@ -51,6 +53,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
   assert.equal(config.features.dartMarkerDarts.enableShadow, true);
   assert.equal(config.features.dartMarkerDarts.enableWobble, true);
+  assert.equal(config.features.x01ScoreProgress.designPreset, "signal");
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -130,6 +133,9 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       },
       turnPointsCount: {
         durationMs: "650",
+      },
+      x01ScoreProgress: {
+        designPreset: "GLASS",
       },
       winnerFireworks: {
         style: "FIREWORKS",
@@ -229,6 +235,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").cooldownMs, 1000);
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 650);
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").designPreset, "glass");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").intensity, "stark");

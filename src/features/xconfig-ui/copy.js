@@ -253,6 +253,24 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
+  "x01-score-progress": featureCopy({
+    cardDescription:
+      "Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl.",
+    visibleDescription:
+      "Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.",
+    visualDescription:
+      "Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.",
+    usefulWhen:
+      "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
+    fields: {
+      designPreset: fieldCopy(
+        "Wählt zwischen signalstarker, gläserner oder besonders reduzierter Balkenoptik.",
+        "Bestimmt, wie der Score-Balken grafisch ausgeführt wird. Die Berechnung bleibt gleich; nur Höhe, Verlauf, Glow und Materialwirkung des Balkens ändern sich.",
+        "Wählt die visuelle Stilrichtung des Score-Balkens."
+      ),
+      debug: DEBUG_FIELD,
+    },
+  }),
   "checkout-board-targets": featureCopy({
     cardDescription:
       "Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen.",
@@ -1808,6 +1826,24 @@ const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
   ),
 });
 
+const X01_SCORE_PROGRESS_DESIGN_OPTION_COPY = deepFreeze({
+  signal: optionCopy(
+    "Nutzen einen klaren, leuchtenden Signal-Balken.",
+    "Der Balken wirkt kräftig, kontrastreich und deutlich präsent. Gerade auf dunkleren Layouts fällt diese Variante am schnellsten ins Auge.",
+    "Diese Variante setzt auf einen klaren, signalstarken Balken mit deutlicher Präsenz und hoher Sofortlesbarkeit."
+  ),
+  glass: optionCopy(
+    "Nutzen einen weicheren, gläsernen Balken mit etwas mehr Tiefe.",
+    "Der Balken erhält weichere Verläufe, eine leicht glasige Materialwirkung und wirkt eleganter als das reine Signal-Preset.",
+    "Diese Variante gibt dem Balken eine glattere, gläserne Anmutung mit weicheren Verläufen und etwas mehr visueller Tiefe."
+  ),
+  minimal: optionCopy(
+    "Reduziert den Balken auf eine besonders flache, ruhige Linie.",
+    "Der Balken bleibt sichtbar, nimmt aber deutlich weniger Raum und Leuchtwirkung ein. Das ist die unauffälligste Darstellung.",
+    "Diese Variante hält den Balken besonders flach und ruhig, damit die Zusatzinformation präsent bleibt, ohne die Spielerkarte stark zu dominieren."
+  ),
+});
+
 const WINNER_STYLE_OPTION_COPY = deepFreeze({
   realistic: optionCopy(
     "Startet einen ausgewogenen Mix aus zentralen und seitlichen Feuerwerksstößen.",
@@ -1924,6 +1960,9 @@ const xconfigFieldOptionCopy = deepFreeze({
     colorTheme: CHECKOUT_SCORE_COLOR_OPTION_COPY,
     intensity: CHECKOUT_SCORE_INTENSITY_OPTION_COPY,
     triggerSource: CHECKOUT_SCORE_TRIGGER_OPTION_COPY,
+  },
+  "x01-score-progress": {
+    designPreset: X01_SCORE_PROGRESS_DESIGN_OPTION_COPY,
   },
   "checkout-board-targets": {
     effect: BOARD_TARGET_EFFECT_OPTION_COPY,

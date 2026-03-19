@@ -109,6 +109,12 @@ test("runtime public config API persists updates and survives feature toggles", 
   assert.equal(storedConfig.featureToggles.turnPointsCount, true);
   assert.equal(runtime.getSnapshot().features["turn-points-count"].mounted, true);
 
+  await runtime.setFeatureEnabled("x01-score-progress", true);
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.featureToggles.x01ScoreProgress, true);
+  assert.equal(runtime.getSnapshot().features["x01-score-progress"].mounted, true);
+
   await runtime.setFeatureEnabled("winner-fireworks", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
@@ -175,6 +181,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "remove-darts-notification"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "single-bull-sound"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "turn-points-count"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "x01-score-progress"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "winner-fireworks"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-shanghai"), true);

@@ -798,6 +798,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   assert.deepEqual(readGroupCards("x01"), [
     "style-checkout-suggestions",
     "checkout-score-pulse",
+    "x01-score-progress",
     "checkout-board-targets",
     "tv-board-zoom",
   ]);

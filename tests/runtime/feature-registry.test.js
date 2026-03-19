@@ -57,6 +57,7 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.equal(listed.some((feature) => feature.featureKey === "remove-darts-notification"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "single-bull-sound"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "turn-points-count"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "x01-score-progress"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "winner-fireworks"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-x01"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-shanghai"), true);

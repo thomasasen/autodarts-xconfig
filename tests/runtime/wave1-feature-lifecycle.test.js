@@ -19,6 +19,7 @@ const FEATURE_CONFIG_KEYS = Object.freeze([
   "removeDartsNotification",
   "singleBullSound",
   "turnPointsCount",
+  "x01ScoreProgress",
   "winnerFireworks",
 ]);
 
@@ -419,6 +420,32 @@ test("turn-points-count mounts idempotently and keeps managed observer state", a
   assert.equal(runtime.context.registries.listeners.size(), 1);
 
   runtime.stop();
+  assert.equal(runtime.context.registries.observers.size(), 0);
+  assert.equal(runtime.context.registries.listeners.size(), 0);
+});
+
+test("x01-score-progress mounts idempotently and removes style on cleanup", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const windowRef = createFakeWindow({ documentRef, href: "https://play.autodarts.io/matches/test" });
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createSingleFeatureConfig("x01ScoreProgress", {
+      designPreset: "glass",
+    }),
+  });
+
+  runtime.start();
+  runtime.start();
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-score-progress-style")), true);
+  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.listeners.size(), 0);
+
+  runtime.stop();
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-score-progress-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
