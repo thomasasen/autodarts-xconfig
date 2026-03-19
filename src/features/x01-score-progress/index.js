@@ -9,6 +9,99 @@ import { buildStyleText, STYLE_ID } from "./style.js";
 const FEATURE_KEY = "x01-score-progress";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
+function createDebugState(featureDebug) {
+  return {
+    featureDebug,
+    lastLogSignature: "",
+    lastWarningSignature: "",
+  };
+}
+
+function emitDebugLog(debugState, signature, message, payload = null) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastLogSignature === signature) {
+    return;
+  }
+
+  debugState.lastLogSignature = signature;
+  if (payload) {
+    debugState.featureDebug.log(message, payload);
+    return;
+  }
+
+  debugState.featureDebug.log(message);
+}
+
+function emitDebugWarning(debugState, signature, message, payload = null) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastWarningSignature === signature) {
+    return;
+  }
+
+  debugState.lastWarningSignature = signature;
+  if (payload) {
+    debugState.featureDebug.warn(message, payload);
+    return;
+  }
+
+  debugState.featureDebug.warn(message);
+}
+
+function buildDebugSignature(debugInfo = {}) {
+  return [
+    debugInfo.reason || "unknown",
+    debugInfo.shouldRender ? 1 : 0,
+    debugInfo.startScore || 0,
+    debugInfo.startScoreSource || "-",
+    debugInfo.cardCount || 0,
+    debugInfo.renderedCards || 0,
+    debugInfo.removedCardsMissingScore || 0,
+    debugInfo.staleHostsRemoved || 0,
+    debugInfo.hostCountAfterCleanup || 0,
+    debugInfo.hiddenHostCount || 0,
+    debugInfo.zeroHeightHostCount || 0,
+    String(debugInfo.variant?.snapshotVariant || "").trim(),
+    String(debugInfo.variant?.domVariant || "").trim(),
+    debugInfo.sampledCards
+      .map((card) => `${card.index}:${card.parsedScore ?? "?"}:${card.hostWidth || "-"}`)
+      .join(","),
+  ].join("::");
+}
+
+function buildDebugMessage(debugInfo = {}) {
+  const variant = debugInfo.variant || {};
+  return `state reason="${debugInfo.reason || "unknown"}" route="${debugInfo.routePath || "-"}${
+    debugInfo.routeHash || ""
+  }" shouldRender=${debugInfo.shouldRender ? "yes" : "no"} start=${
+    debugInfo.startScore ?? "null"
+  } startSource="${debugInfo.startScoreSource || "-"}" cards=${Number(debugInfo.cardCount) || 0} rendered=${
+    Number(debugInfo.renderedCards) || 0
+  } removedMissingScore=${Number(debugInfo.removedCardsMissingScore) || 0} staleRemoved=${
+    Number(debugInfo.staleHostsRemoved) || 0
+  } hostsAfter=${Number(debugInfo.hostCountAfterCleanup) || 0} hiddenHosts=${
+    Number(debugInfo.hiddenHostCount) || 0
+  } zeroHeightHosts=${Number(debugInfo.zeroHeightHostCount) || 0} variantSnapshot="${
+    variant.snapshotVariant || "-"
+  }" variantDom="${variant.domVariant || "-"}"`;
+}
+
+function shouldWarnDebugState(debugInfo = {}) {
+  const reason = String(debugInfo.reason || "");
+  if (reason === "missing-start-score" || reason === "missing-player-cards") {
+    return true;
+  }
+
+  if (reason === "rendered" && (Number(debugInfo.zeroHeightHostCount) > 0 || Number(debugInfo.hiddenHostCount) > 0)) {
+    return true;
+  }
+
+  return false;
+}
+
 export function mountX01ScoreProgress(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -16,6 +109,7 @@ export function mountX01ScoreProgress(context = {}) {
   const observerRegistry = context.registries?.observers;
   const gameState = context.gameState;
   const config = context.config;
+  const featureDebug = context.featureDebug || null;
 
   if (!documentRef || !domGuards) {
     return () => {};
@@ -32,14 +126,33 @@ export function mountX01ScoreProgress(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   const featureState = createScoreProgressState();
+  const debugState = createDebugState(featureDebug);
   const update = () => {
-    syncScoreProgress(
+    const result = syncScoreProgress(
       {
         ...context,
         featureConfig,
       },
       featureState
     );
+
+    if (!featureDebug?.enabled) {
+      return;
+    }
+
+    const debugInfo = result?.debug;
+    if (!debugInfo) {
+      return;
+    }
+
+    const signature = buildDebugSignature(debugInfo);
+    const message = buildDebugMessage(debugInfo);
+    if (shouldWarnDebugState(debugInfo)) {
+      emitDebugWarning(debugState, signature, message, debugInfo);
+      return;
+    }
+
+    emitDebugLog(debugState, signature, message, debugInfo);
   };
 
   const scheduler = createRafScheduler(update, { windowRef });

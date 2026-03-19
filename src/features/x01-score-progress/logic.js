@@ -16,6 +16,7 @@ export const PLAYER_STACK_SELECTOR = ".chakra-stack";
 export const PLAYER_SCORE_SELECTOR = "p.ad-ext-player-score";
 export const START_SCORE_PATTERN = /\b(121|170|\d+01)\b/i;
 export const WIDTH_PROPERTY = "--ad-ext-x01-score-progress-width";
+export const DEBUG_MAX_CARD_SAMPLES = 4;
 
 function isFiniteNumber(value) {
   return Number.isFinite(value);
@@ -72,6 +73,68 @@ function queryAll(documentRef, selector) {
   }
 
   return Array.from(documentRef.querySelectorAll(selector));
+}
+
+function readClassName(node) {
+  if (!node) {
+    return "";
+  }
+
+  if (typeof node.className === "string") {
+    return node.className.trim();
+  }
+
+  if (node.classList && typeof node.classList.toString === "function") {
+    return String(node.classList.toString()).trim();
+  }
+
+  return "";
+}
+
+function summarizeNode(node) {
+  if (!node) {
+    return "-";
+  }
+
+  const tag = String(node.tagName || node.nodeName || "node").toLowerCase();
+  const className = readClassName(node);
+  return className ? `${tag}.${className.replace(/\s+/g, ".")}` : tag;
+}
+
+function readRect(node) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return null;
+  }
+
+  const rect = node.getBoundingClientRect();
+  if (!rect || !Number.isFinite(Number(rect.width)) || !Number.isFinite(Number(rect.height))) {
+    return null;
+  }
+
+  return {
+    width: Number(rect.width),
+    height: Number(rect.height),
+  };
+}
+
+function readComputedDisplay(windowRef, node) {
+  if (!node || !windowRef || typeof windowRef.getComputedStyle !== "function") {
+    return "";
+  }
+
+  try {
+    return String(windowRef.getComputedStyle(node)?.display || "");
+  } catch (_) {
+    return "";
+  }
+}
+
+function toCompactText(value, maxLength = 90) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return `${normalized.slice(0, maxLength)}…`;
 }
 
 export function parseDisplayedScore(text) {
@@ -180,27 +243,53 @@ export function createScoreProgressState() {
   return {
     matchCacheKey: "",
     cachedStartScore: null,
+    cachedStartScoreSource: "",
   };
 }
 
-export function resolveStartScore(context = {}, state = createScoreProgressState()) {
+export function resolveStartScoreWithDebug(context = {}, state = createScoreProgressState()) {
   const cacheKey = buildMatchCacheKey(context);
+  const { snapshotVariant, domVariant } = getVariantTexts(context);
+  const directSources = [snapshotVariant, domVariant];
+
+  let cacheReset = false;
   if (state.matchCacheKey !== cacheKey) {
     state.matchCacheKey = cacheKey;
     state.cachedStartScore = null;
+    state.cachedStartScoreSource = "";
+    cacheReset = true;
   }
 
   if (isFiniteNumber(state.cachedStartScore)) {
-    return state.cachedStartScore;
+    return {
+      startScore: state.cachedStartScore,
+      source: state.cachedStartScoreSource || "cache",
+      cacheHit: true,
+      cacheReset,
+      cacheKey,
+      snapshotVariant,
+      domVariant,
+      allowDomFallback:
+        directSources.some((source) => isSupportedX01VariantText(source)) ||
+        isMatchRoute(context.windowRef),
+    };
   }
 
-  const { snapshotVariant, domVariant } = getVariantTexts(context);
-  const directSources = [snapshotVariant, domVariant];
   for (const source of directSources) {
     const resolved = resolveStartScoreFromVariantText(source);
     if (isFiniteNumber(resolved)) {
       state.cachedStartScore = resolved;
-      return resolved;
+      state.cachedStartScoreSource = source === snapshotVariant ? "snapshot-variant" : "dom-variant";
+      return {
+        startScore: resolved,
+        source: state.cachedStartScoreSource,
+        cacheHit: false,
+        cacheReset,
+        cacheKey,
+        snapshotVariant,
+        domVariant,
+        allowDomFallback: true,
+      };
     }
   }
 
@@ -208,16 +297,48 @@ export function resolveStartScore(context = {}, state = createScoreProgressState
     directSources.some((source) => isSupportedX01VariantText(source)) ||
     isMatchRoute(context.windowRef);
   if (!allowDomFallback) {
-    return null;
+    return {
+      startScore: null,
+      source: "dom-fallback-blocked",
+      cacheHit: false,
+      cacheReset,
+      cacheKey,
+      snapshotVariant,
+      domVariant,
+      allowDomFallback,
+    };
   }
 
   const domResolved = resolveStartScoreFromDom(context.documentRef);
   if (isFiniteNumber(domResolved)) {
     state.cachedStartScore = domResolved;
-    return domResolved;
+    state.cachedStartScoreSource = "dom-controls";
+    return {
+      startScore: domResolved,
+      source: state.cachedStartScoreSource,
+      cacheHit: false,
+      cacheReset,
+      cacheKey,
+      snapshotVariant,
+      domVariant,
+      allowDomFallback,
+    };
   }
 
-  return null;
+  return {
+    startScore: null,
+    source: "unresolved",
+    cacheHit: false,
+    cacheReset,
+    cacheKey,
+    snapshotVariant,
+    domVariant,
+    allowDomFallback,
+  };
+}
+
+export function resolveStartScore(context = {}, state = createScoreProgressState()) {
+  return resolveStartScoreWithDebug(context, state).startScore;
 }
 
 export function getPlayerCards(documentRef) {
@@ -338,60 +459,183 @@ function shouldRenderFeature(context = {}) {
 
 export function syncScoreProgress(context = {}, state = createScoreProgressState()) {
   const documentRef = context.documentRef;
+  const debugEnabled = context.featureConfig?.debug === true;
+  const debugPayload = {
+    reason: "unknown",
+    routePath: getLocationPath(context.windowRef),
+    routeHash: String(context.windowRef?.location?.hash || ""),
+    shouldRender: false,
+    variant: getVariantTexts(context),
+    startScore: null,
+    startScoreSource: "",
+    startScoreCacheHit: false,
+    startScoreCacheReset: false,
+    allowDomFallback: false,
+    cardCount: 0,
+    renderedCards: 0,
+    removedCardsMissingScore: 0,
+    staleHostsRemoved: 0,
+    hostCountAfterCleanup: 0,
+    hiddenHostCount: 0,
+    zeroHeightHostCount: 0,
+    sampledCards: [],
+  };
+
+  const withDebug = (baseResult) => {
+    if (!debugEnabled) {
+      return baseResult;
+    }
+
+    return {
+      ...baseResult,
+      debug: debugPayload,
+    };
+  };
+
   if (!documentRef) {
-    return { startScore: null, renderedCards: 0 };
+    debugPayload.reason = "missing-document";
+    return withDebug({ startScore: null, renderedCards: 0 });
   }
 
-  if (!shouldRenderFeature(context)) {
+  const shouldRender = shouldRenderFeature(context);
+  debugPayload.shouldRender = shouldRender;
+  if (!shouldRender) {
     clearAllScoreProgress(documentRef);
-    return { startScore: null, renderedCards: 0 };
+    debugPayload.reason = "render-disabled";
+    debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    return withDebug({ startScore: null, renderedCards: 0 });
   }
 
-  const startScore = resolveStartScore(context, state);
+  const startScoreDebug = resolveStartScoreWithDebug(context, state);
+  const startScore = startScoreDebug.startScore;
+  debugPayload.startScore = startScore;
+  debugPayload.startScoreSource = startScoreDebug.source;
+  debugPayload.startScoreCacheHit = startScoreDebug.cacheHit;
+  debugPayload.startScoreCacheReset = startScoreDebug.cacheReset;
+  debugPayload.allowDomFallback = startScoreDebug.allowDomFallback;
+  debugPayload.variant = {
+    snapshotVariant: startScoreDebug.snapshotVariant,
+    domVariant: startScoreDebug.domVariant,
+  };
+
   if (!isFiniteNumber(startScore) || startScore <= 0) {
     clearAllScoreProgress(documentRef);
-    return { startScore: null, renderedCards: 0 };
+    debugPayload.reason = "missing-start-score";
+    debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    return withDebug({ startScore: null, renderedCards: 0 });
   }
 
   const cards = getPlayerCards(documentRef);
+  debugPayload.cardCount = cards.length;
   if (!cards.length) {
     clearAllScoreProgress(documentRef);
-    return { startScore, renderedCards: 0 };
+    debugPayload.reason = "missing-player-cards";
+    debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    return withDebug({ startScore, renderedCards: 0 });
   }
 
   const activeHosts = new Set();
   let renderedCards = 0;
+  let removedCardsMissingScore = 0;
+  const sampledCards = [];
+  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
 
-  cards.forEach((cardNode) => {
+  cards.forEach((cardNode, cardIndex) => {
+    const stackNode = getPlayerStack(cardNode) || cardNode;
     const scoreNode = getPlayerScoreNode(cardNode);
     const scoreValue = parseDisplayedScore(scoreNode?.textContent || "");
     if (!isFiniteNumber(scoreValue)) {
       cardNode.querySelector?.(HOST_SELECTOR)?.remove?.();
+      removedCardsMissingScore += 1;
+      if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
+        sampledCards.push({
+          index: cardIndex,
+          card: summarizeNode(cardNode),
+          stack: summarizeNode(stackNode),
+          scoreNodeFound: Boolean(scoreNode),
+          scoreText: toCompactText(scoreNode?.textContent || ""),
+          parsedScore: null,
+          removed: "missing-score",
+        });
+      }
       return;
     }
 
     const hostNode = ensureProgressHost(cardNode, documentRef);
     if (!hostNode) {
+      if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
+        sampledCards.push({
+          index: cardIndex,
+          card: summarizeNode(cardNode),
+          stack: summarizeNode(stackNode),
+          scoreNodeFound: Boolean(scoreNode),
+          scoreText: toCompactText(scoreNode?.textContent || ""),
+          parsedScore: scoreValue,
+          removed: "missing-host",
+        });
+      }
       return;
     }
 
+    const ratio = scoreValue / startScore;
     updateProgressHost(hostNode, {
-      ratio: scoreValue / startScore,
+      ratio,
       active: cardNode.classList?.contains("ad-ext-player-active") === true,
       designPreset: context.featureConfig?.designPreset,
     });
     activeHosts.add(hostNode);
     renderedCards += 1;
-  });
 
-  queryAll(documentRef, HOST_SELECTOR).forEach((hostNode) => {
-    if (!activeHosts.has(hostNode)) {
-      hostNode.remove?.();
+    if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
+      const hostDisplay = readComputedDisplay(windowRef, hostNode);
+      const hostRect = readRect(hostNode);
+      sampledCards.push({
+        index: cardIndex,
+        card: summarizeNode(cardNode),
+        stack: summarizeNode(stackNode),
+        scoreNodeFound: Boolean(scoreNode),
+        scoreText: toCompactText(scoreNode?.textContent || ""),
+        parsedScore: scoreValue,
+        ratio: Number(ratio.toFixed(4)),
+        host: summarizeNode(hostNode),
+        hostState: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-state") || ""),
+        hostPreset: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-preset") || ""),
+        hostWidth: String(hostNode.style?.getPropertyValue?.(WIDTH_PROPERTY) || ""),
+        hostDisplay,
+        hostRect,
+        hostParent: summarizeNode(hostNode.parentNode || null),
+        hostPrevious: summarizeNode(hostNode.previousElementSibling || null),
+      });
     }
   });
 
-  return {
+  let staleHostsRemoved = 0;
+  queryAll(documentRef, HOST_SELECTOR).forEach((hostNode) => {
+    if (!activeHosts.has(hostNode)) {
+      hostNode.remove?.();
+      staleHostsRemoved += 1;
+    }
+  });
+
+  debugPayload.reason = renderedCards > 0 ? "rendered" : "no-rendered-cards";
+  debugPayload.renderedCards = renderedCards;
+  debugPayload.removedCardsMissingScore = removedCardsMissingScore;
+  debugPayload.staleHostsRemoved = staleHostsRemoved;
+  debugPayload.sampledCards = sampledCards;
+
+  const hostsAfter = queryAll(documentRef, HOST_SELECTOR);
+  debugPayload.hostCountAfterCleanup = hostsAfter.length;
+  debugPayload.hiddenHostCount = hostsAfter.filter((hostNode) => {
+    const display = readComputedDisplay(windowRef, hostNode).toLowerCase();
+    return display === "none";
+  }).length;
+  debugPayload.zeroHeightHostCount = hostsAfter.filter((hostNode) => {
+    const rect = readRect(hostNode);
+    return rect ? rect.height <= 0 : false;
+  }).length;
+
+  return withDebug({
     startScore,
     renderedCards,
-  };
+  });
 }

@@ -7,13 +7,19 @@ import {
   resolveStartScore,
   syncScoreProgress,
 } from "../../src/features/x01-score-progress/logic.js";
+import { mountX01ScoreProgress } from "../../src/features/x01-score-progress/index.js";
 import {
   ACTIVE_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
   buildStyleText,
 } from "../../src/features/x01-score-progress/style.js";
+import { createDomGuards } from "../../src/core/dom-guards.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+
+function wait(ms = 0) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function createPlayerCard(documentRef, score, { active = false } = {}) {
   const cardNode = documentRef.createElement("div");
@@ -186,6 +192,143 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   assert.equal(cleared.startScore, null);
   assert.equal(cleared.renderedCards, 0);
   assert.equal(playerDisplay.querySelectorAll(HOST_SELECTOR).length, 0);
+});
+
+test("syncScoreProgress exposes debug reason when start score cannot be resolved", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "X01";
+
+  const result = syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        designPreset: "signal",
+        debug: true,
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "match-x01-no-start",
+          match: {
+            id: "match-x01-no-start",
+            variant: "X01",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.equal(result.startScore, null);
+  assert.equal(result.renderedCards, 0);
+  assert.equal(result.debug.reason, "missing-start-score");
+  assert.equal(result.debug.startScoreSource, "unresolved");
+  assert.equal(result.debug.cardCount, 0);
+  assert.equal(result.debug.hostCountAfterCleanup, 0);
+});
+
+test("syncScoreProgress includes sampled card diagnostics in debug mode", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const activePlayer = createPlayerCard(documentRef, 170, { active: true });
+  const inactivePlayer = createPlayerCard(documentRef, 251);
+  playerDisplay.appendChild(activePlayer.cardNode);
+  playerDisplay.appendChild(inactivePlayer.cardNode);
+
+  const result = syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        designPreset: "glass",
+        debug: true,
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "match-501-debug",
+          match: {
+            id: "match-501-debug",
+            variant: "X01 501",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.equal(result.debug.reason, "rendered");
+  assert.equal(result.debug.startScore, 501);
+  assert.equal(result.debug.startScoreSource, "snapshot-variant");
+  assert.equal(result.debug.cardCount, 2);
+  assert.equal(result.debug.renderedCards, 2);
+  assert.equal(result.debug.sampledCards.length, 2);
+  assert.equal(result.debug.sampledCards[0].hostWidth, "33.93%");
+  assert.equal(result.debug.sampledCards[1].hostWidth, "50.10%");
+});
+
+test("mountX01ScoreProgress emits detailed debug warning payloads", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/debug-case",
+  });
+  documentRef.variantElement.textContent = "X01";
+
+  const logs = [];
+  const warnings = [];
+  const cleanup = mountX01ScoreProgress({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: {
+        registerMutationObserver() {},
+        disconnect() {},
+      },
+    },
+    gameState: {
+      getSnapshot: () => ({
+        match: {
+          id: "debug-match",
+          variant: "X01",
+        },
+      }),
+      subscribe: () => () => {},
+    },
+    config: {
+      getFeatureConfig: () => ({
+        designPreset: "signal",
+        debug: true,
+      }),
+    },
+    featureDebug: {
+      enabled: true,
+      log: (...args) => logs.push(args),
+      warn: (...args) => warnings.push(args),
+    },
+  });
+
+  await wait(5);
+  cleanup();
+
+  assert.equal(logs.length >= 0, true);
+  assert.equal(warnings.length > 0, true);
+  assert.match(String(warnings[0][0] || ""), /reason="missing-start-score"/);
+  assert.equal(warnings[0][1]?.reason, "missing-start-score");
+  assert.equal(Array.isArray(warnings[0][1]?.sampledCards), true);
 });
 
 test("score-progress style reserves a dedicated player-card row for the bar", () => {

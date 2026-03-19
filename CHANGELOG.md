@@ -13,6 +13,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.49] - 2026-03-19
+
+### Changed
+
+- Nutzerwirkung: Für die Fehlersuche am X01-Restscore-Balken liefern aktivierte
+  Debug-Logs jetzt deutlich mehr Kontext zu Render-Entscheidungen und
+  Kartenzuständen.
+  Technik: `x01-score-progress` protokolliert im Debug-Modus dedupliziert
+  Gründe/Signaturen (z. B. fehlender Startscore, fehlende Karten, gerenderte
+  Hosts) inklusive strukturierter Payload zu Variant-Quelle, Startscore-Herkunft,
+  Host-Zustand und Sample-Karten.
+
 ## [2.0.48] - 2026-03-19
 
 ### Fixed
@@ -426,6 +438,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
+[2.0.49]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
 [2.0.48]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
 [2.0.47]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.46]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
