@@ -984,6 +984,52 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   runtime.stop();
 });
 
+test("xConfig x01 score progress settings no longer expose a design selector", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await wait(5);
+
+  assert.equal(
+    Boolean(
+      documentRef.querySelector(
+        "[data-adxconfig-setting='true'][data-setting-key='designPreset']"
+      )
+    ),
+    false
+  );
+  assert.ok(
+    documentRef.querySelector(
+      "[data-adxconfig-setting='true'][data-setting-key='colorTheme']"
+    )
+  );
+  assert.ok(
+    documentRef.querySelector(
+      "[data-adxconfig-setting='true'][data-setting-key='barSize']"
+    )
+  );
+  assert.ok(
+    documentRef.querySelector(
+      "[data-adxconfig-setting='true'][data-setting-key='effect']"
+    )
+  );
+
+  runtime.stop();
+});
+
 test("xConfig dart design options render split layout with preview and active badge slot", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

@@ -431,9 +431,7 @@ test("x01-score-progress mounts idempotently and removes style on cleanup", asyn
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("x01ScoreProgress", {
-      designPreset: "liquid-glass",
-    }),
+    config: createSingleFeatureConfig("x01ScoreProgress"),
   });
 
   runtime.start();

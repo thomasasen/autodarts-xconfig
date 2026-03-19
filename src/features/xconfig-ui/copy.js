@@ -263,11 +263,6 @@ export const xconfigFeatureCopy = deepFreeze({
     usefulWhen:
       "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
     fields: {
-      designPreset: fieldCopy(
-        "Wählt zwischen flacher Vollfarbe, klaren Streifen oder einem Liquid-Glass-Look.",
-        "Bestimmt die Grundästhetik des Balkens. Farben, Größen und Effekte bleiben kompatibel; nur Materialwirkung, Oberflächenstruktur und Tiefenwirkung wechseln.",
-        "Wählt die visuelle Stilrichtung des Score-Balkens."
-      ),
       colorTheme: fieldCopy(
         "Steuert Farblogik und Farbpalette in einer gemeinsamen Auswahl.",
         "Enthält sowohl feste Farbpaletten als auch dynamische Schwellenmodi. So kannst du den Balken statisch einfärben oder die Farbe abhängig von Score/Prozent wechseln.",
@@ -1841,24 +1836,6 @@ const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
   ),
 });
 
-const X01_SCORE_PROGRESS_DESIGN_OPTION_COPY = deepFreeze({
-  plain: optionCopy(
-    "Nutzen eine flache Vollfarbe ohne eingebaute Oberflächenstruktur.",
-    "Der Balken bleibt bewusst klar und direkt: keine Streifen, kein Glas-Look, nur Farbe, Form und optionaler Effekt.",
-    "Flache Vollfarbe ohne zusätzliche Materialoptik."
-  ),
-  stripes: optionCopy(
-    "Legen eine klare Streifenstruktur über den Balken.",
-    "Der Balken erhält diagonale Linien und wirkt dadurch technischer, markanter und aus der Distanz schneller scanbar.",
-    "Streifen-Look mit klarer technischer Signalwirkung."
-  ),
-  "liquid-glass": optionCopy(
-    "Nutzen eine transparente 3D-Glasoptik mit Tiefe und Highlights.",
-    "Der Balken wirkt wie eine weiche, lichtbrechende Glasschicht mit Tiefenstaffelung, ohne die Farb- und Effektlogik zu verlieren.",
-    "3D-Glaslook mit Tiefe, Reflexionen und weicher Materialwirkung."
-  ),
-});
-
 const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
   "checkout-focus": optionCopy(
     "Standardmodus mit Fokus auf Checkout-Relevanz.",
@@ -1892,7 +1869,7 @@ const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
   ),
   "glass-mint": optionCopy(
     "Nutzen ein helles Mint-/Aqua-Schema.",
-    "Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Liquid Glass`.",
+    "Wirkt frischer und leichter als klassische Grünpaletten und bleibt auf dunklen Flächen klar und modern.",
     "Statische helle Mint-/Aqua-Palette."
   ),
   "ember-rush": optionCopy(
@@ -2096,7 +2073,6 @@ const xconfigFieldOptionCopy = deepFreeze({
     triggerSource: CHECKOUT_SCORE_TRIGGER_OPTION_COPY,
   },
   "x01-score-progress": {
-    designPreset: X01_SCORE_PROGRESS_DESIGN_OPTION_COPY,
     colorTheme: X01_SCORE_PROGRESS_COLOR_OPTION_COPY,
     barSize: X01_SCORE_PROGRESS_SIZE_OPTION_COPY,
     effect: X01_SCORE_PROGRESS_EFFECT_OPTION_COPY,

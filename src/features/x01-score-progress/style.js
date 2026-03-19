@@ -6,11 +6,9 @@ export const TRAIL_CLASS = "ad-ext-x01-score-progress__trail";
 export const FILL_CLASS = "ad-ext-x01-score-progress__fill";
 export const ACTIVE_CLASS = "ad-ext-x01-score-progress--active";
 export const INACTIVE_CLASS = "ad-ext-x01-score-progress--inactive";
-export const PRESET_CLASS_PREFIX = "ad-ext-x01-score-progress--preset-";
 export const SIZE_CLASS_PREFIX = "ad-ext-x01-score-progress--size-";
 export const EFFECT_FILL_CLASS_PREFIX = "ad-ext-x01-score-progress__fill--effect-";
 
-export const DESIGN_PRESETS = Object.freeze(["plain", "stripes", "liquid-glass"]);
 export const COLOR_THEMES = Object.freeze([
   "checkout-focus",
   "traffic-light",
@@ -35,7 +33,6 @@ export const EFFECTS = Object.freeze([
   "off",
 ]);
 
-const DESIGN_PRESET_SET = new Set(DESIGN_PRESETS);
 const COLOR_THEME_SET = new Set(COLOR_THEMES);
 const BAR_SIZE_SET = new Set(BAR_SIZES);
 const EFFECT_SET = new Set(EFFECTS);
@@ -43,18 +40,6 @@ const EFFECT_SET = new Set(EFFECTS);
 function normalizeChoice(value, fallbackValue, allowedSet) {
   const normalized = String(value || "").trim().toLowerCase();
   return allowedSet.has(normalized) ? normalized : fallbackValue;
-}
-
-export function normalizeDesignPreset(value) {
-  return normalizeChoice(value, "plain", DESIGN_PRESET_SET);
-}
-
-export function getPresetClass(value) {
-  return `${PRESET_CLASS_PREFIX}${normalizeDesignPreset(value)}`;
-}
-
-export function getPresetClassList() {
-  return DESIGN_PRESETS.map((value) => getPresetClass(value));
 }
 
 export function normalizeColorTheme(value) {
@@ -247,48 +232,6 @@ ${HOST_SELECTOR} .${FILL_CLASS}::before{
 
 ${HOST_SELECTOR} .${FILL_CLASS}::after{
   opacity:0;
-}
-
-${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-plain{
-  --ad-ext-x01-score-progress-track-bg-active:linear-gradient(90deg,var(--ad-ext-x01-score-progress-track-solid-active) 0%,var(--ad-ext-x01-score-progress-track-solid-active) 100%);
-  --ad-ext-x01-score-progress-fill-bg-active:linear-gradient(90deg,var(--ad-ext-x01-score-progress-fill-solid-active) 0%,var(--ad-ext-x01-score-progress-fill-solid-active) 100%);
-  --ad-ext-x01-score-progress-fill-shadow-active:none;
-  --ad-ext-x01-score-progress-track-overlay-active:none;
-  --ad-ext-x01-score-progress-track-overlay-opacity-active:0;
-  --ad-ext-x01-score-progress-track-inner-shadow-active:inset 0 0 0 1px rgba(255,255,255,.04);
-  --ad-ext-x01-score-progress-track-backdrop-filter-active:none;
-  --ad-ext-x01-score-progress-fill-overlay-image-active:none;
-  --ad-ext-x01-score-progress-fill-overlay-opacity-active:0;
-}
-
-${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-stripes{
-  --ad-ext-x01-score-progress-track-bg-active:var(--ad-ext-x01-score-progress-track-base-active);
-  --ad-ext-x01-score-progress-fill-bg-active:var(--ad-ext-x01-score-progress-fill-base-active);
-  --ad-ext-x01-score-progress-fill-shadow-active:0 0 16px var(--ad-ext-x01-score-progress-fill-ambient-active);
-  --ad-ext-x01-score-progress-track-overlay-active:repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 10px,rgba(255,255,255,0) 10px 22px);
-  --ad-ext-x01-score-progress-track-overlay-opacity-active:.6;
-  --ad-ext-x01-score-progress-fill-overlay-image-active:repeating-linear-gradient(135deg,rgba(255,255,255,.24) 0 10px,rgba(255,255,255,.04) 10px 20px);
-  --ad-ext-x01-score-progress-fill-overlay-size-active:auto;
-  --ad-ext-x01-score-progress-fill-overlay-repeat-active:repeat;
-  --ad-ext-x01-score-progress-fill-overlay-blend-active:screen;
-  --ad-ext-x01-score-progress-fill-overlay-opacity-active:.78;
-}
-
-${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-liquid-glass{
-  --ad-ext-x01-score-progress-track-bg-active:linear-gradient(180deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.06) 28%,rgba(255,255,255,0) 100%),var(--ad-ext-x01-score-progress-track-base-active);
-  --ad-ext-x01-score-progress-fill-bg-active:linear-gradient(180deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.08) 30%,rgba(255,255,255,0) 100%),var(--ad-ext-x01-score-progress-fill-base-active);
-  --ad-ext-x01-score-progress-fill-shadow-active:0 0 0 1px rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.28),0 14px 30px var(--ad-ext-x01-score-progress-fill-ambient-active);
-  --ad-ext-x01-score-progress-track-overlay-active:linear-gradient(180deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.12) 22%,rgba(255,255,255,0) 62%);
-  --ad-ext-x01-score-progress-track-overlay-opacity-active:1;
-  --ad-ext-x01-score-progress-track-inner-shadow-active:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(15,23,42,.18);
-  --ad-ext-x01-score-progress-track-border-active:rgba(255,255,255,.16);
-  --ad-ext-x01-score-progress-track-backdrop-filter-active:blur(14px) saturate(145%);
-  --ad-ext-x01-score-progress-fill-overlay-image-active:linear-gradient(110deg,rgba(255,255,255,0) 18%,rgba(255,255,255,.18) 34%,rgba(255,255,255,.68) 50%,rgba(255,255,255,.22) 66%,rgba(255,255,255,0) 82%);
-  --ad-ext-x01-score-progress-fill-overlay-size-active:180% 100%;
-  --ad-ext-x01-score-progress-fill-overlay-position-active:20% 0;
-  --ad-ext-x01-score-progress-fill-overlay-repeat-active:no-repeat;
-  --ad-ext-x01-score-progress-fill-overlay-blend-active:screen;
-  --ad-ext-x01-score-progress-fill-overlay-opacity-active:.54;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-schmal{

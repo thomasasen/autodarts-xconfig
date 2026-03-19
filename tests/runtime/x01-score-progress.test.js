@@ -133,7 +133,6 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "liquid-glass",
         colorTheme: "danger-endgame",
         barSize: "extrabreit",
         effect: "glass-charge",
@@ -159,10 +158,6 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   assert.ok(activeHost);
   assert.equal(activePlayer.stackNode.children[1], activeHost);
   assert.equal(activeHost.classList.contains(ACTIVE_CLASS), true);
-  assert.equal(
-    activeHost.classList.contains("ad-ext-x01-score-progress--preset-liquid-glass"),
-    true
-  );
   assert.equal(activeHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), true);
   assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "danger-endgame");
   assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "glass-charge");
@@ -178,10 +173,6 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   assert.ok(inactiveHost);
   assert.equal(inactivePlayer.stackNode.children[1], inactiveHost);
   assert.equal(inactiveHost.classList.contains(INACTIVE_CLASS), true);
-  assert.equal(
-    inactiveHost.classList.contains("ad-ext-x01-score-progress--preset-liquid-glass"),
-    true
-  );
   assert.equal(inactiveHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), false);
   assert.equal(
     inactiveHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"),
@@ -218,7 +209,7 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
     {
       documentRef,
       windowRef,
-      featureConfig: { designPreset: "plain" },
+      featureConfig: {},
       gameState: {
         getSnapshot: () => ({
           topic: "match-501",
@@ -241,7 +232,7 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
     {
       documentRef,
       windowRef,
-      featureConfig: { designPreset: "plain" },
+      featureConfig: {},
       gameState: {
         getSnapshot: () => ({
           topic: "match-cricket",
@@ -273,7 +264,6 @@ test("syncScoreProgress exposes debug reason when start score cannot be resolved
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "plain",
         debug: true,
       },
       gameState: {
@@ -319,7 +309,6 @@ test("syncScoreProgress includes sampled card diagnostics in debug mode", () => 
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "liquid-glass",
         colorTheme: "checkout-focus",
         barSize: "standard",
         effect: "pulse-core",
@@ -379,7 +368,6 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
     },
     config: {
       getFeatureConfig: () => ({
-        designPreset: "plain",
         colorTheme: "checkout-focus",
         barSize: "standard",
         effect: "pulse-core",
@@ -424,7 +412,6 @@ test("syncScoreProgress keeps inactive styling untouched by active-only settings
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "plain",
         colorTheme: "ember-rush",
         barSize: "extrabreit",
         effect: "signal-sweep",
@@ -479,7 +466,6 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "plain",
         colorTheme: "ember-rush",
         barSize: "extrabreit",
         effect: "signal-sweep",
@@ -513,7 +499,6 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "plain",
         colorTheme: "ember-rush",
         barSize: "extrabreit",
         effect: "signal-sweep",
@@ -571,7 +556,6 @@ test("syncScoreProgress falls back to gameState active player index when active 
       documentRef,
       windowRef,
       featureConfig: {
-        designPreset: "stripes",
         colorTheme: "checkout-focus",
         barSize: "extrabreit",
         effect: "glass-charge",
@@ -621,7 +605,6 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
         documentRef,
         windowRef,
         featureConfig: {
-          designPreset: "liquid-glass",
           colorTheme: "checkout-focus",
           barSize: "standard",
           effect: "pulse-core",
@@ -678,7 +661,6 @@ test("syncScoreProgress animates the ghost trail on active score changes only", 
         documentRef,
         windowRef,
         featureConfig: {
-          designPreset: "liquid-glass",
           colorTheme: "checkout-focus",
           barSize: "standard",
           effect: "ghost-trail",
@@ -747,19 +729,10 @@ test("score-progress style defines clearly separated active size presets", () =>
   );
 });
 
-test("score-progress style exposes distinct plain, stripes and liquid-glass presets", () => {
+test("score-progress style no longer exposes selectable design presets", () => {
   const css = buildStyleText();
 
-  assert.match(
-    css,
-    /--preset-plain\{[^}]*track-backdrop-filter-active:none;[^}]*fill-overlay-image-active:none;/s
-  );
-  assert.match(
-    css,
-    /--preset-stripes\{[^}]*repeating-linear-gradient\(135deg,rgba\(255,255,255,\.14\) 0 10px,rgba\(255,255,255,0\) 10px 22px\);[^}]*fill-overlay-opacity-active:\.78;/s
-  );
-  assert.match(
-    css,
-    /--preset-liquid-glass\{[^}]*blur\(14px\) saturate\(145%\);[^}]*fill-overlay-size-active:180% 100%;/s
-  );
+  assert.equal(css.includes("--preset-plain"), false);
+  assert.equal(css.includes("--preset-stripes"), false);
+  assert.equal(css.includes("--preset-liquid-glass"), false);
 });

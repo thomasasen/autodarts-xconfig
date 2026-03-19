@@ -86,7 +86,6 @@ function buildDebugSignature(debugInfo = {}) {
     Array.isArray(debugInfo.variant?.variantStripTexts)
       ? debugInfo.variant.variantStripTexts.join("|")
       : "",
-    visuals.designPreset || "plain",
     visuals.colorTheme || "checkout-focus",
     visuals.barSize || "standard",
     visuals.effect || "pulse-core",
@@ -125,9 +124,9 @@ function buildDebugMessage(debugInfo = {}) {
   } zeroHeightHosts=${Number(debugInfo.zeroHeightHostCount) || 0} variantSnapshot="${
     variant.snapshotVariant || "-"
   }" variantDom="${variant.domVariant || "-"}" variantStrip="${variantStrip || "-"}"`;
-  return `${baseMessage} visuals(preset="${visuals.designPreset || "plain"}", colors="${
-    visuals.colorTheme || "checkout-focus"
-  }", size="${visuals.barSize || "standard"}", effect="${visuals.effect || "pulse-core"}")`;
+  return `${baseMessage} visuals(colors="${visuals.colorTheme || "checkout-focus"}", size="${
+    visuals.barSize || "standard"
+  }", effect="${visuals.effect || "pulse-core"}")`;
 }
 
 function shouldWarnDebugState(debugInfo = {}) {
@@ -160,7 +159,6 @@ export function mountX01ScoreProgress(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("x01ScoreProgress")
       : {
-          designPreset: "plain",
           colorTheme: "checkout-focus",
           barSize: "standard",
           effect: "pulse-core",

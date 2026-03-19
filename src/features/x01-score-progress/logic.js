@@ -3,8 +3,6 @@ import {
   FILL_CLASS,
   getEffectFillClass,
   getEffectFillClassList,
-  getPresetClass,
-  getPresetClassList,
   getSizeClass,
   getSizeClassList,
   HOST_ATTRIBUTE,
@@ -12,7 +10,6 @@ import {
   INACTIVE_CLASS,
   normalizeBarSize,
   normalizeColorTheme,
-  normalizeDesignPreset,
   normalizeEffect,
   TRAIL_CLASS,
   TRACK_CLASS,
@@ -56,7 +53,6 @@ const ACTIVE_STYLE_PROPERTIES = Object.freeze([
   "--ad-ext-x01-score-progress-fill-overlay-blend-active",
   "--ad-ext-x01-score-progress-fill-overlay-opacity-active",
 ]);
-const PRESET_CLASS_LIST = Object.freeze(getPresetClassList());
 const SIZE_CLASS_LIST = Object.freeze(getSizeClassList());
 const EFFECT_FILL_CLASS_LIST = Object.freeze(getEffectFillClassList());
 const THRESHOLD_COLOR_THEMES = new Set([
@@ -1069,7 +1065,6 @@ export function updateProgressHost(hostNode, options = {}) {
 
   const ratio = clamp(Number(options.ratio) || 0, 0, 1);
   const active = options.active === true;
-  const presetClass = getPresetClass(options.designPreset);
   const sizeClass = getSizeClass(options.barSize);
   const colorTheme = normalizeColorTheme(options.colorTheme);
   const effect = normalizeEffect(options.effect);
@@ -1079,16 +1074,13 @@ export function updateProgressHost(hostNode, options = {}) {
   hostNode.classList.remove(
     `${ACTIVE_CLASS}`,
     `${INACTIVE_CLASS}`,
-    ...PRESET_CLASS_LIST,
     ...SIZE_CLASS_LIST
   );
   hostNode.classList.add(active ? ACTIVE_CLASS : INACTIVE_CLASS);
-  hostNode.classList.add(presetClass);
   if (active) {
     hostNode.classList.add(sizeClass);
   }
   hostNode.setAttribute("data-ad-ext-x01-score-progress-state", active ? "active" : "inactive");
-  hostNode.setAttribute("data-ad-ext-x01-score-progress-preset", normalizeDesignPreset(options.designPreset));
   hostNode.setAttribute(COLOR_THEME_ATTRIBUTE, colorTheme);
   hostNode.setAttribute(SIZE_ATTRIBUTE, normalizeBarSize(options.barSize));
   hostNode.setAttribute(EFFECT_ATTRIBUTE, effect);
@@ -1134,7 +1126,6 @@ function shouldRenderFeature(context = {}) {
 export function syncScoreProgress(context = {}, state = createScoreProgressState()) {
   const documentRef = context.documentRef;
   const debugEnabled = context.featureConfig?.debug === true;
-  const normalizedDesignPreset = normalizeDesignPreset(context.featureConfig?.designPreset);
   const normalizedColorTheme = normalizeColorTheme(context.featureConfig?.colorTheme);
   const normalizedBarSize = normalizeBarSize(context.featureConfig?.barSize);
   const normalizedEffect = normalizeEffect(context.featureConfig?.effect);
@@ -1164,7 +1155,6 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     hiddenHostCount: 0,
     zeroHeightHostCount: 0,
     visuals: {
-      designPreset: normalizedDesignPreset,
       colorTheme: normalizedColorTheme,
       barSize: normalizedBarSize,
       effect: normalizedEffect,
@@ -1303,7 +1293,6 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
       score: scoreValue,
       scoreChanged,
       active: isActive,
-      designPreset: normalizedDesignPreset,
       colorTheme: normalizedColorTheme,
       barSize: normalizedBarSize,
       effect: normalizedEffect,
@@ -1326,7 +1315,6 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
         cardActiveDetected: isActive,
         host: summarizeNode(hostNode),
         hostState: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-state") || ""),
-        hostPreset: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-preset") || ""),
         hostColorTheme: String(hostNode.getAttribute?.(COLOR_THEME_ATTRIBUTE) || ""),
         hostSize: String(hostNode.getAttribute?.(SIZE_ATTRIBUTE) || ""),
         hostEffect: String(hostNode.getAttribute?.(EFFECT_ATTRIBUTE) || ""),

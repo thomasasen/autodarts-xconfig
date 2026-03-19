@@ -13,6 +13,21 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.56] - 2026-03-19
+
+### Changed
+
+- Nutzerwirkung: Die Designauswahl des X01-Restscore-Balkens wurde wieder
+  entfernt, weil die Preset-Umschaltung im Spiel nicht zuverlässig griff. In
+  xConfig gibt es dafür jetzt nur noch die funktionierenden Einstellungen für
+  Farben, Balkengröße und aktive Effekte; README und Feature-Doku wurden
+  entsprechend bereinigt.
+  Technik: `x01-score-progress` nutzt wieder einen festen Basisstil ohne
+  Preset-Logik, entfernt `designPreset` aus xConfig-Descriptoren, Copy und
+  normalisierter Runtime-Config, räumt Altwerte aus der X01-Konfiguration weg
+  und ergänzt Regressionen für die entfernte UI-Option sowie den festen
+  Style-Vertrag.
+
 ## [2.0.55] - 2026-03-19
 
 ### Changed
@@ -20,14 +35,14 @@ _Noch keine Änderungen erfasst._
 - Nutzerwirkung: Der X01-Restscore-Balken bietet jetzt drei klar getrennte
   Designvarianten statt nur leicht abweichender Looks: `Plain Color` als
   flache Vollfarbe ohne eingebaute Materialeffekte, `Stripes` mit sichtbarer
-  Streifenstruktur und `Liquid Glass` mit deutlich stärkerer 3D-/Glaswirkung.
-  Farben, Balkengrößen und aktive Effekte bleiben dabei vollständig kompatibel;
-  inaktive Spieler bleiben bewusst unverändert.
+  Streifenstruktur und `Liquid Glass` mit deutlich stärkerem 3D-/Glas-Look.
+  Die Designs bleiben dabei mit Farben, Balkengrößen und aktiven Effekten
+  kompatibel; inaktive Spieler bleiben unverändert.
   Technik: Die Preset-Architektur von `x01-score-progress` wurde auf drei
   Material-Layer umgebaut, aktive Farbvariablen für Track-/Fill-Overlays
   getrennt abstrahiert, Legacy-Preset-Namen auf das neue Set gemappt sowie
-  xConfig-Optionen, Copy, Lifecycle-Tests und Style-Regressionen auf die neuen
-  Presets umgestellt.
+  xConfig-Texte, Doku, Tests und Build-Artefakte auf die neuen Presets
+  synchronisiert.
 
 ## [2.0.54] - 2026-03-19
 
@@ -521,8 +536,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...HEAD
-[2.0.55]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
+[2.0.56]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
+[2.0.55]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...2606db6
 [2.0.54]: https://github.com/thomasasen/autodarts-xconfig/compare/8a31cd6...8a156b3
 [2.0.53]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...8a31cd6
 [2.0.52]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...fec14ae

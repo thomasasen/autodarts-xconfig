@@ -53,7 +53,6 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
   assert.equal(config.features.dartMarkerDarts.enableShadow, true);
   assert.equal(config.features.dartMarkerDarts.enableWobble, true);
-  assert.equal(config.features.x01ScoreProgress.designPreset, "plain");
   assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
   assert.equal(config.features.x01ScoreProgress.barSize, "standard");
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
@@ -138,7 +137,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         durationMs: "650",
       },
       x01ScoreProgress: {
-        designPreset: "GLASS",
         colorTheme: "ICE-CIRCUIT",
         thresholdColorMode: "TRAFFIC-LIGHT",
         barSize: "EXTRABREIT",
@@ -242,7 +240,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").cooldownMs, 1000);
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 650);
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").designPreset, "liquid-glass");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "glass-charge");
@@ -408,14 +405,22 @@ test("x01-score-progress maps legacy effect keys to the reduced effect set", () 
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "ghost-trail");
 });
 
-test("x01-score-progress maps legacy design presets to the new visual set", () => {
+test("x01-score-progress drops retired design preset fields from normalized config", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
       x01ScoreProgress: {
-        designPreset: "signal",
+        designPreset: "liquid-glass",
+        colorTheme: "checkout-focus",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").designPreset, "stripes");
+  const featureConfig = runtimeConfig.getFeatureConfig("x01ScoreProgress");
+  assert.equal(Object.prototype.hasOwnProperty.call(featureConfig, "designPreset"), false);
+
+  const normalized = runtimeConfig.getNormalized();
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(normalized.features.x01ScoreProgress, "designPreset"),
+    false
+  );
 });

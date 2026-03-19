@@ -265,11 +265,6 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-x01-score-progress",
     description: "Zeigt den verbleibenden X01-Score als abnehmenden Balken pro Spielerkarte.",
     fields: [
-      selectField("designPreset", "Design", [
-        { value: "plain", label: "Plain Color" },
-        { value: "stripes", label: "Stripes" },
-        { value: "liquid-glass", label: "Liquid Glass" },
-      ]),
       selectField("colorTheme", "Farben", [
         { value: "checkout-focus", label: "Checkout Focus" },
         { value: "traffic-light", label: "Traffic Light" },
