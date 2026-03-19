@@ -147,6 +147,9 @@ export const defaultConfig = {
     x01ScoreProgress: {
       enabled: false,
       designPreset: "signal",
+      colorTheme: "checkout-focus",
+      barSize: "standard",
+      effect: "charge-release",
       debug: false,
     },
     themes: {

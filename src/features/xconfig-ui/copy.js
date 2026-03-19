@@ -264,9 +264,24 @@ export const xconfigFeatureCopy = deepFreeze({
       "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
     fields: {
       designPreset: fieldCopy(
-        "Wählt zwischen signalstarker, gläserner oder besonders reduzierter Balkenoptik.",
-        "Bestimmt, wie der Score-Balken grafisch ausgeführt wird. Die Berechnung bleibt gleich; nur Höhe, Verlauf, Glow und Materialwirkung des Balkens ändern sich.",
+        "Wählt zwischen signalstarker, gläserner oder reduzierter Materialoptik des Balkens.",
+        "Bestimmt die Grundästhetik des Balkens. Die Berechnung bleibt unverändert, nur Materialwirkung, Schärfe und Flächencharakter wechseln.",
         "Wählt die visuelle Stilrichtung des Score-Balkens."
+      ),
+      colorTheme: fieldCopy(
+        "Steuert Farblogik und Farbpalette in einer gemeinsamen Auswahl.",
+        "Enthält sowohl feste Farbpaletten als auch dynamische Schwellenmodi. So kannst du den Balken statisch einfärben oder die Farbe abhängig von Score/Prozent wechseln.",
+        "Steuert statische Farbpaletten und dynamische Schwellenfarben in einer gemeinsamen Auswahl."
+      ),
+      barSize: fieldCopy(
+        "Legt die sichtbare Balkenhöhe des aktiven Spielers fest.",
+        "Vergrößert oder verkleinert die Balkenhöhe für aktive Spieler zwischen `Schmal` und `Extrabreit`. Inaktive Spieler bleiben bewusst unverändert.",
+        "Legt die Balkenhöhe des aktiven Spielers fest."
+      ),
+      effect: fieldCopy(
+        "Wählt den visuellen Reaktionseffekt bei Scoreänderungen.",
+        "Bestimmt, ob der Balken bei Punktänderungen ruhig bleibt oder mit Effekten wie Charge, Burn-Down, Sheen oder Checkout-Glow reagiert.",
+        "Wählt den Reaktionseffekt des Balkens bei Scoreänderungen."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1828,19 +1843,158 @@ const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
 
 const X01_SCORE_PROGRESS_DESIGN_OPTION_COPY = deepFreeze({
   signal: optionCopy(
-    "Nutzen einen klaren, leuchtenden Signal-Balken.",
-    "Der Balken wirkt kräftig, kontrastreich und deutlich präsent. Gerade auf dunkleren Layouts fällt diese Variante am schnellsten ins Auge.",
-    "Diese Variante setzt auf einen klaren, signalstarken Balken mit deutlicher Präsenz und hoher Sofortlesbarkeit."
+    "Nutzen eine direkte, klare Signaloptik.",
+    "Der Balken wirkt kontraststark und präsent. Kontur, Fläche und Glanz sind auf schnelle Lesbarkeit ausgelegt.",
+    "Diese Variante priorisiert Sofortlesbarkeit mit klarer Signalwirkung."
   ),
   glass: optionCopy(
-    "Nutzen einen weicheren, gläsernen Balken mit etwas mehr Tiefe.",
-    "Der Balken erhält weichere Verläufe, eine leicht glasige Materialwirkung und wirkt eleganter als das reine Signal-Preset.",
-    "Diese Variante gibt dem Balken eine glattere, gläserne Anmutung mit weicheren Verläufen und etwas mehr visueller Tiefe."
+    "Nutzen eine glatte, gläserne Materialwirkung.",
+    "Der Balken bekommt weichere Übergänge und einen eleganteren Layer-Look mit mehr Tiefe.",
+    "Diese Variante wirkt ruhiger und hochwertiger durch gläserne Übergänge."
   ),
   minimal: optionCopy(
-    "Reduziert den Balken auf eine besonders flache, ruhige Linie.",
-    "Der Balken bleibt sichtbar, nimmt aber deutlich weniger Raum und Leuchtwirkung ein. Das ist die unauffälligste Darstellung.",
-    "Diese Variante hält den Balken besonders flach und ruhig, damit die Zusatzinformation präsent bleibt, ohne die Spielerkarte stark zu dominieren."
+    "Reduziert Glow und Materialeffekte auf eine ruhige Linie.",
+    "Der Balken bleibt klar erkennbar, tritt optisch aber zurück und wirkt nüchterner.",
+    "Diese Variante hält die Zusatzinformation präsent, ohne die Karte stark zu dominieren."
+  ),
+});
+
+const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
+  "checkout-focus": optionCopy(
+    "Standardmodus mit Fokus auf Checkout-Relevanz.",
+    "Färbt den Balken abhängig vom Restscore mit Fokus auf den Bereich bis `170` und steigert die visuelle Dringlichkeit in Checkout-Nähe.",
+    "Dynamischer Standardmodus mit Checkout-Fokus."
+  ),
+  "traffic-light": optionCopy(
+    "Schaltet stufenweise zwischen Rot, Amber und Grün nach Fortschritt.",
+    "Nutzt feste Prozentstufen des verbleibenden Scores. Viel Rest = eher Rot, mittlerer Bereich = Amber, niedriger Rest = Grün.",
+    "Stufenmodus mit klaren Rot/Amber/Grün-Prozentschwellen."
+  ),
+  "danger-endgame": optionCopy(
+    "Betont den Endgame-Bereich mit warnenderer Farbdramaturgie.",
+    "Wechselt in den niedrigen Restwertbereichen aggressiver in warme Warnfarben und hebt kritische Endgame-Situationen deutlich hervor.",
+    "Dynamischer Endgame-Modus mit starkem Warnfokus."
+  ),
+  "gradient-by-progress": optionCopy(
+    "Lässt die Farbe kontinuierlich mit dem Fortschritt wandern.",
+    "Der Balken läuft ohne harte Stufen über einen weichen Verlauf von warm nach kalt beziehungsweise zurück, abhängig vom verbleibenden Prozentwert.",
+    "Kontinuierlicher Farbverlauf entlang des Score-Fortschritts."
+  ),
+  autodarts: optionCopy(
+    "Nutzen ein festes Autodarts-Blau.",
+    "Setzt den Balken auf eine markennahe blau-cyan Palette mit klarer Lesbarkeit auf dunklen Flächen.",
+    "Statische Autodarts-nahe Blaupalette."
+  ),
+  "signal-lime": optionCopy(
+    "Nutzen ein klares Lime-Signal als feste Farbpalette.",
+    "Bleibt konstant im grün-limetten Signalbereich und wirkt präsent, ohne dynamische Schwellenwechsel.",
+    "Statische lime-grüne Signalpalette."
+  ),
+  "glass-mint": optionCopy(
+    "Nutzen ein helles Mint-/Aqua-Schema.",
+    "Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Glass`.",
+    "Statische helle Mint-/Aqua-Palette."
+  ),
+  "ember-rush": optionCopy(
+    "Nutzen ein warmes Orange-Rot-Schema.",
+    "Setzt den Balken dauerhaft auf eine energische, warme Palette mit hoher Aufmerksamkeit.",
+    "Statische warme Ember-Palette."
+  ),
+  "ice-circuit": optionCopy(
+    "Nutzen ein kühles Cyan-Türkis-Schema.",
+    "Bleibt technisch-kühl und klar, mit hoher Differenzierung auf dunklen Boards.",
+    "Statische kühle Cyan-/Türkis-Palette."
+  ),
+  "neon-violet": optionCopy(
+    "Nutzen eine violett-blaue Neonpalette.",
+    "Erzeugt einen modernen, kontrastreichen Look mit leicht futuristischer Wirkung.",
+    "Statische violett-blaue Neonpalette."
+  ),
+  "sunset-amber": optionCopy(
+    "Nutzen eine gold-orange Sunset-Palette.",
+    "Wirkt warm und atmosphärisch, bleibt aber durch hohe Helligkeitskontraste gut lesbar.",
+    "Statische Sunset-/Amber-Palette."
+  ),
+  "monochrome-steel": optionCopy(
+    "Nutzen eine neutrale Stahl-Graupalette.",
+    "Reduziert die Farbsignalik bewusst auf kühle Grauwerte für ein zurückhaltendes, technisches Erscheinungsbild.",
+    "Statische, farbreduzierte Monochrom-Palette."
+  ),
+});
+
+const X01_SCORE_PROGRESS_SIZE_OPTION_COPY = deepFreeze({
+  schmal: optionCopy(
+    "Zeigt den Balken in einer schlanken Höhe.",
+    "Nimmt weniger vertikalen Raum ein und wirkt am zurückhaltendsten.",
+    "Schmale Balkenhöhe für eine ruhige Darstellung."
+  ),
+  standard: optionCopy(
+    "Nutzen die ausgewogene Standardhöhe.",
+    "Balanciert Präsenz und Zurückhaltung und passt in der Regel am besten zum Standardlayout.",
+    "Standardhöhe als neutraler Mittelweg."
+  ),
+  breit: optionCopy(
+    "Macht den Balken sichtbar kräftiger.",
+    "Der aktive Balken wird deutlicher und aus größerer Distanz schneller wahrgenommen.",
+    "Breitere Balkenhöhe mit stärkerer Präsenz."
+  ),
+  extrabreit: optionCopy(
+    "Nutzen die maximal breite Balkenhöhe.",
+    "Stellt den aktiven Balken sehr dominant dar und priorisiert maximale Sichtbarkeit.",
+    "Maximal breite Balkenhöhe für höchste Sichtbarkeit."
+  ),
+});
+
+const X01_SCORE_PROGRESS_EFFECT_OPTION_COPY = deepFreeze({
+  off: optionCopy(
+    "Deaktiviert Reaktionseffekte.",
+    "Der Balken aktualisiert nur Breite und Farbe ohne zusätzliche Animation.",
+    "Keine Zusatzanimation bei Scoreänderungen."
+  ),
+  "pulse-on-change": optionCopy(
+    "Reagiert mit einem kurzen vertikalen Puls.",
+    "Bei Scoreänderungen pulsiert der Balken kompakt und kehrt direkt in den Normalzustand zurück.",
+    "Kurzer Pulsimpuls bei Änderungen."
+  ),
+  "sheen-sweep": optionCopy(
+    "Lässt einen kurzen Licht-Sweep über den Balken laufen.",
+    "Bei Änderungen entsteht ein heller Schimmerlauf mit glatter Ausblendung.",
+    "Kurzer Glanz-Sweep auf Scoreänderung."
+  ),
+  "charge-release": optionCopy(
+    "Lädt den Balken kurz auf und entlädt wieder.",
+    "Erzeugt eine kurze Verdichtung mit anschließender Entlastung und ist als Standardeffekt ausbalanciert.",
+    "Ausgewogener Charge-Burst als Standard."
+  ),
+  "burn-down": optionCopy(
+    "Setzt einen warmen Burn-Down-Impuls.",
+    "Bei Änderungen wird der Balken kurz wärmer und fällt dann kontrolliert zurück.",
+    "Warmer Burn-Impuls bei Änderungen."
+  ),
+  "spark-trail": optionCopy(
+    "Reagiert mit einem schnellen, seitlichen Spark-Versatz.",
+    "Der Balken wirkt kurz elektrisch und schnellt in die stabile Position zurück.",
+    "Kurzer Spark-Trail-Effekt."
+  ),
+  "heat-edge": optionCopy(
+    "Hebt Kanten bei Änderungen hitzeartig an.",
+    "Steigert temporär Sättigung und Helligkeit an der Balkenkante ohne große Bewegung.",
+    "Kantenbetonter Heat-Impuls."
+  ),
+  "segment-pop": optionCopy(
+    "Lässt den Balkenabschnitt kurz aufspringen.",
+    "Bei Änderungen poppt der Balken sichtbar auf und setzt sich dann wieder.",
+    "Kurzer Segment-Pop bei Änderungen."
+  ),
+  "danger-flicker": optionCopy(
+    "Reagiert mit einem kurzen Warn-Flicker.",
+    "Setzt auf einen schnellen Helligkeitswechsel mit aggressiverer Dringlichkeitswirkung.",
+    "Warnender Flicker-Impuls."
+  ),
+  "checkout-glow": optionCopy(
+    "Verstärkt den Balken mit kurzem Glow-Burst.",
+    "Der Balken leuchtet bei Änderungen sichtbar auf und fällt weich zurück.",
+    "Deutlicher Glow-Burst bei Scoreänderung."
   ),
 });
 
@@ -1963,6 +2117,9 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "x01-score-progress": {
     designPreset: X01_SCORE_PROGRESS_DESIGN_OPTION_COPY,
+    colorTheme: X01_SCORE_PROGRESS_COLOR_OPTION_COPY,
+    barSize: X01_SCORE_PROGRESS_SIZE_OPTION_COPY,
+    effect: X01_SCORE_PROGRESS_EFFECT_OPTION_COPY,
   },
   "checkout-board-targets": {
     effect: BOARD_TARGET_EFFECT_OPTION_COPY,

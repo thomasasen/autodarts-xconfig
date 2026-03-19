@@ -85,6 +85,33 @@ const SINGLE_BULL_SOUND_COOLDOWN = new Set([400, 700, 1000]);
 const SINGLE_BULL_SOUND_POLL_INTERVAL = new Set([0, 1200]);
 const TURN_POINTS_COUNT_DURATIONS = new Set([260, 416, 650]);
 const X01_SCORE_PROGRESS_PRESETS = new Set(["signal", "glass", "minimal"]);
+const X01_SCORE_PROGRESS_COLOR_THEMES = new Set([
+  "checkout-focus",
+  "traffic-light",
+  "danger-endgame",
+  "gradient-by-progress",
+  "autodarts",
+  "signal-lime",
+  "glass-mint",
+  "ember-rush",
+  "ice-circuit",
+  "neon-violet",
+  "sunset-amber",
+  "monochrome-steel",
+]);
+const X01_SCORE_PROGRESS_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
+const X01_SCORE_PROGRESS_EFFECTS = new Set([
+  "off",
+  "pulse-on-change",
+  "sheen-sweep",
+  "charge-release",
+  "burn-down",
+  "spark-trail",
+  "heat-edge",
+  "segment-pop",
+  "danger-flicker",
+  "checkout-glow",
+]);
 const WINNER_FIREWORKS_STYLES = new Set([
   "realistic",
   "fireworks",
@@ -518,6 +545,16 @@ function normalizeTurnPointsCountConfig(rawConfig = {}) {
 }
 
 function normalizeX01ScoreProgressConfig(rawConfig = {}) {
+  const legacyThresholdColorMode = normalizeStringChoice(
+    rawConfig.thresholdColorMode,
+    "",
+    X01_SCORE_PROGRESS_COLOR_THEMES
+  );
+  const normalizedColorTheme = normalizeStringChoice(
+    rawConfig.colorTheme,
+    legacyThresholdColorMode || "checkout-focus",
+    X01_SCORE_PROGRESS_COLOR_THEMES
+  );
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     designPreset: normalizeStringChoice(
@@ -525,6 +562,9 @@ function normalizeX01ScoreProgressConfig(rawConfig = {}) {
       "signal",
       X01_SCORE_PROGRESS_PRESETS
     ),
+    colorTheme: normalizedColorTheme,
+    barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_SCORE_PROGRESS_BAR_SIZES),
+    effect: normalizeStringChoice(rawConfig.effect, "charge-release", X01_SCORE_PROGRESS_EFFECTS),
     debug: normalizeBoolean(rawConfig.debug, false),
   };
 }

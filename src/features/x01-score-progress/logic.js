@@ -1,11 +1,19 @@
 import {
   ACTIVE_CLASS,
   FILL_CLASS,
+  getEffectFillClass,
+  getEffectFillClassList,
   getPresetClass,
+  getPresetClassList,
+  getSizeClass,
+  getSizeClassList,
   HOST_ATTRIBUTE,
   HOST_SELECTOR,
   INACTIVE_CLASS,
+  normalizeBarSize,
+  normalizeColorTheme,
   normalizeDesignPreset,
+  normalizeEffect,
   TRACK_CLASS,
 } from "./style.js";
 
@@ -17,6 +25,77 @@ export const PLAYER_SCORE_SELECTOR = "p.ad-ext-player-score";
 export const START_SCORE_PATTERN = /\b(121|170|\d+01)\b/i;
 export const WIDTH_PROPERTY = "--ad-ext-x01-score-progress-width";
 export const DEBUG_MAX_CARD_SAMPLES = 4;
+export const COLOR_THEME_ATTRIBUTE = "data-ad-ext-x01-score-progress-color-theme";
+export const SIZE_ATTRIBUTE = "data-ad-ext-x01-score-progress-size";
+export const EFFECT_ATTRIBUTE = "data-ad-ext-x01-score-progress-effect";
+
+const ACTIVE_STYLE_PROPERTIES = Object.freeze([
+  "--ad-ext-x01-score-progress-track-bg-active",
+  "--ad-ext-x01-score-progress-fill-bg-active",
+  "--ad-ext-x01-score-progress-fill-shadow-active",
+  "--ad-ext-x01-score-progress-sheen-active",
+]);
+const PRESET_CLASS_LIST = Object.freeze(getPresetClassList());
+const SIZE_CLASS_LIST = Object.freeze(getSizeClassList());
+const EFFECT_FILL_CLASS_LIST = Object.freeze(getEffectFillClassList());
+const THRESHOLD_COLOR_THEMES = new Set([
+  "checkout-focus",
+  "traffic-light",
+  "danger-endgame",
+  "gradient-by-progress",
+]);
+const STATIC_COLOR_THEME_PALETTES = Object.freeze({
+  autodarts: Object.freeze({
+    start: [56, 189, 248],
+    mid: [96, 165, 250],
+    end: [125, 211, 252],
+    track: [29, 78, 216],
+  }),
+  "signal-lime": Object.freeze({
+    start: [132, 204, 22],
+    mid: [163, 230, 53],
+    end: [190, 242, 100],
+    track: [63, 98, 18],
+  }),
+  "glass-mint": Object.freeze({
+    start: [45, 212, 191],
+    mid: [110, 231, 183],
+    end: [187, 247, 208],
+    track: [16, 185, 129],
+  }),
+  "ember-rush": Object.freeze({
+    start: [251, 146, 60],
+    mid: [249, 115, 22],
+    end: [239, 68, 68],
+    track: [154, 52, 18],
+  }),
+  "ice-circuit": Object.freeze({
+    start: [56, 189, 248],
+    mid: [34, 211, 238],
+    end: [45, 212, 191],
+    track: [14, 116, 144],
+  }),
+  "neon-violet": Object.freeze({
+    start: [168, 85, 247],
+    mid: [129, 140, 248],
+    end: [56, 189, 248],
+    track: [91, 33, 182],
+  }),
+  "sunset-amber": Object.freeze({
+    start: [250, 204, 21],
+    mid: [249, 115, 22],
+    end: [244, 63, 94],
+    track: [180, 83, 9],
+  }),
+  "monochrome-steel": Object.freeze({
+    start: [226, 232, 240],
+    mid: [148, 163, 184],
+    end: [100, 116, 139],
+    track: [71, 85, 105],
+  }),
+});
+const EFFECT_ANIMATION_SLOT = Symbol("adExtX01ScoreProgressEffectAnimation");
+const EFFECT_CHANGE_TOKEN_ATTRIBUTE = "data-ad-ext-x01-score-progress-effect-token";
 
 function isFiniteNumber(value) {
   return Number.isFinite(value);
@@ -30,6 +109,168 @@ function formatProgressWidth(ratio) {
   const normalizedRatio = clamp(Number(ratio) || 0, 0, 1);
   const percentage = (normalizedRatio * 100).toFixed(2);
   return percentage.endsWith(".00") ? `${Number(percentage)}%` : `${percentage}%`;
+}
+
+function toRgba(color, alpha) {
+  const tuple = Array.isArray(color) ? color : [148, 163, 184];
+  const [r, g, b] = tuple.map((value) => clamp(Number(value) || 0, 0, 255));
+  const normalizedAlpha = clamp(Number(alpha) || 0, 0, 1);
+  return `rgba(${r},${g},${b},${normalizedAlpha.toFixed(3)})`;
+}
+
+function buildFillGradient(palette) {
+  const start = palette?.start || [132, 204, 22];
+  const mid = palette?.mid || [163, 230, 53];
+  const end = palette?.end || [190, 242, 100];
+  return `linear-gradient(90deg,${toRgba(start, 0.98)} 0%,${toRgba(mid, 0.98)} 46%,${toRgba(
+    end,
+    0.99
+  )} 100%)`;
+}
+
+function buildTrackGradient(palette) {
+  const track = palette?.track || [63, 98, 18];
+  return `linear-gradient(90deg,${toRgba(track, 0.42)} 0%,${toRgba(track, 0.15)} 100%)`;
+}
+
+function buildShadowColor(palette) {
+  const shadowBase = palette?.mid || palette?.start || [163, 230, 53];
+  return `0 0 18px ${toRgba(shadowBase, 0.32)}`;
+}
+
+function hslToRgb(h, s, l) {
+  const hue = clamp(Number(h) || 0, 0, 360) / 360;
+  const saturation = clamp(Number(s) || 0, 0, 100) / 100;
+  const lightness = clamp(Number(l) || 0, 0, 100) / 100;
+  if (saturation === 0) {
+    const gray = Math.round(lightness * 255);
+    return [gray, gray, gray];
+  }
+
+  const hueToRgb = (p, q, t) => {
+    let normalizedT = t;
+    if (normalizedT < 0) {
+      normalizedT += 1;
+    }
+    if (normalizedT > 1) {
+      normalizedT -= 1;
+    }
+    if (normalizedT < 1 / 6) {
+      return p + (q - p) * 6 * normalizedT;
+    }
+    if (normalizedT < 1 / 2) {
+      return q;
+    }
+    if (normalizedT < 2 / 3) {
+      return p + (q - p) * (2 / 3 - normalizedT) * 6;
+    }
+    return p;
+  };
+
+  const q =
+    lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+  const p = 2 * lightness - q;
+  return [
+    Math.round(hueToRgb(p, q, hue + 1 / 3) * 255),
+    Math.round(hueToRgb(p, q, hue) * 255),
+    Math.round(hueToRgb(p, q, hue - 1 / 3) * 255),
+  ];
+}
+
+function createPalette(start, mid, end, track) {
+  return {
+    start,
+    mid,
+    end,
+    track,
+  };
+}
+
+function resolveThresholdPalette(mode, ratio, score) {
+  if (mode === "gradient-by-progress") {
+    const hue = clamp(10 + (1 - ratio) * 110, 10, 120);
+    const start = hslToRgb(hue - 8, 88, 52);
+    const mid = hslToRgb(hue, 86, 56);
+    const end = hslToRgb(hue + 8, 84, 60);
+    const track = hslToRgb(hue, 52, 28);
+    return createPalette(start, mid, end, track);
+  }
+
+  if (mode === "traffic-light") {
+    if (ratio > 0.67) {
+      return createPalette([248, 113, 113], [239, 68, 68], [220, 38, 38], [153, 27, 27]);
+    }
+    if (ratio > 0.34) {
+      return createPalette([250, 204, 21], [245, 158, 11], [234, 88, 12], [146, 64, 14]);
+    }
+    return createPalette([132, 204, 22], [74, 222, 128], [34, 197, 94], [22, 101, 52]);
+  }
+
+  if (mode === "danger-endgame") {
+    if (score <= 50) {
+      return createPalette([248, 113, 113], [239, 68, 68], [220, 38, 38], [127, 29, 29]);
+    }
+    if (score <= 121) {
+      return createPalette([251, 146, 60], [249, 115, 22], [234, 88, 12], [124, 45, 18]);
+    }
+    if (score <= 170) {
+      return createPalette([250, 204, 21], [245, 158, 11], [217, 119, 6], [120, 53, 15]);
+    }
+    return createPalette([148, 163, 184], [100, 116, 139], [71, 85, 105], [51, 65, 85]);
+  }
+
+  if (score <= 60) {
+    return createPalette([74, 222, 128], [34, 197, 94], [22, 163, 74], [21, 128, 61]);
+  }
+  if (score <= 170) {
+    return createPalette([250, 204, 21], [245, 158, 11], [217, 119, 6], [146, 64, 14]);
+  }
+  return createPalette([56, 189, 248], [96, 165, 250], [129, 140, 248], [37, 99, 235]);
+}
+
+function resolveColorPalette(colorTheme, ratio, score) {
+  const normalizedColorTheme = normalizeColorTheme(colorTheme);
+  if (THRESHOLD_COLOR_THEMES.has(normalizedColorTheme)) {
+    return resolveThresholdPalette(normalizedColorTheme, ratio, score);
+  }
+  return (
+    STATIC_COLOR_THEME_PALETTES[normalizedColorTheme] || STATIC_COLOR_THEME_PALETTES["signal-lime"]
+  );
+}
+
+function resolveActiveVisualVars(options = {}) {
+  const ratio = clamp(Number(options.ratio) || 0, 0, 1);
+  const score = clamp(Number(options.score) || 0, 0, Number.MAX_SAFE_INTEGER);
+  const palette = resolveColorPalette(options.colorTheme, ratio, score);
+  return {
+    "--ad-ext-x01-score-progress-track-bg-active": buildTrackGradient(palette),
+    "--ad-ext-x01-score-progress-fill-bg-active": buildFillGradient(palette),
+    "--ad-ext-x01-score-progress-fill-shadow-active": buildShadowColor(palette),
+    "--ad-ext-x01-score-progress-sheen-active": toRgba([255, 255, 255], 0.2),
+  };
+}
+
+function clearActiveVisualVars(node) {
+  if (!node?.style || typeof node.style.removeProperty !== "function") {
+    return;
+  }
+  ACTIVE_STYLE_PROPERTIES.forEach((propertyName) => {
+    node.style.removeProperty(propertyName);
+  });
+}
+
+function applyActiveVisualVars(node, variables = {}) {
+  if (!node?.style || typeof node.style.setProperty !== "function") {
+    return;
+  }
+  ACTIVE_STYLE_PROPERTIES.forEach((propertyName) => {
+    const value = String(variables[propertyName] || "").trim();
+    if (value) {
+      node.style.setProperty(propertyName, value);
+      return;
+    }
+    node.style.removeProperty(propertyName);
+  });
 }
 
 function getLocationPath(windowRef) {
@@ -323,6 +564,7 @@ export function createScoreProgressState() {
     matchCacheKey: "",
     cachedStartScore: null,
     cachedStartScoreSource: "",
+    hostScores: new WeakMap(),
   };
 }
 
@@ -526,6 +768,172 @@ export function ensureProgressHost(cardNode, documentRef) {
   return hostNode;
 }
 
+function getFillNode(hostNode) {
+  return hostNode?.querySelector?.(`.${FILL_CLASS}`) || null;
+}
+
+function clearFillEffectClasses(fillNode) {
+  if (!fillNode?.classList) {
+    return;
+  }
+  EFFECT_FILL_CLASS_LIST.forEach((className) => {
+    fillNode.classList.remove(className);
+  });
+}
+
+function cancelEffectAnimation(fillNode) {
+  const runningAnimation = fillNode?.[EFFECT_ANIMATION_SLOT];
+  if (runningAnimation && typeof runningAnimation.cancel === "function") {
+    try {
+      runningAnimation.cancel();
+    } catch (_) {
+      // Ignore stale animation handles.
+    }
+  }
+  if (fillNode && Object.prototype.hasOwnProperty.call(fillNode, EFFECT_ANIMATION_SLOT)) {
+    fillNode[EFFECT_ANIMATION_SLOT] = null;
+  }
+}
+
+function createEffectAnimationDefinition(effect) {
+  const normalizedEffect = normalizeEffect(effect);
+  if (normalizedEffect === "off") {
+    return null;
+  }
+
+  if (normalizedEffect === "pulse-on-change") {
+    return {
+      keyframes: [
+        { transform: "scaleY(1)", filter: "brightness(1)" },
+        { transform: "scaleY(1.2)", filter: "brightness(1.22)" },
+        { transform: "scaleY(1)", filter: "brightness(1)" },
+      ],
+      options: { duration: 320, easing: "ease-out" },
+    };
+  }
+
+  if (normalizedEffect === "sheen-sweep") {
+    return {
+      keyframes: [
+        { filter: "brightness(1) saturate(1)", opacity: 0.92 },
+        { filter: "brightness(1.24) saturate(1.2)", opacity: 1 },
+        { filter: "brightness(1) saturate(1)", opacity: 0.96 },
+      ],
+      options: { duration: 360, easing: "ease-in-out" },
+    };
+  }
+
+  if (normalizedEffect === "charge-release") {
+    return {
+      keyframes: [
+        { transform: "scaleX(1)", filter: "brightness(1)" },
+        { transform: "scaleX(1.035)", filter: "brightness(1.36)" },
+        { transform: "scaleX(1)", filter: "brightness(1)" },
+      ],
+      options: { duration: 430, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+    };
+  }
+
+  if (normalizedEffect === "burn-down") {
+    return {
+      keyframes: [
+        { filter: "brightness(1.24) saturate(1.35) hue-rotate(-8deg)" },
+        { filter: "brightness(1.08) saturate(1.12) hue-rotate(0deg)" },
+        { filter: "brightness(1) saturate(1)" },
+      ],
+      options: { duration: 460, easing: "ease-out" },
+    };
+  }
+
+  if (normalizedEffect === "spark-trail") {
+    return {
+      keyframes: [
+        { transform: "translateX(0)", filter: "brightness(1)" },
+        { transform: "translateX(3px)", filter: "brightness(1.25)" },
+        { transform: "translateX(0)", filter: "brightness(1)" },
+      ],
+      options: { duration: 300, easing: "ease-out" },
+    };
+  }
+
+  if (normalizedEffect === "heat-edge") {
+    return {
+      keyframes: [
+        { filter: "brightness(1.18) saturate(1.22)" },
+        { filter: "brightness(1.08) saturate(1.1)" },
+        { filter: "brightness(1) saturate(1.02)" },
+      ],
+      options: { duration: 420, easing: "ease-out" },
+    };
+  }
+
+  if (normalizedEffect === "segment-pop") {
+    return {
+      keyframes: [
+        { transform: "scaleY(1)" },
+        { transform: "scaleY(1.32)" },
+        { transform: "scaleY(1)" },
+      ],
+      options: { duration: 320, easing: "ease-out" },
+    };
+  }
+
+  if (normalizedEffect === "danger-flicker") {
+    return {
+      keyframes: [
+        { opacity: 0.94, filter: "brightness(1.1)" },
+        { opacity: 1, filter: "brightness(1.34)" },
+        { opacity: 0.88, filter: "brightness(0.92)" },
+        { opacity: 1, filter: "brightness(1.18)" },
+      ],
+      options: { duration: 420, easing: "steps(2, end)" },
+    };
+  }
+
+  if (normalizedEffect === "checkout-glow") {
+    return {
+      keyframes: [
+        { filter: "brightness(1.08) drop-shadow(0 0 4px rgba(255,255,255,.2))" },
+        { filter: "brightness(1.28) drop-shadow(0 0 14px rgba(255,255,255,.45))" },
+        { filter: "brightness(1.08) drop-shadow(0 0 5px rgba(255,255,255,.24))" },
+      ],
+      options: { duration: 620, easing: "ease-in-out" },
+    };
+  }
+
+  return null;
+}
+
+function triggerScoreChangeEffect(fillNode, effect, shouldTrigger) {
+  if (!fillNode) {
+    return;
+  }
+
+  const normalizedEffect = normalizeEffect(effect);
+  fillNode.setAttribute(EFFECT_ATTRIBUTE, normalizedEffect);
+  clearFillEffectClasses(fillNode);
+  fillNode.classList.add(getEffectFillClass(normalizedEffect));
+
+  cancelEffectAnimation(fillNode);
+  if (!shouldTrigger || normalizedEffect === "off" || typeof fillNode.animate !== "function") {
+    return;
+  }
+
+  const definition = createEffectAnimationDefinition(normalizedEffect);
+  if (!definition) {
+    return;
+  }
+
+  const animation = fillNode.animate(definition.keyframes, {
+    fill: "none",
+    iterations: 1,
+    ...definition.options,
+  });
+  fillNode[EFFECT_ANIMATION_SLOT] = animation;
+  const token = Number(fillNode.getAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE) || 0) + 1;
+  fillNode.setAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE, String(token));
+}
+
 export function updateProgressHost(hostNode, options = {}) {
   if (!hostNode || !hostNode.classList || !hostNode.style) {
     return;
@@ -534,19 +942,46 @@ export function updateProgressHost(hostNode, options = {}) {
   const ratio = clamp(Number(options.ratio) || 0, 0, 1);
   const active = options.active === true;
   const presetClass = getPresetClass(options.designPreset);
+  const sizeClass = getSizeClass(options.barSize);
+  const colorTheme = normalizeColorTheme(options.colorTheme);
+  const effect = normalizeEffect(options.effect);
+  const fillNode = getFillNode(hostNode);
 
   hostNode.classList.remove(
     `${ACTIVE_CLASS}`,
     `${INACTIVE_CLASS}`,
-    `${getPresetClass("signal")}`,
-    `${getPresetClass("glass")}`,
-    `${getPresetClass("minimal")}`
+    ...PRESET_CLASS_LIST,
+    ...SIZE_CLASS_LIST
   );
   hostNode.classList.add(active ? ACTIVE_CLASS : INACTIVE_CLASS);
   hostNode.classList.add(presetClass);
+  if (active) {
+    hostNode.classList.add(sizeClass);
+  }
   hostNode.setAttribute("data-ad-ext-x01-score-progress-state", active ? "active" : "inactive");
   hostNode.setAttribute("data-ad-ext-x01-score-progress-preset", normalizeDesignPreset(options.designPreset));
+  hostNode.setAttribute(COLOR_THEME_ATTRIBUTE, colorTheme);
+  hostNode.setAttribute(SIZE_ATTRIBUTE, normalizeBarSize(options.barSize));
+  hostNode.setAttribute(EFFECT_ATTRIBUTE, effect);
   hostNode.style.setProperty(WIDTH_PROPERTY, formatProgressWidth(ratio));
+
+  if (active) {
+    applyActiveVisualVars(
+      hostNode,
+      resolveActiveVisualVars({
+        ratio,
+        score: options.score,
+        colorTheme,
+      })
+    );
+    triggerScoreChangeEffect(fillNode, effect, options.scoreChanged === true);
+    return;
+  }
+
+  clearActiveVisualVars(hostNode);
+  clearFillEffectClasses(fillNode);
+  cancelEffectAnimation(fillNode);
+  fillNode?.removeAttribute?.(EFFECT_CHANGE_TOKEN_ATTRIBUTE);
 }
 
 function shouldRenderFeature(context = {}) {
@@ -562,6 +997,14 @@ function shouldRenderFeature(context = {}) {
 export function syncScoreProgress(context = {}, state = createScoreProgressState()) {
   const documentRef = context.documentRef;
   const debugEnabled = context.featureConfig?.debug === true;
+  const normalizedDesignPreset = normalizeDesignPreset(context.featureConfig?.designPreset);
+  const normalizedColorTheme = normalizeColorTheme(context.featureConfig?.colorTheme);
+  const normalizedBarSize = normalizeBarSize(context.featureConfig?.barSize);
+  const normalizedEffect = normalizeEffect(context.featureConfig?.effect);
+  if (!state.hostScores || typeof state.hostScores.set !== "function") {
+    state.hostScores = new WeakMap();
+  }
+
   const debugPayload = {
     reason: "unknown",
     routePath: getLocationPath(context.windowRef),
@@ -580,6 +1023,12 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     hostCountAfterCleanup: 0,
     hiddenHostCount: 0,
     zeroHeightHostCount: 0,
+    visuals: {
+      designPreset: normalizedDesignPreset,
+      colorTheme: normalizedColorTheme,
+      barSize: normalizedBarSize,
+      effect: normalizedEffect,
+    },
     sampledCards: [],
   };
 
@@ -683,10 +1132,19 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     }
 
     const ratio = scoreValue / startScore;
+    const previousScore = state.hostScores.get(hostNode);
+    const scoreChanged =
+      isFiniteNumber(previousScore) && previousScore !== scoreValue && scoreValue >= 0;
+    state.hostScores.set(hostNode, scoreValue);
     updateProgressHost(hostNode, {
       ratio,
+      score: scoreValue,
+      scoreChanged,
       active: cardNode.classList?.contains("ad-ext-player-active") === true,
-      designPreset: context.featureConfig?.designPreset,
+      designPreset: normalizedDesignPreset,
+      colorTheme: normalizedColorTheme,
+      barSize: normalizedBarSize,
+      effect: normalizedEffect,
     });
     activeHosts.add(hostNode);
     renderedCards += 1;
@@ -705,6 +1163,9 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
         host: summarizeNode(hostNode),
         hostState: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-state") || ""),
         hostPreset: String(hostNode.getAttribute?.("data-ad-ext-x01-score-progress-preset") || ""),
+        hostColorTheme: String(hostNode.getAttribute?.(COLOR_THEME_ATTRIBUTE) || ""),
+        hostSize: String(hostNode.getAttribute?.(SIZE_ATTRIBUTE) || ""),
+        hostEffect: String(hostNode.getAttribute?.(EFFECT_ATTRIBUTE) || ""),
         hostWidth: String(hostNode.style?.getPropertyValue?.(WIDTH_PROPERTY) || ""),
         hostDisplay,
         hostRect,

@@ -54,6 +54,9 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.dartMarkerDarts.enableShadow, true);
   assert.equal(config.features.dartMarkerDarts.enableWobble, true);
   assert.equal(config.features.x01ScoreProgress.designPreset, "signal");
+  assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
+  assert.equal(config.features.x01ScoreProgress.barSize, "standard");
+  assert.equal(config.features.x01ScoreProgress.effect, "charge-release");
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -136,6 +139,10 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       },
       x01ScoreProgress: {
         designPreset: "GLASS",
+        colorTheme: "ICE-CIRCUIT",
+        thresholdColorMode: "TRAFFIC-LIGHT",
+        barSize: "EXTRABREIT",
+        effect: "CHECKOUT-GLOW",
       },
       winnerFireworks: {
         style: "FIREWORKS",
@@ -236,6 +243,9 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 650);
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").designPreset, "glass");
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "checkout-glow");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").intensity, "stark");
@@ -371,4 +381,17 @@ test("runtime config keeps unknown feature fields for forward-compatible setting
 
   const normalized = runtimeConfig.getNormalized();
   assert.equal(normalized.features.themes.x01.retiredBackgroundFlag, "legacy-value");
+});
+
+test("x01-score-progress falls back to thresholdColorMode when colorTheme is missing", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      x01ScoreProgress: {
+        colorTheme: "",
+        thresholdColorMode: "danger-endgame",
+      },
+    },
+  });
+
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "danger-endgame");
 });

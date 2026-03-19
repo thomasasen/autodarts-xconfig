@@ -13,6 +13,21 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.51] - 2026-03-19
+
+### Changed
+
+- Nutzerwirkung: Der X01-Restscore-Balken bietet jetzt deutlich mehr Gestaltung:
+  eine kombinierte Farbauswahl mit dynamischen Schwellenmodi und festen Paletten,
+  vier Balkengrößen sowie zehn Effekte (inklusive `Aus`). Dadurch lassen sich
+  aktive Spieler klarer, hochwertiger und je nach Spielstil auffälliger darstellen,
+  während inaktive Spieler bewusst unverändert bleiben.
+  Technik: `x01-score-progress` wurde um normalisierte Felder
+  (`colorTheme`, `barSize`, `effect`) erweitert, inklusive Legacy-Fallback von
+  `thresholdColorMode`, aktiver-only Visual-Variablen, Effektklassen und
+  score-change Animationen. Dazu kamen UI-/Copy-Erweiterungen, aktualisierte
+  README-/FEATURES-Synchronisation sowie Runtime-/Feature-Regressionstests.
+
 ## [2.0.50] - 2026-03-19
 
 ### Fixed
@@ -450,6 +465,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
+[2.0.51]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.50]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.49]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...d40e59c
 [2.0.48]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD

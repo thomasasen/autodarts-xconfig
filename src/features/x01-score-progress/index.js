@@ -68,6 +68,7 @@ function emitDebugWarning(debugState, signature, message, payload = null) {
 }
 
 function buildDebugSignature(debugInfo = {}) {
+  const visuals = debugInfo.visuals || {};
   return [
     debugInfo.reason || "unknown",
     debugInfo.shouldRender ? 1 : 0,
@@ -85,8 +86,17 @@ function buildDebugSignature(debugInfo = {}) {
     Array.isArray(debugInfo.variant?.variantStripTexts)
       ? debugInfo.variant.variantStripTexts.join("|")
       : "",
+    visuals.designPreset || "signal",
+    visuals.colorTheme || "checkout-focus",
+    visuals.barSize || "standard",
+    visuals.effect || "charge-release",
     debugInfo.sampledCards
-      .map((card) => `${card.index}:${card.parsedScore ?? "?"}:${card.hostWidth || "-"}`)
+      .map(
+        (card) =>
+          `${card.index}:${card.parsedScore ?? "?"}:${card.hostWidth || "-"}:${card.hostColorTheme || "-"}:${
+            card.hostSize || "-"
+          }:${card.hostEffect || "-"}`
+      )
       .join(","),
   ].join("::");
 }
@@ -99,7 +109,10 @@ function buildDebugMessage(debugInfo = {}) {
         .slice(0, 4)
         .join(" | ")
     : "";
-  return `state reason="${debugInfo.reason || "unknown"}" route="${debugInfo.routePath || "-"}${
+  const visuals = debugInfo.visuals || {};
+  const baseMessage = `state reason="${debugInfo.reason || "unknown"}" route="${
+    debugInfo.routePath || "-"
+  }${
     debugInfo.routeHash || ""
   }" shouldRender=${debugInfo.shouldRender ? "yes" : "no"} start=${
     debugInfo.startScore ?? "null"
@@ -112,6 +125,9 @@ function buildDebugMessage(debugInfo = {}) {
   } zeroHeightHosts=${Number(debugInfo.zeroHeightHostCount) || 0} variantSnapshot="${
     variant.snapshotVariant || "-"
   }" variantDom="${variant.domVariant || "-"}" variantStrip="${variantStrip || "-"}"`;
+  return `${baseMessage} visuals(preset="${visuals.designPreset || "signal"}", colors="${
+    visuals.colorTheme || "checkout-focus"
+  }", size="${visuals.barSize || "standard"}", effect="${visuals.effect || "charge-release"}")`;
 }
 
 function shouldWarnDebugState(debugInfo = {}) {
@@ -145,6 +161,9 @@ export function mountX01ScoreProgress(context = {}) {
       ? config.getFeatureConfig("x01ScoreProgress")
       : {
           designPreset: "signal",
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "charge-release",
           debug: false,
         };
 

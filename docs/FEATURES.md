@@ -221,9 +221,38 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 - Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
 - Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung, inaktive Karten bleiben flacher und ruhiger. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
 - `Design`: Wählt die visuelle Stilrichtung des Score-Balkens.
-  - `Signal`: Diese Variante setzt auf einen klaren, signalstarken Balken mit deutlicher Präsenz und hoher Sofortlesbarkeit.
-  - `Glass`: Diese Variante gibt dem Balken eine glattere, gläserne Anmutung mit weicheren Verläufen und etwas mehr visueller Tiefe.
-  - `Minimal`: Diese Variante hält den Balken besonders flach und ruhig, damit die Zusatzinformation präsent bleibt, ohne die Spielerkarte stark zu dominieren.
+  - `Signal`: Diese Variante priorisiert Sofortlesbarkeit mit klarer Signalwirkung.
+  - `Glass`: Diese Variante wirkt ruhiger und hochwertiger durch gläserne Übergänge.
+  - `Minimal`: Diese Variante hält die Zusatzinformation präsent, ohne die Karte stark zu dominieren.
+- `Farben`: Steuert statische Farbpaletten und dynamische Schwellenfarben in einer gemeinsamen Auswahl.
+  - `Checkout Focus`: Dynamischer Standardmodus mit Checkout-Fokus.
+  - `Traffic Light`: Stufenmodus mit klaren Rot/Amber/Grün-Prozentschwellen.
+  - `Danger Endgame`: Dynamischer Endgame-Modus mit starkem Warnfokus.
+  - `Gradient Progress`: Kontinuierlicher Farbverlauf entlang des Score-Fortschritts.
+  - `Autodarts`: Statische Autodarts-nahe Blaupalette.
+  - `Signal Lime`: Statische lime-grüne Signalpalette.
+  - `Glass Mint`: Statische helle Mint-/Aqua-Palette.
+  - `Ember Rush`: Statische warme Ember-Palette.
+  - `Ice Circuit`: Statische kühle Cyan-/Türkis-Palette.
+  - `Neon Violet`: Statische violett-blaue Neonpalette.
+  - `Sunset Amber`: Statische Sunset-/Amber-Palette.
+  - `Monochrome Steel`: Statische, farbreduzierte Monochrom-Palette.
+- `Balkengröße`: Legt die Balkenhöhe des aktiven Spielers fest.
+  - `Schmal`: Schmale Balkenhöhe für eine ruhige Darstellung.
+  - `Standard`: Standardhöhe als neutraler Mittelweg.
+  - `Breit`: Breitere Balkenhöhe mit stärkerer Präsenz.
+  - `Extrabreit`: Maximal breite Balkenhöhe für höchste Sichtbarkeit.
+- `Effekt`: Wählt den Reaktionseffekt des Balkens bei Scoreänderungen.
+  - `Aus`: Keine Zusatzanimation bei Scoreänderungen.
+  - `Pulse on Change`: Kurzer Pulsimpuls bei Änderungen.
+  - `Sheen Sweep`: Kurzer Glanz-Sweep auf Scoreänderung.
+  - `Charge Release`: Ausgewogener Charge-Burst als Standard.
+  - `Burn Down`: Warmer Burn-Impuls bei Änderungen.
+  - `Spark Trail`: Kurzer Spark-Trail-Effekt.
+  - `Heat Edge`: Kantenbetonter Heat-Impuls.
+  - `Segment Pop`: Kurzer Segment-Pop bei Änderungen.
+  - `Danger Flicker`: Warnender Flicker-Impuls.
+  - `Checkout Glow`: Deutlicher Glow-Burst bei Scoreänderung.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ### Checkout Board Targets

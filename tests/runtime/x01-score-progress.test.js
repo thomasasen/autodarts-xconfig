@@ -10,6 +10,7 @@ import {
 import { mountX01ScoreProgress } from "../../src/features/x01-score-progress/index.js";
 import {
   ACTIVE_CLASS,
+  FILL_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
   buildStyleText,
@@ -129,7 +130,12 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
     {
       documentRef,
       windowRef,
-      featureConfig: { designPreset: "glass" },
+      featureConfig: {
+        designPreset: "glass",
+        colorTheme: "danger-endgame",
+        barSize: "extrabreit",
+        effect: "checkout-glow",
+      },
       gameState: {
         getSnapshot: () => ({
           topic: "match-501",
@@ -152,14 +158,35 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   assert.equal(activePlayer.stackNode.children[1], activeHost);
   assert.equal(activeHost.classList.contains(ACTIVE_CLASS), true);
   assert.equal(activeHost.classList.contains("ad-ext-x01-score-progress--preset-glass"), true);
+  assert.equal(activeHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), true);
+  assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "danger-endgame");
+  assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "checkout-glow");
   assert.equal(activeHost.style.getPropertyValue(WIDTH_PROPERTY), "33.93%");
+  const activeFill = activeHost.querySelector(`.${FILL_CLASS}`);
+  assert.ok(activeFill);
+  assert.equal(
+    activeFill.classList.contains("ad-ext-x01-score-progress__fill--effect-checkout-glow"),
+    true
+  );
 
   const inactiveHost = inactivePlayer.cardNode.querySelector(HOST_SELECTOR);
   assert.ok(inactiveHost);
   assert.equal(inactivePlayer.stackNode.children[1], inactiveHost);
   assert.equal(inactiveHost.classList.contains(INACTIVE_CLASS), true);
   assert.equal(inactiveHost.classList.contains("ad-ext-x01-score-progress--preset-glass"), true);
+  assert.equal(inactiveHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), false);
+  assert.equal(
+    inactiveHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"),
+    "danger-endgame"
+  );
+  assert.equal(inactiveHost.getAttribute("data-ad-ext-x01-score-progress-effect"), "checkout-glow");
   assert.equal(inactiveHost.style.getPropertyValue(WIDTH_PROPERTY), "50.10%");
+  const inactiveFill = inactiveHost.querySelector(`.${FILL_CLASS}`);
+  assert.ok(inactiveFill);
+  assert.equal(
+    inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-checkout-glow"),
+    false
+  );
 });
 
 test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
@@ -285,6 +312,9 @@ test("syncScoreProgress includes sampled card diagnostics in debug mode", () => 
       windowRef,
       featureConfig: {
         designPreset: "glass",
+        colorTheme: "checkout-focus",
+        barSize: "standard",
+        effect: "charge-release",
         debug: true,
       },
       gameState: {
@@ -342,6 +372,9 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
     config: {
       getFeatureConfig: () => ({
         designPreset: "signal",
+        colorTheme: "checkout-focus",
+        barSize: "standard",
+        effect: "charge-release",
         debug: true,
       }),
     },
@@ -361,6 +394,149 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
   assert.match(String(warnings[0][0] || ""), /payload=\{.*"reason":"missing-start-score"/s);
   assert.equal(warnings[0][1]?.reason, "missing-start-score");
   assert.equal(Array.isArray(warnings[0][1]?.sampledCards), true);
+});
+
+test("syncScoreProgress keeps inactive styling untouched by active-only settings", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const inactivePlayer = createPlayerCard(documentRef, 251);
+  playerDisplay.appendChild(inactivePlayer.cardNode);
+
+  syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        designPreset: "signal",
+        colorTheme: "ember-rush",
+        barSize: "extrabreit",
+        effect: "danger-flicker",
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "match-inactive-only",
+          match: {
+            id: "match-inactive-only",
+            variant: "501",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  const inactiveHost = inactivePlayer.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(inactiveHost);
+  assert.equal(inactiveHost.classList.contains(INACTIVE_CLASS), true);
+  assert.equal(inactiveHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), false);
+  assert.equal(
+    inactiveHost.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"),
+    ""
+  );
+  const inactiveFill = inactiveHost.querySelector(`.${FILL_CLASS}`);
+  assert.ok(inactiveFill);
+  assert.equal(
+    inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-danger-flicker"),
+    false
+  );
+});
+
+test("syncScoreProgress removes active-only size and effects when a card becomes inactive", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 251, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        designPreset: "signal",
+        colorTheme: "ember-rush",
+        barSize: "extrabreit",
+        effect: "danger-flicker",
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "match-active-pass",
+          match: {
+            id: "match-active-pass",
+            variant: "501",
+          },
+        }),
+      },
+    },
+    state
+  );
+
+  let hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  assert.equal(hostNode.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), true);
+  let fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  assert.ok(fillNode);
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-danger-flicker"),
+    true
+  );
+
+  player.cardNode.classList.remove("ad-ext-player-active");
+  syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        designPreset: "signal",
+        colorTheme: "ember-rush",
+        barSize: "extrabreit",
+        effect: "danger-flicker",
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "match-inactive-pass",
+          match: {
+            id: "match-inactive-pass",
+            variant: "501",
+          },
+        }),
+      },
+    },
+    state
+  );
+
+  hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  assert.equal(hostNode.classList.contains(INACTIVE_CLASS), true);
+  assert.equal(hostNode.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), false);
+  assert.equal(
+    hostNode.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"),
+    ""
+  );
+  fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  assert.ok(fillNode);
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-danger-flicker"),
+    false
+  );
 });
 
 test("score-progress style reserves a dedicated player-card row for the bar", () => {

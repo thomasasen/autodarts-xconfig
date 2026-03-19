@@ -380,10 +380,39 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 **Einstellungen einfach erklärt**
 
-- `Design`: Bestimmt, wie der Score-Balken grafisch ausgeführt wird. Die Berechnung bleibt gleich; nur Höhe, Verlauf, Glow und Materialwirkung des Balkens ändern sich.
-  - `Signal`: Der Balken wirkt kräftig, kontrastreich und deutlich präsent. Gerade auf dunkleren Layouts fällt diese Variante am schnellsten ins Auge.
-  - `Glass`: Der Balken erhält weichere Verläufe, eine leicht glasige Materialwirkung und wirkt eleganter als das reine Signal-Preset.
-  - `Minimal`: Der Balken bleibt sichtbar, nimmt aber deutlich weniger Raum und Leuchtwirkung ein. Das ist die unauffälligste Darstellung.
+- `Design`: Bestimmt die Grundästhetik des Balkens. Die Berechnung bleibt unverändert, nur Materialwirkung, Schärfe und Flächencharakter wechseln.
+  - `Signal`: Der Balken wirkt kontraststark und präsent. Kontur, Fläche und Glanz sind auf schnelle Lesbarkeit ausgelegt.
+  - `Glass`: Der Balken bekommt weichere Übergänge und einen eleganteren Layer-Look mit mehr Tiefe.
+  - `Minimal`: Der Balken bleibt klar erkennbar, tritt optisch aber zurück und wirkt nüchterner.
+- `Farben`: Enthält sowohl feste Farbpaletten als auch dynamische Schwellenmodi. So kannst du den Balken statisch einfärben oder die Farbe abhängig von Score/Prozent wechseln.
+  - `Checkout Focus`: Färbt den Balken abhängig vom Restscore mit Fokus auf den Bereich bis `170` und steigert die visuelle Dringlichkeit in Checkout-Nähe.
+  - `Traffic Light`: Nutzt feste Prozentstufen des verbleibenden Scores. Viel Rest = eher Rot, mittlerer Bereich = Amber, niedriger Rest = Grün.
+  - `Danger Endgame`: Wechselt in den niedrigen Restwertbereichen aggressiver in warme Warnfarben und hebt kritische Endgame-Situationen deutlich hervor.
+  - `Gradient Progress`: Der Balken läuft ohne harte Stufen über einen weichen Verlauf von warm nach kalt beziehungsweise zurück, abhängig vom verbleibenden Prozentwert.
+  - `Autodarts`: Setzt den Balken auf eine markennahe blau-cyan Palette mit klarer Lesbarkeit auf dunklen Flächen.
+  - `Signal Lime`: Bleibt konstant im grün-limetten Signalbereich und wirkt präsent, ohne dynamische Schwellenwechsel.
+  - `Glass Mint`: Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Glass`.
+  - `Ember Rush`: Setzt den Balken dauerhaft auf eine energische, warme Palette mit hoher Aufmerksamkeit.
+  - `Ice Circuit`: Bleibt technisch-kühl und klar, mit hoher Differenzierung auf dunklen Boards.
+  - `Neon Violet`: Erzeugt einen modernen, kontrastreichen Look mit leicht futuristischer Wirkung.
+  - `Sunset Amber`: Wirkt warm und atmosphärisch, bleibt aber durch hohe Helligkeitskontraste gut lesbar.
+  - `Monochrome Steel`: Reduziert die Farbsignalik bewusst auf kühle Grauwerte für ein zurückhaltendes, technisches Erscheinungsbild.
+- `Balkengröße`: Vergrößert oder verkleinert die Balkenhöhe für aktive Spieler zwischen `Schmal` und `Extrabreit`. Inaktive Spieler bleiben bewusst unverändert.
+  - `Schmal`: Nimmt weniger vertikalen Raum ein und wirkt am zurückhaltendsten.
+  - `Standard`: Balanciert Präsenz und Zurückhaltung und passt in der Regel am besten zum Standardlayout.
+  - `Breit`: Der aktive Balken wird deutlicher und aus größerer Distanz schneller wahrgenommen.
+  - `Extrabreit`: Stellt den aktiven Balken sehr dominant dar und priorisiert maximale Sichtbarkeit.
+- `Effekt`: Bestimmt, ob der Balken bei Punktänderungen ruhig bleibt oder mit Effekten wie Charge, Burn-Down, Sheen oder Checkout-Glow reagiert.
+  - `Aus`: Der Balken aktualisiert nur Breite und Farbe ohne zusätzliche Animation.
+  - `Pulse on Change`: Bei Scoreänderungen pulsiert der Balken kompakt und kehrt direkt in den Normalzustand zurück.
+  - `Sheen Sweep`: Bei Änderungen entsteht ein heller Schimmerlauf mit glatter Ausblendung.
+  - `Charge Release`: Erzeugt eine kurze Verdichtung mit anschließender Entlastung und ist als Standardeffekt ausbalanciert.
+  - `Burn Down`: Bei Änderungen wird der Balken kurz wärmer und fällt dann kontrolliert zurück.
+  - `Spark Trail`: Der Balken wirkt kurz elektrisch und schnellt in die stabile Position zurück.
+  - `Heat Edge`: Steigert temporär Sättigung und Helligkeit an der Balkenkante ohne große Bewegung.
+  - `Segment Pop`: Bei Änderungen poppt der Balken sichtbar auf und setzt sich dann wieder.
+  - `Danger Flicker`: Setzt auf einen schnellen Helligkeitswechsel mit aggressiverer Dringlichkeitswirkung.
+  - `Checkout Glow`: Der Balken leuchtet bei Änderungen sichtbar auf und fällt weich zurück.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="animation-autodarts-animate-checkout-board-targets"></a>
