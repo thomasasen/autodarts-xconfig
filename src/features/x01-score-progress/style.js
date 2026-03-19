@@ -10,7 +10,7 @@ export const PRESET_CLASS_PREFIX = "ad-ext-x01-score-progress--preset-";
 export const SIZE_CLASS_PREFIX = "ad-ext-x01-score-progress--size-";
 export const EFFECT_FILL_CLASS_PREFIX = "ad-ext-x01-score-progress__fill--effect-";
 
-export const DESIGN_PRESETS = Object.freeze(["signal", "glass", "minimal"]);
+export const DESIGN_PRESETS = Object.freeze(["plain", "stripes", "liquid-glass"]);
 export const COLOR_THEMES = Object.freeze([
   "checkout-focus",
   "traffic-light",
@@ -46,7 +46,7 @@ function normalizeChoice(value, fallbackValue, allowedSet) {
 }
 
 export function normalizeDesignPreset(value) {
-  return normalizeChoice(value, "signal", DESIGN_PRESET_SET);
+  return normalizeChoice(value, "plain", DESIGN_PRESET_SET);
 }
 
 export function getPresetClass(value) {
@@ -93,14 +93,40 @@ ${HOST_SELECTOR}{
   --ad-ext-x01-score-progress-height-active:clamp(.72rem,1.35vw,1.02rem);
   --ad-ext-x01-score-progress-height-inactive:clamp(.3rem,.72vw,.52rem);
   --ad-ext-x01-score-progress-margin-top:clamp(.3rem,.95vw,.6rem);
-  --ad-ext-x01-score-progress-track-bg-active:linear-gradient(90deg,rgba(34,84,18,.42) 0%,rgba(56,94,22,.18) 100%);
-  --ad-ext-x01-score-progress-fill-bg-active:linear-gradient(90deg,rgba(132,204,22,.98) 0%,rgba(163,230,53,.98) 42%,rgba(190,242,100,.98) 100%);
+  --ad-ext-x01-score-progress-track-base-active:linear-gradient(90deg,rgba(34,84,18,.42) 0%,rgba(56,94,22,.18) 100%);
+  --ad-ext-x01-score-progress-fill-base-active:linear-gradient(90deg,rgba(132,204,22,.98) 0%,rgba(163,230,53,.98) 42%,rgba(190,242,100,.98) 100%);
+  --ad-ext-x01-score-progress-track-solid-active:rgba(56,94,22,.28);
+  --ad-ext-x01-score-progress-fill-solid-active:rgba(163,230,53,.96);
+  --ad-ext-x01-score-progress-fill-outline-active:rgba(190,242,100,.32);
+  --ad-ext-x01-score-progress-fill-ambient-active:rgba(163,230,53,.24);
+  --ad-ext-x01-score-progress-track-border-active:rgba(255,255,255,.08);
+  --ad-ext-x01-score-progress-track-bg-active:var(--ad-ext-x01-score-progress-track-base-active);
+  --ad-ext-x01-score-progress-fill-bg-active:var(--ad-ext-x01-score-progress-fill-base-active);
   --ad-ext-x01-score-progress-fill-shadow-active:0 0 18px rgba(132,204,22,.3);
-  --ad-ext-x01-score-progress-sheen-active:rgba(255,255,255,.16);
+  --ad-ext-x01-score-progress-track-overlay-active:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 70%);
+  --ad-ext-x01-score-progress-track-overlay-opacity-active:1;
+  --ad-ext-x01-score-progress-track-inner-shadow-active:inset 0 0 0 1px rgba(255,255,255,.06);
+  --ad-ext-x01-score-progress-track-backdrop-filter-active:blur(8px) saturate(115%);
+  --ad-ext-x01-score-progress-fill-overlay-image-active:none;
+  --ad-ext-x01-score-progress-fill-overlay-size-active:auto;
+  --ad-ext-x01-score-progress-fill-overlay-position-active:0 0;
+  --ad-ext-x01-score-progress-fill-overlay-repeat-active:repeat;
+  --ad-ext-x01-score-progress-fill-overlay-blend-active:screen;
+  --ad-ext-x01-score-progress-fill-overlay-opacity-active:0;
   --ad-ext-x01-score-progress-track-bg:var(--ad-ext-x01-score-progress-track-bg-active);
   --ad-ext-x01-score-progress-fill-bg:var(--ad-ext-x01-score-progress-fill-bg-active);
   --ad-ext-x01-score-progress-fill-shadow:var(--ad-ext-x01-score-progress-fill-shadow-active);
-  --ad-ext-x01-score-progress-sheen:var(--ad-ext-x01-score-progress-sheen-active);
+  --ad-ext-x01-score-progress-track-overlay:var(--ad-ext-x01-score-progress-track-overlay-active);
+  --ad-ext-x01-score-progress-track-overlay-opacity:var(--ad-ext-x01-score-progress-track-overlay-opacity-active);
+  --ad-ext-x01-score-progress-track-inner-shadow:var(--ad-ext-x01-score-progress-track-inner-shadow-active);
+  --ad-ext-x01-score-progress-track-border-color:var(--ad-ext-x01-score-progress-track-border-active);
+  --ad-ext-x01-score-progress-track-backdrop-filter:var(--ad-ext-x01-score-progress-track-backdrop-filter-active);
+  --ad-ext-x01-score-progress-fill-overlay-image:var(--ad-ext-x01-score-progress-fill-overlay-image-active);
+  --ad-ext-x01-score-progress-fill-overlay-size:var(--ad-ext-x01-score-progress-fill-overlay-size-active);
+  --ad-ext-x01-score-progress-fill-overlay-position:var(--ad-ext-x01-score-progress-fill-overlay-position-active);
+  --ad-ext-x01-score-progress-fill-overlay-repeat:var(--ad-ext-x01-score-progress-fill-overlay-repeat-active);
+  --ad-ext-x01-score-progress-fill-overlay-blend:var(--ad-ext-x01-score-progress-fill-overlay-blend-active);
+  --ad-ext-x01-score-progress-fill-overlay-opacity:var(--ad-ext-x01-score-progress-fill-overlay-opacity-active);
   display:block;
   width:100%;
   min-width:0;
@@ -119,7 +145,17 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}{
   --ad-ext-x01-score-progress-track-bg:var(--ad-ext-x01-score-progress-track-bg-active);
   --ad-ext-x01-score-progress-fill-bg:var(--ad-ext-x01-score-progress-fill-bg-active);
   --ad-ext-x01-score-progress-fill-shadow:var(--ad-ext-x01-score-progress-fill-shadow-active);
-  --ad-ext-x01-score-progress-sheen:var(--ad-ext-x01-score-progress-sheen-active);
+  --ad-ext-x01-score-progress-track-overlay:var(--ad-ext-x01-score-progress-track-overlay-active);
+  --ad-ext-x01-score-progress-track-overlay-opacity:var(--ad-ext-x01-score-progress-track-overlay-opacity-active);
+  --ad-ext-x01-score-progress-track-inner-shadow:var(--ad-ext-x01-score-progress-track-inner-shadow-active);
+  --ad-ext-x01-score-progress-track-border-color:var(--ad-ext-x01-score-progress-track-border-active);
+  --ad-ext-x01-score-progress-track-backdrop-filter:var(--ad-ext-x01-score-progress-track-backdrop-filter-active);
+  --ad-ext-x01-score-progress-fill-overlay-image:var(--ad-ext-x01-score-progress-fill-overlay-image-active);
+  --ad-ext-x01-score-progress-fill-overlay-size:var(--ad-ext-x01-score-progress-fill-overlay-size-active);
+  --ad-ext-x01-score-progress-fill-overlay-position:var(--ad-ext-x01-score-progress-fill-overlay-position-active);
+  --ad-ext-x01-score-progress-fill-overlay-repeat:var(--ad-ext-x01-score-progress-fill-overlay-repeat-active);
+  --ad-ext-x01-score-progress-fill-overlay-blend:var(--ad-ext-x01-score-progress-fill-overlay-blend-active);
+  --ad-ext-x01-score-progress-fill-overlay-opacity:var(--ad-ext-x01-score-progress-fill-overlay-opacity-active);
 }
 
 ${HOST_SELECTOR}.${INACTIVE_CLASS}{
@@ -127,7 +163,17 @@ ${HOST_SELECTOR}.${INACTIVE_CLASS}{
   --ad-ext-x01-score-progress-track-bg:rgba(148,163,184,.12);
   --ad-ext-x01-score-progress-fill-bg:linear-gradient(90deg,rgba(148,163,184,.72) 0%,rgba(203,213,225,.78) 100%);
   --ad-ext-x01-score-progress-fill-shadow:none;
-  --ad-ext-x01-score-progress-sheen:rgba(255,255,255,.08);
+  --ad-ext-x01-score-progress-track-overlay:linear-gradient(180deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,0) 70%);
+  --ad-ext-x01-score-progress-track-overlay-opacity:1;
+  --ad-ext-x01-score-progress-track-inner-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+  --ad-ext-x01-score-progress-track-border-color:rgba(255,255,255,.06);
+  --ad-ext-x01-score-progress-track-backdrop-filter:blur(8px) saturate(105%);
+  --ad-ext-x01-score-progress-fill-overlay-image:none;
+  --ad-ext-x01-score-progress-fill-overlay-size:auto;
+  --ad-ext-x01-score-progress-fill-overlay-position:0 0;
+  --ad-ext-x01-score-progress-fill-overlay-repeat:repeat;
+  --ad-ext-x01-score-progress-fill-overlay-blend:screen;
+  --ad-ext-x01-score-progress-fill-overlay-opacity:0;
   opacity:.88;
 }
 
@@ -139,15 +185,17 @@ ${HOST_SELECTOR} .${TRACK_CLASS}{
   overflow:hidden;
   border-radius:999px;
   background:var(--ad-ext-x01-score-progress-track-bg);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
-  backdrop-filter:blur(8px);
+  border:1px solid var(--ad-ext-x01-score-progress-track-border-color);
+  box-shadow:var(--ad-ext-x01-score-progress-track-inner-shadow);
+  backdrop-filter:var(--ad-ext-x01-score-progress-track-backdrop-filter);
 }
 
 ${HOST_SELECTOR} .${TRACK_CLASS}::after{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(180deg,var(--ad-ext-x01-score-progress-sheen) 0%,rgba(255,255,255,0) 70%);
+  background:var(--ad-ext-x01-score-progress-track-overlay);
+  opacity:var(--ad-ext-x01-score-progress-track-overlay-opacity);
   pointer-events:none;
 }
 
@@ -186,33 +234,61 @@ ${HOST_SELECTOR} .${FILL_CLASS}::after{
   inset:0;
   border-radius:inherit;
   pointer-events:none;
+}
+
+${HOST_SELECTOR} .${FILL_CLASS}::before{
+  background-image:var(--ad-ext-x01-score-progress-fill-overlay-image);
+  background-size:var(--ad-ext-x01-score-progress-fill-overlay-size);
+  background-position:var(--ad-ext-x01-score-progress-fill-overlay-position);
+  background-repeat:var(--ad-ext-x01-score-progress-fill-overlay-repeat);
+  mix-blend-mode:var(--ad-ext-x01-score-progress-fill-overlay-blend);
+  opacity:var(--ad-ext-x01-score-progress-fill-overlay-opacity);
+}
+
+${HOST_SELECTOR} .${FILL_CLASS}::after{
   opacity:0;
 }
 
-${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-signal{
-  --ad-ext-x01-score-progress-sheen-active:rgba(255,255,255,.16);
-}
-
-${HOST_SELECTOR}.ad-ext-x01-score-progress--preset-glass{
-  --ad-ext-x01-score-progress-track-bg-active:linear-gradient(180deg,rgba(255,255,255,.2) 0%,rgba(148,163,184,.08) 100%);
-  --ad-ext-x01-score-progress-fill-shadow-active:0 0 16px rgba(148,163,184,.22);
-  --ad-ext-x01-score-progress-sheen-active:rgba(255,255,255,.26);
-}
-
-${HOST_SELECTOR}.${INACTIVE_CLASS}.ad-ext-x01-score-progress--preset-glass{
-  --ad-ext-x01-score-progress-track-bg:linear-gradient(180deg,rgba(255,255,255,.12) 0%,rgba(100,116,139,.06) 100%);
-  --ad-ext-x01-score-progress-fill-bg:linear-gradient(90deg,rgba(148,163,184,.46) 0%,rgba(203,213,225,.58) 100%);
-}
-
-${HOST_SELECTOR}.ad-ext-x01-score-progress--preset-minimal{
-  --ad-ext-x01-score-progress-track-bg-active:rgba(148,163,184,.12);
+${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-plain{
+  --ad-ext-x01-score-progress-track-bg-active:linear-gradient(90deg,var(--ad-ext-x01-score-progress-track-solid-active) 0%,var(--ad-ext-x01-score-progress-track-solid-active) 100%);
+  --ad-ext-x01-score-progress-fill-bg-active:linear-gradient(90deg,var(--ad-ext-x01-score-progress-fill-solid-active) 0%,var(--ad-ext-x01-score-progress-fill-solid-active) 100%);
   --ad-ext-x01-score-progress-fill-shadow-active:none;
-  --ad-ext-x01-score-progress-sheen-active:rgba(255,255,255,.08);
+  --ad-ext-x01-score-progress-track-overlay-active:none;
+  --ad-ext-x01-score-progress-track-overlay-opacity-active:0;
+  --ad-ext-x01-score-progress-track-inner-shadow-active:inset 0 0 0 1px rgba(255,255,255,.04);
+  --ad-ext-x01-score-progress-track-backdrop-filter-active:none;
+  --ad-ext-x01-score-progress-fill-overlay-image-active:none;
+  --ad-ext-x01-score-progress-fill-overlay-opacity-active:0;
 }
 
-${HOST_SELECTOR}.${INACTIVE_CLASS}.ad-ext-x01-score-progress--preset-minimal{
-  --ad-ext-x01-score-progress-track-bg:rgba(148,163,184,.08);
-  --ad-ext-x01-score-progress-fill-bg:linear-gradient(90deg,rgba(148,163,184,.62) 0%,rgba(203,213,225,.66) 100%);
+${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-stripes{
+  --ad-ext-x01-score-progress-track-bg-active:var(--ad-ext-x01-score-progress-track-base-active);
+  --ad-ext-x01-score-progress-fill-bg-active:var(--ad-ext-x01-score-progress-fill-base-active);
+  --ad-ext-x01-score-progress-fill-shadow-active:0 0 16px var(--ad-ext-x01-score-progress-fill-ambient-active);
+  --ad-ext-x01-score-progress-track-overlay-active:repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 10px,rgba(255,255,255,0) 10px 22px);
+  --ad-ext-x01-score-progress-track-overlay-opacity-active:.6;
+  --ad-ext-x01-score-progress-fill-overlay-image-active:repeating-linear-gradient(135deg,rgba(255,255,255,.24) 0 10px,rgba(255,255,255,.04) 10px 20px);
+  --ad-ext-x01-score-progress-fill-overlay-size-active:auto;
+  --ad-ext-x01-score-progress-fill-overlay-repeat-active:repeat;
+  --ad-ext-x01-score-progress-fill-overlay-blend-active:screen;
+  --ad-ext-x01-score-progress-fill-overlay-opacity-active:.78;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--preset-liquid-glass{
+  --ad-ext-x01-score-progress-track-bg-active:linear-gradient(180deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.06) 28%,rgba(255,255,255,0) 100%),var(--ad-ext-x01-score-progress-track-base-active);
+  --ad-ext-x01-score-progress-fill-bg-active:linear-gradient(180deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.08) 30%,rgba(255,255,255,0) 100%),var(--ad-ext-x01-score-progress-fill-base-active);
+  --ad-ext-x01-score-progress-fill-shadow-active:0 0 0 1px rgba(255,255,255,.18),inset 0 1px 0 rgba(255,255,255,.28),0 14px 30px var(--ad-ext-x01-score-progress-fill-ambient-active);
+  --ad-ext-x01-score-progress-track-overlay-active:linear-gradient(180deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.12) 22%,rgba(255,255,255,0) 62%);
+  --ad-ext-x01-score-progress-track-overlay-opacity-active:1;
+  --ad-ext-x01-score-progress-track-inner-shadow-active:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(15,23,42,.18);
+  --ad-ext-x01-score-progress-track-border-active:rgba(255,255,255,.16);
+  --ad-ext-x01-score-progress-track-backdrop-filter-active:blur(14px) saturate(145%);
+  --ad-ext-x01-score-progress-fill-overlay-image-active:linear-gradient(110deg,rgba(255,255,255,0) 18%,rgba(255,255,255,.18) 34%,rgba(255,255,255,.68) 50%,rgba(255,255,255,.22) 66%,rgba(255,255,255,0) 82%);
+  --ad-ext-x01-score-progress-fill-overlay-size-active:180% 100%;
+  --ad-ext-x01-score-progress-fill-overlay-position-active:20% 0;
+  --ad-ext-x01-score-progress-fill-overlay-repeat-active:no-repeat;
+  --ad-ext-x01-score-progress-fill-overlay-blend-active:screen;
+  --ad-ext-x01-score-progress-fill-overlay-opacity-active:.54;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-schmal{
@@ -233,12 +309,6 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-extrabreit{
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-pulse-core{
   animation:ad-ext-x01-score-progress-pulse-core 1.32s ease-in-out infinite;
-}
-
-${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-pulse-core::before{
-  opacity:1;
-  background:radial-gradient(ellipse at center,rgba(255,255,255,.42) 0%,rgba(255,255,255,.12) 48%,rgba(255,255,255,0) 78%);
-  animation:ad-ext-x01-score-progress-pulse-core-inner 1.32s ease-in-out infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-glass-charge{
@@ -283,11 +353,6 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 @keyframes ad-ext-x01-score-progress-pulse-core{
   0%,100%{transform:scaleY(1);filter:brightness(1) saturate(1.02)}
   50%{transform:scaleY(1.18);filter:brightness(1.2) saturate(1.18)}
-}
-
-@keyframes ad-ext-x01-score-progress-pulse-core-inner{
-  0%,100%{transform:scaleX(.96);opacity:.54}
-  50%{transform:scaleX(1.08);opacity:.96}
 }
 
 @keyframes ad-ext-x01-score-progress-glass-charge-core{

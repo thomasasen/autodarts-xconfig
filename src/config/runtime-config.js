@@ -84,7 +84,7 @@ const SINGLE_BULL_SOUND_VOLUME = new Set([0.5, 0.75, 0.9, 1]);
 const SINGLE_BULL_SOUND_COOLDOWN = new Set([400, 700, 1000]);
 const SINGLE_BULL_SOUND_POLL_INTERVAL = new Set([0, 1200]);
 const TURN_POINTS_COUNT_DURATIONS = new Set([260, 416, 650]);
-const X01_SCORE_PROGRESS_PRESETS = new Set(["signal", "glass", "minimal"]);
+const X01_SCORE_PROGRESS_PRESETS = new Set(["plain", "stripes", "liquid-glass"]);
 const X01_SCORE_PROGRESS_COLOR_THEMES = new Set([
   "checkout-focus",
   "traffic-light",
@@ -553,11 +553,17 @@ function normalizeX01ScoreProgressConfig(rawConfig = {}) {
   );
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
-    designPreset: normalizeStringChoice(
-      rawConfig.designPreset,
-      "signal",
-      X01_SCORE_PROGRESS_PRESETS
-    ),
+    designPreset: normalizeMappedStringChoice(rawConfig.designPreset, "plain", {
+      "": "plain",
+      plain: "plain",
+      stripes: "stripes",
+      "liquid-glass": "liquid-glass",
+      liquidglass: "liquid-glass",
+      liquid_glass: "liquid-glass",
+      signal: "stripes",
+      glass: "liquid-glass",
+      minimal: "plain",
+    }),
     colorTheme: normalizedColorTheme,
     barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_SCORE_PROGRESS_BAR_SIZES),
     effect: normalizeMappedStringChoice(rawConfig.effect, "pulse-core", {

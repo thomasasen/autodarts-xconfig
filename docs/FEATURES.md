@@ -221,9 +221,9 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 - Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
 - Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
 - `Design`: Wählt die visuelle Stilrichtung des Score-Balkens.
-  - `Signal`: Diese Variante priorisiert Sofortlesbarkeit mit klarer Signalwirkung.
-  - `Glass`: Diese Variante wirkt ruhiger und hochwertiger durch gläserne Übergänge.
-  - `Minimal`: Diese Variante hält die Zusatzinformation präsent, ohne die Karte stark zu dominieren.
+  - `Plain Color`: Flache Vollfarbe ohne zusätzliche Materialoptik.
+  - `Stripes`: Streifen-Look mit klarer technischer Signalwirkung.
+  - `Liquid Glass`: 3D-Glaslook mit Tiefe, Reflexionen und weicher Materialwirkung.
 - `Farben`: Steuert statische Farbpaletten und dynamische Schwellenfarben in einer gemeinsamen Auswahl.
   - `Checkout Focus`: Dynamischer Standardmodus mit Checkout-Fokus.
   - `Traffic Light`: Stufenmodus mit klaren Rot/Amber/Grün-Prozentschwellen.

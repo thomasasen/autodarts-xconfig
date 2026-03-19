@@ -432,7 +432,7 @@ test("x01-score-progress mounts idempotently and removes style on cleanup", asyn
     windowRef,
     documentRef,
     config: createSingleFeatureConfig("x01ScoreProgress", {
-      designPreset: "glass",
+      designPreset: "liquid-glass",
     }),
   });
 

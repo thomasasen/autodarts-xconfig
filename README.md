@@ -382,10 +382,10 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 **Einstellungen einfach erklärt**
 
-- `Design`: Bestimmt die Grundästhetik des Balkens. Die Berechnung bleibt unverändert, nur Materialwirkung, Schärfe und Flächencharakter wechseln.
-  - `Signal`: Der Balken wirkt kontraststark und präsent. Kontur, Fläche und Glanz sind auf schnelle Lesbarkeit ausgelegt.
-  - `Glass`: Der Balken bekommt weichere Übergänge und einen eleganteren Layer-Look mit mehr Tiefe.
-  - `Minimal`: Der Balken bleibt klar erkennbar, tritt optisch aber zurück und wirkt nüchterner.
+- `Design`: Bestimmt die Grundästhetik des Balkens. Farben, Größen und Effekte bleiben kompatibel; nur Materialwirkung, Oberflächenstruktur und Tiefenwirkung wechseln.
+  - `Plain Color`: Der Balken bleibt bewusst klar und direkt: keine Streifen, kein Glas-Look, nur Farbe, Form und optionaler Effekt.
+  - `Stripes`: Der Balken erhält diagonale Linien und wirkt dadurch technischer, markanter und aus der Distanz schneller scanbar.
+  - `Liquid Glass`: Der Balken wirkt wie eine weiche, lichtbrechende Glasschicht mit Tiefenstaffelung, ohne die Farb- und Effektlogik zu verlieren.
 - `Farben`: Enthält sowohl feste Farbpaletten als auch dynamische Schwellenmodi. So kannst du den Balken statisch einfärben oder die Farbe abhängig von Score/Prozent wechseln.
   - `Checkout Focus`: Färbt den Balken abhängig vom Restscore mit Fokus auf den Bereich bis `170` und steigert die visuelle Dringlichkeit in Checkout-Nähe.
   - `Traffic Light`: Nutzt feste Prozentstufen des verbleibenden Scores. Viel Rest = eher Rot, mittlerer Bereich = Amber, niedriger Rest = Grün.
@@ -393,7 +393,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Gradient Progress`: Der Balken läuft ohne harte Stufen über einen weichen Verlauf von warm nach kalt beziehungsweise zurück, abhängig vom verbleibenden Prozentwert.
   - `Autodarts`: Setzt den Balken auf eine markennahe blau-cyan Palette mit klarer Lesbarkeit auf dunklen Flächen.
   - `Signal Lime`: Bleibt konstant im grün-limetten Signalbereich und wirkt präsent, ohne dynamische Schwellenwechsel.
-  - `Glass Mint`: Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Glass`.
+  - `Glass Mint`: Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Liquid Glass`.
   - `Ember Rush`: Setzt den Balken dauerhaft auf eine energische, warme Palette mit hoher Aufmerksamkeit.
   - `Ice Circuit`: Bleibt technisch-kühl und klar, mit hoher Differenzierung auf dunklen Boards.
   - `Neon Violet`: Erzeugt einen modernen, kontrastreichen Look mit leicht futuristischer Wirkung.

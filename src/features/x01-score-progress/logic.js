@@ -35,10 +35,26 @@ export const SIZE_ATTRIBUTE = "data-ad-ext-x01-score-progress-size";
 export const EFFECT_ATTRIBUTE = "data-ad-ext-x01-score-progress-effect";
 
 const ACTIVE_STYLE_PROPERTIES = Object.freeze([
+  "--ad-ext-x01-score-progress-track-base-active",
+  "--ad-ext-x01-score-progress-fill-base-active",
+  "--ad-ext-x01-score-progress-track-solid-active",
+  "--ad-ext-x01-score-progress-fill-solid-active",
+  "--ad-ext-x01-score-progress-fill-outline-active",
+  "--ad-ext-x01-score-progress-fill-ambient-active",
+  "--ad-ext-x01-score-progress-track-border-active",
   "--ad-ext-x01-score-progress-track-bg-active",
   "--ad-ext-x01-score-progress-fill-bg-active",
   "--ad-ext-x01-score-progress-fill-shadow-active",
-  "--ad-ext-x01-score-progress-sheen-active",
+  "--ad-ext-x01-score-progress-track-overlay-active",
+  "--ad-ext-x01-score-progress-track-overlay-opacity-active",
+  "--ad-ext-x01-score-progress-track-inner-shadow-active",
+  "--ad-ext-x01-score-progress-track-backdrop-filter-active",
+  "--ad-ext-x01-score-progress-fill-overlay-image-active",
+  "--ad-ext-x01-score-progress-fill-overlay-size-active",
+  "--ad-ext-x01-score-progress-fill-overlay-position-active",
+  "--ad-ext-x01-score-progress-fill-overlay-repeat-active",
+  "--ad-ext-x01-score-progress-fill-overlay-blend-active",
+  "--ad-ext-x01-score-progress-fill-overlay-opacity-active",
 ]);
 const PRESET_CLASS_LIST = Object.freeze(getPresetClassList());
 const SIZE_CLASS_LIST = Object.freeze(getSizeClassList());
@@ -250,10 +266,39 @@ function resolveActiveVisualVars(options = {}) {
   const score = clamp(Number(options.score) || 0, 0, Number.MAX_SAFE_INTEGER);
   const palette = resolveColorPalette(options.colorTheme, ratio, score);
   return {
+    "--ad-ext-x01-score-progress-track-base-active": buildTrackGradient(palette),
+    "--ad-ext-x01-score-progress-fill-base-active": buildFillGradient(palette),
+    "--ad-ext-x01-score-progress-track-solid-active": toRgba(palette?.track, 0.28),
+    "--ad-ext-x01-score-progress-fill-solid-active": toRgba(palette?.mid || palette?.start, 0.96),
+    "--ad-ext-x01-score-progress-fill-outline-active": toRgba(
+      palette?.end || palette?.mid || palette?.start,
+      0.34
+    ),
+    "--ad-ext-x01-score-progress-fill-ambient-active": toRgba(
+      palette?.mid || palette?.start,
+      0.26
+    ),
+    "--ad-ext-x01-score-progress-track-border-active": toRgba(
+      palette?.end || palette?.mid || palette?.track,
+      0.16
+    ),
     "--ad-ext-x01-score-progress-track-bg-active": buildTrackGradient(palette),
     "--ad-ext-x01-score-progress-fill-bg-active": buildFillGradient(palette),
     "--ad-ext-x01-score-progress-fill-shadow-active": buildShadowColor(palette),
-    "--ad-ext-x01-score-progress-sheen-active": toRgba([255, 255, 255], 0.2),
+    "--ad-ext-x01-score-progress-track-overlay-active": `linear-gradient(180deg,${toRgba(
+      [255, 255, 255],
+      0.18
+    )} 0%,rgba(255,255,255,0) 70%)`,
+    "--ad-ext-x01-score-progress-track-overlay-opacity-active": "1",
+    "--ad-ext-x01-score-progress-track-inner-shadow-active":
+      "inset 0 0 0 1px rgba(255,255,255,.06)",
+    "--ad-ext-x01-score-progress-track-backdrop-filter-active": "blur(8px) saturate(115%)",
+    "--ad-ext-x01-score-progress-fill-overlay-image-active": "none",
+    "--ad-ext-x01-score-progress-fill-overlay-size-active": "auto",
+    "--ad-ext-x01-score-progress-fill-overlay-position-active": "0 0",
+    "--ad-ext-x01-score-progress-fill-overlay-repeat-active": "repeat",
+    "--ad-ext-x01-score-progress-fill-overlay-blend-active": "screen",
+    "--ad-ext-x01-score-progress-fill-overlay-opacity-active": "0",
   };
 }
 

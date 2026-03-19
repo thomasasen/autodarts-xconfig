@@ -266,9 +266,9 @@ export const xconfigDescriptors = Object.freeze([
     description: "Zeigt den verbleibenden X01-Score als abnehmenden Balken pro Spielerkarte.",
     fields: [
       selectField("designPreset", "Design", [
-        { value: "signal", label: "Signal" },
-        { value: "glass", label: "Glass" },
-        { value: "minimal", label: "Minimal" },
+        { value: "plain", label: "Plain Color" },
+        { value: "stripes", label: "Stripes" },
+        { value: "liquid-glass", label: "Liquid Glass" },
       ]),
       selectField("colorTheme", "Farben", [
         { value: "checkout-focus", label: "Checkout Focus" },

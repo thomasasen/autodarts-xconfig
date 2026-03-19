@@ -264,8 +264,8 @@ export const xconfigFeatureCopy = deepFreeze({
       "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
     fields: {
       designPreset: fieldCopy(
-        "Wählt zwischen signalstarker, gläserner oder reduzierter Materialoptik des Balkens.",
-        "Bestimmt die Grundästhetik des Balkens. Die Berechnung bleibt unverändert, nur Materialwirkung, Schärfe und Flächencharakter wechseln.",
+        "Wählt zwischen flacher Vollfarbe, klaren Streifen oder einem Liquid-Glass-Look.",
+        "Bestimmt die Grundästhetik des Balkens. Farben, Größen und Effekte bleiben kompatibel; nur Materialwirkung, Oberflächenstruktur und Tiefenwirkung wechseln.",
         "Wählt die visuelle Stilrichtung des Score-Balkens."
       ),
       colorTheme: fieldCopy(
@@ -1842,20 +1842,20 @@ const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
 });
 
 const X01_SCORE_PROGRESS_DESIGN_OPTION_COPY = deepFreeze({
-  signal: optionCopy(
-    "Nutzen eine direkte, klare Signaloptik.",
-    "Der Balken wirkt kontraststark und präsent. Kontur, Fläche und Glanz sind auf schnelle Lesbarkeit ausgelegt.",
-    "Diese Variante priorisiert Sofortlesbarkeit mit klarer Signalwirkung."
+  plain: optionCopy(
+    "Nutzen eine flache Vollfarbe ohne eingebaute Oberflächenstruktur.",
+    "Der Balken bleibt bewusst klar und direkt: keine Streifen, kein Glas-Look, nur Farbe, Form und optionaler Effekt.",
+    "Flache Vollfarbe ohne zusätzliche Materialoptik."
   ),
-  glass: optionCopy(
-    "Nutzen eine glatte, gläserne Materialwirkung.",
-    "Der Balken bekommt weichere Übergänge und einen eleganteren Layer-Look mit mehr Tiefe.",
-    "Diese Variante wirkt ruhiger und hochwertiger durch gläserne Übergänge."
+  stripes: optionCopy(
+    "Legen eine klare Streifenstruktur über den Balken.",
+    "Der Balken erhält diagonale Linien und wirkt dadurch technischer, markanter und aus der Distanz schneller scanbar.",
+    "Streifen-Look mit klarer technischer Signalwirkung."
   ),
-  minimal: optionCopy(
-    "Reduziert Glow und Materialeffekte auf eine ruhige Linie.",
-    "Der Balken bleibt klar erkennbar, tritt optisch aber zurück und wirkt nüchterner.",
-    "Diese Variante hält die Zusatzinformation präsent, ohne die Karte stark zu dominieren."
+  "liquid-glass": optionCopy(
+    "Nutzen eine transparente 3D-Glasoptik mit Tiefe und Highlights.",
+    "Der Balken wirkt wie eine weiche, lichtbrechende Glasschicht mit Tiefenstaffelung, ohne die Farb- und Effektlogik zu verlieren.",
+    "3D-Glaslook mit Tiefe, Reflexionen und weicher Materialwirkung."
   ),
 });
 
@@ -1892,7 +1892,7 @@ const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
   ),
   "glass-mint": optionCopy(
     "Nutzen ein helles Mint-/Aqua-Schema.",
-    "Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Glass`.",
+    "Wirkt frischer und leichter als klassische Grünpaletten und harmoniert besonders mit dem Design `Liquid Glass`.",
     "Statische helle Mint-/Aqua-Palette."
   ),
   "ember-rush": optionCopy(

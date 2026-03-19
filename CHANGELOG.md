@@ -13,6 +13,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.55] - 2026-03-19
+
+### Changed
+
+- Nutzerwirkung: Der X01-Restscore-Balken bietet jetzt drei klar getrennte
+  Designvarianten statt nur leicht abweichender Looks: `Plain Color` als
+  flache Vollfarbe ohne eingebaute Materialeffekte, `Stripes` mit sichtbarer
+  Streifenstruktur und `Liquid Glass` mit deutlich stärkerer 3D-/Glaswirkung.
+  Farben, Balkengrößen und aktive Effekte bleiben dabei vollständig kompatibel;
+  inaktive Spieler bleiben bewusst unverändert.
+  Technik: Die Preset-Architektur von `x01-score-progress` wurde auf drei
+  Material-Layer umgebaut, aktive Farbvariablen für Track-/Fill-Overlays
+  getrennt abstrahiert, Legacy-Preset-Namen auf das neue Set gemappt sowie
+  xConfig-Optionen, Copy, Lifecycle-Tests und Style-Regressionen auf die neuen
+  Presets umgestellt.
+
 ## [2.0.54] - 2026-03-19
 
 ### Fixed
@@ -505,9 +521,10 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...HEAD
-[2.0.54]: https://github.com/thomasasen/autodarts-xconfig/compare/8a31cd6...HEAD
-[2.0.53]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...HEAD
+[2.0.55]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...HEAD
+[2.0.54]: https://github.com/thomasasen/autodarts-xconfig/compare/8a31cd6...8a156b3
+[2.0.53]: https://github.com/thomasasen/autodarts-xconfig/compare/fec14ae...8a31cd6
 [2.0.52]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...fec14ae
 [2.0.51]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
 [2.0.50]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
