@@ -77,6 +77,37 @@ test("resolveStartScore falls back to selected DOM controls on match routes", ()
   assert.equal(startScore, 701);
 });
 
+test("resolveStartScore resolves from variant strip sibling text on match routes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "X01";
+
+  const startBadge = documentRef.createElement("span");
+  startBadge.textContent = "501";
+  documentRef.main.insertBefore(startBadge, documentRef.suggestionElement);
+
+  const startScore = resolveStartScore(
+    {
+      documentRef,
+      windowRef,
+      gameState: {
+        getSnapshot: () => ({
+          match: {
+            id: "match-variant-strip",
+            variant: "X01",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.equal(startScore, 501);
+});
+
 test("syncScoreProgress renders active and inactive bars from the X01 start score", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
@@ -327,6 +358,7 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
   assert.equal(logs.length >= 0, true);
   assert.equal(warnings.length > 0, true);
   assert.match(String(warnings[0][0] || ""), /reason="missing-start-score"/);
+  assert.match(String(warnings[0][0] || ""), /payload=\{.*"reason":"missing-start-score"/s);
   assert.equal(warnings[0][1]?.reason, "missing-start-score");
   assert.equal(Array.isArray(warnings[0][1]?.sampledCards), true);
 });

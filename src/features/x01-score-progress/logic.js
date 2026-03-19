@@ -187,6 +187,85 @@ export function resolveStartScoreFromVariantText(value) {
   return extractStartScore(value);
 }
 
+function collectVariantStripNodes(documentRef) {
+  if (!documentRef || typeof documentRef.getElementById !== "function") {
+    return [];
+  }
+
+  const variantElement = documentRef.getElementById(VARIANT_ELEMENT_ID);
+  if (!variantElement) {
+    return [];
+  }
+
+  const nodes = [];
+  const seen = new Set();
+  const pushUnique = (node) => {
+    if (!node || seen.has(node)) {
+      return;
+    }
+
+    seen.add(node);
+    nodes.push(node);
+  };
+
+  pushUnique(variantElement);
+
+  const parent = variantElement.parentNode || null;
+  if (parent && parent.children) {
+    Array.from(parent.children).forEach(pushUnique);
+  }
+
+  const grandParent = parent?.parentNode || null;
+  if (grandParent && grandParent.children) {
+    Array.from(grandParent.children).forEach((node) => {
+      if (node !== parent) {
+        pushUnique(node);
+      }
+    });
+  }
+
+  return nodes;
+}
+
+export function readVariantStripTexts(documentRef) {
+  const nodes = collectVariantStripNodes(documentRef);
+  if (!nodes.length) {
+    return [];
+  }
+
+  const texts = [];
+  const seen = new Set();
+
+  for (const node of nodes) {
+    for (const candidateValue of readNodeCandidateValues(node)) {
+      const compactText = toCompactText(candidateValue, 80);
+      if (!compactText || seen.has(compactText)) {
+        continue;
+      }
+
+      seen.add(compactText);
+      texts.push(compactText);
+      if (texts.length >= 12) {
+        return texts;
+      }
+    }
+  }
+
+  return texts;
+}
+
+export function resolveStartScoreFromVariantStrip(documentRef, preparedTexts = null) {
+  const texts = Array.isArray(preparedTexts) ? preparedTexts : readVariantStripTexts(documentRef);
+  for (const text of texts) {
+    const resolved = extractStartScore(text);
+    if (isFiniteNumber(resolved)) {
+      return resolved;
+    }
+  }
+
+  return null;
+}
+
 export function resolveStartScoreFromDom(documentRef) {
   if (!documentRef) {
     return null;
@@ -250,6 +329,7 @@ export function createScoreProgressState() {
 export function resolveStartScoreWithDebug(context = {}, state = createScoreProgressState()) {
   const cacheKey = buildMatchCacheKey(context);
   const { snapshotVariant, domVariant } = getVariantTexts(context);
+  const variantStripTexts = readVariantStripTexts(context.documentRef);
   const directSources = [snapshotVariant, domVariant];
 
   let cacheReset = false;
@@ -269,6 +349,7 @@ export function resolveStartScoreWithDebug(context = {}, state = createScoreProg
       cacheKey,
       snapshotVariant,
       domVariant,
+      variantStripTexts,
       allowDomFallback:
         directSources.some((source) => isSupportedX01VariantText(source)) ||
         isMatchRoute(context.windowRef),
@@ -288,9 +369,27 @@ export function resolveStartScoreWithDebug(context = {}, state = createScoreProg
         cacheKey,
         snapshotVariant,
         domVariant,
+        variantStripTexts,
         allowDomFallback: true,
       };
     }
+  }
+
+  const stripResolved = resolveStartScoreFromVariantStrip(context.documentRef, variantStripTexts);
+  if (isFiniteNumber(stripResolved)) {
+    state.cachedStartScore = stripResolved;
+    state.cachedStartScoreSource = "dom-variant-strip";
+    return {
+      startScore: stripResolved,
+      source: state.cachedStartScoreSource,
+      cacheHit: false,
+      cacheReset,
+      cacheKey,
+      snapshotVariant,
+      domVariant,
+      variantStripTexts,
+      allowDomFallback: true,
+    };
   }
 
   const allowDomFallback =
@@ -305,6 +404,7 @@ export function resolveStartScoreWithDebug(context = {}, state = createScoreProg
       cacheKey,
       snapshotVariant,
       domVariant,
+      variantStripTexts,
       allowDomFallback,
     };
   }
@@ -321,6 +421,7 @@ export function resolveStartScoreWithDebug(context = {}, state = createScoreProg
       cacheKey,
       snapshotVariant,
       domVariant,
+      variantStripTexts,
       allowDomFallback,
     };
   }
@@ -333,6 +434,7 @@ export function resolveStartScoreWithDebug(context = {}, state = createScoreProg
     cacheKey,
     snapshotVariant,
     domVariant,
+    variantStripTexts,
     allowDomFallback,
   };
 }
@@ -516,6 +618,9 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   debugPayload.variant = {
     snapshotVariant: startScoreDebug.snapshotVariant,
     domVariant: startScoreDebug.domVariant,
+    variantStripTexts: Array.isArray(startScoreDebug.variantStripTexts)
+      ? startScoreDebug.variantStripTexts
+      : [],
   };
 
   if (!isFiniteNumber(startScore) || startScore <= 0) {

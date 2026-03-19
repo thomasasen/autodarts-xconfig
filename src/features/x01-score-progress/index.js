@@ -17,6 +17,18 @@ function createDebugState(featureDebug) {
   };
 }
 
+function serializeDebugPayload(payload = null) {
+  if (!payload || typeof payload !== "object") {
+    return "";
+  }
+
+  try {
+    return JSON.stringify(payload);
+  } catch (_) {
+    return "";
+  }
+}
+
 function emitDebugLog(debugState, signature, message, payload = null) {
   if (!debugState?.featureDebug?.enabled || !signature) {
     return;
@@ -26,12 +38,14 @@ function emitDebugLog(debugState, signature, message, payload = null) {
   }
 
   debugState.lastLogSignature = signature;
+  const payloadJson = serializeDebugPayload(payload);
+  const messageWithPayload = payloadJson ? `${message} payload=${payloadJson}` : message;
   if (payload) {
-    debugState.featureDebug.log(message, payload);
+    debugState.featureDebug.log(messageWithPayload, payload);
     return;
   }
 
-  debugState.featureDebug.log(message);
+  debugState.featureDebug.log(messageWithPayload);
 }
 
 function emitDebugWarning(debugState, signature, message, payload = null) {
@@ -43,12 +57,14 @@ function emitDebugWarning(debugState, signature, message, payload = null) {
   }
 
   debugState.lastWarningSignature = signature;
+  const payloadJson = serializeDebugPayload(payload);
+  const messageWithPayload = payloadJson ? `${message} payload=${payloadJson}` : message;
   if (payload) {
-    debugState.featureDebug.warn(message, payload);
+    debugState.featureDebug.warn(messageWithPayload, payload);
     return;
   }
 
-  debugState.featureDebug.warn(message);
+  debugState.featureDebug.warn(messageWithPayload);
 }
 
 function buildDebugSignature(debugInfo = {}) {
@@ -66,6 +82,9 @@ function buildDebugSignature(debugInfo = {}) {
     debugInfo.zeroHeightHostCount || 0,
     String(debugInfo.variant?.snapshotVariant || "").trim(),
     String(debugInfo.variant?.domVariant || "").trim(),
+    Array.isArray(debugInfo.variant?.variantStripTexts)
+      ? debugInfo.variant.variantStripTexts.join("|")
+      : "",
     debugInfo.sampledCards
       .map((card) => `${card.index}:${card.parsedScore ?? "?"}:${card.hostWidth || "-"}`)
       .join(","),
@@ -74,6 +93,12 @@ function buildDebugSignature(debugInfo = {}) {
 
 function buildDebugMessage(debugInfo = {}) {
   const variant = debugInfo.variant || {};
+  const variantStrip = Array.isArray(variant.variantStripTexts)
+    ? variant.variantStripTexts
+        .filter((value) => String(value || "").trim())
+        .slice(0, 4)
+        .join(" | ")
+    : "";
   return `state reason="${debugInfo.reason || "unknown"}" route="${debugInfo.routePath || "-"}${
     debugInfo.routeHash || ""
   }" shouldRender=${debugInfo.shouldRender ? "yes" : "no"} start=${
@@ -86,7 +111,7 @@ function buildDebugMessage(debugInfo = {}) {
     Number(debugInfo.hiddenHostCount) || 0
   } zeroHeightHosts=${Number(debugInfo.zeroHeightHostCount) || 0} variantSnapshot="${
     variant.snapshotVariant || "-"
-  }" variantDom="${variant.domVariant || "-"}"`;
+  }" variantDom="${variant.domVariant || "-"}" variantStrip="${variantStrip || "-"}"`;
 }
 
 function shouldWarnDebugState(debugInfo = {}) {

@@ -13,6 +13,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.50] - 2026-03-19
+
+### Fixed
+
+- Nutzerwirkung: Der X01-Restscore-Balken erkennt den Startwert jetzt auch dann
+  zuverlässig, wenn der Matchkopf den Wert als getrennte Badges (`X01`, `501`,
+  `SI-DO`) rendert; dadurch wird der Balken im Live-Match wieder angezeigt.
+  Technik: `x01-score-progress` wertet zusätzliche Variant-Strip-Knoten rund um
+  `#ad-ext-game-variant` als Startscore-Quelle (`dom-variant-strip`) aus und
+  ergänzt Debug-Logs um eine serialisierte `payload=...`-Zeile, damit
+  exportierte Console-Logs die vollständige Diagnose enthalten.
+
 ## [2.0.49] - 2026-03-19
 
 ### Changed
@@ -437,8 +449,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
-[2.0.49]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
+[2.0.50]: https://github.com/thomasasen/autodarts-xconfig/compare/d40e59c...HEAD
+[2.0.49]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...d40e59c
 [2.0.48]: https://github.com/thomasasen/autodarts-xconfig/compare/6362059...HEAD
 [2.0.47]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
 [2.0.46]: https://github.com/thomasasen/autodarts-xconfig/compare/c307908...HEAD
