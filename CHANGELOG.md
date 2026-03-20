@@ -13,6 +13,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.66] - 2026-03-20
+
+### Fixed
+
+- Nutzerwirkung: Der X01-Restscore-Balken hat jetzt nur noch einen kleinen,
+  sauberen Abstand oberhalb des Balkens; zusätzlich ist das sichtbare Flackern
+  des `ad-ext-x01-score-progress__fill`-Elements in Chrome-DevTools deutlich
+  reduziert.
+  Technik: Der obere Balkenabstand wurde auf einen kleineren `clamp(...)`-Wert
+  reduziert und die Effekt-Synchronisierung entkoppelt unnötige Class-/Trail-
+  Resets bei unverändertem Score. Damit werden `ghost-trail`-Animationen bei
+  passiven Re-Syncs nicht mehr laufend abgebrochen; neue Regressionen decken
+  Margin-Vertrag und das Re-Sync-Verhalten ab.
+
 ## [2.0.65] - 2026-03-20
 
 ### Fixed
@@ -707,6 +721,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.66]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.65]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.64]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.63]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

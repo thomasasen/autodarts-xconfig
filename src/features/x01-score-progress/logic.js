@@ -917,6 +917,37 @@ function clearFillEffectClasses(fillNode) {
   });
 }
 
+function hasClassFromList(fillNode, classNames = []) {
+  if (!fillNode?.classList) {
+    return false;
+  }
+  return classNames.some((className) => fillNode.classList.contains(className));
+}
+
+function ensureFillEffectState(fillNode, normalizedEffect) {
+  if (!fillNode?.classList) {
+    return false;
+  }
+
+  const nextEffect = normalizeEffect(normalizedEffect);
+  const nextClass = getEffectFillClass(nextEffect);
+  const currentEffect = String(fillNode.getAttribute(EFFECT_ATTRIBUTE) || "").trim().toLowerCase();
+  const hasNextClass = fillNode.classList.contains(nextClass);
+  const hasOtherEffectClass = EFFECT_FILL_CLASS_LIST.some(
+    (className) => className !== nextClass && fillNode.classList.contains(className)
+  );
+  const hasLegacyClass = hasClassFromList(fillNode, LEGACY_EFFECT_FILL_CLASS_LIST);
+  const needsSync = currentEffect !== nextEffect || !hasNextClass || hasOtherEffectClass || hasLegacyClass;
+
+  if (needsSync) {
+    clearFillEffectClasses(fillNode);
+    fillNode.classList.add(nextClass);
+    fillNode.setAttribute(EFFECT_ATTRIBUTE, nextEffect);
+  }
+
+  return needsSync;
+}
+
 function cancelEffectAnimation(fillNode) {
   const runningAnimation = fillNode?.[EFFECT_ANIMATION_SLOT];
   if (runningAnimation && typeof runningAnimation.cancel === "function") {
@@ -1049,17 +1080,18 @@ function triggerScoreChangeEffect(
   }
 
   const normalizedEffect = normalizeEffect(effect);
-  fillNode.setAttribute(EFFECT_ATTRIBUTE, normalizedEffect);
-  clearFillEffectClasses(fillNode);
-  fillNode.classList.add(getEffectFillClass(normalizedEffect));
-  clearTrailState(trailNode);
+  const effectStateChanged = ensureFillEffectState(fillNode, normalizedEffect);
+  if (effectStateChanged) {
+    cancelEffectAnimation(fillNode);
+    clearTrailState(trailNode);
+  }
 
-  cancelEffectAnimation(fillNode);
   if (!shouldTrigger || normalizedEffect === "off") {
     return;
   }
 
   if (normalizedEffect === "ghost-trail") {
+    clearTrailState(trailNode);
     triggerGhostTrail(trailNode, shouldTrigger, previousRatio, currentRatio);
     const token = Number(fillNode.getAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE) || 0) + 1;
     fillNode.setAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE, String(token));
@@ -1075,6 +1107,8 @@ function triggerScoreChangeEffect(
     return;
   }
 
+  clearTrailState(trailNode);
+  cancelEffectAnimation(fillNode);
   const animation = fillNode.animate(definition.keyframes, {
     fill: "none",
     iterations: 1,

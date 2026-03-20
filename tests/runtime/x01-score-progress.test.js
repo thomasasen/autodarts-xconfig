@@ -763,6 +763,63 @@ test("syncScoreProgress animates the ghost trail on active score changes only", 
   assert.ok(trailNode.__lastAnimation);
 });
 
+test("syncScoreProgress keeps running ghost-trail animation on passive re-sync", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "ghost-trail",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-ghost-trail-resync",
+            match: {
+              id: "match-ghost-trail-resync",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "201";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const trailNode = hostNode.querySelector(`.${TRAIL_CLASS}`);
+  assert.ok(trailNode);
+  const runningAnimation = trailNode.__lastAnimation;
+  assert.ok(runningAnimation);
+  assert.equal(runningAnimation.playState, "running");
+
+  runSync();
+
+  assert.equal(trailNode.__lastAnimation, runningAnimation);
+  assert.equal(runningAnimation.playState, "running");
+});
+
 test("score-progress style reserves a dedicated player-card row for the bar", () => {
   const css = buildStyleText();
 
@@ -788,6 +845,10 @@ test("score-progress style enforces stack layout that keeps the bar below score 
 test("score-progress style defines clearly separated active size presets", () => {
   const css = buildStyleText();
 
+  assert.match(
+    css,
+    /--ad-ext-x01-score-progress-margin-top:clamp\(\.16rem,\s*\.45vw,\s*\.32rem\);/s
+  );
   assert.match(
     css,
     /--size-schmal\{[^}]*height-active:clamp\(\.3rem,\s*\.62vw,\s*\.46rem\);/s
