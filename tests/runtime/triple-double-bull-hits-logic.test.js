@@ -515,7 +515,7 @@ test("flip-edge and card-slam timelines keep the promised 360 degree spins", () 
   );
 });
 
-test("electric-arc timeline applies jittered surge keyframes on row and score", () => {
+test("electric-arc timeline keeps subtle frame jitter and moderated score spacing", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
@@ -544,15 +544,21 @@ test("electric-arc timeline applies jittered surge keyframes on row and score", 
   const electricPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
   const electricRowStep = electricPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
   assert.equal(
-    electricRowStep?.step?.keyframes?.some((frame) => Math.abs(Number(frame.skewX) || 0) >= 1),
+    electricRowStep?.step?.keyframes?.some((frame) => Math.abs(Number(frame.translateX) || 0) >= 1),
     true
+  );
+  assert.equal(
+    electricRowStep?.step?.keyframes?.some((frame) =>
+      Object.prototype.hasOwnProperty.call(frame, "skewX")
+    ),
+    false
   );
 
   const scoreStep = electricPlay?.steps.find(
     (entry) => Array.isArray(entry.step?.keyframes) && entry.step?.keyframes.some((frame) => frame.letterSpacing)
   );
   assert.equal(
-    scoreStep?.step?.keyframes?.some((frame) => frame.letterSpacing === "0.08em"),
+    scoreStep?.step?.keyframes?.some((frame) => frame.letterSpacing === "0.07em"),
     true
   );
 });

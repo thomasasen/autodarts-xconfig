@@ -843,6 +843,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wenn aktiv, blitzt der Turn-Wert nur in dem Zeitraum auf, in dem die Zahl wirklich animiert wird. Bei deaktivierter Option bleibt ausschließlich die Zählbewegung ohne zusätzlichen Lichtimpuls.",
         "Aktiviert oder deaktiviert den Aufblitz-Effekt während laufender Turn-Score-Änderungen."
       ),
+      flashMode: fieldCopy(
+        "Bestimmt, ob der elektrische Rahmen nur bei Änderungen erscheint oder dauerhaft sichtbar bleibt.",
+        "Legt fest, wie der elektrische Rahmen dargestellt wird: `Nur bei Änderung` zeigt den Effekt nur während laufender Zähländerungen, `Permanent` hält den Rahmen dauerhaft sichtbar, solange das Feature aktiv ist.",
+        "Wählt, ob der Rahmen nur bei Änderungen oder dauerhaft sichtbar ist."
+      ),
       debug: DEBUG_FIELD,
     },
   }),
@@ -1846,6 +1851,19 @@ const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
   ),
 });
 
+const TURN_POINTS_FLASH_MODE_OPTION_COPY = deepFreeze({
+  "on-change": optionCopy(
+    "Zeigt den Rahmen nur während echter Wertänderungen.",
+    "Der elektrische Rahmen erscheint nur in dem Zeitraum, in dem die Zahl hoch- oder herunterzählt, und klingt danach aus.",
+    "Rahmen nur während laufender Zahlenänderungen."
+  ),
+  permanent: optionCopy(
+    "Hält den Rahmen dauerhaft um die Turn-Punkte-Zeile sichtbar.",
+    "Der elektrische Rahmen bleibt permanent aktiv, auch wenn sich der Wert gerade nicht ändert. Die Zählanimation selbst läuft weiterhin nur bei echten Wertänderungen.",
+    "Rahmen dauerhaft sichtbar, unabhängig von laufender Änderung."
+  ),
+});
+
 const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
   "checkout-focus": optionCopy(
     "Standardmodus mit Fokus auf Checkout-Relevanz.",
@@ -2146,6 +2164,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "turn-points-count": {
     durationMs: TURN_POINTS_DURATION_OPTION_COPY,
+    flashMode: TURN_POINTS_FLASH_MODE_OPTION_COPY,
   },
   "winner-fireworks": {
     style: WINNER_STYLE_OPTION_COPY,

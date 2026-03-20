@@ -626,6 +626,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: 650, label: "Lang" },
       ]),
       checkboxField("flashOnChange", "Aufblitz-Effekt"),
+      selectField("flashMode", "Aufblitz-Modus", [
+        { value: "on-change", label: "Nur bei Änderung" },
+        { value: "permanent", label: "Permanent" },
+      ]),
       checkboxField("debug", "Debug"),
     ],
   }),

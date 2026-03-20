@@ -1030,7 +1030,7 @@ test("xConfig x01 score progress settings no longer expose a design selector", a
   runtime.stop();
 });
 
-test("xConfig turn points settings expose flash toggle and persist changes", async () => {
+test("xConfig turn points settings expose flash toggle plus mode selector and persist changes", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1053,6 +1053,10 @@ test("xConfig turn points settings expose flash toggle and persist changes", asy
     "[data-adxconfig-setting='true'][data-setting-key='flashOnChange']"
   );
   assert.ok(flashSetting);
+  const flashModeSetting = documentRef.querySelector(
+    "[data-adxconfig-setting='true'][data-setting-key='flashMode']"
+  );
+  assert.ok(flashModeSetting);
 
   const noteTexts = documentRef
     .querySelectorAll(".ad-xconfig-modal .ad-xconfig-note")
@@ -1068,11 +1072,23 @@ test("xConfig turn points settings expose flash toggle and persist changes", asy
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
 
+  clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "permanent");
+  await wait(5);
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnPointsCount.flashMode, "permanent");
+
   clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", true);
   await wait(5);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashOnChange, true);
+
+  clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "on-change");
+  await wait(5);
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnPointsCount.flashMode, "on-change");
 
   runtime.stop();
 });

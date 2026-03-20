@@ -533,10 +533,30 @@ function normalizeSingleBullSoundConfig(rawConfig = {}) {
 }
 
 function normalizeTurnPointsCountConfig(rawConfig = {}) {
+  const hasLegacyFlashPermanent = Object.prototype.hasOwnProperty.call(rawConfig, "flashPermanent");
+  const legacyFlashMode = hasLegacyFlashPermanent
+    ? normalizeBoolean(rawConfig.flashPermanent, false)
+      ? "permanent"
+      : "on-change"
+    : "on-change";
+  const normalizedFlashMode = normalizeMappedStringChoice(rawConfig.flashMode, legacyFlashMode, {
+    "": "on-change",
+    "on-change": "on-change",
+    onchange: "on-change",
+    appear: "on-change",
+    burst: "on-change",
+    "nur-bei-änderung": "on-change",
+    "nur-bei-aenderung": "on-change",
+    permanent: "permanent",
+    always: "permanent",
+    persistent: "permanent",
+    dauerhaft: "permanent",
+  });
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     durationMs: normalizeNumberChoice(rawConfig.durationMs, 416, TURN_POINTS_COUNT_DURATIONS),
     flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true),
+    flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode,
     debug: normalizeBoolean(rawConfig.debug, false),
   };
 }

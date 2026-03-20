@@ -1,5 +1,8 @@
 import { SCORE_FLASH_CLASS, SCORE_FRAME_CLASS, SCORE_SELECTOR } from "./style.js";
 
+const FLASH_MODE_ON_CHANGE = "on-change";
+const FLASH_MODE_PERMANENT = "permanent";
+
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
 }
@@ -27,6 +30,16 @@ function resolveFrameNode(scoreNode) {
   return scoreNode.parentElement || scoreNode;
 }
 
+function normalizeFlashMode(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (normalized === FLASH_MODE_PERMANENT) {
+    return FLASH_MODE_PERMANENT;
+  }
+  return FLASH_MODE_ON_CHANGE;
+}
+
 function clearFlashTimer(node, state, windowRef = null) {
   if (!node || !state) {
     return;
@@ -47,45 +60,60 @@ function clearFlashTimer(node, state, windowRef = null) {
   state.flashTimeoutByNode?.delete?.(node);
 }
 
-function removeFlashClasses(node, state) {
+function removeFlashClasses(node, state, options = {}) {
   if (!node || !state) {
     return;
   }
+  const preserveFrame = options.preserveFrame === true;
   node.classList?.remove?.(SCORE_FLASH_CLASS);
-  const frameNode = state.flashFrameByScoreNode?.get?.(node) || resolveFrameNode(node);
+  const frameNode = state.flashFrameByScoreNode?.get?.(node) || resolveFrameNode(node) || null;
+  if (preserveFrame) {
+    if (frameNode) {
+      frameNode.classList?.add?.(SCORE_FRAME_CLASS);
+      state.flashFrameByScoreNode?.set?.(node, frameNode);
+    }
+    return;
+  }
   frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
   state.flashFrameByScoreNode?.delete?.(node);
 }
 
-function clearFlashState(node, state, windowRef = null) {
+function clearFlashState(node, state, windowRef = null, options = {}) {
   clearFlashTimer(node, state, windowRef);
-  removeFlashClasses(node, state);
+  removeFlashClasses(node, state, options);
 }
 
-function triggerScoreFlash(node, state, windowRef = null) {
+function triggerScoreFlash(node, state, windowRef = null, options = {}) {
   if (!node || !state) {
     return;
   }
 
+  const flashMode = normalizeFlashMode(options.flashMode);
+  const preserveFrame = flashMode === FLASH_MODE_PERMANENT;
   const frameNode = resolveFrameNode(node);
-  clearFlashState(node, state, windowRef);
+  clearFlashState(node, state, windowRef, { preserveFrame });
   node.classList?.remove?.(SCORE_FLASH_CLASS);
-  frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
+  if (!preserveFrame) {
+    frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
+  }
   if (typeof node.getBoundingClientRect === "function") {
     node.getBoundingClientRect();
   }
-  if (typeof frameNode?.getBoundingClientRect === "function") {
+  if (!preserveFrame && typeof frameNode?.getBoundingClientRect === "function") {
     frameNode.getBoundingClientRect();
   }
   node.classList?.add?.(SCORE_FLASH_CLASS);
-  frameNode?.classList?.add?.(SCORE_FRAME_CLASS);
-  state.flashFrameByScoreNode?.set?.(node, frameNode);
+  if (frameNode) {
+    frameNode.classList?.add?.(SCORE_FRAME_CLASS);
+    state.flashFrameByScoreNode?.set?.(node, frameNode);
+  }
 }
 
-function scheduleFlashAfterglow(node, state, windowRef = null, delayMs = 0) {
+function scheduleFlashAfterglow(node, state, windowRef = null, delayMs = 0, options = {}) {
   const normalizedDelayMs = Math.max(0, Number(delayMs) || 0);
+  const preserveFrame = options.preserveFrame === true;
   if (!node || !state || normalizedDelayMs <= 0) {
-    clearFlashState(node, state, windowRef);
+    clearFlashState(node, state, windowRef, { preserveFrame });
     return;
   }
 
@@ -96,9 +124,27 @@ function scheduleFlashAfterglow(node, state, windowRef = null, delayMs = 0) {
   clearFlashTimer(node, state, windowRef);
   const timerHandle = setTimer(() => {
     state.flashTimeoutByNode?.delete?.(node);
-    removeFlashClasses(node, state);
+    removeFlashClasses(node, state, { preserveFrame });
   }, normalizedDelayMs);
   state.flashTimeoutByNode?.set?.(node, timerHandle);
+}
+
+function ensurePersistentFrameClasses(scoreNodes, state) {
+  if (!Array.isArray(scoreNodes) || !scoreNodes.length || !state) {
+    return;
+  }
+
+  scoreNodes.forEach((node) => {
+    if (!node) {
+      return;
+    }
+    const frameNode = resolveFrameNode(node);
+    if (!frameNode) {
+      return;
+    }
+    frameNode.classList?.add?.(SCORE_FRAME_CLASS);
+    state.flashFrameByScoreNode?.set?.(node, frameNode);
+  });
 }
 
 export function stopAnimation(node, state, windowRef = null, options = {}) {
@@ -128,7 +174,10 @@ export function stopAnimation(node, state, windowRef = null, options = {}) {
   state.activeAnimeByNode.delete(node);
   state.targetValueByNode.delete(node);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
-  scheduleFlashAfterglow(node, state, windowRef, flashAfterglowMs);
+  const preserveFrame = options.preserveFrame === true;
+  scheduleFlashAfterglow(node, state, windowRef, flashAfterglowMs, {
+    preserveFrame,
+  });
 }
 
 export function animateScore(node, options = {}) {
@@ -137,6 +186,7 @@ export function animateScore(node, options = {}) {
   const toValue = Number(options.toValue);
   const durationMs = Number(options.durationMs) || 416;
   const flashEnabled = options.flashEnabled !== false;
+  const flashMode = normalizeFlashMode(options.flashMode);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const animeRef = options.animeRef;
   const windowRef = options.windowRef || null;
@@ -148,7 +198,7 @@ export function animateScore(node, options = {}) {
   stopAnimation(node, state, windowRef);
   state.targetValueByNode.set(node, toValue);
   if (flashEnabled) {
-    triggerScoreFlash(node, state, windowRef);
+    triggerScoreFlash(node, state, windowRef, { flashMode });
   }
 
   if (typeof animeRef === "function") {
@@ -166,6 +216,7 @@ export function animateScore(node, options = {}) {
       complete: () => {
         stopAnimation(node, state, windowRef, {
           flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
+          preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
         });
         node.textContent = String(toValue);
         state.lastValueByNode.set(node, toValue);
@@ -192,6 +243,7 @@ export function animateScore(node, options = {}) {
     if (progress >= 1) {
       stopAnimation(node, state, windowRef, {
         flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
+        preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
       });
       node.textContent = String(toValue);
       state.lastValueByNode.set(node, toValue);
@@ -212,6 +264,7 @@ export function updateTurnPoints(options = {}) {
   const state = options.state;
   const durationMs = Number(options.durationMs) || 416;
   const flashEnabled = options.flashEnabled !== false;
+  const flashMode = normalizeFlashMode(options.flashMode);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const animeRef = options.animeRef;
   const windowRef = options.windowRef || null;
@@ -231,6 +284,10 @@ export function updateTurnPoints(options = {}) {
     state.lastValueByNode.delete(node);
     state.renderedValueByNode.delete(node);
   });
+
+  if (flashEnabled && flashMode === FLASH_MODE_PERMANENT) {
+    ensurePersistentFrameClasses(scoreNodes, state);
+  }
 
   scoreNodes.forEach((node) => {
     const parsedValue = parseScore(node.textContent);
@@ -268,6 +325,7 @@ export function updateTurnPoints(options = {}) {
       toValue: parsedValue,
       durationMs,
       flashEnabled,
+      flashMode,
       flashAfterglowMs,
       animeRef,
       windowRef,

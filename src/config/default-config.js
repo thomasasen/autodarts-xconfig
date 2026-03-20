@@ -134,6 +134,7 @@ export const defaultConfig = {
       enabled: false,
       durationMs: 416,
       flashOnChange: true,
+      flashMode: "on-change",
       debug: false,
     },
     winnerFireworks: {

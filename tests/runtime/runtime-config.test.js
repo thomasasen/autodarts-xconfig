@@ -57,6 +57,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.x01ScoreProgress.barSize, "standard");
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
   assert.equal(config.features.turnPointsCount.flashOnChange, true);
+  assert.equal(config.features.turnPointsCount.flashMode, "on-change");
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -137,6 +138,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       turnPointsCount: {
         durationMs: "650",
         flashOnChange: "false",
+        flashMode: "PERMANENT",
       },
       x01ScoreProgress: {
         colorTheme: "ICE-CIRCUIT",
@@ -243,6 +245,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 650);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashOnChange, false);
+  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashMode, "permanent");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "glass-charge");
@@ -438,6 +441,18 @@ test("triple-double-bull-hits accepts electric-arc as animation style option", (
   });
 
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "electric-arc");
+});
+
+test("turn-points-count maps legacy flashPermanent flag to permanent flash mode", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      turnPointsCount: {
+        flashPermanent: true,
+      },
+    },
+  });
+
+  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashMode, "permanent");
 });
 
 test("x01-score-progress drops retired design preset fields from normalized config", () => {

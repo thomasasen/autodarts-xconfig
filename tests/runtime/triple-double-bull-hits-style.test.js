@@ -23,9 +23,12 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   assert.equal(css.includes("rotateY(360deg)"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-row-electric-arc"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-score-electric-arc"), true);
-  assert.equal(css.includes("overflow: visible;"), false);
+  assert.equal(css.includes("overflow: hidden;"), true);
+  assert.equal(css.includes("overflow: visible;"), true);
   assert.equal(css.includes("url(#ad-ext-electric-displace-strong)"), true);
-  assert.equal(css.includes("ad-ext-hit-electric-arc-border-rough"), true);
+  assert.equal(css.includes("ad-ext-hit-electric-arc-frame-electric"), true);
+  assert.equal(css.includes("ad-ext-hit-electric-arc-frame-glow"), true);
+  assert.equal(css.includes("ad-ext-hit-electric-arc-frame-aura"), true);
   assert.equal(
     css.includes(
       `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.ad-ext-hit-highlight--animate`

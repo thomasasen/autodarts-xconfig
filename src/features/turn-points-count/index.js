@@ -32,6 +32,7 @@ export function initializeTurnPointsCount(context = {}) {
       : {
           durationMs: 416,
           flashOnChange: true,
+          flashMode: "on-change",
         };
 
   const state = {
@@ -59,6 +60,7 @@ export function initializeTurnPointsCount(context = {}) {
       state,
       durationMs: featureConfig.durationMs,
       flashEnabled: featureConfig.flashOnChange !== false,
+      flashMode: featureConfig.flashMode,
       flashAfterglowMs: featureConfig.flashOnChange !== false ? 500 : 0,
       animeRef,
       windowRef,
@@ -151,6 +153,7 @@ export function initializeTurnPointsCount(context = {}) {
       state,
       durationMs: featureConfig.durationMs,
       flashEnabled: featureConfig.flashOnChange !== false,
+      flashMode: featureConfig.flashMode,
       flashAfterglowMs: 0,
       animeRef: null,
       windowRef,

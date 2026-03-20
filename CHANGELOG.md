@@ -13,6 +13,27 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.62] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` zeigt `Electric Arc` jetzt
+  im selben Frame-Stil wie `Turn Points Count`, sodass der Effekt nicht mehr
+  abgeschnitten im Container wirkt und visuell ruhiger bleibt.
+  Technik: Die `electric-arc`-Burst-Layer wurden auf ein Turn-Points-nahes
+  Border-/Aura-Setup umgebaut (inklusive kontrollierter Overflow-Freigabe nur im
+  Burst-Fenster), alte Roughness-Keyframes entfernt und Timeline-Jitter in der
+  Logic deutlich reduziert; Style-/Logic-Regressionen wurden entsprechend
+  aktualisiert.
+- Nutzerwirkung: `Animate Turn Points Count` bietet jetzt zusätzlich den
+  Aufblitz-Modus `Permanent`, damit der elektrische Rahmen wahlweise dauerhaft
+  sichtbar bleibt statt nur bei Zahlenänderung.
+  Technik: `turnPointsCount` wurde um `flashMode` in Default-, Runtime- und
+  xConfig-Flow erweitert (`on-change`/`permanent` inkl. Legacy-Fallback),
+  die Flash-Lifecycle-Logik erhielt Preserve-Frame-Pfade für permanente Frames
+  und neue Regressionen decken Config-Normalisierung, UI-Persistenz und
+  Permanent-Rendering ab.
+
 ## [2.0.61] - 2026-03-20
 
 ### Changed
@@ -650,6 +671,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[2.0.62]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.61]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.60]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.59]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
