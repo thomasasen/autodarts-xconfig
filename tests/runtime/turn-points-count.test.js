@@ -11,6 +11,10 @@ import {
 } from "../../src/features/turn-points-count/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
+function wait(ms = 0) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function createState() {
   return {
     lastValueByNode: new Map(),
@@ -19,6 +23,7 @@ function createState() {
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
     flashFrameByScoreNode: new Map(),
+    flashTimeoutByNode: new Map(),
   };
 }
 
@@ -54,7 +59,7 @@ function createAnimeStub() {
   return anime;
 }
 
-test("turn-points-count flashes only while a score-change animation is active", () => {
+test("turn-points-count keeps flash frame for a short afterglow after score animation completes", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const state = createState();
@@ -65,6 +70,7 @@ test("turn-points-count flashes only while a score-change animation is active", 
     documentRef,
     state,
     durationMs: 416,
+    flashAfterglowMs: 500,
     animeRef,
     windowRef,
   });
@@ -75,6 +81,7 @@ test("turn-points-count flashes only while a score-change animation is active", 
     documentRef,
     state,
     durationMs: 416,
+    flashAfterglowMs: 500,
     animeRef,
     windowRef,
   });
@@ -85,11 +92,15 @@ test("turn-points-count flashes only while a score-change animation is active", 
   assert.equal(state.targetValueByNode.get(scoreNode), 45);
 
   animeRef.calls[0].complete();
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
   assert.equal(state.activeAnimeByNode.has(scoreNode), false);
   assert.equal(state.targetValueByNode.has(scoreNode), false);
   assert.equal(state.lastValueByNode.get(scoreNode), 45);
+
+  await wait(560);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
 });
 
 test("turn-points-count does not flash when the displayed value does not change", () => {

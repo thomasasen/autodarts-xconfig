@@ -303,10 +303,27 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 ${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}{
   border-color:rgba(132,245,255,.76);
   border-color:color-mix(in srgb,var(--ad-ext-x01-score-progress-track-border-color) 28%,rgba(132,245,255,.92) 72%);
+  filter:url(#${ELECTRIC_FILTER_SOFT_ID}) brightness(1.08) saturate(1.1);
   box-shadow:
     var(--ad-ext-x01-score-progress-track-inner-shadow),
-    0 0 14px rgba(77,217,255,.28),
+    0 0 18px rgba(77,217,255,.34),
     inset 0 0 0 1px rgba(190,248,255,.2);
+  animation:ad-ext-x01-score-progress-electric-track 1.46s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:.54;
+  background:
+    linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(220,251,255,.62) 47%,rgba(255,255,255,0) 100%),
+    repeating-linear-gradient(90deg,rgba(129,246,255,.22) 0 3px,rgba(255,255,255,0) 3px 11px);
+  filter:url(#${ELECTRIC_FILTER_SOFT_ID});
+  transform:translateX(-170%);
+  animation:ad-ext-x01-score-progress-electric-track-scan 1.28s linear infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}{
@@ -334,7 +351,26 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS}[data-ad-ext-x01-
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge{
-  filter:brightness(1.04) saturate(1.04) drop-shadow(0 0 5px rgba(132,245,255,.3));
+  filter:url(#${ELECTRIC_FILTER_SOFT_ID}) brightness(1.08) saturate(1.1) drop-shadow(0 0 6px rgba(132,245,255,.38));
+  animation:ad-ext-x01-score-progress-electric-surge-core 1.36s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::before{
+  opacity:.24;
+  background-image:
+    repeating-linear-gradient(106deg,rgba(234,252,255,.3) 0 2px,rgba(255,255,255,0) 2px 10px);
+  background-size:180% 100%;
+  background-position:0 0;
+  mix-blend-mode:screen;
+  animation:ad-ext-x01-score-progress-electric-surge-noise 680ms linear infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::after{
+  opacity:.42;
+  background:
+    linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(204,244,255,.18) 34%,rgba(224,252,255,.68) 50%,rgba(204,244,255,.18) 66%,rgba(255,255,255,0) 100%);
+  transform:translateX(-175%);
+  animation:ad-ext-x01-score-progress-electric-surge-scan 1.26s linear infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge{

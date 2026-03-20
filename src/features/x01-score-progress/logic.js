@@ -802,8 +802,7 @@ function resolveCardIdentity(cardNode, scoreNode, cardIndex) {
     return `name:${nameText}`;
   }
 
-  const scoreText = String(scoreNode?.textContent || "").replace(/\s+/g, " ").trim();
-  return `slot:${cardIndex}:${scoreText || "-"}`;
+  return `slot:${cardIndex}`;
 }
 
 function isPlayerCardActive(cardNode, scoreNode, documentRef, activePlayerIndex, cardIndex) {

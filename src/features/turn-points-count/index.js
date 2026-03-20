@@ -41,6 +41,7 @@ export function initializeTurnPointsCount(context = {}) {
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
     flashFrameByScoreNode: new Map(),
+    flashTimeoutByNode: new Map(),
   };
   let animeRef = getAnime(windowRef);
   let disposed = false;
@@ -58,6 +59,7 @@ export function initializeTurnPointsCount(context = {}) {
       state,
       durationMs: featureConfig.durationMs,
       flashEnabled: featureConfig.flashOnChange !== false,
+      flashAfterglowMs: featureConfig.flashOnChange !== false ? 500 : 0,
       animeRef,
       windowRef,
     });
@@ -149,6 +151,7 @@ export function initializeTurnPointsCount(context = {}) {
       state,
       durationMs: featureConfig.durationMs,
       flashEnabled: featureConfig.flashOnChange !== false,
+      flashAfterglowMs: 0,
       animeRef: null,
       windowRef,
     });

@@ -84,6 +84,10 @@ export function buildStyleText() {
   transition: box-shadow 180ms ease-out, border-color 180ms ease-out, filter 180ms ease-out;
 }
 
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]} {
+  overflow: visible;
+}
+
 .ad-ext-turn-throw.${HIT_BASE_CLASS} > * {
   position: relative;
 }

@@ -13,6 +13,27 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.60] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: `Animate Turn Points Count` hat jetzt einen kurzen
+  Nachwirk-Effekt von 0,5 Sekunden nach Abschluss der Zahlanimation, statt
+  abrupt auszublenden.
+  Technik: Die Flash-Steuerung nutzt ein dediziertes Afterglow-Timer-Handling
+  mit robustem Cleanup (inklusive Timer-Cancel bei Re-Trigger, Stop und
+  Node-Detach), ohne den bestehenden Lifecycle zu destabilisieren.
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` zeigt `Electric Arc`
+  nicht mehr auf den Innenbereich des Throw-Containers beschnitten.
+  Technik: Der `electric-arc`-Stil erlaubt jetzt explizit sichtbaren Overflow
+  auf dem betroffenen Row-Container, damit Border-/Glow-Layer vollständig
+  dargestellt werden können.
+- Nutzerwirkung: `X01 Score Progress` zeigt `Electric Surge` zuverlässiger und
+  klarer sichtbar, auch wenn Player-Card-Nodes im DOM neu aufgebaut werden.
+  Technik: Die Card-Identität für Score-Change-Erkennung wurde stabilisiert
+  (slot-basiert ohne scoreabhängigen Schlüssel) und der Electric-Surge-Look
+  erhielt einen permanent sichtbaren Basiseffekt plus Burst-Intensivierung.
+
 ## [2.0.59] - 2026-03-20
 
 ### Changed
@@ -611,6 +632,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[2.0.60]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.59]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.58]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.57]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...222042a

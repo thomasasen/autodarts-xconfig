@@ -27,7 +27,27 @@ function resolveFrameNode(scoreNode) {
   return scoreNode.parentElement || scoreNode;
 }
 
-function clearFlashState(node, state, windowRef = null) {
+function clearFlashTimer(node, state, windowRef = null) {
+  if (!node || !state) {
+    return;
+  }
+
+  const clearTimer =
+    (windowRef && typeof windowRef.clearTimeout === "function"
+      ? windowRef.clearTimeout.bind(windowRef)
+      : clearTimeout);
+  const timerHandle = state.flashTimeoutByNode?.get?.(node);
+  if (timerHandle) {
+    try {
+      clearTimer(timerHandle);
+    } catch (_) {
+      // fail-soft
+    }
+  }
+  state.flashTimeoutByNode?.delete?.(node);
+}
+
+function removeFlashClasses(node, state) {
   if (!node || !state) {
     return;
   }
@@ -35,6 +55,11 @@ function clearFlashState(node, state, windowRef = null) {
   const frameNode = state.flashFrameByScoreNode?.get?.(node) || resolveFrameNode(node);
   frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
   state.flashFrameByScoreNode?.delete?.(node);
+}
+
+function clearFlashState(node, state, windowRef = null) {
+  clearFlashTimer(node, state, windowRef);
+  removeFlashClasses(node, state);
 }
 
 function triggerScoreFlash(node, state, windowRef = null) {
@@ -57,7 +82,26 @@ function triggerScoreFlash(node, state, windowRef = null) {
   state.flashFrameByScoreNode?.set?.(node, frameNode);
 }
 
-export function stopAnimation(node, state, windowRef = null) {
+function scheduleFlashAfterglow(node, state, windowRef = null, delayMs = 0) {
+  const normalizedDelayMs = Math.max(0, Number(delayMs) || 0);
+  if (!node || !state || normalizedDelayMs <= 0) {
+    clearFlashState(node, state, windowRef);
+    return;
+  }
+
+  const setTimer =
+    (windowRef && typeof windowRef.setTimeout === "function"
+      ? windowRef.setTimeout.bind(windowRef)
+      : setTimeout);
+  clearFlashTimer(node, state, windowRef);
+  const timerHandle = setTimer(() => {
+    state.flashTimeoutByNode?.delete?.(node);
+    removeFlashClasses(node, state);
+  }, normalizedDelayMs);
+  state.flashTimeoutByNode?.set?.(node, timerHandle);
+}
+
+export function stopAnimation(node, state, windowRef = null, options = {}) {
   if (!node || !state) {
     return;
   }
@@ -83,7 +127,8 @@ export function stopAnimation(node, state, windowRef = null) {
   }
   state.activeAnimeByNode.delete(node);
   state.targetValueByNode.delete(node);
-  clearFlashState(node, state, windowRef);
+  const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
+  scheduleFlashAfterglow(node, state, windowRef, flashAfterglowMs);
 }
 
 export function animateScore(node, options = {}) {
@@ -92,6 +137,7 @@ export function animateScore(node, options = {}) {
   const toValue = Number(options.toValue);
   const durationMs = Number(options.durationMs) || 416;
   const flashEnabled = options.flashEnabled !== false;
+  const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const animeRef = options.animeRef;
   const windowRef = options.windowRef || null;
 
@@ -118,7 +164,9 @@ export function animateScore(node, options = {}) {
         state.renderedValueByNode.set(node, Number(valueHolder.value));
       },
       complete: () => {
-        stopAnimation(node, state, windowRef);
+        stopAnimation(node, state, windowRef, {
+          flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
+        });
         node.textContent = String(toValue);
         state.lastValueByNode.set(node, toValue);
         state.renderedValueByNode.set(node, toValue);
@@ -142,7 +190,9 @@ export function animateScore(node, options = {}) {
     state.renderedValueByNode.set(node, value);
 
     if (progress >= 1) {
-      stopAnimation(node, state, windowRef);
+      stopAnimation(node, state, windowRef, {
+        flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
+      });
       node.textContent = String(toValue);
       state.lastValueByNode.set(node, toValue);
       state.renderedValueByNode.set(node, toValue);
@@ -162,6 +212,7 @@ export function updateTurnPoints(options = {}) {
   const state = options.state;
   const durationMs = Number(options.durationMs) || 416;
   const flashEnabled = options.flashEnabled !== false;
+  const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const animeRef = options.animeRef;
   const windowRef = options.windowRef || null;
 
@@ -217,6 +268,7 @@ export function updateTurnPoints(options = {}) {
       toValue: parsedValue,
       durationMs,
       flashEnabled,
+      flashAfterglowMs,
       animeRef,
       windowRef,
     });

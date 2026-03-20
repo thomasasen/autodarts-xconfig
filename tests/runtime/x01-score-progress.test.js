@@ -755,6 +755,59 @@ test("syncScoreProgress clears electric-surge burst class after the change windo
   assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), false);
 });
 
+test("syncScoreProgress keeps electric-surge change detection stable when player card nodes are rebuilt", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "electric-surge",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-electric-rebuild",
+            match: {
+              id: "match-electric-rebuild",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  const firstCard = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(firstCard.cardNode);
+  runSync();
+
+  firstCard.cardNode.remove();
+  const rebuiltCard = createPlayerCard(documentRef, 251, { active: true });
+  playerDisplay.appendChild(rebuiltCard.cardNode);
+  runSync();
+
+  const hostNode = rebuiltCard.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), true);
+  const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  assert.ok(fillNode);
+  assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
+});
+
 test("syncScoreProgress animates the ghost trail on active score changes only", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
