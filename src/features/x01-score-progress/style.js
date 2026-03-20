@@ -103,7 +103,9 @@ ${HOST_SELECTOR}{
   --ad-ext-x01-score-progress-trail-width:0%;
   --ad-ext-x01-score-progress-height-active:clamp(.72rem,1.35vw,1.02rem);
   --ad-ext-x01-score-progress-height-inactive:clamp(.3rem,.72vw,.52rem);
-  --ad-ext-x01-score-progress-margin-top:clamp(.16rem,.45vw,.32rem);
+  --ad-ext-x01-score-progress-margin-top-active:2em;
+  --ad-ext-x01-score-progress-margin-top-inactive:clamp(.16rem,.45vw,.32rem);
+  --ad-ext-x01-score-progress-margin-top:var(--ad-ext-x01-score-progress-margin-top-inactive);
   --ad-ext-x01-score-progress-track-base-active:linear-gradient(90deg,rgba(34,84,18,.42) 0%,rgba(56,94,22,.18) 100%);
   --ad-ext-x01-score-progress-fill-base-active:linear-gradient(90deg,rgba(132,204,22,.98) 0%,rgba(163,230,53,.98) 42%,rgba(190,242,100,.98) 100%);
   --ad-ext-x01-score-progress-track-solid-active:rgba(56,94,22,.28);
@@ -153,6 +155,7 @@ ${HOST_SELECTOR}{
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}{
   --ad-ext-x01-score-progress-height:var(--ad-ext-x01-score-progress-height-active);
+  --ad-ext-x01-score-progress-margin-top:var(--ad-ext-x01-score-progress-margin-top-active);
   --ad-ext-x01-score-progress-track-bg:var(--ad-ext-x01-score-progress-track-bg-active);
   --ad-ext-x01-score-progress-fill-bg:var(--ad-ext-x01-score-progress-fill-bg-active);
   --ad-ext-x01-score-progress-fill-shadow:var(--ad-ext-x01-score-progress-fill-shadow-active);
@@ -171,6 +174,7 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}{
 
 ${HOST_SELECTOR}.${INACTIVE_CLASS}{
   --ad-ext-x01-score-progress-height:var(--ad-ext-x01-score-progress-height-inactive);
+  --ad-ext-x01-score-progress-margin-top:var(--ad-ext-x01-score-progress-margin-top-inactive);
   --ad-ext-x01-score-progress-track-bg:rgba(148,163,184,.12);
   --ad-ext-x01-score-progress-fill-bg:linear-gradient(90deg,rgba(148,163,184,.72) 0%,rgba(203,213,225,.78) 100%);
   --ad-ext-x01-score-progress-fill-shadow:none;

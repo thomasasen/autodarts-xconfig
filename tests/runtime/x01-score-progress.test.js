@@ -847,7 +847,19 @@ test("score-progress style defines clearly separated active size presets", () =>
 
   assert.match(
     css,
-    /--ad-ext-x01-score-progress-margin-top:clamp\(\.16rem,\s*\.45vw,\s*\.32rem\);/s
+    /--ad-ext-x01-score-progress-margin-top-active:2em;/s
+  );
+  assert.match(
+    css,
+    /--ad-ext-x01-score-progress-margin-top-inactive:clamp\(\.16rem,\s*\.45vw,\s*\.32rem\);/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-score-progress='true'\]\.ad-ext-x01-score-progress--active\{[^}]*--ad-ext-x01-score-progress-margin-top:var\(--ad-ext-x01-score-progress-margin-top-active\);/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-score-progress='true'\]\.ad-ext-x01-score-progress--inactive\{[^}]*--ad-ext-x01-score-progress-margin-top:var\(--ad-ext-x01-score-progress-margin-top-inactive\);/s
   );
   assert.match(
     css,

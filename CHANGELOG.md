@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.67] - 2026-03-20
+
+### Fixed
+
+- Nutzerwirkung: Der aktive X01-Restscore-Balken hat jetzt den deutlich größeren
+  Abstand oberhalb des Balkens (wie gewünscht), während inaktive Spieler beim
+  bisherigen Abstand bleiben.
+  Technik: Das Margin-Top wurde in aktive/inaktive Variablen getrennt und nur
+  für den aktiven Host auf `2em` gesetzt; Styles-Regressionen prüfen den
+  Active/Inactive-Margin-Vertrag explizit.
+
 ## [2.0.66] - 2026-03-20
 
 ### Fixed
@@ -721,6 +732,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.67]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.66]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.65]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.64]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
