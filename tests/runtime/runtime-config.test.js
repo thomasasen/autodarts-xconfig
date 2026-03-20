@@ -408,7 +408,7 @@ test("x01-score-progress maps legacy effect keys to the reduced effect set", () 
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "ghost-trail");
 });
 
-test("x01-score-progress accepts electric-surge as explicit effect option", () => {
+test("x01-score-progress maps retired electric aliases to signal-sweep", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
       x01ScoreProgress: {
@@ -417,7 +417,15 @@ test("x01-score-progress accepts electric-surge as explicit effect option", () =
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "electric-surge");
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "signal-sweep");
+  const arcBurstConfig = createRuntimeConfig({
+    features: {
+      x01ScoreProgress: {
+        effect: "arc-burst",
+      },
+    },
+  });
+  assert.equal(arcBurstConfig.getFeatureConfig("x01ScoreProgress").effect, "signal-sweep");
 });
 
 test("triple-double-bull-hits accepts electric-arc as animation style option", () => {

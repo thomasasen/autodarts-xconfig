@@ -291,7 +291,6 @@ export const xconfigDescriptors = Object.freeze([
         { value: "segment-drain", label: "Segment Drain" },
         { value: "ghost-trail", label: "Ghost Trail" },
         { value: "signal-sweep", label: "Signal Sweep" },
-        { value: "electric-surge", label: "Electric Surge" },
         { value: "off", label: "Aus" },
       ]),
       checkboxField("debug", "Debug"),

@@ -109,6 +109,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
   const burstKeyBySlot = new Map();
   const activeAnimeByRow = new Map();
   const roleStateByRow = new Map();
+  const triggerResetTimersByRow = new Map();
   let animeRef = getAnime(windowRef);
   let disposed = false;
 
@@ -124,6 +125,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       burstKeyBySlot,
       activeAnimeByRow,
       roleStateByRow,
+      triggerResetTimersByRow,
       animeRef,
       windowRef,
       debugRows: Boolean(featureDebug?.enabled),
@@ -269,6 +271,8 @@ export function initializeTripleDoubleBullHits(context = {}) {
       clearHitDecoration(rowNode, signatureByRow, {
         activeAnimeByRow,
         roleStateByRow,
+        triggerResetTimersByRow,
+        windowRef,
         animeRef,
       });
     });
@@ -277,6 +281,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
     burstKeyBySlot.clear();
     activeAnimeByRow.clear();
     roleStateByRow.clear();
+    triggerResetTimersByRow.clear();
 
     domGuards.removeNodeById(STYLE_ID);
     releaseElectricFilterDefs({ documentRef });

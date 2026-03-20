@@ -13,6 +13,24 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.61] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: `X01 Score Progress` bietet den Effekt `Electric Surge` nicht
+  mehr an, weil der Stil im Matchbetrieb nicht stabil wirkte; bestehende alte
+  Konfigurationen werden automatisch auf `Signal Sweep` umgeleitet.
+  Technik: `electric-surge` wurde aus Style-, Logic-, Runtime- und xConfig-UI-
+  Pfaden entfernt, Legacy-Aliasse (`electric-surge`, `electric-border`,
+  `arc-burst`) werden zentral auf `signal-sweep` normalisiert und mit
+  Regressionstests abgesichert.
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` zeigt `Electric Arc`
+  kontrollierter ohne hässliches Ausfransen/Stehenbleiben des Burst-Rahmens.
+  Technik: Der riskante `overflow: visible`-Pfad wurde entfernt, Electric-Arc-
+  Transform-/Roughness-Spitzen wurden auf die Throw-Row-Geometrie gedämpft und
+  ein explizites Burst-Trigger-Timer-Cleanup ergänzt, damit die
+  Animationsklasse zuverlässig endet.
+
 ## [2.0.60] - 2026-03-20
 
 ### Changed
@@ -632,6 +650,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[2.0.61]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.60]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.59]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.58]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD

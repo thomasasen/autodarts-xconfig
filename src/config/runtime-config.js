@@ -106,7 +106,6 @@ const X01_SCORE_PROGRESS_EFFECTS = new Set([
   "segment-drain",
   "ghost-trail",
   "signal-sweep",
-  "electric-surge",
   "off",
 ]);
 const WINNER_FIREWORKS_STYLES = new Set([
@@ -565,7 +564,7 @@ function normalizeX01ScoreProgressConfig(rawConfig = {}) {
       "segment-drain": "segment-drain",
       "ghost-trail": "ghost-trail",
       "signal-sweep": "signal-sweep",
-      "electric-surge": "electric-surge",
+      "electric-surge": "signal-sweep",
       "pulse-on-change": "pulse-core",
       "charge-release": "pulse-core",
       "sheen-sweep": "glass-charge",
@@ -575,8 +574,8 @@ function normalizeX01ScoreProgressConfig(rawConfig = {}) {
       "spark-trail": "ghost-trail",
       "heat-edge": "signal-sweep",
       "danger-flicker": "signal-sweep",
-      "electric-border": "electric-surge",
-      "arc-burst": "electric-surge",
+      "electric-border": "signal-sweep",
+      "arc-burst": "signal-sweep",
     }),
     debug: normalizeBoolean(rawConfig.debug, false),
   };

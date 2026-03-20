@@ -32,6 +32,8 @@ const RESET_STYLE_PROPERTIES = [
   "text-shadow",
   "letter-spacing",
 ];
+const BURST_TRIGGER_DURATION_MS = 860;
+const BURST_TRIGGER_DURATION_REDUCED_MS = 420;
 
 const INNER_BULL_PATTERN = /(BULLSEYE|BULL|DB|D\s*25|D25)/i;
 const OUTER_BULL_PATTERN = /(S\s*25|S25|SB|OB)/i;
@@ -504,6 +506,54 @@ function collectAnimationTargets(rowNode, roleStateByRow = null) {
   const roleState = roleStateByRow?.get?.(rowNode) || null;
   return [rowNode, roleState?.scoreNode || null, roleState?.segmentNode || null].filter(Boolean);
 }
+
+function clearBurstTriggerResetTimer(rowNode, triggerResetTimersByRow = null, windowRef = null) {
+  if (!rowNode || !triggerResetTimersByRow || typeof triggerResetTimersByRow.get !== "function") {
+    return;
+  }
+
+  const timerHandle = triggerResetTimersByRow.get(rowNode);
+  if (!timerHandle) {
+    triggerResetTimersByRow.delete(rowNode);
+    return;
+  }
+
+  const clearTimer =
+    windowRef && typeof windowRef.clearTimeout === "function"
+      ? windowRef.clearTimeout.bind(windowRef)
+      : clearTimeout;
+  try {
+    clearTimer(timerHandle);
+  } catch (_) {
+    // fail-soft
+  }
+  triggerResetTimersByRow.delete(rowNode);
+}
+
+function scheduleBurstTriggerReset(rowNode, options = {}) {
+  if (!rowNode || !rowNode.classList) {
+    return;
+  }
+
+  const triggerResetTimersByRow = options.triggerResetTimersByRow || null;
+  const windowRef = options.windowRef || null;
+  if (!triggerResetTimersByRow || typeof triggerResetTimersByRow.set !== "function") {
+    return;
+  }
+  if (!windowRef || typeof windowRef.setTimeout !== "function") {
+    return;
+  }
+
+  clearBurstTriggerResetTimer(rowNode, triggerResetTimersByRow, windowRef);
+  const setTimer = windowRef.setTimeout.bind(windowRef);
+  const duration = options.reducedMotion ? BURST_TRIGGER_DURATION_REDUCED_MS : BURST_TRIGGER_DURATION_MS;
+  const timerHandle = setTimer(() => {
+    rowNode.classList?.remove?.(HIT_ANIMATION_TRIGGER_CLASS);
+    triggerResetTimersByRow.delete(rowNode);
+  }, duration);
+  triggerResetTimersByRow.set(rowNode, timerHandle);
+}
+
 function stopRowAnimation(rowNode, options = {}) {
   const activeAnimeByRow = options.activeAnimeByRow || null;
   const roleStateByRow = options.roleStateByRow || null;
@@ -539,6 +589,12 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
     return false;
   }
   const hadDecoration = isRowDecorated(rowNode, signatureByRow);
+
+  clearBurstTriggerResetTimer(
+    rowNode,
+    options.triggerResetTimersByRow || null,
+    options.windowRef || null
+  );
 
   stopRowAnimation(rowNode, options);
   clearTextRoles(rowNode, options.roleStateByRow || null);
@@ -791,38 +847,38 @@ function buildBurstTimeline(animeRef, context = {}) {
           easing: "easeOutExpo",
           keyframes: [
             {
-              scale: 0.92,
+              scale: 0.98,
               translateX: 0,
               translateY: 0,
               skewX: 0,
               filter: "saturate(1) brightness(0.95)",
             },
             {
-              scale: 1.04,
-              translateX: reducedMotion ? -2 : -7,
-              translateY: 2,
-              skewX: -3,
+              scale: 1.01,
+              translateX: reducedMotion ? -1 : -3,
+              translateY: 1,
+              skewX: -1.2,
               filter: "saturate(1.2) brightness(1.12)",
             },
             {
-              scale: 1.14,
-              translateX: reducedMotion ? 3 : 9,
-              translateY: -4,
-              skewX: 2,
+              scale: 1.02,
+              translateX: reducedMotion ? 1 : 3,
+              translateY: -1.2,
+              skewX: 1,
               filter: "saturate(1.44) brightness(1.34)",
             },
             {
-              scale: 1.08,
-              translateX: reducedMotion ? -2 : -10,
-              translateY: 3,
-              skewX: -2,
+              scale: 1.01,
+              translateX: reducedMotion ? -1 : -2.5,
+              translateY: 1,
+              skewX: -0.8,
               filter: "saturate(1.3) brightness(1.2)",
             },
             {
-              scale: 1.03,
-              translateX: reducedMotion ? 2 : 8,
-              translateY: -2,
-              skewX: 1,
+              scale: 1.006,
+              translateX: reducedMotion ? 1 : 2.2,
+              translateY: -0.8,
+              skewX: 0.6,
               filter: "saturate(1.22) brightness(1.12)",
             },
             {
@@ -844,24 +900,24 @@ function buildBurstTimeline(animeRef, context = {}) {
           easing: "linear",
           keyframes: [
             {
-              scale: 1.2,
-              translateX: reducedMotion ? 2 : 7,
+              scale: 1.14,
+              translateX: reducedMotion ? 1 : 3.2,
               letterSpacing: "0.08em",
               filter: "brightness(1.42) drop-shadow(0 0 10px rgba(180,250,255,.68))",
             },
             {
-              scale: 1.08,
-              translateX: reducedMotion ? -2 : -9,
+              scale: 1.05,
+              translateX: reducedMotion ? -1 : -3.6,
               letterSpacing: "0.06em",
               filter: "brightness(1.22) drop-shadow(0 0 6px rgba(180,250,255,.48))",
             },
             {
-              scale: 1.14,
-              translateX: reducedMotion ? 2 : 6,
+              scale: 1.08,
+              translateX: reducedMotion ? 1 : 2.7,
               letterSpacing: "0.07em",
               filter: "brightness(1.34) drop-shadow(0 0 8px rgba(180,250,255,.58))",
             },
-            { scale: 1.04, translateX: reducedMotion ? -1 : -4, letterSpacing: "0.04em" },
+            { scale: 1.02, translateX: reducedMotion ? -1 : -2.1, letterSpacing: "0.04em" },
             { scale: 1, translateX: 0, letterSpacing: "0.01em", filter: "brightness(1.03)" },
           ],
         },
@@ -875,13 +931,13 @@ function buildBurstTimeline(animeRef, context = {}) {
           easing: "linear",
           keyframes: [
             {
-              translateX: reducedMotion ? -1 : -7,
+              translateX: reducedMotion ? -1 : -2.4,
               letterSpacing: "0.16em",
               opacity: 1,
               filter: "brightness(1.3)",
             },
             {
-              translateX: reducedMotion ? 1 : 6,
+              translateX: reducedMotion ? 1 : 2.2,
               letterSpacing: "0.08em",
               opacity: 1,
               filter: "brightness(1.16)",
@@ -1314,6 +1370,11 @@ function startBurstAnimation(rowNode, options = {}) {
     animeRef,
   });
   triggerAnimationReplay(rowNode);
+  scheduleBurstTriggerReset(rowNode, {
+    triggerResetTimersByRow: options.triggerResetTimersByRow || null,
+    windowRef: options.windowRef || null,
+    reducedMotion,
+  });
 
   if (reducedMotion || typeof animeRef !== "function") {
     return false;
@@ -1342,6 +1403,7 @@ export function applyHitDecoration(rowNode, options = {}) {
   const burstKeyBySlot = options.burstKeyBySlot || null;
   const activeAnimeByRow = options.activeAnimeByRow || null;
   const roleStateByRow = options.roleStateByRow || null;
+  const triggerResetTimersByRow = options.triggerResetTimersByRow || null;
   const rowIndex = Number(options.rowIndex) || 0;
   const windowRef = options.windowRef || null;
   const animeRef = options.animeRef || null;
@@ -1366,6 +1428,8 @@ export function applyHitDecoration(rowNode, options = {}) {
     clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
+      triggerResetTimersByRow,
+      windowRef,
       animeRef,
     });
     return {
@@ -1389,6 +1453,8 @@ export function applyHitDecoration(rowNode, options = {}) {
     clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
+      triggerResetTimersByRow,
+      windowRef,
       animeRef,
     });
     return {
@@ -1439,6 +1505,8 @@ export function applyHitDecoration(rowNode, options = {}) {
       animeRef,
       activeAnimeByRow,
       roleStateByRow,
+      triggerResetTimersByRow,
+      windowRef,
       animationStyle,
       reducedMotion,
     });
@@ -1465,6 +1533,7 @@ export function updateHitDecorations(options = {}) {
   const burstKeyBySlot = options.burstKeyBySlot || new Map();
   const activeAnimeByRow = options.activeAnimeByRow || new Map();
   const roleStateByRow = options.roleStateByRow || new Map();
+  const triggerResetTimersByRow = options.triggerResetTimersByRow || null;
   const includeRowDebug = options.debugRows === true;
   const animeRef = options.animeRef || null;
   const windowRef = options.windowRef || null;
@@ -1500,6 +1569,8 @@ export function updateHitDecorations(options = {}) {
     const wasCleared = clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
+      triggerResetTimersByRow,
+      windowRef,
       animeRef,
     });
     trackedRows.delete(rowNode);
@@ -1520,6 +1591,8 @@ export function updateHitDecorations(options = {}) {
       const wasCleared = clearHitDecoration(rowNode, signatureByRow, {
         activeAnimeByRow,
         roleStateByRow,
+        triggerResetTimersByRow,
+        windowRef,
         animeRef,
       });
       burstKeyBySlot.delete(index);
@@ -1550,6 +1623,7 @@ export function updateHitDecorations(options = {}) {
       burstKeyBySlot,
       activeAnimeByRow,
       roleStateByRow,
+      triggerResetTimersByRow,
       rowIndex: index,
       windowRef,
       animeRef,

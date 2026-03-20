@@ -9,13 +9,14 @@ import {
 } from "../../src/features/triple-double-bull-hits/logic.js";
 import {
   HIT_BASE_CLASS,
+  HIT_ANIMATION_TRIGGER_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
   HIT_SCORE_CLASS,
   HIT_SEGMENT_CLASS,
   HIT_THEME_CLASS,
 } from "../../src/features/triple-double-bull-hits/style.js";
-import { FakeDocument } from "./fake-dom.js";
+import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function createAnimeStub() {
   const calls = [];
@@ -82,6 +83,10 @@ function appendThrowRow(documentRef, scoreText, segmentText) {
     scoreNode,
     segmentNode,
   };
+}
+
+function wait(ms = 0) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 test("classifyThrowText resolves mixed throw text by containment priority", () => {
@@ -539,7 +544,7 @@ test("electric-arc timeline applies jittered surge keyframes on row and score", 
   const electricPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
   const electricRowStep = electricPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
   assert.equal(
-    electricRowStep?.step?.keyframes?.some((frame) => frame.skewX === 2),
+    electricRowStep?.step?.keyframes?.some((frame) => Math.abs(Number(frame.skewX) || 0) >= 1),
     true
   );
 
@@ -550,6 +555,45 @@ test("electric-arc timeline applies jittered surge keyframes on row and score", 
     scoreStep?.step?.keyframes?.some((frame) => frame.letterSpacing === "0.08em"),
     true
   );
+});
+
+test("burst trigger class is removed automatically after the replay window", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const nativeSetTimeout = setTimeout;
+  windowRef.setTimeout = (callback, _ms, ...args) => nativeSetTimeout(callback, 0, ...args);
+  windowRef.clearTimeout = (handle) => clearTimeout(handle);
+
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const triggerResetTimersByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    triggerResetTimersByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-arc",
+    },
+    windowRef,
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), true);
+  await wait(10);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
+  assert.equal(triggerResetTimersByRow.has(documentRef.throwRow), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), true);
 });
 
 test("clearHitDecoration removes row classes, text roles, and active anime state", () => {

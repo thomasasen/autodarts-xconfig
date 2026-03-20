@@ -1,6 +1,5 @@
 import {
   ACTIVE_CLASS,
-  ELECTRIC_SURGE_ACTIVE_CLASS,
   FILL_CLASS,
   getEffectFillClass,
   getEffectFillClassList,
@@ -56,6 +55,9 @@ const ACTIVE_STYLE_PROPERTIES = Object.freeze([
 ]);
 const SIZE_CLASS_LIST = Object.freeze(getSizeClassList());
 const EFFECT_FILL_CLASS_LIST = Object.freeze(getEffectFillClassList());
+const LEGACY_EFFECT_FILL_CLASS_LIST = Object.freeze([
+  "ad-ext-x01-score-progress__fill--effect-electric-surge",
+]);
 const THRESHOLD_COLOR_THEMES = new Set([
   "checkout-focus",
   "traffic-light",
@@ -114,10 +116,8 @@ const STATIC_COLOR_THEME_PALETTES = Object.freeze({
 });
 const EFFECT_ANIMATION_SLOT = Symbol("adExtX01ScoreProgressEffectAnimation");
 const TRAIL_ANIMATION_SLOT = Symbol("adExtX01ScoreProgressTrailAnimation");
-const ELECTRIC_SURGE_BURST_SLOT = Symbol("adExtX01ScoreProgressElectricBurst");
 const EFFECT_CHANGE_TOKEN_ATTRIBUTE = "data-ad-ext-x01-score-progress-effect-token";
 const TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-score-progress-trail-width";
-const ELECTRIC_SURGE_BURST_DURATION_MS = 980;
 
 function isFiniteNumber(value) {
   return Number.isFinite(value);
@@ -756,7 +756,6 @@ export function getPlayerCards(documentRef) {
 
 export function clearAllScoreProgress(documentRef) {
   queryAll(documentRef, HOST_SELECTOR).forEach((node) => {
-    clearElectricSurgeBurst(node);
     node.remove?.();
   });
 }
@@ -900,6 +899,9 @@ function clearFillEffectClasses(fillNode) {
   EFFECT_FILL_CLASS_LIST.forEach((className) => {
     fillNode.classList.remove(className);
   });
+  LEGACY_EFFECT_FILL_CLASS_LIST.forEach((className) => {
+    fillNode.classList.remove(className);
+  });
 }
 
 function cancelEffectAnimation(fillNode) {
@@ -936,50 +938,6 @@ function clearTrailState(trailNode) {
 
   trailNode.style?.setProperty?.(TRAIL_WIDTH_PROPERTY, "0%");
   trailNode.style?.setProperty?.("opacity", "0");
-}
-
-function clearElectricSurgeBurst(hostNode, windowRef = null) {
-  if (!hostNode) {
-    return;
-  }
-
-  const timerHandle = hostNode[ELECTRIC_SURGE_BURST_SLOT];
-  const clearTimer =
-    (windowRef && typeof windowRef.clearTimeout === "function"
-      ? windowRef.clearTimeout.bind(windowRef)
-      : clearTimeout);
-  if (timerHandle) {
-    try {
-      clearTimer(timerHandle);
-    } catch (_) {
-      // Ignore stale timer handles.
-    }
-  }
-
-  hostNode.classList?.remove?.(ELECTRIC_SURGE_ACTIVE_CLASS);
-  if (Object.prototype.hasOwnProperty.call(hostNode, ELECTRIC_SURGE_BURST_SLOT)) {
-    hostNode[ELECTRIC_SURGE_BURST_SLOT] = null;
-  }
-}
-
-function activateElectricSurgeBurst(hostNode, windowRef = null) {
-  if (!hostNode?.classList) {
-    return;
-  }
-
-  clearElectricSurgeBurst(hostNode, windowRef);
-  hostNode.classList.add(ELECTRIC_SURGE_ACTIVE_CLASS);
-
-  const setTimer =
-    (windowRef && typeof windowRef.setTimeout === "function"
-      ? windowRef.setTimeout.bind(windowRef)
-      : setTimeout);
-  hostNode[ELECTRIC_SURGE_BURST_SLOT] = setTimer(() => {
-    hostNode.classList?.remove?.(ELECTRIC_SURGE_ACTIVE_CLASS);
-    if (Object.prototype.hasOwnProperty.call(hostNode, ELECTRIC_SURGE_BURST_SLOT)) {
-      hostNode[ELECTRIC_SURGE_BURST_SLOT] = null;
-    }
-  }, ELECTRIC_SURGE_BURST_DURATION_MS);
 }
 
 function createEffectAnimationDefinition(effect) {
@@ -1032,30 +990,6 @@ function createEffectAnimationDefinition(effect) {
     };
   }
 
-  if (normalizedEffect === "electric-surge") {
-    return {
-      keyframes: [
-        {
-          filter: "brightness(1.1) saturate(1.12) drop-shadow(0 0 5px rgba(120,240,255,.34))",
-          transform: "translateX(0) scaleY(1)",
-        },
-        {
-          filter: "brightness(1.72) saturate(1.5) drop-shadow(0 0 14px rgba(122,236,255,.78))",
-          transform: "translateX(2.5px) scaleY(1.28)",
-        },
-        {
-          filter: "brightness(1.26) saturate(1.24) drop-shadow(0 0 8px rgba(122,236,255,.52))",
-          transform: "translateX(-1.3px) scaleY(1.08)",
-        },
-        {
-          filter: "brightness(1.12) saturate(1.14) drop-shadow(0 0 6px rgba(122,236,255,.38))",
-          transform: "translateX(0) scaleY(1)",
-        },
-      ],
-      options: { duration: 420, easing: "ease-out" },
-    };
-  }
-
   return null;
 }
 
@@ -1090,23 +1024,18 @@ function triggerGhostTrail(trailNode, shouldTrigger, previousRatio, currentRatio
 }
 
 function triggerScoreChangeEffect(
-  hostNode,
   fillNode,
   trailNode,
   effect,
   shouldTrigger,
   previousRatio,
-  currentRatio,
-  windowRef = null
+  currentRatio
 ) {
   if (!fillNode) {
     return;
   }
 
   const normalizedEffect = normalizeEffect(effect);
-  if (normalizedEffect !== "electric-surge") {
-    clearElectricSurgeBurst(hostNode, windowRef);
-  }
   fillNode.setAttribute(EFFECT_ATTRIBUTE, normalizedEffect);
   clearFillEffectClasses(fillNode);
   fillNode.classList.add(getEffectFillClass(normalizedEffect));
@@ -1115,10 +1044,6 @@ function triggerScoreChangeEffect(
   cancelEffectAnimation(fillNode);
   if (!shouldTrigger || normalizedEffect === "off") {
     return;
-  }
-
-  if (normalizedEffect === "electric-surge") {
-    activateElectricSurgeBurst(hostNode, windowRef);
   }
 
   if (normalizedEffect === "ghost-trail") {
@@ -1185,19 +1110,16 @@ export function updateProgressHost(hostNode, options = {}) {
       })
     );
     triggerScoreChangeEffect(
-      hostNode,
       fillNode,
       trailNode,
       effect,
       options.scoreChanged === true,
       options.previousRatio,
-      ratio,
-      options.windowRef || null
+      ratio
     );
     return;
   }
 
-  clearElectricSurgeBurst(hostNode, options.windowRef || null);
   clearActiveVisualVars(hostNode);
   clearFillEffectClasses(fillNode);
   cancelEffectAnimation(fillNode);

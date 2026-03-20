@@ -11,7 +11,6 @@ import {
 import { mountX01ScoreProgress } from "../../src/features/x01-score-progress/index.js";
 import {
   ACTIVE_CLASS,
-  ELECTRIC_SURGE_ACTIVE_CLASS,
   FILL_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
@@ -640,122 +639,7 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
   assert.ok(fillNode.__lastAnimation);
 });
 
-test("syncScoreProgress triggers electric-surge only on active score changes", () => {
-  const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({
-    documentRef,
-    href: "https://play.autodarts.io/matches/demo",
-  });
-  documentRef.variantElement.textContent = "501";
-
-  const playerDisplay = documentRef.createElement("div");
-  playerDisplay.id = "ad-ext-player-display";
-  documentRef.main.appendChild(playerDisplay);
-
-  const player = createPlayerCard(documentRef, 301, { active: true });
-  playerDisplay.appendChild(player.cardNode);
-  const state = createScoreProgressState();
-
-  const runSync = () =>
-    syncScoreProgress(
-      {
-        documentRef,
-        windowRef,
-        featureConfig: {
-          colorTheme: "checkout-focus",
-          barSize: "standard",
-          effect: "electric-surge",
-        },
-        gameState: {
-          getSnapshot: () => ({
-            topic: "match-electric-surge",
-            match: {
-              id: "match-electric-surge",
-              variant: "501",
-            },
-          }),
-        },
-      },
-      state
-    );
-
-  runSync();
-  player.scoreNode.textContent = "251";
-  runSync();
-
-  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
-  assert.ok(hostNode);
-  const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
-  assert.ok(fillNode);
-  assert.equal(hostNode.getAttribute(EFFECT_ATTRIBUTE), "electric-surge");
-  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), true);
-  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "electric-surge");
-  assert.equal(
-    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-electric-surge"),
-    true
-  );
-  assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
-  assert.ok(fillNode.__lastAnimation);
-  assert.equal(
-    fillNode.__lastAnimation.keyframes.some((frame) =>
-      String(frame.filter || "").includes("drop-shadow")
-    ),
-    true
-  );
-});
-
-test("syncScoreProgress clears electric-surge burst class after the change window", async () => {
-  const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({
-    documentRef,
-    href: "https://play.autodarts.io/matches/demo",
-  });
-  documentRef.variantElement.textContent = "501";
-
-  const playerDisplay = documentRef.createElement("div");
-  playerDisplay.id = "ad-ext-player-display";
-  documentRef.main.appendChild(playerDisplay);
-
-  const player = createPlayerCard(documentRef, 301, { active: true });
-  playerDisplay.appendChild(player.cardNode);
-  const state = createScoreProgressState();
-
-  const runSync = () =>
-    syncScoreProgress(
-      {
-        documentRef,
-        windowRef,
-        featureConfig: {
-          colorTheme: "checkout-focus",
-          barSize: "standard",
-          effect: "electric-surge",
-        },
-        gameState: {
-          getSnapshot: () => ({
-            topic: "match-electric-surge-timebox",
-            match: {
-              id: "match-electric-surge-timebox",
-              variant: "501",
-            },
-          }),
-        },
-      },
-      state
-    );
-
-  runSync();
-  player.scoreNode.textContent = "251";
-  runSync();
-
-  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
-  assert.ok(hostNode);
-  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), true);
-
-  await wait(1100);
-  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), false);
-});
-
-test("syncScoreProgress keeps electric-surge change detection stable when player card nodes are rebuilt", () => {
+test("syncScoreProgress maps retired electric-surge effect values to signal-sweep", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
@@ -780,9 +664,9 @@ test("syncScoreProgress keeps electric-surge change detection stable when player
         },
         gameState: {
           getSnapshot: () => ({
-            topic: "match-electric-rebuild",
+            topic: "match-electric-legacy",
             match: {
-              id: "match-electric-rebuild",
+              id: "match-electric-legacy",
               variant: "501",
             },
           }),
@@ -794,17 +678,23 @@ test("syncScoreProgress keeps electric-surge change detection stable when player
   const firstCard = createPlayerCard(documentRef, 301, { active: true });
   playerDisplay.appendChild(firstCard.cardNode);
   runSync();
-
-  firstCard.cardNode.remove();
-  const rebuiltCard = createPlayerCard(documentRef, 251, { active: true });
-  playerDisplay.appendChild(rebuiltCard.cardNode);
+  firstCard.scoreNode.textContent = "251";
   runSync();
 
-  const hostNode = rebuiltCard.cardNode.querySelector(HOST_SELECTOR);
+  const hostNode = firstCard.cardNode.querySelector(HOST_SELECTOR);
   assert.ok(hostNode);
-  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), true);
+  assert.equal(hostNode.getAttribute(EFFECT_ATTRIBUTE), "signal-sweep");
   const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
+  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "signal-sweep");
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-signal-sweep"),
+    true
+  );
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-electric-surge"),
+    false
+  );
   assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
 });
 
@@ -906,16 +796,12 @@ test("score-progress style no longer exposes selectable design presets", () => {
   assert.equal(css.includes("--preset-liquid-glass"), false);
 });
 
-test("score-progress style scopes electric-surge track effects to active hosts only", () => {
+test("score-progress style does not ship electric-surge selectors anymore", () => {
   const css = buildStyleText();
 
-  assert.match(
-    css,
-    /\[data-ad-ext-x01-score-progress='true'\]\.ad-ext-x01-score-progress--active\.ad-ext-x01-score-progress--electric-active\[data-ad-ext-x01-score-progress-effect='electric-surge'\]\s+\.ad-ext-x01-score-progress__track/s
-  );
-  assert.equal(css.includes("filter:url(#ad-ext-electric-displace-strong)"), true);
-  assert.equal(css.includes("ad-ext-x01-score-progress-electric-track"), true);
-  assert.equal(css.includes("ad-ext-x01-score-progress-electric-surge-core"), true);
+  assert.equal(css.includes("electric-surge"), false);
+  assert.equal(css.includes("ad-ext-x01-score-progress-electric-track"), false);
+  assert.equal(css.includes("ad-ext-electric-displace"), false);
 });
 
 test("score-progress style does not force displacement filters on non-electric effects", () => {

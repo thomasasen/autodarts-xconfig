@@ -244,7 +244,6 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Segment Drain`: Segmentierte Drain-Optik mit klaren Abschnitten.
   - `Ghost Trail`: Nachziehender Ghost-Trail beim Scorewechsel.
   - `Signal Sweep`: Schneller Signal-Sweep mit hoher Aufmerksamkeit.
-  - `Electric Surge`: Kombiniert einen aktiven Electric-Track-Rand mit einem kurzen Surge-Impuls nur bei Scoreänderungen. Inaktive Karten bleiben unverändert.
   - `Aus`: Keine Zusatzanimation; nur der statische Balken bleibt sichtbar.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 

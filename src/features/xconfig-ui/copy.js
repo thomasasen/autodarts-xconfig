@@ -1958,11 +1958,6 @@ const X01_SCORE_PROGRESS_EFFECT_OPTION_COPY = deepFreeze({
     "Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.",
     "Schneller Signal-Sweep mit hoher Aufmerksamkeit."
   ),
-  "electric-surge": optionCopy(
-    "Lädt den aktiven Balken elektrisch auf und zündet beim Scorewechsel einen klaren Surge.",
-    "Während der aktive Balken steht, pulst eine elektrische Randspannung am Track. Bei jeder echten Scoreänderung feuert ein kurzer, heller Stromstoß durch den Balkenkern.",
-    "Kombiniert einen aktiven Electric-Track-Rand mit einem kurzen Surge-Impuls nur bei Scoreänderungen. Inaktive Karten bleiben unverändert."
-  ),
   off: optionCopy(
     "Deaktiviert Zusatzanimationen.",
     "Der Balken zeigt nur den aktuellen Stand ohne zusätzlichen Effekt. Größe, Farben und Inaktiv-Darstellung bleiben bestehen.",
