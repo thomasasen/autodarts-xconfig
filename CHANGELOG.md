@@ -13,6 +13,29 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.57] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` bietet jetzt zusätzlich den
+  neuen Animationsstil `Electric Arc`, der Treffer mit einem kurzen,
+  elektrischen Burst und klarer Zahlenbetonung inszeniert.
+  Technik: Die Burst-Pipeline wurde um `electric-arc` in Style-, Timeline- und
+  Runtime-Normalisierung erweitert; xConfig-Optionen, README/FEATURES-Abschnitte
+  und Regressionstests wurden auf die neue Stiloption synchronisiert.
+- Nutzerwirkung: `Animate Turn Points Count` zeigt beim Start einer echten
+  Punktänderung jetzt ein kurzes Aufblitzen, das nur während der laufenden
+  Zählanimation aktiv ist und danach sauber verschwindet.
+  Technik: Das Feature erhielt einen scoped Flash-Style, gezielte
+  Klassensteuerung mit Timeout-Cleanup pro Node sowie Tests für Triggergrenzen
+  (nur bei Wertänderung), Lifecycle-Entfernung und Side-Effect-Isolation.
+- Nutzerwirkung: `X01 Score Progress` enthält den neuen Effekt
+  `Electric Surge` mit kurzem Change-Impuls und aktivem Electric-Track-Rand,
+  während inaktive Karten weiterhin unverändert bleiben.
+  Technik: Effekt-Normalisierung, Fill-/Track-Styles und
+  Score-Change-Keyframes wurden um `electric-surge` ergänzt; zusätzliche Tests
+  decken Triggerverhalten, Active-Only-Scoping und Doku-/UI-Parität ab.
+
 ## [2.0.56] - 2026-03-19
 
 ### Changed
@@ -537,6 +560,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
+[2.0.57]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
 [2.0.56]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
 [2.0.55]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...2606db6
 [2.0.54]: https://github.com/thomasasen/autodarts-xconfig/compare/8a31cd6...8a156b3

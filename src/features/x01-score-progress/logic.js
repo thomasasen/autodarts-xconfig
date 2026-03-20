@@ -983,6 +983,26 @@ function createEffectAnimationDefinition(effect) {
     };
   }
 
+  if (normalizedEffect === "electric-surge") {
+    return {
+      keyframes: [
+        {
+          filter: "brightness(1.08) saturate(1.08)",
+          transform: "translateX(0) scaleY(1)",
+        },
+        {
+          filter: "brightness(1.38) saturate(1.34) drop-shadow(0 0 10px rgba(122,236,255,.68))",
+          transform: "translateX(1.5px) scaleY(1.2)",
+        },
+        {
+          filter: "brightness(1.12) saturate(1.1) drop-shadow(0 0 5px rgba(122,236,255,.36))",
+          transform: "translateX(0) scaleY(1)",
+        },
+      ],
+      options: { duration: 340, easing: "ease-out" },
+    };
+  }
+
   return null;
 }
 

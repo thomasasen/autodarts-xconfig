@@ -1392,6 +1392,11 @@ const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY = deepFreeze({
     "Der Burst fühlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug über Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.",
     "Laser Sweep setzt auf einen schnellen Lichtlauf über Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe."
   ),
+  "electric-arc": optionCopy(
+    "Electric Arc schießt einen kurzen, zackigen Stromimpuls über Trefferfeld und Score.",
+    "Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.",
+    "Electric Arc kombiniert einen kompakten Stromstoß mit leichtem Seitenshake auf Feld, Score und Segment. Die Wirkung ist aggressiv und kurz, bleibt aber klar als einmaliger Burst."
+  ),
   "neon-pulse": optionCopy(
     "Reactor Pulse lässt den Treffer hell aufglühen und danach neonartig weiteratmen.",
     "Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop mit klarer Cyberpunk-Anmutung.",
@@ -1947,6 +1952,11 @@ const X01_SCORE_PROGRESS_EFFECT_OPTION_COPY = deepFreeze({
     "Jagt eine scharfe Signallinie über den Balken.",
     "Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.",
     "Schneller Signal-Sweep mit hoher Aufmerksamkeit."
+  ),
+  "electric-surge": optionCopy(
+    "Lädt den aktiven Balken elektrisch auf und zündet beim Scorewechsel einen klaren Surge.",
+    "Während der aktive Balken steht, pulst eine elektrische Randspannung am Track. Bei jeder echten Scoreänderung feuert ein kurzer, heller Stromstoß durch den Balkenkern.",
+    "Kombiniert einen aktiven Electric-Track-Rand mit einem kurzen Surge-Impuls nur bei Scoreänderungen. Inaktive Karten bleiben unverändert."
   ),
   off: optionCopy(
     "Deaktiviert Zusatzanimationen.",

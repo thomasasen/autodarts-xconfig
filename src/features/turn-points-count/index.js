@@ -1,5 +1,6 @@
 import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
 import { collectScoreNodes, stopAnimation, updateTurnPoints } from "./logic.js";
+import { STYLE_ID, buildStyleText } from "./style.js";
 
 const FEATURE_KEY = "turn-points-count";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -12,6 +13,7 @@ export function initializeTurnPointsCount(context = {}) {
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
+  const domGuards = context.domGuards;
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
@@ -33,9 +35,14 @@ export function initializeTurnPointsCount(context = {}) {
     targetValueByNode: new Map(),
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
+    flashTimeoutByNode: new Map(),
   };
   let animeRef = getAnime(windowRef);
   let disposed = false;
+
+  if (domGuards && typeof domGuards.ensureStyle === "function") {
+    domGuards.ensureStyle(STYLE_ID, buildStyleText());
+  }
 
   function update() {
     updateTurnPoints({
@@ -137,6 +144,9 @@ export function initializeTurnPointsCount(context = {}) {
     });
     const scoreNodes = collectScoreNodes(documentRef);
     scoreNodes.forEach((node) => stopAnimation(node, state, windowRef));
+    if (domGuards && typeof domGuards.removeNodeById === "function") {
+      domGuards.removeNodeById(STYLE_ID);
+    }
   };
 }
 

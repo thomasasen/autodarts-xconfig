@@ -30,6 +30,7 @@ export const EFFECTS = Object.freeze([
   "segment-drain",
   "ghost-trail",
   "signal-sweep",
+  "electric-surge",
   "off",
 ]);
 
@@ -293,6 +294,40 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
   animation:ad-ext-x01-score-progress-signal-sweep 1.04s linear infinite;
 }
 
+${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}{
+  border-color:color-mix(in srgb,var(--ad-ext-x01-score-progress-track-border-color) 40%,rgba(138,231,255,.92) 60%);
+  box-shadow:
+    var(--ad-ext-x01-score-progress-track-inner-shadow),
+    0 0 16px rgba(77,217,255,.24),
+    inset 0 0 0 1px rgba(153,239,255,.2);
+  animation:ad-ext-x01-score-progress-electric-track 1.32s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:.66;
+  background:
+    linear-gradient(110deg,rgba(255,255,255,0) 0%,rgba(208,248,255,.66) 48%,rgba(255,255,255,0) 100%);
+  transform:translateX(-140%);
+  animation:ad-ext-x01-score-progress-electric-track-scan 1.32s linear infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge{
+  animation:ad-ext-x01-score-progress-electric-surge-core 1.08s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::after{
+  opacity:.82;
+  background:
+    linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(204,244,255,.14) 34%,rgba(210,249,255,.86) 50%,rgba(204,244,255,.14) 66%,rgba(255,255,255,0) 100%);
+  transform:translateX(-160%);
+  animation:ad-ext-x01-score-progress-electric-surge-scan 1.08s linear infinite;
+}
+
 @keyframes ad-ext-x01-score-progress-pulse-core{
   0%,100%{transform:scaleY(1);filter:brightness(1) saturate(1.02)}
   50%{transform:scaleY(1.18);filter:brightness(1.2) saturate(1.18)}
@@ -321,6 +356,27 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 @keyframes ad-ext-x01-score-progress-signal-sweep{
   0%{transform:translateX(-155%)}
   100%{transform:translateX(155%)}
+}
+
+@keyframes ad-ext-x01-score-progress-electric-track{
+  0%,100%{filter:brightness(1.02) saturate(1.04)}
+  46%{filter:brightness(1.2) saturate(1.2)}
+}
+
+@keyframes ad-ext-x01-score-progress-electric-track-scan{
+  0%{transform:translateX(-140%);opacity:.42}
+  62%{transform:translateX(146%);opacity:.9}
+  100%{transform:translateX(146%);opacity:.42}
+}
+
+@keyframes ad-ext-x01-score-progress-electric-surge-core{
+  0%,100%{filter:brightness(1.04) saturate(1.06)}
+  38%{filter:brightness(1.28) saturate(1.24)}
+}
+
+@keyframes ad-ext-x01-score-progress-electric-surge-scan{
+  0%{transform:translateX(-160%);opacity:.5}
+  100%{transform:translateX(162%);opacity:.9}
 }
 `;
 }

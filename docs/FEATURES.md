@@ -244,6 +244,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Segment Drain`: Segmentierte Drain-Optik mit klaren Abschnitten.
   - `Ghost Trail`: Nachziehender Ghost-Trail beim Scorewechsel.
   - `Signal Sweep`: Schneller Signal-Sweep mit hoher Aufmerksamkeit.
+  - `Electric Surge`: Kombiniert einen aktiven Electric-Track-Rand mit einem kurzen Surge-Impuls nur bei Scoreänderungen. Inaktive Karten bleiben unverändert.
   - `Aus`: Keine Zusatzanimation; nur der statische Balken bleibt sichtbar.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
@@ -441,6 +442,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Slam Punch`: Slam Punch ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand.
   - `Shock Ring`: Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
   - `Laser Sweep`: Laser Sweep setzt auf einen schnellen Lichtlauf über Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe.
+  - `Electric Arc`: Electric Arc kombiniert einen kompakten Stromstoß mit leichtem Seitenshake auf Feld, Score und Segment. Die Wirkung ist aggressiv und kurz, bleibt aber klar als einmaliger Burst.
   - `Reactor Pulse`: Reactor Pulse kombiniert einen deutlichen Neon-Burst mit einem sanften Weiteratmen von Verlauf, Glow und Zahl. Das markierte Feld bleibt also auch nach dem Burst leicht lebendig.
   - `Turbo Bounce`: Turbo Bounce kombiniert einen schnellen Lift mit kurzem Nachfedern. Dadurch wirkt der Treffer rhythmisch und sportlich, ohne im Leerlauf weiterzubewegen.
   - `Card Hammer`: Card Hammer behandelt das Trefferfeld wie eine kleine Broadcast-Karte, die kurz hart einschlägt und per vertikalem Flip wieder einrastet.

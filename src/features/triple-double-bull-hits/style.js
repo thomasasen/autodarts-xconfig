@@ -22,6 +22,7 @@ export const HIT_ANIMATION_CLASS = Object.freeze({
   "impact-pop": "ad-ext-hit-animation--impact-pop",
   shockwave: "ad-ext-hit-animation--shockwave",
   "sweep-shine": "ad-ext-hit-animation--sweep-shine",
+  "electric-arc": "ad-ext-hit-animation--electric-arc",
   "neon-pulse": "ad-ext-hit-animation--neon-pulse",
   "snap-bounce": "ad-ext-hit-animation--snap-bounce",
   "card-slam": "ad-ext-hit-animation--card-slam",
@@ -371,6 +372,14 @@ export function buildStyleText() {
   animation-name: ad-ext-hit-row-sweep-shine;
 }
 
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  animation-name: ad-ext-hit-row-electric-arc;
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
+  animation: ad-ext-hit-score-electric-arc 760ms cubic-bezier(0.14, 0.92, 0.24, 1);
+}
+
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-neon-pulse;
 }
@@ -511,6 +520,25 @@ export function buildStyleText() {
   0% { transform: translateX(-18px) skewX(-5deg) rotateY(-10deg); }
   46% { transform: translateX(14px) skewX(3deg) rotateY(12deg); }
   100% { transform: translateX(0) skewX(0deg) rotateY(0deg); }
+}
+
+@keyframes ad-ext-hit-row-electric-arc {
+  0% { transform: translateX(0) translateY(0) scale(0.96) skewX(0deg); filter: saturate(1.02); }
+  12% { transform: translateX(-5px) translateY(1px) scale(1.03) skewX(-3deg); }
+  26% { transform: translateX(6px) translateY(-3px) scale(1.09) skewX(2deg); }
+  40% { transform: translateX(-7px) translateY(2px) scale(1.05) skewX(-2deg); }
+  56% { transform: translateX(5px) translateY(-1px) scale(1.02) skewX(1deg); }
+  72% { transform: translateX(-3px) translateY(1px) scale(1.01) skewX(-1deg); }
+  100% { transform: translateX(0) translateY(0) scale(1) skewX(0deg); filter: saturate(1.12); }
+}
+
+@keyframes ad-ext-hit-score-electric-arc {
+  0% { transform: translateX(0) scale(1); letter-spacing: 0.01em; }
+  18% { transform: translateX(5px) scale(1.16); letter-spacing: 0.09em; }
+  33% { transform: translateX(-6px) scale(1.06); letter-spacing: 0.05em; }
+  48% { transform: translateX(4px) scale(1.1); letter-spacing: 0.07em; }
+  66% { transform: translateX(-3px) scale(1.02); letter-spacing: 0.03em; }
+  100% { transform: translateX(0) scale(1); letter-spacing: 0.01em; }
 }
 
 @keyframes ad-ext-hit-row-neon-pulse {

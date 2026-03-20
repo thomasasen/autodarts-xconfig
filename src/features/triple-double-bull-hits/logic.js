@@ -782,6 +782,53 @@ function buildBurstTimeline(animeRef, context = {}) {
         110
       );
       break;
+    case "electric-arc":
+      addTimelineStep(
+        timeline,
+        {
+          targets: rowNode,
+          duration: reducedMotion ? 300 : 760,
+          easing: "easeOutQuart",
+          keyframes: [
+            { scale: 0.96, translateX: 0, translateY: 0, skewX: 0, filter: "saturate(1.02)" },
+            { scale: 1.04, translateX: reducedMotion ? -2 : -6, translateY: 1, skewX: -2 },
+            { scale: 1.1, translateX: reducedMotion ? 3 : 8, translateY: -4, skewX: 2 },
+            { scale: 1.04, translateX: reducedMotion ? -2 : -6, translateY: 2, skewX: -1 },
+            { scale: 1, translateX: 0, translateY: 0, skewX: 0, filter: "saturate(1.12)" },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: scoreNode || rowNode,
+          duration: reducedMotion ? 260 : 620,
+          easing: "linear",
+          keyframes: [
+            { scale: 1.2, translateX: reducedMotion ? 2 : 6, letterSpacing: "0.08em" },
+            { scale: 1.05, translateX: reducedMotion ? -2 : -7, letterSpacing: "0.05em" },
+            { scale: 1.12, translateX: reducedMotion ? 2 : 5, letterSpacing: "0.07em" },
+            { scale: 1, translateX: 0, letterSpacing: "0.01em" },
+          ],
+        },
+        0
+      );
+      addTimelineStep(
+        timeline,
+        {
+          targets: segmentNode || rowNode,
+          duration: reducedMotion ? 220 : 440,
+          easing: "linear",
+          keyframes: [
+            { translateX: reducedMotion ? -1 : -5, letterSpacing: "0.16em", opacity: 1 },
+            { translateX: reducedMotion ? 1 : 5, letterSpacing: "0.08em", opacity: 1 },
+            { translateX: 0, letterSpacing: "0.1em", opacity: 1 },
+          ],
+        },
+        95
+      );
+      break;
     case "neon-pulse":
       addTimelineStep(
         timeline,

@@ -21,6 +21,14 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   assert.equal(css.includes("rotateX(-360deg)"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-row-flip-edge"), true);
   assert.equal(css.includes("rotateY(360deg)"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-row-electric-arc"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-score-electric-arc"), true);
+  assert.equal(
+    css.includes(
+      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.ad-ext-hit-highlight--animate`
+    ),
+    true
+  );
 
   assert.equal(
     css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]}`),

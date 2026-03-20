@@ -510,6 +510,48 @@ test("flip-edge and card-slam timelines keep the promised 360 degree spins", () 
   );
 });
 
+test("electric-arc timeline applies jittered surge keyframes on row and score", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-arc",
+    },
+  });
+
+  const electricPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const electricRowStep = electricPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  assert.equal(
+    electricRowStep?.step?.keyframes?.some((frame) => frame.skewX === 2),
+    true
+  );
+
+  const scoreStep = electricPlay?.steps.find(
+    (entry) => Array.isArray(entry.step?.keyframes) && entry.step?.keyframes.some((frame) => frame.letterSpacing)
+  );
+  assert.equal(
+    scoreStep?.step?.keyframes?.some((frame) => frame.letterSpacing === "0.08em"),
+    true
+  );
+});
+
 test("clearHitDecoration removes row classes, text roles, and active anime state", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();

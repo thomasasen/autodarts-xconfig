@@ -416,10 +416,12 @@ test("turn-points-count mounts idempotently and keeps managed observer state", a
   runtime.start();
   await wait(5);
 
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-points-count-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 1);
 
   runtime.stop();
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-points-count-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });

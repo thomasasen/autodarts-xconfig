@@ -1,4 +1,6 @@
-import { SCORE_SELECTOR } from "./style.js";
+import { SCORE_FLASH_CLASS, SCORE_SELECTOR } from "./style.js";
+
+const FLASH_DURATION_MS = 190;
 
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
@@ -18,6 +20,58 @@ export function collectScoreNodes(documentRef) {
     return [];
   }
   return Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
+}
+
+function clearFlashState(node, state, windowRef = null) {
+  if (!node || !state) {
+    return;
+  }
+
+  const flashTimeoutByNode =
+    state.flashTimeoutByNode && typeof state.flashTimeoutByNode.get === "function"
+      ? state.flashTimeoutByNode
+      : null;
+  if (!flashTimeoutByNode) {
+    node.classList?.remove?.(SCORE_FLASH_CLASS);
+    return;
+  }
+
+  const clearTimer =
+    (windowRef && typeof windowRef.clearTimeout === "function"
+      ? windowRef.clearTimeout.bind(windowRef)
+      : clearTimeout);
+  const timeoutHandle = flashTimeoutByNode.get(node);
+  if (timeoutHandle) {
+    clearTimer(timeoutHandle);
+  }
+  flashTimeoutByNode.delete(node);
+  node.classList?.remove?.(SCORE_FLASH_CLASS);
+}
+
+function triggerScoreFlash(node, state, windowRef = null) {
+  if (!node || !state) {
+    return;
+  }
+
+  if (!state.flashTimeoutByNode || typeof state.flashTimeoutByNode.get !== "function") {
+    state.flashTimeoutByNode = new Map();
+  }
+
+  clearFlashState(node, state, windowRef);
+  node.classList?.remove?.(SCORE_FLASH_CLASS);
+  if (typeof node.getBoundingClientRect === "function") {
+    node.getBoundingClientRect();
+  }
+  node.classList?.add?.(SCORE_FLASH_CLASS);
+
+  const setTimer =
+    (windowRef && typeof windowRef.setTimeout === "function"
+      ? windowRef.setTimeout.bind(windowRef)
+      : setTimeout);
+  const timeoutHandle = setTimer(() => {
+    clearFlashState(node, state, windowRef);
+  }, FLASH_DURATION_MS);
+  state.flashTimeoutByNode.set(node, timeoutHandle);
 }
 
 export function stopAnimation(node, state, windowRef = null) {
@@ -46,6 +100,7 @@ export function stopAnimation(node, state, windowRef = null) {
   }
   state.activeAnimeByNode.delete(node);
   state.targetValueByNode.delete(node);
+  clearFlashState(node, state, windowRef);
 }
 
 export function animateScore(node, options = {}) {
@@ -62,6 +117,7 @@ export function animateScore(node, options = {}) {
 
   stopAnimation(node, state, windowRef);
   state.targetValueByNode.set(node, toValue);
+  triggerScoreFlash(node, state, windowRef);
 
   if (typeof animeRef === "function") {
     const valueHolder = { value: fromValue };

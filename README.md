@@ -406,6 +406,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Segment Drain`: Der aktive Balken wirkt sichtbar segmentiert und verliert seine Energie in klaren, technischen Abschnitten statt als glatte Fläche.
   - `Ghost Trail`: Bei Scoreänderungen bleibt kurz eine halbtransparente Spur der vorherigen Länge sichtbar und läuft dann in den neuen Stand aus.
   - `Signal Sweep`: Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.
+  - `Electric Surge`: Während der aktive Balken steht, pulst eine elektrische Randspannung am Track. Bei jeder echten Scoreänderung feuert ein kurzer, heller Stromstoß durch den Balkenkern.
   - `Aus`: Der Balken zeigt nur den aktuellen Stand ohne zusätzlichen Effekt. Größe, Farben und Inaktiv-Darstellung bleiben bestehen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
@@ -591,6 +592,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Slam Punch`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist ein starker One-Shot-Burst ohne Dauerloop.
   - `Shock Ring`: Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
   - `Laser Sweep`: Der Burst fühlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug über Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.
+  - `Electric Arc`: Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.
   - `Reactor Pulse`: Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop mit klarer Cyberpunk-Anmutung.
   - `Turbo Bounce`: Das Trefferfeld hebt sichtbar ab, federt präzise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.
   - `Card Hammer`: Das Feld knallt nicht nur in die Fläche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzögert. Das bleibt ein One-Shot-Burst mit viel Impact.

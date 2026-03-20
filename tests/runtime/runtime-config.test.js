@@ -405,6 +405,30 @@ test("x01-score-progress maps legacy effect keys to the reduced effect set", () 
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "ghost-trail");
 });
 
+test("x01-score-progress accepts electric-surge as explicit effect option", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      x01ScoreProgress: {
+        effect: "ELECTRIC-SURGE",
+      },
+    },
+  });
+
+  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "electric-surge");
+});
+
+test("triple-double-bull-hits accepts electric-arc as animation style option", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      tripleDoubleBullHits: {
+        animationStyle: "ELECTRIC-ARC",
+      },
+    },
+  });
+
+  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "electric-arc");
+});
+
 test("x01-score-progress drops retired design preset fields from normalized config", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {

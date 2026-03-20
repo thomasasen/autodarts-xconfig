@@ -639,6 +639,69 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
   assert.ok(fillNode.__lastAnimation);
 });
 
+test("syncScoreProgress triggers electric-surge only on active score changes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "electric-surge",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-electric-surge",
+            match: {
+              id: "match-electric-surge",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "251";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  assert.ok(fillNode);
+  assert.equal(hostNode.getAttribute(EFFECT_ATTRIBUTE), "electric-surge");
+  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "electric-surge");
+  assert.equal(
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-electric-surge"),
+    true
+  );
+  assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
+  assert.ok(fillNode.__lastAnimation);
+  assert.equal(
+    fillNode.__lastAnimation.keyframes.some((frame) =>
+      String(frame.filter || "").includes("drop-shadow")
+    ),
+    true
+  );
+});
+
 test("syncScoreProgress animates the ghost trail on active score changes only", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
@@ -735,4 +798,15 @@ test("score-progress style no longer exposes selectable design presets", () => {
   assert.equal(css.includes("--preset-plain"), false);
   assert.equal(css.includes("--preset-stripes"), false);
   assert.equal(css.includes("--preset-liquid-glass"), false);
+});
+
+test("score-progress style scopes electric-surge track effects to active hosts only", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-score-progress='true'\]\.ad-ext-x01-score-progress--active\[data-ad-ext-x01-score-progress-effect='electric-surge'\]\s+\.ad-ext-x01-score-progress__track/s
+  );
+  assert.equal(css.includes("ad-ext-x01-score-progress-electric-track"), true);
+  assert.equal(css.includes("ad-ext-x01-score-progress-electric-surge-core"), true);
 });
