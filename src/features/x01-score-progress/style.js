@@ -89,12 +89,12 @@ export function buildStyleText() {
 ${STACK_SELECTOR}{
   display:grid !important;
   grid-template-columns:1fr auto !important;
-  grid-template-rows:max-content minmax(0,1fr) auto !important;
+  grid-template-rows:max-content max-content auto !important;
   align-content:start !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}{
-  grid-template-rows:max-content minmax(0,1fr) auto !important;
+  grid-template-rows:max-content max-content auto !important;
   align-content:start !important;
 }
 
@@ -145,7 +145,7 @@ ${HOST_SELECTOR}{
   grid-column:1 / -1;
   grid-row:3;
   justify-self:stretch;
-  align-self:end;
+  align-self:start;
   order:99;
   flex:0 0 100%;
   opacity:1;

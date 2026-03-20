@@ -13,6 +13,19 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.64] - 2026-03-20
+
+### Fixed
+
+- Nutzerwirkung: Der X01-Restscore-Balken sitzt bei mehreren Spielern nicht mehr
+  zu weit unten, sondern mit einem klaren, kurzen Abstand direkt unter der
+  Score-/Stats-Zeile.
+  Technik: Das erzwungene Stack-Grid für `x01-score-progress` verwendet jetzt
+  kompakte Zeilen (`max-content max-content auto`) statt einer streckenden
+  Mittelzeile; der Balken bleibt in seiner eigenen dritten Zeile und richtet sich
+  dort am Zeilenanfang aus, wodurch Überlagerung und zu große Vertikalabstände
+  gleichzeitig vermieden werden.
+
 ## [2.0.63] - 2026-03-20
 
 ### Fixed
@@ -682,6 +695,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.64]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.63]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.62]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.61]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD

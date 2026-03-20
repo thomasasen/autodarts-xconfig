@@ -768,7 +768,7 @@ test("score-progress style reserves a dedicated player-card row for the bar", ()
 
   assert.match(
     css,
-    /\[data-ad-ext-x01-score-progress='true'\]\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*grid-row:\s*3;[^}]*flex:\s*0\s+0\s+100%;/s
+    /\[data-ad-ext-x01-score-progress='true'\]\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*grid-row:\s*3;[^}]*align-self:\s*start;[^}]*flex:\s*0\s+0\s+100%;/s
   );
 });
 
@@ -777,7 +777,7 @@ test("score-progress style enforces stack layout that keeps the bar below score 
 
   assert.match(
     css,
-    /\.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*grid-template-columns:1fr auto[^}]*grid-template-rows:max-content minmax\(0,1fr\) auto[^}]*align-content:start/s
+    /\.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*grid-template-columns:1fr auto[^}]*grid-template-rows:max-content max-content auto[^}]*align-content:start/s
   );
   assert.match(
     css,
