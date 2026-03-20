@@ -5,6 +5,7 @@ export const XCONFIG_PREVIEW_SCREENSHOTS = Object.freeze({
   "theme-cricket": "template-theme-cricket-xConfig.png",
   "theme-bull-off": "template-theme-bull-off-xConfig.png",
   "checkout-score-pulse": "animation-checkout-score-pulse.gif",
+  "x01-score-progress": "animation-x01-score-progress.png",
   "checkout-board-targets": "animation-checkout-board-targets.gif",
   "tv-board-zoom": "animation-tv-board-zoom.gif",
   "style-checkout-suggestions": "animation-style-checkout-suggestions.png",

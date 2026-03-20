@@ -247,6 +247,8 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Aus`: Keine Zusatzanimation; nur der statische Balken bleibt sichtbar.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![X01 Score Progress](screenshots/animation-x01-score-progress.png)
+
 ### Checkout Board Targets
 
 - Gilt für: `X01`

@@ -4,6 +4,7 @@ import themeBermudaPng from "../../docs/screenshots/template-theme-bermuda-xConf
 import themeCricketPng from "../../docs/screenshots/template-theme-cricket-xConfig.png";
 import themeBullOffPng from "../../docs/screenshots/template-theme-bull-off-xConfig.png";
 import checkoutScorePulseGif from "../../docs/screenshots/animation-checkout-score-pulse.gif";
+import x01ScoreProgressPng from "../../docs/screenshots/animation-x01-score-progress.png";
 import checkoutBoardTargetsGif from "../../docs/screenshots/animation-checkout-board-targets.gif";
 import tvBoardZoomGif from "../../docs/screenshots/animation-tv-board-zoom.gif";
 import styleCheckoutSuggestionsPng from "../../docs/screenshots/animation-style-checkout-suggestions.png";
@@ -26,6 +27,7 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-cricket": themeCricketPng,
   "theme-bull-off": themeBullOffPng,
   "checkout-score-pulse": checkoutScorePulseGif,
+  "x01-score-progress": x01ScoreProgressPng,
   "checkout-board-targets": checkoutBoardTargetsGif,
   "tv-board-zoom": tvBoardZoomGif,
   "style-checkout-suggestions": styleCheckoutSuggestionsPng,

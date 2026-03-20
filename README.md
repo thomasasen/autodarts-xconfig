@@ -409,6 +409,8 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Aus`: Der Balken zeigt nur den aktuellen Stand ohne zusätzlichen Effekt. Größe, Farben und Inaktiv-Darstellung bleiben bestehen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
+![X01 Score Progress](docs/screenshots/animation-x01-score-progress.png)
+
 <a id="animation-autodarts-animate-checkout-board-targets"></a>
 
 ### Checkout Board Targets

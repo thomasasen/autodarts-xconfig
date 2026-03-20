@@ -1303,6 +1303,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
 
   [
     "checkout-score-pulse",
+    "x01-score-progress",
     "checkout-board-targets",
     "tv-board-zoom",
     "turn-start-sweep",

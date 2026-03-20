@@ -262,6 +262,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.",
     usefulWhen:
       "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
+    images: [image("X01 Score Progress", "animation-x01-score-progress.png")],
     fields: {
       colorTheme: fieldCopy(
         "Steuert Farblogik und Farbpalette in einer gemeinsamen Auswahl.",

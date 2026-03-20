@@ -13,6 +13,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.68] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: Für `X01 Score Progress` wird in der Animationen-Kachel in
+  AD xConfig jetzt der neue Screenshot als Hintergrundvorschau angezeigt; zudem
+  ist derselbe Screenshot in README und Features-Doku direkt in der
+  Feature-Sektion eingebunden.
+  Technik: Die Preview-Asset-Zuordnung wurde um `x01-score-progress ->
+  animation-x01-score-progress.png` erweitert (Manifest + Browser-Asset-Map),
+  die Doku-Bildquelle in `xconfig-ui/copy` ergänzt und per
+  `scripts/sync-xconfig-docs.mjs` nach `README.md`/`docs/FEATURES.md`
+  synchronisiert; ein Runtime-Test prüft die gemappte xConfig-Kachelvorschau.
+
 ## [2.0.67] - 2026-03-20
 
 ### Fixed
@@ -732,6 +746,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.68]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.67]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.66]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.65]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
