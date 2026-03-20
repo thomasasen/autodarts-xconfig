@@ -11,6 +11,8 @@ import {
   normalizeBarSize,
   normalizeColorTheme,
   normalizeEffect,
+  STACK_ATTRIBUTE,
+  STACK_SELECTOR,
   TRAIL_CLASS,
   TRACK_CLASS,
 } from "./style.js";
@@ -758,6 +760,7 @@ export function clearAllScoreProgress(documentRef) {
   queryAll(documentRef, HOST_SELECTOR).forEach((node) => {
     node.remove?.();
   });
+  cleanupStackMarkers(documentRef);
 }
 
 function getPlayerStack(cardNode) {
@@ -869,6 +872,7 @@ export function ensureProgressHost(cardNode, documentRef) {
   }
 
   const stackNode = getPlayerStack(cardNode) || cardNode;
+  stackNode?.setAttribute?.(STACK_ATTRIBUTE, "true");
   const scoreNode = getPlayerScoreNode(cardNode);
   if (hostNode.parentNode !== stackNode) {
     if (scoreNode && scoreNode.parentNode === stackNode && typeof scoreNode.insertAdjacentElement === "function") {
@@ -882,6 +886,15 @@ export function ensureProgressHost(cardNode, documentRef) {
 
   ensureProgressChildren(hostNode, documentRef);
   return hostNode;
+}
+
+function cleanupStackMarkers(documentRef) {
+  queryAll(documentRef, STACK_SELECTOR).forEach((stackNode) => {
+    const hasHost = Boolean(stackNode?.querySelector?.(HOST_SELECTOR));
+    if (!hasHost) {
+      stackNode?.removeAttribute?.(STACK_ATTRIBUTE);
+    }
+  });
 }
 
 function getFillNode(hostNode) {
@@ -1349,6 +1362,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
       staleHostsRemoved += 1;
     }
   });
+  cleanupStackMarkers(documentRef);
 
   debugPayload.reason = renderedCards > 0 ? "rendered" : "no-rendered-cards";
   debugPayload.renderedCards = renderedCards;

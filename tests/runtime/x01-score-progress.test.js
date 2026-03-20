@@ -14,6 +14,7 @@ import {
   FILL_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
+  STACK_ATTRIBUTE,
   TRAIL_CLASS,
   buildStyleText,
 } from "../../src/features/x01-score-progress/style.js";
@@ -157,6 +158,7 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   const activeHost = activePlayer.cardNode.querySelector(HOST_SELECTOR);
   assert.ok(activeHost);
   assert.equal(activePlayer.stackNode.children[1], activeHost);
+  assert.equal(activePlayer.stackNode.getAttribute(STACK_ATTRIBUTE), "true");
   assert.equal(activeHost.classList.contains(ACTIVE_CLASS), true);
   assert.equal(activeHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), true);
   assert.equal(activeHost.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "danger-endgame");
@@ -172,6 +174,7 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   const inactiveHost = inactivePlayer.cardNode.querySelector(HOST_SELECTOR);
   assert.ok(inactiveHost);
   assert.equal(inactivePlayer.stackNode.children[1], inactiveHost);
+  assert.equal(inactivePlayer.stackNode.getAttribute(STACK_ATTRIBUTE), "true");
   assert.equal(inactiveHost.classList.contains(INACTIVE_CLASS), true);
   assert.equal(inactiveHost.classList.contains("ad-ext-x01-score-progress--size-extrabreit"), false);
   assert.equal(
@@ -224,6 +227,7 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   );
 
   assert.equal(playerDisplay.querySelectorAll(HOST_SELECTOR).length, 1);
+  assert.equal(activePlayer.stackNode.getAttribute(STACK_ATTRIBUTE), "true");
 
   windowRef.history.pushState({}, "", "/lobbies");
   documentRef.variantElement.textContent = "Cricket";
@@ -249,6 +253,7 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   assert.equal(cleared.startScore, null);
   assert.equal(cleared.renderedCards, 0);
   assert.equal(playerDisplay.querySelectorAll(HOST_SELECTOR).length, 0);
+  assert.equal(activePlayer.stackNode.getAttribute(STACK_ATTRIBUTE), null);
 });
 
 test("syncScoreProgress exposes debug reason when start score cannot be resolved", () => {
@@ -764,6 +769,19 @@ test("score-progress style reserves a dedicated player-card row for the bar", ()
   assert.match(
     css,
     /\[data-ad-ext-x01-score-progress='true'\]\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*grid-row:\s*3;[^}]*flex:\s*0\s+0\s+100%;/s
+  );
+});
+
+test("score-progress style enforces stack layout that keeps the bar below score rows", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*grid-template-columns:1fr auto[^}]*grid-template-rows:max-content minmax\(0,1fr\) auto[^}]*align-content:start/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-active > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*align-content:start/s
   );
 });
 

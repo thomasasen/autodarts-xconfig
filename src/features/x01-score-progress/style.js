@@ -1,6 +1,8 @@
 export const STYLE_ID = "ad-ext-x01-score-progress-style";
 export const HOST_ATTRIBUTE = "data-ad-ext-x01-score-progress";
 export const HOST_SELECTOR = `[${HOST_ATTRIBUTE}='true']`;
+export const STACK_ATTRIBUTE = "data-ad-ext-x01-score-progress-stack";
+export const STACK_SELECTOR = `.chakra-stack[${STACK_ATTRIBUTE}='true']`;
 export const TRACK_CLASS = "ad-ext-x01-score-progress__track";
 export const TRAIL_CLASS = "ad-ext-x01-score-progress__trail";
 export const FILL_CLASS = "ad-ext-x01-score-progress__fill";
@@ -84,6 +86,18 @@ export function getEffectFillClassList() {
 
 export function buildStyleText() {
   return `
+${STACK_SELECTOR}{
+  display:grid !important;
+  grid-template-columns:1fr auto !important;
+  grid-template-rows:max-content minmax(0,1fr) auto !important;
+  align-content:start !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}{
+  grid-template-rows:max-content minmax(0,1fr) auto !important;
+  align-content:start !important;
+}
+
 ${HOST_SELECTOR}{
   --ad-ext-x01-score-progress-width:0%;
   --ad-ext-x01-score-progress-trail-width:0%;

@@ -13,6 +13,17 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.63] - 2026-03-20
+
+### Fixed
+
+- Nutzerwirkung: Bei mehreren X01-Spielern überlagert der Restscore-Balken die
+  Score-Zeile nicht mehr, sondern bleibt stabil darunter in einer eigenen Zeile.
+  Technik: `x01-score-progress` markiert den jeweiligen Player-Stack jetzt
+  explizit, erzwingt dafür ein robustes 3-Zeilen-Grid mit `align-content:start`
+  und räumt Stack-Markierungen beim Host-Cleanup wieder auf; Regressionen sichern
+  den Stack-Markierungs- und Layoutvertrag ab.
+
 ## [2.0.62] - 2026-03-20
 
 ### Changed
@@ -670,7 +681,8 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.63]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.62]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.61]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.60]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
