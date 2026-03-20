@@ -13,6 +13,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.65] - 2026-03-20
+
+### Fixed
+
+- Nutzerwirkung: Die aktive X01-Spieleranzeige bleibt wieder mittig im Container,
+  während der Restscore-Balken mit kleinem Abstand direkt unter der
+  Punkt-/Stats-Zeile sitzt.
+  Technik: Der aktive, vom Progress-Feature markierte Player-Stack bleibt beim
+  3-Zeilen-Grid (`max-content max-content auto`) nun wieder zentriert
+  (`align-content:center`), wodurch der vorherige Top-Shift entfällt, ohne den
+  separaten Balken-Slot oder den Anti-Overlap-Abstand zu verlieren.
+
 ## [2.0.64] - 2026-03-20
 
 ### Fixed
@@ -695,6 +707,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.65]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.64]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.63]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.62]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD

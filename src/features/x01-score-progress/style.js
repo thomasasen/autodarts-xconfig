@@ -95,7 +95,7 @@ ${STACK_SELECTOR}{
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}{
   grid-template-rows:max-content max-content auto !important;
-  align-content:start !important;
+  align-content:center !important;
 }
 
 ${HOST_SELECTOR}{

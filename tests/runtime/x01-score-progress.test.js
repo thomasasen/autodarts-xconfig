@@ -781,7 +781,7 @@ test("score-progress style enforces stack layout that keeps the bar below score 
   );
   assert.match(
     css,
-    /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-active > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*align-content:start/s
+    /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-active > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*align-content:center/s
   );
 });
 

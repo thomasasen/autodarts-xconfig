@@ -9,7 +9,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-const API_VERSION = "2.0.64";
+const API_VERSION = "2.0.65";
 
 function normalizeFeatureDefinitions(definitions) {
   if (!Array.isArray(definitions) || !definitions.length) {
