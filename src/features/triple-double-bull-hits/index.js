@@ -1,4 +1,8 @@
 import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
+import {
+  releaseElectricFilterDefs,
+  retainElectricFilterDefs,
+} from "../../shared/electric-border-engine.js";
 import { clearHitDecoration, updateHitDecorations } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 
@@ -109,6 +113,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
   let disposed = false;
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
+  retainElectricFilterDefs({ documentRef, domGuards });
 
   const scheduler = schedulerFactory(() => {
     const stats = updateHitDecorations({
@@ -274,6 +279,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
     roleStateByRow.clear();
 
     domGuards.removeNodeById(STYLE_ID);
+    releaseElectricFilterDefs({ documentRef });
   };
 }
 

@@ -1,5 +1,9 @@
 import { createRafScheduler } from "../../shared/raf-scheduler.js";
 import {
+  releaseElectricFilterDefs,
+  retainElectricFilterDefs,
+} from "../../shared/electric-border-engine.js";
+import {
   clearAllScoreProgress,
   createScoreProgressState,
   syncScoreProgress,
@@ -166,6 +170,7 @@ export function mountX01ScoreProgress(context = {}) {
         };
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
+  retainElectricFilterDefs({ documentRef, domGuards });
 
   const featureState = createScoreProgressState();
   const debugState = createDebugState(featureDebug);
@@ -253,6 +258,7 @@ export function mountX01ScoreProgress(context = {}) {
 
     clearAllScoreProgress(documentRef);
     domGuards.removeNodeById(STYLE_ID);
+    releaseElectricFilterDefs({ documentRef });
   };
 }
 

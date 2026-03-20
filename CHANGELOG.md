@@ -13,6 +13,33 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.59] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` zeigt bei `Electric Arc`
+  jetzt einen deutlich ZIP-näheren Randlook mit unruhiger, zackiger Kante und
+  mehrlagigem Electric-Glow statt primär Text-/Row-Jitter.
+  Technik: Das Feature nutzt eine gemeinsame SVG-Displacement-Engine mit
+  Turbulence/Displacement-Filtern und schaltet `electric-arc` auf
+  Border-Layer-first (Filter + Roughness-Keyframes) um, während Theme-Farben
+  und Burst-Fenster unverändert erhalten bleiben.
+- Nutzerwirkung: `Animate Turn Points Count` rahmt beim Zählen jetzt die ganze
+  Punktezeile elektrisch ein und blendet den Effekt nur exakt während der
+  aktiven Zahländerung ein.
+  Technik: Die Flash-Logik steuert zusätzlich den Parent-Frame
+  (`scoreNode.parentElement` mit Fallback), inklusive strikt symmetrischem
+  Cleanup bei Stop, DOM-Detach und Feature-Teardown; die Effekt-CSS nutzt
+  ebenfalls die neue gemeinsame Displacement-Engine.
+- Nutzerwirkung: `X01 Score Progress` zeigt bei `Electric Surge` einen
+  deutlich sichtbaren, ZIP-näheren Electric-Rand mit turbulenter Kante und
+  stärkerem peripherem Glow, ohne inaktive Karten zu beeinflussen.
+  Technik: Electric-Surge-Track/Fill wurden auf burst-gebundene
+  Displacement-Layer umgestellt (inkl. Scan/Noise), ein zeitlich begrenztes
+  Active-Burst-Class-Window an echte Score-Änderungen gekoppelt und per
+  Regressionen gegen Nicht-Electric-Effekte sowie Lifecycle-Seiteneffekte
+  abgesichert.
+
 ## [2.0.58] - 2026-03-20
 
 ### Changed
@@ -584,6 +611,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[2.0.59]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.58]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
 [2.0.57]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...222042a
 [2.0.56]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD

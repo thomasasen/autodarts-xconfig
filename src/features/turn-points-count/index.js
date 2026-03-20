@@ -1,4 +1,8 @@
 import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
+import {
+  releaseElectricFilterDefs,
+  retainElectricFilterDefs,
+} from "../../shared/electric-border-engine.js";
 import { collectScoreNodes, stopAnimation, updateTurnPoints } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 
@@ -36,12 +40,16 @@ export function initializeTurnPointsCount(context = {}) {
     targetValueByNode: new Map(),
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
+    flashFrameByScoreNode: new Map(),
   };
   let animeRef = getAnime(windowRef);
   let disposed = false;
+  let electricDefsRetained = false;
 
   if (domGuards && typeof domGuards.ensureStyle === "function") {
     domGuards.ensureStyle(STYLE_ID, buildStyleText());
+    retainElectricFilterDefs({ documentRef, domGuards });
+    electricDefsRetained = true;
   }
 
   function update() {
@@ -148,6 +156,9 @@ export function initializeTurnPointsCount(context = {}) {
     scoreNodes.forEach((node) => stopAnimation(node, state, windowRef));
     if (domGuards && typeof domGuards.removeNodeById === "function") {
       domGuards.removeNodeById(STYLE_ID);
+    }
+    if (electricDefsRetained) {
+      releaseElectricFilterDefs({ documentRef });
     }
   };
 }

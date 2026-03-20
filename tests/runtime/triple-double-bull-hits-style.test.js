@@ -23,6 +23,8 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   assert.equal(css.includes("rotateY(360deg)"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-row-electric-arc"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-score-electric-arc"), true);
+  assert.equal(css.includes("url(#ad-ext-electric-displace-strong)"), true);
+  assert.equal(css.includes("ad-ext-hit-electric-arc-border-rough"), true);
   assert.equal(
     css.includes(
       `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.ad-ext-hit-highlight--animate`
@@ -73,4 +75,18 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   );
   assert.equal(css.includes("--ad-ext-hit-theme-b: #1b7a34;"), true);
   assert.equal(css.includes("--ad-ext-hit-theme-c: #2eaf50;"), true);
+});
+
+test("triple-double-bull-hits keeps displacement filter scoped to electric-arc selectors", () => {
+  const css = buildStyleText();
+  const neonBlock =
+    css.match(
+      new RegExp(
+        `\\.ad-ext-turn-throw\\.${HIT_BASE_CLASS}\\.ad-ext-hit-animation--neon-pulse\\.ad-ext-hit-highlight--animate\\{[^}]+\\}`,
+        "s"
+      )
+    )?.[0] || "";
+
+  assert.equal(css.includes("url(#ad-ext-electric-displace-soft)"), true);
+  assert.equal(neonBlock.includes("filter: var(--ad-ext-hit-electric-filter"), false);
 });

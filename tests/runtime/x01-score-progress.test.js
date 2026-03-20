@@ -11,6 +11,7 @@ import {
 import { mountX01ScoreProgress } from "../../src/features/x01-score-progress/index.js";
 import {
   ACTIVE_CLASS,
+  ELECTRIC_SURGE_ACTIVE_CLASS,
   FILL_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
@@ -687,6 +688,7 @@ test("syncScoreProgress triggers electric-surge only on active score changes", (
   const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
   assert.equal(hostNode.getAttribute(EFFECT_ATTRIBUTE), "electric-surge");
+  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), true);
   assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "electric-surge");
   assert.equal(
     fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-electric-surge"),
@@ -700,6 +702,57 @@ test("syncScoreProgress triggers electric-surge only on active score changes", (
     ),
     true
   );
+});
+
+test("syncScoreProgress clears electric-surge burst class after the change window", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "electric-surge",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-electric-surge-timebox",
+            match: {
+              id: "match-electric-surge-timebox",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "251";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), true);
+
+  await wait(1100);
+  assert.equal(hostNode.classList.contains(ELECTRIC_SURGE_ACTIVE_CLASS), false);
 });
 
 test("syncScoreProgress animates the ghost trail on active score changes only", () => {
@@ -805,8 +858,22 @@ test("score-progress style scopes electric-surge track effects to active hosts o
 
   assert.match(
     css,
-    /\[data-ad-ext-x01-score-progress='true'\]\.ad-ext-x01-score-progress--active\[data-ad-ext-x01-score-progress-effect='electric-surge'\]\s+\.ad-ext-x01-score-progress__track/s
+    /\[data-ad-ext-x01-score-progress='true'\]\.ad-ext-x01-score-progress--active\.ad-ext-x01-score-progress--electric-active\[data-ad-ext-x01-score-progress-effect='electric-surge'\]\s+\.ad-ext-x01-score-progress__track/s
   );
+  assert.equal(css.includes("filter:url(#ad-ext-electric-displace-strong)"), true);
   assert.equal(css.includes("ad-ext-x01-score-progress-electric-track"), true);
   assert.equal(css.includes("ad-ext-x01-score-progress-electric-surge-core"), true);
+});
+
+test("score-progress style does not force displacement filters on non-electric effects", () => {
+  const css = buildStyleText();
+  const pulseCoreBlock = css.match(
+    /\.ad-ext-x01-score-progress__fill--effect-pulse-core\{[^}]+\}/s
+  )?.[0] || "";
+  const signalSweepBlock = css.match(
+    /\.ad-ext-x01-score-progress__fill--effect-signal-sweep\{[^}]+\}/s
+  )?.[0] || "";
+
+  assert.equal(pulseCoreBlock.includes("filter:url(#ad-ext-electric-displace"), false);
+  assert.equal(signalSweepBlock.includes("filter:url(#ad-ext-electric-displace"), false);
 });

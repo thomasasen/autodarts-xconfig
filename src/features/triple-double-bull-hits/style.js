@@ -1,3 +1,8 @@
+import {
+  ELECTRIC_FILTER_SOFT_ID,
+  ELECTRIC_FILTER_STRONG_ID,
+} from "../../shared/electric-border-engine.js";
+
 export const STYLE_ID = "ad-ext-triple-double-bull-hits-style";
 export const HIT_BASE_CLASS = "ad-ext-hit-highlight";
 export const HIT_IDLE_LOOP_CLASS = "ad-ext-hit-highlight--idle";
@@ -57,6 +62,8 @@ export function buildStyleText() {
   --ad-ext-hit-delay-ms: 0ms;
   --ad-ext-hit-img-opacity: 0.15;
   --ad-ext-hit-img-filter: grayscale(1) brightness(0.24) contrast(1.56);
+  --ad-ext-hit-electric-filter-soft: url(#${ELECTRIC_FILTER_SOFT_ID});
+  --ad-ext-hit-electric-filter-strong: url(#${ELECTRIC_FILTER_STRONG_ID});
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -373,10 +380,16 @@ export function buildStyleText() {
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  --ad-ext-hit-gradient-opacity: 0.96;
+  --ad-ext-hit-border-opacity: 1;
+  --ad-ext-hit-shadow-size: 58px;
   animation-name: ad-ext-hit-row-electric-arc;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
+  inset: -11%;
+  mix-blend-mode: screen;
+  filter: var(--ad-ext-hit-electric-filter-soft) saturate(1.34) contrast(1.1) brightness(1.02);
   animation:
     ad-ext-hit-gradient-flow 9s linear infinite,
     ad-ext-hit-burst-surface 900ms cubic-bezier(0.12, 0.9, 0.2, 1),
@@ -384,10 +397,17 @@ export function buildStyleText() {
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS}::after {
+  inset: -1px;
+  border-width: 1.4px;
+  background:
+    linear-gradient(128deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 28%, rgba(255, 255, 255, 0) 72%, rgba(255, 255, 255, 0.2)),
+    linear-gradient(0deg, color-mix(in srgb, var(--ad-ext-hit-edge) 36%, transparent), color-mix(in srgb, var(--ad-ext-hit-edge) 58%, transparent));
+  filter: var(--ad-ext-hit-electric-filter-strong);
   animation:
     ad-ext-hit-border-sweep 5.2s linear infinite,
     ad-ext-hit-burst-border 860ms ease-out,
-    ad-ext-hit-electric-arc-border 760ms steps(2, end);
+    ad-ext-hit-electric-arc-border 760ms steps(2, end),
+    ad-ext-hit-electric-arc-border-rough 760ms steps(5, end);
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
@@ -542,32 +562,24 @@ export function buildStyleText() {
 
 @keyframes ad-ext-hit-row-electric-arc {
   0% {
-    transform: translateX(0) translateY(0) scale(0.92) skewX(0deg);
-    filter: saturate(1) brightness(0.95);
+    transform: translateX(0) translateY(0) scale(0.96) skewX(0deg);
+    filter: saturate(1.02) brightness(0.96);
   }
-  11% {
-    transform: translateX(-7px) translateY(2px) scale(1.04) skewX(-3deg);
-    filter: saturate(1.2) brightness(1.12);
+  22% {
+    transform: translateX(-3px) translateY(1px) scale(1.02) skewX(-1.2deg);
+    filter: saturate(1.24) brightness(1.16);
   }
-  23% {
-    transform: translateX(9px) translateY(-4px) scale(1.14) skewX(2deg);
-    filter: saturate(1.44) brightness(1.34);
+  41% {
+    transform: translateX(2px) translateY(-1px) scale(1.04) skewX(1.2deg);
+    filter: saturate(1.34) brightness(1.28);
   }
-  37% {
-    transform: translateX(-10px) translateY(3px) scale(1.08) skewX(-2deg);
-    filter: saturate(1.3) brightness(1.2);
-  }
-  52% {
-    transform: translateX(8px) translateY(-2px) scale(1.05) skewX(1deg);
-    filter: saturate(1.22) brightness(1.12);
-  }
-  68% {
-    transform: translateX(-5px) translateY(1px) scale(1.03) skewX(-1deg);
-    filter: saturate(1.18) brightness(1.08);
+  64% {
+    transform: translateX(-1px) translateY(.8px) scale(1.01) skewX(-.6deg);
+    filter: saturate(1.18) brightness(1.1);
   }
   100% {
     transform: translateX(0) translateY(0) scale(1) skewX(0deg);
-    filter: saturate(1.16) brightness(1.04);
+    filter: saturate(1.12) brightness(1.04);
   }
 }
 
@@ -577,25 +589,20 @@ export function buildStyleText() {
     letter-spacing: 0.01em;
     filter: brightness(1.02);
   }
-  18% {
-    transform: translateX(7px) scale(1.2);
-    letter-spacing: 0.1em;
-    filter: brightness(1.42) drop-shadow(0 0 10px rgba(180,250,255,.68));
-  }
-  34% {
-    transform: translateX(-9px) scale(1.08);
-    letter-spacing: 0.06em;
-    filter: brightness(1.22) drop-shadow(0 0 6px rgba(180,250,255,.48));
-  }
-  50% {
-    transform: translateX(6px) scale(1.14);
+  24% {
+    transform: translateX(2px) scale(1.2);
     letter-spacing: 0.08em;
-    filter: brightness(1.34) drop-shadow(0 0 8px rgba(180,250,255,.58));
+    filter: brightness(1.46) drop-shadow(0 0 12px rgba(221,249,255,.74));
   }
-  68% {
-    transform: translateX(-4px) scale(1.04);
+  48% {
+    transform: translateX(-1.8px) scale(1.08);
+    letter-spacing: 0.06em;
+    filter: brightness(1.26) drop-shadow(0 0 7px rgba(180,250,255,.52));
+  }
+  70% {
+    transform: translateX(1px) scale(1.03);
     letter-spacing: 0.04em;
-    filter: brightness(1.12);
+    filter: brightness(1.14);
   }
   100% {
     transform: translateX(0) scale(1);
@@ -611,15 +618,15 @@ export function buildStyleText() {
     opacity: 1;
     filter: brightness(1.02);
   }
-  24% {
-    transform: translateX(-7px) translateY(-1px);
-    letter-spacing: 0.16em;
-    filter: brightness(1.3);
+  42% {
+    transform: translateX(-2px) translateY(-.5px);
+    letter-spacing: 0.14em;
+    filter: brightness(1.26);
   }
-  46% {
-    transform: translateX(6px) translateY(1px);
+  68% {
+    transform: translateX(1.2px) translateY(.5px);
     letter-spacing: 0.11em;
-    filter: brightness(1.16);
+    filter: brightness(1.14);
   }
   100% {
     transform: translateX(0) translateY(0);
@@ -632,15 +639,15 @@ export function buildStyleText() {
 @keyframes ad-ext-hit-electric-arc-surface {
   0%, 100% {
     opacity: var(--ad-ext-hit-gradient-opacity);
-    filter: saturate(1.22) contrast(1.08) brightness(0.92);
+    filter: var(--ad-ext-hit-electric-filter-soft) saturate(1.22) contrast(1.08) brightness(0.94);
   }
   40% {
     opacity: 1;
-    filter: saturate(1.58) contrast(1.18) brightness(1.22);
+    filter: var(--ad-ext-hit-electric-filter-soft) saturate(1.62) contrast(1.2) brightness(1.24);
   }
   72% {
     opacity: 0.92;
-    filter: saturate(1.34) contrast(1.12) brightness(1.04);
+    filter: var(--ad-ext-hit-electric-filter-soft) saturate(1.38) contrast(1.14) brightness(1.06);
   }
 }
 
@@ -648,23 +655,42 @@ export function buildStyleText() {
   0%, 100% {
     box-shadow:
       inset 0 0 0 1px rgba(255,255,255,0.05),
-      inset 0 0 22px rgba(255,255,255,0.03),
-      0 0 24px var(--ad-ext-hit-soft-glow),
+      inset 0 0 24px rgba(255,255,255,0.05),
+      0 0 30px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 78%, white 22%),
       0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 74%, white 26%);
   }
   32% {
     box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.2),
-      inset 0 0 34px rgba(255,255,255,0.08),
-      0 0 58px color-mix(in srgb, var(--ad-ext-hit-glow) 82%, white 18%),
-      0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 90%, white 10%);
+      inset 0 0 0 1px rgba(255,255,255,0.24),
+      inset 0 0 34px rgba(255,255,255,0.09),
+      0 0 66px color-mix(in srgb, var(--ad-ext-hit-glow) 82%, white 18%),
+      0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 92%, white 8%);
   }
   62% {
     box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.12),
-      inset 0 0 30px rgba(255,255,255,0.06),
-      0 0 44px color-mix(in srgb, var(--ad-ext-hit-glow) 76%, white 24%),
+      inset 0 0 0 1px rgba(255,255,255,0.14),
+      inset 0 0 30px rgba(255,255,255,0.07),
+      0 0 50px color-mix(in srgb, var(--ad-ext-hit-glow) 76%, white 24%),
       0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 86%, white 14%);
+  }
+}
+
+@keyframes ad-ext-hit-electric-arc-border-rough {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate(-1.1px, .8px) scale(1.002);
+    opacity: .96;
+  }
+  44% {
+    transform: translate(1.3px, -.9px) scale(1.004);
+    opacity: 1;
+  }
+  68% {
+    transform: translate(-.8px, .4px) scale(1.002);
+    opacity: .98;
   }
 }
 

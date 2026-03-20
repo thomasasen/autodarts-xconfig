@@ -1,3 +1,8 @@
+import {
+  ELECTRIC_FILTER_SOFT_ID,
+  ELECTRIC_FILTER_STRONG_ID,
+} from "../../shared/electric-border-engine.js";
+
 export const STYLE_ID = "ad-ext-x01-score-progress-style";
 export const HOST_ATTRIBUTE = "data-ad-ext-x01-score-progress";
 export const HOST_SELECTOR = `[${HOST_ATTRIBUTE}='true']`;
@@ -6,6 +11,7 @@ export const TRAIL_CLASS = "ad-ext-x01-score-progress__trail";
 export const FILL_CLASS = "ad-ext-x01-score-progress__fill";
 export const ACTIVE_CLASS = "ad-ext-x01-score-progress--active";
 export const INACTIVE_CLASS = "ad-ext-x01-score-progress--inactive";
+export const ELECTRIC_SURGE_ACTIVE_CLASS = "ad-ext-x01-score-progress--electric-active";
 export const SIZE_CLASS_PREFIX = "ad-ext-x01-score-progress--size-";
 export const EFFECT_FILL_CLASS_PREFIX = "ad-ext-x01-score-progress__fill--effect-";
 
@@ -299,12 +305,20 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric
   border-color:color-mix(in srgb,var(--ad-ext-x01-score-progress-track-border-color) 28%,rgba(132,245,255,.92) 72%);
   box-shadow:
     var(--ad-ext-x01-score-progress-track-inner-shadow),
+    0 0 14px rgba(77,217,255,.28),
+    inset 0 0 0 1px rgba(190,248,255,.2);
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}{
+  filter:url(#${ELECTRIC_FILTER_STRONG_ID}) brightness(1.16) saturate(1.16);
+  box-shadow:
+    var(--ad-ext-x01-score-progress-track-inner-shadow),
     0 0 22px rgba(77,217,255,.42),
     inset 0 0 0 1px rgba(190,248,255,.34);
   animation:ad-ext-x01-score-progress-electric-track 1.06s ease-in-out infinite;
 }
 
-${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}::before{
+${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}::before{
   content:"";
   position:absolute;
   inset:0;
@@ -314,16 +328,21 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric
   background:
     linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(220,251,255,.78) 47%,rgba(255,255,255,0) 100%),
     repeating-linear-gradient(90deg,rgba(129,246,255,.28) 0 3px,rgba(255,255,255,0) 3px 11px);
+  filter:url(#${ELECTRIC_FILTER_SOFT_ID});
   transform:translateX(-170%);
   animation:ad-ext-x01-score-progress-electric-track-scan .92s linear infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge{
-  filter:brightness(1.12) saturate(1.12) drop-shadow(0 0 6px rgba(132,245,255,.5));
+  filter:brightness(1.04) saturate(1.04) drop-shadow(0 0 5px rgba(132,245,255,.3));
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge{
+  filter:url(#${ELECTRIC_FILTER_SOFT_ID}) brightness(1.16) saturate(1.16) drop-shadow(0 0 8px rgba(132,245,255,.58));
   animation:ad-ext-x01-score-progress-electric-surge-core .94s ease-in-out infinite;
 }
 
-${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::before{
+${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::before{
   opacity:.46;
   background-image:
     repeating-linear-gradient(106deg,rgba(234,252,255,.42) 0 2px,rgba(255,255,255,0) 2px 10px);
@@ -333,7 +352,7 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
   animation:ad-ext-x01-score-progress-electric-surge-noise 420ms linear infinite;
 }
 
-${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::after{
+${HOST_SELECTOR}.${ACTIVE_CLASS}.${ELECTRIC_SURGE_ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::after{
   opacity:.96;
   background:
     linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(204,244,255,.22) 34%,rgba(224,252,255,.92) 50%,rgba(204,244,255,.22) 66%,rgba(255,255,255,0) 100%);

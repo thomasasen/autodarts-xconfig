@@ -1,4 +1,4 @@
-import { SCORE_FLASH_CLASS, SCORE_SELECTOR } from "./style.js";
+import { SCORE_FLASH_CLASS, SCORE_FRAME_CLASS, SCORE_SELECTOR } from "./style.js";
 
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
@@ -20,11 +20,21 @@ export function collectScoreNodes(documentRef) {
   return Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
 }
 
+function resolveFrameNode(scoreNode) {
+  if (!scoreNode) {
+    return null;
+  }
+  return scoreNode.parentElement || scoreNode;
+}
+
 function clearFlashState(node, state, windowRef = null) {
   if (!node || !state) {
     return;
   }
   node.classList?.remove?.(SCORE_FLASH_CLASS);
+  const frameNode = state.flashFrameByScoreNode?.get?.(node) || resolveFrameNode(node);
+  frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
+  state.flashFrameByScoreNode?.delete?.(node);
 }
 
 function triggerScoreFlash(node, state, windowRef = null) {
@@ -32,12 +42,19 @@ function triggerScoreFlash(node, state, windowRef = null) {
     return;
   }
 
+  const frameNode = resolveFrameNode(node);
   clearFlashState(node, state, windowRef);
   node.classList?.remove?.(SCORE_FLASH_CLASS);
+  frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
   if (typeof node.getBoundingClientRect === "function") {
     node.getBoundingClientRect();
   }
+  if (typeof frameNode?.getBoundingClientRect === "function") {
+    frameNode.getBoundingClientRect();
+  }
   node.classList?.add?.(SCORE_FLASH_CLASS);
+  frameNode?.classList?.add?.(SCORE_FRAME_CLASS);
+  state.flashFrameByScoreNode?.set?.(node, frameNode);
 }
 
 export function stopAnimation(node, state, windowRef = null) {
@@ -167,6 +184,7 @@ export function updateTurnPoints(options = {}) {
   scoreNodes.forEach((node) => {
     const parsedValue = parseScore(node.textContent);
     if (parsedValue === null) {
+      stopAnimation(node, state, windowRef);
       return;
     }
 
