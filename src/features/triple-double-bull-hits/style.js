@@ -376,8 +376,26 @@ export function buildStyleText() {
   animation-name: ad-ext-hit-row-electric-arc;
 }
 
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
+  animation:
+    ad-ext-hit-gradient-flow 9s linear infinite,
+    ad-ext-hit-burst-surface 900ms cubic-bezier(0.12, 0.9, 0.2, 1),
+    ad-ext-hit-electric-arc-surface 760ms steps(2, end);
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS}::after {
+  animation:
+    ad-ext-hit-border-sweep 5.2s linear infinite,
+    ad-ext-hit-burst-border 860ms ease-out,
+    ad-ext-hit-electric-arc-border 760ms steps(2, end);
+}
+
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
   animation: ad-ext-hit-score-electric-arc 760ms cubic-bezier(0.14, 0.92, 0.24, 1);
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SEGMENT_CLASS} {
+  animation: ad-ext-hit-segment-electric-arc 620ms linear;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
@@ -523,22 +541,131 @@ export function buildStyleText() {
 }
 
 @keyframes ad-ext-hit-row-electric-arc {
-  0% { transform: translateX(0) translateY(0) scale(0.96) skewX(0deg); filter: saturate(1.02); }
-  12% { transform: translateX(-5px) translateY(1px) scale(1.03) skewX(-3deg); }
-  26% { transform: translateX(6px) translateY(-3px) scale(1.09) skewX(2deg); }
-  40% { transform: translateX(-7px) translateY(2px) scale(1.05) skewX(-2deg); }
-  56% { transform: translateX(5px) translateY(-1px) scale(1.02) skewX(1deg); }
-  72% { transform: translateX(-3px) translateY(1px) scale(1.01) skewX(-1deg); }
-  100% { transform: translateX(0) translateY(0) scale(1) skewX(0deg); filter: saturate(1.12); }
+  0% {
+    transform: translateX(0) translateY(0) scale(0.92) skewX(0deg);
+    filter: saturate(1) brightness(0.95);
+  }
+  11% {
+    transform: translateX(-7px) translateY(2px) scale(1.04) skewX(-3deg);
+    filter: saturate(1.2) brightness(1.12);
+  }
+  23% {
+    transform: translateX(9px) translateY(-4px) scale(1.14) skewX(2deg);
+    filter: saturate(1.44) brightness(1.34);
+  }
+  37% {
+    transform: translateX(-10px) translateY(3px) scale(1.08) skewX(-2deg);
+    filter: saturate(1.3) brightness(1.2);
+  }
+  52% {
+    transform: translateX(8px) translateY(-2px) scale(1.05) skewX(1deg);
+    filter: saturate(1.22) brightness(1.12);
+  }
+  68% {
+    transform: translateX(-5px) translateY(1px) scale(1.03) skewX(-1deg);
+    filter: saturate(1.18) brightness(1.08);
+  }
+  100% {
+    transform: translateX(0) translateY(0) scale(1) skewX(0deg);
+    filter: saturate(1.16) brightness(1.04);
+  }
 }
 
 @keyframes ad-ext-hit-score-electric-arc {
-  0% { transform: translateX(0) scale(1); letter-spacing: 0.01em; }
-  18% { transform: translateX(5px) scale(1.16); letter-spacing: 0.09em; }
-  33% { transform: translateX(-6px) scale(1.06); letter-spacing: 0.05em; }
-  48% { transform: translateX(4px) scale(1.1); letter-spacing: 0.07em; }
-  66% { transform: translateX(-3px) scale(1.02); letter-spacing: 0.03em; }
-  100% { transform: translateX(0) scale(1); letter-spacing: 0.01em; }
+  0% {
+    transform: translateX(0) scale(1);
+    letter-spacing: 0.01em;
+    filter: brightness(1.02);
+  }
+  18% {
+    transform: translateX(7px) scale(1.2);
+    letter-spacing: 0.1em;
+    filter: brightness(1.42) drop-shadow(0 0 10px rgba(180,250,255,.68));
+  }
+  34% {
+    transform: translateX(-9px) scale(1.08);
+    letter-spacing: 0.06em;
+    filter: brightness(1.22) drop-shadow(0 0 6px rgba(180,250,255,.48));
+  }
+  50% {
+    transform: translateX(6px) scale(1.14);
+    letter-spacing: 0.08em;
+    filter: brightness(1.34) drop-shadow(0 0 8px rgba(180,250,255,.58));
+  }
+  68% {
+    transform: translateX(-4px) scale(1.04);
+    letter-spacing: 0.04em;
+    filter: brightness(1.12);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    letter-spacing: 0.01em;
+    filter: brightness(1.03);
+  }
+}
+
+@keyframes ad-ext-hit-segment-electric-arc {
+  0% {
+    transform: translateX(0) translateY(0);
+    letter-spacing: 0.1em;
+    opacity: 1;
+    filter: brightness(1.02);
+  }
+  24% {
+    transform: translateX(-7px) translateY(-1px);
+    letter-spacing: 0.16em;
+    filter: brightness(1.3);
+  }
+  46% {
+    transform: translateX(6px) translateY(1px);
+    letter-spacing: 0.11em;
+    filter: brightness(1.16);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+    letter-spacing: 0.1em;
+    opacity: 1;
+    filter: brightness(1.02);
+  }
+}
+
+@keyframes ad-ext-hit-electric-arc-surface {
+  0%, 100% {
+    opacity: var(--ad-ext-hit-gradient-opacity);
+    filter: saturate(1.22) contrast(1.08) brightness(0.92);
+  }
+  40% {
+    opacity: 1;
+    filter: saturate(1.58) contrast(1.18) brightness(1.22);
+  }
+  72% {
+    opacity: 0.92;
+    filter: saturate(1.34) contrast(1.12) brightness(1.04);
+  }
+}
+
+@keyframes ad-ext-hit-electric-arc-border {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.05),
+      inset 0 0 22px rgba(255,255,255,0.03),
+      0 0 24px var(--ad-ext-hit-soft-glow),
+      0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 74%, white 26%);
+  }
+  32% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.2),
+      inset 0 0 34px rgba(255,255,255,0.08),
+      0 0 58px color-mix(in srgb, var(--ad-ext-hit-glow) 82%, white 18%),
+      0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 90%, white 10%);
+  }
+  62% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.12),
+      inset 0 0 30px rgba(255,255,255,0.06),
+      0 0 44px color-mix(in srgb, var(--ad-ext-hit-glow) 76%, white 24%),
+      0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 86%, white 14%);
+  }
 }
 
 @keyframes ad-ext-hit-row-neon-pulse {

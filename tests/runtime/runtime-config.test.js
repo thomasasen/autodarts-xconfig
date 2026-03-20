@@ -56,6 +56,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
   assert.equal(config.features.x01ScoreProgress.barSize, "standard");
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
+  assert.equal(config.features.turnPointsCount.flashOnChange, true);
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -135,6 +136,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       },
       turnPointsCount: {
         durationMs: "650",
+        flashOnChange: "false",
       },
       x01ScoreProgress: {
         colorTheme: "ICE-CIRCUIT",
@@ -240,6 +242,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").cooldownMs, 1000);
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 650);
+  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashOnChange, false);
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "glass-charge");

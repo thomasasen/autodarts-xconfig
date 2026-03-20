@@ -1030,6 +1030,53 @@ test("xConfig x01 score progress settings no longer expose a design selector", a
   runtime.stop();
 });
 
+test("xConfig turn points settings expose flash toggle and persist changes", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await wait(5);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await wait(5);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await wait(5);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='turn-points-count']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await wait(5);
+
+  const flashSetting = documentRef.querySelector(
+    "[data-adxconfig-setting='true'][data-setting-key='flashOnChange']"
+  );
+  assert.ok(flashSetting);
+
+  const noteTexts = documentRef
+    .querySelectorAll(".ad-xconfig-modal .ad-xconfig-note")
+    .map((node) => String(node.textContent || ""));
+  assert.ok(
+    noteTexts.some((text) => /Aufblitz-Effekt/.test(text)),
+    "missing turn-points flash setting note"
+  );
+
+  clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", false);
+  await wait(5);
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
+
+  clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", true);
+  await wait(5);
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnPointsCount.flashOnChange, true);
+
+  runtime.stop();
+});
+
 test("xConfig dart design options render split layout with preview and active badge slot", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

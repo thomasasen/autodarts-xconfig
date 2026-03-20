@@ -17,7 +17,6 @@ function createState() {
     targetValueByNode: new Map(),
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
-    flashTimeoutByNode: new Map(),
   };
 }
 
@@ -121,11 +120,41 @@ test("stopAnimation clears any pending flash state immediately", () => {
   });
 
   assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
-  assert.equal(state.flashTimeoutByNode.has(scoreNode), true);
 
   stopAnimation(scoreNode, state, windowRef);
   assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
-  assert.equal(state.flashTimeoutByNode.has(scoreNode), false);
+  assert.equal(state.activeAnimeByNode.has(scoreNode), false);
+  assert.equal(state.targetValueByNode.has(scoreNode), false);
+});
+
+test("turn-points-count can disable the flash effect without disabling score animation", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const scoreNode = documentRef.turnPointsElement;
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    flashEnabled: false,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "45";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    flashEnabled: false,
+    animeRef,
+    windowRef,
+  });
+
+  assert.equal(animeRef.calls.length, 1);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
 });
 
 test("turn-points-count style exports the scoped flash animation contract", () => {

@@ -1,7 +1,5 @@
 import { SCORE_FLASH_CLASS, SCORE_SELECTOR } from "./style.js";
 
-const FLASH_DURATION_MS = 190;
-
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
 }
@@ -26,25 +24,6 @@ function clearFlashState(node, state, windowRef = null) {
   if (!node || !state) {
     return;
   }
-
-  const flashTimeoutByNode =
-    state.flashTimeoutByNode && typeof state.flashTimeoutByNode.get === "function"
-      ? state.flashTimeoutByNode
-      : null;
-  if (!flashTimeoutByNode) {
-    node.classList?.remove?.(SCORE_FLASH_CLASS);
-    return;
-  }
-
-  const clearTimer =
-    (windowRef && typeof windowRef.clearTimeout === "function"
-      ? windowRef.clearTimeout.bind(windowRef)
-      : clearTimeout);
-  const timeoutHandle = flashTimeoutByNode.get(node);
-  if (timeoutHandle) {
-    clearTimer(timeoutHandle);
-  }
-  flashTimeoutByNode.delete(node);
   node.classList?.remove?.(SCORE_FLASH_CLASS);
 }
 
@@ -53,25 +32,12 @@ function triggerScoreFlash(node, state, windowRef = null) {
     return;
   }
 
-  if (!state.flashTimeoutByNode || typeof state.flashTimeoutByNode.get !== "function") {
-    state.flashTimeoutByNode = new Map();
-  }
-
   clearFlashState(node, state, windowRef);
   node.classList?.remove?.(SCORE_FLASH_CLASS);
   if (typeof node.getBoundingClientRect === "function") {
     node.getBoundingClientRect();
   }
   node.classList?.add?.(SCORE_FLASH_CLASS);
-
-  const setTimer =
-    (windowRef && typeof windowRef.setTimeout === "function"
-      ? windowRef.setTimeout.bind(windowRef)
-      : setTimeout);
-  const timeoutHandle = setTimer(() => {
-    clearFlashState(node, state, windowRef);
-  }, FLASH_DURATION_MS);
-  state.flashTimeoutByNode.set(node, timeoutHandle);
 }
 
 export function stopAnimation(node, state, windowRef = null) {
@@ -108,6 +74,7 @@ export function animateScore(node, options = {}) {
   const fromValue = Number(options.fromValue);
   const toValue = Number(options.toValue);
   const durationMs = Number(options.durationMs) || 416;
+  const flashEnabled = options.flashEnabled !== false;
   const animeRef = options.animeRef;
   const windowRef = options.windowRef || null;
 
@@ -117,7 +84,9 @@ export function animateScore(node, options = {}) {
 
   stopAnimation(node, state, windowRef);
   state.targetValueByNode.set(node, toValue);
-  triggerScoreFlash(node, state, windowRef);
+  if (flashEnabled) {
+    triggerScoreFlash(node, state, windowRef);
+  }
 
   if (typeof animeRef === "function") {
     const valueHolder = { value: fromValue };
@@ -175,6 +144,7 @@ export function updateTurnPoints(options = {}) {
   const documentRef = options.documentRef;
   const state = options.state;
   const durationMs = Number(options.durationMs) || 416;
+  const flashEnabled = options.flashEnabled !== false;
   const animeRef = options.animeRef;
   const windowRef = options.windowRef || null;
 
@@ -228,6 +198,7 @@ export function updateTurnPoints(options = {}) {
       fromValue,
       toValue: parsedValue,
       durationMs,
+      flashEnabled,
       animeRef,
       windowRef,
     });

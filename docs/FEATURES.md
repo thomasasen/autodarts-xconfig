@@ -586,6 +586,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `Kurz`: Diese Stufe verkürzt die Zählanimation deutlich. Punktänderungen bleiben nachvollziehbar, ohne lange als Bewegung auf der Anzeige stehen zu bleiben.
   - `Standard`: Diese Einstellung hält die Balance zwischen schneller Aktualisierung und sichtbarer Zählbewegung. Der Punktewechsel bleibt klar nachvollziehbar und wirkt dennoch zügig.
   - `Lang`: Diese Stufe verlängert die Hoch- oder Runterzählung merklich. Dadurch wird die Wertänderung sehr gut sichtbar, wirkt aber deutlich weniger sofortig als die kurzen Varianten.
+- `Aufblitz-Effekt`: Aktiviert oder deaktiviert den Aufblitz-Effekt während laufender Turn-Score-Änderungen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Turn Points Count](screenshots/animation-turn-points-count.gif)

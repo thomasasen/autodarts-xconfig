@@ -827,6 +827,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `Kurz`: Der Zahlenlauf ist klar sichtbar, aber zügig vorbei. Das wirkt direkt und sportlich.
   - `Standard`: Die Wertänderung bleibt gut lesbar animiert, ohne träge zu werden. Das ist die neutrale Mittelstufe.
   - `Lang`: Die Zahl bewegt sich ruhiger und länger bis zum Endwert. Das macht den Wechsel besonders nachvollziehbar, aber weniger direkt.
+- `Aufblitz-Effekt`: Wenn aktiv, blitzt der Turn-Wert nur in dem Zeitraum auf, in dem die Zahl wirklich animiert wird. Bei deaktivierter Option bleibt ausschließlich die Zählbewegung ohne zusätzlichen Lichtimpuls.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Turn Points Count](docs/screenshots/animation-turn-points-count.gif)

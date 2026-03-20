@@ -295,12 +295,13 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}{
-  border-color:color-mix(in srgb,var(--ad-ext-x01-score-progress-track-border-color) 40%,rgba(138,231,255,.92) 60%);
+  border-color:rgba(132,245,255,.76);
+  border-color:color-mix(in srgb,var(--ad-ext-x01-score-progress-track-border-color) 28%,rgba(132,245,255,.92) 72%);
   box-shadow:
     var(--ad-ext-x01-score-progress-track-inner-shadow),
-    0 0 16px rgba(77,217,255,.24),
-    inset 0 0 0 1px rgba(153,239,255,.2);
-  animation:ad-ext-x01-score-progress-electric-track 1.32s ease-in-out infinite;
+    0 0 22px rgba(77,217,255,.42),
+    inset 0 0 0 1px rgba(190,248,255,.34);
+  animation:ad-ext-x01-score-progress-electric-track 1.06s ease-in-out infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric-surge'] .${TRACK_CLASS}::before{
@@ -309,23 +310,35 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}[data-ad-ext-x01-score-progress-effect='electric
   inset:0;
   border-radius:inherit;
   pointer-events:none;
-  opacity:.66;
+  opacity:.88;
   background:
-    linear-gradient(110deg,rgba(255,255,255,0) 0%,rgba(208,248,255,.66) 48%,rgba(255,255,255,0) 100%);
-  transform:translateX(-140%);
-  animation:ad-ext-x01-score-progress-electric-track-scan 1.32s linear infinite;
+    linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(220,251,255,.78) 47%,rgba(255,255,255,0) 100%),
+    repeating-linear-gradient(90deg,rgba(129,246,255,.28) 0 3px,rgba(255,255,255,0) 3px 11px);
+  transform:translateX(-170%);
+  animation:ad-ext-x01-score-progress-electric-track-scan .92s linear infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge{
-  animation:ad-ext-x01-score-progress-electric-surge-core 1.08s ease-in-out infinite;
+  filter:brightness(1.12) saturate(1.12) drop-shadow(0 0 6px rgba(132,245,255,.5));
+  animation:ad-ext-x01-score-progress-electric-surge-core .94s ease-in-out infinite;
+}
+
+${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::before{
+  opacity:.46;
+  background-image:
+    repeating-linear-gradient(106deg,rgba(234,252,255,.42) 0 2px,rgba(255,255,255,0) 2px 10px);
+  background-size:180% 100%;
+  background-position:0 0;
+  mix-blend-mode:screen;
+  animation:ad-ext-x01-score-progress-electric-surge-noise 420ms linear infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-electric-surge::after{
-  opacity:.82;
+  opacity:.96;
   background:
-    linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(204,244,255,.14) 34%,rgba(210,249,255,.86) 50%,rgba(204,244,255,.14) 66%,rgba(255,255,255,0) 100%);
-  transform:translateX(-160%);
-  animation:ad-ext-x01-score-progress-electric-surge-scan 1.08s linear infinite;
+    linear-gradient(112deg,rgba(255,255,255,0) 0%,rgba(204,244,255,.22) 34%,rgba(224,252,255,.92) 50%,rgba(204,244,255,.22) 66%,rgba(255,255,255,0) 100%);
+  transform:translateX(-175%);
+  animation:ad-ext-x01-score-progress-electric-surge-scan .94s linear infinite;
 }
 
 @keyframes ad-ext-x01-score-progress-pulse-core{
@@ -359,24 +372,31 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 }
 
 @keyframes ad-ext-x01-score-progress-electric-track{
-  0%,100%{filter:brightness(1.02) saturate(1.04)}
-  46%{filter:brightness(1.2) saturate(1.2)}
+  0%,100%{filter:brightness(1.04) saturate(1.08)}
+  42%{filter:brightness(1.34) saturate(1.34)}
+  68%{filter:brightness(1.18) saturate(1.16)}
 }
 
 @keyframes ad-ext-x01-score-progress-electric-track-scan{
-  0%{transform:translateX(-140%);opacity:.42}
-  62%{transform:translateX(146%);opacity:.9}
-  100%{transform:translateX(146%);opacity:.42}
+  0%{transform:translateX(-170%);opacity:.46}
+  58%{transform:translateX(170%);opacity:1}
+  100%{transform:translateX(170%);opacity:.42}
 }
 
 @keyframes ad-ext-x01-score-progress-electric-surge-core{
-  0%,100%{filter:brightness(1.04) saturate(1.06)}
-  38%{filter:brightness(1.28) saturate(1.24)}
+  0%,100%{filter:brightness(1.1) saturate(1.12) drop-shadow(0 0 5px rgba(120,240,255,.34));transform:translateX(0) scaleY(1)}
+  32%{filter:brightness(1.52) saturate(1.44) drop-shadow(0 0 13px rgba(132,245,255,.74));transform:translateX(2.2px) scaleY(1.26)}
+  64%{filter:brightness(1.28) saturate(1.24) drop-shadow(0 0 8px rgba(132,245,255,.48));transform:translateX(-1.4px) scaleY(1.08)}
 }
 
 @keyframes ad-ext-x01-score-progress-electric-surge-scan{
-  0%{transform:translateX(-160%);opacity:.5}
-  100%{transform:translateX(162%);opacity:.9}
+  0%{transform:translateX(-175%);opacity:.48}
+  100%{transform:translateX(176%);opacity:1}
+}
+
+@keyframes ad-ext-x01-score-progress-electric-surge-noise{
+  0%{background-position:0 0}
+  100%{background-position:180% 0}
 }
 `;
 }

@@ -537,6 +537,7 @@ function normalizeTurnPointsCountConfig(rawConfig = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     durationMs: normalizeNumberChoice(rawConfig.durationMs, 416, TURN_POINTS_COUNT_DURATIONS),
+    flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true),
     debug: normalizeBoolean(rawConfig.debug, false),
   };
 }

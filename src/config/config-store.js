@@ -382,6 +382,7 @@ function importTurnPointsCount(legacyFeatureState) {
   const settings = getLegacyFeatureSettings(legacyFeatureState);
   return buildFeatureImport("turnPointsCount", legacyFeatureState, {
     durationMs: readLegacySetting(settings, "ANIMATIONSDAUER_MS", 416),
+    flashOnChange: readLegacySetting(settings, "AUFBLITZEN_AKTIV", true),
     debug: readLegacySetting(settings, "DEBUG", false),
   });
 }

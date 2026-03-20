@@ -626,6 +626,7 @@ export const xconfigDescriptors = Object.freeze([
         { value: 416, label: "Standard" },
         { value: 650, label: "Lang" },
       ]),
+      checkboxField("flashOnChange", "Aufblitz-Effekt"),
       checkboxField("debug", "Debug"),
     ],
   }),

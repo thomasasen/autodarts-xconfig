@@ -13,6 +13,30 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.58] - 2026-03-20
+
+### Changed
+
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` zeigt den Stil
+  `Electric Arc` jetzt deutlich sichtbarer mit klareren Stromimpulsen,
+  stärkeren Jitter-Spitzen und auffälligerem Segment-/Score-Blitz.
+  Technik: Electric-Arc erhielt verstärkte CSS-Burst-Layer
+  (Surface-/Border-Arc-Keyframes) plus intensivere Timeline-Keyframes in der
+  Anime-Pipeline, ohne das Scope auf andere Trefferstile auszuweiten.
+- Nutzerwirkung: `Animate Turn Points Count` enthält jetzt die neue
+  xConfig-Option `Aufblitz-Effekt` und zeigt den Blitz nur in der Zeit, in der
+  der Turn-Wert tatsächlich animiert wird.
+  Technik: `turnPointsCount` wurde um `flashOnChange` in Default-, Runtime- und
+  Legacy-Config erweitert; der Flash-Selector wurde robuster auf
+  `.ad-ext-turn-points` gestellt, die Flash-Klassensteuerung auf
+  Laufzeit-/Animationsfenster begrenzt und mit Regressionen abgesichert.
+- Nutzerwirkung: `X01 Score Progress` macht `Electric Surge` im Spiel klarer
+  sichtbar, inklusive stärkerem Electric-Track und deutlich erkennbarem
+  Surge-Impuls beim Scorewechsel auf aktiven Karten.
+  Technik: Electric-Surge-Styles und Change-Keyframes wurden in Track-/Fill-
+  Layern sowie WAAPI-Impulsdefinitionen verstärkt; Active-Only-Scoping,
+  Effektzuordnung und bestehende Trigger-Regressionen bleiben erhalten.
+
 ## [2.0.57] - 2026-03-20
 
 ### Changed
@@ -559,8 +583,9 @@ _Noch keine Änderungen erfasst._
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
-[2.0.57]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[2.0.58]: https://github.com/thomasasen/autodarts-xconfig/compare/222042a...HEAD
+[2.0.57]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...222042a
 [2.0.56]: https://github.com/thomasasen/autodarts-xconfig/compare/2606db6...HEAD
 [2.0.55]: https://github.com/thomasasen/autodarts-xconfig/compare/8a156b3...2606db6
 [2.0.54]: https://github.com/thomasasen/autodarts-xconfig/compare/8a31cd6...8a156b3

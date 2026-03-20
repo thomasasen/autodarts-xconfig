@@ -838,6 +838,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Legt die Dauer der Zählanimation fest. Kurze Stufen springen schneller zum Zielwert, längere machen den Zwischenverlauf deutlicher sichtbar.",
         "Bestimmt die Dauer des Hoch- oder Herunterzählens."
       ),
+      flashOnChange: fieldCopy(
+        "Schaltet den kurzen Aufblitz-Effekt während einer echten Zahlenänderung ein oder aus.",
+        "Wenn aktiv, blitzt der Turn-Wert nur in dem Zeitraum auf, in dem die Zahl wirklich animiert wird. Bei deaktivierter Option bleibt ausschließlich die Zählbewegung ohne zusätzlichen Lichtimpuls.",
+        "Aktiviert oder deaktiviert den Aufblitz-Effekt während laufender Turn-Score-Änderungen."
+      ),
       debug: DEBUG_FIELD,
     },
   }),

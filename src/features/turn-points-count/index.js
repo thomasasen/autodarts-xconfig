@@ -27,6 +27,7 @@ export function initializeTurnPointsCount(context = {}) {
       ? config.getFeatureConfig("turnPointsCount")
       : {
           durationMs: 416,
+          flashOnChange: true,
         };
 
   const state = {
@@ -35,7 +36,6 @@ export function initializeTurnPointsCount(context = {}) {
     targetValueByNode: new Map(),
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
-    flashTimeoutByNode: new Map(),
   };
   let animeRef = getAnime(windowRef);
   let disposed = false;
@@ -49,6 +49,7 @@ export function initializeTurnPointsCount(context = {}) {
       documentRef,
       state,
       durationMs: featureConfig.durationMs,
+      flashEnabled: featureConfig.flashOnChange !== false,
       animeRef,
       windowRef,
     });
@@ -139,6 +140,7 @@ export function initializeTurnPointsCount(context = {}) {
       documentRef,
       state,
       durationMs: featureConfig.durationMs,
+      flashEnabled: featureConfig.flashOnChange !== false,
       animeRef: null,
       windowRef,
     });

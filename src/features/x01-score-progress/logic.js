@@ -987,19 +987,23 @@ function createEffectAnimationDefinition(effect) {
     return {
       keyframes: [
         {
-          filter: "brightness(1.08) saturate(1.08)",
+          filter: "brightness(1.1) saturate(1.12) drop-shadow(0 0 5px rgba(120,240,255,.34))",
           transform: "translateX(0) scaleY(1)",
         },
         {
-          filter: "brightness(1.38) saturate(1.34) drop-shadow(0 0 10px rgba(122,236,255,.68))",
-          transform: "translateX(1.5px) scaleY(1.2)",
+          filter: "brightness(1.72) saturate(1.5) drop-shadow(0 0 14px rgba(122,236,255,.78))",
+          transform: "translateX(2.5px) scaleY(1.28)",
         },
         {
-          filter: "brightness(1.12) saturate(1.1) drop-shadow(0 0 5px rgba(122,236,255,.36))",
+          filter: "brightness(1.26) saturate(1.24) drop-shadow(0 0 8px rgba(122,236,255,.52))",
+          transform: "translateX(-1.3px) scaleY(1.08)",
+        },
+        {
+          filter: "brightness(1.12) saturate(1.14) drop-shadow(0 0 6px rgba(122,236,255,.38))",
           transform: "translateX(0) scaleY(1)",
         },
       ],
-      options: { duration: 340, easing: "ease-out" },
+      options: { duration: 420, easing: "ease-out" },
     };
   }
 

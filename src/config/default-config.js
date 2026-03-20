@@ -133,6 +133,7 @@ export const defaultConfig = {
     turnPointsCount: {
       enabled: false,
       durationMs: 416,
+      flashOnChange: true,
       debug: false,
     },
     winnerFireworks: {
