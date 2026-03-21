@@ -13,6 +13,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.70] - 2026-03-21
+
+### Fixed
+
+- Nutzerwirkung: Im X01-Theme bleiben Punktzahl und Spielername auch bei sehr
+  langen Namen sauber im Container; die Punktzahl wird nicht mehr nach rechts
+  aus der Karte geschoben.
+  Technik: Das Player-Grid im X01-Theme nutzt jetzt `minmax(0, 1fr)` für die
+  Namensspalte, ergänzt um explizite `min-width:0`-/Ellipsis-Regeln für
+  Namensknoten sowie eine stabilisierte `max-content`-Score-Spalte; die
+  Theme-Parity-Regression prüft den neuen Layoutvertrag.
+
 ## [2.0.69] - 2026-03-21
 
 ### Fixed
@@ -759,6 +771,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.70]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.69]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.68]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.67]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
