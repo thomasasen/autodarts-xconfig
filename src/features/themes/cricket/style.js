@@ -35,16 +35,16 @@ const cricketThemeCss = `
   --ad-ext-cricket-card-sheen: rgba(127, 214, 247, 0.12);
   --ad-ext-cricket-board-shell: rgba(6, 12, 22, 0.92);
   --ad-ext-cricket-board-rail: rgba(91, 133, 170, 0.3);
-  --ad-ext-theme-cricket-player-column-min-width: 12.8rem;
-  --ad-ext-theme-cricket-player-column-max-width: 14rem;
+  --ad-ext-theme-cricket-player-column-min-width: 14.25rem;
+  --ad-ext-theme-cricket-player-column-max-width: 15.5rem;
   --ad-ext-theme-cricket-player-column-width: clamp(
     var(--ad-ext-theme-cricket-player-column-min-width),
-    14vw,
+    15vw,
     var(--ad-ext-theme-cricket-player-column-max-width)
   );
   --ad-ext-theme-cricket-player-card-min-width: var(--ad-ext-theme-cricket-player-column-min-width);
   --ad-ext-theme-cricket-card-inline-bleed: 0rem;
-  --ad-ext-theme-cricket-player-name-min-width: 4ch;
+  --ad-ext-theme-cricket-player-name-min-width: 4.8ch;
   --ad-ext-theme-cricket-score-min-width: 4.8ch;
   --ad-ext-theme-cricket-stats-min-width: 5.4ch;
   --ad-ext-theme-cricket-player-avatar-size: 2.2rem;

@@ -618,7 +618,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1242px"
+    "1380px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -651,7 +651,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1242px"
+    "1380px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -675,7 +675,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(toggleNode?.textContent || "", "Board anzeigen");
 
-  boardNodes.contentSlot.__rect = { width: 1600, height: 680 };
+  boardNodes.contentSlot.__rect = { width: 1720, height: 680 };
   windowRef.dispatchEvent(new windowRef.Event("resize"));
   await wait(5);
 
@@ -734,7 +734,7 @@ test("theme-cricket keeps 4-player readability width stable on narrow slots with
 
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "832px"
+    "924px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -764,7 +764,7 @@ test("theme-cricket keeps 4-player readability width stable on narrow slots with
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "832px"
+    "924px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -772,7 +772,7 @@ test("theme-cricket keeps 4-player readability width stable on narrow slots with
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
-    "180px"
+    "160px"
   );
 
   runtime.stop();
@@ -818,7 +818,7 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1242px"
+    "1380px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -846,14 +846,14 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1242px"
+    "1380px"
   );
   assert.equal(
     noticeTextNode?.textContent || "",
     "Board manuell eingeblendet, Spielerinfos behalten Priorität."
   );
 
-  boardNodes.contentSlot.__rect = { width: 1600, height: 680 };
+  boardNodes.contentSlot.__rect = { width: 1720, height: 680 };
   windowRef.dispatchEvent(new windowRef.Event("resize"));
   await wait(5);
 

@@ -13,6 +13,19 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 _Noch keine Änderungen erfasst._
 
+## [2.0.69] - 2026-03-21
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-Theme bleibt der Spielername jetzt deutlich besser
+  lesbar, weil jede Spielerkarte mehr Mindestbreite erhält und der Namensbereich
+  nicht mehr so aggressiv kollabiert.
+  Technik: Die Cricket-Layoutvariablen wurden auf breitere Min/Max-Spalten
+  angehoben (`player-column` + `player-name-min-width`), die Readability-Policy
+  in `mount-theme-feature` auf denselben Mindestkartenwert synchronisiert und
+  die Runtime-Regressionen für Style-/Lifecycle-Breitenverträge entsprechend
+  aktualisiert.
+
 ## [2.0.68] - 2026-03-20
 
 ### Changed
@@ -746,6 +759,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.69]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.68]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.67]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.66]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

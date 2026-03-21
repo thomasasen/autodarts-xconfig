@@ -15,14 +15,14 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
   assert.match(css, /\.css-1k7iu8k\s*\{\s*max-width:\s*96%/);
   assert.match(css, /--ad-ext-cricket-surface:\s*rgba\(8,\s*16,\s*30,\s*0\.9\)/);
-  assert.match(css, /--ad-ext-theme-cricket-player-column-min-width:\s*12\.8rem;/);
-  assert.match(css, /--ad-ext-theme-cricket-player-column-max-width:\s*14rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-column-min-width:\s*14\.25rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-column-max-width:\s*15\.5rem;/);
   assert.match(
     css,
-    /--ad-ext-theme-cricket-player-column-width:\s*clamp\(\s*var\(--ad-ext-theme-cricket-player-column-min-width\),\s*14vw,\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*\);/
+    /--ad-ext-theme-cricket-player-column-width:\s*clamp\(\s*var\(--ad-ext-theme-cricket-player-column-min-width\),\s*15vw,\s*var\(--ad-ext-theme-cricket-player-column-max-width\)\s*\);/
   );
   assert.match(css, /--ad-ext-theme-cricket-player-card-min-width:\s*var\(--ad-ext-theme-cricket-player-column-min-width\);/);
-  assert.match(css, /--ad-ext-theme-cricket-player-name-min-width:\s*4ch;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-name-min-width:\s*4\.8ch;/);
   assert.match(css, /--ad-ext-theme-cricket-score-min-width:\s*4\.8ch;/);
   assert.match(css, /--ad-ext-theme-cricket-stats-min-width:\s*5\.4ch;/);
   assert.match(css, /--ad-ext-theme-cricket-card-inline-bleed:\s*0rem;/);
