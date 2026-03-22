@@ -101,6 +101,11 @@ function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
   outerCircle.setAttribute("cy", "0");
   outerCircle.setAttribute("r", "450");
   boardGroup.appendChild(outerCircle);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardGroup.appendChild(labelNode);
+  }
   svg.appendChild(boardGroup);
 
   const markers = markerSpecs.map((spec) => createMarker(documentRef, boardGroup, spec));

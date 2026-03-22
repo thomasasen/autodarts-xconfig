@@ -6,6 +6,11 @@ import {
   togglePreviewSpace,
 } from "./theme-utils.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
+import { findBoardSvgGroup } from "../../../shared/dartboard-svg.js";
+import {
+  BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+  isBoardInputModeControl,
+} from "../../../shared/board-input-mode.js";
 
 export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   contentSlot: "ad-ext-theme-content-slot",
@@ -78,50 +83,8 @@ function countButtons(rootNode) {
   }
 }
 
-function getBoardRadius(rootNode) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return 0;
-  }
-
-  return Array.from(rootNode.querySelectorAll("circle")).reduce((max, circle) => {
-    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
-    return Number.isFinite(radius) && radius > max ? radius : max;
-  }, 0);
-}
-
-function getNumberCoverage(svgNode) {
-  if (!svgNode || typeof svgNode.querySelectorAll !== "function") {
-    return 0;
-  }
-
-  const labels = new Set(
-    Array.from(svgNode.querySelectorAll("text"))
-      .map((node) => Number.parseInt(node?.textContent || "", 10))
-      .filter((value) => Number.isFinite(value) && value >= 1 && value <= 20)
-  );
-  return labels.size;
-}
-
 function findBoardSvg(documentRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return null;
-  }
-
-  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
-  if (!svgNodes.length) {
-    return null;
-  }
-
-  let bestSvg = null;
-  let bestScore = -1;
-  svgNodes.forEach((svgNode) => {
-    const score = getNumberCoverage(svgNode) * 1000 + getBoardRadius(svgNode);
-    if (score > bestScore) {
-      bestScore = score;
-      bestSvg = svgNode;
-    }
-  });
-  return bestScore > 0 ? bestSvg : null;
+  return findBoardSvgGroup(documentRef)?.svg || null;
 }
 
 export function resolveThemeBoardCanvasTarget(boardSvg) {
@@ -554,6 +517,40 @@ function resolveBoardLayoutTargets(documentRef) {
     boardCanvas,
     boardSvg,
   };
+}
+
+function hasBoardInputModeMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+
+  return mutations.some((mutation) => {
+    const nodes = [
+      mutation?.target || null,
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].filter(Boolean);
+
+    return nodes.some((node) => {
+      if (isBoardInputModeControl(node)) {
+        return true;
+      }
+
+      if (typeof node?.querySelectorAll !== "function") {
+        return false;
+      }
+
+      try {
+        return Array.from(
+          node.querySelectorAll(
+            "button, [role='button'], [role='tab'], [role='radio'], input[type='radio']"
+          )
+        ).some((candidate) => isBoardInputModeControl(candidate));
+      } catch (_) {
+        return false;
+      }
+    });
+  });
 }
 
 function removeClass(node, className) {
@@ -1071,7 +1068,10 @@ export function mountThemeFeature(context = {}, options = {}) {
       key: observerKey,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+        if (
+          !hasBoardInputModeMutation(mutations) &&
+          !hasExternalDomMutation(mutations, isManagedNode)
+        ) {
           return;
         }
         scheduler.schedule();
@@ -1080,6 +1080,8 @@ export function mountThemeFeature(context = {}, options = {}) {
         childList: true,
         subtree: true,
         characterData: true,
+        attributes: true,
+        attributeFilter: BOARD_INPUT_MODE_ATTRIBUTE_FILTER.slice(),
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });

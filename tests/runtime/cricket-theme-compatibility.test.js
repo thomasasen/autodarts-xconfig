@@ -305,6 +305,27 @@ function createGameState(options = {}) {
   };
 }
 
+function createBoardModeButtons(documentRef, activeMode = "segments") {
+  const toolbar = documentRef.createElement("div");
+  const buttons = {};
+
+  [
+    ["segments", "Segmentmodus"],
+    ["coords", "Koordinatenmodus"],
+    ["live", "Live-Modus"],
+  ].forEach(([modeKey, label]) => {
+    const button = documentRef.createElement("button");
+    button.type = "button";
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", modeKey === activeMode ? "true" : "false");
+    toolbar.appendChild(button);
+    buttons[modeKey] = button;
+  });
+
+  documentRef.main.appendChild(toolbar);
+  return buttons;
+}
+
 test("theme-like cricket layout keeps highlighter and grid-fx stable with numeric labels and unknown scoring fallback", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
@@ -788,6 +809,93 @@ test("theme-like cricket highlighter restores overlay after external removal and
 
   assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
   assert.equal(Boolean(documentRef.getElementById(CRICKET_STYLE_ID)), false);
+});
+
+test("cricket highlighter schedules rerender on board-input mode aria-toggle mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  createBoardModeButtons(documentRef, "segments");
+  createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      ...createGameState({
+        scoringModeNormalized: "standard",
+        scoringMode: "standard",
+      }),
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  const modeButton = documentRef.querySelector("button[aria-label='Live-Modus']");
+  assert.ok(observer);
+  assert.ok(modeButton);
+
+  const before = scheduleCounter.count;
+  modeButton.setAttribute("aria-pressed", "true");
+  observer.callback([
+    {
+      type: "attributes",
+      target: modeButton,
+      attributeName: "aria-pressed",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count > before, true);
+  cleanupHighlighter();
 });
 
 test("merged label+mark theme layout keeps scoring highlights and grid-fx mapping stable", () => {
@@ -1544,6 +1652,102 @@ test("cricket grid fx runs in cricket/tactics without requiring theme-cricket ho
 
   cleanupGridFx();
   assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
+});
+
+test("cricket grid fx schedules rerender on board-input mode aria-toggle mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  createThemeLikeBoardFixture(documentRef);
+  createBoardModeButtons(documentRef, "segments");
+  createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      ...createGameState({
+        scoringModeNormalized: "standard",
+        scoringMode: "standard",
+      }),
+      isCricketVariant: () => true,
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          rowWave: true,
+          badgeBeacon: true,
+          markProgress: true,
+          threatEdge: true,
+          scoringLane: true,
+          deadRowCollapse: true,
+          deltaChips: true,
+          hitSpark: true,
+          roundTransitionWipe: true,
+          opponentPressureOverlay: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-grid-fx:dom-observer");
+  const modeButton = documentRef.querySelector("button[aria-label='Koordinatenmodus']");
+  assert.ok(observer);
+  assert.ok(modeButton);
+
+  const before = scheduleCounter.count;
+  modeButton.setAttribute("aria-pressed", "true");
+  observer.callback([
+    {
+      type: "attributes",
+      target: modeButton,
+      attributeName: "aria-pressed",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count > before, true);
+  cleanupGridFx();
 });
 
 test("cricket highlighter rerenders the board when merged crfx grid rows update", () => {

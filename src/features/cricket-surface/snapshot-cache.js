@@ -1,4 +1,4 @@
-import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
+import { findBoardSvgGroup, isReusableBoardSnapshot } from "../../shared/dartboard-svg.js";
 
 export function resolveGridSnapshot(documentRef, cricketRules, targetOrder, cache = null, findGrid) {
   if (cache?.grid?.root && cache.grid.root.isConnected !== false) {
@@ -20,7 +20,7 @@ export function resolveGridSnapshot(documentRef, cricketRules, targetOrder, cach
 }
 
 export function resolveBoardSnapshot(documentRef, cache = null) {
-  if (cache?.board?.group && cache.board.group.isConnected !== false) {
+  if (isReusableBoardSnapshot(cache?.board, documentRef)) {
     return cache.board;
   }
 

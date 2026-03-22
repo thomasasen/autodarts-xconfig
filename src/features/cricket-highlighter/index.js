@@ -13,7 +13,11 @@ import {
 } from "./style.js";
 import { CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
-import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
+import { findBoardSvgGroup, isReusableBoardSnapshot } from "../../shared/dartboard-svg.js";
+import {
+  BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+  isBoardInputModeControl,
+} from "../../shared/board-input-mode.js";
 
 const FEATURE_KEY = "cricket-highlighter";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -73,6 +77,7 @@ const SURFACE_ATTRIBUTE_FILTER = Object.freeze([
   "data-column-index",
   "data-row-label",
   "data-target-label",
+  ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
 ]);
 
 function readVariantText(documentRef) {
@@ -121,6 +126,9 @@ function isSurfaceMutationNode(node) {
       ? node
       : node.parentElement || node.parentNode || null;
   if (anchorNode && typeof anchorNode.closest === "function" && anchorNode.closest(SURFACE_SCOPE_SELECTOR)) {
+    return true;
+  }
+  if (isBoardInputModeControl(anchorNode)) {
     return true;
   }
   if (typeof node.matches === "function" && node.matches(SURFACE_SELECTOR)) {
@@ -191,11 +199,9 @@ function hasRelevantCricketMutation(mutations = []) {
 }
 
 function resolveOverlayHealth(documentRef, cache = null) {
-  const cachedBoard = cache?.board;
-  const board =
-    cachedBoard?.group?.isConnected !== false
-      ? cachedBoard
-      : findBoardSvgGroup(documentRef);
+  const board = isReusableBoardSnapshot(cache?.board, documentRef)
+    ? cache.board
+    : findBoardSvgGroup(documentRef);
   if (cache && typeof cache === "object") {
     cache.board = board;
   }

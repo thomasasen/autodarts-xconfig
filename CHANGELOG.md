@@ -11,6 +11,34 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+### Fixed
+
+- Nutzerwirkung: Cricket-/Liveboard-Erkennung bleibt bei überlagerten oder
+  versteckten DOM-Layern stabil; `Dart Marker Darts`, Theme-Hooks,
+  Cricket-Highlighter und Cricket-Grid-FX folgen zuverlässiger dem tatsächlich
+  sichtbaren Board- und Input-Mode statt an stale Controls/Layern hängen zu
+  bleiben.
+  Technik: Die Board-Input-Mode-Erkennung priorisiert jetzt sichtbare aktive
+  Controls (inklusive `checked`-Signal), der Board-SVG-Resolver bevorzugt
+  sichtbare `g`-Layer mit Fallback für gültige Boards ohne Zahl-`text`,
+  Snapshot-Reuse prüft Group-/Mode-Konsistenz strenger, und neue
+  Runtime-Regressionen decken Hidden-Control-, Hidden-Group-, Mode-Toggle- und
+  Observer-Contract-Pfade explizit ab.
+
+## [2.0.73] - 2026-03-22
+
+### Fixed
+
+- Nutzerwirkung: Die Cricket-/Tactics-Liveansicht bleibt auch nach Umschalten
+  zwischen Segment-, Live- und Koordinatenmodus stabil, statt an einem
+  veralteten oder unsichtbaren Board-Layer hängen zu bleiben und rechts nur
+  noch eine leere Theme-Fläche zu zeigen.
+  Technik: Die Board-Erkennung wurde in einen gemeinsamen, sichtbarkeits- und
+  mode-aware Resolver gezogen, Cricket-Board-Snapshots invalidieren jetzt auch
+  bei Input-Mode-Wechseln, und das Theme reagiert selbst auf reine
+  `aria-pressed`-/State-Toggles der Boardmodus-Buttons; neue Runtime-
+  Regressionen decken Resolver-, Cache- und Theme-Umschaltpfade ab.
+
 ## [2.0.72] - 2026-03-22
 
 ### Fixed
@@ -801,6 +829,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.73]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.72]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.71]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.70]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

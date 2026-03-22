@@ -2,6 +2,7 @@
   clearNodeChildren,
   ensureOverlayGroup,
   findBoardSvgGroup,
+  isReusableBoardSnapshot,
 } from "../../shared/dartboard-svg.js";
 import {
   OVERLAY_ID,
@@ -561,11 +562,9 @@ function ensureOverlayShapeCache(overlay, board, visualConfig, boardTargets, cac
 }
 
 function resolveBoardSnapshot(documentRef, cache = null) {
-  const cachedBoard = cache?.board;
-  const board =
-    cachedBoard?.group && cachedBoard.group.isConnected !== false
-      ? cachedBoard
-      : findBoardSvgGroup(documentRef);
+  const board = isReusableBoardSnapshot(cache?.board, documentRef)
+    ? cache.board
+    : findBoardSvgGroup(documentRef);
   if (cache && typeof cache === "object") {
     cache.board = board;
   }

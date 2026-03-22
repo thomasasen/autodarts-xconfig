@@ -2,6 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createBootstrap } from "../../src/core/bootstrap.js";
+import { createDomGuards } from "../../src/core/dom-guards.js";
+import { createListenerRegistry } from "../../src/core/listener-registry.js";
+import { createObserverRegistry } from "../../src/core/observer-registry.js";
+import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import {
   THEME_CRICKET_READABILITY,
@@ -40,6 +44,27 @@ function createThemeConfig(themeConfigKey, themeFeatureConfig = {}) {
       },
     },
   };
+}
+
+function createBoardModeButtons(documentRef, activeMode = "segments") {
+  const toolbar = documentRef.createElement("div");
+  const buttons = {};
+
+  [
+    ["segments", "Segmentmodus"],
+    ["coords", "Koordinatenmodus"],
+    ["live", "Live-Modus"],
+  ].forEach(([modeKey, label]) => {
+    const button = documentRef.createElement("button");
+    button.type = "button";
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", modeKey === activeMode ? "true" : "false");
+    toolbar.appendChild(button);
+    buttons[modeKey] = button;
+  });
+
+  documentRef.main.appendChild(toolbar);
+  return buttons;
 }
 
 function createDartsZoomPreviewFixture(documentRef) {
@@ -308,6 +333,76 @@ test("theme board canvas resolver keeps outer .showAnimations fallback when no i
   documentRef.main.appendChild(boardCanvas);
 
   assert.equal(resolveThemeBoardCanvasTarget(boardSvg), boardCanvas);
+});
+
+test("theme re-resolves the visible board when board-input mode toggles only via aria-pressed state", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const modeButtons = createBoardModeButtons(documentRef, "segments");
+  const hiddenBoard = createBoardFixture(documentRef, { withContentSlot: true });
+  const visibleBoard = createBoardFixture(documentRef, { withContentSlot: true });
+  hiddenBoard.contentSlot.setAttribute("aria-hidden", "true");
+  const windowRef = createMatchWindow(documentRef, "theme-x01-board-mode-toggle");
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const cleanup = mountThemeX01({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          contrastPreset: "high",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(hiddenBoard.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), false);
+  assert.equal(visibleBoard.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+
+  hiddenBoard.contentSlot.removeAttribute("aria-hidden");
+  visibleBoard.contentSlot.setAttribute("aria-hidden", "true");
+  modeButtons.segments.setAttribute("aria-pressed", "false");
+  modeButtons.live.setAttribute("aria-pressed", "true");
+  const observer = observers.get("theme-x01:theme-observer");
+  assert.ok(observer);
+  const observeOptions = observer.observeCalls?.[0]?.options || {};
+  assert.equal(observeOptions.attributes, true);
+  assert.equal(Array.isArray(observeOptions.attributeFilter), true);
+  assert.equal(observeOptions.attributeFilter.includes("aria-pressed"), true);
+  assert.equal(observeOptions.attributeFilter.includes("checked"), true);
+  observer.callback([
+    {
+      type: "attributes",
+      target: modeButtons.live,
+      attributeName: "aria-pressed",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(hiddenBoard.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+  assert.equal(visibleBoard.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), false);
+
+  cleanup();
 });
 
 test("theme-x01 mounts idempotently and cleans up style plus preview spacing", async () => {
