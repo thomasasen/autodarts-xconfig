@@ -51,6 +51,40 @@ function createCountingSchedulerFactory(counterRef) {
   });
 }
 
+function createImmediateSchedulerFactory(counterRef) {
+  return (callback) => ({
+    schedule() {
+      counterRef.count += 1;
+      callback();
+    },
+    cancel() {},
+    isScheduled() {
+      return false;
+    },
+  });
+}
+
+function appendBoardFixture(documentRef) {
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(group);
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+
+  documentRef.main.appendChild(svg);
+  return { svg, group };
+}
+
 test("checkout-board-targets ignores self-managed overlay mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -158,6 +192,172 @@ test("checkout-board-targets renders only the next sensible target when multiple
   const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
   assert.ok(overlay);
   assert.equal(overlay.children.length, 2);
+});
+
+test("checkout-board-targets rerenders after board replacement even when suggestion text stays unchanged", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const domGuards = createDomGuards({ documentRef });
+  const observerRegistry = createObserverRegistry();
+
+  function createBoard() {
+    const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+    const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+    boardCircle.setAttribute("r", "170");
+    group.appendChild(boardCircle);
+
+    for (const value of [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]) {
+      const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+      labelNode.textContent = String(value);
+      group.appendChild(labelNode);
+    }
+
+    svg.appendChild(group);
+    return { svg, group };
+  }
+
+  const firstBoard = createBoard();
+  documentRef.main.appendChild(firstBoard.svg);
+  documentRef.suggestionElement.textContent = "D20";
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules: {
+        parseCheckoutTargetsFromSuggestion: () => [{ ring: "D", value: 20 }],
+      },
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.ok(firstBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`));
+
+  const secondBoard = createBoard();
+  documentRef.main.removeChild(firstBoard.svg);
+  documentRef.main.appendChild(secondBoard.svg);
+
+  const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+  assert.ok(observer);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [secondBoard.svg],
+      removedNodes: [firstBoard.svg],
+    },
+  ]);
+
+  const secondOverlay = secondBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(secondOverlay);
+  assert.equal(secondOverlay.children.length > 0, true);
+
+  cleanup();
+});
+
+test("checkout-board-targets rerenders onto a replaced board when suggestion and variant stay unchanged", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.suggestionElement.textContent = "D20";
+  const firstBoard = appendBoardFixture(documentRef);
+  const scheduleCounter = { count: 0 };
+  const observerRegistry = createObserverRegistry();
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules: {
+        parseCheckoutTargetsFromSuggestion: () => [{ ring: "D", value: 20 }],
+      },
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  try {
+    assert.equal(scheduleCounter.count, 1);
+    assert.ok(firstBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`));
+
+    firstBoard.svg.remove();
+    const secondBoard = appendBoardFixture(documentRef);
+    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    assert.ok(observer);
+
+    observer.callback([
+      {
+        type: "childList",
+        target: documentRef.main,
+        addedNodes: [secondBoard.svg],
+        removedNodes: [firstBoard.svg],
+      },
+    ]);
+
+    assert.equal(scheduleCounter.count, 2);
+    assert.ok(secondBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`));
+  } finally {
+    cleanup();
+  }
 });
 
 test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {

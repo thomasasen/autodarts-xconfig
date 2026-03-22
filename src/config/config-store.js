@@ -518,6 +518,16 @@ function isDefaultRuntimeConfig(rawConfig) {
 
 export function createConfigStore(options = {}) {
   const storage = createStorageAdapter(options);
+  let writeQueue = Promise.resolve();
+
+  function enqueueWrite(operation) {
+    const nextWrite = writeQueue.then(() => operation(), () => operation());
+    writeQueue = nextWrite.then(
+      () => undefined,
+      () => undefined
+    );
+    return nextWrite;
+  }
 
   async function load() {
     const storedValue = await storage.getValue(CONFIG_STORAGE_KEY, null);
@@ -529,74 +539,82 @@ export function createConfigStore(options = {}) {
   }
 
   async function save(rawConfig = {}) {
-    const normalized = normalizeRuntimeConfig(rawConfig);
-    await storage.setValue(CONFIG_STORAGE_KEY, normalized);
-    return normalized;
+    return enqueueWrite(async () => {
+      const normalized = normalizeRuntimeConfig(rawConfig);
+      await storage.setValue(CONFIG_STORAGE_KEY, normalized);
+      return normalized;
+    });
   }
 
   async function update(partialConfig = {}) {
-    const runtimeConfig = createRuntimeConfig(await load());
-    runtimeConfig.update(partialConfig);
-    const next =
-      typeof runtimeConfig.getNormalized === "function"
-        ? runtimeConfig.getNormalized()
-        : runtimeConfig.getRaw();
-    await storage.setValue(CONFIG_STORAGE_KEY, next);
-    return next;
+    return enqueueWrite(async () => {
+      const runtimeConfig = createRuntimeConfig(await load());
+      runtimeConfig.update(partialConfig);
+      const next =
+        typeof runtimeConfig.getNormalized === "function"
+          ? runtimeConfig.getNormalized()
+          : runtimeConfig.getRaw();
+      await storage.setValue(CONFIG_STORAGE_KEY, next);
+      return next;
+    });
   }
 
   async function reset() {
-    const normalized = normalizeRuntimeConfig();
-    await storage.setValue(CONFIG_STORAGE_KEY, normalized);
-    return normalized;
+    return enqueueWrite(async () => {
+      const normalized = normalizeRuntimeConfig();
+      await storage.setValue(CONFIG_STORAGE_KEY, normalized);
+      return normalized;
+    });
   }
 
   async function importLegacyConfigIfAvailable() {
-    const currentStoredConfig = await storage.getValue(CONFIG_STORAGE_KEY, null);
-    const hasStoredCurrentConfig = isObjectLike(currentStoredConfig);
+    return enqueueWrite(async () => {
+      const currentStoredConfig = await storage.getValue(CONFIG_STORAGE_KEY, null);
+      const hasStoredCurrentConfig = isObjectLike(currentStoredConfig);
 
-    if (hasStoredCurrentConfig && !isDefaultRuntimeConfig(currentStoredConfig)) {
+      if (hasStoredCurrentConfig && !isDefaultRuntimeConfig(currentStoredConfig)) {
+        await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
+        return {
+          imported: false,
+          reason: "existing-current-config",
+          config: normalizeRuntimeConfig(currentStoredConfig),
+        };
+      }
+
+      const alreadyImported = await storage.getValue(LEGACY_IMPORT_FLAG_KEY, false);
+      if (alreadyImported) {
+        return {
+          imported: false,
+          reason: "already-imported",
+          config: hasStoredCurrentConfig
+            ? normalizeRuntimeConfig(currentStoredConfig)
+            : await load(),
+        };
+      }
+
+      const legacyValue = await storage.getValue(LEGACY_CONFIG_STORAGE_KEY, null);
+      const mappedConfig = mapLegacyConfig(legacyValue);
+
       await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
+
+      if (!mappedConfig) {
+        return {
+          imported: false,
+          reason: "no-compatible-legacy-config",
+          config: hasStoredCurrentConfig
+            ? normalizeRuntimeConfig(currentStoredConfig)
+            : await load(),
+        };
+      }
+
+      await storage.setValue(CONFIG_STORAGE_KEY, mappedConfig);
+
       return {
-        imported: false,
-        reason: "existing-current-config",
-        config: normalizeRuntimeConfig(currentStoredConfig),
+        imported: true,
+        reason: "legacy-config-imported",
+        config: mappedConfig,
       };
-    }
-
-    const alreadyImported = await storage.getValue(LEGACY_IMPORT_FLAG_KEY, false);
-    if (alreadyImported) {
-      return {
-        imported: false,
-        reason: "already-imported",
-        config: hasStoredCurrentConfig
-          ? normalizeRuntimeConfig(currentStoredConfig)
-          : await load(),
-      };
-    }
-
-    const legacyValue = await storage.getValue(LEGACY_CONFIG_STORAGE_KEY, null);
-    const mappedConfig = mapLegacyConfig(legacyValue);
-
-    await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
-
-    if (!mappedConfig) {
-      return {
-        imported: false,
-        reason: "no-compatible-legacy-config",
-        config: hasStoredCurrentConfig
-          ? normalizeRuntimeConfig(currentStoredConfig)
-          : await load(),
-      };
-    }
-
-    await storage.setValue(CONFIG_STORAGE_KEY, mappedConfig);
-
-    return {
-      imported: true,
-      reason: "legacy-config-imported",
-      config: mappedConfig,
-    };
+    });
   }
 
   return {

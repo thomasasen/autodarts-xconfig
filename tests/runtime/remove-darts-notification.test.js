@@ -14,7 +14,7 @@ import {
   IMAGE_CLASS,
   OVERLAY_ROOT_CLASS,
 } from "../../src/features/remove-darts-notification/style.js";
-import { FakeDocument } from "./fake-dom.js";
+import { FakeDocument, useHtmlCollectionChildren } from "./fake-dom.js";
 
 function createSingleNodeTreeWalker(nodeOrNull) {
   let consumed = false;
@@ -77,6 +77,32 @@ test("remove-darts-notification hides the visible wrapper when .adt-remove is ne
   clearRemoveDartsNotificationState(state);
   assert.equal(card.classList.contains(HIDDEN_NOTICE_CLASS), false);
   assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), false);
+});
+
+test("remove-darts-notification still promotes the visible wrapper when the wrapper exposes HTMLCollection-style children", () => {
+  const documentRef = new FakeDocument();
+  const overlay = documentRef.createElement("div");
+  const card = documentRef.createElement("div");
+  const notice = documentRef.createElement("div");
+  notice.textContent = "Removing Darts";
+  card.appendChild(notice);
+  overlay.appendChild(card);
+  documentRef.main.appendChild(overlay);
+  useHtmlCollectionChildren(card);
+
+  documentRef.createTreeWalker = () => {
+    return createSingleNodeTreeWalker({
+      nodeValue: "Removing Darts",
+      parentElement: notice,
+    });
+  };
+
+  const state = createRemoveDartsNotificationState();
+  updateRemoveDartsNotification({ documentRef, state });
+
+  assert.equal(card.classList.contains(HIDDEN_NOTICE_CLASS), true);
+  assert.equal(notice.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.ok(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`));
 });
 
 test("remove-darts-notification fallback recognizes 'Remove Darts' text", () => {

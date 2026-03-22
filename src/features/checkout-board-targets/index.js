@@ -82,6 +82,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
 
   function invalidateBoardCache() {
     boardCache.value = null;
+    lastRenderSignature = "";
   }
 
   function getBoard() {

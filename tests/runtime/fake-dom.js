@@ -742,6 +742,253 @@ class FakeStorage {
   }
 }
 
+function createFakeTimerHarness(options = {}) {
+  let now = Number.isFinite(options.now) ? Number(options.now) : 0;
+  let nextHandle = 1;
+  const scheduledTasks = new Map();
+  const runningTasks = new Map();
+  let originalGlobals = null;
+
+  function clearTask(handle) {
+    const normalizedHandle = Number(handle);
+    if (scheduledTasks.delete(normalizedHandle)) {
+      return;
+    }
+    const runningTask = runningTasks.get(normalizedHandle);
+    if (runningTask) {
+      runningTask.cancelled = true;
+    }
+  }
+
+  function scheduleTask(callback, delayMs = 0, args = [], options = {}) {
+    const handle = nextHandle;
+    nextHandle += 1;
+    scheduledTasks.set(handle, {
+      handle,
+      callback,
+      args: Array.isArray(args) ? args : [],
+      dueAt: now + Math.max(0, Number(delayMs) || 0),
+      intervalMs: options.interval === true ? Math.max(0, Number(delayMs) || 0) : null,
+      kind: String(options.kind || "timeout"),
+      cancelled: false,
+    });
+    return handle;
+  }
+
+  function getNextDueTask(targetNow) {
+    const dueTasks = Array.from(scheduledTasks.values())
+      .filter((task) => task && task.dueAt <= targetNow)
+      .sort((left, right) => {
+        if (left.dueAt !== right.dueAt) {
+          return left.dueAt - right.dueAt;
+        }
+        return left.handle - right.handle;
+      });
+    return dueTasks[0] || null;
+  }
+
+  function runTask(task) {
+    if (!task) {
+      return;
+    }
+
+    scheduledTasks.delete(task.handle);
+    runningTasks.set(task.handle, task);
+    task.cancelled = false;
+
+    try {
+      if (task.kind === "raf") {
+        task.callback(now);
+      } else {
+        task.callback(...task.args);
+      }
+    } finally {
+      runningTasks.delete(task.handle);
+      if (task.intervalMs !== null && !task.cancelled) {
+        task.dueAt = now + task.intervalMs;
+        scheduledTasks.set(task.handle, task);
+      }
+    }
+  }
+
+  function advance(ms = 0) {
+    const targetNow = now + Math.max(0, Number(ms) || 0);
+    let nextTask = getNextDueTask(targetNow);
+
+    while (nextTask) {
+      now = nextTask.dueAt;
+      runTask(nextTask);
+      nextTask = getNextDueTask(targetNow);
+    }
+
+    now = targetNow;
+    return now;
+  }
+
+  function flush() {
+    return advance(0);
+  }
+
+  function runAll(limit = 1000) {
+    let steps = 0;
+    while (scheduledTasks.size > 0) {
+      const nextTask = Array.from(scheduledTasks.values()).sort((left, right) => {
+        if (left.dueAt !== right.dueAt) {
+          return left.dueAt - right.dueAt;
+        }
+        return left.handle - right.handle;
+      })[0];
+      if (!nextTask) {
+        break;
+      }
+      advance(Math.max(0, nextTask.dueAt - now));
+      steps += 1;
+      if (steps >= limit) {
+        break;
+      }
+    }
+    return now;
+  }
+
+  function installOnWindow(windowRef) {
+    if (!windowRef || typeof windowRef !== "object") {
+      return windowRef;
+    }
+
+    windowRef.setTimeout = (callback, ms, ...args) => {
+      return scheduleTask(callback, ms, args, { kind: "timeout" });
+    };
+    windowRef.clearTimeout = (handle) => {
+      clearTask(handle);
+    };
+    windowRef.setInterval = (callback, ms, ...args) => {
+      return scheduleTask(callback, ms, args, {
+        interval: true,
+        kind: "interval",
+      });
+    };
+    windowRef.clearInterval = (handle) => {
+      clearTask(handle);
+    };
+    windowRef.requestAnimationFrame = (callback) => {
+      return scheduleTask(callback, 16, [], { kind: "raf" });
+    };
+    windowRef.cancelAnimationFrame = (handle) => {
+      clearTask(handle);
+    };
+    if (windowRef.performance && typeof windowRef.performance === "object") {
+      windowRef.performance.now = () => now;
+    }
+    return windowRef;
+  }
+
+  function installGlobals() {
+    if (originalGlobals) {
+      return;
+    }
+
+    originalGlobals = {
+      setTimeout: globalThis.setTimeout,
+      clearTimeout: globalThis.clearTimeout,
+      setInterval: globalThis.setInterval,
+      clearInterval: globalThis.clearInterval,
+      requestAnimationFrame: globalThis.requestAnimationFrame,
+      cancelAnimationFrame: globalThis.cancelAnimationFrame,
+      dateNow: Date.now,
+    };
+
+    globalThis.setTimeout = (callback, ms, ...args) => {
+      return scheduleTask(callback, ms, args, { kind: "timeout" });
+    };
+    globalThis.clearTimeout = (handle) => {
+      clearTask(handle);
+    };
+    globalThis.setInterval = (callback, ms, ...args) => {
+      return scheduleTask(callback, ms, args, {
+        interval: true,
+        kind: "interval",
+      });
+    };
+    globalThis.clearInterval = (handle) => {
+      clearTask(handle);
+    };
+    globalThis.requestAnimationFrame = (callback) => {
+      return scheduleTask(callback, 16, [], { kind: "raf" });
+    };
+    globalThis.cancelAnimationFrame = (handle) => {
+      clearTask(handle);
+    };
+    Date.now = () => now;
+  }
+
+  function restoreGlobals() {
+    if (!originalGlobals) {
+      return;
+    }
+
+    globalThis.setTimeout = originalGlobals.setTimeout;
+    globalThis.clearTimeout = originalGlobals.clearTimeout;
+    globalThis.setInterval = originalGlobals.setInterval;
+    globalThis.clearInterval = originalGlobals.clearInterval;
+    globalThis.requestAnimationFrame = originalGlobals.requestAnimationFrame;
+    globalThis.cancelAnimationFrame = originalGlobals.cancelAnimationFrame;
+    Date.now = originalGlobals.dateNow;
+    originalGlobals = null;
+  }
+
+  return {
+    advance,
+    flush,
+    installOnWindow,
+    installGlobals,
+    runAll,
+    restoreGlobals,
+    get now() {
+      return now;
+    },
+    setNow(value) {
+      now = Number.isFinite(value) ? Number(value) : now;
+      return now;
+    },
+  };
+}
+
+function createHtmlCollectionLike(children = []) {
+  const items = Array.isArray(children) ? children.slice() : Array.from(children || []);
+  const collection = {
+    length: items.length,
+    item(index) {
+      return Number.isInteger(index) && index >= 0 && index < items.length ? items[index] : null;
+    },
+    [Symbol.iterator]: function* iterate() {
+      yield* items;
+    },
+  };
+
+  items.forEach((child, index) => {
+    collection[index] = child;
+  });
+
+  return collection;
+}
+
+function useHtmlCollectionChildren(node, options = {}) {
+  if (!node || typeof node !== "object") {
+    return node;
+  }
+
+  const children = Array.isArray(node.children) ? node.children.slice() : Array.from(node.children || []);
+  node.children = createHtmlCollectionLike(children);
+
+  if (options.deep === true) {
+    children.forEach((child) => {
+      useHtmlCollectionChildren(child, options);
+    });
+  }
+
+  return node;
+}
+
 function createSidebarLink(documentRef, href, label) {
   const link = documentRef.createElement("a");
   link.href = href;
@@ -1134,5 +1381,8 @@ export {
   FakeMutationObserver,
   FakeStorage,
   FakeWebSocket,
+  createFakeTimerHarness,
+  createHtmlCollectionLike,
   createFakeWindow,
+  useHtmlCollectionChildren,
 };

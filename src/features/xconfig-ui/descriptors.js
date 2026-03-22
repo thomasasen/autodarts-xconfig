@@ -1,4 +1,5 @@
 import { getXConfigFeatureCopy, getXConfigFieldCopy, getXConfigFieldOptionCopy } from "./copy.js";
+import { buildFeatureIndex, buildFeatureMap, normalizeFeatureKey } from "../feature-metadata.js";
 
 function checkboxField(key, label) {
   return Object.freeze({
@@ -39,7 +40,7 @@ function actionField(action, label, options = {}) {
 }
 
 function descriptorEntry(definition) {
-  const featureKey = String(definition.featureKey || "").trim();
+  const featureKey = normalizeFeatureKey(definition.featureKey);
   const featureCopy = getXConfigFeatureCopy(featureKey);
   return Object.freeze({
     ...definition,
@@ -676,10 +677,13 @@ export const xconfigDescriptors = Object.freeze([
   }),
 ]);
 
-const descriptorsByFeatureKey = new Map(
-  xconfigDescriptors.map((descriptor) => [descriptor.featureKey, descriptor])
+export const xconfigDescriptorOrder = buildFeatureIndex(
+  xconfigDescriptors,
+  (descriptor) => descriptor?.featureKey
 );
 
+const descriptorsByFeatureKey = buildFeatureMap(xconfigDescriptors, (descriptor) => descriptor.featureKey);
+
 export function getXConfigDescriptor(featureKey) {
-  return descriptorsByFeatureKey.get(String(featureKey || "").trim()) || null;
+  return descriptorsByFeatureKey.get(normalizeFeatureKey(featureKey)) || null;
 }

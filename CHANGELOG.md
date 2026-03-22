@@ -11,7 +11,21 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
-_Noch keine Änderungen erfasst._
+## [2.0.71] - 2026-03-22
+
+### Fixed
+
+- Nutzerwirkung: AD xConfig verliert schnelle Einstellungsänderungen nicht mehr,
+  manuelle Update-Prüfungen werden nach laufenden Hintergrundchecks zuverlässig
+  nachgeholt, und mehrere DOM-/Hydration-Kantenfälle bei Checkout- und
+  Treffer-Overlays bleiben nach Re-Renders stabil.
+  Technik: Die Config-Persistenz serialisiert jetzt konkurrierende
+  Schreibvorgänge deterministisch, die xConfig-Shell verwirft geplante Syncs
+  beim Teardown und merkt genau einen manuellen Folge-Check vor,
+  `checkout-board-targets`, `checkout-score-pulse`,
+  `triple-double-bull-hits` und `remove-darts-notification` erhielten gezielte
+  Fixes, und gemeinsame Cricket-/xConfig-Helfer plus neue Runtime-Regressionen
+  reduzieren Parser-/Metadaten-Drift sowie fragile Timer-/Sleep-Pfade.
 
 ## [2.0.70] - 2026-03-21
 
@@ -771,6 +785,7 @@ _Noch keine Änderungen erfasst._
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.71]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.70]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.69]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.68]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

@@ -9,11 +9,7 @@ import {
   STYLE_ID,
   buildStyleText,
 } from "../../src/features/turn-points-count/style.js";
-import { FakeDocument, createFakeWindow } from "./fake-dom.js";
-
-function wait(ms = 0) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
 
 function createState() {
   return {
@@ -62,45 +58,52 @@ function createAnimeStub() {
 test("turn-points-count keeps flash frame for a short afterglow after score animation completes", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
   const state = createState();
   const animeRef = createAnimeStub();
   const { scoreNode, frameNode } = createTurnPointsFrame(documentRef);
 
-  updateTurnPoints({
-    documentRef,
-    state,
-    durationMs: 416,
-    flashAfterglowMs: 500,
-    animeRef,
-    windowRef,
-  });
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
+  try {
+    updateTurnPoints({
+      documentRef,
+      state,
+      durationMs: 416,
+      flashAfterglowMs: 500,
+      animeRef,
+      windowRef,
+    });
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
 
-  scoreNode.textContent = "45";
-  updateTurnPoints({
-    documentRef,
-    state,
-    durationMs: 416,
-    flashAfterglowMs: 500,
-    animeRef,
-    windowRef,
-  });
+    scoreNode.textContent = "45";
+    updateTurnPoints({
+      documentRef,
+      state,
+      durationMs: 416,
+      flashAfterglowMs: 500,
+      animeRef,
+      windowRef,
+    });
 
-  assert.equal(animeRef.calls.length, 1);
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
-  assert.equal(state.targetValueByNode.get(scoreNode), 45);
+    assert.equal(animeRef.calls.length, 1);
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+    assert.equal(state.targetValueByNode.get(scoreNode), 45);
 
-  animeRef.calls[0].complete();
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
-  assert.equal(state.activeAnimeByNode.has(scoreNode), false);
-  assert.equal(state.targetValueByNode.has(scoreNode), false);
-  assert.equal(state.lastValueByNode.get(scoreNode), 45);
+    animeRef.calls[0].complete();
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+    assert.equal(state.activeAnimeByNode.has(scoreNode), false);
+    assert.equal(state.targetValueByNode.has(scoreNode), false);
+    assert.equal(state.lastValueByNode.get(scoreNode), 45);
 
-  await wait(560);
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
+    timers.advance(560);
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
+  } finally {
+    timers.restoreGlobals();
+  }
 });
 
 test("turn-points-count does not flash when the displayed value does not change", () => {
@@ -237,48 +240,55 @@ test("turn-points-count can disable the flash effect without disabling score ani
 test("turn-points-count supports a permanent frame mode while keeping score flash scoped to value changes", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
   const state = createState();
   const animeRef = createAnimeStub();
   const { scoreNode, frameNode } = createTurnPointsFrame(documentRef);
 
-  updateTurnPoints({
-    documentRef,
-    state,
-    durationMs: 416,
-    flashMode: "permanent",
-    flashAfterglowMs: 500,
-    animeRef,
-    windowRef,
-  });
+  try {
+    updateTurnPoints({
+      documentRef,
+      state,
+      durationMs: 416,
+      flashMode: "permanent",
+      flashAfterglowMs: 500,
+      animeRef,
+      windowRef,
+    });
 
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-  scoreNode.textContent = "45";
-  updateTurnPoints({
-    documentRef,
-    state,
-    durationMs: 416,
-    flashMode: "permanent",
-    flashAfterglowMs: 500,
-    animeRef,
-    windowRef,
-  });
+    scoreNode.textContent = "45";
+    updateTurnPoints({
+      documentRef,
+      state,
+      durationMs: 416,
+      flashMode: "permanent",
+      flashAfterglowMs: 500,
+      animeRef,
+      windowRef,
+    });
 
-  assert.equal(animeRef.calls.length, 1);
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+    assert.equal(animeRef.calls.length, 1);
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-  animeRef.calls[0].complete();
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+    animeRef.calls[0].complete();
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-  await wait(560);
-  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+    timers.advance(560);
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-  stopAnimation(scoreNode, state, windowRef);
-  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
+    stopAnimation(scoreNode, state, windowRef);
+    assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
+  } finally {
+    timers.restoreGlobals();
+  }
 });
 
 test("turn-points-count style exports the scoped flash animation contract", () => {

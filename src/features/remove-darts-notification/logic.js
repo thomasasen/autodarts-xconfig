@@ -400,19 +400,32 @@ function isPromotableNoticeHost(node) {
   );
 }
 
+function getChildElements(node) {
+  if (!node || typeof node !== "object" || !node.children) {
+    return [];
+  }
+
+  try {
+    return Array.from(node.children);
+  } catch (_) {
+    return [];
+  }
+}
+
 function onlyContainsCurrentBranch(parentNode, currentNode) {
-  if (!parentNode || !currentNode || !Array.isArray(parentNode.children) || !parentNode.children.length) {
+  const childNodes = getChildElements(parentNode);
+  if (!currentNode || !childNodes.length) {
     return false;
   }
 
   let matchesCurrentBranch = 0;
-  parentNode.children.forEach((child) => {
+  childNodes.forEach((child) => {
     if (child === currentNode || child?.contains?.(currentNode)) {
       matchesCurrentBranch += 1;
     }
   });
 
-  return matchesCurrentBranch === parentNode.children.length;
+  return matchesCurrentBranch === childNodes.length;
 }
 
 function resolveVisibleNoticeHost(noticeNode) {

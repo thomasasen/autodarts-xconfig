@@ -1,13 +1,44 @@
-﻿import { getXConfigDescriptor, xconfigDescriptors } from "./descriptors.js";
+﻿import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
 import { resolveDartDesignAsset } from "#feature-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
   openUserscriptInstall,
   readStoredUpdateStatus,
-  resolveLatestUpdateStatus,
-  shouldRefreshUpdateStatus,
 } from "./update-check.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import {
+  currentRoute,
+  getContentElement,
+  getSidebarElement,
+  isConfigHash,
+  isLegacyConfigPath,
+  isNavigationElement,
+  normalizeRoutePath,
+  removeNodeById,
+  toRoutePathname,
+} from "./layout-utils.js";
+import {
+  buildFeatureSettingPatch,
+  isThemeFeature,
+  themeKeyFromConfigKey,
+} from "./path-utils.js";
+import { cancelWindowSync, queueWindowSync } from "./sync-scheduler.js";
+import {
+  buildShellRenderSignature,
+  parseShellRenderSignature,
+} from "./render-signature.js";
+import { createShellRenderController } from "./render-controller.js";
+import { createShellRouteController } from "./route-controller.js";
+import {
+  applyThemeBackgroundStatusNode,
+  buildThemeBackgroundStatus,
+  clearThemeBackgroundImage,
+  formatThemeBackgroundSummary,
+  uploadThemeBackgroundImage,
+} from "./theme-background.js";
+import { createShellActionController } from "./action-controller.js";
+import { createUpdateStatusController } from "./update-controller.js";
+import { createShellLifecycleController } from "./lifecycle-controller.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -53,9 +84,7 @@ const SIDEBAR_ROUTE_HINTS = new Set([
   "/plus",
   "/settings",
 ]);
-const descriptorOrder = new Map(
-  xconfigDescriptors.map((descriptor, index) => [descriptor.featureKey, index])
-);
+const descriptorOrder = xconfigDescriptorOrder;
 const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: "all-modes",
@@ -252,30 +281,6 @@ function isObjectLike(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function splitFeaturePath(featureKey) {
-  return String(featureKey || "")
-    .split(".")
-    .map((part) => String(part || "").trim())
-    .filter(Boolean);
-}
-
-function setNestedValue(rootValue, pathParts = [], value) {
-  if (!isObjectLike(rootValue) || !Array.isArray(pathParts) || !pathParts.length) {
-    return;
-  }
-
-  let current = rootValue;
-  for (let index = 0; index < pathParts.length - 1; index += 1) {
-    const part = pathParts[index];
-    if (!isObjectLike(current[part])) {
-      current[part] = {};
-    }
-    current = current[part];
-  }
-
-  current[pathParts[pathParts.length - 1]] = value;
-}
-
 function toTitleCase(value) {
   const raw = String(value || "").trim();
   if (!raw) {
@@ -299,146 +304,6 @@ function formatVariantLabel(variants = []) {
   }
 
   return variants.map((variant) => toTitleCase(variant)).join(" / ");
-}
-
-function isThemeFeature(feature) {
-  return String(feature?.configKey || "").startsWith("themes.");
-}
-
-function estimateBase64ByteSize(rawPayload) {
-  const payload = String(rawPayload || "").replace(/\s+/g, "");
-  if (!payload) {
-    return 0;
-  }
-  const padding = payload.endsWith("==") ? 2 : payload.endsWith("=") ? 1 : 0;
-  return Math.max(0, Math.floor((payload.length * 3) / 4) - padding);
-}
-
-function formatByteSize(byteSize) {
-  const bytes = Number(byteSize) || 0;
-  if (!Number.isFinite(bytes) || bytes <= 0) {
-    return "";
-  }
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  const kiloBytes = bytes / 1024;
-  if (kiloBytes < 1024) {
-    const fixed = kiloBytes < 10 ? 1 : 0;
-    return `${kiloBytes.toFixed(fixed)} KB`;
-  }
-
-  return `${(kiloBytes / 1024).toFixed(1)} MB`;
-}
-
-function readThemeBackgroundImageInfo(feature) {
-  const dataUrl = String(feature?.config?.backgroundImageDataUrl || "").trim();
-  if (!dataUrl.startsWith("data:image/")) {
-    return {
-      hasImage: false,
-      mimeType: "",
-      byteSize: 0,
-      dataUrl: "",
-    };
-  }
-
-  const separatorIndex = dataUrl.indexOf(",");
-  if (separatorIndex <= 0 || separatorIndex >= dataUrl.length - 1) {
-    return {
-      hasImage: false,
-      mimeType: "",
-      byteSize: 0,
-      dataUrl: "",
-    };
-  }
-
-  const header = dataUrl.slice(0, separatorIndex);
-  const payload = dataUrl.slice(separatorIndex + 1);
-  const mimeTypeMatch = header.match(/^data:([^;,]+)(?:;.*)?$/i);
-  const mimeType = String(mimeTypeMatch?.[1] || "image/*").toLowerCase();
-  const isBase64 = /;base64/i.test(header);
-
-  return {
-    hasImage: true,
-    mimeType,
-    byteSize: isBase64 ? estimateBase64ByteSize(payload) : payload.length,
-    dataUrl,
-  };
-}
-
-function formatThemeBackgroundSummary(feature) {
-  const imageInfo = readThemeBackgroundImageInfo(feature);
-  if (!imageInfo.hasImage) {
-    return "Kein eigenes Hintergrundbild gespeichert.";
-  }
-
-  const sizeText = formatByteSize(imageInfo.byteSize);
-  const detailText = sizeText ? `${imageInfo.mimeType}, ${sizeText}` : imageInfo.mimeType;
-  return `Eigenes Hintergrundbild: ${detailText}.`;
-}
-
-function applyThemeBackgroundStatusNode(documentRef, statusNode, feature) {
-  if (!statusNode) {
-    return;
-  }
-
-  const imageInfo = readThemeBackgroundImageInfo(feature);
-  statusNode.setAttribute(
-    "class",
-    imageInfo.hasImage
-      ? "ad-xconfig-theme-image-status"
-      : "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty"
-  );
-  statusNode.setAttribute("data-theme-image-state", imageInfo.hasImage ? "present" : "empty");
-  statusNode.setAttribute("data-theme-image-type", imageInfo.mimeType || "");
-  statusNode.setAttribute("data-theme-image-size", imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : "");
-
-  const summaryText = imageInfo.hasImage
-    ? `Aktuelles Bild: ${imageInfo.mimeType}${imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : ""}.`
-    : "Aktuelles Bild: keines.";
-
-  let summaryNode = statusNode.querySelector?.(".ad-xconfig-theme-image-status-summary") || null;
-  if (!summaryNode) {
-    summaryNode = createElement(documentRef, "p", {
-      className: "ad-xconfig-theme-image-status-summary",
-    });
-    statusNode.appendChild(summaryNode);
-  }
-  summaryNode.textContent = summaryText;
-
-  const existingPreview = statusNode.querySelector?.(".ad-xconfig-theme-image-preview") || null;
-  if (imageInfo.hasImage) {
-    if (existingPreview) {
-      existingPreview.setAttribute("src", imageInfo.dataUrl);
-      existingPreview.setAttribute("alt", `${feature.title} Hintergrundbild`);
-      return;
-    }
-    statusNode.appendChild(createElement(documentRef, "img", {
-      className: "ad-xconfig-theme-image-preview",
-      attributes: {
-        src: imageInfo.dataUrl,
-        alt: `${feature.title} Hintergrundbild`,
-        loading: "lazy",
-        decoding: "async",
-      },
-    }));
-    return;
-  }
-
-  existingPreview?.remove?.();
-}
-
-function buildThemeBackgroundStatus(documentRef, feature) {
-  const status = createElement(documentRef, "div", {
-    className: "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty",
-    attributes: {
-      "data-adxconfig-theme-image-status": "true",
-      "data-feature-key": feature.featureKey,
-    },
-  });
-  applyThemeBackgroundStatusNode(documentRef, status, feature);
-  return status;
 }
 
 function createElement(documentRef, tagName, options = {}) {
@@ -466,224 +331,6 @@ function createElement(documentRef, tagName, options = {}) {
   return element;
 }
 
-function normalizeRoutePath(pathValue) {
-  let normalized = String(pathValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-
-  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
-  if (normalized.length > 1) {
-    normalized = normalized.replace(/\/+$/, "");
-  }
-  return normalized;
-}
-
-function toRoutePathname(windowRef, hrefValue) {
-  const href = String(hrefValue || "").trim();
-  if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
-    return "";
-  }
-
-  try {
-    const parsed = new URL(href, windowRef?.location?.origin || "https://play.autodarts.io");
-    return normalizeRoutePath(parsed.pathname);
-  } catch (_) {
-    return normalizeRoutePath(href);
-  }
-}
-
-function currentRoute(windowRef) {
-  const locationRef = windowRef?.location;
-  return `${locationRef?.pathname || ""}${locationRef?.search || ""}${locationRef?.hash || ""}`;
-}
-
-function normalizeHashValue(hashValue) {
-  const normalized = String(hashValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  return normalized.startsWith("#") ? normalized : `#${normalized}`;
-}
-
-function isLegacyConfigPath(pathValue) {
-  return normalizeRoutePath(pathValue) === CONFIG_PATH;
-}
-
-function isConfigHash(hashValue) {
-  return normalizeHashValue(hashValue) === CONFIG_HASH;
-}
-
-function scoreSidebarCandidate(windowRef, candidate) {
-  if (!candidate || typeof candidate.querySelectorAll !== "function") {
-    return -1;
-  }
-  if (candidate.closest?.(`#${PANEL_HOST_ID}`)) {
-    return -1;
-  }
-
-  const anchors = Array.from(candidate.querySelectorAll("a[href]"));
-  const routeMatches = anchors.reduce((count, anchor) => {
-    return count + (SIDEBAR_ROUTE_HINTS.has(toRoutePathname(windowRef, anchor.getAttribute("href"))) ? 1 : 0);
-  }, 0);
-  if (routeMatches <= 0) {
-    return -1;
-  }
-
-  let score = routeMatches * 20 + Math.min(anchors.length, 8);
-  if (candidate.classList?.contains("navigation")) {
-    score += 10;
-  }
-  if (candidate.matches?.("nav") || candidate.getAttribute?.("role") === "navigation") {
-    score += 12;
-  }
-
-  const width = Number(candidate.getBoundingClientRect?.().width || 0);
-  if (width > 0 && width < 520) {
-    score += 6;
-  }
-
-  return score;
-}
-
-function getSidebarElement(windowRef, documentRef) {
-  const root = documentRef?.getElementById?.("root");
-  if (!root) {
-    return null;
-  }
-
-  const candidates = [
-    root.querySelector?.(".navigation"),
-    root.querySelector?.("nav"),
-    root.querySelector?.("[role='navigation']"),
-    ...Array.from(root.querySelectorAll?.(".navigation") || []),
-    ...Array.from(root.querySelectorAll?.("nav") || []),
-    ...Array.from(root.querySelectorAll?.("[role='navigation']") || []),
-  ].filter(Boolean);
-
-  let best = null;
-  let bestScore = -1;
-  candidates.forEach((candidate) => {
-    const score = scoreSidebarCandidate(windowRef, candidate);
-    if (score > bestScore) {
-      best = candidate;
-      bestScore = score;
-    }
-  });
-
-  return bestScore >= 12 ? best : null;
-}
-
-function isNavigationElement(node) {
-  if (!node) {
-    return false;
-  }
-
-  if (node.classList?.contains("navigation")) {
-    return true;
-  }
-
-  if (node.matches?.("nav") || node.getAttribute?.("role") === "navigation") {
-    return true;
-  }
-
-  return false;
-}
-
-function isPanelHostElement(node) {
-  return Boolean(node) && node.id === PANEL_HOST_ID;
-}
-
-function isVisibleElement(node) {
-  if (!node || !node.style) {
-    return true;
-  }
-  return String(node.style.display || "").toLowerCase() !== "none";
-}
-
-function scoreContentCandidate(node) {
-  if (!node || isNavigationElement(node) || isPanelHostElement(node)) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  let score = 0;
-  if (node.matches?.("main")) {
-    score += 100;
-  }
-  if (isVisibleElement(node)) {
-    score += 20;
-  }
-
-  const rect = node.getBoundingClientRect?.();
-  const width = Number(rect?.width || 0);
-  const height = Number(rect?.height || 0);
-  score += Math.min(width, 2000) / 10;
-  score += Math.min(height, 2000) / 20;
-
-  return score;
-}
-
-function findBestContentCandidate(candidates = []) {
-  let best = null;
-  let bestScore = Number.NEGATIVE_INFINITY;
-
-  candidates.forEach((candidate) => {
-    const score = scoreContentCandidate(candidate);
-    if (score > bestScore) {
-      best = candidate;
-      bestScore = score;
-    }
-  });
-
-  return best;
-}
-
-function getContentElement(windowRef, documentRef, sidebarElement) {
-  const root = documentRef?.getElementById?.("root");
-  if (!root) {
-    return null;
-  }
-
-  const main = root.querySelector?.("main");
-  if (main) {
-    return main;
-  }
-
-  const sidebar = sidebarElement || getSidebarElement(windowRef, documentRef);
-  const siblingCandidates = Array.from(sidebar?.parentNode?.children || []).filter((child) => child !== sidebar);
-  const contentSibling = findBestContentCandidate(siblingCandidates);
-  if (contentSibling) {
-    return contentSibling;
-  }
-
-  const directChildren = Array.from(root.children || []);
-  return findBestContentCandidate(directChildren);
-}
-
-function removeNodeById(documentRef, nodeId) {
-  const node = documentRef?.getElementById?.(nodeId);
-  if (node?.parentNode?.removeChild) {
-    node.parentNode.removeChild(node);
-  }
-}
-
-function buildFeatureSettingPatch(configKey, settingKey, value) {
-  const patch = { features: {} };
-  const path = splitFeaturePath(configKey);
-  if (!path.length) {
-    return patch;
-  }
-
-  const featurePatch = {};
-  featurePatch[settingKey] = value;
-  setNestedValue(patch.features, path, featurePatch);
-  return patch;
-}
-
 function parseFieldValue(field, rawValue, checked) {
   if (!field) {
     return rawValue;
@@ -698,11 +345,6 @@ function parseFieldValue(field, rawValue, checked) {
     : null;
 
   return matchingOption ? matchingOption.value : rawValue;
-}
-
-function themeKeyFromConfigKey(configKey) {
-  const path = splitFeaturePath(configKey);
-  return path.length === 2 && path[0] === "themes" ? path[1] : "";
 }
 
 function sortFeatures(left, right) {
@@ -1786,51 +1428,6 @@ function buildShellContent(documentRef, state, features) {
   return page;
 }
 
-function buildShellRenderSignature(state, features, routeActive) {
-  const normalizedFeatures = Array.isArray(features)
-    ? features.map((feature) => {
-      return {
-        featureKey: feature.featureKey || "",
-        enabled: Boolean(feature.enabled),
-        mounted: Boolean(feature.mounted),
-        config: feature.config || null,
-      };
-    })
-    : [];
-
-  return JSON.stringify({
-    routeActive: Boolean(routeActive),
-    activeTab: String(state?.activeTab || ""),
-    activeSettingsFeatureKey: String(state?.activeSettingsFeatureKey || ""),
-    noticeType: String(state?.notice?.type || ""),
-    noticeMessage: String(state?.notice?.message || ""),
-    updateStatus: {
-      capable: Boolean(state?.updateStatus?.capable),
-      status: String(state?.updateStatus?.status || ""),
-      installedVersion: String(state?.updateStatus?.installedVersion || ""),
-      remoteVersion: String(state?.updateStatus?.remoteVersion || ""),
-      available: Boolean(state?.updateStatus?.available),
-      checkedAt: Number(state?.updateStatus?.checkedAt || 0),
-      stale: Boolean(state?.updateStatus?.stale),
-      error: String(state?.updateStatus?.error || ""),
-    },
-    features: normalizedFeatures,
-  });
-}
-
-function parseShellRenderSignature(signature) {
-  if (!signature) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(signature);
-    return parsed && typeof parsed === "object" ? parsed : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 function ensureXConfigShell(options = {}) {
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   if (!windowRef) {
@@ -1867,6 +1464,8 @@ function ensureXConfigShell(options = {}) {
     started: false,
     historyRestore: null,
     syncScheduled: false,
+    syncHandle: null,
+    syncHandleType: "",
     notice: { type: "", message: "" },
     noticeTimer: null,
     shellNode: null,
@@ -1876,140 +1475,20 @@ function ensureXConfigShell(options = {}) {
       installedVersion,
     }),
     updateCheckPromise: null,
+    pendingManualUpdateCheck: null,
     updateCheckIntervalHandle: null,
   };
 
-  function isConfigRoute() {
-    const locationRef = windowRef?.location || null;
-    return (
-      isLegacyConfigPath(locationRef?.pathname || "") ||
-      isConfigHash(locationRef?.hash || "")
-    );
-  }
-
-  function resolveBaseRouteForConfigHash() {
-    const currentPath = normalizeRoutePath(windowRef?.location?.pathname || "");
-    if (currentPath && currentPath !== CONFIG_PATH) {
-      return currentPath;
-    }
-    if (state.lastNonConfigRoute && state.lastNonConfigRoute !== CONFIG_PATH) {
-      return state.lastNonConfigRoute;
-    }
-    return "/lobbies";
-  }
-
-  function buildConfigHashRoute() {
-    const search = String(windowRef?.location?.search || "");
-    return `${resolveBaseRouteForConfigHash()}${search}${CONFIG_HASH}`;
-  }
-
-  function normalizeLegacyConfigPathIfNeeded() {
-    if (!isLegacyConfigPath(windowRef?.location?.pathname || "")) {
-      return false;
-    }
-    if (typeof windowRef?.history?.replaceState !== "function") {
-      return false;
-    }
-    windowRef.history.replaceState({ adxconfig: true }, "", buildConfigHashRoute());
-    return true;
-  }
+  let routeController = null;
+  let renderController = null;
+  let actionController = null;
+  let lifecycleController = null;
 
   function clearNoticeTimer() {
     if (state.noticeTimer && typeof windowRef.clearTimeout === "function") {
       windowRef.clearTimeout(state.noticeTimer);
       state.noticeTimer = null;
     }
-  }
-
-  function setUpdateStatus(nextStatus = {}) {
-    state.updateStatus = {
-      ...state.updateStatus,
-      ...nextStatus,
-      installedVersion,
-    };
-    queueSync();
-  }
-
-  function refreshUpdateStatus(options = {}) {
-    const force = Boolean(options.force);
-    const announce = Boolean(options.announce);
-
-    if (!state.updateStatus.capable) {
-      return Promise.resolve(state.updateStatus);
-    }
-    if (state.updateCheckPromise) {
-      return state.updateCheckPromise;
-    }
-    if (!force && !shouldRefreshUpdateStatus(state.updateStatus)) {
-      return Promise.resolve(state.updateStatus);
-    }
-
-    setUpdateStatus({
-      status: "checking",
-      error: "",
-      stale: Boolean(state.updateStatus.stale && state.updateStatus.checkedAt > 0),
-    });
-
-    const updatePromise = resolveLatestUpdateStatus({
-      windowRef,
-      installedVersion,
-      force,
-    })
-      .then((nextStatus) => {
-        setUpdateStatus(nextStatus);
-        if (announce) {
-          if (nextStatus.status === "available") {
-            setNotice(
-              "info",
-              `Update gefunden: ${installedVersion} -> ${nextStatus.remoteVersion}.`
-            );
-          } else if (nextStatus.status === "current") {
-            setNotice("success", `Kein neueres Update gefunden. Aktuell installiert: ${installedVersion}.`);
-          } else if (nextStatus.status === "error" || nextStatus.error) {
-            setNotice("error", nextStatus.error || "Update-Prüfung fehlgeschlagen.");
-          }
-        }
-        return nextStatus;
-      })
-      .finally(() => {
-        state.updateCheckPromise = null;
-      });
-
-    state.updateCheckPromise = updatePromise;
-    return updatePromise;
-  }
-
-  function stopAutoUpdateChecks() {
-    if (state.updateCheckIntervalHandle && typeof windowRef.clearInterval === "function") {
-      windowRef.clearInterval(state.updateCheckIntervalHandle);
-    }
-    state.updateCheckIntervalHandle = null;
-  }
-
-  function startAutoUpdateChecks() {
-    stopAutoUpdateChecks();
-    if (!state.updateStatus.capable || typeof windowRef.setInterval !== "function") {
-      return;
-    }
-    state.updateCheckIntervalHandle = windowRef.setInterval(() => {
-      if (!state.started || documentRef?.visibilityState === "hidden") {
-        return;
-      }
-      refreshUpdateStatus({
-        force: false,
-        announce: false,
-      });
-    }, UPDATE_AUTO_CHECK_INTERVAL_MS);
-  }
-
-  function onVisibilityChange() {
-    if (!state.started || documentRef?.visibilityState === "hidden") {
-      return;
-    }
-    refreshUpdateStatus({
-      force: false,
-      announce: false,
-    });
   }
 
   function setNotice(type, message) {
@@ -2084,675 +1563,168 @@ function ensureXConfigShell(options = {}) {
   }
 
   function restoreContent() {
-    state.hiddenDisplays.forEach((displayValue, node) => {
-      if (node && node.isConnected) {
-        node.style.display = displayValue;
-      }
-    });
-    state.hiddenDisplays.clear();
-    state.contentHidden = false;
-  }
-
-  function hideContent(content, host) {
-    Array.from(content?.children || []).forEach((child) => {
-      if (child === host || isNavigationElement(child)) {
-        return;
-      }
-
-      if (!state.hiddenDisplays.has(child)) {
-        state.hiddenDisplays.set(child, child.style.display || "");
-      }
-      child.style.display = "none";
-    });
-    state.contentHidden = true;
-  }
-
-  function syncMenuButtonState() {
-    const button = documentRef.getElementById?.(MENU_ITEM_ID);
-    if (!button) {
-      return;
-    }
-    if (isConfigRoute()) {
-      button.setAttribute("data-active", "true");
-    } else {
-      button.removeAttribute("data-active");
-    }
-  }
-
-  function syncMenuUpdateState(item) {
-    const button = item || documentRef.getElementById?.(MENU_ITEM_ID);
-    if (!button) {
-      return;
-    }
-
-    const hasUpdate = Boolean(state.updateStatus?.available);
-    const remoteVersion = String(state.updateStatus?.remoteVersion || "").trim();
-    const title = hasUpdate && remoteVersion
-      ? `${MENU_LABEL} - Update verfügbar (${installedVersion} -> ${remoteVersion})`
-      : MENU_LABEL;
-
-    if (hasUpdate) {
-      button.setAttribute("data-update-available", "true");
-    } else {
-      button.removeAttribute("data-update-available");
-    }
-
-    button.setAttribute("data-update-state", String(state.updateStatus?.status || ""));
-    button.setAttribute("title", title);
-    button.setAttribute("aria-label", title);
-  }
-
-  function syncMenuLabelForWidth(sidebar, item) {
-    const menuItem = item || documentRef.getElementById?.(MENU_ITEM_ID);
-    const sidebarElement = sidebar || getSidebarElement(windowRef, documentRef);
-    if (!menuItem || !sidebarElement) {
-      return;
-    }
-    const label = menuItem.querySelector?.(".ad-xconfig-menu-label");
-    if (!label) {
-      return;
-    }
-    const width = Number(sidebarElement.getBoundingClientRect?.().width || 0);
-    label.style.display = width > 0 && width < MENU_LABEL_COLLAPSE_WIDTH ? "none" : "inline";
-  }
-
-  function ensureMenuButton() {
-    const sidebar = getSidebarElement(windowRef, documentRef);
-    if (!sidebar) {
-      return null;
-    }
-
-    const sidebarLinks = Array.from(sidebar.querySelectorAll("a[href]"));
-    const boardsAnchor =
-      sidebarLinks.find((link) => toRoutePathname(windowRef, link.getAttribute("href")) === "/boards") ||
-      sidebarLinks.find((link) => String(link.textContent || "").trim().toLowerCase() === "meine boards") ||
-      null;
-    const insertionAnchor =
-      boardsAnchor ||
-      sidebarLinks.find((link) => SIDEBAR_ROUTE_HINTS.has(toRoutePathname(windowRef, link.getAttribute("href")))) ||
-      null;
-    const templateCandidates = [
-      insertionAnchor,
-      ...Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []),
-      sidebar.lastElementChild,
-    ]
-      .filter(Boolean)
-      .filter((node) => node.id !== MENU_ITEM_ID)
-      .filter((node) => !node.closest?.(`#${PANEL_HOST_ID}`))
-      .filter((node) => String(node.getAttribute?.("data-adxconfig-tab") || "").trim() === "");
-    const template = templateCandidates[0] || null;
-
-    let item = documentRef.getElementById?.(MENU_ITEM_ID);
-    const shouldRebuildExistingItem =
-      Boolean(item) &&
-      (
-        Boolean(item.closest?.(`#${PANEL_HOST_ID}`)) ||
-        item.getAttribute?.("data-adxconfig-tab") !== null ||
-        String(item.getAttribute?.("data-adxconfig-action") || "").trim() !== "open" ||
-        !item.querySelector?.(".ad-xconfig-menu-label")
-      );
-    if (shouldRebuildExistingItem) {
-      item.remove?.();
-      item = null;
-    }
-
-    if (!item) {
-      item = template ? template.cloneNode(true) : createElement(documentRef, "button", { type: "button" });
-      const icon = buildMenuIconElement(documentRef, template);
-      const label = createElement(documentRef, "span", {
-        className: "ad-xconfig-menu-label",
-        text: MENU_LABEL,
-      });
-      item.replaceChildren(icon, label);
-    }
-
-    item.id = MENU_ITEM_ID;
-    item.classList?.remove?.("ad-xconfig-tab");
-    item.removeAttribute?.("data-adxconfig-tab");
-    item.setAttribute("role", "button");
-    item.setAttribute("tabindex", "0");
-    item.setAttribute("aria-label", MENU_LABEL);
-    item.setAttribute("title", MENU_LABEL);
-    item.setAttribute("data-adxconfig-action", "open");
-    item.style.cursor = "pointer";
-
-    if (String(item.tagName || "").toLowerCase() === "a") {
-      item.removeAttribute("href");
-    } else if (String(item.tagName || "").toLowerCase() === "button") {
-      item.setAttribute("type", "button");
-    }
-
-    const labelNode = item.querySelector?.(".ad-xconfig-menu-label");
-    if (!labelNode) {
-      const icon = buildMenuIconElement(documentRef, template);
-      const label = createElement(documentRef, "span", {
-        className: "ad-xconfig-menu-label",
-        text: MENU_LABEL,
-      });
-      item.replaceChildren(icon, label);
-    } else {
-      labelNode.textContent = MENU_LABEL;
-      if (!item.querySelector?.(".ad-xconfig-menu-icon")) {
-        const icon = buildMenuIconElement(documentRef, template);
-        item.insertBefore?.(icon, item.firstChild || null);
-      }
-    }
-
-    if (insertionAnchor) {
-      if (insertionAnchor.nextElementSibling !== item) {
-        insertionAnchor.insertAdjacentElement("afterend", item);
-      }
-    } else if (item.parentNode !== sidebar) {
-      sidebar.appendChild(item);
-    }
-
-    syncMenuButtonState();
-    syncMenuUpdateState(item);
-    syncMenuLabelForWidth(sidebar, item);
-    return item;
-  }
-
-  function ensurePanelHost() {
-    const sidebar = getSidebarElement(windowRef, documentRef);
-    const content = getContentElement(windowRef, documentRef, sidebar);
-    if (!content) {
-      return null;
-    }
-
-    let host = documentRef.getElementById?.(PANEL_HOST_ID);
-    if (!host) {
-      host = createElement(documentRef, "section", {
-        id: PANEL_HOST_ID,
-      });
-    }
-
-    if (content === host || host.contains?.(content)) {
-      return host;
-    }
-
-    if (host.parentNode !== content) {
-      content.appendChild(host);
-    }
-
-    return host;
-  }
-
-  function render() {
-    if (!state.started) {
-      return;
-    }
-
-    const host = ensurePanelHost();
-    if (!host) {
-      return;
-    }
-    const features = getFeatures();
-    const routeActive = isConfigRoute();
-    const nextSignature = buildShellRenderSignature(state, features, routeActive);
-    const previousSignaturePayload = parseShellRenderSignature(state.renderSignature);
-    const keepModalStable =
-      Boolean(previousSignaturePayload?.routeActive) &&
-      String(previousSignaturePayload?.activeSettingsFeatureKey || "") !== "" &&
-      String(previousSignaturePayload?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
-      Boolean(routeActive);
-
-    if (
-      state.shellNode &&
-      state.shellNode.parentNode === host &&
-      state.renderSignature === nextSignature
-    ) {
-      return;
-    }
-
-    const previousShellNode =
-      state.shellNode && state.shellNode.parentNode === host ? state.shellNode : null;
-    const hostScrollTop = Number(host.scrollTop || 0);
-    const previousModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
-    const previousModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
-    const previousModalScrollTop = Number(previousModal?.scrollTop || 0);
-    const previousModalBodyScrollTop = Number(previousModalBody?.scrollTop || 0);
-
-    const nextShellNode = buildShellContent(documentRef, state, features);
-
-    if (!previousShellNode) {
-      host.appendChild(nextShellNode);
-      state.shellNode = nextShellNode;
-    } else if (keepModalStable) {
-      state.renderSignature = nextSignature;
-      host.scrollTop = hostScrollTop;
-      const stableModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
-      const stableModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
-      if (stableModal) {
-        stableModal.scrollTop = previousModalScrollTop;
-      }
-      if (stableModalBody) {
-        stableModalBody.scrollTop = previousModalBodyScrollTop;
-      }
-      return;
-    } else {
-      while (previousShellNode.firstChild) {
-        previousShellNode.removeChild(previousShellNode.firstChild);
-      }
-      Array.from(nextShellNode.children).forEach((child) => {
-        previousShellNode.appendChild(child);
-      });
-      state.shellNode = previousShellNode;
-    }
-
-    state.renderSignature = nextSignature;
-    host.scrollTop = hostScrollTop;
-
-    const nextModal = state.shellNode?.querySelector?.(".ad-xconfig-modal") || null;
-    const nextModalBody = state.shellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
-    if (nextModal) {
-      nextModal.scrollTop = previousModalScrollTop;
-    }
-    if (nextModalBody) {
-      nextModalBody.scrollTop = previousModalBodyScrollTop;
-    }
-  }
-
-  function syncVisibility() {
-    const sidebar = getSidebarElement(windowRef, documentRef);
-    const content = getContentElement(windowRef, documentRef, sidebar);
-    const host = ensurePanelHost();
-
-    if (!content || !host) {
-      return;
-    }
-
-    if (isConfigRoute()) {
-      render();
-      hideContent(content, host);
-      host.style.display = "block";
-    } else {
-      if (state.contentHidden) {
-        restoreContent();
-      }
-      state.activeSettingsFeatureKey = "";
-      host.style.display = "none";
-    }
-
-    syncMenuButtonState();
-    syncMenuUpdateState();
+    renderController?.restoreContent();
   }
 
   function queueSync() {
-    if (!state.started || state.syncScheduled) {
-      return;
-    }
-
-    state.syncScheduled = true;
-    const raf =
-      typeof windowRef.requestAnimationFrame === "function"
-        ? windowRef.requestAnimationFrame.bind(windowRef)
-        : (callback) => windowRef.setTimeout(callback, 0);
-
-    raf(() => {
-      state.syncScheduled = false;
+    queueWindowSync(state, windowRef, () => {
       domGuards.ensureStyle(STYLE_ID, styleText);
       ensureMenuButton();
       syncVisibility();
     });
   }
 
+  function cancelQueuedSync() {
+    cancelWindowSync(state, windowRef);
+  }
+
+  const {
+    refreshUpdateStatus,
+    startAutoUpdateChecks,
+    stopAutoUpdateChecks,
+    onVisibilityChange,
+  } = createUpdateStatusController({
+    windowRef,
+    documentRef,
+    installedVersion,
+    state,
+    setNotice,
+    queueSync,
+    updateIntervalMs: UPDATE_AUTO_CHECK_INTERVAL_MS,
+  });
+
   const isManagedNode = createManagedNodeMatcher({
     ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID],
   });
 
+  routeController = createShellRouteController({
+    configHash: CONFIG_HASH,
+    configPath: CONFIG_PATH,
+    currentRoute,
+    isConfigHash,
+    isLegacyConfigPath,
+    normalizeRoutePath,
+    queueSync,
+    state,
+    windowRef,
+  });
+
+  function isConfigRoute() {
+    return routeController?.isConfigRoute() || false;
+  }
+
+  function ensureMenuButton() {
+    return renderController?.ensureMenuButton() || null;
+  }
+
+  function syncVisibility() {
+    renderController?.syncVisibility();
+  }
+
+  renderController = createShellRenderController({
+    buildMenuIconElement,
+    buildShellContent,
+    buildShellRenderSignature,
+    createElement,
+    documentRef,
+    getContentElement,
+    getFeatures,
+    getSidebarElement,
+    installedVersion,
+    isConfigRoute,
+    isNavigationElement,
+    isThemeFeature,
+    menuItemId: MENU_ITEM_ID,
+    menuLabel: MENU_LABEL,
+    menuLabelCollapseWidth: MENU_LABEL_COLLAPSE_WIDTH,
+    panelHostId: PANEL_HOST_ID,
+    parseShellRenderSignature,
+    sidebarRouteHints: SIDEBAR_ROUTE_HINTS,
+    state,
+    toRoutePathname,
+    windowRef,
+  });
+
+  actionController = createShellActionController({
+    buildFeatureSettingPatch,
+    clearThemeBackgroundImage,
+    documentRef,
+    getFeatures,
+    getXConfigDescriptor,
+    isThemeFeature,
+    navigateBack: () => routeController?.navigateBack(),
+    navigateToConfigRoute: () => routeController?.navigateToConfigRoute(),
+    openChangelog,
+    openReadme,
+    openUserscriptInstall,
+    parseFieldValue,
+    queueSync,
+    refreshUpdateStatus,
+    runtimeApi,
+    setNotice,
+    setThemeActionFeedback,
+    state,
+    syncSelectOptionButtons,
+    syncThemeBackgroundIndicators,
+    themeKeyFromConfigKey,
+    uploadThemeBackgroundImage,
+    windowRef,
+  });
+
+  lifecycleController = createShellLifecycleController({
+    cancelQueuedSync,
+    clearNoticeTimer,
+    documentRef,
+    domGuards,
+    eventBus,
+    hasExternalDomMutation,
+    isManagedNode,
+    listenerKeys: LISTENER_KEYS,
+    listenerRegistry,
+    menuItemId: MENU_ITEM_ID,
+    normalizeLegacyConfigPathIfNeeded: () => routeController?.normalizeLegacyConfigPathIfNeeded(),
+    observerRegistry,
+    onDocumentChange,
+    onDocumentClick,
+    onDocumentKeydown,
+    onVisibilityChange,
+    panelHostId: PANEL_HOST_ID,
+    queueSync,
+    refreshUpdateStatus,
+    removeNodeById,
+    restoreContent,
+    rootObserverKey: ROOT_OBSERVER_KEY,
+    runtime,
+    startAutoUpdateChecks,
+    state,
+    stopAutoUpdateChecks,
+    styleId: STYLE_ID,
+    styleText,
+    windowRef,
+  });
+
   function observeRoot() {
-    const target =
-      documentRef.getElementById?.("root") ||
-      documentRef.documentElement ||
-      documentRef.body ||
-      null;
-
-    if (!target || typeof observerRegistry?.registerMutationObserver !== "function") {
-      return;
-    }
-
-    observerRegistry.registerMutationObserver({
-      key: ROOT_OBSERVER_KEY,
-      target,
-      callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
-          return;
-        }
-        queueSync();
-      },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-      },
-      MutationObserverRef: windowRef.MutationObserver,
-    });
+    lifecycleController?.observeRoot();
   }
 
   function patchHistory() {
-    if (state.historyRestore || !windowRef.history) {
-      return;
-    }
-
-    const originalPushState = windowRef.history.pushState?.bind(windowRef.history);
-    const originalReplaceState = windowRef.history.replaceState?.bind(windowRef.history);
-
-    if (typeof originalPushState !== "function" || typeof originalReplaceState !== "function") {
-      return;
-    }
-
-    windowRef.history.pushState = function patchedPushState(...args) {
-      const result = originalPushState(...args);
-      queueSync();
-      return result;
-    };
-
-    windowRef.history.replaceState = function patchedReplaceState(...args) {
-      const result = originalReplaceState(...args);
-      queueSync();
-      return result;
-    };
-
-    state.historyRestore = () => {
-      windowRef.history.pushState = originalPushState;
-      windowRef.history.replaceState = originalReplaceState;
-      state.historyRestore = null;
-    };
+    lifecycleController?.patchHistory();
   }
 
   function navigateToConfigRoute() {
-    if (!isConfigRoute()) {
-      state.lastNonConfigRoute = normalizeRoutePath(currentRoute(windowRef)) || "/lobbies";
-      windowRef.history.pushState({ adxconfig: true }, "", buildConfigHashRoute());
-    } else if (normalizeLegacyConfigPathIfNeeded()) {
-      // Legacy /ad-xconfig URLs should be normalized once to avoid 404 on hard reload.
-    }
-    queueSync();
+    routeController?.navigateToConfigRoute();
   }
 
   function navigateBack() {
-    const target = state.lastNonConfigRoute && state.lastNonConfigRoute !== CONFIG_PATH
-      ? state.lastNonConfigRoute
-      : "/lobbies";
-    windowRef.history.pushState({}, "", target);
-    queueSync();
+    routeController?.navigateBack();
   }
 
   function withRuntimeCall(promiseLike, successMessage, errorMessage, successType = "success") {
-    Promise.resolve(promiseLike)
-      .then(() => {
-        if (successMessage) {
-          setNotice(successType, successMessage);
-        }
-      })
-      .catch(() => {
-        if (errorMessage) {
-          setNotice("error", errorMessage);
-        }
-      })
-      .finally(() => queueSync());
-  }
-
-  function handleThemeBackgroundUpload(feature) {
-    const themeKey = themeKeyFromConfigKey(feature?.configKey);
-    if (!themeKey || typeof runtimeApi.setThemeBackgroundImage !== "function") {
-      return;
-    }
-    const featureKey = String(feature?.featureKey || "").trim();
-    if (typeof documentRef.createElement !== "function" || typeof windowRef.FileReader !== "function") {
-      setNotice("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
-      setThemeActionFeedback(featureKey, "error", "Upload fehlgeschlagen: Diese Umgebung unterstützt keinen Bild-Upload.");
-      return;
-    }
-
-    const input = documentRef.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.style.display = "none";
-    input.onchange = () => {
-      const file = input.files && input.files[0];
-      if (!file) {
-        input.onchange = null;
-        input.remove?.();
-        return;
-      }
-
-      const reader = new windowRef.FileReader();
-      reader.onload = () => {
-        const dataUrl = String(reader.result || "").trim();
-        if (!dataUrl.startsWith("data:image/")) {
-          const errorMessage = "Upload fehlgeschlagen: Die ausgewählte Datei ist kein unterstütztes Bild.";
-          setNotice("error", errorMessage);
-          setThemeActionFeedback(featureKey, "error", errorMessage);
-          input.onchange = null;
-          input.remove?.();
-          return;
-        }
-        const fileName = String(file.name || "").trim();
-        const successMessage = fileName
-          ? `Hintergrundbild gespeichert: ${fileName}.`
-          : "Hintergrundbild gespeichert.";
-        const errorMessage = "Hintergrundbild konnte nicht gespeichert werden.";
-        Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, dataUrl))
-          .then(() => {
-            setNotice("success", successMessage);
-            setThemeActionFeedback(featureKey, "success", successMessage);
-            syncThemeBackgroundIndicators(featureKey);
-          })
-          .catch(() => {
-            setNotice("error", errorMessage);
-            setThemeActionFeedback(featureKey, "error", errorMessage);
-          })
-          .finally(() => queueSync());
-        input.onchange = null;
-        input.remove?.();
-      };
-      reader.onerror = () => {
-        const errorMessage = "Upload fehlgeschlagen: Bild konnte nicht gelesen werden.";
-        setNotice("error", errorMessage);
-        setThemeActionFeedback(featureKey, "error", errorMessage);
-        input.onchange = null;
-        input.remove?.();
-      };
-      reader.readAsDataURL(file);
-    };
-
-    (documentRef.body || documentRef.documentElement).appendChild(input);
-    input.click?.();
+    actionController?.withRuntimeCall(promiseLike, successMessage, errorMessage, successType);
   }
 
   function handleAction(action, actionNode, feature) {
-    if (!action) {
-      return;
-    }
-
-    if (action === "open") {
-      navigateToConfigRoute();
-      return;
-    }
-    if (action === "close") {
-      navigateBack();
-      return;
-    }
-    if (action === "open-settings" && feature) {
-      state.activeSettingsFeatureKey = feature.featureKey;
-      queueSync();
-      return;
-    }
-    if (action === "close-settings") {
-      state.activeSettingsFeatureKey = "";
-      queueSync();
-      return;
-    }
-    if (action === "close-settings-backdrop") {
-      state.activeSettingsFeatureKey = "";
-      queueSync();
-      return;
-    }
-    if (action === "open-readme") {
-      openReadme(windowRef, feature?.featureKey || "");
-      return;
-    }
-    if (action === "open-changelog") {
-      openChangelog(windowRef);
-      return;
-    }
-    if (action === "check-update") {
-      refreshUpdateStatus({
-        force: true,
-        announce: true,
-      });
-      return;
-    }
-    if (action === "install-update") {
-      const opened = openUserscriptInstall(windowRef);
-      setNotice(
-        opened ? "info" : "error",
-        opened
-          ? "Installations-Tab geöffnet. Bestätige das Update in Tampermonkey."
-          : "Installations-Tab konnte nicht geöffnet werden."
-      );
-      return;
-    }
-
-    if (action === "reset" && typeof runtimeApi.resetConfig === "function") {
-      const confirmed = typeof windowRef.confirm === "function"
-        ? windowRef.confirm("Bist du sicher? Damit werden alle Einstellungen auf Default gesetzt und alle Module deaktiviert.")
-        : true;
-      if (!confirmed) {
-        return;
-      }
-      withRuntimeCall(runtimeApi.resetConfig(), "Konfiguration wurde zurückgesetzt.", "Zurücksetzen fehlgeschlagen.", "info");
-      return;
-    }
-
-    if (action === "set-feature" && feature && typeof runtimeApi.setFeatureEnabled === "function") {
-      const enabled = String(actionNode?.getAttribute?.("data-feature-enabled")) === "true";
-      withRuntimeCall(
-        runtimeApi.setFeatureEnabled(feature.featureKey, enabled),
-        `${feature.title}: ${enabled ? "An" : "Aus"}`,
-        `${feature.title}: Status konnte nicht gespeichert werden.`
-      );
-      return;
-    }
-
-    if (action === "enable-all-themes" && typeof runtimeApi.setFeatureEnabled === "function") {
-      const disabledThemeFeatures = getFeatures().filter(
-        (entry) => isThemeFeature(entry) && !entry.enabled
-      );
-      if (!disabledThemeFeatures.length) {
-        setNotice("info", "Alle Themen sind bereits aktiviert.");
-        return;
-      }
-      const enableThemesPromise = disabledThemeFeatures.reduce((chain, entry) => {
-        return chain.then(() => runtimeApi.setFeatureEnabled(entry.featureKey, true));
-      }, Promise.resolve());
-      withRuntimeCall(
-        enableThemesPromise,
-        "Alle Themen aktiviert.",
-        "Themen konnten nicht vollständig aktiviert werden."
-      );
-      return;
-    }
-
-    if (action === "set-setting-toggle" && feature && typeof runtimeApi.saveConfig === "function") {
-      const configKey = actionNode?.getAttribute?.("data-config-key") || feature.configKey;
-      const settingKey = actionNode?.getAttribute?.("data-setting-key");
-      const settingValue = String(actionNode?.getAttribute?.("data-setting-value")) === "true";
-      if (!configKey || !settingKey) {
-        return;
-      }
-      const toggleButtons = Array.from(
-        actionNode?.parentElement?.querySelectorAll?.(
-          `[data-adxconfig-action='set-setting-toggle'][data-setting-key='${settingKey}']`
-        ) || []
-      );
-      toggleButtons.forEach((buttonNode) => {
-        buttonNode.setAttribute("data-active", buttonNode === actionNode ? "true" : "false");
-      });
-      const hiddenInput = actionNode?.parentElement?.querySelector?.(
-        `input[data-adxconfig-setting='true'][data-setting-key='${settingKey}']`
-      );
-      if (hiddenInput) {
-        hiddenInput.checked = settingValue;
-      }
-      withRuntimeCall(
-        runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, settingValue)),
-        "Einstellung gespeichert.",
-        "Einstellung konnte nicht gespeichert werden."
-      );
-      return;
-    }
-
-    if (action === "set-setting-select-option" && feature && typeof runtimeApi.saveConfig === "function") {
-      const configKey = actionNode?.getAttribute?.("data-config-key") || feature.configKey;
-      const settingKey = String(actionNode?.getAttribute?.("data-setting-key") || "").trim();
-      const settingRawValue = String(actionNode?.getAttribute?.("data-setting-value") ?? "");
-      if (!configKey || !settingKey) {
-        return;
-      }
-
-      const descriptor = getXConfigDescriptor(feature.featureKey);
-      const field = descriptor?.fields?.find(
-        (entry) => entry.control === "select" && entry.key === settingKey
-      ) || null;
-      if (!field) {
-        return;
-      }
-
-      syncSelectOptionButtons(documentRef, actionNode, settingRawValue);
-      const nextValue = parseFieldValue(field, settingRawValue, false);
-      withRuntimeCall(
-        runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextValue)),
-        "Einstellung gespeichert.",
-        "Einstellung konnte nicht gespeichert werden."
-      );
-      return;
-    }
-
-    if (!feature) {
-      return;
-    }
-
-    if (action === "run-feature-action" && typeof runtimeApi.runFeatureAction === "function") {
-      const descriptor = getXConfigDescriptor(feature.featureKey);
-      const actionId = String(actionNode?.getAttribute?.("data-feature-action-id") || "").trim();
-      const actionField =
-        descriptor?.fields?.find(
-          (field) =>
-            field.control === "action" &&
-            field.action === action &&
-            String(field.actionId || "").trim() === actionId
-        ) || null;
-      withRuntimeCall(
-        runtimeApi.runFeatureAction(feature.featureKey, actionId),
-        actionField?.successMessage || "Aktion ausgeführt.",
-        actionField?.errorMessage || "Aktion konnte nicht ausgeführt werden.",
-        "info"
-      );
-      return;
-    }
-
-    const themeKey = themeKeyFromConfigKey(feature.configKey);
-    if (action === "clearThemeBackground" && themeKey && typeof runtimeApi.clearThemeBackgroundImage === "function") {
-      const successMessage = "Hintergrundbild entfernt.";
-      const errorMessage = "Hintergrundbild konnte nicht entfernt werden.";
-      Promise.resolve(runtimeApi.clearThemeBackgroundImage(themeKey))
-        .then(() => {
-          setNotice("info", successMessage);
-          setThemeActionFeedback(feature.featureKey, "info", successMessage);
-          syncThemeBackgroundIndicators(feature.featureKey);
-        })
-        .catch(() => {
-          setNotice("error", errorMessage);
-          setThemeActionFeedback(feature.featureKey, "error", errorMessage);
-        })
-        .finally(() => queueSync());
-      return;
-    }
-
-    if (action === "uploadThemeBackground" && themeKey) {
-      handleThemeBackgroundUpload(feature);
-    }
+    actionController?.handleAction(action, actionNode, feature);
   }
 
   function onDocumentClick(event) {
@@ -2860,122 +1832,21 @@ function ensureXConfigShell(options = {}) {
   }
 
   function mount() {
-    if (state.started) {
-      queueSync();
-      return;
-    }
-
-    state.started = true;
-    domGuards.ensureStyle(STYLE_ID, styleText);
-    patchHistory();
-    normalizeLegacyConfigPathIfNeeded();
-
-    if (typeof listenerRegistry?.register === "function") {
-      listenerRegistry.register({
-        key: LISTENER_KEYS.popstate,
-        target: windowRef,
-        type: "popstate",
-        handler: () => queueSync(),
-      });
-      listenerRegistry.register({
-        key: LISTENER_KEYS.click,
-        target: documentRef,
-        type: "click",
-        handler: onDocumentClick,
-      });
-      listenerRegistry.register({
-        key: LISTENER_KEYS.change,
-        target: documentRef,
-        type: "change",
-        handler: onDocumentChange,
-      });
-      listenerRegistry.register({
-        key: LISTENER_KEYS.keydown,
-        target: documentRef,
-        type: "keydown",
-        handler: onDocumentKeydown,
-      });
-      listenerRegistry.register({
-        key: LISTENER_KEYS.visibilitychange,
-        target: documentRef,
-        type: "visibilitychange",
-        handler: onVisibilityChange,
-      });
-    }
-
-    observeRoot();
-    queueSync();
-    startAutoUpdateChecks();
-    refreshUpdateStatus({
-      force: true,
-      announce: false,
-    });
+    lifecycleController?.mount();
   }
 
   function teardown() {
-    state.started = false;
-    state.activeSettingsFeatureKey = "";
-    state.shellNode = null;
-    state.renderSignature = "";
-    clearNoticeTimer();
-    stopAutoUpdateChecks();
-    state.notice = { type: "", message: "" };
-    restoreContent();
-
-    if (typeof observerRegistry?.disconnect === "function") {
-      observerRegistry.disconnect(ROOT_OBSERVER_KEY);
-    }
-    if (typeof listenerRegistry?.remove === "function") {
-      Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
-    }
-
-    if (typeof state.historyRestore === "function") {
-      state.historyRestore();
-    }
-
-    removeNodeById(documentRef, MENU_ITEM_ID);
-    removeNodeById(documentRef, PANEL_HOST_ID);
-    removeNodeById(documentRef, STYLE_ID);
+    lifecycleController?.teardown();
   }
 
-  const offStarted =
-    typeof eventBus?.on === "function"
-      ? eventBus.on("runtime:started", () => mount())
-      : () => {};
-  const offStopped =
-    typeof eventBus?.on === "function"
-      ? eventBus.on("runtime:stopped", () => teardown())
-      : () => {};
-  const offConfigUpdated =
-    typeof eventBus?.on === "function"
-      ? eventBus.on("runtime:config-updated", () => {
-        if (state.started) {
-          queueSync();
-        }
-      })
-      : () => {};
-  const offFeatureToggled =
-    typeof eventBus?.on === "function"
-      ? eventBus.on("runtime:feature-toggled", () => {
-        if (state.started) {
-          queueSync();
-        }
-      })
-      : () => {};
-
-  if (runtime.getSnapshot?.().started) {
-    mount();
-  }
+  const disposeLifecycleBindings = lifecycleController?.bindRuntimeLifecycle?.() || (() => {});
 
   const shell = {
     mount,
     teardown,
     dispose() {
       teardown();
-      offStarted();
-      offStopped();
-      offConfigUpdated();
-      offFeatureToggled();
+      disposeLifecycleBindings();
       shellByWindow.delete(windowRef);
     },
   };

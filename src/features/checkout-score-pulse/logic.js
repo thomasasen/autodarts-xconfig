@@ -63,7 +63,15 @@ export function getCheckoutSuggestionState(context = {}) {
   return x01Rules.parseCheckoutSuggestionState(suggestionNode.textContent || "", outMode);
 }
 
-export function getScoreNodes(documentRef) {
+export function getAllScoreNodes(documentRef) {
+  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+    return [];
+  }
+
+  return Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
+}
+
+export function getScoreNodes(documentRef, gameState = null) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
     return [];
   }
@@ -73,7 +81,23 @@ export function getScoreNodes(documentRef) {
     return activeScores;
   }
 
-  return Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
+  const allScores = getAllScoreNodes(documentRef);
+  const activePlayerIndex =
+    gameState && typeof gameState.getActivePlayerIndex === "function"
+      ? Number(gameState.getActivePlayerIndex())
+      : NaN;
+  if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
+    const playerRows = Array.from(documentRef.querySelectorAll(".ad-ext-player")).filter((rowNode) => {
+      return Boolean(rowNode?.querySelector?.(SCORE_SELECTOR));
+    });
+    const activeRow = playerRows[activePlayerIndex] || null;
+    const activeRowScores = activeRow
+      ? Array.from(activeRow.querySelectorAll?.(SCORE_SELECTOR) || [])
+      : [];
+    return activeRowScores.length === 1 ? activeRowScores : [];
+  }
+
+  return allScores.length === 1 ? allScores : [];
 }
 
 export function isX01Active(context = {}) {

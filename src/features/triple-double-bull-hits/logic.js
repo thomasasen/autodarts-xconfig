@@ -84,13 +84,26 @@ function truncateDebugText(value) {
   return `${text.slice(0, ROW_DEBUG_TEXT_LIMIT - 3)}...`;
 }
 
+function getChildElements(node) {
+  if (!node || typeof node !== "object" || !node.children) {
+    return [];
+  }
+
+  try {
+    return Array.from(node.children);
+  } catch (_) {
+    return [];
+  }
+}
+
 function collectDescendantText(rootNode) {
-  if (!rootNode || !Array.isArray(rootNode.children) || !rootNode.children.length) {
+  const rootChildren = getChildElements(rootNode);
+  if (!rootChildren.length) {
     return "";
   }
 
   const chunks = [];
-  const queue = [...rootNode.children];
+  const queue = [...rootChildren];
 
   while (queue.length) {
     const node = queue.shift();
@@ -103,8 +116,9 @@ function collectDescendantText(rootNode) {
       chunks.push(text);
     }
 
-    if (Array.isArray(node.children) && node.children.length) {
-      queue.push(...node.children);
+    const childNodes = getChildElements(node);
+    if (childNodes.length) {
+      queue.push(...childNodes);
     }
   }
 
@@ -149,20 +163,22 @@ function findNumberedHit(pattern, text) {
 }
 
 function collectElementDescendants(rootNode) {
-  if (!rootNode || !Array.isArray(rootNode.children) || !rootNode.children.length) {
+  const rootChildren = getChildElements(rootNode);
+  if (!rootChildren.length) {
     return [];
   }
 
   const nodes = [];
-  const queue = [...rootNode.children];
+  const queue = [...rootChildren];
   while (queue.length) {
     const node = queue.shift();
     if (!node) {
       continue;
     }
     nodes.push(node);
-    if (Array.isArray(node.children) && node.children.length) {
-      queue.push(...node.children);
+    const childNodes = getChildElements(node);
+    if (childNodes.length) {
+      queue.push(...childNodes);
     }
   }
   return nodes;
@@ -207,7 +223,7 @@ function findBestRoleNode(rowNode, matcher) {
     }
 
     const depth = getNodeDepth(candidate, rowNode);
-    const childCount = Array.isArray(candidate.children) ? candidate.children.length : 0;
+    const childCount = getChildElements(candidate).length;
     const rank = depth * 100 - childCount * 10 - candidateText.length;
     if (rank > bestRank) {
       bestRank = rank;

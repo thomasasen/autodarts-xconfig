@@ -19,6 +19,7 @@ import { mountThemeShanghai } from "./themes/shanghai/index.js";
 import { mountThemeBermuda } from "./themes/bermuda/index.js";
 import { mountThemeCricket } from "./themes/cricket/index.js";
 import { mountThemeBullOff } from "./themes/bull-off/index.js";
+import { normalizeFeatureIdentity, normalizeFeatureKey } from "./feature-metadata.js";
 
 function readFeatureDebugFlag(context, configKey) {
   const configRef = context?.config;
@@ -71,8 +72,7 @@ function normalizeDefinition(definition, options = {}) {
     return null;
   }
 
-  const featureKey = String(definition.featureKey || "").trim();
-  const configKey = String(definition.configKey || "").trim();
+  const { featureKey, configKey } = normalizeFeatureIdentity(definition);
   const initialize = definition.initialize || definition.mount;
 
   if (!featureKey || !configKey || typeof initialize !== "function") {
@@ -371,7 +371,7 @@ export function createFeatureRegistry(options = {}) {
   }
 
   function hasFeature(featureKey) {
-    return definitionsByKey.has(String(featureKey || "").trim());
+    return definitionsByKey.has(normalizeFeatureKey(featureKey));
   }
 
   return {

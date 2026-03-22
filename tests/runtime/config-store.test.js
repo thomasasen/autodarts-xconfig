@@ -9,6 +9,21 @@ import {
 } from "../../src/config/config-store.js";
 import { createFakeWindow, FakeStorage } from "./fake-dom.js";
 
+function createDeferred() {
+  let resolve = null;
+  let reject = null;
+  const promise = new Promise((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return {
+    promise,
+    resolve,
+    reject,
+  };
+}
+
 test("config store loads defaults when storage is empty", async () => {
   const windowRef = createFakeWindow({
     localStorage: new FakeStorage(),
@@ -49,6 +64,45 @@ test("config store saves, updates, and resets persisted config", async () => {
   const reset = await store.reset();
   assert.equal(reset.features.checkoutScorePulse.effect, "scale");
   assert.equal(reset.featureToggles.checkoutScorePulse, true);
+});
+
+test("config store serializes overlapping updates without losing patches", async () => {
+  const localStorage = new FakeStorage();
+  const loadGate = createDeferred();
+  let loadCalls = 0;
+  const store = createConfigStore({
+    localStorageRef: localStorage,
+    gmGetValue: async (key, fallbackValue) => {
+      if (key === CONFIG_STORAGE_KEY) {
+        loadCalls += 1;
+      }
+      await loadGate.promise;
+      return fallbackValue;
+    },
+  });
+
+  const firstUpdate = store.update({
+    features: {
+      checkoutScorePulse: {
+        effect: "blink",
+      },
+    },
+  });
+  const secondUpdate = store.update({
+    featureToggles: {
+      checkoutScorePulse: false,
+    },
+  });
+
+  await Promise.resolve();
+  assert.equal(loadCalls, 1);
+
+  loadGate.resolve();
+  await Promise.all([firstUpdate, secondUpdate]);
+
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.checkoutScorePulse.effect, "blink");
+  assert.equal(storedConfig.featureToggles.checkoutScorePulse, false);
 });
 
 test("config store imports migrated legacy feature and theme settings once without overwriting later config", async () => {

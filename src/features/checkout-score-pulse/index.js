@@ -3,6 +3,7 @@ import {
   applyHighlightState,
   clearHighlightState,
   computeShouldHighlight,
+  getAllScoreNodes,
   getScoreNodes,
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
@@ -41,7 +42,8 @@ export function mountCheckoutScorePulse(context = {}) {
   );
 
   function update() {
-    const scoreNodes = getScoreNodes(documentRef);
+    const allScoreNodes = getAllScoreNodes(documentRef);
+    const scoreNodes = getScoreNodes(documentRef, gameState);
     const shouldHighlight = computeShouldHighlight({
       documentRef,
       gameState,
@@ -50,8 +52,14 @@ export function mountCheckoutScorePulse(context = {}) {
       triggerSource: featureConfig.triggerSource,
     });
 
+    if (!shouldHighlight) {
+      clearHighlightState(allScoreNodes);
+      return;
+    }
+
+    clearHighlightState(allScoreNodes.filter((node) => !scoreNodes.includes(node)));
     applyHighlightState(scoreNodes, {
-      shouldHighlight,
+      shouldHighlight: true,
       effect: featureConfig.effect,
     });
   }
@@ -102,7 +110,7 @@ export function mountCheckoutScorePulse(context = {}) {
       observerRegistry.disconnect(OBSERVER_KEY);
     }
 
-    clearHighlightState(getScoreNodes(documentRef));
+    clearHighlightState(getAllScoreNodes(documentRef));
     domGuards.removeNodeById(STYLE_ID);
   };
 }

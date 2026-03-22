@@ -16,7 +16,7 @@ import {
   HIT_SEGMENT_CLASS,
   HIT_THEME_CLASS,
 } from "../../src/features/triple-double-bull-hits/style.js";
-import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { FakeDocument, createFakeWindow, useHtmlCollectionChildren } from "./fake-dom.js";
 
 function createAnimeStub() {
   const calls = [];
@@ -179,6 +179,32 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
   assert.equal(stats.kindCounts.bullInner, 1);
   assert.equal(Array.isArray(stats.rows), true);
   assert.equal(stats.rows.some((entry) => entry.scoreRole && entry.segmentRole), true);
+});
+
+test("updateHitDecorations still finds score and segment roles when row descendants expose HTMLCollection-style children", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const roleStateByRow = new Map();
+
+  const wrapped = appendThrowRow(documentRef, "60", "T20");
+  useHtmlCollectionChildren(wrapped.row, { deep: true });
+
+  const stats = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "charge-release",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(stats.decoratedCount >= 1, true);
+  assert.equal(wrapped.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(wrapped.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
 });
 
 test("updateHitDecorations applies configured color theme and defaults invalid values to kind-signal", () => {

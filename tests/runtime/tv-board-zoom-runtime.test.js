@@ -8,11 +8,7 @@ import * as x01Rules from "../../src/domain/x01-rules.js";
 import { initializeTvBoardZoom } from "../../src/features/tv-board-zoom/index.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
-import { FakeDocument, createFakeWindow } from "./fake-dom.js";
-
-function wait(ms = 0) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
 
 function createMutableX01GameState(initial = {}) {
   const state = {
@@ -130,6 +126,9 @@ function startTvBoardZoom({ documentRef, windowRef, gameState }) {
 test("tv-board-zoom keeps active zoom during a short missing-board gap", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
   const gameState = createMutableX01GameState({
     activeScore: 40,
     throws: [],
@@ -143,15 +142,15 @@ test("tv-board-zoom keeps active zoom during a short missing-board gap", async (
   });
 
   try {
-    await wait(25);
+    timers.advance(25);
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
     assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
     assert.match(String(targetNode.style.transform || ""), /scale\(/);
 
     boardSvg.remove();
-    documentRef.flushMutations([{ target: targetNode, addedNodes: [], removedNodes: [boardSvg] }]);
+    documentRef.flushMutations([{ target: documentRef.main, addedNodes: [], removedNodes: [boardSvg] }]);
     gameState.notify();
-    await wait(35);
+    timers.advance(35);
 
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
     assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
@@ -160,19 +159,23 @@ test("tv-board-zoom keeps active zoom during a short missing-board gap", async (
     targetNode.appendChild(boardSvg);
     documentRef.flushMutations([{ target: targetNode, addedNodes: [boardSvg], removedNodes: [] }]);
     gameState.notify();
-    await wait(35);
+    timers.advance(35);
 
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
     assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
     assert.match(String(targetNode.style.transform || ""), /scale\(/);
   } finally {
     cleanup();
+    timers.restoreGlobals();
   }
 });
 
 test("tv-board-zoom resets after board stays missing beyond transient grace", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
   const gameState = createMutableX01GameState({
     activeScore: 40,
     throws: [],
@@ -186,24 +189,31 @@ test("tv-board-zoom resets after board stays missing beyond transient grace", as
   });
 
   try {
-    await wait(25);
+    timers.advance(25);
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
 
     boardSvg.remove();
-    documentRef.flushMutations([{ target: targetNode, addedNodes: [], removedNodes: [boardSvg] }]);
+    documentRef.flushMutations([{ target: documentRef.main, addedNodes: [], removedNodes: [boardSvg] }]);
     gameState.notify();
+    timers.advance(0);
 
-    await wait(700);
-    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
-    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+    timers.advance(700);
+    assert.equal(String(targetNode.style.transform || ""), "");
+    assert.equal(String(hostNode.style.overflow || ""), "");
+    assert.equal(String(hostNode.style.overflowX || ""), "");
+    assert.equal(String(hostNode.style.overflowY || ""), "");
   } finally {
     cleanup();
+    timers.restoreGlobals();
   }
 });
 
 test("tv-board-zoom keeps immediate correction zoom-out behavior with manual pause", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
   const gameState = createMutableX01GameState({
     activeScore: 121,
     throws: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
@@ -217,16 +227,17 @@ test("tv-board-zoom keeps immediate correction zoom-out behavior with manual pau
   });
 
   try {
-    await wait(25);
+    timers.advance(25);
     assert.match(String(targetNode.style.transform || ""), /scale\(/);
 
     gameState.state.activeScore = 181;
     gameState.state.throws = [{ segment: { name: "T20" } }];
     gameState.notify();
-    await wait(35);
+    timers.advance(35);
 
     assert.equal(String(targetNode.style.transform || ""), "");
   } finally {
     cleanup();
+    timers.restoreGlobals();
   }
 });

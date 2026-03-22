@@ -14,14 +14,113 @@ function wait(ms = 0) {
 }
 
 async function waitFor(check, { timeoutMs = 120, intervalMs = 4 } = {}) {
-  const deadline = Date.now() + Math.max(0, Number(timeoutMs) || 0);
-  while (Date.now() < deadline) {
+  const now = () => (typeof performance !== "undefined" && typeof performance.now === "function"
+    ? performance.now()
+    : Date.now());
+  const deadline = now() + Math.max(0, Number(timeoutMs) || 0);
+  while (now() < deadline) {
     if (check()) {
       return true;
     }
     await wait(intervalMs);
   }
   return Boolean(check());
+}
+
+async function waitForMenuButton(documentRef) {
+  assert.equal(
+    await waitFor(() => Boolean(documentRef.getElementById("ad-xconfig-menu-item"))),
+    true
+  );
+}
+
+async function waitForShellOpen(windowRef, documentRef) {
+  assert.equal(
+    await waitFor(() => {
+      const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+      return (
+        windowRef.location.hash === "#ad-xconfig" &&
+        panelHost &&
+        panelHost.style.display === "block" &&
+        documentRef.variantElement.style.display === "none"
+      );
+    }),
+    true
+  );
+}
+
+async function waitForShellClosed(windowRef, documentRef) {
+  assert.equal(
+    await waitFor(() => {
+      const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
+      return (
+        windowRef.location.hash === "" &&
+        (!panelHost || panelHost.style.display === "none") &&
+        documentRef.variantElement.style.display === ""
+      );
+    }),
+    true
+  );
+}
+
+async function waitForActiveTab(documentRef, tabId) {
+  assert.equal(
+    await waitFor(() => documentRef.getElementById(`ad-xconfig-tab-${tabId}`)?.getAttribute("data-active") === "true"),
+    true
+  );
+}
+
+async function waitForSettingsModal(documentRef) {
+  assert.equal(
+    await waitFor(() => Boolean(documentRef.querySelector("[data-adxconfig-modal='true']"))),
+    true
+  );
+}
+
+async function waitForSettingsClosed(documentRef) {
+  assert.equal(
+    await waitFor(() => !documentRef.querySelector("[data-adxconfig-modal='true']")),
+    true
+  );
+}
+
+async function waitForStoredConfig(localStorage, check, options = {}) {
+  assert.equal(
+    await waitFor(() => {
+      const rawValue = localStorage.getItem(CONFIG_STORAGE_KEY);
+      if (!rawValue) {
+        return false;
+      }
+      try {
+        return Boolean(check(JSON.parse(rawValue)));
+      } catch (_) {
+        return false;
+      }
+    }, options),
+    true
+  );
+}
+
+async function waitForOpenedUrl(windowRef, expectedUrl, options = {}) {
+  assert.equal(
+    await waitFor(() => windowRef.__openedUrls.at(-1) === expectedUrl, options),
+    true
+  );
+}
+
+function createDeferred() {
+  let resolve = null;
+  let reject = null;
+  const promise = new Promise((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return {
+    promise,
+    resolve,
+    reject,
+  };
 }
 
 function clickFeatureToggle(documentRef, featureKey, enabled) {
@@ -73,7 +172,13 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
-  await wait(5);
+  await waitFor(() => {
+    return (
+      documentRef.querySelectorAll("#ad-xconfig-menu-item").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-panel-host").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-shell-style").length === 0
+    );
+  });
 
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(menuButton);
@@ -86,7 +191,7 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.ok(menuButton.classList.contains("chakra-link"));
 
   menuButton.click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "#ad-xconfig");
@@ -97,7 +202,7 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.equal(panelHost.style.display, "block");
 
   windowRef.history.pushState({}, "", "/lobbies");
-  await wait(5);
+  await waitForShellClosed(windowRef, documentRef);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "");
@@ -117,7 +222,7 @@ test("xConfig shell normalizes legacy /ad-xconfig path to a reload-safe hash rou
   });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "#ad-xconfig");
@@ -128,7 +233,7 @@ test("xConfig shell normalizes legacy /ad-xconfig path to a reload-safe hash rou
   assert.equal(panelHost.style.display, "block");
 
   windowRef.history.pushState({}, "", "/lobbies");
-  await wait(5);
+  await waitForShellClosed(windowRef, documentRef);
 
   assert.equal(windowRef.location.hash, "");
   assert.equal(panelHost.style.display, "none");
@@ -146,13 +251,19 @@ test("xConfig shell keeps sidebar visible when layout has no main element", asyn
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
-  await wait(5);
+  await waitFor(() => {
+    return (
+      documentRef.querySelectorAll("#ad-xconfig-menu-item").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-panel-host").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-shell-style").length === 0
+    );
+  });
 
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(menuButton);
 
   menuButton.click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "#ad-xconfig");
@@ -167,7 +278,7 @@ test("xConfig shell keeps sidebar visible when layout has no main element", asyn
   assert.equal(documentRef.variantElement.style.display, "none");
 
   windowRef.history.pushState({}, "", "/lobbies");
-  await wait(5);
+  await waitForShellClosed(windowRef, documentRef);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(panelHost.style.display, "none");
@@ -183,7 +294,13 @@ test("xConfig shell does not hijack external links that accidentally reuse xConf
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitFor(() => {
+    return (
+      documentRef.querySelectorAll("#ad-xconfig-menu-item").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-panel-host").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-shell-style").length === 0
+    );
+  });
 
   const toolsLink = documentRef.createElement("a");
   toolsLink.id = "autodarts-tools-menu-item";
@@ -195,11 +312,17 @@ test("xConfig shell does not hijack external links that accidentally reuse xConf
   toolsLink.textContent = "Tools";
   documentRef.sidebar.appendChild(toolsLink);
   documentRef.flushMutations();
-  await wait(5);
+  await waitFor(() => {
+    return (
+      documentRef.querySelectorAll("#ad-xconfig-menu-item").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-panel-host").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-shell-style").length === 0
+    );
+  });
 
   const clickEvent = new FakeEvent("click", { bubbles: true, cancelable: true, target: toolsLink });
   const clickAllowed = toolsLink.dispatchEvent(clickEvent);
-  await wait(5);
+  await waitFor(() => windowRef.location.pathname === "/lobbies");
 
   assert.equal(clickAllowed, true);
   assert.equal(clickEvent.defaultPrevented, false);
@@ -208,7 +331,7 @@ test("xConfig shell does not hijack external links that accidentally reuse xConf
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(menuButton);
   menuButton.click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "#ad-xconfig");
 
@@ -220,7 +343,7 @@ test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   const broken = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(broken);
@@ -230,7 +353,7 @@ test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => 
   broken.replaceChildren(documentRef.createElement("span"));
 
   windowRef.history.pushState({}, "", "/boards");
-  await wait(8);
+  await waitFor(() => documentRef.getElementById("ad-xconfig-menu-item")?.getAttribute("data-adxconfig-action") === "open");
 
   const repaired = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(repaired);
@@ -262,10 +385,10 @@ test("xConfig observer ignores self-managed menu/panel mutations and only syncs 
   };
 
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(8);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(8);
+  await waitForShellOpen(windowRef, documentRef);
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
@@ -278,14 +401,14 @@ test("xConfig observer ignores self-managed menu/panel mutations and only syncs 
     { target: panelHost, addedNodes: [panelHost.firstElementChild], removedNodes: [] },
     { target: menuButton, addedNodes: [menuButton.firstElementChild], removedNodes: [] },
   ]);
-  await wait(8);
+  await waitFor(() => rafCount >= baseline);
   const afterManagedMutations = rafCount;
   assert.ok(afterManagedMutations - baseline <= 1);
 
   documentRef.flushMutations([
     { target: documentRef.main, addedNodes: [documentRef.createElement("div")], removedNodes: [] },
   ]);
-  await wait(8);
+  await waitFor(() => rafCount > afterManagedMutations);
   assert.ok(rafCount > afterManagedMutations);
 
   runtime.stop();
@@ -296,19 +419,19 @@ test("xConfig settings modal preserves node identity and scroll offsets during e
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(8);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(8);
+  await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(8);
+  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-fx']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(8);
+  await waitForSettingsModal(documentRef);
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   const shell = panelHost?.querySelector?.(".ad-xconfig-shell") || null;
@@ -330,7 +453,7 @@ test("xConfig settings modal preserves node identity and scroll offsets during e
       removedNodes: [],
     },
   ]);
-  await wait(8);
+  await waitFor(() => documentRef.getElementById("ad-xconfig-panel-host") === panelHost);
 
   const panelHostAfter = documentRef.getElementById("ad-xconfig-panel-host");
   const shellAfter = panelHostAfter?.querySelector?.(".ad-xconfig-shell") || null;
@@ -353,19 +476,19 @@ test("xConfig settings modal keeps container identity while applying setting upd
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(8);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(8);
+  await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(8);
+  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-fx']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(8);
+  await waitForSettingsModal(documentRef);
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   const modal = panelHost?.querySelector?.(".ad-xconfig-modal") || null;
@@ -379,7 +502,7 @@ test("xConfig settings modal keeps container identity while applying setting upd
   modalBody.scrollTop = 192;
 
   clickSettingToggle(documentRef, "cricket-grid-fx", "rowWave", false);
-  await wait(12);
+  await waitFor(() => JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.cricketGridFx.rowWave === false);
 
   const panelHostAfter = documentRef.getElementById("ad-xconfig-panel-host");
   const modalAfter = panelHostAfter?.querySelector?.(".ad-xconfig-modal") || null;
@@ -401,7 +524,7 @@ test("xConfig menu injection stays idempotent and label collapses on narrow side
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   const label = documentRef.querySelector("#ad-xconfig-menu-item .ad-xconfig-menu-label");
@@ -410,14 +533,14 @@ test("xConfig menu injection stays idempotent and label collapses on narrow side
 
   documentRef.sidebar.__rect = { width: 96, height: 720 };
   documentRef.flushMutations();
-  await wait(5);
+  await waitFor(() => label.style.display === "none");
 
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   assert.equal(label.style.display, "none");
 
   documentRef.sidebar.__rect = { width: 260, height: 720 };
   documentRef.flushMutations();
-  await wait(5);
+  await waitFor(() => label.style.display === "inline");
 
   assert.equal(label.style.display, "inline");
   runtime.stop();
@@ -431,13 +554,13 @@ test("xConfig shell stays idempotent across repeated init and DOM mutation sync"
   const first = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   const initialInspect = windowRef.__adXConfig.inspect();
   const second = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   assert.equal(first, second);
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
 
   documentRef.flushMutations();
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-panel-host").length, 1);
@@ -452,7 +575,7 @@ test("xConfig shell keeps listener and observer counts stable across open/close 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   const initialInspect = windowRef.__adXConfig.inspect();
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
@@ -460,10 +583,10 @@ test("xConfig shell keeps listener and observer counts stable across open/close 
 
   for (let cycle = 0; cycle < 4; cycle += 1) {
     menuButton.click();
-    await wait(5);
+    await waitForShellOpen(windowRef, documentRef);
     windowRef.history.pushState({}, "", "/lobbies");
     documentRef.flushMutations();
-    await wait(5);
+    await waitForShellClosed(windowRef, documentRef);
   }
 
   const currentInspect = windowRef.__adXConfig.inspect();
@@ -698,22 +821,197 @@ test("xConfig shell forces one remote update check on startup even with fresh ca
   runtime.stop();
 });
 
+test("xConfig shell replays a manual update check after an inflight check finishes", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const firstRefreshGate = createDeferred();
+  const secondRefreshGate = createDeferred();
+  let fetchCount = 0;
+  let refreshCount = 0;
+  let requestsInRefresh = 0;
+
+  windowRef.fetch = async () => {
+    fetchCount += 1;
+    const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
+    const refreshIndex = refreshCount;
+    const gate = refreshIndex === 0 ? firstRefreshGate : secondRefreshGate;
+    await gate.promise;
+
+    requestsInRefresh += 1;
+    if (requestsInRefresh >= 2) {
+      refreshCount += 1;
+      requestsInRefresh = 0;
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return buildUserscriptMeta(
+          refreshIndex === 0 ? installedVersion : incrementPatchVersion(installedVersion)
+        );
+      },
+    };
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitFor(() => Boolean(documentRef.getElementById("ad-xconfig-menu-item")));
+
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitFor(() => Boolean(documentRef.querySelector("[data-adxconfig-action='check-update']")));
+
+    const recheckButton = documentRef.querySelector("[data-adxconfig-action='check-update']");
+    assert.ok(recheckButton);
+    documentRef.dispatchEvent(new FakeEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      target: recheckButton,
+    }));
+
+    await waitForShellOpen(windowRef, documentRef);
+    assert.equal(fetchCount, 1);
+
+    firstRefreshGate.resolve();
+    await waitFor(() => refreshCount >= 1, { timeoutMs: 260, intervalMs: 5 });
+    assert.equal(
+      await waitFor(
+        () => fetchCount >= 3,
+        { timeoutMs: 260, intervalMs: 5 }
+      ),
+      true
+    );
+
+    secondRefreshGate.resolve();
+
+    assert.equal(
+      await waitFor(
+        () => documentRef.querySelector("[data-adxconfig-update-panel='true']")?.getAttribute("data-update-state") === "available",
+        { timeoutMs: 260, intervalMs: 5 }
+      ),
+      true
+    );
+    assert.equal(fetchCount, 4);
+
+    const notice = documentRef.querySelector(".ad-xconfig-notice");
+    assert.ok(notice);
+    assert.match(String(notice.textContent || ""), /Update gefunden/);
+  } finally {
+    firstRefreshGate.resolve();
+    secondRefreshGate.resolve();
+    runtime.stop();
+  }
+});
+
+test("xConfig shell cancels queued syncs on teardown before the frame runs", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const pendingFrames = [];
+  let nextHandle = 0;
+
+  windowRef.requestAnimationFrame = (callback) => {
+    const handle = ++nextHandle;
+    pendingFrames.push({ handle, callback });
+    return handle;
+  };
+  windowRef.cancelAnimationFrame = (handle) => {
+    const frame = pendingFrames.find((entry) => entry.handle === handle);
+    if (frame) {
+      frame.callback = null;
+    }
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  assert.equal(pendingFrames.length >= 1, true);
+
+  runtime.stop();
+
+  pendingFrames.slice().forEach((frame) => {
+    if (typeof frame.callback === "function") {
+      frame.callback();
+    }
+  });
+
+  await waitFor(() => {
+    return (
+      documentRef.querySelectorAll("#ad-xconfig-menu-item").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-panel-host").length === 0 &&
+      documentRef.querySelectorAll("#ad-xconfig-shell-style").length === 0
+    );
+  });
+
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 0);
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-panel-host").length, 0);
+  assert.equal(documentRef.querySelectorAll("#ad-xconfig-shell-style").length, 0);
+});
+
+test("xConfig shell persists rapid back-to-back UI actions without losing earlier changes", async () => {
+  const gmState = new Map();
+  const localStorage = {
+    getItem() {
+      return null;
+    },
+    setItem() {
+      throw new Error("QuotaExceededError");
+    },
+  };
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({
+    windowRef,
+    documentRef,
+    gmGetValue: async (key, fallbackValue) => (gmState.has(key) ? gmState.get(key) : fallbackValue),
+    gmSetValue: async (key, value) => {
+      await wait(10);
+      gmState.set(key, value);
+    },
+  });
+  await waitFor(() => Boolean(documentRef.getElementById("ad-xconfig-menu-item")));
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  clickFeatureToggle(documentRef, "turn-start-sweep", true);
+  clickFeatureToggle(documentRef, "winner-fireworks", true);
+
+  assert.equal(await waitFor(() => {
+    const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
+    return (
+      Boolean(storedConfig) &&
+      storedConfig.featureToggles.turnStartSweep === true &&
+      storedConfig.featureToggles.winnerFireworks === true
+    );
+  }, { timeoutMs: 500, intervalMs: 5 }), true);
+
+  const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
+  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
+  assert.equal(storedConfig.featureToggles.winnerFireworks, true);
+  assert.equal(runtime.getSnapshot().features["turn-start-sweep"].mounted, true);
+  assert.equal(runtime.getSnapshot().features["winner-fireworks"].mounted, true);
+
+  runtime.stop();
+});
+
 test("xConfig shell wires tabs, settings modal, toggles and save actions", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   clickFeatureToggle(documentRef, "theme-x01", true);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.x01"] === true);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
   clickFeatureToggle(documentRef, "turn-start-sweep", true);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnStartSweep === true);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
@@ -724,7 +1022,7 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   );
   assert.ok(openCheckoutSettings);
   openCheckoutSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   const effectOptionsBefore = documentRef.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
@@ -735,7 +1033,7 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   );
 
   clickSelectSettingOption(documentRef, "checkout-score-pulse", "effect", "blink");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.checkoutScorePulse.effect === "blink");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.checkoutScorePulse.effect, "blink");
@@ -751,19 +1049,19 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   const closeSettings = documentRef.querySelector("[data-adxconfig-action='close-settings']");
   assert.ok(closeSettings);
   closeSettings.click();
-  await wait(5);
+  await waitForSettingsClosed(documentRef);
 
   documentRef.getElementById("ad-xconfig-tab-themes").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "themes");
   const openThemeSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   clickSettingToggle(documentRef, "theme-x01", "showAvg", false);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.showAvg === false);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.showAvg, false);
@@ -776,10 +1074,10 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   const themeCardFeatureKeys = documentRef
     .querySelectorAll(".ad-xconfig-card")
@@ -794,7 +1092,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   ]);
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
 
   const groupNodes = documentRef.querySelectorAll("[data-adxconfig-animation-group]");
   const groupIds = groupNodes.map((groupNode) =>
@@ -847,10 +1145,10 @@ test("xConfig shell enables all themes with a compact action button in the theme
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   const enableAllThemesButton = documentRef.querySelector(
     "[data-adxconfig-action='enable-all-themes']"
@@ -877,7 +1175,7 @@ test("xConfig shell enables all themes with a compact action button in the theme
   assert.equal(storedConfig.featureToggles["themes.bullOff"], true);
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
   assert.equal(
     Boolean(documentRef.querySelector("[data-adxconfig-action='enable-all-themes']")),
     false
@@ -891,17 +1189,17 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   const openThemeSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   const modal = documentRef.querySelector("[data-adxconfig-modal='true']");
   assert.ok(modal);
@@ -956,7 +1254,7 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   assert.equal(displayModeInputWrap.children[1].classList.contains("ad-xconfig-option-list"), true);
 
   clickSelectSettingOption(documentRef, "theme-x01", "backgroundDisplayMode", "tile");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundDisplayMode === "tile");
 
   assert.equal(fillOption.getAttribute("data-active"), "false");
   assert.equal(tileOption.getAttribute("data-active"), "true");
@@ -989,19 +1287,19 @@ test("xConfig x01 score progress settings no longer expose a design selector", a
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   assert.equal(
     Boolean(
@@ -1035,19 +1333,19 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='turn-points-count']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   const flashSetting = documentRef.querySelector(
     "[data-adxconfig-setting='true'][data-setting-key='flashOnChange']"
@@ -1067,25 +1365,25 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
   );
 
   clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", false);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashOnChange === false);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
 
   clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "permanent");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashMode === "permanent");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashMode, "permanent");
 
   clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", true);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashOnChange === true);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashOnChange, true);
 
   clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "on-change");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashMode === "on-change");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashMode, "on-change");
@@ -1098,19 +1396,19 @@ test("xConfig dart design options render split layout with preview and active ba
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-darts']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   const designOptions = documentRef.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design']"
@@ -1135,11 +1433,11 @@ test("xConfig dart design options render split layout with preview and active ba
   assert.ok(activeBeforeSlot.querySelector(".ad-xconfig-option-active"));
 
   clickSelectSettingOption(documentRef, "dart-marker-darts", "design", "red");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.design === "red");
   clickSettingToggle(documentRef, "dart-marker-darts", "enableShadow", false);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableShadow === false);
   clickSettingToggle(documentRef, "dart-marker-darts", "enableWobble", false);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableWobble === false);
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.dartMarkerDarts.design, "red");
@@ -1175,24 +1473,27 @@ test("xConfig shell links every card README button to the matching README anchor
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   for (const descriptor of xconfigDescriptors) {
     const tabId = descriptor.tab === "themes" ? "themes" : "animations";
     const tabButton = documentRef.getElementById(`ad-xconfig-tab-${tabId}`);
     assert.ok(tabButton, `missing tab button for ${descriptor.featureKey}`);
     tabButton.click();
-    await wait(5);
+    await waitForActiveTab(documentRef, tabId);
 
     const cardReadmeButton = documentRef.querySelector(
       `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-readme'][data-feature-key='${descriptor.featureKey}']`
     );
     assert.ok(cardReadmeButton, `missing card README button for ${descriptor.featureKey}`);
     cardReadmeButton.click();
-    await wait(5);
+    await waitForOpenedUrl(
+      windowRef,
+      `https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#${descriptor.readmeAnchor}`
+    );
 
     assert.equal(
       windowRef.__openedUrls.at(-1),
@@ -1208,10 +1509,10 @@ test("xConfig shell links every settings modal README button to the matching REA
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   for (const descriptor of xconfigDescriptors) {
     if (!Array.isArray(descriptor.fields) || !descriptor.fields.length) {
@@ -1222,21 +1523,24 @@ test("xConfig shell links every settings modal README button to the matching REA
     const tabButton = documentRef.getElementById(`ad-xconfig-tab-${tabId}`);
     assert.ok(tabButton, `missing tab button for ${descriptor.featureKey}`);
     tabButton.click();
-    await wait(5);
+    await waitForActiveTab(documentRef, tabId);
 
     const settingsButton = documentRef.querySelector(
       `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-settings'][data-feature-key='${descriptor.featureKey}']`
     );
     assert.ok(settingsButton, `missing settings button for ${descriptor.featureKey}`);
     settingsButton.click();
-    await wait(5);
+    await waitForSettingsModal(documentRef);
 
     const modalReadmeButton = documentRef.querySelector(
       `.ad-xconfig-modal [data-adxconfig-action='open-readme'][data-feature-key='${descriptor.featureKey}']`
     );
     assert.ok(modalReadmeButton, `missing modal README button for ${descriptor.featureKey}`);
     modalReadmeButton.click();
-    await wait(5);
+    await waitForOpenedUrl(
+      windowRef,
+      `https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#${descriptor.readmeAnchor}`
+    );
 
     assert.equal(
       windowRef.__openedUrls.at(-1),
@@ -1246,7 +1550,7 @@ test("xConfig shell links every settings modal README button to the matching REA
     const closeSettingsButton = documentRef.querySelector("[data-adxconfig-action='close-settings']");
     assert.ok(closeSettingsButton, `missing modal close button for ${descriptor.featureKey}`);
     closeSettingsButton.click();
-    await wait(5);
+    await waitForSettingsClosed(documentRef);
   }
 
   runtime.stop();
@@ -1257,10 +1561,10 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   const styleNode = documentRef.getElementById("ad-xconfig-shell-style");
   assert.ok(styleNode);
@@ -1299,7 +1603,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   );
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
 
   [
     "checkout-score-pulse",
@@ -1321,7 +1625,7 @@ test("xConfig shell theme background upload and clear actions persist and expose
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   const originalCreateElement = documentRef.createElement.bind(documentRef);
   documentRef.createElement = (tagName) => {
@@ -1353,14 +1657,14 @@ test("xConfig shell theme background upload and clear actions persist and expose
   };
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   const openThemeSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   let status = documentRef.querySelector(
     "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
@@ -1374,7 +1678,7 @@ test("xConfig shell theme background upload and clear actions persist and expose
   const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
   assert.ok(uploadButton);
   uploadButton.click();
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,ZmFrZS1kYXRh");
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,ZmFrZS1kYXRh");
@@ -1414,7 +1718,7 @@ test("xConfig shell theme background upload and clear actions persist and expose
   const clearButton = documentRef.getElementById("ad-xconfig-field-theme-x01-clearThemeBackground");
   assert.ok(clearButton);
   clearButton.click();
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
@@ -1447,7 +1751,7 @@ test("xConfig shell reports invalid theme upload payloads as error and keeps pre
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   const originalCreateElement = documentRef.createElement.bind(documentRef);
   documentRef.createElement = (tagName) => {
@@ -1479,19 +1783,24 @@ test("xConfig shell reports invalid theme upload payloads as error and keeps pre
   };
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
 
   const openThemeSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
   assert.ok(uploadButton);
   uploadButton.click();
-  await wait(5);
+  await waitFor(() => {
+    const errorFeedback = documentRef.querySelector(
+      "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
+    );
+    return Boolean(errorFeedback) && /kein unterstütztes Bild/.test(String(errorFeedback.textContent || ""));
+  });
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
@@ -1526,19 +1835,19 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   windowRef.confetti = function fakeConfetti() {};
 
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await wait(5);
+  await waitForMenuButton(documentRef);
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='winner-fireworks']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(5);
+  await waitForSettingsModal(documentRef);
 
   const firstPreviewButton = documentRef.getElementById(
     "ad-xconfig-field-winner-fireworks-run-feature-action"
@@ -1557,7 +1866,7 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   );
 
   windowRef.dispatchEvent(new FakeEvent("pointerdown", { bubbles: true }));
-  await wait(5);
+  await waitFor(() => !documentRef.getElementById("ad-ext-winner-fireworks-preview"));
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-style-preview")), false);
@@ -1592,42 +1901,46 @@ test("xConfig shell restores persisted toggle, setting and background state afte
     windowRef: firstWindow,
     documentRef: firstDocument,
   });
-  await wait(5);
+  await waitForMenuButton(firstDocument);
 
   firstDocument.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(firstWindow, firstDocument);
 
   clickFeatureToggle(firstDocument, "theme-x01", true);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.x01"] === true);
   firstDocument.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(firstDocument, "animations");
   clickFeatureToggle(firstDocument, "turn-start-sweep", true);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnStartSweep === true);
   clickFeatureToggle(firstDocument, "x01-score-progress", true);
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.x01ScoreProgress === true);
 
   const openSettings = firstDocument.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
   );
   assert.ok(openSettings);
   openSettings.click();
-  await wait(5);
+  await waitForSettingsModal(firstDocument);
 
   clickSelectSettingOption(firstDocument, "checkout-score-pulse", "effect", "glow");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.checkoutScorePulse.effect === "glow");
 
   const openX01ProgressSettings = firstDocument.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
   );
   assert.ok(openX01ProgressSettings);
   openX01ProgressSettings.click();
-  await wait(5);
+  await waitFor(() => Boolean(
+    firstDocument.querySelector(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
+    )
+  ));
 
   clickSelectSettingOption(firstDocument, "x01-score-progress", "effect", "ghost-trail");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.x01ScoreProgress.effect === "ghost-trail");
 
   await firstWindow.__adXConfig.setThemeBackgroundImage("x01", "data:image/png;base64,cGVyc2lzdGVk");
-  await wait(5);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cGVyc2lzdGVk");
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
@@ -1645,7 +1958,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
     windowRef: secondWindow,
     documentRef: secondDocument,
   });
-  await wait(5);
+  await waitForMenuButton(secondDocument);
 
   const secondSnapshot = secondRuntime.getSnapshot();
   assert.equal(secondSnapshot.features["theme-x01"].enabled, true);
@@ -1661,7 +1974,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   );
 
   secondDocument.getElementById("ad-xconfig-menu-item").click();
-  await wait(5);
+  await waitForShellOpen(secondWindow, secondDocument);
 
   const restoredThemeToggle = secondDocument.querySelector(
     "[data-adxconfig-action='set-feature'][data-feature-key='theme-x01'][data-feature-enabled='true']"
@@ -1670,7 +1983,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   assert.equal(restoredThemeToggle.getAttribute("data-active"), "true");
 
   secondDocument.getElementById("ad-xconfig-tab-animations").click();
-  await wait(5);
+  await waitForActiveTab(secondDocument, "animations");
   const restoredX01ProgressToggle = secondDocument.querySelector(
     "[data-adxconfig-action='set-feature'][data-feature-key='x01-score-progress'][data-feature-enabled='true']"
   );
@@ -1680,7 +1993,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
   );
   openSecondSettings.click();
-  await wait(5);
+  await waitForSettingsModal(secondDocument);
 
   const restoredEffectOptions = secondDocument.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
@@ -1696,11 +2009,18 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   );
   assert.ok(openRestoredX01Settings);
   openRestoredX01Settings.click();
-  await wait(5);
+  await waitFor(() => {
+    return secondDocument.querySelectorAll(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
+    ).length > 0;
+  });
 
   const restoredX01EffectOptions = secondDocument.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
   );
+  await waitFor(() => restoredX01EffectOptions.some(
+    (node) => node.getAttribute("data-active") === "true"
+  ));
   const restoredActiveX01Effects = restoredX01EffectOptions.filter(
     (node) => node.getAttribute("data-active") === "true"
   );
