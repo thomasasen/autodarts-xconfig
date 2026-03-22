@@ -96,7 +96,8 @@ A valid result from this skill must:
 - preserve the project architecture
 - include the necessary test updates
 - pass `npm run check:syntax`
-- leave the repository ready for final packaging through `$release_build` when needed
+- leave the repository ready for final validation through `$repo_validation`
+- leave the repository ready for final packaging through `$userscript_release` when shipped behavior changed
 
 # Commit guidance
 

@@ -122,7 +122,7 @@ A valid fix from this skill must:
 Run or instruct the following:
 - `npm test`
 - targeted runtime/harness checks for grid and highlighter behavior
-- if shipped behavior changed, later use `$userscript-release-build`
+- if shipped behavior changed, later use `$repo_validation` for final validation selection and `$userscript_release` for packaging
 
 # Preferred commit style
 

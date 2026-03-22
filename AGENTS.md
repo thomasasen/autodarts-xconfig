@@ -3,23 +3,74 @@
 ## Repository rules
 
 Use the matching skill from `.agents/skills/` when the task clearly fits one.
-Skills add specialized workflows.
-The rules in this file always apply.
+Global rules in this file always apply.
 
-Use `.agents/skills/changelog_maintenance/SKILL.md` when work involves `CHANGELOG.md`,
-release notes, version history, or documenting relevant shipped/user-visible changes for a
-version bump or handoff.
+Canonical workflow skills:
+- use `.agents/skills/changelog_maintenance/SKILL.md` for `CHANGELOG.md`, release notes, version history, or changelog consistency work
+- use `.agents/skills/repo_validation/SKILL.md` to choose and report the right validation surface after changes
+- use `.agents/skills/userscript_release/SKILL.md` for shipped-source packaging, version bumps, build output refresh, and release/publication truth
+
+## Priority order
+
+If instructions conflict, resolve them in this order:
+1. truthfulness
+2. correctness
+3. validation
+4. architecture integrity
+5. release consistency
+6. changelog/docs
+7. commit formatting
+
+Do not hide unmet validation, broken parity, or environment limits to satisfy a lower-priority rule.
+
+## Definition of done
+
+A task is done only when:
+- the change lives in the correct source layer and generated output was refreshed only through the build flow when required
+- tests and validation were added or updated where needed and the required checks were run
+- validation results, blockers, and environment limits were reported truthfully
+- release parity, version consistency, generated artifacts, and changelog updates are complete when the change affects shipped source
+- the final handoff names any remaining risk, missing execution, or local-vs-remote state gap explicitly
+
+## Architecture guardrails
+
+- keep bootstrap, startup, update-check, cache, and version-sync logic isolated; do not scatter release/version truth across unrelated modules
+- avoid unnecessary coupling between rendering/DOM effects, persistence/config storage, and remote/update logic
+- prefer pure functions for normalization, mapping, state derivation, and other rule-heavy transformations
+- patch the earliest correct layer instead of masking semantic bugs in UI glue or CSS
+- treat startup, update-check, cache, and version-parity logic as high-risk and regression-sensitive; changes there require targeted tests
+
+## Skills vs global rules
+
+`AGENTS.md` defines repository-wide invariants.
+Skills define specialized operational workflows.
+
+Apply both when needed:
+- use the relevant domain or feature skill for implementation work
+- use `$repo_validation` for validation planning and truthful reporting
+- use `$userscript_release` for shipped-source packaging and publication-state checks
+- use `$changelog_maintenance` for curated changelog content and changelog consistency
+
+Do not move repository invariants out of this file just to shorten it.
+
+## Subagent use
+
+- the parent agent owns final synthesis, final validation truth, release steps, and handoff clarity
+- subagents should stay narrow, evidence-based, and task-specific
+- review-oriented subagents should stay read-only unless the task explicitly requires writes
+- no subagent may claim build, test, release, or publication success without concrete command output from this repository
+- if a subagent summary conflicts with local repository truth, local repository truth wins
 
 ## Required validation after changes
 
-After any code change, perform appropriate validation.
+After any code change, use `.agents/skills/repo_validation/SKILL.md` to classify the change and choose the right checks.
 
 Minimum rule:
 - add or update tests when logic, behavior, DOM mapping, rendering, config behavior, or shipped feature behavior changes
 - run the relevant tests after the change
 - do not ignore failing tests
 - fix the cause or report clearly why validation could not be completed
-- for userscript update/version-check behavior, add or update regression coverage for startup check and cache handling (for example `tests/runtime/update-check.test.js` and `tests/runtime/xconfig-shell.test.js`)
+- for userscript update/version-check behavior, add or update regression coverage for startup check and cache handling, for example `tests/runtime/update-check.test.js` and `tests/runtime/xconfig-shell.test.js`
 
 Prefer the repository verification flow:
 - `npm run verify`
@@ -38,11 +89,13 @@ Changelog gate requirement:
 
 ## Required release steps for shipped source changes
 
-If the change affects shipped behavior or modifies files under `src/`, `loader/`, `scripts/`, or bundled assets:
+If the change affects shipped behavior or modifies files under `src/`, `loader/`, `scripts/`, or bundled assets, use `.agents/skills/userscript_release/SKILL.md`.
 
+Required release flow:
 - bump the version in `package.json`
 - rebuild the userscript from source
 - refresh `dist/autodarts-xconfig.user.js`
+- refresh `dist/autodarts-xconfig.meta.js`
 - run validation before considering the task complete
 
 Use:
@@ -51,15 +104,17 @@ Use:
 - `npm run verify`
 
 A shipped source change is not complete until:
-- version is bumped
-- build succeeded
+- the version is bumped
+- the build succeeded
 - tests were run
 - generated output matches the current source state
+- local version markers are aligned
 - `CHANGELOG.md` reflects the released change set
 
 ## Required changelog maintenance
 
 Maintain `CHANGELOG.md` as the canonical human-readable history for this repository.
+Use `.agents/skills/changelog_maintenance/SKILL.md` for workflow detail.
 
 Rules:
 - add or update `CHANGELOG.md` for relevant shipped/user-visible changes and for meaningful release-workflow changes
@@ -88,13 +143,13 @@ Suggested PowerShell check:
 
 ## Generated files
 
-`dist/autodarts-xconfig.user.js` is a generated build artifact.
+`dist/autodarts-xconfig.user.js` and `dist/autodarts-xconfig.meta.js` are generated build artifacts.
 
 Rules:
 - never hand-edit files in `dist/`
 - always change source files first
 - rebuild after source changes
-- commit the refreshed generated file when shipped behavior changed
+- commit the refreshed generated files when shipped behavior or release metadata changed
 
 Flow:
 `src` or other shipped source changes -> version bump -> build -> test -> commit updated `dist`
@@ -157,4 +212,3 @@ Example:
 For German user-facing wording in code, config labels, xConfig copy, README, and docs:
 - use proper German umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
 - do not transliterate as `ae`, `oe`, `ue`, or `ss` unless a technical system explicitly requires ASCII-only output
-

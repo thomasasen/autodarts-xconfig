@@ -5,116 +5,100 @@ description: Use when `CHANGELOG.md`, release notes, version history, or version
 
 # Goal
 
-Keep `CHANGELOG.md` accurate, understandable, and synchronized with the repository state.
-
-# Use this skill when
-
-- a changelog must be created or extended
-- a version bump needs release notes
-- user-visible or shipped changes need a curated changelog entry
-- release history should be backfilled from git history
-- changelog consistency must be checked before handoff
-
-# Do not use this skill when
-
-- the task is only code implementation with no changelog impact
-- the task is only exploratory debugging with no user-visible outcome yet
-- the request is to dump commit messages unchanged into release notes
+Keep `CHANGELOG.md` accurate, curated, and synchronized with repository truth.
 
 # Core rules
 
-- treat `CHANGELOG.md` as the canonical, human-written history
-- never copy commit logs into the changelog without curation
-- keep `Unreleased` at the top
+- treat `CHANGELOG.md` as the canonical human-written history
+- curate entries; never dump commit logs unchanged
+- keep `## [Unreleased]` at the top
 - use ISO dates (`YYYY-MM-DD`) for released versions
 - write every real changelog entry in two parts:
   - `Nutzerwirkung: ...`
   - `Technik: ...`
 - keep `CHANGELOG.md` in UTF-8 and preserve German umlauts directly (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`)
-- never ship mojibake sequences (for example `Ã`, `Â`, `â€“`, `�`) in changelog text
-- separate working-tree truth from commit-history truth
-- always check whether local changes exist that are not committed yet
-- state clearly when local state, committed state, and GitHub-published state differ
+- never ship mojibake sequences such as `Ãƒ`, `Ã‚`, `Ã¢â‚¬â€œ`, or `�`
+- separate working-tree truth, committed-history truth, and GitHub-published truth
+- do not document pure internal cleanup unless it changes shipped behavior, maintainer workflow, release workflow, or user-visible expectations
 
-# Workflow
+# Workflow modes
 
-## 1. Inspect repository truth first
+## 1. Edit or update
 
-Before editing, inspect:
+Use this mode when current work needs a curated changelog entry.
 
-- `git status --short`
-- `git diff --name-only HEAD`
-- `git log --oneline`
-- `package.json`
-- `CHANGELOG.md`
+- inspect repository truth first:
+  - `git status --short`
+  - `git diff --name-only HEAD`
+  - `git log --oneline`
+  - `package.json`
+  - `CHANGELOG.md`
+- for in-progress work, add or revise entries only under `## [Unreleased]`
+- document:
+  - shipped behavior changes
+  - user-visible config/default meaning changes
+  - release metadata changes
+  - release-workflow changes that matter to maintainers
+- do not add noise for test-only cleanup, refactors with no external effect, or temporary debugging steps
 
-Do not assume Codex-made edits were committed.
-Treat the working tree and the commit graph as separate sources of truth.
+## 2. Release preparation
 
-## 2. Decide whether the changelog must change
+Use this mode when changelog work overlaps with a version bump or release packaging.
 
-Update `CHANGELOG.md` when:
+- this skill owns changelog structure, entry curation, release sections, and compare links
+- `$userscript_release` owns version bump timing, build output refresh, local version parity, and publication-state checks
+- when versioning a release:
+  - move finalized `Unreleased` entries into a new released section
+  - add the release date
+  - keep a fresh `## [Unreleased]` section above it
+  - update bottom compare links
+- if no tags exist yet:
+  - use GitHub compare links based on release commits
+  - if the newest local release is not committed yet, a temporary `...HEAD` compare link is acceptable
 
-- user-visible behavior changed
-- shipped behavior changed
-- config defaults or meanings changed
-- release/version metadata changed
-- repository workflows changed in a way that matters for maintainers and releases
+## 3. Audit or consistency check
 
-Pure internal cleanup with no meaningful external effect may stay out of the changelog.
+Use this mode before handoff or when changelog drift is suspected.
 
-## 3. Maintain the right section
-
-For normal in-progress work:
-
-- append or revise entries only under `## [Unreleased]`
-
-For version bumps:
-
-- move the finalized `Unreleased` entries into a new released section
-- add the release date
-- keep a fresh empty `Unreleased` section above it
-- update link references at the bottom
-
-If no tags exist yet:
-
-- use GitHub compare links based on release commits
-- if the newest local release is not committed yet, a temporary `...HEAD` link is acceptable
-
-## 4. Curate, do not transcribe
-
-For each entry:
-
-- `Nutzerwirkung` explains what changed on screen or in workflow
-- `Technik` explains the implementation or validation angle for technical readers
-
-Avoid:
-
-- raw commit noise
-- internal-only jargon in the user-facing sentence
-- one-line release sections with no concrete outcome
-
-## 5. Run consistency checks
-
-Before handoff:
-
-- verify that `CHANGELOG.md` structure is valid
-- verify that the top released version matches `package.json`
-- verify that every entry has both required parts
-- verify whether relevant local changes exist without changelog updates
-- scan `CHANGELOG.md` for mojibake markers and fix before handoff
-  - suggested check: `rg -n "Ã|Â|â€“|â€”|â€ž|â€œ|â€™|â€|�" CHANGELOG.md`
+- verify the top released version matches `package.json`
+- verify every real entry contains both required parts
+- verify relevant local changes do not leave `CHANGELOG.md` untouched
+- verify local working tree, committed history, and GitHub-published state are described separately
+- scan for mojibake before handoff
+  - suggested check: `rg -n "Ãƒ|Ã‚|Ã¢â‚¬â€œ|Ã¢â‚¬â€|Ã¢â‚¬Å¾|Ã¢â‚¬Å“|Ã¢â‚¬â„¢|Ã¢â‚¬|�" CHANGELOG.md`
 - run `npm run check:changelog` when Node/npm is available
 
-Be explicit that this check is heuristic for semantic completeness. It can detect drift signals,
-not prove that every meaningful change was documented perfectly.
+This check is structural and drift-oriented. It improves confidence, but it does not prove perfect semantic completeness.
+
+## 4. Historical backfill
+
+Use this mode when older history must be reconstructed.
+
+- curate from git history instead of copying commit subjects
+- preserve uncertainty when history is noisy or incomplete
+- favor accurate summaries over exhaustive low-value detail
+- do not invent release dates, scope, or user impact that the history cannot support
+
+# Relevance filter
+
+Update `CHANGELOG.md` when:
+- shipped behavior changed
+- user-visible behavior changed
+- config defaults or meanings changed
+- release/version metadata changed
+- repository release workflow changed in a way that matters for maintainers
+
+Usually leave `CHANGELOG.md` unchanged when:
+- only tests changed with no user-visible or maintainer-visible effect
+- internal refactors preserve behavior and release workflow
+- exploratory debugging produced no shipped outcome
 
 # Output requirements
 
 A valid result from this skill must:
-
 - leave `CHANGELOG.md` readable on GitHub
+- keep entries curated and dual-part
 - distinguish local working tree, committed history, and GitHub-published state
-- include curated dual-part entries
-- reject unfiltered commit-log dumps as changelog content
-- mention any remaining uncertainty if git history is incomplete or noisy
+- reject raw commit-log dumps as release notes
+- point version/build/parity/publication work to `$userscript_release` instead of absorbing that workflow
+- mention any remaining uncertainty if history or publication state could not be verified cleanly
