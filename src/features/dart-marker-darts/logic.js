@@ -4,6 +4,7 @@ import {
   collectBoardMarkers,
   readMarkerPosition,
 } from "../../shared/dartboard-markers.js";
+import { isCoordinateBoardInputModeActive } from "../../shared/board-input-mode.js";
 import { resolveDartDesignAsset } from "#feature-assets";
 import {
   DART_CLASS,
@@ -1271,6 +1272,14 @@ export function updateDartMarkerDarts(options = {}) {
     });
   }
   state.lastHref = currentHref || state.lastHref;
+
+  if (isCoordinateBoardInputModeActive(documentRef)) {
+    clearDartMarkerDartsState(state, {
+      featureDebug,
+      reason: "coordinate-mode",
+    });
+    return;
+  }
 
   const board = findBoardSvgGroup(documentRef);
   if (!board?.svg || !board.radius) {

@@ -717,13 +717,20 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "dart-marker-darts": featureCopy({
     cardDescription:
-      "Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation.",
+      "Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation und pausiert im Koordinatenmodus automatisch.",
     visibleDescription:
-      "Standardmarker können durch kleine Dart-Grafiken ersetzt werden.",
+      "Standardmarker können durch kleine Dart-Grafiken ersetzt werden. Im Koordinatenmodus der Liveboard-Ansicht pausiert das Modul automatisch.",
     visualDescription:
       "Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.",
     usefulWhen:
       "Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.",
+    readmeDetailHeading: "Wichtiger Hinweis",
+    readmeDetails: [
+      "Im Koordinatenmodus der Autodarts-Liveboard-Ansicht pausiert `Dart Marker Darts` automatisch. So bleibt die Eingabeansicht frei von zusätzlichen Dart-Overlays und missverständlichen Marker-Ersatzgrafiken.",
+    ],
+    featuresDetails: [
+      "Im Koordinatenmodus der Liveboard-Ansicht pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
+    ],
     images: [image("Dart Marker Darts", "animation-dart-marker-darts.png")],
     fields: {
       design: fieldCopy(
@@ -742,9 +749,9 @@ export const xconfigFeatureCopy = deepFreeze({
         "Passt die Größe der Dart-Grafiken an."
       ),
       hideOriginalMarkers: fieldCopy(
-        "Blendet die ursprünglichen Marker aus, damit nur die Dart-Grafiken sichtbar bleiben.",
-        "Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist.",
-        "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus."
+        "Blendet die ursprünglichen Marker aus, damit nur die Dart-Grafiken sichtbar bleiben. Im Koordinatenmodus pausiert das Modul trotzdem komplett automatisch.",
+        "Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Im Koordinatenmodus der Liveboard-Ansicht pausiert `Dart Marker Darts` jedoch vollständig automatisch.",
+        "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Koordinatenmodus pausiert das Modul automatisch."
       ),
       enableShadow: fieldCopy(
         "Schaltet den Einschlag-Schatten unter dem Dart ein oder aus.",

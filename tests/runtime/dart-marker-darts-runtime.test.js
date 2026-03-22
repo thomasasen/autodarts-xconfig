@@ -6,6 +6,10 @@ import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import {
+  getActiveBoardInputMode,
+  isCoordinateBoardInputModeActive,
+} from "../../src/shared/board-input-mode.js";
+import {
   clearDartMarkerDartsState,
   createDartMarkerDartsState,
   updateDartMarkerDarts,
@@ -156,6 +160,55 @@ function createSingleFeatureRuntimeConfig() {
   };
 }
 
+function setModeButtonActive(button, contract = "aria-pressed", isActive = false) {
+  [
+    "aria-pressed",
+    "aria-selected",
+    "aria-checked",
+    "data-active",
+    "data-selected",
+    "data-checked",
+    "data-pressed",
+    "data-state",
+  ].forEach((attributeName) => button.removeAttribute(attributeName));
+
+  if (!isActive) {
+    return button;
+  }
+
+  if (contract === "data-state") {
+    button.setAttribute("data-state", "checked");
+    return button;
+  }
+
+  button.setAttribute(contract, "true");
+  return button;
+}
+
+function installKeyboardModeToggle(documentRef, activeMode = "segments", contract = "aria-pressed") {
+  const group = documentRef.createElement("div");
+  group.setAttribute("role", contract === "aria-selected" ? "tablist" : "radiogroup");
+
+  const labelsByMode = {
+    segments: "Segmentmodus",
+    coords: "Koordinatenmodus",
+    live: "Live-Modus",
+  };
+
+  const buttonsByMode = {};
+  Object.entries(labelsByMode).forEach(([modeKey, label]) => {
+    const button = documentRef.createElement("button");
+    button.setAttribute("type", "button");
+    button.setAttribute("aria-label", label);
+    setModeButtonActive(button, contract, modeKey === activeMode);
+    group.appendChild(button);
+    buttonsByMode[modeKey] = button;
+  });
+
+  documentRef.main.appendChild(group);
+  return buttonsByMode;
+}
+
 test("dart-marker-darts keeps separate darts for markers with identical cx/cy/r", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -186,6 +239,22 @@ test("dart-marker-darts keeps separate darts for markers with identical cx/cy/r"
   assert.equal(getDartImages(documentRef).length, 2);
 
   clearDartMarkerDartsState(state);
+});
+
+test("coordinate input mode detection recognizes multiple active-state contracts", () => {
+  const documentRef = new FakeDocument();
+  const buttons = installKeyboardModeToggle(documentRef, "coords", "aria-pressed");
+
+  assert.equal(getActiveBoardInputMode(documentRef), "coords");
+  assert.equal(isCoordinateBoardInputModeActive(documentRef), true);
+
+  setModeButtonActive(buttons.coords, "aria-pressed", false);
+  setModeButtonActive(buttons.live, "aria-selected", true);
+  assert.equal(getActiveBoardInputMode(documentRef), "live");
+
+  setModeButtonActive(buttons.live, "aria-selected", false);
+  setModeButtonActive(buttons.segments, "data-state", true);
+  assert.equal(getActiveBoardInputMode(documentRef), "segments");
 });
 
 test("dart-marker-darts separates flight container, rotation group, and image node", () => {
@@ -450,6 +519,66 @@ test("dart-marker-darts cleanup restores marker opacity, removes overlay artifac
   assert.equal(state.entriesByMarker.size, 0);
   assert.equal(state.markerOpacityByMarker.size, 0);
   assert.equal(animation.playState, "idle");
+});
+
+test("dart-marker-darts pauses completely while coordinate input mode is active", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 0,
+      cy: 0,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 }),
+    },
+  ]);
+  const buttons = installKeyboardModeToggle(documentRef, "segments", "aria-pressed");
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: {
+      ...VISUAL_CONFIG,
+      hideOriginalMarkers: true,
+    },
+  });
+
+  assert.equal(state.entriesByMarker.size, 1);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), true);
+  assert.equal(markers[0].style.opacity, "0");
+
+  setModeButtonActive(buttons.segments, "aria-pressed", false);
+  setModeButtonActive(buttons.coords, "aria-selected", true);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: {
+      ...VISUAL_CONFIG,
+      hideOriginalMarkers: true,
+    },
+  });
+
+  assert.equal(state.entriesByMarker.size, 0);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
+  assert.equal(markers[0].style.opacity, "");
+
+  setModeButtonActive(buttons.coords, "aria-selected", false);
+  setModeButtonActive(buttons.segments, "data-state", true);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: {
+      ...VISUAL_CONFIG,
+      hideOriginalMarkers: true,
+    },
+  });
+
+  assert.equal(state.entriesByMarker.size, 1);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), true);
+  assert.equal(markers[0].style.opacity, "0");
+
+  clearDartMarkerDartsState(state);
 });
 
 test("dart-marker-darts reacts to scroll, resize, and mutation triggers without drift", async () => {

@@ -509,8 +509,9 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 ### Dart Marker Darts
 
 - Gilt für: `alle Modi`
-- Kurz: Standardmarker können durch kleine Dart-Grafiken ersetzt werden.
+- Kurz: Standardmarker können durch kleine Dart-Grafiken ersetzt werden. Im Koordinatenmodus der Liveboard-Ansicht pausiert das Modul automatisch.
 - Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
+- Im Koordinatenmodus der Liveboard-Ansicht pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
 - `Dart Design`: Wählt das Bilddesign der eingeblendeten Darts.
   - `Autodarts`: Dieses Motiv zeigt einen silbernen Dart mit einem weichen violett-blauen Verlaufsflight. Der Look wirkt modern, leicht futuristisch und hebt sich klar von den einfarbigen Varianten ab.
   - `Black Blue`: Dieses Motiv kombiniert einen dunklen Flight mit prägnanten blauen Linien. Dadurch wirkt der Dart besonders technisch, modern und kontrastreich.
@@ -530,7 +531,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `Klein`: Diese Stufe reduziert die Dart-Grafik leicht unter die Standardgröße. Das Segment bleibt besser sichtbar, während der Dart weiterhin klar als Ersatzmarker erkennbar bleibt.
   - `Standard`: Diese Einstellung verwendet die reguläre Grundgröße für den Dart-Marker. Der Dart ist klar sichtbar, ohne den Trefferbereich unnötig stark zu füllen.
   - `Groß`: Diese Stufe vergrößert die Dart-Grafik sichtbar über die Standardgröße hinaus. Treffer wirken dadurch präsenter, nehmen aber auch mehr vom Segmentbild ein.
-- `Original-Marker ausblenden`: Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus.
+- `Original-Marker ausblenden`: Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Koordinatenmodus pausiert das Modul automatisch.
 - `Einschlag-Schatten`: Schaltet den Einschlag-Schatten der Dart-Grafik ein oder aus.
 - `Einschlag-Wobble`: Schaltet das kurze Wobble der Dart-Grafik beim Einschlag ein oder aus.
 - `Fluggeschwindigkeit`: Regelt die Dauer der Fluganimation.

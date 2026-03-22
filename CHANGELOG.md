@@ -11,6 +11,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.72] - 2026-03-22
+
+### Fixed
+
+- Nutzerwirkung: `Dart Marker Darts` pausiert in der Liveboard-Ansicht des
+  Koordinatenmodus jetzt automatisch, sodass dort keine zusätzlichen
+  Dart-Overlays oder ausgeblendeten Originalmarker mehr für missverständliche
+  Trefferdarstellung sorgen. AD xConfig, README und Features-Doku weisen
+  außerdem klar auf dieses Verhalten hin.
+  Technik: Eine neue Board-Eingabemodus-Erkennung wertet stabilere
+  Zustandsmerkmale wie `aria-pressed`, `aria-selected`, `data-checked` und
+  `data-state` aus; `dart-marker-darts` räumt sich im Koordinatenmodus
+  vollständig ab, neue Runtime-Regressionen decken Suspend/Resume ab, und die
+  kanonischen xConfig-Textquellen synchronisieren die Doku-Hinweise nach
+  `README.md` und `docs/FEATURES.md`.
+
 ## [2.0.71] - 2026-03-22
 
 ### Fixed
@@ -785,6 +801,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.72]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.71]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.70]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.69]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
