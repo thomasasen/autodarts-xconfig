@@ -570,6 +570,9 @@ test("theme board canvas resolver prefers the outer canvas wrapper for image-bac
   documentRef.main.appendChild(showAnimations);
 
   assert.equal(resolveThemeBoardCanvasTarget(boardSvg), boardCanvas);
+
+  boardCanvas.classList.add(THEME_LAYOUT_HOOK_CLASSES.boardCanvas);
+  assert.equal(resolveThemeBoardCanvasTarget(boardSvg), boardCanvas);
 });
 
 test("theme re-resolves the visible board when board-input mode toggles only via aria-pressed state", async () => {
@@ -1233,6 +1236,10 @@ test("theme-cricket keeps image-backed live board layouts inside the right theme
   assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
   assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
   assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardImageBackedMode),
+    true
+  );
+  assert.equal(
     boardNodes.boardEventShell.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardEventShell),
     true
   );
@@ -1275,6 +1282,10 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
 
   assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
   assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardImageBackedMode),
+    true
+  );
   assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
 
   boardNodes.boardMediaRoot.removeChild(boardNodes.boardSvg);
@@ -1283,6 +1294,10 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
 
   assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
   assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardImageBackedMode),
+    true
+  );
   assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
 
   const replacementBoardSvg = createSparseImageBackedBoardSvg(documentRef);
@@ -1296,6 +1311,10 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
   );
   assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
   assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardImageBackedMode),
+    true
+  );
 
   runtime.stop();
 });

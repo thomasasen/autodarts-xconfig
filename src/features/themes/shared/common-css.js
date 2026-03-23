@@ -404,6 +404,10 @@ div.css-y3hfdd > .css-1igwmid{
   overflow: visible !important;
 }
 
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed .ad-ext-theme-board-canvas > *{
+  display: block !important;
+}
+
 .ad-ext-theme-board-media-root > .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"],
 .ad-ext-theme-board-media-root > svg[viewBox="0 0 1000 1000"]{
   width: 100% !important;
@@ -414,6 +418,29 @@ div.css-y3hfdd > .css-1igwmid{
   max-height: 100% !important;
   display: block !important;
   aspect-ratio: 1 / 1;
+}
+
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed .ad-ext-theme-board-media-root{
+  position: relative !important;
+  display: block !important;
+}
+
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed .ad-ext-theme-board-media-root > img,
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed .ad-ext-theme-board-media-root > .chakra-image{
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
+}
+
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed .ad-ext-theme-board-media-root > .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"],
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed .ad-ext-theme-board-media-root > svg[viewBox="0 0 1000 1000"]{
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .ad-ext-theme-board-svg[viewBox="0 0 1000 1000"]{

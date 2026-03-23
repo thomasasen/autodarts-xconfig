@@ -17,6 +17,7 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   contentLeft: "ad-ext-theme-content-left",
   contentBoard: "ad-ext-theme-content-board",
   boardPanel: "ad-ext-theme-board-panel",
+  boardImageBackedMode: "ad-ext-theme-board-image-backed",
   boardControls: "ad-ext-theme-board-controls",
   boardViewport: "ad-ext-theme-board-viewport",
   boardEventShell: "ad-ext-theme-board-event-shell",
@@ -294,6 +295,14 @@ function isImageBackedBoardMediaRoot(node, boardSvg) {
   return imageChildCount >= 1 && boardChildCount === 1;
 }
 
+function isImageBackedBoardLayout(boardCanvas, boardMediaRoot) {
+  if (!boardCanvas || !boardMediaRoot || boardMediaRoot === boardCanvas) {
+    return false;
+  }
+
+  return hasBoardBackdropImage(boardMediaRoot) || hasBoardBackdropImage(boardCanvas);
+}
+
 export function resolveThemeBoardCanvasTarget(boardSvg) {
   if (!boardSvg || typeof boardSvg.closest !== "function") {
     return null;
@@ -307,17 +316,13 @@ export function resolveThemeBoardCanvasTarget(boardSvg) {
   const parentWrapper = imageBackedMediaRoot?.parentElement || null;
 
   if (stableBoardCanvas) {
-    if (
-      imageBackedMediaRoot &&
-      parentWrapper &&
-      parentWrapper !== stableBoardCanvas &&
-      isLikelyBoardMediaWrapper(parentWrapper, boardSvg)
-    ) {
-      return parentWrapper;
+    if (imageBackedMediaRoot) {
+      return stableBoardCanvas;
     }
     if (
       directParent &&
       directParent !== stableBoardCanvas &&
+      !isImageBackedBoardMediaRoot(directParent, boardSvg) &&
       isLikelyBoardMediaWrapper(directParent, boardSvg)
     ) {
       return directParent;
@@ -860,6 +865,9 @@ function resolveBoardLayoutTargets(documentRef) {
   const targets = {
     ...(hasCompleteContentTargets ? contentTargets : {}),
     boardPanel,
+    boardImageBackedMode: isImageBackedBoardLayout(boardCanvas, boardEventTargets.boardMediaRoot)
+      ? boardPanel
+      : null,
     boardControls,
     boardViewport,
     ...boardEventTargets,

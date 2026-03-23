@@ -241,11 +241,27 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
+    /\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-canvas\s*>\s*\*\s*\{[^}]*display:\s*block\s*!important;/s
+  );
+  assert.match(
+    css,
     /\.ad-ext-theme-board-event-shell\s*\{[^}]*width:\s*var\(--ad-ext-theme-board-size,\s*100%\)\s*!important;[^}]*height:\s*var\(--ad-ext-theme-board-size,\s*100%\)\s*!important;[^}]*display:\s*grid\s*!important;[^}]*place-items:\s*center\s*!important;[^}]*position:\s*relative\s*!important;/s
   );
   assert.match(
     css,
     /\.ad-ext-theme-board-media-root\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-media-root\s*\{[^}]*position:\s*relative\s*!important;[^}]*display:\s*block\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-media-root\s*>\s*img,\s*\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-media-root\s*>\s*\.chakra-image\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;[^}]*display:\s*block\s*!important;[^}]*object-fit:\s*contain\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-media-root\s*>\s*\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\],\s*\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-media-root\s*>\s*svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*position:\s*absolute\s*!important;[^}]*inset:\s*0\s*!important;[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;/s
   );
   assert.match(
     css,
@@ -280,6 +296,10 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   assert.match(
     css,
     /\.ad-ext-theme-board-panel\s*\{[^}]*width:\s*100%\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*min-width:\s*0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed::after\s*\{[^}]*content:\s*none;/s
   );
   assert.match(
     css,

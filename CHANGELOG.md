@@ -26,11 +26,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   minimalem Overlay-SVG als gültigen rechten Board-Kontext und bleiben auch
   bei kurzzeitig neu aufgebauten Overlay-SVGs stabil; für diese Pfade wird
   jetzt außerdem der äußere Canvas-Wrapper statt des inneren `img + svg`-
-  Knotens als Theme-Canvas verwendet, damit das Liveboard sichtbar und sauber
-  im rechten Slot bleibt. Neue Runtime-/Style-Regressionen sichern normale
-  4-Spieler-Layouts, manuell eingeblendete Engpass-Slots, verschachtelte
-  `showAnimations`-Boardpfade sowie den `img + Overlay-SVG`-Pfad samt
-  Rebuild-Gap ab.
+  Knotens als Theme-Canvas verwendet, ein interner image-backed Board-Modus
+  erhält die native `img + Overlay-SVG`-Stapelung ohne generischen Flex-Zwang,
+  und der Cricket-Panel-Glow wird nur für diese Liveboard-Pfade neutralisiert,
+  damit das Livebild sichtbar und sauber im rechten Slot bleibt. Neue
+  Runtime-/Style-Regressionen sichern normale 4-Spieler-Layouts, manuell
+  eingeblendete Engpass-Slots, verschachtelte `showAnimations`-Boardpfade
+  sowie den `img + Overlay-SVG`-Pfad samt Rebuild-Gap ab.
 
 ## [2.0.74] - 2026-03-22
 

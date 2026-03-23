@@ -730,6 +730,10 @@ p.chakra-text.css-1qlemha {
   opacity: 0.78;
 }
 
+.ad-ext-theme-board-panel.ad-ext-theme-board-image-backed::after {
+  content: none;
+}
+
 .ad-ext-theme-board-controls,
 .ad-ext-theme-board-viewport {
   position: relative;
