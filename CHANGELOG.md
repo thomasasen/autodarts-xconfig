@@ -11,6 +11,21 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.75] - 2026-03-23
+
+### Fixed
+
+- Nutzerwirkung: Das virtuelle Cricket-/Tactics-Board bleibt jetzt rechts im
+  eigenen Bereich zentriert sichtbar, statt bei breiten Matrix- oder
+  Spielerlayouts in die linke Anzeige hineinzuragen; bei echtem Platzmangel
+  blendet das Theme das Board weiterhin lesbarkeitsorientiert aus.
+  Technik: Die Cricket-Readability berücksichtigt jetzt die tatsächlich
+  gerenderte linke Layoutbreite statt nur die Spielerkarten-Heuristik,
+  sichtbare Board-Slots koppeln ihre Breite an `--ad-ext-theme-board-size`,
+  und neue Runtime-/Style-Regressionen sichern normale 4-Spieler-Layouts,
+  manuell eingeblendete Engpass-Slots und verschachtelte
+  `showAnimations`-Boardpfade ab.
+
 ## [2.0.74] - 2026-03-22
 
 ### Fixed
@@ -831,6 +846,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.75]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.74]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.73]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.72]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

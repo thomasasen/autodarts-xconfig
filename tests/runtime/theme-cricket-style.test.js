@@ -271,11 +271,23 @@ test("cricket theme keeps standard preview placement and uses stable board layou
   );
   assert.match(
     css,
-    /\.ad-ext-theme-content-slot\.ad-ext-theme-cricket-board-forced-visible\s*>\s*\.ad-ext-theme-content-board\s*\{[^}]*max-width:\s*var\(--ad-ext-theme-cricket-board-width,\s*var\(--ad-ext-theme-cricket-board-min-width-manual\)\)\s*!important;/s
+    /\.ad-ext-theme-content-slot\.ad-ext-theme-cricket-board-forced-visible\s*>\s*\.ad-ext-theme-content-board\s*\{[^}]*width:\s*var\(--ad-ext-theme-cricket-board-width,\s*var\(--ad-ext-theme-cricket-board-min-width-manual\)\)\s*!important;[^}]*max-width:\s*var\(--ad-ext-theme-cricket-board-width,\s*var\(--ad-ext-theme-cricket-board-min-width-manual\)\)\s*!important;/s
   );
   assert.match(
     css,
-    /\.ad-ext-theme-board-viewport\s*\{[^}]*width:\s*100%\s*!important;[^}]*min-width:\s*0\s*!important;[^}]*justify-content:\s*center\s*!important;[^}]*align-items:\s*center\s*!important;/s
+    /\.ad-ext-theme-content-board\s*\{[^}]*width:\s*100%\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*justify-self:\s*stretch\s*!important;[^}]*align-self:\s*stretch\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-panel\s*\{[^}]*width:\s*100%\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*min-width:\s*0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-viewport\s*\{[^}]*width:\s*100%\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*min-width:\s*0\s*!important;[^}]*justify-content:\s*center\s*!important;[^}]*align-items:\s*center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-event-shell,\s*\.ad-ext-theme-board-media-root\s*\{[^}]*max-width:\s*100%\s*!important;[^}]*max-height:\s*100%\s*!important;/s
   );
   assert.doesNotMatch(css, /div\.css-y3hfdd\s*\{[^}]*container-type:\s*size\s*!important;/s);
   assert.match(

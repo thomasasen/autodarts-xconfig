@@ -349,6 +349,16 @@ function getElementHeight(node) {
   }
 }
 
+function getSmallestPositiveDimension(values = []) {
+  const normalized = values
+    .map((value) => Number.parseFloat(value))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  if (!normalized.length) {
+    return 0;
+  }
+  return Math.min(...normalized);
+}
+
 function clearBoardSizeVariable(node) {
   if (!node || !node.style || typeof node.style.removeProperty !== "function") {
     return;
@@ -356,7 +366,7 @@ function clearBoardSizeVariable(node) {
   node.style.removeProperty(BOARD_SIZE_CSS_VARIABLE);
 }
 
-function updateBoardSizeVariable(node, sizingNode = null) {
+function updateBoardSizeVariable(node, sizingNode = null, options = {}) {
   if (!node || !node.style || typeof node.style.setProperty !== "function") {
     return;
   }
@@ -364,7 +374,14 @@ function updateBoardSizeVariable(node, sizingNode = null) {
   const measurementNode = sizingNode || node;
   const width = getElementWidth(measurementNode);
   const height = getElementHeight(measurementNode);
-  const boardSize = Math.floor(Math.min(width, height));
+  const maxSizePx = getSmallestPositiveDimension([
+    options.maxSizePx,
+    options.maxWidthPx,
+    options.maxHeightPx,
+  ]);
+  const boardSize = Math.floor(
+    maxSizePx > 0 ? Math.min(width, height, maxSizePx) : Math.min(width, height)
+  );
   if (!Number.isFinite(boardSize) || boardSize <= 0) {
     clearBoardSizeVariable(node);
     return;
@@ -850,6 +867,57 @@ function computeCricketRequiredPlayerWidth(playerCount) {
   );
 }
 
+function measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode) {
+  const directChildWidths = getElementChildren(contentLeftNode).map((childNode) =>
+    getElementWidth(childNode)
+  );
+  return Math.max(
+    getElementWidth(contentLeftNode),
+    getElementWidth(playerDisplayNode),
+    ...directChildWidths
+  );
+}
+
+function resolveCricketBoardSizeCap(state) {
+  const targets = state?.layoutHookTargets || {};
+  const readabilityState = state?.cricketReadability || {};
+  if (readabilityState.boardHidden) {
+    return 0;
+  }
+
+  return getSmallestPositiveDimension([
+    readabilityState.boardForcedVisible ? readabilityState.boardWidthPx : 0,
+    getElementWidth(targets.contentBoard),
+  ]);
+}
+
+function syncCricketBoardSize(state) {
+  const targets = state?.layoutHookTargets || {};
+  const measurementNode =
+    targets.boardViewport || targets.boardPanel || targets.boardCanvas || null;
+  const boardSizeCapPx = resolveCricketBoardSizeCap(state);
+  const boardTargets = [targets.boardCanvas];
+
+  if (targets.boardEventShell && targets.boardEventShell !== targets.boardCanvas) {
+    boardTargets.push(targets.boardEventShell);
+  }
+
+  boardTargets.forEach((targetNode) => {
+    if (!targetNode) {
+      return;
+    }
+
+    if (state?.cricketReadability?.boardHidden) {
+      clearBoardSizeVariable(targetNode);
+      return;
+    }
+
+    updateBoardSizeVariable(targetNode, measurementNode, {
+      maxWidthPx: boardSizeCapPx,
+    });
+  });
+}
+
 function removeCricketReadabilityNotice(state) {
   const readabilityState = state?.cricketReadability;
   if (!readabilityState || typeof readabilityState !== "object") {
@@ -1060,9 +1128,10 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
   const layoutTargets = state.layoutHookTargets || {};
   const contentSlotNode = layoutTargets.contentSlot || null;
   const contentLeftNode = layoutTargets.contentLeft || null;
+  const contentBoardNode = layoutTargets.contentBoard || null;
   const playerDisplayNode = documentRef?.getElementById?.("ad-ext-player-display") || null;
 
-  if (!contentSlotNode || !contentLeftNode || !playerDisplayNode) {
+  if (!contentSlotNode || !contentLeftNode || !contentBoardNode || !playerDisplayNode) {
     updateCricketReadabilityClasses(state, contentSlotNode, { playerCount: 0 });
     removeCricketReadabilityNotice(state);
     readabilityState.isConstrained = false;
@@ -1071,12 +1140,16 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     readabilityState.boardForcedVisible = false;
     readabilityState.boardWidthPx = 0;
     readabilityState.playerAreaRequiredWidthPx = 0;
+    syncCricketBoardSize(state);
     return;
   }
 
   const slotWidth = getElementWidth(contentSlotNode);
   const playerCount = countCricketPlayerCards(playerDisplayNode);
-  const requiredPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
+  const requiredPlayerWidth = Math.max(
+    computeCricketRequiredPlayerWidth(playerCount),
+    measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode)
+  );
   const availableBoardWidth =
     slotWidth -
     requiredPlayerWidth -
@@ -1103,13 +1176,19 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
       playerCount,
     });
     removeCricketReadabilityNotice(state);
+    syncCricketBoardSize(state);
     return;
   }
 
-  const boardForcedVisible = readabilityState.manualOverride === "show";
+  const boardForcedVisible =
+    readabilityState.manualOverride === "show" &&
+    availableBoardWidth >= CRICKET_READABILITY_POLICY.boardManualMinWidthPx;
   const boardHidden = !boardForcedVisible;
   const boardWidthPx = boardForcedVisible
-    ? Math.max(CRICKET_READABILITY_POLICY.boardManualMinWidthPx, Math.floor(availableBoardWidth))
+    ? Math.max(
+        CRICKET_READABILITY_POLICY.boardManualMinWidthPx,
+        Math.floor(availableBoardWidth)
+      )
     : 0;
   readabilityState.isConstrained = true;
   readabilityState.boardHidden = boardHidden;
@@ -1132,6 +1211,7 @@ function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     }
   });
   updateCricketReadabilityNotice(state, { boardHidden, boardForcedVisible });
+  syncCricketBoardSize(state);
 }
 
 export function mountThemeFeature(context = {}, options = {}) {

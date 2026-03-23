@@ -697,12 +697,16 @@ p.chakra-text.css-1qlemha {
   position: relative;
   min-width: 0 !important;
   width: 100% !important;
+  max-width: 100% !important;
   display: flex !important;
   justify-content: center !important;
+  justify-self: stretch !important;
+  align-self: stretch !important;
   overflow: visible !important;
 }
 
 .ad-ext-theme-content-slot.ad-ext-theme-cricket-board-forced-visible > .ad-ext-theme-content-board {
+  width: var(--ad-ext-theme-cricket-board-width, var(--ad-ext-theme-cricket-board-min-width-manual)) !important;
   max-width: var(--ad-ext-theme-cricket-board-width, var(--ad-ext-theme-cricket-board-min-width-manual)) !important;
 }
 
@@ -712,6 +716,7 @@ p.chakra-text.css-1qlemha {
   border-radius: 0 !important;
   box-shadow: none !important;
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
 }
 
@@ -733,6 +738,7 @@ p.chakra-text.css-1qlemha {
 
 .ad-ext-theme-board-viewport {
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
   justify-content: center !important;
   align-items: center !important;
@@ -740,6 +746,12 @@ p.chakra-text.css-1qlemha {
 
 .ad-ext-theme-board-canvas {
   min-width: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.ad-ext-theme-board-event-shell,
+.ad-ext-theme-board-media-root {
   max-width: 100% !important;
   max-height: 100% !important;
 }
