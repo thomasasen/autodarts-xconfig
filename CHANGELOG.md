@@ -24,10 +24,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   sichtbare Board-Slots koppeln ihre Breite an `--ad-ext-theme-board-size`,
   Theme-Layout-Hooks erkennen zusätzlich bildgestützte Live-Boards mit
   minimalem Overlay-SVG als gültigen rechten Board-Kontext und bleiben auch
-  bei kurzzeitig neu aufgebauten Overlay-SVGs stabil, und neue
-  Runtime-/Style-Regressionen sichern normale 4-Spieler-Layouts, manuell
-  eingeblendete Engpass-Slots, verschachtelte `showAnimations`-Boardpfade
-  sowie den `img + Overlay-SVG`-Pfad samt Rebuild-Gap ab.
+  bei kurzzeitig neu aufgebauten Overlay-SVGs stabil; für diese Pfade wird
+  jetzt außerdem der äußere Canvas-Wrapper statt des inneren `img + svg`-
+  Knotens als Theme-Canvas verwendet, damit das Liveboard sichtbar und sauber
+  im rechten Slot bleibt. Neue Runtime-/Style-Regressionen sichern normale
+  4-Spieler-Layouts, manuell eingeblendete Engpass-Slots, verschachtelte
+  `showAnimations`-Boardpfade sowie den `img + Overlay-SVG`-Pfad samt
+  Rebuild-Gap ab.
 
 ## [2.0.74] - 2026-03-22
 

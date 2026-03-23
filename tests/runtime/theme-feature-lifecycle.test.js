@@ -441,7 +441,7 @@ function createImageBackedInfoStyleBoardFixture(documentRef) {
     boardControls,
     boardViewport: boardPanel,
     boardEventShell,
-    boardCanvas: boardMediaRoot,
+    boardCanvas,
     boardSvg,
     boardMediaRoot,
   };
@@ -547,6 +547,27 @@ test("theme board canvas resolver keeps outer .showAnimations fallback when no i
   boardCanvas.classList.add("showAnimations", "ad-ext-theme-board-canvas");
   boardCanvas.appendChild(boardSvg);
   documentRef.main.appendChild(boardCanvas);
+
+  assert.equal(resolveThemeBoardCanvasTarget(boardSvg), boardCanvas);
+});
+
+test("theme board canvas resolver prefers the outer canvas wrapper for image-backed live boards", () => {
+  const documentRef = new FakeDocument();
+  const boardCanvas = documentRef.createElement("div");
+  const boardMediaRoot = documentRef.createElement("div");
+  const boardImage = documentRef.createElement("img");
+  const boardSvg = createSparseImageBackedBoardSvg(documentRef);
+  const showAnimations = documentRef.createElement("div");
+
+  boardCanvas.classList.add("css-1nz0cmz");
+  boardMediaRoot.classList.add("css-79elbk");
+  showAnimations.classList.add("showAnimations");
+
+  boardMediaRoot.appendChild(boardImage);
+  boardMediaRoot.appendChild(boardSvg);
+  boardCanvas.appendChild(boardMediaRoot);
+  showAnimations.appendChild(boardCanvas);
+  documentRef.main.appendChild(showAnimations);
 
   assert.equal(resolveThemeBoardCanvasTarget(boardSvg), boardCanvas);
 });

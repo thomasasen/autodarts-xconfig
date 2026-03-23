@@ -272,6 +272,28 @@ function isLikelyBoardMediaWrapper(node, boardSvg) {
   return children.length <= 2;
 }
 
+function isImageBackedBoardMediaRoot(node, boardSvg) {
+  if (!node || !boardSvg || node === boardSvg) {
+    return false;
+  }
+
+  if (!elementContains(node, boardSvg) || countButtons(node) > 0) {
+    return false;
+  }
+
+  const children = getElementChildren(node);
+  if (children.length < 2 || children.length > 3) {
+    return false;
+  }
+
+  const imageChildCount = children.filter((child) => {
+    const tagName = normalizeText(child.tagName || child.nodeName);
+    return tagName === "img";
+  }).length;
+  const boardChildCount = children.filter((child) => elementContains(child, boardSvg)).length;
+  return imageChildCount >= 1 && boardChildCount === 1;
+}
+
 export function resolveThemeBoardCanvasTarget(boardSvg) {
   if (!boardSvg || typeof boardSvg.closest !== "function") {
     return null;
@@ -280,8 +302,19 @@ export function resolveThemeBoardCanvasTarget(boardSvg) {
   const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
   const showAnimations = boardSvg.closest(".showAnimations");
   const directParent = boardSvg.parentElement || null;
+  const imageBackedMediaRoot =
+    directParent && isImageBackedBoardMediaRoot(directParent, boardSvg) ? directParent : null;
+  const parentWrapper = imageBackedMediaRoot?.parentElement || null;
 
   if (stableBoardCanvas) {
+    if (
+      imageBackedMediaRoot &&
+      parentWrapper &&
+      parentWrapper !== stableBoardCanvas &&
+      isLikelyBoardMediaWrapper(parentWrapper, boardSvg)
+    ) {
+      return parentWrapper;
+    }
     if (
       directParent &&
       directParent !== stableBoardCanvas &&
@@ -293,6 +326,14 @@ export function resolveThemeBoardCanvasTarget(boardSvg) {
   }
 
   if (showAnimations) {
+    if (
+      imageBackedMediaRoot &&
+      parentWrapper &&
+      parentWrapper !== showAnimations &&
+      isLikelyBoardMediaWrapper(parentWrapper, boardSvg)
+    ) {
+      return parentWrapper;
+    }
     if (
       directParent &&
       directParent !== showAnimations &&
@@ -341,9 +382,16 @@ function resolveThemeBoardEventTargets(boardCanvas, boardSvg) {
     };
   }
 
+  const directParent = boardSvg.parentElement || null;
+  const imageBackedMediaRoot =
+    directParent && isImageBackedBoardMediaRoot(directParent, boardSvg) ? directParent : null;
+
   return {
     boardEventShell: showAnimations,
-    boardMediaRoot: boardCanvas,
+    boardMediaRoot:
+      imageBackedMediaRoot && imageBackedMediaRoot !== boardCanvas
+        ? imageBackedMediaRoot
+        : boardCanvas,
   };
 }
 
