@@ -324,6 +324,123 @@ function createInfoStyleBoardFixture(documentRef) {
   };
 }
 
+function createImageBackedInfoStyleBoardFixture(documentRef) {
+  const contentSlot = documentRef.createElement("div");
+  const contentLeft = documentRef.createElement("div");
+  const contentBoard = documentRef.createElement("div");
+  const playerDisplay = documentRef.createElement("div");
+  const boardShell = documentRef.createElement("div");
+  const boardStack = documentRef.createElement("div");
+  const boardPanel = documentRef.createElement("div");
+  const boardToolbar = documentRef.createElement("div");
+  const boardToolbarInner = documentRef.createElement("div");
+  const boardControls = documentRef.createElement("div");
+  const boardEventShell = documentRef.createElement("div");
+  const boardCanvas = documentRef.createElement("div");
+  const boardMediaRoot = documentRef.createElement("div");
+  const boardImage = documentRef.createElement("img");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const defs = documentRef.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const overlayGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const overlayRect = documentRef.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+  contentSlot.classList.add("css-u5v8bq");
+  contentLeft.classList.add("css-rc3vw3");
+  contentBoard.classList.add("css-vo3506");
+  boardShell.classList.add("css-tkevr6");
+  boardStack.classList.add("css-7ls08l");
+  boardPanel.classList.add("css-jbngkd");
+  boardToolbar.classList.add("chakra-stack", "css-vw7qil");
+  boardToolbarInner.classList.add("chakra-stack", "css-1igwmid");
+  boardControls.classList.add("chakra-stack", "css-7bjx6y");
+  boardEventShell.classList.add("showAnimations", "css-1cdcn26");
+  boardCanvas.classList.add("css-1nz0cmz");
+  boardMediaRoot.classList.add("css-79elbk");
+  boardImage.classList.add("chakra-image", "css-11cxvkr");
+  boardImage.setAttribute("src", "blob:https://play.autodarts.io/test-virtual-board");
+  playerDisplay.id = "ad-ext-player-display";
+
+  contentSlot.__rect = { width: 1660, height: 680 };
+  contentLeft.__rect = { width: 1032, height: 680 };
+  contentBoard.__rect = { width: 620, height: 680 };
+  boardPanel.__rect = { width: 620, height: 680 };
+  boardEventShell.__rect = { width: 620, height: 620 };
+  boardCanvas.__rect = { width: 620, height: 620 };
+  boardMediaRoot.__rect = { width: 620, height: 620 };
+  boardImage.__rect = { width: 620, height: 620 };
+  boardSvg.__rect = { width: 620, height: 620 };
+
+  const ringButton = documentRef.createElement("button");
+  ringButton.type = "button";
+  ringButton.setAttribute("aria-label", "Show virtual number ring");
+  const legOneButton = documentRef.createElement("button");
+  legOneButton.type = "button";
+  legOneButton.setAttribute("data-active", "true");
+  legOneButton.textContent = "1";
+  const legTwoButton = documentRef.createElement("button");
+  legTwoButton.type = "button";
+  legTwoButton.textContent = "2";
+  const legThreeButton = documentRef.createElement("button");
+  legThreeButton.type = "button";
+  legThreeButton.textContent = "3";
+  boardToolbarInner.appendChild(ringButton);
+  boardToolbarInner.appendChild(legOneButton);
+  boardToolbarInner.appendChild(legTwoButton);
+  boardToolbarInner.appendChild(legThreeButton);
+  boardToolbar.appendChild(boardToolbarInner);
+
+  const controlsSpacer = documentRef.createElement("div");
+  const undoButton = documentRef.createElement("button");
+  undoButton.type = "button";
+  undoButton.textContent = "Undo";
+  const nextButton = documentRef.createElement("button");
+  nextButton.type = "button";
+  nextButton.textContent = "Next";
+  boardControls.appendChild(controlsSpacer);
+  boardControls.appendChild(undoButton);
+  boardControls.appendChild(nextButton);
+
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+  overlayGroup.setAttribute("transform", "translate(500, 500)");
+  overlayRect.setAttribute("opacity", "0");
+  overlayRect.setAttribute("x", "-500");
+  overlayRect.setAttribute("y", "-500");
+  overlayRect.setAttribute("width", "1000");
+  overlayRect.setAttribute("height", "1000");
+  overlayGroup.appendChild(overlayRect);
+  boardSvg.appendChild(defs);
+  boardSvg.appendChild(overlayGroup);
+
+  boardMediaRoot.appendChild(boardImage);
+  boardMediaRoot.appendChild(boardSvg);
+  boardCanvas.appendChild(boardMediaRoot);
+  boardEventShell.appendChild(boardCanvas);
+  boardPanel.appendChild(boardToolbar);
+  boardPanel.appendChild(boardControls);
+  boardPanel.appendChild(boardEventShell);
+  boardStack.appendChild(boardPanel);
+  boardShell.appendChild(boardStack);
+  contentBoard.appendChild(boardShell);
+  contentLeft.appendChild(playerDisplay);
+  contentSlot.appendChild(contentLeft);
+  contentSlot.appendChild(contentBoard);
+  documentRef.main.appendChild(contentSlot);
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+    boardPanel,
+    boardToolbar,
+    boardControls,
+    boardViewport: boardPanel,
+    boardEventShell,
+    boardCanvas: boardMediaRoot,
+    boardSvg,
+    boardMediaRoot,
+  };
+}
+
 function addPlayerCards(documentRef, playerDisplayNode, count) {
   if (!playerDisplayNode || !Number.isFinite(count) || count <= 0) {
     return;
@@ -1057,6 +1174,50 @@ test("theme-cricket keeps the normal 4-player board visible in a dedicated right
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
     ""
+  );
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
+
+  runtime.stop();
+});
+
+test("theme-cricket keeps image-backed live board layouts inside the right theme slot", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  const boardNodes = createImageBackedInfoStyleBoardFixture(documentRef);
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-image-backed-live-board");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), true);
+  assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
+  assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(
+    boardNodes.boardEventShell.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardEventShell),
+    true
+  );
+  assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
+  assert.equal(
+    boardNodes.boardMediaRoot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardMediaRoot),
+    true
+  );
+  assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
   );
   assert.equal(
     boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),

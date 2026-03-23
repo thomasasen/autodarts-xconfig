@@ -22,9 +22,11 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   Technik: Die Cricket-Readability berücksichtigt jetzt die tatsächlich
   gerenderte linke Layoutbreite statt nur die Spielerkarten-Heuristik,
   sichtbare Board-Slots koppeln ihre Breite an `--ad-ext-theme-board-size`,
-  und neue Runtime-/Style-Regressionen sichern normale 4-Spieler-Layouts,
-  manuell eingeblendete Engpass-Slots und verschachtelte
-  `showAnimations`-Boardpfade ab.
+  Theme-Layout-Hooks erkennen zusätzlich bildgestützte Live-Boards mit
+  minimalem Overlay-SVG als gültigen rechten Board-Kontext, und neue
+  Runtime-/Style-Regressionen sichern normale 4-Spieler-Layouts, manuell
+  eingeblendete Engpass-Slots, verschachtelte `showAnimations`-Boardpfade
+  sowie den `img + Overlay-SVG`-Pfad ab.
 
 ## [2.0.74] - 2026-03-22
 

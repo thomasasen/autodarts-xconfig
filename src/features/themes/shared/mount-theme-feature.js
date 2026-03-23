@@ -91,6 +91,126 @@ function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function isInteractiveControlAncestor(node) {
+  let current = node?.parentElement || node?.parentNode || null;
+  let depth = 0;
+
+  while (current && depth < 8) {
+    const tagName = normalizeText(current.tagName || current.nodeName);
+    const role = normalizeText(current.getAttribute?.("role"));
+    const inputType = normalizeText(current.getAttribute?.("type"));
+    if (
+      tagName === "button" ||
+      role === "button" ||
+      role === "tab" ||
+      role === "radio" ||
+      (tagName === "input" && inputType === "radio")
+    ) {
+      return true;
+    }
+    current = current.parentElement || current.parentNode || null;
+    depth += 1;
+  }
+
+  return false;
+}
+
+function hasExactBoardViewBox(node) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return false;
+  }
+
+  const rawViewBox = String(node.getAttribute("viewBox") || "")
+    .trim()
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ");
+  return rawViewBox === "0 0 1000 1000";
+}
+
+function hasBoardBackdropImage(node) {
+  if (!node || typeof node.querySelectorAll !== "function") {
+    return false;
+  }
+
+  try {
+    return Array.from(node.querySelectorAll("img")).some((candidate) => {
+      if (!candidate || candidate.isConnected === false) {
+        return false;
+      }
+      return !isInteractiveControlAncestor(candidate);
+    });
+  } catch (_) {
+    return false;
+  }
+}
+
+function getLayoutFallbackBoardSvgScore(svgNode, documentRef) {
+  if (!svgNode || typeof svgNode.closest !== "function") {
+    return 0;
+  }
+
+  if (svgNode.isConnected === false || isInteractiveControlAncestor(svgNode)) {
+    return 0;
+  }
+
+  if (!hasExactBoardViewBox(svgNode)) {
+    return 0;
+  }
+
+  const showAnimations = svgNode.closest(".showAnimations");
+  if (!showAnimations) {
+    return 0;
+  }
+
+  const boardPanel = resolveBoardPanel(svgNode, documentRef);
+  if (!boardPanel || countButtons(boardPanel) <= 0) {
+    return 0;
+  }
+
+  const mediaCandidates = [
+    svgNode.parentElement || null,
+    svgNode.parentElement?.parentElement || null,
+    showAnimations,
+  ].filter(Boolean);
+  const hasBackdropImage = mediaCandidates.some((candidate) => hasBoardBackdropImage(candidate));
+  if (!hasBackdropImage) {
+    return 0;
+  }
+
+  const width = getElementWidth(svgNode);
+  const height = getElementHeight(svgNode);
+  const minDimension = Math.min(width, height);
+  if (!Number.isFinite(minDimension) || minDimension < 240) {
+    return 0;
+  }
+
+  return Math.floor(width * height) + minDimension;
+}
+
+function findBoardLayoutFallbackSvg(documentRef) {
+  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+    return null;
+  }
+
+  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
+  if (!svgNodes.length) {
+    return null;
+  }
+
+  let bestNode = null;
+  let bestScore = 0;
+
+  svgNodes.forEach((svgNode) => {
+    const score = getLayoutFallbackBoardSvgScore(svgNode, documentRef);
+    if (score > bestScore) {
+      bestScore = score;
+      bestNode = svgNode;
+    }
+  });
+
+  return bestNode;
+}
+
 function isLikelyBoardMediaWrapper(node, boardSvg) {
   if (!node || !boardSvg || node === boardSvg) {
     return false;
@@ -642,7 +762,7 @@ function isBoardLayoutContextConsistent(targets) {
 }
 
 function resolveBoardLayoutTargets(documentRef) {
-  const boardSvg = findBoardSvg(documentRef);
+  const boardSvg = findBoardSvg(documentRef) || findBoardLayoutFallbackSvg(documentRef);
   if (!boardSvg) {
     return {
       status: "missing-board",
