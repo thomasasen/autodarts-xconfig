@@ -11,6 +11,21 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.76] - 2026-03-23
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-Theme bleibt die helle Aktiv-Markierung jetzt stabil
+  nur auf dem tatsächlich aktiven Spieler. Stale Umrandungen auf inaktiven
+  Spielern wie Spieler 1 bei gleichzeitig aktivem späteren Spieler werden nicht
+  mehr angezeigt.
+  Technik: Das Theme synchronisiert jetzt eine kanonische
+  Active-Player-Markierung pro Cricket-Spielerkarte, reagiert dafür auch auf
+  Player-Class-Mutationen und rendert die aktive/inaktive Kartenoptik über
+  diese xConfig-gesteuerte Zustandsquelle statt direkt über potenziell stale
+  `ad-ext-player-active`-Klassen; neue Lifecycle-/Style-Regressionen decken
+  doppelte Active-Klassen, Turn-Wechsel und Cleanup explizit ab.
+
 ## [2.0.75] - 2026-03-23
 
 ### Fixed
@@ -854,6 +869,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.76]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.75]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.74]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.73]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

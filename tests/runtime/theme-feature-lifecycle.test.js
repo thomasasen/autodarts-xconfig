@@ -6,8 +6,10 @@ import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
+import { mountThemeCricket } from "../../src/features/themes/cricket/index.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import {
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
   THEME_CRICKET_READABILITY,
   THEME_LAYOUT_HOOK_CLASSES,
   resolveThemeBoardCanvasTarget,
@@ -494,6 +496,30 @@ function assertThemeHookState(nodes, expectedActive) {
     }
     assert.equal(node.classList.contains(className), expectedActive);
   });
+}
+
+function createCricketThemeGameState(initialActivePlayerIndex = 0) {
+  let activePlayerIndex = Number(initialActivePlayerIndex) || 0;
+  const listeners = new Set();
+
+  return {
+    getActivePlayerIndex() {
+      return activePlayerIndex;
+    },
+    setActivePlayerIndex(nextIndex) {
+      activePlayerIndex = Number(nextIndex) || 0;
+      listeners.forEach((listener) => listener());
+    },
+    isCricketVariant() {
+      return true;
+    },
+    subscribe(listener) {
+      if (typeof listener === "function") {
+        listeners.add(listener);
+      }
+      return () => listeners.delete(listener);
+    },
+  };
 }
 
 test("selectWidestContentLayoutCandidate prefers widest slot and keeps deterministic tie-breaking", () => {
@@ -1021,6 +1047,78 @@ test("theme-cricket activates for tactics and cleans style on cleanup", async ()
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-cricket-style")), false);
   assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
+});
+
+test("theme-cricket canonicalizes the active player card when stale active classes remain on other players", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+  const playerNodes = Array.from(documentRef.getElementById("ad-ext-player-display").children);
+  playerNodes[2].classList.add("ad-ext-player-active");
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-active-card-sync");
+  const gameState = createCricketThemeGameState(2);
+  const cleanup = mountThemeCricket({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState,
+    config: {
+      getFeatureConfig() {
+        return {
+          showAvg: true,
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(playerNodes[0].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "false");
+  assert.equal(playerNodes[1].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "false");
+  assert.equal(playerNodes[2].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "true");
+  assert.equal(playerNodes[3].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "false");
+
+  playerNodes.forEach((node) => node.classList.remove("ad-ext-player-active"));
+  playerNodes[0].classList.add("ad-ext-player-active");
+  playerNodes[1].classList.add("ad-ext-player-active");
+  gameState.setActivePlayerIndex(1);
+  documentRef.flushMutations([
+    {
+      type: "attributes",
+      target: playerNodes[1],
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(playerNodes[0].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "false");
+  assert.equal(playerNodes[1].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "true");
+  assert.equal(playerNodes[2].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "false");
+  assert.equal(playerNodes[3].getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), "false");
+
+  cleanup();
+
+  playerNodes.forEach((node) => {
+    assert.equal(node.getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), null);
+  });
 });
 
 test("theme-cricket auto-hides board for readability and keeps player width when manually showing a narrow board", async () => {

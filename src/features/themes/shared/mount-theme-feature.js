@@ -30,6 +30,7 @@ const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
 const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
   "--ad-ext-theme-cricket-player-area-required-width";
 const CRICKET_PLAYER_COUNT_CSS_VARIABLE = "--ad-ext-theme-cricket-player-count";
+export const CRICKET_ACTIVE_PLAYER_ATTRIBUTE = "data-ad-ext-theme-cricket-active";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const CRICKET_READABILITY_POLICY = Object.freeze({
   playerCardMinWidthPx: 228,
@@ -1058,6 +1059,90 @@ function countCricketPlayerCards(playerDisplayNode) {
   return 0;
 }
 
+function collectCricketPlayerCards(documentRef) {
+  const playerDisplayNode = documentRef?.getElementById?.("ad-ext-player-display") || null;
+  if (!playerDisplayNode || typeof playerDisplayNode !== "object") {
+    return [];
+  }
+
+  const directChildren = Array.isArray(playerDisplayNode.children)
+    ? playerDisplayNode.children.filter((child) => {
+        return Boolean(child?.classList?.contains?.("ad-ext-player"));
+      })
+    : [];
+  if (directChildren.length) {
+    return directChildren;
+  }
+
+  if (typeof playerDisplayNode.querySelectorAll === "function") {
+    return Array.from(playerDisplayNode.querySelectorAll(".ad-ext-player"));
+  }
+
+  return [];
+}
+
+function resolveCricketThemeActivePlayerIndex(documentRef, gameState) {
+  const playerNodes = collectCricketPlayerCards(documentRef);
+  if (!playerNodes.length) {
+    return -1;
+  }
+
+  const stateIndexRaw =
+    gameState && typeof gameState.getActivePlayerIndex === "function"
+      ? Number(gameState.getActivePlayerIndex())
+      : Number.NaN;
+  const hasStateIndex = Number.isFinite(stateIndexRaw);
+  const normalizedStateIndex = hasStateIndex
+    ? Math.max(0, Math.min(Math.round(stateIndexRaw), playerNodes.length - 1))
+    : -1;
+
+  const domActiveIndexes = playerNodes.reduce((indexes, node, index) => {
+    if (node?.classList?.contains?.("ad-ext-player-active")) {
+      indexes.push(index);
+    }
+    return indexes;
+  }, []);
+
+  if (domActiveIndexes.length === 1) {
+    return domActiveIndexes[0];
+  }
+
+  if (domActiveIndexes.length > 1) {
+    // Autodarts can briefly leave stale active classes behind during turn switches.
+    // Prefer the state index when available; otherwise trust the newest visible marker.
+    return hasStateIndex ? normalizedStateIndex : domActiveIndexes[domActiveIndexes.length - 1];
+  }
+
+  return hasStateIndex ? normalizedStateIndex : 0;
+}
+
+function syncCricketActivePlayerState(documentRef, gameState) {
+  const playerNodes = collectCricketPlayerCards(documentRef);
+  if (!playerNodes.length) {
+    return;
+  }
+
+  const activePlayerIndex = resolveCricketThemeActivePlayerIndex(documentRef, gameState);
+  playerNodes.forEach((node, index) => {
+    if (!node || typeof node.setAttribute !== "function") {
+      return;
+    }
+    node.setAttribute(
+      CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+      index === activePlayerIndex ? "true" : "false"
+    );
+  });
+}
+
+function clearCricketActivePlayerState(documentRef) {
+  collectCricketPlayerCards(documentRef).forEach((node) => {
+    if (!node || typeof node.removeAttribute !== "function") {
+      return;
+    }
+    node.removeAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE);
+  });
+}
+
 function computeCricketRequiredPlayerWidth(playerCount) {
   const normalizedPlayerCount = Number.isFinite(playerCount)
     ? Math.max(1, Math.floor(playerCount))
@@ -1322,6 +1407,43 @@ function clearCricketReadabilityPolicy(state) {
   state.cricketReadability = createCricketReadabilityState();
 }
 
+function isCricketPlayerStateNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  if (node.id === "ad-ext-player-display") {
+    return true;
+  }
+
+  if (node?.classList?.contains?.("ad-ext-player")) {
+    return true;
+  }
+
+  return Boolean(typeof node.closest === "function" && node.closest("#ad-ext-player-display"));
+}
+
+function hasCricketPlayerStateMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+
+  return mutations.some((mutation) => {
+    if (String(mutation?.type || "") === "attributes") {
+      const attributeName = String(mutation?.attributeName || "").trim().toLowerCase();
+      if (attributeName && attributeName !== "class") {
+        return false;
+      }
+      return isCricketPlayerStateNode(mutation?.target || null);
+    }
+
+    return [
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].some((node) => isCricketPlayerStateNode(node));
+  });
+}
+
 function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
   if (!state || typeof state !== "object") {
     return;
@@ -1475,6 +1597,7 @@ export function mountThemeFeature(context = {}, options = {}) {
       togglePreviewSpace(documentRef, previewPlacement, false);
       clearBoardLayoutHooks(themeState);
       if (isCricketTheme) {
+        clearCricketActivePlayerState(documentRef);
         clearCricketReadabilityPolicy(themeState);
       }
       return;
@@ -1486,6 +1609,7 @@ export function mountThemeFeature(context = {}, options = {}) {
       togglePreviewSpace(documentRef, previewPlacement, false);
       clearBoardLayoutHooks(themeState);
       if (isCricketTheme) {
+        clearCricketActivePlayerState(documentRef);
         clearCricketReadabilityPolicy(themeState);
       }
       return;
@@ -1500,6 +1624,7 @@ export function mountThemeFeature(context = {}, options = {}) {
     togglePreviewSpace(documentRef, previewPlacement, previewSpaceEnabled);
     updateBoardLayoutHooks(documentRef, themeState);
     if (isCricketTheme) {
+      syncCricketActivePlayerState(documentRef, gameState);
       applyCricketReadabilityPolicy(documentRef, themeState, scheduler);
     }
   }
@@ -1528,6 +1653,12 @@ export function mountThemeFeature(context = {}, options = {}) {
     ids: [styleId, isCricketTheme ? THEME_CRICKET_READABILITY.noticeId : ""].filter(Boolean),
     classNames: managedClassNames,
   });
+  const observedAttributeFilter = Array.from(
+    new Set([
+      ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+      ...(isCricketTheme ? ["class"] : []),
+    ])
+  );
 
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
@@ -1536,6 +1667,7 @@ export function mountThemeFeature(context = {}, options = {}) {
       target: rootNode,
       callback: (mutations = []) => {
         if (
+          !(isCricketTheme && hasCricketPlayerStateMutation(mutations)) &&
           !hasBoardInputModeMutation(mutations) &&
           !hasExternalDomMutation(mutations, isManagedNode)
         ) {
@@ -1548,7 +1680,7 @@ export function mountThemeFeature(context = {}, options = {}) {
         subtree: true,
         characterData: true,
         attributes: true,
-        attributeFilter: BOARD_INPUT_MODE_ATTRIBUTE_FILTER.slice(),
+        attributeFilter: observedAttributeFilter,
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -1593,6 +1725,7 @@ export function mountThemeFeature(context = {}, options = {}) {
     );
     clearBoardLayoutHooks(themeState);
     if (isCricketTheme) {
+      clearCricketActivePlayerState(documentRef);
       clearCricketReadabilityPolicy(themeState);
     }
     domGuards.removeNodeById(styleId);

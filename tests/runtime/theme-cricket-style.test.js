@@ -5,6 +5,7 @@ import {
   PREVIEW_PLACEMENT,
   buildCricketThemeCss,
 } from "../../src/features/themes/cricket/style.js";
+import { CRICKET_ACTIVE_PLAYER_ATTRIBUTE } from "../../src/features/themes/shared/mount-theme-feature.js";
 import { buildStyleText as buildCricketHighlighterStyleText } from "../../src/features/cricket-highlighter/style.js";
 import { buildStyleText as buildCricketGridFxStyleText } from "../../src/features/cricket-grid-fx/style.js";
 
@@ -351,6 +352,16 @@ test("cricket theme strengthens tactical hierarchy without leaving stable hooks"
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\)\s*>\s*\.chakra-stack\s*\{[^}]*filter:\s*saturate\(0\.76\)\s*brightness\(0\.9\);/s
+  );
+  assert.ok(
+    css.includes(
+      `#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > .chakra-stack {`
+    )
+  );
+  assert.ok(
+    css.includes(
+      `#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > .chakra-stack {`
+    )
   );
   assert.doesNotMatch(
     css,
