@@ -211,6 +211,33 @@ function findBoardLayoutFallbackSvg(documentRef) {
   return bestNode;
 }
 
+function shouldKeepImageBackedLayoutHooks(targets) {
+  if (!targets || typeof targets !== "object") {
+    return false;
+  }
+
+  const connectedLayoutNodes = [
+    targets.contentSlot,
+    targets.contentBoard,
+    targets.boardPanel,
+  ].filter(Boolean);
+  if (!connectedLayoutNodes.length) {
+    return false;
+  }
+  if (connectedLayoutNodes.some((node) => node.isConnected === false)) {
+    return false;
+  }
+
+  const boardSurfaceCandidates = [
+    targets.boardCanvas,
+    targets.boardEventShell,
+    targets.boardPanel,
+  ].filter(Boolean);
+  return boardSurfaceCandidates.some((candidate) => {
+    return candidate.isConnected !== false && hasBoardBackdropImage(candidate);
+  });
+}
+
 function isLikelyBoardMediaWrapper(node, boardSvg) {
   if (!node || !boardSvg || node === boardSvg) {
     return false;
@@ -897,6 +924,9 @@ function updateBoardLayoutHooks(documentRef, state) {
   const previous = state.layoutHookTargets || {};
 
   if (!resolution || resolution.status === "missing-board") {
+    if (shouldKeepImageBackedLayoutHooks(previous)) {
+      return;
+    }
     clearBoardLayoutHooks(state);
     return;
   }

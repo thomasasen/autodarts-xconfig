@@ -256,6 +256,27 @@ function createNestedShowAnimationsBoardFixture(documentRef, options = {}) {
   };
 }
 
+function createSparseImageBackedBoardSvg(documentRef, size = 620) {
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const defs = documentRef.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const overlayGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const overlayRect = documentRef.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+  boardSvg.__rect = { width: size, height: size };
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+  overlayGroup.setAttribute("transform", "translate(500, 500)");
+  overlayRect.setAttribute("opacity", "0");
+  overlayRect.setAttribute("x", "-500");
+  overlayRect.setAttribute("y", "-500");
+  overlayRect.setAttribute("width", "1000");
+  overlayRect.setAttribute("height", "1000");
+  overlayGroup.appendChild(overlayRect);
+  boardSvg.appendChild(defs);
+  boardSvg.appendChild(overlayGroup);
+
+  return boardSvg;
+}
+
 function createInfoStyleBoardFixture(documentRef) {
   const contentSlot = documentRef.createElement("div");
   const contentLeft = documentRef.createElement("div");
@@ -339,10 +360,7 @@ function createImageBackedInfoStyleBoardFixture(documentRef) {
   const boardCanvas = documentRef.createElement("div");
   const boardMediaRoot = documentRef.createElement("div");
   const boardImage = documentRef.createElement("img");
-  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  const defs = documentRef.createElementNS("http://www.w3.org/2000/svg", "defs");
-  const overlayGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const overlayRect = documentRef.createElementNS("http://www.w3.org/2000/svg", "rect");
+  const boardSvg = createSparseImageBackedBoardSvg(documentRef);
 
   contentSlot.classList.add("css-u5v8bq");
   contentLeft.classList.add("css-rc3vw3");
@@ -368,7 +386,6 @@ function createImageBackedInfoStyleBoardFixture(documentRef) {
   boardCanvas.__rect = { width: 620, height: 620 };
   boardMediaRoot.__rect = { width: 620, height: 620 };
   boardImage.__rect = { width: 620, height: 620 };
-  boardSvg.__rect = { width: 620, height: 620 };
 
   const ringButton = documentRef.createElement("button");
   ringButton.type = "button";
@@ -399,17 +416,6 @@ function createImageBackedInfoStyleBoardFixture(documentRef) {
   boardControls.appendChild(controlsSpacer);
   boardControls.appendChild(undoButton);
   boardControls.appendChild(nextButton);
-
-  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
-  overlayGroup.setAttribute("transform", "translate(500, 500)");
-  overlayRect.setAttribute("opacity", "0");
-  overlayRect.setAttribute("x", "-500");
-  overlayRect.setAttribute("y", "-500");
-  overlayRect.setAttribute("width", "1000");
-  overlayRect.setAttribute("height", "1000");
-  overlayGroup.appendChild(overlayRect);
-  boardSvg.appendChild(defs);
-  boardSvg.appendChild(overlayGroup);
 
   boardMediaRoot.appendChild(boardImage);
   boardMediaRoot.appendChild(boardSvg);
@@ -1224,6 +1230,51 @@ test("theme-cricket keeps image-backed live board layouts inside the right theme
     "620px"
   );
   assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
+
+  runtime.stop();
+});
+
+test("theme-cricket keeps image-backed board hooks stable while the overlay svg is rebuilt", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  const boardNodes = createImageBackedInfoStyleBoardFixture(documentRef);
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-image-backed-gap");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
+  assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
+
+  boardNodes.boardMediaRoot.removeChild(boardNodes.boardSvg);
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
+  assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
+
+  const replacementBoardSvg = createSparseImageBackedBoardSvg(documentRef);
+  boardNodes.boardMediaRoot.appendChild(replacementBoardSvg);
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(
+    replacementBoardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg),
+    true
+  );
+  assert.equal(boardNodes.contentBoard.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentBoard), true);
+  assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
 
   runtime.stop();
 });
