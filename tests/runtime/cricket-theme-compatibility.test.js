@@ -46,6 +46,24 @@ import {
 import { THEME_LAYOUT_HOOK_CLASSES } from "../../src/features/themes/shared/mount-theme-feature.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
+function appendBoardLikeGeometry(documentRef, groupNode, boardRadius) {
+  const ringRatios = [0.75, 0.52, 0.14];
+  ringRatios.forEach((ratio) => {
+    const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("r", String(Math.max(1, Math.floor(boardRadius * ratio))));
+    groupNode.appendChild(circle);
+  });
+
+  for (let index = 0; index < 46; index += 1) {
+    const path = documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute(
+      "d",
+      `M ${index} 0 L ${index + 1} ${Math.max(1, index % 8)} L ${index + 2} 0 Z`
+    );
+    groupNode.appendChild(path);
+  }
+}
+
 function createThemeLikeBoardFixture(documentRef) {
   const contentSlot = documentRef.createElement("div");
   const contentLeft = documentRef.createElement("div");
@@ -72,6 +90,9 @@ function createThemeLikeBoardFixture(documentRef) {
   const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
   outerRing.setAttribute("r", "500");
   boardSvg.appendChild(outerRing);
+  const undoButton = documentRef.createElement("button");
+  undoButton.textContent = "Undo";
+  boardControls.appendChild(undoButton);
 
   for (let value = 1; value <= 20; value += 1) {
     const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -88,6 +109,60 @@ function createThemeLikeBoardFixture(documentRef) {
   contentSlot.appendChild(contentLeft);
   contentSlot.appendChild(contentBoard);
   documentRef.main.appendChild(contentSlot);
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+    boardPanel,
+    boardControls,
+    boardViewport,
+    boardCanvas,
+    boardSvg,
+  };
+}
+
+function createDecorativeAmbiguousBoardFixture(documentRef, options = {}) {
+  const shell = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const radius = Number(options.radius) > 0 ? Number(options.radius) : 720;
+
+  shell.__rect = { width: Number(options.width) || 980, height: Number(options.height) || 980 };
+  svg.__rect = { width: Number(options.width) || 980, height: Number(options.height) || 980 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("r", String(radius));
+  group.appendChild(circle);
+
+  if (options.addPartialLabels === true) {
+    for (let value = 10; value <= 20; value += 1) {
+      const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+      labelNode.textContent = String(value);
+      group.appendChild(labelNode);
+    }
+  }
+  if (options.addFullLabels === true) {
+    for (let value = 1; value <= 20; value += 1) {
+      const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+      labelNode.textContent = String(value);
+      group.appendChild(labelNode);
+    }
+  }
+  if (options.addBoardLikeGeometry === true) {
+    appendBoardLikeGeometry(documentRef, group, radius);
+  }
+
+  svg.appendChild(group);
+  shell.appendChild(svg);
+  documentRef.main.appendChild(shell);
+
+  return {
+    shell,
+    svg,
+    group,
+  };
 }
 
 function createThemeLikeNestedBoardFixture(documentRef) {
@@ -517,6 +592,111 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
 
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-targets")), false);
+});
+
+test("theme-like cricket highlighter ignores ambiguous decorative board candidates and mounts overlay on the real board", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const boardNodes = createThemeLikeBoardFixture(documentRef);
+  const decorative = createDecorativeAmbiguousBoardFixture(documentRef, {
+    width: 1120,
+    height: 1120,
+    radius: 740,
+    addPartialLabels: true,
+  });
+  createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketVisualConfig({
+    showOpenTargets: false,
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gameState = createGameState();
+  const renderCache = { grid: null, board: null };
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+  const rendered = renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState,
+    cache: renderCache,
+  });
+
+  assert.equal(rendered, true);
+  const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(overlay), true);
+  assert.equal(Boolean(boardNodes.boardSvg.querySelector(`#${CRICKET_OVERLAY_ID}`)), true);
+  assert.equal(Boolean(decorative.svg.querySelector(`#${CRICKET_OVERLAY_ID}`)), false);
+});
+
+test("theme-like cricket highlighter prefers board with controls context over full board-like decorative svg", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const boardNodes = createThemeLikeBoardFixture(documentRef);
+  const decorative = createDecorativeAmbiguousBoardFixture(documentRef, {
+    width: 1120,
+    height: 1120,
+    radius: 740,
+    addFullLabels: true,
+    addBoardLikeGeometry: true,
+  });
+  createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketVisualConfig({
+    showOpenTargets: false,
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gameState = createGameState();
+  const renderCache = { grid: null, board: null };
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+  const rendered = renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState,
+    cache: renderCache,
+  });
+
+  assert.equal(rendered, true);
+  const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
+  assert.equal(Boolean(overlay), true);
+  assert.equal(Boolean(boardNodes.boardSvg.querySelector(`#${CRICKET_OVERLAY_ID}`)), true);
+  assert.equal(Boolean(decorative.svg.querySelector(`#${CRICKET_OVERLAY_ID}`)), false);
 });
 
 test("theme-like cricket layout does not turn reflected two-hit rows into scoring", () => {

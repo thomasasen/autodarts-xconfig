@@ -1,5 +1,13 @@
 import { getActiveBoardInputMode } from "./board-input-mode.js";
 
+const BOARD_DRAWABLE_SELECTOR = "path, circle, line, polygon, polyline, text";
+const BOARD_EXACT_VIEWBOX = Object.freeze({
+  x: 0,
+  y: 0,
+  width: 1000,
+  height: 1000,
+});
+
 function getBoardRadius(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return 0;
@@ -26,6 +34,130 @@ function isManagedOverlayGroup(groupNode) {
 
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function getElementChildren(node) {
+  if (!node) {
+    return [];
+  }
+  if (Array.isArray(node.children)) {
+    return node.children.filter((child) => child && child.nodeType === 1);
+  }
+  const rawChildren = Array.from(node.children || []);
+  if (!rawChildren.length) {
+    return [];
+  }
+  return rawChildren.filter((child) => child && child.nodeType === 1);
+}
+
+function elementContains(rootNode, targetNode) {
+  if (!rootNode || !targetNode || typeof rootNode !== "object" || typeof targetNode !== "object") {
+    return false;
+  }
+  if (rootNode === targetNode) {
+    return true;
+  }
+  if (typeof rootNode.contains === "function") {
+    return rootNode.contains(targetNode);
+  }
+
+  let current = targetNode.parentElement || targetNode.parentNode || null;
+  while (current) {
+    if (current === rootNode) {
+      return true;
+    }
+    current = current.parentElement || current.parentNode || null;
+  }
+  return false;
+}
+
+function isInteractiveControlNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+  const tagName = normalizeText(node.tagName || node.nodeName);
+  if (tagName === "button") {
+    return true;
+  }
+  const role = normalizeText(node.getAttribute?.("role"));
+  if (role === "button" || role === "tab" || role === "radio") {
+    return true;
+  }
+  if (tagName === "input") {
+    const type = normalizeText(node.getAttribute?.("type"));
+    return type === "radio";
+  }
+  return false;
+}
+
+function countInteractiveControls(rootNode) {
+  if (!rootNode || typeof rootNode !== "object") {
+    return 0;
+  }
+  const directChildren = getElementChildren(rootNode);
+  if (!directChildren.length) {
+    return 0;
+  }
+  let count = 0;
+  directChildren.forEach((child) => {
+    if (isInteractiveControlNode(child)) {
+      count += 1;
+    }
+    getElementChildren(child).forEach((grandChild) => {
+      if (isInteractiveControlNode(grandChild)) {
+        count += 1;
+      }
+    });
+  });
+  return count;
+}
+
+function hasBoardControlSiblingContext(svgNode) {
+  if (!svgNode || typeof svgNode !== "object") {
+    return false;
+  }
+
+  let current = svgNode.parentElement || svgNode.parentNode || null;
+  let depth = 0;
+  while (current && depth < 8) {
+    const currentTag = normalizeText(current.tagName || current.nodeName);
+    if (currentTag === "main" || currentTag === "body" || currentTag === "html") {
+      current = current.parentElement || current.parentNode || null;
+      depth += 1;
+      continue;
+    }
+
+    const children = getElementChildren(current);
+    if (children.length >= 2 && children.length <= 6) {
+      const hasBoardChild = children.some((child) => elementContains(child, svgNode));
+      const hasControlSibling = children.some((child) => {
+        if (elementContains(child, svgNode)) {
+          return false;
+        }
+        return countInteractiveControls(child) > 0;
+      });
+      if (hasBoardChild && hasControlSibling) {
+        return true;
+      }
+    }
+    current = current.parentElement || current.parentNode || null;
+    depth += 1;
+  }
+  return false;
+}
+
+function getNodeDepthWithin(node, ancestorNode) {
+  if (!node || !ancestorNode) {
+    return 0;
+  }
+
+  let current = node;
+  let depth = 0;
+  while (current && current !== ancestorNode) {
+    current = current.parentElement || current.parentNode || null;
+    depth += 1;
+  }
+  return current === ancestorNode ? depth : 0;
 }
 
 function getComputedStyleRef(node) {
@@ -117,14 +249,218 @@ function isNodeExplicitlyHidden(node) {
   return display === "none" || visibility === "hidden" || visibility === "collapse" || opacity === "0";
 }
 
-function selectHigherRadiusGroup(left, right) {
+function readNumberCoverage(rootNode) {
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
+    return 0;
+  }
+
+  return new Set(
+    Array.from(rootNode.querySelectorAll("text"))
+      .map((node) => Number.parseInt(node?.textContent || "", 10))
+      .filter((value) => Number.isFinite(value) && value >= 1 && value <= 20)
+  ).size;
+}
+
+function readDrawableMetrics(rootNode) {
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
+    return {
+      pathCount: 0,
+      circleCount: 0,
+      positiveCircleCount: 0,
+      uniquePositiveCircleCount: 0,
+      lineCount: 0,
+      polygonCount: 0,
+      polylineCount: 0,
+      textCount: 0,
+      drawableCount: 0,
+    };
+  }
+
+  const pathCount = rootNode.querySelectorAll("path").length;
+  const circles = Array.from(rootNode.querySelectorAll("circle"));
+  const circleCount = circles.length;
+  const positiveCircleRadii = circles
+    .map((node) => Number.parseFloat(node?.getAttribute?.("r")))
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .map((value) => Number(value.toFixed(4)));
+  const lineCount = rootNode.querySelectorAll("line").length;
+  const polygonCount = rootNode.querySelectorAll("polygon").length;
+  const polylineCount = rootNode.querySelectorAll("polyline").length;
+  const textCount = rootNode.querySelectorAll("text").length;
+  const drawableCount = rootNode.querySelectorAll(BOARD_DRAWABLE_SELECTOR).length;
+
+  return {
+    pathCount,
+    circleCount,
+    positiveCircleCount: positiveCircleRadii.length,
+    uniquePositiveCircleCount: new Set(positiveCircleRadii).size,
+    lineCount,
+    polygonCount,
+    polylineCount,
+    textCount,
+    drawableCount,
+  };
+}
+
+function nearlyEqual(left, right, tolerance = 0.001) {
+  if (!Number.isFinite(left) || !Number.isFinite(right)) {
+    return false;
+  }
+  return Math.abs(left - right) <= tolerance;
+}
+
+function parseViewBoxMetrics(node) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return {
+      hasSquareViewBox: false,
+      hasExactBoardViewBox: false,
+    };
+  }
+
+  const rawViewBox = String(node.getAttribute("viewBox") || "")
+    .trim()
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ");
+  if (!rawViewBox) {
+    return {
+      hasSquareViewBox: false,
+      hasExactBoardViewBox: false,
+    };
+  }
+
+  const parts = rawViewBox
+    .split(" ")
+    .map((entry) => Number.parseFloat(entry))
+    .filter((value) => Number.isFinite(value));
+  if (parts.length !== 4) {
+    return {
+      hasSquareViewBox: false,
+      hasExactBoardViewBox: false,
+    };
+  }
+
+  const [x, y, width, height] = parts;
+  if (!(width > 0) || !(height > 0)) {
+    return {
+      hasSquareViewBox: false,
+      hasExactBoardViewBox: false,
+    };
+  }
+
+  const hasSquareViewBox = nearlyEqual(width / height, 1, 0.02);
+  const hasExactBoardViewBox =
+    nearlyEqual(x, BOARD_EXACT_VIEWBOX.x) &&
+    nearlyEqual(y, BOARD_EXACT_VIEWBOX.y) &&
+    nearlyEqual(width, BOARD_EXACT_VIEWBOX.width) &&
+    nearlyEqual(height, BOARD_EXACT_VIEWBOX.height);
+
+  return {
+    hasSquareViewBox,
+    hasExactBoardViewBox,
+  };
+}
+
+function isSparseAmbiguousCandidate(meta) {
+  return (
+    meta.numberCount === 0 &&
+    meta.positiveCircleCount <= 1 &&
+    meta.drawableCount <= 3 &&
+    meta.pathCount <= 2
+  );
+}
+
+function isBoardLikeCandidate(meta, options = {}) {
+  if (!meta || !Number.isFinite(meta.radius) || meta.radius <= 0 || !meta.visible) {
+    return false;
+  }
+
+  if (meta.numberCount >= 18 && meta.radius >= 250) {
+    return true;
+  }
+
+  if (
+    meta.numberCount >= 5 &&
+    (meta.pathCount >= 10 || meta.positiveCircleCount >= 3 || meta.drawableCount >= 20)
+  ) {
+    return true;
+  }
+
+  if (meta.pathCount >= 40) {
+    return true;
+  }
+
+  if (meta.pathCount >= 20 && meta.drawableCount >= 24) {
+    return true;
+  }
+
+  if (
+    meta.positiveCircleCount >= 4 &&
+    meta.uniquePositiveCircleCount >= 3 &&
+    meta.drawableCount >= 24
+  ) {
+    return true;
+  }
+
+  if (
+    options.isSvgCandidate === true &&
+    (meta.hasSquareViewBox || meta.hasExactBoardViewBox) &&
+    ((meta.pathCount >= 16 && meta.drawableCount >= 24) ||
+      (meta.positiveCircleCount >= 4 && meta.drawableCount >= 20))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function getBoardCandidateScore(candidateNode, options = {}) {
+  const numberCount = readNumberCoverage(candidateNode);
+  const radius = getBoardRadius(candidateNode);
+  const visible = isNodeVisible(candidateNode);
+  const area = getRenderableArea(candidateNode);
+  const drawableMetrics = readDrawableMetrics(candidateNode);
+  const viewBoxMetrics = options.isSvgCandidate ? parseViewBoxMetrics(candidateNode) : {};
+  const hasBoardControlContext = options.isSvgCandidate ? hasBoardControlSiblingContext(candidateNode) : false;
+
+  const candidate = {
+    numberCount,
+    radius,
+    visible,
+    area,
+    ...drawableMetrics,
+    hasSquareViewBox: Boolean(viewBoxMetrics.hasSquareViewBox),
+    hasExactBoardViewBox: Boolean(viewBoxMetrics.hasExactBoardViewBox),
+    hasBoardControlContext,
+  };
+  candidate.isSparseAmbiguous = isSparseAmbiguousCandidate(candidate);
+  candidate.isBoardLike = isBoardLikeCandidate(candidate, options);
+  candidate.score = candidate.isBoardLike
+    ? (
+        (candidate.hasExactBoardViewBox ? 500_000 : 0) +
+        (candidate.hasSquareViewBox ? 300_000 : 0) +
+        (candidate.hasBoardControlContext ? 1_500_000 : 0) +
+        candidate.numberCount * 200_000 +
+        candidate.pathCount * 2_500 +
+        candidate.drawableCount * 350 +
+        candidate.uniquePositiveCircleCount * 6_000 +
+        Math.min(candidate.area, 999_999) +
+        candidate.radius * 50
+      )
+    : -1;
+  return candidate;
+}
+
+function selectHigherScoreCandidate(left, right) {
   if (!left) {
     return right;
   }
   if (!right) {
     return left;
   }
-  return right.radius > left.radius ? right : left;
+  if (right.score === left.score) {
+    return right.meta.radius > left.meta.radius ? right : left;
+  }
+  return right.score > left.score ? right : left;
 }
 
 function resolveBestBoardGroup(svgNode) {
@@ -136,63 +472,76 @@ function resolveBestBoardGroup(svgNode) {
   }
 
   let bestVisibleGroup = null;
-  let bestAnyGroup = null;
 
   Array.from(svgNode.querySelectorAll("g")).forEach((group) => {
     if (isManagedOverlayGroup(group)) {
       return;
     }
 
-    const radius = getBoardRadius(group);
-    if (radius <= 0) {
+    const meta = getBoardCandidateScore(group, { isSvgCandidate: false });
+    if (!meta.visible || meta.radius <= 0 || !meta.isBoardLike) {
       return;
     }
 
     const candidate = {
       group,
-      radius,
+      radius: meta.radius,
+      meta: {
+        ...meta,
+        groupDepth: getNodeDepthWithin(group, svgNode),
+      },
+      score: meta.score,
     };
 
-    bestAnyGroup = selectHigherRadiusGroup(bestAnyGroup, candidate);
-    if (isNodeVisible(group)) {
-      bestVisibleGroup = selectHigherRadiusGroup(bestVisibleGroup, candidate);
-    }
+    bestVisibleGroup = selectHigherSpecificBoardGroup(bestVisibleGroup, candidate);
   });
 
-  return bestVisibleGroup || bestAnyGroup || { group: null, radius: 0 };
+  return bestVisibleGroup || { group: null, radius: 0 };
+}
+
+function selectHigherSpecificBoardGroup(left, right) {
+  if (!left) {
+    return right;
+  }
+  if (!right) {
+    return left;
+  }
+
+  const leftContainsRight = elementContains(left.group, right.group) && left.group !== right.group;
+  const rightContainsLeft = elementContains(right.group, left.group) && right.group !== left.group;
+  if (leftContainsRight && !rightContainsLeft) {
+    return right;
+  }
+  if (rightContainsLeft && !leftContainsRight) {
+    return left;
+  }
+
+  if (right.score === left.score) {
+    if (right.meta.groupDepth !== left.meta.groupDepth) {
+      return right.meta.groupDepth > left.meta.groupDepth ? right : left;
+    }
+    return right.meta.radius > left.meta.radius ? right : left;
+  }
+  return right.score > left.score ? right : left;
 }
 
 function resolveBestBoardSvg(svgNodes = []) {
-  let bestPreferred = null;
-  let bestPreferredScore = -1;
-  let bestFallback = null;
-  let bestFallbackScore = -1;
+  let bestCandidate = null;
 
   svgNodes.forEach((svgNode) => {
-    const candidate = getBoardCandidateScore(svgNode);
-    if (candidate.radius <= 0 || !candidate.visible) {
+    const meta = getBoardCandidateScore(svgNode, { isSvgCandidate: true });
+    if (!meta.visible || meta.radius <= 0 || !meta.isBoardLike) {
       return;
     }
 
-    if (candidate.numberCount > 0 && candidate.score > bestPreferredScore) {
-      bestPreferred = {
-        svg: svgNode,
-        meta: candidate,
-      };
-      bestPreferredScore = candidate.score;
-    }
-
-    const fallbackScore = Math.min(candidate.area, 999_999) + candidate.radius;
-    if (fallbackScore > bestFallbackScore) {
-      bestFallback = {
-        svg: svgNode,
-        meta: candidate,
-      };
-      bestFallbackScore = fallbackScore;
-    }
+    bestCandidate = selectHigherScoreCandidate(bestCandidate, {
+      svg: svgNode,
+      meta,
+      score: meta.score,
+    });
   });
 
-  return bestPreferred || bestFallback || null;
+  return bestCandidate || null;
 }
 
 function isSnapshotGroupReusable(snapshot) {
@@ -222,6 +571,29 @@ function hasReusableRadius(snapshot) {
   return Number.isFinite(snapshot?.radius) && Number(snapshot.radius) > 0;
 }
 
+function isSnapshotSemanticallyReusable(snapshot) {
+  const svgNode = snapshot?.svg || null;
+  if (!svgNode) {
+    return false;
+  }
+
+  const svgMeta = getBoardCandidateScore(svgNode, { isSvgCandidate: true });
+  if (!svgMeta.visible || svgMeta.radius <= 0 || !svgMeta.isBoardLike) {
+    return false;
+  }
+
+  if (!snapshot?.group || snapshot.group === svgNode) {
+    return true;
+  }
+
+  if (isManagedOverlayGroup(snapshot.group)) {
+    return false;
+  }
+
+  const groupMeta = getBoardCandidateScore(snapshot.group, { isSvgCandidate: false });
+  return groupMeta.visible && groupMeta.radius > 0 && groupMeta.isBoardLike;
+}
+
 function isSnapshotModeReusable(snapshot, documentRef) {
   const currentModeKey = getActiveBoardInputMode(documentRef);
   if (Object.prototype.hasOwnProperty.call(snapshot, "modeKey") && snapshot.modeKey !== currentModeKey) {
@@ -246,34 +618,14 @@ function isNodeVisible(node) {
   return hasClientRects(node) || getRenderableArea(node) > 0;
 }
 
-function getBoardCandidateScore(svgNode) {
-  const numberCount = new Set(
-    Array.from(svgNode.querySelectorAll("text"))
-      .map((node) => Number.parseInt(node?.textContent || "", 10))
-      .filter((value) => Number.isFinite(value) && value >= 1 && value <= 20)
-  ).size;
-  const radius = getBoardRadius(svgNode);
-  const visible = isNodeVisible(svgNode);
-  const area = getRenderableArea(svgNode);
-
-  return {
-    numberCount,
-    radius,
-    visible,
-    area,
-    score:
-      (visible ? 10_000_000 : 0) +
-      numberCount * 1_000 +
-      Math.min(area, 999_999) +
-      radius,
-  };
-}
-
 export function isReusableBoardSnapshot(snapshot, documentRef) {
   if (!isSnapshotGroupReusable(snapshot)) {
     return false;
   }
   if (!hasReusableRadius(snapshot)) {
+    return false;
+  }
+  if (!isSnapshotSemanticallyReusable(snapshot)) {
     return false;
   }
   if (!isSnapshotModeReusable(snapshot, documentRef)) {
@@ -299,7 +651,7 @@ export function findBoardSvgGroup(documentRef) {
 
   const bestSvg = bestBoard.svg;
   const bestGroupCandidate = resolveBestBoardGroup(bestSvg);
-  const radius = bestGroupCandidate.radius || getBoardRadius(bestSvg);
+  const radius = bestGroupCandidate.radius || bestBoard.meta.radius || getBoardRadius(bestSvg);
   if (!radius) {
     return null;
   }

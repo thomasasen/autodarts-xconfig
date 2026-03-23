@@ -146,6 +146,99 @@ function createBoardFixture(documentRef, options = {}) {
   };
 }
 
+function createPanelViewportBoardFixture(documentRef, options = {}) {
+  const withContentSlot = options.withContentSlot === true;
+  const boardPanel = documentRef.createElement("div");
+  const boardControls = documentRef.createElement("div");
+  const boardCanvas = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const contentSlot = withContentSlot ? documentRef.createElement("div") : null;
+  const contentLeft = withContentSlot ? documentRef.createElement("div") : null;
+  const contentBoard = withContentSlot ? documentRef.createElement("div") : null;
+  const playerDisplay = withContentSlot ? documentRef.createElement("div") : null;
+
+  boardControls.classList.add("chakra-stack");
+  boardCanvas.classList.add("showAnimations");
+  boardCanvas.__rect = { width: 780, height: 620 };
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const undoButton = documentRef.createElement("button");
+  undoButton.textContent = "Undo";
+  boardControls.appendChild(undoButton);
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  boardSvg.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardSvg.appendChild(labelNode);
+  }
+
+  boardCanvas.appendChild(boardSvg);
+  boardPanel.appendChild(boardControls);
+  boardPanel.appendChild(boardCanvas);
+
+  if (withContentSlot) {
+    playerDisplay.id = "ad-ext-player-display";
+    contentLeft.appendChild(playerDisplay);
+    contentBoard.appendChild(boardPanel);
+    contentSlot.appendChild(contentLeft);
+    contentSlot.appendChild(contentBoard);
+    documentRef.main.appendChild(contentSlot);
+  } else {
+    documentRef.main.appendChild(boardPanel);
+  }
+
+  return {
+    contentSlot,
+    contentLeft,
+    contentBoard,
+    boardPanel,
+    boardControls,
+    boardViewport: boardPanel,
+    boardCanvas,
+    boardSvg,
+  };
+}
+
+function createDecorativeBoardLikeSvgFixture(documentRef, options = {}) {
+  const shell = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const radius = Number(options.radius) > 0 ? Number(options.radius) : 680;
+
+  shell.__rect = { width: Number(options.width) || 980, height: Number(options.height) || 980 };
+  svg.__rect = { width: Number(options.width) || 980, height: Number(options.height) || 980 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", String(radius));
+  group.appendChild(outerRing);
+
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+
+  for (let index = 0; index < 42; index += 1) {
+    const pathNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathNode.setAttribute("d", `M ${index} 0 L ${index + 1} 1 L ${index + 2} 0 Z`);
+    group.appendChild(pathNode);
+  }
+
+  svg.appendChild(group);
+  shell.appendChild(svg);
+  documentRef.main.appendChild(shell);
+
+  return {
+    shell,
+    svg,
+    group,
+  };
+}
+
 function createNestedShowAnimationsBoardFixture(documentRef, options = {}) {
   const nodes = createBoardFixture(documentRef, options);
   const innerBoardLayer = documentRef.createElement("div");
@@ -403,6 +496,106 @@ test("theme re-resolves the visible board when board-input mode toggles only via
   assert.equal(visibleBoard.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), false);
 
   cleanup();
+});
+
+test("theme accepts panel-as-viewport board layouts without invalidating layout hooks", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createPanelViewportBoardFixture(documentRef, { withContentSlot: true });
+  const windowRef = createMatchWindow(documentRef, "theme-x01-panel-viewport-layout");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(boardNodes.boardPanel.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardPanel), true);
+  assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
+  assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), true);
+
+  runtime.stop();
+});
+
+test("theme keeps existing layout hooks when a board-like decorative svg appears outside panel context", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  const windowRef = createMatchWindow(documentRef, "theme-x01-ignore-decorative-boardlike-svg");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), true);
+
+  const decorative = createDecorativeBoardLikeSvgFixture(documentRef, {
+    width: 1120,
+    height: 1120,
+    radius: 720,
+  });
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), true);
+  assert.equal(decorative.svg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), false);
+  assert.equal(
+    documentRef.querySelectorAll(`.${THEME_LAYOUT_HOOK_CLASSES.contentSlot}`).length,
+    1
+  );
+  assert.equal(
+    documentRef.querySelector(`.${THEME_LAYOUT_HOOK_CLASSES.contentSlot}`),
+    boardNodes.contentSlot
+  );
+
+  runtime.stop();
+});
+
+test("theme clears stale hooks when previous valid board subtree is removed and only invalid context remains", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  const windowRef = createMatchWindow(documentRef, "theme-x01-clear-stale-invalid-context");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), true);
+
+  documentRef.main.removeChild(boardNodes.contentSlot);
+  createDecorativeBoardLikeSvgFixture(documentRef, {
+    width: 1120,
+    height: 1120,
+    radius: 720,
+  });
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), false);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), false);
+
+  runtime.stop();
 });
 
 test("theme-x01 mounts idempotently and cleans up style plus preview spacing", async () => {

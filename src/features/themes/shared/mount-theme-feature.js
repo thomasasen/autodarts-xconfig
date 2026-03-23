@@ -87,6 +87,44 @@ function findBoardSvg(documentRef) {
   return findBoardSvgGroup(documentRef)?.svg || null;
 }
 
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isLikelyBoardMediaWrapper(node, boardSvg) {
+  if (!node || !boardSvg || node === boardSvg) {
+    return false;
+  }
+
+  if (!elementContains(node, boardSvg)) {
+    return false;
+  }
+
+  if (
+    node.classList?.contains?.("showAnimations") ||
+    node.classList?.contains?.(THEME_LAYOUT_HOOK_CLASSES.boardCanvas) ||
+    node.classList?.contains?.(THEME_LAYOUT_HOOK_CLASSES.boardMediaRoot)
+  ) {
+    return true;
+  }
+
+  if (countButtons(node) > 0) {
+    return false;
+  }
+
+  const children = getElementChildren(node);
+  if (!children.length) {
+    return false;
+  }
+
+  const boardChildCount = children.filter((child) => elementContains(child, boardSvg)).length;
+  if (boardChildCount !== 1) {
+    return false;
+  }
+
+  return children.length <= 2;
+}
+
 export function resolveThemeBoardCanvasTarget(boardSvg) {
   if (!boardSvg || typeof boardSvg.closest !== "function") {
     return null;
@@ -96,23 +134,33 @@ export function resolveThemeBoardCanvasTarget(boardSvg) {
   const showAnimations = boardSvg.closest(".showAnimations");
   const directParent = boardSvg.parentElement || null;
 
-  if (
-    directParent &&
-    directParent !== stableBoardCanvas &&
-    directParent !== showAnimations
-  ) {
-    return directParent;
-  }
-
   if (stableBoardCanvas) {
+    if (
+      directParent &&
+      directParent !== stableBoardCanvas &&
+      isLikelyBoardMediaWrapper(directParent, boardSvg)
+    ) {
+      return directParent;
+    }
     return stableBoardCanvas;
   }
 
   if (showAnimations) {
+    if (
+      directParent &&
+      directParent !== showAnimations &&
+      isLikelyBoardMediaWrapper(directParent, boardSvg)
+    ) {
+      return directParent;
+    }
     return showAnimations;
   }
 
-  return directParent || boardSvg;
+  if (directParent && isLikelyBoardMediaWrapper(directParent, boardSvg)) {
+    return directParent;
+  }
+
+  return boardSvg;
 }
 
 export function resolveThemeBoardViewportTarget(boardCanvas, boardSvg) {
@@ -180,8 +228,14 @@ function resolveBoardPanel(boardSvg, documentRef) {
 
   let current = boardSvg.parentElement || null;
   while (current && current !== documentRef?.body && current !== documentRef?.documentElement) {
+    const currentTag = normalizeText(current.tagName || current.nodeName);
+    if (currentTag === "main" || currentTag === "body" || currentTag === "html") {
+      current = current.parentElement || null;
+      continue;
+    }
+
     const children = getElementChildren(current);
-    if (children.length >= 2) {
+    if (children.length >= 2 && children.length <= 6) {
       const hasBoardChild = children.some((child) => elementContains(child, boardSvg));
       const hasControlsSibling = children.some((child) => {
         if (elementContains(child, boardSvg)) {
@@ -491,24 +545,107 @@ function resolveContentLayoutTargets(documentRef, boardSvg) {
   return selectWidestContentLayoutCandidate(candidates);
 }
 
+function hasCompleteContentLayoutTargets(contentTargets) {
+  return (
+    Boolean(contentTargets?.contentSlot) &&
+    Boolean(contentTargets?.contentLeft) &&
+    Boolean(contentTargets?.contentBoard)
+  );
+}
+
+function isBoardLayoutContextConsistent(targets) {
+  if (!targets || !targets.boardSvg || !targets.boardPanel || !targets.boardViewport || !targets.boardCanvas) {
+    return false;
+  }
+
+  if (targets.boardPanel === targets.boardCanvas) {
+    return false;
+  }
+
+  if (!elementContains(targets.boardPanel, targets.boardCanvas)) {
+    return false;
+  }
+
+  if (!elementContains(targets.boardPanel, targets.boardSvg)) {
+    return false;
+  }
+
+  if (targets.boardViewport !== targets.boardPanel) {
+    if (findDirectChildContaining(targets.boardPanel, targets.boardViewport) !== targets.boardViewport) {
+      return false;
+    }
+    if (!elementContains(targets.boardPanel, targets.boardViewport)) {
+      return false;
+    }
+  }
+
+  if (targets.boardViewport === targets.boardCanvas) {
+    return false;
+  }
+
+  if (!elementContains(targets.boardViewport, targets.boardCanvas)) {
+    return false;
+  }
+
+  if (!elementContains(targets.boardViewport, targets.boardSvg)) {
+    return false;
+  }
+
+  if (targets.boardControls && !elementContains(targets.boardPanel, targets.boardControls)) {
+    return false;
+  }
+
+  if (
+    targets.boardControls &&
+    findDirectChildContaining(targets.boardPanel, targets.boardControls) !== targets.boardControls
+  ) {
+    return false;
+  }
+
+  const hasAnyContentTarget = Boolean(
+    targets.contentSlot || targets.contentLeft || targets.contentBoard
+  );
+  if (!hasAnyContentTarget) {
+    return true;
+  }
+
+  if (!hasCompleteContentLayoutTargets(targets)) {
+    return false;
+  }
+
+  if (!elementContains(targets.contentSlot, targets.contentLeft)) {
+    return false;
+  }
+
+  if (!elementContains(targets.contentSlot, targets.contentBoard)) {
+    return false;
+  }
+
+  return true;
+}
+
 function resolveBoardLayoutTargets(documentRef) {
   const boardSvg = findBoardSvg(documentRef);
   if (!boardSvg) {
-    return null;
+    return {
+      status: "missing-board",
+      targets: null,
+    };
   }
 
-  const contentTargets = resolveContentLayoutTargets(documentRef, boardSvg) || {};
-  const hasCompleteContentTargets =
-    Boolean(contentTargets.contentSlot) &&
-    Boolean(contentTargets.contentLeft) &&
-    Boolean(contentTargets.contentBoard);
+  const rawContentTargets = resolveContentLayoutTargets(documentRef, boardSvg) || {};
+  const hasCompleteContentTargets = hasCompleteContentLayoutTargets(rawContentTargets);
+  const hasPartialContentTargets =
+    Boolean(rawContentTargets.contentSlot || rawContentTargets.contentLeft || rawContentTargets.contentBoard) &&
+    !hasCompleteContentTargets;
+  const contentTargets = hasCompleteContentTargets ? rawContentTargets : {};
   const boardCanvas = resolveThemeBoardCanvasTarget(boardSvg);
   const boardEventTargets = resolveThemeBoardEventTargets(boardCanvas, boardSvg);
   const boardViewport = resolveThemeBoardViewportTarget(boardCanvas, boardSvg);
   const boardPanel = resolveBoardPanel(boardSvg, documentRef);
   const boardControls = boardPanel ? resolveBoardControls(boardPanel, boardSvg) : null;
 
-  return {
+  const targets = {
     ...(hasCompleteContentTargets ? contentTargets : {}),
     boardPanel,
     boardControls,
@@ -516,6 +653,18 @@ function resolveBoardLayoutTargets(documentRef) {
     ...boardEventTargets,
     boardCanvas,
     boardSvg,
+  };
+
+  if (hasPartialContentTargets || !isBoardLayoutContextConsistent(targets)) {
+    return {
+      status: "invalid-context",
+      targets: null,
+    };
+  }
+
+  return {
+    status: "valid",
+    targets,
   };
 }
 
@@ -586,10 +735,42 @@ function clearBoardLayoutHooks(state) {
   state.layoutHookTargets = {};
 }
 
+function areLayoutHookTargetsConnected(targets) {
+  if (!targets || typeof targets !== "object") {
+    return false;
+  }
+  const relevantNodes = [
+    targets.boardSvg,
+    targets.boardCanvas,
+    targets.boardViewport,
+    targets.boardPanel,
+    targets.contentSlot,
+    targets.contentLeft,
+    targets.contentBoard,
+  ].filter(Boolean);
+  if (!relevantNodes.length) {
+    return false;
+  }
+  return relevantNodes.every((node) => node.isConnected !== false);
+}
+
 function updateBoardLayoutHooks(documentRef, state) {
-  const targets = resolveBoardLayoutTargets(documentRef);
-  const nextTargets = targets || {};
+  const resolution = resolveBoardLayoutTargets(documentRef);
+  const nextTargets = resolution?.targets || {};
   const previous = state.layoutHookTargets || {};
+
+  if (!resolution || resolution.status === "missing-board") {
+    clearBoardLayoutHooks(state);
+    return;
+  }
+
+  if (resolution.status !== "valid") {
+    if (!areLayoutHookTargetsConnected(previous)) {
+      clearBoardLayoutHooks(state);
+    }
+    return;
+  }
+
   if (previous.boardCanvas && previous.boardCanvas !== nextTargets.boardCanvas) {
     clearBoardSizeVariable(previous.boardCanvas);
   }

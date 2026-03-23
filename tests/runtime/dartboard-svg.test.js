@@ -33,15 +33,36 @@ function createBoardModeButtons(documentRef, activeMode = "segments", options = 
   return buttons;
 }
 
+function appendBoardLikeGeometry(documentRef, groupNode, boardRadius) {
+  const ringRatios = [0.75, 0.52, 0.14];
+  ringRatios.forEach((ratio) => {
+    const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("r", String(Math.max(1, Math.floor(boardRadius * ratio))));
+    groupNode.appendChild(circle);
+  });
+
+  for (let index = 0; index < 46; index += 1) {
+    const path = documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute(
+      "d",
+      `M ${index} 0 L ${index + 1} ${Math.max(1, index % 8)} L ${index + 2} 0 Z`
+    );
+    groupNode.appendChild(path);
+  }
+}
+
 function createBoardFixture(documentRef, options = {}) {
   const shell = documentRef.createElement("div");
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardPanel = options.withPanelControls === true ? documentRef.createElement("div") : null;
+  const boardControls = options.withPanelControls === true ? documentRef.createElement("div") : null;
+  const boardViewport = options.withPanelControls === true ? documentRef.createElement("div") : null;
   const boardRadius = Number(options.boardRadius) > 0 ? Number(options.boardRadius) : 500;
 
-  shell.__rect = { width: 720, height: 720 };
-  svg.__rect = { width: 720, height: 720 };
-  svg.setAttribute("viewBox", "0 0 1000 1000");
+  shell.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  svg.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  svg.setAttribute("viewBox", String(options.viewBox || "0 0 1000 1000"));
 
   if (options.hidden === true) {
     shell.setAttribute("aria-hidden", "true");
@@ -63,11 +84,28 @@ function createBoardFixture(documentRef, options = {}) {
     }
   }
 
+  if (options.addBoardLikeGeometry === true) {
+    appendBoardLikeGeometry(documentRef, group, boardRadius);
+  }
+
   svg.appendChild(group);
   shell.appendChild(svg);
-  documentRef.main.appendChild(shell);
+  if (boardPanel && boardControls && boardViewport) {
+    const undoButton = documentRef.createElement("button");
+    undoButton.textContent = "Undo";
+    boardControls.appendChild(undoButton);
+    boardViewport.appendChild(shell);
+    boardPanel.appendChild(boardControls);
+    boardPanel.appendChild(boardViewport);
+    documentRef.main.appendChild(boardPanel);
+  } else {
+    documentRef.main.appendChild(shell);
+  }
 
   return {
+    boardPanel,
+    boardControls,
+    boardViewport,
     shell,
     svg,
     group,
@@ -133,14 +171,165 @@ test("findBoardSvgGroup prefers visible board groups within the same svg over hi
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
 });
 
-test("findBoardSvgGroup falls back to visible radius-based board detection when number labels are missing", () => {
+test("findBoardSvgGroup prefers unlabeled board-like geometry over decorative single-circle svg", () => {
   const documentRef = new FakeDocument();
-  const board = createBoardFixture(documentRef, { includeLabels: false });
+  createBoardFixture(documentRef, {
+    includeLabels: false,
+    addBoardLikeGeometry: false,
+    boardRadius: 670,
+    width: 980,
+    height: 980,
+  });
+  const boardLike = createBoardFixture(documentRef, {
+    includeLabels: false,
+    addBoardLikeGeometry: true,
+    boardRadius: 500,
+    width: 720,
+    height: 720,
+  });
 
   const boardSnapshot = findBoardSvgGroup(documentRef);
-  assert.equal(boardSnapshot?.svg, board.svg);
-  assert.equal(boardSnapshot?.group, board.group);
+  assert.equal(boardSnapshot?.svg, boardLike.svg);
+  assert.equal(boardSnapshot?.group, boardLike.group);
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
+});
+
+test("findBoardSvgGroup ignores sparse decorative svg with partial numeric labels 10..20", () => {
+  const documentRef = new FakeDocument();
+  const decorative = createBoardFixture(documentRef, {
+    includeLabels: false,
+    addBoardLikeGeometry: false,
+    boardRadius: 700,
+    width: 1040,
+    height: 1040,
+  });
+  for (let value = 10; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    decorative.group.appendChild(labelNode);
+  }
+
+  const boardLike = createBoardFixture(documentRef, {
+    includeLabels: false,
+    addBoardLikeGeometry: true,
+    boardRadius: 500,
+    width: 720,
+    height: 720,
+  });
+
+  const boardSnapshot = findBoardSvgGroup(documentRef);
+  assert.equal(boardSnapshot?.svg, boardLike.svg);
+  assert.equal(boardSnapshot?.group, boardLike.group);
+});
+
+test("findBoardSvgGroup ignores decorative larger groups and picks board-like unlabeled group in the same svg", () => {
+  const documentRef = new FakeDocument();
+  const shell = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const decorativeGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardLikeGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  shell.__rect = { width: 920, height: 920 };
+  svg.__rect = { width: 920, height: 920 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const decorativeCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  decorativeCircle.setAttribute("r", "690");
+  decorativeGroup.appendChild(decorativeCircle);
+
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "500");
+  boardLikeGroup.appendChild(boardCircle);
+  appendBoardLikeGeometry(documentRef, boardLikeGroup, 500);
+
+  svg.appendChild(decorativeGroup);
+  svg.appendChild(boardLikeGroup);
+  shell.appendChild(svg);
+  documentRef.main.appendChild(shell);
+
+  const boardSnapshot = findBoardSvgGroup(documentRef);
+  assert.equal(boardSnapshot?.svg, svg);
+  assert.equal(boardSnapshot?.group, boardLikeGroup);
+  assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
+});
+
+test("findBoardSvgGroup prefers the specific board child group over a larger wrapper group", () => {
+  const documentRef = new FakeDocument();
+  const shell = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const wrapperGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  shell.__rect = { width: 920, height: 920 };
+  svg.__rect = { width: 920, height: 920 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const wrapperCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  wrapperCircle.setAttribute("r", "690");
+  wrapperGroup.appendChild(wrapperCircle);
+
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "500");
+  boardGroup.appendChild(boardCircle);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardGroup.appendChild(labelNode);
+  }
+  appendBoardLikeGeometry(documentRef, boardGroup, 500);
+
+  wrapperGroup.appendChild(boardGroup);
+  svg.appendChild(wrapperGroup);
+  shell.appendChild(svg);
+  documentRef.main.appendChild(shell);
+
+  const boardSnapshot = findBoardSvgGroup(documentRef);
+  assert.equal(boardSnapshot?.svg, svg);
+  assert.equal(boardSnapshot?.group, boardGroup);
+  assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
+});
+
+test("findBoardSvgGroup prefers board candidates with panel control context over decorative board-like svg", () => {
+  const documentRef = new FakeDocument();
+  const realBoard = createBoardFixture(documentRef, {
+    boardRadius: 500,
+    width: 720,
+    height: 720,
+    withPanelControls: true,
+  });
+  createBoardFixture(documentRef, {
+    includeLabels: true,
+    addBoardLikeGeometry: true,
+    boardRadius: 740,
+    width: 1120,
+    height: 1120,
+  });
+
+  const boardSnapshot = findBoardSvgGroup(documentRef);
+  assert.equal(boardSnapshot?.svg, realBoard.svg);
+  assert.equal(boardSnapshot?.group, realBoard.group);
+  assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
+});
+
+test("findBoardSvgGroup returns null for ambiguous unlabeled single-circle-only candidates", () => {
+  const documentRef = new FakeDocument();
+  createBoardFixture(documentRef, {
+    includeLabels: false,
+    addBoardLikeGeometry: false,
+    boardRadius: 640,
+    width: 980,
+    height: 980,
+  });
+  createBoardFixture(documentRef, {
+    includeLabels: false,
+    addBoardLikeGeometry: false,
+    boardRadius: 620,
+    width: 920,
+    height: 920,
+  });
+
+  const boardSnapshot = findBoardSvgGroup(documentRef);
+  assert.equal(boardSnapshot, null);
 });
 
 test("cricket board snapshot cache invalidates across board-input mode switches when the visible board layer changes", () => {
