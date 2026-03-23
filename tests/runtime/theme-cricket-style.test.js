@@ -339,6 +339,10 @@ test("cricket theme strengthens tactical hierarchy without leaving stable hooks"
   );
   assert.match(
     css,
+    /#ad-ext-player-display\s*>\s*\*\s*\{[^}]*border:\s*0\s*!important;[^}]*box-shadow:\s*none\s*!important;[^}]*background:\s*transparent\s*!important;[^}]*outline:\s*none\s*!important;/s
+  );
+  assert.match(
+    css,
     /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*border-radius:\s*0\s*!important;/s
   );
   assert.match(
@@ -363,6 +367,15 @@ test("cricket theme strengthens tactical hierarchy without leaving stable hooks"
       `#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > .chakra-stack {`
     )
   );
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px rgba\(110,\s*138,\s*154,\s*0\.26\),\s*inset 0 0 10px rgba\(3,\s*16,\s*24,\s*0\.2\)\s*!important;[^}]*background:\s*linear-gradient\(\s*90deg,\s*rgba\(9,\s*26,\s*38,\s*0\.28\)\s*0%,\s*rgba\(9,\s*26,\s*38,\s*0\.1\)\s*100%\s*\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell::before,\s*\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell::after\s*\{[^}]*content:\s*none\s*!important;/s
+  );
+  assert.doesNotMatch(css, /\.css-rtn29s\s*\{/);
   assert.doesNotMatch(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player:not\(\.ad-ext-player-active\)\s*>\s*\.chakra-stack\s*\{[^}]*opacity:\s*0\.82;/s

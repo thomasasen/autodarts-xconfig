@@ -11,6 +11,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.77] - 2026-03-23
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-Theme sieht die Tabellen-/Grid-Spalte von Spieler 1
+  bei inaktivem Zug jetzt wieder wie eine normale inaktive Spalte aus. Helle
+  Sonderrahmen am Spielerkarten-Wrapper und die vollflächige Label-Zellenoptik
+  lassen `Tornado Tom` nicht mehr fälschlich hervorgehoben wirken, wenn ein
+  anderer Spieler aktiv ist.
+  Technik: Das Theme entfernt die fragile, Chakra-klassenbasierte Wrapper-
+  Umrandung (`.css-rtn29s`) vollständig, neutralisiert äußere Player-Wrapper
+  generisch und reduziert im Cricket-Grid die `ad-ext-crfx-label-cell` auf die
+  Badge-Darstellung statt die ganze erste gemergte Zelle hervorzuheben; neue
+  Style-Regressionen sichern Wrapper-Reset, Label-Cell-Neutralisierung und das
+  Ausbleiben der Hashklassen-Kopplung ab.
+
 ## [2.0.76] - 2026-03-23
 
 ### Fixed
@@ -869,6 +885,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[2.0.77]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.76]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.75]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.74]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

@@ -92,6 +92,10 @@ const cricketThemeCss = `
   min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
   max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
   width: var(--ad-ext-theme-cricket-player-column-width) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
 }
 
 #ad-ext-player-display .ad-ext-player{
@@ -415,10 +419,6 @@ div.css-nfhdnc {
   }
 }
 
-.css-rtn29s {
-  border: 2px solid #9fdb58 !important;
-}
-
 .chakra-stack.navigation {
   background-color: var(--theme-navigation-bg);
 }
@@ -708,6 +708,23 @@ span.chakra-switch__track.css-v4l15v {
   min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
   max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
   width: var(--ad-ext-theme-cricket-player-column-width) !important;
+}
+
+.ad-ext-crfx-root .ad-ext-crfx-label-cell {
+  box-shadow:
+    inset 0 0 0 1px rgba(110, 138, 154, 0.26),
+    inset 0 0 10px rgba(3, 16, 24, 0.2) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 26, 38, 0.28) 0%,
+      rgba(9, 26, 38, 0.1) 100%
+    ) !important;
+}
+
+.ad-ext-crfx-root .ad-ext-crfx-label-cell::before,
+.ad-ext-crfx-root .ad-ext-crfx-label-cell::after {
+  content: none !important;
 }
 
 p.chakra-text.css-1qlemha {

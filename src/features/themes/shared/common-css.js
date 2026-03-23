@@ -75,10 +75,6 @@ span.chakra-badge.css-n2903v {
   background-color: #d69d2e !important;
 }
 
-.css-rtn29s {
-  border: 2px solid rgb(159 219 88);
-}
-
 p.chakra-text.ad-ext-player-score.css-18w03sn { color: #9fdb58; }
 span.css-3fr5p8 { background-color: #9fdb58; color: #222; }
 p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: #9fdb58; }
