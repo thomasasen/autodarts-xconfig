@@ -11,6 +11,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.80] - 2026-03-24
+
+### Changed
+
+- Nutzerwirkung: AD xConfig verhält sich funktional unverändert, interne Theme-, xConfig- und Konfigurationspfade wurden jedoch stabilisiert, sodass Einstellungen, Theme-Layout-Hooks und Shell-Rendering robuster bleiben und künftige Änderungen regressionsärmer umgesetzt werden können.
+  Technik: Feature-Katalog und Config-Spezifikation dienen jetzt als zentrale Wahrheitsquelle für Defaults, empfohlene Profile und Normalisierung; doppelte Feature-Pfad- und Theme-Key-Helper wurden zusammengeführt, der Theme-Mount wurde in Board-/Cricket-Module zerlegt, die xConfig-Shell trennt Style und View-Komposition in eigene interne Module, und zusätzliche Charakterisierungs- sowie Paritätstests sichern Registry-, Runtime-, Theme- und Shell-Verträge ab.
+
 ## [2.0.79] - 2026-03-24
 
 ### Changed
@@ -910,6 +917,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
+[2.0.80]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.79]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.78]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...ae480a9
 [2.0.77]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

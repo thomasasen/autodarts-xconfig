@@ -1,64 +1,14 @@
 import { ConfigPersistenceError, createConfigStore } from "../config/config-store.js";
+import { setNestedValue, splitFeaturePath } from "../config/feature-path-utils.js";
 import { createBootstrap } from "../core/bootstrap.js";
 import { createRecommendedRuntimeConfig } from "../config/runtime-config.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
+import { normalizeThemeKey, VALID_THEME_KEYS } from "../shared/theme-key-utils.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
 const RUNTIME_INIT_PROMISE_KEY = "__runtimeInitPromise";
-const VALID_THEME_KEYS = new Set(["x01", "shanghai", "bermuda", "cricket", "bullOff"]);
-
-function splitFeaturePath(featureKey) {
-  return String(featureKey || "")
-    .split(".")
-    .map((part) => String(part || "").trim())
-    .filter(Boolean);
-}
-
-function setNestedValue(rootValue, pathParts = [], value) {
-  if (!rootValue || typeof rootValue !== "object" || !Array.isArray(pathParts) || !pathParts.length) {
-    return;
-  }
-
-  let current = rootValue;
-  for (let index = 0; index < pathParts.length - 1; index += 1) {
-    const part = pathParts[index];
-    if (!current[part] || typeof current[part] !== "object" || Array.isArray(current[part])) {
-      current[part] = {};
-    }
-    current = current[part];
-  }
-
-  current[pathParts[pathParts.length - 1]] = value;
-}
-
-function normalizeThemeKey(themeKey) {
-  const normalized = String(themeKey || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-
-  const aliases = {
-    x01: "x01",
-    shanghai: "shanghai",
-    bermuda: "bermuda",
-    cricket: "cricket",
-    tactics: "cricket",
-    "bull-off": "bullOff",
-    bull_off: "bullOff",
-    bulloff: "bullOff",
-  };
-
-  if (Object.prototype.hasOwnProperty.call(aliases, normalized)) {
-    return aliases[normalized];
-  }
-
-  if (normalized === "bull off") {
-    return "bullOff";
-  }
-
-  return "";
-}
+const VALID_THEME_KEY_SET = new Set(VALID_THEME_KEYS);
 
 function buildFeatureEnabledPatch(configKey, enabled) {
   const normalizedKey = String(configKey || "").trim();
@@ -197,7 +147,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       const normalizedThemeKey = normalizeThemeKey(themeKey);
       const normalizedDataUrl = String(dataUrl || "").trim();
 
-      if (!VALID_THEME_KEYS.has(normalizedThemeKey)) {
+      if (!VALID_THEME_KEY_SET.has(normalizedThemeKey)) {
         return runtime.getSnapshot();
       }
       if (!normalizedDataUrl.startsWith("data:image/")) {
@@ -220,7 +170,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
 
     async function clearThemeBackgroundImage(themeKey) {
       const normalizedThemeKey = normalizeThemeKey(themeKey);
-      if (!VALID_THEME_KEYS.has(normalizedThemeKey)) {
+      if (!VALID_THEME_KEY_SET.has(normalizedThemeKey)) {
         return runtime.getSnapshot();
       }
 

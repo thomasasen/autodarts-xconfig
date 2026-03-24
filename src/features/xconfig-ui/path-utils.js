@@ -1,29 +1,14 @@
-function isObjectLike(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
+import {
+  setNestedValue as setSharedNestedValue,
+  splitFeaturePath as splitSharedFeaturePath,
+} from "../../config/feature-path-utils.js";
 
 export function splitFeaturePath(featureKey) {
-  return String(featureKey || "")
-    .split(".")
-    .map((part) => String(part || "").trim())
-    .filter(Boolean);
+  return splitSharedFeaturePath(featureKey);
 }
 
 export function setNestedValue(rootValue, pathParts = [], value) {
-  if (!isObjectLike(rootValue) || !Array.isArray(pathParts) || !pathParts.length) {
-    return;
-  }
-
-  let current = rootValue;
-  for (let index = 0; index < pathParts.length - 1; index += 1) {
-    const part = pathParts[index];
-    if (!isObjectLike(current[part])) {
-      current[part] = {};
-    }
-    current = current[part];
-  }
-
-  current[pathParts[pathParts.length - 1]] = value;
+  return setSharedNestedValue(rootValue, pathParts, value);
 }
 
 export function buildFeatureSettingPatch(configKey, settingKey, value) {

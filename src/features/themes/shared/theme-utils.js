@@ -1,3 +1,5 @@
+import { normalizeThemeKey as normalizeSharedThemeKey } from "../../../shared/theme-key-utils.js";
+
 export const PREVIEW_SPACE_CLASS = "ad-ext-turn-preview-space";
 const GAME_ROUTE_PREFIXES = Object.freeze(["/matches"]);
 const XCONFIG_ROUTE_PATH = "/ad-xconfig";
@@ -28,27 +30,7 @@ export function clampNumber(value, minValue, maxValue, fallbackValue) {
 }
 
 export function normalizeThemeKey(themeKey) {
-  const normalized = String(themeKey || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-
-  const aliases = {
-    x01: "x01",
-    shanghai: "shanghai",
-    bermuda: "bermuda",
-    cricket: "cricket",
-    tactics: "cricket",
-    bulloff: "bullOff",
-    "bull-off": "bullOff",
-    "bull_off": "bullOff",
-  };
-
-  if (Object.prototype.hasOwnProperty.call(aliases, normalized)) {
-    return aliases[normalized];
-  }
-
-  return "";
+  return normalizeSharedThemeKey(themeKey);
 }
 
 export function normalizeVariant(value) {
