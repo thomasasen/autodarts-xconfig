@@ -28,6 +28,7 @@ import { initializeRemoveDartsNotification } from "../../src/features/remove-dar
 import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
+import * as x01Rules from "../../src/domain/x01-rules.js";
 import {
   FakeDocument,
   FakeMessageEvent,
@@ -159,7 +160,7 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
   cleanup();
 });
 
-test("checkout-board-targets renders only the next sensible target when multiple targets are available", () => {
+test("checkout-board-targets render helper draws every provided target once", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -191,7 +192,99 @@ test("checkout-board-targets renders only the next sensible target when multiple
 
   const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
   assert.ok(overlay);
-  assert.equal(overlay.children.length, 2);
+  assert.equal(overlay.children.length, 4);
+});
+
+test("checkout-board-targets selects next, finish or all route segments from visible checkout suggestions", () => {
+  function createBoardDocument() {
+    const documentRef = new FakeDocument();
+    documentRef.suggestionElement.textContent = "BULL";
+    documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+    const secondSuggestion = documentRef.createElement("div");
+    secondSuggestion.classList.add("suggestion");
+    secondSuggestion.textContent = "D8";
+    secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+    documentRef.main.appendChild(secondSuggestion);
+    appendBoardFixture(documentRef);
+    return { documentRef, secondSuggestion };
+  }
+
+  function mountWithMode(targetSelectionMode) {
+    const { documentRef } = createBoardDocument();
+    const windowRef = createFakeWindow({ documentRef });
+    const cleanup = initializeCheckoutBoardTargets({
+      documentRef,
+      windowRef,
+      domGuards: createDomGuards({ documentRef }),
+      registries: {
+        observers: createObserverRegistry(),
+      },
+      gameState: {
+        isX01Variant: () => true,
+        getOutMode: () => "Double Out",
+        subscribe() {
+          return () => {};
+        },
+      },
+      domain: {
+        x01Rules,
+        variantRules: {
+          isX01VariantText: () => true,
+        },
+      },
+      config: {
+        getFeatureConfig() {
+          return {
+            effect: "pulse",
+            singleRing: "both",
+            targetSelectionMode,
+            colorTheme: "violet",
+            outlineIntensity: "standard",
+          };
+        },
+      },
+      helpers: {
+        createRafScheduler(callback) {
+          return {
+            schedule() {
+              callback();
+            },
+            cancel() {},
+            isScheduled() {
+              return false;
+            },
+          };
+        },
+      },
+    });
+
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    return { cleanup, overlay };
+  }
+
+  const nextSelection = mountWithMode("next");
+  try {
+    assert.equal(nextSelection.overlay.children.length, 2);
+    assert.equal(String(nextSelection.overlay.children[0]?.tagName || ""), "CIRCLE");
+  } finally {
+    nextSelection.cleanup();
+  }
+
+  const finishSelection = mountWithMode("finish");
+  try {
+    assert.equal(finishSelection.overlay.children.length, 2);
+    assert.equal(String(finishSelection.overlay.children[0]?.tagName || ""), "PATH");
+  } finally {
+    finishSelection.cleanup();
+  }
+
+  const allSelection = mountWithMode("all");
+  try {
+    assert.equal(allSelection.overlay.children.length, 4);
+  } finally {
+    allSelection.cleanup();
+  }
 });
 
 test("checkout-board-targets rerenders after board replacement even when suggestion text stays unchanged", () => {
@@ -235,9 +328,7 @@ test("checkout-board-targets rerenders after board replacement even when suggest
       },
     },
     domain: {
-      x01Rules: {
-        parseCheckoutTargetsFromSuggestion: () => [{ ring: "D", value: 20 }],
-      },
+      x01Rules,
       variantRules: {
         isX01VariantText: () => true,
       },
@@ -313,9 +404,7 @@ test("checkout-board-targets rerenders onto a replaced board when suggestion and
       },
     },
     domain: {
-      x01Rules: {
-        parseCheckoutTargetsFromSuggestion: () => [{ ring: "D", value: 20 }],
-      },
+      x01Rules,
       variantRules: {
         isX01VariantText: () => true,
       },

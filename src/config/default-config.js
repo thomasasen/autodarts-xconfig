@@ -35,6 +35,7 @@ export const defaultConfig = {
       enabled: false,
       effect: "pulse",
       singleRing: "both",
+      targetSelectionMode: "next",
       colorTheme: "violet",
       outlineIntensity: "standard",
       debug: false,
@@ -44,6 +45,7 @@ export const defaultConfig = {
       zoomLevel: 2.75,
       zoomSpeed: "mittel",
       checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
       debug: false,
     },
     styleCheckoutSuggestions: {

@@ -15,10 +15,12 @@ const CHECKOUT_COLORS = new Set([
 ]);
 const BOARD_TARGET_EFFECTS = new Set(["pulse", "blink", "glow"]);
 const BOARD_TARGET_SINGLE_RING = new Set(["both", "inner", "outer"]);
+const BOARD_TARGET_SELECTION_MODES = new Set(["next", "all", "finish"]);
 const BOARD_TARGET_THEMES = new Set(["violet", "cyan", "amber"]);
 const BOARD_TARGET_OUTLINE_INTENSITY = new Set(["dezent", "standard", "stark"]);
 const TV_ZOOM_LEVELS = new Set([2.35, 2.75, 3.15]);
 const TV_ZOOM_SPEEDS = new Set(["schnell", "mittel", "langsam"]);
+const TV_ZOOM_TARGETS = new Set(["finish-only", "route-first"]);
 const SUGGESTION_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
 const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
@@ -319,6 +321,11 @@ function normalizeCheckoutBoardTargetsConfig(rawConfig = {}) {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     effect: normalizeStringChoice(rawConfig.effect, "pulse", BOARD_TARGET_EFFECTS),
     singleRing: normalizeStringChoice(rawConfig.singleRing, "both", BOARD_TARGET_SINGLE_RING),
+    targetSelectionMode: normalizeStringChoice(
+      rawConfig.targetSelectionMode,
+      "next",
+      BOARD_TARGET_SELECTION_MODES
+    ),
     colorTheme: normalizeStringChoice(rawConfig.colorTheme, "violet", BOARD_TARGET_THEMES),
     outlineIntensity: normalizeStringChoice(
       rawConfig.outlineIntensity,
@@ -335,6 +342,11 @@ function normalizeTvBoardZoomConfig(rawConfig = {}) {
     zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS),
     zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS),
     checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true),
+    checkoutZoomTarget: normalizeStringChoice(
+      rawConfig.checkoutZoomTarget,
+      "finish-only",
+      TV_ZOOM_TARGETS
+    ),
     debug: normalizeBoolean(rawConfig.debug, false),
   };
 }

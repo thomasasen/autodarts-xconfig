@@ -430,6 +430,10 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Beide`: Wenn ein Single-Feld Ziel eines Checkouts ist, werden beide Single-Bereiche des Segments hervorgehoben. Das erzeugt die breiteste visuelle Markierung.
   - `Innen`: Die Hervorhebung sitzt ausschließlich zwischen Triple- und Bull-Bereich. Der äußere Single-Ring bleibt unbelegt.
   - `Außen`: Die Hervorhebung liegt ausschließlich im äußeren Single-Bereich zwischen Double-Ring und Triple-Ring. Der innere Bereich bleibt frei.
+- `Zielauswahl`: Steuert, wie viele Segmente aus der sichtbaren Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert nur das zuerst zu spielende Segment, `Alle Felder` die gesamte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.
+  - `Nächstes Feld`: Es wird genau das Segment hervorgehoben, das als nächster Dart laut sichtbarer Checkout-Route ansteht. Das ist die fokussierteste und standardmäßige Darstellung.
+  - `Alle Felder`: Die komplette explizite Checkout-Route wird am Board sichtbar gemacht. Dadurch siehst du alle Schritte der Empfehlung parallel, statt nur den aktuellen Einstieg.
+  - `Nur Finish`: Es wird ausschließlich das Segment hervorgehoben, das das Leg tatsächlich beendet. Frühere Setup- oder Routenfelder bleiben unmarkiert.
 - `Farbthema`: Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.
   - `Violett`: Die Segmentfüllung und Kontur laufen in eine violette Palette. Das wirkt am stärksten wie ein klassischer Neon-Overlay-Look.
   - `Cyan`: Die Board-Markierung wirkt technisch und frisch, ohne so warm wie Amber zu erscheinen. Gerade auf dunklen Flächen wirkt Cyan sehr klar.
@@ -462,6 +466,9 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Mittel`: Der Zoom läuft weder hektisch noch träge. Diese Stufe hält die Balance zwischen direktem Fokus und TV-artiger Ruhe.
   - `Langsam`: Der Zoom wirkt stärker wie eine bewusste Kamerafahrt. Das Ziel baut sich langsamer auf und bleibt dadurch filmischer im Blick.
 - `Checkout-Zoom`: Aktiviert oder deaktiviert den Zoom auf eindeutige Ein-Dart-Checkout-Situationen in den ersten beiden Würfen. Bei aktivem Checkout-Zoom bleibt der Fokus nach einem getroffenen Checkout bis zum Leg-Ende bestehen. Andere Zoom-Fälle, etwa der spezielle `T20`-Setup-Fokus nach zwei `T20` inklusive Hold nach `T20,T20,T20` bis zum Spielerwechsel, werden dadurch nicht grundsätzlich abgeschaltet.
+- `Checkout-Ziel`: Steuert, welches Segment aus einer sichtbaren Checkout-Route für den Zoom verwendet wird. `Nur Finish-Feld` fokussiert standardmäßig nur das eigentliche Beendigungsfeld des Legs, `Erstes Routenfeld` verhält sich wie der frühere Routenfokus auf den ersten Schritt.
+  - `Nur Finish-Feld`: Mehrstufige Checkout-Routen wie `T16` plus `D8` werden standardmäßig auf das letzte, legbeendende Segment fokussiert. Setup-Schritte der Route werden dabei nicht automatisch gezoomt.
+  - `Erstes Routenfeld`: Der Zoom folgt dem zuerst zu spielenden Schritt der sichtbaren Checkout-Route. Das entspricht dem früheren Routenfokus, bei dem mehrstufige Empfehlungen direkt beim ersten Segment beginnen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![TV Board Zoom](docs/screenshots/animation-tv-board-zoom.gif)

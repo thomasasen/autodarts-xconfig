@@ -58,6 +58,8 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
   assert.equal(config.features.turnPointsCount.flashOnChange, true);
   assert.equal(config.features.turnPointsCount.flashMode, "on-change");
+  assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
+  assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -66,10 +68,12 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       checkoutBoardTargets: {
         effect: "GLOW",
         singleRing: "INNER",
+        targetSelectionMode: "ALL",
       },
       tvBoardZoom: {
         zoomLevel: "3.15",
         zoomSpeed: "SCHNELL",
+        checkoutZoomTarget: "ROUTE-FIRST",
       },
       styleCheckoutSuggestions: {
         style: "STRIPE",
@@ -191,8 +195,10 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
 
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").effect, "glow");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "inner");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").targetSelectionMode, "all");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomSpeed, "schnell");
+  assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").checkoutZoomTarget, "route-first");
   assert.equal(runtimeConfig.getFeatureConfig("styleCheckoutSuggestions").style, "stripe");
   assert.equal(runtimeConfig.getFeatureConfig("styleCheckoutSuggestions").labelText, "FINISH");
   assert.equal(runtimeConfig.getFeatureConfig("averageTrendArrow").durationMs, 500);

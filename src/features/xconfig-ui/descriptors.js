@@ -313,6 +313,11 @@ export const xconfigDescriptors = Object.freeze([
         { value: "inner", label: "Innen" },
         { value: "outer", label: "Außen" },
       ]),
+      selectField("targetSelectionMode", "Zielauswahl", [
+        { value: "next", label: "Nächstes Feld" },
+        { value: "all", label: "Alle Felder" },
+        { value: "finish", label: "Nur Finish" },
+      ]),
       selectField("colorTheme", "Farbthema", [
         { value: "violet", label: "Violett" },
         { value: "cyan", label: "Cyan" },
@@ -343,6 +348,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "langsam", label: "Langsam" },
       ]),
       checkboxField("checkoutZoomEnabled", "Checkout-Zoom"),
+      selectField("checkoutZoomTarget", "Checkout-Ziel", [
+        { value: "finish-only", label: "Nur Finish-Feld" },
+        { value: "route-first", label: "Erstes Routenfeld" },
+      ]),
       checkboxField("debug", "Debug"),
     ],
   }),

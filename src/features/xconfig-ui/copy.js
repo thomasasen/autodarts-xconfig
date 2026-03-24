@@ -302,6 +302,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.",
         "Bestimmt, welche Single-Ringe bei Single-Zielen markiert werden."
       ),
+      targetSelectionMode: fieldCopy(
+        "Legt fest, ob das nächste Feld, alle Felder oder nur das Finish-Feld der sichtbaren Checkout-Route markiert werden.",
+        "Steuert, wie viele Segmente aus der sichtbaren Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert nur das zuerst zu spielende Segment, `Alle Felder` die gesamte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
+        "Legt fest, welcher Teil der sichtbaren Checkout-Route am Board markiert wird."
+      ),
       colorTheme: fieldCopy(
         "Passt die Farbe der Board-Markierungen an dein Setup an.",
         "Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.",
@@ -340,6 +345,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Schaltet den speziellen Zoom für klare Ein-Dart-Checkouts ein oder aus.",
         "Aktiviert oder deaktiviert den Zoom auf eindeutige Ein-Dart-Checkout-Situationen in den ersten beiden Würfen. Bei aktivem Checkout-Zoom bleibt der Fokus nach einem getroffenen Checkout bis zum Leg-Ende bestehen. Andere Zoom-Fälle, etwa der spezielle `T20`-Setup-Fokus nach zwei `T20` inklusive Hold nach `T20,T20,T20` bis zum Spielerwechsel, werden dadurch nicht grundsätzlich abgeschaltet.",
         "Schaltet den Checkout-Zoom für klare Ein-Dart-Finishes ein oder aus."
+      ),
+      checkoutZoomTarget: fieldCopy(
+        "Bestimmt, ob der Zoom bei Checkout-Routen auf das Finish-Feld oder auf das erste sichtbare Routenfeld geht.",
+        "Steuert, welches Segment aus einer sichtbaren Checkout-Route für den Zoom verwendet wird. `Nur Finish-Feld` fokussiert standardmäßig nur das eigentliche Beendigungsfeld des Legs, `Erstes Routenfeld` verhält sich wie der frühere Routenfokus auf den ersten Schritt.",
+        "Bestimmt, welches Segment einer sichtbaren Checkout-Route als Zoomziel verwendet wird."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1184,6 +1194,24 @@ const BOARD_TARGET_OUTLINE_OPTION_COPY = deepFreeze({
   ),
 });
 
+const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({
+  next: optionCopy(
+    "Markiert nur das zuerst zu spielende Feld der sichtbaren Checkout-Route.",
+    "Es wird genau das Segment hervorgehoben, das als nächster Dart laut sichtbarer Checkout-Route ansteht. Das ist die fokussierteste und standardmäßige Darstellung.",
+    "Markiert nur das erste Segment der sichtbaren Checkout-Route."
+  ),
+  all: optionCopy(
+    "Markiert alle sichtbaren Felder der Checkout-Route gleichzeitig.",
+    "Die komplette explizite Checkout-Route wird am Board sichtbar gemacht. Dadurch siehst du alle Schritte der Empfehlung parallel, statt nur den aktuellen Einstieg.",
+    "Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig."
+  ),
+  finish: optionCopy(
+    "Markiert nur das abschließende Finish-Feld der Route.",
+    "Es wird ausschließlich das Segment hervorgehoben, das das Leg tatsächlich beendet. Frühere Setup- oder Routenfelder bleiben unmarkiert.",
+    "Markiert nur das letzte Finish-Segment der sichtbaren Checkout-Route."
+  ),
+});
+
 const TV_BOARD_ZOOM_LEVEL_OPTION_COPY = deepFreeze({
   "2.35": optionCopy(
     "Zoomt vergleichsweise weit und lässt noch viel Boardumfeld stehen.",
@@ -1217,6 +1245,19 @@ const TV_BOARD_ZOOM_SPEED_OPTION_COPY = deepFreeze({
     "Fährt sichtbar ruhiger und länger ein und aus.",
     "Der Zoom wirkt stärker wie eine bewusste Kamerafahrt. Das Ziel baut sich langsamer auf und bleibt dadurch filmischer im Blick.",
     "Diese Einstellung verlängert Ein- und Auszoomung spürbar. Der Fokus wirkt dadurch weicher und cineastischer, aber weniger direkt als bei `Schnell`."
+  ),
+});
+
+const TV_BOARD_ZOOM_TARGET_OPTION_COPY = deepFreeze({
+  "finish-only": optionCopy(
+    "Zoomt bei Checkout-Routen nur auf das eigentliche Finish-Feld.",
+    "Mehrstufige Checkout-Routen wie `T16` plus `D8` werden standardmäßig auf das letzte, legbeendende Segment fokussiert. Setup-Schritte der Route werden dabei nicht automatisch gezoomt.",
+    "Fokussiert bei sichtbaren Checkout-Routen nur das abschließende Finish-Feld."
+  ),
+  "route-first": optionCopy(
+    "Zoomt auf das erste sichtbare Feld der Checkout-Route.",
+    "Der Zoom folgt dem zuerst zu spielenden Schritt der sichtbaren Checkout-Route. Das entspricht dem früheren Routenfokus, bei dem mehrstufige Empfehlungen direkt beim ersten Segment beginnen.",
+    "Fokussiert bei sichtbaren Checkout-Routen das erste Routenfeld."
   ),
 });
 
@@ -2116,12 +2157,14 @@ const xconfigFieldOptionCopy = deepFreeze({
   "checkout-board-targets": {
     effect: BOARD_TARGET_EFFECT_OPTION_COPY,
     singleRing: BOARD_TARGET_SINGLE_RING_OPTION_COPY,
+    targetSelectionMode: BOARD_TARGET_SELECTION_MODE_OPTION_COPY,
     colorTheme: BOARD_TARGET_COLOR_OPTION_COPY,
     outlineIntensity: BOARD_TARGET_OUTLINE_OPTION_COPY,
   },
   "tv-board-zoom": {
     zoomLevel: TV_BOARD_ZOOM_LEVEL_OPTION_COPY,
     zoomSpeed: TV_BOARD_ZOOM_SPEED_OPTION_COPY,
+    checkoutZoomTarget: TV_BOARD_ZOOM_TARGET_OPTION_COPY,
   },
   "style-checkout-suggestions": {
     style: CHECKOUT_SUGGESTION_STYLE_OPTION_COPY,

@@ -262,6 +262,10 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Beide`: Bei Single-Zielen werden sowohl der innere als auch der äußere Single-Ring des betreffenden Segments markiert. Das ist die flächigste und am leichtesten erkennbare Variante.
   - `Innen`: Bei Single-Zielen wird nur der innere Single-Ring sichtbar markiert. Dadurch bleibt die Zielmarkierung schmaler und konzentriert sich stärker auf den innenliegenden Bereich des Segments.
   - `Außen`: Diese Einstellung zeichnet bei Single-Zielen nur den äußeren Single-Ring nach. Das ist sinnvoll, wenn du die Markierung näher an der Außenzone des Boards sehen möchtest.
+- `Zielauswahl`: Legt fest, welcher Teil der sichtbaren Checkout-Route am Board markiert wird.
+  - `Nächstes Feld`: Markiert nur das erste Segment der sichtbaren Checkout-Route.
+  - `Alle Felder`: Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig.
+  - `Nur Finish`: Markiert nur das letzte Finish-Segment der sichtbaren Checkout-Route.
 - `Farbthema`: Passt die Farbe der Board-Markierungen an.
   - `Violett`: Diese Palette nutzt ein klares Violett für Füllung und Kontur der Checkout-Ziele. Dadurch wirkt die Markierung deutlich futuristischer und hebt sich stark von den Standardfarben des Boards ab.
   - `Cyan`: Diese Farbpalette färbt die Ziele in ein kühles Cyan und erzeugt damit einen sauberen, technischen Look. Auf dunklen Board-Bereichen wirkt die Markierung sehr klar und modern.
@@ -288,6 +292,9 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Mittel`: Diese Stufe ist der Mittelweg zwischen schnellem Fokuswechsel und weicher Kamerafahrt. Die Bewegung bleibt klar wahrnehmbar, ohne das Geschehen unnötig zu verzögern.
   - `Langsam`: Diese Einstellung verlängert Ein- und Auszoomung spürbar. Der Fokus wirkt dadurch weicher und cineastischer, aber weniger direkt als bei `Schnell`.
 - `Checkout-Zoom`: Schaltet den Checkout-Zoom für klare Ein-Dart-Finishes ein oder aus.
+- `Checkout-Ziel`: Bestimmt, welches Segment einer sichtbaren Checkout-Route als Zoomziel verwendet wird.
+  - `Nur Finish-Feld`: Fokussiert bei sichtbaren Checkout-Routen nur das abschließende Finish-Feld.
+  - `Erstes Routenfeld`: Fokussiert bei sichtbaren Checkout-Routen das erste Routenfeld.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![TV Board Zoom](screenshots/animation-tv-board-zoom.gif)

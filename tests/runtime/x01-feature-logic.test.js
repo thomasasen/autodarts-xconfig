@@ -260,6 +260,23 @@ test("tv-board-zoom falls back to score checkout when suggestion is invalid or c
     nowTs: 3000,
   });
 
+  const conflictRouteFirstIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef: conflictDocument,
+    windowRef: conflictWindow,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
+    },
+    nowTs: 3000,
+  });
+
   const invalidDocument = new FakeDocument();
   invalidDocument.suggestionElement.textContent = "ABC";
   const invalidWindow = createFakeWindow({ documentRef: invalidDocument });
@@ -284,9 +301,81 @@ test("tv-board-zoom falls back to score checkout when suggestion is invalid or c
     reason: "checkout",
     segment: "D20",
   });
+  assert.deepEqual(conflictRouteFirstIntent, {
+    reason: "checkout",
+    segment: "D20",
+  });
   assert.deepEqual(invalidIntent, {
     reason: "checkout",
     segment: "D20",
+  });
+});
+
+test("tv-board-zoom uses finish-only checkout routes by default for multi-step suggestions", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T16";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D8";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 121,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 3400,
+  });
+
+  assert.deepEqual(intent, {
+    reason: "route-finish",
+    segment: "D8",
+  });
+});
+
+test("tv-board-zoom route-first mode keeps the first visible checkout route field", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T16";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D8";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 121,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
+    },
+    nowTs: 3450,
+  });
+
+  assert.deepEqual(intent, {
+    reason: "route-first",
+    segment: "T16",
   });
 });
 

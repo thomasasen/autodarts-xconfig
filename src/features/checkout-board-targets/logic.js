@@ -398,10 +398,16 @@ export function renderCheckoutTargets(options = {}) {
     return;
   }
 
-  const selectedTargets = checkoutTargets.slice(0, 1);
   const ownerDocument = overlay.ownerDocument;
 
-  selectedTargets.forEach((target) => {
+  const renderedKeys = new Set();
+  checkoutTargets.forEach((target) => {
+    const key = `${target?.ring || ""}:${Number.isFinite(target?.value) ? target.value : ""}`;
+    if (renderedKeys.has(key)) {
+      return;
+    }
+    renderedKeys.add(key);
+
     const shapes = buildTargetShapes(ownerDocument, board.radius, target, visualConfig);
     shapes.forEach((shapeNode) => {
       applyShapeStyle(shapeNode, board.radius, visualConfig);

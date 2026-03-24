@@ -5,17 +5,14 @@ import {
 } from "./logic.js";
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import {
+  collectVisibleCheckoutRoute,
+  getCheckoutFinishSegmentFromRoute,
+  mapRouteSegmentsToBoardTargets,
+} from "../x01-checkout-route.js";
 
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
-const SUGGESTION_SELECTOR = ".suggestion";
-
-function readSuggestionText(documentRef) {
-  if (!documentRef || typeof documentRef.querySelector !== "function") {
-    return "";
-  }
-  return String(documentRef.querySelector(SUGGESTION_SELECTOR)?.textContent || "").trim();
-}
 
 function isX01Active({ gameState, documentRef, variantRules }) {
   if (gameState && typeof gameState.isX01Variant === "function") {
@@ -56,8 +53,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     !documentRef ||
     !domGuards ||
     !schedulerFactory ||
-    !x01Rules ||
-    typeof x01Rules.parseCheckoutTargetsFromSuggestion !== "function"
+    !x01Rules
   ) {
     return () => {};
   }
@@ -68,10 +64,17 @@ export function initializeCheckoutBoardTargets(context = {}) {
       : {
           effect: "pulse",
           singleRing: "both",
+          targetSelectionMode: "next",
           colorTheme: "violet",
           outlineIntensity: "standard",
         };
   const visualConfig = resolveBoardTargetVisualConfig(featureConfig);
+  const targetSelectionMode =
+    String(featureConfig.targetSelectionMode || "").trim().toLowerCase() === "all"
+      ? "all"
+      : String(featureConfig.targetSelectionMode || "").trim().toLowerCase() === "finish"
+        ? "finish"
+        : "next";
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
@@ -111,14 +114,35 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
   }
 
+  function selectRouteSegments(routeSegments = []) {
+    if (!Array.isArray(routeSegments) || !routeSegments.length) {
+      return [];
+    }
+
+    if (targetSelectionMode === "all") {
+      return routeSegments.slice();
+    }
+
+    if (targetSelectionMode === "finish") {
+      const outMode =
+        gameState && typeof gameState.getOutMode === "function"
+          ? String(gameState.getOutMode() || "")
+          : "";
+      const finishSegment = getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
+      return finishSegment ? [finishSegment] : [];
+    }
+
+    return [routeSegments[0]];
+  }
+
   function update() {
     const active = isX01Active({
       gameState,
       documentRef,
       variantRules,
     });
-    const suggestionText = readSuggestionText(documentRef);
-    const signature = `${active ? "x01" : "other"}|${suggestionText}`;
+    const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+    const signature = `${active ? "x01" : "other"}|${routeSegments.join(">")}`;
 
     if (signature === lastRenderSignature) {
       return;
@@ -130,7 +154,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const targets = x01Rules.parseCheckoutTargetsFromSuggestion(suggestionText);
+    const targets = mapRouteSegmentsToBoardTargets(selectRouteSegments(routeSegments), x01Rules);
     const board = getBoard();
     if (!board) {
       return;

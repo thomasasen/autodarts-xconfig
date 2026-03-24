@@ -34,6 +34,8 @@ test("config store loads defaults when storage is empty", async () => {
 
   assert.equal(config.features.checkoutScorePulse.effect, "scale");
   assert.equal(config.featureToggles.checkoutScorePulse, true);
+  assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
+  assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
 });
 
 test("config store saves, updates, and resets persisted config", async () => {
@@ -45,10 +47,20 @@ test("config store saves, updates, and resets persisted config", async () => {
     featureToggles: {
       checkoutScorePulse: false,
     },
+    features: {
+      checkoutBoardTargets: {
+        targetSelectionMode: "all",
+      },
+      tvBoardZoom: {
+        checkoutZoomTarget: "route-first",
+      },
+    },
   });
 
   let stored = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(stored.featureToggles.checkoutScorePulse, false);
+  assert.equal(stored.features.checkoutBoardTargets.targetSelectionMode, "all");
+  assert.equal(stored.features.tvBoardZoom.checkoutZoomTarget, "route-first");
 
   const updated = await store.update({
     features: {
@@ -60,10 +72,14 @@ test("config store saves, updates, and resets persisted config", async () => {
 
   assert.equal(updated.features.checkoutScorePulse.effect, "blink");
   assert.equal(updated.featureToggles.checkoutScorePulse, false);
+  assert.equal(updated.features.checkoutBoardTargets.targetSelectionMode, "all");
+  assert.equal(updated.features.tvBoardZoom.checkoutZoomTarget, "route-first");
 
   const reset = await store.reset();
   assert.equal(reset.features.checkoutScorePulse.effect, "scale");
   assert.equal(reset.featureToggles.checkoutScorePulse, true);
+  assert.equal(reset.features.checkoutBoardTargets.targetSelectionMode, "next");
+  assert.equal(reset.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
 });
 
 test("config store serializes overlapping updates without losing patches", async () => {

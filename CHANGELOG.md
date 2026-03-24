@@ -11,6 +11,24 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.78] - 2026-03-24
+
+### Fixed
+
+- Nutzerwirkung: X01-Checkout-Hinweise verhalten sich jetzt stabil über
+  mehrstufige Checkout-Routen hinweg. Der TV-Board-Zoom kann wahlweise auf das
+  erste Routensegment oder standardmäßig nur auf das tatsächliche Finish-Ziel
+  zoomen, und die Checkout-Board-Targets werden bei sichtbaren Suggestions wie
+  `T16` gefolgt von `D8` wieder korrekt angezeigt statt auszufallen oder auf dem
+  falschen Feld zu landen.
+  Technik: Eine gemeinsame X01-Checkout-Routenauflösung liest sichtbare
+  Suggestion-Felder geordnet aus dem DOM, parst explizite Segmente robust zu
+  einer Route und versorgt damit sowohl TV-Board-Zoom als auch
+  Checkout-Board-Targets; zusätzlich wurden neue Enum-Configs mit
+  Rückwärtskompatibilität (`checkoutZoomTarget`, `targetSelectionMode`),
+  xConfig-Select-Felder sowie Runtime-, Persistenz-, UI- und DOM-Regressionstests
+  für Mehrfeld-Checkouts ergänzt.
+
 ## [2.0.77] - 2026-03-23
 
 ### Fixed
@@ -884,7 +902,8 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...HEAD
+[2.0.78]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...HEAD
 [2.0.77]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.76]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.75]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

@@ -1,12 +1,15 @@
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "./style.js";
+import {
+  collectVisibleCheckoutRoute,
+  getCheckoutFinishSegmentFromRoute,
+  getFirstCheckoutRouteSegment,
+  getSingleSuggestionSegmentFromRoute,
+} from "../x01-checkout-route.js";
 
 const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
   ".ad-ext-player-active p.ad-ext-player-score",
   "p.ad-ext-player-score",
-]);
-const SUGGESTION_SELECTORS = Object.freeze([
-  ".suggestion",
 ]);
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -210,75 +213,6 @@ function parseSegmentWithFallback(segmentName, x01Rules) {
     value,
     score: value * multiplier,
   };
-}
-
-function parseExplicitSuggestionSegments(text, x01Rules) {
-  if (!x01Rules) {
-    return [];
-  }
-
-  if (typeof x01Rules.parseExplicitCheckoutSegments === "function") {
-    return x01Rules.parseExplicitCheckoutSegments(text);
-  }
-
-  const normalizedText = String(text || "").toUpperCase();
-  const tokens = normalizedText.match(/\b(?:DB|BULLSEYE|BULL|SB|OB|[TDS](?:[1-9]|1\d|20|25))\b/g) || [];
-  return tokens
-    .map((token) => {
-      if (token === "DB" || token === "BULLSEYE" || token === "BULL") {
-        return "BULL";
-      }
-      if (token === "SB" || token === "OB") {
-        return "S25";
-      }
-      return typeof x01Rules.normalizeSegmentName === "function"
-        ? x01Rules.normalizeSegmentName(token)
-        : token;
-    })
-    .filter(Boolean);
-}
-
-function getBestVisibleSuggestionTextFromDom(documentRef, windowRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return "";
-  }
-
-  const candidates = [];
-  SUGGESTION_SELECTORS.forEach((selector) => {
-    Array.from(documentRef.querySelectorAll(selector)).forEach((node) => {
-      if (!isElementVisible(node, windowRef)) {
-        return;
-      }
-
-      const text = String(node?.textContent || "").trim();
-      if (!text) {
-        return;
-      }
-
-      candidates.push({
-        text,
-        weight: getNodeVisualWeight(node, windowRef),
-      });
-    });
-  });
-
-  if (!candidates.length) {
-    return "";
-  }
-
-  candidates.sort((left, right) => right.weight - left.weight);
-  return candidates[0].text;
-}
-
-export function getSuggestionSegmentFromDom(documentRef, windowRef, x01Rules) {
-  const suggestionText = getBestVisibleSuggestionTextFromDom(documentRef, windowRef);
-  if (!suggestionText) {
-    return "";
-  }
-
-  const segments = parseExplicitSuggestionSegments(suggestionText, x01Rules);
-  const validSegment = segments.find((segment) => Boolean(parseSegmentWithFallback(segment, x01Rules)));
-  return validSegment || "";
 }
 
 function getBoardRadius(rootNode) {
@@ -595,7 +529,7 @@ function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
     return { x: 0.5, y: 0.5 };
   }
 
-  if (reason === "checkout" && parsedSegment?.ring === "D") {
+  if ((reason === "checkout" || reason === "route-finish") && parsedSegment?.ring === "D") {
     const viewBox = segmentPoint?.viewBox;
     const pointX = Number(segmentPoint?.x);
     const pointY = Number(segmentPoint?.y);
@@ -1050,6 +984,10 @@ export function computeZoomIntent(options = {}) {
     gameState && typeof gameState.getOutMode === "function"
       ? String(gameState.getOutMode() || "")
       : "";
+  const checkoutZoomTarget =
+    String(config?.checkoutZoomTarget || "").trim().toLowerCase() === "route-first"
+      ? "route-first"
+      : "finish-only";
 
   if (!gameState || typeof gameState.isX01Variant !== "function") {
     return null;
@@ -1134,14 +1072,11 @@ export function computeZoomIntent(options = {}) {
       activeScore = visibleScore;
     }
   }
-  const suggestionSegment = getSuggestionSegmentFromDom(documentRef, windowRef, x01Rules);
+  const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  const firstRouteSegment = getFirstCheckoutRouteSegment(routeSegments);
+  const finishRouteSegment = getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
+  const suggestionSegment = getSingleSuggestionSegmentFromRoute(routeSegments);
   const suggestionIsCheckout = isOneDartCheckoutSegmentForMode(suggestionSegment, outMode, x01Rules);
-  const suggestionMatchesScore = canFinishWithSegment(
-    activeScore,
-    suggestionSegment,
-    outMode,
-    x01Rules
-  );
   const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
   const canUseT20Setup = canUseThirdDartT20Setup(
     throws,
@@ -1197,14 +1132,39 @@ export function computeZoomIntent(options = {}) {
   }
 
   if (config.checkoutZoomEnabled && throwCount <= 2) {
-    if (
-      suggestionSegment &&
-      suggestionIsCheckout &&
-      (!Number.isFinite(activeScore) || suggestionMatchesScore)
-    ) {
-      const intent = { reason: "checkout", segment: suggestionSegment };
-      state.activeIntent = intent;
-      return intent;
+    if (checkoutZoomTarget === "route-first" && firstRouteSegment) {
+      const isSingleRoute = routeSegments.length === 1;
+      const matchesSingleCheckoutScore =
+        isSingleRoute &&
+        isOneDartCheckoutSegmentForMode(firstRouteSegment, outMode, x01Rules) &&
+        (!Number.isFinite(activeScore) ||
+          canFinishWithSegment(activeScore, firstRouteSegment, outMode, x01Rules));
+
+      if (!isSingleRoute || matchesSingleCheckoutScore) {
+        const intent = {
+          reason: matchesSingleCheckoutScore ? "checkout" : "route-first",
+          segment: firstRouteSegment,
+        };
+        state.activeIntent = intent;
+        return intent;
+      }
+    }
+
+    if (finishRouteSegment) {
+      const isSingleRoute = routeSegments.length === 1;
+      const matchesSingleCheckoutScore =
+        isSingleRoute &&
+        (!Number.isFinite(activeScore) ||
+          canFinishWithSegment(activeScore, finishRouteSegment, outMode, x01Rules));
+
+      if (!isSingleRoute || matchesSingleCheckoutScore) {
+        const intent = {
+          reason: matchesSingleCheckoutScore ? "checkout" : "route-finish",
+          segment: finishRouteSegment,
+        };
+        state.activeIntent = intent;
+        return intent;
+      }
     }
 
     if (scoreCheckoutSegment) {
@@ -1215,7 +1175,7 @@ export function computeZoomIntent(options = {}) {
   }
 
   if (throwCount <= 2) {
-    const canUseSuggestionForSetup =
+      const canUseSuggestionForSetup =
       Boolean(suggestionSegment) &&
       (config.checkoutZoomEnabled || !suggestionIsCheckout);
     const canUseSuggestionSegment =

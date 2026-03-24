@@ -1140,6 +1140,57 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   runtime.stop();
 });
 
+test("xConfig shell persists checkout route selection modes for board targets and TV zoom", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openBoardTargetSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-board-targets']"
+  );
+  assert.ok(openBoardTargetSettings);
+  openBoardTargetSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  clickSelectSettingOption(documentRef, "checkout-board-targets", "targetSelectionMode", "all");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutBoardTargets.targetSelectionMode === "all"
+  );
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.checkoutBoardTargets.targetSelectionMode, "all");
+
+  const openZoomSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='tv-board-zoom']"
+  );
+  assert.ok(openZoomSettings);
+  openZoomSettings.click();
+  await waitFor(() => Boolean(
+    documentRef.querySelector(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='tv-board-zoom'][data-setting-key='checkoutZoomTarget']"
+    )
+  ));
+
+  clickSelectSettingOption(documentRef, "tv-board-zoom", "checkoutZoomTarget", "route-first");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.tvBoardZoom.checkoutZoomTarget === "route-first"
+  );
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.tvBoardZoom.checkoutZoomTarget, "route-first");
+
+  runtime.stop();
+});
+
 test("xConfig shell enables all themes with a compact action button in the themes tab", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
