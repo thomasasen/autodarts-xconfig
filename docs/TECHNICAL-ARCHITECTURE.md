@@ -56,6 +56,7 @@ Verfügbar sind:
 - `getConfig()`
 - `saveConfig(partialConfig)`
 - `resetConfig()`
+- `applyRecommendedDefaults()`
 - `setFeatureEnabled(featureRef, enabled)`
 - `runFeatureAction(featureKey, actionId)`
 - `listFeatures()`

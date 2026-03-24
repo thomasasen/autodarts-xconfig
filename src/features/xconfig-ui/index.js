@@ -1307,6 +1307,16 @@ function buildShellContent(documentRef, state, features) {
     type: "button",
     attributes: {
       "data-adxconfig-action": "reset",
+      "aria-label": "Hard Reset ausführen",
+    },
+  }));
+  headerActions.appendChild(createElement(documentRef, "button", {
+    className: "ad-xconfig-btn ad-xconfig-btn--primary",
+    text: "Empfohlene Standards",
+    type: "button",
+    attributes: {
+      "data-adxconfig-action": "apply-recommended-defaults",
+      "aria-label": "Empfohlene Standards anwenden",
     },
   }));
   header.appendChild(headerActions);
@@ -1365,15 +1375,6 @@ function buildShellContent(documentRef, state, features) {
     contentHead.appendChild(createElement(documentRef, "h2", {
       className: "ad-xconfig-content-title",
       text: "Themen",
-    }));
-    contentHead.appendChild(createElement(documentRef, "button", {
-      type: "button",
-      className: "ad-xconfig-btn ad-xconfig-btn--compact",
-      text: "Alle aktivieren",
-      attributes: {
-        "data-adxconfig-action": "enable-all-themes",
-        "aria-label": "Alle Themen aktivieren",
-      },
     }));
     content.appendChild(contentHead);
   }

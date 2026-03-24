@@ -1,11 +1,18 @@
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt 20 Module in einem Userscript:
+`autodarts-xconfig` bündelt `21` Module in einem Userscript:
 
-- 15 Animationen und Komfortfunktionen
-- 5 Themes
+- `16` Animationen und Komfortfunktionen
+- `5` Themes
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
+
+## Hinweise zur Konfiguration
+
+- Insgesamt `21` Module: `16` Animationen und Komfortfunktionen sowie `5` Themes.
+- `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
+- `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
+- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro Bild.
 
 ![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)
@@ -44,7 +51,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
   - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild nur für dieses Theme.
+- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
 - `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
 
 ![Theme Bull-off in AD xConfig](screenshots/template-theme-bull-off-xConfig.png)
@@ -78,7 +85,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
   - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild nur für dieses Theme.
+- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
 - `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
 
 ![Theme X01 in AD xConfig](screenshots/template-theme-x01-xConfig.png)
@@ -114,7 +121,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
   - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild nur für dieses Theme.
+- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
 - `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
 
 ![Theme Cricket in AD xConfig](screenshots/template-theme-cricket-xConfig.png)
@@ -148,7 +155,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
   - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild nur für dieses Theme.
+- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
 - `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
 
 ![Theme Shanghai in AD xConfig](screenshots/template-theme-shanghai-xConfig.png)
@@ -181,7 +188,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
   - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild nur für dieses Theme.
+- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
 - `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
 
 ![Theme Bermuda in AD xConfig](screenshots/template-theme-bermuda-xConfig.png)

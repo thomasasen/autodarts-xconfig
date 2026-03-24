@@ -1,5 +1,6 @@
 import { ConfigPersistenceError, createConfigStore } from "../config/config-store.js";
 import { createBootstrap } from "../core/bootstrap.js";
+import { createRecommendedRuntimeConfig } from "../config/runtime-config.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
 
@@ -167,6 +168,14 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       return runtime.getSnapshot();
     }
 
+    async function applyRecommendedDefaults() {
+      const currentConfig = await configStore.load();
+      const nextConfig = createRecommendedRuntimeConfig(currentConfig);
+      await configStore.save(nextConfig);
+      runtime.updateConfig(nextConfig);
+      return runtime.getSnapshot();
+    }
+
     async function persistentSetFeatureEnabled(featureRef, enabled) {
       const normalizedFeatureRef = String(featureRef || "");
       const snapshot = runtime.getSnapshot();
@@ -237,6 +246,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       getConfig,
       saveConfig,
       resetConfig,
+      applyRecommendedDefaults,
       setFeatureEnabled: persistentSetFeatureEnabled,
       runFeatureAction: (featureRef, actionId) => runtime.runFeatureAction(featureRef, actionId),
       setThemeBackgroundImage,
@@ -273,6 +283,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       getConfig,
       saveConfig,
       resetConfig,
+      applyRecommendedDefaults,
       setFeatureEnabled: persistentSetFeatureEnabled,
       runFeatureAction: (featureRef, actionId) => runtime.runFeatureAction(featureRef, actionId),
       setThemeBackgroundImage,

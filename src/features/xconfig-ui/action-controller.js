@@ -103,12 +103,40 @@ export function createShellActionController(options = {}) {
 
     if (action === "reset" && typeof runtimeApi.resetConfig === "function") {
       const confirmed = typeof windowRef.confirm === "function"
-        ? windowRef.confirm("Bist du sicher? Damit werden alle Einstellungen auf Default gesetzt und alle Module deaktiviert.")
+        ? windowRef.confirm(
+            "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht alle gespeicherten Theme-Bilder."
+          )
         : true;
       if (!confirmed) {
         return;
       }
-      withRuntimeCall(runtimeApi.resetConfig(), "Konfiguration wurde zurückgesetzt.", "Zurücksetzen fehlgeschlagen.", "info");
+      withRuntimeCall(
+        runtimeApi.resetConfig(),
+        "Hard Reset ausgeführt.",
+        "Hard Reset fehlgeschlagen.",
+        "info"
+      );
+      return;
+    }
+
+    if (
+      action === "apply-recommended-defaults" &&
+      typeof runtimeApi.applyRecommendedDefaults === "function"
+    ) {
+      const confirmed = typeof windowRef.confirm === "function"
+        ? windowRef.confirm(
+            "Bist du sicher? Die empfohlenen Standards aktivieren alle Module und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."
+          )
+        : true;
+      if (!confirmed) {
+        return;
+      }
+      withRuntimeCall(
+        runtimeApi.applyRecommendedDefaults(),
+        "Empfohlene Standards angewendet.",
+        "Empfohlene Standards konnten nicht angewendet werden.",
+        "info"
+      );
       return;
     }
 
@@ -118,25 +146,6 @@ export function createShellActionController(options = {}) {
         runtimeApi.setFeatureEnabled(feature.featureKey, enabled),
         `${feature.title}: ${enabled ? "An" : "Aus"}`,
         `${feature.title}: Status konnte nicht gespeichert werden.`
-      );
-      return;
-    }
-
-    if (action === "enable-all-themes" && typeof runtimeApi.setFeatureEnabled === "function") {
-      const disabledThemeFeatures = getFeatures().filter(
-        (entry) => isThemeFeature(entry) && !entry.enabled
-      );
-      if (!disabledThemeFeatures.length) {
-        setNotice("info", "Alle Themen sind bereits aktiviert.");
-        return;
-      }
-      const enableThemesPromise = disabledThemeFeatures.reduce((chain, entry) => {
-        return chain.then(() => runtimeApi.setFeatureEnabled(entry.featureKey, true));
-      }, Promise.resolve());
-      withRuntimeCall(
-        enableThemesPromise,
-        "Alle Themen aktiviert.",
-        "Themen konnten nicht vollständig aktiviert werden."
       );
       return;
     }

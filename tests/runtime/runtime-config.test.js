@@ -1,8 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createRuntimeConfig, normalizeRuntimeConfig } from "../../src/config/runtime-config.js";
+import {
+  createHardResetRuntimeConfig,
+  createRecommendedRuntimeConfig,
+  createRuntimeConfig,
+  normalizeRuntimeConfig,
+} from "../../src/config/runtime-config.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
+
+function getStoredFeatureConfig(storedConfig, configKey) {
+  if (String(configKey || "").startsWith("themes.")) {
+    const themeKey = String(configKey).split(".")[1];
+    return storedConfig.features?.themes?.[themeKey] || null;
+  }
+
+  return storedConfig.features?.[configKey] || null;
+}
 
 test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   const config = normalizeRuntimeConfig();
@@ -60,6 +74,78 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.turnPointsCount.flashMode, "on-change");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
+});
+
+test("createHardResetRuntimeConfig disables every feature and clears theme images", () => {
+  const config = createHardResetRuntimeConfig({
+    features: {
+      themes: {
+        x01: {
+          backgroundImageDataUrl: "data:image/png;base64,AAAA",
+        },
+      },
+    },
+  });
+
+  defaultFeatureDefinitions.forEach((definition) => {
+    assert.equal(config.featureToggles[definition.configKey], false, definition.configKey);
+    assert.equal(getStoredFeatureConfig(config, definition.configKey).enabled, false, definition.configKey);
+  });
+
+  assert.equal(config.features.checkoutScorePulse.enabled, false);
+  assert.equal(config.features.checkoutScorePulse.effect, "scale");
+  assert.equal(config.features.checkoutBoardTargets.enabled, false);
+  assert.equal(config.features.tvBoardZoom.enabled, false);
+  assert.equal(config.features.tripleDoubleBullHits.enabled, false);
+  assert.equal(config.features.cricketGridFx.enabled, false);
+  assert.equal(config.features.themes.x01.enabled, false);
+  assert.equal(config.features.themes.x01.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.shanghai.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.bullOff.debug, false);
+});
+
+test("createRecommendedRuntimeConfig enables every feature and preserves theme images", () => {
+  const config = createRecommendedRuntimeConfig({
+    features: {
+      themes: {
+        x01: {
+          backgroundImageDataUrl: "data:image/png;base64,AAAA",
+        },
+        cricket: {
+          backgroundImageDataUrl: "data:image/png;base64,BBBB",
+        },
+      },
+    },
+  });
+
+  defaultFeatureDefinitions.forEach((definition) => {
+    assert.equal(config.featureToggles[definition.configKey], true, definition.configKey);
+    assert.equal(getStoredFeatureConfig(config, definition.configKey).enabled, true, definition.configKey);
+  });
+
+  assert.equal(config.features.checkoutScorePulse.enabled, true);
+  assert.equal(config.features.checkoutScorePulse.effect, "scale");
+  assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
+  assert.equal(config.features.tvBoardZoom.checkoutZoomEnabled, true);
+  assert.equal(config.features.styleCheckoutSuggestions.style, "outline");
+  assert.equal(config.features.styleCheckoutSuggestions.labelText, "CHECKOUT");
+  assert.equal(config.features.styleCheckoutSuggestions.colorTheme, "amber");
+  assert.equal(config.features.turnStartSweep.sweepStyle, "subtle");
+  assert.equal(config.features.turnStartSweep.durationMs, 420);
+  assert.equal(config.features.tripleDoubleBullHits.colorTheme, "kind-signal");
+  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "impact-pop");
+  assert.equal(config.features.cricketGridFx.intensity, "subtle");
+  assert.equal(config.features.cricketGridFx.pressureOverlay, false);
+  assert.equal(config.features.dartMarkerDarts.hideOriginalMarkers, true);
+  assert.equal(config.features.dartMarkerDarts.enableWobble, false);
+  assert.equal(config.features.singleBullSound.volume, 0.75);
+  assert.equal(config.features.winnerFireworks.intensity, "dezent");
+  assert.equal(config.features.themes.x01.enabled, true);
+  assert.equal(config.features.themes.shanghai.enabled, true);
+  assert.equal(config.features.themes.cricket.enabled, true);
+  assert.equal(config.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
+  assert.equal(config.features.themes.cricket.backgroundImageDataUrl, "data:image/png;base64,BBBB");
+  assert.equal(config.features.themes.bullOff.backgroundImageDataUrl, "");
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {

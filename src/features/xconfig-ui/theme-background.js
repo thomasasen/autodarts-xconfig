@@ -25,9 +25,15 @@ function formatByteSize(byteSize) {
   return `${(kiloBytes / 1024).toFixed(1)} MB`;
 }
 
-export function readThemeBackgroundImageInfo(feature) {
-  const dataUrl = String(feature?.config?.backgroundImageDataUrl || "").trim();
-  if (!dataUrl.startsWith("data:image/")) {
+const THEME_BACKGROUND_MAX_WIDTH = 1920;
+const THEME_BACKGROUND_MAX_HEIGHT = 1080;
+const THEME_BACKGROUND_MAX_BYTES = Math.floor(1.5 * 1024 * 1024);
+const THEME_BACKGROUND_WEBP_QUALITY = 0.86;
+const THEME_BACKGROUND_JPEG_QUALITY = 0.88;
+
+function parseDataUrlInfo(dataUrl) {
+  const normalizedDataUrl = String(dataUrl || "").trim();
+  if (!normalizedDataUrl.startsWith("data:image/")) {
     return {
       hasImage: false,
       mimeType: "",
@@ -36,8 +42,8 @@ export function readThemeBackgroundImageInfo(feature) {
     };
   }
 
-  const separatorIndex = dataUrl.indexOf(",");
-  if (separatorIndex <= 0 || separatorIndex >= dataUrl.length - 1) {
+  const separatorIndex = normalizedDataUrl.indexOf(",");
+  if (separatorIndex <= 0 || separatorIndex >= normalizedDataUrl.length - 1) {
     return {
       hasImage: false,
       mimeType: "",
@@ -46,8 +52,8 @@ export function readThemeBackgroundImageInfo(feature) {
     };
   }
 
-  const header = dataUrl.slice(0, separatorIndex);
-  const payload = dataUrl.slice(separatorIndex + 1);
+  const header = normalizedDataUrl.slice(0, separatorIndex);
+  const payload = normalizedDataUrl.slice(separatorIndex + 1);
   const mimeTypeMatch = header.match(/^data:([^;,]+)(?:;.*)?$/i);
   const mimeType = String(mimeTypeMatch?.[1] || "image/*").toLowerCase();
   const isBase64 = /;base64/i.test(header);
@@ -56,8 +62,230 @@ export function readThemeBackgroundImageInfo(feature) {
     hasImage: true,
     mimeType,
     byteSize: isBase64 ? estimateBase64ByteSize(payload) : payload.length,
-    dataUrl,
+    dataUrl: normalizedDataUrl,
   };
+}
+
+function isSupportedThemeBackgroundMimeType(mimeType) {
+  const normalizedMimeType = String(mimeType || "").trim().toLowerCase();
+  return (
+    normalizedMimeType === "image/png" ||
+    normalizedMimeType === "image/jpeg" ||
+    normalizedMimeType === "image/webp"
+  );
+}
+
+function createThemeBackgroundError(message) {
+  const error = new Error(String(message || "Theme background normalization failed."));
+  error.name = "ThemeBackgroundNormalizationError";
+  return error;
+}
+
+async function readFileAsDataUrl(windowRef, file) {
+  if (typeof windowRef?.FileReader !== "function") {
+    throw createThemeBackgroundError("Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+  }
+
+  return await new Promise((resolve, reject) => {
+    const reader = new windowRef.FileReader();
+    reader.onload = () => resolve(String(reader.result || "").trim());
+    reader.onerror = () => reject(createThemeBackgroundError("Bild konnte nicht gelesen werden."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadImageElement(windowRef, dataUrl) {
+  if (typeof windowRef?.Image !== "function") {
+    throw createThemeBackgroundError("Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+  }
+
+  return await new Promise((resolve, reject) => {
+    const image = new windowRef.Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(createThemeBackgroundError("Bild konnte nicht geladen werden."));
+    image.src = dataUrl;
+  });
+}
+
+async function loadThemeBackgroundSource(windowRef, file) {
+  const sourceLoaders = [];
+
+  if (typeof windowRef?.createImageBitmap === "function") {
+    sourceLoaders.push(async () => {
+      const bitmap = await windowRef.createImageBitmap(file);
+      return {
+        source: bitmap,
+        width: Number(bitmap?.width || 0),
+        height: Number(bitmap?.height || 0),
+        release() {
+          if (typeof bitmap?.close === "function") {
+            bitmap.close();
+          }
+        },
+      };
+    });
+  }
+
+  if (typeof windowRef?.FileReader === "function" && typeof windowRef?.Image === "function") {
+    sourceLoaders.push(async () => {
+      const dataUrl = await readFileAsDataUrl(windowRef, file);
+      const image = await loadImageElement(windowRef, dataUrl);
+      return {
+        source: image,
+        width: Number(image?.naturalWidth || image?.width || 0),
+        height: Number(image?.naturalHeight || image?.height || 0),
+        release() {},
+      };
+    });
+  }
+
+  let lastError = null;
+  for (const loadSource of sourceLoaders) {
+    try {
+      const source = await loadSource();
+      if (source?.width > 0 && source?.height > 0) {
+        return source;
+      }
+      lastError = createThemeBackgroundError("Bild konnte nicht normalisiert werden.");
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw createThemeBackgroundError("Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+}
+
+function createThemeBackgroundCanvas(documentRef, width, height) {
+  if (typeof documentRef?.createElement !== "function") {
+    throw createThemeBackgroundError("Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+  }
+
+  const canvas = documentRef.createElement("canvas");
+  if (!canvas || typeof canvas.getContext !== "function" || typeof canvas.toDataURL !== "function") {
+    throw createThemeBackgroundError("Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+  }
+
+  canvas.width = Math.max(1, Math.round(Number(width) || 0));
+  canvas.height = Math.max(1, Math.round(Number(height) || 0));
+  const context = canvas.getContext("2d");
+  if (!context || typeof context.drawImage !== "function") {
+    throw createThemeBackgroundError("Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+  }
+
+  return { canvas, context };
+}
+
+function readCanvasDataUrl(canvas, mimeType, quality) {
+  try {
+    return String(canvas.toDataURL(mimeType, quality) || "").trim();
+  } catch (_) {
+    return "";
+  }
+}
+
+function resolveThemeBackgroundOutputCandidates(sourceMimeType) {
+  const normalizedSourceMimeType = String(sourceMimeType || "").trim().toLowerCase();
+  const candidates = [
+    { mimeType: "image/webp", quality: THEME_BACKGROUND_WEBP_QUALITY },
+  ];
+
+  if (
+    isSupportedThemeBackgroundMimeType(normalizedSourceMimeType) &&
+    normalizedSourceMimeType !== "image/webp"
+  ) {
+    candidates.push({
+      mimeType: normalizedSourceMimeType,
+      quality: normalizedSourceMimeType === "image/jpeg" ? THEME_BACKGROUND_JPEG_QUALITY : undefined,
+    });
+  }
+
+  if (normalizedSourceMimeType !== "image/jpeg") {
+    candidates.push({
+      mimeType: "image/jpeg",
+      quality: THEME_BACKGROUND_JPEG_QUALITY,
+    });
+  }
+
+  if (normalizedSourceMimeType !== "image/png") {
+    candidates.push({
+      mimeType: "image/png",
+      quality: undefined,
+    });
+  }
+
+  return candidates;
+}
+
+export async function normalizeThemeBackgroundUpload(options = {}) {
+  const windowRef = options.windowRef || null;
+  const documentRef = options.documentRef || null;
+  const file = options.file || null;
+  const maxWidth = Math.max(1, Number(options.maxWidth) || THEME_BACKGROUND_MAX_WIDTH);
+  const maxHeight = Math.max(1, Number(options.maxHeight) || THEME_BACKGROUND_MAX_HEIGHT);
+  const maxBytes = Math.max(1, Number(options.maxBytes) || THEME_BACKGROUND_MAX_BYTES);
+
+  if (!file || typeof file !== "object") {
+    throw createThemeBackgroundError("Bitte eine Bilddatei auswählen.");
+  }
+
+  const fileType = String(file.type || "").trim().toLowerCase();
+  if (!fileType.startsWith("image/")) {
+    throw createThemeBackgroundError("Die ausgewählte Datei ist kein unterstütztes Bild.");
+  }
+
+  const source = await loadThemeBackgroundSource(windowRef, file);
+  const sourceWidth = Math.max(1, Number(source.width) || 0);
+  const sourceHeight = Math.max(1, Number(source.height) || 0);
+  const resizeScale = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight, 1);
+  const targetWidth = Math.max(1, Math.round(sourceWidth * resizeScale));
+  const targetHeight = Math.max(1, Math.round(sourceHeight * resizeScale));
+  const resized = targetWidth !== sourceWidth || targetHeight !== sourceHeight;
+  const { canvas, context } = createThemeBackgroundCanvas(documentRef, targetWidth, targetHeight);
+
+  try {
+    context.drawImage(source.source, 0, 0, targetWidth, targetHeight);
+
+    const outputCandidates = resolveThemeBackgroundOutputCandidates(fileType);
+    let lastCandidate = null;
+
+    for (const candidate of outputCandidates) {
+      const dataUrl = readCanvasDataUrl(canvas, candidate.mimeType, candidate.quality);
+      const info = parseDataUrlInfo(dataUrl);
+      if (!info.hasImage) {
+        continue;
+      }
+
+      const nextCandidate = {
+        ...info,
+        resized,
+      };
+      lastCandidate = nextCandidate;
+
+      if (nextCandidate.byteSize <= maxBytes) {
+        return nextCandidate;
+      }
+    }
+
+    if (lastCandidate && lastCandidate.byteSize > maxBytes) {
+      throw createThemeBackgroundError(
+        `Das Bild ist nach der Optimierung größer als ${formatByteSize(maxBytes)}.`
+      );
+    }
+
+    throw createThemeBackgroundError("Bild konnte nicht normalisiert werden.");
+  } finally {
+    if (typeof source.release === "function") {
+      source.release();
+    }
+  }
+}
+
+export function readThemeBackgroundImageInfo(feature) {
+  return parseDataUrlInfo(feature?.config?.backgroundImageDataUrl || "");
 }
 
 export function formatThemeBackgroundSummary(feature) {
@@ -85,7 +313,10 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
   );
   statusNode.setAttribute("data-theme-image-state", imageInfo.hasImage ? "present" : "empty");
   statusNode.setAttribute("data-theme-image-type", imageInfo.mimeType || "");
-  statusNode.setAttribute("data-theme-image-size", imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : "");
+  statusNode.setAttribute(
+    "data-theme-image-size",
+    imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : ""
+  );
 
   const summaryText = imageInfo.hasImage
     ? `Aktuelles Bild: ${imageInfo.mimeType}${imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : ""}.`
@@ -149,7 +380,7 @@ export function uploadThemeBackgroundImage(options = {}) {
   }
 
   const featureKey = String(feature?.featureKey || "").trim();
-  if (typeof documentRef?.createElement !== "function" || typeof windowRef?.FileReader !== "function") {
+  if (typeof documentRef?.createElement !== "function") {
     setNotice?.("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
     setThemeActionFeedback?.(
       featureKey,
@@ -171,46 +402,49 @@ export function uploadThemeBackgroundImage(options = {}) {
       return;
     }
 
-    const reader = new windowRef.FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || "").trim();
-      if (!dataUrl.startsWith("data:image/")) {
-        const errorMessage = "Upload fehlgeschlagen: Die ausgewählte Datei ist kein unterstütztes Bild.";
+    const cleanup = () => {
+      input.onchange = null;
+      input.remove?.();
+    };
+
+    Promise.resolve(
+      normalizeThemeBackgroundUpload({
+        file,
+        windowRef,
+        documentRef,
+        maxWidth: options.maxWidth,
+        maxHeight: options.maxHeight,
+        maxBytes: options.maxBytes,
+      })
+    )
+      .then((normalizedImage) => {
+        const fileName = String(file.name || "").trim();
+        const successMessage = normalizedImage.resized
+          ? fileName
+            ? `Hintergrundbild optimiert gespeichert: ${fileName}.`
+            : "Hintergrundbild optimiert gespeichert."
+          : fileName
+            ? `Hintergrundbild gespeichert: ${fileName}.`
+            : "Hintergrundbild gespeichert.";
+
+        return Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, normalizedImage.dataUrl))
+          .then(() => {
+            setNotice?.("success", successMessage);
+            setThemeActionFeedback?.(featureKey, "success", successMessage);
+            syncThemeBackgroundIndicators?.(featureKey);
+          });
+      })
+      .catch((error) => {
+        const errorMessage = String(
+          error?.message || "Hintergrundbild konnte nicht gespeichert werden."
+        ).trim();
         setNotice?.("error", errorMessage);
         setThemeActionFeedback?.(featureKey, "error", errorMessage);
-        input.onchange = null;
-        input.remove?.();
-        return;
-      }
-
-      const fileName = String(file.name || "").trim();
-      const successMessage = fileName
-        ? `Hintergrundbild gespeichert: ${fileName}.`
-        : "Hintergrundbild gespeichert.";
-      const errorMessage = "Hintergrundbild konnte nicht gespeichert werden.";
-      Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, dataUrl))
-        .then(() => {
-          setNotice?.("success", successMessage);
-          setThemeActionFeedback?.(featureKey, "success", successMessage);
-          syncThemeBackgroundIndicators?.(featureKey);
-        })
-        .catch(() => {
-          setNotice?.("error", errorMessage);
-          setThemeActionFeedback?.(featureKey, "error", errorMessage);
-        })
-        .finally(() => queueSync?.());
-
-      input.onchange = null;
-      input.remove?.();
-    };
-    reader.onerror = () => {
-      const errorMessage = "Upload fehlgeschlagen: Bild konnte nicht gelesen werden.";
-      setNotice?.("error", errorMessage);
-      setThemeActionFeedback?.(featureKey, "error", errorMessage);
-      input.onchange = null;
-      input.remove?.();
-    };
-    reader.readAsDataURL(file);
+      })
+      .finally(() => {
+        cleanup();
+        queueSync?.();
+      });
   };
 
   (documentRef.body || documentRef.documentElement).appendChild(input);

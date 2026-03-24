@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import {
+  buildXConfigOverviewSection,
   buildFeaturesDocSection,
   buildReadmeFeatureSection,
 } from "../../src/features/xconfig-ui/copy.js";
@@ -39,6 +40,15 @@ const mojibakePattern =
 const featureDefinitionByKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );
+const overviewCounts = {
+  totalModules: xconfigDescriptors.length,
+  animationModules: xconfigDescriptors.filter((descriptor) => descriptor.tab !== "themes").length,
+  themeModules: xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes").length,
+  themeImageLimit: "1,5 MiB",
+};
+function escapeRegExp(text) {
+  return String(text || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 test("README references the canonical userscript install target", () => {
   const readme = readFileSync(readmePath, "utf8");
@@ -84,6 +94,25 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 
   assert.doesNotMatch(readme, deprecatedOverviewScreenshotPattern);
   assert.doesNotMatch(featuresDoc, deprecatedOverviewScreenshotPattern);
+});
+
+test("xConfig module counts derive from the current registry descriptors", () => {
+  assert.equal(overviewCounts.totalModules, 21);
+  assert.equal(overviewCounts.animationModules, 16);
+  assert.equal(overviewCounts.themeModules, 5);
+});
+
+test("README and FEATURES share the generated xConfig overview copy", () => {
+  const readme = readFileSync(readmePath, "utf8");
+  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const readmeOverviewCopy = buildXConfigOverviewSection("Im Überblick", overviewCounts).trim();
+  const featuresOverviewCopy = buildXConfigOverviewSection(
+    "Hinweise zur Konfiguration",
+    overviewCounts
+  ).trim();
+
+  assert.match(readme, new RegExp(escapeRegExp(readmeOverviewCopy)));
+  assert.match(featuresDoc, new RegExp(escapeRegExp(featuresOverviewCopy)));
 });
 
 test("README and FEATURES keep beginner-facing German text free of mojibake", () => {
@@ -296,6 +325,7 @@ test("release architecture and QA docs mention public action API and release sta
   const releaseQaDoc = readFileSync(releaseQaDocPath, "utf8");
 
   assert.match(architectureDoc, /runFeatureAction\(featureKey, actionId\)/);
+  assert.match(architectureDoc, /applyRecommendedDefaults\(\)/);
   assert.match(architectureDoc, /v1\.1\.0/);
   assert.match(migrationDoc, /v1\.1\.0/);
   assert.match(releaseQaDoc, /Winner Fireworks/);

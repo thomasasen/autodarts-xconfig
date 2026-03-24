@@ -11,6 +11,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.79] - 2026-03-24
+
+### Changed
+
+- Nutzerwirkung: AD xConfig trennt jetzt klar zwischen einem echten `↺ Zurücksetzen` und `Empfohlene Standards`. Der Hard Reset deaktiviert alle Module, schaltet Debug aus und löscht gespeicherte Theme-Bilder; das neue Gesamtpreset aktiviert alle Themes und Animationen mit ausgewogenen Vorgaben. Theme-Bild-Uploads werden vor dem Speichern lokal optimiert, auf maximal `1920×1080` skaliert und bei `1,5 MiB` sauber begrenzt.
+  Technik: Neue Preset-Fabriken erzeugen vollständige Hard-Reset- und Recommended-Konfigurationen samt öffentlicher Runtime-API `applyRecommendedDefaults()`, die xConfig-Header-Aktionen wurden auf diese APIs umgestellt, Theme-Bilder werden vor Persistenz normalisiert und begrenzt, und README/FEATURES sowie ihr Generator beziehen Reset-/Preset-/Count-/Upload-Copy jetzt aus einer gemeinsamen Quelle mit aktualisierten Regressionstests.
+
 ## [2.0.78] - 2026-03-24
 
 ### Fixed
@@ -902,8 +909,9 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...HEAD
-[2.0.78]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...HEAD
+[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
+[2.0.79]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
+[2.0.78]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...ae480a9
 [2.0.77]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.76]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD
 [2.0.75]: https://github.com/thomasasen/autodarts-xconfig/compare/0e2da01...HEAD

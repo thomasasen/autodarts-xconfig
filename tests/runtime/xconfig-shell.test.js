@@ -144,6 +144,35 @@ function clickSelectSettingOption(documentRef, featureKey, settingKey, settingVa
   button.click();
 }
 
+function clickHeaderAction(documentRef, action) {
+  const selector = `[data-adxconfig-action='${action}']`;
+  const button = documentRef.querySelector(selector);
+  assert.ok(button, `missing header action button for ${action}`);
+  button.click();
+}
+
+function readNestedValue(rootValue, pathParts) {
+  return (Array.isArray(pathParts) ? pathParts : []).reduce((current, part) => {
+    if (!current || typeof current !== "object") {
+      return undefined;
+    }
+    return current[part];
+  }, rootValue);
+}
+
+function getFeatureConfigValue(config, configKey, fieldPath) {
+  const pathParts = String(configKey || "")
+    .split(".")
+    .map((part) => String(part || "").trim())
+    .filter(Boolean);
+  const featureConfig = readNestedValue(config?.features || {}, pathParts);
+  if (!fieldPath) {
+    return featureConfig;
+  }
+
+  return readNestedValue(featureConfig || {}, String(fieldPath).split(".").filter(Boolean));
+}
+
 function incrementPatchVersion(version) {
   const [major = "0", minor = "0", patch = "0"] = String(version || "")
     .split(".")
@@ -1191,7 +1220,7 @@ test("xConfig shell persists checkout route selection modes for board targets an
   runtime.stop();
 });
 
-test("xConfig shell enables all themes with a compact action button in the themes tab", async () => {
+test("xConfig shell renders reset and recommended default header actions", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1201,38 +1230,133 @@ test("xConfig shell enables all themes with a compact action button in the theme
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  const enableAllThemesButton = documentRef.querySelector(
-    "[data-adxconfig-action='enable-all-themes']"
+  const resetButton = documentRef.querySelector("[data-adxconfig-action='reset']");
+  const recommendedButton = documentRef.querySelector(
+    "[data-adxconfig-action='apply-recommended-defaults']"
   );
-  assert.ok(enableAllThemesButton);
-  assert.equal(enableAllThemesButton.classList.contains("ad-xconfig-btn--compact"), true);
-  enableAllThemesButton.click();
-  assert.equal(await waitFor(() => {
-    const storedSnapshot = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-    return (
-      storedSnapshot.featureToggles["themes.x01"] === true &&
-      storedSnapshot.featureToggles["themes.shanghai"] === true &&
-      storedSnapshot.featureToggles["themes.bermuda"] === true &&
-      storedSnapshot.featureToggles["themes.cricket"] === true &&
-      storedSnapshot.featureToggles["themes.bullOff"] === true
-    );
-  }, { timeoutMs: 500, intervalMs: 6 }), true);
 
-  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles["themes.x01"], true);
-  assert.equal(storedConfig.featureToggles["themes.shanghai"], true);
-  assert.equal(storedConfig.featureToggles["themes.bermuda"], true);
-  assert.equal(storedConfig.featureToggles["themes.cricket"], true);
-  assert.equal(storedConfig.featureToggles["themes.bullOff"], true);
-
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
+  assert.ok(resetButton);
+  assert.ok(recommendedButton);
+  assert.equal(resetButton.classList.contains("ad-xconfig-btn--danger"), true);
+  assert.equal(recommendedButton.classList.contains("ad-xconfig-btn--primary"), true);
   assert.equal(
     Boolean(documentRef.querySelector("[data-adxconfig-action='enable-all-themes']")),
     false
   );
 
   runtime.stop();
+});
+
+test("xConfig shell hard reset clears all modules and recommended defaults preserve theme images", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const confirmMessages = [];
+  windowRef.confirm = (message) => {
+    confirmMessages.push(String(message || ""));
+    return true;
+  };
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+
+    await runtime.setFeatureEnabled("theme-x01", true);
+    await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,ZmFrZS1oZWFkZXI=");
+    await runtime.saveConfig({
+      features: {
+        checkoutScorePulse: {
+          effect: "blink",
+        },
+        styleCheckoutSuggestions: {
+          style: "badge",
+        },
+      },
+    });
+
+    clickHeaderAction(documentRef, "reset");
+    await assert.equal(
+      await waitFor(() =>
+        confirmMessages.some((message) =>
+          message.includes("Hard Reset") && message.includes("Theme-Bilder")
+        ),
+        { timeoutMs: 120, intervalMs: 4 }
+      ),
+      true
+    );
+    await waitForStoredConfig(localStorage, (config) => {
+      const allDisabled = runtime.listFeatures().every((feature) => {
+        const toggleValue = config.featureToggles[feature.configKey];
+        const featureConfig = getFeatureConfigValue(config, feature.configKey);
+        return toggleValue === false && featureConfig?.enabled === false;
+      });
+
+      return (
+        allDisabled &&
+        config.features.checkoutScorePulse.effect === "scale" &&
+        config.features.themes.x01.backgroundImageDataUrl === ""
+      );
+    }, { timeoutMs: 2000, intervalMs: 8 });
+
+    await waitFor(() => {
+      const noticeText = String(documentRef.querySelector(".ad-xconfig-notice")?.textContent || "");
+      return noticeText.includes("Hard Reset ausgeführt.");
+    });
+
+    await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,cmVwbGF5LWhlYWRlcg==");
+    await runtime.saveConfig({
+      features: {
+        checkoutScorePulse: {
+          effect: "blink",
+        },
+        styleCheckoutSuggestions: {
+          style: "badge",
+        },
+      },
+    });
+
+    clickHeaderAction(documentRef, "apply-recommended-defaults");
+    await assert.equal(
+      await waitFor(() =>
+        confirmMessages.some((message) =>
+          message.includes("empfohlenen Standards") && message.includes("Theme-Bilder")
+        ),
+        { timeoutMs: 120, intervalMs: 4 }
+      ),
+      true
+    );
+    await waitForStoredConfig(localStorage, (config) => {
+      const allEnabled = runtime.listFeatures().every((feature) => {
+        const toggleValue = config.featureToggles[feature.configKey];
+        const featureConfig = getFeatureConfigValue(config, feature.configKey);
+        return toggleValue === true && featureConfig?.enabled === true;
+      });
+
+      return (
+        allEnabled &&
+        config.features.checkoutBoardTargets.colorTheme === "amber" &&
+        config.features.styleCheckoutSuggestions.style === "outline" &&
+        config.features.styleCheckoutSuggestions.labelText === "CHECKOUT" &&
+        config.features.turnStartSweep.sweepStyle === "subtle" &&
+        config.features.tripleDoubleBullHits.animationStyle === "impact-pop" &&
+        config.features.cricketGridFx.intensity === "subtle" &&
+        config.features.cricketGridFx.pressureOverlay === false &&
+        config.features.dartMarkerDarts.hideOriginalMarkers === true &&
+        config.features.singleBullSound.volume === 0.75 &&
+        config.features.winnerFireworks.intensity === "dezent" &&
+        config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
+      );
+    }, { timeoutMs: 2000, intervalMs: 8 });
+
+    await waitFor(() => {
+      const noticeText = String(documentRef.querySelector(".ad-xconfig-notice")?.textContent || "");
+      return noticeText.includes("Empfohlene Standards angewendet.");
+    });
+  } finally {
+    runtime.stop();
+  }
 });
 
 test("xConfig settings modal renders explanatory notes for checkbox, select and action fields", async () => {
@@ -1267,7 +1391,9 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     "missing select explanation note"
   );
   assert.ok(
-    noteTexts.includes("Öffnet die Dateiauswahl und speichert ein eigenes Bild nur für dieses Theme."),
+    noteTexts.includes(
+      "Öffnet die Dateiauswahl, optimiert das Bild auf maximal 1920×1080 und speichert es lokal bis 1,5 MiB nur für dieses Theme."
+    ),
     "missing action explanation note"
   );
 
@@ -1680,12 +1806,30 @@ test("xConfig shell theme background upload and clear actions persist and expose
 
   const originalCreateElement = documentRef.createElement.bind(documentRef);
   documentRef.createElement = (tagName) => {
+    if (String(tagName || "").toLowerCase() === "canvas") {
+      return {
+        width: 0,
+        height: 0,
+        getContext() {
+          return {
+            drawImage() {},
+          };
+        },
+        toDataURL(mimeType) {
+          if (mimeType === "image/webp") {
+            return `data:image/webp;base64,${"a".repeat(40)}`;
+          }
+          return "data:image/png;base64,ZmFrZS1kYXRh";
+        },
+      };
+    }
+
     const node = originalCreateElement(tagName);
     if (String(tagName || "").toLowerCase() === "input") {
       const originalClick = typeof node.click === "function" ? node.click.bind(node) : null;
       node.click = () => {
         if (node.type === "file") {
-          node.files = [{ name: "bg.png" }];
+          node.files = [{ name: "bg.png", type: "image/png" }];
           if (typeof node.onchange === "function") {
             node.onchange();
           }
@@ -1698,6 +1842,11 @@ test("xConfig shell theme background upload and clear actions persist and expose
     }
     return node;
   };
+  windowRef.createImageBitmap = async () => ({
+    width: 2400,
+    height: 1800,
+    close() {},
+  });
   windowRef.FileReader = class FakeFileReader {
     readAsDataURL() {
       this.result = "data:image/png;base64,ZmFrZS1kYXRh";
@@ -1729,14 +1878,21 @@ test("xConfig shell theme background upload and clear actions persist and expose
   const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
   assert.ok(uploadButton);
   uploadButton.click();
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,ZmFrZS1kYXRh");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.x01.backgroundImageDataUrl === `data:image/webp;base64,${"a".repeat(40)}`
+  );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,ZmFrZS1kYXRh");
+  assert.equal(
+    storedConfig.features.themes.x01.backgroundImageDataUrl,
+    `data:image/webp;base64,${"a".repeat(40)}`
+  );
   const uploadFeedback = documentRef.querySelector(
     "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
   );
   assert.ok(uploadFeedback);
+  assert.match(String(uploadFeedback.textContent || ""), /optimiert gespeichert/);
   assert.match(String(uploadFeedback.textContent || ""), /bg\.png/);
   assert.equal(
     uploadFeedback.classList.contains("ad-xconfig-theme-action-feedback--success"),
@@ -1748,23 +1904,23 @@ test("xConfig shell theme background upload and clear actions persist and expose
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "present");
-  assert.equal(status.getAttribute("data-theme-image-type"), "image/png");
-  assert.equal(status.getAttribute("data-theme-image-size"), "9");
+  assert.equal(status.getAttribute("data-theme-image-type"), "image/webp");
+  assert.equal(status.getAttribute("data-theme-image-size"), "30");
 
   const uploadedSummary = status.querySelector(".ad-xconfig-theme-image-status-summary");
   assert.ok(uploadedSummary);
-  assert.match(String(uploadedSummary.textContent || ""), /image\/png/);
-  assert.match(String(uploadedSummary.textContent || ""), /9 B/);
+  assert.match(String(uploadedSummary.textContent || ""), /image\/webp/);
+  assert.match(String(uploadedSummary.textContent || ""), /30 B/);
 
   const preview = status.querySelector(".ad-xconfig-theme-image-preview");
   assert.ok(preview);
-  assert.equal(preview.getAttribute("src"), "data:image/png;base64,ZmFrZS1kYXRh");
+  assert.equal(preview.getAttribute("src"), `data:image/webp;base64,${"a".repeat(40)}`);
 
   const themeCardNote = documentRef.querySelector(
     ".ad-xconfig-card[data-feature-key='theme-x01'] .ad-xconfig-note"
   );
   assert.ok(themeCardNote);
-  assert.match(String(themeCardNote.textContent || ""), /image\/png/);
+  assert.match(String(themeCardNote.textContent || ""), /Hintergrundbild/);
 
   const clearButton = documentRef.getElementById("ad-xconfig-field-theme-x01-clearThemeBackground");
   assert.ok(clearButton);

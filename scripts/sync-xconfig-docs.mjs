@@ -1,7 +1,8 @@
-import { readFileSync, writeFileSync } from "node:fs";
+﻿import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { xconfigDescriptors } from "../src/features/xconfig-ui/descriptors.js";
 import {
+  buildXConfigOverviewSection,
   buildFeaturesDocSection,
   buildReadmeFeatureSection,
 } from "../src/features/xconfig-ui/copy.js";
@@ -24,6 +25,13 @@ const orderedEntries = xconfigDescriptors
     definition: definitionByFeatureKey.get(descriptor.featureKey) || null,
   }))
   .filter((entry) => entry.definition);
+
+const overviewCounts = Object.freeze({
+  totalModules: orderedEntries.length,
+  animationModules: orderedEntries.filter((entry) => entry.descriptor.tab !== "themes").length,
+  themeModules: orderedEntries.filter((entry) => entry.descriptor.tab === "themes").length,
+  themeImageLimit: "1,5 MiB",
+});
 
 function buildQuickNavigation() {
   const themeEntries = orderedEntries.filter((entry) => entry.descriptor.tab === "themes");
@@ -76,6 +84,21 @@ function buildFeaturesDocGroup(title, entries) {
 }
 
 function buildFeaturesDocSections() {
+  const introSection = [
+    "# Feature-Übersicht",
+    "",
+    `\`autodarts-xconfig\` bündelt \`${overviewCounts.totalModules}\` Module in einem Userscript:`,
+    "",
+    `- \`${overviewCounts.animationModules}\` Animationen und Komfortfunktionen`,
+    `- \`${overviewCounts.themeModules}\` Themes`,
+    "",
+    "Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).",
+    "",
+    buildXConfigOverviewSection("Hinweise zur Konfiguration", overviewCounts).trim(),
+    "",
+    "![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)",
+    "![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)",
+  ].join("\n");
   const themeEntries = orderedEntries.filter((entry) => entry.descriptor.tab === "themes");
   const x01Entries = orderedEntries.filter(
     (entry) => entry.descriptor.tab !== "themes" && entry.definition.variants.includes("x01")
@@ -91,6 +114,8 @@ function buildFeaturesDocSections() {
   );
 
   return [
+    introSection.trim(),
+    "",
     buildFeaturesDocGroup("Themes", themeEntries).trim(),
     "",
     buildFeaturesDocGroup("Animationen für X01", x01Entries).trim(),
@@ -104,7 +129,7 @@ function buildFeaturesDocSections() {
 
 function replaceSection(documentText, startHeading, endHeading, replacement) {
   const startIndex = documentText.indexOf(startHeading);
-  const endIndex = documentText.indexOf(endHeading);
+  const endIndex = documentText.lastIndexOf(endHeading);
 
   if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
     throw new Error(`Unable to replace section between "${startHeading}" and "${endHeading}".`);
@@ -128,9 +153,15 @@ function syncReadme() {
 function syncFeaturesDoc() {
   const current = readFileSync(featuresDocPath, "utf8");
   const replacement = buildFeaturesDocSections();
-  const next = replaceSection(current, "## Themes", "## Hinweise zur Konfiguration", replacement);
+  const next = replaceSection(
+    current,
+    '# Feature-Übersicht',
+    '## Hinweise zur Konfiguration',
+    replacement
+  );
   writeFileSync(featuresDocPath, next, "utf8");
 }
 
 syncReadme();
 syncFeaturesDoc();
+

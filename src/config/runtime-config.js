@@ -732,6 +732,234 @@ function normalizeThemeBullOffConfig(rawConfig = {}) {
   };
 }
 
+function createPresetBaseConfig() {
+  return deepClone(defaultConfig);
+}
+
+function getThemeConfigKeys() {
+  const themeConfig = defaultConfig.features?.themes;
+  if (!themeConfig || typeof themeConfig !== "object" || Array.isArray(themeConfig)) {
+    return [];
+  }
+
+  return Object.keys(themeConfig);
+}
+
+function getFeatureConfigKeys() {
+  return Object.keys(defaultConfig.featureToggles || {});
+}
+
+function applyFeatureToggleState(configValue, enabled) {
+  if (!configValue || typeof configValue !== "object" || Array.isArray(configValue)) {
+    return;
+  }
+
+  const normalizedEnabled = Boolean(enabled);
+  getFeatureConfigKeys().forEach((featureKey) => {
+    if (Object.prototype.hasOwnProperty.call(configValue.featureToggles || {}, featureKey)) {
+      configValue.featureToggles[featureKey] = normalizedEnabled;
+    }
+  });
+
+  const featureKeys = collectFeatureKeysFromObject(configValue.features || {});
+  featureKeys.forEach((featureKey) => {
+    const featureConfig = getNestedValue(configValue.features || {}, splitFeaturePath(featureKey));
+    if (!featureConfig || typeof featureConfig !== "object" || Array.isArray(featureConfig)) {
+      return;
+    }
+
+    featureConfig.enabled = normalizedEnabled;
+    if (Object.prototype.hasOwnProperty.call(featureConfig, "debug")) {
+      featureConfig.debug = false;
+    }
+  });
+}
+
+function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClear = false) {
+  const themeConfigs = configValue?.features?.themes;
+  if (!themeConfigs || typeof themeConfigs !== "object" || Array.isArray(themeConfigs)) {
+    return;
+  }
+
+  getThemeConfigKeys().forEach((themeKey) => {
+    const targetThemeConfig = themeConfigs[themeKey];
+    if (!targetThemeConfig || typeof targetThemeConfig !== "object" || Array.isArray(targetThemeConfig)) {
+      return;
+    }
+
+    if (shouldClear) {
+      targetThemeConfig.backgroundImageDataUrl = "";
+      return;
+    }
+
+    const sourceThemeConfig = sourceConfig?.features?.themes?.[themeKey];
+    targetThemeConfig.backgroundImageDataUrl = normalizeThemeBackgroundImage(
+      sourceThemeConfig?.backgroundImageDataUrl || ""
+    );
+  });
+}
+
+function applyRecommendedFeatureDefaults(configValue) {
+  const featureRoot = configValue?.features;
+  if (!featureRoot || typeof featureRoot !== "object" || Array.isArray(featureRoot)) {
+    return;
+  }
+
+  const assign = (path, values) => {
+    const featureConfig = getNestedValue(featureRoot, splitFeaturePath(path));
+    if (!featureConfig || typeof featureConfig !== "object" || Array.isArray(featureConfig)) {
+      return;
+    }
+
+    Object.assign(featureConfig, values);
+  };
+
+  assign("checkoutScorePulse", {
+    effect: "scale",
+    colorTheme: "159, 219, 88",
+    intensity: "standard",
+    triggerSource: "suggestion-first",
+  });
+  assign("checkoutBoardTargets", {
+    effect: "pulse",
+    singleRing: "both",
+    targetSelectionMode: "next",
+    colorTheme: "amber",
+    outlineIntensity: "standard",
+  });
+  assign("tvBoardZoom", {
+    zoomLevel: 2.75,
+    zoomSpeed: "mittel",
+    checkoutZoomEnabled: true,
+    checkoutZoomTarget: "finish-only",
+  });
+  assign("styleCheckoutSuggestions", {
+    style: "outline",
+    labelText: "CHECKOUT",
+    colorTheme: "amber",
+  });
+  assign("averageTrendArrow", {
+    durationMs: 320,
+    size: "standard",
+  });
+  assign("turnStartSweep", {
+    durationMs: 420,
+    sweepStyle: "subtle",
+  });
+  assign("tripleDoubleBullHits", {
+    colorTheme: "kind-signal",
+    animationStyle: "impact-pop",
+  });
+  assign("cricketHighlighter", {
+    showOpenObjectives: false,
+    showDeadObjectives: true,
+    irrelevantBoardDimStyle: "smoke",
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  assign("cricketGridFx", {
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    pressureEdge: true,
+    scoringStripe: true,
+    deadRowMuted: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    pressureOverlay: false,
+    colorTheme: "standard",
+    intensity: "subtle",
+  });
+  assign("dartMarkerEmphasis", {
+    size: 6,
+    color: "rgb(49, 130, 206)",
+    effect: "glow",
+    opacityPercent: 85,
+    outline: "aus",
+  });
+  assign("dartMarkerDarts", {
+    design: "autodarts",
+    animateDarts: true,
+    sizePercent: 100,
+    hideOriginalMarkers: true,
+    enableShadow: true,
+    enableWobble: false,
+    flightSpeed: "standard",
+  });
+  assign("removeDartsNotification", {
+    imageSize: "standard",
+    pulseAnimation: true,
+    pulseScale: 1.04,
+  });
+  assign("singleBullSound", {
+    volume: 0.75,
+    cooldownMs: 700,
+    pollIntervalMs: 0,
+  });
+  assign("turnPointsCount", {
+    durationMs: 416,
+    flashOnChange: true,
+    flashMode: "on-change",
+  });
+  assign("winnerFireworks", {
+    style: "realistic",
+    colorTheme: "autodarts",
+    intensity: "dezent",
+    includeBullOut: true,
+    pointerDismiss: true,
+  });
+  assign("x01ScoreProgress", {
+    colorTheme: "checkout-focus",
+    barSize: "standard",
+    effect: "pulse-core",
+  });
+  assign("themes.x01", {
+    showAvg: true,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+  });
+  assign("themes.shanghai", {
+    showAvg: true,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+  });
+  assign("themes.bermuda", {
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+  });
+  assign("themes.cricket", {
+    showAvg: true,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+  });
+  assign("themes.bullOff", {
+    contrastPreset: "standard",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+  });
+}
+
+function buildHardResetRuntimeConfig() {
+  const config = createPresetBaseConfig();
+  applyFeatureToggleState(config, false);
+  applyThemeBackgroundImages(config, null, true);
+  return normalizeRuntimeConfig(config);
+}
+
+function buildRecommendedRuntimeConfig(sourceConfig = {}) {
+  const config = createPresetBaseConfig();
+  applyFeatureToggleState(config, true);
+  applyThemeBackgroundImages(config, sourceConfig, false);
+  applyRecommendedFeatureDefaults(config);
+  return normalizeRuntimeConfig(config);
+}
+
 const FEATURE_NORMALIZERS = Object.freeze({
   checkoutScorePulse: normalizeCheckoutScorePulseConfig,
   checkoutBoardTargets: normalizeCheckoutBoardTargetsConfig,
@@ -896,4 +1124,12 @@ export function createRuntimeConfig(overrides = {}) {
 
 export function normalizeRuntimeConfig(overrides = {}) {
   return createRuntimeConfig(overrides).getNormalized();
+}
+
+export function createHardResetRuntimeConfig() {
+  return buildHardResetRuntimeConfig();
+}
+
+export function createRecommendedRuntimeConfig(sourceConfig = {}) {
+  return buildRecommendedRuntimeConfig(sourceConfig);
 }

@@ -90,9 +90,9 @@ const THEME_PLAYER_TRANSPARENCY_FIELD = fieldCopy(
 );
 
 const THEME_UPLOAD_FIELD = fieldCopy(
-  "Öffnet die Dateiauswahl und speichert ein eigenes Bild nur für dieses Theme.",
-  "Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal gesichert und nach Reloads wieder für genau dieses Theme verwendet.",
-  "Speichert ein eigenes Bild nur für dieses Theme."
+  "Öffnet die Dateiauswahl, optimiert das Bild auf maximal 1920×1080 und speichert es lokal bis 1,5 MiB nur für dieses Theme.",
+  "Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal auf maximal 1920×1080 optimiert, bis 1,5 MiB begrenzt und nach Reloads wieder für genau dieses Theme verwendet.",
+  "Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme."
 );
 
 const THEME_CLEAR_FIELD = fieldCopy(
@@ -2250,6 +2250,34 @@ export function getXConfigFieldOptionCopy(featureKey, fieldKey, optionValue) {
     return null;
   }
   return fieldEntry[normalizeOptionCopyKey(optionValue)] || null;
+}
+
+function normalizeCountValue(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || numericValue < 0) {
+    return 0;
+  }
+
+  return Math.trunc(numericValue);
+}
+
+export function buildXConfigOverviewSection(title, summary = {}) {
+  const sectionTitle = String(title || "Hinweise zur Konfiguration").trim() || "Hinweise zur Konfiguration";
+  const totalModules = normalizeCountValue(summary.totalModules);
+  const animationModules = normalizeCountValue(summary.animationModules);
+  const themeModules = normalizeCountValue(summary.themeModules);
+  const themeImageLimit = String(summary.themeImageLimit || "1,5 MiB").trim() || "1,5 MiB";
+
+  const lines = [
+    `## ${sectionTitle}`,
+    "",
+    `- Insgesamt \`${totalModules}\` Module: \`${animationModules}\` Animationen und Komfortfunktionen sowie \`${themeModules}\` Themes.`,
+    `- \`↺ Zurücksetzen\`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.`,
+    `- \`Empfohlene Standards\`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.`,
+    `- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von \`${themeImageLimit}\` pro Bild.`,
+  ];
+
+  return `${lines.join("\n")}\n`;
 }
 
 export function formatVariantLabel(variants = []) {

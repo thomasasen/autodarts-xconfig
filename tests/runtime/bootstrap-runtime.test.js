@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
+import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { FakeStorage, FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -18,6 +19,15 @@ async function waitFor(check, { timeoutMs = 120, intervalMs = 4 } = {}) {
     await wait(intervalMs);
   }
   return Boolean(check());
+}
+
+function getStoredFeatureConfig(storedConfig, configKey) {
+  if (String(configKey || "").startsWith("themes.")) {
+    const themeKey = String(configKey).split(".")[1];
+    return storedConfig.features?.themes?.[themeKey] || null;
+  }
+
+  return storedConfig.features?.[configKey] || null;
 }
 
 test("initializeTampermonkeyRuntime is idempotent and reuses the namespace", async () => {
@@ -188,6 +198,106 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "theme-bermuda"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-cricket"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-bull-off"), true);
+
+  runtime.stop();
+});
+
+test("runtime applyRecommendedDefaults enables all features and preserves theme images", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      featureToggles: {
+        checkoutScorePulse: false,
+      },
+      features: {
+        themes: {
+          x01: {
+            backgroundImageDataUrl: "data:image/png;base64,AAAA",
+          },
+          cricket: {
+            backgroundImageDataUrl: "data:image/png;base64,BBBB",
+          },
+        },
+      },
+    }),
+  });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  const snapshot = await runtime.applyRecommendedDefaults();
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(snapshot.features["checkout-score-pulse"].enabled, true);
+  assert.equal(storedConfig.features.checkoutScorePulse.enabled, true);
+  assert.equal(storedConfig.features.checkoutBoardTargets.colorTheme, "amber");
+  assert.equal(storedConfig.features.styleCheckoutSuggestions.style, "outline");
+  assert.equal(storedConfig.features.turnStartSweep.durationMs, 420);
+  assert.equal(storedConfig.features.tripleDoubleBullHits.animationStyle, "impact-pop");
+  assert.equal(storedConfig.features.cricketGridFx.intensity, "subtle");
+  assert.equal(storedConfig.features.cricketGridFx.pressureOverlay, false);
+  assert.equal(storedConfig.features.dartMarkerDarts.hideOriginalMarkers, true);
+  assert.equal(storedConfig.features.singleBullSound.volume, 0.75);
+  assert.equal(storedConfig.features.winnerFireworks.intensity, "dezent");
+  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
+  assert.equal(
+    storedConfig.features.themes.cricket.backgroundImageDataUrl,
+    "data:image/png;base64,BBBB"
+  );
+
+  defaultFeatureDefinitions.forEach((definition) => {
+    assert.equal(storedConfig.featureToggles[definition.configKey], true, definition.configKey);
+    assert.equal(
+      getStoredFeatureConfig(storedConfig, definition.configKey).enabled,
+      true,
+      definition.configKey
+    );
+  });
+
+  runtime.stop();
+});
+
+test("runtime resetConfig performs a hard reset and clears theme images", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      featureToggles: {
+        checkoutScorePulse: true,
+      },
+      features: {
+        checkoutScorePulse: {
+          enabled: true,
+          effect: "blink",
+        },
+        themes: {
+          x01: {
+            enabled: true,
+            backgroundImageDataUrl: "data:image/png;base64,AAAA",
+          },
+        },
+      },
+    }),
+  });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  const snapshot = await runtime.resetConfig();
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(snapshot.features["checkout-score-pulse"].enabled, false);
+  assert.equal(storedConfig.featureToggles.checkoutScorePulse, false);
+  assert.equal(storedConfig.features.checkoutScorePulse.enabled, false);
+  assert.equal(storedConfig.features.checkoutScorePulse.effect, "scale");
+  assert.equal(storedConfig.features.themes.x01.enabled, false);
+  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+
+  defaultFeatureDefinitions.forEach((definition) => {
+    assert.equal(storedConfig.featureToggles[definition.configKey], false, definition.configKey);
+    assert.equal(
+      getStoredFeatureConfig(storedConfig, definition.configKey).enabled,
+      false,
+      definition.configKey
+    );
+  });
 
   runtime.stop();
 });

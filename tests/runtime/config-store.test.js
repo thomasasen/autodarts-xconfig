@@ -7,6 +7,7 @@ import {
   LEGACY_IMPORT_FLAG_KEY,
   createConfigStore,
 } from "../../src/config/config-store.js";
+import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 import { createFakeWindow, FakeStorage } from "./fake-dom.js";
 
 function createDeferred() {
@@ -22,6 +23,15 @@ function createDeferred() {
     resolve,
     reject,
   };
+}
+
+function getStoredFeatureConfig(storedConfig, configKey) {
+  if (String(configKey || "").startsWith("themes.")) {
+    const themeKey = String(configKey).split(".")[1];
+    return storedConfig.features?.themes?.[themeKey] || null;
+  }
+
+  return storedConfig.features?.[configKey] || null;
 }
 
 test("config store loads defaults when storage is empty", async () => {
@@ -77,9 +87,18 @@ test("config store saves, updates, and resets persisted config", async () => {
 
   const reset = await store.reset();
   assert.equal(reset.features.checkoutScorePulse.effect, "scale");
-  assert.equal(reset.featureToggles.checkoutScorePulse, true);
+  assert.equal(reset.featureToggles.checkoutScorePulse, false);
   assert.equal(reset.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(reset.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
+  assert.equal(reset.features.checkoutScorePulse.enabled, false);
+  assert.equal(reset.features.themes.x01.enabled, false);
+  assert.equal(reset.features.themes.x01.backgroundImageDataUrl, "");
+  defaultFeatureDefinitions.forEach((definition) => {
+    assert.equal(reset.featureToggles[definition.configKey], false, definition.configKey);
+    const featureConfig = getStoredFeatureConfig(reset, definition.configKey);
+    assert.ok(featureConfig, `missing reset config for ${definition.configKey}`);
+    assert.equal(featureConfig.enabled, false, definition.configKey);
+  });
 });
 
 test("config store serializes overlapping updates without losing patches", async () => {

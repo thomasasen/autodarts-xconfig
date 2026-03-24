@@ -1,4 +1,8 @@
-import { createRuntimeConfig, normalizeRuntimeConfig } from "./runtime-config.js";
+import {
+  createHardResetRuntimeConfig,
+  createRuntimeConfig,
+  normalizeRuntimeConfig,
+} from "./runtime-config.js";
 
 export const CONFIG_STORAGE_KEY = "autodarts-xconfig:config:v1";
 export const LEGACY_CONFIG_STORAGE_KEY = "ad-xconfig:config";
@@ -561,7 +565,7 @@ export function createConfigStore(options = {}) {
 
   async function reset() {
     return enqueueWrite(async () => {
-      const normalized = normalizeRuntimeConfig();
+      const normalized = createHardResetRuntimeConfig();
       await storage.setValue(CONFIG_STORAGE_KEY, normalized);
       return normalized;
     });
