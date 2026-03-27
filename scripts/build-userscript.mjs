@@ -21,6 +21,8 @@ const userscriptHeader = `// ==UserScript==
 // @author       Thomas Asen
 // @license      MIT
 // @match        https://play.autodarts.io/*
+// @exclude      https://play.autodarts.io/boards
+// @exclude      https://play.autodarts.io/boards/*
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue

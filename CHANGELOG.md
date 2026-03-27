@@ -11,6 +11,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
 ## [Unreleased]
 
+## [2.0.81] - 2026-03-27
+
+### Changed
+
+- Nutzerwirkung: Das Userscript greift über den Tampermonkey-Header nicht mehr auf `https://play.autodarts.io/boards` und `https://play.autodarts.io/boards/...`, sodass der Boards-Bereich bei Direktaufrufen und Reloads von AD xConfig ausgenommen bleibt.
+  Technik: Die Userscript-Metadaten im Loader und im Build-Header wurden um passende `@exclude`-Einträge ergänzt, die Versionsmarker wurden auf `2.0.81` angehoben, und die Header-Regressionstests prüfen die ausgeschlossenen Boards-Routen jetzt explizit mit.
+
 ## [2.0.80] - 2026-03-24
 
 ### Changed
@@ -917,6 +924,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   entsprechend synchronisiert.
 
 [Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
+[2.0.81]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.80]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.79]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.78]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...ae480a9

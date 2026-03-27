@@ -24,6 +24,8 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   assert.match(text, /\/\/ ==UserScript==/);
   assert.match(text, new RegExp(`@version\\s+${packageVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
   assert.match(text, /@match\s+https:\/\/play\.autodarts\.io\/\*/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
   assert.match(text, /@grant\s+GM_getValue/);
   assert.match(text, /@grant\s+GM_setValue/);
   assert.match(
@@ -83,6 +85,8 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
 
   assert.match(text, /\/\/ ==UserScript==/);
   assert.match(text, new RegExp(`@version\\s+${packageVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
   assert.match(
     text,
     /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.user\.js/
