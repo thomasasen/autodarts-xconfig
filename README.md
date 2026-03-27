@@ -33,6 +33,10 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 4. Links in der Navigation **AD xConfig** öffnen
 5. Erst `Themen` und `Animationen` in Ruhe ansehen, dann einzelne Module einschalten
 
+Wichtige Tampermonkey-Einstellung im Browser: Öffne unter den Browsererweiterungen die Detailseite von Tampermonkey und aktiviere dort `Nutzerscripts zulassen` sowie `Zugriff auf Datei-URLs zulassen`.
+
+![Tampermonkey Erweiterungseinstellungen](docs/screenshots/Erweiterung_Einstellung_Tempermonkey.png)
+
 Wichtiger Hinweis nach der Installation: Alle Themes sind zuerst ausgeschaltet. Die meisten Animationen und Komfortfunktionen sind ebenfalls aus. `Checkout Score Pulse` ist standardmäßig bereits eingeschaltet. Am einfachsten ist es, wenn du Themes und Animationen einzeln ausprobierst und Autodarts Schritt für Schritt an deine Wünsche anpasst.
 
 ![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
