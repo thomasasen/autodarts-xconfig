@@ -132,6 +132,13 @@ When a release changes the userscript version, the handoff must clearly distingu
 - GitHub published state
 - installed Tampermonkey state
 
+Release checkpoint codeword:
+- use `Versionsspiegel` as the shared codeword for version/build/publication parity across local source, generated `dist`, GitHub, and installed Tampermonkey state
+- if a task touches shipped source, release metadata, userscript headers, version markers, `dist/`, update checks, or anything that could make xConfig show stale installed/GitHub versions, explicitly say that `Versionsspiegel` is relevant
+- when `Versionsspiegel` is relevant, pause before final release-style steps and ask the user a short direct question when the next step has non-obvious consequences, for example version bump, build, dist refresh, local install refresh, commit, or push
+- the preferred prompt style is concise and explicit, for example: `Versionsspiegel ist relevant. Soll ich jetzt Version/Build/dist mitziehen?`
+- do not assume that edited source files alone change the installed or GitHub-visible version; call out the gap until build, install refresh, and push actually happened
+
 Mandatory before final handoff:
 - confirm `package.json`, `src/core/bootstrap.js` (`API_VERSION`), `loader/autodarts-xconfig.user.js`, `dist/autodarts-xconfig.meta.js`, and `dist/autodarts-xconfig.user.js` all use the same `@version`
 - if the environment cannot push to GitHub, explicitly state that the remote version is still old and xConfig will continue to show the old GitHub version until push
