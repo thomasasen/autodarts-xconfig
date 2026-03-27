@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cricket State Parity"
+  short_description: "Keep Cricket and Tactics board and grid semantics aligned."
+  default_prompt: "Use this skill to fix or review Cricket/Tactics semantic state, active-player perspective, and board/grid parity."

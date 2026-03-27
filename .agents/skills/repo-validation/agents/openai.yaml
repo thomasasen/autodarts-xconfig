@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repo Validation"
+  short_description: "Choose the right validation surface and report results truthfully for this repository."
+  default_prompt: "Use this skill to classify the current change and decide which repo validation commands must run."

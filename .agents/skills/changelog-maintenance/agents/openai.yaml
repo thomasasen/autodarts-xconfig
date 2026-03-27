@@ -1,0 +1,4 @@
+interface:
+  display_name: "Changelog Maintenance"
+  short_description: "Curate and audit CHANGELOG.md entries, release sections, and changelog consistency."
+  default_prompt: "Use this skill to update or audit CHANGELOG.md against the current repository truth."

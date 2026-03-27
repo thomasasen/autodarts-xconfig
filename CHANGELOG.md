@@ -9,7 +9,8 @@ Solange dieses Repository noch keine Git-Tags verwendet, verweisen die Versionsl
 GitHub-Vergleiche zwischen Release-Commits. Der neueste lokale Release-Eintrag kann bis
 zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 
-## [Unreleased]
+Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
+direkt zu einer versionierten Release-Sektion.
 
 ## [2.0.81] - 2026-03-27
 
@@ -923,7 +924,6 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.81]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.80]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.79]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD

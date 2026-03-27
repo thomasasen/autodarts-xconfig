@@ -1,0 +1,6 @@
+interface:
+  display_name: "Oldrepo Parity Recovery"
+  short_description: "Recover proven `.oldrepo` behavior in the modern modular architecture."
+  default_prompt: "Use this skill to recover a known-good `.oldrepo` behavior without copying the old structure wholesale."
+policy:
+  allow_implicit_invocation: false

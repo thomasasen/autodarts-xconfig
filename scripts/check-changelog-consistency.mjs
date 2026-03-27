@@ -9,9 +9,9 @@ const repoRoot = path.resolve(__dirname, "..");
 const changelogPath = path.join(repoRoot, "CHANGELOG.md");
 const packageJsonPath = path.join(repoRoot, "package.json");
 const repoUrl = "https://github.com/thomasasen/autodarts-xconfig";
-const versionHeadingPattern =
-  /^## \[(Unreleased|[0-9]+\.[0-9]+\.[0-9]+)\](?: - (\d{4}-\d{2}-\d{2}))?$/gm;
-const linkReferencePattern = /^\[([^\]]+)\]:\s+(https:\/\/github\.com\/thomasasen\/autodarts-xconfig\/\S+)$/gm;
+const versionHeadingPattern = /^## \[([0-9]+\.[0-9]+\.[0-9]+)\] - (\d{4}-\d{2}-\d{2})$/gm;
+const linkReferencePattern =
+  /^\[([^\]]+)\]:\s+(https:\/\/github\.com\/thomasasen\/autodarts-xconfig\/\S+)$/gm;
 const placeholderPattern = /^_Noch keine Änderungen erfasst\._$/m;
 
 export function compareSemver(left, right) {
@@ -42,7 +42,7 @@ export function parseChangelogSections(text) {
     const heading = match[0];
     const name = match[1];
     const date = match[2] || null;
-    const start = match.index + heading.length;
+    const start = (match.index ?? 0) + heading.length;
     const end = nextMatch ? nextMatch.index : normalizedText.length;
     const body = normalizedText.slice(start, end).trim();
 
@@ -111,9 +111,7 @@ function validateSectionEntries(section) {
     }
 
     if (/^- /.test(line) && !/^- Nutzerwirkung:\s+\S/.test(line)) {
-      errors.push(
-        `Abschnitt ${section.name}: Listenpunkte müssen mit "Nutzerwirkung:" beginnen.`
-      );
+      errors.push(`Abschnitt ${section.name}: Listenpunkte müssen mit "Nutzerwirkung:" beginnen.`);
     }
 
     if (/^Technik:\s+\S/.test(line)) {
@@ -149,12 +147,7 @@ function validateSectionEntries(section) {
     );
   }
 
-  if (
-    section.name !== "Unreleased" &&
-    entryCount === 0 &&
-    section.body &&
-    !placeholderPattern.test(section.body)
-  ) {
+  if (entryCount === 0 && section.body && !placeholderPattern.test(section.body)) {
     errors.push(`Abschnitt ${section.name}: Freigegebene Versionen brauchen mindestens einen Eintrag.`);
   }
 
@@ -179,16 +172,7 @@ export function validateChangelogDocument({
     return ["CHANGELOG.md enthält keine gültigen Abschnittsüberschriften."];
   }
 
-  if (sections[0]?.name !== "Unreleased") {
-    errors.push('Der erste Changelog-Abschnitt muss "## [Unreleased]" sein.');
-  }
-
-  const releaseSections = sections.filter((section) => section.name !== "Unreleased");
-  if (!releaseSections.length) {
-    errors.push("CHANGELOG.md enthält keine freigegebene Versionssektion.");
-  }
-
-  const topRelease = releaseSections[0] || null;
+  const topRelease = sections[0] || null;
   if (topRelease && topRelease.name !== packageVersion) {
     errors.push(
       `Die oberste freigegebene Version (${topRelease.name}) stimmt nicht mit package.json (${packageVersion}) überein.`
@@ -196,7 +180,7 @@ export function validateChangelogDocument({
   }
 
   if (headPackageVersion && headPackageVersion !== packageVersion) {
-    const bumpedVersionExists = releaseSections.some((section) => section.name === packageVersion);
+    const bumpedVersionExists = sections.some((section) => section.name === packageVersion);
     if (!bumpedVersionExists) {
       errors.push(
         `package.json wurde von ${headPackageVersion} auf ${packageVersion} geändert, aber eine passende Release-Sektion fehlt.`
@@ -204,9 +188,9 @@ export function validateChangelogDocument({
     }
   }
 
-  for (let index = 0; index < releaseSections.length - 1; index += 1) {
-    const currentVersion = releaseSections[index].name;
-    const nextVersion = releaseSections[index + 1].name;
+  for (let index = 0; index < sections.length - 1; index += 1) {
+    const currentVersion = sections[index].name;
+    const nextVersion = sections[index + 1].name;
     if (compareSemver(currentVersion, nextVersion) <= 0) {
       errors.push(
         `Die Versionsreihenfolge ist nicht absteigend: ${currentVersion} steht vor ${nextVersion}.`
@@ -215,18 +199,14 @@ export function validateChangelogDocument({
   }
 
   sections.forEach((section) => {
-    if (section.name !== "Unreleased" && !section.date) {
+    if (!section.date) {
       errors.push(`Abschnitt ${section.name}: Freigegebene Versionen brauchen ein ISO-Datum.`);
     }
     errors.push(...validateSectionEntries(section));
   });
 
   const linkReferences = parseLinkReferences(normalizedText);
-  if (!linkReferences.has("Unreleased")) {
-    errors.push('Es fehlt die Link-Referenz "[Unreleased]".');
-  }
-
-  for (const section of releaseSections) {
+  for (const section of sections) {
     if (!linkReferences.has(section.name)) {
       errors.push(`Es fehlt die Link-Referenz "[${section.name}]".`);
       continue;
@@ -236,11 +216,6 @@ export function validateChangelogDocument({
     if (!link.startsWith(repoUrl)) {
       errors.push(`Die Link-Referenz "[${section.name}]" zeigt nicht auf ${repoUrl}.`);
     }
-  }
-
-  const unreleasedLink = linkReferences.get("Unreleased") || "";
-  if (!unreleasedLink.startsWith(`${repoUrl}/compare/`)) {
-    errors.push('Die Link-Referenz "[Unreleased]" muss ein GitHub-Vergleichslink sein.');
   }
 
   const hasRelevantChanges = changedFiles.some((filePath) => isChangelogRelevantFile(filePath));

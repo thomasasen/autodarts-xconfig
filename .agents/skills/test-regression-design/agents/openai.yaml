@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Regression Design"
+  short_description: "Design or update regression coverage at the right test layer."
+  default_prompt: "Use this skill to add or refine tests that lock in the intended behavior and regression contract."

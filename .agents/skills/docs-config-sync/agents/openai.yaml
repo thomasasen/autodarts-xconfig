@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docs Config Sync"
+  short_description: "Align user-facing wording, labels, defaults, and README text with shipped behavior."
+  default_prompt: "Use this skill to keep config labels, docs, and README wording aligned with actual shipped behavior."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Change"
+  short_description: "Implement or refactor shipped feature behavior without breaking architecture or validation flow."
+  default_prompt: "Use this skill as the general feature-change workflow when no narrower repo skill is a better fit."

@@ -6,9 +6,9 @@ Use the matching skill from `.agents/skills/` when the task clearly fits one.
 Global rules in this file always apply.
 
 Canonical workflow skills:
-- use `.agents/skills/changelog_maintenance/SKILL.md` for `CHANGELOG.md`, release notes, version history, or changelog consistency work
-- use `.agents/skills/repo_validation/SKILL.md` to choose and report the right validation surface after changes
-- use `.agents/skills/userscript_release/SKILL.md` for shipped-source packaging, version bumps, build output refresh, and release/publication truth
+- use `.agents/skills/changelog-maintenance/SKILL.md` for `CHANGELOG.md`, release notes, version history, or changelog consistency work
+- use `.agents/skills/repo-validation/SKILL.md` to choose and report the right validation surface after changes
+- use `.agents/skills/userscript-release/SKILL.md` for shipped-source packaging, version bumps, build output refresh, and release/publication truth
 
 ## Priority order
 
@@ -43,15 +43,16 @@ A task is done only when:
 ## Skills vs global rules
 
 `AGENTS.md` defines repository-wide invariants.
-Skills define specialized operational workflows.
+Skills define task-specific workflows.
 
 Apply both when needed:
 - use the relevant domain or feature skill for implementation work
-- use `$repo_validation` for validation planning and truthful reporting
-- use `$userscript_release` for shipped-source packaging and publication-state checks
-- use `$changelog_maintenance` for curated changelog content and changelog consistency
+- use `$repo-validation` for validation planning and truthful reporting after changes
+- use `$userscript-release` for shipped-source packaging and publication-state checks
+- use `$changelog-maintenance` for curated changelog content and changelog consistency
 
-Do not move repository invariants out of this file just to shorten it.
+Keep durable repository policy here.
+Keep operational step-by-step workflows in the matching skills.
 
 ## Subagent use
 
@@ -63,42 +64,34 @@ Do not move repository invariants out of this file just to shorten it.
 
 ## Required validation after changes
 
-After any code change, use `.agents/skills/repo_validation/SKILL.md` to classify the change and choose the right checks.
+After any code change, use `.agents/skills/repo-validation/SKILL.md` to classify the change and choose the right checks.
 
-Minimum rule:
+Minimum rules:
 - add or update tests when logic, behavior, DOM mapping, rendering, config behavior, or shipped feature behavior changes
-- run the relevant tests after the change
+- run the relevant checks after the change
 - do not ignore failing tests
 - fix the cause or report clearly why validation could not be completed
 - for userscript update/version-check behavior, add or update regression coverage for startup check and cache handling, for example `tests/runtime/update-check.test.js` and `tests/runtime/xconfig-shell.test.js`
 
-Prefer the repository verification flow:
-- `npm run verify`
-
-If a narrower check is appropriate during iteration, use:
-- `npm run check:syntax`
-- `npm test`
-
-Syntax gate requirement:
-- run `npm run check:syntax` before release validation
-- the check must pass for all JavaScript entry points (`src`, `scripts`, `loader`, `tests`, `dist`) and package JSON files
-
-Changelog gate requirement:
-- run `npm run check:changelog` when relevant shipped/user-visible behavior, release metadata, or repository release workflow changed
-- do not treat a version bump as complete until `CHANGELOG.md` and the changelog consistency check are updated
+Validation policy:
+- prefer `npm run verify` for shipped behavior changes
+- use narrower iteration checks only when they match the actual change scope
+- run `npm run check:syntax` before release-style validation
+- run `npm run check:changelog` when shipped or user-visible behavior, release metadata, or maintainer-facing release workflow changed
+- for docs-only or instruction-only changes, re-read the edited files for contradictions and verify documented commands against `package.json`
 
 ## Required release steps for shipped source changes
 
-If the change affects shipped behavior or modifies files under `src/`, `loader/`, `scripts/`, or bundled assets, use `.agents/skills/userscript_release/SKILL.md`.
+If the change affects shipped behavior or modifies files under `src/`, `loader/`, `scripts/`, or bundled assets, use `.agents/skills/userscript-release/SKILL.md`.
 
-Required release flow:
+Required release outcomes:
 - bump the version in `package.json`
 - rebuild the userscript from source
 - refresh `dist/autodarts-xconfig.user.js`
 - refresh `dist/autodarts-xconfig.meta.js`
-- run validation before considering the task complete
+- run the required validation before considering the task complete
 
-Use:
+Core release commands:
 - `npm run build`
 - `npm test`
 - `npm run verify`
@@ -114,29 +107,27 @@ A shipped source change is not complete until:
 ## Required changelog maintenance
 
 Maintain `CHANGELOG.md` as the canonical human-readable history for this repository.
-Use `.agents/skills/changelog_maintenance/SKILL.md` for workflow detail.
+Use `.agents/skills/changelog-maintenance/SKILL.md` for workflow detail.
 
 Rules:
-- add or update `CHANGELOG.md` for relevant shipped/user-visible changes and for meaningful release-workflow changes
-- keep `## [Unreleased]` at the top
+- add or update `CHANGELOG.md` for relevant shipped or user-visible changes and for meaningful maintainer-facing release workflow changes
+- keep the newest released version section at the top
 - every real changelog entry must contain both `Nutzerwirkung:` and `Technik:`
-- when the version is bumped, move finalized `Unreleased` entries into a new versioned section with ISO date
+- when the version is bumped, add a new top versioned section with ISO date instead of using an `Unreleased` staging section
 - a version increase is not complete if `CHANGELOG.md` was not updated together with the release
 - before final handoff, distinguish clearly between local working tree state, locally committed state, and GitHub-published state
-- before final handoff, verify changelog consistency against current version, working tree, and release status
 
 ## Required publication check for userscript updates
 
 When a release changes the userscript version, the handoff must clearly distinguish:
 - local repository state
-- GitHub published state
+- GitHub-published state
 - installed Tampermonkey state
 
 Release checkpoint codeword:
-- use `Versionsspiegel` as the shared codeword for version/build/publication parity across local source, generated `dist`, GitHub, and installed Tampermonkey state
-- if a task touches shipped source, release metadata, userscript headers, version markers, `dist/`, update checks, or anything that could make xConfig show stale installed/GitHub versions, explicitly say that `Versionsspiegel` is relevant
-- when `Versionsspiegel` is relevant, pause before final release-style steps and ask the user a short direct question when the next step has non-obvious consequences, for example version bump, build, dist refresh, local install refresh, commit, or push
-- the preferred prompt style is concise and explicit, for example: `Versionsspiegel ist relevant. Soll ich jetzt Version/Build/dist mitziehen?`
+- use `Versionsspiegel` as the shared codeword for version, build, and publication parity across local source, generated `dist`, GitHub, and installed Tampermonkey state
+- if a task touches shipped source, release metadata, userscript headers, version markers, `dist/`, update checks, or anything that could make xConfig show stale installed or GitHub versions, explicitly say that `Versionsspiegel` is relevant
+- when `Versionsspiegel` is relevant, pause before final release-style steps and ask a short direct question when the next step has non-obvious consequences, for example version bump, build, dist refresh, local install refresh, commit, or push
 - do not assume that edited source files alone change the installed or GitHub-visible version; call out the gap until build, install refresh, and push actually happened
 
 Mandatory before final handoff:
@@ -157,9 +148,6 @@ Rules:
 - always change source files first
 - rebuild after source changes
 - commit the refreshed generated files when shipped behavior or release metadata changed
-
-Flow:
-`src` or other shipped source changes -> version bump -> build -> test -> commit updated `dist`
 
 ## Environment truthfulness
 
@@ -198,19 +186,6 @@ Preferred format:
 `what: ...`
 `how: ...`
 `validation: ...`
-
-Example:
-
-`fix(cricket): stabilize tactics state derivation and board/grid parity`
-
-`why: tactics mode could drift from cricket assumptions and produce inconsistent target-state rendering.`
-`what: generalized state derivation for tactics objectives and aligned board/grid consumption with the same semantic state.`
-`how: updated domain normalization, target-state derivation, and regression coverage.`
-`validation: npm run verify`
-
-Final handoff rule:
-- when the task is complete and files changed, end the handoff with a ready-to-use commit message block in the preferred format
-- when no files changed, no commit message is required
 
 ## Project commands
 

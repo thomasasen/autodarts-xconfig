@@ -1,0 +1,98 @@
+---
+name: repo-validation
+description: Choose and report the right validation scope for autodarts-xconfig changes. Use after code, config, DOM, startup/update, release, docs, or repository-instruction changes to decide which checks must run, what residual risk remains, and how to report results truthfully.
+---
+
+# Goal
+
+Choose the minimum sufficient validation for the actual change, run what the environment allows, and report the result truthfully.
+
+# Core rules
+
+- classify the change before choosing commands
+- combine requirements when a change spans multiple classes
+- never invent build, test, parser, or changelog results
+- report exactly what ran, what did not run, and what risk remains
+- prefer real repo commands over invented wrappers
+
+# Change classes
+
+## 1. Docs-only or guidance-only
+
+Examples:
+- `README.md`
+- `docs/`
+- `AGENTS.md`
+- `.agents/skills/`
+- `.codex/`
+
+Minimum validation:
+- re-read changed files for dead references, overlap, and contradictions
+- confirm documented commands still exist in `package.json`
+- validate changed structured config formats locally when possible
+
+## 2. Config-only
+
+Minimum validation:
+- add or update targeted config or runtime tests
+- run `npm run check:syntax`
+- run `npm test`
+
+## 3. Logic, runtime, DOM, or rendering behavior
+
+Minimum validation:
+- add or update the closest behavior-level tests
+- run `npm run check:syntax`
+- run `npm test`
+
+## 4. Startup, update, version, or cache behavior
+
+Minimum validation:
+- add or update targeted regression coverage
+- run `npm run check:syntax`
+- run `npm test`
+
+Regression-sensitive anchors:
+- `tests/runtime/update-check.test.js`
+- `tests/runtime/xconfig-shell.test.js`
+- `tests/runtime/userscript-build.test.js`
+
+## 5. Release or build workflow
+
+Minimum validation:
+- run `npm run check:syntax`
+- run `npm run build`
+- run `npm test`
+- run `npm run check:changelog`
+
+Preferred release validation:
+- `npm run verify`
+
+If shipped-source packaging or publication truth is in scope, also use `$userscript-release`.
+
+# Selection rules
+
+- if the change affects shipped behavior, default to `npm run verify`
+- if the change affects `src/`, `loader/`, `scripts/`, or bundled assets, assume release-sensitive validation until proven otherwise
+- if the change is startup, update, or version-sensitive, review the three regression anchors explicitly even when only one file changed
+- if only docs or guidance changed, do not claim runtime validation proves the instructions are correct
+
+# Reporting requirements
+
+Every validation summary must state:
+- the chosen change class or classes
+- which commands were executed
+- whether those commands passed, failed, or were not run
+- which tests were added or updated, if any
+- what could not be executed and why
+- what residual risk remains
+- whether the task left local file changes that need a commit message in the final handoff
+
+# Output requirements
+
+A valid result from this skill must:
+- use the real repo commands from `package.json`
+- choose a validation surface that matches the actual change
+- call out regression-sensitive startup or version work explicitly
+- report execution truthfully
+- leave no ambiguity about what remains unverified

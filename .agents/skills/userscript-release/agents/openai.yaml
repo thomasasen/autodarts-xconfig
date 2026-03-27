@@ -1,0 +1,4 @@
+interface:
+  display_name: "Userscript Release"
+  short_description: "Prepare shipped-source releases with version parity, rebuilt artifacts, and honest publication state."
+  default_prompt: "Use this skill to package a shipped-source change into a release-ready userscript state."

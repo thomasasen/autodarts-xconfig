@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cricket Grid DOM Resilience"
+  short_description: "Harden Cricket and Tactics rendering against unstable DOM structure and rerender churn."
+  default_prompt: "Use this skill to debug or fix Cricket/Tactics DOM mapping, observer, or rerender resilience issues."
