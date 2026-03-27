@@ -185,7 +185,10 @@ Every commit should clearly state:
 - why it changed
 - how it was implemented
 - how it was validated
-- if a build was executed in the task, provide a ready-to-use commit message in this format before handoff
+- final handoff must include a ready-to-use commit message whenever this task left meaningful local repository changes behind
+- do not omit the commit message just because the user did not explicitly ask for one
+- if a build was executed in the task, the commit message `validation:` line must name the real build/test/verify command outcome that was run
+- if the task is intentionally incomplete or should not be committed yet, say that explicitly instead of silently omitting the commit guidance
 
 Preferred format:
 
@@ -204,6 +207,10 @@ Example:
 `what: generalized state derivation for tactics objectives and aligned board/grid consumption with the same semantic state.`
 `how: updated domain normalization, target-state derivation, and regression coverage.`
 `validation: npm run verify`
+
+Final handoff rule:
+- when the task is complete and files changed, end the handoff with a ready-to-use commit message block in the preferred format
+- when no files changed, no commit message is required
 
 ## Project commands
 

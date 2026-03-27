@@ -123,7 +123,10 @@ Every release-related handoff must state:
 - whether GitHub-published state was verified or is still old
 - what installed Tampermonkey users should expect right now
 
-If a build was executed, include a ready-to-use commit message in the repository's required format.
+Every release-related handoff must also end with a ready-to-use commit message in the repository's required format whenever the task changed files.
+- do not omit the commit message just because the user did not explicitly ask for one
+- if a build was executed, the `validation:` line must name the real command outcome that ran, for example `npm run verify`
+- if the task is intentionally not ready to commit, state that explicitly instead of silently skipping the commit guidance
 
 # Environment limits
 
@@ -142,3 +145,4 @@ A valid result from this skill must:
 - coordinate with `$changelog_maintenance` when a version bump or release entry is required
 - distinguish local, committed, published, and installed truth explicitly
 - report validation and publication state honestly
+- include a ready-to-use commit message whenever the task left commit-worthy file changes

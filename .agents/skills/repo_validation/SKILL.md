@@ -134,6 +134,7 @@ Every validation summary must state:
 - which tests were added or updated, if any
 - what could not be executed and why
 - what residual risk remains
+- whether the task left local file changes that need a commit message in the final handoff
 
 Examples of acceptable phrasing:
 - `Executed: npm.cmd run check:syntax, npm.cmd test`
@@ -156,3 +157,4 @@ A valid result from this skill must:
 - call out regression-sensitive startup/update/version work explicitly
 - report execution truthfully
 - leave no ambiguity about what remains unverified
+- remind the final handoff to include a ready-to-use commit message whenever the task changed files

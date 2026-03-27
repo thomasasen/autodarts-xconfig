@@ -46,12 +46,17 @@ const overviewCounts = {
   themeModules: xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes").length,
   themeImageLimit: "1,5 MiB",
 };
+
+function readText(filePath) {
+  return readFileSync(filePath, "utf8").replace(/\r\n/g, "\n");
+}
+
 function escapeRegExp(text) {
   return String(text || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 test("README references the canonical userscript install target", () => {
-  const readme = readFileSync(readmePath, "utf8");
+  const readme = readText(readmePath);
 
   assert.match(readme, /dist\/autodarts-xconfig\.user\.js/);
   assert.match(
@@ -62,7 +67,7 @@ test("README references the canonical userscript install target", () => {
 });
 
 test("README screenshot paths exist in docs/screenshots", () => {
-  const readme = readFileSync(readmePath, "utf8");
+  const readme = readText(readmePath);
   const imageMatches = Array.from(readme.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g));
 
   assert.ok(imageMatches.length >= 8);
@@ -81,7 +86,7 @@ test("README screenshot paths exist in docs/screenshots", () => {
 });
 
 test("README uses the current AD xConfig overview screenshots", () => {
-  const readme = readFileSync(readmePath, "utf8");
+  const readme = readText(readmePath);
 
   requiredReadmeOverviewScreenshots.forEach((screenshotPath) => {
     assert.match(readme, new RegExp(screenshotPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -89,8 +94,8 @@ test("README uses the current AD xConfig overview screenshots", () => {
 });
 
 test("README and FEATURES no longer reference the deprecated AD xConfig overview screenshot", () => {
-  const readme = readFileSync(readmePath, "utf8");
-  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const readme = readText(readmePath);
+  const featuresDoc = readText(featuresDocPath);
 
   assert.doesNotMatch(readme, deprecatedOverviewScreenshotPattern);
   assert.doesNotMatch(featuresDoc, deprecatedOverviewScreenshotPattern);
@@ -103,8 +108,8 @@ test("xConfig module counts derive from the current registry descriptors", () =>
 });
 
 test("README and FEATURES share the generated xConfig overview copy", () => {
-  const readme = readFileSync(readmePath, "utf8");
-  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const readme = readText(readmePath);
+  const featuresDoc = readText(featuresDocPath);
   const readmeOverviewCopy = buildXConfigOverviewSection("Im Überblick", overviewCounts).trim();
   const featuresOverviewCopy = buildXConfigOverviewSection(
     "Hinweise zur Konfiguration",
@@ -116,8 +121,8 @@ test("README and FEATURES share the generated xConfig overview copy", () => {
 });
 
 test("README and FEATURES keep beginner-facing German text free of mojibake", () => {
-  const readme = readFileSync(readmePath, "utf8");
-  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const readme = readText(readmePath);
+  const featuresDoc = readText(featuresDocPath);
 
   assert.doesNotMatch(readme, mojibakePattern);
   assert.doesNotMatch(featuresDoc, mojibakePattern);
@@ -129,13 +134,13 @@ test("README and FEATURES keep beginner-facing German text free of mojibake", ()
 });
 
 test("README contains a visible install badge", () => {
-  const readme = readFileSync(readmePath, "utf8");
+  const readme = readText(readmePath);
 
   assert.match(readme, /\!\[Installieren\]\(https:\/\/img\.shields\.io\/badge\//);
 });
 
 test("README contains stable anchors for every xConfig module entry", () => {
-  const readme = readFileSync(readmePath, "utf8");
+  const readme = readText(readmePath);
 
   xconfigDescriptors.forEach((descriptor) => {
     assert.match(
@@ -182,7 +187,7 @@ test("every xConfig select option carries UI and docs descriptions", () => {
 });
 
 test("README contains the generated xConfig feature sections and all setting explanations", () => {
-  const readme = readFileSync(readmePath, "utf8");
+  const readme = readText(readmePath);
 
   xconfigDescriptors.forEach((descriptor) => {
     const definition = featureDefinitionByKey.get(descriptor.featureKey);
@@ -197,7 +202,7 @@ test("README contains the generated xConfig feature sections and all setting exp
 });
 
 test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
-  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const featuresDoc = readText(featuresDocPath);
   const imageMatches = Array.from(featuresDoc.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g));
 
   assert.ok(imageMatches.length >= 16);
@@ -213,7 +218,7 @@ test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
 });
 
 test("FEATURES uses the current AD xConfig overview screenshots", () => {
-  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const featuresDoc = readText(featuresDocPath);
 
   requiredFeaturesOverviewScreenshots.forEach((screenshotPath) => {
     assert.match(featuresDoc, new RegExp(screenshotPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -221,7 +226,7 @@ test("FEATURES uses the current AD xConfig overview screenshots", () => {
 });
 
 test("FEATURES doc contains the generated xConfig feature sections and all setting explanations", () => {
-  const featuresDoc = readFileSync(featuresDocPath, "utf8");
+  const featuresDoc = readText(featuresDocPath);
 
   xconfigDescriptors.forEach((descriptor) => {
     const definition = featureDefinitionByKey.get(descriptor.featureKey);
@@ -307,9 +312,9 @@ test("dart rule audit documents exist", () => {
 });
 
 test("dart rule docs mention the audited core modules and rule topics", () => {
-  const modulesDoc = readFileSync(dartRuleModulesDocPath, "utf8");
-  const referenceDoc = readFileSync(dartRulesReferenceDocPath, "utf8");
-  const auditDoc = readFileSync(dartRuleAuditDocPath, "utf8");
+  const modulesDoc = readText(dartRuleModulesDocPath);
+  const referenceDoc = readText(dartRulesReferenceDocPath);
+  const auditDoc = readText(dartRuleAuditDocPath);
 
   assert.match(modulesDoc, /src\/domain\/x01-rules\.js/);
   assert.match(modulesDoc, /src\/domain\/cricket-rules\.js/);
@@ -320,9 +325,9 @@ test("dart rule docs mention the audited core modules and rule topics", () => {
 });
 
 test("release architecture and QA docs mention public action API and release status", () => {
-  const architectureDoc = readFileSync(architectureDocPath, "utf8");
-  const migrationDoc = readFileSync(migrationStatusDocPath, "utf8");
-  const releaseQaDoc = readFileSync(releaseQaDocPath, "utf8");
+  const architectureDoc = readText(architectureDocPath);
+  const migrationDoc = readText(migrationStatusDocPath);
+  const releaseQaDoc = readText(releaseQaDocPath);
 
   assert.match(architectureDoc, /runFeatureAction\(featureKey, actionId\)/);
   assert.match(architectureDoc, /applyRecommendedDefaults\(\)/);
@@ -337,8 +342,8 @@ test("runtime audit docs exist and cover entry points plus findings", () => {
     assert.equal(existsSync(filePath), true, `missing runtime audit doc: ${path.basename(filePath)}`);
   });
 
-  const runtimeEntrypointsDoc = readFileSync(runtimeEntrypointsDocPath, "utf8");
-  const performanceAuditDoc = readFileSync(performanceAuditDocPath, "utf8");
+  const runtimeEntrypointsDoc = readText(runtimeEntrypointsDocPath);
+  const performanceAuditDoc = readText(performanceAuditDocPath);
 
   assert.match(runtimeEntrypointsDoc, /Bootstrap/i);
   assert.match(runtimeEntrypointsDoc, /Mutation Observer/i);
