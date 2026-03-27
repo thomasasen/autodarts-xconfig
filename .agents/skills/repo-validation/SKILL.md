@@ -76,6 +76,7 @@ If shipped-source packaging or publication truth is in scope, also use `$userscr
 - if the change affects `src/`, `loader/`, `scripts/`, or bundled assets, assume release-sensitive validation until proven otherwise
 - if the change is startup, update, or version-sensitive, review the three regression anchors explicitly even when only one file changed
 - if only docs or guidance changed, do not claim runtime validation proves the instructions are correct
+- if work happened across multiple agents, branches, or worktrees, validate the integrated repository state rather than relying on partial side results alone
 
 # Reporting requirements
 
@@ -86,6 +87,7 @@ Every validation summary must state:
 - which tests were added or updated, if any
 - what could not be executed and why
 - what residual risk remains
+- whether any side work in other agents, branches, or worktrees is still unmerged
 - whether the task left local file changes that need a commit message in the final handoff
 
 # Output requirements

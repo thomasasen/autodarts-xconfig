@@ -16,6 +16,8 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Changed
 
+- Nutzerwirkung: Die Repository-Anweisungen unterstützen jetzt größere oder parallele Wartungsarbeiten klarer, sodass Codex bei passenden Aufgaben kontrollierter zwischen Hauptarbeit, Delegation, Integration und Validierung unterscheiden kann.
+  Technik: `AGENTS.md` definiert jetzt Parallel-Work-, Worktree- und ExecPlan-Regeln, `PLANS.md` beschreibt die repo-spezifische ExecPlan-Struktur, und das Validierungs-Skill verlangt bei Multi-Agent-/Multi-Worktree-Arbeit ausdrücklich die Prüfung des integrierten Gesamtstands.
 - Nutzerwirkung: Das Userscript greift über den Tampermonkey-Header nicht mehr auf `https://play.autodarts.io/boards` und `https://play.autodarts.io/boards/...`, sodass der Boards-Bereich bei Direktaufrufen und Reloads von AD xConfig ausgenommen bleibt.
   Technik: Die Userscript-Metadaten im Loader und im Build-Header wurden um passende `@exclude`-Einträge ergänzt, die Versionsmarker wurden auf `2.0.81` angehoben, und die Header-Regressionstests prüfen die ausgeschlossenen Boards-Routen jetzt explizit mit.
 

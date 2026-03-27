@@ -62,6 +62,38 @@ Keep operational step-by-step workflows in the matching skills.
 - no subagent may claim build, test, release, or publication success without concrete command output from this repository
 - if a subagent summary conflicts with local repository truth, local repository truth wins
 
+## Parallel work
+
+When the current Codex client or runtime supports subagents, background delegation, or parallel execution, use parallel agents when the task naturally splits into independent subtasks.
+
+Rules:
+- keep the parent agent responsible for planning, integration, final validation truth, release steps, and final handoff
+- prefer parallel agents for bounded side work such as repository exploration, isolated bug analysis, targeted test design, or independent file groups
+- only parallelize write tasks when file ownership is disjoint and merge boundaries are clear
+- do not spawn extra agents for small or tightly coupled tasks where coordination cost exceeds the benefit
+- after parallel work, integrate first and validate the integrated result second
+
+## Worktree guidance
+
+Use separate git worktrees when concurrent agent work would otherwise share one mutable checkout and create avoidable merge risk.
+
+Rules:
+- create one worktree per concurrent write stream
+- give each worktree a dedicated branch with a task-specific name
+- assign each worktree clear file or module ownership
+- do not let multiple concurrent write agents edit the same files unless the user explicitly accepts that risk
+- prune finished worktrees after integration when they are no longer needed
+
+## ExecPlans
+
+For complex features, significant refactors, or multi-stage work that may span multiple agents, branches, or validation steps, use `PLANS.md` as the repository guide for executable planning.
+
+Use an ExecPlan especially when:
+- the work should be split across multiple agents
+- the task spans multiple modules or validation stages
+- staged integration is likely
+- the implementation may take more than one focused working session
+
 ## Required validation after changes
 
 After any code change, use `.agents/skills/repo-validation/SKILL.md` to classify the change and choose the right checks.
