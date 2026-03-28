@@ -72,29 +72,40 @@ function compareSuggestionNodes(left, right) {
   return Number(left?.domIndex || 0) - Number(right?.domIndex || 0);
 }
 
+function toRouteEntry(node, allNodes, x01Rules) {
+  const text = String(node?.textContent || "").trim();
+  const segments = parseExplicitRouteSegments(text, x01Rules);
+  if (!segments.length) {
+    return null;
+  }
+
+  return {
+    node,
+    text,
+    rect: node.getBoundingClientRect?.() || null,
+    domIndex: getStableNodeIndex(node, allNodes),
+    segments,
+  };
+}
+
 export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
     return [];
   }
 
   const allSuggestionNodes = Array.from(documentRef.querySelectorAll(SUGGESTION_SELECTOR));
-  return allSuggestionNodes
+  const visibleEntries = allSuggestionNodes
     .filter((node) => isElementVisible(node, windowRef))
-    .map((node) => {
-      const text = String(node?.textContent || "").trim();
-      const segments = parseExplicitRouteSegments(text, x01Rules);
-      if (!segments.length) {
-        return null;
-      }
+    .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
+    .filter(Boolean)
+    .sort(compareSuggestionNodes);
 
-      return {
-        node,
-        text,
-        rect: node.getBoundingClientRect?.() || null,
-        domIndex: getStableNodeIndex(node, allSuggestionNodes),
-        segments,
-      };
-    })
+  if (visibleEntries.length) {
+    return visibleEntries;
+  }
+
+  return allSuggestionNodes
+    .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
     .filter(Boolean)
     .sort(compareSuggestionNodes);
 }

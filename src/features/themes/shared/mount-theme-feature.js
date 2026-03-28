@@ -8,23 +8,16 @@ import {
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 import { BOARD_INPUT_MODE_ATTRIBUTE_FILTER } from "../../../shared/board-input-mode.js";
 import {
-  THEME_LAYOUT_HOOK_CLASSES,
   clearBoardLayoutHooks,
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+  THEME_LAYOUT_HOOK_CLASSES,
+  THEME_CRICKET_READABILITY,
   hasBoardInputModeMutation,
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
   updateBoardLayoutHooks,
 } from "./board-layout-resolver.js";
-import {
-  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
-  THEME_CRICKET_READABILITY,
-  applyCricketReadabilityPolicy,
-  clearCricketActivePlayerState,
-  clearCricketReadabilityPolicy,
-  createCricketReadabilityState,
-  hasCricketPlayerStateMutation,
-  syncCricketActivePlayerState,
-} from "./cricket-readability.js";
+import { resolveThemePolicy } from "./theme-policies.js";
 
 export {
   THEME_LAYOUT_HOOK_CLASSES,
@@ -33,8 +26,6 @@ export {
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
 };
-
-const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 
 export function mountThemeFeature(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -54,10 +45,19 @@ export function mountThemeFeature(context = {}, options = {}) {
   const previewSpaceClass = String(
     previewPlacement.previewSpaceClass || PREVIEW_SPACE_CLASS
   ).trim();
+  const resolvedPreviewPlacement = {
+    ...previewPlacement,
+    previewSpaceClass,
+  };
   const buildThemeCss =
     typeof options.buildThemeCss === "function"
       ? options.buildThemeCss
       : () => "";
+  const themePolicy = resolveThemePolicy({
+    ...options,
+    featureKey,
+    configKey,
+  });
 
   if (!documentRef || !domGuards || !featureKey || !configKey || !styleId || !variantName) {
     return () => {};
@@ -66,11 +66,25 @@ export function mountThemeFeature(context = {}, options = {}) {
   const observerKey = `${featureKey}:theme-observer`;
   const resizeListenerKey = `${featureKey}:theme-resize`;
   const scrollListenerKey = `${featureKey}:theme-scroll`;
-  const isCricketTheme = featureKey === CRICKET_THEME_FEATURE_KEY;
   const themeState = {
     layoutHookTargets: {},
-    cricketReadability: createCricketReadabilityState(),
+    ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
   };
+
+  function deactivateTheme() {
+    domGuards.removeNodeById(styleId);
+    togglePreviewSpace(documentRef, resolvedPreviewPlacement, false);
+    clearBoardLayoutHooks(themeState);
+
+    if (themePolicy && typeof themePolicy.onDeactivate === "function") {
+      themePolicy.onDeactivate({
+        documentRef,
+        gameState,
+        themeState,
+        windowRef,
+      });
+    }
+  }
 
   function evaluateThemeState() {
     const featureConfig =
@@ -87,25 +101,13 @@ export function mountThemeFeature(context = {}, options = {}) {
     });
 
     if (!isActive) {
-      domGuards.removeNodeById(styleId);
-      togglePreviewSpace(documentRef, previewPlacement, false);
-      clearBoardLayoutHooks(themeState);
-      if (isCricketTheme) {
-        clearCricketActivePlayerState(documentRef);
-        clearCricketReadabilityPolicy(themeState);
-      }
+      deactivateTheme();
       return;
     }
 
     const cssText = String(buildThemeCss(featureConfig) || "").trim();
     if (!cssText) {
-      domGuards.removeNodeById(styleId);
-      togglePreviewSpace(documentRef, previewPlacement, false);
-      clearBoardLayoutHooks(themeState);
-      if (isCricketTheme) {
-        clearCricketActivePlayerState(documentRef);
-        clearCricketReadabilityPolicy(themeState);
-      }
+      deactivateTheme();
       return;
     }
 
@@ -115,27 +117,30 @@ export function mountThemeFeature(context = {}, options = {}) {
       previewPlacement,
       windowRef
     );
-    togglePreviewSpace(documentRef, previewPlacement, previewSpaceEnabled);
+    togglePreviewSpace(documentRef, resolvedPreviewPlacement, previewSpaceEnabled);
     updateBoardLayoutHooks(documentRef, themeState);
-    if (isCricketTheme) {
-      syncCricketActivePlayerState(documentRef, gameState);
-      applyCricketReadabilityPolicy(documentRef, themeState, scheduler);
+
+    if (themePolicy && typeof themePolicy.onActivate === "function") {
+      themePolicy.onActivate({
+        documentRef,
+        gameState,
+        themeState,
+        windowRef,
+        scheduler,
+      });
     }
   }
 
-  const readabilityManagedClassNames = isCricketTheme
-    ? [
-        THEME_CRICKET_READABILITY.noticeClass,
-        THEME_CRICKET_READABILITY.noticeTextClass,
-        THEME_CRICKET_READABILITY.toggleClass,
-      ]
-    : [];
   const managedClassNames = Array.from(
     new Set(
       [
         previewSpaceClass,
         ...Object.values(THEME_LAYOUT_HOOK_CLASSES),
-        ...readabilityManagedClassNames,
+        ...(
+          themePolicy && typeof themePolicy.getManagedClassNames === "function"
+            ? themePolicy.getManagedClassNames(themeState)
+            : []
+        ),
       ].filter(Boolean)
     )
   );
@@ -144,13 +149,24 @@ export function mountThemeFeature(context = {}, options = {}) {
       ? context.helpers.createRafScheduler(evaluateThemeState)
       : createRafScheduler(evaluateThemeState, { windowRef });
   const isManagedNode = createManagedNodeMatcher({
-    ids: [styleId, isCricketTheme ? THEME_CRICKET_READABILITY.noticeId : ""].filter(Boolean),
+    ids: [
+      styleId,
+      ...(
+        themePolicy && typeof themePolicy.getManagedNodeIds === "function"
+          ? themePolicy.getManagedNodeIds(themeState)
+          : []
+      ),
+    ].filter(Boolean),
     classNames: managedClassNames,
   });
   const observedAttributeFilter = Array.from(
     new Set([
       ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
-      ...(isCricketTheme ? ["class"] : []),
+      ...(
+        themePolicy && typeof themePolicy.getObservedAttributeFilter === "function"
+          ? themePolicy.getObservedAttributeFilter(themeState)
+          : []
+      ),
     ])
   );
 
@@ -160,8 +176,17 @@ export function mountThemeFeature(context = {}, options = {}) {
       key: observerKey,
       target: rootNode,
       callback: (mutations = []) => {
+        const policyMutation = themePolicy &&
+          typeof themePolicy.shouldScheduleMutation === "function" &&
+          themePolicy.shouldScheduleMutation(mutations, {
+            documentRef,
+            gameState,
+            themeState,
+            windowRef,
+          });
+
         if (
-          !(isCricketTheme && hasCricketPlayerStateMutation(mutations)) &&
+          !policyMutation &&
           !hasBoardInputModeMutation(mutations) &&
           !hasExternalDomMutation(mutations, isManagedNode)
         ) {
@@ -212,17 +237,7 @@ export function mountThemeFeature(context = {}, options = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
-    togglePreviewSpace(
-      documentRef,
-      { ...previewPlacement, previewSpaceClass },
-      false
-    );
-    clearBoardLayoutHooks(themeState);
-    if (isCricketTheme) {
-      clearCricketActivePlayerState(documentRef);
-      clearCricketReadabilityPolicy(themeState);
-    }
-    domGuards.removeNodeById(styleId);
+    deactivateTheme();
 
     try {
       unsubscribeGameState();

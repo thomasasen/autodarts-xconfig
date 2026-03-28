@@ -6,6 +6,7 @@
   updateSingleBullSound,
 } from "./logic.js";
 import { resolveSingleBullSoundConfig } from "./style.js";
+import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 
 const FEATURE_KEY = "single-bull-sound";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -18,14 +19,11 @@ const LISTENER_KEYS = Object.freeze({
 export function initializeSingleBullSound(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
-  const observerRegistry = context.registries?.observers;
-  const listenerRegistry = context.registries?.listeners;
   const gameState = context.gameState;
   const x01Rules = context.domain?.x01Rules;
   const config = context.config;
-  const schedulerFactory = context.helpers?.createRafScheduler;
 
-  if (!documentRef || !windowRef || !x01Rules || typeof schedulerFactory !== "function") {
+  if (!documentRef || !windowRef || !x01Rules) {
     return () => {};
   }
 
@@ -51,51 +49,50 @@ export function initializeSingleBullSound(context = {}) {
     });
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
-  const scheduleUpdate = () => scheduler.schedule();
-  const rootNode = documentRef.documentElement || documentRef.body || documentRef;
-
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: scheduleUpdate,
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      },
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
+  const harness = createFeatureMountHarness(context, {
+    isSupported: ({ documentRef: nextDocumentRef, windowRef: nextWindowRef }) =>
+      Boolean(nextDocumentRef && nextWindowRef && x01Rules),
+    update,
+  });
+  if (!harness) {
+    return () => {};
   }
 
-  if (listenerRegistry && typeof listenerRegistry.register === "function") {
-    listenerRegistry.register({
+  const scheduleUpdate = () => harness.schedule();
+  harness.registerObserver({
+    key: OBSERVER_KEY,
+    callback: scheduleUpdate,
+    observeOptions: {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    },
+  });
+
+  harness.registerListeners([
+    {
       key: LISTENER_KEYS.unlockPointer,
       target: windowRef,
       type: "pointerdown",
       handler: () => tryUnlockSingleBullAudio(state),
       options: { passive: true, capture: true },
-    });
-    listenerRegistry.register({
+    },
+    {
       key: LISTENER_KEYS.unlockKey,
       target: windowRef,
       type: "keydown",
       handler: () => tryUnlockSingleBullAudio(state),
       options: { capture: true },
-    });
-    listenerRegistry.register({
+    },
+    {
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
       handler: scheduleUpdate,
-    });
-  }
+    },
+  ]);
 
-  const unsubscribeGameState =
-    gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(scheduleUpdate)
-      : () => {};
+  harness.subscribeToGameState(scheduleUpdate);
 
   installSingleBullSoundPolling(state, () => {
     if (documentRef.visibilityState === "hidden") {
@@ -105,32 +102,11 @@ export function initializeSingleBullSound(context = {}) {
   }, soundConfig.pollIntervalMs);
 
   tryUnlockSingleBullAudio(state);
-  scheduler.schedule();
-  let cleanedUp = false;
+  harness.schedule();
 
-  return function cleanup() {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-
-    scheduler.cancel();
-
-    try {
-      unsubscribeGameState();
-    } catch (_) {
-      // fail-soft
-    }
-
-    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
-    }
-    if (listenerRegistry && typeof listenerRegistry.remove === "function") {
-      Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
-    }
-
+  return harness.createCleanup(() => {
     clearSingleBullSoundState(state);
-  };
+  });
 }
 
 export const mountSingleBullSound = initializeSingleBullSound;

@@ -13,20 +13,17 @@ import {
   resolveRemoveDartsNotificationConfig,
 } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 
 const FEATURE_KEY = "remove-darts-notification";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
 export function initializeRemoveDartsNotification(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const domGuards = context.domGuards;
-  const observerRegistry = context.registries?.observers;
-  const gameState = context.gameState;
   const config = context.config;
-  const schedulerFactory = context.helpers?.createRafScheduler;
 
-  if (!documentRef || !domGuards || typeof schedulerFactory !== "function") {
+  if (!documentRef || !domGuards) {
     return () => {};
   }
 
@@ -51,61 +48,40 @@ export function initializeRemoveDartsNotification(context = {}) {
     });
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
-  const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const harness = createFeatureMountHarness(context, {
+    isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
+    update,
+  });
+  if (!harness) {
+    return () => {};
+  }
+
   const isManagedNode = createManagedNodeMatcher({
     classNames: [OVERLAY_ROOT_CLASS, CARD_CLASS, IMAGE_CLASS],
   });
 
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
-          return;
-        }
-        requestImmediateFallbackScan(state);
-        scheduler.schedule();
-      },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      },
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
+  harness.registerObserver({
+    key: OBSERVER_KEY,
+    callback: (mutations = []) => {
+      if (!hasExternalDomMutation(mutations, isManagedNode)) {
+        return;
+      }
+      requestImmediateFallbackScan(state);
+      harness.schedule();
+    },
+    observeOptions: {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    },
+  });
+  harness.subscribeToGameState();
+  harness.schedule();
 
-  const unsubscribeGameState =
-    gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
-      : () => {};
-
-  scheduler.schedule();
-  let cleanedUp = false;
-
-  return function cleanup() {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-
-    scheduler.cancel();
-
-    try {
-      unsubscribeGameState();
-    } catch (_) {
-      // fail-soft
-    }
-
-    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
-    }
-
+  return harness.createCleanup(() => {
     clearRemoveDartsNotificationState(state);
     domGuards.removeNodeById(STYLE_ID);
-  };
+  });
 }
 
 export const mountRemoveDartsNotification = initializeRemoveDartsNotification;

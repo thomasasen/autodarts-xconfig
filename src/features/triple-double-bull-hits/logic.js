@@ -8,10 +8,12 @@ import {
   HIT_SEGMENT_CLASS,
   HIT_THEME_CLASS,
 } from "./style.js";
+import {
+  collectTurnThrowRows,
+  findTurnContainer,
+  readTurnPointsToken as readTurnPointsTokenFromSurface,
+} from "../shared/turn-surface-adapter.js";
 
-const TURN_CONTAINER_SELECTOR = "#ad-ext-turn";
-const THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
-const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
 const ROW_DEBUG_TEXT_LIMIT = 72;
 const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
 const SUPPORTED_ANIMATION_STYLE = new Set(Object.keys(HIT_ANIMATION_CLASS));
@@ -72,18 +74,6 @@ function isElementDisabled(node) {
   }
 
   return false;
-}
-
-function findTurnContainer(documentRef) {
-  if (!documentRef || typeof documentRef.querySelector !== "function") {
-    return null;
-  }
-
-  try {
-    return documentRef.querySelector(TURN_CONTAINER_SELECTOR);
-  } catch (_) {
-    return null;
-  }
 }
 
 function normalizeRawText(value) {
@@ -151,26 +141,10 @@ function collectDescendantText(rootNode) {
 }
 
 function readTurnPointsToken(documentRef, turnContainer = null) {
-  const scopedContainer = turnContainer || findTurnContainer(documentRef);
-  const scopedPointsNode =
-    scopedContainer && typeof scopedContainer.querySelector === "function"
-      ? scopedContainer.querySelector(TURN_POINTS_SELECTOR)
-      : null;
-
-  if (scopedPointsNode) {
-    return normalizeRawText(scopedPointsNode.textContent || "");
-  }
-
-  if (!documentRef || typeof documentRef.querySelector !== "function") {
-    return "";
-  }
-
-  try {
-    const fallbackPointsNode = documentRef.querySelector(TURN_POINTS_SELECTOR);
-    return normalizeRawText(fallbackPointsNode?.textContent || "");
-  } catch (_) {
-    return "";
-  }
+  return readTurnPointsTokenFromSurface(documentRef, {
+    turnContainer,
+    normalizeText: normalizeRawText,
+  });
 }
 
 function findNumberedHit(pattern, text) {
@@ -551,22 +525,7 @@ export function classifyThrowText(rawText) {
 }
 
 export function collectThrowRows(documentRef) {
-  const turnContainer = findTurnContainer(documentRef);
-  if (turnContainer) {
-    const scopedRows = collectBySelector(turnContainer, THROW_ROW_SELECTOR).filter((rowNode) => {
-      return Boolean(rowNode && rowNode.classList);
-    });
-
-    const directRows = scopedRows.filter((rowNode) => rowNode.parentElement === turnContainer);
-    if (directRows.length > 0) {
-      return directRows;
-    }
-    if (scopedRows.length > 0) {
-      return scopedRows;
-    }
-  }
-
-  return collectBySelector(documentRef, THROW_ROW_SELECTOR).filter((rowNode) => {
+  return collectTurnThrowRows(documentRef).filter((rowNode) => {
     return Boolean(rowNode && rowNode.classList);
   });
 }

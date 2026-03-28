@@ -1,0 +1,262 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { createShellActionController } from "../../src/features/xconfig-ui/action-controller.js";
+
+function flushMicrotasks() {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
+function createActionNode(attributes = {}, parentElement = null) {
+  return {
+    attributes: { ...attributes },
+    parentElement,
+    checked: false,
+    getAttribute(name) {
+      const key = String(name || "");
+      return Object.prototype.hasOwnProperty.call(this.attributes, key)
+        ? this.attributes[key]
+        : null;
+    },
+    setAttribute(name, value) {
+      this.attributes[String(name || "")] = String(value);
+    },
+  };
+}
+
+function createToggleGroup(settingKey) {
+  const hiddenInput = { checked: false };
+  const selectedButton = createActionNode({
+    "data-setting-key": settingKey,
+    "data-setting-value": "true",
+  });
+  const otherButton = createActionNode({
+    "data-setting-key": settingKey,
+    "data-setting-value": "false",
+  });
+  const parentElement = {
+    querySelectorAll(selector) {
+      assert.equal(
+        selector,
+        `[data-adxconfig-action='set-setting-toggle'][data-setting-key='${settingKey}']`
+      );
+      return [selectedButton, otherButton];
+    },
+    querySelector(selector) {
+      assert.equal(
+        selector,
+        `input[data-adxconfig-setting='true'][data-setting-key='${settingKey}']`
+      );
+      return hiddenInput;
+    },
+  };
+
+  selectedButton.parentElement = parentElement;
+  otherButton.parentElement = parentElement;
+
+  return {
+    selectedButton,
+    otherButton,
+    hiddenInput,
+  };
+}
+
+test("createShellActionController dispatches navigation and shell-state commands", () => {
+  const calls = [];
+  const state = { activeSettingsFeatureKey: "" };
+  const controller = createShellActionController({
+    windowRef: {},
+    state,
+    queueSync: () => calls.push("sync"),
+    navigateToConfigRoute: () => calls.push("open"),
+    navigateBack: () => calls.push("close"),
+    openReadme: (_windowRef, featureKey) => calls.push(["readme", featureKey]),
+    openChangelog: () => calls.push("changelog"),
+  });
+
+  controller.handleAction("open");
+  controller.handleAction("close");
+  controller.handleAction("open-settings", null, { featureKey: "theme-x01" });
+  controller.handleAction("close-settings");
+  controller.handleAction("close-settings-backdrop");
+  controller.handleAction("open-readme", null, { featureKey: "winner-fireworks" });
+  controller.handleAction("open-changelog");
+  controller.handleAction("unknown-action");
+
+  assert.deepEqual(calls, [
+    "open",
+    "close",
+    "sync",
+    "sync",
+    "sync",
+    ["readme", "winner-fireworks"],
+    "changelog",
+  ]);
+  assert.equal(state.activeSettingsFeatureKey, "");
+});
+
+test("createShellActionController dispatches runtime, update and theme commands", async () => {
+  const calls = [];
+  const notices = [];
+  const state = { activeSettingsFeatureKey: "" };
+  const controller = createShellActionController({
+    windowRef: {
+      confirm(message) {
+        calls.push(["confirm", message]);
+        return true;
+      },
+    },
+    state,
+    setNotice: (type, message) => notices.push([type, message]),
+    queueSync: () => calls.push("sync"),
+    refreshUpdateStatus: (options) => calls.push(["refresh", options]),
+    openUserscriptInstall: () => {
+      calls.push("install");
+      return true;
+    },
+    runtimeApi: {
+      resetConfig: () => {
+        calls.push("reset");
+        return Promise.resolve("reset-done");
+      },
+      applyRecommendedDefaults: () => {
+        calls.push("defaults");
+        return Promise.resolve("defaults-done");
+      },
+      clearThemeBackgroundImage: () => {
+        calls.push("clear-theme-runtime");
+      },
+    },
+    clearThemeBackgroundImage: (options) => calls.push(["clear-theme", options.themeKey]),
+    uploadThemeBackgroundImage: (options) => calls.push(["upload-theme", options.themeKey]),
+    themeKeyFromConfigKey: (configKey) => (configKey === "themes.x01" ? "x01" : ""),
+  });
+
+  controller.handleAction("check-update");
+  controller.handleAction("install-update");
+  controller.handleAction("reset");
+  controller.handleAction("apply-recommended-defaults");
+  controller.handleAction("clearThemeBackground", null, {
+    configKey: "themes.x01",
+  });
+  controller.handleAction("uploadThemeBackground", null, {
+    configKey: "themes.x01",
+  });
+
+  await flushMicrotasks();
+
+  assert.deepEqual(calls, [
+    ["refresh", { force: true, announce: true }],
+    "install",
+    ["confirm", "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht alle gespeicherten Theme-Bilder."],
+    "reset",
+    ["confirm", "Bist du sicher? Die empfohlenen Standards aktivieren alle Module und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."],
+    "defaults",
+    ["clear-theme", "x01"],
+    ["upload-theme", "x01"],
+    "sync",
+    "sync",
+  ]);
+  assert.deepEqual(notices, [
+    ["info", "Installations-Tab geöffnet. Bestätige das Update in Tampermonkey."],
+    ["info", "Hard Reset ausgeführt."],
+    ["info", "Empfohlene Standards angewendet."],
+  ]);
+});
+
+test("createShellActionController dispatches feature and setting payload commands", async () => {
+  const calls = [];
+  const notices = [];
+  const descriptor = {
+    fields: [
+      {
+        control: "select",
+        key: "effect",
+      },
+      {
+        control: "action",
+        action: "run-feature-action",
+        actionId: "preview",
+        successMessage: "Aktion erledigt.",
+        errorMessage: "Aktion fehlgeschlagen.",
+      },
+    ],
+  };
+  const selectButton = createActionNode({
+    "data-config-key": "checkoutScorePulse",
+    "data-setting-key": "effect",
+    "data-setting-value": "glow",
+  });
+  const toggleGroup = createToggleGroup("enabled");
+  const controller = createShellActionController({
+    windowRef: {},
+    queueSync: () => calls.push("sync"),
+    setNotice: (type, message) => notices.push([type, message]),
+    runtimeApi: {
+      setFeatureEnabled: (featureKey, enabled) => {
+        calls.push(["set-feature", featureKey, enabled]);
+        return Promise.resolve("feature-updated");
+      },
+      saveConfig: (patch) => {
+        calls.push(["save-config", patch]);
+        return Promise.resolve("config-updated");
+      },
+      runFeatureAction: (featureKey, actionId) => {
+        calls.push(["run-feature-action", featureKey, actionId]);
+        return Promise.resolve("action-run");
+      },
+    },
+    getXConfigDescriptor: () => descriptor,
+    buildFeatureSettingPatch: (configKey, settingKey, value) => ({
+      configKey,
+      settingKey,
+      value,
+    }),
+    parseFieldValue: (_field, value) => `parsed:${value}`,
+    syncSelectOptionButtons: (_documentRef, node, value) => {
+      calls.push(["sync-select", node, value]);
+    },
+  });
+
+  controller.handleAction("set-feature", createActionNode({
+    "data-feature-enabled": "true",
+  }), {
+    featureKey: "checkout-score-pulse",
+    title: "Checkout Score Pulse",
+  });
+  controller.handleAction("set-setting-toggle", toggleGroup.selectedButton, {
+    configKey: "checkoutScorePulse",
+  });
+  controller.handleAction("set-setting-select-option", selectButton, {
+    featureKey: "checkout-score-pulse",
+    configKey: "checkoutScorePulse",
+  });
+  controller.handleAction("run-feature-action", createActionNode({
+    "data-feature-action-id": "preview",
+  }), {
+    featureKey: "winner-fireworks",
+  });
+
+  await flushMicrotasks();
+
+  assert.deepEqual(calls, [
+    ["set-feature", "checkout-score-pulse", true],
+    ["save-config", { configKey: "checkoutScorePulse", settingKey: "enabled", value: true }],
+    ["sync-select", selectButton, "glow"],
+    ["save-config", { configKey: "checkoutScorePulse", settingKey: "effect", value: "parsed:glow" }],
+    ["run-feature-action", "winner-fireworks", "preview"],
+    "sync",
+    "sync",
+    "sync",
+    "sync",
+  ]);
+  assert.equal(toggleGroup.hiddenInput.checked, true);
+  assert.equal(toggleGroup.selectedButton.getAttribute("data-active"), "true");
+  assert.equal(toggleGroup.otherButton.getAttribute("data-active"), "false");
+  assert.deepEqual(notices, [
+    ["success", "Checkout Score Pulse: An"],
+    ["success", "Einstellung gespeichert."],
+    ["success", "Einstellung gespeichert."],
+    ["info", "Aktion erledigt."],
+  ]);
+});

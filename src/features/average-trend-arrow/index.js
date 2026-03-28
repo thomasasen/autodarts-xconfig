@@ -1,6 +1,7 @@
 import { updateAverageTrendArrows } from "./logic.js";
 import { ARROW_CLASS, STYLE_ID, buildStyleText } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 
 const FEATURE_KEY = "average-trend-arrow";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -9,12 +10,9 @@ export function initializeAverageTrendArrow(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
   const domGuards = context.domGuards;
-  const observerRegistry = context.registries?.observers;
-  const gameState = context.gameState;
   const config = context.config;
-  const schedulerFactory = context.helpers?.createRafScheduler;
 
-  if (!documentRef || !domGuards || typeof schedulerFactory !== "function") {
+  if (!documentRef || !domGuards) {
     return () => {};
   }
 
@@ -39,65 +37,45 @@ export function initializeAverageTrendArrow(context = {}) {
     })
   );
 
-  const scheduler = schedulerFactory(() => {
-    updateAverageTrendArrows({
-      documentRef,
-      lastValueByNode,
-      arrowByAverageNode,
-      timeoutByArrow,
-      arrowNodes,
-      durationMs: featureConfig.durationMs,
-    });
-  }, { windowRef });
+  const harness = createFeatureMountHarness(context, {
+    isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
+    update: () => {
+      updateAverageTrendArrows({
+        documentRef,
+        lastValueByNode,
+        arrowByAverageNode,
+        timeoutByArrow,
+        arrowNodes,
+        durationMs: featureConfig.durationMs,
+      });
+    },
+  });
+  if (!harness) {
+    return () => {};
+  }
+
   const isManagedNode = createManagedNodeMatcher({
     classNames: [ARROW_CLASS],
   });
 
-  const rootNode = documentRef.documentElement || documentRef.body || documentRef;
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
-          return;
-        }
-        scheduler.schedule();
-      },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      },
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
+  harness.registerObserver({
+    key: OBSERVER_KEY,
+    callback: (mutations = []) => {
+      if (!hasExternalDomMutation(mutations, isManagedNode)) {
+        return;
+      }
+      harness.schedule();
+    },
+    observeOptions: {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    },
+  });
+  harness.subscribeToGameState();
+  harness.schedule();
 
-  const unsubscribeGameState =
-    gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
-      : () => {};
-
-  scheduler.schedule();
-  let cleanedUp = false;
-
-  return function cleanup() {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-
-    scheduler.cancel();
-    try {
-      unsubscribeGameState();
-    } catch (_) {
-      // Fail-soft cleanup.
-    }
-
-    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
-    }
-
+  return harness.createCleanup(() => {
     const clearTimeoutRef =
       windowRef && typeof windowRef.clearTimeout === "function"
         ? windowRef.clearTimeout.bind(windowRef)
@@ -114,7 +92,7 @@ export function initializeAverageTrendArrow(context = {}) {
     arrowNodes.clear();
 
     domGuards.removeNodeById(STYLE_ID);
-  };
+  });
 }
 
 export const mountAverageTrendArrow = initializeAverageTrendArrow;

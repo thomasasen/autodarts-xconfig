@@ -1,5 +1,9 @@
 import { SINGLE_BULL_SOUND_ASSET } from "#feature-assets";
 import { THROW_TEXT_SELECTORS } from "./style.js";
+import {
+  collectTurnThrowRows,
+  collectTurnThrowTextNodes,
+} from "../shared/turn-surface-adapter.js";
 
 const SIGNAL_COOLDOWN_MS = 250;
 const PROCESSED_THROW_KEY_LIMIT = 400;
@@ -9,28 +13,7 @@ function normalizeText(value) {
 }
 
 function collectThrowTextNodes(documentRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return [];
-  }
-
-  const result = [];
-  const seen = new Set();
-
-  THROW_TEXT_SELECTORS.forEach((selector) => {
-    try {
-      Array.from(documentRef.querySelectorAll(selector)).forEach((node) => {
-        if (!node || seen.has(node)) {
-          return;
-        }
-        seen.add(node);
-        result.push(node);
-      });
-    } catch (_) {
-      // fail-soft selector parsing
-    }
-  });
-
-  return result;
+  return collectTurnThrowTextNodes(documentRef, THROW_TEXT_SELECTORS);
 }
 
 function buildTurnId(activeTurn) {
@@ -187,11 +170,9 @@ function scanDomRows(options = {}) {
       ? gameState.getActiveTurn()
       : null;
   const rowIndexByNode = new Map();
-  if (typeof documentRef.querySelectorAll === "function") {
-    Array.from(documentRef.querySelectorAll(".ad-ext-turn-throw")).forEach((rowNode, rowIndex) => {
-      rowIndexByNode.set(rowNode, rowIndex);
-    });
-  }
+  collectTurnThrowRows(documentRef).forEach((rowNode, rowIndex) => {
+    rowIndexByNode.set(rowNode, rowIndex);
+  });
 
   const throwNodes = collectThrowTextNodes(documentRef);
   const throwNodeSet = new Set(throwNodes);

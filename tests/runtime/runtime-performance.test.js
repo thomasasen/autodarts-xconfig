@@ -287,6 +287,211 @@ test("checkout-board-targets selects next, finish or all route segments from vis
   }
 });
 
+test("checkout-board-targets emits debug snapshots for render and no-route states", () => {
+  const renderDocument = new FakeDocument();
+  renderDocument.suggestionElement.textContent = "D20";
+  appendBoardFixture(renderDocument);
+  const renderLogs = [];
+  const renderWarnings = [];
+
+  const renderCleanup = initializeCheckoutBoardTargets({
+    documentRef: renderDocument,
+    windowRef: createFakeWindow({ documentRef: renderDocument }),
+    domGuards: createDomGuards({ documentRef: renderDocument }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+          debug: true,
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        renderLogs.push(args);
+      },
+      warn(...args) {
+        renderWarnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  renderCleanup();
+
+  assert.equal(renderLogs.length, 1);
+  assert.equal(renderWarnings.length, 0);
+  assert.match(String(renderLogs[0][0] || ""), /status="render"/);
+  assert.equal(renderLogs[0][1]?.status, "render");
+  assert.deepEqual(renderLogs[0][1]?.routeSegments, ["D20"]);
+  assert.deepEqual(renderLogs[0][1]?.targets, [{ ring: "D", value: 20 }]);
+  assert.equal(renderLogs[0][1]?.board?.found, true);
+
+  const noRouteDocument = new FakeDocument();
+  noRouteDocument.suggestionElement.textContent = "";
+  appendBoardFixture(noRouteDocument);
+  const noRouteLogs = [];
+  const noRouteWarnings = [];
+
+  const noRouteCleanup = initializeCheckoutBoardTargets({
+    documentRef: noRouteDocument,
+    windowRef: createFakeWindow({ documentRef: noRouteDocument }),
+    domGuards: createDomGuards({ documentRef: noRouteDocument }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+          debug: true,
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        noRouteLogs.push(args);
+      },
+      warn(...args) {
+        noRouteWarnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  noRouteCleanup();
+
+  assert.equal(noRouteLogs.length, 0);
+  assert.equal(noRouteWarnings.length, 1);
+  assert.match(String(noRouteWarnings[0][0] || ""), /status="no-route"/);
+  assert.equal(noRouteWarnings[0][1]?.status, "no-route");
+  assert.deepEqual(noRouteWarnings[0][1]?.routeSegments, []);
+  assert.deepEqual(noRouteWarnings[0][1]?.targets, []);
+});
+
+test("checkout-board-targets still renders when the suggestion node text exists but its rect collapses", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "D20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 0, height: 0 };
+  appendBoardFixture(documentRef);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length, 2);
+  } finally {
+    cleanup();
+  }
+});
+
 test("checkout-board-targets rerenders after board replacement even when suggestion text stays unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
