@@ -17,10 +17,6 @@ const scriptPath = path.resolve(
 function buildSampleChangelog(version = "2.0.23") {
   return `# Changelog
 
-## [Unreleased]
-
-_Noch keine Änderungen erfasst._
-
 ## [${version}] - 2026-03-16
 
 ### Changed
@@ -28,18 +24,16 @@ _Noch keine Änderungen erfasst._
 - Nutzerwirkung: Sichtbare Änderung für Nutzer.
   Technik: Technischer Hintergrund der Änderung.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/example...HEAD
 [${version}]: https://github.com/thomasasen/autodarts-xconfig/compare/example...example2
 `;
 }
 
-test("parseChangelogSections reads unreleased and released sections in order", () => {
+test("parseChangelogSections reads released sections in order", () => {
   const sections = parseChangelogSections(buildSampleChangelog());
 
-  assert.equal(sections.length, 2);
-  assert.equal(sections[0].name, "Unreleased");
-  assert.equal(sections[1].name, "2.0.23");
-  assert.equal(sections[1].date, "2026-03-16");
+  assert.equal(sections.length, 1);
+  assert.equal(sections[0].name, "2.0.23");
+  assert.equal(sections[0].date, "2026-03-16");
 });
 
 test("validateChangelogDocument accepts the expected dual-part entry format", () => {
@@ -56,15 +50,12 @@ test("validateChangelogDocument accepts the expected dual-part entry format", ()
 test("validateChangelogDocument rejects entries without a Technik line", () => {
   const invalidChangelog = `# Changelog
 
-## [Unreleased]
-
 ## [2.0.23] - 2026-03-16
 
 ### Fixed
 
 - Nutzerwirkung: Nur der erste Teil ist vorhanden.
 
-[Unreleased]: https://github.com/thomasasen/autodarts-xconfig/compare/example...HEAD
 [2.0.23]: https://github.com/thomasasen/autodarts-xconfig/compare/example...example2
 `;
 

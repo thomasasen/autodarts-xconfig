@@ -21,6 +21,11 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Das Userscript greift über den Tampermonkey-Header nicht mehr auf `https://play.autodarts.io/boards` und `https://play.autodarts.io/boards/...`, sodass der Boards-Bereich bei Direktaufrufen und Reloads von AD xConfig ausgenommen bleibt.
   Technik: Die Userscript-Metadaten im Loader und im Build-Header wurden um passende `@exclude`-Einträge ergänzt, die Versionsmarker wurden auf `2.0.81` angehoben, und die Header-Regressionstests prüfen die ausgeschlossenen Boards-Routen jetzt explizit mit.
 
+### Fixed
+
+- Nutzerwirkung: Gewinner-Zeilen im X01-Layout bleiben mit aktivem Restscore-Balken jetzt wieder mittig ausgerichtet, statt nach oben zu rutschen, wenn Autodarts nur noch den Winner-Zustand markiert.
+  Technik: Der X01-Score-Progress behandelt in seiner Stack-Zentrierung jetzt neben `.ad-ext-player-active` auch `.ad-ext-player-winner`, und eine Style-Regression deckt den Winner-Fall explizit mit ab.
+
 ## [2.0.80] - 2026-03-24
 
 ### Changed

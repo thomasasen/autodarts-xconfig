@@ -93,7 +93,8 @@ ${STACK_SELECTOR}{
   align-content:start !important;
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}{
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR}{
   grid-template-rows:max-content max-content auto !important;
   align-content:center !important;
 }
