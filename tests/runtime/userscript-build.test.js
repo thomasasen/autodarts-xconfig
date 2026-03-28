@@ -71,6 +71,18 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
     text,
     /\.ad-ext-theme-board-canvas\s*>\s*\*\s*\{[^}]*overflow:\s*visible\s*!important;/s
   );
+  assert.match(
+    text,
+    /-ms-overflow-style:\s*none\s*!important;/
+  );
+  assert.match(
+    text,
+    /scrollbar-width:\s*none\s*!important;/
+  );
+  assert.match(
+    text,
+    /::-webkit-scrollbar\s*\{[^}]*width:\s*0\s*!important;[^}]*height:\s*0\s*!important;[^}]*display:\s*none\s*!important;/s
+  );
   assert.match(text, /height:\s*100%\s*!important;/);
   assert.doesNotMatch(text, /minmax\(20rem,\s*0\.95fr\)\s*minmax\(0,\s*1\.05fr\)/);
   assert.doesNotMatch(text, /width:\s*min\(100%,\s*100vh\)\s*!important;/);

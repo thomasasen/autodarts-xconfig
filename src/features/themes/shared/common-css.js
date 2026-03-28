@@ -13,6 +13,49 @@ export const commonThemeCss = `
   --theme-alt-bg: #274e13;
 }
 
+/* Hide native scrollbars across active theme surfaces without clipping overflow content. */
+div.css-gmuwbf,
+div.css-gmuwbf *,
+div.css-tkevr6,
+div.css-tkevr6 *,
+div.css-nfhdnc,
+div.css-nfhdnc *,
+#ad-ext-player-display,
+#ad-ext-player-display *,
+.ad-ext-theme-content-slot,
+.ad-ext-theme-content-slot *,
+.ad-ext-theme-board-panel,
+.ad-ext-theme-board-panel *,
+.ad-ext-theme-board-viewport,
+.ad-ext-theme-board-viewport *,
+.ad-ext-theme-board-canvas,
+.ad-ext-theme-board-canvas * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+div.css-gmuwbf::-webkit-scrollbar,
+div.css-gmuwbf *::-webkit-scrollbar,
+div.css-tkevr6::-webkit-scrollbar,
+div.css-tkevr6 *::-webkit-scrollbar,
+div.css-nfhdnc::-webkit-scrollbar,
+div.css-nfhdnc *::-webkit-scrollbar,
+#ad-ext-player-display::-webkit-scrollbar,
+#ad-ext-player-display *::-webkit-scrollbar,
+.ad-ext-theme-content-slot::-webkit-scrollbar,
+.ad-ext-theme-content-slot *::-webkit-scrollbar,
+.ad-ext-theme-board-panel::-webkit-scrollbar,
+.ad-ext-theme-board-panel *::-webkit-scrollbar,
+.ad-ext-theme-board-viewport::-webkit-scrollbar,
+.ad-ext-theme-board-viewport *::-webkit-scrollbar,
+.ad-ext-theme-board-canvas::-webkit-scrollbar,
+.ad-ext-theme-board-canvas *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
 div.css-gmuwbf,
 div.css-tkevr6,
 div.css-nfhdnc {
