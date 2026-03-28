@@ -25,6 +25,20 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro Bild.
 
+## Was du zuerst lesen solltest
+
+- Neu hier? Starte mit [Schnell loslegen](#schnell-loslegen).
+- Wenn das Menü da ist, helfen dir [Wo finde ich was?](#wo-finde-ich-was), [So ist eine Kachel aufgebaut](#so-ist-eine-kachel-aufgebaut) und [So sieht das Einstellungsfenster aus](#so-sieht-das-einstellungsfenster-aus).
+- Für einzelne Module nutzt du am schnellsten die [Schnellnavigation](#schnellnavigation) oder direkt im Spiel den Button `📖 README`.
+- Wenn du Updates verstehen oder neu anstoßen willst, gehe zu [Updates erkennen und installieren](#updates-erkennen-und-installieren).
+- Nur wenn du am Repository arbeitest, ist der Abschnitt [Für Entwickler](#für-entwickler) relevant.
+
+## Voraussetzungen
+
+- Ein aktueller Desktop-Browser, in dem Autodarts unter `https://play.autodarts.io/` läuft.
+- Eine installierte Tampermonkey-Erweiterung.
+- Die Screenshots und Bezeichnungen in dieser Anleitung stammen aus einem Chrome-/Chromium-Setup. In anderen Browsern können Menüpunkte und Schalter leicht anders heißen oder an einer etwas anderen Stelle liegen.
+
 ## Schnell loslegen
 
 1. Tampermonkey installieren: [tampermonkey.net](https://www.tampermonkey.net/)
@@ -46,12 +60,21 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 
 ![Tampermonkey Injection-Hinweis](docs/screenshots/tempermonkey-injection.png)
 
+## Wenn AD xConfig nicht erscheint
+
+1. In Tampermonkey prüfen, ob `autodarts-xconfig` installiert und aktiviert ist.
+2. `https://play.autodarts.io/` vollständig neu laden.
+3. In den Browsererweiterungen bei Tampermonkey `Nutzerscripts zulassen` und `Zugriff auf Datei-URLs zulassen` aktivieren.
+4. Falls Tampermonkey beim Installieren oder Aktualisieren einen zusätzlichen Tab geöffnet hat, die Installation dort vollständig bestätigen.
+5. Wenn ein Injection-Hinweis erscheint, die empfohlene Browser-Einstellung übernehmen.
+6. Danach erneut links in der Navigation nach **AD xConfig** suchen.
+
 ## Wo finde ich was?
 
 - `Themen`: Hier findest du Farben, Layouts und Hintergründe.
 - `Animationen`: Hier findest du Effekte und Komfortfunktionen.
 - `⚙ Einstellungen`: Mit diesem Button öffnest du die Einstellungen einer Kachel.
-- `📖 README`: Mit diesem Button springst du direkt zur passenden Stelle in dieser Dokumentation.
+- `📖 README`: Mit diesem Button öffnest du die GitHub-README direkt an der passenden Modulstelle in einem neuen Tab.
 - An/Aus-Schalter: Hier schaltest du ein Modul direkt ein oder aus.
 
 ## Der obere Bereich im Menü
@@ -84,7 +107,7 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 - `Gilt für` zeigt dir, in welchen Spielmodi das Modul gedacht ist.
 - Die Zahl bei `Einstellungen` zeigt, wie viele Einstellmöglichkeiten es gibt.
 - `⚙ Einstellungen` öffnet das Einstellungsfenster dieser Kachel.
-- `📖 README` öffnet direkt die passende Stelle in dieser `README.md`.
+- `📖 README` öffnet die GitHub-README direkt an der passenden Modulstelle.
 - Der Hinweis unten zeigt bei Themes zum Beispiel an, ob schon ein eigenes Hintergrundbild gespeichert ist.
 - Der An/Aus-Schalter oben rechts ist die wichtigste Aktion: Hier schaltest du das Modul direkt ein oder aus.
 
@@ -92,7 +115,7 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 
 ![AD xConfig Einstellungsfenster](docs/screenshots/ad-xconfig-einstellungen.png)
 
-- Oben findest du wieder den Button `📖 README` für mehr Informationen zum gerade geöffneten Modul.
+- Oben findest du wieder den Button `📖 README`, der die GitHub-README direkt beim gerade geöffneten Modul öffnet.
 - Die Einstellungen sind in Gruppen aufgeteilt, damit du nicht alles auf einmal suchen musst.
 - Viele Gruppen funktionieren wie eine Einzelauswahl. Meist ist pro Gruppe nur eine Option gleichzeitig aktiv.
 - Die aktuell ausgewählte Option ist mit `Aktuell` markiert.
@@ -900,21 +923,37 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 ## Weitere Dokumentation
 
+### Für Nutzer
+
+- [Änderungen / Changelog](CHANGELOG.md)
 - [Feature-Übersicht](docs/FEATURES.md)
+
+### Für Entwicklung und Maintenance
+
 - [Technische Architektur](docs/TECHNICAL-ARCHITECTURE.md)
+- [Runtime-Entrypoints](docs/RUNTIME-ENTRYPOINTS.md)
+- [Performance-Audit](docs/PERFORMANCE-AUDIT.md)
+- [Feature-Parität](docs/FEATURE-PARITY.md)
 - [Migrationsstatus](docs/MIGRATION-STATUS.md)
+- [Release-QA-Report](docs/RELEASE-QA-REPORT.md)
+- [Dart-Rule-Module](docs/DART-RULE-MODULES.md)
+- [Dart-Rules-Referenz](docs/DART-RULES-REFERENCE.md)
+- [Dart-Rule-Audit](docs/DART-RULE-AUDIT.md)
 - [Legacy-Paritätsmatrix](docs/LEGACY-PARITY-MATRIX.md)
 - [Legacy-Diskrepanzmatrix](docs/LEGACY-DISCREPANCY-MATRIX.md)
 - [Legacy-Inventur](docs/OLDREPO-INVENTORY.md)
 - [Neue System-Inventur](docs/NEW-SYSTEM-INVENTORY.md)
-- [Release-QA-Report](docs/RELEASE-QA-REPORT.md)
 - [UI-/UX-Finalisierung](docs/UI-UX-FINALIZATION.md)
 
 ## Für Entwickler
 
+Wenn du AD xConfig nur nutzen möchtest, kannst du diesen Abschnitt überspringen. Für Beiträge, lokale Prüfungen und Release-nahes Arbeiten sind diese Befehle relevant:
+
 ```bash
 npm install
+npm run check:syntax
 npm run build
 npm test
+npm run check:changelog
 npm run verify
 ```
