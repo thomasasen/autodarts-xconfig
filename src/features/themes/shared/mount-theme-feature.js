@@ -9,20 +9,22 @@ import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/
 import { BOARD_INPUT_MODE_ATTRIBUTE_FILTER } from "../../../shared/board-input-mode.js";
 import {
   clearBoardLayoutHooks,
-  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
-  THEME_LAYOUT_HOOK_CLASSES,
-  THEME_CRICKET_READABILITY,
   hasBoardInputModeMutation,
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
   updateBoardLayoutHooks,
 } from "./board-layout-resolver.js";
+import {
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+  THEME_CRICKET_READABILITY,
+  THEME_LAYOUT_HOOK_CLASSES,
+} from "./theme-layout-contract.js";
 import { resolveThemePolicy } from "./theme-policies.js";
 
 export {
-  THEME_LAYOUT_HOOK_CLASSES,
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
   THEME_CRICKET_READABILITY,
+  THEME_LAYOUT_HOOK_CLASSES,
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
 };

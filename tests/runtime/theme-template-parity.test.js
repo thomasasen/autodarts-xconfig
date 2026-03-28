@@ -100,11 +100,11 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   );
   assert.match(
     commonLayoutCss,
-    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*1fr auto\s*!important;[^}]*grid-template-rows:\s*max-content minmax\(0,\s*1fr\)\s*!important;[^}]*align-content:\s*start\s*!important;/s
+    /div\.css-y3hfdd:not\(\[data-ad-ext-cricket-stack="true"\]\)\s*\{[^}]*grid-template-columns:\s*1fr auto\s*!important;[^}]*grid-template-rows:\s*max-content minmax\(0,\s*1fr\)\s*!important;[^}]*align-content:\s*start\s*!important;/s
   );
   assert.match(
     commonLayoutCss,
-    /div\.css-y3hfdd\s*>\s*\.css-1igwmid\s*\{[^}]*grid-row-start:\s*2\s*!important;[^}]*padding-left:\s*55px\s*!important;[^}]*align-self:\s*start\s*!important;[^}]*margin-top:\s*0\s*!important;/s
+    /div\.css-y3hfdd:not\(\[data-ad-ext-cricket-stack="true"\]\)\s*>\s*\.css-1igwmid\s*\{[^}]*grid-row-start:\s*2\s*!important;[^}]*padding-left:\s*55px\s*!important;[^}]*align-self:\s*start\s*!important;[^}]*margin-top:\s*0\s*!important;/s
   );
   assert.match(
     commonLayoutCss,

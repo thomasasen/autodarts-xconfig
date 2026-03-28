@@ -139,7 +139,7 @@ export const commonLayoutCss = `
   ) !important;
 }
 
-.ad-ext-player-inactive .chakra-stack.css-37hv00 {
+.ad-ext-player-inactive .chakra-stack.css-37hv00:not([data-ad-ext-cricket-row="true"]) {
   height: 20px !important;
 }
 
@@ -190,7 +190,7 @@ export const commonLayoutCss = `
   grid-area: board !important;
 }
 
-div.css-y3hfdd{
+div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]){
   display: grid !important;
   grid-template-columns: 1fr auto !important;
   grid-template-rows: max-content minmax(0, 1fr) !important;
@@ -201,8 +201,8 @@ div.css-y3hfdd{
   display: contents !important;
 }
 
-div.css-y3hfdd > p,
-div.css-y3hfdd > .ad-ext_winner-score-wrapper > p{
+div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > p,
+div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > .ad-ext_winner-score-wrapper > p{
   color: var(--theme-text-highlight-color);
   grid-row-start: 1 !important;
   grid-row-end: 3 !important;
@@ -223,7 +223,7 @@ div.css-y3hfdd > .ad-ext_winner-score-wrapper > p{
   grid-column-end: 2 !important;
 }
 
-.css-37hv00{
+.css-37hv00:not([data-ad-ext-cricket-row="true"]){
   grid-row-start: 1 !important;
   grid-row-end: 2 !important;
   grid-column-start: 1 !important;
@@ -232,7 +232,7 @@ div.css-y3hfdd > .ad-ext_winner-score-wrapper > p{
   flex-wrap: nowrap !important;
 }
 
-div.css-y3hfdd > .css-1igwmid{
+div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > .css-1igwmid{
   grid-row-start: 2 !important;
   grid-row-end: 3 !important;
   grid-column-start: 1 !important;

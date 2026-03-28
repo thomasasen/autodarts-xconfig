@@ -1,6 +1,14 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
 import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
-import { CRICKET_ACTIVE_PLAYER_ATTRIBUTE } from "../shared/mount-theme-feature.js";
+import {
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+  CRICKET_IDENTITY_SHELL_ATTRIBUTE,
+  CRICKET_META_ATTRIBUTE,
+  CRICKET_META_SHELL_ATTRIBUTE,
+  CRICKET_ROW_ATTRIBUTE,
+  CRICKET_SLOT_ATTRIBUTE,
+  CRICKET_STACK_ATTRIBUTE,
+} from "../shared/theme-layout-contract.js";
 
 export const STYLE_ID = "ad-ext-theme-cricket-style";
 
@@ -15,6 +23,18 @@ function resolveThemeCricketConfig(rawConfig = {}) {
     showAvg: normalizeBoolean(rawConfig.showAvg, true),
   };
 }
+
+const STACK_SELECTOR = `[${CRICKET_STACK_ATTRIBUTE}="true"]`;
+const ROW_SELECTOR = `[${CRICKET_ROW_ATTRIBUTE}="true"]`;
+const SLOT_MARKS_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="marks"]`;
+const SLOT_IDENTITY_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="identity"]`;
+const SLOT_STATS_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="stats"]`;
+const SLOT_DECORATIVE_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="decorative"]`;
+const META_AVATAR_SELECTOR = `[${CRICKET_META_ATTRIBUTE}="avatar"]`;
+const META_NAME_SELECTOR = `[${CRICKET_META_ATTRIBUTE}="name"]`;
+const META_WINS_SELECTOR = `[${CRICKET_META_ATTRIBUTE}="wins"]`;
+const IDENTITY_SHELL_SELECTOR = `[${CRICKET_IDENTITY_SHELL_ATTRIBUTE}="true"]`;
+const META_SHELL_SELECTOR = `[${CRICKET_META_SHELL_ATTRIBUTE}="true"]`;
 
 const cricketThemeCss = `
 :root{
@@ -89,7 +109,7 @@ const cricketThemeCss = `
 
 #ad-ext-player-display > * {
   margin: 0 !important;
-  min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
+  min-width: var(--ad-ext-theme-cricket-player-column-width) !important;
   max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
   width: var(--ad-ext-theme-cricket-player-column-width) !important;
   border: 0 !important;
@@ -100,11 +120,11 @@ const cricketThemeCss = `
 
 #ad-ext-player-display .ad-ext-player{
   min-height: 206px !important;
-  min-width: var(--ad-ext-theme-cricket-player-card-min-width) !important;
+  min-width: 0 !important;
   width: 100% !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}{
   display: grid !important;
   grid-template-columns:
     max-content
@@ -117,40 +137,43 @@ const cricketThemeCss = `
   column-gap: 0.3rem !important;
   row-gap: 0.26rem !important;
   min-height: 206px !important;
-  min-width: var(--ad-ext-theme-cricket-player-card-min-width) !important;
+  min-width: 0 !important;
   padding-inline: 0 !important;
   padding-top: 0.3rem !important;
   padding-bottom: 0.3rem !important;
 }
 
-div.css-y3hfdd{
-  grid-template-columns:
-    max-content
-    minmax(var(--ad-ext-theme-cricket-stats-min-width), 1fr)
-    minmax(var(--ad-ext-theme-cricket-score-min-width), max-content) !important;
-  grid-template-areas:
-    "identity identity identity"
-    "matches stats score" !important;
-  align-items: start !important;
-  column-gap: 0.3rem !important;
-  row-gap: 0.26rem !important;
-  min-height: 0 !important;
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} {
   container-type: inline-size !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} {
   display: contents !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} {
   grid-area: matches !important;
   grid-column: 1 !important;
   justify-self: start !important;
   align-self: center !important;
   z-index: 2 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-3fr5p8 {
+  min-height: 1.18rem !important;
+  min-width: 1.31rem !important;
+  padding-inline: 0.35rem !important;
+  border-radius: 0.34rem !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-1hcjh09 {
+  font-size: clamp(0.83rem, 0.92vw, 0.99rem) !important;
+  line-height: 1 !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} {
   grid-area: identity !important;
   grid-column: 1 / -1 !important;
   margin-inline: 0 !important;
@@ -160,48 +183,14 @@ div.css-y3hfdd{
   overflow: visible !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
-  grid-area: stats !important;
-  grid-column: 1 / 3 !important;
-  justify-self: stretch !important;
-  align-self: center !important;
-  min-width: var(--ad-ext-theme-cricket-stats-min-width) !important;
-  max-width: 100% !important;
-  overflow: visible !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 0.2rem !important;
-  padding-left: 1.38rem !important;
-  white-space: nowrap !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .css-17xejub {
-  display: none !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80,
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 > span,
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l,
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1igwmid,
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .ad-ext-player-name {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR},
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} * {
   min-width: 0 !important;
   max-width: 100% !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-3fr5p8 {
-  min-height: 1.18rem !important;
-  min-width: 1.31rem !important;
-  padding-inline: 0.35rem !important;
-  border-radius: 0.34rem !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-1hcjh09 {
-  font-size: clamp(0.83rem, 0.92vw, 0.99rem) !important;
-  line-height: 1 !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 > span {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} > ${IDENTITY_SHELL_SELECTOR},
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR}:not(${IDENTITY_SHELL_SELECTOR}) {
   display: grid !important;
   grid-template-columns: var(--ad-ext-theme-cricket-player-avatar-size) minmax(0, 1fr) auto !important;
   grid-template-areas:
@@ -218,27 +207,27 @@ div.css-y3hfdd{
   background: linear-gradient(90deg, rgba(86, 97, 116, 0.34), rgba(68, 80, 99, 0.18)) !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_SHELL_SELECTOR} {
+  display: contents !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_AVATAR_SELECTOR} {
   grid-area: avatar !important;
   align-items: center !important;
   gap: 0 !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l > .chakra-avatar {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_AVATAR_SELECTOR} > .chakra-avatar {
   --avatar-size: var(--ad-ext-theme-cricket-player-avatar-size) !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-aa7b80 > span > .css-1igwmid {
-  display: contents !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-aa7b80 > span > .css-1igwmid > .ad-ext-player-name {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_NAME_SELECTOR} {
   grid-area: name !important;
   min-width: 0 !important;
   align-self: center !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-aa7b80 > span > .css-1igwmid > .chakra-badge {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_WINS_SELECTOR} {
   grid-area: wins !important;
   justify-self: end !important;
   align-self: center !important;
@@ -250,14 +239,34 @@ div.css-y3hfdd{
   border-radius: 999px !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid > p {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} {
+  grid-area: stats !important;
+  grid-column: 1 / 3 !important;
+  justify-self: stretch !important;
+  align-self: center !important;
+  min-width: var(--ad-ext-theme-cricket-stats-min-width) !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.2rem !important;
+  padding-left: 1.38rem !important;
+  white-space: nowrap !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p {
   overflow: visible !important;
   text-overflow: clip !important;
   white-space: nowrap !important;
   min-width: max-content !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .ad-ext-player-score {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_DECORATIVE_SELECTOR} {
+  display: none !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > .ad-ext-player-score {
   grid-area: score !important;
   grid-column: 3 !important;
   grid-row: 2 !important;
@@ -273,7 +282,7 @@ div.css-y3hfdd{
   z-index: 3 !important;
 }
 
-p.chakra-text.css-1j0bqop{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p {
   font-size: clamp(0.92rem, 1.04vw, 1.1rem) !important;
   line-height: 1.15 !important;
 }
@@ -283,15 +292,6 @@ p.chakra-text.css-1j0bqop{
   font-size: clamp(1rem, 1.05vw, 1.3rem) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
   text-shadow: var(--ad-ext-theme-cricket-score-shadow) !important;
-}
-
-.ad-ext-player-inactive .chakra-stack.css-37hv00 {
-  height: auto !important;
-  min-height: 2.2rem !important;
-}
-
-.ad-ext-player.ad-ext-player-inactive.css-1en42kf{
-  display: block !important;
 }
 
 * {
@@ -388,33 +388,33 @@ div.css-nfhdnc {
 }
 
 @container (max-width: 13.75rem) {
-  #ad-ext-player-display .ad-ext-player > .chakra-stack,
-  div.css-y3hfdd {
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} {
     column-gap: 0.42rem !important;
   }
 
-  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-aa7b80 > span {
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} > ${IDENTITY_SHELL_SELECTOR},
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR}:not(${IDENTITY_SHELL_SELECTOR}) {
     grid-template-columns: 1.9rem minmax(0, 1fr) auto !important;
     column-gap: 0.32rem !important;
   }
 
-  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-1psdi5l > .chakra-avatar {
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_AVATAR_SELECTOR} > .chakra-avatar {
     --avatar-size: 1.9rem !important;
   }
 
-  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 > .css-1cmgsw8 .css-1hcjh09 {
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-1hcjh09 {
     font-size: 0.78rem !important;
   }
 
-  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-1igwmid {
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} {
     justify-content: flex-start !important;
   }
 
-  #ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 .css-aa7b80 > span > .css-1igwmid > .chakra-badge {
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_IDENTITY_SELECTOR} ${META_WINS_SELECTOR} {
     font-size: 0.62rem !important;
   }
 
-  p.chakra-text.css-1j0bqop{
+  #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p {
     font-size: 0.92rem !important;
   }
 }
@@ -452,20 +452,6 @@ div.css-rrf7rv {
   display: contents !important;
 }
 
-.css-y3hfdd > p,
-.css-y3hfdd > .ad-ext_winner-score-wrapper > p {
-  color: var(--ad-ext-theme-cricket-score-active-color);
-}
-
-p.chakra-text.ad-ext-player-score.css-1r7jzhg {
-  color: var(--ad-ext-theme-cricket-score-active-color);
-}
-
-div.ad-ext-player.ad-ext-player-active.css-1en42kf {
-  border-color: var(--theme-border-color);
-  border-style: solid;
-}
-
 div.chakra-menu__menu-list.css-yskgbr {
   background-color: var(--theme-border-color);
 }
@@ -486,6 +472,12 @@ span.chakra-switch__track.css-v4l15v {
     minmax(var(--ad-ext-theme-cricket-player-area-required-width), max-content)
     minmax(var(--ad-ext-theme-cricket-board-min-width-auto), 1fr) !important;
   gap: var(--ad-ext-theme-cricket-content-gap) !important;
+}
+
+.ad-ext-theme-content-slot.ad-ext-theme-cricket-readability-constrained:not(.ad-ext-theme-cricket-board-hidden) {
+  grid-template-columns:
+    minmax(var(--ad-ext-theme-cricket-player-area-required-width), max-content)
+    minmax(0, var(--ad-ext-theme-cricket-board-width, var(--ad-ext-theme-cricket-board-min-width-auto))) !important;
 }
 
 .ad-ext-theme-content-slot > .ad-ext-theme-content-left {
@@ -566,7 +558,7 @@ span.chakra-switch__track.css-v4l15v {
   border-color: rgba(159, 232, 112, 0.4) !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} {
   position: relative !important;
   overflow: hidden !important;
   background: linear-gradient(165deg, rgba(6, 15, 34, 0.96), rgba(3, 10, 24, 0.94)) !important;
@@ -576,7 +568,7 @@ span.chakra-switch__track.css-v4l15v {
   transition: border-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack::before {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -587,7 +579,7 @@ span.chakra-switch__track.css-v4l15v {
   opacity: 0.9;
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack {
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR} {
   border-color: var(--ad-ext-cricket-active-ring) !important;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
@@ -596,7 +588,7 @@ span.chakra-switch__track.css-v4l15v {
     0 12px 28px rgba(0, 0, 0, 0.44);
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack::after {
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -605,11 +597,11 @@ span.chakra-switch__track.css-v4l15v {
   box-shadow: inset 0 0 18px rgba(159, 232, 112, 0.08), 0 0 24px var(--ad-ext-cricket-card-glow);
 }
 
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > .chakra-stack {
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > ${STACK_SELECTOR} {
   filter: saturate(0.76) brightness(0.9);
 }
 
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > .chakra-stack::after {
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > ${STACK_SELECTOR}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -617,7 +609,7 @@ span.chakra-switch__track.css-v4l15v {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(1, 6, 15, 0.18) 100%);
 }
 
-#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > .chakra-stack {
+#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > ${STACK_SELECTOR} {
   border-color: var(--ad-ext-cricket-active-ring) !important;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
@@ -627,7 +619,7 @@ span.chakra-switch__track.css-v4l15v {
   filter: none !important;
 }
 
-#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > .chakra-stack::after {
+#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > ${STACK_SELECTOR}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -636,13 +628,13 @@ span.chakra-switch__track.css-v4l15v {
   box-shadow: inset 0 0 18px rgba(159, 232, 112, 0.08), 0 0 24px var(--ad-ext-cricket-card-glow);
 }
 
-#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > .chakra-stack {
+#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > ${STACK_SELECTOR} {
   border-color: var(--ad-ext-cricket-line) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 26px rgba(0, 0, 0, 0.42) !important;
   filter: saturate(0.76) brightness(0.9) !important;
 }
 
-#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > .chakra-stack::after {
+#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > ${STACK_SELECTOR}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -705,7 +697,7 @@ span.chakra-switch__track.css-v4l15v {
 
 #ad-ext-player-display + div > .ad-ext-crfx-cell,
 .ad-ext-theme-content-left > #ad-ext-player-display + div > .ad-ext-crfx-cell {
-  min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
+  min-width: var(--ad-ext-theme-cricket-player-column-width) !important;
   max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
   width: var(--ad-ext-theme-cricket-player-column-width) !important;
 }
@@ -752,7 +744,7 @@ p.chakra-text.css-1qlemha {
 
 #grid tr > td:not(:first-child),
 #grid tr > th:not(:first-child) {
-  min-width: var(--ad-ext-theme-cricket-player-column-min-width) !important;
+  min-width: var(--ad-ext-theme-cricket-player-column-width) !important;
   max-width: var(--ad-ext-theme-cricket-player-column-max-width) !important;
   width: var(--ad-ext-theme-cricket-player-column-width) !important;
 }
@@ -860,7 +852,7 @@ export function buildCricketThemeCss(featureConfig = {}) {
   const avgVisibilityCss = resolved.showAvg
     ? ""
     : `
-p.chakra-text.css-1j0bqop{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p{
   display: none !important;
 }
 

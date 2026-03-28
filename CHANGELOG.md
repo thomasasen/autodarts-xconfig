@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.82] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Das Cricket-/Tactics-Layout bleibt bei wechselnden Autodarts-Wrappern jetzt stabiler. Spielernamen bleiben deutlich besser lesbar, Punkte- und Kartenbereiche verschieben sich nicht mehr so leicht, und freie Breite wird bevorzugt für die Spielerinfos genutzt, bevor das Board im engen Layout schrumpft oder ausgeblendet wird.
+  Technik: Die Cricket-Spielerkarten werden jetzt zur Laufzeit auf stabile semantische Slots normalisiert, die Theme-CSS ist von fragilen Chakra-Hashklassen auf interne Datenattribute umgestellt, die Readability-Logik verteilt die verfügbare Breite aktiv zwischen Spielerbereich und Board mit klarer `Spieler zuerst`-Policy, und neue DOM-/Lifecycle-Regressionstests decken gemeldete sowie driftende Wrapper-Strukturen ab.
+
 ## [2.0.81] - 2026-03-27
 
 ### Changed
@@ -931,6 +938,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[2.0.82]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.81]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.80]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.79]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD

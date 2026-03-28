@@ -15,6 +15,14 @@ import {
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
 } from "../../src/features/themes/shared/mount-theme-feature.js";
+import {
+  CRICKET_IDENTITY_SHELL_ATTRIBUTE,
+  CRICKET_META_ATTRIBUTE,
+  CRICKET_META_SHELL_ATTRIBUTE,
+  CRICKET_ROW_ATTRIBUTE,
+  CRICKET_SLOT_ATTRIBUTE,
+  CRICKET_STACK_ATTRIBUTE,
+} from "../../src/features/themes/shared/theme-layout-contract.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -449,29 +457,137 @@ function createImageBackedInfoStyleBoardFixture(documentRef) {
   };
 }
 
-function addPlayerCards(documentRef, playerDisplayNode, count) {
+function createSimpleCricketPlayerCard(documentRef, index) {
+  const playerNode = documentRef.createElement("div");
+  playerNode.classList.add("ad-ext-player");
+
+  const stackNode = documentRef.createElement("div");
+  stackNode.classList.add("chakra-stack");
+  const nameNode = documentRef.createElement("p");
+  nameNode.classList.add("ad-ext-player-name");
+  nameNode.textContent = `PLAYER-${index + 1}`;
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("ad-ext-player-score");
+  scoreNode.textContent = String(index * 10);
+  stackNode.appendChild(nameNode);
+  stackNode.appendChild(scoreNode);
+  playerNode.appendChild(stackNode);
+
+  return playerNode;
+}
+
+function createReportedCricketPlayerCard(documentRef, index, options = {}) {
+  const playerNode = documentRef.createElement("div");
+  playerNode.classList.add("ad-ext-player");
+
+  const stackNode = documentRef.createElement("div");
+  stackNode.classList.add("chakra-stack", "css-y3hfdd");
+
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("chakra-text", "ad-ext-player-score", "css-18w03sn");
+  scoreNode.textContent = String(index * 10);
+  stackNode.appendChild(scoreNode);
+
+  const rowNode = documentRef.createElement("div");
+  rowNode.classList.add("chakra-stack", options.altWrapper === true ? "css-alt-row" : "css-37hv00");
+
+  const marksNode = documentRef.createElement("div");
+  marksNode.classList.add(options.altWrapper === true ? "css-mark-bucket" : "css-1k3nd6z");
+  const marksBadge = documentRef.createElement("span");
+  marksBadge.classList.add("css-3fr5p8");
+  const marksText = documentRef.createElement("p");
+  marksText.classList.add("chakra-text", "css-1hcjh09");
+  marksText.textContent = String(index);
+  marksBadge.appendChild(marksText);
+  marksNode.appendChild(marksBadge);
+
+  const identityOuter = documentRef.createElement("div");
+  identityOuter.classList.add(options.altWrapper === true ? "css-identity-shell" : "css-4rrvd0");
+  const identityShell = documentRef.createElement("span");
+  identityShell.classList.add(options.altWrapper === true ? "css-drift-shell" : "css-z1uxps");
+
+  const avatarWrap = documentRef.createElement("div");
+  avatarWrap.classList.add("chakra-stack", "css-1psdi5l");
+  const avatarNode = documentRef.createElement("span");
+  avatarNode.classList.add("chakra-avatar");
+  const avatarImage = documentRef.createElement("img");
+  avatarImage.setAttribute("alt", `player-${index + 1}`);
+  avatarNode.appendChild(avatarImage);
+  avatarWrap.appendChild(avatarNode);
+
+  const metaWrap = documentRef.createElement("div");
+  metaWrap.classList.add("chakra-stack", options.altWrapper === true ? "css-meta-drift" : "css-1igwmid");
+  const nameNode = documentRef.createElement("span");
+  nameNode.classList.add("ad-ext-player-name", "css-g0ywsj");
+  const nameText = documentRef.createElement("p");
+  nameText.classList.add("chakra-text", "css-11cuipc");
+  nameText.textContent = options.longName || `TORNADO PLAYER ${index + 1}`;
+  nameNode.appendChild(nameText);
+
+  const winsNode = documentRef.createElement("span");
+  winsNode.classList.add("chakra-badge", "css-n2903v");
+  winsNode.textContent = `${35 + index}+`;
+
+  metaWrap.appendChild(nameNode);
+  metaWrap.appendChild(winsNode);
+  identityShell.appendChild(avatarWrap);
+  identityShell.appendChild(metaWrap);
+  identityOuter.appendChild(identityShell);
+
+  if (options.swapRowOrder === true) {
+    rowNode.appendChild(identityOuter);
+    rowNode.appendChild(marksNode);
+  } else {
+    rowNode.appendChild(marksNode);
+    rowNode.appendChild(identityOuter);
+  }
+  stackNode.appendChild(rowNode);
+
+  const statsNode = documentRef.createElement("div");
+  statsNode.classList.add("chakra-stack", "css-1igwmid");
+  const mprNode = documentRef.createElement("p");
+  mprNode.classList.add("chakra-text", "css-1j0bqop");
+  mprNode.textContent = `MPR: ${index.toFixed(1)}`;
+  statsNode.appendChild(mprNode);
+  statsNode.appendChild(documentRef.createElement("div"));
+  statsNode.appendChild(documentRef.createElement("div"));
+  stackNode.appendChild(statsNode);
+
+  const decorativeNode = documentRef.createElement("div");
+  decorativeNode.classList.add("css-17xejub");
+  stackNode.appendChild(decorativeNode);
+
+  playerNode.appendChild(stackNode);
+  return playerNode;
+}
+
+function createCricketPlayerCard(documentRef, index, options = {}) {
+  const variant = String(options.variant || "simple").trim().toLowerCase();
+  if (variant === "reported") {
+    return createReportedCricketPlayerCard(documentRef, index, {
+      longName: options.longName,
+    });
+  }
+  if (variant === "drifted") {
+    return createReportedCricketPlayerCard(documentRef, index, {
+      altWrapper: true,
+      swapRowOrder: true,
+      longName: options.longName,
+    });
+  }
+  return createSimpleCricketPlayerCard(documentRef, index);
+}
+
+function addPlayerCards(documentRef, playerDisplayNode, count, options = {}) {
   if (!playerDisplayNode || !Number.isFinite(count) || count <= 0) {
     return;
   }
 
   for (let index = 0; index < count; index += 1) {
-    const playerNode = documentRef.createElement("div");
-    playerNode.classList.add("ad-ext-player");
+    const playerNode = createCricketPlayerCard(documentRef, index, options);
     if (index === 0) {
       playerNode.classList.add("ad-ext-player-active");
     }
-
-    const stackNode = documentRef.createElement("div");
-    stackNode.classList.add("chakra-stack");
-    const nameNode = documentRef.createElement("p");
-    nameNode.classList.add("ad-ext-player-name");
-    nameNode.textContent = `PLAYER-${index + 1}`;
-    const scoreNode = documentRef.createElement("p");
-    scoreNode.classList.add("ad-ext-player-score");
-    scoreNode.textContent = String(index * 10);
-    stackNode.appendChild(nameNode);
-    stackNode.appendChild(scoreNode);
-    playerNode.appendChild(stackNode);
     playerDisplayNode.appendChild(playerNode);
   }
 }
@@ -1154,7 +1270,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1380px"
+    "1600px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -1232,7 +1348,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
 
   assert.equal(
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass),
-    false
+    true
   );
   assert.equal(
     boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
@@ -1240,7 +1356,7 @@ test("theme-cricket auto-hides board for readability and keeps player width when
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
-    ""
+    "332px"
   );
   assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
   assert.equal(
@@ -1446,7 +1562,7 @@ test("theme-cricket measures the rendered 4-player left layout before forcing th
 
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1240px"
+    "1480px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -1542,7 +1658,7 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
-    "1380px"
+    "1600px"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-count"),
@@ -1594,11 +1710,11 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   windowRef.dispatchEvent(new windowRef.Event("resize"));
   await wait(5);
 
-  assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass), false);
+  assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.constrainedClass), true);
   assert.equal(boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass), false);
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-board-width"),
-    ""
+    "332px"
   );
   assert.equal(Boolean(documentRef.getElementById(THEME_CRICKET_READABILITY.noticeId)), false);
   assert.equal(
@@ -1608,6 +1724,165 @@ test("theme-cricket keeps March 15 readability semantics with nested showAnimati
   assert.equal(
     boardNodes.innerBoardLayer.style.getPropertyValue("--ad-ext-theme-board-size"),
     "620px"
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket normalizes the reported player-card DOM and uses free width for 3-player readability", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1900, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1272, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 3, {
+    variant: "reported",
+    longName: "TORNADO TOM LONGNAME",
+  });
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-reported-dom");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  const firstPlayerNode = playerDisplayNode.children[0];
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "1272px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-column-width"),
+    "424px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_STACK_ATTRIBUTE}="true"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_ROW_ATTRIBUTE}="true"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="marks"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="identity"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="stats"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="decorative"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_IDENTITY_SHELL_ATTRIBUTE}="true"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_META_SHELL_ATTRIBUTE}="true"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_META_ATTRIBUTE}="avatar"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_META_ATTRIBUTE}="name"]`) !== null,
+    true
+  );
+  assert.equal(
+    firstPlayerNode.querySelector(`[${CRICKET_META_ATTRIBUTE}="wins"]`) !== null,
+    true
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DOM drifts without state changes", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1900, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1272, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 3, {
+    variant: "reported",
+    longName: "TORNADO TOM LONGNAME",
+  });
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-reported-dom-replace");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  const originalFirstPlayer = playerDisplayNode.children[0];
+  const replacementPlayer = createCricketPlayerCard(documentRef, 0, {
+    variant: "drifted",
+    longName: "TORNADO TOM LONGNAME",
+  });
+  replacementPlayer.classList.add("ad-ext-player-active");
+
+  playerDisplayNode.insertBefore(replacementPlayer, originalFirstPlayer);
+  playerDisplayNode.removeChild(originalFirstPlayer);
+  documentRef.flushMutations();
+  await wait(5);
+
+  assert.equal(
+    replacementPlayer.getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE),
+    "true"
+  );
+  assert.equal(
+    replacementPlayer.querySelector(`[${CRICKET_STACK_ATTRIBUTE}="true"]`) !== null,
+    true
+  );
+  assert.equal(
+    replacementPlayer.querySelector(`[${CRICKET_ROW_ATTRIBUTE}="true"]`) !== null,
+    true
+  );
+  assert.equal(
+    replacementPlayer.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="identity"]`) !== null,
+    true
+  );
+  assert.equal(
+    replacementPlayer.querySelector(`[${CRICKET_META_ATTRIBUTE}="name"]`) !== null,
+    true
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-column-width"),
+    "424px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
   );
 
   runtime.stop();

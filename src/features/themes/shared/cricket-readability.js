@@ -11,26 +11,25 @@ import {
   BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
   isBoardInputModeControl,
 } from "../../../shared/board-input-mode.js";
-
-export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
-  contentSlot: "ad-ext-theme-content-slot",
-  contentLeft: "ad-ext-theme-content-left",
-  contentBoard: "ad-ext-theme-content-board",
-  boardPanel: "ad-ext-theme-board-panel",
-  boardImageBackedMode: "ad-ext-theme-board-image-backed",
-  boardControls: "ad-ext-theme-board-controls",
-  boardViewport: "ad-ext-theme-board-viewport",
-  boardEventShell: "ad-ext-theme-board-event-shell",
-  boardCanvas: "ad-ext-theme-board-canvas",
-  boardMediaRoot: "ad-ext-theme-board-media-root",
-  boardSvg: "ad-ext-theme-board-svg",
-});
+import {
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+  CRICKET_IDENTITY_SHELL_ATTRIBUTE,
+  CRICKET_META_ATTRIBUTE,
+  CRICKET_META_SHELL_ATTRIBUTE,
+  CRICKET_ROW_ATTRIBUTE,
+  CRICKET_SLOT_ATTRIBUTE,
+  CRICKET_STACK_ATTRIBUTE,
+  THEME_CRICKET_READABILITY,
+  THEME_LAYOUT_HOOK_CLASSES,
+} from "./theme-layout-contract.js";
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
+const CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-player-column-width";
+const CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE =
+  "--ad-ext-theme-cricket-player-column-max-width";
 const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
   "--ad-ext-theme-cricket-player-area-required-width";
 const CRICKET_PLAYER_COUNT_CSS_VARIABLE = "--ad-ext-theme-cricket-player-count";
-export const CRICKET_ACTIVE_PLAYER_ATTRIBUTE = "data-ad-ext-theme-cricket-active";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const CRICKET_READABILITY_POLICY = Object.freeze({
   playerCardMinWidthPx: 228,
@@ -40,16 +39,6 @@ const CRICKET_READABILITY_POLICY = Object.freeze({
   boardAutoMinWidthPx: 288,
   boardManualMinWidthPx: 160,
 });
-export const THEME_CRICKET_READABILITY = Object.freeze({
-  constrainedClass: "ad-ext-theme-cricket-readability-constrained",
-  boardHiddenClass: "ad-ext-theme-cricket-board-hidden",
-  boardForcedVisibleClass: "ad-ext-theme-cricket-board-forced-visible",
-  noticeId: "ad-ext-theme-cricket-readability-notice",
-  noticeClass: "ad-ext-theme-cricket-readability-notice",
-  noticeTextClass: "ad-ext-theme-cricket-readability-text",
-  toggleClass: "ad-ext-theme-cricket-readability-toggle",
-});
-
 export function createCricketReadabilityState() {
   return {
     contentSlotNode: null,
@@ -59,6 +48,7 @@ export function createCricketReadabilityState() {
     boardAutoHidden: false,
     boardForcedVisible: false,
     boardWidthPx: 0,
+    playerColumnWidthPx: 0,
     playerAreaRequiredWidthPx: 0,
     noticeNode: null,
     noticeTextNode: null,
@@ -1081,6 +1071,287 @@ function collectCricketPlayerCards(documentRef) {
   return [];
 }
 
+const CRICKET_PLAYER_CARD_MARKER_ATTRIBUTES = Object.freeze([
+  CRICKET_STACK_ATTRIBUTE,
+  CRICKET_ROW_ATTRIBUTE,
+  CRICKET_SLOT_ATTRIBUTE,
+  CRICKET_META_ATTRIBUTE,
+  CRICKET_IDENTITY_SHELL_ATTRIBUTE,
+  CRICKET_META_SHELL_ATTRIBUTE,
+]);
+
+function removeMarkerAttributes(node) {
+  if (!node || typeof node.removeAttribute !== "function") {
+    return;
+  }
+  CRICKET_PLAYER_CARD_MARKER_ATTRIBUTES.forEach((attributeName) => {
+    node.removeAttribute(attributeName);
+  });
+}
+
+function clearCricketPlayerCardMarkers(playerNode) {
+  if (!playerNode || typeof playerNode !== "object") {
+    return;
+  }
+
+  removeMarkerAttributes(playerNode);
+  if (typeof playerNode.querySelectorAll !== "function") {
+    return;
+  }
+
+  try {
+    Array.from(playerNode.querySelectorAll("*")).forEach((node) => {
+      removeMarkerAttributes(node);
+    });
+  } catch (_) {
+    // Ignore selector failures on transient host DOM nodes.
+  }
+}
+
+function setMarkerAttribute(node, attributeName, value = "true") {
+  if (!node || !attributeName || typeof node.setAttribute !== "function") {
+    return;
+  }
+  node.setAttribute(attributeName, value);
+}
+
+function findOwningChild(containerNode, targetNode) {
+  if (!containerNode || !targetNode || containerNode === targetNode) {
+    return null;
+  }
+
+  let current = targetNode;
+  while (current && current.parentElement && current.parentElement !== containerNode) {
+    current = current.parentElement;
+  }
+
+  return current?.parentElement === containerNode ? current : null;
+}
+
+function findClosestDescendant(node, selector) {
+  if (!node || typeof node.querySelector !== "function" || !selector) {
+    return null;
+  }
+
+  try {
+    return node.querySelector(selector);
+  } catch (_) {
+    return null;
+  }
+}
+
+function nodeContainsAnyTarget(node, targets = []) {
+  if (!node) {
+    return false;
+  }
+
+  return targets.some((target) => {
+    if (!target) {
+      return false;
+    }
+    return node === target || elementContains(node, target);
+  });
+}
+
+function findCommonAncestorWithin(boundaryNode, targets = []) {
+  const normalizedTargets = targets.filter(Boolean);
+  if (!boundaryNode || !normalizedTargets.length) {
+    return null;
+  }
+
+  const ancestorChain = [];
+  let current = normalizedTargets[0];
+  while (current) {
+    ancestorChain.push(current);
+    if (current === boundaryNode) {
+      break;
+    }
+    current = current.parentElement || current.parentNode || null;
+  }
+
+  return ancestorChain.find((candidate) => {
+    return normalizedTargets.every((target) => {
+      return candidate === target || elementContains(candidate, target);
+    });
+  }) || null;
+}
+
+function getNodeText(node) {
+  if (!node || typeof node !== "object") {
+    return "";
+  }
+
+  const ownText = String(node.textContent || "").trim();
+  if (ownText.length > 0) {
+    return ownText.toLowerCase();
+  }
+
+  const childText = getElementChildren(node)
+    .map((child) => getNodeText(child))
+    .filter((value) => value.length > 0)
+    .join(" ")
+    .trim();
+  return childText.toLowerCase();
+}
+
+function hasMeaningfulText(node) {
+  return getNodeText(node).length > 0;
+}
+
+function resolveCricketPlayerStack(playerNode) {
+  const directChildren = getElementChildren(playerNode);
+  return (
+    directChildren.find((child) => child?.classList?.contains?.("chakra-stack")) ||
+    directChildren[0] ||
+    findClosestDescendant(playerNode, ".chakra-stack") ||
+    null
+  );
+}
+
+function resolveCricketPlayerRowContainer(stackNode, identityTargets = []) {
+  const directChildren = getElementChildren(stackNode);
+  return (
+    directChildren.find((child) => nodeContainsAnyTarget(child, identityTargets)) || null
+  );
+}
+
+function resolveCricketStatsSlot(stackNode, rowNode, scoreNode) {
+  const directChildren = getElementChildren(stackNode).filter((child) => child !== scoreNode);
+  const statsCandidates = directChildren.filter((child) => child !== rowNode);
+  return (
+    statsCandidates.find((child) => getNodeText(child).includes("mpr")) ||
+    statsCandidates.find((child) => hasMeaningfulText(child)) ||
+    null
+  );
+}
+
+function normalizeCricketIdentitySlot(identitySlot) {
+  if (!identitySlot) {
+    return;
+  }
+
+  const preferredShell =
+    getElementChildren(identitySlot).find((child) => {
+      return Boolean(
+        findClosestDescendant(child, ".ad-ext-player-name") ||
+          findClosestDescendant(child, ".chakra-badge") ||
+          findClosestDescendant(child, ".chakra-avatar")
+      );
+    }) || identitySlot;
+
+  if (preferredShell !== identitySlot) {
+    setMarkerAttribute(preferredShell, CRICKET_IDENTITY_SHELL_ATTRIBUTE);
+  }
+
+  const effectiveShell = preferredShell;
+  const nameNode = findClosestDescendant(effectiveShell, ".ad-ext-player-name");
+  const badgeNode = findClosestDescendant(effectiveShell, ".chakra-badge");
+  const avatarNode =
+    findClosestDescendant(effectiveShell, ".chakra-avatar") ||
+    findClosestDescendant(effectiveShell, ".chakra-avatar__img");
+
+  const nameBadgeShell = findCommonAncestorWithin(effectiveShell, [nameNode, badgeNode]);
+  if (
+    nameBadgeShell &&
+    nameBadgeShell !== effectiveShell &&
+    nameBadgeShell !== nameNode &&
+    nameBadgeShell !== badgeNode
+  ) {
+    setMarkerAttribute(nameBadgeShell, CRICKET_META_SHELL_ATTRIBUTE);
+  }
+
+  const avatarMetaNode = findOwningChild(effectiveShell, avatarNode) || avatarNode;
+  if (avatarMetaNode) {
+    setMarkerAttribute(avatarMetaNode, CRICKET_META_ATTRIBUTE, "avatar");
+  }
+  if (nameNode) {
+    setMarkerAttribute(nameNode, CRICKET_META_ATTRIBUTE, "name");
+  }
+  if (badgeNode) {
+    setMarkerAttribute(badgeNode, CRICKET_META_ATTRIBUTE, "wins");
+  }
+}
+
+function normalizeCricketPlayerCard(playerNode) {
+  clearCricketPlayerCardMarkers(playerNode);
+
+  const stackNode = resolveCricketPlayerStack(playerNode);
+  if (!stackNode) {
+    return null;
+  }
+
+  setMarkerAttribute(stackNode, CRICKET_STACK_ATTRIBUTE);
+
+  const nameNode = findClosestDescendant(stackNode, ".ad-ext-player-name");
+  const badgeNode = findClosestDescendant(stackNode, ".chakra-badge");
+  const avatarNode =
+    findClosestDescendant(stackNode, ".chakra-avatar") ||
+    findClosestDescendant(stackNode, ".chakra-avatar__img");
+  const scoreNode = findClosestDescendant(stackNode, ".ad-ext-player-score");
+
+  const rowNode = resolveCricketPlayerRowContainer(stackNode, [nameNode, badgeNode, avatarNode]);
+  if (rowNode && rowNode !== stackNode) {
+    setMarkerAttribute(rowNode, CRICKET_ROW_ATTRIBUTE);
+  }
+
+  const statsNode = resolveCricketStatsSlot(stackNode, rowNode, scoreNode);
+  if (statsNode) {
+    setMarkerAttribute(statsNode, CRICKET_SLOT_ATTRIBUTE, "stats");
+  }
+
+  let identitySlot = null;
+  let marksSlot = null;
+  if (rowNode) {
+    const rowChildren = getElementChildren(rowNode);
+    identitySlot =
+      rowChildren.find((child) => nodeContainsAnyTarget(child, [nameNode, badgeNode, avatarNode])) ||
+      (nodeContainsAnyTarget(rowNode, [nameNode, badgeNode, avatarNode]) ? rowNode : null);
+    marksSlot =
+      rowChildren.find((child) => {
+        return child !== identitySlot && !nodeContainsAnyTarget(child, [scoreNode, statsNode]);
+      }) || null;
+  }
+
+  if (!identitySlot) {
+    const directChildren = getElementChildren(stackNode).filter((child) => child !== scoreNode);
+    identitySlot =
+      directChildren.find((child) => nodeContainsAnyTarget(child, [nameNode, badgeNode, avatarNode])) ||
+      null;
+  }
+
+  if (marksSlot) {
+    setMarkerAttribute(marksSlot, CRICKET_SLOT_ATTRIBUTE, "marks");
+  }
+  if (identitySlot) {
+    setMarkerAttribute(identitySlot, CRICKET_SLOT_ATTRIBUTE, "identity");
+    normalizeCricketIdentitySlot(identitySlot);
+  }
+
+  getElementChildren(stackNode).forEach((child) => {
+    if (child === scoreNode || child === rowNode || child === statsNode) {
+      return;
+    }
+    if (child.getAttribute?.(CRICKET_SLOT_ATTRIBUTE)) {
+      return;
+    }
+    setMarkerAttribute(child, CRICKET_SLOT_ATTRIBUTE, "decorative");
+  });
+
+  return {
+    stackNode,
+    rowNode,
+    identitySlot,
+    marksSlot,
+    statsNode,
+  };
+}
+
+function normalizeCricketPlayerCards(documentRef) {
+  return collectCricketPlayerCards(documentRef).map((playerNode) => {
+    return normalizeCricketPlayerCard(playerNode);
+  });
+}
+
 function resolveCricketThemeActivePlayerIndex(documentRef, gameState) {
   const playerNodes = collectCricketPlayerCards(documentRef);
   if (!playerNodes.length) {
@@ -1122,6 +1393,7 @@ export function syncCricketActivePlayerState(documentRef, gameState) {
     return;
   }
 
+  normalizeCricketPlayerCards(documentRef);
   const activePlayerIndex = resolveCricketThemeActivePlayerIndex(documentRef, gameState);
   playerNodes.forEach((node, index) => {
     if (!node || typeof node.setAttribute !== "function") {
@@ -1140,6 +1412,7 @@ export function clearCricketActivePlayerState(documentRef) {
       return;
     }
     node.removeAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE);
+    clearCricketPlayerCardMarkers(node);
   });
 }
 
@@ -1158,6 +1431,19 @@ function computeCricketRequiredPlayerWidth(playerCount) {
   );
 }
 
+function computeCricketPlayerColumnWidth(playerAreaWidthPx, playerCount) {
+  const normalizedPlayerCount = Number.isFinite(playerCount)
+    ? Math.max(1, Math.floor(playerCount))
+    : 1;
+  const normalizedPlayerAreaWidth = Number.isFinite(playerAreaWidthPx)
+    ? Math.max(0, Math.floor(playerAreaWidthPx))
+    : 0;
+  const totalGapWidth =
+    Math.max(0, normalizedPlayerCount - 1) * CRICKET_READABILITY_POLICY.playerCardGapPx;
+  const availableCardWidth = Math.max(0, normalizedPlayerAreaWidth - totalGapWidth);
+  return Math.max(0, Math.floor(availableCardWidth / normalizedPlayerCount));
+}
+
 function measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode) {
   const directChildWidths = getElementChildren(contentLeftNode).map((childNode) =>
     getElementWidth(childNode)
@@ -1167,6 +1453,18 @@ function measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode) {
     getElementWidth(playerDisplayNode),
     ...directChildWidths
   );
+}
+
+function measureCricketPreferredBoardWidth(layoutTargets = {}, contentBoardNode = null) {
+  const measuredWidth = getSmallestPositiveDimension([
+    getElementWidth(layoutTargets.boardViewport),
+    getElementWidth(layoutTargets.boardCanvas),
+    getElementWidth(contentBoardNode),
+  ]);
+  if (measuredWidth <= 0) {
+    return 0;
+  }
+  return Math.max(CRICKET_READABILITY_POLICY.boardAutoMinWidthPx, measuredWidth);
 }
 
 function resolveCricketBoardSizeCap(state) {
@@ -1248,6 +1546,8 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardHiddenClass);
     removeClass(previousContentSlot, THEME_CRICKET_READABILITY.boardForcedVisibleClass);
     clearStyleVariable(previousContentSlot, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
+    clearStyleVariable(previousContentSlot, CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE);
+    clearStyleVariable(previousContentSlot, CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE);
     clearStyleVariable(previousContentSlot, CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE);
     clearStyleVariable(previousContentSlot, CRICKET_PLAYER_COUNT_CSS_VARIABLE);
   }
@@ -1263,6 +1563,10 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
   const boardWidthPx =
     Number.isFinite(options.boardWidthPx) && options.boardWidthPx > 0
       ? Math.floor(options.boardWidthPx)
+      : 0;
+  const playerColumnWidthPx =
+    Number.isFinite(options.playerColumnWidthPx) && options.playerColumnWidthPx > 0
+      ? Math.floor(options.playerColumnWidthPx)
       : 0;
   const playerAreaRequiredWidthPx =
     Number.isFinite(options.playerAreaRequiredWidthPx) && options.playerAreaRequiredWidthPx > 0
@@ -1280,6 +1584,22 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     boardForcedVisible
   );
 
+  if (playerColumnWidthPx > 0) {
+    updateStyleVariable(
+      contentSlotNode,
+      CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE,
+      `${playerColumnWidthPx}px`
+    );
+    updateStyleVariable(
+      contentSlotNode,
+      CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE,
+      `${playerColumnWidthPx}px`
+    );
+  } else {
+    clearStyleVariable(contentSlotNode, CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE);
+    clearStyleVariable(contentSlotNode, CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE);
+  }
+
   if (playerAreaRequiredWidthPx > 0) {
     updateStyleVariable(
       contentSlotNode,
@@ -1296,7 +1616,7 @@ function updateCricketReadabilityClasses(state, contentSlotNode, options = {}) {
     clearStyleVariable(contentSlotNode, CRICKET_PLAYER_COUNT_CSS_VARIABLE);
   }
 
-  if (boardForcedVisible && boardWidthPx > 0) {
+  if (boardWidthPx > 0) {
     updateStyleVariable(contentSlotNode, CRICKET_BOARD_WIDTH_CSS_VARIABLE, `${boardWidthPx}px`);
   } else {
     clearStyleVariable(contentSlotNode, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
@@ -1398,6 +1718,11 @@ export function clearCricketReadabilityPolicy(state) {
   }
 
   clearStyleVariable(readabilityState.contentSlotNode, CRICKET_BOARD_WIDTH_CSS_VARIABLE);
+  clearStyleVariable(readabilityState.contentSlotNode, CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE);
+  clearStyleVariable(
+    readabilityState.contentSlotNode,
+    CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE
+  );
   clearStyleVariable(
     readabilityState.contentSlotNode,
     CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE
@@ -1458,6 +1783,7 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
   const contentLeftNode = layoutTargets.contentLeft || null;
   const contentBoardNode = layoutTargets.contentBoard || null;
   const playerDisplayNode = documentRef?.getElementById?.("ad-ext-player-display") || null;
+  normalizeCricketPlayerCards(documentRef);
 
   if (!contentSlotNode || !contentLeftNode || !contentBoardNode || !playerDisplayNode) {
     updateCricketReadabilityClasses(state, contentSlotNode, { playerCount: 0 });
@@ -1467,6 +1793,7 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     readabilityState.boardAutoHidden = false;
     readabilityState.boardForcedVisible = false;
     readabilityState.boardWidthPx = 0;
+    readabilityState.playerColumnWidthPx = 0;
     readabilityState.playerAreaRequiredWidthPx = 0;
     syncCricketBoardSize(state);
     return;
@@ -1474,32 +1801,75 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
 
   const slotWidth = getElementWidth(contentSlotNode);
   const playerCount = countCricketPlayerCards(playerDisplayNode);
+  const minimumPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
+  const measuredPlayerWidth = measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode);
   const requiredPlayerWidth = Math.max(
-    computeCricketRequiredPlayerWidth(playerCount),
-    measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode)
+    minimumPlayerWidth,
+    measuredPlayerWidth
   );
-  const availableBoardWidth =
-    slotWidth -
-    requiredPlayerWidth -
-    (playerCount > 0 ? CRICKET_READABILITY_POLICY.contentGapPx : 0);
-  const isConstrained =
+  const preferredBoardWidth = measureCricketPreferredBoardWidth(layoutTargets, contentBoardNode);
+  const contentGapPx = playerCount > 0 ? CRICKET_READABILITY_POLICY.contentGapPx : 0;
+  const availablePlayerWidthForPreferredBoard = Math.max(
+    0,
+    slotWidth - preferredBoardWidth - contentGapPx
+  );
+  const boardWidthAtMinimumPlayers = Math.max(0, slotWidth - requiredPlayerWidth - contentGapPx);
+  const boardFitsAtPreferredWidth =
     slotWidth > 0 &&
     playerCount > 0 &&
-    availableBoardWidth < CRICKET_READABILITY_POLICY.boardAutoMinWidthPx;
+    preferredBoardWidth > 0 &&
+    availablePlayerWidthForPreferredBoard >= requiredPlayerWidth;
+  const boardCanAutoShrink =
+    slotWidth > 0 &&
+    playerCount > 0 &&
+    boardWidthAtMinimumPlayers >= CRICKET_READABILITY_POLICY.boardAutoMinWidthPx;
 
-  if (!isConstrained) {
+  if (boardFitsAtPreferredWidth || (preferredBoardWidth <= 0 && slotWidth > 0 && playerCount > 0)) {
+    const resolvedPlayerAreaWidth = Math.max(
+      requiredPlayerWidth,
+      availablePlayerWidthForPreferredBoard
+    );
+    const playerColumnWidthPx = computeCricketPlayerColumnWidth(
+      resolvedPlayerAreaWidth,
+      playerCount
+    );
     readabilityState.manualOverride = null;
     readabilityState.isConstrained = false;
     readabilityState.boardHidden = false;
     readabilityState.boardAutoHidden = false;
     readabilityState.boardForcedVisible = false;
     readabilityState.boardWidthPx = 0;
-    readabilityState.playerAreaRequiredWidthPx = requiredPlayerWidth;
+    readabilityState.playerColumnWidthPx = playerColumnWidthPx;
+    readabilityState.playerAreaRequiredWidthPx = resolvedPlayerAreaWidth;
     updateCricketReadabilityClasses(state, contentSlotNode, {
       isConstrained: false,
       boardHidden: false,
       boardForcedVisible: false,
       boardWidthPx: 0,
+      playerColumnWidthPx,
+      playerAreaRequiredWidthPx: resolvedPlayerAreaWidth,
+      playerCount,
+    });
+    removeCricketReadabilityNotice(state);
+    syncCricketBoardSize(state);
+    return;
+  }
+
+  if (boardCanAutoShrink) {
+    const playerColumnWidthPx = computeCricketPlayerColumnWidth(requiredPlayerWidth, playerCount);
+    readabilityState.isConstrained = true;
+    readabilityState.boardHidden = false;
+    readabilityState.boardAutoHidden = false;
+    readabilityState.boardForcedVisible = false;
+    readabilityState.boardWidthPx = Math.floor(boardWidthAtMinimumPlayers);
+    readabilityState.playerColumnWidthPx = playerColumnWidthPx;
+    readabilityState.playerAreaRequiredWidthPx = requiredPlayerWidth;
+    updateCricketReadabilityClasses(state, contentSlotNode, {
+      isConstrained: true,
+      boardHidden: false,
+      boardForcedVisible: false,
+      boardWidthPx: Math.floor(boardWidthAtMinimumPlayers),
+      playerColumnWidthPx,
       playerAreaRequiredWidthPx: requiredPlayerWidth,
       playerCount,
     });
@@ -1510,26 +1880,35 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
 
   const boardForcedVisible =
     readabilityState.manualOverride === "show" &&
-    availableBoardWidth >= CRICKET_READABILITY_POLICY.boardManualMinWidthPx;
+    boardWidthAtMinimumPlayers >= CRICKET_READABILITY_POLICY.boardManualMinWidthPx;
   const boardHidden = !boardForcedVisible;
   const boardWidthPx = boardForcedVisible
     ? Math.max(
         CRICKET_READABILITY_POLICY.boardManualMinWidthPx,
-        Math.floor(availableBoardWidth)
+        Math.floor(boardWidthAtMinimumPlayers)
       )
     : 0;
+  const resolvedPlayerAreaWidth = boardHidden
+    ? Math.max(0, Math.floor(slotWidth))
+    : Math.max(0, Math.floor(slotWidth - boardWidthPx - contentGapPx));
+  const playerColumnWidthPx = computeCricketPlayerColumnWidth(
+    resolvedPlayerAreaWidth,
+    playerCount
+  );
   readabilityState.isConstrained = true;
   readabilityState.boardHidden = boardHidden;
   readabilityState.boardAutoHidden = boardHidden;
   readabilityState.boardForcedVisible = boardForcedVisible;
   readabilityState.boardWidthPx = boardWidthPx;
-  readabilityState.playerAreaRequiredWidthPx = requiredPlayerWidth;
+  readabilityState.playerColumnWidthPx = playerColumnWidthPx;
+  readabilityState.playerAreaRequiredWidthPx = resolvedPlayerAreaWidth;
   updateCricketReadabilityClasses(state, contentSlotNode, {
     isConstrained: true,
     boardHidden,
     boardForcedVisible,
     boardWidthPx,
-    playerAreaRequiredWidthPx: requiredPlayerWidth,
+    playerColumnWidthPx,
+    playerAreaRequiredWidthPx: resolvedPlayerAreaWidth,
     playerCount,
   });
   ensureCricketReadabilityNotice(documentRef, state, contentLeftNode, () => {

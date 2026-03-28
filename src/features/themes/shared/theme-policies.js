@@ -1,8 +1,4 @@
 import {
-  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
-  THEME_CRICKET_READABILITY,
-} from "./board-layout-resolver.js";
-import {
   applyCricketReadabilityPolicy,
   clearCricketActivePlayerState,
   clearCricketReadabilityPolicy,
@@ -10,6 +6,10 @@ import {
   hasCricketPlayerStateMutation,
   syncCricketActivePlayerState,
 } from "./cricket-readability.js";
+import {
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+  THEME_CRICKET_READABILITY,
+} from "./theme-layout-contract.js";
 
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 

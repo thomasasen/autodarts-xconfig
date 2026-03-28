@@ -11,26 +11,12 @@ import {
   BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
   isBoardInputModeControl,
 } from "../../../shared/board-input-mode.js";
-
-export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
-  contentSlot: "ad-ext-theme-content-slot",
-  contentLeft: "ad-ext-theme-content-left",
-  contentBoard: "ad-ext-theme-content-board",
-  boardPanel: "ad-ext-theme-board-panel",
-  boardImageBackedMode: "ad-ext-theme-board-image-backed",
-  boardControls: "ad-ext-theme-board-controls",
-  boardViewport: "ad-ext-theme-board-viewport",
-  boardEventShell: "ad-ext-theme-board-event-shell",
-  boardCanvas: "ad-ext-theme-board-canvas",
-  boardMediaRoot: "ad-ext-theme-board-media-root",
-  boardSvg: "ad-ext-theme-board-svg",
-});
+import { THEME_LAYOUT_HOOK_CLASSES } from "./theme-layout-contract.js";
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
 const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
   "--ad-ext-theme-cricket-player-area-required-width";
 const CRICKET_PLAYER_COUNT_CSS_VARIABLE = "--ad-ext-theme-cricket-player-count";
-export const CRICKET_ACTIVE_PLAYER_ATTRIBUTE = "data-ad-ext-theme-cricket-active";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const CRICKET_READABILITY_POLICY = Object.freeze({
   playerCardMinWidthPx: 228,
@@ -40,16 +26,6 @@ const CRICKET_READABILITY_POLICY = Object.freeze({
   boardAutoMinWidthPx: 288,
   boardManualMinWidthPx: 160,
 });
-export const THEME_CRICKET_READABILITY = Object.freeze({
-  constrainedClass: "ad-ext-theme-cricket-readability-constrained",
-  boardHiddenClass: "ad-ext-theme-cricket-board-hidden",
-  boardForcedVisibleClass: "ad-ext-theme-cricket-board-forced-visible",
-  noticeId: "ad-ext-theme-cricket-readability-notice",
-  noticeClass: "ad-ext-theme-cricket-readability-notice",
-  noticeTextClass: "ad-ext-theme-cricket-readability-text",
-  toggleClass: "ad-ext-theme-cricket-readability-toggle",
-});
-
 function createCricketReadabilityState() {
   return {
     contentSlotNode: null,
