@@ -107,6 +107,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
   const trackedRows = new Set();
   const signatureByRow = new Map();
   const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
   const activeAnimeByRow = new Map();
   const roleStateByRow = new Map();
   const triggerResetTimersByRow = new Map();
@@ -123,6 +124,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       trackedRows,
       signatureByRow,
       burstKeyBySlot,
+      slotStateByIndex,
       activeAnimeByRow,
       roleStateByRow,
       triggerResetTimersByRow,
@@ -279,6 +281,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
     trackedRows.clear();
     signatureByRow.clear();
     burstKeyBySlot.clear();
+    slotStateByIndex.clear();
     activeAnimeByRow.clear();
     roleStateByRow.clear();
     triggerResetTimersByRow.clear();

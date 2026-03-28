@@ -40,6 +40,8 @@ const OUTER_BULL_PATTERN = /(S\s*25|S25|SB|OB)/i;
 const SINGLE_25_PATTERN = /\b25\b/;
 const TRIPLE_PATTERN = /T\s*(\d{1,2})/gi;
 const DOUBLE_PATTERN = /D\s*(\d{1,2})/gi;
+const CORRECTION_CLASS_NAME = "correction-bg";
+const MANUAL_CORRECTION_ACTION_LABELS = new Set(["CANCEL", "OK"]);
 
 function collectBySelector(rootNode, selector) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
@@ -51,6 +53,25 @@ function collectBySelector(rootNode, selector) {
   } catch (_) {
     return [];
   }
+}
+
+function isElementDisabled(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  if (node.disabled === true) {
+    return true;
+  }
+
+  if (typeof node.getAttribute === "function") {
+    const disabledAttribute = node.getAttribute("disabled");
+    if (disabledAttribute !== null && disabledAttribute !== undefined) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function findTurnContainer(documentRef) {
@@ -94,6 +115,10 @@ function getChildElements(node) {
   } catch (_) {
     return [];
   }
+}
+
+function hasClassName(node, className) {
+  return Boolean(node?.classList?.contains?.(className));
 }
 
 function collectDescendantText(rootNode) {
@@ -182,6 +207,84 @@ function collectElementDescendants(rootNode) {
     }
   }
   return nodes;
+}
+
+function collectRowCorrectionNodes(rowNode) {
+  if (!rowNode || typeof rowNode !== "object") {
+    return [];
+  }
+
+  return [rowNode, ...collectElementDescendants(rowNode)].filter((node) =>
+    hasClassName(node, CORRECTION_CLASS_NAME)
+  );
+}
+
+function rowHasCorrectionMarker(rowNode) {
+  return collectRowCorrectionNodes(rowNode).length > 0;
+}
+
+function clearRowCorrectionMarkers(rowNode) {
+  const correctionNodes = collectRowCorrectionNodes(rowNode);
+  correctionNodes.forEach((node) => {
+    node.classList?.remove?.(CORRECTION_CLASS_NAME);
+  });
+  return correctionNodes.length;
+}
+
+function isManualCorrectionActive(documentRef) {
+  const actionButtons = collectBySelector(documentRef, "button,[role='button']");
+  return actionButtons.some((buttonNode) => {
+    if (!buttonNode || isElementDisabled(buttonNode)) {
+      return false;
+    }
+    const buttonText = normalizeRawText(buttonNode.textContent || "").toUpperCase();
+    return MANUAL_CORRECTION_ACTION_LABELS.has(buttonText);
+  });
+}
+
+function getRowLifecycleKey(rowNode) {
+  const rowText = normalizeRawText(rowNode?.textContent || collectDescendantText(rowNode));
+  const hasCorrection = rowHasCorrectionMarker(rowNode) ? 1 : 0;
+  return `${rowText}|correction:${hasCorrection}`;
+}
+
+function reconcileRowSlotState(rowNode, options = {}) {
+  const slotStateByIndex = options.slotStateByIndex || null;
+  const rowIndex = Number(options.rowIndex);
+  if (!slotStateByIndex || typeof slotStateByIndex.get !== "function" || !Number.isFinite(rowIndex)) {
+    return {
+      replaced: false,
+      rewritten: false,
+    };
+  }
+
+  const previousState = slotStateByIndex.get(rowIndex) || null;
+  const currentLifecycleKey = getRowLifecycleKey(rowNode);
+  const replaced = Boolean(previousState?.rowNode) && previousState.rowNode !== rowNode;
+  const rewritten =
+    Boolean(previousState?.rowNode) &&
+    previousState.rowNode === rowNode &&
+    previousState.lifecycleKey !== currentLifecycleKey;
+
+  if (replaced && previousState?.rowNode) {
+    clearHitDecoration(previousState.rowNode, options.signatureByRow || null, options);
+  }
+
+  if (rewritten) {
+    clearHitDecoration(rowNode, options.signatureByRow || null, options);
+  }
+
+  if (typeof slotStateByIndex.set === "function") {
+    slotStateByIndex.set(rowIndex, {
+      rowNode,
+      lifecycleKey: currentLifecycleKey,
+    });
+  }
+
+  return {
+    replaced,
+    rewritten,
+  };
 }
 
 function getNodeDepth(node, rootNode) {
@@ -1531,11 +1634,13 @@ export function updateHitDecorations(options = {}) {
   const activeAnimeByRow = options.activeAnimeByRow || new Map();
   const roleStateByRow = options.roleStateByRow || new Map();
   const triggerResetTimersByRow = options.triggerResetTimersByRow || null;
+  const slotStateByIndex = options.slotStateByIndex || null;
   const includeRowDebug = options.debugRows === true;
   const animeRef = options.animeRef || null;
   const windowRef = options.windowRef || null;
   const turnContainer = findTurnContainer(documentRef);
   const turnPointsToken = readTurnPointsToken(documentRef, turnContainer);
+  const manualCorrectionActive = isManualCorrectionActive(documentRef);
 
   const currentRows = collectThrowRows(documentRef);
   const currentRowSet = new Set(currentRows);
@@ -1547,6 +1652,8 @@ export function updateHitDecorations(options = {}) {
     burstCount: 0,
     idleLoopCount: 0,
     removedCount: 0,
+    staleCorrectionClearedCount: 0,
+    transientCorrectionCount: 0,
     rowSource,
     turnContainerFound: Boolean(turnContainer),
     turnPointsToken,
@@ -1581,7 +1688,50 @@ export function updateHitDecorations(options = {}) {
   currentRows.forEach((rowNode, index) => {
     seenSlots.add(index);
     trackedRows.add(rowNode);
+    const rowHasPendingCorrection = rowHasCorrectionMarker(rowNode);
+    if (manualCorrectionActive && rowHasPendingCorrection) {
+      if (slotStateByIndex && typeof slotStateByIndex.set === "function") {
+        slotStateByIndex.set(index, {
+          rowNode,
+          lifecycleKey: getRowLifecycleKey(rowNode),
+        });
+      }
+      stats.transientCorrectionCount += 1;
+      if (includeRowDebug) {
+        stats.rows.push({
+          index,
+          text: truncateDebugText(normalizeRawText(rowNode.textContent || "") || collectDescendantText(rowNode)),
+          hit: "correction-pending",
+          applied: false,
+          replayed: false,
+          burst: false,
+          idle: false,
+          scoreRole: false,
+          segmentRole: false,
+          signature: "",
+        });
+      }
+      return;
+    }
+
+    if (rowHasPendingCorrection) {
+      const clearedMarkerCount = clearRowCorrectionMarkers(rowNode);
+      if (clearedMarkerCount > 0) {
+        stats.staleCorrectionClearedCount += 1;
+      }
+    }
+
     const rowText = normalizeRawText(rowNode.textContent || "") || collectDescendantText(rowNode);
+    reconcileRowSlotState(rowNode, {
+      rowIndex: index,
+      slotStateByIndex,
+      signatureByRow,
+      activeAnimeByRow,
+      roleStateByRow,
+      triggerResetTimersByRow,
+      windowRef,
+      animeRef,
+    });
     const hitMeta = getHitMetaFromRow(rowNode);
 
     if (!hitMeta) {
@@ -1665,6 +1815,14 @@ export function updateHitDecorations(options = {}) {
       burstKeyBySlot.delete(slotIndex);
     }
   });
+
+  if (slotStateByIndex && typeof slotStateByIndex.delete === "function") {
+    Array.from(slotStateByIndex.keys()).forEach((slotIndex) => {
+      if (!seenSlots.has(slotIndex)) {
+        slotStateByIndex.delete(slotIndex);
+      }
+    });
+  }
 
   return stats;
 }

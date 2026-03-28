@@ -85,6 +85,27 @@ function appendThrowRow(documentRef, scoreText, segmentText) {
   };
 }
 
+function appendManualCorrectionButtons(documentRef, options = {}) {
+  const controls = documentRef.createElement("div");
+  const cancelButton = documentRef.createElement("button");
+  const okButton = documentRef.createElement("button");
+
+  cancelButton.textContent = "Cancel";
+  okButton.textContent = "Ok";
+  cancelButton.disabled = options.disabled === true;
+  okButton.disabled = options.disabled === true;
+
+  controls.appendChild(cancelButton);
+  controls.appendChild(okButton);
+  documentRef.main.appendChild(controls);
+
+  return {
+    controls,
+    cancelButton,
+    okButton,
+  };
+}
+
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -424,6 +445,191 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
     },
   });
   assert.equal(fourth.burstCount, 1);
+});
+
+test("manual correction keeps pending correction markers untouched until the correction actions are disabled", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const roleStateByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  documentRef.throwRow.classList.add("correction-bg");
+  const correctionButtons = appendManualCorrectionButtons(documentRef);
+
+  const pending = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  assert.equal(pending.transientCorrectionCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
+
+  correctionButtons.cancelButton.disabled = true;
+  correctionButtons.okButton.disabled = true;
+
+  const reconciled = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  assert.equal(reconciled.staleCorrectionClearedCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+});
+
+test("same-slot manual correction reclassifies a stale highlighted row from triple to double after confirmation", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+  const correctionButtons = appendManualCorrectionButtons(documentRef, { disabled: true });
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
+    },
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+
+  correctionButtons.cancelButton.disabled = false;
+  correctionButtons.okButton.disabled = false;
+  documentRef.throwTextElement.textContent = "40 D20";
+  documentRef.throwRow.textContent = "40 D20";
+  documentRef.throwRow.classList.add("correction-bg");
+
+  const pending = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
+    },
+  });
+
+  assert.equal(pending.transientCorrectionCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.double), false);
+
+  correctionButtons.cancelButton.disabled = true;
+  correctionButtons.okButton.disabled = true;
+
+  const reconciled = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "card-slam",
+    },
+  });
+
+  assert.equal(reconciled.staleCorrectionClearedCount, 1);
+  assert.equal(reconciled.burstCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.double), true);
+});
+
+test("completed correction to a non-special single removes stale correction markers and prior hit decoration", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+  appendManualCorrectionButtons(documentRef, { disabled: true });
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  documentRef.throwTextElement.textContent = "20 S20";
+  documentRef.throwRow.textContent = "20 S20";
+  documentRef.throwRow.classList.add("correction-bg");
+
+  const reconciled = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  assert.equal(reconciled.staleCorrectionClearedCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
+  assert.equal(burstKeyBySlot.has(0), false);
 });
 
 test("loop-capable presets keep idle loops on marked rows without re-bursting older rows", () => {
