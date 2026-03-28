@@ -160,6 +160,7 @@ Release checkpoint codeword:
 - use `Versionsspiegel` as the shared codeword for version, build, and publication parity across local source, generated `dist`, GitHub, and installed Tampermonkey state
 - if a task touches shipped source, release metadata, userscript headers, version markers, `dist/`, update checks, or anything that could make xConfig show stale installed or GitHub versions, explicitly say that `Versionsspiegel` is relevant
 - when `Versionsspiegel` is relevant, pause before final release-style steps and ask a short direct question when the next step has non-obvious consequences, for example version bump, build, dist refresh, local install refresh, commit, or push
+- a `Versionsspiegel` pause does not waive commit guidance; if meaningful local changes already exist, the handoff must still include a ready-to-use commit message plus a clear note about which release or publication steps remain open
 - do not assume that edited source files alone change the installed or GitHub-visible version; call out the gap until build, install refresh, and push actually happened
 
 Mandatory before final handoff:
@@ -207,6 +208,7 @@ Every commit should clearly state:
 - how it was validated
 - final handoff must include a ready-to-use commit message whenever this task left meaningful local repository changes behind
 - do not omit the commit message just because the user did not explicitly ask for one
+- do not omit the commit message when pausing for `Versionsspiegel`, release confirmation, build, push, or other incomplete end steps; in those cases provide the best current commit message and clearly label the remaining work
 - if a build was executed in the task, the commit message `validation:` line must name the real build/test/verify command outcome that was run
 - if the task is intentionally incomplete or should not be committed yet, say that explicitly instead of silently omitting the commit guidance
 
