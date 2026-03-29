@@ -21,7 +21,7 @@ function attrSelector(attributeName, value = "true") {
   return `[${attributeName}="${value}"]`;
 }
 
-function extractRuleSlice(css, selector, length = 700) {
+function extractRuleSlice(css, selector, length = 1200) {
   const start = css.indexOf(selector);
   assert.notEqual(start, -1, `Expected CSS selector not found: ${selector}`);
   return css.slice(start, start + length);
@@ -37,23 +37,29 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(css, /--ad-ext-theme-cricket-player-column-max-width:\s*15\.5rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-column-width:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-player-area-required-width:\s*var\(--ad-ext-theme-cricket-left-min-width\);/);
+  assert.match(css, /--ad-ext-theme-cricket-score-line-height-multiplier:\s*0\.9;/);
+  assert.match(css, /--ad-ext-theme-cricket-stats-row-height:\s*18\.363px;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-row-height:\s*calc\(/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-visual-scale:\s*0\.675;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-height:\s*calc\(/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-min-width:\s*2\.85rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-padding-inline:\s*0\.66rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-radius:\s*0\.64rem;/);
   assert.match(
     css,
-    /--ad-ext-theme-cricket-name-size-active:\s*clamp\(\s*1\.08rem,\s*1\.19vw,\s*1\.28rem\s*\);/
+    /--ad-ext-theme-cricket-matches-font-size:\s*calc\(var\(--ad-ext-theme-cricket-matches-row-height\)\s*\*\s*0\.486\);/
   );
   assert.match(
     css,
-    /--ad-ext-theme-cricket-name-size-inactive:\s*clamp\(\s*0\.86rem,\s*0\.92vw,\s*0\.99rem\s*\);/
+    /--ad-ext-theme-cricket-name-size-active:\s*clamp\(\s*1\.24rem,\s*1\.37vw,\s*1\.47rem\s*\);/
+  );
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-name-size-inactive:\s*clamp\(\s*0\.99rem,\s*1\.06vw,\s*1\.14rem\s*\);/
   );
   assert.match(css, /--ad-ext-theme-cricket-score-size-active:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-end-inset:\s*0\.38rem;/);
-  assert.match(
-    css,
-    /--ad-ext-theme-cricket-wins-font-size:\s*clamp\(\s*1\.86rem,\s*2\.16vw,\s*2\.28rem\s*\);/
-  );
-  assert.match(css, /--ad-ext-theme-cricket-wins-min-height:\s*3\.15rem;/);
-  assert.match(css, /--ad-ext-theme-cricket-wins-padding-inline:\s*0\.9rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-grid-gap:\s*0\.35rem;/);
 
   assert.ok(
@@ -178,27 +184,74 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.ok(css.includes(`--ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);`));
-  assert.ok(css.includes(`--ad-ext-theme-cricket-wins-scale: 1;`));
-  assert.doesNotMatch(css, /--ad-ext-theme-cricket-wins-scale:\s*0\.92;/);
+  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-min-width: 3.35rem;`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-padding-inline: 0.78rem;`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-radius: 0.78rem;`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-wins-scale: 0.92;`));
+  const stackRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)}{`
+  );
+  assert.match(stackRule, /grid-template-areas:\s*"identity identity identity"\s*"matches \. score"\s*"stats stats score"\s*!important;/s);
+  assert.match(stackRule, /grid-template-rows:\s*auto\s*var\(--ad-ext-theme-cricket-matches-row-height\)\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/s);
+  assert.match(stackRule, /row-gap:\s*0\s*!important;/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*\{[^}]*display:\s*block\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*width:\s*100%\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*line-height:\s*1\.08\s*!important;[^}]*white-space:\s*nowrap\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*line-height:\s*1\.05\s*!important;[^}]*white-space:\s*nowrap\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
   );
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;[^}]*margin-inline-end:\s*var\(--ad-ext-theme-cricket-score-end-inset\)\s*!important;/s
   );
+  const matchesBadgeRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "marks")} .css-3fr5p8 {`
+  );
+  assert.match(matchesBadgeRule, /min-width:\s*var\(--ad-ext-theme-cricket-matches-badge-min-width\)\s*!important;/);
+  assert.match(matchesBadgeRule, /width:\s*fit-content\s*!important;/);
+  assert.match(matchesBadgeRule, /height:\s*var\(--ad-ext-theme-cricket-matches-badge-height\)\s*!important;/);
+  assert.match(matchesBadgeRule, /min-height:\s*var\(--ad-ext-theme-cricket-matches-badge-height\)\s*!important;/);
+  assert.match(matchesBadgeRule, /padding-inline:\s*var\(--ad-ext-theme-cricket-matches-badge-padding-inline\)\s*!important;/);
+  assert.match(matchesBadgeRule, /border-radius:\s*var\(--ad-ext-theme-cricket-matches-badge-radius\)\s*!important;/);
+  assert.match(matchesBadgeRule, /align-self:\s*center\s*!important;/);
+  const matchesFontRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "marks")} .css-1hcjh09 {`
+  );
+  assert.match(matchesFontRule, /font-size:\s*var\(--ad-ext-theme-cricket-matches-font-size\)\s*!important;/);
+  const marksSlotRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "marks")} {`
+  );
+  assert.match(marksSlotRule, /align-self:\s*stretch\s*!important;/);
+  assert.match(marksSlotRule, /display:\s*flex\s*!important;/);
+  assert.match(marksSlotRule, /align-items:\s*center\s*!important;/);
+  assert.match(marksSlotRule, /height:\s*var\(--ad-ext-theme-cricket-matches-row-height\)\s*!important;/);
+  const statsSlotRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "stats")} {`
+  );
+  assert.match(statsSlotRule, /grid-row:\s*3\s*!important;/);
+  assert.match(statsSlotRule, /padding-left:\s*0\s*!important;/);
+  assert.match(statsSlotRule, /height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
+  assert.match(statsSlotRule, /line-height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
+  const scoreSlotRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > .ad-ext-player-score {`
+  );
+  assert.match(scoreSlotRule, /grid-row:\s*2\s*\/\s*4\s*!important;/);
+  assert.match(scoreSlotRule, /align-self:\s*start\s*!important;/);
   const winsRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "identity")} ${attrSelector(CRICKET_META_ATTRIBUTE, "wins")} {`
   );
-  assert.match(winsRule, /min-height:\s*var\(--ad-ext-theme-cricket-wins-min-height\)\s*!important;/);
-  assert.match(winsRule, /padding-inline:\s*var\(--ad-ext-theme-cricket-wins-padding-inline\)\s*!important;/);
-  assert.match(winsRule, /font-size:\s*var\(--ad-ext-theme-cricket-wins-font-size\)\s*!important;/);
+  assert.match(winsRule, /min-height:\s*1\.05rem\s*!important;/);
+  assert.match(winsRule, /padding-inline:\s*0\.3rem\s*!important;/);
+  assert.match(winsRule, /font-size:\s*clamp\(0\.62rem,\s*0\.72vw,\s*0\.76rem\)\s*!important;/);
   assert.match(
     css,
     /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px rgba\(110,\s*138,\s*154,\s*0\.26\),\s*inset 0 0 10px rgba\(3,\s*16,\s*24,\s*0\.2\)\s*!important;/s

@@ -12,12 +12,19 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.95] - 2026-03-30
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-/Tactics-Theme sind die Spielernamen jetzt nochmals spürbar größer, und die linke Kartenstatistik ist ruhiger aufgebaut: Die Anzeige der gewonnenen Runden sitzt oberhalb von `MPR`, bleibt sichtbar kleiner als zuvor und teilt sich die verfügbare Höhe jetzt sauber mit der MPR-Zeile, sodass beide zusammen praktisch exakt der Punktehöhe entsprechen.
+  Technik: Das Cricket-Theme verwendet für den linken `matches`-/`stats`-Block jetzt ein explizites Dreizeilen-Grid mit `identity`, `matches` und `stats`, berechnet die `matches`-Zeilenhöhe direkt aus der aktiven bzw. inaktiven Score-Höhe minus fester Stats-Zeile, skaliert die sichtbare Badge innerhalb dieser Zeile separat herunter und hebt gleichzeitig die aktive sowie inaktive Namensskala um weitere fünfzehn Prozent an; die Style-Regressionen sichern die neuen Höhen-, Badge- und Namensverträge ausdrücklich ab.
+
 ## [2.0.94] - 2026-03-30
 
 ### Changed
 
-- Nutzerwirkung: Die Anzeige der bereits gewonnenen Runden auf den Cricket-/Tactics-Spielerkarten ist jetzt deutlich präsenter und rund dreimal so groß wie zuvor, ohne die Namenszeile aus dem Layout zu drängen.
-  Technik: Das Cricket-Theme verwendet für die Wins-Badge jetzt eigene Größenvariablen für Schrift, Mindesthöhe und Innenabstand statt der bisherigen kleinen Badge-Grundwerte; eine erweiterte Style-Regression sichert den größeren Badge-Vertrag ausdrücklich ab.
+- Nutzerwirkung: Die kleine linke Rundengewinn-/Match-Badge auf den Cricket-/Tactics-Spielerkarten ist jetzt deutlich präsenter und ungefähr dreimal so groß wie zuvor, ohne die Stats-Zeile aus dem Layout zu drängen; die separate obere `35+`-Meta-Badge bleibt wieder in ihrer kompakten Größe.
+  Technik: Das Cricket-Theme verwendet für den linken `matches`-Slot jetzt eigene Größenvariablen für Badge-Fläche, Radius, Innenabstand und Ziffernfont, während die versehentlich vergrößerte Identity-Meta-Badge wieder auf ihren kompakten Vertrag zurückgesetzt wurde; die Style-Regression sichert beide Pfade ausdrücklich ab.
 
 ## [2.0.93] - 2026-03-30
 
@@ -1032,8 +1039,9 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...HEAD
-[2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...main
+[2.0.95]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...HEAD
+[2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654
+[2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...830ce47
 [2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...8355902
 [2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...fcc069c
 [2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...2824799
