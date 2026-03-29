@@ -13,6 +13,75 @@ import {
 
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const SCORE_SELECTOR = "p.ad-ext-player-score";
+const ACTIVE_SCORE_SELECTOR =
+  ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score, .ad-ext-player-active p.ad-ext-player-score";
+
+function parseScore(text) {
+  const match = String(text || "").match(/\d+/);
+  if (!match) {
+    return NaN;
+  }
+
+  const value = Number(match[0]);
+  return Number.isFinite(value) ? value : NaN;
+}
+
+function resolveActiveScore(gameState, documentRef) {
+  if (gameState && typeof gameState.getActiveScore === "function") {
+    const score = gameState.getActiveScore();
+    if (Number.isFinite(score)) {
+      return score;
+    }
+  }
+
+  if (!documentRef || typeof documentRef.querySelector !== "function") {
+    return NaN;
+  }
+
+  const node =
+    documentRef.querySelector(ACTIVE_SCORE_SELECTOR) ||
+    documentRef.querySelector(SCORE_SELECTOR);
+  return parseScore(node?.textContent || "");
+}
+
+function getScoreCheckoutSegment(activeScore, outMode, x01Rules) {
+  if (!x01Rules || !Number.isFinite(activeScore)) {
+    return "";
+  }
+
+  const segment =
+    x01Rules.getPreferredOneDartCheckoutSegment?.(activeScore, outMode) ||
+    x01Rules.getOneDartCheckoutSegment?.(activeScore) ||
+    "";
+
+  return segment &&
+    typeof x01Rules.isOneDartCheckoutSegmentForOutMode === "function" &&
+    x01Rules.isOneDartCheckoutSegmentForOutMode(segment, outMode)
+    ? segment
+    : "";
+}
+
+function canFinishWithActiveScore(activeScore, segmentName, outMode, x01Rules) {
+  if (!x01Rules || !Number.isFinite(activeScore) || !segmentName) {
+    return false;
+  }
+
+  if (typeof x01Rules.canFinishWithSegment === "function") {
+    return x01Rules.canFinishWithSegment(activeScore, segmentName, outMode);
+  }
+
+  const parsed = typeof x01Rules.parseSegment === "function"
+    ? x01Rules.parseSegment(segmentName)
+    : null;
+  if (!parsed || parsed.score !== activeScore) {
+    return false;
+  }
+
+  return typeof x01Rules.isOneDartCheckoutSegmentForOutMode === "function"
+    ? x01Rules.isOneDartCheckoutSegmentForOutMode(segmentName, outMode)
+    : false;
+}
 
 function createDebugState(featureDebug) {
   return {
@@ -76,9 +145,11 @@ function buildDebugPayload(options = {}) {
   return {
     status: String(options.status || "unknown"),
     active: options.active === true,
+    activeScore: Number.isFinite(options.activeScore) ? options.activeScore : null,
     variantText: String(options.variantText || "").trim(),
     outMode: String(options.outMode || "").trim(),
     targetSelectionMode: String(options.targetSelectionMode || "next"),
+    selectionSource: String(options.selectionSource || "none"),
     suggestionCount:
       documentRef && typeof documentRef.querySelectorAll === "function"
         ? documentRef.querySelectorAll(".suggestion").length
@@ -107,9 +178,11 @@ function buildDebugSignature(payload = {}) {
   return [
     payload.status || "unknown",
     payload.active ? 1 : 0,
+    payload.activeScore ?? "null",
     payload.variantText || "-",
     payload.outMode || "-",
     payload.targetSelectionMode || "next",
+    payload.selectionSource || "none",
     Number(payload.suggestionCount) || 0,
     Number(payload.svgCount) || 0,
     Array.isArray(payload.routeEntries)
@@ -135,7 +208,9 @@ function buildDebugSignature(payload = {}) {
 function buildDebugSummary(payload = {}) {
   return `state status="${payload.status || "unknown"}" active=${payload.active ? "yes" : "no"} variant="${
     payload.variantText || "-"
-  }" outMode="${payload.outMode || "-"}" selection="${payload.targetSelectionMode || "next"}" suggestions=${
+  }" activeScore="${payload.activeScore ?? "-"}" outMode="${payload.outMode || "-"}" selection="${
+    payload.targetSelectionMode || "next"
+  }" source="${payload.selectionSource || "none"}" suggestions=${
     Number(payload.suggestionCount) || 0
   } route="${Array.isArray(payload.routeSegments) ? payload.routeSegments.join(">") : ""}" selected="${
     Array.isArray(payload.selectedSegments) ? payload.selectedSegments.join(">") : ""
@@ -250,25 +325,65 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
   }
 
-  function selectRouteSegments(routeSegments = []) {
-    if (!Array.isArray(routeSegments) || !routeSegments.length) {
-      return [];
+  function selectRouteSegments(routeSegments = [], activeScore, outMode) {
+    if (!Array.isArray(routeSegments)) {
+      return {
+        selectedSegments: [],
+        selectionSource: "none",
+      };
     }
 
     if (targetSelectionMode === "all") {
-      return routeSegments.slice();
+      return {
+        selectedSegments: routeSegments.slice(),
+        selectionSource: routeSegments.length ? "route-all" : "none",
+      };
     }
 
     if (targetSelectionMode === "finish") {
-      const outMode =
-        gameState && typeof gameState.getOutMode === "function"
-          ? String(gameState.getOutMode() || "")
-          : "";
-      const finishSegment = getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
-      return finishSegment ? [finishSegment] : [];
+      const resolvedOutMode =
+        typeof outMode === "string"
+          ? outMode
+          : gameState && typeof gameState.getOutMode === "function"
+            ? String(gameState.getOutMode() || "")
+            : "";
+      const finishSegment = getCheckoutFinishSegmentFromRoute(routeSegments, resolvedOutMode, x01Rules);
+      if (finishSegment) {
+        return {
+          selectedSegments: [finishSegment],
+          selectionSource: "route-finish",
+        };
+      }
+
+      const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, resolvedOutMode, x01Rules);
+      return {
+        selectedSegments: scoreCheckoutSegment ? [scoreCheckoutSegment] : [],
+        selectionSource: scoreCheckoutSegment ? "score-checkout" : "none",
+      };
     }
 
-    return [routeSegments[0]];
+    const currentCheckoutSegment = routeSegments.find((segment) =>
+      canFinishWithActiveScore(activeScore, segment, outMode, x01Rules)
+    );
+    if (currentCheckoutSegment) {
+      return {
+        selectedSegments: [currentCheckoutSegment],
+        selectionSource: "route-current-checkout",
+      };
+    }
+
+    const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
+    if (scoreCheckoutSegment) {
+      return {
+        selectedSegments: [scoreCheckoutSegment],
+        selectionSource: "score-checkout",
+      };
+    }
+
+    return {
+      selectedSegments: routeSegments.length ? [routeSegments[0]] : [],
+      selectionSource: routeSegments.length ? "route-first" : "none",
+    };
   }
 
   function update() {
@@ -288,7 +403,13 @@ export function initializeCheckoutBoardTargets(context = {}) {
       gameState && typeof gameState.getOutMode === "function"
         ? String(gameState.getOutMode() || "")
         : "";
-    const signature = `${active ? "x01" : "other"}|${routeSegments.join(">")}`;
+    const activeScore = resolveActiveScore(gameState, documentRef);
+    const signature = [
+      active ? "x01" : "other",
+      routeSegments.join(">"),
+      Number.isFinite(activeScore) ? activeScore : "null",
+      outMode,
+    ].join("|");
 
     if (signature === lastRenderSignature) {
       return;
@@ -299,9 +420,11 @@ export function initializeCheckoutBoardTargets(context = {}) {
       const payload = buildDebugPayload({
         status: "inactive",
         active,
+        activeScore,
         variantText,
         outMode,
         targetSelectionMode,
+        selectionSource: "none",
         documentRef,
         routeEntries,
         routeSegments,
@@ -314,10 +437,13 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const selectedSegments = selectRouteSegments(routeSegments);
+    const {
+      selectedSegments,
+      selectionSource,
+    } = selectRouteSegments(routeSegments, activeScore, outMode);
     const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
     const board = getBoard();
-    const status = !routeSegments.length
+    const status = !routeSegments.length && !selectedSegments.length
       ? "no-route"
       : !selectedSegments.length
         ? "no-selected-segments"
@@ -329,9 +455,11 @@ export function initializeCheckoutBoardTargets(context = {}) {
     const payload = buildDebugPayload({
       status,
       active,
+      activeScore,
       variantText,
       outMode,
       targetSelectionMode,
+      selectionSource,
       documentRef,
       routeEntries,
       routeSegments,

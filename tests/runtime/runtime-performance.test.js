@@ -287,6 +287,170 @@ test("checkout-board-targets selects next, finish or all route segments from vis
   }
 });
 
+test("checkout-board-targets next mode prefers the current one-dart checkout over stale route-first steps", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "50";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "BULL";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  appendBoardFixture(documentRef);
+
+  const logs = [];
+  const warnings = [];
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 50,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        warnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    assert.equal(warnings.length, 0);
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0][1]?.status, "render");
+    assert.equal(logs[0][1]?.activeScore, 50);
+    assert.equal(logs[0][1]?.selectionSource, "route-current-checkout");
+    assert.deepEqual(logs[0][1]?.routeSegments, ["T20", "BULL"]);
+    assert.deepEqual(logs[0][1]?.selectedSegments, ["BULL"]);
+    assert.deepEqual(logs[0][1]?.targets, [{ ring: "DB", value: null }]);
+  } finally {
+    cleanup();
+  }
+});
+
+test("checkout-board-targets next mode falls back to the active score checkout when route suggestions disappear", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "50";
+  documentRef.suggestionElement.textContent = "";
+  appendBoardFixture(documentRef);
+
+  const logs = [];
+  const warnings = [];
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 50,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        warnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    assert.equal(warnings.length, 0);
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0][1]?.status, "render");
+    assert.equal(logs[0][1]?.selectionSource, "score-checkout");
+    assert.deepEqual(logs[0][1]?.routeSegments, []);
+    assert.deepEqual(logs[0][1]?.selectedSegments, ["BULL"]);
+    assert.deepEqual(logs[0][1]?.targets, [{ ring: "DB", value: null }]);
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length > 0, true);
+  } finally {
+    cleanup();
+  }
+});
+
 test("checkout-board-targets emits debug snapshots for render and no-route states", () => {
   const renderDocument = new FakeDocument();
   renderDocument.suggestionElement.textContent = "D20";
