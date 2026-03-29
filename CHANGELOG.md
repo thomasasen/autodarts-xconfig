@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.93] - 2026-03-30
+
+### Changed
+
+- Nutzerwirkung: Im Cricket-/Tactics-Theme darf das Board jetzt mehr von der verfügbaren Höhe ausnutzen, sobald die Spielertabelle dafür realistisch Breite abgeben kann; wenn die Tabelle tatsächlich mehr Raum braucht, behält sie weiterhin Priorität.
+  Technik: Die Cricket-Readability misst die linke Spielertabelle nicht mehr nur in ihrer aktuellen, selbstverstärkten Breite, sondern führt zusätzlich einen kontrollierten Breiten-Probezug unter Druck aus und verwendet daraus die kleinere, tatsächlich benötigte Tabellenbreite als Auto-Readability-Basis; eine neue Runtime-Regression sichert ausdrücklich ab, dass freier Slack wieder an das Board zurückgegeben wird, ohne die Tabellen-Priorität aufzugeben.
+
 ## [2.0.92] - 2026-03-29
 
 ### Changed
@@ -1018,7 +1025,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...HEAD
+[2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...HEAD
+[2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...8355902
 [2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...fcc069c
 [2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...2824799
 [2.0.89]: https://github.com/thomasasen/autodarts-xconfig/compare/9b8c3c0...b0eb1cc

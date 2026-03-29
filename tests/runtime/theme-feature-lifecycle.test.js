@@ -1821,6 +1821,52 @@ test("theme-cricket normalizes the reported player-card DOM and uses free width 
   runtime.stop();
 });
 
+test("theme-cricket gives the board back recovered slack when the player table needs less than its current width", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1888, height: 769 };
+  boardNodes.contentLeft.__rect = { width: 1404, height: 769 };
+  boardNodes.contentBoard.__rect = { width: 474, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  addPlayerCards(documentRef, playerDisplayNode, 3, {
+    variant: "reported",
+    longName: "TORNADO TOM LONGNAME",
+  });
+  playerDisplayNode.scrollWidth = 1208;
+  boardNodes.contentLeft.scrollWidth = 1208;
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-recovers-player-slack");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-area-required-width"),
+    "1208px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-column-width"),
+    "402px"
+  );
+  assert.equal(
+    boardNodes.contentSlot.classList.contains(THEME_CRICKET_READABILITY.boardHiddenClass),
+    false
+  );
+
+  runtime.stop();
+});
+
 test("theme-cricket restores truncated reported names from avatar metadata before css ellipsis applies", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";

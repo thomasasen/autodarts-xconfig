@@ -540,6 +540,24 @@ function getElementHeight(node) {
   }
 }
 
+function getElementScrollWidth(node) {
+  if (!node || typeof node !== "object") {
+    return 0;
+  }
+
+  const width = Number.parseFloat(node.scrollWidth);
+  return Number.isFinite(width) && width > 0 ? width : 0;
+}
+
+function getElementClientWidth(node) {
+  if (!node || typeof node !== "object") {
+    return 0;
+  }
+
+  const width = Number.parseFloat(node.clientWidth);
+  return Number.isFinite(width) && width > 0 ? width : 0;
+}
+
 function getSmallestPositiveDimension(values = []) {
   const normalized = values
     .map((value) => Number.parseFloat(value))
@@ -1557,6 +1575,166 @@ function measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode) {
   );
 }
 
+function restoreCricketReadabilityProbeVariables(contentSlotNode, snapshot = new Map()) {
+  if (!contentSlotNode || !contentSlotNode.style || typeof contentSlotNode.style.setProperty !== "function") {
+    return;
+  }
+
+  snapshot.forEach((value, variableName) => {
+    if (value) {
+      contentSlotNode.style.setProperty(variableName, value);
+      return;
+    }
+    contentSlotNode.style.removeProperty(variableName);
+  });
+}
+
+function measureCricketPlayerAreaProbeWidth(
+  contentSlotNode,
+  contentLeftNode,
+  playerDisplayNode,
+  playerCount,
+  probePlayerAreaWidthPx
+) {
+  if (!contentSlotNode || !contentLeftNode || !playerDisplayNode || playerCount <= 0) {
+    return 0;
+  }
+
+  const normalizedProbePlayerAreaWidth = Number.isFinite(probePlayerAreaWidthPx)
+    ? Math.max(0, Math.floor(probePlayerAreaWidthPx))
+    : 0;
+  if (normalizedProbePlayerAreaWidth <= 0) {
+    return 0;
+  }
+
+  const probePlayerColumnWidth = computeCricketPlayerColumnWidth(
+    normalizedProbePlayerAreaWidth,
+    playerCount
+  );
+  if (probePlayerColumnWidth <= 0) {
+    return 0;
+  }
+
+  const directChildNodes = getElementChildren(contentLeftNode);
+  const probeNodes = [contentLeftNode, playerDisplayNode, ...directChildNodes].filter(Boolean);
+  const variableSnapshot = new Map([
+    [
+      CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE,
+      contentSlotNode.style.getPropertyValue(CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE),
+    ],
+    [
+      CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE,
+      contentSlotNode.style.getPropertyValue(CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE),
+    ],
+    [
+      CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE,
+      contentSlotNode.style.getPropertyValue(CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE),
+    ],
+  ]);
+
+  try {
+    contentSlotNode.style.setProperty(
+      CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE,
+      `${normalizedProbePlayerAreaWidth}px`
+    );
+    contentSlotNode.style.setProperty(
+      CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE,
+      `${probePlayerColumnWidth}px`
+    );
+    contentSlotNode.style.setProperty(
+      CRICKET_PLAYER_COLUMN_MAX_WIDTH_CSS_VARIABLE,
+      `${probePlayerColumnWidth}px`
+    );
+
+    const measuredProbeWidth = Math.max(
+      normalizedProbePlayerAreaWidth,
+      ...probeNodes.map((node) =>
+        getElementScrollWidth(node) || getElementClientWidth(node) || getElementWidth(node)
+      )
+    );
+    return Number.isFinite(measuredProbeWidth) && measuredProbeWidth > 0
+      ? Math.floor(measuredProbeWidth)
+      : 0;
+  } finally {
+    restoreCricketReadabilityProbeVariables(contentSlotNode, variableSnapshot);
+  }
+}
+
+function measureCricketRequiredPlayerWidth(
+  contentSlotNode,
+  contentLeftNode,
+  playerDisplayNode,
+  playerCount,
+  probePlayerAreaWidthPx,
+  slotWidth,
+  contentGapPx,
+  maximumAutoBoardWidth
+) {
+  const minimumPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
+  const measuredCurrentWidth = measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode);
+  const normalizedSlotWidth = Number.isFinite(slotWidth) ? Math.max(0, Math.floor(slotWidth)) : 0;
+  const normalizedContentGapPx = Number.isFinite(contentGapPx)
+    ? Math.max(0, Math.floor(contentGapPx))
+    : 0;
+  const normalizedMaximumAutoBoardWidth = Number.isFinite(maximumAutoBoardWidth)
+    ? Math.max(0, Math.floor(maximumAutoBoardWidth))
+    : 0;
+  let nextProbeWidth = Number.isFinite(probePlayerAreaWidthPx)
+    ? Math.max(minimumPlayerWidth, Math.floor(probePlayerAreaWidthPx))
+    : minimumPlayerWidth;
+  let smallestProbedWidth = 0;
+
+  for (let iteration = 0; iteration < 4; iteration += 1) {
+    const probedWidth = measureCricketPlayerAreaProbeWidth(
+      contentSlotNode,
+      contentLeftNode,
+      playerDisplayNode,
+      playerCount,
+      nextProbeWidth
+    );
+    if (!(Number.isFinite(probedWidth) && probedWidth > 0)) {
+      break;
+    }
+
+    if (smallestProbedWidth <= 0 || probedWidth < smallestProbedWidth) {
+      smallestProbedWidth = probedWidth;
+    }
+
+    if (
+      probedWidth <= nextProbeWidth ||
+      normalizedSlotWidth <= 0 ||
+      normalizedMaximumAutoBoardWidth <= 0
+    ) {
+      break;
+    }
+
+    const nextBoardWidth = Math.max(
+      0,
+      Math.min(
+        normalizedMaximumAutoBoardWidth,
+        Math.floor(normalizedSlotWidth - probedWidth - normalizedContentGapPx)
+      )
+    );
+    const resolvedNextProbeWidth = Math.max(
+      minimumPlayerWidth,
+      Math.floor(Math.max(0, normalizedSlotWidth - nextBoardWidth - normalizedContentGapPx))
+    );
+    if (resolvedNextProbeWidth <= nextProbeWidth) {
+      break;
+    }
+    nextProbeWidth = resolvedNextProbeWidth;
+  }
+
+  const effectiveMeasuredWidth =
+    Number.isFinite(smallestProbedWidth) &&
+    smallestProbedWidth > 0 &&
+    smallestProbedWidth < measuredCurrentWidth
+      ? smallestProbedWidth
+      : measuredCurrentWidth;
+
+  return Math.max(minimumPlayerWidth, effectiveMeasuredWidth);
+}
+
 function measureCricketPreferredBoardWidth(layoutTargets = {}, contentBoardNode = null) {
   const measuredWidth = getSmallestPositiveDimension([
     getElementWidth(layoutTargets.boardViewport),
@@ -1902,20 +2080,43 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
   }
 
   const slotWidth = getElementWidth(contentSlotNode);
+  const slotHeight = getElementHeight(contentSlotNode);
   const playerCount = countCricketPlayerCards(playerDisplayNode);
   const minimumPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
-  const measuredPlayerWidth = measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode);
-  const requiredPlayerWidth = Math.max(
-    minimumPlayerWidth,
-    measuredPlayerWidth
-  );
-  const preferredBoardWidth = measureCricketPreferredBoardWidth(layoutTargets, contentBoardNode);
   const contentGapPx = playerCount > 0 ? CRICKET_READABILITY_POLICY.contentGapPx : 0;
+  const maximumAutoBoardWidth = Math.max(
+    0,
+    Math.floor(
+      Math.min(
+        slotHeight > 0 ? slotHeight : Number.POSITIVE_INFINITY,
+        Math.max(0, slotWidth - minimumPlayerWidth - contentGapPx)
+      )
+    )
+  );
+  const probePlayerAreaWidth = Math.max(
+    minimumPlayerWidth,
+    Math.floor(Math.max(0, slotWidth - maximumAutoBoardWidth - contentGapPx))
+  );
+  const requiredPlayerWidth = measureCricketRequiredPlayerWidth(
+    contentSlotNode,
+    contentLeftNode,
+    playerDisplayNode,
+    playerCount,
+    probePlayerAreaWidth,
+    slotWidth,
+    contentGapPx,
+    maximumAutoBoardWidth
+  );
+  const boardWidthAtRequiredPlayers = Math.max(0, slotWidth - requiredPlayerWidth - contentGapPx);
+  const autoVisibleBoardWidth = Math.min(maximumAutoBoardWidth, boardWidthAtRequiredPlayers);
+  const preferredBoardWidth = Math.max(
+    measureCricketPreferredBoardWidth(layoutTargets, contentBoardNode),
+    autoVisibleBoardWidth
+  );
   const availablePlayerWidthForPreferredBoard = Math.max(
     0,
     slotWidth - preferredBoardWidth - contentGapPx
   );
-  const boardWidthAtMinimumPlayers = Math.max(0, slotWidth - requiredPlayerWidth - contentGapPx);
   const boardFitsAtPreferredWidth =
     slotWidth > 0 &&
     playerCount > 0 &&
@@ -1924,7 +2125,7 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
   const boardCanAutoShrink =
     slotWidth > 0 &&
     playerCount > 0 &&
-    boardWidthAtMinimumPlayers >= CRICKET_READABILITY_POLICY.boardAutoMinWidthPx;
+    autoVisibleBoardWidth >= CRICKET_READABILITY_POLICY.boardAutoMinWidthPx;
 
   if (boardFitsAtPreferredWidth || (preferredBoardWidth <= 0 && slotWidth > 0 && playerCount > 0)) {
     const resolvedPlayerAreaWidth = Math.max(
@@ -1963,14 +2164,14 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     readabilityState.boardHidden = false;
     readabilityState.boardAutoHidden = false;
     readabilityState.boardForcedVisible = false;
-    readabilityState.boardWidthPx = Math.floor(boardWidthAtMinimumPlayers);
+    readabilityState.boardWidthPx = Math.floor(autoVisibleBoardWidth);
     readabilityState.playerColumnWidthPx = playerColumnWidthPx;
     readabilityState.playerAreaRequiredWidthPx = requiredPlayerWidth;
     updateCricketReadabilityClasses(state, contentSlotNode, {
       isConstrained: true,
       boardHidden: false,
       boardForcedVisible: false,
-      boardWidthPx: Math.floor(boardWidthAtMinimumPlayers),
+      boardWidthPx: Math.floor(autoVisibleBoardWidth),
       playerColumnWidthPx,
       playerAreaRequiredWidthPx: requiredPlayerWidth,
       playerCount,
@@ -1982,12 +2183,12 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
 
   const boardForcedVisible =
     readabilityState.manualOverride === "show" &&
-    boardWidthAtMinimumPlayers >= CRICKET_READABILITY_POLICY.boardManualMinWidthPx;
+    boardWidthAtRequiredPlayers >= CRICKET_READABILITY_POLICY.boardManualMinWidthPx;
   const boardHidden = !boardForcedVisible;
   const boardWidthPx = boardForcedVisible
     ? Math.max(
         CRICKET_READABILITY_POLICY.boardManualMinWidthPx,
-        Math.floor(boardWidthAtMinimumPlayers)
+        Math.floor(boardWidthAtRequiredPlayers)
       )
     : 0;
   const resolvedPlayerAreaWidth = boardHidden
