@@ -17,7 +17,7 @@ direkt zu einer versionierten Release-Sektion.
 ### Fixed
 
 - Nutzerwirkung: Im Cricket-/Tactics-Theme bleiben Spielernamen auf den Spielerkarten jetzt wieder sichtbar und sinnvoll lesbar, der aktive Punktestand ist klar größer als bei inaktiven Spielern, und das Board füllt den rechten Bereich deutlich besser aus statt unnötig klein zu bleiben.
-  Technik: Die Cricket-Theme-CSS spannt die Identity-Shell jetzt über die volle verfügbare Slot-Breite, priorisiert den Namensbereich vor sekundärer Meta, steuert aktive und inaktive Namens- sowie Score-Größen über stabile Host-Variablen und entfernt unnötiges Event-Shell-Padding, damit image-backed Boards ihre zugewiesene Quadratfläche vollständig nutzen; zusätzliche Style-Regressionen sichern Namen-, Score- und Board-Fill-Verträge ausdrücklich ab.
+  Technik: Die Cricket-Spielerkarten normalisieren hostseitig bereits gekürzte Namens-Strings jetzt gegen vollständigere Quellen wie Avatar-`alt`, spiegeln rekonstruierte Vollnamen direkt im sichtbaren Text und `title`, erzwingen die aktive/inaktive Namenshierarchie konsistent auf Wrapper und innerem Textknoten, rücken die Score-Anzeige mit einem echten End-Inset etwas vom rechten Rand weg und strecken die gemeinsame Cricket-/Tactics-Grid-Fläche über ein zweizeiliges Linkslayout mit gleichmäßig verteilten Auto-Zeilen besser auf die verfügbare Resthöhe; zusätzliche Runtime- und Style-Regressionen sichern Namens-Recovery, DOM-Drift und die neuen Höhen-/Inset-Verträge ausdrücklich ab.
 
 ## [2.0.88] - 2026-03-29
 

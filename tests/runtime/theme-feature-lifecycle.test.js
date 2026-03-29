@@ -511,7 +511,7 @@ function createReportedCricketPlayerCard(documentRef, index, options = {}) {
   const avatarNode = documentRef.createElement("span");
   avatarNode.classList.add("chakra-avatar");
   const avatarImage = documentRef.createElement("img");
-  avatarImage.setAttribute("alt", `player-${index + 1}`);
+  avatarImage.setAttribute("alt", options.avatarAlt || `player-${index + 1}`);
   avatarNode.appendChild(avatarImage);
   avatarWrap.appendChild(avatarNode);
 
@@ -521,7 +521,7 @@ function createReportedCricketPlayerCard(documentRef, index, options = {}) {
   nameNode.classList.add("ad-ext-player-name", "css-g0ywsj");
   const nameText = documentRef.createElement("p");
   nameText.classList.add("chakra-text", "css-11cuipc");
-  nameText.textContent = options.longName || `TORNADO PLAYER ${index + 1}`;
+  nameText.textContent = options.visibleName || options.longName || `TORNADO PLAYER ${index + 1}`;
   nameNode.appendChild(nameText);
 
   const winsNode = documentRef.createElement("span");
@@ -566,6 +566,8 @@ function createCricketPlayerCard(documentRef, index, options = {}) {
   if (variant === "reported") {
     return createReportedCricketPlayerCard(documentRef, index, {
       longName: options.longName,
+      visibleName: options.visibleName,
+      avatarAlt: options.avatarAlt,
     });
   }
   if (variant === "drifted") {
@@ -573,6 +575,8 @@ function createCricketPlayerCard(documentRef, index, options = {}) {
       altWrapper: true,
       swapRowOrder: true,
       longName: options.longName,
+      visibleName: options.visibleName,
+      avatarAlt: options.avatarAlt,
     });
   }
   return createSimpleCricketPlayerCard(documentRef, index);
@@ -1817,6 +1821,51 @@ test("theme-cricket normalizes the reported player-card DOM and uses free width 
   runtime.stop();
 });
 
+test("theme-cricket restores truncated reported names from avatar metadata before css ellipsis applies", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1480, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1260, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 212, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.appendChild(
+    createReportedCricketPlayerCard(documentRef, 0, {
+      visibleName: "TORNADO TO..",
+      avatarAlt: "tornado tom",
+    })
+  );
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-restores-truncated-name");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const activePlayer = playerDisplayNode.children[0];
+  const restoredNameNode = activePlayer.querySelector(".ad-ext-player-name");
+  const restoredNameTextNode = restoredNameNode?.querySelector("p");
+
+  assert.equal(restoredNameTextNode?.textContent || "", "TORNADO TOM");
+  assert.equal(restoredNameNode?.getAttribute("title") || "", "TORNADO TOM");
+  assert.equal(restoredNameTextNode?.getAttribute("title") || "", "TORNADO TOM");
+  assert.equal(
+    activePlayer.getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE),
+    "true"
+  );
+
+  runtime.stop();
+});
+
 test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DOM drifts without state changes", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
@@ -1828,7 +1877,8 @@ test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DO
   boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
   addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 3, {
     variant: "reported",
-    longName: "TORNADO TOM LONGNAME",
+    visibleName: "TORNADO TO..",
+    avatarAlt: "tornado tom",
   });
 
   const windowRef = createMatchWindow(documentRef, "theme-cricket-reported-dom-replace");
@@ -1847,7 +1897,8 @@ test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DO
   const originalFirstPlayer = playerDisplayNode.children[0];
   const replacementPlayer = createCricketPlayerCard(documentRef, 0, {
     variant: "drifted",
-    longName: "TORNADO TOM LONGNAME",
+    visibleName: "TORNADO TO..",
+    avatarAlt: "tornado tom",
   });
   replacementPlayer.classList.add("ad-ext-player-active");
 
@@ -1875,6 +1926,16 @@ test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DO
   assert.equal(
     replacementPlayer.querySelector(`[${CRICKET_META_ATTRIBUTE}="name"]`) !== null,
     true
+  );
+  const replacementNameNode = replacementPlayer.querySelector(".ad-ext-player-name");
+  const replacementNameTextNode = replacementNameNode?.querySelector("p");
+  assert.equal(
+    replacementNameTextNode?.textContent || "",
+    "TORNADO TOM"
+  );
+  assert.equal(
+    replacementNameNode?.getAttribute("title") || "",
+    "TORNADO TOM"
   );
   assert.equal(
     boardNodes.contentSlot.style.getPropertyValue("--ad-ext-theme-cricket-player-column-width"),

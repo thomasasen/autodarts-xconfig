@@ -1198,6 +1198,107 @@ function hasMeaningfulText(node) {
   return getNodeText(node).length > 0;
 }
 
+function getTrimmedText(node) {
+  if (!node || typeof node !== "object") {
+    return "";
+  }
+  return String(node.textContent || "").trim();
+}
+
+function getAttributeText(node, attributeName) {
+  if (!node || typeof node.getAttribute !== "function" || !attributeName) {
+    return "";
+  }
+  return String(node.getAttribute(attributeName) || "").trim();
+}
+
+function normalizeCricketNameText(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function normalizeComparableCricketName(value) {
+  return normalizeCricketNameText(value)
+    .toLowerCase()
+    .replace(/[\s.]+/g, "");
+}
+
+function isLikelyTruncatedCricketName(value) {
+  const normalized = normalizeCricketNameText(value);
+  return /(?:\.{2,}|\u2026)$/.test(normalized) || normalized.includes("\u2026");
+}
+
+function resolveCricketNameTextNode(nameNode) {
+  if (!nameNode) {
+    return null;
+  }
+
+  return (
+    getElementChildren(nameNode).find((child) => hasMeaningfulText(child)) ||
+    findClosestDescendant(nameNode, "p") ||
+    nameNode
+  );
+}
+
+function resolveCricketAvatarAltText(avatarNode) {
+  if (!avatarNode) {
+    return "";
+  }
+
+  const avatarImage =
+    (avatarNode.matches?.("img") ? avatarNode : null) ||
+    findClosestDescendant(avatarNode, "img");
+  return normalizeCricketNameText(getAttributeText(avatarImage, "alt"));
+}
+
+function formatResolvedCricketDisplayName(value) {
+  const normalized = normalizeCricketNameText(value);
+  return normalized ? normalized.toLocaleUpperCase() : "";
+}
+
+function maybeRestoreCricketDisplayName(nameNode, avatarNode) {
+  if (!nameNode) {
+    return;
+  }
+
+  const nameTextNode = resolveCricketNameTextNode(nameNode);
+  const visibleName = normalizeCricketNameText(getTrimmedText(nameTextNode));
+  if (!visibleName || !isLikelyTruncatedCricketName(visibleName)) {
+    return;
+  }
+
+  const sourceCandidates = [
+    getAttributeText(nameNode, "title"),
+    getAttributeText(nameNode, "aria-label"),
+    getAttributeText(nameTextNode, "title"),
+    getAttributeText(nameTextNode, "aria-label"),
+    resolveCricketAvatarAltText(avatarNode),
+  ]
+    .map((value) => normalizeCricketNameText(value))
+    .filter(Boolean);
+
+  const visibleComparable = normalizeComparableCricketName(visibleName);
+  const resolvedSource = sourceCandidates.find((candidate) => {
+    const comparableCandidate = normalizeComparableCricketName(candidate);
+    return comparableCandidate.length > visibleComparable.length;
+  });
+  if (!resolvedSource) {
+    return;
+  }
+
+  const resolvedDisplayName = formatResolvedCricketDisplayName(resolvedSource);
+  if (!resolvedDisplayName) {
+    return;
+  }
+
+  nameTextNode.textContent = resolvedDisplayName;
+  nameNode.setAttribute("title", resolvedDisplayName);
+  if (nameTextNode !== nameNode && typeof nameTextNode.setAttribute === "function") {
+    nameTextNode.setAttribute("title", resolvedDisplayName);
+  }
+}
+
 function resolveCricketPlayerStack(playerNode) {
   const directChildren = getElementChildren(playerNode);
   return (
@@ -1266,6 +1367,7 @@ function normalizeCricketIdentitySlot(identitySlot) {
   }
   if (nameNode) {
     setMarkerAttribute(nameNode, CRICKET_META_ATTRIBUTE, "name");
+    maybeRestoreCricketDisplayName(nameNode, avatarMetaNode || avatarNode);
   }
   if (badgeNode) {
     setMarkerAttribute(badgeNode, CRICKET_META_ATTRIBUTE, "wins");

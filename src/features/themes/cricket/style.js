@@ -78,8 +78,10 @@ const cricketThemeCss = `
   --ad-ext-theme-cricket-score-shadow:
     0 1px 0 rgba(4, 10, 20, 0.92),
     0 0 16px rgba(4, 10, 20, 0.46);
+  --ad-ext-theme-cricket-score-end-inset: 0.38rem;
   --ad-ext-theme-cricket-player-gap: 0rem;
   --ad-ext-theme-cricket-content-gap: 0.5rem;
+  --ad-ext-theme-cricket-player-grid-gap: 0.35rem;
   --ad-ext-theme-cricket-left-padding-width: 1.25rem;
   --ad-ext-theme-cricket-left-min-width: calc(
     var(--ad-ext-theme-cricket-player-card-min-width) + var(--ad-ext-theme-cricket-left-padding-width)
@@ -319,8 +321,9 @@ const cricketThemeCss = `
   align-self: center !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
+  margin-inline-end: var(--ad-ext-theme-cricket-score-end-inset) !important;
   padding-left: 0.2rem !important;
-  padding-right: 0.18rem !important;
+  padding-right: 0.12rem !important;
   max-inline-size: none !important;
   overflow: visible !important;
   text-overflow: initial !important;
@@ -369,8 +372,10 @@ div.css-nfhdnc {
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name > p {
+  font-size: var(--ad-ext-theme-cricket-name-size) !important;
   width: 100% !important;
   min-width: 0 !important;
+  line-height: 1.08 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ".." !important;
@@ -394,6 +399,7 @@ div.css-nfhdnc {
   overflow: visible !important;
   text-overflow: initial !important;
   letter-spacing: -0.02em !important;
+  margin-inline-end: var(--ad-ext-theme-cricket-score-end-inset) !important;
   min-inline-size: var(--ad-ext-theme-cricket-score-min-width) !important;
   font-variant-numeric: tabular-nums;
   text-shadow: var(--ad-ext-theme-cricket-score-shadow) !important;
@@ -518,6 +524,10 @@ span.chakra-switch__track.css-v4l15v {
 }
 
 .ad-ext-theme-content-slot > .ad-ext-theme-content-left {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  row-gap: var(--ad-ext-theme-cricket-player-grid-gap) !important;
+  align-content: stretch !important;
   min-width: 0 !important;
   min-height: 0 !important;
   width: max-content !important;
@@ -722,9 +732,16 @@ span.chakra-switch__track.css-v4l15v {
       var(--ad-ext-theme-cricket-player-count),
       var(--ad-ext-theme-cricket-player-column-width)
     ) !important;
+  grid-auto-rows: minmax(0, 1fr) !important;
   column-gap: 0 !important;
+  row-gap: 1.6px !important;
+  margin-top: 0 !important;
   width: max-content !important;
   min-width: max-content !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  align-content: stretch !important;
+  align-self: stretch !important;
   justify-content: start !important;
 }
 

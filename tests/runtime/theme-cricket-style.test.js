@@ -35,6 +35,8 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(css, /--ad-ext-theme-cricket-name-size-inactive:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-size-active:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
+  assert.match(css, /--ad-ext-theme-cricket-score-end-inset:\s*0\.38rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-player-grid-gap:\s*0\.35rem;/);
 
   assert.ok(
     css.includes(
@@ -88,7 +90,11 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s*\+\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*\{[^}]*grid-template-columns:\s*repeat\(\s*var\(--ad-ext-theme-cricket-player-count\),\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*\)\s*!important;/s
+    /\.ad-ext-theme-content-slot\s*>\s*\.ad-ext-theme-content-left\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-rows:\s*auto\s+minmax\(0,\s*1fr\)\s*!important;[^}]*row-gap:\s*var\(--ad-ext-theme-cricket-player-grid-gap\)\s*!important;[^}]*align-content:\s*stretch\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*\{[^}]*grid-template-columns:\s*repeat\(\s*var\(--ad-ext-theme-cricket-player-count\),\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*\)\s*!important;[^}]*grid-auto-rows:\s*minmax\(0,\s*1fr\)\s*!important;[^}]*margin-top:\s*0\s*!important;[^}]*height:\s*100%\s*!important;[^}]*align-content:\s*stretch\s*!important;/s
   );
 });
 
@@ -152,7 +158,11 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*line-height:\s*1\.08\s*!important;[^}]*white-space:\s*nowrap\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;[^}]*margin-inline-end:\s*var\(--ad-ext-theme-cricket-score-end-inset\)\s*!important;/s
   );
   assert.match(
     css,
