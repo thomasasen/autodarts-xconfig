@@ -4,6 +4,7 @@ import {
   OVERLAY_ID,
   SVG_NS,
   TARGET_CLASS,
+  TARGET_FAMILY_ATTRIBUTE,
 } from "./style.js";
 
 const SEGMENT_ORDER = Object.freeze([
@@ -194,42 +195,150 @@ export function clearOverlay(overlay) {
   }
 }
 
-function applyShapeStyle(shapeNode, radius, visualConfig) {
+function resolveTargetFamily(target) {
+  if (target?.ring === "D" || target?.ring === "T") {
+    return "outer";
+  }
+  if (target?.ring === "DB" || target?.ring === "SB") {
+    return "bull";
+  }
+  return "single";
+}
+
+function resolveTargetStyleProfile(target, radius, visualConfig) {
+  const baseStrokeWidth = Math.max(1, radius * visualConfig.strokeWidthRatio);
+  const baseOutlineWidth = baseStrokeWidth + 1.5;
+  const family = resolveTargetFamily(target);
+  const pulseProfile = visualConfig.pulseProfile || {};
+  const outerPulseProfile = visualConfig.outerSegmentPulseProfile || {};
+  const isOuterPulse = family === "outer" && visualConfig.effect === "pulse";
+
+  return {
+    family,
+    strokeWidthPx:
+      family === "outer"
+        ? baseStrokeWidth + Number(outerPulseProfile.strokeWidthBoostPx || 0)
+        : baseStrokeWidth,
+    outlineWidthPx:
+      family === "outer"
+        ? baseOutlineWidth + Number(outerPulseProfile.outlineWidthBoostPx || 0)
+        : baseOutlineWidth,
+    pulseMinOpacity: isOuterPulse
+      ? Number(outerPulseProfile.minOpacity || pulseProfile.minOpacity || 0.25)
+      : Number(pulseProfile.minOpacity || 0.25),
+    pulseMaxOpacity: isOuterPulse
+      ? Number(outerPulseProfile.maxOpacity || pulseProfile.maxOpacity || 1)
+      : Number(pulseProfile.maxOpacity || 1),
+    pulseMinScale: isOuterPulse
+      ? Number(outerPulseProfile.minScale || pulseProfile.minScale || 0.98)
+      : Number(pulseProfile.minScale || 0.98),
+    pulseMaxScale: isOuterPulse
+      ? Number(outerPulseProfile.maxScale || pulseProfile.maxScale || 1.02)
+      : Number(pulseProfile.maxScale || 1.02),
+    filter: isOuterPulse ? String(outerPulseProfile.filter || "none") : "none",
+    outlineBaseOpacity:
+      family === "outer"
+        ? Math.max(
+            Number(visualConfig.outlineIntensity.baseOpacity || 0),
+            Number(outerPulseProfile.outlineBaseOpacityFloor || 0)
+          )
+        : Number(visualConfig.outlineIntensity.baseOpacity || 0),
+    outlinePulseMinOpacity:
+      family === "outer"
+        ? Math.max(
+            Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
+            Number(outerPulseProfile.outlinePulseMinOpacityFloor || 0)
+          )
+        : Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
+    outlinePulseMaxOpacity:
+      family === "outer"
+        ? Math.max(
+            Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
+            Number(outerPulseProfile.outlinePulseMaxOpacityFloor || 0)
+          )
+        : Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
+    outlineWidthDownPx:
+      family === "outer"
+        ? Math.max(
+            Number(visualConfig.outlineIntensity.widthDownPx || 0),
+            Number(outerPulseProfile.outlineWidthDownPxFloor || 0)
+          )
+        : Number(visualConfig.outlineIntensity.widthDownPx || 0),
+    outlineWidthUpPx:
+      family === "outer"
+        ? Math.max(
+            Number(visualConfig.outlineIntensity.widthUpPx || 0),
+            Number(outerPulseProfile.outlineWidthUpPxFloor || 0)
+          )
+        : Number(visualConfig.outlineIntensity.widthUpPx || 0),
+  };
+}
+
+function applyTargetMetadata(shapeNode, target, styleProfile) {
+  if (!shapeNode || typeof shapeNode.setAttribute !== "function") {
+    return;
+  }
+
+  shapeNode.setAttribute(TARGET_FAMILY_ATTRIBUTE, String(styleProfile.family || "single"));
+  shapeNode.setAttribute("data-target-ring", String(target?.ring || ""));
+  if (Number.isFinite(target?.value)) {
+    shapeNode.setAttribute("data-target-value", String(target.value));
+  }
+}
+
+function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
   if (!shapeNode || !shapeNode.classList || !shapeNode.style) {
     return;
   }
 
   shapeNode.classList.add(TARGET_CLASS, EFFECT_CLASSES[visualConfig.effect] || EFFECT_CLASSES.pulse);
-  const strokeWidth = Math.max(1, radius * visualConfig.strokeWidthRatio);
+  const strokeWidth = styleProfile.strokeWidthPx;
 
   shapeNode.style.setProperty("--ad-ext-target-color", visualConfig.theme.color);
   shapeNode.style.setProperty("--ad-ext-target-stroke", visualConfig.theme.strokeColor);
   shapeNode.style.setProperty("--ad-ext-target-stroke-width", `${strokeWidth}px`);
-  shapeNode.style.setProperty("--ad-ext-target-outline-width", `${strokeWidth + 1.5}px`);
+  shapeNode.style.setProperty("--ad-ext-target-outline-width", `${styleProfile.outlineWidthPx}px`);
   shapeNode.style.setProperty("--ad-ext-target-duration", `${visualConfig.animationMs}ms`);
+  shapeNode.style.setProperty("--ad-ext-target-filter", styleProfile.filter);
+  shapeNode.style.setProperty(
+    "--ad-ext-target-pulse-min-opacity",
+    String(styleProfile.pulseMinOpacity)
+  );
+  shapeNode.style.setProperty(
+    "--ad-ext-target-pulse-max-opacity",
+    String(styleProfile.pulseMaxOpacity)
+  );
+  shapeNode.style.setProperty(
+    "--ad-ext-target-pulse-min-scale",
+    String(styleProfile.pulseMinScale)
+  );
+  shapeNode.style.setProperty(
+    "--ad-ext-target-pulse-max-scale",
+    String(styleProfile.pulseMaxScale)
+  );
   shapeNode.style.setProperty(
     "--ad-ext-target-outline-stroke-alpha",
     String(visualConfig.outlineIntensity.strokeAlpha)
   );
   shapeNode.style.setProperty(
     "--ad-ext-target-outline-base-opacity",
-    String(visualConfig.outlineIntensity.baseOpacity)
+    String(styleProfile.outlineBaseOpacity)
   );
   shapeNode.style.setProperty(
     "--ad-ext-target-outline-pulse-min-opacity",
-    String(visualConfig.outlineIntensity.pulseMinOpacity)
+    String(styleProfile.outlinePulseMinOpacity)
   );
   shapeNode.style.setProperty(
     "--ad-ext-target-outline-pulse-max-opacity",
-    String(visualConfig.outlineIntensity.pulseMaxOpacity)
+    String(styleProfile.outlinePulseMaxOpacity)
   );
   shapeNode.style.setProperty(
     "--ad-ext-target-outline-width-down-px",
-    `${visualConfig.outlineIntensity.widthDownPx}px`
+    `${styleProfile.outlineWidthDownPx}px`
   );
   shapeNode.style.setProperty(
     "--ad-ext-target-outline-width-up-px",
-    `${visualConfig.outlineIntensity.widthUpPx}px`
+    `${styleProfile.outlineWidthUpPx}px`
   );
   if (shapeNode.dataset && shapeNode.dataset.noStroke === "true") {
     shapeNode.style.stroke = "none";
@@ -245,14 +354,13 @@ function cloneShapeAsOutline(shapeNode, ownerDocument) {
   return outline;
 }
 
-function applyOutlineStyle(outlineNode, radius, visualConfig) {
+function applyOutlineStyle(outlineNode, visualConfig, styleProfile) {
   if (!outlineNode || !outlineNode.classList || !outlineNode.style) {
     return;
   }
 
-  const strokeWidth = Math.max(1, radius * visualConfig.strokeWidthRatio);
   outlineNode.classList.add(OUTLINE_CLASS);
-  outlineNode.style.setProperty("--ad-ext-target-outline-width", `${strokeWidth + 1.5}px`);
+  outlineNode.style.setProperty("--ad-ext-target-outline-width", `${styleProfile.outlineWidthPx}px`);
   outlineNode.style.setProperty("--ad-ext-target-duration", `${visualConfig.animationMs}ms`);
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-stroke-alpha",
@@ -260,23 +368,23 @@ function applyOutlineStyle(outlineNode, radius, visualConfig) {
   );
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-base-opacity",
-    String(visualConfig.outlineIntensity.baseOpacity)
+    String(styleProfile.outlineBaseOpacity)
   );
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-pulse-min-opacity",
-    String(visualConfig.outlineIntensity.pulseMinOpacity)
+    String(styleProfile.outlinePulseMinOpacity)
   );
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-pulse-max-opacity",
-    String(visualConfig.outlineIntensity.pulseMaxOpacity)
+    String(styleProfile.outlinePulseMaxOpacity)
   );
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-width-down-px",
-    `${visualConfig.outlineIntensity.widthDownPx}px`
+    `${styleProfile.outlineWidthDownPx}px`
   );
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-width-up-px",
-    `${visualConfig.outlineIntensity.widthUpPx}px`
+    `${styleProfile.outlineWidthUpPx}px`
   );
 }
 
@@ -409,12 +517,15 @@ export function renderCheckoutTargets(options = {}) {
     renderedKeys.add(key);
 
     const shapes = buildTargetShapes(ownerDocument, board.radius, target, visualConfig);
+    const styleProfile = resolveTargetStyleProfile(target, board.radius, visualConfig);
     shapes.forEach((shapeNode) => {
-      applyShapeStyle(shapeNode, board.radius, visualConfig);
+      applyTargetMetadata(shapeNode, target, styleProfile);
+      applyShapeStyle(shapeNode, visualConfig, styleProfile);
       overlay.appendChild(shapeNode);
 
       const outline = cloneShapeAsOutline(shapeNode, ownerDocument);
-      applyOutlineStyle(outline, board.radius, visualConfig);
+      applyTargetMetadata(outline, target, styleProfile);
+      applyOutlineStyle(outline, visualConfig, styleProfile);
       overlay.appendChild(outline);
     });
   });

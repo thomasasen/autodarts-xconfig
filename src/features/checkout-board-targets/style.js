@@ -3,6 +3,7 @@ export const STYLE_ID = "ad-ext-checkout-board-style";
 export const OVERLAY_ID = "ad-ext-checkout-targets";
 export const TARGET_CLASS = "ad-ext-checkout-target";
 export const OUTLINE_CLASS = "ad-ext-checkout-target-outline";
+export const TARGET_FAMILY_ATTRIBUTE = "data-target-family";
 export const EFFECT_CLASSES = Object.freeze({
   pulse: "ad-ext-checkout-target--pulse",
   blink: "ad-ext-checkout-target--blink",
@@ -51,6 +52,30 @@ const OUTLINE_INTENSITY_PRESETS = Object.freeze({
   },
 });
 
+const BASE_PULSE_PROFILE = Object.freeze({
+  minOpacity: 0.25,
+  maxOpacity: 1,
+  minScale: 0.98,
+  maxScale: 1.02,
+  filter: "none",
+});
+
+const OUTER_SEGMENT_PULSE_PROFILE = Object.freeze({
+  minOpacity: 0.62,
+  maxOpacity: 1,
+  minScale: 1.03,
+  maxScale: 1.11,
+  filter:
+    "drop-shadow(0 0 8px var(--ad-ext-target-stroke)) drop-shadow(0 0 16px var(--ad-ext-target-color))",
+  strokeWidthBoostPx: 2,
+  outlineWidthBoostPx: 5.5,
+  outlineBaseOpacityFloor: 0.7,
+  outlinePulseMinOpacityFloor: 0.7,
+  outlinePulseMaxOpacityFloor: 1,
+  outlineWidthDownPxFloor: 2,
+  outlineWidthUpPxFloor: 2,
+});
+
 function resolvePreset(presets, presetKey, fallbackKey) {
   const normalized = String(presetKey || "").trim().toLowerCase();
   return presets[normalized] || presets[fallbackKey];
@@ -73,6 +98,8 @@ export function resolveBoardTargetVisualConfig(featureConfig = {}) {
     animationMs: 1000,
     edgePaddingPx: 1,
     theme: resolvePreset(BOARD_THEME_PRESETS, featureConfig.colorTheme, "violet"),
+    pulseProfile: BASE_PULSE_PROFILE,
+    outerSegmentPulseProfile: OUTER_SEGMENT_PULSE_PROFILE,
     outlineIntensity: resolvePreset(
       OUTLINE_INTENSITY_PRESETS,
       featureConfig.outlineIntensity,
@@ -90,6 +117,7 @@ export function buildStyleText() {
   transform-box: fill-box;
   transform-origin: center;
   opacity: 0.9;
+  filter: var(--ad-ext-target-filter, none);
   pointer-events: none;
 }
 
@@ -122,9 +150,18 @@ export function buildStyleText() {
 }
 
 @keyframes ad-ext-checkout-pulse {
-  0% { opacity: 0.25; transform: scale(0.98); }
-  50% { opacity: 1; transform: scale(1.02); }
-  100% { opacity: 0.25; transform: scale(0.98); }
+  0% {
+    opacity: var(--ad-ext-target-pulse-min-opacity, 0.25);
+    transform: scale(var(--ad-ext-target-pulse-min-scale, 0.98));
+  }
+  50% {
+    opacity: var(--ad-ext-target-pulse-max-opacity, 1);
+    transform: scale(var(--ad-ext-target-pulse-max-scale, 1.02));
+  }
+  100% {
+    opacity: var(--ad-ext-target-pulse-min-opacity, 0.25);
+    transform: scale(var(--ad-ext-target-pulse-min-scale, 0.98));
+  }
 }
 
 @keyframes ad-ext-checkout-blink {
