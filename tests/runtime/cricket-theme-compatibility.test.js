@@ -1203,9 +1203,11 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
 
   assert.equal(gridFxStats.status, "ok");
   assert.equal(gridFxStats.offenseRowCount || 0, 3);
-  assert.equal(gridFxStats.badgeCount || 0, 7);
+  assert.equal(gridFxStats.badgeCount || 0, 6);
   const labelCell20 = rowsByLabel.get("20")?.labelCell || null;
   const labelText20 = rowsByLabel.get("20")?.labelText || null;
+  const bullLabelCell = rowsByLabel.get("BULL")?.labelCell || null;
+  const bullLabelText = rowsByLabel.get("BULL")?.labelText || null;
   const opponentCell20 = rowsByLabel.get("20")?.playerCells?.[0] || null;
   const opponentCell19 = rowsByLabel.get("19")?.playerCells?.[0] || null;
   const opponentCell18 = rowsByLabel.get("18")?.playerCells?.[0] || null;
@@ -1215,6 +1217,8 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   const opponentCellBull = rowsByLabel.get("BULL")?.playerCells?.[0] || null;
   assert.equal(Boolean(labelCell20), true);
   assert.equal(Boolean(labelText20), true);
+  assert.equal(Boolean(bullLabelCell), true);
+  assert.equal(Boolean(bullLabelText), true);
   assert.equal(Boolean(opponentCell20), true);
   assert.equal(Boolean(opponentCell19), true);
   assert.equal(Boolean(opponentCell18), true);
@@ -1226,6 +1230,9 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(labelCell20?.classList?.contains(LABEL_STATE_CLASS.scoring), true);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), true);
   assert.equal(labelText20?.classList?.contains(BADGE_STATE_CLASS.scoring), true);
+  assert.equal(bullLabelCell?.classList?.contains(LABEL_CLASS), true);
+  assert.equal(bullLabelText?.classList?.contains(BADGE_CLASS), false);
+  assert.equal(bullLabelCell?.textContent, "\u29BF");
   assert.equal(opponentCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(opponentCell20?.classList?.contains(THREAT_CLASS), true);
   assert.equal(opponentCell20?.classList?.contains(PRESSURE_CLASS), true);
@@ -1254,6 +1261,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   clearCricketHighlights(documentRef);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), false);
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), false);
+  assert.equal(bullLabelCell?.textContent, "Bull");
 });
 
 test("theme-like combined cricket surface keeps 19 and 18 neutral while only 20 is tactical", () => {

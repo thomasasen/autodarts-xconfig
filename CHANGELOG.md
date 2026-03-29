@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.91] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-/Tactics-Theme erscheinen die Spielernamen jetzt etwas größer, und die linke Bull-Labelzelle der Tabelle zeigt `⦿` statt `Bull`, ohne breiter oder höher als die Zahlzellen `20` bis `15` zu werden.
+  Technik: Die Cricket-Namensskalen wurden im Theme um rund zehn Prozent erhöht, und die Grid-FX-Logik behandelt die vordere Bull-Zelle jetzt ausdrücklich wieder als normale Label-Cell statt als separates Badge, ersetzt dort sichtbare `Bull`-Beschriftungen gezielt durch `U+29BF`, merkt sich den ursprünglichen Host-Text für Cleanup/Unmount und hält so die bestehende Label-Cell-Geometrie unangetastet; zusätzliche Regressionen sichern die neue Namensskala sowie die Bull-Frontzelle ausdrücklich ab.
+
 ## [2.0.90] - 2026-03-29
 
 ### Fixed
@@ -1004,7 +1011,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...HEAD
+[2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...HEAD
+[2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...2824799
 [2.0.89]: https://github.com/thomasasen/autodarts-xconfig/compare/9b8c3c0...b0eb1cc
 [2.0.88]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...9b8c3c0
 [2.0.86]: https://github.com/thomasasen/autodarts-xconfig/compare/0bebdfc...0d636b4

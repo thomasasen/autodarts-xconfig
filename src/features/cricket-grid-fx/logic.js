@@ -73,6 +73,7 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   "span",
 ]);
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
+const BULL_DISPLAY_LABEL = "\u29BF";
 
 function queryAll(rootNode, selector) {
   return queryAllFromDiscovery(rootNode, selector);
@@ -190,7 +191,80 @@ function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
 }
 
 function getDisplayLabel(label) {
-  return String(label || "").toUpperCase() === "BULL" ? "Bull" : String(label || "");
+  return String(label || "").toUpperCase() === "BULL" ? BULL_DISPLAY_LABEL : String(label || "");
+}
+
+function resolveDisplayLabelTarget(node, label, cricketRules) {
+  if (!node) {
+    return null;
+  }
+
+  const normalizedLabel = normalizeCricketLabelValue(cricketRules, label);
+  if (normalizedLabel !== "BULL") {
+    return null;
+  }
+
+  if (node.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true") {
+    return node;
+  }
+
+  const normalizedNodeLabel = normalizeCricketLabelValue(
+    cricketRules,
+    node?.getAttribute?.("data-row-label") ||
+      node?.getAttribute?.("data-target-label") ||
+      node?.textContent ||
+      ""
+  );
+  if (normalizedNodeLabel === "BULL" && Number(node?.childElementCount || 0) === 0) {
+    return node;
+  }
+
+  const childElements = Array.from(node?.children || []);
+  return (
+    childElements.find((childNode) => {
+      return (
+        Number(childNode?.childElementCount || 0) === 0 &&
+        normalizeCricketLabelValue(
+          cricketRules,
+          childNode?.getAttribute?.("data-row-label") ||
+            childNode?.getAttribute?.("data-target-label") ||
+            childNode?.textContent ||
+            ""
+        ) === "BULL"
+      );
+    }) || null
+  );
+}
+
+function applyDisplayLabel(node, label, state, cricketRules) {
+  const targetNode = resolveDisplayLabelTarget(node, label, cricketRules);
+  if (!targetNode) {
+    return;
+  }
+
+  const displayLabel = getDisplayLabel(label);
+  if (String(targetNode.textContent || "") === displayLabel) {
+    return;
+  }
+
+  if (state?.displayLabelTextByNode instanceof Map && !state.displayLabelTextByNode.has(targetNode)) {
+    state.displayLabelTextByNode.set(targetNode, String(targetNode.textContent || ""));
+  }
+
+  targetNode.textContent = displayLabel;
+}
+
+function restoreDisplayLabels(state) {
+  if (!(state?.displayLabelTextByNode instanceof Map)) {
+    return;
+  }
+
+  state.displayLabelTextByNode.forEach((originalText, node) => {
+    if (node) {
+      node.textContent = originalText;
+    }
+  });
+  state.displayLabelTextByNode.clear();
 }
 
 function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {
@@ -466,6 +540,7 @@ function clearPersistentState(state) {
       node.parentNode.removeChild(node);
     }
   });
+  restoreDisplayLabels(state);
   state.hiddenLabelNodes.forEach((node) => {
     if (typeof node?.removeAttribute === "function") {
       node.removeAttribute(HIDDEN_LABEL_ATTRIBUTE);
@@ -552,6 +627,23 @@ function setBadgeStateClasses(badgeNode, stateToken) {
   }
 
   badgeNode.classList.add(BADGE_STATE_CLASS.neutral);
+}
+
+function clearBadgeClasses(node) {
+  if (!node || !node.classList) {
+    return;
+  }
+
+  node.classList.remove(
+    BADGE_CLASS,
+    BADGE_BURST_CLASS,
+    BADGE_BEACON_CLASS,
+    BADGE_STATE_CLASS.neutral,
+    BADGE_STATE_CLASS.scoring,
+    BADGE_STATE_CLASS.offense,
+    BADGE_STATE_CLASS.pressure,
+    BADGE_STATE_CLASS.dead
+  );
 }
 
 function toggleTimedClass(state, node, className, timeoutMs = 700) {
@@ -719,6 +811,7 @@ export function createCricketGridFxState(windowRef = null) {
     timeoutHandles: new Set(),
     syntheticBadges: new Set(),
     hiddenLabelNodes: new Set(),
+    displayLabelTextByNode: new Map(),
     previousMarksByLabel: {},
     previousStateMap: new Map(),
     previousActivePlayerIndex: null,
@@ -1492,6 +1585,9 @@ export function updateCricketGridFx(options = {}) {
     const labelPresentation = normalizePresentationToken(
       labelCellState?.presentation || presentation
     );
+    const inlineBullLabel =
+      normalizeCricketLabelValue(cricketRules, row.label) === "BULL" &&
+      Boolean(labelCellNode?.classList);
     let badgeNode = null;
     if (
       row.badgeNode?.classList &&
@@ -1500,7 +1596,17 @@ export function updateCricketGridFx(options = {}) {
     ) {
       badgeNode = row.badgeNode;
     }
-    if (!badgeNode && labelCellNode?.ownerDocument?.createElement) {
+    if (inlineBullLabel) {
+      clearBadgeClasses(labelCellNode);
+      toggleClass(labelCellNode, CELL_CLASS, true);
+      clearBadgeClasses(badgeNode);
+      if (typeof labelCellNode?.removeAttribute === "function") {
+        labelCellNode.removeAttribute(HIDDEN_LABEL_ATTRIBUTE);
+      }
+      state.hiddenLabelNodes.delete(labelCellNode);
+      badgeNode = null;
+    }
+    if (!inlineBullLabel && !badgeNode && labelCellNode?.ownerDocument?.createElement) {
       badgeNode = labelCellNode.ownerDocument.createElement("span");
       badgeNode.setAttribute(SYNTHETIC_BADGE_ATTRIBUTE, "true");
       badgeNode.textContent = getDisplayLabel(row.label);
@@ -1512,6 +1618,8 @@ export function updateCricketGridFx(options = {}) {
       }
       badgeFallbackCount += 1;
     }
+    applyDisplayLabel(labelCellNode, row.label, state, cricketRules);
+    applyDisplayLabel(badgeNode, row.label, state, cricketRules);
     if (labelCellNode?.classList) {
       labelCellNode.classList.add(LABEL_CLASS);
       setLabelStateClasses(labelCellNode, labelPresentation);
@@ -1525,7 +1633,7 @@ export function updateCricketGridFx(options = {}) {
       state.trackedLabels.add(labelCellNode);
     }
 
-    if (badgeNode?.classList) {
+    if (!inlineBullLabel && badgeNode?.classList) {
       badgeNode.classList.add(BADGE_CLASS);
       setBadgeStateClasses(badgeNode, labelPresentation);
       toggleClass(

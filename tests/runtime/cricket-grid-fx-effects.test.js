@@ -11,6 +11,7 @@ import {
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
   ACTIVE_COLUMN_CLASS,
+  BADGE_BEACON_CLASS,
   BADGE_BURST_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
@@ -538,6 +539,139 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(Boolean(documentRef.querySelector(`.${ROW_WAVE_CLASS}`)), false);
   assert.equal(Boolean(documentRef.querySelector(`.${WIPE_CLASS}`)), false);
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), false);
+});
+
+test("cricket grid fx renders the bull row with the unicode bull label and restores host text on cleanup", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "bull-label:0",
+  });
+
+  const bullLabelCell = rowsByLabel.get("BULL")?.labelCell || null;
+  const syntheticBullBadge =
+    bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`) || null;
+
+  assert.equal(bullLabelCell?.classList?.contains(LABEL_CLASS), true);
+  assert.equal(bullLabelCell?.classList?.contains(BADGE_CLASS), false);
+  assert.equal(bullLabelCell?.textContent, "\u29BF");
+  assert.equal(Boolean(syntheticBullBadge), false);
+  assert.equal(bullLabelCell?.getAttribute?.(HIDDEN_LABEL_ATTRIBUTE), null);
+
+  clearCricketGridFxState(state);
+
+  assert.equal(Boolean(bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`)), false);
+  assert.equal(bullLabelCell?.textContent, "Bull");
+});
+
+test("cricket grid fx converts badge-like bull labels back into the front label cell contract", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const bullLabelCell = rowsByLabel.get("BULL")?.labelCell || null;
+  assert.ok(bullLabelCell);
+  bullLabelCell.classList.remove("label-cell");
+  bullLabelCell.classList.add(BADGE_CLASS, BADGE_STATE_CLASS.scoring, BADGE_BEACON_CLASS);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "bull-inline-repair:0",
+  });
+
+  assert.equal(bullLabelCell?.classList?.contains(LABEL_CLASS), true);
+  assert.equal(bullLabelCell?.classList?.contains(CELL_CLASS), true);
+  assert.equal(bullLabelCell?.classList?.contains(BADGE_CLASS), false);
+  assert.equal(bullLabelCell?.textContent, "\u29BF");
+  assert.equal(Boolean(bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`)), false);
+  assert.equal(bullLabelCell?.getAttribute?.(HIDDEN_LABEL_ATTRIBUTE), null);
+
+  clearCricketGridFxState(state);
+
+  assert.equal(bullLabelCell?.textContent, "Bull");
 });
 
 test("cricket grid fx backfills missing snapshot rows from grid root in merged discovery layouts", () => {

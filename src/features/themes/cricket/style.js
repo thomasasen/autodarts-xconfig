@@ -69,8 +69,8 @@ const cricketThemeCss = `
   --ad-ext-theme-cricket-score-min-width: 4.8ch;
   --ad-ext-theme-cricket-stats-min-width: 5.4ch;
   --ad-ext-theme-cricket-player-avatar-size: 2.2rem;
-  --ad-ext-theme-cricket-name-size-active: clamp(0.98rem, 1.08vw, 1.16rem);
-  --ad-ext-theme-cricket-name-size-inactive: clamp(0.78rem, 0.84vw, 0.9rem);
+  --ad-ext-theme-cricket-name-size-active: clamp(1.08rem, 1.19vw, 1.28rem);
+  --ad-ext-theme-cricket-name-size-inactive: clamp(0.86rem, 0.92vw, 0.99rem);
   --ad-ext-theme-cricket-score-active-color: var(--theme-text-highlight-color);
   --ad-ext-theme-cricket-score-inactive-color: rgba(214, 229, 245, 0.84);
   --ad-ext-theme-cricket-score-size-active: clamp(3.35rem, 4.08vw, 4.48rem);
