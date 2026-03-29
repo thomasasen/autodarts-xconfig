@@ -22,6 +22,8 @@ direkt zu einer versionierten Release-Sektion.
   Technik: Die explizite Checkout-Segment-Erkennung akzeptiert jetzt auch unpräfixte `25` sowohl in den X01-Regeln als auch im Route-Fallback, und eine zusätzliche Routen-Regression schützt die Normalisierung `25 -> S25` vor erneutem Drift.
 - Nutzerwirkung: `Checkout Board Targets` hebt den `Single Bull / 25`-Ring bei sichtbaren X01-Checkouts jetzt deutlich klarer hervor, sodass der äußere Bull-Ring im Standard-`Pulse`-Modus spürbar sichtbarer leuchtet statt nur sehr dezent zu pulsieren.
   Technik: `bull`-Ziele erhalten im `pulse`-Modus jetzt ein eigenes Sichtbarkeitsprofil mit stärkerer Mindest-Opacity, größerer Puls-Skalierung, breiterer Kontur und themengefärbtem Halo; außerhalb von `pulse` bleiben `blink` und `glow` absichtlich auf dem bisherigen, effektneutralen Styling, und neue Render-Regressionen sichern beide Verträge ausdrücklich ab.
+- Nutzerwirkung: Beim `X01 Score Progress` sitzt die Linie auf inaktiven Spielerkarten jetzt wieder klar unterhalb der Statistikzeile, statt in kleinen Inaktiv-Karten in die `Ø`-Anzeige hineinzurutschen.
+  Technik: Der Progress-Stack erzwingt für `.ad-ext-player-inactive` jetzt eine eigene dritte `max-content`-Zeile mit `height:auto`, damit Theme-Höhenzwänge die mittlere Stats-Zeile nicht mehr auf `0px` kollabieren lassen; eine Style-Regression deckt den Inaktiv-Vertrag ausdrücklich ab.
 
 ## [2.0.86] - 2026-03-29
 

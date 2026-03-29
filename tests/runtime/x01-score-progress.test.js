@@ -840,6 +840,18 @@ test("score-progress style enforces stack layout that keeps the bar below score 
     css,
     /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-active > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\],\s*#ad-ext-player-display \.ad-ext-player\.ad-ext-player-winner > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*align-content:center/s
   );
+  assert.match(
+    css,
+    /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-inactive > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\]\{[^}]*grid-template-rows:max-content max-content max-content[^}]*min-height:79px[^}]*height:auto[^}]*padding-top:6px[^}]*padding-bottom:4px/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-inactive > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\] > \.ad-ext-player-score\{[^}]*line-height:1[^}]*align-self:center/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-inactive > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\] > \[data-ad-ext-x01-score-progress='true'\]\{[^}]*margin-top:1px/s
+  );
 });
 
 test("score-progress style defines clearly separated active size presets", () => {

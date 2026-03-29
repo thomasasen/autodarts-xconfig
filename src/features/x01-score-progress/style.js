@@ -99,6 +99,23 @@ ${STACK_SELECTOR}{
   align-content:center !important;
 }
 
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR}{
+  grid-template-rows:max-content max-content max-content !important;
+  min-height:79px !important;
+  height:auto !important;
+  padding-top:6px !important;
+  padding-bottom:4px !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR} > .ad-ext-player-score{
+  line-height:1 !important;
+  align-self:center !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR} > ${HOST_SELECTOR}{
+  margin-top:1px !important;
+}
+
 ${HOST_SELECTOR}{
   --ad-ext-x01-score-progress-width:0%;
   --ad-ext-x01-score-progress-trail-width:0%;
