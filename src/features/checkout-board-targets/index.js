@@ -13,6 +13,7 @@ import {
 
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const TRANSIENT_ROUTE_RETENTION_MS = 1500;
 const SCORE_SELECTOR = "p.ad-ext-player-score";
 const ACTIVE_SCORE_SELECTOR =
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score, .ad-ext-player-active p.ad-ext-player-score";
@@ -81,6 +82,10 @@ function canFinishWithActiveScore(activeScore, segmentName, outMode, x01Rules) {
   return typeof x01Rules.isOneDartCheckoutSegmentForOutMode === "function"
     ? x01Rules.isOneDartCheckoutSegmentForOutMode(segmentName, outMode)
     : false;
+}
+
+function nowMs() {
+  return Date.now();
 }
 
 function createDebugState(featureDebug) {
@@ -293,10 +298,86 @@ export function initializeCheckoutBoardTargets(context = {}) {
   const boardCache = {
     value: null,
   };
+  const retainedRenderState = {
+    selectedSegments: [],
+    targets: [],
+    activeScore: NaN,
+    outMode: "",
+    validUntilMs: 0,
+  };
+  let retainExpiryTimer = 0;
+
+  function clearRetainExpiryTimer() {
+    if (!retainExpiryTimer) {
+      return;
+    }
+    clearTimeout(retainExpiryTimer);
+    retainExpiryTimer = 0;
+  }
 
   function invalidateBoardCache() {
     boardCache.value = null;
     lastRenderSignature = "";
+  }
+
+  function resetRetainedRenderState() {
+    retainedRenderState.selectedSegments = [];
+    retainedRenderState.targets = [];
+    retainedRenderState.activeScore = NaN;
+    retainedRenderState.outMode = "";
+    retainedRenderState.validUntilMs = 0;
+    clearRetainExpiryTimer();
+  }
+
+  function rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode) {
+    retainedRenderState.selectedSegments = Array.isArray(selectedSegments)
+      ? selectedSegments.slice()
+      : [];
+    retainedRenderState.targets = Array.isArray(targets)
+      ? targets.map((target) => ({ ...target }))
+      : [];
+    retainedRenderState.activeScore = Number.isFinite(activeScore) ? activeScore : NaN;
+    retainedRenderState.outMode = String(outMode || "");
+    retainedRenderState.validUntilMs = nowMs() + TRANSIENT_ROUTE_RETENTION_MS;
+    clearRetainExpiryTimer();
+  }
+
+  function scheduleRetainedRenderExpiry() {
+    clearRetainExpiryTimer();
+    const delayMs = Math.max(0, retainedRenderState.validUntilMs - nowMs());
+    if (!delayMs) {
+      return;
+    }
+    retainExpiryTimer = setTimeout(() => {
+      retainExpiryTimer = 0;
+      lastRenderSignature = "";
+      scheduler.schedule();
+    }, delayMs + 25);
+  }
+
+  function getRetainedRender(activeScore, outMode) {
+    if (!retainedRenderState.targets.length || nowMs() > retainedRenderState.validUntilMs) {
+      return null;
+    }
+
+    const normalizedOutMode = String(outMode || "").trim();
+    const retainedOutMode = String(retainedRenderState.outMode || "").trim();
+    if (normalizedOutMode && retainedOutMode && normalizedOutMode !== retainedOutMode) {
+      return null;
+    }
+
+    if (
+      Number.isFinite(activeScore) &&
+      Number.isFinite(retainedRenderState.activeScore) &&
+      activeScore !== retainedRenderState.activeScore
+    ) {
+      return null;
+    }
+
+    return {
+      selectedSegments: retainedRenderState.selectedSegments.slice(),
+      targets: retainedRenderState.targets.map((target) => ({ ...target })),
+    };
   }
 
   function getBoard() {
@@ -417,6 +498,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     lastRenderSignature = signature;
 
     if (!active) {
+      resetRetainedRenderState();
       const payload = buildDebugPayload({
         status: "inactive",
         active,
@@ -443,7 +525,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     } = selectRouteSegments(routeSegments, activeScore, outMode);
     const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
     const board = getBoard();
-    const status = !routeSegments.length && !selectedSegments.length
+    let status = !routeSegments.length && !selectedSegments.length
       ? "no-route"
       : !selectedSegments.length
         ? "no-selected-segments"
@@ -452,6 +534,30 @@ export function initializeCheckoutBoardTargets(context = {}) {
           : !board
             ? "no-board"
             : "render";
+    let renderSelectedSegments = selectedSegments;
+    let renderTargets = targets;
+    let renderSelectionSource = selectionSource;
+
+    if (status === "render") {
+      rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode);
+    } else if (
+      board &&
+      (status === "no-route" || status === "no-selected-segments" || status === "no-targets")
+    ) {
+      const retainedRender = getRetainedRender(activeScore, outMode);
+      if (retainedRender) {
+        renderSelectedSegments = retainedRender.selectedSegments;
+        renderTargets = retainedRender.targets;
+        renderSelectionSource = "retained-last-targets";
+        status = "render-retained";
+        scheduleRetainedRenderExpiry();
+      }
+    }
+
+    if (status !== "render-retained" && status !== "render") {
+      clearRetainExpiryTimer();
+    }
+
     const payload = buildDebugPayload({
       status,
       active,
@@ -459,17 +565,17 @@ export function initializeCheckoutBoardTargets(context = {}) {
       variantText,
       outMode,
       targetSelectionMode,
-      selectionSource,
+      selectionSource: renderSelectionSource,
       documentRef,
       routeEntries,
       routeSegments,
-      selectedSegments,
-      targets,
+      selectedSegments: renderSelectedSegments,
+      targets: renderTargets,
       board,
     });
     emitDebugEvent(
       debugState,
-      status === "render" ? "log" : "warn",
+      status === "render" || status === "render-retained" ? "log" : "warn",
       buildDebugSignature(payload),
       buildDebugSummary(payload),
       payload
@@ -480,7 +586,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
 
     renderCheckoutTargets({
       board,
-      checkoutTargets: targets,
+      checkoutTargets: renderTargets,
       visualConfig,
     });
   }
@@ -525,6 +631,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
+    resetRetainedRenderState();
     try {
       unsubscribeGameState();
     } catch (_) {

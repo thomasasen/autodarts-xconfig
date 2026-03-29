@@ -451,6 +451,210 @@ test("checkout-board-targets next mode falls back to the active score checkout w
   }
 });
 
+test("checkout-board-targets keeps the last drawable target during a transient no-route gap", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "96";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D18";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  appendBoardFixture(documentRef);
+  const windowRef = createFakeWindow({ documentRef });
+  const observerRegistry = createObserverRegistry();
+  const logs = [];
+  const warnings = [];
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 96,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        warnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    assert.ok(observer);
+
+    let overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length, 2);
+
+    documentRef.suggestionElement.textContent = "";
+    secondSuggestion.textContent = "";
+    observer.callback([
+      {
+        type: "characterData",
+        target: documentRef.suggestionElement,
+        addedNodes: [],
+        removedNodes: [],
+      },
+      {
+        type: "characterData",
+        target: secondSuggestion,
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ]);
+
+    overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length, 2);
+    assert.equal(logs.at(-1)?.[1]?.status, "render-retained");
+    assert.equal(logs.at(-1)?.[1]?.selectionSource, "retained-last-targets");
+    assert.deepEqual(logs.at(-1)?.[1]?.routeSegments, []);
+    assert.deepEqual(logs.at(-1)?.[1]?.selectedSegments, ["T20"]);
+    assert.equal(warnings.length, 0);
+
+    await wait(1700);
+
+    overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length, 0);
+    assert.equal(warnings.at(-1)?.[1]?.status, "no-route");
+  } finally {
+    cleanup();
+  }
+});
+
+test("checkout-board-targets reapplies retained targets onto a replaced board during a transient no-route gap", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "96";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D18";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+  const observerRegistry = createObserverRegistry();
+  const firstBoard = appendBoardFixture(documentRef);
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 96,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    assert.ok(observer);
+    assert.ok(firstBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`));
+
+    documentRef.suggestionElement.textContent = "";
+    secondSuggestion.textContent = "";
+    const secondBoard = appendBoardFixture(documentRef);
+    documentRef.main.removeChild(firstBoard.svg);
+    observer.callback([
+      {
+        type: "childList",
+        target: documentRef.main,
+        addedNodes: [secondBoard.svg],
+        removedNodes: [firstBoard.svg],
+      },
+    ]);
+
+    const replacementOverlay = secondBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+    assert.ok(replacementOverlay);
+    assert.equal(replacementOverlay.children.length, 2);
+  } finally {
+    cleanup();
+  }
+});
+
 test("checkout-board-targets emits debug snapshots for render and no-route states", () => {
   const renderDocument = new FakeDocument();
   renderDocument.suggestionElement.textContent = "D20";
