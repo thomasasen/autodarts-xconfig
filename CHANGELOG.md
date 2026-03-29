@@ -16,8 +16,8 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
-- Nutzerwirkung: Im Cricket-/Tactics-Theme erscheinen die Spielernamen jetzt etwas größer, und die linke Bull-Labelzelle der Tabelle zeigt `⦿` statt `Bull`, ohne breiter oder höher als die Zahlzellen `20` bis `15` zu werden.
-  Technik: Die Cricket-Namensskalen wurden im Theme um rund zehn Prozent erhöht, und die Grid-FX-Logik behandelt die vordere Bull-Zelle jetzt ausdrücklich wieder als normale Label-Cell statt als separates Badge, ersetzt dort sichtbare `Bull`-Beschriftungen gezielt durch `U+29BF`, merkt sich den ursprünglichen Host-Text für Cleanup/Unmount und hält so die bestehende Label-Cell-Geometrie unangetastet; zusätzliche Regressionen sichern die neue Namensskala sowie die Bull-Frontzelle ausdrücklich ab.
+- Nutzerwirkung: Im Cricket-/Tactics-Theme erscheinen die Spielernamen jetzt etwas größer, und die linke Bull-Labelzelle der Tabelle zeigt stabil `⦿` statt `Bull`, ohne zwischen Host-Text und Glyph zu flackern oder breiter bzw. höher als die Zahlzellen `20` bis `15` zu werden.
+  Technik: Die Cricket-Namensskalen wurden im Theme um rund zehn Prozent erhöht, und die Grid-FX-Logik behandelt die vordere Bull-Zelle jetzt ausdrücklich wieder als normale Label-Cell statt als separates Badge, ersetzt dort sichtbare `Bull`-Beschriftungen gezielt durch `U+29BF`, markiert Bull-Knoten zusätzlich mit einer kanonischen DOM-Labelkennung für stabile Re-Discovery und stellt den ursprünglichen Host-Text samt Attributen beim Cleanup wieder her; zusätzliche Regressionen sichern die neue Namensskala, die Bull-Frontzelle und den flackerfreien Bull-Rediscovery-Pfad ausdrücklich ab.
 
 ## [2.0.90] - 2026-03-29
 

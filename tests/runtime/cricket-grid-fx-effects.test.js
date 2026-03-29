@@ -598,6 +598,7 @@ test("cricket grid fx renders the bull row with the unicode bull label and resto
   assert.equal(bullLabelCell?.classList?.contains(LABEL_CLASS), true);
   assert.equal(bullLabelCell?.classList?.contains(BADGE_CLASS), false);
   assert.equal(bullLabelCell?.textContent, "\u29BF");
+  assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), "BULL");
   assert.equal(Boolean(syntheticBullBadge), false);
   assert.equal(bullLabelCell?.getAttribute?.(HIDDEN_LABEL_ATTRIBUTE), null);
 
@@ -605,6 +606,7 @@ test("cricket grid fx renders the bull row with the unicode bull label and resto
 
   assert.equal(Boolean(bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`)), false);
   assert.equal(bullLabelCell?.textContent, "Bull");
+  assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), null);
 });
 
 test("cricket grid fx converts badge-like bull labels back into the front label cell contract", () => {
@@ -666,12 +668,14 @@ test("cricket grid fx converts badge-like bull labels back into the front label 
   assert.equal(bullLabelCell?.classList?.contains(CELL_CLASS), true);
   assert.equal(bullLabelCell?.classList?.contains(BADGE_CLASS), false);
   assert.equal(bullLabelCell?.textContent, "\u29BF");
+  assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), "BULL");
   assert.equal(Boolean(bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`)), false);
   assert.equal(bullLabelCell?.getAttribute?.(HIDDEN_LABEL_ATTRIBUTE), null);
 
   clearCricketGridFxState(state);
 
   assert.equal(bullLabelCell?.textContent, "Bull");
+  assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), null);
 });
 
 test("cricket grid fx backfills missing snapshot rows from grid root in merged discovery layouts", () => {

@@ -194,6 +194,34 @@ function getDisplayLabel(label) {
   return String(label || "").toUpperCase() === "BULL" ? BULL_DISPLAY_LABEL : String(label || "");
 }
 
+function rememberDisplayLabelSnapshot(node, state) {
+  if (!node || !(state?.displayLabelTextByNode instanceof Map) || state.displayLabelTextByNode.has(node)) {
+    return;
+  }
+
+  state.displayLabelTextByNode.set(node, {
+    text: String(node.textContent || ""),
+    dataRowLabel:
+      typeof node?.getAttribute === "function" ? node.getAttribute("data-row-label") : null,
+    dataTargetLabel:
+      typeof node?.getAttribute === "function" ? node.getAttribute("data-target-label") : null,
+  });
+}
+
+function setCanonicalDisplayLabel(node, label, state, cricketRules) {
+  if (!node || typeof node?.setAttribute !== "function") {
+    return;
+  }
+
+  const normalizedLabel = normalizeCricketLabelValue(cricketRules, label);
+  if (!normalizedLabel) {
+    return;
+  }
+
+  rememberDisplayLabelSnapshot(node, state);
+  node.setAttribute("data-row-label", normalizedLabel);
+}
+
 function resolveDisplayLabelTarget(node, label, cricketRules) {
   if (!node) {
     return null;
@@ -242,14 +270,13 @@ function applyDisplayLabel(node, label, state, cricketRules) {
     return;
   }
 
+  setCanonicalDisplayLabel(targetNode, label, state, cricketRules);
   const displayLabel = getDisplayLabel(label);
   if (String(targetNode.textContent || "") === displayLabel) {
     return;
   }
 
-  if (state?.displayLabelTextByNode instanceof Map && !state.displayLabelTextByNode.has(targetNode)) {
-    state.displayLabelTextByNode.set(targetNode, String(targetNode.textContent || ""));
-  }
+  rememberDisplayLabelSnapshot(targetNode, state);
 
   targetNode.textContent = displayLabel;
 }
@@ -259,9 +286,25 @@ function restoreDisplayLabels(state) {
     return;
   }
 
-  state.displayLabelTextByNode.forEach((originalText, node) => {
+  state.displayLabelTextByNode.forEach((snapshot, node) => {
     if (node) {
-      node.textContent = originalText;
+      const originalText =
+        snapshot && typeof snapshot === "object" && Object.prototype.hasOwnProperty.call(snapshot, "text")
+          ? snapshot.text
+          : snapshot;
+      node.textContent = String(originalText || "");
+      if (typeof node?.setAttribute === "function") {
+        if (snapshot && typeof snapshot === "object" && snapshot.dataRowLabel != null) {
+          node.setAttribute("data-row-label", snapshot.dataRowLabel);
+        } else if (typeof node?.removeAttribute === "function") {
+          node.removeAttribute("data-row-label");
+        }
+        if (snapshot && typeof snapshot === "object" && snapshot.dataTargetLabel != null) {
+          node.setAttribute("data-target-label", snapshot.dataTargetLabel);
+        } else if (typeof node?.removeAttribute === "function") {
+          node.removeAttribute("data-target-label");
+        }
+      }
     }
   });
   state.displayLabelTextByNode.clear();
@@ -1585,15 +1628,15 @@ export function updateCricketGridFx(options = {}) {
     const labelPresentation = normalizePresentationToken(
       labelCellState?.presentation || presentation
     );
-    const inlineBullLabel =
-      normalizeCricketLabelValue(cricketRules, row.label) === "BULL" &&
-      Boolean(labelCellNode?.classList);
-    let badgeNode = null;
-    if (
+    const normalizedDisplayLabel = normalizeCricketLabelValue(cricketRules, row.label);
+    const hasDistinctBadgeNode =
       row.badgeNode?.classList &&
       row.badgeNode !== labelCellNode &&
-      row.badgeNode.isConnected !== false
-    ) {
+      row.badgeNode.isConnected !== false;
+    const inlineBullLabel =
+      normalizedDisplayLabel === "BULL" && Boolean(labelCellNode?.classList) && !hasDistinctBadgeNode;
+    let badgeNode = null;
+    if (hasDistinctBadgeNode) {
       badgeNode = row.badgeNode;
     }
     if (inlineBullLabel) {
@@ -1605,6 +1648,10 @@ export function updateCricketGridFx(options = {}) {
       }
       state.hiddenLabelNodes.delete(labelCellNode);
       badgeNode = null;
+    }
+    if (normalizedDisplayLabel === "BULL") {
+      setCanonicalDisplayLabel(labelCellNode, row.label, state, cricketRules);
+      setCanonicalDisplayLabel(badgeNode, row.label, state, cricketRules);
     }
     if (!inlineBullLabel && !badgeNode && labelCellNode?.ownerDocument?.createElement) {
       badgeNode = labelCellNode.ownerDocument.createElement("span");
@@ -1618,8 +1665,7 @@ export function updateCricketGridFx(options = {}) {
       }
       badgeFallbackCount += 1;
     }
-    applyDisplayLabel(labelCellNode, row.label, state, cricketRules);
-    applyDisplayLabel(badgeNode, row.label, state, cricketRules);
+    applyDisplayLabel(badgeNode || labelCellNode, row.label, state, cricketRules);
     if (labelCellNode?.classList) {
       labelCellNode.classList.add(LABEL_CLASS);
       setLabelStateClasses(labelCellNode, labelPresentation);
