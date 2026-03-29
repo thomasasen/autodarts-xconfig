@@ -51,6 +51,29 @@ function appendThrowRow(documentRef, text = "") {
   };
 }
 
+function appendSplitThrowRow(documentRef, scoreText = "", segmentText = "") {
+  const row = documentRef.createElement("div");
+  row.classList.add("ad-ext-turn-throw");
+
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("chakra-text");
+  scoreNode.textContent = String(scoreText || "");
+
+  const segmentNode = documentRef.createElement("p");
+  segmentNode.classList.add("chakra-text");
+  segmentNode.textContent = String(segmentText || "");
+
+  row.appendChild(scoreNode);
+  row.appendChild(segmentNode);
+  documentRef.turnContainer.appendChild(row);
+
+  return {
+    row,
+    scoreNode,
+    segmentNode,
+  };
+}
+
 test("single-bull-sound does not replay the same hit when DOM and gameState report it in separate updates", () => {
   const documentRef = new FakeDocument();
   documentRef.throwTextElement.textContent = "S25";
@@ -94,6 +117,54 @@ test("single-bull-sound does not replay the same hit when DOM and gameState repo
           points: 25,
         },
       ]),
+      x01Rules,
+      state,
+      config,
+    });
+    assert.equal(playCalls.length, 1);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("single-bull-sound does not replay when score and segment nodes of the same throw update separately", () => {
+  const documentRef = new FakeDocument();
+  documentRef.turnContainer.removeChild(documentRef.throwRow);
+
+  const splitRow = appendSplitThrowRow(documentRef, "25", "");
+
+  const playCalls = [];
+  const state = createAudioState(playCalls);
+  const config = {
+    volume: 0.9,
+    cooldownMs: 700,
+  };
+  const activeTurn = {
+    id: "turn-split-dom",
+    round: 4,
+    turn: 1,
+    playerId: "player-1",
+  };
+
+  const originalDateNow = Date.now;
+  let fakeNow = 4_000;
+  Date.now = () => fakeNow;
+
+  try {
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(activeTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+    assert.equal(playCalls.length, 1);
+
+    splitRow.segmentNode.textContent = "S25";
+    fakeNow = 4_350;
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(activeTurn, []),
       x01Rules,
       state,
       config,
@@ -155,6 +226,68 @@ test("single-bull-sound still plays for the next throw index in the same turn", 
           points: 25,
         },
       ]),
+      x01Rules,
+      state,
+      config,
+    });
+    assert.equal(playCalls.length, 2);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("single-bull-sound plays again for the same slot after the next turn resets the row text", () => {
+  const documentRef = new FakeDocument();
+  documentRef.throwTextElement.textContent = "S25";
+
+  const playCalls = [];
+  const state = createAudioState(playCalls);
+  const config = {
+    volume: 0.9,
+    cooldownMs: 700,
+  };
+  const firstTurn = {
+    id: "turn-reset-1",
+    round: 5,
+    turn: 1,
+    playerId: "player-1",
+  };
+  const secondTurn = {
+    id: "turn-reset-2",
+    round: 5,
+    turn: 2,
+    playerId: "player-1",
+  };
+
+  const originalDateNow = Date.now;
+  let fakeNow = 5_000;
+  Date.now = () => fakeNow;
+
+  try {
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(firstTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+    assert.equal(playCalls.length, 1);
+
+    documentRef.throwTextElement.textContent = "";
+    fakeNow = 5_900;
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(secondTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+
+    documentRef.throwTextElement.textContent = "S25";
+    fakeNow = 6_800;
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(secondTurn, []),
       x01Rules,
       state,
       config,

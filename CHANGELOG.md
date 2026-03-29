@@ -18,6 +18,8 @@ direkt zu einer versionierten Release-Sektion.
 
 - Nutzerwirkung: Im Shanghai-Theme sind die Spielerkacheln jetzt wie im X01-Theme mittig ausgerichtet, sodass Namen, Werte und Zusatzinfos wieder ausgewogen zentriert statt sichtbar versetzt erscheinen.
   Technik: Das gemeinsame Theme-System erzeugt den zentrierten Spielerkachel-Grid-Vertrag jetzt über einen wiederverwendbaren Shared-Helper für X01 und Shanghai, und die Theme-CSS-Regression deckt die aktive Karten-Zentrierung für Shanghai ausdrücklich mit ab.
+- Nutzerwirkung: Der `Single Bull Sound` spielt bei einem einzelnen Single-Bull-Treffer jetzt stabil nur noch einmal ab, auch wenn Autodarts Score- und Segment-Text derselben Wurfzeile kurz nacheinander aktualisiert.
+  Technik: Die Runtime dedupliziert Single-Bull-Signale jetzt pro Turn und Wurf-Slot statt nur pro Textnode, leert veraltete Node-Marker bei geleerten Throw-Zeilen sauber, und neue Regressionstests decken getrennte DOM-Updates derselben Throw-Row sowie den Reset zwischen zwei Turns ausdrücklich ab.
 
 ## [2.0.83] - 2026-03-29
 

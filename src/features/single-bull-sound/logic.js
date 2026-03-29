@@ -45,6 +45,17 @@ function buildThrowKeys(activeTurn, throwEntry, throwIndex) {
   return keys;
 }
 
+function syncProcessedThrowScope(state, activeTurn) {
+  const turnId = buildTurnId(activeTurn);
+  if (state.lastProcessedTurnId === turnId) {
+    return turnId;
+  }
+
+  state.lastProcessedTurnId = turnId;
+  state.processedThrowKeys.clear();
+  return turnId;
+}
+
 function rememberProcessedThrow(state, throwKeys) {
   const normalizedKeys = (Array.isArray(throwKeys) ? throwKeys : [throwKeys])
     .map((key) => String(key || "").trim())
@@ -169,6 +180,7 @@ function scanDomRows(options = {}) {
     gameState && typeof gameState.getActiveTurn === "function"
       ? gameState.getActiveTurn()
       : null;
+  syncProcessedThrowScope(state, activeTurn);
   const rowIndexByNode = new Map();
   collectTurnThrowRows(documentRef).forEach((rowNode, rowIndex) => {
     rowIndexByNode.set(rowNode, rowIndex);
@@ -187,6 +199,8 @@ function scanDomRows(options = {}) {
   throwNodes.forEach((node, fallbackThrowIndex) => {
     const normalizedText = normalizeText(node.textContent);
     if (!normalizedText) {
+      state.lastTextByNode.delete(node);
+      state.lastPlayedAtByNode.delete(node);
       return;
     }
 
@@ -214,11 +228,13 @@ function scanDomRows(options = {}) {
     const throwIndex = rowIndexByNode.has(throwRow)
       ? rowIndexByNode.get(throwRow)
       : fallbackThrowIndex;
+    const throwKeys = buildThrowKeys(activeTurn, null, throwIndex);
+    if (!rememberProcessedThrow(state, throwKeys)) {
+      return;
+    }
 
     if (safePlayAudio(state, config)) {
       state.lastPlayedAtByNode.set(node, now);
-      const throwKeys = buildThrowKeys(activeTurn, null, throwIndex);
-      rememberProcessedThrow(state, throwKeys);
     }
   });
 }
@@ -241,6 +257,7 @@ function scanGameStateThrows(options = {}) {
     typeof gameState.getActiveTurn === "function"
       ? gameState.getActiveTurn()
       : null;
+  syncProcessedThrowScope(state, activeTurn);
   const throws =
     typeof gameState.getActiveThrows === "function"
       ? gameState.getActiveThrows()
@@ -269,6 +286,7 @@ export function createSingleBullSoundState(windowRef, config) {
     windowRef,
     audio: createAudio(windowRef, config),
     audioUnlocked: false,
+    lastProcessedTurnId: "",
     lastSignalPlayedAt: 0,
     lastTextByNode: new Map(),
     lastPlayedAtByNode: new Map(),
@@ -300,6 +318,9 @@ export function clearSingleBullSoundState(state) {
     }
   }
 
+  state.lastProcessedTurnId = "";
+  state.lastTextByNode.clear();
+  state.lastPlayedAtByNode.clear();
   state.processedThrowKeys.clear();
 }
 
