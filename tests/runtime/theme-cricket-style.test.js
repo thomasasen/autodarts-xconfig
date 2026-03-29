@@ -184,7 +184,7 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.match(
     css,
-    /\.ad-ext-theme-board-panel\s*\{[^}]*background:\s*transparent\s*!important;[^}]*border:\s*none\s*!important;[^}]*box-shadow:\s*none\s*!important;/s
+    /\.ad-ext-theme-board-panel\s*\{[^}]*background:[^}]*linear-gradient\(180deg,\s*rgba\(9,\s*16,\s*28,\s*0\.9\),\s*rgba\(4,\s*12,\s*20,\s*0\.84\)\)[^}]*border:\s*1px solid rgba\(56,\s*74,\s*102,\s*0\.58\)\s*!important;[^}]*box-shadow:[^}]*0 8px 24px rgba\(0,\s*0,\s*0,\s*0\.24\)\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
   );
   assert.ok(
     css.includes(

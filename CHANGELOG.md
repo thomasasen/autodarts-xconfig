@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.92] - 2026-03-29
+
+### Changed
+
+- Nutzerwirkung: Das Cricket-Board erscheint im rechten Bereich jetzt wieder klar abgegrenzt und gerahmt, sodass die Dartscheibe optisch sauber vom restlichen Layout getrennt wird, ohne die bereits verbesserte Flächenausnutzung zu verlieren.
+  Technik: Das Cricket-Theme rendert `.ad-ext-theme-board-panel` jetzt mit einer dunklen Verlaufsfläche, subtiler Kontur, leichter Tiefenwirkung und ausgeblendeten Überläufen statt vollständig transparent; die Style-Regression prüft den neuen Board-Panel-Vertrag ausdrücklich, und der Release-Stand wurde auf `2.0.92` angehoben.
+
 ## [2.0.91] - 2026-03-29
 
 ### Fixed
@@ -1011,7 +1018,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...HEAD
+[2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...HEAD
+[2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...fcc069c
 [2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...2824799
 [2.0.89]: https://github.com/thomasasen/autodarts-xconfig/compare/9b8c3c0...b0eb1cc
 [2.0.88]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...9b8c3c0
