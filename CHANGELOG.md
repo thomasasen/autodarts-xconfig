@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.94] - 2026-03-30
+
+### Changed
+
+- Nutzerwirkung: Die Anzeige der bereits gewonnenen Runden auf den Cricket-/Tactics-Spielerkarten ist jetzt deutlich präsenter und rund dreimal so groß wie zuvor, ohne die Namenszeile aus dem Layout zu drängen.
+  Technik: Das Cricket-Theme verwendet für die Wins-Badge jetzt eigene Größenvariablen für Schrift, Mindesthöhe und Innenabstand statt der bisherigen kleinen Badge-Grundwerte; eine erweiterte Style-Regression sichert den größeren Badge-Vertrag ausdrücklich ab.
+
 ## [2.0.93] - 2026-03-30
 
 ### Changed
@@ -1025,7 +1032,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...HEAD
+[2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...HEAD
+[2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...main
 [2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...8355902
 [2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...fcc069c
 [2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...2824799

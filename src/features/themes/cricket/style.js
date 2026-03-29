@@ -79,6 +79,9 @@ const cricketThemeCss = `
     0 1px 0 rgba(4, 10, 20, 0.92),
     0 0 16px rgba(4, 10, 20, 0.46);
   --ad-ext-theme-cricket-score-end-inset: 0.38rem;
+  --ad-ext-theme-cricket-wins-font-size: clamp(1.86rem, 2.16vw, 2.28rem);
+  --ad-ext-theme-cricket-wins-min-height: 3.15rem;
+  --ad-ext-theme-cricket-wins-padding-inline: 0.9rem;
   --ad-ext-theme-cricket-player-gap: 0rem;
   --ad-ext-theme-cricket-content-gap: 0.5rem;
   --ad-ext-theme-cricket-player-grid-gap: 0.35rem;
@@ -139,7 +142,7 @@ const cricketThemeCss = `
   --ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);
   --ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);
   --ad-ext-theme-cricket-score-color: var(--ad-ext-theme-cricket-score-active-color);
-  --ad-ext-theme-cricket-wins-scale: 0.92;
+  --ad-ext-theme-cricket-wins-scale: 1;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}{
@@ -277,9 +280,9 @@ const cricketThemeCss = `
   justify-self: end !important;
   align-self: center !important;
   min-width: 0 !important;
-  min-height: 1.05rem !important;
-  padding-inline: 0.3rem !important;
-  font-size: clamp(0.62rem, 0.72vw, 0.76rem) !important;
+  min-height: var(--ad-ext-theme-cricket-wins-min-height) !important;
+  padding-inline: var(--ad-ext-theme-cricket-wins-padding-inline) !important;
+  font-size: var(--ad-ext-theme-cricket-wins-font-size) !important;
   line-height: 1.05 !important;
   border-radius: 999px !important;
   transform: scale(var(--ad-ext-theme-cricket-wins-scale)) !important;

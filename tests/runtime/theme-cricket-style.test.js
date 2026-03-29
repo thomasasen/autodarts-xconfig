@@ -21,6 +21,12 @@ function attrSelector(attributeName, value = "true") {
   return `[${attributeName}="${value}"]`;
 }
 
+function extractRuleSlice(css, selector, length = 700) {
+  const start = css.indexOf(selector);
+  assert.notEqual(start, -1, `Expected CSS selector not found: ${selector}`);
+  return css.slice(start, start + length);
+}
+
 test("cricket theme uses the stable cricket-card attribute contract and readability layout", () => {
   const css = buildCricketThemeCss({ showAvg: true });
 
@@ -42,6 +48,12 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(css, /--ad-ext-theme-cricket-score-size-active:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-end-inset:\s*0\.38rem;/);
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-wins-font-size:\s*clamp\(\s*1\.86rem,\s*2\.16vw,\s*2\.28rem\s*\);/
+  );
+  assert.match(css, /--ad-ext-theme-cricket-wins-min-height:\s*3\.15rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-wins-padding-inline:\s*0\.9rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-grid-gap:\s*0\.35rem;/);
 
   assert.ok(
@@ -166,6 +178,8 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.ok(css.includes(`--ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-wins-scale: 1;`));
+  assert.doesNotMatch(css, /--ad-ext-theme-cricket-wins-scale:\s*0\.92;/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*\{[^}]*display:\s*block\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*width:\s*100%\s*!important;/s
@@ -178,6 +192,13 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;[^}]*margin-inline-end:\s*var\(--ad-ext-theme-cricket-score-end-inset\)\s*!important;/s
   );
+  const winsRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "identity")} ${attrSelector(CRICKET_META_ATTRIBUTE, "wins")} {`
+  );
+  assert.match(winsRule, /min-height:\s*var\(--ad-ext-theme-cricket-wins-min-height\)\s*!important;/);
+  assert.match(winsRule, /padding-inline:\s*var\(--ad-ext-theme-cricket-wins-padding-inline\)\s*!important;/);
+  assert.match(winsRule, /font-size:\s*var\(--ad-ext-theme-cricket-wins-font-size\)\s*!important;/);
   assert.match(
     css,
     /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px rgba\(110,\s*138,\s*154,\s*0\.26\),\s*inset 0 0 10px rgba\(3,\s*16,\s*24,\s*0\.2\)\s*!important;/s
