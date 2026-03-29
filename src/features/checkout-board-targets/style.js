@@ -76,6 +76,22 @@ const OUTER_SEGMENT_PULSE_PROFILE = Object.freeze({
   outlineWidthUpPxFloor: 2,
 });
 
+const BULL_SEGMENT_PULSE_PROFILE = Object.freeze({
+  minOpacity: 0.52,
+  maxOpacity: 1,
+  minScale: 1.02,
+  maxScale: 1.08,
+  filter:
+    "drop-shadow(0 0 6px var(--ad-ext-target-stroke)) drop-shadow(0 0 14px var(--ad-ext-target-color))",
+  strokeWidthBoostPx: 1.5,
+  outlineWidthBoostPx: 2.5,
+  outlineBaseOpacityFloor: 0.72,
+  outlinePulseMinOpacityFloor: 0.72,
+  outlinePulseMaxOpacityFloor: 1,
+  outlineWidthDownPxFloor: 1.2,
+  outlineWidthUpPxFloor: 1.8,
+});
+
 function resolvePreset(presets, presetKey, fallbackKey) {
   const normalized = String(presetKey || "").trim().toLowerCase();
   return presets[normalized] || presets[fallbackKey];
@@ -100,6 +116,7 @@ export function resolveBoardTargetVisualConfig(featureConfig = {}) {
     theme: resolvePreset(BOARD_THEME_PRESETS, featureConfig.colorTheme, "violet"),
     pulseProfile: BASE_PULSE_PROFILE,
     outerSegmentPulseProfile: OUTER_SEGMENT_PULSE_PROFILE,
+    bullSegmentPulseProfile: BULL_SEGMENT_PULSE_PROFILE,
     outlineIntensity: resolvePreset(
       OUTLINE_INTENSITY_PRESETS,
       featureConfig.outlineIntensity,

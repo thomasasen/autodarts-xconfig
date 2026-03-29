@@ -211,66 +211,46 @@ function resolveTargetStyleProfile(target, radius, visualConfig) {
   const family = resolveTargetFamily(target);
   const pulseProfile = visualConfig.pulseProfile || {};
   const outerPulseProfile = visualConfig.outerSegmentPulseProfile || {};
-  const isOuterPulse = family === "outer" && visualConfig.effect === "pulse";
+  const bullPulseProfile = visualConfig.bullSegmentPulseProfile || {};
+  const isPulseEffect = visualConfig.effect === "pulse";
+  const familyPulseProfile =
+    family === "outer" && isPulseEffect
+      ? outerPulseProfile
+      : family === "bull" && isPulseEffect
+        ? bullPulseProfile
+        : pulseProfile;
+  const strokeWidthBoostPx = Number(familyPulseProfile.strokeWidthBoostPx || 0);
+  const outlineWidthBoostPx = Number(familyPulseProfile.outlineWidthBoostPx || 0);
 
   return {
     family,
-    strokeWidthPx:
-      family === "outer"
-        ? baseStrokeWidth + Number(outerPulseProfile.strokeWidthBoostPx || 0)
-        : baseStrokeWidth,
-    outlineWidthPx:
-      family === "outer"
-        ? baseOutlineWidth + Number(outerPulseProfile.outlineWidthBoostPx || 0)
-        : baseOutlineWidth,
-    pulseMinOpacity: isOuterPulse
-      ? Number(outerPulseProfile.minOpacity || pulseProfile.minOpacity || 0.25)
-      : Number(pulseProfile.minOpacity || 0.25),
-    pulseMaxOpacity: isOuterPulse
-      ? Number(outerPulseProfile.maxOpacity || pulseProfile.maxOpacity || 1)
-      : Number(pulseProfile.maxOpacity || 1),
-    pulseMinScale: isOuterPulse
-      ? Number(outerPulseProfile.minScale || pulseProfile.minScale || 0.98)
-      : Number(pulseProfile.minScale || 0.98),
-    pulseMaxScale: isOuterPulse
-      ? Number(outerPulseProfile.maxScale || pulseProfile.maxScale || 1.02)
-      : Number(pulseProfile.maxScale || 1.02),
-    filter: isOuterPulse ? String(outerPulseProfile.filter || "none") : "none",
-    outlineBaseOpacity:
-      family === "outer"
-        ? Math.max(
-            Number(visualConfig.outlineIntensity.baseOpacity || 0),
-            Number(outerPulseProfile.outlineBaseOpacityFloor || 0)
-          )
-        : Number(visualConfig.outlineIntensity.baseOpacity || 0),
-    outlinePulseMinOpacity:
-      family === "outer"
-        ? Math.max(
-            Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
-            Number(outerPulseProfile.outlinePulseMinOpacityFloor || 0)
-          )
-        : Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
-    outlinePulseMaxOpacity:
-      family === "outer"
-        ? Math.max(
-            Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
-            Number(outerPulseProfile.outlinePulseMaxOpacityFloor || 0)
-          )
-        : Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
-    outlineWidthDownPx:
-      family === "outer"
-        ? Math.max(
-            Number(visualConfig.outlineIntensity.widthDownPx || 0),
-            Number(outerPulseProfile.outlineWidthDownPxFloor || 0)
-          )
-        : Number(visualConfig.outlineIntensity.widthDownPx || 0),
-    outlineWidthUpPx:
-      family === "outer"
-        ? Math.max(
-            Number(visualConfig.outlineIntensity.widthUpPx || 0),
-            Number(outerPulseProfile.outlineWidthUpPxFloor || 0)
-          )
-        : Number(visualConfig.outlineIntensity.widthUpPx || 0),
+    strokeWidthPx: baseStrokeWidth + strokeWidthBoostPx,
+    outlineWidthPx: baseOutlineWidth + outlineWidthBoostPx,
+    pulseMinOpacity: Number(familyPulseProfile.minOpacity || pulseProfile.minOpacity || 0.25),
+    pulseMaxOpacity: Number(familyPulseProfile.maxOpacity || pulseProfile.maxOpacity || 1),
+    pulseMinScale: Number(familyPulseProfile.minScale || pulseProfile.minScale || 0.98),
+    pulseMaxScale: Number(familyPulseProfile.maxScale || pulseProfile.maxScale || 1.02),
+    filter: isPulseEffect ? String(familyPulseProfile.filter || "none") : "none",
+    outlineBaseOpacity: Math.max(
+      Number(visualConfig.outlineIntensity.baseOpacity || 0),
+      Number(familyPulseProfile.outlineBaseOpacityFloor || 0)
+    ),
+    outlinePulseMinOpacity: Math.max(
+      Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
+      Number(familyPulseProfile.outlinePulseMinOpacityFloor || 0)
+    ),
+    outlinePulseMaxOpacity: Math.max(
+      Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
+      Number(familyPulseProfile.outlinePulseMaxOpacityFloor || 0)
+    ),
+    outlineWidthDownPx: Math.max(
+      Number(visualConfig.outlineIntensity.widthDownPx || 0),
+      Number(familyPulseProfile.outlineWidthDownPxFloor || 0)
+    ),
+    outlineWidthUpPx: Math.max(
+      Number(visualConfig.outlineIntensity.widthUpPx || 0),
+      Number(familyPulseProfile.outlineWidthUpPxFloor || 0)
+    ),
   };
 }
 

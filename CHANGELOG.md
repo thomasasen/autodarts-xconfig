@@ -12,7 +12,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.0.87] - 2026-03-29
+## [2.0.88] - 2026-03-29
 
 ### Fixed
 
@@ -20,6 +20,8 @@ direkt zu einer versionierten Release-Sektion.
   Technik: Die X01-Zielauswahl bevorzugt in `next` jetzt das erste sichtbare Routenfeld, nutzt den direkten Score-Checkout nur noch als gezielten Stale-Route-Override bei unplausiblen Erstschritten, gleicht DOM- und Game-State-Score gegeneinander ab und bevorzugt bei Konflikten den sichtbaren DOM-Score; zusätzliche Runtime-Regressionen sichern sowohl den Live-Fall `61 -> 25, D18` als auch den alten `50 -> BULL`-Override ausdrücklich ab.
 - Nutzerwirkung: Bare Checkout-Hinweise wie `25` werden in X01-Routen wieder korrekt als `Single Bull` verstanden und können dadurch zuverlässig auf dem Board hervorgehoben werden.
   Technik: Die explizite Checkout-Segment-Erkennung akzeptiert jetzt auch unpräfixte `25` sowohl in den X01-Regeln als auch im Route-Fallback, und eine zusätzliche Routen-Regression schützt die Normalisierung `25 -> S25` vor erneutem Drift.
+- Nutzerwirkung: `Checkout Board Targets` hebt den `Single Bull / 25`-Ring bei sichtbaren X01-Checkouts jetzt deutlich klarer hervor, sodass der äußere Bull-Ring im Standard-`Pulse`-Modus spürbar sichtbarer leuchtet statt nur sehr dezent zu pulsieren.
+  Technik: `bull`-Ziele erhalten im `pulse`-Modus jetzt ein eigenes Sichtbarkeitsprofil mit stärkerer Mindest-Opacity, größerer Puls-Skalierung, breiterer Kontur und themengefärbtem Halo; außerhalb von `pulse` bleiben `blink` und `glow` absichtlich auf dem bisherigen, effektneutralen Styling, und neue Render-Regressionen sichern beide Verträge ausdrücklich ab.
 
 ## [2.0.86] - 2026-03-29
 
@@ -986,7 +988,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.87]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...HEAD
+[2.0.88]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...HEAD
 [2.0.86]: https://github.com/thomasasen/autodarts-xconfig/compare/0bebdfc...0d636b4
 [2.0.85]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
 [2.0.84]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
