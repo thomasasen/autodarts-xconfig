@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.90] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Das Cricket-/Tactics-Theme stellt die linke Spielfläche nach der `2.0.89`-Regression wieder korrekt dar, sodass Spielerkarten und Grid nicht mehr kollabieren oder nach unten wegrutschen, während die zuletzt verbesserten Namen-, Score- und Board-Anpassungen erhalten bleiben.
+  Technik: Das linke Cricket-/Tactics-Layout verwendet jetzt wieder eine kollisionsfreie Flex-Spalte statt eines mit alten Shared-Grid-Regeln konkurrierenden Zweizeilen-Grids, setzt `#ad-ext-player-display` explizit von geerbten `grid-area`-/`grid-row`-Platzierungen zurück, lässt den gemeinsamen Grid-Container die Resthöhe als echter Flex-Füller belegen und ersetzt die fehlerhafte Style-Regression durch Absicherungen für den neuen Flex-Vertrag.
+
 ## [2.0.89] - 2026-03-29
 
 ### Fixed
@@ -997,7 +1004,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.89]: https://github.com/thomasasen/autodarts-xconfig/compare/9b8c3c0...HEAD
+[2.0.90]: https://github.com/thomasasen/autodarts-xconfig/compare/b0eb1cc...HEAD
+[2.0.89]: https://github.com/thomasasen/autodarts-xconfig/compare/9b8c3c0...b0eb1cc
 [2.0.88]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...9b8c3c0
 [2.0.86]: https://github.com/thomasasen/autodarts-xconfig/compare/0bebdfc...0d636b4
 [2.0.85]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512

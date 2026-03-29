@@ -524,10 +524,9 @@ span.chakra-switch__track.css-v4l15v {
 }
 
 .ad-ext-theme-content-slot > .ad-ext-theme-content-left {
-  display: grid !important;
-  grid-template-rows: auto minmax(0, 1fr) !important;
-  row-gap: var(--ad-ext-theme-cricket-player-grid-gap) !important;
-  align-content: stretch !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--ad-ext-theme-cricket-player-grid-gap) !important;
   min-width: 0 !important;
   min-height: 0 !important;
   width: max-content !important;
@@ -535,6 +534,14 @@ span.chakra-switch__track.css-v4l15v {
   max-width: 100% !important;
   justify-self: start !important;
   align-self: stretch !important;
+}
+
+.ad-ext-theme-content-left > #ad-ext-player-display {
+  grid-area: auto !important;
+  grid-row: auto !important;
+  grid-column: auto !important;
+  flex: 0 0 auto !important;
+  max-height: none !important;
 }
 
 .ad-ext-theme-content-slot.ad-ext-theme-cricket-board-forced-visible {
@@ -736,10 +743,11 @@ span.chakra-switch__track.css-v4l15v {
   column-gap: 0 !important;
   row-gap: 1.6px !important;
   margin-top: 0 !important;
+  flex: 1 1 auto !important;
   width: max-content !important;
   min-width: max-content !important;
   min-height: 0 !important;
-  height: 100% !important;
+  height: auto !important;
   align-content: stretch !important;
   align-self: stretch !important;
   justify-content: start !important;

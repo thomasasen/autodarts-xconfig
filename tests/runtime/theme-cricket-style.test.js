@@ -90,11 +90,19 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   );
   assert.match(
     css,
-    /\.ad-ext-theme-content-slot\s*>\s*\.ad-ext-theme-content-left\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-rows:\s*auto\s+minmax\(0,\s*1fr\)\s*!important;[^}]*row-gap:\s*var\(--ad-ext-theme-cricket-player-grid-gap\)\s*!important;[^}]*align-content:\s*stretch\s*!important;/s
+    /\.ad-ext-theme-content-slot\s*>\s*\.ad-ext-theme-content-left\s*\{[^}]*display:\s*flex\s*!important;[^}]*flex-direction:\s*column\s*!important;[^}]*gap:\s*var\(--ad-ext-theme-cricket-player-grid-gap\)\s*!important;[^}]*height:\s*100%\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s*\+\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*\{[^}]*grid-template-columns:\s*repeat\(\s*var\(--ad-ext-theme-cricket-player-count\),\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*\)\s*!important;[^}]*grid-auto-rows:\s*minmax\(0,\s*1fr\)\s*!important;[^}]*margin-top:\s*0\s*!important;[^}]*height:\s*100%\s*!important;[^}]*align-content:\s*stretch\s*!important;/s
+    /\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\{[^}]*grid-area:\s*auto\s*!important;[^}]*grid-row:\s*auto\s*!important;[^}]*grid-column:\s*auto\s*!important;[^}]*flex:\s*0\s+0\s+auto\s*!important;[^}]*max-height:\s*none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*\{[^}]*grid-template-columns:\s*repeat\(\s*var\(--ad-ext-theme-cricket-player-count\),\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*\)\s*!important;[^}]*grid-auto-rows:\s*minmax\(0,\s*1fr\)\s*!important;[^}]*margin-top:\s*0\s*!important;[^}]*flex:\s*1\s+1\s+auto\s*!important;[^}]*height:\s*auto\s*!important;[^}]*align-content:\s*stretch\s*!important;/s
+  );
+  assert.doesNotMatch(
+    css,
+    /\.ad-ext-theme-content-slot\s*>\s*\.ad-ext-theme-content-left\s*\{[^}]*display:\s*grid\s*!important;/s
   );
 });
 
