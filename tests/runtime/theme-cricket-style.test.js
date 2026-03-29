@@ -31,6 +31,10 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(css, /--ad-ext-theme-cricket-player-column-max-width:\s*15\.5rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-column-width:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-player-area-required-width:\s*var\(--ad-ext-theme-cricket-left-min-width\);/);
+  assert.match(css, /--ad-ext-theme-cricket-name-size-active:\s*clamp\(/);
+  assert.match(css, /--ad-ext-theme-cricket-name-size-inactive:\s*clamp\(/);
+  assert.match(css, /--ad-ext-theme-cricket-score-size-active:\s*clamp\(/);
+  assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
 
   assert.ok(
     css.includes(
@@ -133,11 +137,58 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.match(
     css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-inactive\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-inactive\);/s
+  );
+  assert.ok(
+    css.includes(
+      `#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"]{`
+    )
+  );
+  assert.ok(css.includes(`--ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);`));
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*\{[^}]*display:\s*block\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*width:\s*100%\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;/s
+  );
+  assert.match(
+    css,
     /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell\s*\{[^}]*box-shadow:\s*inset 0 0 0 1px rgba\(110,\s*138,\s*154,\s*0\.26\),\s*inset 0 0 10px rgba\(3,\s*16,\s*24,\s*0\.2\)\s*!important;/s
   );
   assert.match(
     css,
     /\.ad-ext-theme-board-panel\s*\{[^}]*background:\s*transparent\s*!important;[^}]*border:\s*none\s*!important;[^}]*box-shadow:\s*none\s*!important;/s
+  );
+  assert.ok(
+    css.includes(
+      `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "identity")} ${attrSelector(CRICKET_META_SHELL_ATTRIBUTE)} {`
+    )
+  );
+  assert.ok(
+    css.includes(
+      `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "identity")} > ${attrSelector(CRICKET_IDENTITY_SHELL_ATTRIBUTE)} {`
+    )
+  );
+  assert.match(
+    css,
+    /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*!important;/s
+  );
+  assert.match(css, /grid-column:\s*1\s*\/\s*-1\s*!important;/s);
+});
+
+test("cricket theme removes event-shell padding so the board fills its slot", () => {
+  const css = buildCricketThemeCss({ showAvg: true });
+
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-event-shell\s*\{[^}]*padding:\s*0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-event-shell\s*>\s*\.ad-ext-theme-board-canvas,\s*\.ad-ext-theme-board-event-shell\s*>\s*\.ad-ext-theme-board-media-root,\s*\.ad-ext-theme-board-panel\.ad-ext-theme-board-image-backed\s+\.ad-ext-theme-board-media-root\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;/s
   );
 });
 

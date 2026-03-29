@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.89] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-/Tactics-Theme bleiben Spielernamen auf den Spielerkarten jetzt wieder sichtbar und sinnvoll lesbar, der aktive Punktestand ist klar größer als bei inaktiven Spielern, und das Board füllt den rechten Bereich deutlich besser aus statt unnötig klein zu bleiben.
+  Technik: Die Cricket-Theme-CSS spannt die Identity-Shell jetzt über die volle verfügbare Slot-Breite, priorisiert den Namensbereich vor sekundärer Meta, steuert aktive und inaktive Namens- sowie Score-Größen über stabile Host-Variablen und entfernt unnötiges Event-Shell-Padding, damit image-backed Boards ihre zugewiesene Quadratfläche vollständig nutzen; zusätzliche Style-Regressionen sichern Namen-, Score- und Board-Fill-Verträge ausdrücklich ab.
+
 ## [2.0.88] - 2026-03-29
 
 ### Fixed
@@ -990,7 +997,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.88]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...HEAD
+[2.0.89]: https://github.com/thomasasen/autodarts-xconfig/compare/9b8c3c0...HEAD
+[2.0.88]: https://github.com/thomasasen/autodarts-xconfig/compare/0d636b4...9b8c3c0
 [2.0.86]: https://github.com/thomasasen/autodarts-xconfig/compare/0bebdfc...0d636b4
 [2.0.85]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
 [2.0.84]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
