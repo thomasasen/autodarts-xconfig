@@ -7,6 +7,7 @@ import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } 
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import {
   collectVisibleCheckoutRouteEntries,
+  getFirstCheckoutRouteSegment,
   getCheckoutFinishSegmentFromRoute,
   mapRouteSegmentsToBoardTargets,
 } from "../x01-checkout-route.js";
@@ -28,14 +29,7 @@ function parseScore(text) {
   return Number.isFinite(value) ? value : NaN;
 }
 
-function resolveActiveScore(gameState, documentRef) {
-  if (gameState && typeof gameState.getActiveScore === "function") {
-    const score = gameState.getActiveScore();
-    if (Number.isFinite(score)) {
-      return score;
-    }
-  }
-
+function readDomActiveScore(documentRef) {
   if (!documentRef || typeof documentRef.querySelector !== "function") {
     return NaN;
   }
@@ -44,6 +38,62 @@ function resolveActiveScore(gameState, documentRef) {
     documentRef.querySelector(ACTIVE_SCORE_SELECTOR) ||
     documentRef.querySelector(SCORE_SELECTOR);
   return parseScore(node?.textContent || "");
+}
+
+function resolveActiveScoreState(gameState, documentRef) {
+  const gameStateScore =
+    gameState && typeof gameState.getActiveScore === "function"
+      ? Number(gameState.getActiveScore())
+      : NaN;
+  const domScore = readDomActiveScore(documentRef);
+
+  if (Number.isFinite(domScore) && Number.isFinite(gameStateScore)) {
+    if (domScore === gameStateScore) {
+      return {
+        activeScore: domScore,
+        domScore,
+        gameStateScore,
+        scoreSource: "game-state+dom",
+        scoreAgreement: "match",
+      };
+    }
+
+    return {
+      activeScore: domScore,
+      domScore,
+      gameStateScore,
+      scoreSource: "dom-preferred",
+      scoreAgreement: "mismatch",
+    };
+  }
+
+  if (Number.isFinite(domScore)) {
+    return {
+      activeScore: domScore,
+      domScore,
+      gameStateScore,
+      scoreSource: "dom",
+      scoreAgreement: "dom-only",
+    };
+  }
+
+  if (Number.isFinite(gameStateScore)) {
+    return {
+      activeScore: gameStateScore,
+      domScore,
+      gameStateScore,
+      scoreSource: "game-state",
+      scoreAgreement: "game-state-only",
+    };
+  }
+
+  return {
+    activeScore: NaN,
+    domScore,
+    gameStateScore,
+    scoreSource: "none",
+    scoreAgreement: "none",
+  };
 }
 
 function getScoreCheckoutSegment(activeScore, outMode, x01Rules) {
@@ -63,25 +113,33 @@ function getScoreCheckoutSegment(activeScore, outMode, x01Rules) {
     : "";
 }
 
-function canFinishWithActiveScore(activeScore, segmentName, outMode, x01Rules) {
+function canStartVisibleCheckoutRoute(activeScore, segmentName, outMode, x01Rules) {
   if (!x01Rules || !Number.isFinite(activeScore) || !segmentName) {
     return false;
   }
 
-  if (typeof x01Rules.canFinishWithSegment === "function") {
-    return x01Rules.canFinishWithSegment(activeScore, segmentName, outMode);
+  if (typeof x01Rules.evaluateThrowOutcome !== "function") {
+    return true;
   }
 
-  const parsed = typeof x01Rules.parseSegment === "function"
-    ? x01Rules.parseSegment(segmentName)
-    : null;
-  if (!parsed || parsed.score !== activeScore) {
+  const outcome = x01Rules.evaluateThrowOutcome({
+    scoreBefore: activeScore,
+    segmentName,
+    outMode,
+  });
+  if (!outcome || outcome.isBust) {
     return false;
   }
 
-  return typeof x01Rules.isOneDartCheckoutSegmentForOutMode === "function"
-    ? x01Rules.isOneDartCheckoutSegmentForOutMode(segmentName, outMode)
-    : false;
+  if (outcome.isFinish) {
+    return true;
+  }
+
+  if (typeof x01Rules.isCheckoutPossibleFromScoreForOutMode === "function") {
+    return x01Rules.isCheckoutPossibleFromScoreForOutMode(outcome.scoreAfter, outMode);
+  }
+
+  return outcome.scoreAfter > 1;
 }
 
 function nowMs() {
@@ -151,6 +209,10 @@ function buildDebugPayload(options = {}) {
     status: String(options.status || "unknown"),
     active: options.active === true,
     activeScore: Number.isFinite(options.activeScore) ? options.activeScore : null,
+    domScore: Number.isFinite(options.domScore) ? options.domScore : null,
+    gameStateScore: Number.isFinite(options.gameStateScore) ? options.gameStateScore : null,
+    scoreSource: String(options.scoreSource || "none"),
+    scoreAgreement: String(options.scoreAgreement || "none"),
     variantText: String(options.variantText || "").trim(),
     outMode: String(options.outMode || "").trim(),
     targetSelectionMode: String(options.targetSelectionMode || "next"),
@@ -184,6 +246,10 @@ function buildDebugSignature(payload = {}) {
     payload.status || "unknown",
     payload.active ? 1 : 0,
     payload.activeScore ?? "null",
+    payload.domScore ?? "null",
+    payload.gameStateScore ?? "null",
+    payload.scoreSource || "none",
+    payload.scoreAgreement || "none",
     payload.variantText || "-",
     payload.outMode || "-",
     payload.targetSelectionMode || "next",
@@ -213,7 +279,11 @@ function buildDebugSignature(payload = {}) {
 function buildDebugSummary(payload = {}) {
   return `state status="${payload.status || "unknown"}" active=${payload.active ? "yes" : "no"} variant="${
     payload.variantText || "-"
-  }" activeScore="${payload.activeScore ?? "-"}" outMode="${payload.outMode || "-"}" selection="${
+  }" activeScore="${payload.activeScore ?? "-"}" domScore="${payload.domScore ?? "-"}" gameStateScore="${
+    payload.gameStateScore ?? "-"
+  }" scoreSource="${payload.scoreSource || "none"}" scoreAgreement="${payload.scoreAgreement || "none"}" outMode="${
+    payload.outMode || "-"
+  }" selection="${
     payload.targetSelectionMode || "next"
   }" source="${payload.selectionSource || "none"}" suggestions=${
     Number(payload.suggestionCount) || 0
@@ -443,17 +513,27 @@ export function initializeCheckoutBoardTargets(context = {}) {
       };
     }
 
-    const currentCheckoutSegment = routeSegments.find((segment) =>
-      canFinishWithActiveScore(activeScore, segment, outMode, x01Rules)
-    );
-    if (currentCheckoutSegment) {
+    const firstRouteSegment = getFirstCheckoutRouteSegment(routeSegments);
+    const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
+    if (firstRouteSegment) {
+      if (
+        scoreCheckoutSegment &&
+        firstRouteSegment !== scoreCheckoutSegment &&
+        !canStartVisibleCheckoutRoute(activeScore, firstRouteSegment, outMode, x01Rules) &&
+        routeSegments.includes(scoreCheckoutSegment)
+      ) {
+        return {
+          selectedSegments: [scoreCheckoutSegment],
+          selectionSource: "score-checkout-override-route",
+        };
+      }
+
       return {
-        selectedSegments: [currentCheckoutSegment],
-        selectionSource: "route-current-checkout",
+        selectedSegments: [firstRouteSegment],
+        selectionSource: "route-first",
       };
     }
 
-    const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
     if (scoreCheckoutSegment) {
       return {
         selectedSegments: [scoreCheckoutSegment],
@@ -484,11 +564,14 @@ export function initializeCheckoutBoardTargets(context = {}) {
       gameState && typeof gameState.getOutMode === "function"
         ? String(gameState.getOutMode() || "")
         : "";
-    const activeScore = resolveActiveScore(gameState, documentRef);
+    const activeScoreState = resolveActiveScoreState(gameState, documentRef);
+    const activeScore = activeScoreState.activeScore;
     const signature = [
       active ? "x01" : "other",
       routeSegments.join(">"),
       Number.isFinite(activeScore) ? activeScore : "null",
+      Number.isFinite(activeScoreState.domScore) ? activeScoreState.domScore : "null",
+      Number.isFinite(activeScoreState.gameStateScore) ? activeScoreState.gameStateScore : "null",
       outMode,
     ].join("|");
 
@@ -503,6 +586,10 @@ export function initializeCheckoutBoardTargets(context = {}) {
         status: "inactive",
         active,
         activeScore,
+        domScore: activeScoreState.domScore,
+        gameStateScore: activeScoreState.gameStateScore,
+        scoreSource: activeScoreState.scoreSource,
+        scoreAgreement: activeScoreState.scoreAgreement,
         variantText,
         outMode,
         targetSelectionMode,
@@ -562,6 +649,10 @@ export function initializeCheckoutBoardTargets(context = {}) {
       status,
       active,
       activeScore,
+      domScore: activeScoreState.domScore,
+      gameStateScore: activeScoreState.gameStateScore,
+      scoreSource: activeScoreState.scoreSource,
+      scoreAgreement: activeScoreState.scoreAgreement,
       variantText,
       outMode,
       targetSelectionMode,

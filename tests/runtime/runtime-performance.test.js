@@ -354,7 +354,7 @@ test("checkout-board-targets selects next, finish or all route segments from vis
   }
 });
 
-test("checkout-board-targets next mode prefers the current one-dart checkout over stale route-first steps", () => {
+test("checkout-board-targets next mode overrides an implausible route-first step with the direct checkout", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "50";
   documentRef.suggestionElement.textContent = "T20";
@@ -429,10 +429,100 @@ test("checkout-board-targets next mode prefers the current one-dart checkout ove
     assert.equal(logs.length, 1);
     assert.equal(logs[0][1]?.status, "render");
     assert.equal(logs[0][1]?.activeScore, 50);
-    assert.equal(logs[0][1]?.selectionSource, "route-current-checkout");
+    assert.equal(logs[0][1]?.scoreSource, "game-state+dom");
+    assert.equal(logs[0][1]?.scoreAgreement, "match");
+    assert.equal(logs[0][1]?.selectionSource, "score-checkout-override-route");
     assert.deepEqual(logs[0][1]?.routeSegments, ["T20", "BULL"]);
     assert.deepEqual(logs[0][1]?.selectedSegments, ["BULL"]);
     assert.deepEqual(logs[0][1]?.targets, [{ ring: "DB", value: null }]);
+  } finally {
+    cleanup();
+  }
+});
+
+test("checkout-board-targets next mode keeps the visible route-first target when the game state score lags behind the DOM", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "61";
+  documentRef.suggestionElement.textContent = "25";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D18";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  appendBoardFixture(documentRef);
+
+  const logs = [];
+  const warnings = [];
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 36,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "amber",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        warnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    assert.equal(warnings.length, 0);
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0][1]?.status, "render");
+    assert.equal(logs[0][1]?.activeScore, 61);
+    assert.equal(logs[0][1]?.domScore, 61);
+    assert.equal(logs[0][1]?.gameStateScore, 36);
+    assert.equal(logs[0][1]?.scoreSource, "dom-preferred");
+    assert.equal(logs[0][1]?.scoreAgreement, "mismatch");
+    assert.equal(logs[0][1]?.selectionSource, "route-first");
+    assert.deepEqual(logs[0][1]?.routeSegments, ["S25", "D18"]);
+    assert.deepEqual(logs[0][1]?.selectedSegments, ["S25"]);
+    assert.deepEqual(logs[0][1]?.targets, [{ ring: "SB", value: null }]);
   } finally {
     cleanup();
   }

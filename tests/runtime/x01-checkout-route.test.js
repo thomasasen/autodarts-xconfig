@@ -56,6 +56,23 @@ test("x01 checkout route keeps segment order from a single multi-step suggestion
   ]);
 });
 
+test("x01 checkout route normalizes single-bull setup steps ahead of the visible finish field", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "25";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+  appendSuggestion(documentRef, "D18", 500, 10);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["S25", "D18"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "S25");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D18");
+  assert.deepEqual(mapRouteSegmentsToBoardTargets(route, x01Rules), [
+    { ring: "SB" },
+    { ring: "D", value: 18 },
+  ]);
+});
+
 test("x01 checkout route falls back to non-zero text suggestions when rect-based visibility collapses", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "D20";

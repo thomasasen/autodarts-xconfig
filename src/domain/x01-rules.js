@@ -15,7 +15,7 @@ function toNumber(value) {
 
 const CHECKOUT_TOKEN_PATTERN = /DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
 const EXPLICIT_SEGMENT_PATTERN =
-  /\b(?:DB|BULLSEYE|BULL|SB|OB|[TDS](?:[1-9]|1\d|20|25))\b/g;
+  /\b(?:DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g;
 
 const SCORING_SEGMENTS = Object.freeze([
   ...Array.from({ length: 20 }, (_value, index) => `S${index + 1}`),

@@ -36,7 +36,7 @@ function parseExplicitRouteSegments(text, x01Rules) {
 
   const normalizedText = String(text || "").toUpperCase();
   const tokens =
-    normalizedText.match(/\b(?:DB|BULLSEYE|BULL|SB|OB|[TDS](?:[1-9]|1\d|20|25))\b/g) || [];
+    normalizedText.match(/\b(?:DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g) || [];
 
   return tokens
     .map((token) => {
