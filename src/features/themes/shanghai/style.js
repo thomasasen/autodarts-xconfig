@@ -1,4 +1,5 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
+import { buildCenteredPlayerCardLayoutCss } from "../shared/player-card-layout.js";
 import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-shanghai-style";
@@ -19,6 +20,7 @@ function resolveThemeShanghaiConfig(rawConfig = {}) {
 export function buildShanghaiThemeCss(featureConfig = {}) {
   const resolved = resolveThemeShanghaiConfig(featureConfig);
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
+  const playerCardLayoutCss = buildCenteredPlayerCardLayoutCss();
   const avgVisibilityCss = resolved.showAvg
     ? ""
     : `
@@ -31,7 +33,7 @@ p.chakra-text.css-1j0bqop{
 }
 `;
 
-  return buildThemeCssBundle(featureConfig, `${avgVisibilityCss}${previewCss}`);
+  return buildThemeCssBundle(featureConfig, `${avgVisibilityCss}${previewCss}${playerCardLayoutCss}`);
 }
 
 export { PREVIEW_PLACEMENT };

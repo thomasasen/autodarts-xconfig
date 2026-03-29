@@ -72,6 +72,26 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
   assert.match(shanghaiCss, /ad-ext-turn-preview-space/);
   assert.match(bermudaCss, /ad-ext-turn-preview-space/);
   assert.match(shanghaiCss, /ad-ext-avg-trend-arrow\s*\{\s*display:\s*none\s*!important;/);
+  assert.match(
+    shanghaiCss,
+    /div\.ad-ext-player\.ad-ext-player-active\s+div\.css-y3hfdd\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
+  );
+  assert.match(
+    shanghaiCss,
+    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;/s
+  );
+  assert.match(
+    shanghaiCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*min-width:\s*0\s*!important;[^}]*overflow:\s*hidden\s*!important;[^}]*text-overflow:\s*ellipsis\s*!important;[^}]*white-space:\s*nowrap\s*!important;/s
+  );
+  assert.match(
+    shanghaiCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*justify-self:\s*end\s*!important;[^}]*min-width:\s*max-content\s*!important;[^}]*white-space:\s*nowrap\s*!important;/s
+  );
+  assert.doesNotMatch(
+    shanghaiCss,
+    /div\.ad-ext-player\.ad-ext-player-active\s+p\.chakra-text\.ad-ext-player-score\s*\{[^}]*font-size:\s*9em;/s
+  );
   assertNoFragileLayoutSelectors(shanghaiCss);
   assertNoFragileLayoutSelectors(bermudaCss);
 });

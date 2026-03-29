@@ -1,4 +1,5 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
+import { buildCenteredPlayerCardLayoutCss } from "../shared/player-card-layout.js";
 import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-x01-style";
@@ -27,6 +28,7 @@ function resolveThemeX01Config(rawConfig = {}) {
 export function buildX01ThemeCss(featureConfig = {}) {
   const resolved = resolveThemeX01Config(featureConfig);
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
+  const playerCardLayoutCss = buildCenteredPlayerCardLayoutCss();
   const avgVisibilityCss = resolved.showAvg
     ? ""
     : `
@@ -50,41 +52,6 @@ div.ad-ext-player.ad-ext-player-active p.chakra-text.ad-ext-player-score {
 
 div.ad-ext-player.ad-ext-player-active p.chakra-text.css-11cuipc {
   font-size: 1.5em;
-}
-
-div.css-y3hfdd{
-  grid-template-columns: minmax(0, 1fr) max-content !important;
-  gap: 0px !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd {
-  min-width: 0 !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 {
-  min-width: 0 !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-}
-
-#ad-ext-player-display .ad-ext-player .ad-ext-player-name,
-#ad-ext-player-display .ad-ext-player .ad-ext-player-name > p {
-  min-width: 0 !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
-#ad-ext-player-display .ad-ext-player .ad-ext-player-score {
-  justify-self: end !important;
-  min-width: max-content !important;
-  white-space: nowrap !important;
-}
-
-div.ad-ext-player.ad-ext-player-active div.css-y3hfdd {
-  grid-template-rows: max-content max-content !important;
-  align-content: center !important;
 }
 `;
 
@@ -148,7 +115,7 @@ span.chakra-badge.css-1c4630i {
 
   return buildThemeCssBundle(
     featureConfig,
-    `${navigationOverride}${previewCss}${avgVisibilityCss}${statsSizingCss}${overlayPriorityCss}${x01LayoutOverrides}`
+    `${navigationOverride}${previewCss}${avgVisibilityCss}${playerCardLayoutCss}${statsSizingCss}${overlayPriorityCss}${x01LayoutOverrides}`
   );
 }
 
