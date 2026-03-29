@@ -12,14 +12,30 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.85] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Der `Single Bull Sound` spielt bei einem einzelnen Single-Bull-Treffer jetzt stabil nur noch einmal ab, auch wenn Autodarts Score- und Segment-Text derselben Wurfzeile kurz nacheinander aktualisiert oder der erste Audioversuch durch den Browser blockiert wird.
+  Technik: Die Runtime dedupliziert Single-Bull-Signale jetzt pro Turn und Wurf-Slot erst nach erfolgreichem Playback, gibt blockierte Versuche für einen sauberen Retry wieder frei, leert veraltete Node-Marker bei geleerten Throw-Zeilen sauber, und neue Regressionstests decken getrennte DOM-Updates derselben Throw-Row, den Reset zwischen zwei Turns sowie blockierte Audiostarts ausdrücklich ab.
+- Nutzerwirkung: `Animate Triple, Double, Bull Hits` reagiert bei manuellen Wurfkorrekturen jetzt robuster und lässt sich nicht mehr von fremden `Cancel`-/`OK`-Buttons außerhalb der aktiven Wurfoberfläche irritieren.
+  Technik: Die Pending-Korrekturerkennung ist jetzt auf den Turn-Surface um `#ad-ext-turn` begrenzt, verlangt reale `correction-bg`-Marker im aktuellen Throw-Set, und neue Regressionstests decken sowohl False Positives außerhalb des Turn-Bereichs als auch Bestätigungs- und Cleanup-Pfade ab.
+- Nutzerwirkung: X01-Checkout-Hinweise ignorieren in Fallback-Situationen jetzt versteckte, veraltete Suggestion-Knoten, sodass kollabierte, aber noch stilistisch sichtbare Routen Vorrang vor stale Hidden-Hints behalten.
+  Technik: Die Checkout-Route respektiert im Fallback jetzt zuerst die Style-Sichtbarkeit und fällt erst danach auf rein parsebare Texte ohne Sichtbarkeitsmerkmale zurück; neue Regressionen decken kollabierte Rects und explizit versteckte stale Suggestions gemeinsam ab.
+- Nutzerwirkung: Die Spielerkarten-Zentrierung im X01- und Shanghai-Theme bleibt jetzt auch stabiler, wenn Autodarts interne Chakra-Hashklassen austauscht.
+  Technik: Das gemeinsame Player-Card-Layout hängt nicht mehr an konkreten Chakra-Hashselektoren, sondern nutzt stabile xConfig-Stack-/Player-Selektoren; die Theme-Parity-Regressionen sichern den robusteren Vertrag ausdrücklich mit ab.
+
+### Changed
+
+- Nutzerwirkung: Die lokale Release-Historie bleibt im aktuellen Versionsblock nachvollziehbarer, weil fehlerhafte Compare-Links jetzt früher auffallen.
+  Technik: `scripts/check-changelog-consistency.mjs` validiert für den aktuellen Release-Block echte GitHub-Compare-Ranges und erlaubt `HEAD` nur noch in der obersten lokalen Release-Sektion; zusätzliche Regressionstests sichern bounded Ranges und ältere `HEAD`-Fehler explizit ab.
+
 ## [2.0.84] - 2026-03-29
 
 ### Fixed
 
 - Nutzerwirkung: Im Shanghai-Theme sind die Spielerkacheln jetzt wie im X01-Theme mittig ausgerichtet, sodass Namen, Werte und Zusatzinfos wieder ausgewogen zentriert statt sichtbar versetzt erscheinen.
   Technik: Das gemeinsame Theme-System erzeugt den zentrierten Spielerkachel-Grid-Vertrag jetzt über einen wiederverwendbaren Shared-Helper für X01 und Shanghai, und die Theme-CSS-Regression deckt die aktive Karten-Zentrierung für Shanghai ausdrücklich mit ab.
-- Nutzerwirkung: Der `Single Bull Sound` spielt bei einem einzelnen Single-Bull-Treffer jetzt stabil nur noch einmal ab, auch wenn Autodarts Score- und Segment-Text derselben Wurfzeile kurz nacheinander aktualisiert.
-  Technik: Die Runtime dedupliziert Single-Bull-Signale jetzt pro Turn und Wurf-Slot statt nur pro Textnode, leert veraltete Node-Marker bei geleerten Throw-Zeilen sauber, und neue Regressionstests decken getrennte DOM-Updates derselben Throw-Row sowie den Reset zwischen zwei Turns ausdrücklich ab.
 
 ## [2.0.83] - 2026-03-29
 
@@ -954,10 +970,11 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.84]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...HEAD
+[2.0.85]: https://github.com/thomasasen/autodarts-xconfig/compare/df12512...HEAD
+[2.0.84]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
 [2.0.83]: https://github.com/thomasasen/autodarts-xconfig/compare/a3b3e0d...67edda7
 [2.0.82]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...a3b3e0d
-[2.0.81]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
+[2.0.81]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...59c9b12
 [2.0.80]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.79]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...HEAD
 [2.0.78]: https://github.com/thomasasen/autodarts-xconfig/compare/6223647...ae480a9

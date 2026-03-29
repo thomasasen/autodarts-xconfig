@@ -39,11 +39,15 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   );
   assert.match(
     css,
-    /div\.ad-ext-player\.ad-ext-player-active\s+div\.css-y3hfdd\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
   );
   assert.match(
     css,
-    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;[^}]*min-width:\s*0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.chakra-stack\s*\{[^}]*min-width:\s*0\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
   );
   assert.match(
     css,
@@ -74,11 +78,15 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
   assert.match(shanghaiCss, /ad-ext-avg-trend-arrow\s*\{\s*display:\s*none\s*!important;/);
   assert.match(
     shanghaiCss,
-    /div\.ad-ext-player\.ad-ext-player-active\s+div\.css-y3hfdd\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
   );
   assert.match(
     shanghaiCss,
-    /div\.css-y3hfdd\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;[^}]*min-width:\s*0\s*!important;/s
+  );
+  assert.match(
+    shanghaiCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.chakra-stack\s*\{[^}]*min-width:\s*0\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*overflow:\s*hidden\s*!important;/s
   );
   assert.match(
     shanghaiCss,

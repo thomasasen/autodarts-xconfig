@@ -1,15 +1,6 @@
 export const SUGGESTION_SELECTOR = ".suggestion";
 
-function isElementVisible(element, windowRef) {
-  if (!element || typeof element.getBoundingClientRect !== "function") {
-    return false;
-  }
-
-  const rect = element.getBoundingClientRect();
-  if (!(rect.width > 0 && rect.height > 0)) {
-    return false;
-  }
-
+function isElementStyleVisible(element, windowRef) {
   try {
     const style = windowRef?.getComputedStyle?.(element);
     if (!style) {
@@ -23,6 +14,19 @@ function isElementVisible(element, windowRef) {
   } catch (_) {
     return true;
   }
+}
+
+function isElementVisible(element, windowRef) {
+  if (!element || typeof element.getBoundingClientRect !== "function") {
+    return false;
+  }
+
+  const rect = element.getBoundingClientRect();
+  if (!(rect.width > 0 && rect.height > 0)) {
+    return false;
+  }
+
+  return isElementStyleVisible(element, windowRef);
 }
 
 function parseExplicitRouteSegments(text, x01Rules) {
@@ -102,6 +106,15 @@ export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Ru
 
   if (visibleEntries.length) {
     return visibleEntries;
+  }
+
+  const styleVisibleEntries = allSuggestionNodes
+    .filter((node) => isElementStyleVisible(node, windowRef))
+    .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
+    .filter(Boolean)
+    .sort(compareSuggestionNodes);
+  if (styleVisibleEntries.length) {
+    return styleVisibleEntries;
   }
 
   return allSuggestionNodes

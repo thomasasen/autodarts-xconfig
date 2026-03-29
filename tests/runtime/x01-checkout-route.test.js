@@ -67,6 +67,32 @@ test("x01 checkout route falls back to non-zero text suggestions when rect-based
   assert.deepEqual(mapRouteSegmentsToBoardTargets(route, x01Rules), [{ ring: "D", value: 20 }]);
 });
 
+test("x01 checkout route ignores explicitly hidden stale suggestions in collapsed fallback mode", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "D20";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 0, height: 0 };
+  const hiddenSuggestion = appendSuggestion(documentRef, "T16 D8", 100, 10);
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.getComputedStyle = (node) => {
+    if (node === hiddenSuggestion) {
+      return {
+        display: "none",
+        visibility: "hidden",
+        opacity: "0",
+      };
+    }
+
+    return {
+      display: "",
+      visibility: "",
+      opacity: "1",
+    };
+  };
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["D20"]);
+});
+
 test("x01 checkout route exposes single-segment suggestions for setup fallback only", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "T19";

@@ -205,8 +205,13 @@ function clearRowCorrectionMarkers(rowNode) {
   return correctionNodes.length;
 }
 
-function isManualCorrectionActive(documentRef) {
-  const actionButtons = collectBySelector(documentRef, "button,[role='button']");
+function collectManualCorrectionButtons(documentRef, turnContainer = null) {
+  const correctionScope = turnContainer || documentRef;
+  return collectBySelector(correctionScope, "button,[role='button']");
+}
+
+function isManualCorrectionActive(documentRef, turnContainer = null) {
+  const actionButtons = collectManualCorrectionButtons(documentRef, turnContainer);
   return actionButtons.some((buttonNode) => {
     if (!buttonNode || isElementDisabled(buttonNode)) {
       return false;
@@ -1599,10 +1604,12 @@ export function updateHitDecorations(options = {}) {
   const windowRef = options.windowRef || null;
   const turnContainer = findTurnContainer(documentRef);
   const turnPointsToken = readTurnPointsToken(documentRef, turnContainer);
-  const manualCorrectionActive = isManualCorrectionActive(documentRef);
 
   const currentRows = collectThrowRows(documentRef);
   const currentRowSet = new Set(currentRows);
+  const manualCorrectionActive =
+    currentRows.some((rowNode) => rowHasCorrectionMarker(rowNode)) &&
+    isManualCorrectionActive(documentRef, turnContainer);
   const rowSource = turnContainer ? "turn-container" : currentRows.length > 0 ? "document-fallback" : "none";
   const stats = {
     rowCount: currentRows.length,

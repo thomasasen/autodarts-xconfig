@@ -1,15 +1,14 @@
 export function buildCenteredPlayerCardLayoutCss() {
+  const stackSelector = "#ad-ext-player-display .ad-ext-player > .chakra-stack";
   return `
-div.css-y3hfdd{
+${stackSelector}{
+  display: grid !important;
   grid-template-columns: minmax(0, 1fr) max-content !important;
   gap: 0px !important;
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd {
   min-width: 0 !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack.css-y3hfdd > .chakra-stack.css-37hv00 {
+${stackSelector} > .chakra-stack {
   min-width: 0 !important;
   max-width: 100% !important;
   overflow: hidden !important;
@@ -30,7 +29,8 @@ div.css-y3hfdd{
   white-space: nowrap !important;
 }
 
-div.ad-ext-player.ad-ext-player-active div.css-y3hfdd {
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > .chakra-stack {
   grid-template-rows: max-content max-content !important;
   align-content: center !important;
 }

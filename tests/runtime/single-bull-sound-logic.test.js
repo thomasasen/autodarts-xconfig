@@ -5,25 +5,33 @@ import { updateSingleBullSound } from "../../src/features/single-bull-sound/logi
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import { FakeDocument } from "./fake-dom.js";
 
-function createAudioState(playCalls) {
+function createAudioState(playCalls, audioOverrides = {}) {
+  const audio = {
+    volume: 1,
+    currentTime: 0,
+    play() {
+      playCalls.push(Date.now());
+      return Promise.resolve();
+    },
+    pause() {},
+    ...audioOverrides,
+  };
+
   return {
     windowRef: null,
-    audio: {
-      volume: 1,
-      currentTime: 0,
-      play() {
-        playCalls.push(Date.now());
-        return Promise.resolve();
-      },
-      pause() {},
-    },
+    audio,
     audioUnlocked: true,
+    lastProcessedTurnId: "",
     lastSignalPlayedAt: 0,
     lastTextByNode: new Map(),
     lastPlayedAtByNode: new Map(),
     processedThrowKeys: new Set(),
     pollIntervalHandle: 0,
   };
+}
+
+function flushMicrotasks() {
+  return Promise.resolve();
 }
 
 function createGameState(activeTurn, activeThrows) {
@@ -293,6 +301,65 @@ test("single-bull-sound plays again for the same slot after the next turn resets
       config,
     });
     assert.equal(playCalls.length, 2);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("single-bull-sound retries the same DOM row after autoplay blocked the first attempt", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.throwTextElement.textContent = "S25";
+
+  const playCalls = [];
+  let blockedOnce = true;
+  const state = createAudioState(playCalls, {
+    play() {
+      playCalls.push(Date.now());
+      if (blockedOnce) {
+        blockedOnce = false;
+        return Promise.reject(new Error("autoplay blocked"));
+      }
+      return Promise.resolve();
+    },
+  });
+  const config = {
+    volume: 0.9,
+    cooldownMs: 700,
+  };
+  const activeTurn = {
+    id: "turn-autoplay-retry",
+    round: 6,
+    turn: 1,
+    playerId: "player-1",
+  };
+
+  const originalDateNow = Date.now;
+  let fakeNow = 7_000;
+  Date.now = () => fakeNow;
+
+  try {
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(activeTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+    assert.equal(playCalls.length, 1);
+
+    await flushMicrotasks();
+    assert.equal(state.processedThrowKeys.size, 0);
+
+    fakeNow = 7_500;
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(activeTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+    assert.equal(playCalls.length, 2);
+    assert.equal(state.processedThrowKeys.size, 1);
   } finally {
     Date.now = originalDateNow;
   }

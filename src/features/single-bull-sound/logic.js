@@ -56,18 +56,26 @@ function syncProcessedThrowScope(state, activeTurn) {
   return turnId;
 }
 
-function rememberProcessedThrow(state, throwKeys) {
-  const normalizedKeys = (Array.isArray(throwKeys) ? throwKeys : [throwKeys])
+function normalizeThrowKeys(throwKeys) {
+  return (Array.isArray(throwKeys) ? throwKeys : [throwKeys])
     .map((key) => String(key || "").trim())
     .filter(Boolean);
+}
+
+function hasProcessedThrow(state, throwKeys) {
+  const normalizedKeys = normalizeThrowKeys(throwKeys);
   if (!normalizedKeys.length) {
     return false;
   }
 
-  if (normalizedKeys.some((throwKey) => state.processedThrowKeys.has(throwKey))) {
-    return false;
-  }
+  return normalizedKeys.some((throwKey) => state.processedThrowKeys.has(throwKey));
+}
 
+function rememberProcessedThrow(state, throwKeys) {
+  const normalizedKeys = normalizeThrowKeys(throwKeys);
+  if (!normalizedKeys.length) {
+    return;
+  }
   normalizedKeys.forEach((throwKey) => {
     state.processedThrowKeys.add(throwKey);
     while (state.processedThrowKeys.size > PROCESSED_THROW_KEY_LIMIT) {
@@ -78,20 +86,31 @@ function rememberProcessedThrow(state, throwKeys) {
       state.processedThrowKeys.delete(oldest);
     }
   });
-
-  return true;
 }
 
-function safePlayAudio(state, config) {
+function forgetProcessedThrow(state, throwKeys) {
+  normalizeThrowKeys(throwKeys).forEach((throwKey) => {
+    state.processedThrowKeys.delete(throwKey);
+  });
+}
+
+function safePlayAudio(state, config, options = {}) {
   const audio = state.audio;
   if (!audio) {
-    return false;
+    return {
+      played: false,
+      reason: "no-audio",
+    };
   }
 
   const now = Date.now();
   if (now - state.lastSignalPlayedAt < SIGNAL_COOLDOWN_MS) {
-    return false;
+    return {
+      played: false,
+      reason: "signal-cooldown",
+    };
   }
+  const previousSignalPlayedAt = state.lastSignalPlayedAt;
   state.lastSignalPlayedAt = now;
 
   audio.volume = config.volume;
@@ -102,14 +121,36 @@ function safePlayAudio(state, config) {
     // fail-soft reset
   }
 
-  const playResult = audio.play();
+  const handlePlaybackFailure =
+    typeof options.onPlaybackFailure === "function"
+      ? options.onPlaybackFailure
+      : () => {};
+
+  let playResult = null;
+  try {
+    playResult = audio.play();
+  } catch (_) {
+    state.lastSignalPlayedAt = previousSignalPlayedAt;
+    handlePlaybackFailure();
+    return {
+      played: false,
+      reason: "play-error",
+    };
+  }
+
   if (playResult && typeof playResult.catch === "function") {
     playResult.catch(() => {
-      // fail-soft when autoplay blocks playback
+      if (state.lastSignalPlayedAt === now) {
+        state.lastSignalPlayedAt = previousSignalPlayedAt;
+      }
+      handlePlaybackFailure();
     });
   }
 
-  return true;
+  return {
+    played: true,
+    reason: "played",
+  };
 }
 
 function createAudio(windowRef, config) {
@@ -229,12 +270,25 @@ function scanDomRows(options = {}) {
       ? rowIndexByNode.get(throwRow)
       : fallbackThrowIndex;
     const throwKeys = buildThrowKeys(activeTurn, null, throwIndex);
-    if (!rememberProcessedThrow(state, throwKeys)) {
+    if (hasProcessedThrow(state, throwKeys)) {
       return;
     }
 
-    if (safePlayAudio(state, config)) {
+    const audioResult = safePlayAudio(state, config, {
+      onPlaybackFailure() {
+        forgetProcessedThrow(state, throwKeys);
+        state.lastTextByNode.delete(node);
+        state.lastPlayedAtByNode.delete(node);
+      },
+    });
+    if (audioResult.played) {
       state.lastPlayedAtByNode.set(node, now);
+      rememberProcessedThrow(state, throwKeys);
+      return;
+    }
+
+    if (audioResult.reason === "signal-cooldown") {
+      state.lastTextByNode.delete(node);
     }
   });
 }
@@ -273,11 +327,18 @@ function scanGameStateThrows(options = {}) {
     }
 
     const throwKeys = buildThrowKeys(activeTurn, throwEntry, throwIndex);
-    if (!rememberProcessedThrow(state, throwKeys)) {
+    if (hasProcessedThrow(state, throwKeys)) {
       return;
     }
 
-    safePlayAudio(state, config);
+    const audioResult = safePlayAudio(state, config, {
+      onPlaybackFailure() {
+        forgetProcessedThrow(state, throwKeys);
+      },
+    });
+    if (audioResult.played) {
+      rememberProcessedThrow(state, throwKeys);
+    }
   });
 }
 

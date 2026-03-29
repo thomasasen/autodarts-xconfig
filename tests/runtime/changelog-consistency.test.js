@@ -28,6 +28,50 @@ function buildSampleChangelog(version = "2.0.23") {
 `;
 }
 
+function buildRecentReleaseChangelog({
+  topLinkHead = "HEAD",
+  recentOlderLinkHead = "67edda7",
+} = {}) {
+  return `# Changelog
+
+## [2.0.84] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Sichtbare Änderung für Nutzer.
+  Technik: Technischer Hintergrund der Änderung.
+
+[2.0.84]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...${topLinkHead}
+
+## [2.0.83] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Sichtbare Änderung für Nutzer.
+  Technik: Technischer Hintergrund der Änderung.
+
+[2.0.83]: https://github.com/thomasasen/autodarts-xconfig/compare/a3b3e0d...${recentOlderLinkHead}
+
+## [2.0.82] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: Sichtbare Änderung für Nutzer.
+  Technik: Technischer Hintergrund der Änderung.
+
+[2.0.82]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...a3b3e0d
+
+## [2.0.81] - 2026-03-27
+
+### Changed
+
+- Nutzerwirkung: Sichtbare Änderung für Nutzer.
+  Technik: Technischer Hintergrund der Änderung.
+
+[2.0.81]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...a3b3e0d
+`;
+}
+
 test("parseChangelogSections reads released sections in order", () => {
   const sections = parseChangelogSections(buildSampleChangelog());
 
@@ -42,6 +86,16 @@ test("validateChangelogDocument accepts the expected dual-part entry format", ()
     packageVersion: "2.0.23",
     headPackageVersion: "2.0.22",
     changedFiles: ["CHANGELOG.md", "scripts/check-changelog-consistency.mjs"],
+  });
+
+  assert.deepEqual(errors, []);
+});
+
+test("validateChangelogDocument accepts bounded compare links for the current release window", () => {
+  const errors = validateChangelogDocument({
+    text: buildRecentReleaseChangelog(),
+    packageVersion: "2.0.84",
+    changedFiles: ["CHANGELOG.md"],
   });
 
   assert.deepEqual(errors, []);
@@ -68,6 +122,21 @@ test("validateChangelogDocument rejects entries without a Technik line", () => {
   assert.match(
     errors.join("\n"),
     /braucht direkt danach einen eingerückten "Technik:"-Teil/
+  );
+});
+
+test("validateChangelogDocument rejects compare links on older release sections when they still point to HEAD", () => {
+  const errors = validateChangelogDocument({
+    text: buildRecentReleaseChangelog({
+      recentOlderLinkHead: "HEAD",
+    }),
+    packageVersion: "2.0.84",
+    changedFiles: ["CHANGELOG.md"],
+  });
+
+  assert.match(
+    errors.join("\n"),
+    /Abschnitt 2\.0\.83: Nur die oberste lokale Release-Sektion darf vorübergehend auf HEAD zeigen\./
   );
 });
 

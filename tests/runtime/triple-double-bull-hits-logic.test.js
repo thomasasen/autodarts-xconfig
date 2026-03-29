@@ -89,6 +89,7 @@ function appendManualCorrectionButtons(documentRef, options = {}) {
   const controls = documentRef.createElement("div");
   const cancelButton = documentRef.createElement("button");
   const okButton = documentRef.createElement("button");
+  const parentNode = options.parentNode || documentRef.main;
 
   cancelButton.textContent = "Cancel";
   okButton.textContent = "Ok";
@@ -97,7 +98,7 @@ function appendManualCorrectionButtons(documentRef, options = {}) {
 
   controls.appendChild(cancelButton);
   controls.appendChild(okButton);
-  documentRef.main.appendChild(controls);
+  parentNode.appendChild(controls);
 
   return {
     controls,
@@ -447,7 +448,7 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
   assert.equal(fourth.burstCount, 1);
 });
 
-test("manual correction keeps pending correction markers untouched until the correction actions are disabled", () => {
+test("manual correction ignores unrelated CANCEL/OK controls outside the turn surface", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
@@ -458,7 +459,41 @@ test("manual correction keeps pending correction markers untouched until the cor
   documentRef.throwTextElement.textContent = "60 T20";
   documentRef.throwRow.textContent = "60 T20";
   documentRef.throwRow.classList.add("correction-bg");
-  const correctionButtons = appendManualCorrectionButtons(documentRef);
+  appendManualCorrectionButtons(documentRef);
+
+  const pending = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "impact-pop",
+    },
+  });
+
+  assert.equal(pending.staleCorrectionClearedCount, 1);
+  assert.equal(pending.transientCorrectionCount, 0);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+});
+
+test("manual correction keeps pending correction markers untouched inside the turn surface", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const roleStateByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  documentRef.throwRow.classList.add("correction-bg");
+  const correctionButtons = appendManualCorrectionButtons(documentRef, {
+    parentNode: documentRef.turnContainer,
+  });
 
   const pending = updateHitDecorations({
     documentRef,
@@ -474,6 +509,7 @@ test("manual correction keeps pending correction markers untouched until the cor
   });
 
   assert.equal(pending.transientCorrectionCount, 1);
+  assert.equal(pending.staleCorrectionClearedCount, 0);
   assert.equal(documentRef.throwRow.classList.contains("correction-bg"), true);
   assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
 
@@ -507,7 +543,10 @@ test("same-slot manual correction reclassifies a stale highlighted row from trip
   const activeAnimeByRow = new Map();
   const roleStateByRow = new Map();
   const animeRef = createAnimeStub();
-  const correctionButtons = appendManualCorrectionButtons(documentRef, { disabled: true });
+  const correctionButtons = appendManualCorrectionButtons(documentRef, {
+    disabled: true,
+    parentNode: documentRef.turnContainer,
+  });
 
   documentRef.throwTextElement.textContent = "60 T20";
   documentRef.throwRow.textContent = "60 T20";

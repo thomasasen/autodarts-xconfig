@@ -9,10 +9,12 @@ const repoRoot = path.resolve(__dirname, "..");
 const changelogPath = path.join(repoRoot, "CHANGELOG.md");
 const packageJsonPath = path.join(repoRoot, "package.json");
 const repoUrl = "https://github.com/thomasasen/autodarts-xconfig";
+const compareUrlPrefix = `${repoUrl}/compare/`;
 const versionHeadingPattern = /^## \[([0-9]+\.[0-9]+\.[0-9]+)\] - (\d{4}-\d{2}-\d{2})$/gm;
 const linkReferencePattern =
   /^\[([^\]]+)\]:\s+(https:\/\/github\.com\/thomasasen\/autodarts-xconfig\/\S+)$/gm;
 const placeholderPattern = /^_Noch keine Änderungen erfasst\._$/m;
+const semanticReleaseFloor = "2.0.81";
 
 export function compareSemver(left, right) {
   const leftParts = String(left || "")
@@ -82,6 +84,29 @@ function parseLinkReferences(text) {
   }
 
   return references;
+}
+
+function parseCompareLink(link) {
+  const normalizedLink = String(link || "").trim();
+  if (!normalizedLink.startsWith(compareUrlPrefix)) {
+    return null;
+  }
+
+  const compareTarget = normalizedLink.slice(compareUrlPrefix.length);
+  const parts = compareTarget.split("...");
+  if (parts.length !== 2) {
+    return null;
+  }
+
+  const [base, head] = parts.map((part) => String(part || "").trim());
+  if (!base || !head) {
+    return null;
+  }
+
+  return {
+    base,
+    head,
+  };
 }
 
 function validateSectionEntries(section) {
@@ -154,6 +179,39 @@ function validateSectionEntries(section) {
   return errors;
 }
 
+function validateRecentCompareLinks(sections, linkReferences) {
+  const errors = [];
+  const relevantSections = sections.filter(
+    (section) => compareSemver(section.name, semanticReleaseFloor) >= 0
+  );
+
+  relevantSections.forEach((section, index) => {
+    const link = linkReferences.get(section.name) || "";
+    const compareLink = parseCompareLink(link);
+    if (!compareLink) {
+      errors.push(
+        `Abschnitt ${section.name}: Link-Referenzen müssen auf eine GitHub-Compare-Range im Format "${compareUrlPrefix}<base>...<head>" zeigen.`
+      );
+      return;
+    }
+
+    if (compareLink.base === compareLink.head) {
+      errors.push(
+        `Abschnitt ${section.name}: Compare-Range muss zwei unterschiedliche Endpunkte haben.`
+      );
+      return;
+    }
+
+    if (compareLink.head === "HEAD" && index !== 0) {
+      errors.push(
+        `Abschnitt ${section.name}: Nur die oberste lokale Release-Sektion darf vorübergehend auf HEAD zeigen.`
+      );
+    }
+  });
+
+  return errors;
+}
+
 export function validateChangelogDocument({
   text,
   packageVersion,
@@ -217,6 +275,8 @@ export function validateChangelogDocument({
       errors.push(`Die Link-Referenz "[${section.name}]" zeigt nicht auf ${repoUrl}.`);
     }
   }
+
+  errors.push(...validateRecentCompareLinks(sections, linkReferences));
 
   const hasRelevantChanges = changedFiles.some((filePath) => isChangelogRelevantFile(filePath));
   const changelogWasChanged = changedFiles.some(
