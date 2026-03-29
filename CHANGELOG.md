@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.86] - 2026-03-29
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` bleibt bei X01-Reloads und kurzzeitig fehlenden Checkout-Suggestions jetzt stabiler sichtbar, bevorzugt das aktuell echte Finish-Feld wie `D18` oder `BULL`, und äußere Double-/Triple-Ziele pulsen deutlich präsenter statt nur schwer erkennbar zu flackern.
+  Technik: Die X01-Zielauswahl priorisiert jetzt scorebasierte Echtzeit-Finishes vor stale Routenschritten, hält das letzte gültige Overlay kurz durch Hydration-Lücken, rendert äußere `D`-/`T`-Segmente mit verstärktem Pulse-/Halo-Profil, lässt `SB`/`DB` bewusst auf dem Basisprofil, und neue Runtime-Regressionen decken Stale-Route-, Reload- sowie Outer-vs-Bull-Pfade ausdrücklich ab.
+
 ## [2.0.85] - 2026-03-29
 
 ### Fixed
@@ -970,7 +977,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.85]: https://github.com/thomasasen/autodarts-xconfig/compare/df12512...HEAD
+[2.0.86]: https://github.com/thomasasen/autodarts-xconfig/compare/0bebdfc...HEAD
+[2.0.85]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
 [2.0.84]: https://github.com/thomasasen/autodarts-xconfig/compare/67edda7...df12512
 [2.0.83]: https://github.com/thomasasen/autodarts-xconfig/compare/a3b3e0d...67edda7
 [2.0.82]: https://github.com/thomasasen/autodarts-xconfig/compare/ae480a9...a3b3e0d
