@@ -1057,7 +1057,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/652863c...HEAD
+[2.0.99]: https://github.com/thomasasen/autodarts-xconfig/compare/4b18f03...HEAD
+[2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/652863c...4b18f03
 [2.0.96]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...652863c
 [2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654
 [2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...830ce47
