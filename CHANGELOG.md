@@ -12,12 +12,14 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.0.97] - 2026-03-30
+## [2.0.98] - 2026-03-30
 
 ### Fixed
 
 - Nutzerwirkung: Die Cricket-/Tactics-Spielerkarten behalten jetzt ihre korrekte obere Identitätszeile mit Namen und `35+`, während der untere Kartenbereich gleichzeitig ruhiger und kompakter wirkt: aktive und inaktive Karten sind gleich hoch, `Gewonnene Runden` und `MPR` bleiben links sauber zweizeilig, die Punktezahl bleibt rechts einzeilig, und beide Inhaltsblöcke sitzen im unteren Kartenbereich nun sichtbar vertikal mittig statt zu tief oder mit unnötigem Leerraum.
   Technik: Das Cricket-Theme entfernt die erzwungene Mindesthöhe der Spielerkarten, lässt `#ad-ext-player-display` seine Kartenhöhe wieder aus dem tatsächlichen Inhalt ableiten, streckt aktive und inaktive Karten anschließend über den gemeinsamen Grid-Track auf dieselbe Außenhöhe, und verwendet für den Karten-Stack jetzt ein fünfreihiges Grid mit oberen und unteren Flex-Spacern; dadurch bleiben Name und Meta-Zeile unangetastet, während Matches-/Stats-Block links sowie der Score rechts innerhalb des unteren Kartenbereichs jeweils stabil vertikal zentriert werden. Zusätzliche Style-Regressionen sichern den neuen Fünfzeilen-Vertrag, die fehlende Legacy-Mindesthöhe und die aktualisierten Slot-Positionen ausdrücklich ab.
+- Nutzerwirkung: Die Cricket-/Tactics-Spielerkarten wirken im unteren Statistikbereich jetzt ausgewogener: Die Anzeige der gewonnenen Runden ist sichtbar kleiner, `MPR` etwas größer, aktive und inaktive Karten haben nun denselben kleinen Abstand zwischen Badge und `MPR`, und die inaktiven Karten verwenden für Namen, `MPR` und die Badge-Fläche der gewonnenen Runden jetzt dieselbe helle Tonalität wie die Punkteanzeige, wodurch das Gesamtbild ruhiger und stimmiger wirkt.
+  Technik: Das Cricket-Theme verkleinert die linke `matches`-Badge über neue kompaktere Badge-Variablen, hebt die `stats`-Typografie für `MPR` leicht an, ergänzt einen gezielten zusätzlichen `margin-top` nur für den aktiven `stats`-Slot, damit der bestehende Inaktiv-Abstand exakt gespiegelt wird, und führt für inaktive Karten explizite Farb-Overrides für Namen, `stats` und Badge-Hintergrund ein, während der Zifferntext in der Badge absichtlich dunkel bleibt; zusätzliche Style-Regressionen sichern die neuen Badge-Maße, die größere `MPR`-Skala, den aktiven Zusatzabstand und die inaktive Farb-Hierarchie ausdrücklich ab.
 
 ## [2.0.96] - 2026-03-30
 
@@ -1048,7 +1050,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.97]: https://github.com/thomasasen/autodarts-xconfig/compare/652863c...HEAD
+[2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/652863c...HEAD
 [2.0.96]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...652863c
 [2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654
 [2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...830ce47

@@ -40,14 +40,14 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(css, /--ad-ext-theme-cricket-score-line-height-multiplier:\s*0\.9;/);
   assert.match(css, /--ad-ext-theme-cricket-stats-row-height:\s*18\.363px;/);
   assert.match(css, /--ad-ext-theme-cricket-matches-row-height:\s*calc\(/);
-  assert.match(css, /--ad-ext-theme-cricket-matches-visual-scale:\s*0\.675;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-visual-scale:\s*0\.54;/);
   assert.match(css, /--ad-ext-theme-cricket-matches-badge-height:\s*calc\(/);
-  assert.match(css, /--ad-ext-theme-cricket-matches-badge-min-width:\s*2\.85rem;/);
-  assert.match(css, /--ad-ext-theme-cricket-matches-badge-padding-inline:\s*0\.66rem;/);
-  assert.match(css, /--ad-ext-theme-cricket-matches-badge-radius:\s*0\.64rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-min-width:\s*2\.55rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-padding-inline:\s*0\.54rem;/);
+  assert.match(css, /--ad-ext-theme-cricket-matches-badge-radius:\s*0\.56rem;/);
   assert.match(
     css,
-    /--ad-ext-theme-cricket-matches-font-size:\s*calc\(var\(--ad-ext-theme-cricket-matches-row-height\)\s*\*\s*0\.486\);/
+    /--ad-ext-theme-cricket-matches-font-size:\s*var\(--ad-ext-theme-cricket-matches-badge-height\);/
   );
   assert.match(
     css,
@@ -193,9 +193,9 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.ok(css.includes(`--ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);`));
-  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-min-width: 3.35rem;`));
-  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-padding-inline: 0.78rem;`));
-  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-radius: 0.78rem;`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-min-width: 2.55rem;`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-padding-inline: 0.54rem;`));
+  assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-radius: 0.56rem;`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-wins-scale: 0.92;`));
   const stackRule = extractRuleSlice(
     css,
@@ -263,12 +263,20 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   assert.match(statsSlotRule, /padding-left:\s*0\s*!important;/);
   assert.match(statsSlotRule, /height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
   assert.match(statsSlotRule, /line-height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="true"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\]\s*\{[^}]*margin-top:\s*4\.4px\s*!important;/s
+  );
   const statsTextRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "stats")} > p {`
   );
   assert.match(statsTextRule, /padding-left:\s*var\(--ad-ext-theme-cricket-left-stat-inset\)\s*!important;/);
   assert.match(statsTextRule, /box-sizing:\s*border-box\s*!important;/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\]\s*>\s*p\s*\{[^}]*font-size:\s*clamp\(1\.01rem,\s*1\.14vw,\s*1\.21rem\)\s*!important;[^}]*line-height:\s*1\.15\s*!important;/s
+  );
   const scoreSlotRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > .ad-ext-player-score {`
@@ -276,6 +284,22 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   assert.match(scoreSlotRule, /grid-row:\s*2\s*\/\s*6\s*!important;/);
   assert.match(scoreSlotRule, /align-self:\s*center\s*!important;/);
   assert.match(scoreSlotRule, /margin:\s*0\s*!important;/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\]\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-row="true"\]\s*>\s*\[data-ad-ext-cricket-slot="marks"\]\s+\.css-3fr5p8\s*\{[^}]*background:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-row="true"\]\s*>\s*\[data-ad-ext-cricket-slot="marks"\]\s+\.css-1hcjh09,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-row="true"\]\s*>\s*\[data-ad-ext-cricket-slot="marks"\]\s+\.css-3fr5p8\s+p\s*\{[^}]*color:\s*rgba\(8,\s*16,\s*30,\s*0\.92\)\s*!important;/s
+  );
   const winsRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "identity")} ${attrSelector(CRICKET_META_ATTRIBUTE, "wins")} {`
