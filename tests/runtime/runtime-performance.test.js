@@ -44,6 +44,13 @@ function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function assertApprox(actual, expected, epsilon = 0.000001) {
+  assert.ok(
+    Math.abs(actual - expected) <= epsilon,
+    `expected ${actual} to be within ${epsilon} of ${expected}`
+  );
+}
+
 function createCountingSchedulerFactory(counterRef) {
   return () => ({
     schedule() {
@@ -198,7 +205,7 @@ test("checkout-board-targets render helper draws every provided target once", ()
   assert.equal(overlay.children.length, 4);
 });
 
-test("checkout-board-targets uses calmer focus profiles for outer wedges and bull checkouts", () => {
+test("checkout-board-targets keeps focus targets readable across single, outer and bull families", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -220,11 +227,55 @@ test("checkout-board-targets uses calmer focus profiles for outer wedges and bul
       group,
       radius: 500,
     },
-    checkoutTargets: [{ ring: "D", value: 18 }],
+    checkoutTargets: [{ ring: "S", value: 20 }],
     visualConfig,
   });
 
   let overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  let singleNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='single']`));
+  let singleShape = singleNodes.find((node) => !node.classList.contains("ad-ext-checkout-target-outline"));
+  let singleOutline = singleNodes.find((node) =>
+    node.classList.contains("ad-ext-checkout-target-outline")
+  );
+
+  assert.ok(singleShape);
+  assert.ok(singleOutline);
+  assertApprox(
+    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    3.15
+  );
+  assertApprox(
+    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    5.1
+  );
+  assertApprox(
+    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    0.56
+  );
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
+  assertApprox(
+    parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    5.1
+  );
+  assertApprox(
+    parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    0.46
+  );
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
+    checkoutTargets: [{ ring: "D", value: 18 }],
+    visualConfig,
+  });
+
+  overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
   assert.ok(overlay);
 
   let outerNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='outer']`));
@@ -233,16 +284,31 @@ test("checkout-board-targets uses calmer focus profiles for outer wedges and bul
 
   assert.ok(outerShape);
   assert.ok(outerOutline);
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.5999999999999996px");
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"), "5.9px");
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.56");
+  assertApprox(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    3.8
+  );
+  assertApprox(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.3
+  );
+  assertApprox(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    0.64
+  );
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
   assert.match(
     outerShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
   );
-  assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "5.9px");
-  assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.48");
+  assertApprox(
+    parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.3
+  );
+  assertApprox(
+    parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    0.52
+  );
 
   renderCheckoutTargets({
     board: {
@@ -263,16 +329,31 @@ test("checkout-board-targets uses calmer focus profiles for outer wedges and bul
 
   assert.ok(bullShape);
   assert.ok(bullOutline);
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.8px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "6.4px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.6799999999999999");
+  assertApprox(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    4
+  );
+  assertApprox(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.7
+  );
+  assertApprox(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    0.76
+  );
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
   assert.match(
     bullShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
   );
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "6.4px");
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.58");
+  assertApprox(
+    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.7
+  );
+  assertApprox(
+    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    0.62
+  );
   assert.ok(
     parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
       parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
@@ -280,6 +361,10 @@ test("checkout-board-targets uses calmer focus profiles for outer wedges and bul
   assert.ok(
     parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
       parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"))
+  );
+  assert.ok(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
+      parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width"))
   );
 });
 
@@ -323,7 +408,10 @@ test("checkout-board-targets keeps outline clones isolated from target effect cl
   assert.equal(bullOutline.classList.contains(OUTLINE_CLASS), true);
   assert.equal(bullOutline.classList.contains(TARGET_CLASS), false);
   assert.equal(bullOutline.classList.contains(EFFECT_CLASSES.focus), false);
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "6.4px");
+  assertApprox(
+    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.7
+  );
 });
 
 test("checkout-board-targets softens and staggers follow-up targets in multi-target routes", () => {
@@ -450,6 +538,45 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
       group,
       radius: 500,
     },
+    checkoutTargets: [{ ring: "S", value: 20 }],
+    visualConfig: signalConfig,
+  });
+
+  overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  let singleNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='single']`));
+  let singleShape = singleNodes.find((node) => !node.classList.contains(OUTLINE_CLASS));
+  let singleOutline = singleNodes.find((node) => node.classList.contains(OUTLINE_CLASS));
+
+  assert.ok(singleShape);
+  assert.ok(singleOutline);
+  assert.equal(singleShape.classList.contains(EFFECT_CLASSES.signal), true);
+  assertApprox(
+    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    3.15
+  );
+  assertApprox(
+    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    5.3
+  );
+  assertApprox(
+    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    0.16
+  );
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
+  assertApprox(
+    parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    0.22
+  );
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
     checkoutTargets: [{ ring: "D", value: 18 }],
     visualConfig: signalConfig,
   });
@@ -464,12 +591,24 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.ok(outerShape);
   assert.ok(outerOutline);
   assert.equal(outerShape.classList.contains(EFFECT_CLASSES.signal), true);
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.4px");
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"), "6.1px");
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.18");
+  assertApprox(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    3.65
+  );
+  assertApprox(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.3
+  );
+  assertApprox(
+    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    0.24
+  );
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
   assert.match(outerShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
-  assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.22");
+  assertApprox(
+    parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    0.26
+  );
 
   renderCheckoutTargets({
     board: {
@@ -491,12 +630,28 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.ok(bullShape);
   assert.ok(bullOutline);
   assert.equal(bullShape.classList.contains(EFFECT_CLASSES.signal), true);
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.6999999999999997px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "6.3px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.22");
+  assertApprox(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    3.85
+  );
+  assertApprox(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    6.8
+  );
+  assertApprox(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    0.3
+  );
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-opacity"), "1");
   assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.28");
+  assertApprox(
+    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    0.32
+  );
+  assert.ok(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
+      parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+  );
 });
 
 test("checkout-board-targets selects next, finish or all segments from the authoritative route", () => {

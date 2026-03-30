@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.101] - 2026-03-30
+
+### Fixed
+
+- Nutzerwirkung: Die Presets `Focus` und `Signal` im `Checkout Board Targets`-Overlay bleiben auf Single-, Triple-, Double- und Bull-Feldern jetzt deutlich zuverlässiger erkennbar; gerade Singles und der kleine Bull gehen im ruhigen Fokus oder im Blink-Off-Zustand nicht mehr so leicht unter.
+  Technik: Die im MCP direkt auf echten Board-Geometrien verglichenen Effektprofile heben in `focus` die Single-/Outer-/Bull-Mindestopazität, Konturbreite und Outline-Floors ausgewogen an und geben `signal` eine tragfähigere Off-Phase samt stärkerer Single-/Bull-Kontur; zusätzliche Runtime-Regressionen sichern die konkreten Single-/Outer-/Bull-Verträge für `focus` und `signal` ausdrücklich ab.
+
 ## [2.0.100] - 2026-03-30
 
 ### Fixed
@@ -1066,11 +1073,12 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.100]: https://github.com/thomasasen/autodarts-xconfig/compare/a9fa2bb...HEAD
+[2.0.101]: https://github.com/thomasasen/autodarts-xconfig/compare/93aa69d...HEAD
+[2.0.100]: https://github.com/thomasasen/autodarts-xconfig/compare/a9fa2bb...93aa69d
 [2.0.99]: https://github.com/thomasasen/autodarts-xconfig/compare/4b18f03...a9fa2bb
-[2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/652863c...4b18f03
-[2.0.96]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...652863c
-[2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654
+[2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...652863c
+[2.0.96]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654
+[2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...830ce47
 [2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...830ce47
 [2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...8355902
 [2.0.91]: https://github.com/thomasasen/autodarts-xconfig/compare/2824799...fcc069c
