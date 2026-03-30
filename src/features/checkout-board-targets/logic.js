@@ -205,52 +205,147 @@ function resolveTargetFamily(target) {
   return "single";
 }
 
-function resolveTargetStyleProfile(target, radius, visualConfig) {
+function clampToRange(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function scaleToward(value, neutralValue, emphasis) {
+  return neutralValue + (value - neutralValue) * emphasis;
+}
+
+function resolvePriorityProfile(visualConfig, targetIndex, targetCount) {
+  const priorityProfiles = Array.isArray(visualConfig.routePriorityProfiles)
+    ? visualConfig.routePriorityProfiles
+    : [];
+  const fallbackProfile = priorityProfiles[priorityProfiles.length - 1] || {
+    opacityEmphasis: 1,
+    motionEmphasis: 1,
+    outlineEmphasis: 1,
+    animationDelayMs: 0,
+  };
+
+  if (!targetCount || targetCount <= 1) {
+    return priorityProfiles[0] || fallbackProfile;
+  }
+  return priorityProfiles[targetIndex] || fallbackProfile;
+}
+
+function resolveTargetStyleProfile(target, radius, visualConfig, renderContext = {}) {
   const baseStrokeWidth = Math.max(1, radius * visualConfig.strokeWidthRatio);
   const baseOutlineWidth = baseStrokeWidth + 1.5;
   const family = resolveTargetFamily(target);
-  const pulseProfile = visualConfig.pulseProfile || {};
-  const outerPulseProfile = visualConfig.outerSegmentPulseProfile || {};
-  const bullPulseProfile = visualConfig.bullSegmentPulseProfile || {};
-  const isPulseEffect = visualConfig.effect === "pulse";
-  const familyPulseProfile =
-    family === "outer" && isPulseEffect
-      ? outerPulseProfile
-      : family === "bull" && isPulseEffect
-        ? bullPulseProfile
-        : pulseProfile;
-  const strokeWidthBoostPx = Number(familyPulseProfile.strokeWidthBoostPx || 0);
-  const outlineWidthBoostPx = Number(familyPulseProfile.outlineWidthBoostPx || 0);
+  const effectProfiles = visualConfig.effectProfiles?.[visualConfig.effect] || {};
+  const baseEffectProfile = effectProfiles.base || {};
+  const familyEffectProfile =
+    family === "outer"
+      ? effectProfiles.outer || baseEffectProfile
+      : family === "bull"
+        ? effectProfiles.bull || baseEffectProfile
+        : baseEffectProfile;
+  const priorityProfile =
+    renderContext.priorityProfile ||
+    resolvePriorityProfile(
+      visualConfig,
+      Number(renderContext.targetIndex) || 0,
+      Number(renderContext.targetCount) || 0
+    );
+  const opacityEmphasis = clampToRange(Number(priorityProfile.opacityEmphasis || 1), 0, 1);
+  const motionEmphasis = clampToRange(Number(priorityProfile.motionEmphasis || 1), 0, 1);
+  const outlineEmphasis = clampToRange(Number(priorityProfile.outlineEmphasis || 1), 0, 1);
+  const strokeWidthBoostPx = Number(familyEffectProfile.strokeWidthBoostPx || 0);
+  const outlineWidthBoostPx = Number(familyEffectProfile.outlineWidthBoostPx || 0);
+  const resolvedStrokeWidth = scaleToward(
+    baseStrokeWidth + strokeWidthBoostPx,
+    baseStrokeWidth,
+    outlineEmphasis
+  );
+  const resolvedOutlineWidth = scaleToward(
+    baseOutlineWidth + outlineWidthBoostPx,
+    baseOutlineWidth,
+    outlineEmphasis
+  );
+  const resolvedOutlineBaseOpacity = scaleToward(
+    Math.max(
+      Number(visualConfig.outlineIntensity.baseOpacity || 0),
+      Number(familyEffectProfile.outlineBaseOpacityFloor || 0)
+    ),
+    0.3,
+    outlineEmphasis
+  );
+  const resolvedOutlinePulseMinOpacity = scaleToward(
+    Math.max(
+      Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
+      Number(familyEffectProfile.outlinePulseMinOpacityFloor || 0)
+    ),
+    0.2,
+    outlineEmphasis
+  );
+  const resolvedOutlinePulseMaxOpacity = scaleToward(
+    Math.max(
+      Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
+      Number(familyEffectProfile.outlinePulseMaxOpacityFloor || 0)
+    ),
+    0.78,
+    outlineEmphasis
+  );
 
   return {
     family,
-    strokeWidthPx: baseStrokeWidth + strokeWidthBoostPx,
-    outlineWidthPx: baseOutlineWidth + outlineWidthBoostPx,
-    pulseMinOpacity: Number(familyPulseProfile.minOpacity || pulseProfile.minOpacity || 0.25),
-    pulseMaxOpacity: Number(familyPulseProfile.maxOpacity || pulseProfile.maxOpacity || 1),
-    pulseMinScale: Number(familyPulseProfile.minScale || pulseProfile.minScale || 0.98),
-    pulseMaxScale: Number(familyPulseProfile.maxScale || pulseProfile.maxScale || 1.02),
-    filter: isPulseEffect ? String(familyPulseProfile.filter || "none") : "none",
-    outlineBaseOpacity: Math.max(
-      Number(visualConfig.outlineIntensity.baseOpacity || 0),
-      Number(familyPulseProfile.outlineBaseOpacityFloor || 0)
+    strokeWidthPx: resolvedStrokeWidth,
+    outlineWidthPx: resolvedOutlineWidth,
+    pulseMinOpacity: clampToRange(
+      scaleToward(Number(familyEffectProfile.minOpacity || baseEffectProfile.minOpacity || 0.25), 0.18, opacityEmphasis),
+      0,
+      1
     ),
-    outlinePulseMinOpacity: Math.max(
-      Number(visualConfig.outlineIntensity.pulseMinOpacity || 0),
-      Number(familyPulseProfile.outlinePulseMinOpacityFloor || 0)
+    pulseMaxOpacity: clampToRange(
+      scaleToward(Number(familyEffectProfile.maxOpacity || baseEffectProfile.maxOpacity || 1), 0.74, opacityEmphasis),
+      0,
+      1
     ),
-    outlinePulseMaxOpacity: Math.max(
-      Number(visualConfig.outlineIntensity.pulseMaxOpacity || 0),
-      Number(familyPulseProfile.outlinePulseMaxOpacityFloor || 0)
+    pulseMinScale: scaleToward(
+      Number(familyEffectProfile.minScale || baseEffectProfile.minScale || 1),
+      1,
+      motionEmphasis
     ),
-    outlineWidthDownPx: Math.max(
-      Number(visualConfig.outlineIntensity.widthDownPx || 0),
-      Number(familyPulseProfile.outlineWidthDownPxFloor || 0)
+    pulseMaxScale: scaleToward(
+      Number(familyEffectProfile.maxScale || baseEffectProfile.maxScale || 1),
+      1,
+      motionEmphasis
     ),
-    outlineWidthUpPx: Math.max(
-      Number(visualConfig.outlineIntensity.widthUpPx || 0),
-      Number(familyPulseProfile.outlineWidthUpPxFloor || 0)
+    filter: String(familyEffectProfile.filter || baseEffectProfile.filter || "none"),
+    glowFilterMin: String(
+      familyEffectProfile.filterMin || baseEffectProfile.filterMin || familyEffectProfile.filter || baseEffectProfile.filter || "none"
     ),
+    glowFilterMax: String(
+      familyEffectProfile.filterMax || baseEffectProfile.filterMax || familyEffectProfile.filter || baseEffectProfile.filter || "none"
+    ),
+    blinkFilterMin: String(
+      familyEffectProfile.filterMin || baseEffectProfile.filterMin || "none"
+    ),
+    blinkFilterMax: String(
+      familyEffectProfile.filterMax || baseEffectProfile.filterMax || familyEffectProfile.filter || baseEffectProfile.filter || "none"
+    ),
+    outlineBaseOpacity: clampToRange(resolvedOutlineBaseOpacity, 0, 1),
+    outlinePulseMinOpacity: clampToRange(resolvedOutlinePulseMinOpacity, 0, 1),
+    outlinePulseMaxOpacity: clampToRange(resolvedOutlinePulseMaxOpacity, 0, 1),
+    outlineWidthDownPx: scaleToward(
+      Math.max(
+        Number(visualConfig.outlineIntensity.widthDownPx || 0),
+        Number(familyEffectProfile.outlineWidthDownPxFloor || 0)
+      ),
+      0.5,
+      outlineEmphasis
+    ),
+    outlineWidthUpPx: scaleToward(
+      Math.max(
+        Number(visualConfig.outlineIntensity.widthUpPx || 0),
+        Number(familyEffectProfile.outlineWidthUpPxFloor || 0)
+      ),
+      1,
+      outlineEmphasis
+    ),
+    animationDelayMs: Number(priorityProfile.animationDelayMs || 0),
   };
 }
 
@@ -279,7 +374,15 @@ function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
   shapeNode.style.setProperty("--ad-ext-target-stroke-width", `${strokeWidth}px`);
   shapeNode.style.setProperty("--ad-ext-target-outline-width", `${styleProfile.outlineWidthPx}px`);
   shapeNode.style.setProperty("--ad-ext-target-duration", `${visualConfig.animationMs}ms`);
+  shapeNode.style.setProperty(
+    "--ad-ext-target-animation-delay",
+    `${styleProfile.animationDelayMs}ms`
+  );
   shapeNode.style.setProperty("--ad-ext-target-filter", styleProfile.filter);
+  shapeNode.style.setProperty("--ad-ext-target-glow-filter-min", styleProfile.glowFilterMin);
+  shapeNode.style.setProperty("--ad-ext-target-glow-filter-max", styleProfile.glowFilterMax);
+  shapeNode.style.setProperty("--ad-ext-target-blink-filter-min", styleProfile.blinkFilterMin);
+  shapeNode.style.setProperty("--ad-ext-target-blink-filter-max", styleProfile.blinkFilterMax);
   shapeNode.style.setProperty(
     "--ad-ext-target-pulse-min-opacity",
     String(styleProfile.pulseMinOpacity)
@@ -329,6 +432,9 @@ function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
 function cloneShapeAsOutline(shapeNode, ownerDocument) {
   const outline = ownerDocument.createElementNS(SVG_NS, shapeNode.tagName);
   Array.from(shapeNode.attributes || []).forEach((attribute) => {
+    if (attribute.name === "class" || attribute.name === "style") {
+      return;
+    }
     outline.setAttribute(attribute.name, attribute.value);
   });
   return outline;
@@ -342,6 +448,10 @@ function applyOutlineStyle(outlineNode, visualConfig, styleProfile) {
   outlineNode.classList.add(OUTLINE_CLASS);
   outlineNode.style.setProperty("--ad-ext-target-outline-width", `${styleProfile.outlineWidthPx}px`);
   outlineNode.style.setProperty("--ad-ext-target-duration", `${visualConfig.animationMs}ms`);
+  outlineNode.style.setProperty(
+    "--ad-ext-target-animation-delay",
+    `${styleProfile.animationDelayMs}ms`
+  );
   outlineNode.style.setProperty(
     "--ad-ext-target-outline-stroke-alpha",
     String(visualConfig.outlineIntensity.strokeAlpha)
@@ -489,15 +599,36 @@ export function renderCheckoutTargets(options = {}) {
   const ownerDocument = overlay.ownerDocument;
 
   const renderedKeys = new Set();
+  const uniqueTargets = [];
   checkoutTargets.forEach((target) => {
     const key = `${target?.ring || ""}:${Number.isFinite(target?.value) ? target.value : ""}`;
     if (renderedKeys.has(key)) {
       return;
     }
     renderedKeys.add(key);
+    uniqueTargets.push(target);
+  });
+
+  const renderEntries = uniqueTargets
+    .map((target, targetIndex) => ({
+      target,
+      targetIndex,
+      priorityProfile: resolvePriorityProfile(visualConfig, targetIndex, uniqueTargets.length),
+    }))
+    .sort((left, right) => right.targetIndex - left.targetIndex);
+
+  renderEntries.forEach(({ target, targetIndex, priorityProfile }) => {
+    const key = `${target?.ring || ""}:${Number.isFinite(target?.value) ? target.value : ""}`;
+    if (!key) {
+      return;
+    }
 
     const shapes = buildTargetShapes(ownerDocument, board.radius, target, visualConfig);
-    const styleProfile = resolveTargetStyleProfile(target, board.radius, visualConfig);
+    const styleProfile = resolveTargetStyleProfile(target, board.radius, visualConfig, {
+      targetIndex,
+      targetCount: uniqueTargets.length,
+      priorityProfile,
+    });
     shapes.forEach((shapeNode) => {
       applyTargetMetadata(shapeNode, target, styleProfile);
       applyShapeStyle(shapeNode, visualConfig, styleProfile);

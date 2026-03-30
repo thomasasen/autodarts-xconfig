@@ -288,7 +288,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Mögliche Checkout-Ziele werden direkt am virtuellen Board markiert.",
     visualDescription:
-      "Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist.",
+      "Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. Wenn mehrere Routenschritte gleichzeitig sichtbar sind, bleibt das zuerst zu spielende Feld am stärksten betont.",
     usefulWhen: "Wenn du Finish-Wege nicht nur lesen, sondern direkt am Board sehen willst.",
     images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
     fields: {
@@ -304,7 +304,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       targetSelectionMode: fieldCopy(
         "Legt fest, ob das nächste Feld, alle Felder oder nur das Finish-Feld der sichtbaren Checkout-Route markiert werden.",
-        "Steuert, wie viele Segmente aus der sichtbaren Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert nur das zuerst zu spielende Segment, `Alle Felder` die gesamte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
+        "Steuert, wie viele Segmente aus der sichtbaren Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert nur das zuerst zu spielende Segment, `Alle Felder` die gesamte Route mit klarer Priorität auf dem ersten Schritt und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
         "Legt fest, welcher Teil der sichtbaren Checkout-Route am Board markiert wird."
       ),
       colorTheme: fieldCopy(

@@ -260,18 +260,18 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 
 - Gilt für: `X01`
 - Kurz: Mögliche Checkout-Ziele werden direkt am virtuellen Board markiert.
-- Grafisch: Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist.
+- Grafisch: Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist. Wenn mehrere Routenschritte gleichzeitig sichtbar sind, bleibt das zuerst zu spielende Feld am stärksten betont.
 - `Effekt`: Legt die Animationsart der markierten Segmente fest.
   - `Pulse`: Die markierten Felder atmen sichtbar über Helligkeit und leichte Größenänderung. Dadurch bleiben die Checkout-Ziele aufmerksamkeitsstark, aber weicher als bei einem Blinkeffekt.
-  - `Blink`: Diese Variante reduziert die Zwischenstufen und arbeitet mit deutlichen Sichtbarkeitssprüngen. Dadurch springen die relevanten Board-Segmente besonders schnell ins Auge.
-  - `Glow`: Die Ziele werden primär über Helligkeit, Kontur und einen zusätzlichen Leuchtsaum betont. Das wirkt ruhiger als `Blink`, aber strahlender als `Pulse`.
+  - `Blink`: Diese Variante reduziert die Zwischenstufen und arbeitet mit schnellen, deutlichen Sichtbarkeitssprüngen und kurzen hellen Spitzen. Dadurch springen die relevanten Board-Segmente besonders schnell ins Auge.
+  - `Glow`: Die Ziele werden primär über Helligkeit, Kontur und einen weich atmenden Leuchtsaum betont. Das wirkt ruhiger als `Blink`, aber strahlender und flächiger als `Pulse`.
 - `Single-Ring`: Bestimmt, welche Single-Ringe bei Single-Zielen markiert werden.
   - `Beide`: Bei Single-Zielen werden sowohl der innere als auch der äußere Single-Ring des betreffenden Segments markiert. Das ist die flächigste und am leichtesten erkennbare Variante.
   - `Innen`: Bei Single-Zielen wird nur der innere Single-Ring sichtbar markiert. Dadurch bleibt die Zielmarkierung schmaler und konzentriert sich stärker auf den innenliegenden Bereich des Segments.
   - `Außen`: Diese Einstellung zeichnet bei Single-Zielen nur den äußeren Single-Ring nach. Das ist sinnvoll, wenn du die Markierung näher an der Außenzone des Boards sehen möchtest.
 - `Zielauswahl`: Legt fest, welcher Teil der sichtbaren Checkout-Route am Board markiert wird.
   - `Nächstes Feld`: Markiert nur das erste Segment der sichtbaren Checkout-Route.
-  - `Alle Felder`: Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig.
+  - `Alle Felder`: Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig. Das zuerst zu spielende Segment bleibt dabei sichtbar am stärksten betont.
   - `Nur Finish`: Markiert nur das letzte Finish-Segment der sichtbaren Checkout-Route.
 - `Farbthema`: Passt die Farbe der Board-Markierungen an.
   - `Violett`: Diese Palette nutzt ein klares Violett für Füllung und Kontur der Checkout-Ziele. Dadurch wirkt die Markierung deutlich futuristischer und hebt sich stark von den Standardfarben des Boards ab.

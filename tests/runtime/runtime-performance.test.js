@@ -12,7 +12,10 @@ import { initializeCricketHighlighter } from "../../src/features/cricket-highlig
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import { initializeTripleDoubleBullHits } from "../../src/features/triple-double-bull-hits/index.js";
 import {
+  EFFECT_CLASSES,
+  OUTLINE_CLASS,
   OVERLAY_ID as CHECKOUT_OVERLAY_ID,
+  TARGET_CLASS,
   TARGET_FAMILY_ATTRIBUTE,
   resolveBoardTargetVisualConfig,
 } from "../../src/features/checkout-board-targets/style.js";
@@ -219,29 +222,19 @@ test("checkout-board-targets boosts pulse visibility for outer wedges and bull c
       group,
       radius: 500,
     },
-    checkoutTargets: [
-      { ring: "D", value: 18 },
-      { ring: "DB", value: 25 },
-      { ring: "SB", value: 25 },
-    ],
+    checkoutTargets: [{ ring: "D", value: 18 }],
     visualConfig,
   });
 
-  const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  let overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
   assert.ok(overlay);
 
-  const outerNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='outer']`));
-  const bullNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='bull']`));
-  const outerShape = outerNodes.find((node) => !node.classList.contains("ad-ext-checkout-target-outline"));
-  const outerOutline = outerNodes.find((node) => node.classList.contains("ad-ext-checkout-target-outline"));
-  const bullShape = bullNodes.find((node) => !node.classList.contains("ad-ext-checkout-target-outline"));
-  const bullOutline = bullNodes.find((node) => node.classList.contains("ad-ext-checkout-target-outline"));
+  let outerNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='outer']`));
+  let outerShape = outerNodes.find((node) => !node.classList.contains("ad-ext-checkout-target-outline"));
+  let outerOutline = outerNodes.find((node) => node.classList.contains("ad-ext-checkout-target-outline"));
 
   assert.ok(outerShape);
   assert.ok(outerOutline);
-  assert.ok(bullShape);
-  assert.ok(bullOutline);
-
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "6px");
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"), "11px");
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.62");
@@ -253,6 +246,25 @@ test("checkout-board-targets boosts pulse visibility for outer wedges and bull c
   assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "11px");
   assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.7");
 
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
+    checkoutTargets: [{ ring: "SB", value: 25 }],
+    visualConfig,
+  });
+
+  overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  const bullNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='bull']`));
+  const bullShape = bullNodes.find((node) => !node.classList.contains("ad-ext-checkout-target-outline"));
+  const bullOutline = bullNodes.find((node) => node.classList.contains("ad-ext-checkout-target-outline"));
+
+  assert.ok(bullShape);
+  assert.ok(bullOutline);
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "5.5px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "8px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.52");
@@ -265,7 +277,7 @@ test("checkout-board-targets boosts pulse visibility for outer wedges and bull c
   assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.72");
 });
 
-test("checkout-board-targets keeps bull targets on effect-neutral styling outside pulse mode", () => {
+test("checkout-board-targets keeps outline clones isolated from target effect classes", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -276,7 +288,7 @@ test("checkout-board-targets keeps bull targets on effect-neutral styling outsid
   documentRef.main.appendChild(svg);
 
   const visualConfig = resolveBoardTargetVisualConfig({
-    effect: "glow",
+    effect: "pulse",
     singleRing: "both",
     colorTheme: "amber",
     outlineIntensity: "standard",
@@ -296,17 +308,166 @@ test("checkout-board-targets keeps bull targets on effect-neutral styling outsid
   assert.ok(overlay);
 
   const bullNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='bull']`));
-  const bullShape = bullNodes.find((node) => !node.classList.contains("ad-ext-checkout-target-outline"));
-  const bullOutline = bullNodes.find((node) => node.classList.contains("ad-ext-checkout-target-outline"));
+  const bullShape = bullNodes.find((node) => !node.classList.contains(OUTLINE_CLASS));
+  const bullOutline = bullNodes.find((node) => node.classList.contains(OUTLINE_CLASS));
 
   assert.ok(bullShape);
   assert.ok(bullOutline);
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "4px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "5.5px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.25");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.02");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-filter"), "none");
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.35");
+  assert.equal(bullShape.classList.contains(TARGET_CLASS), true);
+  assert.equal(bullShape.classList.contains(EFFECT_CLASSES.pulse), true);
+  assert.equal(bullOutline.classList.contains(OUTLINE_CLASS), true);
+  assert.equal(bullOutline.classList.contains(TARGET_CLASS), false);
+  assert.equal(bullOutline.classList.contains(EFFECT_CLASSES.pulse), false);
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "8px");
+});
+
+test("checkout-board-targets softens and staggers follow-up targets in multi-target routes", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "500");
+  group.appendChild(boardCircle);
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  const visualConfig = resolveBoardTargetVisualConfig({
+    effect: "pulse",
+    singleRing: "both",
+    colorTheme: "violet",
+    outlineIntensity: "standard",
+  });
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
+    checkoutTargets: [
+      { ring: "T", value: 20 },
+      { ring: "D", value: 10 },
+      { ring: "SB", value: 25 },
+    ],
+    visualConfig,
+  });
+
+  const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  const targetShapes = Array.from(overlay.querySelectorAll(`.${TARGET_CLASS}`));
+  const primaryOuter = targetShapes.find(
+    (node) =>
+      node.getAttribute("data-target-ring") === "T" &&
+      node.getAttribute("data-target-value") === "20"
+  );
+  const secondaryOuter = targetShapes.find(
+    (node) =>
+      node.getAttribute("data-target-ring") === "D" &&
+      node.getAttribute("data-target-value") === "10"
+  );
+  const tertiaryBull = targetShapes.find(
+    (node) =>
+      node.getAttribute("data-target-ring") === "SB" &&
+      node.getAttribute("data-target-value") === "25"
+  );
+
+  assert.ok(primaryOuter);
+  assert.ok(secondaryOuter);
+  assert.ok(tertiaryBull);
+  assert.equal(primaryOuter.style.getPropertyValue("--ad-ext-target-animation-delay"), "0ms");
+  assert.equal(secondaryOuter.style.getPropertyValue("--ad-ext-target-animation-delay"), "-140ms");
+  assert.equal(tertiaryBull.style.getPropertyValue("--ad-ext-target-animation-delay"), "-280ms");
+  assert.ok(
+    parseFloat(secondaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) <
+      parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+  );
+  assert.ok(
+    parseFloat(secondaryOuter.style.getPropertyValue("--ad-ext-target-pulse-max-scale")) <
+      parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-pulse-max-scale"))
+  );
+  assert.ok(
+    parseFloat(tertiaryBull.style.getPropertyValue("--ad-ext-target-outline-width")) <
+      parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-outline-width"))
+  );
+});
+
+test("checkout-board-targets applies dedicated glow and blink profiles outside pulse mode", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "500");
+  group.appendChild(boardCircle);
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  const glowConfig = resolveBoardTargetVisualConfig({
+    effect: "glow",
+    singleRing: "both",
+    colorTheme: "amber",
+    outlineIntensity: "standard",
+  });
+  const blinkConfig = resolveBoardTargetVisualConfig({
+    effect: "blink",
+    singleRing: "both",
+    colorTheme: "cyan",
+    outlineIntensity: "standard",
+  });
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
+    checkoutTargets: [{ ring: "SB", value: 25 }],
+    visualConfig: glowConfig,
+  });
+
+  let overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  let bullNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='bull']`));
+  let bullShape = bullNodes.find((node) => !node.classList.contains(OUTLINE_CLASS));
+  let bullOutline = bullNodes.find((node) => node.classList.contains(OUTLINE_CLASS));
+
+  assert.ok(bullShape);
+  assert.ok(bullOutline);
+  assert.equal(bullShape.classList.contains(EFFECT_CLASSES.glow), true);
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "5px");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "7.7px");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.7");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.44");
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
+    checkoutTargets: [{ ring: "D", value: 18 }],
+    visualConfig: blinkConfig,
+  });
+
+  overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  const outerNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='outer']`));
+  const outerShape = outerNodes.find((node) => !node.classList.contains(OUTLINE_CLASS));
+  const outerOutline = outerNodes.find((node) => node.classList.contains(OUTLINE_CLASS));
+
+  assert.ok(outerShape);
+  assert.ok(outerOutline);
+  assert.equal(outerShape.classList.contains(EFFECT_CLASSES.blink), true);
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "4.9px");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"), "7.9px");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.28");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.match(outerShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
+  assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.35");
 });
 
 test("checkout-board-targets selects next, finish or all route segments from visible checkout suggestions", () => {
