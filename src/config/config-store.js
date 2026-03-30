@@ -188,6 +188,22 @@ function normalizeLegacyColorTheme(value, fallbackValue) {
   return LEGACY_COLOR_THEME_ALIASES[compact] || rawValue;
 }
 
+function normalizeLegacyBoardTargetVisualPreset(visualPresetValue, legacyEffectValue) {
+  const explicitPreset = String(visualPresetValue || "").trim().toLowerCase();
+  if (explicitPreset === "focus" || explicitPreset === "signal" || explicitPreset === "steady") {
+    return explicitPreset;
+  }
+
+  const legacyEffect = String(legacyEffectValue || "").trim().toLowerCase();
+  if (legacyEffect === "blink") {
+    return "signal";
+  }
+  if (legacyEffect === "glow") {
+    return "steady";
+  }
+  return "focus";
+}
+
 function normalizeLegacyDartDesign(value, fallbackValue = "autodarts") {
   const rawValue = String(value || "").trim();
   if (!rawValue) {
@@ -220,10 +236,13 @@ const LEGACY_IMPORTERS_BY_CONFIG_KEY = Object.freeze({
   checkoutBoardTargets(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
     return buildFeatureImport("checkoutBoardTargets", legacyFeatureState, {
-      effect: readLegacySetting(settings, "EFFEKT", "pulse"),
-      singleRing: readLegacySetting(settings, "SINGLE_RING", "both"),
-      colorTheme: readLegacySetting(settings, "FARBTHEMA", "violet"),
-      outlineIntensity: readLegacySetting(settings, "KONTUR_INTENSITAET", "standard"),
+      visualPreset: normalizeLegacyBoardTargetVisualPreset(
+        readLegacySetting(settings, "VISUAL_PRESET", ""),
+        readLegacySetting(settings, "EFFEKT", "pulse")
+      ),
+      singleRing: readLegacySetting(settings, "SINGLE_RING", "inner"),
+      targetSelectionMode: readLegacySetting(settings, "ZIELAUSWAHL", "next"),
+      colorTheme: readLegacySetting(settings, "FARBTHEMA", "amber"),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },

@@ -72,6 +72,9 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
   assert.equal(config.features.turnPointsCount.flashOnChange, true);
   assert.equal(config.features.turnPointsCount.flashMode, "on-change");
+  assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
+  assert.equal(config.features.checkoutBoardTargets.singleRing, "inner");
+  assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
 });
@@ -152,6 +155,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
       checkoutBoardTargets: {
+        visualPreset: "SIGNAL",
         effect: "GLOW",
         singleRing: "INNER",
         targetSelectionMode: "ALL",
@@ -279,7 +283,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").effect, "glow");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "signal");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "inner");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").targetSelectionMode, "all");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
@@ -368,6 +372,26 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").playerFieldTransparency, 5);
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").contrastPreset, "high");
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").backgroundDisplayMode, "fill");
+});
+
+test("createRuntimeConfig maps legacy checkout-board-targets effects to visual presets", () => {
+  const steadyConfig = createRuntimeConfig({
+    features: {
+      checkoutBoardTargets: {
+        effect: "GLOW",
+      },
+    },
+  });
+  const signalConfig = createRuntimeConfig({
+    features: {
+      checkoutBoardTargets: {
+        effect: "blink",
+      },
+    },
+  });
+
+  assert.equal(steadyConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "steady");
+  assert.equal(signalConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "signal");
 });
 
 test("normalized feature configs expose a boolean debug flag for every registered script", () => {

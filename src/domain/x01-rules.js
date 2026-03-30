@@ -345,6 +345,22 @@ function getCheckoutSetupSegments() {
   return SCORING_SEGMENTS.map((segmentName) => parseSegment(segmentName)).filter(Boolean);
 }
 
+function normalizeDartsRemaining(value, fallbackValue = 3) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallbackValue;
+  }
+
+  const normalized = Math.trunc(numeric);
+  if (normalized < 0) {
+    return 0;
+  }
+  if (normalized > 3) {
+    return 3;
+  }
+  return normalized;
+}
+
 const CHECKOUT_SETUP_SEGMENTS = Object.freeze(getCheckoutSetupSegments());
 const CHECKOUT_FINISH_SEGMENTS_BY_MODE = Object.freeze({
   straight: Object.freeze(getCheckoutFinishSegments("straight")),
@@ -352,22 +368,35 @@ const CHECKOUT_FINISH_SEGMENTS_BY_MODE = Object.freeze({
   master: Object.freeze(getCheckoutFinishSegments("master")),
 });
 
-function getCheckoutFeasibilitySet(outMode) {
+function buildCheckoutFeasibilitySet(outMode, dartsRemaining) {
   const normalizedOutMode = normalizeOutMode(outMode);
   const finishSegments =
     CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] ||
     CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
   const scores = new Set();
+  const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
+
+  if (normalizedDartsRemaining < 1) {
+    return scores;
+  }
 
   finishSegments.forEach((finishSegment) => {
     scores.add(finishSegment.score);
   });
+
+  if (normalizedDartsRemaining < 2) {
+    return scores;
+  }
 
   CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
     finishSegments.forEach((finishSegment) => {
       scores.add(firstSegment.score + finishSegment.score);
     });
   });
+
+  if (normalizedDartsRemaining < 3) {
+    return scores;
+  }
 
   CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
     CHECKOUT_SETUP_SEGMENTS.forEach((secondSegment) => {
@@ -381,10 +410,25 @@ function getCheckoutFeasibilitySet(outMode) {
 }
 
 const CHECKOUTABLE_SCORES_BY_MODE = Object.freeze({
-  straight: getCheckoutFeasibilitySet("straight"),
-  double: getCheckoutFeasibilitySet("double"),
-  master: getCheckoutFeasibilitySet("master"),
+  straight: Object.freeze({
+    1: buildCheckoutFeasibilitySet("straight", 1),
+    2: buildCheckoutFeasibilitySet("straight", 2),
+    3: buildCheckoutFeasibilitySet("straight", 3),
+  }),
+  double: Object.freeze({
+    1: buildCheckoutFeasibilitySet("double", 1),
+    2: buildCheckoutFeasibilitySet("double", 2),
+    3: buildCheckoutFeasibilitySet("double", 3),
+  }),
+  master: Object.freeze({
+    1: buildCheckoutFeasibilitySet("master", 1),
+    2: buildCheckoutFeasibilitySet("master", 2),
+    3: buildCheckoutFeasibilitySet("master", 3),
+  }),
 });
+
+const CHECKOUT_ROUTE_CACHE = new Map();
+const PREFERRED_CHECKOUT_ROUTE_CACHE = new Map();
 
 function getOneDartPreference(segment, outMode) {
   if (!segment) {
@@ -423,6 +467,84 @@ function compareOneDartSegments(left, right, outMode) {
   return String(left.normalized || "").localeCompare(String(right.normalized || ""));
 }
 
+function getSetupSegmentPreference(segment) {
+  if (!segment) {
+    return -1;
+  }
+
+  if (segment.normalized === "BULL" || segment.normalized === "S25") {
+    return 0;
+  }
+
+  if (segment.ring === "T") {
+    return 3;
+  }
+
+  if (segment.ring === "D") {
+    return 2;
+  }
+
+  return 1;
+}
+
+function countBullSetupSegments(route = []) {
+  return route.slice(0, -1).reduce((count, segment) => {
+    return segment?.normalized === "BULL" || segment?.normalized === "S25" ? count + 1 : count;
+  }, 0);
+}
+
+function compareCheckoutRoutes(leftRoute = [], rightRoute = [], outMode) {
+  if (leftRoute.length !== rightRoute.length) {
+    return leftRoute.length - rightRoute.length;
+  }
+
+  const leftFirstScore = Number(leftRoute[0]?.score || 0);
+  const rightFirstScore = Number(rightRoute[0]?.score || 0);
+  if (leftFirstScore !== rightFirstScore) {
+    return rightFirstScore - leftFirstScore;
+  }
+
+  const leftSecondScore = Number(leftRoute[1]?.score || 0);
+  const rightSecondScore = Number(rightRoute[1]?.score || 0);
+  if (leftSecondScore !== rightSecondScore) {
+    return rightSecondScore - leftSecondScore;
+  }
+
+  const setupLength = Math.max(0, leftRoute.length - 1);
+  for (let index = 0; index < setupLength; index += 1) {
+    const leftSetupPreference = getSetupSegmentPreference(leftRoute[index]);
+    const rightSetupPreference = getSetupSegmentPreference(rightRoute[index]);
+    if (leftSetupPreference !== rightSetupPreference) {
+      return rightSetupPreference - leftSetupPreference;
+    }
+
+    const leftValue = Number(leftRoute[index]?.value || 0);
+    const rightValue = Number(rightRoute[index]?.value || 0);
+    if (leftValue !== rightValue) {
+      return rightValue - leftValue;
+    }
+  }
+
+  const bullSetupDelta = countBullSetupSegments(leftRoute) - countBullSetupSegments(rightRoute);
+  if (bullSetupDelta !== 0) {
+    return bullSetupDelta;
+  }
+
+  const leftFinish = leftRoute[leftRoute.length - 1] || null;
+  const rightFinish = rightRoute[rightRoute.length - 1] || null;
+  const finishComparison = compareOneDartSegments(leftFinish, rightFinish, outMode);
+  if (finishComparison !== 0) {
+    return finishComparison;
+  }
+
+  return leftRoute
+    .map((segment) => String(segment?.normalized || ""))
+    .join(">")
+    .localeCompare(
+      rightRoute.map((segment) => String(segment?.normalized || "")).join(">")
+    );
+}
+
 export function getSegmentScore(segmentName) {
   const parsed = parseSegment(segmentName);
   return parsed ? parsed.score : NaN;
@@ -438,21 +560,125 @@ export function isTripleSegment(segmentName) {
   return Boolean(parsed) && parsed.ring === "T";
 }
 
-export function isCheckoutPossibleFromScoreForOutMode(score, outMode) {
+export function isCheckoutPossibleFromScoreForOutModeWithDarts(score, outMode, dartsRemaining = 3) {
   const numeric = toNumber(score);
   if (!Number.isFinite(numeric) || numeric <= 0) {
     return false;
   }
 
   const normalizedOutMode = normalizeOutMode(outMode);
-  const scoreSet =
-    CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode] ||
-    CHECKOUTABLE_SCORES_BY_MODE.straight;
+  const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
+  if (normalizedDartsRemaining < 1) {
+    return false;
+  }
+
+  const scoreSetByDarts =
+    CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode] || CHECKOUTABLE_SCORES_BY_MODE.straight;
+  const scoreSet = scoreSetByDarts[normalizedDartsRemaining] || scoreSetByDarts[3];
   return scoreSet.has(numeric);
+}
+
+export function isCheckoutPossibleFromScoreForOutMode(score, outMode) {
+  return isCheckoutPossibleFromScoreForOutModeWithDarts(score, outMode, 3);
 }
 
 export function isCheckoutPossibleFromScore(score) {
   return isCheckoutPossibleFromScoreForOutMode(score, "double");
+}
+
+export function getCheckoutRoutesForScore(score, outMode, dartsRemaining = 3) {
+  const numeric = toNumber(score);
+  const normalizedOutMode = normalizeOutMode(outMode);
+  const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
+  if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1) {
+    return [];
+  }
+
+  const cacheKey = `${numeric}:${normalizedOutMode}:${normalizedDartsRemaining}`;
+  const cachedRoutes = CHECKOUT_ROUTE_CACHE.get(cacheKey);
+  if (cachedRoutes) {
+    return cachedRoutes.map((route) => route.slice());
+  }
+
+  const routes = [];
+  const currentRoute = [];
+
+  function visitRoutes(remainingScore, remainingDarts) {
+    if (remainingDarts < 1) {
+      return;
+    }
+
+    CHECKOUT_SETUP_SEGMENTS.forEach((segment) => {
+      const outcome = evaluateThrowOutcome({
+        scoreBefore: remainingScore,
+        segmentName: segment.normalized,
+        outMode: normalizedOutMode,
+      });
+      if (outcome.isBust) {
+        return;
+      }
+
+      currentRoute.push(segment.normalized);
+
+      if (outcome.isFinish) {
+        routes.push(currentRoute.slice());
+        currentRoute.pop();
+        return;
+      }
+
+      const nextRemainingDarts = remainingDarts - 1;
+      if (
+        nextRemainingDarts >= 1 &&
+        isCheckoutPossibleFromScoreForOutModeWithDarts(
+          outcome.scoreAfter,
+          normalizedOutMode,
+          nextRemainingDarts
+        )
+      ) {
+        visitRoutes(outcome.scoreAfter, nextRemainingDarts);
+      }
+
+      currentRoute.pop();
+    });
+  }
+
+  visitRoutes(numeric, normalizedDartsRemaining);
+
+  const frozenRoutes = Object.freeze(routes.map((route) => Object.freeze(route.slice())));
+  CHECKOUT_ROUTE_CACHE.set(cacheKey, frozenRoutes);
+  return frozenRoutes.map((route) => route.slice());
+}
+
+export function getPreferredCheckoutRoute(score, outMode, dartsRemaining = 3) {
+  const numeric = toNumber(score);
+  const normalizedOutMode = normalizeOutMode(outMode);
+  const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
+  if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1) {
+    return [];
+  }
+
+  const cacheKey = `${numeric}:${normalizedOutMode}:${normalizedDartsRemaining}`;
+  const cachedRoute = PREFERRED_CHECKOUT_ROUTE_CACHE.get(cacheKey);
+  if (cachedRoute) {
+    return cachedRoute.slice();
+  }
+
+  const bestRoute =
+    getCheckoutRoutesForScore(numeric, normalizedOutMode, normalizedDartsRemaining)
+      .map((route) => ({
+        segments: route,
+        parsedSegments: route.map((segmentName) => parseSegment(segmentName)).filter(Boolean),
+      }))
+      .sort((left, right) =>
+        compareCheckoutRoutes(left.parsedSegments, right.parsedSegments, normalizedOutMode)
+      )[0]?.segments || [];
+
+  PREFERRED_CHECKOUT_ROUTE_CACHE.set(cacheKey, Object.freeze(bestRoute.slice()));
+  return bestRoute.slice();
+}
+
+export function getPreferredCheckoutStep(score, outMode, dartsRemaining = 3) {
+  return getPreferredCheckoutRoute(score, outMode, dartsRemaining)[0] || "";
 }
 
 export function getOneDartCheckoutSegmentsForOutMode(score, outMode) {

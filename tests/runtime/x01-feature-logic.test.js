@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import { computeShouldHighlight } from "../../src/features/checkout-score-pulse/logic.js";
+import { resolveAuthoritativeCheckoutRoute } from "../../src/features/x01-checkout-route.js";
 import { computeZoomIntent, markManualZoomPause } from "../../src/features/tv-board-zoom/logic.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -47,6 +48,48 @@ function createZoomState() {
     matchBoundaryToken: "",
   };
 }
+
+test("resolveAuthoritativeCheckoutRoute keeps a plausible visible route under 180", () => {
+  const resolved = resolveAuthoritativeCheckoutRoute({
+    routeSegments: ["25", "D18"],
+    activeScore: 61,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved.routeSegments, ["S25", "D18"]);
+  assert.equal(resolved.selectionSource, "validated-visible-route");
+  assert.equal(resolved.visibleSegmentsUsed, 2);
+});
+
+test("resolveAuthoritativeCheckoutRoute replaces implausible visible routes with a score route", () => {
+  const resolved = resolveAuthoritativeCheckoutRoute({
+    routeSegments: ["T20", "BULL"],
+    activeScore: 50,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved.routeSegments, ["BULL"]);
+  assert.equal(resolved.selectionSource, "score-route");
+  assert.equal(resolved.visibleSegmentsUsed, 0);
+});
+
+test("resolveAuthoritativeCheckoutRoute extends a valid visible prefix with a fallback finish", () => {
+  const resolved = resolveAuthoritativeCheckoutRoute({
+    routeSegments: ["T20"],
+    activeScore: 96,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved.routeSegments, ["T20", "D18"]);
+  assert.equal(resolved.selectionSource, "validated-visible-route+fallback");
+  assert.equal(resolved.visibleSegmentsUsed, 1);
+});
 
 test("checkout-score-pulse score logic respects the active out mode", () => {
   const documentRef = new FakeDocument();

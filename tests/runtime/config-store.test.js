@@ -44,6 +44,7 @@ test("config store loads defaults when storage is empty", async () => {
 
   assert.equal(config.features.checkoutScorePulse.effect, "scale");
   assert.equal(config.featureToggles.checkoutScorePulse, true);
+  assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
 });
@@ -154,6 +155,16 @@ test("config store imports migrated legacy feature and theme settings once witho
             DEBUG: true,
           },
         },
+        "a-checkout-board": {
+          enabled: true,
+          settings: {
+            EFFEKT: "blink",
+            SINGLE_RING: "outer",
+            ZIELAUSWAHL: "all",
+            FARBTHEMA: "cyan",
+            DEBUG: true,
+          },
+        },
         "a-winner-fireworks": {
           enabled: true,
           settings: {
@@ -235,6 +246,12 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.checkoutScorePulse.intensity, "stark");
   assert.equal(importedConfig.features.checkoutScorePulse.triggerSource, "score-only");
   assert.equal(importedConfig.features.checkoutScorePulse.debug, true);
+  assert.equal(importedConfig.featureToggles.checkoutBoardTargets, true);
+  assert.equal(importedConfig.features.checkoutBoardTargets.visualPreset, "signal");
+  assert.equal(importedConfig.features.checkoutBoardTargets.singleRing, "outer");
+  assert.equal(importedConfig.features.checkoutBoardTargets.targetSelectionMode, "all");
+  assert.equal(importedConfig.features.checkoutBoardTargets.colorTheme, "cyan");
+  assert.equal(importedConfig.features.checkoutBoardTargets.debug, true);
   assert.equal(importedConfig.featureToggles.winnerFireworks, true);
   assert.equal(importedConfig.features.winnerFireworks.style, "cannon");
   assert.equal(importedConfig.features.winnerFireworks.colorTheme, "gold");

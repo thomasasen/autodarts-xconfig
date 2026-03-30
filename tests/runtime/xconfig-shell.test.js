@@ -1188,13 +1188,22 @@ test("xConfig shell persists checkout route selection modes for board targets an
   openBoardTargetSettings.click();
   await waitForSettingsModal(documentRef);
 
+  clickSelectSettingOption(documentRef, "checkout-board-targets", "visualPreset", "signal");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutBoardTargets.visualPreset === "signal"
+  );
+
   clickSelectSettingOption(documentRef, "checkout-board-targets", "targetSelectionMode", "all");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutBoardTargets.targetSelectionMode === "all"
+    (config) =>
+      config.features.checkoutBoardTargets.visualPreset === "signal" &&
+      config.features.checkoutBoardTargets.targetSelectionMode === "all"
   );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.checkoutBoardTargets.visualPreset, "signal");
   assert.equal(storedConfig.features.checkoutBoardTargets.targetSelectionMode, "all");
 
   const openZoomSettings = documentRef.querySelector(

@@ -7,9 +7,9 @@ import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } 
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import {
   collectVisibleCheckoutRouteEntries,
-  getFirstCheckoutRouteSegment,
   getCheckoutFinishSegmentFromRoute,
   mapRouteSegmentsToBoardTargets,
+  resolveAuthoritativeCheckoutRoute,
 } from "../x01-checkout-route.js";
 
 const FEATURE_KEY = "checkout-board-targets";
@@ -96,50 +96,13 @@ function resolveActiveScoreState(gameState, documentRef) {
   };
 }
 
-function getScoreCheckoutSegment(activeScore, outMode, x01Rules) {
-  if (!x01Rules || !Number.isFinite(activeScore)) {
-    return "";
-  }
-
-  const segment =
-    x01Rules.getPreferredOneDartCheckoutSegment?.(activeScore, outMode) ||
-    x01Rules.getOneDartCheckoutSegment?.(activeScore) ||
-    "";
-
-  return segment &&
-    typeof x01Rules.isOneDartCheckoutSegmentForOutMode === "function" &&
-    x01Rules.isOneDartCheckoutSegmentForOutMode(segment, outMode)
-    ? segment
-    : "";
-}
-
-function canStartVisibleCheckoutRoute(activeScore, segmentName, outMode, x01Rules) {
-  if (!x01Rules || !Number.isFinite(activeScore) || !segmentName) {
-    return false;
-  }
-
-  if (typeof x01Rules.evaluateThrowOutcome !== "function") {
-    return true;
-  }
-
-  const outcome = x01Rules.evaluateThrowOutcome({
-    scoreBefore: activeScore,
-    segmentName,
-    outMode,
-  });
-  if (!outcome || outcome.isBust) {
-    return false;
-  }
-
-  if (outcome.isFinish) {
-    return true;
-  }
-
-  if (typeof x01Rules.isCheckoutPossibleFromScoreForOutMode === "function") {
-    return x01Rules.isCheckoutPossibleFromScoreForOutMode(outcome.scoreAfter, outMode);
-  }
-
-  return outcome.scoreAfter > 1;
+function resolveDartsRemaining(gameState) {
+  const throws = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
+  const throwCount = Math.max(0, Math.min(3, throws.length));
+  return {
+    throwCount,
+    dartsRemaining: Math.max(0, 3 - throwCount),
+  };
 }
 
 function nowMs() {
@@ -347,11 +310,10 @@ export function initializeCheckoutBoardTargets(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("checkoutBoardTargets")
       : {
-          effect: "pulse",
-          singleRing: "both",
+          visualPreset: "focus",
+          singleRing: "inner",
           targetSelectionMode: "next",
-          colorTheme: "violet",
-          outlineIntensity: "standard",
+          colorTheme: "amber",
         };
   const visualConfig = resolveBoardTargetVisualConfig(featureConfig);
   const targetSelectionMode =
@@ -476,74 +438,34 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
   }
 
-  function selectRouteSegments(routeSegments = [], activeScore, outMode) {
+  function selectRouteSegments(routeSegments = [], outMode) {
     if (!Array.isArray(routeSegments)) {
       return {
         selectedSegments: [],
-        selectionSource: "none",
       };
     }
 
     if (targetSelectionMode === "all") {
       return {
         selectedSegments: routeSegments.slice(),
-        selectionSource: routeSegments.length ? "route-all" : "none",
       };
     }
 
     if (targetSelectionMode === "finish") {
-      const resolvedOutMode =
-        typeof outMode === "string"
-          ? outMode
-          : gameState && typeof gameState.getOutMode === "function"
-            ? String(gameState.getOutMode() || "")
-            : "";
-      const finishSegment = getCheckoutFinishSegmentFromRoute(routeSegments, resolvedOutMode, x01Rules);
+      const finishSegment = getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
       if (finishSegment) {
         return {
           selectedSegments: [finishSegment],
-          selectionSource: "route-finish",
-        };
-      }
-
-      const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, resolvedOutMode, x01Rules);
-      return {
-        selectedSegments: scoreCheckoutSegment ? [scoreCheckoutSegment] : [],
-        selectionSource: scoreCheckoutSegment ? "score-checkout" : "none",
-      };
-    }
-
-    const firstRouteSegment = getFirstCheckoutRouteSegment(routeSegments);
-    const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
-    if (firstRouteSegment) {
-      if (
-        scoreCheckoutSegment &&
-        firstRouteSegment !== scoreCheckoutSegment &&
-        !canStartVisibleCheckoutRoute(activeScore, firstRouteSegment, outMode, x01Rules) &&
-        routeSegments.includes(scoreCheckoutSegment)
-      ) {
-        return {
-          selectedSegments: [scoreCheckoutSegment],
-          selectionSource: "score-checkout-override-route",
         };
       }
 
       return {
-        selectedSegments: [firstRouteSegment],
-        selectionSource: "route-first",
-      };
-    }
-
-    if (scoreCheckoutSegment) {
-      return {
-        selectedSegments: [scoreCheckoutSegment],
-        selectionSource: "score-checkout",
+        selectedSegments: [],
       };
     }
 
     return {
       selectedSegments: routeSegments.length ? [routeSegments[0]] : [],
-      selectionSource: routeSegments.length ? "route-first" : "none",
     };
   }
 
@@ -566,6 +488,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
         : "";
     const activeScoreState = resolveActiveScoreState(gameState, documentRef);
     const activeScore = activeScoreState.activeScore;
+    const { dartsRemaining } = resolveDartsRemaining(gameState);
     const signature = [
       active ? "x01" : "other",
       routeSegments.join(">"),
@@ -573,6 +496,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       Number.isFinite(activeScoreState.domScore) ? activeScoreState.domScore : "null",
       Number.isFinite(activeScoreState.gameStateScore) ? activeScoreState.gameStateScore : "null",
       outMode,
+      dartsRemaining,
     ].join("|");
 
     if (signature === lastRenderSignature) {
@@ -606,10 +530,15 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const {
-      selectedSegments,
-      selectionSource,
-    } = selectRouteSegments(routeSegments, activeScore, outMode);
+    const routeResolution = resolveAuthoritativeCheckoutRoute({
+      routeSegments,
+      activeScore,
+      outMode,
+      dartsRemaining,
+      x01Rules,
+    });
+    const { selectedSegments } = selectRouteSegments(routeResolution.routeSegments, outMode);
+    const selectionSource = routeResolution.selectionSource || "none";
     const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
     const board = getBoard();
     let status = !routeSegments.length && !selectedSegments.length

@@ -366,7 +366,7 @@ function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
     return;
   }
 
-  shapeNode.classList.add(TARGET_CLASS, EFFECT_CLASSES[visualConfig.effect] || EFFECT_CLASSES.pulse);
+  shapeNode.classList.add(TARGET_CLASS, EFFECT_CLASSES[visualConfig.effect] || EFFECT_CLASSES.focus);
   const strokeWidth = styleProfile.strokeWidthPx;
 
   shapeNode.style.setProperty("--ad-ext-target-color", visualConfig.theme.color);

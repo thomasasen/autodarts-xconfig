@@ -303,15 +303,15 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-checkout-board-targets",
     description: "Markiert sinnvolle Checkout-Ziele direkt am Board.",
     fields: [
-      selectField("effect", "Effekt", [
-        { value: "pulse", label: "Pulse" },
-        { value: "blink", label: "Blink" },
-        { value: "glow", label: "Glow" },
+      selectField("visualPreset", "Darstellung", [
+        { value: "focus", label: "Focus" },
+        { value: "signal", label: "Signal" },
+        { value: "steady", label: "Steady" },
       ]),
       selectField("singleRing", "Single-Ring", [
-        { value: "both", label: "Beide" },
         { value: "inner", label: "Innen" },
         { value: "outer", label: "Außen" },
+        { value: "both", label: "Beide" },
       ]),
       selectField("targetSelectionMode", "Zielauswahl", [
         { value: "next", label: "Nächstes Feld" },
@@ -322,11 +322,6 @@ export const xconfigDescriptors = Object.freeze([
         { value: "violet", label: "Violett" },
         { value: "cyan", label: "Cyan" },
         { value: "amber", label: "Amber" },
-      ]),
-      selectField("outlineIntensity", "Kontur-Intensität", [
-        { value: "dezent", label: "Dezent" },
-        { value: "standard", label: "Standard" },
-        { value: "stark", label: "Stark" },
       ]),
       checkboxField("debug", "Debug"),
     ],

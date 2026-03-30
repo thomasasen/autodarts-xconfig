@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.100] - 2026-03-30
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` zeigt in X01 unter `180` jetzt standardmäßig immer genau das nächste sinnvolle Feld statt bloß den ersten sichtbaren Suggestion-Schritt, bleibt dabei optisch ruhiger und näher am sauberen nativen Blink-/Fokusgefühl, und die xConfig-Oberfläche wurde auf die klareren Presets `Focus`, `Signal` und `Steady` umgestellt.
+  Technik: Eine neue autoritative Checkout-Resolver-Schicht validiert sichtbare Routen gegen Score, Out-Mode und verbleibende Darts, verwirft unplausible DOM-Vorschläge, ergänzt gültige Präfixe notfalls scorebasiert und nutzt neue Domain-Helper für bevorzugte Checkout-Routen; parallel wurden Config- und Legacy-Importpfade auf `visualPreset` migriert, die Board-Styles auf ruhigere Halo-/Opacity-Profile ohne Geometrie-Skalierung umgebaut und zusätzliche Domain-, Runtime-, Config- und xConfig-Regressionen für Smart-Next, Preset-Migration und Retention ergänzt.
+
 ## [2.0.99] - 2026-03-30
 
 ### Fixed
@@ -1057,7 +1064,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.99]: https://github.com/thomasasen/autodarts-xconfig/compare/4b18f03...HEAD
+[2.0.100]: https://github.com/thomasasen/autodarts-xconfig/compare/a9fa2bb...HEAD
+[2.0.99]: https://github.com/thomasasen/autodarts-xconfig/compare/4b18f03...a9fa2bb
 [2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/652863c...4b18f03
 [2.0.96]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...652863c
 [2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654

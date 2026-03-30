@@ -286,16 +286,17 @@ export const xconfigFeatureCopy = deepFreeze({
     cardDescription:
       "Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen.",
     visibleDescription:
-      "Mögliche Checkout-Ziele werden direkt am virtuellen Board markiert.",
+      "Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.",
     visualDescription:
-      "Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist. Wenn mehrere Routenschritte gleichzeitig sichtbar sind, bleibt das zuerst zu spielende Feld am stärksten betont.",
-    usefulWhen: "Wenn du Finish-Wege nicht nur lesen, sondern direkt am Board sehen willst.",
+      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode und zeigt ansonsten eine sinnvolle scorebasierte Route. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.",
+    usefulWhen:
+      "Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.",
     images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
     fields: {
-      effect: fieldCopy(
-        "Legt fest, ob markierte Segmente pulsieren, blinken oder glühen.",
-        "Wählt die Animationsart der markierten Board-Segmente. Die Segmentauswahl bleibt gleich; nur die Bewegung und Leuchtwirkung ändern sich.",
-        "Legt die Animationsart der markierten Segmente fest."
+      visualPreset: fieldCopy(
+        "Wählt zwischen fokussierter Standarddarstellung, klarem Blinksignal und ruhigem Dauer-Glow.",
+        "Legt fest, wie die markierten Board-Segmente visuell wirken. Die Segmentauswahl bleibt gleich; nur Signalcharakter, Leuchtverhalten und Bewegungsruhe ändern sich.",
+        "Wählt die visuelle Darstellung der markierten Segmente."
       ),
       singleRing: fieldCopy(
         "Bestimmt bei Single-Zielen, ob der innere, äußere oder beide Single-Ringe markiert werden.",
@@ -303,19 +304,14 @@ export const xconfigFeatureCopy = deepFreeze({
         "Bestimmt, welche Single-Ringe bei Single-Zielen markiert werden."
       ),
       targetSelectionMode: fieldCopy(
-        "Legt fest, ob das nächste Feld, alle Felder oder nur das Finish-Feld der sichtbaren Checkout-Route markiert werden.",
-        "Steuert, wie viele Segmente aus der sichtbaren Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert nur das zuerst zu spielende Segment, `Alle Felder` die gesamte Route mit klarer Priorität auf dem ersten Schritt und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
-        "Legt fest, welcher Teil der sichtbaren Checkout-Route am Board markiert wird."
+        "Legt fest, ob das nächste sinnvolle Feld, die ganze Route oder nur das Finish-Feld markiert werden.",
+        "Steuert, wie viele Segmente aus der autoritativen Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert unter `180` immer genau den nächsten sinnvollen Schritt, `Alle Felder` zeigt die gesamte validierte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
+        "Legt fest, welcher Teil der autoritativen Checkout-Route am Board markiert wird."
       ),
       colorTheme: fieldCopy(
         "Passt die Farbe der Board-Markierungen an dein Setup an.",
         "Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.",
         "Passt die Farbe der Board-Markierungen an."
-      ),
-      outlineIntensity: fieldCopy(
-        "Regelt Stärke und Puls der Kontur um das Zielsegment.",
-        "Steuert Deckkraft, Breite und Animation der weißen Umrandung. Hohe Stufen zeichnen die Zielkontur sichtbarer und mit kräftigerem Puls.",
-        "Regelt Stärke und Puls der Zielkontur."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1121,21 +1117,21 @@ const CHECKOUT_SCORE_TRIGGER_OPTION_COPY = deepFreeze({
   ),
 });
 
-const BOARD_TARGET_EFFECT_OPTION_COPY = deepFreeze({
-  pulse: optionCopy(
-    "Lässt die markierten Segmente weich auf- und abschwellen.",
-    "Die Zielsegmente werden rhythmisch heller und minimal größer. Das wirkt lebendig, ohne hart zu blinken.",
-    "Die markierten Felder atmen sichtbar über Helligkeit und leichte Größenänderung. Dadurch bleiben die Checkout-Ziele aufmerksamkeitsstark, aber weicher als bei einem Blinkeffekt."
+const BOARD_TARGET_VISUAL_PRESET_OPTION_COPY = deepFreeze({
+  focus: optionCopy(
+    "Betont das Ziel ruhig und fokussiert mit Kontur, Opazität und sanftem Halo.",
+    "Das Segment bleibt stabil markiert, ohne geometrisch zu wachsen. Die Wirkung sitzt auf Helligkeit, Kontur und einem weichen Leuchtsaum und ist als neue Standarddarstellung gedacht.",
+    "Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig, klar und dauerhaft lesbar im Fokus."
   ),
-  blink: optionCopy(
-    "Lässt die markierten Segmente hart zwischen gedimmt und klar sichtbar wechseln.",
-    "Die Zielsegmente arbeiten mit klaren, schnellen Sichtbarkeitssprüngen und kurzen hellen Spitzen. Das ist die direkteste und auffälligste Zielmarkierung.",
-    "Diese Variante reduziert die Zwischenstufen und arbeitet mit schnellen, deutlichen Sichtbarkeitssprüngen und kurzen hellen Spitzen. Dadurch springen die relevanten Board-Segmente besonders schnell ins Auge."
+  signal: optionCopy(
+    "Arbeitet mit einem klaren, sauberen Blinksignal ähnlich zum nativen Board-Hinweis.",
+    "Die Markierung springt in kurzen, klaren On/Off-Phasen zwischen gedimmt und sichtbar, ohne zusätzliche Skalierung. Das wirkt direkter als `Focus`, bleibt aber sauberer als ein schwerer Pulse-Look.",
+    "Diese Darstellung orientiert sich am sauberen nativen Blinkgefühl und setzt das Ziel mit kurzen, klaren Sichtbarkeitssprüngen in Szene."
   ),
-  glow: optionCopy(
-    "Lässt die Segmente vor allem über Leuchten und Kontur wirken.",
-    "Die Markierung bleibt ruhiger als bei `Blink`, atmet aber sichtbar über einen weicheren Leuchtsaum und eine stärkere Halo-Wirkung um das Zielsegment.",
-    "Die Ziele werden primär über Helligkeit, Kontur und einen weich atmenden Leuchtsaum betont. Das wirkt ruhiger als `Blink`, aber strahlender und flächiger als `Pulse`."
+  steady: optionCopy(
+    "Hält das Ziel fast konstant sichtbar und verändert nur Glow und Kontur leicht.",
+    "Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit und Halo. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.",
+    "Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis sichtbar sein soll."
   ),
 });
 
@@ -1176,39 +1172,21 @@ const BOARD_TARGET_COLOR_OPTION_COPY = deepFreeze({
   ),
 });
 
-const BOARD_TARGET_OUTLINE_OPTION_COPY = deepFreeze({
-  dezent: optionCopy(
-    "Hält die Kontur fein und relativ ruhig.",
-    "Die weiße Umrandung bleibt sichtbar, aber schmal und mit zurückhaltender Pulsbewegung. Das Zielsegment bleibt klar, ohne dominant umzuranden.",
-    "Diese Stufe nutzt eine eher feine Kontur mit moderatem Leuchtwechsel. Die Zielsegmente bleiben sauber eingerahmt, ohne dass die Outline den eigentlichen Farbfleck überlagert."
-  ),
-  standard: optionCopy(
-    "Nutzen eine ausgewogene Konturbreite und Pulswirkung.",
-    "Die Umrandung ist deutlich sichtbar und verändert Breite und Deckkraft gut erkennbar. Das ist die Mittelstufe für die Zielkontur.",
-    "Diese Einstellung liefert den vorgesehenen Mittelwert für Konturbreite, Deckkraft und Pulsverlauf. Das Zielsegment bekommt eine klar lesbare, aber noch ausgewogene Umrandung."
-  ),
-  stark: optionCopy(
-    "Macht die Kontur am breitesten und auffälligsten.",
-    "Die weiße Umrandung wirkt kräftiger, heller und pulsiert stärker. Das hebt das Zielsegment besonders deutlich aus dem Board heraus.",
-    "Diese Stufe verstärkt Breite, Sichtbarkeit und Puls der Zielkontur sichtbar. Die markierten Segmente werden dadurch besonders hart vom restlichen Board abgesetzt."
-  ),
-});
-
 const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({
   next: optionCopy(
-    "Markiert nur das zuerst zu spielende Feld der sichtbaren Checkout-Route.",
-    "Es wird genau das Segment hervorgehoben, das als nächster Dart laut sichtbarer Checkout-Route ansteht. Das ist die fokussierteste und standardmäßige Darstellung.",
-    "Markiert nur das erste Segment der sichtbaren Checkout-Route."
+    "Markiert genau das nächste sinnvolle Feld der validierten Checkout-Route.",
+    "Unter `180` wird immer genau das Segment hervorgehoben, das als nächster sinnvoller Dart aus Score, Out-Mode und plausibler sichtbarer Route hervorgeht. Fehlt eine brauchbare sichtbare Route, wird sie scorebasiert sinnvoll ergänzt oder ersetzt.",
+    "Markiert unter `180` genau das nächste sinnvolle Feld der validierten oder synthetisch ergänzten Checkout-Route."
   ),
   all: optionCopy(
-    "Markiert alle sichtbaren Felder der Checkout-Route gleichzeitig.",
-    "Die komplette explizite Checkout-Route wird am Board sichtbar gemacht. Dadurch siehst du alle Schritte der Empfehlung parallel, statt nur den aktuellen Einstieg. Das zuerst zu spielende Segment bleibt dabei sichtbar am stärksten betont.",
-    "Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig. Das zuerst zu spielende Segment bleibt dabei sichtbar am stärksten betont."
+    "Markiert alle Felder der autoritativen Checkout-Route gleichzeitig.",
+    "Die komplette validierte beziehungsweise scorebasiert ergänzte Route wird am Board sichtbar gemacht. Das zuerst zu spielende Segment bleibt dabei klar am stärksten betont, Folgeziele laufen bewusst ruhiger mit.",
+    "Markiert alle Segmente der autoritativen Checkout-Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt."
   ),
   finish: optionCopy(
-    "Markiert nur das abschließende Finish-Feld der Route.",
-    "Es wird ausschließlich das Segment hervorgehoben, das das Leg tatsächlich beendet. Frühere Setup- oder Routenfelder bleiben unmarkiert.",
-    "Markiert nur das letzte Finish-Segment der sichtbaren Checkout-Route."
+    "Markiert nur das abschließende Finish-Feld der autoritativen Route.",
+    "Es wird ausschließlich das Segment hervorgehoben, das die validierte oder scorebasiert ergänzte Route tatsächlich beendet. Frühere Setup-Felder bleiben unmarkiert.",
+    "Markiert nur das Finish-Segment der autoritativen Checkout-Route."
   ),
 });
 
@@ -2155,11 +2133,10 @@ const xconfigFieldOptionCopy = deepFreeze({
     effect: X01_SCORE_PROGRESS_EFFECT_OPTION_COPY,
   },
   "checkout-board-targets": {
-    effect: BOARD_TARGET_EFFECT_OPTION_COPY,
+    visualPreset: BOARD_TARGET_VISUAL_PRESET_OPTION_COPY,
     singleRing: BOARD_TARGET_SINGLE_RING_OPTION_COPY,
     targetSelectionMode: BOARD_TARGET_SELECTION_MODE_OPTION_COPY,
     colorTheme: BOARD_TARGET_COLOR_OPTION_COPY,
-    outlineIntensity: BOARD_TARGET_OUTLINE_OPTION_COPY,
   },
   "tv-board-zoom": {
     zoomLevel: TV_BOARD_ZOOM_LEVEL_OPTION_COPY,

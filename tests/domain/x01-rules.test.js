@@ -7,6 +7,9 @@ import {
   IMPOSSIBLE_CHECKOUT_SCORES,
   canFinishWithSegment,
   evaluateThrowOutcome,
+  getCheckoutRoutesForScore,
+  getPreferredCheckoutRoute,
+  getPreferredCheckoutStep,
   getOneDartCheckoutSegmentsForOutMode,
   getHighlightHitKind,
   getOneDartCheckoutSegment,
@@ -15,6 +18,7 @@ import {
   getSuggestionOneDartCheckoutSegment,
   isDoubleBullSegment,
   isCheckoutPossibleFromScoreForOutMode,
+  isCheckoutPossibleFromScoreForOutModeWithDarts,
   isCheckoutPossibleFromScore,
   isOneDartCheckoutSegmentForOutMode,
   isSingleBullHitText,
@@ -48,6 +52,23 @@ test("out-mode-aware checkout feasibility distinguishes straight, double and mas
   assert.equal(isCheckoutPossibleFromScoreForOutMode(1, "double"), false);
   assert.equal(isCheckoutPossibleFromScoreForOutMode(180, "double"), false);
   assert.equal(isCheckoutPossibleFromScoreForOutMode(180, "straight"), true);
+  assert.equal(isCheckoutPossibleFromScoreForOutModeWithDarts(40, "double", 1), true);
+  assert.equal(isCheckoutPossibleFromScoreForOutModeWithDarts(80, "double", 1), false);
+  assert.equal(isCheckoutPossibleFromScoreForOutModeWithDarts(80, "double", 2), true);
+  assert.equal(isCheckoutPossibleFromScoreForOutModeWithDarts(121, "double", 2), false);
+  assert.equal(isCheckoutPossibleFromScoreForOutModeWithDarts(121, "double", 1), false);
+});
+
+test("checkout route helpers enumerate valid routes and prefer shortest high-scoring starts", () => {
+  const doubleOut80Routes = getCheckoutRoutesForScore(80, "double", 2);
+  assert.ok(doubleOut80Routes.some((route) => route.join(">") === "T20>D10"));
+  assert.ok(doubleOut80Routes.some((route) => route.join(">") === "D20>D20"));
+
+  assert.deepEqual(getPreferredCheckoutRoute(80, "double", 2), ["T20", "D10"]);
+  assert.equal(getPreferredCheckoutStep(120, "double", 3), "T20");
+  assert.deepEqual(getPreferredCheckoutRoute(50, "double", 3), ["BULL"]);
+  assert.equal(getPreferredCheckoutStep(61, "double", 2), "T19");
+  assert.deepEqual(getPreferredCheckoutRoute(60, "master", 1), ["T20"]);
 });
 
 test("one-dart checkout helpers resolve expected segments per out mode", () => {

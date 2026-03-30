@@ -196,3 +196,153 @@ export function mapRouteSegmentsToBoardTargets(routeSegments = [], x01Rules) {
       return true;
     });
 }
+
+function normalizeDartsRemaining(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 3;
+  }
+
+  const normalized = Math.trunc(numeric);
+  if (normalized < 0) {
+    return 0;
+  }
+  if (normalized > 3) {
+    return 3;
+  }
+  return normalized;
+}
+
+function normalizeRouteSegments(routeSegments = [], x01Rules) {
+  return (Array.isArray(routeSegments) ? routeSegments : [])
+    .map((segmentName) =>
+      typeof x01Rules?.normalizeSegmentName === "function"
+        ? x01Rules.normalizeSegmentName(segmentName)
+        : String(segmentName || "").trim()
+    )
+    .filter(Boolean);
+}
+
+function validateVisibleCheckoutRoute(routeSegments = [], options = {}) {
+  const normalizedRouteSegments = normalizeRouteSegments(routeSegments, options.x01Rules);
+  const x01Rules = options.x01Rules;
+  const activeScore = Number(options.activeScore);
+  const outMode = String(options.outMode || "");
+  const dartsRemaining = normalizeDartsRemaining(options.dartsRemaining);
+
+  if (!normalizedRouteSegments.length || !Number.isFinite(activeScore) || dartsRemaining < 1) {
+    return null;
+  }
+
+  if (typeof x01Rules?.evaluateThrowOutcome !== "function") {
+    return null;
+  }
+
+  const acceptedSegments = [];
+  let remainingScore = activeScore;
+  let remainingDarts = dartsRemaining;
+
+  for (const segmentName of normalizedRouteSegments.slice(0, dartsRemaining)) {
+    const outcome = x01Rules.evaluateThrowOutcome({
+      scoreBefore: remainingScore,
+      segmentName,
+      outMode,
+    });
+    if (!outcome || outcome.isBust) {
+      return null;
+    }
+
+    acceptedSegments.push(segmentName);
+    remainingDarts -= 1;
+
+    if (outcome.isFinish) {
+      return {
+        routeSegments: acceptedSegments.slice(),
+        visibleSegmentsUsed: acceptedSegments.length,
+        completedWithFallback: false,
+      };
+    }
+
+    if (remainingDarts < 1) {
+      return null;
+    }
+
+    if (
+      typeof x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts === "function" &&
+      !x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts(
+        outcome.scoreAfter,
+        outMode,
+        remainingDarts
+      )
+    ) {
+      return null;
+    }
+
+    remainingScore = outcome.scoreAfter;
+  }
+
+  const fallbackRoute =
+    typeof x01Rules?.getPreferredCheckoutRoute === "function"
+      ? x01Rules.getPreferredCheckoutRoute(remainingScore, outMode, remainingDarts)
+      : [];
+  if (!fallbackRoute.length) {
+    return null;
+  }
+
+  return {
+    routeSegments: [...acceptedSegments, ...fallbackRoute],
+    visibleSegmentsUsed: acceptedSegments.length,
+    completedWithFallback: true,
+  };
+}
+
+export function resolveAuthoritativeCheckoutRoute(options = {}) {
+  const routeSegments = normalizeRouteSegments(options.routeSegments, options.x01Rules);
+  const activeScore = Number(options.activeScore);
+  const outMode = String(options.outMode || "");
+  const dartsRemaining = normalizeDartsRemaining(options.dartsRemaining);
+  const x01Rules = options.x01Rules;
+  const smartCheckoutActive = Number.isFinite(activeScore) && activeScore > 1 && activeScore < 180;
+
+  if (!smartCheckoutActive) {
+    return {
+      routeSegments: routeSegments.slice(),
+      selectionSource: routeSegments.length ? "visible-route" : "none",
+      visibleSegmentsUsed: routeSegments.length,
+    };
+  }
+
+  const validatedVisibleRoute = validateVisibleCheckoutRoute(routeSegments, {
+    activeScore,
+    outMode,
+    dartsRemaining,
+    x01Rules,
+  });
+  if (validatedVisibleRoute) {
+    return {
+      routeSegments: validatedVisibleRoute.routeSegments.slice(),
+      selectionSource: validatedVisibleRoute.completedWithFallback
+        ? "validated-visible-route+fallback"
+        : "validated-visible-route",
+      visibleSegmentsUsed: validatedVisibleRoute.visibleSegmentsUsed,
+    };
+  }
+
+  const scoreRoute =
+    typeof x01Rules?.getPreferredCheckoutRoute === "function"
+      ? x01Rules.getPreferredCheckoutRoute(activeScore, outMode, dartsRemaining)
+      : [];
+  if (scoreRoute.length) {
+    return {
+      routeSegments: scoreRoute.slice(),
+      selectionSource: "score-route",
+      visibleSegmentsUsed: 0,
+    };
+  }
+
+  return {
+    routeSegments: [],
+    selectionSource: routeSegments.length ? "invalid-visible-route" : "none",
+    visibleSegmentsUsed: 0,
+  };
+}

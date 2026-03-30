@@ -452,32 +452,28 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Checkout Board Targets
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Mögliche Checkout-Ziele werden direkt am virtuellen Board markiert.
-- Grafisch: Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist. Wenn mehrere Routenschritte gleichzeitig sichtbar sind, bleibt das zuerst zu spielende Feld am stärksten betont.
-- Wann sinnvoll? Wenn du Finish-Wege nicht nur lesen, sondern direkt am Board sehen willst.
+- Was macht es sichtbar? Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
+- Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode und zeigt ansonsten eine sinnvolle scorebasierte Route. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.
+- Wann sinnvoll? Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.
 
 **Einstellungen einfach erklärt**
 
-- `Effekt`: Wählt die Animationsart der markierten Board-Segmente. Die Segmentauswahl bleibt gleich; nur die Bewegung und Leuchtwirkung ändern sich.
-  - `Pulse`: Die Zielsegmente werden rhythmisch heller und minimal größer. Das wirkt lebendig, ohne hart zu blinken.
-  - `Blink`: Die Zielsegmente arbeiten mit klaren, schnellen Sichtbarkeitssprüngen und kurzen hellen Spitzen. Das ist die direkteste und auffälligste Zielmarkierung.
-  - `Glow`: Die Markierung bleibt ruhiger als bei `Blink`, atmet aber sichtbar über einen weicheren Leuchtsaum und eine stärkere Halo-Wirkung um das Zielsegment.
+- `Darstellung`: Legt fest, wie die markierten Board-Segmente visuell wirken. Die Segmentauswahl bleibt gleich; nur Signalcharakter, Leuchtverhalten und Bewegungsruhe ändern sich.
+  - `Focus`: Das Segment bleibt stabil markiert, ohne geometrisch zu wachsen. Die Wirkung sitzt auf Helligkeit, Kontur und einem weichen Leuchtsaum und ist als neue Standarddarstellung gedacht.
+  - `Signal`: Die Markierung springt in kurzen, klaren On/Off-Phasen zwischen gedimmt und sichtbar, ohne zusätzliche Skalierung. Das wirkt direkter als `Focus`, bleibt aber sauberer als ein schwerer Pulse-Look.
+  - `Steady`: Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit und Halo. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.
 - `Single-Ring`: Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.
-  - `Beide`: Wenn ein Single-Feld Ziel eines Checkouts ist, werden beide Single-Bereiche des Segments hervorgehoben. Das erzeugt die breiteste visuelle Markierung.
   - `Innen`: Die Hervorhebung sitzt ausschließlich zwischen Triple- und Bull-Bereich. Der äußere Single-Ring bleibt unbelegt.
   - `Außen`: Die Hervorhebung liegt ausschließlich im äußeren Single-Bereich zwischen Double-Ring und Triple-Ring. Der innere Bereich bleibt frei.
-- `Zielauswahl`: Steuert, wie viele Segmente aus der sichtbaren Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert nur das zuerst zu spielende Segment, `Alle Felder` die gesamte Route mit klarer Priorität auf dem ersten Schritt und `Nur Finish` ausschließlich das abschließende Finish-Segment.
-  - `Nächstes Feld`: Es wird genau das Segment hervorgehoben, das als nächster Dart laut sichtbarer Checkout-Route ansteht. Das ist die fokussierteste und standardmäßige Darstellung.
-  - `Alle Felder`: Die komplette explizite Checkout-Route wird am Board sichtbar gemacht. Dadurch siehst du alle Schritte der Empfehlung parallel, statt nur den aktuellen Einstieg. Das zuerst zu spielende Segment bleibt dabei sichtbar am stärksten betont.
-  - `Nur Finish`: Es wird ausschließlich das Segment hervorgehoben, das das Leg tatsächlich beendet. Frühere Setup- oder Routenfelder bleiben unmarkiert.
+  - `Beide`: Wenn ein Single-Feld Ziel eines Checkouts ist, werden beide Single-Bereiche des Segments hervorgehoben. Das erzeugt die breiteste visuelle Markierung.
+- `Zielauswahl`: Steuert, wie viele Segmente aus der autoritativen Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert unter `180` immer genau den nächsten sinnvollen Schritt, `Alle Felder` zeigt die gesamte validierte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.
+  - `Nächstes Feld`: Unter `180` wird immer genau das Segment hervorgehoben, das als nächster sinnvoller Dart aus Score, Out-Mode und plausibler sichtbarer Route hervorgeht. Fehlt eine brauchbare sichtbare Route, wird sie scorebasiert sinnvoll ergänzt oder ersetzt.
+  - `Alle Felder`: Die komplette validierte beziehungsweise scorebasiert ergänzte Route wird am Board sichtbar gemacht. Das zuerst zu spielende Segment bleibt dabei klar am stärksten betont, Folgeziele laufen bewusst ruhiger mit.
+  - `Nur Finish`: Es wird ausschließlich das Segment hervorgehoben, das die validierte oder scorebasiert ergänzte Route tatsächlich beendet. Frühere Setup-Felder bleiben unmarkiert.
 - `Farbthema`: Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.
   - `Violett`: Die Segmentfüllung und Kontur laufen in eine violette Palette. Das wirkt am stärksten wie ein klassischer Neon-Overlay-Look.
   - `Cyan`: Die Board-Markierung wirkt technisch und frisch, ohne so warm wie Amber zu erscheinen. Gerade auf dunklen Flächen wirkt Cyan sehr klar.
   - `Amber`: Die Markierung erinnert eher an warmes Warn- oder Bühnenlicht. Das fällt deutlich auf und wirkt energischer als Cyan.
-- `Kontur-Intensität`: Steuert Deckkraft, Breite und Animation der weißen Umrandung. Hohe Stufen zeichnen die Zielkontur sichtbarer und mit kräftigerem Puls.
-  - `Dezent`: Die weiße Umrandung bleibt sichtbar, aber schmal und mit zurückhaltender Pulsbewegung. Das Zielsegment bleibt klar, ohne dominant umzuranden.
-  - `Standard`: Die Umrandung ist deutlich sichtbar und verändert Breite und Deckkraft gut erkennbar. Das ist die Mittelstufe für die Zielkontur.
-  - `Stark`: Die weiße Umrandung wirkt kräftiger, heller und pulsiert stärker. Das hebt das Zielsegment besonders deutlich aus dem Board heraus.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Checkout Board Targets](docs/screenshots/animation-checkout-board-targets.gif)
