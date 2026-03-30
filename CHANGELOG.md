@@ -12,12 +12,14 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.0.95] - 2026-03-30
+## [2.0.96] - 2026-03-30
 
 ### Fixed
 
 - Nutzerwirkung: Im Cricket-/Tactics-Theme sind die Spielernamen jetzt nochmals spürbar größer, und die linke Kartenstatistik ist ruhiger aufgebaut: Die Anzeige der gewonnenen Runden sitzt oberhalb von `MPR`, bleibt sichtbar kleiner als zuvor und teilt sich die verfügbare Höhe jetzt sauber mit der MPR-Zeile, sodass beide zusammen praktisch exakt der Punktehöhe entsprechen.
-  Technik: Das Cricket-Theme verwendet für den linken `matches`-/`stats`-Block jetzt ein explizites Dreizeilen-Grid mit `identity`, `matches` und `stats`, berechnet die `matches`-Zeilenhöhe direkt aus der aktiven bzw. inaktiven Score-Höhe minus fester Stats-Zeile, skaliert die sichtbare Badge innerhalb dieser Zeile separat herunter und hebt gleichzeitig die aktive sowie inaktive Namensskala um weitere fünfzehn Prozent an; die Style-Regressionen sichern die neuen Höhen-, Badge- und Namensverträge ausdrücklich ab.
+  Technik: Das Cricket-Theme verwendet für den linken `matches`-/`stats`-Block jetzt ein explizites Dreizeilen-Grid mit `identity`, `matches` und `stats`, berechnet die `matches`-Zeilenhöhe direkt aus der aktiven bzw. inaktiven Score-Höhe minus fester Stats-Zeile, skaliert die sichtbare Badge innerhalb dieser Zeile separat herunter, hebt gleichzeitig die aktive sowie inaktive Namensskala um weitere fünfzehn Prozent an und erzwingt die Badge-Schrift jetzt auch direkt auf dem Badge-Container, damit spätere Host-/Theme-Regeln die Größe nicht wieder auf den kleinen Legacy-Wert zurückdrücken.
+- Nutzerwirkung: Die Anzeige der gewonnenen Runden und `MPR` sitzt auf den Cricket-/Tactics-Spielerkarten jetzt etwas weiter vom linken Rand weg und wirkt damit ausgewogener zur Punktezahl auf der rechten Seite.
+  Technik: Das Cricket-Theme verwendet für den linken `matches`-Slot und den sichtbaren `MPR`-Text jetzt einen gemeinsamen linken Innenabstand, der sich am rechten Score-Inset orientiert; zusätzliche Style-Regressionen sichern die neue symmetrischere Karten-Geometrie ausdrücklich ab.
 
 ## [2.0.94] - 2026-03-30
 
@@ -1039,7 +1041,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.95]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...HEAD
+[2.0.96]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...HEAD
 [2.0.94]: https://github.com/thomasasen/autodarts-xconfig/compare/830ce47...bd6c654
 [2.0.93]: https://github.com/thomasasen/autodarts-xconfig/compare/8355902...830ce47
 [2.0.92]: https://github.com/thomasasen/autodarts-xconfig/compare/fcc069c...8355902

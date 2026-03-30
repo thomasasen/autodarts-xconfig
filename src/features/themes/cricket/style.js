@@ -82,6 +82,7 @@ const cricketThemeCss = `
   --ad-ext-theme-cricket-matches-badge-padding-inline: 0.66rem;
   --ad-ext-theme-cricket-matches-badge-radius: 0.64rem;
   --ad-ext-theme-cricket-matches-font-size: calc(var(--ad-ext-theme-cricket-matches-row-height) * 0.486);
+  --ad-ext-theme-cricket-left-stat-inset: calc(var(--ad-ext-theme-cricket-score-end-inset) + 0.05rem);
   --ad-ext-theme-cricket-player-avatar-size: 2.2rem;
   --ad-ext-theme-cricket-name-size-active: clamp(1.24rem, 1.37vw, 1.47rem);
   --ad-ext-theme-cricket-name-size-inactive: clamp(0.99rem, 1.06vw, 1.14rem);
@@ -198,11 +199,13 @@ const cricketThemeCss = `
   align-self: stretch !important;
   display: flex !important;
   align-items: center !important;
+  padding-left: var(--ad-ext-theme-cricket-left-stat-inset) !important;
   z-index: 2 !important;
   min-width: 0 !important;
   max-width: 100% !important;
   height: var(--ad-ext-theme-cricket-matches-row-height) !important;
   min-height: var(--ad-ext-theme-cricket-matches-row-height) !important;
+  box-sizing: border-box !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-3fr5p8 {
@@ -219,7 +222,8 @@ const cricketThemeCss = `
   box-sizing: border-box !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-1hcjh09 {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-1hcjh09,
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-3fr5p8 {
   font-size: var(--ad-ext-theme-cricket-matches-font-size) !important;
   line-height: 1 !important;
 }
@@ -345,6 +349,8 @@ const cricketThemeCss = `
   text-overflow: clip !important;
   white-space: nowrap !important;
   min-width: max-content !important;
+  padding-left: var(--ad-ext-theme-cricket-left-stat-inset) !important;
+  box-sizing: border-box !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_DECORATIVE_SELECTOR} {

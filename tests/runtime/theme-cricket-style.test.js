@@ -51,6 +51,10 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   );
   assert.match(
     css,
+    /--ad-ext-theme-cricket-left-stat-inset:\s*calc\(var\(--ad-ext-theme-cricket-score-end-inset\)\s*\+\s*0\.05rem\);/
+  );
+  assert.match(
+    css,
     /--ad-ext-theme-cricket-name-size-active:\s*clamp\(\s*1\.24rem,\s*1\.37vw,\s*1\.47rem\s*\);/
   );
   assert.match(
@@ -230,7 +234,9 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   assert.match(marksSlotRule, /align-self:\s*stretch\s*!important;/);
   assert.match(marksSlotRule, /display:\s*flex\s*!important;/);
   assert.match(marksSlotRule, /align-items:\s*center\s*!important;/);
+  assert.match(marksSlotRule, /padding-left:\s*var\(--ad-ext-theme-cricket-left-stat-inset\)\s*!important;/);
   assert.match(marksSlotRule, /height:\s*var\(--ad-ext-theme-cricket-matches-row-height\)\s*!important;/);
+  assert.match(marksSlotRule, /box-sizing:\s*border-box\s*!important;/);
   const statsSlotRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "stats")} {`
@@ -239,6 +245,12 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   assert.match(statsSlotRule, /padding-left:\s*0\s*!important;/);
   assert.match(statsSlotRule, /height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
   assert.match(statsSlotRule, /line-height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
+  const statsTextRule = extractRuleSlice(
+    css,
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "stats")} > p {`
+  );
+  assert.match(statsTextRule, /padding-left:\s*var\(--ad-ext-theme-cricket-left-stat-inset\)\s*!important;/);
+  assert.match(statsTextRule, /box-sizing:\s*border-box\s*!important;/);
   const scoreSlotRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > .ad-ext-player-score {`
