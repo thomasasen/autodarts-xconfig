@@ -263,16 +263,24 @@ test("checkout-board-targets uses calmer focus profiles for outer wedges and bul
 
   assert.ok(bullShape);
   assert.ok(bullOutline);
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.1999999999999997px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "5.3px");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.54");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.8px");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "6.4px");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.6799999999999999");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
   assert.match(
     bullShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
   );
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "5.3px");
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.44");
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "6.4px");
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.58");
+  assert.ok(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
+      parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+  );
+  assert.ok(
+    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
+      parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"))
+  );
 });
 
 test("checkout-board-targets keeps outline clones isolated from target effect classes", () => {
@@ -315,7 +323,7 @@ test("checkout-board-targets keeps outline clones isolated from target effect cl
   assert.equal(bullOutline.classList.contains(OUTLINE_CLASS), true);
   assert.equal(bullOutline.classList.contains(TARGET_CLASS), false);
   assert.equal(bullOutline.classList.contains(EFFECT_CLASSES.focus), false);
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "5.3px");
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width"), "6.4px");
 });
 
 test("checkout-board-targets softens and staggers follow-up targets in multi-target routes", () => {
@@ -462,6 +470,33 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
   assert.match(outerShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assert.equal(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.22");
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 500,
+    },
+    checkoutTargets: [{ ring: "SB", value: 25 }],
+    visualConfig: signalConfig,
+  });
+
+  overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+
+  bullNodes = Array.from(overlay.querySelectorAll(`[${TARGET_FAMILY_ATTRIBUTE}='bull']`));
+  bullShape = bullNodes.find((node) => !node.classList.contains(OUTLINE_CLASS));
+  bullOutline = bullNodes.find((node) => node.classList.contains(OUTLINE_CLASS));
+
+  assert.ok(bullShape);
+  assert.ok(bullOutline);
+  assert.equal(bullShape.classList.contains(EFFECT_CLASSES.signal), true);
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3.6999999999999997px");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "6.3px");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.22");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-opacity"), "1");
+  assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.28");
 });
 
 test("checkout-board-targets selects next, finish or all segments from the authoritative route", () => {

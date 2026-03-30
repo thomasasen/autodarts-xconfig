@@ -16,6 +16,8 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Das `Single Bull / 25`-Ziel im `Checkout Board Targets`-Overlay bleibt jetzt auch im kleinen Bull-Bereich deutlich besser erkennbar, weil Fokus- und Signal-Darstellung dort sichtbar kräftiger ausfallen statt gegen das Board fast wegzufallen.
+  Technik: Die bull-spezifischen Effektprofile verstärken in `focus` und `signal` gezielt Mindest-Opacity, Halo, Konturbreite und Outline-Puls nur für `SB`/Bull-Geometrien; zusätzliche Runtime-Regressionen sichern den stärkeren Sichtbarkeitsvertrag für Bull-Targets und den Signal-Pfad ausdrücklich ab.
 - Nutzerwirkung: `Checkout Board Targets` zeigt in X01 unter `180` jetzt standardmäßig immer genau das nächste sinnvolle Feld statt bloß den ersten sichtbaren Suggestion-Schritt, bleibt dabei optisch ruhiger und näher am sauberen nativen Blink-/Fokusgefühl, und die xConfig-Oberfläche wurde auf die klareren Presets `Focus`, `Signal` und `Steady` umgestellt.
   Technik: Eine neue autoritative Checkout-Resolver-Schicht validiert sichtbare Routen gegen Score, Out-Mode und verbleibende Darts, verwirft unplausible DOM-Vorschläge, ergänzt gültige Präfixe notfalls scorebasiert und nutzt neue Domain-Helper für bevorzugte Checkout-Routen; parallel wurden Config- und Legacy-Importpfade auf `visualPreset` migriert, die Board-Styles auf ruhigere Halo-/Opacity-Profile ohne Geometrie-Skalierung umgebaut und zusätzliche Domain-, Runtime-, Config- und xConfig-Regressionen für Smart-Next, Preset-Migration und Retention ergänzt.
 
