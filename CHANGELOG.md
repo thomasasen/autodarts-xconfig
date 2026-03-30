@@ -16,8 +16,8 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
-- Nutzerwirkung: `Checkout Board Targets` trennt Füllung und weiße Zielkontur jetzt sauberer, wodurch Pulse-, Glow- und Blink-Markierungen klarer und hochwertiger wirken; bei `Alle Felder` bleibt das zuerst zu spielende Segment sichtbar am stärksten betont, während Folgeziele ruhiger mitlaufen.
-  Technik: Die Overlay-Outline klont keine Shape-Klassen oder Inline-Styles mehr mit, `checkout-board-targets` priorisiert Mehrziel-Routen jetzt nur noch im echten All-Route-Fall, verfeinert `glow` und `blink` über eigene Filter-/Timing-Profile, synchronisiert die Nutzertexte auf README-, Docs- und xConfig-Ebene und erweitert die Runtime-Regressionen gezielt für Outline-Isolation, Mehrziel-Hierarchie und Nicht-Pulse-Effektverträge.
+- Nutzerwirkung: `Checkout Board Targets` trennt Füllung und weiße Zielkontur jetzt sauberer, wodurch Pulse-, Glow- und Blink-Markierungen klarer und hochwertiger wirken; bei `Alle Felder` bleibt das zuerst zu spielende Segment sichtbar am stärksten betont, während Folgeziele ruhiger und versetzt mitlaufen.
+  Technik: Die Overlay-Outline klont keine Shape-Klassen oder Inline-Styles mehr mit, `checkout-board-targets` priorisiert Mehrziel-Routen jetzt nur noch im echten All-Route-Fall mit gestaffelten Delays und reduzierter Folgeintensität, verfeinert `glow` und `blink` über eigene Filter-/Timing-Profile, synchronisiert die Nutzertexte auf README-, Docs- und xConfig-Ebene und erweitert die Runtime-Regressionen gezielt für Outline-Isolation, Mehrziel-Hierarchie und Nicht-Pulse-Effektverträge.
 
 ## [2.0.98] - 2026-03-30
 

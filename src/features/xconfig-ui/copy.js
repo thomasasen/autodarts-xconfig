@@ -288,7 +288,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Mögliche Checkout-Ziele werden direkt am virtuellen Board markiert.",
     visualDescription:
-      "Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. Wenn mehrere Routenschritte gleichzeitig sichtbar sind, bleibt das zuerst zu spielende Feld am stärksten betont.",
+      "Die relevanten Segmente erhalten eine farbige Füllung, Kontur und Animation. So siehst du am Board selbst, welches Ziel aktuell für den Checkout relevant ist. Wenn mehrere Routenschritte gleichzeitig sichtbar sind, bleibt das zuerst zu spielende Feld am stärksten betont.",
     usefulWhen: "Wenn du Finish-Wege nicht nur lesen, sondern direkt am Board sehen willst.",
     images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
     fields: {
@@ -1129,13 +1129,13 @@ const BOARD_TARGET_EFFECT_OPTION_COPY = deepFreeze({
   ),
   blink: optionCopy(
     "Lässt die markierten Segmente hart zwischen gedimmt und klar sichtbar wechseln.",
-    "Die Zielsegmente blinken mit klaren Helligkeitssprüngen. Das ist die direkteste und auffälligste Zielmarkierung.",
-    "Diese Variante reduziert die Zwischenstufen und arbeitet mit deutlichen Sichtbarkeitssprüngen. Dadurch springen die relevanten Board-Segmente besonders schnell ins Auge."
+    "Die Zielsegmente arbeiten mit klaren, schnellen Sichtbarkeitssprüngen und kurzen hellen Spitzen. Das ist die direkteste und auffälligste Zielmarkierung.",
+    "Diese Variante reduziert die Zwischenstufen und arbeitet mit schnellen, deutlichen Sichtbarkeitssprüngen und kurzen hellen Spitzen. Dadurch springen die relevanten Board-Segmente besonders schnell ins Auge."
   ),
   glow: optionCopy(
     "Lässt die Segmente vor allem über Leuchten und Kontur wirken.",
-    "Die Markierung bleibt ruhiger als bei `Blink`, bekommt aber einen stärkeren Lichtschein und sichtbaren Glow um das Zielsegment.",
-    "Die Ziele werden primär über Helligkeit, Kontur und einen zusätzlichen Leuchtsaum betont. Das wirkt ruhiger als `Blink`, aber strahlender als `Pulse`."
+    "Die Markierung bleibt ruhiger als bei `Blink`, atmet aber sichtbar über einen weicheren Leuchtsaum und eine stärkere Halo-Wirkung um das Zielsegment.",
+    "Die Ziele werden primär über Helligkeit, Kontur und einen weich atmenden Leuchtsaum betont. Das wirkt ruhiger als `Blink`, aber strahlender und flächiger als `Pulse`."
   ),
 });
 
@@ -1202,8 +1202,8 @@ const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({
   ),
   all: optionCopy(
     "Markiert alle sichtbaren Felder der Checkout-Route gleichzeitig.",
-    "Die komplette explizite Checkout-Route wird am Board sichtbar gemacht. Dadurch siehst du alle Schritte der Empfehlung parallel, statt nur den aktuellen Einstieg.",
-    "Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig."
+    "Die komplette explizite Checkout-Route wird am Board sichtbar gemacht. Dadurch siehst du alle Schritte der Empfehlung parallel, statt nur den aktuellen Einstieg. Das zuerst zu spielende Segment bleibt dabei sichtbar am stärksten betont.",
+    "Markiert alle Segmente der sichtbaren Checkout-Route gleichzeitig. Das zuerst zu spielende Segment bleibt dabei sichtbar am stärksten betont."
   ),
   finish: optionCopy(
     "Markiert nur das abschließende Finish-Feld der Route.",
