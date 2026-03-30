@@ -65,6 +65,7 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-end-inset:\s*0\.38rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-grid-gap:\s*0\.35rem;/);
+  assert.doesNotMatch(css, /min-height:\s*206px\s*!important;/);
 
   assert.ok(
     css.includes(
@@ -127,6 +128,10 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   assert.match(
     css,
     /#ad-ext-player-display\s*\+\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*\{[^}]*grid-template-columns:\s*repeat\(\s*var\(--ad-ext-theme-cricket-player-count\),\s*var\(--ad-ext-theme-cricket-player-column-width\)\s*\)\s*!important;[^}]*grid-auto-rows:\s*minmax\(0,\s*1fr\)\s*!important;[^}]*margin-top:\s*0\s*!important;[^}]*flex:\s*1\s+1\s+auto\s*!important;[^}]*height:\s*auto\s*!important;[^}]*align-content:\s*stretch\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\*\s*\{[^}]*min-height:\s*0\s*!important;[^}]*height:\s*100%\s*!important;[^}]*align-self:\s*stretch\s*!important;/s
   );
   assert.doesNotMatch(
     css,
@@ -196,9 +201,20 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)}{`
   );
-  assert.match(stackRule, /grid-template-areas:\s*"identity identity identity"\s*"matches \. score"\s*"stats stats score"\s*!important;/s);
-  assert.match(stackRule, /grid-template-rows:\s*auto\s*var\(--ad-ext-theme-cricket-matches-row-height\)\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/s);
+  assert.match(
+    stackRule,
+    /grid-template-areas:\s*"identity identity identity"\s*"\.\s+\.\s+score"\s*"matches \. score"\s*"stats stats score"\s*"\.\s+\.\s+score"\s*!important;/s
+  );
+  assert.match(
+    stackRule,
+    /grid-template-rows:\s*auto\s*minmax\(0,\s*1fr\)\s*var\(--ad-ext-theme-cricket-matches-row-height\)\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*minmax\(0,\s*1fr\)\s*!important;/s
+  );
+  assert.match(stackRule, /align-items:\s*stretch\s*!important;/);
+  assert.match(stackRule, /align-content:\s*stretch\s*!important;/);
   assert.match(stackRule, /row-gap:\s*0\s*!important;/);
+  assert.match(stackRule, /min-height:\s*0\s*!important;/);
+  assert.match(stackRule, /height:\s*100%\s*!important;/);
+  assert.match(stackRule, /padding-bottom:\s*0\s*!important;/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*\{[^}]*display:\s*block\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-name-size\)\s*!important;[^}]*width:\s*100%\s*!important;/s
@@ -231,7 +247,8 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "marks")} {`
   );
-  assert.match(marksSlotRule, /align-self:\s*stretch\s*!important;/);
+  assert.match(marksSlotRule, /grid-row:\s*3\s*!important;/);
+  assert.match(marksSlotRule, /align-self:\s*center\s*!important;/);
   assert.match(marksSlotRule, /display:\s*flex\s*!important;/);
   assert.match(marksSlotRule, /align-items:\s*center\s*!important;/);
   assert.match(marksSlotRule, /padding-left:\s*var\(--ad-ext-theme-cricket-left-stat-inset\)\s*!important;/);
@@ -241,7 +258,8 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "stats")} {`
   );
-  assert.match(statsSlotRule, /grid-row:\s*3\s*!important;/);
+  assert.match(statsSlotRule, /grid-row:\s*4\s*!important;/);
+  assert.match(statsSlotRule, /align-self:\s*center\s*!important;/);
   assert.match(statsSlotRule, /padding-left:\s*0\s*!important;/);
   assert.match(statsSlotRule, /height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
   assert.match(statsSlotRule, /line-height:\s*var\(--ad-ext-theme-cricket-stats-row-height\)\s*!important;/);
@@ -255,8 +273,9 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > .ad-ext-player-score {`
   );
-  assert.match(scoreSlotRule, /grid-row:\s*2\s*\/\s*4\s*!important;/);
-  assert.match(scoreSlotRule, /align-self:\s*start\s*!important;/);
+  assert.match(scoreSlotRule, /grid-row:\s*2\s*\/\s*6\s*!important;/);
+  assert.match(scoreSlotRule, /align-self:\s*center\s*!important;/);
+  assert.match(scoreSlotRule, /margin:\s*0\s*!important;/);
   const winsRule = extractRuleSlice(
     css,
     `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_ROW_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "identity")} ${attrSelector(CRICKET_META_ATTRIBUTE, "wins")} {`
