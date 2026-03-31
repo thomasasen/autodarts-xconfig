@@ -257,11 +257,18 @@ function resolveLegacyVisualPreset(featureConfig = {}) {
 
 export function resolveBoardTargetVisualConfig(featureConfig = {}) {
   const visualPreset = resolveLegacyVisualPreset(featureConfig);
+  const segmentStyle =
+    String(featureConfig.segmentStyle || "").trim().toLowerCase() === "surface-only"
+      ? "surface-only"
+      : "surface-outline";
   const presetProfile = VISUAL_PRESET_PROFILES[visualPreset] || VISUAL_PRESET_PROFILES.focus;
 
   return {
     effect: visualPreset,
     visualPreset,
+    segmentStyle,
+    renderOutline: segmentStyle !== "surface-only",
+    renderShapeStroke: segmentStyle !== "surface-only",
     singleRing: ["inner", "outer", "both"].includes(
       String(featureConfig.singleRing || "").trim().toLowerCase()
     )

@@ -73,6 +73,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.turnPointsCount.flashOnChange, true);
   assert.equal(config.features.turnPointsCount.flashMode, "on-change");
   assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
+  assert.equal(config.features.checkoutBoardTargets.segmentStyle, "surface-outline");
   assert.equal(config.features.checkoutBoardTargets.singleRing, "inner");
   assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
@@ -129,6 +130,7 @@ test("createRecommendedRuntimeConfig enables every feature and preserves theme i
   assert.equal(config.features.checkoutScorePulse.enabled, true);
   assert.equal(config.features.checkoutScorePulse.effect, "scale");
   assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
+  assert.equal(config.features.checkoutBoardTargets.segmentStyle, "surface-outline");
   assert.equal(config.features.tvBoardZoom.checkoutZoomEnabled, true);
   assert.equal(config.features.styleCheckoutSuggestions.style, "outline");
   assert.equal(config.features.styleCheckoutSuggestions.labelText, "CHECKOUT");
@@ -156,6 +158,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     features: {
       checkoutBoardTargets: {
         visualPreset: "SIGNAL",
+        segmentStyle: "SURFACE-ONLY",
         effect: "GLOW",
         singleRing: "INNER",
         targetSelectionMode: "ALL",
@@ -284,6 +287,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   });
 
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "signal");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").segmentStyle, "surface-only");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "inner");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").targetSelectionMode, "all");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);

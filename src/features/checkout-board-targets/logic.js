@@ -516,9 +516,12 @@ function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
     "--ad-ext-target-outline-width-up-px",
     `${styleProfile.outlineWidthUpPx}px`
   );
-  if (shapeNode.dataset && shapeNode.dataset.noStroke === "true") {
-    shapeNode.style.stroke = "none";
-    shapeNode.style.strokeWidth = "0";
+  if (
+    visualConfig.renderShapeStroke === false ||
+    (shapeNode.dataset && shapeNode.dataset.noStroke === "true")
+  ) {
+    shapeNode.style.setProperty("stroke", "none");
+    shapeNode.style.setProperty("stroke-width", "0");
   }
 }
 
@@ -738,6 +741,10 @@ export function renderCheckoutTargets(options = {}) {
         nextNodes.push(reusableShapeNode);
       } else {
         nextNodes.push(shapeNode);
+      }
+
+      if (visualConfig.renderOutline === false) {
+        return;
       }
 
       const outline = cloneShapeAsOutline(shapeNode, ownerDocument);

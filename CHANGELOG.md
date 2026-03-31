@@ -12,12 +12,14 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.0.103] - 2026-03-31
+## [2.0.104] - 2026-03-31
 
 ### Fixed
 
 - Nutzerwirkung: `Checkout Board Targets` pulsiert auf dem X01-Board jetzt auch bei `T20` und ähnlichen Zielsegmenten wieder sauber und kontinuierlich, statt nur kurz zu zucken, wenn das gleiche Ziel mehrfach hintereinander neu gerendert wird.
   Technik: Das Board-Overlay verwendet bei identischer Zielgeometrie bestehende SVG-Knoten weiter, synchronisiert deren Attribute, Klassen und Inline-Styles statt sie jedes Mal neu zu erzeugen und verhindert so den permanenten Animations-Reset des Signal-Pulses; eine zusätzliche Runtime-Regression sichert die Knoten-Wiederverwendung ausdrücklich ab.
+- Nutzerwirkung: `Checkout Board Targets` kann Ziele jetzt optional nur über die farbige Fläche ohne zusätzlichen Rahmen markieren, sodass zum Beispiel `S20` mit demselben Preset-Verhalten, Glow und Farbthema flächig hervorgehoben wird, ohne Segmentkontur oder weiße Zielkontur einzublenden.
+  Technik: `checkout-board-targets` normalisiert dafür den neuen Modus `surface-only`, lässt im Renderpfad sowohl den farbigen Shape-`stroke` als auch den Outline-Klon gezielt weg, hält Preset-Animationen weiterhin auf der Fläche aktiv und ergänzt Runtime- sowie xConfig-Regressionen für Renderverhalten, Config-Normalisierung und Persistenz.
 
 ## [2.0.102] - 2026-03-31
 
@@ -1087,7 +1089,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.103]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...HEAD
+[2.0.104]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...HEAD
+[2.0.103]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49
 [2.0.102]: https://github.com/thomasasen/autodarts-xconfig/compare/5bccf6d...aa62402
 [2.0.101]: https://github.com/thomasasen/autodarts-xconfig/compare/93aa69d...5bccf6d
 [2.0.100]: https://github.com/thomasasen/autodarts-xconfig/compare/a9fa2bb...93aa69d

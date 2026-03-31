@@ -1169,7 +1169,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   runtime.stop();
 });
 
-test("xConfig shell persists checkout route selection modes for board targets and TV zoom", async () => {
+test("xConfig shell persists checkout board target and TV zoom select settings", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1194,16 +1194,26 @@ test("xConfig shell persists checkout route selection modes for board targets an
     (config) => config.features.checkoutBoardTargets.visualPreset === "signal"
   );
 
+  clickSelectSettingOption(documentRef, "checkout-board-targets", "segmentStyle", "surface-only");
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features.checkoutBoardTargets.visualPreset === "signal" &&
+      config.features.checkoutBoardTargets.segmentStyle === "surface-only"
+  );
+
   clickSelectSettingOption(documentRef, "checkout-board-targets", "targetSelectionMode", "all");
   await waitForStoredConfig(
     localStorage,
     (config) =>
       config.features.checkoutBoardTargets.visualPreset === "signal" &&
+      config.features.checkoutBoardTargets.segmentStyle === "surface-only" &&
       config.features.checkoutBoardTargets.targetSelectionMode === "all"
   );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.checkoutBoardTargets.visualPreset, "signal");
+  assert.equal(storedConfig.features.checkoutBoardTargets.segmentStyle, "surface-only");
   assert.equal(storedConfig.features.checkoutBoardTargets.targetSelectionMode, "all");
 
   const openZoomSettings = documentRef.querySelector(

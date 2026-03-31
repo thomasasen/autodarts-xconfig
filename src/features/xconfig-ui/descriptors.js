@@ -308,6 +308,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "signal", label: "Signal" },
         { value: "steady", label: "Steady" },
       ]),
+      selectField("segmentStyle", "Segmentstil", [
+        { value: "surface-outline", label: "Fläche + Rahmen" },
+        { value: "surface-only", label: "Nur Fläche" },
+      ]),
       selectField("singleRing", "Single-Ring", [
         { value: "inner", label: "Innen" },
         { value: "outer", label: "Außen" },

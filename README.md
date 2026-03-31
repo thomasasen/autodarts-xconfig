@@ -453,7 +453,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
-- Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.
+- Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.
 - Wann sinnvoll? Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.
 
 **Einstellungen einfach erklärt**
@@ -462,6 +462,9 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Focus`: Das Segment bleibt ruhig und klar markiert, atmet aber leicht über Opazität, Kontur, Halo und eine kleine Skalierung. Dadurch wirkt die Darstellung lebendiger, ohne unruhig zu werden.
   - `Signal`: Die Markierung folgt einem sauberen Blinkpuls ähnlich zum nativen Board-Hinweis und kombiniert den Helligkeitswechsel mit leichter Skalierung und Glow. Das wirkt direkter als `Focus`, bleibt aber kontrollierter als ein schwerer Pulse-Look.
   - `Steady`: Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit, Halo und eine sehr kleine Skalierung. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.
+- `Segmentstil`: Bestimmt, ob die Checkout-Markierung zusätzlich eine farbige Segmentkontur und die weiße Zielkontur verwendet oder ob nur die farbige Fläche selbst sichtbar bleibt. Farben, Presets, Glow und Bewegungsverhalten laufen in beiden Modi weiter auf der Fläche.
+  - `Fläche + Rahmen`: Die Checkout-Ziele behalten die farbige Füllung, ihre farbige Segmentkontur und die weiße pulsierende Zielkontur. Das ist die bisherige, klar gerahmte Darstellung.
+  - `Nur Fläche`: Die Markierung färbt nur die Ziel-Fläche selbst ein und blendet sowohl die farbige Segmentkontur als auch die weiße Zielkontur aus. Farben, Glow, Opazität und Bewegungsverhalten des gewählten Presets bleiben trotzdem auf der Fläche aktiv.
 - `Single-Ring`: Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.
   - `Innen`: Die Hervorhebung sitzt ausschließlich zwischen Triple- und Bull-Bereich. Der äußere Single-Ring bleibt unbelegt.
   - `Außen`: Die Hervorhebung liegt ausschließlich im äußeren Single-Bereich zwischen Double-Ring und Triple-Ring. Der innere Bereich bleibt frei.
@@ -470,7 +473,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Nächstes Feld`: Unter `180` wird immer genau das Segment hervorgehoben, das als nächster sinnvoller Dart aus Score, Out-Mode und plausibler sichtbarer Route hervorgeht. Fehlt eine brauchbare sichtbare Route, wird sie scorebasiert sinnvoll ergänzt oder ersetzt.
   - `Alle Felder`: Die komplette validierte beziehungsweise scorebasiert ergänzte Route wird am Board sichtbar gemacht. Das zuerst zu spielende Segment bleibt dabei klar am stärksten betont, Folgeziele laufen bewusst ruhiger mit.
   - `Nur Finish`: Es wird ausschließlich das Segment hervorgehoben, das die validierte oder scorebasiert ergänzte Route tatsächlich beendet. Frühere Setup-Felder bleiben unmarkiert.
-- `Farbthema`: Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.
+- `Farbthema`: Wählt das Farbschema für Füllung, optionale Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.
   - `Violett`: Die Segmentfüllung und Kontur laufen in eine violette Palette. Das wirkt am stärksten wie ein klassischer Neon-Overlay-Look.
   - `Cyan`: Die Board-Markierung wirkt technisch und frisch, ohne so warm wie Amber zu erscheinen. Gerade auf dunklen Flächen wirkt Cyan sehr klar.
   - `Amber`: Die Markierung erinnert eher an warmes Warn- oder Bühnenlicht. Das fällt deutlich auf und wirkt energischer als Cyan.

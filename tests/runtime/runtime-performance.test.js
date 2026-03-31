@@ -263,6 +263,66 @@ test("checkout-board-targets reuses identical overlay nodes across rerenders so 
   assert.equal(firstShapeNode.getAttribute("data-target-value"), "20");
 });
 
+test("checkout-board-targets surface-only mode keeps the S20 fill animated but removes stroke and outline", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "170");
+  group.appendChild(boardCircle);
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  const outlinedConfig = resolveBoardTargetVisualConfig({
+    visualPreset: "focus",
+    segmentStyle: "surface-outline",
+    singleRing: "inner",
+    colorTheme: "violet",
+  });
+  const surfaceOnlyConfig = resolveBoardTargetVisualConfig({
+    visualPreset: "signal",
+    segmentStyle: "surface-only",
+    singleRing: "inner",
+    colorTheme: "amber",
+  });
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 170,
+    },
+    checkoutTargets: [{ ring: "S", value: 20 }],
+    visualConfig: outlinedConfig,
+  });
+
+  const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+  assert.equal(overlay.children.length, 2);
+
+  const firstShapeNode = overlay.children[0];
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 170,
+    },
+    checkoutTargets: [{ ring: "S", value: 20 }],
+    visualConfig: surfaceOnlyConfig,
+  });
+
+  assert.equal(overlay.children.length, 1);
+  assert.equal(overlay.children[0], firstShapeNode);
+  assert.equal(overlay.querySelector(`.${OUTLINE_CLASS}`), null);
+  assert.equal(firstShapeNode.classList.contains(EFFECT_CLASSES.signal), true);
+  assert.equal(firstShapeNode.style.getPropertyValue("stroke"), "none");
+  assert.equal(firstShapeNode.style.getPropertyValue("stroke-width"), "0");
+  assert.match(firstShapeNode.style.getPropertyValue("--ad-ext-target-color"), /245, 158, 11/);
+  assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.968");
+  assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
+});
+
 test("checkout-board-targets keeps focus targets readable across single, outer and bull families", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");

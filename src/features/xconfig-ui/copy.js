@@ -288,7 +288,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.",
     visualDescription:
-      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.",
+      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.",
     usefulWhen:
       "Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.",
     images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
@@ -297,6 +297,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wählt zwischen fokussierter Standarddarstellung, klarem Blinksignal und ruhigem Dauer-Glow.",
         "Legt fest, wie die markierten Board-Segmente visuell wirken. Die Segmentauswahl bleibt gleich; nur Signalcharakter, Leuchtverhalten und Bewegungsruhe ändern sich.",
         "Wählt die visuelle Darstellung der markierten Segmente."
+      ),
+      segmentStyle: fieldCopy(
+        "Legt fest, ob die Ziele als farbige Fläche mit Rahmen oder nur als farbige Fläche erscheinen.",
+        "Bestimmt, ob die Checkout-Markierung zusätzlich eine farbige Segmentkontur und die weiße Zielkontur verwendet oder ob nur die farbige Fläche selbst sichtbar bleibt. Farben, Presets, Glow und Bewegungsverhalten laufen in beiden Modi weiter auf der Fläche.",
+        "Legt fest, ob die Ziele mit Rahmen oder nur über die farbige Fläche markiert werden."
       ),
       singleRing: fieldCopy(
         "Bestimmt bei Single-Zielen, ob der innere, äußere oder beide Single-Ringe markiert werden.",
@@ -310,7 +315,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       colorTheme: fieldCopy(
         "Passt die Farbe der Board-Markierungen an dein Setup an.",
-        "Wählt das Farbschema für Füllung, Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.",
+        "Wählt das Farbschema für Füllung, optionale Kontur und Leuchteffekt der Checkout-Ziele. Die Segmentlogik bleibt unverändert; nur die visuelle Farbwirkung wechselt.",
         "Passt die Farbe der Board-Markierungen an."
       ),
       debug: DEBUG_FIELD,
@@ -1132,6 +1137,19 @@ const BOARD_TARGET_VISUAL_PRESET_OPTION_COPY = deepFreeze({
     "Hält das Ziel fast konstant sichtbar und verändert nur Glow und Kontur leicht.",
     "Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit, Halo und eine sehr kleine Skalierung. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.",
     "Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis mit nur minimaler Bewegung sichtbar sein soll."
+  ),
+});
+
+const BOARD_TARGET_SEGMENT_STYLE_OPTION_COPY = deepFreeze({
+  "surface-outline": optionCopy(
+    "Zeigt die farbige Fläche zusammen mit Rahmen und Zielkontur.",
+    "Die Checkout-Ziele behalten die farbige Füllung, ihre farbige Segmentkontur und die weiße pulsierende Zielkontur. Das ist die bisherige, klar gerahmte Darstellung.",
+    "Diese Variante kombiniert die farbige Fläche mit Segmentrahmen und zusätzlicher Zielkontur und entspricht dem bisherigen Standard-Look."
+  ),
+  "surface-only": optionCopy(
+    "Zeigt nur die farbige Fläche ohne Rahmen.",
+    "Die Markierung färbt nur die Ziel-Fläche selbst ein und blendet sowohl die farbige Segmentkontur als auch die weiße Zielkontur aus. Farben, Glow, Opazität und Bewegungsverhalten des gewählten Presets bleiben trotzdem auf der Fläche aktiv.",
+    "Diese Variante markiert das Ziel ausschließlich über die eingefärbte Fläche und lässt den Rahmen komplett weg, während Preset und Farblogik auf der Fläche erhalten bleiben."
   ),
 });
 
@@ -2134,6 +2152,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "checkout-board-targets": {
     visualPreset: BOARD_TARGET_VISUAL_PRESET_OPTION_COPY,
+    segmentStyle: BOARD_TARGET_SEGMENT_STYLE_OPTION_COPY,
     singleRing: BOARD_TARGET_SINGLE_RING_OPTION_COPY,
     targetSelectionMode: BOARD_TARGET_SELECTION_MODE_OPTION_COPY,
     colorTheme: BOARD_TARGET_COLOR_OPTION_COPY,
