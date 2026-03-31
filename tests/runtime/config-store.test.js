@@ -47,6 +47,7 @@ test("config store loads defaults when storage is empty", async () => {
   assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
+  assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
 });
 
 test("config store saves, updates, and resets persisted config", async () => {
@@ -64,6 +65,7 @@ test("config store saves, updates, and resets persisted config", async () => {
       },
       tvBoardZoom: {
         checkoutZoomTarget: "route-first",
+        t20SetupZoomEnabled: false,
       },
     },
   });
@@ -72,6 +74,7 @@ test("config store saves, updates, and resets persisted config", async () => {
   assert.equal(stored.featureToggles.checkoutScorePulse, false);
   assert.equal(stored.features.checkoutBoardTargets.targetSelectionMode, "all");
   assert.equal(stored.features.tvBoardZoom.checkoutZoomTarget, "route-first");
+  assert.equal(stored.features.tvBoardZoom.t20SetupZoomEnabled, false);
 
   const updated = await store.update({
     features: {
@@ -85,12 +88,14 @@ test("config store saves, updates, and resets persisted config", async () => {
   assert.equal(updated.featureToggles.checkoutScorePulse, false);
   assert.equal(updated.features.checkoutBoardTargets.targetSelectionMode, "all");
   assert.equal(updated.features.tvBoardZoom.checkoutZoomTarget, "route-first");
+  assert.equal(updated.features.tvBoardZoom.t20SetupZoomEnabled, false);
 
   const reset = await store.reset();
   assert.equal(reset.features.checkoutScorePulse.effect, "scale");
   assert.equal(reset.featureToggles.checkoutScorePulse, false);
   assert.equal(reset.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(reset.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
+  assert.equal(reset.features.tvBoardZoom.t20SetupZoomEnabled, true);
   assert.equal(reset.features.checkoutScorePulse.enabled, false);
   assert.equal(reset.features.themes.x01.enabled, false);
   assert.equal(reset.features.themes.x01.backgroundImageDataUrl, "");

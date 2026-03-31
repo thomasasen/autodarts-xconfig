@@ -351,6 +351,7 @@ export const xconfigDescriptors = Object.freeze([
         { value: "finish-only", label: "Nur Finish-Feld" },
         { value: "route-first", label: "Erstes Routenfeld" },
       ]),
+      checkboxField("t20SetupZoomEnabled", "T20-Setup-Zoom"),
       checkboxField("debug", "Debug"),
     ],
   }),

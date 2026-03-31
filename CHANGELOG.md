@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.108] - 2026-04-01
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom` respektiert bei `Nur Finish-Feld` jetzt den aktiven Out-Mode sauber und zoomt außerhalb des optionalen `T20`-Sonderfalls nur noch auf echte Ein-Dart-Finishes; irreführende Setup-Ziele wie `S14` nach `121 -> S7 -> T20` bleiben damit ungezoomt. Zusätzlich lässt sich der spezielle `T20`-Setup-Zoom nach zwei `T20` jetzt direkt in xConfig ein- oder ausschalten.
+  Technik: `tv-board-zoom` unterdrückt im Modus `finish-only` generische `smart-setup`-Fallbacks, behält die Out-Mode-aware Checkout-Auswahl für `Straight Out`, `Double Out` und `Master Out` bei, ergänzt das neue Config-Flag `t20SetupZoomEnabled` samt xConfig-Descriptoren und Nutzertexten und sichert das Verhalten über Runtime-, Config- und xConfig-Shell-Regressionen ab.
+
 ## [2.0.107] - 2026-03-31
 
 ### Fixed
@@ -1117,7 +1124,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.107]: https://github.com/thomasasen/autodarts-xconfig/compare/eeea914...HEAD
+[2.0.108]: https://github.com/thomasasen/autodarts-xconfig/compare/382e093...HEAD
+[2.0.107]: https://github.com/thomasasen/autodarts-xconfig/compare/eeea914...382e093
 [2.0.106]: https://github.com/thomasasen/autodarts-xconfig/compare/d632f40...eeea914
 [2.0.105]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...d632f40
 [2.0.104]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49

@@ -988,6 +988,9 @@ export function computeZoomIntent(options = {}) {
     String(config?.checkoutZoomTarget || "").trim().toLowerCase() === "route-first"
       ? "route-first"
       : "finish-only";
+  const t20SetupZoomEnabled = config?.t20SetupZoomEnabled !== false;
+  const finishOnlyCheckoutZoom = Boolean(config?.checkoutZoomEnabled) &&
+    checkoutZoomTarget === "finish-only";
 
   if (!gameState || typeof gameState.isX01Variant !== "function") {
     return null;
@@ -1056,6 +1059,16 @@ export function computeZoomIntent(options = {}) {
 
   state.lastTurnId = turnId;
   state.lastThrowCount = throwCount;
+
+  if (!t20SetupZoomEnabled && state.activeIntent?.reason === "t20-setup") {
+    state.holdUntilTs = 0;
+    state.activeIntent = null;
+    state.stickyUntilTurnChange = false;
+  }
+  if (finishOnlyCheckoutZoom && state.activeIntent?.reason === "smart-setup") {
+    state.holdUntilTs = 0;
+    state.activeIntent = null;
+  }
 
   const stateScoreCandidate = gameState.getActiveScore?.();
   const stateActiveScore =
@@ -1175,11 +1188,13 @@ export function computeZoomIntent(options = {}) {
   }
 
   if (throwCount <= 2) {
-      const canUseSuggestionForSetup =
+    const canUseSuggestionForSetup =
+      !finishOnlyCheckoutZoom &&
       Boolean(suggestionSegment) &&
       (config.checkoutZoomEnabled || !suggestionIsCheckout);
     const canUseSuggestionSegment =
-      canUseSuggestionForSetup && (suggestionSegment !== "T20" || canUseT20Setup);
+      canUseSuggestionForSetup &&
+      (suggestionSegment !== "T20" || (t20SetupZoomEnabled && canUseT20Setup));
     if (canUseSuggestionSegment) {
       const reason = suggestionSegment === "T20" ? "t20-setup" : "smart-setup";
       const intent = { reason, segment: suggestionSegment };
@@ -1188,7 +1203,7 @@ export function computeZoomIntent(options = {}) {
     }
   }
 
-  if (canUseT20Setup) {
+  if (t20SetupZoomEnabled && canUseT20Setup) {
     const intent = { reason: "t20-setup", segment: "T20" };
     state.activeIntent = intent;
     return intent;

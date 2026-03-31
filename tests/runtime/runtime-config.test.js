@@ -78,6 +78,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
+  assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
 });
 
 test("createHardResetRuntimeConfig disables every feature and clears theme images", () => {
@@ -132,6 +133,7 @@ test("createRecommendedRuntimeConfig enables every feature and preserves theme i
   assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
   assert.equal(config.features.checkoutBoardTargets.segmentStyle, "surface-outline");
   assert.equal(config.features.tvBoardZoom.checkoutZoomEnabled, true);
+  assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
   assert.equal(config.features.styleCheckoutSuggestions.style, "outline");
   assert.equal(config.features.styleCheckoutSuggestions.labelText, "CHECKOUT");
   assert.equal(config.features.styleCheckoutSuggestions.colorTheme, "amber");
@@ -167,6 +169,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         zoomLevel: "3.15",
         zoomSpeed: "SCHNELL",
         checkoutZoomTarget: "ROUTE-FIRST",
+        t20SetupZoomEnabled: "false",
       },
       styleCheckoutSuggestions: {
         style: "STRIPE",
@@ -293,6 +296,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomSpeed, "schnell");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").checkoutZoomTarget, "route-first");
+  assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").t20SetupZoomEnabled, false);
   assert.equal(runtimeConfig.getFeatureConfig("styleCheckoutSuggestions").style, "stripe");
   assert.equal(runtimeConfig.getFeatureConfig("styleCheckoutSuggestions").labelText, "FINISH");
   assert.equal(runtimeConfig.getFeatureConfig("averageTrendArrow").durationMs, 500);

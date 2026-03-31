@@ -349,8 +349,13 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       checkoutZoomTarget: fieldCopy(
         "Bestimmt, ob der Zoom bei Checkout-Routen auf das Finish-Feld oder auf das erste sichtbare Routenfeld geht.",
-        "Steuert, welches Segment aus einer sichtbaren Checkout-Route für den Zoom verwendet wird. `Nur Finish-Feld` fokussiert standardmäßig nur das eigentliche Beendigungsfeld des Legs, `Erstes Routenfeld` verhält sich wie der frühere Routenfokus auf den ersten Schritt.",
+        "Steuert, welches Segment aus einer sichtbaren Checkout-Route für den Zoom verwendet wird. `Nur Finish-Feld` fokussiert nur echte Ein-Dart-Finishes gemäß aktivem Out-Mode und unterdrückt normale Setup-Zooms; der optionale `T20`-Spezialfall nach zwei `T20` bleibt davon getrennt. `Erstes Routenfeld` verhält sich wie der frühere Routenfokus auf den ersten Schritt und lässt auch normale Setup-Ziele weiter zu.",
         "Bestimmt, welches Segment einer sichtbaren Checkout-Route als Zoomziel verwendet wird."
+      ),
+      t20SetupZoomEnabled: fieldCopy(
+        "Schaltet den speziellen `T20`-Setup-Zoom nach zwei `T20` ein oder aus.",
+        "Aktiviert oder deaktiviert den Sonderfall, bei dem nach zwei `T20` ein weiterer `T20` als sinnvoller dritter Dart gezoomt wird. Ist die Option aus, bleiben nur echte Checkout-Zooms gemäß Out-Mode und Checkout-Ziel aktiv.",
+        "Schaltet den `T20`-Spezialfall nach zwei `T20` ein oder aus."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1247,7 +1252,7 @@ const TV_BOARD_ZOOM_SPEED_OPTION_COPY = deepFreeze({
 const TV_BOARD_ZOOM_TARGET_OPTION_COPY = deepFreeze({
   "finish-only": optionCopy(
     "Zoomt bei Checkout-Routen nur auf das eigentliche Finish-Feld.",
-    "Mehrstufige Checkout-Routen wie `T16` plus `D8` werden standardmäßig auf das letzte, legbeendende Segment fokussiert. Setup-Schritte der Route werden dabei nicht automatisch gezoomt.",
+    "Mehrstufige Checkout-Routen wie `T16` plus `D8` werden standardmäßig auf das letzte, legbeendende Segment fokussiert. Gezoomt werden dabei nur echte Ein-Dart-Finishes gemäß aktivem Out-Mode; normale Setup-Schritte bleiben unberücksichtigt.",
     "Fokussiert bei sichtbaren Checkout-Routen nur das abschließende Finish-Feld."
   ),
   "route-first": optionCopy(

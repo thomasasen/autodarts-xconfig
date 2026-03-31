@@ -70,6 +70,7 @@ export function initializeTvBoardZoom(context = {}) {
           zoomSpeed: "mittel",
           checkoutZoomEnabled: true,
           checkoutZoomTarget: "finish-only",
+          t20SetupZoomEnabled: true,
         };
 
   const speedConfig = resolveZoomSpeedConfig(featureConfig.zoomSpeed);

@@ -459,6 +459,7 @@ test("tv-board-zoom applies smart setup suggestion through the full turn", () =>
     windowRef,
     featureConfig: {
       checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
     },
     nowTs: 4000,
   });
@@ -480,6 +481,7 @@ test("tv-board-zoom applies smart setup suggestion through the full turn", () =>
     windowRef,
     featureConfig: {
       checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
     },
     nowTs: 4100,
   });
@@ -501,6 +503,7 @@ test("tv-board-zoom applies smart setup suggestion through the full turn", () =>
     windowRef,
     featureConfig: {
       checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
     },
     nowTs: 4200,
   });
@@ -508,6 +511,36 @@ test("tv-board-zoom applies smart setup suggestion through the full turn", () =>
   assert.deepEqual(firstIntent, { reason: "smart-setup", segment: "T19" });
   assert.deepEqual(secondIntent, { reason: "smart-setup", segment: "T19" });
   assert.deepEqual(thirdIntent, { reason: "smart-setup", segment: "T19" });
+});
+
+test("tv-board-zoom finish-only mode suppresses non-checkout setup suggestions", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "S14";
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 54,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "S7" } }, { segment: { name: "T20" } }],
+      activeTurn: {
+        id: "turn-finish-only-setup",
+        playerId: "player-1",
+        throws: [{ segment: { name: "S7" } }, { segment: { name: "T20" } }],
+      },
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 4300,
+  });
+
+  assert.equal(intent, null);
 });
 
 test("tv-board-zoom does not force T20 setup zoom after only one dart", () => {
@@ -566,6 +599,36 @@ test("tv-board-zoom allows T20 setup only for 2xT20 with sensible third dart", (
   });
 
   assert.deepEqual(setupIntent, { reason: "t20-setup", segment: "T20" });
+});
+
+test("tv-board-zoom can disable the T20 setup special case through config", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T20";
+  const windowRef = createFakeWindow({ documentRef });
+
+  const setupIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 121,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+      activeTurn: {
+        id: "turn-double-t20-disabled",
+        playerId: "player-1",
+        throws: [{ segment: { name: "T20" } }, { segment: { name: "T20" } }],
+      },
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      t20SetupZoomEnabled: false,
+    },
+    nowTs: 5120,
+  });
+
+  assert.equal(setupIntent, null);
 });
 
 test("tv-board-zoom does not use T20 setup when first two darts are mixed", () => {

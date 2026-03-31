@@ -198,7 +198,7 @@ function normalizeThemeBaseConfig(rawConfig = {}, defaults = {}) {
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutScorePulse: { enabled: true, effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutBoardTargets: { enabled: false, visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "inner", targetSelectionMode: "next", colorTheme: "amber", debug: false },
-  tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", debug: false },
+  tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
   styleCheckoutSuggestions: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
   averageTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   turnStartSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
@@ -222,7 +222,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
 const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutScorePulse: { effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first" },
   checkoutBoardTargets: { visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "inner", targetSelectionMode: "next", colorTheme: "amber" },
-  tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only" },
+  tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
   styleCheckoutSuggestions: { style: "outline", labelText: "CHECKOUT", colorTheme: "amber" },
   averageTrendArrow: { durationMs: 320, size: "standard" },
   turnStartSweep: { durationMs: 420, sweepStyle: "subtle" },
@@ -476,7 +476,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: resolveLegacyBoardTargetVisualPreset(rawConfig), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: normalizeStringChoice(rawConfig.singleRing, "inner", BOARD_TARGET_SINGLE_RING), targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   tvBoardZoom(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   styleCheckoutSuggestions(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };

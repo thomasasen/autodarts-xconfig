@@ -301,6 +301,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 - `Checkout-Ziel`: Bestimmt, welches Segment einer sichtbaren Checkout-Route als Zoomziel verwendet wird.
   - `Nur Finish-Feld`: Fokussiert bei sichtbaren Checkout-Routen nur das abschließende Finish-Feld.
   - `Erstes Routenfeld`: Fokussiert bei sichtbaren Checkout-Routen das erste Routenfeld.
+- `T20-Setup-Zoom`: Schaltet den `T20`-Spezialfall nach zwei `T20` ein oder aus.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![TV Board Zoom](screenshots/animation-tv-board-zoom.gif)
