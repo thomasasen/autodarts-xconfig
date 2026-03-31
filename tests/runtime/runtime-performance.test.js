@@ -1907,6 +1907,75 @@ test("checkout-board-targets rerenders onto a replaced board when suggestion and
   }
 });
 
+test("checkout-board-targets reacts to throw-surface attribute mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.suggestionElement.textContent = "D20";
+  appendBoardFixture(documentRef);
+  const scheduleCounter = { count: 0 };
+  const observerRegistry = createObserverRegistry();
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  try {
+    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    assert.ok(observer);
+
+    const observeOptions = observer.observeCalls[0]?.options || {};
+    assert.equal(observeOptions.attributes, true);
+    assert.equal(Array.isArray(observeOptions.attributeFilter), true);
+    assert.equal(observeOptions.attributeFilter.includes("class"), true);
+
+    assert.equal(scheduleCounter.count, 1);
+    documentRef.throwRow.classList.add("is-updating");
+    observer.callback([
+      {
+        type: "attributes",
+        target: documentRef.throwRow,
+        attributeName: "class",
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ]);
+
+    assert.equal(scheduleCounter.count, 2);
+  } finally {
+    cleanup();
+  }
+});
+
 test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -2268,6 +2337,57 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
   assert.equal(warnings.length, 0);
 
   cleanup();
+});
+
+test("triple-double-bull-hits reacts to throw-surface attribute mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const scheduleCounter = { count: 0 };
+  const observers = createObserverRegistry();
+
+  const cleanup = initializeTripleDoubleBullHits({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      subscribe() {
+        return () => {};
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  try {
+    const observer = observers.get("triple-double-bull-hits:dom-observer");
+    assert.ok(observer);
+
+    const observeOptions = observer.observeCalls[0]?.options || {};
+    assert.equal(observeOptions.attributes, true);
+    assert.equal(Array.isArray(observeOptions.attributeFilter), true);
+    assert.equal(observeOptions.attributeFilter.includes("class"), true);
+
+    assert.equal(scheduleCounter.count, 1);
+    documentRef.throwRow.classList.add("is-updating");
+    observer.callback([
+      {
+        type: "attributes",
+        target: documentRef.throwRow,
+        attributeName: "class",
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ]);
+
+    assert.equal(scheduleCounter.count, 2);
+  } finally {
+    cleanup();
+  }
 });
 
 test("cricket-highlighter rerenders on throw updates even when board state stays the same", () => {

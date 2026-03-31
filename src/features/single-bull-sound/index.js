@@ -7,6 +7,7 @@
 } from "./logic.js";
 import { resolveSingleBullSoundConfig } from "./style.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
+import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "single-bull-sound";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -62,11 +63,7 @@ export function initializeSingleBullSound(context = {}) {
   harness.registerObserver({
     key: OBSERVER_KEY,
     callback: scheduleUpdate,
-    observeOptions: {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    },
+    observeOptions: createTurnSurfaceObserveOptions(),
   });
 
   harness.registerListeners([

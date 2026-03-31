@@ -1,6 +1,37 @@
 export const TURN_SURFACE_SELECTOR = "#ad-ext-turn";
 export const TURN_THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
 export const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
+export const TURN_SURFACE_MUTATION_ATTRIBUTE_FILTER = Object.freeze([
+  "class",
+  "style",
+  "hidden",
+  "aria-hidden",
+  "data-state",
+  "data-status",
+  "aria-selected",
+  "selected",
+]);
+
+export function createTurnSurfaceObserveOptions(options = {}) {
+  const extraAttributeFilter = Array.isArray(options.attributeFilter)
+    ? options.attributeFilter
+    : [];
+  const attributeFilter = Array.from(
+    new Set(
+      [...TURN_SURFACE_MUTATION_ATTRIBUTE_FILTER, ...extraAttributeFilter]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  return {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter,
+  };
+}
 
 function normalizeText(value) {
   return String(value || "")

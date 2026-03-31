@@ -5,6 +5,7 @@ import {
 } from "../../shared/electric-border-engine.js";
 import { collectScoreNodes, stopAnimation, updateTurnPoints } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
+import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "turn-points-count";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -93,11 +94,7 @@ export function initializeTurnPointsCount(context = {}) {
         }
         scheduler.schedule();
       },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      },
+      observeOptions: createTurnSurfaceObserveOptions(),
       MutationObserverRef: windowRef?.MutationObserver,
     });
   }

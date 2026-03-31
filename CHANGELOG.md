@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.107] - 2026-03-31
+
+### Fixed
+
+- Nutzerwirkung: Throw-basierte Anzeigen wie `Triple / Double / Bull Hits`, `Turn Points Count`, `Single Bull Sound` und auch `Checkout Board Targets` reagieren jetzt zuverlässiger auf nachgeladene oder umgeschaltete Wurffelder, statt vereinzelt erst mit Verzögerung nach einem späteren DOM-Update sichtbar nachzuziehen.
+  Technik: Die Turn-Surface-Features teilen sich jetzt eine gemeinsame Observer-Konfiguration, die neben Knoten- und Textänderungen auch relevante Attributwechsel wie `class`, `style` oder `aria-hidden` an den Wurffeldern beobachtet; zusätzliche Runtime-Regressionen sichern die gemeinsame Filterkonfiguration sowie Reaktionen von `checkout-board-targets` und `triple-double-bull-hits` auf Attributmutationen ausdrücklich ab.
+
 ## [2.0.106] - 2026-03-31
 
 ### Fixed
@@ -1110,7 +1117,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.106]: https://github.com/thomasasen/autodarts-xconfig/compare/d632f40...HEAD
+[2.0.107]: https://github.com/thomasasen/autodarts-xconfig/compare/eeea914...HEAD
+[2.0.106]: https://github.com/thomasasen/autodarts-xconfig/compare/d632f40...eeea914
 [2.0.105]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...d632f40
 [2.0.104]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49
 [2.0.103]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49

@@ -11,6 +11,7 @@ import {
   mapRouteSegmentsToBoardTargets,
   resolveAuthoritativeCheckoutRoute,
 } from "../x01-checkout-route.js";
+import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -627,11 +628,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
         invalidateBoardCache();
         scheduler.schedule();
       },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      },
+      observeOptions: createTurnSurfaceObserveOptions(),
       MutationObserverRef: windowRef?.MutationObserver,
     });
   }

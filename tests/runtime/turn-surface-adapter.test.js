@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   collectTurnThrowRows,
   collectTurnThrowTextNodes,
+  createTurnSurfaceObserveOptions,
   findTurnContainer,
   readTurnPointsToken,
 } from "../../src/features/shared/turn-surface-adapter.js";
@@ -55,4 +56,23 @@ test("readTurnPointsToken and collectTurnThrowTextNodes use scoped turn-surface 
   assert.ok(nodes.includes(documentRef.throwTextElement));
   assert.ok(nodes.includes(extraRow.textNode));
   assert.equal(nodes.filter((node) => node === documentRef.throwTextElement).length, 1);
+});
+
+test("createTurnSurfaceObserveOptions watches throw-surface attribute changes with a stable default filter", () => {
+  const observeOptions = createTurnSurfaceObserveOptions({
+    attributeFilter: ["data-score", "class"],
+  });
+
+  assert.equal(observeOptions.childList, true);
+  assert.equal(observeOptions.subtree, true);
+  assert.equal(observeOptions.characterData, true);
+  assert.equal(observeOptions.attributes, true);
+  assert.equal(Array.isArray(observeOptions.attributeFilter), true);
+  assert.equal(observeOptions.attributeFilter.includes("class"), true);
+  assert.equal(observeOptions.attributeFilter.includes("style"), true);
+  assert.equal(observeOptions.attributeFilter.includes("data-score"), true);
+  assert.equal(
+    observeOptions.attributeFilter.filter((value) => value === "class").length,
+    1
+  );
 });

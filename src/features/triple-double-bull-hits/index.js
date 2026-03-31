@@ -5,6 +5,7 @@ import {
 } from "../../shared/electric-border-engine.js";
 import { clearHitDecoration, updateHitDecorations } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
+import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "triple-double-bull-hits";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -201,11 +202,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: () => scheduler.schedule(),
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      },
+      observeOptions: createTurnSurfaceObserveOptions(),
       MutationObserverRef: windowRef?.MutationObserver,
     });
   }
