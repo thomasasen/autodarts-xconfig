@@ -147,32 +147,4 @@ export const styleText = `
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;
 
-function isObjectLike(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function toTitleCase(value) {
-  const raw = String(value || "").trim();
-  if (!raw) {
-    return "";
-  }
-
-  if (raw.toLowerCase() === "x01") {
-    return "X01";
-  }
-
-  return raw.charAt(0).toUpperCase() + raw.slice(1);
-}
-
-function formatVariantLabel(variants = []) {
-  if (!Array.isArray(variants) || !variants.length) {
-    return "";
-  }
-
-  if (variants.includes("all")) {
-    return "Alle Modi";
-  }
-
-  return variants.map((variant) => toTitleCase(variant)).join(" / ");
-}
 

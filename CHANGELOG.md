@@ -23,6 +23,8 @@ direkt zu einer versionierten Release-Sektion.
 
 - Nutzerwirkung: Repository-Arbeit in VS Code erkennt ESLint jetzt direkt im Workspace, und der Lint-Lauf ist mit `npm run lint` reproduzierbar verfügbar, ohne zusätzlich Prettier oder weitere Stil-Plugins einzuführen.
   Technik: Das Repository nutzt jetzt eine schlanke Flat-Config über `eslint.config.js`, ergänzt `package.json` um `lint`-Skripte und die nötigen ESLint-Abhängigkeiten, empfiehlt die passenden VS-Code-Erweiterungen per `.vscode/extensions.json`, setzt konservative Workspace-Settings für die ESLint-Erkennung und hält die Maintainer-Hinweise in `README.md` sowie `AGENTS.md` dazu synchron.
+- Nutzerwirkung: ESLint deckt jetzt wieder fachlich wichtige Repo-Dateien in `src/`, `tests/` und `scripts/` ab, statt sie pauschal aus dem Diagnose-Scope auszublenden; nur echte Vendor- oder generierte Dateien bleiben global außen vor.
+  Technik: Die Flat-Config trennt jetzt strikt zwischen generierten bzw. fremden Dateien und echten Projektquellen, entfernt die breiten File-Ignores für Source- und Testdateien, behebt die kleinen Einzelverstöße direkt im Code und begrenzt die vorläufige Legacy-Sonderbehandlung auf wenige klar benannte Datei-Overrides nur für `no-unused-vars`.
 
 ## [2.0.104] - 2026-03-31
 

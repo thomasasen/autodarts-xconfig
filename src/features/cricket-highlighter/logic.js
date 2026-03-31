@@ -316,7 +316,6 @@ function applyOverlayStyleVars(overlay, visualConfig, radius) {
   const theme = visualConfig.theme || {};
   const intensity = visualConfig.intensity || {};
   const baseColor = visualConfig.baseColor || { r: 90, g: 90, b: 90 };
-  const mutedColor = visualConfig.mutedColor || { r: 33, g: 33, b: 33 };
   const deadColor = visualConfig.deadColor || { r: 112, g: 118, b: 128 };
   const showOpenObjectives = visualConfig.showOpenObjectives === true;
   const highlightOpacity = clampAlpha(intensity.highlightOpacity, 0.45);

@@ -29,7 +29,6 @@ import {
   BADGE_STATE_CLASS,
   DEAD_CLASS,
   DELTA_CLASS,
-  HIDDEN_LABEL_ATTRIBUTE,
   LABEL_CLASS,
   LABEL_STATE_CLASS,
   MARK_PROGRESS_CLASS,
@@ -38,9 +37,7 @@ import {
   ROW_WAVE_CLASS,
   SCORE_CLASS,
   SPARK_CLASS,
-  SYNTHETIC_BADGE_ATTRIBUTE,
   THREAT_CLASS,
-  WIPE_CLASS,
   resolveCricketGridFxConfig,
 } from "../../src/features/cricket-grid-fx/style.js";
 import { THEME_LAYOUT_HOOK_CLASSES } from "../../src/features/themes/shared/mount-theme-feature.js";

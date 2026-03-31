@@ -201,10 +201,6 @@ class FakeEventTarget {
   }
 }
 
-function isObjectLike(value) {
-  return Boolean(value) && typeof value === "object";
-}
-
 function splitSelectorList(selector) {
   return String(selector || "")
     .split(",")

@@ -136,7 +136,7 @@ test("README and FEATURES keep beginner-facing German text free of mojibake", ()
 test("README contains a visible install badge", () => {
   const readme = readText(readmePath);
 
-  assert.match(readme, /\!\[Installieren\]\(https:\/\/img\.shields\.io\/badge\//);
+  assert.match(readme, /!\[Installieren\]\(https:\/\/img\.shields\.io\/badge\//);
 });
 
 test("README contains stable anchors for every xConfig module entry", () => {

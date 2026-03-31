@@ -12,9 +12,6 @@ const repoRoot = process.cwd();
 const readmePath = path.resolve(repoRoot, "README.md");
 const featuresDocPath = path.resolve(repoRoot, "docs", "FEATURES.md");
 
-const descriptorByFeatureKey = new Map(
-  xconfigDescriptors.map((descriptor) => [descriptor.featureKey, descriptor])
-);
 const definitionByFeatureKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );

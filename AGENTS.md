@@ -205,6 +205,8 @@ Windows / PowerShell note:
 - editor extensions are helpers only and never replace real CLI validation
 - linting is only considered complete when the repo lint command was actually executed
 - respect the checked-in ESLint rules and workspace settings for this repository
+- reserve ESLint ignores for generated artifacts and third-party/vendor code
+- keep real project sources and tests in the lint scope; use narrow file-level overrides for legacy hotspots instead of hiding files wholesale
 - do not disable ESLint rules without a concrete, justified reason
 
 ## Commit expectations

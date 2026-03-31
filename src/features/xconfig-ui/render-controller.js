@@ -25,8 +25,6 @@ export function createShellRenderController(options = {}) {
     typeof options.isConfigRoute === "function" ? options.isConfigRoute : () => false;
   const isNavigationElement =
     typeof options.isNavigationElement === "function" ? options.isNavigationElement : () => false;
-  const isThemeFeature =
-    typeof options.isThemeFeature === "function" ? options.isThemeFeature : () => false;
   const parseShellRenderSignature =
     typeof options.parseShellRenderSignature === "function" ? options.parseShellRenderSignature : () => null;
   const buildShellRenderSignature =

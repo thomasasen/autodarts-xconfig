@@ -139,7 +139,7 @@ test("runtime public config API persists updates and survives feature toggles", 
   );
   assert.equal(
     await waitFor(
-      () => !Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")),
+      () => documentRef.getElementById("ad-ext-winner-fireworks-preview") === null,
       { timeoutMs: 220, intervalMs: 5 }
     ),
     true

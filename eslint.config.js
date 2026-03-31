@@ -1,6 +1,22 @@
 import js from "@eslint/js";
 import globals from "globals";
 
+const generatedOrVendorIgnores = [
+  "dist/**",
+  "node_modules/**",
+  "src/vendors/anime.min.cjs",
+  "src/vendors/canvas-confetti.browser.js",
+];
+
+const legacyUnusedVarOverrideFiles = [
+  "src/features/cricket-grid-fx/logic.js",
+  "src/features/cricket-surface/pipeline.js",
+  "src/features/themes/shared/board-layout-resolver.js",
+  "src/features/themes/shared/cricket-readability.js",
+  "src/features/xconfig-ui/index.js",
+  "src/features/xconfig-ui/shell-view.js",
+];
+
 const unusedVariableRule = [
   "error",
   {
@@ -17,27 +33,7 @@ const tampermonkeyGlobals = {
 
 export default [
   {
-    ignores: [
-      "dist/**",
-      "node_modules/**",
-      "src/vendors/anime.min.cjs",
-      "src/vendors/canvas-confetti.browser.js",
-      "src/features/cricket-grid-fx/logic.js",
-      "src/features/cricket-surface/pipeline.js",
-      "src/features/themes/shared/board-layout-resolver.js",
-      "src/features/themes/shared/cricket-readability.js",
-      "src/domain/cricket-rules.js",
-      "src/features/cricket-highlighter/logic.js",
-      "src/features/xconfig-ui/index.js",
-      "src/features/xconfig-ui/render-controller.js",
-      "src/features/xconfig-ui/shell-style.js",
-      "src/features/xconfig-ui/shell-view.js",
-      "scripts/sync-xconfig-docs.mjs",
-      "tests/runtime/bootstrap-runtime.test.js",
-      "tests/runtime/cricket-theme-compatibility.test.js",
-      "tests/runtime/fake-dom.js",
-      "tests/runtime/readme-docs.test.js",
-    ],
+    ignores: generatedOrVendorIgnores,
   },
   js.configs.recommended,
   {
@@ -63,6 +59,12 @@ export default [
     },
     rules: {
       "no-unused-vars": unusedVariableRule,
+    },
+  },
+  {
+    files: legacyUnusedVarOverrideFiles,
+    rules: {
+      "no-unused-vars": "off",
     },
   },
 ];

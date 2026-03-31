@@ -171,22 +171,6 @@ function resolveScoringModeNormalized(options = {}) {
   return "unknown";
 }
 
-function resolveSupportsTacticalHighlights(options = {}) {
-  if (typeof options.supportsTacticalHighlights === "boolean") {
-    return options.supportsTacticalHighlights;
-  }
-
-  if (
-    Object.prototype.hasOwnProperty.call(options, "scoringMode") ||
-    Object.prototype.hasOwnProperty.call(options, "scoringModeNormalized")
-  ) {
-    const scoringModeNormalized = resolveScoringModeNormalized(options);
-    return scoringModeNormalized === "standard" || scoringModeNormalized === "cutthroat";
-  }
-
-  return true;
-}
-
 function normalizeSegmentName(segment) {
   const raw = String(segment || "").trim().toUpperCase();
   if (!raw) {
