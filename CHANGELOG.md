@@ -19,6 +19,11 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `Checkout Board Targets` übernimmt geänderte Einstellungen wie `Single-Ring: Beide` und `Nur Fläche` jetzt auch in bereits geöffneten Match-Tabs zuverlässig, sodass die Board-Markierung nicht erst nach einem manuellen Reload korrekt auf beide Single-Ringe umspringt.
   Technik: Der Tampermonkey-Runtime hört jetzt auf `storage`-Änderungen des persistierten xConfig-Status, lädt die aktuelle Konfiguration tabübergreifend nach und remountet betroffene Features auf Basis des gespeicherten Zustands; zusätzliche Runtime-Regressionen sichern sowohl den Cross-Tab-Sync als auch die Render-Kombinationen `singleRing` x `segmentStyle` für Single-Ziele ausdrücklich ab.
 
+### Changed
+
+- Nutzerwirkung: Repository-Arbeit in VS Code erkennt ESLint jetzt direkt im Workspace, und der Lint-Lauf ist mit `npm run lint` reproduzierbar verfügbar, ohne zusätzlich Prettier oder weitere Stil-Plugins einzuführen.
+  Technik: Das Repository nutzt jetzt eine schlanke Flat-Config über `eslint.config.js`, ergänzt `package.json` um `lint`-Skripte und die nötigen ESLint-Abhängigkeiten, empfiehlt die passenden VS-Code-Erweiterungen per `.vscode/extensions.json`, setzt konservative Workspace-Settings für die ESLint-Erkennung und hält die Maintainer-Hinweise in `README.md` sowie `AGENTS.md` dazu synchron.
+
 ## [2.0.104] - 2026-03-31
 
 ### Fixed

@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "tamasfe.even-better-toml",
+    "DavidAnson.vscode-markdownlint",
+    "yzhang.markdown-all-in-one",
+    "dbaeumer.vscode-eslint"
+  ]
+}

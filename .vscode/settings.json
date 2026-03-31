@@ -1,0 +1,15 @@
+{
+  "eslint.useFlatConfig": true,
+  "eslint.validate": [
+    "javascript"
+  ],
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "eslint.format.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": false
+  }
+}

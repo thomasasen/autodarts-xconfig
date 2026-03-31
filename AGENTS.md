@@ -199,6 +199,14 @@ If Node/npm is not available:
 Windows / PowerShell note:
 - if `npm` is blocked by execution policy, use `npm.cmd`
 
+## VS Code / Workspace Tooling
+
+- workspace recommendations live in `.vscode/extensions.json`
+- editor extensions are helpers only and never replace real CLI validation
+- linting is only considered complete when the repo lint command was actually executed
+- respect the checked-in ESLint rules and workspace settings for this repository
+- do not disable ESLint rules without a concrete, justified reason
+
 ## Commit expectations
 
 Every commit should clearly state:
@@ -224,6 +232,7 @@ Preferred format:
 ## Project commands
 
 - install dependencies: `npm install`
+- run lint: `npm run lint`
 - build userscript: `npm run build`
 - run syntax checks: `npm run check:syntax`
 - run changelog checks: `npm run check:changelog`

@@ -950,6 +950,7 @@ Wenn du AD xConfig nur nutzen möchtest, kannst du diesen Abschnitt überspringe
 
 ```bash
 npm install
+npm run lint
 npm run check:syntax
 npm run build
 npm test
