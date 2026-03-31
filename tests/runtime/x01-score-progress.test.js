@@ -15,6 +15,7 @@ import {
   HOST_SELECTOR,
   INACTIVE_CLASS,
   STACK_ATTRIBUTE,
+  TRACK_CLASS,
   TRAIL_CLASS,
   buildStyleText,
 } from "../../src/features/x01-score-progress/style.js";
@@ -818,6 +819,87 @@ test("syncScoreProgress keeps running ghost-trail animation on passive re-sync",
 
   assert.equal(trailNode.__lastAnimation, runningAnimation);
   assert.equal(runningAnimation.playState, "running");
+});
+
+test("syncScoreProgress keeps intact progress nodes stable on passive re-sync and rebuilds only after structure damage", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "ghost-trail",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-ghost-trail-stability",
+            match: {
+              id: "match-ghost-trail-stability",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "201";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+
+  const stableTrackNode = hostNode.querySelector(`.${TRACK_CLASS}`);
+  const stableFillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  const stableTrailNode = hostNode.querySelector(`.${TRAIL_CLASS}`);
+  const stableAnimation = stableTrailNode?.__lastAnimation;
+  assert.ok(stableTrackNode);
+  assert.ok(stableFillNode);
+  assert.ok(stableTrailNode);
+  assert.ok(stableAnimation);
+
+  runSync();
+
+  assert.equal(hostNode.querySelector(`.${TRACK_CLASS}`), stableTrackNode);
+  assert.equal(hostNode.querySelector(`.${FILL_CLASS}`), stableFillNode);
+  assert.equal(hostNode.querySelector(`.${TRAIL_CLASS}`), stableTrailNode);
+  assert.equal(stableTrailNode.__lastAnimation, stableAnimation);
+  assert.equal(stableAnimation.playState, "running");
+
+  stableTrackNode.removeChild(stableTrailNode);
+  runSync();
+
+  const repairedTrackNode = hostNode.querySelector(`.${TRACK_CLASS}`);
+  const repairedFillNode = hostNode.querySelector(`.${FILL_CLASS}`);
+  const repairedTrailNode = hostNode.querySelector(`.${TRAIL_CLASS}`);
+  assert.ok(repairedTrackNode);
+  assert.ok(repairedFillNode);
+  assert.ok(repairedTrailNode);
+  assert.notEqual(repairedTrackNode, stableTrackNode);
+  assert.notEqual(repairedFillNode, stableFillNode);
+  assert.notEqual(repairedTrailNode, stableTrailNode);
+  assert.equal(hostNode.children.length, 1);
+  assert.equal(hostNode.children[0], repairedTrackNode);
+  assert.equal(repairedTrackNode.children[0], repairedTrailNode);
+  assert.equal(repairedTrackNode.children[1], repairedFillNode);
 });
 
 test("score-progress style reserves a dedicated player-card row for the bar", () => {
