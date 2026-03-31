@@ -1,6 +1,6 @@
 ---
 name: userscript-release
-description: Prepare or finalize an autodarts-xconfig release. Use only when the task explicitly includes release, finalize, ship, package, publish, a version bump, `dist/` refresh, or publication-state verification.
+description: Prepare or finalize an autodarts-xconfig release. This is the release-specific workflow skill. Use only when the task explicitly includes release, finalize, ship, package, publish, a version bump, `dist/` refresh, or publication-state verification.
 ---
 
 # Goal

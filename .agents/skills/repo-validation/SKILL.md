@@ -1,6 +1,6 @@
 ---
 name: repo-validation
-description: Choose and report the smallest sufficient validation after actual autodarts-xconfig changes. Use when the right local checks are not obvious or when the handoff needs explicit validation and residual-risk reporting.
+description: Choose and report the smallest sufficient local validation for an autodarts-xconfig change. Use when the right checks are not obvious or when the handoff needs explicit validation and residual-risk reporting.
 ---
 
 # Goal
@@ -93,6 +93,5 @@ Every validation summary must state:
 A valid result from this skill must:
 - use the real repo commands from `package.json`
 - choose a validation surface that matches the actual change
-- call out regression-sensitive startup or version work explicitly
 - report execution truthfully
 - leave no ambiguity about what remains unverified
