@@ -206,6 +206,63 @@ test("checkout-board-targets render helper draws every provided target once", ()
   assert.equal(overlay.children.length, 4);
 });
 
+test("checkout-board-targets reuses identical overlay nodes across rerenders so the pulse can continue", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "170");
+  group.appendChild(boardCircle);
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  const focusConfig = resolveBoardTargetVisualConfig({
+    visualPreset: "focus",
+    singleRing: "both",
+    colorTheme: "violet",
+  });
+  const signalConfig = resolveBoardTargetVisualConfig({
+    visualPreset: "signal",
+    singleRing: "both",
+    colorTheme: "amber",
+  });
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 170,
+    },
+    checkoutTargets: [{ ring: "T", value: 20 }],
+    visualConfig: focusConfig,
+  });
+
+  const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+  assert.ok(overlay);
+  assert.equal(overlay.children.length, 2);
+
+  const firstShapeNode = overlay.children[0];
+  const firstOutlineNode = overlay.children[1];
+
+  renderCheckoutTargets({
+    board: {
+      svg,
+      group,
+      radius: 170,
+    },
+    checkoutTargets: [{ ring: "T", value: 20 }],
+    visualConfig: signalConfig,
+  });
+
+  assert.equal(overlay.children.length, 2);
+  assert.equal(overlay.children[0], firstShapeNode);
+  assert.equal(overlay.children[1], firstOutlineNode);
+  assert.equal(firstShapeNode.classList.contains("ad-ext-checkout-target--signal"), true);
+  assert.match(firstShapeNode.style.getPropertyValue("--ad-ext-target-color"), /245, 158, 11/);
+  assert.equal(firstShapeNode.getAttribute("data-target-ring"), "T");
+  assert.equal(firstShapeNode.getAttribute("data-target-value"), "20");
+});
+
 test("checkout-board-targets keeps focus targets readable across single, outer and bull families", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");

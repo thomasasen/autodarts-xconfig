@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.103] - 2026-03-31
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` pulsiert auf dem X01-Board jetzt auch bei `T20` und ähnlichen Zielsegmenten wieder sauber und kontinuierlich, statt nur kurz zu zucken, wenn das gleiche Ziel mehrfach hintereinander neu gerendert wird.
+  Technik: Das Board-Overlay verwendet bei identischer Zielgeometrie bestehende SVG-Knoten weiter, synchronisiert deren Attribute, Klassen und Inline-Styles statt sie jedes Mal neu zu erzeugen und verhindert so den permanenten Animations-Reset des Signal-Pulses; eine zusätzliche Runtime-Regression sichert die Knoten-Wiederverwendung ausdrücklich ab.
+
 ## [2.0.102] - 2026-03-31
 
 ### Fixed
@@ -1080,7 +1087,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.102]: https://github.com/thomasasen/autodarts-xconfig/compare/5bccf6d...HEAD
+[2.0.103]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...HEAD
+[2.0.102]: https://github.com/thomasasen/autodarts-xconfig/compare/5bccf6d...aa62402
 [2.0.101]: https://github.com/thomasasen/autodarts-xconfig/compare/93aa69d...5bccf6d
 [2.0.100]: https://github.com/thomasasen/autodarts-xconfig/compare/a9fa2bb...93aa69d
 [2.0.99]: https://github.com/thomasasen/autodarts-xconfig/compare/4b18f03...a9fa2bb

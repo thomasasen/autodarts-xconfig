@@ -195,6 +195,99 @@ export function clearOverlay(overlay) {
   }
 }
 
+function buildRenderableNodeKey(node) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return "";
+  }
+
+  const className = String(node.getAttribute("class") || "");
+  const role = className.includes(OUTLINE_CLASS) ? "outline" : "shape";
+  return [
+    role,
+    String(node.tagName || ""),
+    String(node.getAttribute("data-target-ring") || ""),
+    String(node.getAttribute("data-target-value") || ""),
+    String(node.getAttribute("d") || ""),
+    String(node.getAttribute("r") || ""),
+    String(node.getAttribute("fill-rule") || ""),
+  ].join("|");
+}
+
+function syncRenderableNode(targetNode, sourceNode) {
+  if (
+    !targetNode ||
+    !sourceNode ||
+    typeof targetNode.setAttribute !== "function" ||
+    typeof sourceNode.getAttribute !== "function"
+  ) {
+    return targetNode;
+  }
+
+  const staleAttributeNames = new Set(
+    Array.from(targetNode.attributes || []).map((attribute) => attribute.name)
+  );
+  staleAttributeNames.delete("class");
+  staleAttributeNames.delete("style");
+
+  const sourceClassName = String(sourceNode.getAttribute("class") || "").trim();
+  if (sourceClassName) {
+    targetNode.setAttribute("class", sourceClassName);
+  } else {
+    try {
+      targetNode.removeAttribute("class");
+    } catch (_) {
+      // Ignore environments that expose className without removeAttribute support.
+    }
+  }
+
+  Array.from(sourceNode.attributes || []).forEach((attribute) => {
+    targetNode.setAttribute(attribute.name, attribute.value);
+    staleAttributeNames.delete(attribute.name);
+  });
+
+  staleAttributeNames.forEach((attributeName) => {
+    try {
+      targetNode.removeAttribute(attributeName);
+    } catch (_) {
+      // Keep sync fail-soft in restrictive SVG shims.
+    }
+  });
+
+  if (targetNode.style && sourceNode.style) {
+    const sourceStyleEntries =
+      sourceNode.style._values instanceof Map
+        ? Array.from(sourceNode.style._values.entries())
+        : Array.from({ length: Number(sourceNode.style.length) || 0 }, (_, index) => {
+            const propertyName =
+              typeof sourceNode.style.item === "function"
+                ? sourceNode.style.item(index)
+                : sourceNode.style[index];
+            return [propertyName, sourceNode.style.getPropertyValue(propertyName)];
+          }).filter(([propertyName]) => Boolean(propertyName));
+    const staleStyleNames =
+      targetNode.style._values instanceof Map
+        ? new Set(Array.from(targetNode.style._values.keys()))
+        : new Set(
+            Array.from({ length: Number(targetNode.style.length) || 0 }, (_, index) =>
+              typeof targetNode.style.item === "function"
+                ? targetNode.style.item(index)
+                : targetNode.style[index]
+            ).filter(Boolean)
+          );
+
+    sourceStyleEntries.forEach(([propertyName, propertyValue]) => {
+      targetNode.style.setProperty(propertyName, propertyValue);
+      staleStyleNames.delete(propertyName);
+    });
+
+    staleStyleNames.forEach((propertyName) => {
+      targetNode.style.removeProperty(propertyName);
+    });
+  }
+
+  return targetNode;
+}
+
 function resolveTargetFamily(target) {
   if (target?.ring === "D" || target?.ring === "T") {
     return "outer";
@@ -590,9 +683,9 @@ export function renderCheckoutTargets(options = {}) {
   if (!overlay) {
     return;
   }
-  clearOverlay(overlay);
 
   if (!checkoutTargets.length) {
+    clearOverlay(overlay);
     return;
   }
 
@@ -617,6 +710,11 @@ export function renderCheckoutTargets(options = {}) {
     }))
     .sort((left, right) => right.targetIndex - left.targetIndex);
 
+  const existingNodesByKey = new Map(
+    Array.from(overlay.children || []).map((node) => [buildRenderableNodeKey(node), node])
+  );
+  const nextNodes = [];
+
   renderEntries.forEach(({ target, targetIndex, priorityProfile }) => {
     const key = `${target?.ring || ""}:${Number.isFinite(target?.value) ? target.value : ""}`;
     if (!key) {
@@ -632,12 +730,43 @@ export function renderCheckoutTargets(options = {}) {
     shapes.forEach((shapeNode) => {
       applyTargetMetadata(shapeNode, target, styleProfile);
       applyShapeStyle(shapeNode, visualConfig, styleProfile);
-      overlay.appendChild(shapeNode);
+      const shapeKey = buildRenderableNodeKey(shapeNode);
+      const reusableShapeNode = existingNodesByKey.get(shapeKey);
+      if (reusableShapeNode && reusableShapeNode.tagName === shapeNode.tagName) {
+        syncRenderableNode(reusableShapeNode, shapeNode);
+        existingNodesByKey.delete(shapeKey);
+        nextNodes.push(reusableShapeNode);
+      } else {
+        nextNodes.push(shapeNode);
+      }
 
       const outline = cloneShapeAsOutline(shapeNode, ownerDocument);
       applyTargetMetadata(outline, target, styleProfile);
       applyOutlineStyle(outline, visualConfig, styleProfile);
-      overlay.appendChild(outline);
+      const outlineKey = buildRenderableNodeKey(outline);
+      const reusableOutlineNode = existingNodesByKey.get(outlineKey);
+      if (reusableOutlineNode && reusableOutlineNode.tagName === outline.tagName) {
+        syncRenderableNode(reusableOutlineNode, outline);
+        existingNodesByKey.delete(outlineKey);
+        nextNodes.push(reusableOutlineNode);
+      } else {
+        nextNodes.push(outline);
+      }
     });
+  });
+
+  Array.from(overlay.children || []).forEach((childNode) => {
+    if (nextNodes.includes(childNode)) {
+      return;
+    }
+    overlay.removeChild(childNode);
+  });
+
+  nextNodes.forEach((node, index) => {
+    const referenceNode = overlay.children[index] || null;
+    if (referenceNode === node) {
+      return;
+    }
+    overlay.insertBefore(node, referenceNode);
   });
 }
