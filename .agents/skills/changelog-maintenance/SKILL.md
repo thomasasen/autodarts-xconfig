@@ -1,6 +1,6 @@
 ---
 name: changelog-maintenance
-description: Curate, update, or audit `CHANGELOG.md` in autodarts-xconfig. Use when changelog entries, release sections, versioned history, compare links, or changelog consistency need work, especially alongside shipped or maintainer-visible release workflow changes. Do not use for pure code changes with no changelog impact.
+description: Curate, update, or audit `CHANGELOG.md` in autodarts-xconfig. Use when the task explicitly includes changelog editing, release notes, compare-link maintenance, or changelog consistency checks. Do not use for ordinary code changes unless changelog work is in scope.
 ---
 
 # Goal

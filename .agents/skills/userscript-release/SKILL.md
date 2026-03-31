@@ -1,6 +1,6 @@
 ---
 name: userscript-release
-description: Prepare autodarts-xconfig shipped-source releases. Use when shipped behavior or release metadata changed and the work needs version bump timing, userscript rebuild, generated artifact refresh, local version parity checks, changelog coordination, or clear separation of local, committed, published, and installed userscript state.
+description: Prepare or finalize an autodarts-xconfig release. Use only when the task explicitly includes release, finalize, ship, package, publish, a version bump, `dist/` refresh, or publication-state verification.
 ---
 
 # Goal

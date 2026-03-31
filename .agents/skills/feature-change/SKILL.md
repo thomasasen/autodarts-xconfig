@@ -1,6 +1,6 @@
 ---
 name: feature-change
-description: Implement or refactor shipped feature behavior in autodarts-xconfig. Use for config behavior, runtime logic, UI behavior, effects, themes, selectors, observers, mount logic, or module wiring when no narrower domain skill is a better fit. Do not use for release-only work, docs-only edits, or `.oldrepo` parity recovery.
+description: Implement or refactor source-layer behavior in autodarts-xconfig when no narrower domain skill fits. Use for config behavior, runtime logic, UI behavior, effects, themes, selectors, observers, mount logic, or module wiring. Do not use for docs/guidance-only, test-only, release-only, or `.oldrepo` parity work.
 ---
 
 # Goal

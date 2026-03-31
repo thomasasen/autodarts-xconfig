@@ -1,6 +1,6 @@
 ---
 name: repo-validation
-description: Choose and report the right validation scope for autodarts-xconfig changes. Use after code, config, DOM, startup/update, release, docs, or repository-instruction changes to decide which checks must run, what residual risk remains, and how to report results truthfully.
+description: Choose and report the smallest sufficient validation after actual autodarts-xconfig changes. Use when the right local checks are not obvious or when the handoff needs explicit validation and residual-risk reporting.
 ---
 
 # Goal
@@ -72,11 +72,11 @@ If shipped-source packaging or publication truth is in scope, also use `$userscr
 
 # Selection rules
 
-- if the change affects shipped behavior, default to `npm run verify`
-- if the change affects `src/`, `loader/`, `scripts/`, or bundled assets, assume release-sensitive validation until proven otherwise
+- if the change is docs, guidance, or repo-instruction only, do not escalate to runtime validation unless a changed file format or referenced command needs a real local check
+- if the change affects behavior, config, runtime, DOM, startup, update, or cache handling, run the narrowest repo commands that prove that scope
+- use release validation only when the task explicitly includes release, finalize, ship, package, publish, version bump, `dist/` refresh, or publication-state work
 - if the change is startup, update, or version-sensitive, review the three regression anchors explicitly even when only one file changed
 - if only docs or guidance changed, do not claim runtime validation proves the instructions are correct
-- if work happened across multiple agents, branches, or worktrees, validate the integrated repository state rather than relying on partial side results alone
 
 # Reporting requirements
 
@@ -87,8 +87,6 @@ Every validation summary must state:
 - which tests were added or updated, if any
 - what could not be executed and why
 - what residual risk remains
-- whether any side work in other agents, branches, or worktrees is still unmerged
-- whether the task left local file changes that need a commit message in the final handoff
 
 # Output requirements
 
