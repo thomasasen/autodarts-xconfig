@@ -91,6 +91,20 @@ test("resolveAuthoritativeCheckoutRoute extends a valid visible prefix with a fa
   assert.equal(resolved.visibleSegmentsUsed, 1);
 });
 
+test("resolveAuthoritativeCheckoutRoute keeps the first visible setup segment when no finish route remains", () => {
+  const resolved = resolveAuthoritativeCheckoutRoute({
+    routeSegments: ["T20", "S10"],
+    activeScore: 102,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved.routeSegments, ["T20"]);
+  assert.equal(resolved.selectionSource, "visible-setup-segment");
+  assert.equal(resolved.visibleSegmentsUsed, 1);
+});
+
 test("checkout-score-pulse score logic respects the active out mode", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";

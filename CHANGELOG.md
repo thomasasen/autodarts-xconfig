@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.102] - 2026-03-31
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` hält unter `theme-x01` das nächste sinnvolle Feld jetzt auch dann direkt am Board sichtbar, wenn nach einem Setup-Dart keine vollständige Finish-Route mehr übrig bleibt; zugleich wirken `Focus`, `Signal` und `Steady` wieder klar unterscheidbar und sichtbar lebendig statt nahezu statisch.
+  Technik: Die X01-Route-Auflösung behält bei fehlender Finish-Route gezielt das erste plausible sichtbare Setup-Segment als `visible-setup-segment`, die Board-Keyframes nutzen wieder echte Scale-Bewegung für alle drei Presets, und `signal` folgt nun einem ruhigeren Blinkpuls näher am nativen Board-Hinweis; zusätzliche Runtime-Regressionen sichern Setup-Fallback, CSS-Verträge und x01-Verhalten ausdrücklich ab.
+
 ## [2.0.101] - 2026-03-30
 
 ### Fixed
@@ -1073,7 +1080,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.101]: https://github.com/thomasasen/autodarts-xconfig/compare/93aa69d...HEAD
+[2.0.102]: https://github.com/thomasasen/autodarts-xconfig/compare/5bccf6d...HEAD
+[2.0.101]: https://github.com/thomasasen/autodarts-xconfig/compare/93aa69d...5bccf6d
 [2.0.100]: https://github.com/thomasasen/autodarts-xconfig/compare/a9fa2bb...93aa69d
 [2.0.99]: https://github.com/thomasasen/autodarts-xconfig/compare/4b18f03...a9fa2bb
 [2.0.98]: https://github.com/thomasasen/autodarts-xconfig/compare/bd6c654...652863c

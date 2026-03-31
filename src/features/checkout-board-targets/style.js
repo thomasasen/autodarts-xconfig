@@ -44,8 +44,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       base: Object.freeze({
         minOpacity: 0.56,
         maxOpacity: 0.94,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.988,
+        maxScale: 1.046,
         filter: buildDropShadowFilter(3, 9),
         filterMin: buildDropShadowFilter(2, 6),
         filterMax: buildDropShadowFilter(4, 12),
@@ -60,8 +60,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       outer: Object.freeze({
         minOpacity: 0.64,
         maxOpacity: 1,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.985,
+        maxScale: 1.068,
         filter: buildDropShadowFilter(4, 11),
         filterMin: buildDropShadowFilter(3, 8),
         filterMax: buildDropShadowFilter(5, 14),
@@ -76,8 +76,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       bull: Object.freeze({
         minOpacity: 0.76,
         maxOpacity: 1,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.983,
+        maxScale: 1.082,
         filter: buildDropShadowFilter(4, 12),
         filterMin: buildDropShadowFilter(3, 9),
         filterMax: buildDropShadowFilter(6, 15),
@@ -92,7 +92,7 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
     }),
   }),
   signal: Object.freeze({
-    animationMs: 920,
+    animationMs: 840,
     outlineIntensity: Object.freeze({
       strokeAlpha: 0.98,
       baseOpacity: 0.48,
@@ -105,8 +105,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       base: Object.freeze({
         minOpacity: 0.16,
         maxOpacity: 0.98,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.968,
+        maxScale: 1.088,
         filter: buildDropShadowFilter(3, 8),
         filterMin: "none",
         filterMax: buildDropShadowFilter(4, 11),
@@ -121,8 +121,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       outer: Object.freeze({
         minOpacity: 0.24,
         maxOpacity: 1,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.964,
+        maxScale: 1.11,
         filter: buildDropShadowFilter(4, 10),
         filterMin: "none",
         filterMax: buildDropShadowFilter(5, 13),
@@ -137,8 +137,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       bull: Object.freeze({
         minOpacity: 0.3,
         maxOpacity: 1,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.958,
+        maxScale: 1.124,
         filter: buildDropShadowFilter(4, 11),
         filterMin: "none",
         filterMax: buildDropShadowFilter(6, 15),
@@ -166,8 +166,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       base: Object.freeze({
         minOpacity: 0.64,
         maxOpacity: 0.82,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.998,
+        maxScale: 1.018,
         filter: buildDropShadowFilter(2, 7),
         filterMin: buildDropShadowFilter(2, 6),
         filterMax: buildDropShadowFilter(3, 9),
@@ -180,8 +180,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       outer: Object.freeze({
         minOpacity: 0.7,
         maxOpacity: 0.88,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.997,
+        maxScale: 1.024,
         filter: buildDropShadowFilter(3, 8),
         filterMin: buildDropShadowFilter(2, 7),
         filterMax: buildDropShadowFilter(4, 10),
@@ -196,8 +196,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       bull: Object.freeze({
         minOpacity: 0.68,
         maxOpacity: 0.86,
-        minScale: 1,
-        maxScale: 1,
+        minScale: 0.998,
+        maxScale: 1.022,
         filter: buildDropShadowFilter(2, 7),
         filterMin: buildDropShadowFilter(2, 6),
         filterMax: buildDropShadowFilter(3, 9),
@@ -287,10 +287,11 @@ export function buildStyleText() {
   stroke-width: var(--ad-ext-target-stroke-width);
   transform-box: fill-box;
   transform-origin: center;
+  transform: scale(var(--ad-ext-target-pulse-min-scale, 1));
   opacity: 0.82;
   filter: var(--ad-ext-target-filter, none);
   pointer-events: none;
-  will-change: opacity, filter;
+  will-change: opacity, filter, transform;
 }
 
 .${OUTLINE_CLASS} {
@@ -311,7 +312,7 @@ export function buildStyleText() {
 }
 
 .${EFFECT_CLASSES.signal} {
-  animation: ad-ext-checkout-signal var(--ad-ext-target-duration) steps(1, end) infinite;
+  animation: ad-ext-checkout-signal var(--ad-ext-target-duration) ease-in-out infinite;
   animation-delay: var(--ad-ext-target-animation-delay, 0ms);
 }
 
@@ -326,28 +327,26 @@ export function buildStyleText() {
   100% {
     opacity: var(--ad-ext-target-pulse-min-opacity, 0.46);
     filter: var(--ad-ext-target-glow-filter-min, none);
+    transform: scale(var(--ad-ext-target-pulse-min-scale, 1));
   }
   50% {
     opacity: var(--ad-ext-target-pulse-max-opacity, 0.9);
     filter: var(--ad-ext-target-glow-filter-max, var(--ad-ext-target-filter, none));
+    transform: scale(var(--ad-ext-target-pulse-max-scale, 1));
   }
 }
 
 @keyframes ad-ext-checkout-signal {
   0%,
-  18% {
-    opacity: var(--ad-ext-target-pulse-min-opacity, 0.12);
-    filter: var(--ad-ext-target-blink-filter-min, none);
-  }
-  24%,
-  58% {
-    opacity: var(--ad-ext-target-pulse-max-opacity, 1);
-    filter: var(--ad-ext-target-blink-filter-max, none);
-  }
-  64%,
   100% {
     opacity: var(--ad-ext-target-pulse-min-opacity, 0.12);
     filter: var(--ad-ext-target-blink-filter-min, none);
+    transform: scale(var(--ad-ext-target-pulse-min-scale, 1));
+  }
+  50% {
+    opacity: var(--ad-ext-target-pulse-max-opacity, 1);
+    filter: var(--ad-ext-target-blink-filter-max, none);
+    transform: scale(var(--ad-ext-target-pulse-max-scale, 1));
   }
 }
 
@@ -356,10 +355,12 @@ export function buildStyleText() {
   100% {
     opacity: var(--ad-ext-target-pulse-min-opacity, 0.64);
     filter: var(--ad-ext-target-glow-filter-min, none);
+    transform: scale(var(--ad-ext-target-pulse-min-scale, 1));
   }
   50% {
     opacity: var(--ad-ext-target-pulse-max-opacity, 0.82);
     filter: var(--ad-ext-target-glow-filter-max, var(--ad-ext-target-filter, none));
+    transform: scale(var(--ad-ext-target-pulse-max-scale, 1));
   }
 }
 

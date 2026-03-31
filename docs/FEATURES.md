@@ -260,19 +260,19 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 
 - Gilt für: `X01`
 - Kurz: Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
-- Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode und zeigt ansonsten eine sinnvolle scorebasierte Route. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.
+- Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.
 - `Darstellung`: Wählt die visuelle Darstellung der markierten Segmente.
-  - `Focus`: Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig, klar und dauerhaft lesbar im Fokus.
-  - `Signal`: Diese Darstellung orientiert sich am sauberen nativen Blinkgefühl und setzt das Ziel mit kurzen, klaren Sichtbarkeitssprüngen in Szene.
-  - `Steady`: Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis sichtbar sein soll.
+  - `Focus`: Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig und klar im Fokus und ergänzt Helligkeit, Halo und Kontur um eine kleine, kontrollierte Skalierung.
+  - `Signal`: Diese Darstellung orientiert sich am nativen Blinkgefühl und setzt das Ziel mit klaren Helligkeitswechseln, leichtem Wachstum und sauberem Halo in Szene.
+  - `Steady`: Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis mit nur minimaler Bewegung sichtbar sein soll.
 - `Single-Ring`: Bestimmt, welche Single-Ringe bei Single-Zielen markiert werden.
   - `Innen`: Bei Single-Zielen wird nur der innere Single-Ring sichtbar markiert. Dadurch bleibt die Zielmarkierung schmaler und konzentriert sich stärker auf den innenliegenden Bereich des Segments.
   - `Außen`: Diese Einstellung zeichnet bei Single-Zielen nur den äußeren Single-Ring nach. Das ist sinnvoll, wenn du die Markierung näher an der Außenzone des Boards sehen möchtest.
   - `Beide`: Bei Single-Zielen werden sowohl der innere als auch der äußere Single-Ring des betreffenden Segments markiert. Das ist die flächigste und am leichtesten erkennbare Variante.
 - `Zielauswahl`: Legt fest, welcher Teil der autoritativen Checkout-Route am Board markiert wird.
-  - `Nächstes Feld`: Markiert unter `180` genau das nächste sinnvolle Feld der validierten oder synthetisch ergänzten Checkout-Route.
-  - `Alle Felder`: Markiert alle Segmente der autoritativen Checkout-Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt.
-  - `Nur Finish`: Markiert nur das Finish-Segment der autoritativen Checkout-Route.
+  - `Nächstes Feld`: Markiert unter `180` genau das nächste sinnvolle Feld; wenn keine Finish-Route mehr steht, bleibt ein plausibler sichtbarer Setup-Hinweis als nächstes Feld erhalten.
+  - `Alle Felder`: Markiert alle Segmente der validierten beziehungsweise scorebasiert ergänzten Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt.
+  - `Nur Finish`: Markiert nur das Finish-Segment der validierten beziehungsweise scorebasiert ergänzten Route.
 - `Farbthema`: Passt die Farbe der Board-Markierungen an.
   - `Violett`: Diese Palette nutzt ein klares Violett für Füllung und Kontur der Checkout-Ziele. Dadurch wirkt die Markierung deutlich futuristischer und hebt sich stark von den Standardfarben des Boards ab.
   - `Cyan`: Diese Farbpalette färbt die Ziele in ein kühles Cyan und erzeugt damit einen sauberen, technischen Look. Auf dunklen Board-Bereichen wirkt die Markierung sehr klar und modern.

@@ -296,6 +296,33 @@ function validateVisibleCheckoutRoute(routeSegments = [], options = {}) {
   };
 }
 
+function resolveVisibleSetupSegment(routeSegments = [], options = {}) {
+  const normalizedRouteSegments = normalizeRouteSegments(routeSegments, options.x01Rules);
+  const firstSegment = normalizedRouteSegments[0] || "";
+  const activeScore = Number(options.activeScore);
+  const outMode = String(options.outMode || "");
+  const x01Rules = options.x01Rules;
+
+  if (
+    !firstSegment ||
+    !Number.isFinite(activeScore) ||
+    typeof x01Rules?.evaluateThrowOutcome !== "function"
+  ) {
+    return "";
+  }
+
+  const outcome = x01Rules.evaluateThrowOutcome({
+    scoreBefore: activeScore,
+    segmentName: firstSegment,
+    outMode,
+  });
+  if (!outcome || outcome.isBust) {
+    return "";
+  }
+
+  return firstSegment;
+}
+
 export function resolveAuthoritativeCheckoutRoute(options = {}) {
   const routeSegments = normalizeRouteSegments(options.routeSegments, options.x01Rules);
   const activeScore = Number(options.activeScore);
@@ -337,6 +364,19 @@ export function resolveAuthoritativeCheckoutRoute(options = {}) {
       routeSegments: scoreRoute.slice(),
       selectionSource: "score-route",
       visibleSegmentsUsed: 0,
+    };
+  }
+
+  const visibleSetupSegment = resolveVisibleSetupSegment(routeSegments, {
+    activeScore,
+    outMode,
+    x01Rules,
+  });
+  if (visibleSetupSegment) {
+    return {
+      routeSegments: [visibleSetupSegment],
+      selectionSource: "visible-setup-segment",
+      visibleSegmentsUsed: 1,
     };
   }
 

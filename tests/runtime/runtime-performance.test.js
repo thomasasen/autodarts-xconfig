@@ -12,6 +12,7 @@ import { initializeCricketHighlighter } from "../../src/features/cricket-highlig
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
 import { initializeTripleDoubleBullHits } from "../../src/features/triple-double-bull-hits/index.js";
 import {
+  buildStyleText,
   EFFECT_CLASSES,
   OUTLINE_CLASS,
   OVERLAY_ID as CHECKOUT_OVERLAY_ID,
@@ -254,7 +255,8 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
     parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.56
   );
-  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.988");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.046");
   assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
     parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
@@ -296,7 +298,8 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
     parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.64
   );
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.985");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.068");
   assert.match(
     outerShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
@@ -341,7 +344,8 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
     parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.76
   );
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.983");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.082");
   assert.match(
     bullShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
@@ -528,7 +532,8 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "4.85px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.6799999999999999");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.998");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.022");
   assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.48");
 
@@ -564,7 +569,8 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
     parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.16
   );
-  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.968");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
   assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
     parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
@@ -603,7 +609,8 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
     parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.24
   );
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.964");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.11");
   assert.match(outerShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
     parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
@@ -642,6 +649,8 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
     parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.3
   );
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.958");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.124");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-opacity"), "1");
   assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
@@ -651,6 +660,34 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.ok(
     parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
       parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+  );
+});
+
+test("checkout-board-targets style text animates scale and keeps signal close to the native board blink", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    new RegExp(
+      `\\.${EFFECT_CLASSES.signal}\\s*\\{[^}]*animation:\\s*ad-ext-checkout-signal\\s+var\\(--ad-ext-target-duration\\)\\s+ease-in-out\\s+infinite;`,
+      "s"
+    )
+  );
+  assert.equal(css.includes("steps(1, end)"), false);
+  assert.match(
+    css,
+    /@keyframes ad-ext-checkout-focus\s*\{[\s\S]*transform:\s*scale\(var\(--ad-ext-target-pulse-max-scale,\s*1\)\);/s
+  );
+  assert.match(
+    css,
+    /@keyframes ad-ext-checkout-signal\s*\{[\s\S]*0%,\s*100%\s*\{[\s\S]*50%\s*\{/s
+  );
+  assert.match(
+    css,
+    new RegExp(
+      `\\.${TARGET_CLASS}\\s*\\{[^}]*will-change:\\s*opacity,\\s*filter,\\s*transform;`,
+      "s"
+    )
   );
 });
 
@@ -918,6 +955,89 @@ test("checkout-board-targets next mode keeps the visible route-first target when
     assert.deepEqual(logs[0][1]?.routeSegments, ["S25", "D18"]);
     assert.deepEqual(logs[0][1]?.selectedSegments, ["S25"]);
     assert.deepEqual(logs[0][1]?.targets, [{ ring: "SB", value: null }]);
+  } finally {
+    cleanup();
+  }
+});
+
+test("checkout-board-targets next mode keeps the visible setup target when no finish route remains", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "102";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "S10";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  appendBoardFixture(documentRef);
+
+  const logs = [];
+  const warnings = [];
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 102,
+      getOutMode: () => "Double Out",
+      getActiveThrows: () => [{ segment: { name: "S19" } }],
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          visualPreset: "steady",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "violet",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        warnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    assert.equal(warnings.length, 0);
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0][1]?.status, "render");
+    assert.equal(logs[0][1]?.selectionSource, "visible-setup-segment");
+    assert.deepEqual(logs[0][1]?.routeSegments, ["T20", "S10"]);
+    assert.deepEqual(logs[0][1]?.selectedSegments, ["T20"]);
+    assert.deepEqual(logs[0][1]?.targets, [{ ring: "T", value: 20 }]);
   } finally {
     cleanup();
   }

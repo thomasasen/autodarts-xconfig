@@ -288,7 +288,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.",
     visualDescription:
-      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode und zeigt ansonsten eine sinnvolle scorebasierte Route. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.",
+      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.",
     usefulWhen:
       "Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.",
     images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
@@ -305,7 +305,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       targetSelectionMode: fieldCopy(
         "Legt fest, ob das nächste sinnvolle Feld, die ganze Route oder nur das Finish-Feld markiert werden.",
-        "Steuert, wie viele Segmente aus der autoritativen Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert unter `180` immer genau den nächsten sinnvollen Schritt, `Alle Felder` zeigt die gesamte validierte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
+        "Steuert, wie viele Segmente aus der autoritativen Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert unter `180` immer genau den nächsten sinnvollen Schritt; wenn keine Finish-Route mehr steht, bleibt ein plausibler sichtbarer Setup-Hinweis als nächstes Feld erhalten. `Alle Felder` zeigt die gesamte validierte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
         "Legt fest, welcher Teil der autoritativen Checkout-Route am Board markiert wird."
       ),
       colorTheme: fieldCopy(
@@ -1120,18 +1120,18 @@ const CHECKOUT_SCORE_TRIGGER_OPTION_COPY = deepFreeze({
 const BOARD_TARGET_VISUAL_PRESET_OPTION_COPY = deepFreeze({
   focus: optionCopy(
     "Betont das Ziel ruhig und fokussiert mit Kontur, Opazität und sanftem Halo.",
-    "Das Segment bleibt stabil markiert, ohne geometrisch zu wachsen. Die Wirkung sitzt auf Helligkeit, Kontur und einem weichen Leuchtsaum und ist als neue Standarddarstellung gedacht.",
-    "Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig, klar und dauerhaft lesbar im Fokus."
+    "Das Segment bleibt ruhig und klar markiert, atmet aber leicht über Opazität, Kontur, Halo und eine kleine Skalierung. Dadurch wirkt die Darstellung lebendiger, ohne unruhig zu werden.",
+    "Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig und klar im Fokus und ergänzt Helligkeit, Halo und Kontur um eine kleine, kontrollierte Skalierung."
   ),
   signal: optionCopy(
     "Arbeitet mit einem klaren, sauberen Blinksignal ähnlich zum nativen Board-Hinweis.",
-    "Die Markierung springt in kurzen, klaren On/Off-Phasen zwischen gedimmt und sichtbar, ohne zusätzliche Skalierung. Das wirkt direkter als `Focus`, bleibt aber sauberer als ein schwerer Pulse-Look.",
-    "Diese Darstellung orientiert sich am sauberen nativen Blinkgefühl und setzt das Ziel mit kurzen, klaren Sichtbarkeitssprüngen in Szene."
+    "Die Markierung folgt einem sauberen Blinkpuls ähnlich zum nativen Board-Hinweis und kombiniert den Helligkeitswechsel mit leichter Skalierung und Glow. Das wirkt direkter als `Focus`, bleibt aber kontrollierter als ein schwerer Pulse-Look.",
+    "Diese Darstellung orientiert sich am nativen Blinkgefühl und setzt das Ziel mit klaren Helligkeitswechseln, leichtem Wachstum und sauberem Halo in Szene."
   ),
   steady: optionCopy(
     "Hält das Ziel fast konstant sichtbar und verändert nur Glow und Kontur leicht.",
-    "Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit und Halo. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.",
-    "Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis sichtbar sein soll."
+    "Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit, Halo und eine sehr kleine Skalierung. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.",
+    "Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis mit nur minimaler Bewegung sichtbar sein soll."
   ),
 });
 
@@ -1176,17 +1176,17 @@ const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({
   next: optionCopy(
     "Markiert genau das nächste sinnvolle Feld der validierten Checkout-Route.",
     "Unter `180` wird immer genau das Segment hervorgehoben, das als nächster sinnvoller Dart aus Score, Out-Mode und plausibler sichtbarer Route hervorgeht. Fehlt eine brauchbare sichtbare Route, wird sie scorebasiert sinnvoll ergänzt oder ersetzt.",
-    "Markiert unter `180` genau das nächste sinnvolle Feld der validierten oder synthetisch ergänzten Checkout-Route."
+    "Markiert unter `180` genau das nächste sinnvolle Feld; wenn keine Finish-Route mehr steht, bleibt ein plausibler sichtbarer Setup-Hinweis als nächstes Feld erhalten."
   ),
   all: optionCopy(
     "Markiert alle Felder der autoritativen Checkout-Route gleichzeitig.",
     "Die komplette validierte beziehungsweise scorebasiert ergänzte Route wird am Board sichtbar gemacht. Das zuerst zu spielende Segment bleibt dabei klar am stärksten betont, Folgeziele laufen bewusst ruhiger mit.",
-    "Markiert alle Segmente der autoritativen Checkout-Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt."
+    "Markiert alle Segmente der validierten beziehungsweise scorebasiert ergänzten Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt."
   ),
   finish: optionCopy(
     "Markiert nur das abschließende Finish-Feld der autoritativen Route.",
     "Es wird ausschließlich das Segment hervorgehoben, das die validierte oder scorebasiert ergänzte Route tatsächlich beendet. Frühere Setup-Felder bleiben unmarkiert.",
-    "Markiert nur das Finish-Segment der autoritativen Checkout-Route."
+    "Markiert nur das Finish-Segment der validierten beziehungsweise scorebasiert ergänzten Route."
   ),
 });
 
