@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.106] - 2026-03-31
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` liest sichtbar formatierte Checkout-Karten wie `60 / T20` und `14 / S14` jetzt wieder stabil korrekt aus, sodass bei `Alle Felder` im laufenden Match die echten Routenfelder am Board markiert bleiben statt fälschlich auf eine scorebasierte Ersatzroute wie `T20` plus `T18` umzuschalten.
+  Technik: Die X01-Route-Erkennung bevorzugt für `.suggestion`-Karten jetzt robustere Textquellen wie `innerText` und notfalls einzelne Leaf-Texte statt nur des verketteten Wrapper-`textContent`; zusätzliche Runtime-Regressionen sichern sowohl den Live-Fall mit kollabiertem `60T20`/`14S14` als auch den Fallback über verschachtelte Textknoten ausdrücklich ab.
+
 ## [2.0.105] - 2026-03-31
 
 ### Fixed
@@ -1103,7 +1110,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.105]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...HEAD
+[2.0.106]: https://github.com/thomasasen/autodarts-xconfig/compare/d632f40...HEAD
+[2.0.105]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...d632f40
 [2.0.104]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49
 [2.0.103]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49
 [2.0.102]: https://github.com/thomasasen/autodarts-xconfig/compare/5bccf6d...aa62402

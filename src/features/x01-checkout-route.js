@@ -53,6 +53,57 @@ function parseExplicitRouteSegments(text, x01Rules) {
     .filter(Boolean);
 }
 
+function normalizeRouteTextCandidate(value) {
+  return String(value || "").trim();
+}
+
+function getSuggestionLeafTextValues(node) {
+  if (!node || typeof node.querySelectorAll !== "function") {
+    return [];
+  }
+
+  return Array.from(node.querySelectorAll("*"))
+    .filter((element) => {
+      if (!element || typeof element.querySelectorAll !== "function") {
+        return false;
+      }
+      return element.querySelectorAll("*").length === 0;
+    })
+    .map((element) => normalizeRouteTextCandidate(element.textContent))
+    .filter(Boolean);
+}
+
+function resolveSuggestionRouteText(node, x01Rules) {
+  const candidateValues = [
+    normalizeRouteTextCandidate(node?.innerText),
+    normalizeRouteTextCandidate(node?.textContent),
+    ...getSuggestionLeafTextValues(node),
+  ];
+  const seenCandidates = new Set();
+  const uniqueCandidates = candidateValues.filter((candidate) => {
+    if (!candidate || seenCandidates.has(candidate)) {
+      return false;
+    }
+    seenCandidates.add(candidate);
+    return true;
+  });
+
+  for (const candidate of uniqueCandidates) {
+    const parsedSegments = parseExplicitRouteSegments(candidate, x01Rules);
+    if (parsedSegments.length) {
+      return {
+        text: candidate,
+        segments: parsedSegments,
+      };
+    }
+  }
+
+  return {
+    text: uniqueCandidates[0] || "",
+    segments: [],
+  };
+}
+
 function getStableNodeIndex(node, allNodes) {
   const index = Array.isArray(allNodes) ? allNodes.indexOf(node) : -1;
   return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
@@ -77,8 +128,7 @@ function compareSuggestionNodes(left, right) {
 }
 
 function toRouteEntry(node, allNodes, x01Rules) {
-  const text = String(node?.textContent || "").trim();
-  const segments = parseExplicitRouteSegments(text, x01Rules);
+  const { text, segments } = resolveSuggestionRouteText(node, x01Rules);
   if (!segments.length) {
     return null;
   }

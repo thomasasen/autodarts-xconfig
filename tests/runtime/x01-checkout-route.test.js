@@ -121,3 +121,41 @@ test("x01 checkout route exposes single-segment suggestions for setup fallback o
   assert.equal(getSingleSuggestionSegmentFromRoute(route), "T19");
   assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "");
 });
+
+test("x01 checkout route reads styled suggestion cards when textContent collapses score and segment", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "60T20";
+  documentRef.suggestionElement.innerText = "60\nT20";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+
+  const secondSuggestion = appendSuggestion(documentRef, "14S14", 500, 10);
+  secondSuggestion.innerText = "14\nS14";
+
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["T20", "S14"]);
+  assert.deepEqual(mapRouteSegmentsToBoardTargets(route, x01Rules), [
+    { ring: "T", value: 20 },
+    { ring: "S", value: 14 },
+  ]);
+});
+
+test("x01 checkout route falls back to leaf text when wrapper text is collapsed", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "14S14";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+  documentRef.suggestionElement.replaceChildren();
+
+  const scoreNode = documentRef.createElement("div");
+  scoreNode.textContent = "14";
+  const segmentNode = documentRef.createElement("div");
+  segmentNode.textContent = "S14";
+  documentRef.suggestionElement.appendChild(scoreNode);
+  documentRef.suggestionElement.appendChild(segmentNode);
+
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["S14"]);
+});
