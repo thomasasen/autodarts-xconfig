@@ -323,6 +323,100 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
   assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
 });
 
+test("checkout-board-targets keeps Single-Ring and Segmentstil combinations distinct for single targets", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "500");
+  group.appendChild(boardCircle);
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  const combinations = [
+    {
+      singleRing: "inner",
+      segmentStyle: "surface-outline",
+      expectedShapeCount: 1,
+      expectedOutlineCount: 1,
+    },
+    {
+      singleRing: "outer",
+      segmentStyle: "surface-outline",
+      expectedShapeCount: 1,
+      expectedOutlineCount: 1,
+    },
+    {
+      singleRing: "both",
+      segmentStyle: "surface-outline",
+      expectedShapeCount: 2,
+      expectedOutlineCount: 2,
+    },
+    {
+      singleRing: "both",
+      segmentStyle: "surface-only",
+      expectedShapeCount: 2,
+      expectedOutlineCount: 0,
+    },
+  ];
+
+  const distinctShapePathsByCombo = new Map();
+
+  combinations.forEach((combination) => {
+    const visualConfig = resolveBoardTargetVisualConfig({
+      visualPreset: "focus",
+      singleRing: combination.singleRing,
+      segmentStyle: combination.segmentStyle,
+      colorTheme: "cyan",
+    });
+
+    renderCheckoutTargets({
+      board: {
+        svg,
+        group,
+        radius: 500,
+      },
+      checkoutTargets: [{ ring: "S", value: 10 }],
+      visualConfig,
+    });
+
+    const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+    assert.ok(overlay);
+
+    const shapeNodes = Array.from(overlay.querySelectorAll(`.${TARGET_CLASS}`));
+    const outlineNodes = Array.from(overlay.querySelectorAll(`.${OUTLINE_CLASS}`));
+    const distinctShapePaths = new Set(shapeNodes.map((node) => node.getAttribute("d") || ""));
+
+    assert.equal(shapeNodes.length, combination.expectedShapeCount);
+    assert.equal(outlineNodes.length, combination.expectedOutlineCount);
+    assert.equal(distinctShapePaths.size, combination.expectedShapeCount);
+
+    distinctShapePathsByCombo.set(
+      `${combination.singleRing}:${combination.segmentStyle}`,
+      distinctShapePaths
+    );
+  });
+
+  const innerPaths = distinctShapePathsByCombo.get("inner:surface-outline");
+  const outerPaths = distinctShapePathsByCombo.get("outer:surface-outline");
+  const bothOutlinedPaths = distinctShapePathsByCombo.get("both:surface-outline");
+  const bothSurfaceOnlyPaths = distinctShapePathsByCombo.get("both:surface-only");
+
+  assert.ok(innerPaths);
+  assert.ok(outerPaths);
+  assert.ok(bothOutlinedPaths);
+  assert.ok(bothSurfaceOnlyPaths);
+  assert.notDeepEqual(Array.from(innerPaths), Array.from(outerPaths));
+  assert.deepEqual(
+    Array.from(bothOutlinedPaths).sort(),
+    Array.from(new Set([...innerPaths, ...outerPaths])).sort()
+  );
+  assert.deepEqual(
+    Array.from(bothSurfaceOnlyPaths).sort(),
+    Array.from(bothOutlinedPaths).sort()
+  );
+});
+
 test("checkout-board-targets keeps focus targets readable across single, outer and bull families", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");

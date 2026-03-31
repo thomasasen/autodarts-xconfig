@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.105] - 2026-03-31
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` übernimmt geänderte Einstellungen wie `Single-Ring: Beide` und `Nur Fläche` jetzt auch in bereits geöffneten Match-Tabs zuverlässig, sodass die Board-Markierung nicht erst nach einem manuellen Reload korrekt auf beide Single-Ringe umspringt.
+  Technik: Der Tampermonkey-Runtime hört jetzt auf `storage`-Änderungen des persistierten xConfig-Status, lädt die aktuelle Konfiguration tabübergreifend nach und remountet betroffene Features auf Basis des gespeicherten Zustands; zusätzliche Runtime-Regressionen sichern sowohl den Cross-Tab-Sync als auch die Render-Kombinationen `singleRing` x `segmentStyle` für Single-Ziele ausdrücklich ab.
+
 ## [2.0.104] - 2026-03-31
 
 ### Fixed
@@ -1089,7 +1096,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.104]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...HEAD
+[2.0.105]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...HEAD
+[2.0.104]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49
 [2.0.103]: https://github.com/thomasasen/autodarts-xconfig/compare/aa62402...1a0bb49
 [2.0.102]: https://github.com/thomasasen/autodarts-xconfig/compare/5bccf6d...aa62402
 [2.0.101]: https://github.com/thomasasen/autodarts-xconfig/compare/93aa69d...5bccf6d

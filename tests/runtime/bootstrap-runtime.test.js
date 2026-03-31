@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
-import { FakeStorage, FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { FakeEvent, FakeStorage, FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -168,6 +168,62 @@ test("runtime public config API persists updates and survives feature toggles", 
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
 
   runtime.stop();
+});
+
+test("runtime syncs persisted config changes from another window via storage events", async () => {
+  const localStorage = new FakeStorage();
+  const firstDocument = new FakeDocument();
+  const secondDocument = new FakeDocument();
+  const firstWindow = createFakeWindow({ documentRef: firstDocument, localStorage });
+  const secondWindow = createFakeWindow({ documentRef: secondDocument, localStorage });
+
+  const firstRuntime = await initializeTampermonkeyRuntime({
+    windowRef: firstWindow,
+    documentRef: firstDocument,
+  });
+  const secondRuntime = await initializeTampermonkeyRuntime({
+    windowRef: secondWindow,
+    documentRef: secondDocument,
+  });
+
+  await firstRuntime.saveConfig({
+    featureToggles: {
+      checkoutBoardTargets: true,
+    },
+    features: {
+      checkoutBoardTargets: {
+        enabled: true,
+        segmentStyle: "surface-only",
+        singleRing: "both",
+        targetSelectionMode: "all",
+        colorTheme: "cyan",
+      },
+    },
+  });
+
+  const storageEvent = new FakeEvent("storage", { bubbles: false, cancelable: false });
+  storageEvent.key = CONFIG_STORAGE_KEY;
+  storageEvent.newValue = localStorage.getItem(CONFIG_STORAGE_KEY);
+  storageEvent.storageArea = localStorage;
+  secondWindow.dispatchEvent(storageEvent);
+
+  assert.equal(
+    await waitFor(() => {
+      const snapshot = secondRuntime.getSnapshot();
+      const feature = snapshot.features["checkout-board-targets"];
+      return (
+        feature?.enabled === true &&
+        feature?.config?.segmentStyle === "surface-only" &&
+        feature?.config?.singleRing === "both" &&
+        feature?.config?.targetSelectionMode === "all" &&
+        feature?.config?.colorTheme === "cyan"
+      );
+    }),
+    true
+  );
+
+  firstRuntime.stop();
+  secondRuntime.stop();
 });
 
 test("runtime listFeatures exposes the full migrated feature catalog", async () => {

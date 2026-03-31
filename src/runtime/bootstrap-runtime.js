@@ -1,4 +1,8 @@
-import { ConfigPersistenceError, createConfigStore } from "../config/config-store.js";
+import {
+  CONFIG_STORAGE_KEY,
+  ConfigPersistenceError,
+  createConfigStore,
+} from "../config/config-store.js";
 import { setNestedValue, splitFeaturePath } from "../config/feature-path-utils.js";
 import { createBootstrap } from "../core/bootstrap.js";
 import { createRecommendedRuntimeConfig } from "../config/runtime-config.js";
@@ -61,12 +65,13 @@ export async function initializeTampermonkeyRuntime(options = {}) {
   }
 
   const runtimePromise = (async function initializeRuntimeInternal() {
+    const localStorageRef =
+      options.localStorageRef ||
+      windowRef?.localStorage ||
+      (typeof localStorage !== "undefined" ? localStorage : null);
     const configStore = createConfigStore({
       windowRef,
-      localStorageRef:
-        options.localStorageRef ||
-        windowRef?.localStorage ||
-        (typeof localStorage !== "undefined" ? localStorage : null),
+      localStorageRef,
       gmGetValue:
         options.gmGetValue ||
         (typeof GM_getValue === "function" ? GM_getValue : null),
@@ -101,6 +106,53 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       config: initialConfig,
       featureDefinitions: featureRegistry.getDefinitions(),
     });
+    let lastConfigStorageValue =
+      localStorageRef && typeof localStorageRef.getItem === "function"
+        ? localStorageRef.getItem(CONFIG_STORAGE_KEY)
+        : null;
+
+    function rememberStoredConfigSnapshot() {
+      if (!localStorageRef || typeof localStorageRef.getItem !== "function") {
+        lastConfigStorageValue = null;
+        return;
+      }
+      lastConfigStorageValue = localStorageRef.getItem(CONFIG_STORAGE_KEY);
+    }
+
+    async function syncRuntimeFromStoredConfig() {
+      if (!localStorageRef || typeof localStorageRef.getItem !== "function") {
+        return runtime.getSnapshot();
+      }
+
+      const nextStoredValue = localStorageRef.getItem(CONFIG_STORAGE_KEY);
+      if (nextStoredValue === lastConfigStorageValue) {
+        return runtime.getSnapshot();
+      }
+
+      lastConfigStorageValue = nextStoredValue;
+      const nextConfig = await configStore.load();
+      runtime.updateConfig(nextConfig);
+      return runtime.getSnapshot();
+    }
+
+    function onStorageSync(event) {
+      const changedKey =
+        typeof event?.key === "string" || event?.key === null ? event.key : "";
+      if (changedKey && changedKey !== CONFIG_STORAGE_KEY) {
+        return;
+      }
+      if (
+        event?.storageArea &&
+        localStorageRef &&
+        event.storageArea !== localStorageRef
+      ) {
+        return;
+      }
+
+      Promise.resolve(syncRuntimeFromStoredConfig()).catch(() => {
+        // Fail-soft on cross-tab sync; the next manual interaction will still reload config.
+      });
+    }
 
     async function getConfig() {
       return configStore.load();
@@ -108,12 +160,14 @@ export async function initializeTampermonkeyRuntime(options = {}) {
 
     async function saveConfig(partialConfig = {}) {
       const nextConfig = await configStore.update(partialConfig);
+      rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
     }
 
     async function resetConfig() {
       const nextConfig = await configStore.reset();
+      rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
     }
@@ -122,6 +176,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       const currentConfig = await configStore.load();
       const nextConfig = createRecommendedRuntimeConfig(currentConfig);
       await configStore.save(nextConfig);
+      rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
     }
@@ -138,7 +193,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       const configKey = featureState?.configKey || normalizedFeatureRef;
 
       const nextConfig = await configStore.update(buildFeatureEnabledPatch(configKey, enabled));
-
+      rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
     }
@@ -164,6 +219,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         },
       });
 
+      rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
     }
@@ -184,6 +240,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         },
       });
 
+      rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
     }
@@ -205,6 +262,9 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     });
 
     runtime.start();
+    if (windowRef && typeof windowRef.addEventListener === "function") {
+      windowRef.addEventListener("storage", onStorageSync);
+    }
 
     const namespace = getGlobalNamespace(windowRef);
     ensureXConfigUi({
