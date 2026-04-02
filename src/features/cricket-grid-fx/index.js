@@ -1,10 +1,20 @@
 import { buildCricketRenderState, CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
 import {
+  canDelayMissingMatchBoardGap,
+  clearDegradedHostRecoveryRecord,
   DEGRADED_HOST_RECOVERY_STATUS,
+  DEGRADED_HOST_RECOVERY_REARM_MS,
   hasPendingDegradedHostRecovery,
+  hasDegradedHostRecoveryRecord,
   maybeRecoverDegradedMatchHost,
+  resolveMissingMatchBoardGapDelay,
   resolvePendingDegradedHostRecheckDelay,
 } from "../cricket-surface/degraded-host-recovery.js";
+import {
+  collectCricketSurfaceWatchNodes,
+  hasTrackedCricketSurfaceMutation,
+  setCricketSurfaceWatchNodes,
+} from "../cricket-surface/surface-watch.js";
 import {
   clearCricketGridFxState,
   createCricketGridFxState,
@@ -29,6 +39,7 @@ import {
 
 const FEATURE_KEY = "cricket-grid-fx";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const POST_TRANSITION_SURFACE_AUDIT_MS = 420;
 const LISTENER_KEYS = Object.freeze({
   resize: `${FEATURE_KEY}:window-resize`,
   orientation: `${FEATURE_KEY}:window-orientation`,
@@ -46,6 +57,11 @@ const SURFACE_SELECTOR = [
   "#ad-ext-game-variant",
   "#ad-ext-player-display",
   ".ad-ext-player",
+  ".ad-ext-theme-content-board",
+  ".ad-ext-theme-board-panel",
+  ".ad-ext-theme-board-viewport",
+  ".ad-ext-theme-board-canvas",
+  ".ad-ext-theme-board-svg",
 ].join(",");
 
 const SURFACE_SCOPE_SELECTOR = [
@@ -55,6 +71,10 @@ const SURFACE_SCOPE_SELECTOR = [
   ".chakra-grid",
   "#ad-ext-player-display",
   "#ad-ext-game-variant",
+  ".ad-ext-theme-content-board",
+  ".ad-ext-theme-board-panel",
+  ".ad-ext-theme-board-viewport",
+  ".ad-ext-theme-board-canvas",
 ].join(",");
 
 const SURFACE_ATTRIBUTE_FILTER = Object.freeze([
@@ -179,6 +199,23 @@ function hasRelevantCricketMutation(mutations = []) {
   });
 }
 
+function refreshSurfaceWatchNodes(state, renderState, documentRef) {
+  if (!state?.surfaceWatchState) {
+    return;
+  }
+
+  const extraNodes = [
+    ...(state.trackedCells instanceof Set ? Array.from(state.trackedCells) : []),
+    ...(state.trackedLabels instanceof Set ? Array.from(state.trackedLabels) : []),
+  ];
+
+  setCricketSurfaceWatchNodes(state.surfaceWatchState, collectCricketSurfaceWatchNodes({
+    documentRef,
+    renderState,
+    extraNodes,
+  }));
+}
+
 function buildStatusSignature(renderState) {
   return `${renderState?.surfaceStatus || "unknown"}::${renderState?.variantText || "-"}`;
 }
@@ -229,6 +266,7 @@ export function initializeCricketGridFx(context = {}) {
   const schedulerFactory = context.helpers?.createRafScheduler;
   const degradedHostGraceMs = context.degradedHostGraceMs;
   const degradedHostRecoveryCooldownMs = context.degradedHostRecoveryCooldownMs;
+  const degradedHostRecoveryRearmMs = context.degradedHostRecoveryRearmMs;
 
   if (!documentRef || !domGuards || !cricketRules || typeof schedulerFactory !== "function") {
     return () => {};
@@ -261,6 +299,11 @@ export function initializeCricketGridFx(context = {}) {
   let lastStatusSignature = "";
   let pendingDegradedHostRecheckHandle = 0;
   let pendingDegradedHostRecheckSignature = "";
+  let pendingRecoveryRearmHandle = 0;
+  let pendingRecoveryRearmSignature = "";
+  let pendingSurfaceAuditHandle = 0;
+  let pendingSurfaceAuditSignature = "";
+  let completedMissingBoardHoldKey = "";
 
   const invalidateRenderCache = () => {
     if (state.renderCache && typeof state.renderCache === "object") {
@@ -277,13 +320,72 @@ export function initializeCricketGridFx(context = {}) {
     pendingDegradedHostRecheckSignature = "";
   }
 
+  function clearPendingRecoveryRearm() {
+    if (pendingRecoveryRearmHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingRecoveryRearmHandle);
+    }
+    pendingRecoveryRearmHandle = 0;
+    pendingRecoveryRearmSignature = "";
+  }
+
+  function clearPendingSurfaceAudit() {
+    if (pendingSurfaceAuditHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingSurfaceAuditHandle);
+    }
+    pendingSurfaceAuditHandle = 0;
+    pendingSurfaceAuditSignature = "";
+  }
+
+  function buildMissingBoardHoldKey(renderState) {
+    if (!canDelayMissingMatchBoardGap(renderState) || !lastTransitionSignature) {
+      return "";
+    }
+    return `${renderState?.matchRouteId || "-"}::${lastTransitionSignature}`;
+  }
+
+  function schedulePostTransitionSurfaceAudit(renderState, transitionSignature) {
+    if (
+      String(renderState?.surfaceStatus || "") !== CRICKET_SURFACE_STATUS.READY ||
+      !transitionSignature ||
+      typeof windowRef?.setTimeout !== "function"
+    ) {
+      clearPendingSurfaceAudit();
+      return false;
+    }
+
+    if (pendingSurfaceAuditHandle && pendingSurfaceAuditSignature === transitionSignature) {
+      return true;
+    }
+
+    clearPendingSurfaceAudit();
+    pendingSurfaceAuditSignature = transitionSignature;
+    pendingSurfaceAuditHandle = windowRef.setTimeout(() => {
+      pendingSurfaceAuditHandle = 0;
+      pendingSurfaceAuditSignature = "";
+      invalidateRenderCache();
+      update();
+    }, POST_TRANSITION_SURFACE_AUDIT_MS);
+    return true;
+  }
+
   function schedulePendingDegradedHostRecheck(renderState) {
-    if (!hasPendingDegradedHostRecovery(renderState) || typeof windowRef?.setTimeout !== "function") {
+    if (!canDelayMissingMatchBoardGap(renderState) || typeof windowRef?.setTimeout !== "function") {
       clearPendingDegradedHostRecheck();
       return false;
     }
 
-    const delayMs = resolvePendingDegradedHostRecheckDelay(renderState, {
+    const pendingDegradedHostRecovery = hasPendingDegradedHostRecovery(renderState);
+    const missingBoardHoldKey = pendingDegradedHostRecovery ? "" : buildMissingBoardHoldKey(renderState);
+    if (!pendingDegradedHostRecovery && (!missingBoardHoldKey || completedMissingBoardHoldKey === missingBoardHoldKey)) {
+      clearPendingDegradedHostRecheck();
+      return false;
+    }
+
+    const delayMs = pendingDegradedHostRecovery
+      ? resolvePendingDegradedHostRecheckDelay(renderState, {
+        fallbackGraceMs: degradedHostGraceMs,
+      })
+      : resolveMissingMatchBoardGapDelay(renderState, {
       fallbackGraceMs: degradedHostGraceMs,
     });
     if (!(delayMs > 0)) {
@@ -292,10 +394,12 @@ export function initializeCricketGridFx(context = {}) {
     }
 
     const nextSignature = [
+      pendingDegradedHostRecovery ? "degraded-host" : "missing-board-gap",
       renderState?.matchRouteId || "-",
       Number(renderState?.degradedHostInfo?.graceMs) || Number(degradedHostGraceMs) || 0,
       Math.max(0, Math.round(Number(renderState?.degradedHostInfo?.ageMs) || 0)),
       Math.max(1, Math.round(delayMs)),
+      missingBoardHoldKey || "-",
     ].join("::");
     if (pendingDegradedHostRecheckHandle && pendingDegradedHostRecheckSignature === nextSignature) {
       return true;
@@ -304,10 +408,45 @@ export function initializeCricketGridFx(context = {}) {
     clearPendingDegradedHostRecheck();
     pendingDegradedHostRecheckSignature = nextSignature;
     pendingDegradedHostRecheckHandle = windowRef.setTimeout(() => {
+      if (!pendingDegradedHostRecovery && missingBoardHoldKey) {
+        completedMissingBoardHoldKey = missingBoardHoldKey;
+      }
       pendingDegradedHostRecheckHandle = 0;
       pendingDegradedHostRecheckSignature = "";
       invalidateRenderCache();
       update();
+    }, delayMs);
+    return true;
+  }
+
+  function scheduleRecoveryRearm(renderState) {
+    const matchId = String(renderState?.matchRouteId || "").trim();
+    if (!matchId || !hasDegradedHostRecoveryRecord({ matchId, windowRef })) {
+      clearPendingRecoveryRearm();
+      return false;
+    }
+    if (typeof windowRef?.setTimeout !== "function") {
+      clearPendingRecoveryRearm();
+      return false;
+    }
+
+    const delayMs = Math.max(
+      1,
+      Number.isFinite(Number(degradedHostRecoveryRearmMs))
+        ? Number(degradedHostRecoveryRearmMs)
+        : DEGRADED_HOST_RECOVERY_REARM_MS
+    );
+    const nextSignature = `${matchId}::${delayMs}`;
+    if (pendingRecoveryRearmHandle && pendingRecoveryRearmSignature === nextSignature) {
+      return true;
+    }
+
+    clearPendingRecoveryRearm();
+    pendingRecoveryRearmSignature = nextSignature;
+    pendingRecoveryRearmHandle = windowRef.setTimeout(() => {
+      pendingRecoveryRearmHandle = 0;
+      pendingRecoveryRearmSignature = "";
+      clearDegradedHostRecoveryRecord({ matchId, windowRef });
     }, delayMs);
     return true;
   }
@@ -333,9 +472,14 @@ export function initializeCricketGridFx(context = {}) {
     const statusSignature = buildStatusSignature(renderState);
     const variantText = renderState?.variantText || readVariantText(documentRef);
     const pendingDegradedHostRecheck = hasPendingDegradedHostRecovery(renderState);
+    const delayedMissingBoardGap = canDelayMissingMatchBoardGap(renderState) && Boolean(lastTransitionSignature);
 
-    if (!pendingDegradedHostRecheck) {
+    if (!pendingDegradedHostRecheck && !delayedMissingBoardGap) {
       clearPendingDegradedHostRecheck();
+    }
+    if (surfaceStatus !== CRICKET_SURFACE_STATUS.READY) {
+      clearPendingRecoveryRearm();
+      clearPendingSurfaceAudit();
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
@@ -381,8 +525,18 @@ export function initializeCricketGridFx(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-      if (pendingDegradedHostRecheck) {
-        schedulePendingDegradedHostRecheck(renderState);
+      const scheduledRecheck = schedulePendingDegradedHostRecheck(renderState);
+      if (scheduledRecheck) {
+        if (statusSignature === lastStatusSignature) {
+          return;
+        }
+        lastStatusSignature = statusSignature;
+        emitDebugWarning(
+          debugState,
+          `${statusSignature}::pending-board-gap::${renderState?.matchRouteId || "-"}`,
+          `warn kein Board variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" pendingRecheck="true"`
+        );
+        return;
       }
       if (statusSignature === lastStatusSignature) {
         return;
@@ -418,6 +572,8 @@ export function initializeCricketGridFx(context = {}) {
       return;
     }
 
+    completedMissingBoardHoldKey = "";
+    scheduleRecoveryRearm(renderState);
     lastStatusSignature = "";
     const transitionSignature = String(renderState?.transitionSignature || "");
     if (!transitionSignature) {
@@ -426,6 +582,7 @@ export function initializeCricketGridFx(context = {}) {
     }
     const renderContractLive = hasLiveGridRenderContract(state, renderState);
     if (transitionSignature === lastTransitionSignature && renderContractLive) {
+      refreshSurfaceWatchNodes(state, renderState, documentRef);
       return;
     }
 
@@ -450,7 +607,13 @@ export function initializeCricketGridFx(context = {}) {
       return;
     }
 
+    const hadPriorReadyTransition = Boolean(lastTransitionSignature);
+    const transitionChanged = transitionSignature !== lastTransitionSignature;
     lastTransitionSignature = transitionSignature;
+    refreshSurfaceWatchNodes(state, renderState, documentRef);
+    if (hadPriorReadyTransition && transitionChanged) {
+      schedulePostTransitionSurfaceAudit(renderState, transitionSignature);
+    }
     const logSignature = [
       transitionSignature,
       debugStats.status || "unknown",
@@ -484,7 +647,10 @@ export function initializeCricketGridFx(context = {}) {
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
-        if (!hasRelevantCricketMutation(mutations)) {
+        if (
+          !hasRelevantCricketMutation(mutations) &&
+          !hasTrackedCricketSurfaceMutation(mutations, state.surfaceWatchState)
+        ) {
           return;
         }
         invalidateRenderCache();
@@ -549,6 +715,8 @@ export function initializeCricketGridFx(context = {}) {
 
     scheduler.cancel();
     clearPendingDegradedHostRecheck();
+    clearPendingRecoveryRearm();
+    clearPendingSurfaceAudit();
 
     try {
       unsubscribeGameState();

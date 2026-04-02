@@ -541,7 +541,7 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), false);
 });
 
-test("cricket grid fx renders the bull row with the unicode bull label and restores host text on cleanup", () => {
+test("cricket grid fx renders the bull row with legacy text label and restores host text on cleanup", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -597,7 +597,7 @@ test("cricket grid fx renders the bull row with the unicode bull label and resto
 
   assert.equal(bullLabelCell?.classList?.contains(LABEL_CLASS), true);
   assert.equal(bullLabelCell?.classList?.contains(BADGE_CLASS), false);
-  assert.equal(bullLabelCell?.textContent, "\u29BF");
+  assert.equal(bullLabelCell?.textContent, "Bull");
   assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), "BULL");
   assert.equal(Boolean(syntheticBullBadge), false);
   assert.equal(bullLabelCell?.getAttribute?.(HIDDEN_LABEL_ATTRIBUTE), null);
@@ -696,6 +696,263 @@ test("cricket grid fx never decorates or flattens the app root when a transient 
   assert.ok(rootElement.querySelector("main"), "root keeps nested app shell after cleanup");
 });
 
+test("cricket grid fx never snapshots or flattens a large visible host wrapper when bull drift misclassifies it", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const hostWrapper = documentRef.createElement("div");
+  hostWrapper.classList.add("css-z42oq0");
+  hostWrapper.__rect = { width: 1536, height: 678 };
+
+  const leftPane = documentRef.createElement("div");
+  leftPane.textContent = "TORNADO TOM 0 TEST 0 20 19 18 17 16 15 Bull";
+  const rightPane = documentRef.createElement("div");
+  rightPane.textContent = "UndoNext2011841361015217319716811149125";
+  const footerPane = documentRef.createElement("div");
+  footerPane.textContent = "Cricket";
+
+  hostWrapper.appendChild(leftPane);
+  hostWrapper.appendChild(rightPane);
+  hostWrapper.appendChild(footerPane);
+  documentRef.body.appendChild(hostWrapper);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const childCountBefore = Number(hostWrapper?.children?.length || 0);
+  const bullRow = renderState?.gridSnapshot?.rowMap?.get("BULL") || null;
+  assert.ok(bullRow, "bull row exists");
+
+  const degradedBullRow = {
+    ...bullRow,
+    labelCell: hostWrapper,
+    badgeNode: hostWrapper,
+  };
+  const degradedRows = (renderState?.gridSnapshot?.rows || []).map((row) => {
+    return row?.label === "BULL" ? degradedBullRow : row;
+  });
+  const degradedRenderState = {
+    ...renderState,
+    gridSnapshot: {
+      ...(renderState?.gridSnapshot || {}),
+      rows: degradedRows,
+      rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
+    },
+  };
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: degradedRenderState,
+    state,
+    visualConfig,
+    turnToken: "protected-wrapper-bull",
+  });
+
+  assert.equal(state.displayLabelTextByNode.has(hostWrapper), false);
+  assert.equal(hostWrapper.getAttribute("data-row-label"), null);
+  assert.equal(rightPane.textContent, "UndoNext2011841361015217319716811149125");
+
+  clearCricketGridFxState(state);
+
+  assert.equal(Number(hostWrapper?.children?.length || 0), childCountBefore);
+  assert.ok(hostWrapper.querySelector("div"), "wrapper keeps nested content after cleanup");
+  assert.equal(rightPane.textContent, "UndoNext2011841361015217319716811149125");
+});
+
+test("cricket grid fx keeps broad bull layout divs out of the display-label target path", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  const labels = ["20", "19", "18", "17", "16", "15", "BULL"];
+  const rowsByLabel = createMergedNonSemanticGrid(
+    documentRef,
+    labels,
+    Object.fromEntries(labels.map((label) => [label, [0, 0]]))
+  );
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state,
+    visualConfig,
+    turnToken: "broad-bull-layout-div",
+  });
+
+  const bullOwnerCell = rowsByLabel.get("BULL")?.ownerCell || null;
+  const bullLabelText = rowsByLabel.get("BULL")?.labelText || null;
+  const bullDisplayNode =
+    Array.from(bullOwnerCell?.querySelectorAll?.("span, p, div") || []).find((node) => {
+      return (
+        node !== bullOwnerCell &&
+        (node.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true" ||
+          node.getAttribute?.("data-row-label") === "BULL" ||
+          node.textContent === "Bull")
+      );
+    }) || null;
+
+  assert.ok(bullOwnerCell, "bull owner cell exists");
+  assert.ok(bullLabelText, "bull label text exists");
+  assert.equal(bullOwnerCell?.getAttribute?.("data-row-label"), null);
+  assert.ok(bullDisplayNode, "bull display stays on a descendant node, not the broad layout div");
+  assert.equal(bullDisplayNode?.textContent, "Bull");
+
+  clearCricketGridFxState(state);
+
+  assert.equal(bullOwnerCell?.getAttribute?.("data-row-label"), null);
+  assert.equal(bullLabelText?.textContent, "Bull");
+});
+
+test("cricket grid fx ignores generic div badge hosts for bull rows and falls back to a descendant anchor", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const driftingBadgeHost = documentRef.createElement("div");
+  driftingBadgeHost.classList.add("css-1yso2z2");
+  driftingBadgeHost.__rect = { width: 18, height: 34 };
+  documentRef.body.appendChild(driftingBadgeHost);
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const bullRow = renderState?.gridSnapshot?.rowMap?.get("BULL") || null;
+  assert.ok(bullRow, "bull row exists");
+  const degradedBullRow = {
+    ...bullRow,
+    badgeNode: driftingBadgeHost,
+  };
+  const degradedRows = (renderState?.gridSnapshot?.rows || []).map((row) => {
+    return row?.label === "BULL" ? degradedBullRow : row;
+  });
+  const degradedRenderState = {
+    ...renderState,
+    gridSnapshot: {
+      ...(renderState?.gridSnapshot || {}),
+      rows: degradedRows,
+      rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
+    },
+  };
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: degradedRenderState,
+    state,
+    visualConfig,
+    turnToken: "generic-div-bull-badge-host",
+  });
+
+  const bullLabelCell = rowsByLabel.get("BULL")?.labelCell || null;
+  const bullDisplayNode =
+    bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"], [data-row-label="BULL"]`) || null;
+
+  assert.equal(driftingBadgeHost.getAttribute("data-row-label"), null);
+  assert.equal(driftingBadgeHost.textContent, "");
+  assert.ok(bullDisplayNode, "bull display falls back to a descendant anchor inside the label cell");
+  assert.equal(String(bullDisplayNode?.textContent || ""), "Bull");
+
+  clearCricketGridFxState(state);
+
+  assert.equal(driftingBadgeHost.getAttribute("data-row-label"), null);
+  assert.equal(driftingBadgeHost.textContent, "");
+});
+
 test("cricket grid fx converts badge-like bull labels back into the front label cell contract", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -754,7 +1011,7 @@ test("cricket grid fx converts badge-like bull labels back into the front label 
   assert.equal(bullLabelCell?.classList?.contains(LABEL_CLASS), true);
   assert.equal(bullLabelCell?.classList?.contains(CELL_CLASS), true);
   assert.equal(bullLabelCell?.classList?.contains(BADGE_CLASS), false);
-  assert.equal(bullLabelCell?.textContent, "\u29BF");
+  assert.equal(bullLabelCell?.textContent, "Bull");
   assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), "BULL");
   assert.equal(Boolean(bullLabelCell?.querySelector?.(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`)), false);
   assert.equal(bullLabelCell?.getAttribute?.(HIDDEN_LABEL_ATTRIBUTE), null);

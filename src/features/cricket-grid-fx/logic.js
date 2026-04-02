@@ -31,6 +31,10 @@ import {
   resolveCricketRowPresentation,
 } from "../cricket-surface/presentation.js";
 import {
+  clearCricketSurfaceWatchState,
+  createCricketSurfaceWatchState,
+} from "../cricket-surface/surface-watch.js";
+import {
   normalizeCricketLabelNode,
   normalizeCricketLabelValue,
 } from "../cricket-surface/label-utils.js";
@@ -73,7 +77,9 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   "span",
 ]);
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
-const BULL_DISPLAY_LABEL = "\u29BF";
+const MAX_SAFE_DISPLAY_LABEL_TEXT_LENGTH = 24;
+const MAX_SAFE_DISPLAY_LABEL_WIDTH = 240;
+const MAX_SAFE_DISPLAY_LABEL_HEIGHT = 140;
 
 function queryAll(rootNode, selector) {
   return queryAllFromDiscovery(rootNode, selector);
@@ -191,7 +197,7 @@ function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
 }
 
 function getDisplayLabel(label) {
-  return String(label || "").toUpperCase() === "BULL" ? BULL_DISPLAY_LABEL : String(label || "");
+  return String(label || "").toUpperCase() === "BULL" ? "Bull" : String(label || "");
 }
 
 function isProtectedCricketHostNode(node) {
@@ -212,10 +218,73 @@ function isProtectedCricketHostNode(node) {
   return role === "main" || role === "navigation";
 }
 
+function isSafeDisplayLabelHostNode(node) {
+  if (!node || isProtectedCricketHostNode(node) || !isVisible(node)) {
+    return false;
+  }
+
+  const textContent = String(node.textContent || "").replace(/\s+/g, " ").trim();
+  if (!textContent || textContent.length > MAX_SAFE_DISPLAY_LABEL_TEXT_LENGTH) {
+    return false;
+  }
+
+  const childElementCount = Number(node.childElementCount || 0);
+  if (childElementCount > 3) {
+    return false;
+  }
+
+  if (typeof node.querySelector === "function") {
+    if (node.querySelector("main, nav, button, input, textarea, select")) {
+      return false;
+    }
+  }
+
+  if (typeof node.getBoundingClientRect === "function") {
+    const rect = node.getBoundingClientRect();
+    const width = Number.parseFloat(rect?.width);
+    const height = Number.parseFloat(rect?.height);
+    if (
+      (Number.isFinite(width) && width > MAX_SAFE_DISPLAY_LABEL_WIDTH) ||
+      (Number.isFinite(height) && height > MAX_SAFE_DISPLAY_LABEL_HEIGHT)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isPreferredInlineBullLabelHost(node, cricketRules) {
+  if (!isSafeDisplayLabelHostNode(node)) {
+    return false;
+  }
+
+  if (node?.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true") {
+    return true;
+  }
+
+  const tagName = String(node?.tagName || "").toUpperCase();
+  if (tagName === "SPAN" || tagName === "P" || tagName === "TD" || tagName === "TH") {
+    return true;
+  }
+
+  const normalizedNodeLabel = normalizeCricketLabelValue(
+    cricketRules,
+    node?.getAttribute?.("data-row-label") ||
+      node?.getAttribute?.("data-target-label") ||
+      ""
+  );
+  if (normalizedNodeLabel === "BULL") {
+    return true;
+  }
+
+  return false;
+}
+
 function rememberDisplayLabelSnapshot(node, state) {
   if (
     !node ||
-    isProtectedCricketHostNode(node) ||
+    !isSafeDisplayLabelHostNode(node) ||
     !(state?.displayLabelTextByNode instanceof Map) ||
     state.displayLabelTextByNode.has(node)
   ) {
@@ -232,7 +301,7 @@ function rememberDisplayLabelSnapshot(node, state) {
 }
 
 function setCanonicalDisplayLabel(node, label, state, cricketRules) {
-  if (!node || isProtectedCricketHostNode(node) || typeof node?.setAttribute !== "function") {
+  if (!node || !isSafeDisplayLabelHostNode(node) || typeof node?.setAttribute !== "function") {
     return;
   }
 
@@ -255,6 +324,20 @@ function resolveDisplayLabelTarget(node, label, cricketRules) {
     return null;
   }
 
+  const isSafeBullLeafTarget = (candidateNode) => {
+    if (!candidateNode || !isSafeDisplayLabelHostNode(candidateNode)) {
+      return false;
+    }
+    if (Number(candidateNode?.childElementCount || 0) !== 0) {
+      return false;
+    }
+    const compactText = String(candidateNode.textContent || "").replace(/\s+/g, " ").trim();
+    if (!compactText || compactText.length > 12) {
+      return false;
+    }
+    return normalizeCricketLabelNode(cricketRules, candidateNode) === "BULL";
+  };
+
   if (node.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true") {
     return node;
   }
@@ -265,8 +348,10 @@ function resolveDisplayLabelTarget(node, label, cricketRules) {
       node?.getAttribute?.("data-target-label") ||
       ""
   );
-  const inferredNodeLabel = normalizedNodeLabel || normalizeCricketLabelNode(cricketRules, node);
-  if (inferredNodeLabel === "BULL" && Number(node?.childElementCount || 0) === 0) {
+  if (normalizedNodeLabel === "BULL" && isPreferredInlineBullLabelHost(node, cricketRules)) {
+    return node;
+  }
+  if (isSafeBullLeafTarget(node)) {
     return node;
   }
 
@@ -274,9 +359,9 @@ function resolveDisplayLabelTarget(node, label, cricketRules) {
   return (
     childElements.find((childNode) => {
       return (
-        Number(childNode?.childElementCount || 0) === 0 &&
-        !isProtectedCricketHostNode(childNode) &&
-        normalizeCricketLabelNode(cricketRules, childNode) === "BULL"
+        childNode?.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true" ||
+        isSafeBullLeafTarget(childNode) ||
+        isPreferredInlineBullLabelHost(childNode, cricketRules)
       );
     }) || null
   );
@@ -305,7 +390,7 @@ function restoreDisplayLabels(state) {
   }
 
   state.displayLabelTextByNode.forEach((snapshot, node) => {
-    if (node && !isProtectedCricketHostNode(node)) {
+    if (node && isSafeDisplayLabelHostNode(node)) {
       const originalText =
         snapshot && typeof snapshot === "object" && Object.prototype.hasOwnProperty.call(snapshot, "text")
           ? snapshot.text
@@ -611,6 +696,7 @@ function clearPersistentState(state) {
 
   state.trackedCells.clear();
   state.trackedLabels.clear();
+  clearCricketSurfaceWatchState(state.surfaceWatchState);
   state.trackedProgressTargets.clear();
   state.syntheticBadges.clear();
   state.hiddenLabelNodes.clear();
@@ -862,6 +948,7 @@ export function createCricketGridFxState(windowRef = null) {
   return {
     windowRef,
     gridRoot: null,
+    surfaceWatchState: createCricketSurfaceWatchState(),
     trackedCells: new Set(),
     trackedLabels: new Set(),
     trackedProgressTargets: new Set(),
@@ -1649,13 +1736,22 @@ export function updateCricketGridFx(options = {}) {
       row.badgeNode !== labelCellNode &&
       row.badgeNode.isConnected !== false;
     const inlineBullLabel =
-      normalizedDisplayLabel === "BULL" && Boolean(labelCellNode?.classList) && !hasDistinctBadgeNode;
+      normalizedDisplayLabel === "BULL" &&
+      isPreferredInlineBullLabelHost(labelCellNode, cricketRules) &&
+      !hasDistinctBadgeNode;
     const safeLabelCellNode = isProtectedCricketHostNode(labelCellNode) ? null : labelCellNode;
     let badgeNode = null;
     if (hasDistinctBadgeNode) {
       badgeNode = row.badgeNode;
     }
     if (isProtectedCricketHostNode(badgeNode)) {
+      badgeNode = null;
+    }
+    if (
+      normalizedDisplayLabel === "BULL" &&
+      badgeNode &&
+      !isPreferredInlineBullLabelHost(badgeNode, cricketRules)
+    ) {
       badgeNode = null;
     }
     if (inlineBullLabel) {
@@ -1668,9 +1764,8 @@ export function updateCricketGridFx(options = {}) {
       state.hiddenLabelNodes.delete(safeLabelCellNode);
       badgeNode = null;
     }
-    if (normalizedDisplayLabel === "BULL") {
+    if (normalizedDisplayLabel === "BULL" && inlineBullLabel) {
       setCanonicalDisplayLabel(safeLabelCellNode, row.label, state, cricketRules);
-      setCanonicalDisplayLabel(badgeNode, row.label, state, cricketRules);
     }
     if (!inlineBullLabel && !badgeNode && safeLabelCellNode?.ownerDocument?.createElement) {
       badgeNode = safeLabelCellNode.ownerDocument.createElement("span");
@@ -1684,7 +1779,10 @@ export function updateCricketGridFx(options = {}) {
       }
       badgeFallbackCount += 1;
     }
-    applyDisplayLabel(badgeNode || safeLabelCellNode, row.label, state, cricketRules);
+    if (normalizedDisplayLabel === "BULL") {
+      setCanonicalDisplayLabel(badgeNode, row.label, state, cricketRules);
+    }
+    applyDisplayLabel(badgeNode || (inlineBullLabel ? safeLabelCellNode : null), row.label, state, cricketRules);
     if (safeLabelCellNode?.classList) {
       safeLabelCellNode.classList.add(LABEL_CLASS);
       setLabelStateClasses(safeLabelCellNode, labelPresentation);

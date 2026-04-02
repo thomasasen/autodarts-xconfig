@@ -12,6 +12,10 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardSvg: "ad-ext-theme-board-svg",
 });
 
+export const THEME_LAYOUT_RETENTION_CLASSES = Object.freeze({
+  boardGapHold: "ad-ext-theme-board-gap-hold",
+});
+
 export const CRICKET_ACTIVE_PLAYER_ATTRIBUTE = "data-ad-ext-theme-cricket-active";
 
 export const THEME_CRICKET_READABILITY = Object.freeze({

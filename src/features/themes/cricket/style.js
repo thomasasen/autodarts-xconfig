@@ -947,6 +947,27 @@ p.chakra-text.css-1qlemha {
   overflow: hidden !important;
 }
 
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold {
+  overflow: hidden !important;
+}
+
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-viewport,
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-event-shell,
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-canvas,
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-media-root {
+  color: transparent !important;
+  text-shadow: none !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-viewport *,
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-event-shell *,
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-canvas *,
+.ad-ext-theme-board-panel.ad-ext-theme-board-gap-hold .ad-ext-theme-board-media-root * {
+  text-shadow: none !important;
+}
+
 .ad-ext-theme-board-panel::after {
   content: "";
   position: absolute;

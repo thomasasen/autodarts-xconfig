@@ -1,6 +1,7 @@
 const RECOVERY_STORAGE_PREFIX = "adx:cricket-host-recovery:";
 export const DEGRADED_HOST_RECOVERY_COOLDOWN_MS = 30_000;
 export const DEGRADED_HOST_RECHECK_BUFFER_MS = 16;
+export const DEGRADED_HOST_RECOVERY_REARM_MS = 1_500;
 
 export const DEGRADED_HOST_RECOVERY_STATUS = Object.freeze({
   IDLE: "idle",
@@ -13,9 +14,54 @@ function normalizeMatchId(value) {
   return String(value || "").trim();
 }
 
+function resolveRecoveryStorageContext(options = {}) {
+  const renderState = options.renderState || null;
+  const matchId = normalizeMatchId(options.matchId || renderState?.matchRouteId);
+  const storageKey = getDegradedHostRecoveryKey(matchId);
+  const windowRef = options.windowRef || renderState?.documentRef?.defaultView || null;
+  const storage = windowRef?.sessionStorage || null;
+  return {
+    matchId,
+    storageKey,
+    storage,
+    windowRef,
+  };
+}
+
 export function getDegradedHostRecoveryKey(matchId) {
   const normalizedMatchId = normalizeMatchId(matchId);
   return normalizedMatchId ? `${RECOVERY_STORAGE_PREFIX}${normalizedMatchId}` : "";
+}
+
+export function hasDegradedHostRecoveryRecord(options = {}) {
+  const { storage, storageKey } = resolveRecoveryStorageContext(options);
+  return Boolean(readRecoveryRecord(storage, storageKey));
+}
+
+export function clearDegradedHostRecoveryRecord(options = {}) {
+  const { matchId, storageKey, storage } = resolveRecoveryStorageContext(options);
+  if (!storage || !storageKey || typeof storage.removeItem !== "function") {
+    return {
+      cleared: false,
+      matchId,
+      storageKey,
+    };
+  }
+
+  try {
+    storage.removeItem(storageKey);
+    return {
+      cleared: true,
+      matchId,
+      storageKey,
+    };
+  } catch (_) {
+    return {
+      cleared: false,
+      matchId,
+      storageKey,
+    };
+  }
 }
 
 export function hasPendingDegradedHostRecovery(renderState) {
@@ -23,6 +69,14 @@ export function hasPendingDegradedHostRecovery(renderState) {
     String(renderState?.surfaceStatus || "") === "missing-board" &&
     normalizeMatchId(renderState?.matchRouteId) &&
     renderState?.degradedHostInfo?.pending === true
+  );
+}
+
+export function canDelayMissingMatchBoardGap(renderState) {
+  return (
+    String(renderState?.surfaceStatus || "") === "missing-board" &&
+    normalizeMatchId(renderState?.matchRouteId) &&
+    Boolean(renderState?.gridSnapshot?.root)
   );
 }
 
@@ -55,6 +109,29 @@ export function resolvePendingDegradedHostRecheckDelay(renderState, options = {}
   );
   const remainingMs = Math.max(0, graceMs - ageMs);
   return Math.max(1, remainingMs + bufferMs);
+}
+
+export function resolveMissingMatchBoardGapDelay(renderState, options = {}) {
+  if (!canDelayMissingMatchBoardGap(renderState)) {
+    return -1;
+  }
+
+  const pendingDelay = resolvePendingDegradedHostRecheckDelay(renderState, options);
+  if (pendingDelay > 0) {
+    return pendingDelay;
+  }
+
+  const fallbackGraceMs = Math.max(
+    0,
+    Number.isFinite(Number(options.fallbackGraceMs)) ? Number(options.fallbackGraceMs) : 0
+  );
+  const bufferMs = Math.max(
+    0,
+    Number.isFinite(Number(options.bufferMs))
+      ? Number(options.bufferMs)
+      : DEGRADED_HOST_RECHECK_BUFFER_MS
+  );
+  return Math.max(1, fallbackGraceMs + bufferMs);
 }
 
 function readRecoveryRecord(storage, storageKey) {
@@ -143,6 +220,17 @@ export function maybeRecoverDegradedMatchHost(options = {}) {
     lastAttemptAt: nowMs,
     href: currentUrl,
   });
+
+  if (typeof locationRef.reload === "function") {
+    locationRef.reload();
+    return {
+      status: DEGRADED_HOST_RECOVERY_STATUS.RELOADING,
+      matchId,
+      storageKey,
+      attempts: nextAttempts,
+      cooldownMs,
+    };
+  }
 
   if (typeof locationRef.replace === "function") {
     locationRef.replace(currentUrl);

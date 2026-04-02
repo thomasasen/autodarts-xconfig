@@ -9,6 +9,7 @@ import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/
 import { BOARD_INPUT_MODE_ATTRIBUTE_FILTER } from "../../../shared/board-input-mode.js";
 import {
   clearBoardLayoutHooks,
+  hasBoardLayoutHookMutation,
   hasBoardInputModeMutation,
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
@@ -72,8 +73,45 @@ export function mountThemeFeature(context = {}, options = {}) {
     layoutHookTargets: {},
     ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
   };
+  let pendingLayoutHookRecheckHandle = 0;
+  let pendingLayoutHookRecheckSignature = "";
+
+  function clearPendingLayoutHookRecheck() {
+    if (pendingLayoutHookRecheckHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingLayoutHookRecheckHandle);
+    }
+    pendingLayoutHookRecheckHandle = 0;
+    pendingLayoutHookRecheckSignature = "";
+  }
+
+  function schedulePendingLayoutHookRecheck(result = {}) {
+    const delayMs = Math.max(0, Number(result?.recheckDelayMs) || 0);
+    if (!(delayMs > 0) || typeof windowRef?.setTimeout !== "function") {
+      clearPendingLayoutHookRecheck();
+      return;
+    }
+
+    const signature = [
+      String(result?.status || ""),
+      Math.max(1, Math.round(delayMs)),
+      String(windowRef?.location?.pathname || ""),
+      String(windowRef?.location?.hash || ""),
+    ].join("::");
+    if (pendingLayoutHookRecheckHandle && pendingLayoutHookRecheckSignature === signature) {
+      return;
+    }
+
+    clearPendingLayoutHookRecheck();
+    pendingLayoutHookRecheckSignature = signature;
+    pendingLayoutHookRecheckHandle = windowRef.setTimeout(() => {
+      pendingLayoutHookRecheckHandle = 0;
+      pendingLayoutHookRecheckSignature = "";
+      scheduler.schedule();
+    }, delayMs);
+  }
 
   function deactivateTheme() {
+    clearPendingLayoutHookRecheck();
     domGuards.removeNodeById(styleId);
     togglePreviewSpace(documentRef, resolvedPreviewPlacement, false);
     clearBoardLayoutHooks(themeState);
@@ -120,7 +158,12 @@ export function mountThemeFeature(context = {}, options = {}) {
       windowRef
     );
     togglePreviewSpace(documentRef, resolvedPreviewPlacement, previewSpaceEnabled);
-    updateBoardLayoutHooks(documentRef, themeState);
+    const layoutResult = updateBoardLayoutHooks(documentRef, themeState);
+    if (layoutResult?.retained) {
+      schedulePendingLayoutHookRecheck(layoutResult);
+    } else {
+      clearPendingLayoutHookRecheck();
+    }
 
     if (themePolicy && typeof themePolicy.onActivate === "function") {
       themePolicy.onActivate({
@@ -189,6 +232,7 @@ export function mountThemeFeature(context = {}, options = {}) {
 
         if (
           !policyMutation &&
+          !hasBoardLayoutHookMutation(mutations, themeState) &&
           !hasBoardInputModeMutation(mutations) &&
           !hasExternalDomMutation(mutations, isManagedNode)
         ) {
@@ -239,6 +283,7 @@ export function mountThemeFeature(context = {}, options = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
+    clearPendingLayoutHookRecheck();
     deactivateTheme();
 
     try {

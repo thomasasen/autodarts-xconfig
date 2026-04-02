@@ -12,6 +12,10 @@ import { initializeCricketHighlighter } from "../../src/features/cricket-highlig
 import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
 import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
 import {
+  canDelayMissingMatchBoardGap,
+  resolveMissingMatchBoardGapDelay,
+} from "../../src/features/cricket-surface/degraded-host-recovery.js";
+import {
   FakeDocument,
   createFakeTimerHarness,
   createFakeWindow,
@@ -44,7 +48,8 @@ function createNumericCricketGrid(documentRef) {
   return table;
 }
 
-function createBoardFixture(documentRef) {
+function createBoardFixture(documentRef, options = {}) {
+  const parentNode = options.parentNode || documentRef.main;
   const boardShell = documentRef.createElement("div");
   const boardControls = documentRef.createElement("div");
   const undoButton = documentRef.createElement("button");
@@ -78,8 +83,8 @@ function createBoardFixture(documentRef) {
 
   boardSvg.appendChild(boardGroup);
   boardShell.appendChild(boardSvg);
-  documentRef.main.appendChild(boardShell);
-  return boardShell;
+  parentNode.appendChild(boardShell);
+  return { boardShell, boardControls, boardSvg };
 }
 
 function createDegradedMatchHostFixture(documentRef) {
@@ -130,6 +135,48 @@ function createDegradedMatchHostFixture(documentRef) {
   documentRef.main.appendChild(host);
 
   return { host, leftPane, rightPane, grid };
+}
+
+function createHealthyMatchHostFixture(documentRef) {
+  const host = documentRef.createElement("div");
+  host.className = "css-u5v8bq";
+  host.__rect = { left: 216, top: 184, width: 1108, height: 500 };
+
+  const leftPane = documentRef.createElement("div");
+  leftPane.className = "css-rc3vw3";
+  leftPane.__rect = { left: 216, top: 184, width: 644, height: 500 };
+
+  const roster = documentRef.createElement("div");
+  roster.textContent = "TEST2 TEST MPR:0.0";
+  roster.__rect = { left: 216, top: 184, width: 644, height: 88 };
+  leftPane.appendChild(roster);
+
+  const grid = createNumericCricketGrid(documentRef);
+  grid.__rect = { left: 216, top: 284, width: 644, height: 224 };
+  leftPane.appendChild(grid);
+
+  const rightPane = documentRef.createElement("div");
+  rightPane.className = "css-vo3506";
+  rightPane.__rect = { left: 860, top: 184, width: 464, height: 500 };
+
+  const boardFixture = createBoardFixture(documentRef, { parentNode: rightPane });
+  boardFixture.boardShell.__rect = { left: 860, top: 184, width: 464, height: 500 };
+  boardFixture.boardControls.__rect = { left: 860, top: 184, width: 180, height: 40 };
+  boardFixture.boardSvg.__rect = { left: 860, top: 220, width: 464, height: 464 };
+
+  host.appendChild(leftPane);
+  host.appendChild(rightPane);
+  documentRef.main.appendChild(host);
+
+  return {
+    host,
+    leftPane,
+    rightPane,
+    grid,
+    boardShell: boardFixture.boardShell,
+    boardControls: boardFixture.boardControls,
+    boardSvg: boardFixture.boardSvg,
+  };
 }
 
 function createGameState() {
@@ -195,6 +242,21 @@ function createFeatureConfig() {
       };
     },
   };
+}
+
+function countRecoveryNavigations(windowRef) {
+  return Number(windowRef?.location?.__reloadCount || 0) + Number(windowRef?.location?.__replacedUrls?.length || 0);
+}
+
+function clearChildren(node) {
+  const target = node && typeof node === "object" ? node : null;
+  if (!target || !Array.isArray(target.children)) {
+    return;
+  }
+
+  while (target.children.length) {
+    target.removeChild(target.children[0]);
+  }
 }
 
 test("buildCricketRenderState upgrades persistent degraded match host from missing-board to degraded-host after grace", () => {
@@ -352,7 +414,7 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
   });
 
   try {
-    assert.equal(windowRef.location.__replacedUrls.length, 1);
+    assert.equal(countRecoveryNavigations(windowRef), 1);
     assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
     assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
 
@@ -373,7 +435,7 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
     highlighterObserver.callback(mutation);
     gridFxObserver.callback(mutation);
 
-    assert.equal(windowRef.location.__replacedUrls.length, 1);
+    assert.equal(countRecoveryNavigations(windowRef), 1);
     assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
     assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
   } finally {
@@ -427,13 +489,13 @@ test("cricket highlighter and grid fx recheck pending degraded hosts after grace
   });
 
   try {
-    assert.equal(windowRef.location.__replacedUrls.length, 0);
+    assert.equal(countRecoveryNavigations(windowRef), 0);
 
     timerHarness.advance(299);
-    assert.equal(windowRef.location.__replacedUrls.length, 0);
+    assert.equal(countRecoveryNavigations(windowRef), 0);
 
     timerHarness.advance(17);
-    assert.equal(windowRef.location.__replacedUrls.length, 1);
+    assert.equal(countRecoveryNavigations(windowRef), 1);
     assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
     assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
     assert.notEqual(
@@ -445,4 +507,311 @@ test("cricket highlighter and grid fx recheck pending degraded hosts after grace
     cleanupHighlighter();
     timerHarness.restoreGlobals();
   }
+});
+
+test("cricket highlighter and grid fx watch last healthy surface nodes when degraded host churn only flips an ancestor class", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/watch-surface-nodes",
+  });
+  const timerHarness = createFakeTimerHarness({ now: 3_000 });
+  timerHarness.installGlobals();
+  timerHarness.installOnWindow(windowRef);
+  documentRef.variantElement.textContent = "Cricket";
+
+  const healthyFixture = createHealthyMatchHostFixture(documentRef);
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const domGuards = createDomGuards({ documentRef });
+  const domain = { cricketRules, variantRules };
+  const gameState = createGameState();
+  const helperScheduler = createImmediateScheduler();
+  const config = createFeatureConfig();
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 300,
+  });
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 300,
+  });
+
+  try {
+    assert.equal(countRecoveryNavigations(windowRef), 0);
+
+    healthyFixture.rightPane.removeChild(healthyFixture.boardShell);
+    healthyFixture.rightPane.textContent = "UndoNext2011841361015217319";
+    healthyFixture.host.classList.add("css-host-degraded");
+
+    const mutation = [
+      {
+        type: "attributes",
+        attributeName: "class",
+        target: healthyFixture.host,
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ];
+
+    observers.get("cricket-highlighter:dom-observer")?.callback(mutation);
+    observers.get("cricket-grid-fx:dom-observer")?.callback(mutation);
+
+    assert.equal(countRecoveryNavigations(windowRef), 0);
+
+    timerHarness.advance(317);
+
+    assert.equal(countRecoveryNavigations(windowRef), 1);
+    assert.notEqual(
+      windowRef.sessionStorage.getItem("adx:cricket-host-recovery:watch-surface-nodes"),
+      null
+    );
+  } finally {
+    cleanupGridFx();
+    cleanupHighlighter();
+    timerHarness.restoreGlobals();
+  }
+});
+
+test("cricket highlighter and grid fx audit the surface after throw transitions even without host mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/post-throw-audit",
+  });
+  const timerHarness = createFakeTimerHarness({ now: 4_000 });
+  timerHarness.installGlobals();
+  timerHarness.installOnWindow(windowRef);
+  documentRef.variantElement.textContent = "Cricket";
+
+  const listeners = [];
+  const activeThrows = [];
+  const gameState = {
+    getCricketGameModeNormalized: () => "cricket",
+    getCricketGameMode: () => "Cricket",
+    getCricketScoringModeNormalized: () => "standard",
+    getCricketScoringMode: () => "standard",
+    getActivePlayerIndex: () => 0,
+    getActiveThrows: () => activeThrows.slice(),
+    getActiveTurn: () => null,
+    getSnapshot: () => ({
+      match: {
+        players: [{ id: "player-a" }, { id: "player-b" }],
+      },
+    }),
+    isCricketVariant: () => true,
+    subscribe(callback) {
+      listeners.push(callback);
+      return () => {};
+    },
+  };
+
+  createHealthyMatchHostFixture(documentRef);
+  const observers = createObserverRegistry();
+  const listenerRegistry = createListenerRegistry();
+  const domGuards = createDomGuards({ documentRef });
+  const domain = { cricketRules, variantRules };
+  const helperScheduler = createImmediateScheduler();
+  const config = createFeatureConfig();
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners: listenerRegistry },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 300,
+  });
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners: listenerRegistry },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 300,
+  });
+
+  try {
+    activeThrows.push({
+      value: 20,
+      segment: "S20",
+      label: "S20",
+    });
+    listeners.forEach((callback) => callback());
+
+    clearChildren(documentRef.main);
+    createDegradedMatchHostFixture(documentRef);
+
+    timerHarness.advance(419);
+    assert.equal(countRecoveryNavigations(windowRef), 0);
+
+    timerHarness.advance(318);
+    assert.equal(countRecoveryNavigations(windowRef), 1);
+    assert.notEqual(
+      windowRef.sessionStorage.getItem("adx:cricket-host-recovery:post-throw-audit"),
+      null
+    );
+  } finally {
+    cleanupGridFx();
+    cleanupHighlighter();
+    timerHarness.restoreGlobals();
+  }
+});
+
+test("cricket highlighter and grid fx re-arm degraded-host recovery after a stable ready phase", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/rearm-after-ready",
+  });
+  const timerHarness = createFakeTimerHarness({ now: 5_000 });
+  timerHarness.installGlobals();
+  timerHarness.installOnWindow(windowRef);
+  documentRef.variantElement.textContent = "Cricket";
+
+  const degradedFixture = createDegradedMatchHostFixture(documentRef);
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const domGuards = createDomGuards({ documentRef });
+  const domain = { cricketRules, variantRules };
+  const gameState = createGameState();
+  const helperScheduler = createImmediateScheduler();
+  const config = createFeatureConfig();
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 0,
+    degradedHostRecoveryRearmMs: 1_000,
+  });
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 0,
+    degradedHostRecoveryRearmMs: 1_000,
+  });
+
+  try {
+    assert.equal(countRecoveryNavigations(windowRef), 1);
+    assert.notEqual(
+      windowRef.sessionStorage.getItem("adx:cricket-host-recovery:rearm-after-ready"),
+      null
+    );
+
+    clearChildren(documentRef.main);
+    const healthyFixture = createHealthyMatchHostFixture(documentRef);
+    const lifecycleMutation = [
+      {
+        type: "childList",
+        target: documentRef.main,
+        addedNodes: [healthyFixture.host],
+        removedNodes: [degradedFixture.host],
+      },
+    ];
+    observers.get("cricket-highlighter:dom-observer")?.callback(lifecycleMutation);
+    observers.get("cricket-grid-fx:dom-observer")?.callback(lifecycleMutation);
+
+    timerHarness.advance(999);
+    assert.notEqual(
+      windowRef.sessionStorage.getItem("adx:cricket-host-recovery:rearm-after-ready"),
+      null
+    );
+
+    timerHarness.advance(1);
+    assert.equal(
+      windowRef.sessionStorage.getItem("adx:cricket-host-recovery:rearm-after-ready"),
+      null
+    );
+
+    clearChildren(documentRef.main);
+    const degradedAgainFixture = createDegradedMatchHostFixture(documentRef);
+    const degradeAgainMutation = [
+      {
+        type: "childList",
+        target: documentRef.main,
+        addedNodes: [degradedAgainFixture.host],
+        removedNodes: [healthyFixture.host],
+      },
+    ];
+    observers.get("cricket-highlighter:dom-observer")?.callback(degradeAgainMutation);
+    observers.get("cricket-grid-fx:dom-observer")?.callback(degradeAgainMutation);
+
+    assert.equal(countRecoveryNavigations(windowRef), 2);
+  } finally {
+    cleanupGridFx();
+    cleanupHighlighter();
+    timerHarness.restoreGlobals();
+  }
+});
+
+test("missing-board match gaps use the fallback grace delay even before degraded-host is confirmed", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/fallback-gap",
+  });
+  documentRef.variantElement.textContent = "Cricket";
+  const fixture = createHealthyMatchHostFixture(documentRef);
+
+  const readyRenderState = buildCricketRenderState({
+    documentRef,
+    windowRef,
+    gameState: createGameState(),
+    cricketRules,
+    variantRules,
+    cache: { grid: null, board: null },
+  });
+  assert.equal(readyRenderState?.surfaceStatus, "ready");
+
+  fixture.rightPane.removeChild(fixture.boardShell);
+
+  const missingBoardRenderState = buildCricketRenderState({
+    documentRef,
+    windowRef,
+    gameState: createGameState(),
+    cricketRules,
+    variantRules,
+    degradedHostGraceMs: 300,
+    cache: { grid: null, board: null },
+  });
+
+  assert.equal(missingBoardRenderState?.surfaceStatus, "missing-board");
+  assert.equal(canDelayMissingMatchBoardGap(missingBoardRenderState), true);
+  assert.equal(resolveMissingMatchBoardGapDelay(missingBoardRenderState, { fallbackGraceMs: 300 }), 316);
 });

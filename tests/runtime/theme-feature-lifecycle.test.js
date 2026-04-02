@@ -5,6 +5,12 @@ import { createBootstrap } from "../../src/core/bootstrap.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
+import * as cricketRules from "../../src/domain/cricket-rules.js";
+import * as variantRules from "../../src/domain/variant-rules.js";
+import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
+import { ROOT_CLASS } from "../../src/features/cricket-grid-fx/style.js";
+import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
+import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
 import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
 import { mountThemeCricket } from "../../src/features/themes/cricket/index.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
@@ -22,6 +28,7 @@ import {
   CRICKET_ROW_ATTRIBUTE,
   CRICKET_SLOT_ATTRIBUTE,
   CRICKET_STACK_ATTRIBUTE,
+  THEME_LAYOUT_RETENTION_CLASSES,
 } from "../../src/features/themes/shared/theme-layout-contract.js";
 
 function wait(ms = 0) {
@@ -640,6 +647,83 @@ function createCricketThemeGameState(initialActivePlayerIndex = 0) {
       return () => listeners.delete(listener);
     },
   };
+}
+
+function createCricketSurfaceGameState(initialActivePlayerIndex = 0) {
+  let activePlayerIndex = Number(initialActivePlayerIndex) || 0;
+  const listeners = new Set();
+
+  return {
+    getCricketGameModeNormalized() {
+      return "cricket";
+    },
+    getCricketGameMode() {
+      return "Cricket";
+    },
+    getCricketScoringModeNormalized() {
+      return "standard";
+    },
+    getCricketScoringMode() {
+      return "standard";
+    },
+    getActivePlayerIndex() {
+      return activePlayerIndex;
+    },
+    setActivePlayerIndex(nextIndex) {
+      activePlayerIndex = Number(nextIndex) || 0;
+      listeners.forEach((listener) => listener());
+    },
+    getActiveThrows() {
+      return [];
+    },
+    getActiveTurn() {
+      return null;
+    },
+    getSnapshot() {
+      return {
+        match: {
+          players: [{ id: "player-a" }, { id: "player-b" }],
+        },
+      };
+    },
+    isCricketVariant() {
+      return true;
+    },
+    subscribe(listener) {
+      if (typeof listener === "function") {
+        listeners.add(listener);
+      }
+      return () => listeners.delete(listener);
+    },
+  };
+}
+
+function createNumericCricketGrid(documentRef, marksByLabel = {}) {
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
+
+  targetOrder.forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    const marks = Array.isArray(marksByLabel?.[label]) ? marksByLabel[label] : [0, 0];
+    marks.forEach((value, index) => {
+      const playerCell = documentRef.createElement("td");
+      playerCell.classList.add("player-cell");
+      playerCell.setAttribute("data-player-index", String(index));
+      playerCell.setAttribute("data-marks", String(value));
+      row.appendChild(playerCell);
+    });
+
+    table.appendChild(row);
+  });
+
+  documentRef.main.appendChild(table);
+  return table;
 }
 
 test("selectWidestContentLayoutCandidate prefers widest slot and keeps deterministic tie-breaking", () => {
@@ -1521,7 +1605,7 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
   const replacementBoardSvg = createSparseImageBackedBoardSvg(documentRef);
   boardNodes.boardMediaRoot.appendChild(replacementBoardSvg);
   documentRef.flushMutations();
-  await wait(5);
+  await wait(40);
 
   assert.equal(
     replacementBoardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg),
@@ -1535,6 +1619,408 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
   );
 
   runtime.stop();
+});
+
+test("theme-cricket keeps layout hooks during a short missing-board gap", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1660, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1032, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-short-board-gap");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    false
+  );
+
+  boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+  documentRef.flushMutations([
+    {
+      type: "childList",
+      target: boardNodes.boardCanvas,
+      addedNodes: [],
+      removedNodes: [boardNodes.boardSvg],
+    },
+  ]);
+  await wait(80);
+
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    true
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket refreshes retained layout hooks when the board returns within grace", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1660, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1032, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-board-gap-recovers");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    false
+  );
+
+  boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+  documentRef.flushMutations([
+    {
+      type: "childList",
+      target: boardNodes.boardCanvas,
+      addedNodes: [],
+      removedNodes: [boardNodes.boardSvg],
+    },
+  ]);
+  await wait(80);
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    true
+  );
+
+  boardNodes.boardCanvas.appendChild(boardNodes.boardSvg);
+  documentRef.flushMutations([
+    {
+      type: "childList",
+      target: boardNodes.boardCanvas,
+      addedNodes: [boardNodes.boardSvg],
+      removedNodes: [],
+    },
+  ]);
+  await wait(160);
+
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    false
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket clears retained layout hooks after grace when the board stays missing", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1660, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1032, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-board-gap-timeout");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    false
+  );
+
+  boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+  documentRef.flushMutations([
+    {
+      type: "childList",
+      target: boardNodes.boardCanvas,
+      addedNodes: [],
+      removedNodes: [boardNodes.boardSvg],
+    },
+  ]);
+  await wait(950);
+
+  assertThemeHookState(boardNodes, false);
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    ""
+  );
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    false
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket keeps layout hooks through transient invalid-context host rebuilds when the last healthy layout is still connected", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 4);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-invalid-context-gap");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assertThemeHookState(boardNodes, true);
+
+  const undoButton = boardNodes.boardControls.querySelector("button");
+  boardNodes.boardControls.removeChild(undoButton);
+  documentRef.flushMutations([
+    {
+      type: "childList",
+      target: boardNodes.boardControls,
+      addedNodes: [],
+      removedNodes: [undoButton],
+    },
+  ]);
+  await wait(80);
+  assertThemeHookState(boardNodes, true);
+
+  boardNodes.boardControls.appendChild(undoButton);
+  documentRef.flushMutations([
+    {
+      type: "childList",
+      target: boardNodes.boardControls,
+      addedNodes: [undoButton],
+      removedNodes: [],
+    },
+  ]);
+  await wait(80);
+
+  assertThemeHookState(boardNodes, true);
+
+  runtime.stop();
+});
+
+test("theme-cricket does not retain hidden stale board hooks when the previous layout vanishes from the visible match surface", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1660, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1032, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 2);
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-hidden-stale-board");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+  assertThemeHookState(boardNodes, true);
+
+  [
+    boardNodes.contentSlot,
+    boardNodes.contentLeft,
+    boardNodes.contentBoard,
+    boardNodes.boardPanel,
+    boardNodes.boardViewport,
+    boardNodes.boardCanvas,
+  ].forEach((node) => {
+    node.style.display = "none";
+  });
+  documentRef.flushMutations([
+    { type: "attributes", target: boardNodes.contentSlot, attributeName: "style" },
+    { type: "attributes", target: boardNodes.contentBoard, attributeName: "style" },
+    { type: "attributes", target: boardNodes.boardPanel, attributeName: "style" },
+    { type: "attributes", target: boardNodes.boardViewport, attributeName: "style" },
+    { type: "attributes", target: boardNodes.boardCanvas, attributeName: "style" },
+  ]);
+  await wait(80);
+
+  assertThemeHookState(boardNodes, false);
+  assert.equal(
+    boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+    false
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket keeps theme hooks and cricket surface overlays during a short board gap", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 2);
+  createNumericCricketGrid(documentRef, {
+    "20": [1, 0],
+  });
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-surface-gap");
+  const domGuards = createDomGuards({ documentRef });
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const gameState = createCricketSurfaceGameState(0);
+  const schedulerHelpers = {
+    createRafScheduler(callback) {
+      return {
+        schedule() {
+          callback();
+        },
+        cancel() {},
+        isScheduled() {
+          return false;
+        },
+      };
+    },
+  };
+  const config = {
+    getFeatureConfig(featureKey) {
+      if (featureKey === "themes.cricket") {
+        return { showAvg: true };
+      }
+      if (featureKey === "cricketHighlighter") {
+        return {
+          showOpenObjectives: false,
+          showDeadObjectives: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      }
+      return {
+        rowWave: true,
+        badgeBeacon: true,
+        markProgress: true,
+        pressureEdge: true,
+        scoringStripe: true,
+        deadRowMuted: true,
+        deltaChips: true,
+        hitSpark: true,
+        roundTransitionWipe: true,
+        pressureOverlay: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      };
+    },
+  };
+
+  const cleanupTheme = mountThemeCricket({
+    windowRef,
+    documentRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    config,
+    helpers: schedulerHelpers,
+  });
+  const cleanupHighlighter = initializeCricketHighlighter({
+    windowRef,
+    documentRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain: { cricketRules, variantRules },
+    config,
+    helpers: schedulerHelpers,
+    degradedHostGraceMs: 300,
+  });
+  const cleanupGridFx = initializeCricketGridFx({
+    windowRef,
+    documentRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain: { cricketRules, variantRules },
+    config,
+    helpers: schedulerHelpers,
+    degradedHostGraceMs: 300,
+  });
+
+  try {
+    assertThemeHookState(boardNodes, true);
+    assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), true);
+    assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
+
+    boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+    documentRef.flushMutations([
+      {
+        type: "childList",
+        target: boardNodes.boardCanvas,
+        addedNodes: [],
+        removedNodes: [boardNodes.boardSvg],
+      },
+    ]);
+    await wait(80);
+
+    assertThemeHookState(boardNodes, true);
+    assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
+    assert.equal(
+      boardNodes.boardPanel.classList.contains(THEME_LAYOUT_RETENTION_CLASSES.boardGapHold),
+      true
+    );
+  } finally {
+    cleanupGridFx();
+    cleanupHighlighter();
+    cleanupTheme();
+  }
 });
 
 test("theme-cricket measures the rendered 4-player left layout before forcing the board visible", async () => {

@@ -11,13 +11,19 @@ import {
   BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
   isBoardInputModeControl,
 } from "../../../shared/board-input-mode.js";
-import { THEME_LAYOUT_HOOK_CLASSES } from "./theme-layout-contract.js";
+import {
+  THEME_LAYOUT_HOOK_CLASSES,
+  THEME_LAYOUT_RETENTION_CLASSES,
+} from "./theme-layout-contract.js";
+
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
 const CRICKET_PLAYER_AREA_REQUIRED_WIDTH_CSS_VARIABLE =
   "--ad-ext-theme-cricket-player-area-required-width";
 const CRICKET_PLAYER_COUNT_CSS_VARIABLE = "--ad-ext-theme-cricket-player-count";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
+export const CRICKET_THEME_TRANSIENT_BOARD_GAP_GRACE_MS = 700;
+export const CRICKET_THEME_TRANSIENT_BOARD_GAP_RECHECK_BUFFER_MS = 16;
 const CRICKET_READABILITY_POLICY = Object.freeze({
   playerCardMinWidthPx: 228,
   playerCardGapPx: 0,
@@ -40,6 +46,27 @@ function createCricketReadabilityState() {
     noticeTextNode: null,
     toggleNode: null,
     toggleHandler: null,
+  };
+}
+
+export function createLayoutHookRetentionState(options = {}) {
+  return {
+    enabled: options.enabled === true,
+    graceMs: Math.max(
+      0,
+      Number.isFinite(Number(options.graceMs))
+        ? Number(options.graceMs)
+        : CRICKET_THEME_TRANSIENT_BOARD_GAP_GRACE_MS
+    ),
+    recheckBufferMs: Math.max(
+      0,
+      Number.isFinite(Number(options.recheckBufferMs))
+        ? Number(options.recheckBufferMs)
+        : CRICKET_THEME_TRANSIENT_BOARD_GAP_RECHECK_BUFFER_MS
+    ),
+    lastHealthyAtMs: 0,
+    retainedStatus: "",
+    boardGapHoldActive: false,
   };
 }
 
@@ -67,6 +94,62 @@ function findBoardSvg(documentRef) {
 
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function getComputedStyleRef(node) {
+  const viewRef = node?.ownerDocument?.defaultView;
+  if (!viewRef || typeof viewRef.getComputedStyle !== "function") {
+    return null;
+  }
+
+  try {
+    return viewRef.getComputedStyle(node);
+  } catch (_) {
+    return null;
+  }
+}
+
+function isNodeExplicitlyHidden(node) {
+  if (!node || typeof node !== "object") {
+    return true;
+  }
+
+  if (node.hidden === true) {
+    return true;
+  }
+
+  const ariaHidden = normalizeText(node.getAttribute?.("aria-hidden"));
+  if (ariaHidden === "true") {
+    return true;
+  }
+
+  const hiddenAttribute =
+    typeof node.getAttribute === "function" ? node.getAttribute("hidden") : null;
+  if (hiddenAttribute !== null) {
+    return true;
+  }
+
+  const inlineDisplay = normalizeText(node.style?.display);
+  const inlineVisibility = normalizeText(node.style?.visibility);
+  const inlineOpacity = normalizeText(node.style?.opacity);
+  if (
+    inlineDisplay === "none" ||
+    inlineVisibility === "hidden" ||
+    inlineVisibility === "collapse" ||
+    inlineOpacity === "0"
+  ) {
+    return true;
+  }
+
+  const computedStyle = getComputedStyleRef(node);
+  if (!computedStyle) {
+    return false;
+  }
+
+  const display = normalizeText(computedStyle.display);
+  const visibility = normalizeText(computedStyle.visibility);
+  const opacity = normalizeText(computedStyle.opacity);
+  return display === "none" || visibility === "hidden" || visibility === "collapse" || opacity === "0";
 }
 
 function isInteractiveControlAncestor(node) {
@@ -526,6 +609,98 @@ function getElementHeight(node) {
   }
 }
 
+function isRenderableLayoutNode(node, options = {}) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  if (node.isConnected === false || isNodeExplicitlyHidden(node)) {
+    return false;
+  }
+
+  const minWidth = Math.max(0, Number(options.minWidth) || 0);
+  const minHeight = Math.max(0, Number(options.minHeight) || 0);
+  const minArea = Math.max(0, Number(options.minArea) || 0);
+  const width = getElementWidth(node);
+  const height = getElementHeight(node);
+  if (minWidth > 0 && width < minWidth) {
+    return false;
+  }
+  if (minHeight > 0 && height < minHeight) {
+    return false;
+  }
+  if (minArea > 0 && width * height < minArea) {
+    return false;
+  }
+
+  return width > 0 && height > 0;
+}
+
+function hasRenderableContentLayoutTargets(targets) {
+  if (!targets || typeof targets !== "object") {
+    return false;
+  }
+
+  const contentNodes = [targets.contentSlot, targets.contentLeft, targets.contentBoard].filter(Boolean);
+  if (!contentNodes.length) {
+    return false;
+  }
+
+  return contentNodes.every((node) =>
+    isRenderableLayoutNode(node, {
+      minWidth: 24,
+      minHeight: 24,
+      minArea: 576,
+    })
+  );
+}
+
+function hasRenderableBoardLayoutTargets(targets) {
+  if (!targets || typeof targets !== "object") {
+    return false;
+  }
+
+  const boardViewport = targets.boardViewport || null;
+  const boardCanvas = targets.boardCanvas || null;
+  const boardPanel = targets.boardPanel || null;
+  if (!boardViewport || !boardCanvas) {
+    return false;
+  }
+
+  const boardViewportIsPanel = boardViewport === boardPanel;
+  const viewportRenderable = boardViewportIsPanel
+    ? isRenderableLayoutNode(boardViewport, {
+        minWidth: 120,
+        minHeight: 24,
+        minArea: 2880,
+      })
+    : isRenderableLayoutNode(boardViewport, {
+        minWidth: 120,
+        minHeight: 120,
+        minArea: 14400,
+      });
+  if (
+    !viewportRenderable ||
+    !isRenderableLayoutNode(boardCanvas, {
+      minWidth: 120,
+      minHeight: 120,
+      minArea: 14400,
+    })
+  ) {
+    return false;
+  }
+
+  if (!boardPanel) {
+    return true;
+  }
+
+  return isRenderableLayoutNode(boardPanel, {
+    minWidth: 120,
+    minHeight: 24,
+    minArea: 2880,
+  });
+}
+
 function getSmallestPositiveDimension(values = []) {
   const normalized = values
     .map((value) => Number.parseFloat(value))
@@ -619,10 +794,15 @@ export function selectWidestContentLayoutCandidate(candidates = []) {
     return null;
   }
 
+  const renderableCandidates = candidates.filter((candidate) =>
+    hasRenderableContentLayoutTargets(candidate)
+  );
+  const comparableCandidates = renderableCandidates.length ? renderableCandidates : candidates;
+
   let bestCandidate = null;
   let bestMeta = null;
 
-  candidates.forEach((candidate, index) => {
+  comparableCandidates.forEach((candidate, index) => {
     if (!candidate || !candidate.contentSlot || !candidate.contentLeft || !candidate.contentBoard) {
       return;
     }
@@ -752,6 +932,10 @@ function isBoardLayoutContextConsistent(targets) {
     return false;
   }
 
+  if (!hasRenderableBoardLayoutTargets(targets)) {
+    return false;
+  }
+
   if (targets.boardPanel === targets.boardCanvas) {
     return false;
   }
@@ -807,6 +991,10 @@ function isBoardLayoutContextConsistent(targets) {
     return false;
   }
 
+  if (!hasRenderableContentLayoutTargets(targets)) {
+    return false;
+  }
+
   if (!elementContains(targets.contentSlot, targets.contentLeft)) {
     return false;
   }
@@ -829,10 +1017,12 @@ function resolveBoardLayoutTargets(documentRef) {
 
   const rawContentTargets = resolveContentLayoutTargets(documentRef, boardSvg) || {};
   const hasCompleteContentTargets = hasCompleteContentLayoutTargets(rawContentTargets);
+  const hasRenderableContentTargets =
+    hasCompleteContentTargets && hasRenderableContentLayoutTargets(rawContentTargets);
   const hasPartialContentTargets =
     Boolean(rawContentTargets.contentSlot || rawContentTargets.contentLeft || rawContentTargets.contentBoard) &&
     !hasCompleteContentTargets;
-  const contentTargets = hasCompleteContentTargets ? rawContentTargets : {};
+  const contentTargets = hasRenderableContentTargets ? rawContentTargets : {};
   const boardCanvas = resolveThemeBoardCanvasTarget(boardSvg);
   const boardEventTargets = resolveThemeBoardEventTargets(boardCanvas, boardSvg);
   const boardViewport = resolveThemeBoardViewportTarget(boardCanvas, boardSvg);
@@ -922,6 +1112,7 @@ function toggleClass(node, className, enabled) {
 
 export function clearBoardLayoutHooks(state) {
   const previous = state?.layoutHookTargets || {};
+  removeBoardGapHold(previous);
   clearBoardSizeVariable(previous.boardCanvas);
   if (previous.boardEventShell && previous.boardEventShell !== previous.boardCanvas) {
     clearBoardSizeVariable(previous.boardEventShell);
@@ -930,6 +1121,87 @@ export function clearBoardLayoutHooks(state) {
     removeClass(previous[key], className);
   });
   state.layoutHookTargets = {};
+}
+
+function resolveLayoutHookRetention(state) {
+  const retention = state?.layoutHookRetention;
+  return retention && typeof retention === "object" ? retention : null;
+}
+
+function clearRetainedLayoutStatus(state) {
+  const retention = resolveLayoutHookRetention(state);
+  if (!retention) {
+    return;
+  }
+  retention.retainedStatus = "";
+  retention.boardGapHoldActive = false;
+}
+
+function markHealthyLayoutRetention(state, nowMs) {
+  const retention = resolveLayoutHookRetention(state);
+  if (!retention) {
+    return;
+  }
+  retention.lastHealthyAtMs = Math.max(0, Number(nowMs) || 0);
+  retention.retainedStatus = "";
+  retention.boardGapHoldActive = false;
+}
+
+function resolveRetainedLayoutRecheckDelay(state, nowMs) {
+  const retention = resolveLayoutHookRetention(state);
+  if (!retention?.enabled) {
+    return -1;
+  }
+
+  const graceMs = Math.max(0, Number(retention.graceMs) || 0);
+  const bufferMs = Math.max(0, Number(retention.recheckBufferMs) || 0);
+  const lastHealthyAtMs = Math.max(0, Number(retention.lastHealthyAtMs) || 0);
+  if (!(graceMs > 0) || !(lastHealthyAtMs > 0)) {
+    return -1;
+  }
+
+  const ageMs = Math.max(0, Math.round(Math.max(0, Number(nowMs) || 0) - lastHealthyAtMs));
+  if (ageMs >= graceMs) {
+    return -1;
+  }
+
+  return Math.max(1, graceMs - ageMs + bufferMs);
+}
+
+function maybeRetainLayoutHooks(state, status, previous, nowMs) {
+  if (!previous || !areRetainableLayoutHookTargetsConnected(previous)) {
+    removeBoardGapHold(previous);
+    clearRetainedLayoutStatus(state);
+    return {
+      status,
+      retained: false,
+      recheckDelayMs: -1,
+    };
+  }
+
+  const recheckDelayMs = resolveRetainedLayoutRecheckDelay(state, nowMs);
+  if (!(recheckDelayMs > 0)) {
+    removeBoardGapHold(previous);
+    clearRetainedLayoutStatus(state);
+    return {
+      status,
+      retained: false,
+      recheckDelayMs: -1,
+    };
+  }
+
+  const retention = resolveLayoutHookRetention(state);
+  if (retention) {
+    retention.retainedStatus = String(status || "");
+    retention.boardGapHoldActive = true;
+  }
+  applyBoardGapHold(previous);
+
+  return {
+    status,
+    retained: true,
+    recheckDelayMs,
+  };
 }
 
 function areLayoutHookTargetsConnected(targets) {
@@ -951,24 +1223,148 @@ function areLayoutHookTargetsConnected(targets) {
   return relevantNodes.every((node) => node.isConnected !== false);
 }
 
-export function updateBoardLayoutHooks(documentRef, state) {
+function areRetainableLayoutHookTargetsConnected(targets) {
+  if (!targets || typeof targets !== "object") {
+    return false;
+  }
+  const connectedNodes = [
+    targets.contentSlot,
+    targets.contentLeft,
+    targets.contentBoard,
+    targets.boardPanel,
+    targets.boardControls,
+    targets.boardViewport,
+    targets.boardEventShell,
+    targets.boardCanvas,
+    targets.boardMediaRoot,
+  ].filter(Boolean);
+  if (!connectedNodes.length) {
+    return false;
+  }
+  if (connectedNodes.some((node) => node.isConnected === false)) {
+    return false;
+  }
+
+  if (
+    targets.contentSlot &&
+    targets.contentLeft &&
+    targets.contentBoard &&
+    !hasRenderableContentLayoutTargets(targets)
+  ) {
+    return false;
+  }
+
+  return hasRenderableBoardLayoutTargets(targets);
+}
+
+function collectLayoutHookMutationNodes(mutation) {
+  return [
+    mutation?.target || null,
+    ...Array.from(mutation?.addedNodes || []),
+    ...Array.from(mutation?.removedNodes || []),
+  ].filter(Boolean);
+}
+
+function layoutHookTargetTouchesNode(targetNode, candidateNode) {
+  if (!targetNode || !candidateNode) {
+    return false;
+  }
+
+  return (
+    targetNode === candidateNode ||
+    elementContains(targetNode, candidateNode) ||
+    elementContains(candidateNode, targetNode)
+  );
+}
+
+function applyBoardGapHold(targets) {
+  const holdClass = THEME_LAYOUT_RETENTION_CLASSES.boardGapHold;
+  [
+    targets?.boardPanel,
+    targets?.boardViewport,
+    targets?.boardEventShell,
+    targets?.boardCanvas,
+    targets?.boardMediaRoot,
+  ].filter(Boolean).forEach((node) => addClass(node, holdClass));
+}
+
+function removeBoardGapHold(targets) {
+  const holdClass = THEME_LAYOUT_RETENTION_CLASSES.boardGapHold;
+  [
+    targets?.boardPanel,
+    targets?.boardViewport,
+    targets?.boardEventShell,
+    targets?.boardCanvas,
+    targets?.boardMediaRoot,
+  ].filter(Boolean).forEach((node) => removeClass(node, holdClass));
+}
+
+export function hasBoardLayoutHookMutation(mutations = [], state = {}) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+
+  const targets = state?.layoutHookTargets || {};
+  const trackedNodes = [
+    targets.contentBoard,
+    targets.boardPanel,
+    targets.boardControls,
+    targets.boardViewport,
+    targets.boardEventShell,
+    targets.boardCanvas,
+    targets.boardMediaRoot,
+    targets.boardSvg,
+  ].filter(Boolean);
+  if (!trackedNodes.length) {
+    return false;
+  }
+
+  return mutations.some((mutation) => {
+    const touchedNodes = collectLayoutHookMutationNodes(mutation);
+    if (!touchedNodes.length) {
+      return false;
+    }
+
+    return touchedNodes.some((candidateNode) => {
+      return trackedNodes.some((targetNode) =>
+        layoutHookTargetTouchesNode(targetNode, candidateNode)
+      );
+    });
+  });
+}
+
+export function updateBoardLayoutHooks(documentRef, state, options = {}) {
+  const nowMs = Number.isFinite(Number(options.nowMs)) ? Number(options.nowMs) : Date.now();
   const resolution = resolveBoardLayoutTargets(documentRef);
   const nextTargets = resolution?.targets || {};
   const previous = state.layoutHookTargets || {};
 
   if (!resolution || resolution.status === "missing-board") {
-    if (shouldKeepImageBackedLayoutHooks(previous)) {
-      return;
+    const retainedLayout = maybeRetainLayoutHooks(state, "missing-board", previous, nowMs);
+    if (retainedLayout.retained) {
+      return retainedLayout;
     }
     clearBoardLayoutHooks(state);
-    return;
+    clearRetainedLayoutStatus(state);
+    return {
+      status: "missing-board",
+      retained: false,
+      recheckDelayMs: -1,
+    };
   }
 
   if (resolution.status !== "valid") {
-    if (!areLayoutHookTargetsConnected(previous)) {
-      clearBoardLayoutHooks(state);
+    const retainedLayout = maybeRetainLayoutHooks(state, resolution.status, previous, nowMs);
+    if (retainedLayout.retained) {
+      return retainedLayout;
     }
-    return;
+    clearBoardLayoutHooks(state);
+    clearRetainedLayoutStatus(state);
+    return {
+      status: resolution.status,
+      retained: false,
+      recheckDelayMs: -1,
+    };
   }
 
   if (previous.boardCanvas && previous.boardCanvas !== nextTargets.boardCanvas) {
@@ -987,6 +1383,7 @@ export function updateBoardLayoutHooks(documentRef, state) {
       removeClass(previous[key], className);
     }
   });
+  removeBoardGapHold(previous);
 
   Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
     addClass(nextTargets[key], className);
@@ -1007,4 +1404,10 @@ export function updateBoardLayoutHooks(documentRef, state) {
   }
 
   state.layoutHookTargets = nextTargets;
+  markHealthyLayoutRetention(state, nowMs);
+  return {
+    status: "valid",
+    retained: false,
+    recheckDelayMs: -1,
+  };
 }

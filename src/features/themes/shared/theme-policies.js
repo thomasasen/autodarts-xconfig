@@ -6,6 +6,7 @@ import {
   hasCricketPlayerStateMutation,
   syncCricketActivePlayerState,
 } from "./cricket-readability.js";
+import { createLayoutHookRetentionState } from "./board-layout-resolver.js";
 import {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
   THEME_CRICKET_READABILITY,
@@ -19,6 +20,9 @@ function createCricketThemePolicy() {
     createState() {
       return {
         cricketReadability: createCricketReadabilityState(),
+        layoutHookRetention: createLayoutHookRetentionState({
+          enabled: true,
+        }),
       };
     },
     getManagedNodeIds() {

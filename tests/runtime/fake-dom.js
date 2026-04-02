@@ -1267,8 +1267,12 @@ function createLocation(initialHref = "https://play.autodarts.io/lobbies") {
     search: parsed.search,
     hash: parsed.hash,
     __replacedUrls: [],
+    __reloadCount: 0,
     get href() {
       return `${this.origin}${this.pathname}${this.search}${this.hash}`;
+    },
+    reload() {
+      this.__reloadCount += 1;
     },
     replace(url) {
       this.__replacedUrls.push(String(url || ""));
