@@ -47,6 +47,11 @@ const GRID_MIN_UNIQUE_LABELS = 4;
 const GRID_MIN_ROWS_WITH_PLAYER_CELLS = 2;
 const GRID_MIN_COVERAGE = 0;
 const BASE_CRICKET_OBJECTIVE_COUNT = 7;
+const GRID_MIN_GEOMETRY_LABELS = 4;
+const GRID_MIN_ROW_BAND_COUNT = 2;
+const GRID_ROW_BAND_RATIO = 0.5;
+const GRID_ROW_BAND_TOLERANCE_PX = 8;
+const GRID_COLUMN_BAND_TOLERANCE_PX = 24;
 
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
@@ -194,6 +199,97 @@ function isCandidateGridRoot(node) {
   return true;
 }
 
+function readNodeRect(node) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return null;
+  }
+
+  const rect = node.getBoundingClientRect();
+  const left = Number(rect?.x ?? rect?.left);
+  const top = Number(rect?.y ?? rect?.top);
+  const width = Number(rect?.width);
+  const height = Number(rect?.height);
+  if (
+    !Number.isFinite(left) ||
+    !Number.isFinite(top) ||
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    return null;
+  }
+
+  return { left, top, width, height };
+}
+
+function countCoordinateBands(values, tolerancePx) {
+  const numericValues = Array.isArray(values)
+    ? values
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value))
+      .sort((left, right) => left - right)
+    : [];
+  if (!numericValues.length) {
+    return 0;
+  }
+
+  const tolerance = Math.max(0, Number(tolerancePx) || 0);
+  let bands = 1;
+  let lastAnchor = numericValues[0];
+  for (let index = 1; index < numericValues.length; index += 1) {
+    const value = numericValues[index];
+    if (Math.abs(value - lastAnchor) > tolerance) {
+      bands += 1;
+      lastAnchor = value;
+    }
+  }
+  return bands;
+}
+
+function summarizeLabelGeometry(labelEntries, cricketRules, targetSet) {
+  const entries = Array.isArray(labelEntries) ? labelEntries : [];
+  if (entries.length < GRID_MIN_GEOMETRY_LABELS) {
+    return {
+      usable: false,
+      rowBandCount: 0,
+      columnBandCount: 0,
+    };
+  }
+
+  const rects = entries
+    .map((entry) => {
+      const labelCell =
+        resolveLabelCell(entry?.node, cricketRules, targetSet, entry?.label || "") || entry?.node || null;
+      return readNodeRect(labelCell);
+    })
+    .filter(Boolean);
+
+  if (rects.length < Math.min(GRID_MIN_GEOMETRY_LABELS, entries.length)) {
+    return {
+      usable: false,
+      rowBandCount: 0,
+      columnBandCount: 0,
+    };
+  }
+
+  const rowBandCount = countCoordinateBands(
+    rects.map((rect) => rect.top),
+    GRID_ROW_BAND_TOLERANCE_PX
+  );
+  const columnBandCount = countCoordinateBands(
+    rects.map((rect) => rect.left),
+    GRID_COLUMN_BAND_TOLERANCE_PX
+  );
+  const usable = rowBandCount > 1 || columnBandCount > 1;
+
+  return {
+    usable,
+    rowBandCount,
+    columnBandCount,
+  };
+}
+
 function getRootScore(rootNode, cricketRules, targetSet) {
   if (!isCandidateGridRoot(rootNode)) {
     return {
@@ -252,8 +348,25 @@ function getRootScore(rootNode, cricketRules, targetSet) {
     };
   }
 
+  const labelGeometry = summarizeLabelGeometry(labels, cricketRules, targetSet);
+  const requiredRowBands = Math.min(
+    uniqueLabels.size,
+    Math.max(GRID_MIN_ROW_BAND_COUNT, Math.ceil(uniqueLabels.size * GRID_ROW_BAND_RATIO))
+  );
+  if (labelGeometry.usable && labelGeometry.rowBandCount < requiredRowBands) {
+    return {
+      score: 0,
+      labels,
+      diagnostics,
+      rowsWithPlayerCells,
+      coverage,
+    };
+  }
+
   const visibleBonus = isNodeVisible(rootNode) ? 10 : 0;
-  const score = uniqueLabels.size * 100 + labels.length + visibleBonus + rowsWithPlayerCells * 6;
+  const geometryBonus = labelGeometry.usable ? labelGeometry.rowBandCount * 8 : 0;
+  const score =
+    uniqueLabels.size * 100 + labels.length + visibleBonus + rowsWithPlayerCells * 6 + geometryBonus;
   return { score, labels, diagnostics, rowsWithPlayerCells, coverage };
 }
 

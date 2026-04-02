@@ -164,6 +164,75 @@ function createMergedNestedLabelCellGrid(documentRef, labels, marksByRow) {
   return grid;
 }
 
+function createCollapsedObjectiveStrip(documentRef, labels) {
+  const wrapper = documentRef.createElement("div");
+  wrapper.className = "chakra-stack";
+  wrapper.__rect = { left: 200, top: 0, width: 1336, height: 671 };
+
+  const header = documentRef.createElement("div");
+  header.className = "chakra-wrap";
+  header.__rect = { left: 216, top: 16, width: 1304, height: 36 };
+  header.textContent = "Cricket R1/50";
+  wrapper.appendChild(header);
+
+  const hiddenSettings = documentRef.createElement("div");
+  hiddenSettings.id = "ad-ext-game-settings-extra";
+  hiddenSettings.className = "chakra-stack css-1igwmid";
+  hiddenSettings.textContent = "TextDummy";
+  hiddenSettings.style.display = "none";
+  hiddenSettings.__rect = { left: 0, top: 0, width: 0, height: 0 };
+  wrapper.appendChild(hiddenSettings);
+
+  const turnPreview = documentRef.createElement("div");
+  turnPreview.id = "ad-ext-turn";
+  turnPreview.className = "chakra-stack css-1emway5";
+  turnPreview.textContent = "0";
+  turnPreview.__rect = { left: 216, top: 68, width: 1304, height: 100 };
+  wrapper.appendChild(turnPreview);
+
+  const matchBody = documentRef.createElement("div");
+  matchBody.className = "css-u5v8bq";
+  matchBody.__rect = { left: 216, top: 184, width: 644, height: 500 };
+  wrapper.appendChild(matchBody);
+
+  const scorePane = documentRef.createElement("div");
+  scorePane.className = "css-rc3vw3";
+  scorePane.__rect = { left: 216, top: 184, width: 383, height: 500 };
+  matchBody.appendChild(scorePane);
+
+  const strip = documentRef.createElement("div");
+  strip.className = "css-rfeml4";
+  strip.__rect = { left: 216, top: 284, width: 922, height: 21 };
+  scorePane.appendChild(strip);
+
+  labels.forEach((label, index) => {
+    const className = index % 2 === 0 ? "css-1yso2z2" : "css-jpb1ox";
+    const rowIndex = Math.floor(index / 2);
+    const top = 284 + rowIndex * 3;
+    const labelLeft = index % 2 === 0 ? 216 : 677;
+    const playerLeft = index % 2 === 0 ? 446 : 907;
+
+    const labelCell = documentRef.createElement("div");
+    labelCell.className = className;
+    labelCell.__rect = { left: labelLeft, top, width: 230, height: 2 };
+    const labelText = documentRef.createElement("p");
+    labelText.className = "chakra-text css-1qlemha";
+    labelText.textContent = label === "BULL" ? "Bull" : label;
+    labelText.__rect = { left: labelLeft, top, width: 44, height: 41 };
+    labelCell.appendChild(labelText);
+
+    const playerCell = documentRef.createElement("div");
+    playerCell.className = className;
+    playerCell.__rect = { left: playerLeft, top, width: 230, height: 2 };
+
+    strip.appendChild(labelCell);
+    strip.appendChild(playerCell);
+  });
+
+  documentRef.main.appendChild(wrapper);
+  return wrapper;
+}
+
 function installTransientLabelDiscoveryFilter(gridRoot, suppressedLabels) {
   const originalQuerySelectorAll = gridRoot.querySelectorAll.bind(gridRoot);
 
@@ -1335,6 +1404,31 @@ test("render state ignores collapsed mixed-content pseudo rows from generic cric
   });
 
   documentRef.main.appendChild(wrapper);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.surfaceStatus, "missing-grid");
+  assert.equal(Boolean(renderState?.gridSnapshot?.root), false);
+  assert.equal(Number(renderState?.discoveredUniqueLabelCount) || 0, 0);
+});
+
+test("render state ignores collapsed horizontal objective strips from live cricket match layouts", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createCollapsedObjectiveStrip(documentRef, ["20", "19", "18", "17", "16", "15", "BULL"]);
 
   const renderState = buildCricketRenderState({
     documentRef,

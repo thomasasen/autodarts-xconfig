@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.110] - 2026-04-02
+
+### Fixed
+
+- Nutzerwirkung: Cricket-Layouts mit nur kollabierten Zielstreifen werden jetzt lieber unangetastet gelassen, statt die Match-Ansicht fälschlich als vollwertiges Cricket-Grid zu dekorieren und damit das sichtbare Layout in einen unbrauchbaren Horizontalstreifen zu drücken.
+  Technik: Die Grid-Erkennung verlangt bei belastbarer DOM-Geometrie jetzt zusätzlich mehrere vertikale Label-Bänder, sodass rein horizontale Objective-Strips trotz gültiger Labels und Sibling-Zellen nicht mehr als Cricket-Grid durchrutschen; eine neue Runtime-Regression bildet genau diesen Live-Match-Fall mit verstecktem `TextDummy`-Container und kollabiertem Zielstreifen nach.
+
 ## [2.0.109] - 2026-04-02
 
 ### Fixed
@@ -1133,7 +1140,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.109]: https://github.com/thomasasen/autodarts-xconfig/compare/84362ea...HEAD
+[2.0.110]: https://github.com/thomasasen/autodarts-xconfig/compare/3f4c391...HEAD
+[2.0.109]: https://github.com/thomasasen/autodarts-xconfig/compare/84362ea...3f4c391
 [2.0.108]: https://github.com/thomasasen/autodarts-xconfig/compare/382e093...84362ea
 [2.0.107]: https://github.com/thomasasen/autodarts-xconfig/compare/eeea914...382e093
 [2.0.106]: https://github.com/thomasasen/autodarts-xconfig/compare/d632f40...eeea914
