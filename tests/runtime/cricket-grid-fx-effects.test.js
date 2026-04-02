@@ -609,6 +609,93 @@ test("cricket grid fx renders the bull row with the unicode bull label and resto
   assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), null);
 });
 
+test("cricket grid fx never decorates or flattens the app root when a transient row misclassifies it", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  documentRef.winnerNode.classList.remove("ad-ext-player");
+
+  createNumericCricketGrid(documentRef, {
+    "20": [0, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const visualConfig = resolveCricketGridFxConfig({
+    rowWave: false,
+    badgeBeacon: true,
+    markProgress: false,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: false,
+    hitSpark: false,
+    roundTransitionWipe: false,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+
+  const state = createCricketGridFxState(windowRef);
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: { grid: null, board: null },
+  });
+
+  const rootElement = documentRef.rootElement;
+  const rootChildCountBefore = Number(rootElement?.children?.length || 0);
+  const row20 = renderState?.gridSnapshot?.rowMap?.get("20") || null;
+  assert.ok(row20, "20 row exists");
+
+  const degradedRow20 = {
+    ...row20,
+    labelCell: rootElement,
+    badgeNode: rootElement,
+    playerCells: [rootElement, row20?.playerCellsByIndex?.[1] || null].filter(Boolean),
+    playerCellsByIndex: [rootElement, row20?.playerCellsByIndex?.[1] || null],
+  };
+  const degradedRows = (renderState?.gridSnapshot?.rows || []).map((row) => {
+    return row?.label === "20" ? degradedRow20 : row;
+  });
+  const degradedRenderState = {
+    ...renderState,
+    gridSnapshot: {
+      ...(renderState?.gridSnapshot || {}),
+      rows: degradedRows,
+      rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
+    },
+  };
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: degradedRenderState,
+    state,
+    visualConfig,
+    turnToken: "protected-root-row",
+  });
+
+  assert.equal(rootElement.classList.contains(CELL_CLASS), false);
+  assert.equal(rootElement.classList.contains(LABEL_CLASS), false);
+  assert.equal(rootElement.classList.contains(BADGE_BEACON_CLASS), false);
+  assert.equal(state.displayLabelTextByNode.has(rootElement), false);
+
+  clearCricketGridFxState(state);
+
+  assert.equal(rootElement.classList.contains(CELL_CLASS), false);
+  assert.equal(rootElement.classList.contains(LABEL_CLASS), false);
+  assert.equal(Number(rootElement?.children?.length || 0), rootChildCountBefore);
+  assert.ok(rootElement.querySelector("main"), "root keeps nested app shell after cleanup");
+});
+
 test("cricket grid fx converts badge-like bull labels back into the front label cell contract", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

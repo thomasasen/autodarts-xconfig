@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.109] - 2026-04-02
+
+### Fixed
+
+- Nutzerwirkung: Cricket-Matches bleiben jetzt auch beim Wechsel innerhalb der laufenden Play-Applikation stabil sichtbar, statt sich kurz korrekt aufzubauen und danach in einen einzelnen Textblock zu kollabieren.
+  Technik: `cricket-grid-fx` schützt App-Shell-Knoten wie `#root`, `body` und `main` jetzt explizit davor, als Cricket-Label-, Badge- oder Zellziel dekoriert oder beim Cleanup per `textContent` zurückgeschrieben zu werden; eine zusätzliche Runtime-Regression deckt genau den transienten SPA-Fehlpfad mit fälschlich als Row eingebrachtem App-Root ausdrücklich ab.
+
 ## [2.0.108] - 2026-04-01
 
 ### Fixed
@@ -1126,7 +1133,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.108]: https://github.com/thomasasen/autodarts-xconfig/compare/382e093...HEAD
+[2.0.109]: https://github.com/thomasasen/autodarts-xconfig/compare/84362ea...HEAD
+[2.0.108]: https://github.com/thomasasen/autodarts-xconfig/compare/382e093...84362ea
 [2.0.107]: https://github.com/thomasasen/autodarts-xconfig/compare/eeea914...382e093
 [2.0.106]: https://github.com/thomasasen/autodarts-xconfig/compare/d632f40...eeea914
 [2.0.105]: https://github.com/thomasasen/autodarts-xconfig/compare/1a0bb49...d632f40
