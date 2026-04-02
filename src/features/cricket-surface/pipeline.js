@@ -37,12 +37,14 @@ export const CRICKET_SURFACE_STATUS = Object.freeze({
   READY: "ready",
   MISSING_GRID: "missing-grid",
   MISSING_BOARD: "missing-board",
+  DEGRADED_HOST: "degraded-host",
   PAUSED_ROUTE: "paused-route",
   INACTIVE_VARIANT: "inactive-variant",
 });
 
 const PAUSED_ROUTE_PATH = "/ad-xconfig";
 const PAUSED_ROUTE_HASH = "#ad-xconfig";
+const MATCH_ROUTE_PATTERN = /^\/matches\/([^/]+)$/i;
 const GRID_MIN_UNIQUE_LABELS = 4;
 const GRID_MIN_ROWS_WITH_PLAYER_CELLS = 2;
 const GRID_MIN_COVERAGE = 0;
@@ -52,6 +54,12 @@ const GRID_MIN_ROW_BAND_COUNT = 2;
 const GRID_ROW_BAND_RATIO = 0.5;
 const GRID_ROW_BAND_TOLERANCE_PX = 8;
 const GRID_COLUMN_BAND_TOLERANCE_PX = 24;
+const DEGRADED_HOST_DEFAULT_GRACE_MS = 300;
+const DEGRADED_HOST_MIN_LABELS = 4;
+const DEGRADED_HOST_MIN_PANE_HEIGHT_RATIO = 0.55;
+const DEGRADED_HOST_MIN_LEFT_PANE_WIDTH_RATIO = 0.4;
+const DEGRADED_HOST_MIN_RIGHT_PANE_WIDTH_RATIO = 0.18;
+const DEGRADED_HOST_MIN_PANE_SPAN_RATIO = 0.8;
 
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
@@ -85,6 +93,7 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
 
 const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
+const degradedHostDetectionByWindow = new WeakMap();
 
 function isNodeVisible(node) {
   return isNodeVisibleFromDiscovery(node);
@@ -115,6 +124,13 @@ function normalizeHashValue(hashValue) {
     return "";
   }
   return normalized.startsWith("#") ? normalized : `#${normalized}`;
+}
+
+export function extractMatchRouteId(windowRef, documentRef) {
+  const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
+  const routePath = normalizeRoutePath(locationRef?.pathname || "");
+  const match = routePath.match(MATCH_ROUTE_PATTERN);
+  return match?.[1] || "";
 }
 
 function readVariantText(documentRef) {
@@ -221,6 +237,158 @@ function readNodeRect(node) {
   }
 
   return { left, top, width, height };
+}
+
+function readCompactNodeText(node) {
+  return String(node?.textContent || "").replace(/\s+/g, "").trim();
+}
+
+function containsNode(parentNode, childNode) {
+  if (!parentNode || !childNode) {
+    return false;
+  }
+  if (parentNode === childNode) {
+    return true;
+  }
+  return typeof parentNode.contains === "function" ? parentNode.contains(childNode) : false;
+}
+
+function readVisibleChildEntries(node) {
+  return Array.from(node?.children || [])
+    .map((childNode) => ({
+      node: childNode,
+      rect: readNodeRect(childNode),
+    }))
+    .filter((entry) => Boolean(entry.rect) && isNodeVisible(entry.node));
+}
+
+function hasDegradedControlPaneText(node) {
+  const compactText = readCompactNodeText(node);
+  if (!compactText) {
+    return false;
+  }
+  if (!/undo/i.test(compactText) || !/next/i.test(compactText)) {
+    return false;
+  }
+  return /(20|19|18|17|16|15|bull)/i.test(compactText) || /\d{6,}/.test(compactText);
+}
+
+function findDegradedHostCandidate(extracted, options = {}) {
+  const gridRoot = extracted?.gridSnapshot?.root || null;
+  const documentRef = options.documentRef || extracted?.documentRef || null;
+  if (!gridRoot || !documentRef) {
+    return null;
+  }
+
+  const uniqueLabelCount = Number(
+    extracted?.discoveredUniqueLabelCount ||
+      extracted?.gridSnapshot?.rowMap?.size ||
+      extracted?.gridSnapshot?.labels?.length ||
+      0
+  );
+  if (uniqueLabelCount < DEGRADED_HOST_MIN_LABELS) {
+    return null;
+  }
+
+  let current = gridRoot;
+  while (current && current !== documentRef.body && current !== documentRef.documentElement) {
+    const hostRect = readNodeRect(current);
+    const childEntries = readVisibleChildEntries(current);
+    if (hostRect && childEntries.length >= 2) {
+      const dominantChildren = childEntries
+        .filter((entry) => entry.rect.height >= hostRect.height * DEGRADED_HOST_MIN_PANE_HEIGHT_RATIO)
+        .sort((left, right) => {
+          const leftArea = left.rect.width * left.rect.height;
+          const rightArea = right.rect.width * right.rect.height;
+          return rightArea - leftArea;
+        })
+        .slice(0, 2)
+        .sort((left, right) => left.rect.left - right.rect.left);
+
+      if (dominantChildren.length === 2) {
+        const [leftPane, rightPane] = dominantChildren;
+        const paneSpan = leftPane.rect.width + rightPane.rect.width;
+        const leftWidthRatio = hostRect.width > 0 ? leftPane.rect.width / hostRect.width : 0;
+        const rightWidthRatio = hostRect.width > 0 ? rightPane.rect.width / hostRect.width : 0;
+        if (
+          containsNode(leftPane.node, gridRoot) &&
+          paneSpan >= hostRect.width * DEGRADED_HOST_MIN_PANE_SPAN_RATIO &&
+          leftWidthRatio >= DEGRADED_HOST_MIN_LEFT_PANE_WIDTH_RATIO &&
+          rightWidthRatio >= DEGRADED_HOST_MIN_RIGHT_PANE_WIDTH_RATIO &&
+          hasDegradedControlPaneText(rightPane.node)
+        ) {
+          return {
+            hostNode: current,
+            leftPaneNode: leftPane.node,
+            rightPaneNode: rightPane.node,
+            rightPaneText: readCompactNodeText(rightPane.node),
+          };
+        }
+      }
+    }
+
+    current = current.parentElement || null;
+  }
+
+  return null;
+}
+
+function getDegradedHostDetectionStore(windowRef, documentRef) {
+  const key = windowRef || documentRef || null;
+  if (!key || typeof key !== "object") {
+    return null;
+  }
+
+  let store = degradedHostDetectionByWindow.get(key);
+  if (!store) {
+    store = new Map();
+    degradedHostDetectionByWindow.set(key, store);
+  }
+  return store;
+}
+
+function resolveDegradedHostGate(windowRef, documentRef, matchRouteId, isCandidate, options = {}) {
+  const graceMs = Math.max(
+    0,
+    Number.isFinite(Number(options.degradedHostGraceMs))
+      ? Number(options.degradedHostGraceMs)
+      : DEGRADED_HOST_DEFAULT_GRACE_MS
+  );
+  const detectionStore = getDegradedHostDetectionStore(windowRef, documentRef);
+  if (!detectionStore || !matchRouteId) {
+    return {
+      eligible: Boolean(isCandidate) && graceMs <= 0,
+      ageMs: 0,
+      graceMs,
+    };
+  }
+
+  if (!isCandidate) {
+    detectionStore.delete(matchRouteId);
+    return {
+      eligible: false,
+      ageMs: 0,
+      graceMs,
+    };
+  }
+
+  const nowMs = Number.isFinite(Number(options.nowMs)) ? Number(options.nowMs) : Date.now();
+  const existingEntry = detectionStore.get(matchRouteId);
+  if (!existingEntry) {
+    detectionStore.set(matchRouteId, { firstDetectedAt: nowMs });
+    return {
+      eligible: graceMs <= 0,
+      ageMs: 0,
+      graceMs,
+    };
+  }
+
+  const ageMs = Math.max(0, nowMs - Number(existingEntry.firstDetectedAt || 0));
+  return {
+    eligible: ageMs >= graceMs,
+    ageMs,
+    graceMs,
+  };
 }
 
 function countCoordinateBands(values, tolerancePx) {
@@ -1188,10 +1356,12 @@ export function extractScoreboardState(options = {}) {
   const variantRules = options.variantRules;
   const enforceVariantGuard = options.enforceVariantGuard === true;
   const variantText = readVariantText(documentRef);
+  const matchRouteId = extractMatchRouteId(windowRef, documentRef);
 
   if (!documentRef || !options.cricketRules) {
     return {
       surfaceStatus: CRICKET_SURFACE_STATUS.MISSING_GRID,
+      matchRouteId,
       variantText,
       pipelineSignature: `${CRICKET_SURFACE_STATUS.MISSING_GRID}::invalid-context`,
       transitionSignature: `${CRICKET_SURFACE_STATUS.MISSING_GRID}::invalid-context`,
@@ -1199,8 +1369,10 @@ export function extractScoreboardState(options = {}) {
   }
 
   if (isXConfigRoute(windowRef, documentRef)) {
+    resolveDegradedHostGate(windowRef, documentRef, matchRouteId, false, options);
     return {
       surfaceStatus: CRICKET_SURFACE_STATUS.PAUSED_ROUTE,
+      matchRouteId,
       variantText,
       pipelineSignature: `${CRICKET_SURFACE_STATUS.PAUSED_ROUTE}::${variantText || "-"}`,
       transitionSignature: `${CRICKET_SURFACE_STATUS.PAUSED_ROUTE}::${variantText || "-"}`,
@@ -1208,8 +1380,10 @@ export function extractScoreboardState(options = {}) {
   }
 
   if (enforceVariantGuard && !isCricketFamilyActive(gameState, documentRef, variantRules)) {
+    resolveDegradedHostGate(windowRef, documentRef, matchRouteId, false, options);
     return {
       surfaceStatus: CRICKET_SURFACE_STATUS.INACTIVE_VARIANT,
+      matchRouteId,
       variantText,
       pipelineSignature: `${CRICKET_SURFACE_STATUS.INACTIVE_VARIANT}::${variantText || "-"}`,
       transitionSignature: `${CRICKET_SURFACE_STATUS.INACTIVE_VARIANT}::${variantText || "-"}`,
@@ -1218,8 +1392,10 @@ export function extractScoreboardState(options = {}) {
 
   const extracted = buildMarksByLabelSnapshot(options);
   if (!extracted) {
+    resolveDegradedHostGate(windowRef, documentRef, matchRouteId, false, options);
     return {
       surfaceStatus: CRICKET_SURFACE_STATUS.MISSING_GRID,
+      matchRouteId,
       variantText,
       pipelineSignature: `${CRICKET_SURFACE_STATUS.MISSING_GRID}::${variantText || "-"}`,
       transitionSignature: `${CRICKET_SURFACE_STATUS.MISSING_GRID}::${variantText || "-"}`,
@@ -1228,12 +1404,33 @@ export function extractScoreboardState(options = {}) {
 
   const boardSnapshot = extracted.boardSnapshot;
   const hasBoard = Boolean(boardSnapshot?.group && Number(boardSnapshot?.radius) > 0);
+  const degradedHostCandidate = !hasBoard && matchRouteId
+    ? findDegradedHostCandidate(extracted, { documentRef })
+    : null;
+  const degradedHostGate = resolveDegradedHostGate(
+    windowRef,
+    documentRef,
+    matchRouteId,
+    Boolean(degradedHostCandidate),
+    options
+  );
   const surfaceStatus = hasBoard
     ? CRICKET_SURFACE_STATUS.READY
-    : CRICKET_SURFACE_STATUS.MISSING_BOARD;
+    : degradedHostCandidate && degradedHostGate.eligible
+      ? CRICKET_SURFACE_STATUS.DEGRADED_HOST
+      : CRICKET_SURFACE_STATUS.MISSING_BOARD;
 
   return {
     ...extracted,
+    degradedHostInfo: degradedHostCandidate
+      ? {
+        rightPaneText: degradedHostCandidate.rightPaneText,
+        graceMs: degradedHostGate.graceMs,
+        ageMs: degradedHostGate.ageMs,
+        pending: !degradedHostGate.eligible,
+      }
+      : null,
+    matchRouteId,
     surfaceStatus,
     variantText,
   };

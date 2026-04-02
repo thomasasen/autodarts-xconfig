@@ -1727,7 +1727,7 @@ test("theme-like nested board layer keeps cricket highlighter and grid-fx stable
   clearCricketHighlights(documentRef);
 });
 
-test("cricket grid fx runs in cricket/tactics without requiring theme-cricket hooks", () => {
+test("cricket grid fx waits for a valid board before decorating cricket/tactics rows", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -1807,14 +1807,14 @@ test("cricket grid fx runs in cricket/tactics without requiring theme-cricket ho
     },
   });
 
-  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
+  assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
   const initialLabelCell20 = rowsByLabel.get("20")?.labelCell || null;
   assert.equal(
     Boolean(
       initialLabelCell20?.classList?.contains(BADGE_CLASS) ||
         initialLabelCell20?.querySelector?.(`.${BADGE_CLASS}`)
     ),
-    true
+    false
   );
 
   createThemeLikeBoardFixture(documentRef);

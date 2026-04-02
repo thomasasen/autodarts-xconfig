@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.111] - 2026-04-02
+
+### Fixed
+
+- Nutzerwirkung: Beim Wechsel von der Startseite in ein bereits laufendes Cricket-Match stabilisiert xConfig degradierte Autodarts-SPA-Einstiege jetzt automatisch, statt den Screen im halb aufgebauten `UndoNext...`-Layout ohne Board stehen zu lassen; bleibt der Host trotzdem kaputt, greifen Cricket-Features fail-safe nicht mehr in die Oberfläche ein.
+  Technik: Die gemeinsame Cricket-Surface klassifiziert fehlendes Board plus degradierte Zwei-Pane-Matchstruktur jetzt als `degraded-host`, wartet kurz auf stabile DOM-Erholung, löst pro Match-ID höchstens einen sessiongebundenen Hard-Reload aus und hält `cricket-grid-fx` sowie `cricket-highlighter` bis zur gesunden Surface strikt passiv; neue Runtime- und Lifecycle-Regressionen sichern Grace-Phase, Fehlalarm-Schutz und den One-Shot-Recovery-Pfad ausdrücklich ab.
+
 ## [2.0.110] - 2026-04-02
 
 ### Fixed
@@ -1140,7 +1147,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.110]: https://github.com/thomasasen/autodarts-xconfig/compare/3f4c391...HEAD
+[2.0.111]: https://github.com/thomasasen/autodarts-xconfig/compare/bb5158a...HEAD
+[2.0.110]: https://github.com/thomasasen/autodarts-xconfig/compare/3f4c391...bb5158a
 [2.0.109]: https://github.com/thomasasen/autodarts-xconfig/compare/84362ea...3f4c391
 [2.0.108]: https://github.com/thomasasen/autodarts-xconfig/compare/382e093...84362ea
 [2.0.107]: https://github.com/thomasasen/autodarts-xconfig/compare/eeea914...382e093

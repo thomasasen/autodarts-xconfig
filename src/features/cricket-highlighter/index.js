@@ -12,6 +12,10 @@ import {
   resolveCricketVisualConfig,
 } from "./style.js";
 import { CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
+import {
+  DEGRADED_HOST_RECOVERY_STATUS,
+  maybeRecoverDegradedMatchHost,
+} from "../cricket-surface/degraded-host-recovery.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup, isReusableBoardSnapshot } from "../../shared/dartboard-svg.js";
 import {
@@ -277,6 +281,8 @@ export function initializeCricketHighlighter(context = {}) {
   const config = context.config;
   const featureDebug = context.featureDebug || null;
   const schedulerFactory = context.helpers?.createRafScheduler;
+  const degradedHostGraceMs = context.degradedHostGraceMs;
+  const degradedHostRecoveryCooldownMs = context.degradedHostRecoveryCooldownMs;
 
   if (!documentRef || !domGuards || !cricketRules || typeof schedulerFactory !== "function") {
     return () => {};
@@ -330,6 +336,7 @@ export function initializeCricketHighlighter(context = {}) {
       cricketRules,
       variantRules,
       enforceVariantGuard: true,
+      degradedHostGraceMs,
       visualConfig,
       cache: renderCache,
     });
@@ -389,6 +396,27 @@ export function initializeCricketHighlighter(context = {}) {
         debugState,
         statusSignature,
         `warn kein Board variant="${variantText || "-"}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: true });
+      const recovery = maybeRecoverDegradedMatchHost({
+        renderState,
+        windowRef,
+        cooldownMs: degradedHostRecoveryCooldownMs,
+      });
+      const recoveryStatus =
+        recovery?.status || DEGRADED_HOST_RECOVERY_STATUS.BLOCKED;
+      emitDebugWarning(
+        debugState,
+        `${statusSignature}::${recoveryStatus}::${renderState?.matchRouteId || "-"}`,
+        `warn degraded host variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" recovery="${recoveryStatus}" ${visualDebugContext}`
       );
       return;
     }

@@ -1266,8 +1266,13 @@ function createLocation(initialHref = "https://play.autodarts.io/lobbies") {
     pathname: parsed.pathname,
     search: parsed.search,
     hash: parsed.hash,
+    __replacedUrls: [],
     get href() {
       return `${this.origin}${this.pathname}${this.search}${this.hash}`;
+    },
+    replace(url) {
+      this.__replacedUrls.push(String(url || ""));
+      updateLocation(this, url);
     },
   };
 }
@@ -1303,6 +1308,7 @@ function createFakeWindow(options = {}) {
     location,
     __openedUrls: [],
     localStorage: options.localStorage || new FakeStorage(),
+    sessionStorage: options.sessionStorage || new FakeStorage(),
     MutationObserver: FakeMutationObserver,
     MessageEvent: FakeMessageEvent,
     WebSocket: FakeWebSocket,

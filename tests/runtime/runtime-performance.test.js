@@ -2788,6 +2788,7 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
+  appendBoardFixture(documentRef);
 
   const targetOrder = ["20", "19", "18", "17", "16", "15", "BULL"];
   const createGridTable = () => {
@@ -2921,6 +2922,7 @@ test("cricket-grid-fx reacts to attribute-only mark updates and ignores self cla
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
+  appendBoardFixture(documentRef);
 
   const table = documentRef.createElement("table");
   table.id = "grid";
