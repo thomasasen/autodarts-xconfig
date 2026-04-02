@@ -1,5 +1,6 @@
 const RECOVERY_STORAGE_PREFIX = "adx:cricket-host-recovery:";
 export const DEGRADED_HOST_RECOVERY_COOLDOWN_MS = 30_000;
+export const DEGRADED_HOST_RECHECK_BUFFER_MS = 16;
 
 export const DEGRADED_HOST_RECOVERY_STATUS = Object.freeze({
   IDLE: "idle",
@@ -15,6 +16,45 @@ function normalizeMatchId(value) {
 export function getDegradedHostRecoveryKey(matchId) {
   const normalizedMatchId = normalizeMatchId(matchId);
   return normalizedMatchId ? `${RECOVERY_STORAGE_PREFIX}${normalizedMatchId}` : "";
+}
+
+export function hasPendingDegradedHostRecovery(renderState) {
+  return (
+    String(renderState?.surfaceStatus || "") === "missing-board" &&
+    normalizeMatchId(renderState?.matchRouteId) &&
+    renderState?.degradedHostInfo?.pending === true
+  );
+}
+
+export function resolvePendingDegradedHostRecheckDelay(renderState, options = {}) {
+  if (!hasPendingDegradedHostRecovery(renderState)) {
+    return -1;
+  }
+
+  const fallbackGraceMs = Math.max(
+    0,
+    Number.isFinite(Number(options.fallbackGraceMs)) ? Number(options.fallbackGraceMs) : 0
+  );
+  const bufferMs = Math.max(
+    0,
+    Number.isFinite(Number(options.bufferMs))
+      ? Number(options.bufferMs)
+      : DEGRADED_HOST_RECHECK_BUFFER_MS
+  );
+  const graceMs = Math.max(
+    0,
+    Number.isFinite(Number(renderState?.degradedHostInfo?.graceMs))
+      ? Number(renderState.degradedHostInfo.graceMs)
+      : fallbackGraceMs
+  );
+  const ageMs = Math.max(
+    0,
+    Number.isFinite(Number(renderState?.degradedHostInfo?.ageMs))
+      ? Number(renderState.degradedHostInfo.ageMs)
+      : 0
+  );
+  const remainingMs = Math.max(0, graceMs - ageMs);
+  return Math.max(1, remainingMs + bufferMs);
 }
 
 function readRecoveryRecord(storage, storageKey) {

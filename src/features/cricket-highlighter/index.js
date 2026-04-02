@@ -14,7 +14,9 @@ import {
 import { CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
 import {
   DEGRADED_HOST_RECOVERY_STATUS,
+  hasPendingDegradedHostRecovery,
   maybeRecoverDegradedMatchHost,
+  resolvePendingDegradedHostRecheckDelay,
 } from "../cricket-surface/degraded-host-recovery.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup, isReusableBoardSnapshot } from "../../shared/dartboard-svg.js";
@@ -306,6 +308,8 @@ export function initializeCricketHighlighter(context = {}) {
   const debugState = createDebugState(featureDebug);
   const styleContractState = ensureStyleContract({ domGuards, debugState });
   const visualDebugContext = buildVisualDebugContext(visualConfig, styleContractState);
+  let pendingDegradedHostRecheckHandle = 0;
+  let pendingDegradedHostRecheckSignature = "";
   const renderCache = {
     grid: null,
     board: null,
@@ -317,6 +321,49 @@ export function initializeCricketHighlighter(context = {}) {
     renderCache.grid = null;
     renderCache.board = null;
     renderCache.overlayShapeState = null;
+  }
+
+  function clearPendingDegradedHostRecheck() {
+    if (pendingDegradedHostRecheckHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingDegradedHostRecheckHandle);
+    }
+    pendingDegradedHostRecheckHandle = 0;
+    pendingDegradedHostRecheckSignature = "";
+  }
+
+  function schedulePendingDegradedHostRecheck(renderState) {
+    if (!hasPendingDegradedHostRecovery(renderState) || typeof windowRef?.setTimeout !== "function") {
+      clearPendingDegradedHostRecheck();
+      return false;
+    }
+
+    const delayMs = resolvePendingDegradedHostRecheckDelay(renderState, {
+      fallbackGraceMs: degradedHostGraceMs,
+    });
+    if (!(delayMs > 0)) {
+      clearPendingDegradedHostRecheck();
+      return false;
+    }
+
+    const nextSignature = [
+      renderState?.matchRouteId || "-",
+      Number(renderState?.degradedHostInfo?.graceMs) || Number(degradedHostGraceMs) || 0,
+      Math.max(0, Math.round(Number(renderState?.degradedHostInfo?.ageMs) || 0)),
+      Math.max(1, Math.round(delayMs)),
+    ].join("::");
+    if (pendingDegradedHostRecheckHandle && pendingDegradedHostRecheckSignature === nextSignature) {
+      return true;
+    }
+
+    clearPendingDegradedHostRecheck();
+    pendingDegradedHostRecheckSignature = nextSignature;
+    pendingDegradedHostRecheckHandle = windowRef.setTimeout(() => {
+      pendingDegradedHostRecheckHandle = 0;
+      pendingDegradedHostRecheckSignature = "";
+      invalidateRenderCache();
+      update();
+    }, delayMs);
+    return true;
   }
 
   function clearAndReset(options = {}) {
@@ -343,6 +390,11 @@ export function initializeCricketHighlighter(context = {}) {
     const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
     const statusSignature = buildStatusSignature(renderState);
     const variantText = renderState?.variantText || readVariantText(documentRef);
+    const pendingDegradedHostRecheck = hasPendingDegradedHostRecovery(renderState);
+
+    if (!pendingDegradedHostRecheck) {
+      clearPendingDegradedHostRecheck();
+    }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
       if (statusSignature === lastStatusSignature) {
@@ -387,6 +439,9 @@ export function initializeCricketHighlighter(context = {}) {
     }
 
     if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+      if (pendingDegradedHostRecheck) {
+        schedulePendingDegradedHostRecheck(renderState);
+      }
       if (statusSignature === lastStatusSignature) {
         return;
       }
@@ -583,6 +638,7 @@ export function initializeCricketHighlighter(context = {}) {
     }
     cleanedUp = true;
     scheduler.cancel();
+    clearPendingDegradedHostRecheck();
 
     try {
       unsubscribeGameState();

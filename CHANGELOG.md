@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.0.112] - 2026-04-02
+
+### Fixed
+
+- Nutzerwirkung: Wenn ein Cricket-Match erst sauber steht und dann nach einem Wurf oder Polling-Update ohne Board in das rohe `UndoNext...`-Hostlayout kippt, reagiert xConfig jetzt auch ohne weitere DOM-Bewegung zuverlässig und lässt die Oberfläche nicht dauerhaft im halb kaputten Zwischenzustand hängen.
+  Technik: Die degradierte Cricket-Surface bleibt während der Grace-Phase nicht mehr auf nachfolgende Fremdmutationen angewiesen, sondern plant in `cricket-grid-fx` und `cricket-highlighter` einen getakteten Recheck nach Ablauf der Host-Stabilisierungsfrist; dadurch eskaliert `missing-board + pending degraded-host` deterministisch zu `degraded-host`, der bestehende One-Shot-Recovery-Pfad feuert auch bei stillstehendem DOM, und eine neue Lifecycle-Regression deckt genau diesen No-Mutation-Fall ausdrücklich ab.
+
 ## [2.0.111] - 2026-04-02
 
 ### Fixed
@@ -1147,7 +1154,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.111]: https://github.com/thomasasen/autodarts-xconfig/compare/bb5158a...HEAD
+[2.0.112]: https://github.com/thomasasen/autodarts-xconfig/compare/2e404db...HEAD
+[2.0.111]: https://github.com/thomasasen/autodarts-xconfig/compare/bb5158a...2e404db
 [2.0.110]: https://github.com/thomasasen/autodarts-xconfig/compare/3f4c391...bb5158a
 [2.0.109]: https://github.com/thomasasen/autodarts-xconfig/compare/84362ea...3f4c391
 [2.0.108]: https://github.com/thomasasen/autodarts-xconfig/compare/382e093...84362ea

@@ -381,3 +381,68 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
     cleanupHighlighter();
   }
 });
+
+test("cricket highlighter and grid fx recheck pending degraded hosts after grace without extra DOM mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/recover-after-grace",
+  });
+  const timerHarness = createFakeTimerHarness({ now: 2_000 });
+  timerHarness.installGlobals();
+  timerHarness.installOnWindow(windowRef);
+  documentRef.variantElement.textContent = "Cricket";
+  createDegradedMatchHostFixture(documentRef);
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const domGuards = createDomGuards({ documentRef });
+  const domain = { cricketRules, variantRules };
+  const gameState = createGameState();
+  const helperScheduler = createImmediateScheduler();
+  const config = createFeatureConfig();
+
+  const cleanupHighlighter = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 300,
+  });
+
+  const cleanupGridFx = initializeCricketGridFx({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: { observers, listeners },
+    gameState,
+    domain,
+    config,
+    helpers: helperScheduler,
+    degradedHostGraceMs: 300,
+  });
+
+  try {
+    assert.equal(windowRef.location.__replacedUrls.length, 0);
+
+    timerHarness.advance(299);
+    assert.equal(windowRef.location.__replacedUrls.length, 0);
+
+    timerHarness.advance(17);
+    assert.equal(windowRef.location.__replacedUrls.length, 1);
+    assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), false);
+    assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), false);
+    assert.notEqual(
+      windowRef.sessionStorage.getItem("adx:cricket-host-recovery:recover-after-grace"),
+      null
+    );
+  } finally {
+    cleanupGridFx();
+    cleanupHighlighter();
+    timerHarness.restoreGlobals();
+  }
+});
