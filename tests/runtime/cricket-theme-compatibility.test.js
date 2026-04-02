@@ -1231,7 +1231,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(bullLabelText?.classList?.contains(BADGE_CLASS), true);
   assert.equal(bullLabelText?.textContent, "Bull");
   assert.equal(bullLabelCell?.getAttribute?.("data-row-label"), null);
-  assert.equal(bullLabelText?.getAttribute?.("data-row-label"), "BULL");
+  assert.equal(bullLabelText?.getAttribute?.("data-row-label"), null);
   assert.equal(opponentCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(opponentCell20?.classList?.contains(THREAT_CLASS), true);
   assert.equal(opponentCell20?.classList?.contains(PRESSURE_CLASS), true);
