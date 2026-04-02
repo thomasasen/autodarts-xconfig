@@ -1,3 +1,5 @@
+const MAX_INFERRED_DOM_LABEL_TEXT_LENGTH = 24;
+
 export function normalizeCricketLabelValue(cricketRules, value) {
   if (!cricketRules || typeof cricketRules.normalizeCricketLabel !== "function") {
     return "";
@@ -7,10 +9,18 @@ export function normalizeCricketLabelValue(cricketRules, value) {
 }
 
 export function normalizeCricketLabelNode(cricketRules, node) {
-  return normalizeCricketLabelValue(
-    cricketRules,
-    node?.getAttribute?.("data-row-label") || node?.getAttribute?.("data-target-label") || node?.textContent || ""
-  );
+  const explicitLabel =
+    node?.getAttribute?.("data-row-label") || node?.getAttribute?.("data-target-label") || "";
+  if (explicitLabel) {
+    return normalizeCricketLabelValue(cricketRules, explicitLabel);
+  }
+
+  const textContent = String(node?.textContent || "").replace(/\s+/g, " ").trim();
+  if (!textContent || textContent.length > MAX_INFERRED_DOM_LABEL_TEXT_LENGTH) {
+    return "";
+  }
+
+  return normalizeCricketLabelValue(cricketRules, textContent);
 }
 
 export function getClassTokens(node) {

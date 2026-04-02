@@ -18,6 +18,8 @@ direkt zu einer versionierten Release-Sektion.
 
 - Nutzerwirkung: `TV Board Zoom` respektiert bei `Nur Finish-Feld` jetzt den aktiven Out-Mode sauber und zoomt außerhalb des optionalen `T20`-Sonderfalls nur noch auf echte Ein-Dart-Finishes; irreführende Setup-Ziele wie `S14` nach `121 -> S7 -> T20` bleiben damit ungezoomt. Zusätzlich lässt sich der spezielle `T20`-Setup-Zoom nach zwei `T20` jetzt direkt in xConfig ein- oder ausschalten.
   Technik: `tv-board-zoom` unterdrückt im Modus `finish-only` generische `smart-setup`-Fallbacks, behält die Out-Mode-aware Checkout-Auswahl für `Straight Out`, `Double Out` und `Master Out` bei, ergänzt das neue Config-Flag `t20SetupZoomEnabled` samt xConfig-Descriptoren und Nutzertexten und sichert das Verhalten über Runtime-, Config- und xConfig-Shell-Regressionen ab.
+- Nutzerwirkung: Cricket-/Tactics-Ansichten greifen bei kollabierten oder fremd gestörten Match-Containern nicht mehr versehentlich generische Seitenblöcke als Cricket-Grid auf; dadurch wird die Oberfläche in solchen Drift-Fällen nicht zusätzlich von AD xConfig als scheinbare Grid-Zelle dekoriert.
+  Technik: Die Cricket-Label-Erkennung akzeptiert DOM-Text ohne explizite `data-row-label`-/`data-target-label`-Kennung jetzt nur noch für kurze, atomare Knoten statt für lange Sammel-Container, und zusätzliche Runtime-Regressionen sichern sowohl den Utility-Pfad als auch den zusammengefallenen Mixed-Content-Container auf Render-State-Ebene ausdrücklich ab.
 
 ## [2.0.107] - 2026-03-31
 

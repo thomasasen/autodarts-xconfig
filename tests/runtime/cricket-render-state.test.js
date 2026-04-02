@@ -1310,6 +1310,51 @@ test("render state ignores objective-like labels inside #ad-ext-turn preview car
   );
 });
 
+test("render state ignores collapsed mixed-content pseudo rows from generic cricket page containers", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const wrapper = documentRef.createElement("div");
+  wrapper.classList.add("chakra-stack");
+
+  ["20", "19", "18", "17"].forEach((label) => {
+    const row = documentRef.createElement("div");
+    const labelNode = documentRef.createElement("div");
+    labelNode.textContent = `Dummy Cricket First to 2 TORNADO TOM Ziel ${label} Undo Next`;
+
+    const firstPlayerCell = documentRef.createElement("div");
+    firstPlayerCell.setAttribute("data-marks", "0");
+
+    const secondPlayerCell = documentRef.createElement("div");
+    secondPlayerCell.setAttribute("data-marks", "0");
+
+    row.appendChild(labelNode);
+    row.appendChild(firstPlayerCell);
+    row.appendChild(secondPlayerCell);
+    wrapper.appendChild(row);
+  });
+
+  documentRef.main.appendChild(wrapper);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.surfaceStatus, "missing-grid");
+  assert.equal(Boolean(renderState?.gridSnapshot?.root), false);
+  assert.equal(Number(renderState?.discoveredUniqueLabelCount) || 0, 0);
+});
+
 test("render state keeps tactics numeric, bull and special objectives on the same 4-state model", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";

@@ -245,7 +245,7 @@ export function resolveBadgeNode(options = {}) {
       isDecoratableBadgeNode(labelNode, labelCell, cricketRules, label) ||
       (
         allowLabelNodeFallback &&
-        normalizeCricketLabelValue(cricketRules, labelNode.textContent || "") === label
+        normalizeCricketLabelNode(cricketRules, labelNode) === label
       )
     )
   ) {

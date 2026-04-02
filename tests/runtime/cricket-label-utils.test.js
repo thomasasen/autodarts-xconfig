@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import * as cricketRules from "../../src/domain/cricket-rules.js";
 import {
   getClassTokens,
   normalizeCricketLabelNode,
@@ -14,7 +15,7 @@ import { collectLabelNodes as collectLabelNodesFromDiscovery } from "../../src/f
 import { FakeDocument } from "./fake-dom.js";
 
 test("cricket label utils normalize node text and label attributes consistently", () => {
-  const cricketRules = {
+  const labelRules = {
     normalizeCricketLabel(value) {
       return String(value || "").trim().toUpperCase();
     },
@@ -30,8 +31,8 @@ test("cricket label utils normalize node text and label attributes consistently"
     },
   };
 
-  assert.equal(normalizeCricketLabelValue(cricketRules, "  20 "), "20");
-  assert.equal(normalizeCricketLabelNode(cricketRules, node), "BULL");
+  assert.equal(normalizeCricketLabelValue(labelRules, "  20 "), "20");
+  assert.equal(normalizeCricketLabelNode(labelRules, node), "BULL");
 });
 
 test("cricket label utils read class tokens from array-like and string-backed nodes", () => {
@@ -59,7 +60,7 @@ test("cricket label utils read class tokens from array-like and string-backed no
 
 test("cricket label layout resolves merged label cells through the shared helper", () => {
   const documentRef = new FakeDocument();
-  const cricketRules = {
+  const labelRules = {
     normalizeCricketLabel(value) {
       return String(value || "").trim().toUpperCase();
     },
@@ -82,7 +83,7 @@ test("cricket label layout resolves merged label cells through the shared helper
   assert.equal(
     resolveLabelCell({
       labelNode,
-      cricketRules,
+      cricketRules: labelRules,
       targetSet: new Set(["20"]),
     }),
     labelCell
@@ -91,7 +92,7 @@ test("cricket label layout resolves merged label cells through the shared helper
 
 test("cricket label layout resolves decoratable badge nodes through the shared helper", () => {
   const documentRef = new FakeDocument();
-  const cricketRules = {
+  const labelRules = {
     normalizeCricketLabel(value) {
       return String(value || "").trim().toUpperCase();
     },
@@ -121,7 +122,7 @@ test("cricket label layout resolves decoratable badge nodes through the shared h
     resolveBadgeNode({
       labelNode,
       labelCell,
-      cricketRules,
+      cricketRules: labelRules,
       label: "20",
     }),
     badgeNode
@@ -130,7 +131,7 @@ test("cricket label layout resolves decoratable badge nodes through the shared h
 
 test("cricket grid discovery drops nested wrapper labels and skips turn preview rows", () => {
   const documentRef = new FakeDocument();
-  const cricketRules = {
+  const labelRules = {
     normalizeCricketLabel(value) {
       return String(value || "").trim().toUpperCase();
     },
@@ -167,7 +168,7 @@ test("cricket grid discovery drops nested wrapper labels and skips turn preview 
 
   const labels = collectLabelNodesFromDiscovery(
     gridRoot,
-    cricketRules,
+    labelRules,
     new Set(["20", "19", "18"]),
     ["[data-row-label]"],
     null,
@@ -183,4 +184,25 @@ test("cricket grid discovery drops nested wrapper labels and skips turn preview 
     ["18", "20"]
   );
   assert.equal(labels.find((entry) => entry.label === "20")?.node, innerLabel);
+});
+
+test("normalizeCricketLabelNode ignores long mixed-content container text", () => {
+  const documentRef = new FakeDocument();
+  const node = documentRef.createElement("div");
+
+  node.textContent =
+    "Dummy Cricket First to 2 TORNADO TOM HARDY BOY 20 19 18 17 16 15 Bull Undo Next";
+
+  assert.equal(normalizeCricketLabelNode(cricketRules, node), "");
+});
+
+test("normalizeCricketLabelNode still trusts explicit row-label attributes on wrappers", () => {
+  const documentRef = new FakeDocument();
+  const node = documentRef.createElement("div");
+
+  node.setAttribute("data-row-label", "Bull");
+  node.textContent =
+    "Dummy Cricket First to 2 TORNADO TOM HARDY BOY 20 19 18 17 16 15 Bull Undo Next";
+
+  assert.equal(normalizeCricketLabelNode(cricketRules, node), "BULL");
 });

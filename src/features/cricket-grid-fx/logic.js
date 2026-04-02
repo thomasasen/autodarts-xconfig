@@ -240,10 +240,10 @@ function resolveDisplayLabelTarget(node, label, cricketRules) {
     cricketRules,
     node?.getAttribute?.("data-row-label") ||
       node?.getAttribute?.("data-target-label") ||
-      node?.textContent ||
       ""
   );
-  if (normalizedNodeLabel === "BULL" && Number(node?.childElementCount || 0) === 0) {
+  const inferredNodeLabel = normalizedNodeLabel || normalizeCricketLabelNode(cricketRules, node);
+  if (inferredNodeLabel === "BULL" && Number(node?.childElementCount || 0) === 0) {
     return node;
   }
 
@@ -252,13 +252,7 @@ function resolveDisplayLabelTarget(node, label, cricketRules) {
     childElements.find((childNode) => {
       return (
         Number(childNode?.childElementCount || 0) === 0 &&
-        normalizeCricketLabelValue(
-          cricketRules,
-          childNode?.getAttribute?.("data-row-label") ||
-            childNode?.getAttribute?.("data-target-label") ||
-            childNode?.textContent ||
-            ""
-        ) === "BULL"
+        normalizeCricketLabelNode(cricketRules, childNode) === "BULL"
       );
     }) || null
   );
@@ -376,10 +370,7 @@ function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
     const result = [];
     let cursor = anchorNode?.nextElementSibling || null;
     while (cursor) {
-      const siblingLabel = normalizeCricketLabelValue(
-        cricketRules,
-        cursor.getAttribute?.("data-row-label") || cursor.textContent || ""
-      );
+      const siblingLabel = normalizeCricketLabelNode(cricketRules, cursor);
       if (siblingLabel && targetSet.has(siblingLabel)) {
         break;
       }
