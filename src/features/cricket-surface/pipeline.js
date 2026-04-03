@@ -32,6 +32,7 @@ import {
   resolveBadgeNode as resolveBadgeNodeFromDiscovery,
   resolveLabelCell as resolveLabelCellFromDiscovery,
 } from "./grid-discovery.js";
+import { isProtectedCricketGridRootCandidate } from "./protected-hosts.js";
 
 export const CRICKET_SURFACE_STATUS = Object.freeze({
   READY: "ready",
@@ -210,6 +211,9 @@ function isCandidateGridRoot(node) {
     return false;
   }
   if (isInsideTurnPreview(node)) {
+    return false;
+  }
+  if (isProtectedCricketGridRootCandidate(node)) {
     return false;
   }
   return true;

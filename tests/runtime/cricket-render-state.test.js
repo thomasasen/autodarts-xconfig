@@ -233,6 +233,102 @@ function createCollapsedObjectiveStrip(documentRef, labels) {
   return wrapper;
 }
 
+function createLiveThemeObjectiveStripLayout(documentRef, marksByRow) {
+  const wrapper = documentRef.createElement("div");
+  wrapper.setAttribute("class", "chakra-stack animate__animated animate__fadeIn css-1k7iu8k");
+
+  const header = documentRef.createElement("div");
+  header.setAttribute("class", "chakra-wrap");
+  header.textContent = "Cricket R1/50";
+  wrapper.appendChild(header);
+
+  const hiddenSettings = documentRef.createElement("div");
+  hiddenSettings.id = "ad-ext-game-settings-extra";
+  hiddenSettings.textContent = "TextDummy";
+  hiddenSettings.style.display = "none";
+  wrapper.appendChild(hiddenSettings);
+
+  const turnPreview = documentRef.createElement("div");
+  turnPreview.id = "ad-ext-turn";
+  turnPreview.textContent = "0";
+  wrapper.appendChild(turnPreview);
+
+  const contentSlot = documentRef.createElement("div");
+  contentSlot.setAttribute("class", "ad-ext-theme-content-slot");
+  const contentLeft = documentRef.createElement("div");
+  contentLeft.setAttribute("class", "ad-ext-theme-content-left");
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  const objectiveStrip = documentRef.createElement("div");
+  objectiveStrip.setAttribute("class", "css-rfeml4");
+  const contentBoard = documentRef.createElement("div");
+  contentBoard.setAttribute("class", "ad-ext-theme-content-board");
+  const boardPanel = documentRef.createElement("div");
+  boardPanel.setAttribute("class", "ad-ext-theme-board-panel");
+  const boardViewport = documentRef.createElement("div");
+  boardViewport.setAttribute("class", "ad-ext-theme-board-viewport");
+  const boardCanvas = documentRef.createElement("div");
+  boardCanvas.setAttribute("class", "ad-ext-theme-board-canvas");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  boardSvg.setAttribute("class", "ad-ext-theme-board-svg");
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  boardSvg.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardSvg.appendChild(labelNode);
+  }
+
+  Object.entries(marksByRow || {}).forEach(([label, marks], index) => {
+    const className = index % 2 === 0 ? "css-1yso2z2" : "css-jpb1ox";
+    const labelCell = documentRef.createElement("div");
+    labelCell.setAttribute("class", className);
+    const labelText = documentRef.createElement("p");
+    labelText.setAttribute("class", "chakra-text css-1qlemha");
+    labelText.textContent = label === "BULL" ? "Bull" : label;
+    labelCell.appendChild(labelText);
+
+    const ownMarks = Number(Array.isArray(marks) ? marks[0] : 0);
+    if (ownMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(ownMarks));
+      labelCell.appendChild(icon);
+    }
+
+    const playerCell = documentRef.createElement("div");
+    playerCell.setAttribute("class", className);
+    const opponentMarks = Number(Array.isArray(marks) ? marks[1] : 0);
+    if (opponentMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(opponentMarks));
+      playerCell.appendChild(icon);
+    }
+
+    objectiveStrip.appendChild(labelCell);
+    objectiveStrip.appendChild(playerCell);
+  });
+
+  boardCanvas.appendChild(boardSvg);
+  boardViewport.appendChild(boardCanvas);
+  boardPanel.appendChild(boardViewport);
+  contentBoard.appendChild(boardPanel);
+  contentLeft.appendChild(playerDisplay);
+  contentLeft.appendChild(objectiveStrip);
+  contentSlot.appendChild(contentLeft);
+  contentSlot.appendChild(contentBoard);
+  wrapper.appendChild(contentSlot);
+  documentRef.main.appendChild(wrapper);
+
+  return {
+    wrapper,
+    objectiveStrip,
+    playerDisplay,
+    contentBoard,
+  };
+}
+
 function installTransientLabelDiscoveryFilter(gridRoot, suppressedLabels) {
   const originalQuerySelectorAll = gridRoot.querySelectorAll.bind(gridRoot);
 
@@ -1447,6 +1543,43 @@ test("render state ignores collapsed horizontal objective strips from live crick
   assert.equal(renderState?.surfaceStatus, "missing-grid");
   assert.equal(Boolean(renderState?.gridSnapshot?.root), false);
   assert.equal(Number(renderState?.discoveredUniqueLabelCount) || 0, 0);
+});
+
+test("render state prefers the live theme objective strip over the broader match wrapper", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const fixture = createLiveThemeObjectiveStripLayout(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.surfaceStatus, "ready");
+  assert.equal(renderState?.gridSnapshot?.root, fixture.objectiveStrip);
+  assert.notEqual(renderState?.gridSnapshot?.root, fixture.wrapper);
+  assert.equal(renderState?.marksByLabel["20"]?.join(","), "3,0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
+  assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
+  assert.equal(renderState?.stateMap.get("BULL")?.boardPresentation, "open");
 });
 
 test("render state keeps tactics numeric, bull and special objectives on the same 4-state model", () => {

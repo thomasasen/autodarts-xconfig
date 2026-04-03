@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.2] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: Im Live-Cricket-Layout mit Theme-Objective-Strip werden Board-Overlay und `cricket-grid-fx` jetzt wieder aus dem echten Zielstreifen statt aus dem kompletten Match-Wrapper abgeleitet; dadurch bleibt `20` bei drei eigenen Marks am Board sichtbar als Scoring-Ziel, während Player-Display und Board-Host nicht mehr versehentlich als Cricket-Grid mitverarbeitet werden.
+  Technik: Die Cricket-Surface blockiert Grid-Root-Kandidaten jetzt früh, sobald sie Theme-Board-Hosts oder `#ad-ext-player-display` enthalten, und `cricket-grid-fx` nutzt dieselbe geschützte Host-Definition; neue Runtime- und Theme-Regressions decken den Live-Fall mit Theme-Objective-Strip, gemeinsamem Wrapper und Board-Overlay ausdrücklich ab.
+
 ## [2.1.1] - 2026-04-03
 
 ### Fixed
@@ -1170,7 +1177,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...HEAD
+[2.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...HEAD
+[2.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...c9b25d4
 [2.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...f0cc281
 [2.0.113]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...ca465fc
 [2.0.112]: https://github.com/thomasasen/autodarts-xconfig/compare/2e404db...340e7b4

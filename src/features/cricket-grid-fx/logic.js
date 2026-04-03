@@ -44,6 +44,7 @@ import {
   resolveBadgeNode as sharedResolveBadgeNode,
   resolveLabelCell as sharedResolveLabelCell,
 } from "../cricket-surface/label-layout.js";
+import { isProtectedCricketHostNode } from "../cricket-surface/protected-hosts.js";
 import {
   collectLabelNodes as collectLabelNodesFromDiscovery,
   collectTargetLabelsInNode as collectTargetLabelsInNodeFromDiscovery,
@@ -77,11 +78,6 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   "span",
 ]);
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
-const PROTECTED_CRICKET_HOST_SELECTORS = Object.freeze([
-  "#ad-ext-player-display",
-  ".ad-ext-player",
-  "[data-ad-ext-cricket-stack]",
-]);
 
 function queryAll(rootNode, selector) {
   return queryAllFromDiscovery(rootNode, selector);
@@ -201,37 +197,6 @@ function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
 
 function getDisplayLabel(label) {
   return String(label || "").toUpperCase() === "BULL" ? "Bull" : String(label || "");
-}
-
-function isProtectedCricketHostNode(node) {
-  if (!node || typeof node !== "object") {
-    return false;
-  }
-
-  const tagName = String(node.tagName || "").toUpperCase();
-  if (tagName === "HTML" || tagName === "BODY" || tagName === "MAIN" || tagName === "NAV") {
-    return true;
-  }
-
-  if (String(node.id || "") === "root") {
-    return true;
-  }
-
-  const isInsideProtectedHost =
-    typeof node.closest === "function" &&
-    PROTECTED_CRICKET_HOST_SELECTORS.some((selector) => {
-      try {
-        return Boolean(node.closest(selector));
-      } catch (_) {
-        return false;
-      }
-    });
-  if (isInsideProtectedHost) {
-    return true;
-  }
-
-  const role = String(node.getAttribute?.("role") || "").trim().toLowerCase();
-  return role === "main" || role === "navigation";
 }
 
 function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {

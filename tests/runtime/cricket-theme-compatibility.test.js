@@ -170,6 +170,81 @@ function appendThemeLikeReportedPlayerCard(documentRef, playerDisplayNode, optio
   return { playerNode, stackNode, scoreNode, rowNode, statsNode };
 }
 
+function createLiveThemeObjectiveStripFixture(documentRef, marksByLabel) {
+  const wrapper = documentRef.createElement("div");
+  wrapper.setAttribute("class", "chakra-stack animate__animated animate__fadeIn css-1k7iu8k");
+
+  const header = documentRef.createElement("div");
+  header.setAttribute("class", "chakra-wrap");
+  header.textContent = "Cricket R1/50";
+  wrapper.appendChild(header);
+
+  const hiddenSettings = documentRef.createElement("div");
+  hiddenSettings.id = "ad-ext-game-settings-extra";
+  hiddenSettings.textContent = "TextDummy";
+  hiddenSettings.style.display = "none";
+  wrapper.appendChild(hiddenSettings);
+
+  const turnPreview = documentRef.createElement("div");
+  turnPreview.id = "ad-ext-turn";
+  turnPreview.textContent = "0";
+  wrapper.appendChild(turnPreview);
+
+  const boardNodes = createThemeLikeBoardFixture(documentRef);
+  wrapper.appendChild(boardNodes.contentSlot);
+
+  const objectiveStrip = documentRef.createElement("div");
+  objectiveStrip.setAttribute("class", "css-rfeml4");
+  const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
+  const rowStateByLabel = new Map();
+
+  targetOrder.forEach((label, index) => {
+    const className = index % 2 === 0 ? "css-1yso2z2" : "css-jpb1ox";
+    const labelCell = documentRef.createElement("div");
+    labelCell.setAttribute("class", className);
+
+    const labelText = documentRef.createElement("p");
+    labelText.setAttribute("class", "chakra-text css-1qlemha");
+    labelText.textContent = label === "BULL" ? "Bull" : label;
+    labelCell.appendChild(labelText);
+
+    const marks = Array.isArray(marksByLabel?.[label]) ? marksByLabel[label] : [0, 0];
+    const ownerMarks = Number(marks[0] || 0);
+    if (ownerMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(ownerMarks));
+      labelCell.appendChild(icon);
+    }
+
+    const playerCell = documentRef.createElement("div");
+    playerCell.setAttribute("class", className);
+    const opponentMarks = Number(marks[1] || 0);
+    if (opponentMarks > 0) {
+      const icon = documentRef.createElement("img");
+      icon.setAttribute("alt", String(opponentMarks));
+      playerCell.appendChild(icon);
+    }
+
+    objectiveStrip.appendChild(labelCell);
+    objectiveStrip.appendChild(playerCell);
+    rowStateByLabel.set(label, {
+      labelCell,
+      labelText,
+      playerCells: [playerCell],
+    });
+  });
+
+  boardNodes.contentLeft.appendChild(objectiveStrip);
+  documentRef.main.appendChild(wrapper);
+
+  return {
+    wrapper,
+    objectiveStrip,
+    boardNodes,
+    rowStateByLabel,
+  };
+}
+
 function createDecorativeAmbiguousBoardFixture(documentRef, options = {}) {
   const shell = documentRef.createElement("div");
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -726,6 +801,99 @@ test("theme-like cricket grid-fx does not decorate player-card scores when the a
   assert.equal(stackNode.classList.contains(CELL_CLASS), false);
   assert.equal(stackNode.classList.contains(LABEL_CLASS), false);
   assert.equal(stackNode.classList.contains(OPEN_CLASS), false);
+});
+
+test("live-like theme objective strip keeps board overlay and grid-fx aligned on the strip root", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const fixture = createLiveThemeObjectiveStripFixture(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderCache = { grid: null, board: null };
+  const visualConfig = resolveCricketVisualConfig({
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxVisualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxState = createCricketGridFxState();
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState({
+      scoringModeNormalized: "standard",
+      scoringMode: "standard",
+      activePlayerIndex: 0,
+    }),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+
+  assert.equal(renderState?.gridSnapshot?.root, fixture.objectiveStrip);
+  assert.notEqual(renderState?.gridSnapshot?.root, fixture.wrapper);
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
+
+  const highlightStats = {};
+  renderCricketHighlights({
+    documentRef,
+    visualConfig,
+    renderState,
+    cache: renderCache,
+    debugStats: highlightStats,
+  });
+
+  const overlay = documentRef.getElementById("ad-ext-cricket-targets");
+  const shapes20 = Array.from(overlay?.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "20";
+  });
+  assert.equal(overlay?.parentNode, fixture.boardNodes.boardSvg);
+  assert.equal(shapes20.length > 0, true);
+  assert.equal(highlightStats.shapeCountByPresentation?.scoring || 0, 4);
+  assert.equal(
+    shapes20.every((node) => String(node?.dataset?.targetPresentation || "") === "scoring"),
+    true
+  );
+
+  const gridFxStats = {};
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state: gridFxState,
+    visualConfig: gridFxVisualConfig,
+    turnToken: "live-theme-strip:1",
+    debugStats: gridFxStats,
+  });
+
+  assert.equal(gridFxStats.status, "ok");
+  assert.equal(fixture.objectiveStrip.classList.contains(ROOT_CLASS), true);
+  assert.equal(fixture.wrapper.classList.contains(ROOT_CLASS), false);
+  assert.equal(
+    fixture.rowStateByLabel.get("20")?.labelCell?.classList?.contains(LABEL_STATE_CLASS.scoring),
+    true
+  );
 });
 
 test("theme-like cricket highlighter ignores ambiguous decorative board candidates and mounts overlay on the real board", () => {
