@@ -1094,17 +1094,47 @@ export function computeZoomIntent(options = {}) {
     Number.isFinite(stateScoreCandidate) && stateScoreCandidate >= 0
       ? stateScoreCandidate
       : null;
-  let activeScore = Number.isFinite(stateActiveScore)
-    ? stateActiveScore
-    : getBestVisibleScoreFromDom(documentRef, windowRef);
+  const domActiveScore = getBestVisibleScoreFromDom(documentRef, windowRef);
+  const visibleRouteSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  let activeScore = Number.isFinite(stateActiveScore) ? stateActiveScore : domActiveScore;
 
-  if (state.stickyUntilLegEnd && stateActiveScore === 0 && throwCount === 0) {
-    const visibleScore = getBestVisibleScoreFromDom(documentRef, windowRef);
-    if (Number.isFinite(visibleScore) && visibleScore > 0) {
-      activeScore = visibleScore;
+  if (
+    Number.isFinite(stateActiveScore) &&
+    Number.isFinite(domActiveScore) &&
+    domActiveScore !== stateActiveScore &&
+    visibleRouteSegments.length > 1
+  ) {
+    const gameStateSurface = resolveCheckoutSurfaceSemantics({
+      routeSegments: visibleRouteSegments,
+      activeScore: stateActiveScore,
+      outMode,
+      dartsRemaining: Math.max(0, 3 - throwCount),
+      x01Rules,
+    });
+    const domSurface = resolveCheckoutSurfaceSemantics({
+      routeSegments: visibleRouteSegments,
+      activeScore: domActiveScore,
+      outMode,
+      dartsRemaining: Math.max(0, 3 - throwCount),
+      x01Rules,
+    });
+    const gameStateLooksLikeDirectFinish =
+      gameStateSurface.selectionSource === "score-route" &&
+      gameStateSurface.canUseAuthoritativeFinishNow;
+    const domLooksLikeVisibleMultiStepRoute =
+      String(domSurface.selectionSource || "").startsWith("validated-visible-route") &&
+      !domSurface.canUseAuthoritativeFinishNow;
+
+    if (gameStateLooksLikeDirectFinish && domLooksLikeVisibleMultiStepRoute) {
+      activeScore = domActiveScore;
     }
   }
-  const visibleRouteSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+
+  if (state.stickyUntilLegEnd && stateActiveScore === 0 && throwCount === 0) {
+    if (Number.isFinite(domActiveScore) && domActiveScore > 0) {
+      activeScore = domActiveScore;
+    }
+  }
   const checkoutSurface = resolveCheckoutSurfaceSemantics({
     routeSegments: visibleRouteSegments,
     activeScore,

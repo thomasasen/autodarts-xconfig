@@ -571,6 +571,43 @@ test("tv-board-zoom finish-only mode falls back to the direct checkout when a vi
   });
 });
 
+test("tv-board-zoom finish-only mode prefers the visible DOM score over a stale gameState score", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "121";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "25";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const thirdSuggestion = documentRef.createElement("div");
+  thirdSuggestion.classList.add("suggestion");
+  thirdSuggestion.textContent = "D18";
+  thirdSuggestion.__rect = { left: 720, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(thirdSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 36,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 3430,
+  });
+
+  assert.equal(intent, null);
+});
+
 test("tv-board-zoom route-first mode keeps the first visible checkout route field", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "T20";

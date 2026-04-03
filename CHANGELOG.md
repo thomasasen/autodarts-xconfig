@@ -12,12 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.11] - 2026-04-04
+## [2.1.12] - 2026-04-04
 
 ### Fixed
 
 - Nutzerwirkung: `checkout-board-targets` markiert im Modus `Nur Finish` das Finish-Feld jetzt erst dann, wenn dieser Dart im aktuellen Wurf wirklich dran ist; bei sichtbaren Mehrschritt-Routen wie `T20` plus `D18` bleibt das Board vor dem ersten Dart deshalb zunächst unmarkiert, und `tv-board-zoom` sowie Board-Targets folgen dabei wieder derselben Finish-Freigabe-Regel.
   Technik: `checkout-board-targets` prüft die Finish-Auswahl in `targetSelectionMode: "finish"` jetzt zusätzlich gegen den aktuellen Score, statt das letzte Segment einer autoritativen Route immer sofort zu übernehmen; zusätzlich liefert die gemeinsame X01-Semantik in `x01-checkout-route` die zentralisierte Finish-Freigabe (`authoritativeFinishSegment` plus `canUseAuthoritativeFinishNow`), die jetzt sowohl von `checkout-board-targets` als auch von `tv-board-zoom` genutzt wird, während feature-spezifische Zoom-, Hold- und Render-Logik lokal bleibt; neue Runtime-Regressionen decken Mehrschritt-Routen, stale sichtbare Routen und die gemeinsame Semantik direkt ab, und die Nutzertexte wurden daran synchronisiert.
+
+- Nutzerwirkung: `tv-board-zoom` zoomt im Modus `Nur Finish-Feld` bei sichtbaren Mehrschritt-Checkout-Routen nicht mehr verfrüht auf das Finish, wenn der interne Match-State kurz einen veralteten Score liefert, im Player-Panel aber bereits der aktuelle Score steht; bei `121` mit sichtbarer Route `T20`, `25`, `D18` bleibt der Zoom dadurch jetzt wieder aus, bis der Finish-Dart wirklich dran ist.
+  Technik: `tv-board-zoom` gleicht bei Score-Mismatch zwischen `gameState` und sichtbarem DOM-Score die mehrstufige Checkout-Surface jetzt gezielt gegen beide Score-Kandidaten ab und bevorzugt den DOM-Score nur dann, wenn die sichtbare Route damit plausibel bleibt, der stale `gameState` aber fälschlich schon einen direkten Finish-Zoom erzeugen würde; eine neue X01-Regression deckt diesen DOM-vs-Game-State-Fall ausdrücklich ab.
 
 ## [2.1.9] - 2026-04-03
 
@@ -1244,7 +1247,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.11]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...HEAD
+[2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...HEAD
 [2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...1b33189
 [2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...35bc075
 [2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...5d99934
