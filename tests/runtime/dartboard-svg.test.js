@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  findBoardSvgRoot,
   findBoardSvgGroup,
   isReusableBoardSnapshot,
 } from "../../src/shared/dartboard-svg.js";
@@ -134,6 +135,14 @@ test("findBoardSvgGroup prefers the visible board over a hidden stale board laye
   assert.equal(boardSnapshot?.modeKey, "segments");
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
   assert.equal(isReusableBoardSnapshot({ ...boardSnapshot, svg: staleBoard.svg }, documentRef), false);
+});
+
+test("findBoardSvgRoot keeps the shared svg-root selector aligned for stale and live board candidates", () => {
+  const documentRef = new FakeDocument();
+  createBoardFixture(documentRef, { hidden: true, boardRadius: 480 });
+  const liveBoard = createBoardFixture(documentRef, { boardRadius: 500 });
+
+  assert.equal(findBoardSvgRoot(documentRef), liveBoard.svg);
 });
 
 test("findBoardSvgGroup prefers visible board groups within the same svg over hidden stale groups", () => {

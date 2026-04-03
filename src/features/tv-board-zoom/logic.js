@@ -5,6 +5,7 @@ import {
   getFirstCheckoutRouteSegment,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
+import { findBoardSvgRoot } from "../../shared/dartboard-svg.js";
 
 const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
@@ -226,33 +227,7 @@ function getBoardRadius(rootNode) {
 }
 
 export function findBoardSvg(documentRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return null;
-  }
-
-  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
-  if (!svgNodes.length) {
-    return null;
-  }
-
-  let bestSvg = null;
-  let bestScore = -1;
-
-  svgNodes.forEach((svgNode) => {
-    const numberCount = new Set(
-      Array.from(svgNode.querySelectorAll("text"))
-        .map((node) => Number.parseInt(node?.textContent || "", 10))
-        .filter((value) => Number.isFinite(value) && value >= 1 && value <= 20)
-    ).size;
-    const radius = getBoardRadius(svgNode);
-    const score = numberCount * 1000 + radius;
-    if (score > bestScore) {
-      bestSvg = svgNode;
-      bestScore = score;
-    }
-  });
-
-  return bestSvg;
+  return findBoardSvgRoot(documentRef);
 }
 
 function segmentAngles(value) {

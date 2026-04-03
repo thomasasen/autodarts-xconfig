@@ -19,6 +19,32 @@ function getBoardRadius(rootNode) {
   }, 0);
 }
 
+export function findBoardSvgRoot(documentRef) {
+  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+    return null;
+  }
+
+  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
+  if (!svgNodes.length) {
+    return null;
+  }
+
+  let bestSvg = null;
+  let bestScore = -1;
+
+  svgNodes.forEach((svgNode) => {
+    const numberCount = readNumberCoverage(svgNode);
+    const radius = getBoardRadius(svgNode);
+    const score = numberCount * 1000 + radius;
+    if (score > bestScore) {
+      bestSvg = svgNode;
+      bestScore = score;
+    }
+  });
+
+  return bestSvg;
+}
+
 function isManagedOverlayGroup(groupNode) {
   if (!groupNode || typeof groupNode.getAttribute !== "function") {
     return false;

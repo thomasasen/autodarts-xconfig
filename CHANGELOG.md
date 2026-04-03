@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.6] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: `checkout-board-targets` und `tv-board-zoom` hängen sich jetzt stabiler an dieselbe Board-SVG-Wurzel, sodass Board-Markierung und Zoom bei ausgetauschten oder kurzzeitig stale Boards seltener auf unterschiedliche SVG-Roots driften, ohne das sichtbare Verhalten der Features zu ändern.
+  Technik: `dartboard-svg` exportiert mit `findBoardSvgRoot()` jetzt die bisher doppelt gepflegte SVG-Root-Auswahl auf Basis von Zahlenring-Abdeckung und Kreisradius; `checkout-board-targets` und `tv-board-zoom` delegieren diese Entscheidung dorthin, und `checkout-board-targets` nutzt zusätzlich die bestehenden Shared-Overlay-Helfer statt lokaler Duplikate.
+
 ## [2.1.5] - 2026-04-03
 
 ### Fixed
@@ -1198,7 +1205,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...HEAD
+[2.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/59708e4...HEAD
+[2.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...59708e4
 [2.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...fa4ca1f
 [2.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...1329886
 [2.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/c9b25d4...ba5e325

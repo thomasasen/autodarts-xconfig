@@ -6,6 +6,11 @@ import {
   TARGET_CLASS,
   TARGET_FAMILY_ATTRIBUTE,
 } from "./style.js";
+import {
+  clearNodeChildren,
+  ensureOverlayGroup,
+  findBoardSvgRoot,
+} from "../../shared/dartboard-svg.js";
 
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -110,32 +115,7 @@ function getBoardRadius(rootNode) {
 }
 
 export function findBoard(documentRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return null;
-  }
-
-  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
-  if (!svgNodes.length) {
-    return null;
-  }
-
-  let bestSvg = null;
-  let bestScore = -1;
-
-  svgNodes.forEach((svgNode) => {
-    const numberCount = new Set(
-      Array.from(svgNode.querySelectorAll("text"))
-        .map((node) => Number.parseInt(node?.textContent || "", 10))
-        .filter((value) => Number.isFinite(value) && value >= 1 && value <= 20)
-    ).size;
-    const radius = getBoardRadius(svgNode);
-    const score = numberCount * 1000 + radius;
-    if (score > bestScore) {
-      bestSvg = svgNode;
-      bestScore = score;
-    }
-  });
-
+  const bestSvg = findBoardSvgRoot(documentRef);
   if (!bestSvg) {
     return null;
   }
@@ -163,36 +143,11 @@ export function findBoard(documentRef) {
 }
 
 export function ensureOverlay(boardGroup) {
-  if (!boardGroup || typeof boardGroup.querySelector !== "function") {
-    return null;
-  }
-
-  let overlay = boardGroup.querySelector(`#${OVERLAY_ID}`);
-  if (overlay) {
-    return overlay;
-  }
-
-  const ownerDocument = boardGroup.ownerDocument;
-  if (!ownerDocument || typeof ownerDocument.createElementNS !== "function") {
-    return null;
-  }
-
-  overlay = ownerDocument.createElementNS(SVG_NS, "g");
-  overlay.id = OVERLAY_ID;
-  if (typeof boardGroup.appendChild === "function") {
-    boardGroup.appendChild(overlay);
-  }
-  return overlay;
+  return ensureOverlayGroup(boardGroup, OVERLAY_ID, SVG_NS);
 }
 
 export function clearOverlay(overlay) {
-  if (!overlay || typeof overlay.firstChild === "undefined") {
-    return;
-  }
-
-  while (overlay.firstChild) {
-    overlay.removeChild(overlay.firstChild);
-  }
+  clearNodeChildren(overlay);
 }
 
 function buildRenderableNodeKey(node) {
