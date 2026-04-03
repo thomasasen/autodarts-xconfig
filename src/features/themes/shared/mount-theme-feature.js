@@ -122,6 +122,7 @@ export function mountThemeFeature(context = {}, options = {}) {
         gameState,
         themeState,
         windowRef,
+        runtimeContext: context,
       });
     }
   }
@@ -172,6 +173,7 @@ export function mountThemeFeature(context = {}, options = {}) {
         themeState,
         windowRef,
         scheduler,
+        runtimeContext: context,
       });
     }
   }

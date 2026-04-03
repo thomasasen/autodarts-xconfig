@@ -1536,6 +1536,32 @@ export function clearCricketActivePlayerState(documentRef) {
   });
 }
 
+export function syncCricketActivePlayerStateFromRenderState(
+  documentRef,
+  renderState,
+  gameState = null
+) {
+  const playerNodes = collectCricketPlayerCards(documentRef);
+  if (!playerNodes.length) {
+    return;
+  }
+
+  normalizeCricketPlayerCards(documentRef);
+  const renderStateIndex = Number(renderState?.activePlayerIndex);
+  const activePlayerIndex = Number.isFinite(renderStateIndex)
+    ? Math.max(0, Math.min(Math.round(renderStateIndex), playerNodes.length - 1))
+    : resolveCricketThemeActivePlayerIndex(documentRef, gameState);
+  playerNodes.forEach((node, index) => {
+    if (!node || typeof node.setAttribute !== "function") {
+      return;
+    }
+    node.setAttribute(
+      CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+      index === activePlayerIndex ? "true" : "false"
+    );
+  });
+}
+
 function computeCricketRequiredPlayerWidth(playerCount) {
   const normalizedPlayerCount = Number.isFinite(playerCount)
     ? Math.max(1, Math.floor(playerCount))

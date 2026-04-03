@@ -1,0 +1,826 @@
+import {
+  buildCricketRenderState,
+  clearCricketHighlights,
+  renderCricketHighlights,
+} from "./logic.js";
+import {
+  OVERLAY_ID,
+  STYLE_CONTRACT_VERSION,
+  STYLE_ID,
+  buildStyleText,
+  readStyleContractStatus,
+  resolveCricketVisualConfig,
+} from "./style.js";
+import { CRICKET_SURFACE_STATUS } from "../cricket-surface/pipeline.js";
+import {
+  canDelayMissingMatchBoardGap,
+  clearDegradedHostRecoveryRecord,
+  DEGRADED_HOST_RECOVERY_STATUS,
+  DEGRADED_HOST_RECOVERY_REARM_MS,
+  hasPendingDegradedHostRecovery,
+  hasDegradedHostRecoveryRecord,
+  maybeRecoverDegradedMatchHost,
+  resolveMissingMatchBoardGapDelay,
+  resolvePendingDegradedHostRecheckDelay,
+} from "../cricket-surface/degraded-host-recovery.js";
+import {
+  clearCricketSurfaceWatchState,
+  collectCricketSurfaceWatchNodes,
+  createCricketSurfaceWatchState,
+  hasTrackedCricketSurfaceMutation,
+  setCricketSurfaceWatchNodes,
+} from "../cricket-surface/surface-watch.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { findBoardSvgGroup, isReusableBoardSnapshot } from "../../shared/dartboard-svg.js";
+import {
+  BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+  isBoardInputModeControl,
+} from "../../shared/board-input-mode.js";
+
+const FEATURE_KEY = "cricket-highlighter";
+const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const POST_TRANSITION_SURFACE_AUDIT_MS = 420;
+const LISTENER_KEYS = Object.freeze({
+  resize: `${FEATURE_KEY}:window-resize`,
+  orientation: `${FEATURE_KEY}:window-orientation`,
+  visibility: `${FEATURE_KEY}:document-visibility`,
+});
+
+const SURFACE_SELECTOR = [
+  "#grid",
+  ".ad-ext-cricket-grid",
+  ".ad-ext-crfx-root",
+  ".ad-ext-crfx-cell",
+  ".ad-ext-crfx-label-cell",
+  ".ad-ext-crfx-badge",
+  ".chakra-grid",
+  ".label-cell",
+  ".player-cell",
+  "[data-row-label]",
+  "[data-target-label]",
+  "#ad-ext-game-variant",
+  "#ad-ext-player-display",
+  ".ad-ext-player",
+  ".ad-ext-theme-content-slot",
+  ".ad-ext-theme-content-board",
+  ".ad-ext-theme-board-panel",
+  ".ad-ext-theme-board-viewport",
+  ".ad-ext-theme-board-svg",
+].join(",");
+
+const SURFACE_SCOPE_SELECTOR = [
+  "#grid",
+  ".ad-ext-cricket-grid",
+  ".ad-ext-crfx-root",
+  ".chakra-grid",
+  "#ad-ext-player-display",
+  "#ad-ext-game-variant",
+  ".ad-ext-theme-content-board",
+  ".ad-ext-theme-board-panel",
+  ".ad-ext-theme-board-viewport",
+  ".ad-ext-theme-board-canvas",
+  ".ad-ext-theme-board-svg",
+].join(",");
+
+const SURFACE_ATTRIBUTE_FILTER = Object.freeze([
+  "class",
+  "alt",
+  "title",
+  "aria-label",
+  "data-marks",
+  "data-mark",
+  "data-hits",
+  "data-hit",
+  "data-player-index",
+  "data-player",
+  "data-column-index",
+  "data-row-label",
+  "data-target-label",
+  ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+]);
+
+function readVariantText(documentRef) {
+  return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
+}
+
+function createDebugState(featureDebug) {
+  return {
+    featureDebug,
+    lastLogSignature: "",
+    lastWarningSignature: "",
+  };
+}
+
+function emitDebugLog(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastLogSignature === signature) {
+    return;
+  }
+  debugState.lastLogSignature = signature;
+  debugState.featureDebug.log(message);
+}
+
+function emitDebugWarning(debugState, signature, message) {
+  if (!debugState?.featureDebug?.enabled || !signature) {
+    return;
+  }
+  if (debugState.lastWarningSignature === signature) {
+    return;
+  }
+  debugState.lastWarningSignature = signature;
+  debugState.featureDebug.warn(message);
+}
+
+function isSurfaceMutationNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+  if (typeof node.closest === "function" && node.closest("#ad-xconfig-panel-host")) {
+    return false;
+  }
+  const anchorNode =
+    typeof node.closest === "function"
+      ? node
+      : node.parentElement || node.parentNode || null;
+  if (anchorNode && typeof anchorNode.closest === "function" && anchorNode.closest(SURFACE_SCOPE_SELECTOR)) {
+    return true;
+  }
+  if (isBoardInputModeControl(anchorNode)) {
+    return true;
+  }
+  if (typeof node.matches === "function" && node.matches(SURFACE_SELECTOR)) {
+    return true;
+  }
+  if (typeof node.closest === "function" && node.closest(".ad-ext-theme-board-canvas, .ad-ext-theme-content-board")) {
+    return true;
+  }
+  if (typeof node.querySelector === "function" && node.querySelector(SURFACE_SELECTOR)) {
+    return true;
+  }
+  return false;
+}
+
+function hasOverlayRemovalMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+  return mutations.some((mutation) => {
+    const removedNodes = Array.from(mutation?.removedNodes || []);
+    return removedNodes.some((node) => String(node?.id || "") === OVERLAY_ID);
+  });
+}
+
+function hasRelevantCricketMutation(mutations = []) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+
+  const isRelevantAttributeMutation = (mutation) => {
+    if (String(mutation?.type || "") !== "attributes") {
+      return true;
+    }
+
+    const attributeName = String(mutation?.attributeName || "").trim().toLowerCase();
+    if (!attributeName) {
+      return false;
+    }
+
+    if (attributeName !== "class") {
+      return SURFACE_ATTRIBUTE_FILTER.includes(attributeName);
+    }
+
+    const target = mutation?.target || null;
+    if (!target || typeof target.matches !== "function") {
+      return false;
+    }
+
+    // React only to class flips that can change active-player perspective.
+    return target.matches(".ad-ext-player, #ad-ext-player-display, #ad-ext-game-variant");
+  };
+
+  return mutations.some((mutation) => {
+    if (!isRelevantAttributeMutation(mutation)) {
+      return false;
+    }
+
+    const target = mutation?.target || null;
+    if (isSurfaceMutationNode(target)) {
+      return true;
+    }
+    const touchedNodes = [
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ];
+    return touchedNodes.some((node) => isSurfaceMutationNode(node));
+  });
+}
+
+function refreshSurfaceWatchNodes(surfaceWatchState, renderState, documentRef) {
+  const overlayNode = documentRef?.getElementById?.(OVERLAY_ID) || null;
+  setCricketSurfaceWatchNodes(
+    surfaceWatchState,
+    collectCricketSurfaceWatchNodes({
+      documentRef,
+      renderState,
+      extraNodes: overlayNode ? [overlayNode] : [],
+    })
+  );
+}
+
+function resolveOverlayHealth(documentRef, cache = null) {
+  const board = isReusableBoardSnapshot(cache?.board, documentRef)
+    ? cache.board
+    : findBoardSvgGroup(documentRef);
+  if (cache && typeof cache === "object") {
+    cache.board = board;
+  }
+  if (!board?.group) {
+    return false;
+  }
+
+  const overlay = board.group.querySelector?.(`#${OVERLAY_ID}`) || null;
+  return Boolean(overlay && overlay.isConnected !== false);
+}
+
+function buildStatusSignature(renderState) {
+  return `${renderState?.surfaceStatus || "unknown"}::${renderState?.variantText || "-"}`;
+}
+
+function formatPresentationCounts(counts) {
+  const source = counts && typeof counts === "object" ? counts : {};
+  return ["open", "scoring", "pressure", "dead", "inactive"]
+    .map((key) => `${key}:${Number(source[key]) || 0}`)
+    .join(",");
+}
+
+function buildVisualDebugContext(visualConfig, styleContractState) {
+  return [
+    `dim=${visualConfig?.dimIrrelevantBoardTargets !== false ? "on" : "off"}`,
+    `dimStyle="${String(visualConfig?.irrelevantBoardDimStyle || "smoke")}"`,
+    `showOpen=${visualConfig?.showOpenObjectives === true ? "on" : "off"}`,
+    `showDead=${visualConfig?.showDeadObjectives !== false ? "on" : "off"}`,
+    `styleContractOk=${styleContractState?.ok ? "true" : "false"}`,
+    `styleContractVersion="${styleContractState?.version || STYLE_CONTRACT_VERSION}"`,
+  ].join(" ");
+}
+
+function ensureStyleContract({ domGuards, debugState }) {
+  const cssText = buildStyleText();
+  let styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
+  const initialStatus = readStyleContractStatus(styleNode);
+  let finalStatus = initialStatus;
+  let repaired = false;
+
+  if (!initialStatus.ok) {
+    repaired = true;
+    domGuards.removeNodeById(STYLE_ID);
+    styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
+    finalStatus = readStyleContractStatus(styleNode);
+
+    const missingBefore = initialStatus.missingSelectors.join(",");
+    const missingAfter = finalStatus.missingSelectors.join(",");
+    emitDebugWarning(
+      debugState,
+      `style-contract::${STYLE_CONTRACT_VERSION}::${missingBefore || "none"}::${missingAfter || "none"}`,
+      `warn style-contract version="${STYLE_CONTRACT_VERSION}" missingBefore="${missingBefore || "-"}" missingAfter="${missingAfter || "-"}" repaired="${finalStatus.ok ? "ok" : "failed"}"`
+    );
+  }
+
+  return {
+    ok: finalStatus.ok,
+    version: finalStatus.version || STYLE_CONTRACT_VERSION,
+    missingSelectors: finalStatus.missingSelectors,
+    repaired,
+  };
+}
+
+export function initializeCricketHighlighter(context = {}) {
+  const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
+  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const domGuards = context.domGuards;
+  const observerRegistry = context.registries?.observers;
+  const listenerRegistry = context.registries?.listeners;
+  const gameState = context.gameState;
+  const variantRules = context.domain?.variantRules;
+  const cricketRules = context.domain?.cricketRules;
+  const config = context.config;
+  const featureDebug = context.featureDebug || null;
+  const schedulerFactory = context.helpers?.createRafScheduler;
+  const degradedHostGraceMs = context.degradedHostGraceMs;
+  const degradedHostRecoveryCooldownMs = context.degradedHostRecoveryCooldownMs;
+  const degradedHostRecoveryRearmMs = context.degradedHostRecoveryRearmMs;
+
+  if (!documentRef || !domGuards || !cricketRules || typeof schedulerFactory !== "function") {
+    return () => {};
+  }
+
+  const featureConfig =
+    config && typeof config.getFeatureConfig === "function"
+      ? config.getFeatureConfig("cricketHighlighter")
+      : {
+        showOpenObjectives: false,
+        showDeadObjectives: true,
+        irrelevantBoardDimStyle: "smoke",
+        dimIrrelevantBoardTargets: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      };
+  const visualConfig = resolveCricketVisualConfig(featureConfig);
+
+  let lastTransitionSignature = "";
+  let lastStatusSignature = "";
+  const debugState = createDebugState(featureDebug);
+  const styleContractState = ensureStyleContract({ domGuards, debugState });
+  const visualDebugContext = buildVisualDebugContext(visualConfig, styleContractState);
+  let pendingDegradedHostRecheckHandle = 0;
+  let pendingDegradedHostRecheckSignature = "";
+  let pendingRecoveryRearmHandle = 0;
+  let pendingRecoveryRearmSignature = "";
+  let pendingSurfaceAuditHandle = 0;
+  let pendingSurfaceAuditSignature = "";
+  let completedMissingBoardHoldKey = "";
+  const surfaceWatchState = createCricketSurfaceWatchState();
+  const renderCache = {
+    grid: null,
+    board: null,
+    gridStableRowsByLabel: null,
+    overlayShapeState: null,
+  };
+
+  function invalidateRenderCache() {
+    renderCache.grid = null;
+    renderCache.board = null;
+    renderCache.overlayShapeState = null;
+  }
+
+  function clearPendingDegradedHostRecheck() {
+    if (pendingDegradedHostRecheckHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingDegradedHostRecheckHandle);
+    }
+    pendingDegradedHostRecheckHandle = 0;
+    pendingDegradedHostRecheckSignature = "";
+  }
+
+  function clearPendingRecoveryRearm() {
+    if (pendingRecoveryRearmHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingRecoveryRearmHandle);
+    }
+    pendingRecoveryRearmHandle = 0;
+    pendingRecoveryRearmSignature = "";
+  }
+
+  function clearPendingSurfaceAudit() {
+    if (pendingSurfaceAuditHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingSurfaceAuditHandle);
+    }
+    pendingSurfaceAuditHandle = 0;
+    pendingSurfaceAuditSignature = "";
+  }
+
+  function buildMissingBoardHoldKey(renderState) {
+    if (!canDelayMissingMatchBoardGap(renderState) || !lastTransitionSignature) {
+      return "";
+    }
+    return `${renderState?.matchRouteId || "-"}::${lastTransitionSignature}`;
+  }
+
+  function schedulePostTransitionSurfaceAudit(renderState, transitionSignature) {
+    if (
+      String(renderState?.surfaceStatus || "") !== CRICKET_SURFACE_STATUS.READY ||
+      !transitionSignature ||
+      typeof windowRef?.setTimeout !== "function"
+    ) {
+      clearPendingSurfaceAudit();
+      return false;
+    }
+
+    if (pendingSurfaceAuditHandle && pendingSurfaceAuditSignature === transitionSignature) {
+      return true;
+    }
+
+    clearPendingSurfaceAudit();
+    pendingSurfaceAuditSignature = transitionSignature;
+    pendingSurfaceAuditHandle = windowRef.setTimeout(() => {
+      pendingSurfaceAuditHandle = 0;
+      pendingSurfaceAuditSignature = "";
+      invalidateRenderCache();
+      update();
+    }, POST_TRANSITION_SURFACE_AUDIT_MS);
+    return true;
+  }
+
+  function schedulePendingDegradedHostRecheck(renderState) {
+    if (!canDelayMissingMatchBoardGap(renderState) || typeof windowRef?.setTimeout !== "function") {
+      clearPendingDegradedHostRecheck();
+      return false;
+    }
+
+    const pendingDegradedHostRecovery = hasPendingDegradedHostRecovery(renderState);
+    const missingBoardHoldKey = pendingDegradedHostRecovery ? "" : buildMissingBoardHoldKey(renderState);
+    if (!pendingDegradedHostRecovery && (!missingBoardHoldKey || completedMissingBoardHoldKey === missingBoardHoldKey)) {
+      clearPendingDegradedHostRecheck();
+      return false;
+    }
+
+    const delayMs = pendingDegradedHostRecovery
+      ? resolvePendingDegradedHostRecheckDelay(renderState, {
+        fallbackGraceMs: degradedHostGraceMs,
+      })
+      : resolveMissingMatchBoardGapDelay(renderState, {
+      fallbackGraceMs: degradedHostGraceMs,
+    });
+    if (!(delayMs > 0)) {
+      clearPendingDegradedHostRecheck();
+      return false;
+    }
+
+    const nextSignature = [
+      pendingDegradedHostRecovery ? "degraded-host" : "missing-board-gap",
+      renderState?.matchRouteId || "-",
+      Number(renderState?.degradedHostInfo?.graceMs) || Number(degradedHostGraceMs) || 0,
+      Math.max(0, Math.round(Number(renderState?.degradedHostInfo?.ageMs) || 0)),
+      Math.max(1, Math.round(delayMs)),
+      missingBoardHoldKey || "-",
+    ].join("::");
+    if (pendingDegradedHostRecheckHandle && pendingDegradedHostRecheckSignature === nextSignature) {
+      return true;
+    }
+
+    clearPendingDegradedHostRecheck();
+    pendingDegradedHostRecheckSignature = nextSignature;
+    pendingDegradedHostRecheckHandle = windowRef.setTimeout(() => {
+      if (!pendingDegradedHostRecovery && missingBoardHoldKey) {
+        completedMissingBoardHoldKey = missingBoardHoldKey;
+      }
+      pendingDegradedHostRecheckHandle = 0;
+      pendingDegradedHostRecheckSignature = "";
+      invalidateRenderCache();
+      update();
+    }, delayMs);
+    return true;
+  }
+
+  function scheduleRecoveryRearm(renderState) {
+    const matchId = String(renderState?.matchRouteId || "").trim();
+    if (!matchId || !hasDegradedHostRecoveryRecord({ matchId, windowRef })) {
+      clearPendingRecoveryRearm();
+      return false;
+    }
+    if (typeof windowRef?.setTimeout !== "function") {
+      clearPendingRecoveryRearm();
+      return false;
+    }
+
+    const delayMs = Math.max(
+      1,
+      Number.isFinite(Number(degradedHostRecoveryRearmMs))
+        ? Number(degradedHostRecoveryRearmMs)
+        : DEGRADED_HOST_RECOVERY_REARM_MS
+    );
+    const nextSignature = `${matchId}::${delayMs}`;
+    if (pendingRecoveryRearmHandle && pendingRecoveryRearmSignature === nextSignature) {
+      return true;
+    }
+
+    clearPendingRecoveryRearm();
+    pendingRecoveryRearmSignature = nextSignature;
+    pendingRecoveryRearmHandle = windowRef.setTimeout(() => {
+      pendingRecoveryRearmHandle = 0;
+      pendingRecoveryRearmSignature = "";
+      clearDegradedHostRecoveryRecord({ matchId, windowRef });
+    }, delayMs);
+    return true;
+  }
+
+  function clearAndReset(options = {}) {
+    const clearOverlay = options.clearOverlay !== false;
+    const clearWatchNodes = options.clearWatchNodes !== false;
+    lastTransitionSignature = "";
+    renderCache.overlayShapeState = null;
+    if (clearWatchNodes) {
+      clearCricketSurfaceWatchState(surfaceWatchState);
+    }
+    if (clearOverlay) {
+      clearCricketHighlights(documentRef);
+    }
+  }
+
+  function update() {
+    const renderState = buildCricketRenderState({
+      documentRef,
+      windowRef,
+      gameState,
+      cricketRules,
+      variantRules,
+      enforceVariantGuard: true,
+      degradedHostGraceMs,
+      visualConfig,
+      cache: renderCache,
+    });
+    const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
+    const statusSignature = buildStatusSignature(renderState);
+    const variantText = renderState?.variantText || readVariantText(documentRef);
+    const pendingDegradedHostRecheck = hasPendingDegradedHostRecovery(renderState);
+    const delayedMissingBoardGap = canDelayMissingMatchBoardGap(renderState) && Boolean(lastTransitionSignature);
+
+    if (!pendingDegradedHostRecheck && !delayedMissingBoardGap) {
+      clearPendingDegradedHostRecheck();
+    }
+    if (surfaceStatus !== CRICKET_SURFACE_STATUS.READY) {
+      clearPendingRecoveryRearm();
+      clearPendingSurfaceAudit();
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: true });
+      emitDebugLog(
+        debugState,
+        statusSignature,
+        `state paused route variant="${variantText || "-"}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: true });
+      emitDebugLog(
+        debugState,
+        statusSignature,
+        `state inactive variant="${variantText || "-"}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: false });
+      emitDebugWarning(
+        debugState,
+        statusSignature,
+        `warn kein Grid variant="${variantText || "-"}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+      const scheduledRecheck = schedulePendingDegradedHostRecheck(renderState);
+      if (scheduledRecheck) {
+        if (statusSignature === lastStatusSignature) {
+          return;
+        }
+        lastStatusSignature = statusSignature;
+        emitDebugWarning(
+          debugState,
+          `${statusSignature}::pending-board-gap::${renderState?.matchRouteId || "-"}`,
+          `warn kein Board variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" pendingRecheck="true" ${visualDebugContext}`
+        );
+        return;
+      }
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: false });
+      emitDebugWarning(
+        debugState,
+        statusSignature,
+        `warn kein Board variant="${variantText || "-"}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
+      if (statusSignature === lastStatusSignature) {
+        return;
+      }
+      lastStatusSignature = statusSignature;
+      clearAndReset({ clearOverlay: true });
+      const recovery = maybeRecoverDegradedMatchHost({
+        renderState,
+        windowRef,
+        cooldownMs: degradedHostRecoveryCooldownMs,
+      });
+      const recoveryStatus =
+        recovery?.status || DEGRADED_HOST_RECOVERY_STATUS.BLOCKED;
+      emitDebugWarning(
+        debugState,
+        `${statusSignature}::${recoveryStatus}::${renderState?.matchRouteId || "-"}`,
+        `warn degraded host variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" recovery="${recoveryStatus}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    completedMissingBoardHoldKey = "";
+    scheduleRecoveryRearm(renderState);
+    lastStatusSignature = "";
+    const signature = String(renderState?.transitionSignature || renderState?.pipelineSignature || "");
+    if (!signature) {
+      clearAndReset({ clearOverlay: false });
+      return;
+    }
+
+    const overlayHealthy = resolveOverlayHealth(documentRef, renderCache);
+    if (signature === lastTransitionSignature && overlayHealthy) {
+      refreshSurfaceWatchNodes(surfaceWatchState, renderState, documentRef);
+      return;
+    }
+
+    const debugStats = {};
+    const rendered = renderCricketHighlights({
+      documentRef,
+      visualConfig,
+      renderState,
+      cache: renderCache,
+      debugStats,
+      onInvariantWarning: (warning) => {
+        const presentationCounts = formatPresentationCounts(warning?.shapeCountByPresentation);
+        const targetOrder = Array.isArray(warning?.targetOrder) ? warning.targetOrder.join(",") : "";
+        const signatureParts = [
+          "invariant",
+          warning?.type || "unknown",
+          Number(warning?.inactiveTargetCount) || 0,
+          presentationCounts,
+          warning?.dimIrrelevantBoardTargets === false ? 0 : 1,
+          warning?.showOpenObjectives === true ? 1 : 0,
+          warning?.showDeadObjectives === false ? 0 : 1,
+          String(warning?.irrelevantBoardDimStyle || visualConfig?.irrelevantBoardDimStyle || "smoke"),
+          targetOrder,
+          styleContractState.ok ? 1 : 0,
+          styleContractState.version || STYLE_CONTRACT_VERSION,
+        ];
+        emitDebugWarning(
+          debugState,
+          signatureParts.join("::"),
+          `warn invariant type="${warning?.type || "unknown"}" inactiveTargets=${Number(warning?.inactiveTargetCount) || 0} presentationCounts="${presentationCounts}" targetOrder="${targetOrder || "-"}" dim=${warning?.dimIrrelevantBoardTargets === false ? "off" : "on"} dimStyle="${String(warning?.irrelevantBoardDimStyle || visualConfig?.irrelevantBoardDimStyle || "smoke")}" showOpen=${warning?.showOpenObjectives === true ? "on" : "off"} showDead=${warning?.showDeadObjectives === false ? "off" : "on"} ${visualDebugContext}`
+        );
+      },
+    });
+
+    if (!rendered) {
+      clearAndReset({ clearOverlay: false });
+      emitDebugWarning(
+        debugState,
+        `${signature}::render-failed`,
+        `warn render fehlgeschlagen variant="${variantText || "-"}" ${visualDebugContext}`
+      );
+      return;
+    }
+
+    const presentationCounts = formatPresentationCounts(debugStats.shapeCountByPresentation);
+    const hadPriorReadyTransition = Boolean(lastTransitionSignature);
+    const transitionChanged = signature !== lastTransitionSignature;
+    lastTransitionSignature = signature;
+    refreshSurfaceWatchNodes(surfaceWatchState, renderState, documentRef);
+    if (hadPriorReadyTransition && transitionChanged) {
+      schedulePostTransitionSurfaceAudit(renderState, signature);
+    }
+    const logSignature = [
+      signature,
+      debugStats.renderedShapeCount || 0,
+      debugStats.nonOpenTargetCount || 0,
+      debugStats.openTargetCount || 0,
+      debugStats.renderedOpenTargetCount || 0,
+      debugStats.inactiveTargetCount || 0,
+      presentationCounts,
+      visualConfig.dimIrrelevantBoardTargets === false ? 0 : 1,
+      visualConfig.showOpenObjectives === true ? 1 : 0,
+      visualConfig.showDeadObjectives === false ? 0 : 1,
+      String(visualConfig.irrelevantBoardDimStyle || "smoke"),
+      styleContractState.ok ? 1 : 0,
+      styleContractState.version || STYLE_CONTRACT_VERSION,
+      renderState?.activeThrowPreviewDebug?.applied ? 1 : 0,
+      renderState?.activeThrowPreviewDebug?.suppressionReason || "none",
+    ].join("::");
+
+    emitDebugLog(
+      debugState,
+      logSignature,
+      `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" shapes=${Number(debugStats.renderedShapeCount) || 0} nonOpen=${Number(debugStats.nonOpenTargetCount) || 0} open=${Number(debugStats.openTargetCount) || 0}/${Number(debugStats.renderedOpenTargetCount) || 0} inactiveTargets=${Number(debugStats.inactiveTargetCount) || 0} presentationCounts="${presentationCounts}" activePreview=${renderState?.activeThrowPreviewDebug?.applied ? "on" : "off"} reason="${renderState?.activeThrowPreviewDebug?.suppressionReason || "none"}" labels="${(renderState?.activeThrowPreviewDebug?.labels || []).join(",")}" ${visualDebugContext}`
+    );
+  }
+
+  const scheduler = schedulerFactory(update, { windowRef });
+  const rootNode = documentRef.getElementById?.("root") || documentRef.body || documentRef.documentElement || documentRef;
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [OVERLAY_ID],
+  });
+
+  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
+    observerRegistry.registerMutationObserver({
+      key: OBSERVER_KEY,
+      target: rootNode,
+      callback: (mutations = []) => {
+        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        if (hasOverlayRemovalMutation(mutations)) {
+          invalidateRenderCache();
+          scheduler.schedule();
+          return;
+        }
+        if (
+          !hasRelevantCricketMutation(mutations) &&
+          !hasTrackedCricketSurfaceMutation(mutations, surfaceWatchState)
+        ) {
+          return;
+        }
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
+      observeOptions: {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: SURFACE_ATTRIBUTE_FILTER.slice(),
+      },
+      MutationObserverRef: windowRef?.MutationObserver,
+    });
+  }
+
+  if (listenerRegistry && typeof listenerRegistry.register === "function") {
+    listenerRegistry.register({
+      key: LISTENER_KEYS.resize,
+      target: windowRef,
+      type: "resize",
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
+      options: { passive: true },
+    });
+    listenerRegistry.register({
+      key: LISTENER_KEYS.orientation,
+      target: windowRef,
+      type: "orientationchange",
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
+      options: { passive: true },
+    });
+    listenerRegistry.register({
+      key: LISTENER_KEYS.visibility,
+      target: documentRef,
+      type: "visibilitychange",
+      handler: () => {
+        invalidateRenderCache();
+        scheduler.schedule();
+      },
+    });
+  }
+
+  const unsubscribeGameState =
+    gameState && typeof gameState.subscribe === "function"
+      ? gameState.subscribe(() => scheduler.schedule())
+      : () => {};
+
+  scheduler.schedule();
+  let cleanedUp = false;
+
+  return function cleanup() {
+    if (cleanedUp) {
+      return;
+    }
+    cleanedUp = true;
+    scheduler.cancel();
+    clearPendingDegradedHostRecheck();
+    clearPendingRecoveryRearm();
+    clearPendingSurfaceAudit();
+
+    try {
+      unsubscribeGameState();
+    } catch (_) {
+      // keep cleanup fail-soft
+    }
+
+    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
+      observerRegistry.disconnect(OBSERVER_KEY);
+    }
+    if (listenerRegistry && typeof listenerRegistry.remove === "function") {
+      Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
+    }
+
+    clearCricketHighlights(documentRef);
+    clearCricketSurfaceWatchState(surfaceWatchState);
+    invalidateRenderCache();
+    domGuards.removeNodeById(STYLE_ID);
+  };
+}
+
+export const mountCricketHighlighter = initializeCricketHighlighter;
+export const initialize = initializeCricketHighlighter;
+export const mount = initializeCricketHighlighter;

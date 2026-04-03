@@ -12,12 +12,14 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.0.113] - 2026-04-02
+## [2.1.0] - 2026-04-03
 
 ### Fixed
 
 - Nutzerwirkung: Wenn ein Cricket-Match nach einer bereits erfolgreichen Stabilisierung später bei einem Wurf erneut in den rohen Hostzustand kippt, kann xConfig jetzt nochmals eingreifen, statt am alten sessiongebundenen Recovery-Marker hängen zu bleiben und den Screen nach `S20`-Treffern wieder kollabieren zu lassen.
   Technik: Der degradierte Match-Host bleibt weiter gegen Reload-Loops abgesichert, aber `cricket-grid-fx` und `cricket-highlighter` schalten den sessiongebundenen Recovery-Key nach einer stabil gesunden `ready`-Surface automatisch wieder scharf; dadurch kann derselbe Match-Tab nach einer echten Erholung erneut genau einen Recovery-Reload auslösen, und eine neue Lifecycle-Regression deckt den Pfad `degraded -> healthy -> degraded` ausdrücklich ab.
+- Nutzerwirkung: Cricket-Grid, Board-Overlay und Theme reagieren jetzt deutlich ruhiger und konsistenter auf dieselben Live-Änderungen, statt sich bei Host-Wechseln, Attribut-Hydrationen oder parallelen Rebuilds gegenseitig mit eigenen Observer-/Render-Pfaden zu überholen.
+  Technik: `cricket-grid-fx` und `cricket-highlighter` teilen sich jetzt eine gemeinsame Cricket-Surface-Runtime mit einem koordinierten Observer-/Listener-/Game-State-Pfad, gemeinsamer Render-State-Ermittlung, featurelokalen Renderern und aliasfähigen Debug-Observern; zusätzlich synchronisiert das Cricket-Theme den aktiven Spieler jetzt aus derselben Surface-Semantik, und eine neue Lifecycle-Regression sichert ausdrücklich ab, dass Grid-FX und Highlighter zusammen nur noch einen echten Runtime-Observer-Stack verwenden.
 
 ## [2.0.112] - 2026-04-02
 
@@ -1161,7 +1163,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.0.113]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...HEAD
+[2.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...HEAD
+[2.0.113]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...ca465fc
 [2.0.112]: https://github.com/thomasasen/autodarts-xconfig/compare/2e404db...340e7b4
 [2.0.111]: https://github.com/thomasasen/autodarts-xconfig/compare/bb5158a...2e404db
 [2.0.110]: https://github.com/thomasasen/autodarts-xconfig/compare/3f4c391...bb5158a

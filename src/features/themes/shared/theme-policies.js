@@ -5,8 +5,10 @@ import {
   createCricketReadabilityState,
   hasCricketPlayerStateMutation,
   syncCricketActivePlayerState,
+  syncCricketActivePlayerStateFromRenderState,
 } from "./cricket-readability.js";
 import { createLayoutHookRetentionState } from "./board-layout-resolver.js";
+import { acquireSharedCricketRuntime } from "../../cricket-surface/shared-runtime.js";
 import {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
   THEME_CRICKET_READABILITY,
@@ -23,6 +25,7 @@ function createCricketThemePolicy() {
         layoutHookRetention: createLayoutHookRetentionState({
           enabled: true,
         }),
+        cricketRuntimeUnsubscribe: null,
       };
     },
     getManagedNodeIds() {
@@ -42,6 +45,21 @@ function createCricketThemePolicy() {
       return hasCricketPlayerStateMutation(mutations);
     },
     onActivate(context = {}) {
+      if (!context.themeState.cricketRuntimeUnsubscribe) {
+        const sharedRuntime = acquireSharedCricketRuntime(context.runtimeContext || {});
+        if (sharedRuntime) {
+          context.themeState.cricketRuntimeUnsubscribe = sharedRuntime.subscribe({
+            featureKey: `${CRICKET_THEME_FEATURE_KEY}:theme-policy`,
+            onRenderState: ({ renderState }) => {
+              syncCricketActivePlayerStateFromRenderState(
+                context.documentRef,
+                renderState,
+                context.gameState
+              );
+            },
+          });
+        }
+      }
       syncCricketActivePlayerState(context.documentRef, context.gameState);
       applyCricketReadabilityPolicy(
         context.documentRef,
@@ -50,6 +68,12 @@ function createCricketThemePolicy() {
       );
     },
     onDeactivate(context = {}) {
+      try {
+        context.themeState.cricketRuntimeUnsubscribe?.();
+      } catch (_) {
+        // Keep theme cleanup fail-soft.
+      }
+      context.themeState.cricketRuntimeUnsubscribe = null;
       clearCricketActivePlayerState(context.documentRef);
       clearCricketReadabilityPolicy(context.themeState);
     },

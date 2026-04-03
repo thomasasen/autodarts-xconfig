@@ -49,6 +49,26 @@ function createSingleFeatureConfig(configKey, featureConfig = {}) {
   };
 }
 
+function createFeatureConfig(configEntries = {}) {
+  const featureToggles = {};
+  const features = {};
+
+  FEATURE_CONFIG_KEYS.forEach((key) => {
+    const featureConfig = configEntries[key];
+    const enabled = Boolean(featureConfig);
+    featureToggles[key] = enabled;
+    features[key] = {
+      ...(featureConfig || {}),
+      enabled,
+    };
+  });
+
+  return {
+    featureToggles,
+    features,
+  };
+}
+
 function runtimeBootstrapAudio(windowRef) {
   if (!windowRef || typeof windowRef !== "object") {
     return;
@@ -286,6 +306,42 @@ test("cricket-grid-fx mounts idempotently and releases observers/listeners", asy
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")), false);
+  assert.equal(runtime.context.registries.observers.size(), 0);
+  assert.equal(runtime.context.registries.listeners.size(), 0);
+});
+
+test("cricket-highlighter and cricket-grid-fx share one runtime observer/listener stack", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const windowRef = createFakeWindow({ documentRef });
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createFeatureConfig({
+      cricketHighlighter: {
+        showDeadTargets: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      },
+      cricketGridFx: {
+        rowWave: true,
+        colorTheme: "standard",
+        intensity: "normal",
+      },
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-highlighter-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")), true);
+  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.listeners.size(), 3);
+  assert.ok(runtime.context.registries.observers.get("cricket-highlighter:dom-observer"));
+  assert.ok(runtime.context.registries.observers.get("cricket-grid-fx:dom-observer"));
+
+  runtime.stop();
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
