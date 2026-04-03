@@ -16,6 +16,12 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Das Userscript-Verhalten bleibt unverändert; eine ungenutzte interne Asset-Wrapper-Datei entfällt aus dem Quellbaum, sodass die Source-Struktur etwas schlanker und eindeutiger wird.
+  Technik: `src/shared/feature-assets.js` wurde entfernt, weil der aktive Code durchgehend den `#feature-assets`-Importpfad aus `package.json` nutzt und es im Repository keine verbleibenden Aufrufer für den dünnen Re-Export gab.
+
+- Nutzerwirkung: Das Userscript-Verhalten bleibt unverändert; der veraltete Cricket-Backup-Bestand liegt nicht mehr im aktiven `src`-Baum und kann dadurch nicht mehr mit gepflegtem Quellcode verwechselt werden.
+  Technik: Der archivierte Ordner `src/legacy-backups/cricket-rebuild-2026-04-03` wurde entfernt, nachdem im Repository keine Laufzeit-, Build-, Test- oder Doku-Abhängigkeiten dafür verblieben waren; übrig blieb nur noch der breite ESLint-Ignore für Backup-Pfade.
+
 - Nutzerwirkung: `checkout-board-targets` bleibt bei Board-Wechseln, verschachtelten Board-Gruppen und kurzzeitig abweichenden Shared-Board-Kandidaten beim bisherigen sichtbaren Verhalten, driftet dabei aber seltener von der gemeinsamen Board-Wahrheit im Shared-Layer weg.
   Technik: `dartboard-svg` liefert mit `findCheckoutCompatibleBoardSnapshot()` jetzt einen kleinen Checkout-Kompatibilitäts-Adapter zwischen der bisherigen `findBoardSvgRoot()`-Auswahl und dem stärkeren kanonischen `findBoardSvgGroup()`-Snapshot; `checkout-board-targets` nutzt diesen Shared-Entry-Point statt seine Board-Suche lokal noch einmal nachzubauen, abgesichert durch neue Regressionen für Gleichstand, versteckte größere Gruppen und Wrapper-vs-Child-Gruppen.
 
