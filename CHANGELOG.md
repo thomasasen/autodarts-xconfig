@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.3] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: Die gemeinsame Cricket-Surface bleibt bei transienten Board-Gaps, degradierten Match-Hosts und nachfolgenden Erholungen stabiler und leichter vorhersagbar; `cricket-grid-fx`, Board-Overlay und Theme behalten dabei ihr bisheriges Verhalten, reagieren aber robuster auf den Pfad `ready -> missing-board -> ready/degraded-host`.
+  Technik: Die Shared-Cricket-Runtime trennt Timer-Slots, degraded-host Recovery-Gating, missing-board Deferral und READY-Lifecycle jetzt in klarere interne Helfer, liefert fuer Subscriber das abgeleitete Lifecycle-Signal `boardGapDeferred`, entkoppelt `cricket-grid-fx` und `cricket-highlighter` damit von doppelten Runtime-Details und fasst die Delay-Normalisierung fuer degraded-host Rechecks in einer gemeinsamen Helper-Schicht zusammen; zusaetzlich sichert eine neue Runtime-Regression den deferred Board-Gap-Pfad direkt am Shared-Runtime-Vertrag ab.
+
 ## [2.1.2] - 2026-04-03
 
 ### Fixed
@@ -1177,7 +1184,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...HEAD
+[2.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...HEAD
+[2.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/c9b25d4...ba5e325
 [2.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...c9b25d4
 [2.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...f0cc281
 [2.0.113]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...ca465fc

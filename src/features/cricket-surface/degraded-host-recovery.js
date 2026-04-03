@@ -80,11 +80,7 @@ export function canDelayMissingMatchBoardGap(renderState) {
   );
 }
 
-export function resolvePendingDegradedHostRecheckDelay(renderState, options = {}) {
-  if (!hasPendingDegradedHostRecovery(renderState)) {
-    return -1;
-  }
-
+function resolveDegradedHostDelayContext(renderState, options = {}) {
   const fallbackGraceMs = Math.max(
     0,
     Number.isFinite(Number(options.fallbackGraceMs)) ? Number(options.fallbackGraceMs) : 0
@@ -108,7 +104,22 @@ export function resolvePendingDegradedHostRecheckDelay(renderState, options = {}
       : 0
   );
   const remainingMs = Math.max(0, graceMs - ageMs);
-  return Math.max(1, remainingMs + bufferMs);
+  return {
+    fallbackGraceMs,
+    bufferMs,
+    graceMs,
+    ageMs,
+    remainingMs,
+  };
+}
+
+export function resolvePendingDegradedHostRecheckDelay(renderState, options = {}) {
+  if (!hasPendingDegradedHostRecovery(renderState)) {
+    return -1;
+  }
+
+  const delayContext = resolveDegradedHostDelayContext(renderState, options);
+  return Math.max(1, delayContext.remainingMs + delayContext.bufferMs);
 }
 
 export function resolveMissingMatchBoardGapDelay(renderState, options = {}) {
@@ -121,17 +132,8 @@ export function resolveMissingMatchBoardGapDelay(renderState, options = {}) {
     return pendingDelay;
   }
 
-  const fallbackGraceMs = Math.max(
-    0,
-    Number.isFinite(Number(options.fallbackGraceMs)) ? Number(options.fallbackGraceMs) : 0
-  );
-  const bufferMs = Math.max(
-    0,
-    Number.isFinite(Number(options.bufferMs))
-      ? Number(options.bufferMs)
-      : DEGRADED_HOST_RECHECK_BUFFER_MS
-  );
-  return Math.max(1, fallbackGraceMs + bufferMs);
+  const delayContext = resolveDegradedHostDelayContext(renderState, options);
+  return Math.max(1, delayContext.fallbackGraceMs + delayContext.bufferMs);
 }
 
 function readRecoveryRecord(storage, storageKey) {

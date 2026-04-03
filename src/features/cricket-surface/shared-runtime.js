@@ -106,8 +106,14 @@ function ensureObserverAliasSupport(observerRegistry) {
   }
 
   const aliasObservers = new Map();
-  const originalGet = observerRegistry.get.bind(observerRegistry);
-  const originalDisconnect = observerRegistry.disconnect.bind(observerRegistry);
+  const originalGet =
+    typeof observerRegistry.get === "function"
+      ? observerRegistry.get.bind(observerRegistry)
+      : () => null;
+  const originalDisconnect =
+    typeof observerRegistry.disconnect === "function"
+      ? observerRegistry.disconnect.bind(observerRegistry)
+      : () => false;
 
   observerRegistry.__sharedCricketAliasStore = aliasObservers;
   observerRegistry.__sharedCricketAliasSupport = true;
@@ -123,6 +129,33 @@ function ensureObserverAliasSupport(observerRegistry) {
     }
     return originalDisconnect(normalizedKey);
   };
+}
+
+function registerRuntimeObserverAlias(observerRegistry, aliasKey, runtime) {
+  const normalizedKey = String(aliasKey || "").trim();
+  const aliasStore = observerRegistry?.__sharedCricketAliasStore;
+  if (!normalizedKey || !(aliasStore instanceof Map)) {
+    return false;
+  }
+
+  aliasStore.set(normalizedKey, createRuntimeAliasObserver(runtime));
+  return true;
+}
+
+function unregisterRuntimeObserverAlias(observerRegistry, aliasKey) {
+  const normalizedKey = String(aliasKey || "").trim();
+  if (!normalizedKey || !observerRegistry || typeof observerRegistry !== "object") {
+    return false;
+  }
+
+  const aliasStore = observerRegistry.__sharedCricketAliasStore;
+  if (aliasStore instanceof Map && aliasStore.delete(normalizedKey)) {
+    return true;
+  }
+
+  return typeof observerRegistry.disconnect === "function"
+    ? observerRegistry.disconnect(normalizedKey)
+    : false;
 }
 
 function isSurfaceMutationNode(node) {
@@ -306,37 +339,58 @@ function createSharedCricketRuntime(context = {}) {
     });
   }
 
-  function clearPendingDegradedHostRecheck() {
-    if (
-      runtime.pendingDegradedHostRecheckHandle &&
-      typeof runtime.windowRef?.clearTimeout === "function"
-    ) {
-      runtime.windowRef.clearTimeout(runtime.pendingDegradedHostRecheckHandle);
+  function clearTimeoutSlot(handleKey, signatureKey) {
+    if (runtime[handleKey] && typeof runtime.windowRef?.clearTimeout === "function") {
+      runtime.windowRef.clearTimeout(runtime[handleKey]);
     }
-    runtime.pendingDegradedHostRecheckHandle = 0;
-    runtime.pendingDegradedHostRecheckSignature = "";
+    runtime[handleKey] = 0;
+    runtime[signatureKey] = "";
+  }
+
+  function scheduleTimeoutSlot(options = {}) {
+    const handleKey = String(options.handleKey || "").trim();
+    const signatureKey = String(options.signatureKey || "").trim();
+    const nextSignature = String(options.nextSignature || "");
+    const delayMs = Number(options.delayMs);
+    const onTimeout = typeof options.onTimeout === "function" ? options.onTimeout : () => {};
+
+    if (
+      !handleKey ||
+      !signatureKey ||
+      !nextSignature ||
+      !(delayMs > 0) ||
+      typeof runtime.windowRef?.setTimeout !== "function"
+    ) {
+      if (handleKey && signatureKey) {
+        clearTimeoutSlot(handleKey, signatureKey);
+      }
+      return false;
+    }
+
+    if (runtime[handleKey] && runtime[signatureKey] === nextSignature) {
+      return true;
+    }
+
+    clearTimeoutSlot(handleKey, signatureKey);
+    runtime[signatureKey] = nextSignature;
+    runtime[handleKey] = runtime.windowRef.setTimeout(() => {
+      runtime[handleKey] = 0;
+      runtime[signatureKey] = "";
+      onTimeout();
+    }, delayMs);
+    return true;
+  }
+
+  function clearPendingDegradedHostRecheck() {
+    clearTimeoutSlot("pendingDegradedHostRecheckHandle", "pendingDegradedHostRecheckSignature");
   }
 
   function clearPendingRecoveryRearm() {
-    if (
-      runtime.pendingRecoveryRearmHandle &&
-      typeof runtime.windowRef?.clearTimeout === "function"
-    ) {
-      runtime.windowRef.clearTimeout(runtime.pendingRecoveryRearmHandle);
-    }
-    runtime.pendingRecoveryRearmHandle = 0;
-    runtime.pendingRecoveryRearmSignature = "";
+    clearTimeoutSlot("pendingRecoveryRearmHandle", "pendingRecoveryRearmSignature");
   }
 
   function clearPendingSurfaceAudit() {
-    if (
-      runtime.pendingSurfaceAuditHandle &&
-      typeof runtime.windowRef?.clearTimeout === "function"
-    ) {
-      runtime.windowRef.clearTimeout(runtime.pendingSurfaceAuditHandle);
-    }
-    runtime.pendingSurfaceAuditHandle = 0;
-    runtime.pendingSurfaceAuditSignature = "";
+    clearTimeoutSlot("pendingSurfaceAuditHandle", "pendingSurfaceAuditSignature");
   }
 
   function buildMissingBoardHoldKey(renderState) {
@@ -346,56 +400,59 @@ function createSharedCricketRuntime(context = {}) {
     return `${renderState?.matchRouteId || "-"}::${runtime.lastReadyTransitionSignature}`;
   }
 
+  function resolveMissingBoardDeferral(renderState) {
+    const pendingDegradedHostRecheck = hasPendingDegradedHostRecovery(renderState);
+    const delayedMissingBoardGap =
+      canDelayMissingMatchBoardGap(renderState) && Boolean(runtime.lastReadyTransitionSignature);
+    return {
+      pendingDegradedHostRecheck,
+      delayedMissingBoardGap,
+      boardGapDeferred: pendingDegradedHostRecheck || delayedMissingBoardGap,
+    };
+  }
+
+  function clearMissingBoardHoldState() {
+    runtime.completedMissingBoardHoldKey = "";
+  }
+
   function schedulePostTransitionSurfaceAudit(renderState, transitionSignature) {
     if (
       String(renderState?.surfaceStatus || "") !== CRICKET_SURFACE_STATUS.READY ||
-      !transitionSignature ||
-      typeof runtime.windowRef?.setTimeout !== "function"
+      !transitionSignature
     ) {
       clearPendingSurfaceAudit();
       return false;
     }
 
-    if (
-      runtime.pendingSurfaceAuditHandle &&
-      runtime.pendingSurfaceAuditSignature === transitionSignature
-    ) {
-      return true;
-    }
-
-    clearPendingSurfaceAudit();
-    runtime.pendingSurfaceAuditSignature = transitionSignature;
-    runtime.pendingSurfaceAuditHandle = runtime.windowRef.setTimeout(() => {
-      runtime.pendingSurfaceAuditHandle = 0;
-      runtime.pendingSurfaceAuditSignature = "";
-      invalidateRenderCache();
-      runtime.scheduler.schedule();
-    }, POST_TRANSITION_SURFACE_AUDIT_MS);
-    return true;
+    return scheduleTimeoutSlot({
+      handleKey: "pendingSurfaceAuditHandle",
+      signatureKey: "pendingSurfaceAuditSignature",
+      nextSignature: transitionSignature,
+      delayMs: POST_TRANSITION_SURFACE_AUDIT_MS,
+      onTimeout: () => {
+        invalidateRenderCache();
+        runtime.scheduler.schedule();
+      },
+    });
   }
 
-  function schedulePendingDegradedHostRecheck(renderState) {
-    if (
-      !canDelayMissingMatchBoardGap(renderState) ||
-      typeof runtime.windowRef?.setTimeout !== "function"
-    ) {
-      clearPendingDegradedHostRecheck();
-      return false;
+  function resolveMissingBoardRecheckPlan(renderState) {
+    if (!canDelayMissingMatchBoardGap(renderState)) {
+      return null;
     }
 
-    const pendingDegradedHostRecovery = hasPendingDegradedHostRecovery(renderState);
-    const missingBoardHoldKey = pendingDegradedHostRecovery
+    const pendingDegradedHostRecheck = hasPendingDegradedHostRecovery(renderState);
+    const missingBoardHoldKey = pendingDegradedHostRecheck
       ? ""
       : buildMissingBoardHoldKey(renderState);
     if (
-      !pendingDegradedHostRecovery &&
+      !pendingDegradedHostRecheck &&
       (!missingBoardHoldKey || runtime.completedMissingBoardHoldKey === missingBoardHoldKey)
     ) {
-      clearPendingDegradedHostRecheck();
-      return false;
+      return null;
     }
 
-    const delayMs = pendingDegradedHostRecovery
+    const delayMs = pendingDegradedHostRecheck
       ? resolvePendingDegradedHostRecheckDelay(renderState, {
           fallbackGraceMs: runtime.degradedHostGraceMs,
         })
@@ -403,37 +460,53 @@ function createSharedCricketRuntime(context = {}) {
           fallbackGraceMs: runtime.degradedHostGraceMs,
         });
     if (!(delayMs > 0)) {
+      return null;
+    }
+
+    return {
+      pendingDegradedHostRecheck,
+      missingBoardHoldKey,
+      delayMs,
+      nextSignature: [
+        pendingDegradedHostRecheck ? "degraded-host" : "missing-board-gap",
+        renderState?.matchRouteId || "-",
+        Number(renderState?.degradedHostInfo?.graceMs) || Number(runtime.degradedHostGraceMs) || 0,
+        Math.max(0, Math.round(Number(renderState?.degradedHostInfo?.ageMs) || 0)),
+        Math.max(1, Math.round(delayMs)),
+        missingBoardHoldKey || "-",
+      ].join("::"),
+    };
+  }
+
+  function schedulePendingDegradedHostRecheck(renderState) {
+    const recheckPlan = resolveMissingBoardRecheckPlan(renderState);
+    if (!recheckPlan) {
       clearPendingDegradedHostRecheck();
       return false;
     }
 
-    const nextSignature = [
-      pendingDegradedHostRecovery ? "degraded-host" : "missing-board-gap",
-      renderState?.matchRouteId || "-",
-      Number(renderState?.degradedHostInfo?.graceMs) || Number(runtime.degradedHostGraceMs) || 0,
-      Math.max(0, Math.round(Number(renderState?.degradedHostInfo?.ageMs) || 0)),
-      Math.max(1, Math.round(delayMs)),
-      missingBoardHoldKey || "-",
-    ].join("::");
-    if (
-      runtime.pendingDegradedHostRecheckHandle &&
-      runtime.pendingDegradedHostRecheckSignature === nextSignature
-    ) {
-      return true;
-    }
+    return scheduleTimeoutSlot({
+      handleKey: "pendingDegradedHostRecheckHandle",
+      signatureKey: "pendingDegradedHostRecheckSignature",
+      nextSignature: recheckPlan.nextSignature,
+      delayMs: recheckPlan.delayMs,
+      onTimeout: () => {
+        if (!recheckPlan.pendingDegradedHostRecheck && recheckPlan.missingBoardHoldKey) {
+          runtime.completedMissingBoardHoldKey = recheckPlan.missingBoardHoldKey;
+        }
+        invalidateRenderCache();
+        runtime.scheduler.schedule();
+      },
+    });
+  }
 
-    clearPendingDegradedHostRecheck();
-    runtime.pendingDegradedHostRecheckSignature = nextSignature;
-    runtime.pendingDegradedHostRecheckHandle = runtime.windowRef.setTimeout(() => {
-      if (!pendingDegradedHostRecovery && missingBoardHoldKey) {
-        runtime.completedMissingBoardHoldKey = missingBoardHoldKey;
-      }
-      runtime.pendingDegradedHostRecheckHandle = 0;
-      runtime.pendingDegradedHostRecheckSignature = "";
-      invalidateRenderCache();
-      runtime.scheduler.schedule();
-    }, delayMs);
-    return true;
+  function resolveRecoveryRearmDelay() {
+    return Math.max(
+      1,
+      Number.isFinite(Number(runtime.degradedHostRecoveryRearmMs))
+        ? Number(runtime.degradedHostRecoveryRearmMs)
+        : DEGRADED_HOST_RECOVERY_REARM_MS
+    );
   }
 
   function scheduleRecoveryRearm(renderState) {
@@ -442,33 +515,101 @@ function createSharedCricketRuntime(context = {}) {
       clearPendingRecoveryRearm();
       return false;
     }
-    if (typeof runtime.windowRef?.setTimeout !== "function") {
-      clearPendingRecoveryRearm();
+
+    const delayMs = resolveRecoveryRearmDelay();
+    return scheduleTimeoutSlot({
+      handleKey: "pendingRecoveryRearmHandle",
+      signatureKey: "pendingRecoveryRearmSignature",
+      nextSignature: `${matchId}::${delayMs}`,
+      delayMs,
+      onTimeout: () => {
+        clearDegradedHostRecoveryRecord({ matchId, windowRef: runtime.windowRef });
+      },
+    });
+  }
+
+  function updateDegradedHostRecovery(renderState, surfaceStatus, statusSignature) {
+    if (surfaceStatus !== CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
+      runtime.lastDegradedStatusSignature = "";
+      return null;
+    }
+
+    if (statusSignature === runtime.lastDegradedStatusSignature) {
+      return null;
+    }
+
+    const recovery = maybeRecoverDegradedMatchHost({
+      renderState,
+      windowRef: runtime.windowRef,
+      cooldownMs: runtime.degradedHostRecoveryCooldownMs,
+    });
+    runtime.lastDegradedStatusSignature = statusSignature;
+    return recovery;
+  }
+
+  function syncMissingBoardDeferral(renderState, deferralState) {
+    if (String(renderState?.surfaceStatus || "") !== CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+      clearPendingDegradedHostRecheck();
       return false;
     }
 
-    const delayMs = Math.max(
-      1,
-      Number.isFinite(Number(runtime.degradedHostRecoveryRearmMs))
-        ? Number(runtime.degradedHostRecoveryRearmMs)
-        : DEGRADED_HOST_RECOVERY_REARM_MS
-    );
-    const nextSignature = `${matchId}::${delayMs}`;
-    if (
-      runtime.pendingRecoveryRearmHandle &&
-      runtime.pendingRecoveryRearmSignature === nextSignature
-    ) {
-      return true;
+    if (!deferralState?.boardGapDeferred) {
+      clearPendingDegradedHostRecheck();
+      return false;
     }
 
-    clearPendingRecoveryRearm();
-    runtime.pendingRecoveryRearmSignature = nextSignature;
-    runtime.pendingRecoveryRearmHandle = runtime.windowRef.setTimeout(() => {
-      runtime.pendingRecoveryRearmHandle = 0;
-      runtime.pendingRecoveryRearmSignature = "";
-      clearDegradedHostRecoveryRecord({ matchId, windowRef: runtime.windowRef });
-    }, delayMs);
-    return true;
+    return schedulePendingDegradedHostRecheck(renderState);
+  }
+
+  function syncReadyLifecycle(renderState, transitionSignature) {
+    const surfaceStatus = String(renderState?.surfaceStatus || "");
+    if (surfaceStatus !== CRICKET_SURFACE_STATUS.READY) {
+      clearPendingRecoveryRearm();
+      clearPendingSurfaceAudit();
+      if (surfaceStatus !== CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+        clearMissingBoardHoldState();
+        runtime.lastReadyTransitionSignature = "";
+      }
+      return false;
+    }
+
+    clearMissingBoardHoldState();
+    scheduleRecoveryRearm(renderState);
+    if (!transitionSignature) {
+      runtime.lastReadyTransitionSignature = "";
+      return false;
+    }
+
+    const previousTransitionSignature = runtime.lastReadyTransitionSignature;
+    const transitionChanged = transitionSignature !== previousTransitionSignature;
+    runtime.lastReadyTransitionSignature = transitionSignature;
+    if (!previousTransitionSignature || !transitionChanged) {
+      return false;
+    }
+
+    return schedulePostTransitionSurfaceAudit(renderState, transitionSignature);
+  }
+
+  function scheduleSharedRuntimeUpdate() {
+    runtime.scheduler.schedule();
+  }
+
+  function notifySubscribers(renderState, lifecycle) {
+    runtime.subscribers.forEach((subscriber) => {
+      try {
+        subscriber.onRenderState?.({
+          documentRef: runtime.documentRef,
+          windowRef: runtime.windowRef,
+          renderState,
+          renderCache: runtime.renderCache,
+          lifecycle,
+          invalidateRenderCache,
+          scheduleUpdate: scheduleSharedRuntimeUpdate,
+        });
+      } catch (_) {
+        // Feature-local render failures should not stop other cricket consumers.
+      }
+    });
   }
 
   function refreshTrackedSurfaceNodes(renderState) {
@@ -509,79 +650,22 @@ function createSharedCricketRuntime(context = {}) {
     const transitionSignature = String(
       renderState?.transitionSignature || renderState?.pipelineSignature || ""
     );
-    const pendingDegradedHostRecheck = hasPendingDegradedHostRecovery(renderState);
-    const delayedMissingBoardGap =
-      canDelayMissingMatchBoardGap(renderState) && Boolean(runtime.lastReadyTransitionSignature);
-
-    if (!pendingDegradedHostRecheck && !delayedMissingBoardGap) {
-      clearPendingDegradedHostRecheck();
-    }
-    if (surfaceStatus !== CRICKET_SURFACE_STATUS.READY) {
-      clearPendingRecoveryRearm();
-      clearPendingSurfaceAudit();
-    }
-
-    let recovery = null;
-    if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
-      if (statusSignature !== runtime.lastDegradedStatusSignature) {
-        recovery = maybeRecoverDegradedMatchHost({
-          renderState,
-          windowRef: runtime.windowRef,
-          cooldownMs: runtime.degradedHostRecoveryCooldownMs,
-        });
-        runtime.lastDegradedStatusSignature = statusSignature;
-      }
-    } else {
-      runtime.lastDegradedStatusSignature = "";
-    }
-
-    if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-      schedulePendingDegradedHostRecheck(renderState);
-    }
-
-    if (surfaceStatus === CRICKET_SURFACE_STATUS.READY) {
-      runtime.completedMissingBoardHoldKey = "";
-      scheduleRecoveryRearm(renderState);
-      if (transitionSignature) {
-        const hadPriorReadyTransition = Boolean(runtime.lastReadyTransitionSignature);
-        const transitionChanged = transitionSignature !== runtime.lastReadyTransitionSignature;
-        runtime.lastReadyTransitionSignature = transitionSignature;
-        if (hadPriorReadyTransition && transitionChanged) {
-          schedulePostTransitionSurfaceAudit(renderState, transitionSignature);
-        }
-      } else {
-        runtime.lastReadyTransitionSignature = "";
-      }
-    } else if (surfaceStatus !== CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-      runtime.completedMissingBoardHoldKey = "";
-      runtime.lastReadyTransitionSignature = "";
-    }
+    const missingBoardDeferral = resolveMissingBoardDeferral(renderState);
+    const recovery = updateDegradedHostRecovery(renderState, surfaceStatus, statusSignature);
+    syncMissingBoardDeferral(renderState, missingBoardDeferral);
+    syncReadyLifecycle(renderState, transitionSignature);
 
     const lifecycle = {
       surfaceStatus,
       statusSignature,
       transitionSignature,
-      pendingDegradedHostRecheck,
-      delayedMissingBoardGap,
+      pendingDegradedHostRecheck: missingBoardDeferral.pendingDegradedHostRecheck,
+      delayedMissingBoardGap: missingBoardDeferral.delayedMissingBoardGap,
+      boardGapDeferred: missingBoardDeferral.boardGapDeferred,
       recovery,
     };
 
-    runtime.subscribers.forEach((subscriber) => {
-      try {
-        subscriber.onRenderState?.({
-          documentRef: runtime.documentRef,
-          windowRef: runtime.windowRef,
-          renderState,
-          renderCache: runtime.renderCache,
-          lifecycle,
-          invalidateRenderCache,
-          scheduleUpdate: () => runtime.scheduler.schedule(),
-        });
-      } catch (_) {
-        // Feature-local render failures should not stop other cricket consumers.
-      }
-    });
-
+    notifySubscribers(renderState, lifecycle);
     refreshTrackedSurfaceNodes(renderState);
   }
 
@@ -712,16 +796,7 @@ function createSharedCricketRuntime(context = {}) {
 
     runtime.subscribers.set(featureKey, subscriber);
     const aliasObserverKey = String(options.observerAliasKey || "").trim();
-    if (
-      aliasObserverKey &&
-      runtime.observerRegistry &&
-      typeof runtime.observerRegistry.register === "function"
-    ) {
-      runtime.observerRegistry.__sharedCricketAliasStore?.set(
-        aliasObserverKey,
-        createRuntimeAliasObserver(runtime)
-      );
-    }
+    registerRuntimeObserverAlias(runtime.observerRegistry, aliasObserverKey, runtime);
 
     runtime.scheduler.schedule();
     let removed = false;
@@ -732,13 +807,7 @@ function createSharedCricketRuntime(context = {}) {
       removed = true;
 
       runtime.subscribers.delete(featureKey);
-      if (
-        aliasObserverKey &&
-        runtime.observerRegistry &&
-        typeof runtime.observerRegistry.disconnect === "function"
-      ) {
-        runtime.observerRegistry.disconnect(aliasObserverKey);
-      }
+      unregisterRuntimeObserverAlias(runtime.observerRegistry, aliasObserverKey);
 
       if (runtime.subscribers.size === 0) {
         runtime.dispose();

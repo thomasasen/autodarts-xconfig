@@ -240,7 +240,7 @@ export function initializeCricketHighlighter(context = {}) {
       }
 
       if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-        if (lifecycle.pendingDegradedHostRecheck || lifecycle.delayedMissingBoardGap) {
+        if (lifecycle.boardGapDeferred) {
           if (statusSignature === lastStatusSignature) {
             return;
           }

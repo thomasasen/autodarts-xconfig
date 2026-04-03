@@ -11,6 +11,7 @@ import { ROOT_CLASS } from "../../src/features/cricket-grid-fx/style.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
 import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
+import { acquireSharedCricketRuntime } from "../../src/features/cricket-surface/shared-runtime.js";
 import {
   canDelayMissingMatchBoardGap,
   resolveMissingMatchBoardGapDelay,
@@ -586,6 +587,59 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
     cleanupGridFx();
     cleanupHighlighter();
     timerHarness.restoreGlobals();
+  }
+});
+
+test("shared cricket runtime marks ready-to-missing-board gaps as boardGapDeferred", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/board-gap-deferred",
+  });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const healthyFixture = createHealthyMatchHostFixture(documentRef);
+  const observers = createObserverRegistry();
+  const listenerRegistry = createListenerRegistry();
+  const lifecycleEvents = [];
+  const sharedRuntime = acquireSharedCricketRuntime({
+    documentRef,
+    windowRef,
+    registries: { observers, listeners: listenerRegistry },
+    gameState: createGameState(),
+    domain: { cricketRules, variantRules },
+    helpers: createImmediateScheduler(),
+    degradedHostGraceMs: 300,
+  });
+
+  assert.ok(sharedRuntime);
+  const unsubscribe = sharedRuntime.subscribe({
+    featureKey: "test-board-gap-deferred",
+    onRenderState: ({ lifecycle }) => {
+      lifecycleEvents.push({
+        surfaceStatus: lifecycle.surfaceStatus,
+        boardGapDeferred: lifecycle.boardGapDeferred,
+        pendingDegradedHostRecheck: lifecycle.pendingDegradedHostRecheck,
+        delayedMissingBoardGap: lifecycle.delayedMissingBoardGap,
+      });
+    },
+  });
+
+  try {
+    const readyLifecycle = lifecycleEvents[lifecycleEvents.length - 1] || null;
+    assert.equal(readyLifecycle?.surfaceStatus, "ready");
+    assert.equal(readyLifecycle?.boardGapDeferred, false);
+
+    healthyFixture.rightPane.removeChild(healthyFixture.boardShell);
+    sharedRuntime.scheduler.schedule();
+
+    const deferredLifecycle = lifecycleEvents[lifecycleEvents.length - 1] || null;
+    assert.equal(deferredLifecycle?.surfaceStatus, "missing-board");
+    assert.equal(deferredLifecycle?.boardGapDeferred, true);
+    assert.equal(deferredLifecycle?.pendingDegradedHostRecheck, false);
+    assert.equal(deferredLifecycle?.delayedMissingBoardGap, true);
+  } finally {
+    unsubscribe();
   }
 });
 
