@@ -9,7 +9,7 @@ import {
 import {
   clearNodeChildren,
   ensureOverlayGroup,
-  findBoardSvgRoot,
+  findCheckoutCompatibleBoardSnapshot,
 } from "../../shared/dartboard-svg.js";
 
 const SEGMENT_ORDER = Object.freeze([
@@ -103,43 +103,8 @@ function createBull(ownerDocument, radius, innerRatio, outerRatio, solid, option
   return ring;
 }
 
-function getBoardRadius(rootNode) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return 0;
-  }
-
-  return Array.from(rootNode.querySelectorAll("circle")).reduce((max, circle) => {
-    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
-    return Number.isFinite(radius) && radius > max ? radius : max;
-  }, 0);
-}
-
 export function findBoard(documentRef) {
-  const bestSvg = findBoardSvgRoot(documentRef);
-  if (!bestSvg) {
-    return null;
-  }
-
-  let bestGroup = null;
-  let bestRadius = 0;
-  Array.from(bestSvg.querySelectorAll("g")).forEach((group) => {
-    const groupRadius = getBoardRadius(group);
-    if (groupRadius > bestRadius) {
-      bestRadius = groupRadius;
-      bestGroup = group;
-    }
-  });
-
-  const radius = bestRadius || getBoardRadius(bestSvg);
-  if (!radius) {
-    return null;
-  }
-
-  return {
-    svg: bestSvg,
-    group: bestGroup || bestSvg,
-    radius,
-  };
+  return findCheckoutCompatibleBoardSnapshot(documentRef);
 }
 
 export function ensureOverlay(boardGroup) {

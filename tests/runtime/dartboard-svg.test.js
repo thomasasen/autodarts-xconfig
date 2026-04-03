@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  findCheckoutCompatibleBoardSnapshot,
   findBoardSvgRoot,
   findBoardSvgGroup,
   isReusableBoardSnapshot,
@@ -145,6 +146,22 @@ test("findBoardSvgRoot keeps the shared svg-root selector aligned for stale and 
   assert.equal(findBoardSvgRoot(documentRef), liveBoard.svg);
 });
 
+test("findCheckoutCompatibleBoardSnapshot returns the canonical snapshot when legacy and canonical board truth match", () => {
+  const documentRef = new FakeDocument();
+  createBoardModeButtons(documentRef, "live");
+  const liveBoard = createBoardFixture(documentRef, {
+    boardRadius: 500,
+    withPanelControls: true,
+  });
+
+  const boardSnapshot = findCheckoutCompatibleBoardSnapshot(documentRef);
+
+  assert.equal(boardSnapshot?.svg, liveBoard.svg);
+  assert.equal(boardSnapshot?.group, liveBoard.group);
+  assert.equal(boardSnapshot?.radius, 500);
+  assert.equal(boardSnapshot?.modeKey, "live");
+});
+
 test("findBoardSvgGroup prefers visible board groups within the same svg over hidden stale groups", () => {
   const documentRef = new FakeDocument();
   const shell = documentRef.createElement("div");
@@ -178,6 +195,43 @@ test("findBoardSvgGroup prefers visible board groups within the same svg over hi
   assert.equal(boardSnapshot?.svg, svg);
   assert.equal(boardSnapshot?.group, visibleGroup);
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
+});
+
+test("findCheckoutCompatibleBoardSnapshot preserves the legacy hidden larger group when canonical selects the visible board group", () => {
+  const documentRef = new FakeDocument();
+  const shell = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const hiddenGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const visibleGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  svg.__rect = { width: 720, height: 720 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  hiddenGroup.setAttribute("aria-hidden", "true");
+
+  const hiddenCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  hiddenCircle.setAttribute("r", "640");
+  hiddenGroup.appendChild(hiddenCircle);
+
+  const visibleCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  visibleCircle.setAttribute("r", "500");
+  visibleGroup.appendChild(visibleCircle);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    visibleGroup.appendChild(labelNode);
+  }
+
+  svg.appendChild(hiddenGroup);
+  svg.appendChild(visibleGroup);
+  shell.appendChild(svg);
+  documentRef.main.appendChild(shell);
+
+  const boardSnapshot = findCheckoutCompatibleBoardSnapshot(documentRef);
+
+  assert.equal(boardSnapshot?.svg, svg);
+  assert.equal(boardSnapshot?.group, hiddenGroup);
+  assert.equal(boardSnapshot?.radius, 640);
+  assert.equal(Object.prototype.hasOwnProperty.call(boardSnapshot || {}, "modeKey"), false);
 });
 
 test("findBoardSvgGroup prefers unlabeled board-like geometry over decorative single-circle svg", () => {
@@ -296,6 +350,44 @@ test("findBoardSvgGroup prefers the specific board child group over a larger wra
   assert.equal(boardSnapshot?.svg, svg);
   assert.equal(boardSnapshot?.group, boardGroup);
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
+});
+
+test("findCheckoutCompatibleBoardSnapshot preserves the legacy wrapper group and radius when canonical selects a nested board group", () => {
+  const documentRef = new FakeDocument();
+  const shell = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const wrapperGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  shell.__rect = { width: 920, height: 920 };
+  svg.__rect = { width: 920, height: 920 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const wrapperCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  wrapperCircle.setAttribute("r", "690");
+  wrapperGroup.appendChild(wrapperCircle);
+
+  const boardCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  boardCircle.setAttribute("r", "500");
+  boardGroup.appendChild(boardCircle);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardGroup.appendChild(labelNode);
+  }
+  appendBoardLikeGeometry(documentRef, boardGroup, 500);
+
+  wrapperGroup.appendChild(boardGroup);
+  svg.appendChild(wrapperGroup);
+  shell.appendChild(svg);
+  documentRef.main.appendChild(shell);
+
+  const boardSnapshot = findCheckoutCompatibleBoardSnapshot(documentRef);
+
+  assert.equal(boardSnapshot?.svg, svg);
+  assert.equal(boardSnapshot?.group, wrapperGroup);
+  assert.equal(boardSnapshot?.radius, 690);
+  assert.equal(Object.prototype.hasOwnProperty.call(boardSnapshot || {}, "modeKey"), false);
 });
 
 test("findBoardSvgGroup prefers board candidates with panel control context over decorative board-like svg", () => {

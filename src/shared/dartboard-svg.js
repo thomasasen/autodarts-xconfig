@@ -45,6 +45,34 @@ export function findBoardSvgRoot(documentRef) {
   return bestSvg;
 }
 
+function findLegacyBoardSvgGroupSnapshot(documentRef) {
+  const bestSvg = findBoardSvgRoot(documentRef);
+  if (!bestSvg) {
+    return null;
+  }
+
+  let bestGroup = null;
+  let bestRadius = 0;
+  Array.from(bestSvg.querySelectorAll("g")).forEach((group) => {
+    const groupRadius = getBoardRadius(group);
+    if (groupRadius > bestRadius) {
+      bestRadius = groupRadius;
+      bestGroup = group;
+    }
+  });
+
+  const radius = bestRadius || getBoardRadius(bestSvg);
+  if (!radius) {
+    return null;
+  }
+
+  return {
+    svg: bestSvg,
+    group: bestGroup || bestSvg,
+    radius,
+  };
+}
+
 function isManagedOverlayGroup(groupNode) {
   if (!groupNode || typeof groupNode.getAttribute !== "function") {
     return false;
@@ -688,6 +716,29 @@ export function findBoardSvgGroup(documentRef) {
     radius,
     modeKey: getActiveBoardInputMode(documentRef),
   };
+}
+
+function areBoardSnapshotsEquivalent(left, right) {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return (
+    left.svg === right.svg &&
+    left.group === right.group &&
+    nearlyEqual(left.radius, right.radius)
+  );
+}
+
+export function findCheckoutCompatibleBoardSnapshot(documentRef) {
+  const legacySnapshot = findLegacyBoardSvgGroupSnapshot(documentRef);
+  const canonicalSnapshot = findBoardSvgGroup(documentRef);
+
+  if (areBoardSnapshotsEquivalent(legacySnapshot, canonicalSnapshot)) {
+    return canonicalSnapshot;
+  }
+
+  return legacySnapshot;
 }
 
 export function ensureOverlayGroup(boardGroup, overlayId, svgNs = "http://www.w3.org/2000/svg") {

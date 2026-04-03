@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.7] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: `checkout-board-targets` bleibt bei Board-Wechseln, verschachtelten Board-Gruppen und kurzzeitig abweichenden Shared-Board-Kandidaten beim bisherigen sichtbaren Verhalten, driftet dabei aber seltener von der gemeinsamen Board-Wahrheit im Shared-Layer weg.
+  Technik: `dartboard-svg` liefert mit `findCheckoutCompatibleBoardSnapshot()` jetzt einen kleinen Checkout-Kompatibilitäts-Adapter zwischen der bisherigen `findBoardSvgRoot()`-Auswahl und dem stärkeren kanonischen `findBoardSvgGroup()`-Snapshot; `checkout-board-targets` nutzt diesen Shared-Entry-Point statt seine Board-Suche lokal noch einmal nachzubauen, abgesichert durch neue Regressionen für Gleichstand, versteckte größere Gruppen und Wrapper-vs-Child-Gruppen.
+
 ## [2.1.6] - 2026-04-03
 
 ### Fixed
@@ -1205,7 +1212,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/59708e4...HEAD
+[2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...HEAD
+[2.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/59708e4...4d2f8fd
 [2.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...59708e4
 [2.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...fa4ca1f
 [2.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...1329886
