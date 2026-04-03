@@ -79,6 +79,22 @@ export function collectTurnThrowRows(documentRef) {
   });
 }
 
+export function getTurnSurfaceSnapshot(documentRef, options = {}) {
+  const turnContainer = findTurnContainer(documentRef);
+  const throwRows = collectTurnThrowRows(documentRef);
+  const turnPointsToken = readTurnPointsToken(documentRef, {
+    turnContainer,
+    normalizeText: options.normalizeText,
+  });
+
+  return {
+    turnContainer,
+    throwRows,
+    turnPointsToken,
+    rowSource: turnContainer ? "turn-container" : throwRows.length > 0 ? "document-fallback" : "none",
+  };
+}
+
 export function readTurnPointsToken(documentRef, options = {}) {
   const normalize = typeof options.normalizeText === "function" ? options.normalizeText : normalizeText;
   const turnContainer = options.turnContainer || findTurnContainer(documentRef);

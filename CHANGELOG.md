@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.5] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: `triple-double-bull-hits` stützt sich bei Throw-Rows, Turn-Points und Turn-Surface-Fallbacks jetzt auf einen konsistenteren gemeinsamen Turn-Surface-Blick, ohne dass sich Hit-Erkennung, Korrekturverhalten oder die sichtbaren Animationen ändern.
+  Technik: `turn-surface-adapter` liefert mit `getTurnSurfaceSnapshot()` jetzt ein kleines gemeinsames Snapshot für `turnContainer`, `throwRows`, `turnPointsToken` und `rowSource`; `triple-double-bull-hits` liest diese Turn-Surface-Fakten darüber statt sie lokal aus mehreren Adapter-Aufrufen und eigener Fallback-Ableitung erneut zusammenzusetzen, abgesichert durch eine neue Adapter-Regression.
+
 ## [2.1.4] - 2026-04-03
 
 ### Fixed
@@ -1191,7 +1198,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...HEAD
+[2.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...HEAD
+[2.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...fa4ca1f
 [2.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...1329886
 [2.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/c9b25d4...ba5e325
 [2.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...c9b25d4

@@ -10,8 +10,7 @@ import {
 } from "./style.js";
 import {
   collectTurnThrowRows,
-  findTurnContainer,
-  readTurnPointsToken as readTurnPointsTokenFromSurface,
+  getTurnSurfaceSnapshot,
 } from "../shared/turn-surface-adapter.js";
 
 const ROW_DEBUG_TEXT_LIMIT = 72;
@@ -138,13 +137,6 @@ function collectDescendantText(rootNode) {
   }
 
   return normalizeRawText(chunks.join(" "));
-}
-
-function readTurnPointsToken(documentRef, turnContainer = null) {
-  return readTurnPointsTokenFromSurface(documentRef, {
-    turnContainer,
-    normalizeText: normalizeRawText,
-  });
 }
 
 function findNumberedHit(pattern, text) {
@@ -1602,15 +1594,18 @@ export function updateHitDecorations(options = {}) {
   const includeRowDebug = options.debugRows === true;
   const animeRef = options.animeRef || null;
   const windowRef = options.windowRef || null;
-  const turnContainer = findTurnContainer(documentRef);
-  const turnPointsToken = readTurnPointsToken(documentRef, turnContainer);
-
-  const currentRows = collectThrowRows(documentRef);
+  const turnSurface = getTurnSurfaceSnapshot(documentRef, {
+    normalizeText: normalizeRawText,
+  });
+  const turnContainer = turnSurface.turnContainer;
+  const turnPointsToken = turnSurface.turnPointsToken;
+  const currentRows = turnSurface.throwRows.filter((rowNode) => {
+    return Boolean(rowNode && rowNode.classList);
+  });
   const currentRowSet = new Set(currentRows);
   const manualCorrectionActive =
     currentRows.some((rowNode) => rowHasCorrectionMarker(rowNode)) &&
     isManualCorrectionActive(documentRef, turnContainer);
-  const rowSource = turnContainer ? "turn-container" : currentRows.length > 0 ? "document-fallback" : "none";
   const stats = {
     rowCount: currentRows.length,
     decoratedCount: 0,
@@ -1620,7 +1615,7 @@ export function updateHitDecorations(options = {}) {
     removedCount: 0,
     staleCorrectionClearedCount: 0,
     transientCorrectionCount: 0,
-    rowSource,
+    rowSource: turnSurface.rowSource,
     turnContainerFound: Boolean(turnContainer),
     turnPointsToken,
     kindCounts: {
