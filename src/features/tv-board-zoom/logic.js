@@ -3,7 +3,7 @@ import {
   collectVisibleCheckoutRoute,
   getCheckoutFinishSegmentFromRoute,
   getFirstCheckoutRouteSegment,
-  getSingleSuggestionSegmentFromRoute,
+  resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
 
 const ACTIVE_SCORE_SELECTORS = Object.freeze([
@@ -438,6 +438,33 @@ function canUseThirdDartT20Setup(throws, throwCount, activeScore, outMode, x01Ru
   }
 
   return true;
+}
+
+function buildCheckoutRouteIntent(segmentName, routeSegments, options = {}) {
+  const segment = String(segmentName || "");
+  if (!segment) {
+    return null;
+  }
+
+  const routeLength = Array.isArray(routeSegments) ? routeSegments.length : 0;
+  const isSingleRoute = routeLength === 1;
+  const activeScore = Number(options.activeScore);
+  const outMode = String(options.outMode || "");
+  const x01Rules = options.x01Rules;
+  const routeReason = String(options.routeReason || "route-finish");
+  const matchesSingleCheckoutScore =
+    isSingleRoute &&
+    (!Number.isFinite(activeScore) ||
+      canFinishWithSegment(activeScore, segment, outMode, x01Rules));
+
+  if (!isSingleRoute || matchesSingleCheckoutScore) {
+    return {
+      reason: matchesSingleCheckoutScore ? "checkout" : routeReason,
+      segment,
+    };
+  }
+
+  return null;
 }
 
 export function getTurnId(turn) {
@@ -1085,10 +1112,23 @@ export function computeZoomIntent(options = {}) {
       activeScore = visibleScore;
     }
   }
-  const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
-  const firstRouteSegment = getFirstCheckoutRouteSegment(routeSegments);
-  const finishRouteSegment = getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
-  const suggestionSegment = getSingleSuggestionSegmentFromRoute(routeSegments);
+  const visibleRouteSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  const checkoutSurface = resolveCheckoutSurfaceSemantics({
+    routeSegments: visibleRouteSegments,
+    activeScore,
+    outMode,
+    dartsRemaining: Math.max(0, 3 - throwCount),
+    x01Rules,
+  });
+  const routeSegments = checkoutSurface.visibleRouteSegments;
+  const authoritativeRouteSegments = checkoutSurface.authoritativeRouteSegments;
+  const firstRouteSegment = getFirstCheckoutRouteSegment(authoritativeRouteSegments);
+  const finishRouteSegment = getCheckoutFinishSegmentFromRoute(
+    authoritativeRouteSegments,
+    outMode,
+    x01Rules
+  );
+  const suggestionSegment = checkoutSurface.singleVisibleSegment;
   const suggestionIsCheckout = isOneDartCheckoutSegmentForMode(suggestionSegment, outMode, x01Rules);
   const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
   const canUseT20Setup = canUseThirdDartT20Setup(
@@ -1145,36 +1185,31 @@ export function computeZoomIntent(options = {}) {
   }
 
   if (config.checkoutZoomEnabled && throwCount <= 2) {
-    if (checkoutZoomTarget === "route-first" && firstRouteSegment) {
-      const isSingleRoute = routeSegments.length === 1;
-      const matchesSingleCheckoutScore =
-        isSingleRoute &&
-        isOneDartCheckoutSegmentForMode(firstRouteSegment, outMode, x01Rules) &&
-        (!Number.isFinite(activeScore) ||
-          canFinishWithSegment(activeScore, firstRouteSegment, outMode, x01Rules));
+    const canUseCheckoutSurfaceForIntent =
+      checkoutSurface.surfaceKind === "visible-explicit-checkout" ||
+      checkoutSurface.surfaceKind === "score-route";
 
-      if (!isSingleRoute || matchesSingleCheckoutScore) {
-        const intent = {
-          reason: matchesSingleCheckoutScore ? "checkout" : "route-first",
-          segment: firstRouteSegment,
-        };
+    if (canUseCheckoutSurfaceForIntent && checkoutZoomTarget === "route-first") {
+      const intent = buildCheckoutRouteIntent(firstRouteSegment, authoritativeRouteSegments, {
+        activeScore,
+        outMode,
+        x01Rules,
+        routeReason: "route-first",
+      });
+      if (intent) {
         state.activeIntent = intent;
         return intent;
       }
     }
 
-    if (finishRouteSegment) {
-      const isSingleRoute = routeSegments.length === 1;
-      const matchesSingleCheckoutScore =
-        isSingleRoute &&
-        (!Number.isFinite(activeScore) ||
-          canFinishWithSegment(activeScore, finishRouteSegment, outMode, x01Rules));
-
-      if (!isSingleRoute || matchesSingleCheckoutScore) {
-        const intent = {
-          reason: matchesSingleCheckoutScore ? "checkout" : "route-finish",
-          segment: finishRouteSegment,
-        };
+    if (canUseCheckoutSurfaceForIntent) {
+      const intent = buildCheckoutRouteIntent(finishRouteSegment, authoritativeRouteSegments, {
+        activeScore,
+        outMode,
+        x01Rules,
+        routeReason: "route-finish",
+      });
+      if (intent) {
         state.activeIntent = intent;
         return intent;
       }

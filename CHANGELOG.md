@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.4] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: Die X01-Checkout-Helfer für `checkout-board-targets` und `tv-board-zoom` reagieren jetzt konsistenter auf dieselbe volatile Checkout-Oberfläche; gültige sichtbare Checkout-Routen bleiben bevorzugt, während irreführende Multi-Step-Routen im `route-first`-Zoom unterhalb von `180` nicht mehr lokal anders interpretiert werden als die Board-Ziele.
+  Technik: Die gemeinsame X01-Checkout-Domänenschicht liefert mit `resolveCheckoutSurfaceSemantics()` jetzt ein kleines semantisches Snapshot für sichtbare Route, autoritative Route, Fallback-Bedeutung und Setup-only-Fälle; `checkout-board-targets` liest daraus dieselbe autoritative Route wie `tv-board-zoom`, während Retention, transienter Reset-Grace, Manual-Pause und Rendering bewusst feature-lokal bleiben, abgesichert durch neue Runtime-Regressions für Surface-Semantik und Zoom-Entscheidungen.
+
 ## [2.1.3] - 2026-04-03
 
 ### Fixed
@@ -1184,7 +1191,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...HEAD
+[2.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...HEAD
+[2.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...1329886
 [2.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/c9b25d4...ba5e325
 [2.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...c9b25d4
 [2.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...f0cc281

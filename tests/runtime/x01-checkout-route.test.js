@@ -8,6 +8,7 @@ import {
   getFirstCheckoutRouteSegment,
   getSingleSuggestionSegmentFromRoute,
   mapRouteSegmentsToBoardTargets,
+  resolveCheckoutSurfaceSemantics,
 } from "../../src/features/x01-checkout-route.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -158,4 +159,88 @@ test("x01 checkout route falls back to leaf text when wrapper text is collapsed"
 
   const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
   assert.deepEqual(route, ["S14"]);
+});
+
+test("x01 checkout route resolves semantic snapshot for a valid explicit visible checkout route", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["25", "D18"],
+    activeScore: 61,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["S25", "D18"],
+    authoritativeRouteSegments: ["S25", "D18"],
+    selectionSource: "validated-visible-route",
+    visibleSegmentsUsed: 2,
+    firstVisibleSegment: "S25",
+    visibleFinishSegment: "D18",
+    singleVisibleSegment: "",
+    surfaceKind: "visible-explicit-checkout",
+  });
+});
+
+test("x01 checkout route resolves semantic snapshot for a visible prefix with fallback finish", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["T20"],
+    activeScore: 96,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["T20"],
+    authoritativeRouteSegments: ["T20", "D18"],
+    selectionSource: "validated-visible-route+fallback",
+    visibleSegmentsUsed: 1,
+    firstVisibleSegment: "T20",
+    visibleFinishSegment: "",
+    singleVisibleSegment: "T20",
+    surfaceKind: "visible-prefix+fallback",
+  });
+});
+
+test("x01 checkout route resolves semantic snapshot for score-route fallback on conflicting visible route", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["T20", "BULL"],
+    activeScore: 50,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["T20", "BULL"],
+    authoritativeRouteSegments: ["BULL"],
+    selectionSource: "score-route",
+    visibleSegmentsUsed: 0,
+    firstVisibleSegment: "T20",
+    visibleFinishSegment: "BULL",
+    singleVisibleSegment: "",
+    surfaceKind: "score-route",
+  });
+});
+
+test("x01 checkout route resolves semantic snapshot for visible setup-only fallback", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["T20", "S10"],
+    activeScore: 102,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["T20", "S10"],
+    authoritativeRouteSegments: ["T20"],
+    selectionSource: "visible-setup-segment",
+    visibleSegmentsUsed: 1,
+    firstVisibleSegment: "T20",
+    visibleFinishSegment: "",
+    singleVisibleSegment: "",
+    surfaceKind: "visible-setup-only",
+  });
 });

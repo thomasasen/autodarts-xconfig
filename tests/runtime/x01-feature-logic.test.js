@@ -242,7 +242,10 @@ test("tv-board-zoom uses out-mode-aware one-dart checkout targets", () => {
     nowTs: 1000,
   });
 
-  assert.equal(doubleIntent, null);
+  assert.deepEqual(doubleIntent, {
+    reason: "route-finish",
+    segment: "D3",
+  });
   assert.deepEqual(masterIntent, {
     reason: "checkout",
     segment: "T20",
@@ -370,18 +373,18 @@ test("tv-board-zoom falls back to score checkout when suggestion is invalid or c
 
 test("tv-board-zoom uses finish-only checkout routes by default for multi-step suggestions", () => {
   const documentRef = new FakeDocument();
-  documentRef.suggestionElement.textContent = "T16";
+  documentRef.suggestionElement.textContent = "T20";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
   const secondSuggestion = documentRef.createElement("div");
   secondSuggestion.classList.add("suggestion");
-  secondSuggestion.textContent = "D8";
+  secondSuggestion.textContent = "D18";
   secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
   documentRef.main.appendChild(secondSuggestion);
   const windowRef = createFakeWindow({ documentRef });
 
   const intent = computeZoomIntent({
     gameState: createX01GameState({
-      activeScore: 121,
+      activeScore: 96,
       outMode: "Double Out",
       activeThrows: [],
     }),
@@ -398,24 +401,24 @@ test("tv-board-zoom uses finish-only checkout routes by default for multi-step s
 
   assert.deepEqual(intent, {
     reason: "route-finish",
-    segment: "D8",
+    segment: "D18",
   });
 });
 
 test("tv-board-zoom route-first mode keeps the first visible checkout route field", () => {
   const documentRef = new FakeDocument();
-  documentRef.suggestionElement.textContent = "T16";
+  documentRef.suggestionElement.textContent = "T20";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
   const secondSuggestion = documentRef.createElement("div");
   secondSuggestion.classList.add("suggestion");
-  secondSuggestion.textContent = "D8";
+  secondSuggestion.textContent = "D18";
   secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
   documentRef.main.appendChild(secondSuggestion);
   const windowRef = createFakeWindow({ documentRef });
 
   const intent = computeZoomIntent({
     gameState: createX01GameState({
-      activeScore: 121,
+      activeScore: 96,
       outMode: "Double Out",
       activeThrows: [],
     }),
@@ -432,8 +435,73 @@ test("tv-board-zoom route-first mode keeps the first visible checkout route fiel
 
   assert.deepEqual(intent, {
     reason: "route-first",
-    segment: "T16",
+    segment: "T20",
   });
+});
+
+test("tv-board-zoom route-first mode aligns invalid multi-step visible routes to the authoritative score route", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "BULL";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 50,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
+    },
+    nowTs: 3475,
+  });
+
+  assert.deepEqual(intent, {
+    reason: "checkout",
+    segment: "BULL",
+  });
+});
+
+test("tv-board-zoom route-first mode does not treat visible setup-only routes as checkout intent", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "S10";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 102,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
+    },
+    nowTs: 3490,
+  });
+
+  assert.equal(intent, null);
 });
 
 test("tv-board-zoom applies smart setup suggestion through the full turn", () => {

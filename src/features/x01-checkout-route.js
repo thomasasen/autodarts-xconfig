@@ -436,3 +436,50 @@ export function resolveAuthoritativeCheckoutRoute(options = {}) {
     visibleSegmentsUsed: 0,
   };
 }
+
+function mapCheckoutSelectionSourceToSurfaceKind(selectionSource) {
+  switch (String(selectionSource || "")) {
+    case "visible-route":
+    case "validated-visible-route":
+      return "visible-explicit-checkout";
+    case "validated-visible-route+fallback":
+      return "visible-prefix+fallback";
+    case "score-route":
+      return "score-route";
+    case "visible-setup-segment":
+      return "visible-setup-only";
+    default:
+      return "none";
+  }
+}
+
+export function resolveCheckoutSurfaceSemantics(options = {}) {
+  const visibleRouteSegments = normalizeRouteSegments(options.routeSegments, options.x01Rules);
+  const routeResolution = resolveAuthoritativeCheckoutRoute({
+    ...options,
+    routeSegments: visibleRouteSegments,
+  });
+  const authoritativeRouteSegments = normalizeRouteSegments(
+    routeResolution?.routeSegments,
+    options.x01Rules
+  );
+  const selectionSource = String(routeResolution?.selectionSource || "none");
+  const visibleSegmentsUsed = Number.isFinite(routeResolution?.visibleSegmentsUsed)
+    ? Number(routeResolution.visibleSegmentsUsed)
+    : 0;
+
+  return {
+    visibleRouteSegments: visibleRouteSegments.slice(),
+    authoritativeRouteSegments: authoritativeRouteSegments.slice(),
+    selectionSource,
+    visibleSegmentsUsed,
+    firstVisibleSegment: getFirstCheckoutRouteSegment(visibleRouteSegments),
+    visibleFinishSegment: getCheckoutFinishSegmentFromRoute(
+      visibleRouteSegments,
+      options.outMode,
+      options.x01Rules
+    ),
+    singleVisibleSegment: getSingleSuggestionSegmentFromRoute(visibleRouteSegments),
+    surfaceKind: mapCheckoutSelectionSourceToSurfaceKind(selectionSource),
+  };
+}

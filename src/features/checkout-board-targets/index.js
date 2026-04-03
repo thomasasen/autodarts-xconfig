@@ -9,7 +9,7 @@ import {
   collectVisibleCheckoutRouteEntries,
   getCheckoutFinishSegmentFromRoute,
   mapRouteSegmentsToBoardTargets,
-  resolveAuthoritativeCheckoutRoute,
+  resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 
@@ -531,15 +531,18 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const routeResolution = resolveAuthoritativeCheckoutRoute({
+    const checkoutSurface = resolveCheckoutSurfaceSemantics({
       routeSegments,
       activeScore,
       outMode,
       dartsRemaining,
       x01Rules,
     });
-    const { selectedSegments } = selectRouteSegments(routeResolution.routeSegments, outMode);
-    const selectionSource = routeResolution.selectionSource || "none";
+    const { selectedSegments } = selectRouteSegments(
+      checkoutSurface.authoritativeRouteSegments,
+      outMode
+    );
+    const selectionSource = checkoutSurface.selectionSource || "none";
     const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
     const board = getBoard();
     let status = !routeSegments.length && !selectedSegments.length
