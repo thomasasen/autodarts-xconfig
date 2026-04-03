@@ -1095,7 +1095,6 @@ export function computeZoomIntent(options = {}) {
     dartsRemaining: Math.max(0, 3 - throwCount),
     x01Rules,
   });
-  const routeSegments = checkoutSurface.visibleRouteSegments;
   const authoritativeRouteSegments = checkoutSurface.authoritativeRouteSegments;
   const firstRouteSegment = getFirstCheckoutRouteSegment(authoritativeRouteSegments);
   const finishRouteSegment = getCheckoutFinishSegmentFromRoute(

@@ -4,6 +4,7 @@ import globals from "globals";
 const generatedOrVendorIgnores = [
   "dist/**",
   "node_modules/**",
+  "src/legacy-backups/**",
   "src/vendors/anime.min.cjs",
   "src/vendors/canvas-confetti.browser.js",
 ];

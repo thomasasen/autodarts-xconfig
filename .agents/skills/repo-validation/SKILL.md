@@ -14,6 +14,7 @@ Choose the minimum sufficient validation for the actual change, run what the env
 - never invent build, test, parser, or changelog results
 - report exactly what ran, what did not run, and what risk remains
 - prefer real repo commands over invented wrappers
+- treat `npm run lint` as a hygiene check for actively maintained source, tests, scripts, loader code, and lint config; do not let archive, backup, vendor, or generated trees define the default lint surface
 
 # Change classes
 
@@ -74,6 +75,7 @@ If shipped-source packaging or publication truth is in scope, also use `$userscr
 
 - if the change is docs, guidance, or repo-instruction only, do not escalate to runtime validation unless a changed file format or referenced command needs a real local check
 - if the change affects behavior, config, runtime, DOM, startup, update, or cache handling, run the narrowest repo commands that prove that scope
+- use `npm run lint` when a change touches linted JS/MJS source, tests, loader code, scripts, or lint configuration and the check would add signal beyond syntax/test coverage
 - use release validation only when the task explicitly includes release, finalize, ship, package, publish, version bump, `dist/` refresh, or publication-state work
 - if the change is startup, update, or version-sensitive, review the three regression anchors explicitly even when only one file changed
 - if only docs or guidance changed, do not claim runtime validation proves the instructions are correct

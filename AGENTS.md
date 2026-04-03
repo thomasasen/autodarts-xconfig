@@ -7,6 +7,7 @@ Priority: truthfulness, correctness, proportional validation.
 - prefer minimal diffs and existing conventions
 - preserve existing architecture boundaries unless the task explicitly requires changing them
 - work in source, not `dist/`
+- keep standard ESLint coverage scoped to actively maintained source; exclude archive, backup, vendor, and generated trees from the default lint surface
 - never hand-edit generated files; refresh them only through the build flow when release work is explicitly requested
 - use `.agents/skills/repo-validation/SKILL.md` after changes to choose the smallest sufficient validation
 - use `.agents/skills/userscript-release/SKILL.md` only for explicitly requested release, finalize, package, ship, or publish work
