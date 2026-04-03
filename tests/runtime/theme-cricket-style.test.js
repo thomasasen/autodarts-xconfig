@@ -55,11 +55,11 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   );
   assert.match(
     css,
-    /--ad-ext-theme-cricket-name-size-active:\s*clamp\(\s*1\.24rem,\s*1\.37vw,\s*1\.47rem\s*\);/
+    /--ad-ext-theme-cricket-name-size-active:\s*clamp\(\s*1\.488rem,\s*1\.644vw,\s*1\.764rem\s*\);/
   );
   assert.match(
     css,
-    /--ad-ext-theme-cricket-name-size-inactive:\s*clamp\(\s*0\.99rem,\s*1\.06vw,\s*1\.14rem\s*\);/
+    /--ad-ext-theme-cricket-name-size-inactive:\s*clamp\(\s*1\.188rem,\s*1\.272vw,\s*1\.368rem\s*\);/
   );
   assert.match(css, /--ad-ext-theme-cricket-score-size-active:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
