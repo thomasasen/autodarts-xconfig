@@ -431,10 +431,28 @@ function buildCheckoutRouteIntent(segmentName, routeSegments, options = {}) {
     isSingleRoute &&
     (!Number.isFinite(activeScore) ||
       canFinishWithSegment(activeScore, segment, outMode, x01Rules));
+  const matchesCurrentCheckoutScore =
+    !isSingleRoute &&
+    Number.isFinite(activeScore) &&
+    canFinishWithSegment(activeScore, segment, outMode, x01Rules);
 
-  if (!isSingleRoute || matchesSingleCheckoutScore) {
+  if (matchesCurrentCheckoutScore) {
     return {
-      reason: matchesSingleCheckoutScore ? "checkout" : routeReason,
+      reason: "checkout",
+      segment,
+    };
+  }
+
+  if (isSingleRoute && matchesSingleCheckoutScore) {
+    return {
+      reason: "checkout",
+      segment,
+    };
+  }
+
+  if (routeReason === "route-first" && !isSingleRoute) {
+    return {
+      reason: routeReason,
       segment,
     };
   }

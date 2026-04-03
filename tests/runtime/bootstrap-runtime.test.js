@@ -66,7 +66,7 @@ test("runtime public config API persists updates and survives feature toggles", 
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
-  documentRef.activeScoreElement.textContent = "170";
+  documentRef.activeScoreElement.textContent = "40";
 
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const originalSetTimeout = windowRef.setTimeout.bind(windowRef);

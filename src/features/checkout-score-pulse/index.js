@@ -46,6 +46,7 @@ export function mountCheckoutScorePulse(context = {}) {
     const scoreNodes = getScoreNodes(documentRef, gameState);
     const shouldHighlight = computeShouldHighlight({
       documentRef,
+      windowRef,
       gameState,
       variantRules: context.domain?.variantRules,
       x01Rules: context.domain?.x01Rules,

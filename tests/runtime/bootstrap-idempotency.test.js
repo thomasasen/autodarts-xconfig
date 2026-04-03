@@ -49,7 +49,7 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "";
-  documentRef.activeScoreElement.textContent = "170";
+  documentRef.activeScoreElement.textContent = "40";
 
   const windowRef = createFakeWindow({ documentRef });
 
@@ -95,7 +95,7 @@ test("config updates remount affected mounted features without duplicating obser
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "";
-  documentRef.activeScoreElement.textContent = "170";
+  documentRef.activeScoreElement.textContent = "40";
 
   const windowRef = createFakeWindow({ documentRef });
 

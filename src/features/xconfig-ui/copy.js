@@ -222,9 +222,9 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "checkout-score-pulse": featureCopy({
     cardDescription:
-      "Hebt finishfähige Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor.",
+      "Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor.",
     visibleDescription:
-      "Finishfähige Restwerte werden direkt an der aktiven Punktzahl hervorgehoben.",
+      "Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.",
     visualDescription:
       "Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.",
     usefulWhen: "Wenn du Checkout-Momente schneller am Score erkennen möchtest.",
@@ -232,7 +232,7 @@ export const xconfigFeatureCopy = deepFreeze({
     fields: {
       effect: fieldCopy(
         "Wählt, ob die Restpunktzahl pulsiert, glüht, skaliert oder blinkt.",
-        "Legt fest, wie die aktive Restpunktzahl hervorgehoben wird, sobald das Modul ein Checkout erkennt. Grafisch ändert sich nur die Animationsart des Score-Elements.",
+        "Legt fest, wie die aktive Restpunktzahl hervorgehoben wird, sobald das Modul einen direkten Finish-Dart erkennt. Grafisch ändert sich nur die Animationsart des Score-Elements.",
         "Wählt die Animationsart der hervorgehobenen Restpunktzahl."
       ),
       colorTheme: fieldCopy(
@@ -247,7 +247,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       triggerSource: fieldCopy(
         "Legt fest, ob Vorschlag, Score oder nur eine der beiden Quellen den Effekt auslöst.",
-        "Bestimmt, woran das Modul das Checkout erkennt. `Vorschlag zuerst` nutzt den sichtbaren Checkout-Vorschlag bevorzugt und fällt nur ohne Vorschlag auf die reine Score-Prüfung zurück; die anderen Modi erzwingen ausschließlich Score- oder Vorschlagslogik.",
+        "Bestimmt, woran das Modul den direkten Finish-Dart erkennt. `Vorschlag zuerst` prüft zuerst den sichtbaren Checkout-Vorschlag und fällt bei unpassender oder fehlender Route auf die reine Score-Prüfung zurück; die anderen Modi erzwingen ausschließlich Score- oder Vorschlagslogik.",
         "Legt fest, welche Quelle den Score-Effekt auslösen darf."
       ),
       debug: DEBUG_FIELD,
@@ -1112,18 +1112,18 @@ const CHECKOUT_SCORE_INTENSITY_OPTION_COPY = deepFreeze({
 const CHECKOUT_SCORE_TRIGGER_OPTION_COPY = deepFreeze({
   "suggestion-first": optionCopy(
     "Nutzen zuerst den sichtbaren Checkout-Vorschlag und fällt sonst auf den Score zurück.",
-    "Der Effekt folgt bevorzugt dem angezeigten Suggestion-Block. Nur wenn dort nichts Verwertbares steht, entscheidet die reine Score-Prüfung.",
-    "Diese Einstellung koppelt die Hervorhebung zuerst an die sichtbare Checkout-Empfehlung und nutzt den Punktestand nur als Fallback. Dadurch folgt der Effekt am ehesten dem, was der Nutzer aktuell als Lösung angezeigt bekommt."
+    "Der Effekt folgt bevorzugt dem angezeigten Suggestion-Block. Mehrschrittige Routen lösen ihn noch nicht aus; bei fehlender oder klar unpassender Route entscheidet die reine Score-Prüfung.",
+    "Diese Einstellung koppelt die Hervorhebung zuerst an die sichtbare Checkout-Empfehlung und nutzt den Punktestand nur als Fallback. Mehrschrittige Routen lösen den Effekt noch nicht aus; entscheidend ist erst der aktuell fällige Finish-Dart."
   ),
   "score-only": optionCopy(
     "Lässt ausschließlich den mathematisch finishfähigen Score auslösen.",
-    "Der sichtbare Suggestion-Text spielt keine Rolle. Sobald der Restwert nach den Out-Regeln finishbar ist, wird der Effekt gezeigt.",
-    "Mit dieser Einstellung entscheidet allein die rechnerische Finishfähigkeit des aktuellen Scores. Sichtbare Checkout-Vorschläge beeinflussen den Effekt nicht mehr."
+    "Der sichtbare Suggestion-Text spielt keine Rolle. Sobald der Restwert nach den Out-Regeln mit dem nächsten Dart direkt finishbar ist, wird der Effekt gezeigt.",
+    "Mit dieser Einstellung entscheidet allein, ob der aktuelle Score mit dem nächsten Dart direkt finishbar ist. Sichtbare Checkout-Vorschläge beeinflussen den Effekt nicht mehr."
   ),
   "suggestion-only": optionCopy(
     "Lässt nur einen vorhandenen Checkout-Vorschlag auslösen.",
-    "Der Effekt erscheint nur dann, wenn das Modul auch tatsächlich einen Suggestion-Hinweis erkennt. Ein finishbarer Score ohne Vorschlag bleibt ohne Effekt.",
-    "Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch finishbarer Wert erzeugt keinen Effekt, solange kein passender Checkout-Vorschlag erkannt wird."
+    "Der Effekt erscheint nur dann, wenn der sichtbare Suggestion-Hinweis genau den aktuell fälligen Finish-Dart trägt. Ein direkt finishbarer Score ohne passenden Vorschlag bleibt ohne Effekt.",
+    "Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch direkt finishbarer Wert erzeugt keinen Effekt, solange kein passender Finish-Vorschlag erkannt wird."
   ),
 });
 

@@ -3,6 +3,7 @@ import {
   getEffectClass,
   getEffectClassList,
 } from "./style.js";
+import { collectVisibleCheckoutRoute, resolveCheckoutSurfaceSemantics } from "../x01-checkout-route.js";
 
 export const SCORE_SELECTOR = "p.ad-ext-player-score";
 export const ACTIVE_SCORE_SELECTOR =
@@ -43,8 +44,46 @@ export function getActiveScoreValue(context = {}) {
 }
 
 export function getCheckoutSuggestionState(context = {}) {
+  const suggestionSignal = resolveCheckoutSuggestionSignal(context);
+  if (!suggestionSignal) {
+    return null;
+  }
+
+  return suggestionSignal.shouldHighlight === true;
+}
+
+function isDirectCheckoutPossible(activeScore, outMode, dartsRemaining, x01Rules) {
+  if (!Number.isFinite(activeScore) || !x01Rules || dartsRemaining < 1) {
+    return false;
+  }
+
+  if (typeof x01Rules.getPreferredOneDartCheckoutSegment === "function") {
+    return Boolean(x01Rules.getPreferredOneDartCheckoutSegment(activeScore, outMode));
+  }
+
+  if (typeof x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts === "function") {
+    return x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts(activeScore, outMode, 1);
+  }
+
+  return false;
+}
+
+function canFinishWithSegment(activeScore, segmentName, outMode, x01Rules) {
+  if (!segmentName || !Number.isFinite(activeScore) || !x01Rules) {
+    return false;
+  }
+
+  if (typeof x01Rules.canFinishWithSegment === "function") {
+    return x01Rules.canFinishWithSegment(activeScore, segmentName, outMode);
+  }
+
+  return false;
+}
+
+function resolveCheckoutSuggestionSignal(context = {}) {
   const documentRef = context.documentRef;
   const x01Rules = context.x01Rules;
+  const windowRef = context.windowRef;
   const outMode = String(context.outMode || "");
   const activeScore = context.activeScore;
   const dartsRemaining = context.dartsRemaining;
@@ -63,17 +102,62 @@ export function getCheckoutSuggestionState(context = {}) {
   }
 
   const suggestionText = suggestionNode.textContent || "";
+  const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
 
   if (typeof x01Rules.parseCheckoutSuggestionStateForScore === "function") {
-    return x01Rules.parseCheckoutSuggestionStateForScore(
+    const explicitSuggestionState = x01Rules.parseCheckoutSuggestionStateForScore(
       suggestionText,
       activeScore,
       outMode,
       dartsRemaining
     );
+    if (explicitSuggestionState === false) {
+      return {
+        shouldHighlight: false,
+        shouldFallbackToScore: false,
+      };
+    }
   }
 
-  return x01Rules.parseCheckoutSuggestionState(suggestionText, outMode);
+  if (!routeSegments.length) {
+    const fallbackSuggestionState =
+      typeof x01Rules.parseCheckoutSuggestionState === "function"
+        ? x01Rules.parseCheckoutSuggestionState(suggestionText, outMode)
+        : null;
+    if (fallbackSuggestionState === false) {
+      return {
+        shouldHighlight: false,
+        shouldFallbackToScore: false,
+      };
+    }
+    return null;
+  }
+
+  const checkoutSurface = resolveCheckoutSurfaceSemantics({
+    routeSegments,
+    activeScore,
+    outMode,
+    dartsRemaining,
+    x01Rules,
+  });
+  const selectionSource = String(checkoutSurface?.selectionSource || "none");
+  const nextSegment =
+    Array.isArray(checkoutSurface?.authoritativeRouteSegments) &&
+    checkoutSurface.authoritativeRouteSegments.length
+      ? String(checkoutSurface.authoritativeRouteSegments[0] || "")
+      : "";
+  const routeAccepted =
+    selectionSource !== "score-route" &&
+    selectionSource !== "invalid-visible-route" &&
+    selectionSource !== "none";
+
+  return {
+    shouldHighlight:
+      routeAccepted &&
+      (!Number.isFinite(dartsRemaining) || dartsRemaining >= 1) &&
+      canFinishWithSegment(activeScore, nextSegment, outMode, x01Rules),
+    shouldFallbackToScore: selectionSource === "score-route" || selectionSource === "invalid-visible-route",
+  };
 }
 
 function normalizeDartsRemaining(value) {
@@ -195,34 +279,36 @@ export function computeShouldHighlight(context = {}) {
 
   const activeScore = getActiveScoreValue(context);
   const dartsRemaining = getReliableDartsRemaining(context);
-  const suggestionState = getCheckoutSuggestionState({
+  const suggestionSignal = resolveCheckoutSuggestionSignal({
     ...context,
     outMode,
     activeScore,
     dartsRemaining,
   });
-  const scoreCheckoutPossible =
-    x01Rules && typeof x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts === "function"
-      ? x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts(
-          activeScore,
-          outMode,
-          Number.isFinite(dartsRemaining) ? dartsRemaining : 3
-        )
-      : x01Rules && typeof x01Rules.isCheckoutPossibleFromScoreForOutMode === "function"
-        ? x01Rules.isCheckoutPossibleFromScoreForOutMode(activeScore, outMode)
-      : x01Rules && typeof x01Rules.isCheckoutPossibleFromScore === "function"
-        ? x01Rules.isCheckoutPossibleFromScore(activeScore)
-      : false;
+  const scoreCheckoutPossible = isDirectCheckoutPossible(
+    activeScore,
+    outMode,
+    Number.isFinite(dartsRemaining) ? dartsRemaining : 3,
+    x01Rules
+  );
 
   if (triggerSource === "score-only") {
     return scoreCheckoutPossible;
   }
 
   if (triggerSource === "suggestion-only") {
-    return suggestionState === true;
+    return suggestionSignal?.shouldHighlight === true;
   }
 
-  return suggestionState !== null ? suggestionState : scoreCheckoutPossible;
+  if (!suggestionSignal) {
+    return scoreCheckoutPossible;
+  }
+
+  if (suggestionSignal.shouldFallbackToScore) {
+    return scoreCheckoutPossible;
+  }
+
+  return suggestionSignal.shouldHighlight === true;
 }
 
 export function applyHighlightState(nodes, options = {}) {

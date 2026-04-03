@@ -49,6 +49,20 @@ function createZoomState() {
   };
 }
 
+function appendSuggestion(documentRef, text, left = 300, top = 10) {
+  const node = documentRef.createElement("div");
+  node.classList.add("suggestion");
+  node.textContent = text;
+  node.__rect = {
+    left,
+    top,
+    width: 180,
+    height: 48,
+  };
+  documentRef.main.appendChild(node);
+  return node;
+}
+
 test("resolveAuthoritativeCheckoutRoute keeps a plausible visible route under 180", () => {
   const resolved = resolveAuthoritativeCheckoutRoute({
     routeSegments: ["25", "D18"],
@@ -105,16 +119,16 @@ test("resolveAuthoritativeCheckoutRoute keeps the first visible setup segment wh
   assert.equal(resolved.visibleSegmentsUsed, 1);
 });
 
-test("checkout-score-pulse score logic respects the active out mode", () => {
+test("checkout-score-pulse score logic waits for a direct finish and respects the active out mode", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "";
-  documentRef.activeScoreElement.textContent = "159";
+  documentRef.activeScoreElement.textContent = "60";
 
   const doubleShouldHighlight = computeShouldHighlight({
     documentRef,
     gameState: createX01GameState({
-      activeScore: 159,
+      activeScore: 60,
       outMode: "Double Out",
     }),
     variantRules,
@@ -125,7 +139,7 @@ test("checkout-score-pulse score logic respects the active out mode", () => {
   const masterShouldHighlight = computeShouldHighlight({
     documentRef,
     gameState: createX01GameState({
-      activeScore: 159,
+      activeScore: 60,
       outMode: "Master Out",
     }),
     variantRules,
@@ -188,6 +202,30 @@ test("checkout-score-pulse suggestion-first falls back to out-mode-aware score m
   assert.equal(shouldHighlight, true);
 });
 
+test("checkout-score-pulse waits for the finish dart instead of pulsing on a multi-step route", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "X01";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+  appendSuggestion(documentRef, "25", 500, 10);
+  appendSuggestion(documentRef, "D18", 700, 10);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const shouldHighlight = computeShouldHighlight({
+    documentRef,
+    windowRef,
+    gameState: createX01GameState({
+      activeScore: 121,
+      outMode: "Double Out",
+    }),
+    variantRules,
+    x01Rules,
+    triggerSource: "suggestion-first",
+  });
+
+  assert.equal(shouldHighlight, false);
+});
+
 test("checkout-score-pulse ignores stale explicit suggestions that do not fit the active score", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
@@ -208,18 +246,59 @@ test("checkout-score-pulse ignores stale explicit suggestions that do not fit th
   assert.equal(shouldHighlight, false);
 });
 
-test("checkout-score-pulse uses reliable remaining darts when validating explicit suggestions", () => {
+test("checkout-score-pulse suggestion-first falls back to score when a stale route hides an immediate finish", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
-  documentRef.suggestionElement.textContent = "T20 D10";
-  documentRef.activeScoreElement.textContent = "80";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+  appendSuggestion(documentRef, "25", 500, 10);
+  appendSuggestion(documentRef, "D18", 700, 10);
+  const windowRef = createFakeWindow({ documentRef });
 
-  const blockedByOneDart = computeShouldHighlight({
+  const suggestionOnly = computeShouldHighlight({
+    documentRef,
+    windowRef,
+    gameState: createX01GameState({
+      activeScore: 36,
+      outMode: "Double Out",
+    }),
+    variantRules,
+    x01Rules,
+    triggerSource: "suggestion-only",
+  });
+
+  const suggestionFirst = computeShouldHighlight({
+    documentRef,
+    windowRef,
+    gameState: createX01GameState({
+      activeScore: 36,
+      outMode: "Double Out",
+    }),
+    variantRules,
+    x01Rules,
+    triggerSource: "suggestion-first",
+  });
+
+  assert.equal(suggestionOnly, false);
+  assert.equal(suggestionFirst, true);
+});
+
+test("checkout-score-pulse uses reliable remaining darts when validating an immediate finish suggestion", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "X01";
+  documentRef.suggestionElement.textContent = "D10";
+  documentRef.activeScoreElement.textContent = "20";
+
+  const blockedByNoDarts = computeShouldHighlight({
     documentRef,
     gameState: createX01GameState({
-      activeScore: 80,
+      activeScore: 20,
       outMode: "Double Out",
-      activeThrows: [{ segment: { name: "S1" } }, { segment: { name: "S1" } }],
+      activeThrows: [
+        { segment: { name: "S1" } },
+        { segment: { name: "S1" } },
+        { segment: { name: "S1" } },
+      ],
     }),
     variantRules,
     x01Rules,
@@ -229,7 +308,7 @@ test("checkout-score-pulse uses reliable remaining darts when validating explici
   const allowedWithTwoDarts = computeShouldHighlight({
     documentRef,
     gameState: createX01GameState({
-      activeScore: 80,
+      activeScore: 20,
       outMode: "Double Out",
       activeThrows: [{ segment: { name: "S1" } }],
     }),
@@ -238,7 +317,7 @@ test("checkout-score-pulse uses reliable remaining darts when validating explici
     triggerSource: "suggestion-only",
   });
 
-  assert.equal(blockedByOneDart, false);
+  assert.equal(blockedByNoDarts, false);
   assert.equal(allowedWithTwoDarts, true);
 });
 
@@ -296,10 +375,7 @@ test("tv-board-zoom uses out-mode-aware one-dart checkout targets", () => {
     nowTs: 1000,
   });
 
-  assert.deepEqual(doubleIntent, {
-    reason: "route-finish",
-    segment: "D3",
-  });
+  assert.equal(doubleIntent, null);
   assert.deepEqual(masterIntent, {
     reason: "checkout",
     segment: "T20",
@@ -425,7 +501,7 @@ test("tv-board-zoom falls back to score checkout when suggestion is invalid or c
   });
 });
 
-test("tv-board-zoom uses finish-only checkout routes by default for multi-step suggestions", () => {
+test("tv-board-zoom finish-only mode waits until the finish dart is actually current", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "T20";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
@@ -453,8 +529,44 @@ test("tv-board-zoom uses finish-only checkout routes by default for multi-step s
     nowTs: 3400,
   });
 
+  assert.equal(intent, null);
+});
+
+test("tv-board-zoom finish-only mode falls back to the direct checkout when a visible multi-step route is stale", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "25";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const thirdSuggestion = documentRef.createElement("div");
+  thirdSuggestion.classList.add("suggestion");
+  thirdSuggestion.textContent = "D18";
+  thirdSuggestion.__rect = { left: 720, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(thirdSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 36,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 3420,
+  });
+
   assert.deepEqual(intent, {
-    reason: "route-finish",
+    reason: "checkout",
     segment: "D18",
   });
 });

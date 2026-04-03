@@ -379,13 +379,13 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Checkout Score Pulse
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Finishfähige Restwerte werden direkt an der aktiven Punktzahl hervorgehoben.
+- Was macht es sichtbar? Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
 - Grafisch: Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.
 - Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
 
 **Einstellungen einfach erklärt**
 
-- `Effekt`: Legt fest, wie die aktive Restpunktzahl hervorgehoben wird, sobald das Modul ein Checkout erkennt. Grafisch ändert sich nur die Animationsart des Score-Elements.
+- `Effekt`: Legt fest, wie die aktive Restpunktzahl hervorgehoben wird, sobald das Modul einen direkten Finish-Dart erkennt. Grafisch ändert sich nur die Animationsart des Score-Elements.
   - `Pulse`: Die Zahl wächst und leuchtet rhythmisch leicht an und fällt wieder auf ihre Ausgangsform zurück. Das wirkt wie ein ruhiger Herzschlag direkt auf dem Score.
   - `Glow`: Die Zahl bleibt weitgehend ruhig an Ort und Größe, bekommt aber einen sichtbar stärker werdenden Leuchtkranz. Das eignet sich für Nutzer, die eher Licht als Bewegung wollen.
   - `Scale`: Die Zahl springt nicht hart, sondern wächst kurz auf und fällt wieder zurück. Im Gegensatz zu `Glow` steht hier die Größenänderung stärker im Vordergrund als der Lichtschein.
@@ -399,10 +399,10 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
   - `Dezent`: Größe, Leuchtstärke und Deckkraft ändern sich nur moderat. Der Effekt ist erkennbar, ohne den Score dauerhaft zu dominieren.
   - `Standard`: Der Effekt ist klar sichtbar, ohne übermäßig hart zu wirken. Das ist die Standardbalance zwischen Aufmerksamkeit und Ruhe.
   - `Stark`: Glow, Skalierung und Sichtbarkeitswechsel werden deutlich stärker. Die Zahl springt dir optisch am schnellsten ins Auge.
-- `Trigger-Quelle`: Bestimmt, woran das Modul das Checkout erkennt. `Vorschlag zuerst` nutzt den sichtbaren Checkout-Vorschlag bevorzugt und fällt nur ohne Vorschlag auf die reine Score-Prüfung zurück; die anderen Modi erzwingen ausschließlich Score- oder Vorschlagslogik.
-  - `Vorschlag zuerst`: Der Effekt folgt bevorzugt dem angezeigten Suggestion-Block. Nur wenn dort nichts Verwertbares steht, entscheidet die reine Score-Prüfung.
-  - `Nur Score`: Der sichtbare Suggestion-Text spielt keine Rolle. Sobald der Restwert nach den Out-Regeln finishbar ist, wird der Effekt gezeigt.
-  - `Nur Vorschlag`: Der Effekt erscheint nur dann, wenn das Modul auch tatsächlich einen Suggestion-Hinweis erkennt. Ein finishbarer Score ohne Vorschlag bleibt ohne Effekt.
+- `Trigger-Quelle`: Bestimmt, woran das Modul den direkten Finish-Dart erkennt. `Vorschlag zuerst` prüft zuerst den sichtbaren Checkout-Vorschlag und fällt bei unpassender oder fehlender Route auf die reine Score-Prüfung zurück; die anderen Modi erzwingen ausschließlich Score- oder Vorschlagslogik.
+  - `Vorschlag zuerst`: Der Effekt folgt bevorzugt dem angezeigten Suggestion-Block. Mehrschrittige Routen lösen ihn noch nicht aus; bei fehlender oder klar unpassender Route entscheidet die reine Score-Prüfung.
+  - `Nur Score`: Der sichtbare Suggestion-Text spielt keine Rolle. Sobald der Restwert nach den Out-Regeln mit dem nächsten Dart direkt finishbar ist, wird der Effekt gezeigt.
+  - `Nur Vorschlag`: Der Effekt erscheint nur dann, wenn der sichtbare Suggestion-Hinweis genau den aktuell fälligen Finish-Dart trägt. Ein direkt finishbarer Score ohne passenden Vorschlag bleibt ohne Effekt.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Checkout Score Pulse](docs/screenshots/animation-checkout-score-pulse.gif)

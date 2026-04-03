@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.9] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: `checkout-score-pulse` und `tv-board-zoom` reagieren bei sichtbaren Mehrschritt-Checkout-Routen jetzt erst dann auf das Finish-Feld, wenn dieser Dart wirklich aktuell dran ist; bei `121` mit sichtbarer Route `T20`, `25`, `D18` wird `D18` also nicht mehr vorzeitig als direkter Finish-Hinweis gepulst oder im Modus `Nur Finish-Feld` gezoomt.
+  Technik: `checkout-score-pulse` wertet sichtbare Checkout-Routen jetzt über die gemeinsame X01-Surface-Semantik gegen echten Score, Out-Mode und Restdarts aus und fällt bei stale sichtbaren Routen gezielt auf den direkten Score-Checkout zurück; `tv-board-zoom` begrenzt `finish-only` auf echte aktuelle Ein-Dart-Finishes, behält `route-first` bewusst unverändert bei und sichert beide Pfade mit erweiterten X01-, Runtime- und Doku-Regressionen ab.
+
 ## [2.1.8] - 2026-04-03
 
 ### Fixed
@@ -1225,7 +1232,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...HEAD
+[2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...HEAD
+[2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...35bc075
 [2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...5d99934
 [2.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/59708e4...4d2f8fd
 [2.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...59708e4

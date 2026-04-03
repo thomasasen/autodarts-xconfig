@@ -198,7 +198,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 ### Checkout Score Pulse
 
 - Gilt für: `X01`
-- Kurz: Finishfähige Restwerte werden direkt an der aktiven Punktzahl hervorgehoben.
+- Kurz: Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
 - Grafisch: Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.
 - `Effekt`: Wählt die Animationsart der hervorgehobenen Restpunktzahl.
   - `Pulse`: Die Restpunktzahl bekommt einen weichen Puls aus Größenänderung, Helligkeit und Schattierung. Der Effekt wirkt organisch und wiederkehrend, ohne die Zahl hart springen zu lassen.
@@ -215,9 +215,9 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
   - `Standard`: Diese Stufe liefert den vorgesehenen Mittelweg für Skalierung, Leuchtweite und Blinkstärke. Die Finish-Hervorhebung ist deutlich genug für schnelle Wahrnehmung, ohne zu hektisch zu werden.
   - `Stark`: Diese Stufe erhöht die Maximalwerte für Skalierung, Schimmer und Sichtbarkeitsschwankung spürbar. Der Effekt wirkt energischer, dominanter und ist auch aus größerem Abstand leichter wahrzunehmen.
 - `Trigger-Quelle`: Legt fest, welche Quelle den Score-Effekt auslösen darf.
-  - `Vorschlag zuerst`: Diese Einstellung koppelt die Hervorhebung zuerst an die sichtbare Checkout-Empfehlung und nutzt den Punktestand nur als Fallback. Dadurch folgt der Effekt am ehesten dem, was der Nutzer aktuell als Lösung angezeigt bekommt.
-  - `Nur Score`: Mit dieser Einstellung entscheidet allein die rechnerische Finishfähigkeit des aktuellen Scores. Sichtbare Checkout-Vorschläge beeinflussen den Effekt nicht mehr.
-  - `Nur Vorschlag`: Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch finishbarer Wert erzeugt keinen Effekt, solange kein passender Checkout-Vorschlag erkannt wird.
+  - `Vorschlag zuerst`: Diese Einstellung koppelt die Hervorhebung zuerst an die sichtbare Checkout-Empfehlung und nutzt den Punktestand nur als Fallback. Mehrschrittige Routen lösen den Effekt noch nicht aus; entscheidend ist erst der aktuell fällige Finish-Dart.
+  - `Nur Score`: Mit dieser Einstellung entscheidet allein, ob der aktuelle Score mit dem nächsten Dart direkt finishbar ist. Sichtbare Checkout-Vorschläge beeinflussen den Effekt nicht mehr.
+  - `Nur Vorschlag`: Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch direkt finishbarer Wert erzeugt keinen Effekt, solange kein passender Finish-Vorschlag erkannt wird.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Checkout Score Pulse](screenshots/animation-checkout-score-pulse.gif)
