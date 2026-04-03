@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import {
+  canUseCheckoutFinishSegmentNow,
   collectVisibleCheckoutRoute,
   getCheckoutFinishSegmentFromRoute,
   getFirstCheckoutRouteSegment,
@@ -123,6 +124,36 @@ test("x01 checkout route exposes single-segment suggestions for setup fallback o
   assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "");
 });
 
+test("x01 checkout route exposes when a finish segment is actually current", () => {
+  assert.equal(
+    canUseCheckoutFinishSegmentNow({
+      routeSegments: ["T20", "D18"],
+      activeScore: 96,
+      outMode: "Double Out",
+      x01Rules,
+    }),
+    false
+  );
+  assert.equal(
+    canUseCheckoutFinishSegmentNow({
+      routeSegments: ["D18"],
+      activeScore: 36,
+      outMode: "Double Out",
+      x01Rules,
+    }),
+    true
+  );
+  assert.equal(
+    canUseCheckoutFinishSegmentNow({
+      routeSegments: ["BULL"],
+      activeScore: 50,
+      outMode: "Double Out",
+      x01Rules,
+    }),
+    true
+  );
+});
+
 test("x01 checkout route reads styled suggestion cards when textContent collapses score and segment", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "60T20";
@@ -177,6 +208,8 @@ test("x01 checkout route resolves semantic snapshot for a valid explicit visible
     visibleSegmentsUsed: 2,
     firstVisibleSegment: "S25",
     visibleFinishSegment: "D18",
+    authoritativeFinishSegment: "D18",
+    canUseAuthoritativeFinishNow: false,
     singleVisibleSegment: "",
     surfaceKind: "visible-explicit-checkout",
   });
@@ -198,6 +231,8 @@ test("x01 checkout route resolves semantic snapshot for a visible prefix with fa
     visibleSegmentsUsed: 1,
     firstVisibleSegment: "T20",
     visibleFinishSegment: "",
+    authoritativeFinishSegment: "D18",
+    canUseAuthoritativeFinishNow: false,
     singleVisibleSegment: "T20",
     surfaceKind: "visible-prefix+fallback",
   });
@@ -219,6 +254,8 @@ test("x01 checkout route resolves semantic snapshot for score-route fallback on 
     visibleSegmentsUsed: 0,
     firstVisibleSegment: "T20",
     visibleFinishSegment: "BULL",
+    authoritativeFinishSegment: "BULL",
+    canUseAuthoritativeFinishNow: true,
     singleVisibleSegment: "",
     surfaceKind: "score-route",
   });
@@ -240,6 +277,8 @@ test("x01 checkout route resolves semantic snapshot for visible setup-only fallb
     visibleSegmentsUsed: 1,
     firstVisibleSegment: "T20",
     visibleFinishSegment: "",
+    authoritativeFinishSegment: "",
+    canUseAuthoritativeFinishNow: false,
     singleVisibleSegment: "",
     surfaceKind: "visible-setup-only",
   });

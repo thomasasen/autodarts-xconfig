@@ -1,7 +1,6 @@
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "./style.js";
 import {
   collectVisibleCheckoutRoute,
-  getCheckoutFinishSegmentFromRoute,
   getFirstCheckoutRouteSegment,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
@@ -1115,11 +1114,7 @@ export function computeZoomIntent(options = {}) {
   });
   const authoritativeRouteSegments = checkoutSurface.authoritativeRouteSegments;
   const firstRouteSegment = getFirstCheckoutRouteSegment(authoritativeRouteSegments);
-  const finishRouteSegment = getCheckoutFinishSegmentFromRoute(
-    authoritativeRouteSegments,
-    outMode,
-    x01Rules
-  );
+  const finishRouteSegment = checkoutSurface.authoritativeFinishSegment;
   const suggestionSegment = checkoutSurface.singleVisibleSegment;
   const suggestionIsCheckout = isOneDartCheckoutSegmentForMode(suggestionSegment, outMode, x01Rules);
   const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
@@ -1194,14 +1189,16 @@ export function computeZoomIntent(options = {}) {
       }
     }
 
-    if (canUseCheckoutSurfaceForIntent) {
-      const intent = buildCheckoutRouteIntent(finishRouteSegment, authoritativeRouteSegments, {
-        activeScore,
-        outMode,
-        x01Rules,
-        routeReason: "route-finish",
-      });
-      if (intent) {
+    if (
+      canUseCheckoutSurfaceForIntent &&
+      checkoutSurface.canUseAuthoritativeFinishNow &&
+      finishRouteSegment
+    ) {
+      const intent = {
+        reason: "checkout",
+        segment: finishRouteSegment,
+      };
+      if (intent.segment) {
         state.activeIntent = intent;
         return intent;
       }

@@ -208,6 +208,44 @@ export function getCheckoutFinishSegmentFromRoute(routeSegments = [], outMode, x
   return "";
 }
 
+export function canUseCheckoutFinishSegmentNow(options = {}) {
+  const x01Rules = options.x01Rules;
+  const outMode = String(options.outMode || "");
+  const routeSegments = normalizeRouteSegments(options.routeSegments, x01Rules);
+  const finishSegment =
+    String(options.finishSegment || "").trim() ||
+    getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
+
+  if (!finishSegment) {
+    return false;
+  }
+
+  const activeScore = Number(options.activeScore);
+  if (Number.isFinite(activeScore)) {
+    if (typeof x01Rules?.canFinishWithSegment === "function") {
+      return x01Rules.canFinishWithSegment(activeScore, finishSegment, outMode);
+    }
+
+    const parsedSegment =
+      typeof x01Rules?.parseSegment === "function" ? x01Rules.parseSegment(finishSegment) : null;
+    if (!parsedSegment || parsedSegment.score !== activeScore) {
+      return false;
+    }
+
+    if (typeof x01Rules?.isOneDartCheckoutSegmentForOutMode === "function") {
+      return x01Rules.isOneDartCheckoutSegmentForOutMode(finishSegment, outMode);
+    }
+
+    if (typeof x01Rules?.isOneDartCheckoutSegment === "function") {
+      return x01Rules.isOneDartCheckoutSegment(finishSegment);
+    }
+
+    return false;
+  }
+
+  return routeSegments.length === 1;
+}
+
 export function segmentNameToBoardTarget(segmentName, x01Rules) {
   const parsed =
     typeof x01Rules?.parseSegment === "function" ? x01Rules.parseSegment(segmentName) : null;
@@ -467,6 +505,11 @@ export function resolveCheckoutSurfaceSemantics(options = {}) {
   const visibleSegmentsUsed = Number.isFinite(routeResolution?.visibleSegmentsUsed)
     ? Number(routeResolution.visibleSegmentsUsed)
     : 0;
+  const authoritativeFinishSegment = getCheckoutFinishSegmentFromRoute(
+    authoritativeRouteSegments,
+    options.outMode,
+    options.x01Rules
+  );
 
   return {
     visibleRouteSegments: visibleRouteSegments.slice(),
@@ -479,6 +522,14 @@ export function resolveCheckoutSurfaceSemantics(options = {}) {
       options.outMode,
       options.x01Rules
     ),
+    authoritativeFinishSegment,
+    canUseAuthoritativeFinishNow: canUseCheckoutFinishSegmentNow({
+      routeSegments: authoritativeRouteSegments,
+      finishSegment: authoritativeFinishSegment,
+      activeScore: options.activeScore,
+      outMode: options.outMode,
+      x01Rules: options.x01Rules,
+    }),
     singleVisibleSegment: getSingleSuggestionSegmentFromRoute(visibleRouteSegments),
     surfaceKind: mapCheckoutSelectionSourceToSurfaceKind(selectionSource),
   };

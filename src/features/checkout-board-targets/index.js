@@ -7,7 +7,6 @@ import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } 
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import {
   collectVisibleCheckoutRouteEntries,
-  getCheckoutFinishSegmentFromRoute,
   mapRouteSegmentsToBoardTargets,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
@@ -439,8 +438,12 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
   }
 
-  function selectRouteSegments(routeSegments = [], outMode) {
-    if (!Array.isArray(routeSegments)) {
+  function selectRouteSegments(checkoutSurface = {}) {
+    const routeSegments = Array.isArray(checkoutSurface.authoritativeRouteSegments)
+      ? checkoutSurface.authoritativeRouteSegments
+      : [];
+
+    if (!routeSegments.length && targetSelectionMode !== "finish") {
       return {
         selectedSegments: [],
       };
@@ -453,10 +456,9 @@ export function initializeCheckoutBoardTargets(context = {}) {
     }
 
     if (targetSelectionMode === "finish") {
-      const finishSegment = getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules);
-      if (finishSegment) {
+      if (checkoutSurface.canUseAuthoritativeFinishNow && checkoutSurface.authoritativeFinishSegment) {
         return {
-          selectedSegments: [finishSegment],
+          selectedSegments: [checkoutSurface.authoritativeFinishSegment],
         };
       }
 
@@ -538,10 +540,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       dartsRemaining,
       x01Rules,
     });
-    const { selectedSegments } = selectRouteSegments(
-      checkoutSurface.authoritativeRouteSegments,
-      outMode
-    );
+    const { selectedSegments } = selectRouteSegments(checkoutSurface);
     const selectionSource = checkoutSurface.selectionSource || "none";
     const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
     const board = getBoard();

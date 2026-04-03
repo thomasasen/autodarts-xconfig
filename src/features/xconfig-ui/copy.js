@@ -310,7 +310,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       targetSelectionMode: fieldCopy(
         "Legt fest, ob das nächste sinnvolle Feld, die ganze Route oder nur das Finish-Feld markiert werden.",
-        "Steuert, wie viele Segmente aus der autoritativen Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert unter `180` immer genau den nächsten sinnvollen Schritt; wenn keine Finish-Route mehr steht, bleibt ein plausibler sichtbarer Setup-Hinweis als nächstes Feld erhalten. `Alle Felder` zeigt die gesamte validierte Route und `Nur Finish` ausschließlich das abschließende Finish-Segment.",
+        "Steuert, wie viele Segmente aus der autoritativen Checkout-Route am Board hervorgehoben werden. `Nächstes Feld` markiert unter `180` immer genau den nächsten sinnvollen Schritt; wenn keine Finish-Route mehr steht, bleibt ein plausibler sichtbarer Setup-Hinweis als nächstes Feld erhalten. `Alle Felder` zeigt die gesamte validierte Route und `Nur Finish` hebt das Finish-Segment erst dann hervor, wenn es tatsächlich der aktuelle Ein-Dart-Checkout ist.",
         "Legt fest, welcher Teil der autoritativen Checkout-Route am Board markiert wird."
       ),
       colorTheme: fieldCopy(
@@ -1207,9 +1207,9 @@ const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({
     "Markiert alle Segmente der validierten beziehungsweise scorebasiert ergänzten Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt."
   ),
   finish: optionCopy(
-    "Markiert nur das abschließende Finish-Feld der autoritativen Route.",
-    "Es wird ausschließlich das Segment hervorgehoben, das die validierte oder scorebasiert ergänzte Route tatsächlich beendet. Frühere Setup-Felder bleiben unmarkiert.",
-    "Markiert nur das Finish-Segment der validierten beziehungsweise scorebasiert ergänzten Route."
+    "Markiert nur das Finish-Feld, sobald es wirklich der aktuelle Ein-Dart-Checkout ist.",
+    "Es wird ausschließlich das Segment hervorgehoben, das den Leg im aktuellen Wurf tatsächlich beenden kann. Mehrstufige Setup-Routen wie `T20` plus `D18` bleiben deshalb zunächst unmarkiert; fällt die sichtbare Route weg oder ist erkennbar veraltet, darf ein direkter scorebasierter Ein-Dart-Checkout weiterhin erscheinen.",
+    "Markiert nur das aktuelle Finish-Segment; mehrstufige Setup-Routen bleiben bis zum echten Finish-Dart unmarkiert."
   ),
 });
 

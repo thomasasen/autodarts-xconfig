@@ -275,7 +275,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 - `Zielauswahl`: Legt fest, welcher Teil der autoritativen Checkout-Route am Board markiert wird.
   - `Nächstes Feld`: Markiert unter `180` genau das nächste sinnvolle Feld; wenn keine Finish-Route mehr steht, bleibt ein plausibler sichtbarer Setup-Hinweis als nächstes Feld erhalten.
   - `Alle Felder`: Markiert alle Segmente der validierten beziehungsweise scorebasiert ergänzten Route gleichzeitig, mit klarem Fokus auf dem ersten Schritt.
-  - `Nur Finish`: Markiert nur das Finish-Segment der validierten beziehungsweise scorebasiert ergänzten Route.
+  - `Nur Finish`: Markiert nur das aktuelle Finish-Segment; mehrstufige Setup-Routen bleiben bis zum echten Finish-Dart unmarkiert.
 - `Farbthema`: Passt die Farbe der Board-Markierungen an.
   - `Violett`: Diese Palette nutzt ein klares Violett für Füllung und Kontur der Checkout-Ziele. Dadurch wirkt die Markierung deutlich futuristischer und hebt sich stark von den Standardfarben des Boards ab.
   - `Cyan`: Diese Farbpalette färbt die Ziele in ein kühles Cyan und erzeugt damit einen sauberen, technischen Look. Auf dunklen Board-Bereichen wirkt die Markierung sehr klar und modern.

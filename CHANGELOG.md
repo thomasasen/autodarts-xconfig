@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.11] - 2026-04-04
+
+### Fixed
+
+- Nutzerwirkung: `checkout-board-targets` markiert im Modus `Nur Finish` das Finish-Feld jetzt erst dann, wenn dieser Dart im aktuellen Wurf wirklich dran ist; bei sichtbaren Mehrschritt-Routen wie `T20` plus `D18` bleibt das Board vor dem ersten Dart deshalb zunächst unmarkiert, und `tv-board-zoom` sowie Board-Targets folgen dabei wieder derselben Finish-Freigabe-Regel.
+  Technik: `checkout-board-targets` prüft die Finish-Auswahl in `targetSelectionMode: "finish"` jetzt zusätzlich gegen den aktuellen Score, statt das letzte Segment einer autoritativen Route immer sofort zu übernehmen; zusätzlich liefert die gemeinsame X01-Semantik in `x01-checkout-route` die zentralisierte Finish-Freigabe (`authoritativeFinishSegment` plus `canUseAuthoritativeFinishNow`), die jetzt sowohl von `checkout-board-targets` als auch von `tv-board-zoom` genutzt wird, während feature-spezifische Zoom-, Hold- und Render-Logik lokal bleibt; neue Runtime-Regressionen decken Mehrschritt-Routen, stale sichtbare Routen und die gemeinsame Semantik direkt ab, und die Nutzertexte wurden daran synchronisiert.
+
 ## [2.1.9] - 2026-04-03
 
 ### Fixed
@@ -1237,7 +1244,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...HEAD
+[2.1.11]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...HEAD
+[2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...1b33189
 [2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...35bc075
 [2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...5d99934
 [2.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/59708e4...4d2f8fd

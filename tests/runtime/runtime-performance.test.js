@@ -905,15 +905,16 @@ test("checkout-board-targets style text animates scale and keeps signal close to
 test("checkout-board-targets selects next, finish or all segments from the authoritative route", () => {
   function createBoardDocument() {
     const documentRef = new FakeDocument();
-    documentRef.suggestionElement.textContent = "BULL";
+    documentRef.activeScoreElement.textContent = "96";
+    documentRef.suggestionElement.textContent = "T20";
     documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
     const secondSuggestion = documentRef.createElement("div");
     secondSuggestion.classList.add("suggestion");
-    secondSuggestion.textContent = "D8";
+    secondSuggestion.textContent = "D18";
     secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
     documentRef.main.appendChild(secondSuggestion);
     appendBoardFixture(documentRef);
-    return { documentRef, secondSuggestion };
+    return { documentRef };
   }
 
   function mountWithMode(targetSelectionMode) {
@@ -982,9 +983,7 @@ test("checkout-board-targets selects next, finish or all segments from the autho
 
   const finishSelection = mountWithMode("finish");
   try {
-    assert.equal(finishSelection.overlay.children.length, 2);
-    assert.equal(String(finishSelection.overlay.children[0]?.tagName || ""), "CIRCLE");
-    assert.equal(finishSelection.overlay.children[0]?.getAttribute("data-target-ring"), "DB");
+    assert.equal(finishSelection.overlay.children.length, 0);
   } finally {
     finishSelection.cleanup();
   }
@@ -994,6 +993,81 @@ test("checkout-board-targets selects next, finish or all segments from the autho
     assert.equal(allSelection.overlay.children.length, 4);
   } finally {
     allSelection.cleanup();
+  }
+});
+
+test("checkout-board-targets finish mode falls back to the current one-dart checkout when a visible multi-step route is stale", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "36";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "25";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const thirdSuggestion = documentRef.createElement("div");
+  thirdSuggestion.classList.add("suggestion");
+  thirdSuggestion.textContent = "D18";
+  thirdSuggestion.__rect = { left: 720, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(thirdSuggestion);
+  appendBoardFixture(documentRef);
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 36,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "finish",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length, 2);
+    assert.equal(overlay.children[0]?.getAttribute("data-target-ring"), "D");
+    assert.equal(overlay.children[0]?.getAttribute("data-target-value"), "18");
+  } finally {
+    cleanup();
   }
 });
 
