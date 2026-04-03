@@ -77,6 +77,11 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   "span",
 ]);
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
+const PROTECTED_CRICKET_HOST_SELECTORS = Object.freeze([
+  "#ad-ext-player-display",
+  ".ad-ext-player",
+  "[data-ad-ext-cricket-stack]",
+]);
 
 function queryAll(rootNode, selector) {
   return queryAllFromDiscovery(rootNode, selector);
@@ -107,7 +112,7 @@ function resolveGridRoot(documentRef, cricketRules, targetOrder) {
       const labelHits = new Set();
       LABEL_NODE_SELECTORS.forEach((labelSelector) => {
         queryAll(candidate, labelSelector).forEach((node) => {
-          if (isInsideTurnPreview(node)) {
+          if (isInsideTurnPreview(node) || isProtectedCricketHostNode(node)) {
             return;
           }
           const normalized = normalizeCricketLabelNode(cricketRules, node);
@@ -139,6 +144,7 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet) {
       skipNode(node) {
         return (
           isInsideTurnPreview(node) ||
+          isProtectedCricketHostNode(node) ||
           node?.getAttribute?.(SYNTHETIC_BADGE_ATTRIBUTE) === "true"
         );
       },
@@ -211,6 +217,19 @@ function isProtectedCricketHostNode(node) {
     return true;
   }
 
+  const isInsideProtectedHost =
+    typeof node.closest === "function" &&
+    PROTECTED_CRICKET_HOST_SELECTORS.some((selector) => {
+      try {
+        return Boolean(node.closest(selector));
+      } catch (_) {
+        return false;
+      }
+    });
+  if (isInsideProtectedHost) {
+    return true;
+  }
+
   const role = String(node.getAttribute?.("role") || "").trim().toLowerCase();
   return role === "main" || role === "navigation";
 }
@@ -254,7 +273,7 @@ function collectPlayerCells(labelNode, cricketRules, targetSet, options = {}) {
   if (!labelNode) {
     return [];
   }
-  if (isInsideTurnPreview(labelNode)) {
+  if (isInsideTurnPreview(labelNode) || isProtectedCricketHostNode(labelNode)) {
     return [];
   }
   const labelCell = resolveLabelCell(labelNode, cricketRules, targetSet);

@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.1] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: Cricket-Punktestände im Player-Display bleiben jetzt auch dann sichtbar, wenn ein aktiver Spieler bereits `20`, `19` oder einen anderen Cricket-Zielwert als Score erreicht hat; die Anzeige verschwindet nicht mehr, nur weil der Scoretext wie ein Grid-Label aussieht.
+  Technik: `cricket-grid-fx` behandelt Nodes aus `#ad-ext-player-display` und normalisierten Cricket-Player-Cards jetzt ausdrücklich als geschützte Hosts und schließt sie bereits bei Label-Discovery, Grid-Root-Scoring und Player-Cell-Ermittlung aus; eine neue Theme-Kompatibilitäts-Regression sichert zusätzlich ab, dass echte Grid-Zellen weiter markiert werden, Player-Card-Scores aber keine `ad-ext-crfx-*`-Klassen mehr erhalten.
+
 ## [2.1.0] - 2026-04-03
 
 ### Fixed
@@ -1163,7 +1170,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...HEAD
+[2.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/f0cc281...HEAD
+[2.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...f0cc281
 [2.0.113]: https://github.com/thomasasen/autodarts-xconfig/compare/340e7b4...ca465fc
 [2.0.112]: https://github.com/thomasasen/autodarts-xconfig/compare/2e404db...340e7b4
 [2.0.111]: https://github.com/thomasasen/autodarts-xconfig/compare/bb5158a...2e404db

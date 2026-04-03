@@ -25,6 +25,7 @@ import {
 } from "../../src/features/cricket-grid-fx/logic.js";
 import {
   ACTIVE_COLUMN_CLASS,
+  CELL_CLASS,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
   DEAD_CLASS,
@@ -32,6 +33,7 @@ import {
   LABEL_CLASS,
   LABEL_STATE_CLASS,
   MARK_PROGRESS_CLASS,
+  OPEN_CLASS,
   PRESSURE_CLASS,
   ROOT_CLASS,
   ROW_WAVE_CLASS,
@@ -117,6 +119,55 @@ function createThemeLikeBoardFixture(documentRef) {
     boardCanvas,
     boardSvg,
   };
+}
+
+function appendThemeLikeReportedPlayerCard(documentRef, playerDisplayNode, options = {}) {
+  const playerNode = documentRef.createElement("div");
+  playerNode.classList.add("ad-ext-player", options.active === false ? "ad-ext-player-inactive" : "ad-ext-player-active");
+
+  const stackNode = documentRef.createElement("div");
+  stackNode.classList.add("chakra-stack", "css-y3hfdd");
+
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("chakra-text", "ad-ext-player-score", "css-1r7jzhg");
+  scoreNode.textContent = String(options.scoreText ?? "20");
+  stackNode.appendChild(scoreNode);
+
+  const rowNode = documentRef.createElement("div");
+  rowNode.classList.add("chakra-stack", "css-37hv00");
+
+  const marksNode = documentRef.createElement("div");
+  marksNode.classList.add("css-1k3nd6z");
+  const marksBadge = documentRef.createElement("span");
+  marksBadge.classList.add("css-3fr5p8");
+  const marksText = documentRef.createElement("p");
+  marksText.classList.add("chakra-text", "css-1hcjh09");
+  marksText.textContent = String(options.marksText ?? "0");
+  marksBadge.appendChild(marksText);
+  marksNode.appendChild(marksBadge);
+  rowNode.appendChild(marksNode);
+
+  const identityNode = documentRef.createElement("div");
+  identityNode.classList.add("css-4rrvd0");
+  const nameNode = documentRef.createElement("span");
+  nameNode.classList.add("ad-ext-player-name", "css-g0ywsj");
+  nameNode.textContent = String(options.nameText ?? "TEST2");
+  identityNode.appendChild(nameNode);
+  rowNode.appendChild(identityNode);
+  stackNode.appendChild(rowNode);
+
+  const statsNode = documentRef.createElement("div");
+  statsNode.classList.add("chakra-stack", "css-1igwmid");
+  const mprNode = documentRef.createElement("p");
+  mprNode.classList.add("chakra-text", "css-1j0bqop");
+  mprNode.textContent = String(options.statsText ?? "MPR: 6.0");
+  statsNode.appendChild(mprNode);
+  stackNode.appendChild(statsNode);
+
+  playerNode.appendChild(stackNode);
+  playerDisplayNode.appendChild(playerNode);
+
+  return { playerNode, stackNode, scoreNode, rowNode, statsNode };
 }
 
 function createDecorativeAmbiguousBoardFixture(documentRef, options = {}) {
@@ -589,6 +640,92 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
 
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), false);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-targets")), false);
+});
+
+test("theme-like cricket grid-fx does not decorate player-card scores when the active score matches a target label", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const boardNodes = createThemeLikeBoardFixture(documentRef);
+  const { scoreNode, stackNode } = appendThemeLikeReportedPlayerCard(
+    documentRef,
+    documentRef.getElementById("ad-ext-player-display"),
+    {
+      active: true,
+      scoreText: "20",
+      nameText: "TEST2",
+      statsText: "MPR: 6.0",
+    }
+  );
+  const rowsByLabel = createNumericCricketGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderCache = { grid: null, board: null };
+  const gameState = createGameState({
+    scoringModeNormalized: "standard",
+    scoringMode: "standard",
+  });
+  const visualConfig = resolveCricketVisualConfig({
+    showDeadTargets: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxVisualConfig = resolveCricketGridFxConfig({
+    rowWave: true,
+    badgeBeacon: true,
+    markProgress: true,
+    threatEdge: true,
+    scoringLane: true,
+    deadRowCollapse: true,
+    deltaChips: true,
+    hitSpark: true,
+    roundTransitionWipe: true,
+    opponentPressureOverlay: true,
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const gridFxState = createCricketGridFxState();
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    gameState,
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
+  const debugStats = {};
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState,
+    state: gridFxState,
+    visualConfig: gridFxVisualConfig,
+    turnToken: "theme-card-score-guard:1",
+    debugStats,
+  });
+
+  const gridRoot = documentRef.querySelector(`.${ROOT_CLASS}`);
+  const liveGridCell20 = rowsByLabel.get("20")?.playerCells?.[0] || null;
+
+  assert.equal(Boolean(gridRoot), true);
+  assert.equal(Boolean(boardNodes.contentSlot), true);
+  assert.equal(debugStats.status, "ok");
+  assert.equal(liveGridCell20?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(scoreNode.classList.contains(BADGE_CLASS), false);
+  assert.equal(scoreNode.classList.contains(SCORE_CLASS), false);
+  assert.equal(scoreNode.classList.contains(LABEL_CLASS), false);
+  assert.equal(stackNode.classList.contains(CELL_CLASS), false);
+  assert.equal(stackNode.classList.contains(LABEL_CLASS), false);
+  assert.equal(stackNode.classList.contains(OPEN_CLASS), false);
 });
 
 test("theme-like cricket highlighter ignores ambiguous decorative board candidates and mounts overlay on the real board", () => {
