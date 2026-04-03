@@ -22,7 +22,7 @@
     "check:changelog": "node ./scripts/check-changelog-consistency.mjs",
     "sync:autodarts-docs-fixture": "node ./scripts/sync-autodarts-docs-fixture.mjs",
     "test": "npm run check:syntax && node ./scripts/run-tests.mjs",
-    "verify": "npm run build && npm test && npm run check:changelog"
+    "verify": "npm run lint && npm run build && npm test && npm run check:changelog"
   },
   "license": "MIT",
   "devDependencies": {

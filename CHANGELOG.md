@@ -19,6 +19,11 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `checkout-score-pulse` und `tv-board-zoom` reagieren bei sichtbaren Mehrschritt-Checkout-Routen jetzt erst dann auf das Finish-Feld, wenn dieser Dart wirklich aktuell dran ist; bei `121` mit sichtbarer Route `T20`, `25`, `D18` wird `D18` also nicht mehr vorzeitig als direkter Finish-Hinweis gepulst oder im Modus `Nur Finish-Feld` gezoomt.
   Technik: `checkout-score-pulse` wertet sichtbare Checkout-Routen jetzt über die gemeinsame X01-Surface-Semantik gegen echten Score, Out-Mode und Restdarts aus und fällt bei stale sichtbaren Routen gezielt auf den direkten Score-Checkout zurück; `tv-board-zoom` begrenzt `finish-only` auf echte aktuelle Ein-Dart-Finishes, behält `route-first` bewusst unverändert bei und sichert beide Pfade mit erweiterten X01-, Runtime- und Doku-Regressionen ab.
 
+### Changed
+
+- Nutzerwirkung: Repository-Arbeit folgt jetzt einem klareren ESLint-Ablauf; `npm run verify` startet immer mit dem Lint-Lauf, und Maintainer-Hinweise machen deutlicher, dass ein fehlgeschlagener oder ausgelassener Lint-Check die Arbeit nicht als abgeschlossen gelten lässt.
+  Technik: `package.json` verdrahtet `verify` jetzt mit `npm run lint` als erstem Schritt, und `AGENTS.md` verlangt fuer lint-relevante Aenderungen einen explizit berichteten erfolgreichen Lint-Lauf, bevor ein Task als done deklariert werden darf.
+
 ## [2.1.8] - 2026-04-03
 
 ### Fixed
