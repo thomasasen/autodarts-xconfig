@@ -82,14 +82,14 @@ test("target order and mode inference separate cricket from tactics", () => {
   assert.deepEqual(getTargetOrderByGameMode("Tactics"), TACTICS_TARGET_ORDER);
   assert.equal(inferCricketGameModeByLabels(["20", "19", "BULL"]), "cricket");
   assert.equal(inferCricketGameModeByLabels(["20", "14", "10", "BULL"]), "tactics");
-  assert.equal(inferCricketGameModeByLabels(["20", "Double", "Bull"]), "tactics");
+  assert.equal(inferCricketGameModeByLabels(["20", "Double", "Bull"]), "cricket");
   assert.equal(inferCricketGameModeByLabels(["foo", "bar"]), "");
 });
 
-test("resolveTargetOrderByGameModeAndLabels keeps dynamic tactics extras from visible labels", () => {
+test("resolveTargetOrderByGameModeAndLabels keeps official tactics targets while ignoring compatibility extras", () => {
   assert.deepEqual(
     resolveTargetOrderByGameModeAndLabels("tactics", ["20", "19", "Double", "Triple", "Bull"]),
-    ["20", "19", "BULL", "DOUBLE", "TRIPLE"]
+    ["20", "19", "BULL"]
   );
   assert.deepEqual(
     resolveTargetOrderByGameModeAndLabels("cricket", ["20", "19", "Double", "Triple", "Bull"]),
@@ -496,9 +496,10 @@ test("computeTargetStates follows 4-state formula for multi-player scenarios", (
   assert.equal(states.get("18")?.boardPresentation, "open");
 });
 
-test("tactics DOUBLE and TRIPLE use the same four-state semantics as numeric targets", () => {
+test("tactics compatibility extras do not become official target states", () => {
   const states = computeTargetStates(
     {
+      "20": [3, 0],
       DOUBLE: [3, 0],
       TRIPLE: [0, 3],
     },
@@ -506,16 +507,13 @@ test("tactics DOUBLE and TRIPLE use the same four-state semantics as numeric tar
       gameMode: "Tactics",
       scoringMode: "standard",
       activePlayerIndex: 0,
-      targetOrder: ["DOUBLE", "TRIPLE"],
+      targetOrder: ["20", "DOUBLE", "TRIPLE"],
     }
   );
 
-  assert.equal(states.get("DOUBLE")?.boardPresentation, "scoring");
-  assert.equal(states.get("DOUBLE")?.cellStates?.[0]?.presentation, "scoring");
-  assert.equal(states.get("DOUBLE")?.cellStates?.[1]?.presentation, "pressure");
-  assert.equal(states.get("TRIPLE")?.boardPresentation, "pressure");
-  assert.equal(states.get("TRIPLE")?.cellStates?.[0]?.presentation, "pressure");
-  assert.equal(states.get("TRIPLE")?.cellStates?.[1]?.presentation, "scoring");
+  assert.equal(states.has("20"), true);
+  assert.equal(states.has("DOUBLE"), false);
+  assert.equal(states.has("TRIPLE"), false);
 });
 
 test("cricket and tactics state engine matches the independent 4-state oracle across objective families", () => {
@@ -531,14 +529,14 @@ test("cricket and tactics state engine matches the independent 4-state oracle ac
       targetOrder: ["BULL"],
     },
     {
-      label: "DOUBLE",
+      label: "14",
       gameMode: "Tactics",
-      targetOrder: ["DOUBLE"],
+      targetOrder: ["14"],
     },
     {
-      label: "TRIPLE",
+      label: "10",
       gameMode: "Tactics",
-      targetOrder: ["TRIPLE"],
+      targetOrder: ["10"],
     },
   ];
 
@@ -609,14 +607,14 @@ test("cricket and tactics 3-player state engine matches the independent 4-state 
       targetOrder: ["BULL"],
     },
     {
-      label: "DOUBLE",
+      label: "14",
       gameMode: "Tactics",
-      targetOrder: ["DOUBLE"],
+      targetOrder: ["14"],
     },
     {
-      label: "TRIPLE",
+      label: "10",
       gameMode: "Tactics",
-      targetOrder: ["TRIPLE"],
+      targetOrder: ["10"],
     },
   ];
 
@@ -673,14 +671,14 @@ test("cricket and tactics 4-player state engine matches the independent 4-state 
       targetOrder: ["BULL"],
     },
     {
-      label: "DOUBLE",
+      label: "14",
       gameMode: "Tactics",
-      targetOrder: ["DOUBLE"],
+      targetOrder: ["14"],
     },
     {
-      label: "TRIPLE",
+      label: "10",
       gameMode: "Tactics",
-      targetOrder: ["TRIPLE"],
+      targetOrder: ["10"],
     },
   ];
 
@@ -755,8 +753,8 @@ test("3-player color contract uses one deterministic mapping for cricket+tactics
   const objectiveCases = [
     { label: "20", gameMode: "Cricket", targetOrder: ["20"] },
     { label: "BULL", gameMode: "Cricket", targetOrder: ["BULL"] },
-    { label: "DOUBLE", gameMode: "Tactics", targetOrder: ["DOUBLE"] },
-    { label: "TRIPLE", gameMode: "Tactics", targetOrder: ["TRIPLE"] },
+    { label: "14", gameMode: "Tactics", targetOrder: ["14"] },
+    { label: "10", gameMode: "Tactics", targetOrder: ["10"] },
   ];
 
   objectiveCases.forEach(({ label, gameMode, targetOrder }) => {
@@ -914,4 +912,24 @@ test("evaluateCricketWinState keeps unknown scoring mode neutral for leading/win
       { leading: false, winner: false },
     ]
   );
+});
+
+test("evaluateCricketWinState ignores DOUBLE and TRIPLE for tactics target counts", () => {
+  const result = evaluateCricketWinState({
+    gameMode: "Tactics",
+    targetOrder: ["DOUBLE", "TRIPLE", "20"],
+    marksByLabel: {
+      DOUBLE: [3, 3],
+      TRIPLE: [3, 3],
+      "20": [3, 0],
+    },
+    scoresByPlayer: [0, 0],
+    scoringMode: "neutral",
+  });
+
+  assert.deepEqual(result.targetOrder, ["20"]);
+  assert.equal(result.playerStates[0].closedTargetCount, 1);
+  assert.equal(result.playerStates[0].allTargetsClosed, true);
+  assert.equal(result.playerStates[1].closedTargetCount, 0);
+  assert.equal(result.playerStates[1].allTargetsClosed, false);
 });

@@ -188,6 +188,60 @@ test("checkout-score-pulse suggestion-first falls back to out-mode-aware score m
   assert.equal(shouldHighlight, true);
 });
 
+test("checkout-score-pulse ignores stale explicit suggestions that do not fit the active score", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "X01";
+  documentRef.suggestionElement.textContent = "T20 D20";
+  documentRef.activeScoreElement.textContent = "159";
+
+  const shouldHighlight = computeShouldHighlight({
+    documentRef,
+    gameState: createX01GameState({
+      activeScore: 159,
+      outMode: "Double Out",
+    }),
+    variantRules,
+    x01Rules,
+    triggerSource: "suggestion-only",
+  });
+
+  assert.equal(shouldHighlight, false);
+});
+
+test("checkout-score-pulse uses reliable remaining darts when validating explicit suggestions", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "X01";
+  documentRef.suggestionElement.textContent = "T20 D10";
+  documentRef.activeScoreElement.textContent = "80";
+
+  const blockedByOneDart = computeShouldHighlight({
+    documentRef,
+    gameState: createX01GameState({
+      activeScore: 80,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "S1" } }, { segment: { name: "S1" } }],
+    }),
+    variantRules,
+    x01Rules,
+    triggerSource: "suggestion-only",
+  });
+
+  const allowedWithTwoDarts = computeShouldHighlight({
+    documentRef,
+    gameState: createX01GameState({
+      activeScore: 80,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "S1" } }],
+    }),
+    variantRules,
+    x01Rules,
+    triggerSource: "suggestion-only",
+  });
+
+  assert.equal(blockedByOneDart, false);
+  assert.equal(allowedWithTwoDarts, true);
+});
+
 test("checkout-score-pulse does not trigger when the variant context is unknown", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "";

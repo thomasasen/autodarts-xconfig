@@ -293,7 +293,7 @@ test("dead targets stay visible when showDeadTargets is enabled", () => {
   );
 });
 
-test("tactics DOUBLE/TRIPLE objectives use the same scoring and pressure semantics on board", () => {
+test("tactics numeric objectives use the same scoring and pressure semantics on board", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
   createBoard(documentRef);
@@ -302,11 +302,11 @@ test("tactics DOUBLE/TRIPLE objectives use the same scoring and pressure semanti
     {
       "20": [0, 0],
       "19": [0, 0],
-      Double: [3, 0],
-      Triple: [0, 3],
+      "14": [3, 0],
+      "10": [0, 3],
       BULL: [0, 0],
     },
-    ["20", "19", "Double", "Triple", "BULL"]
+    ["20", "19", "14", "10", "BULL"]
   );
 
   const renderState = buildCricketRenderState({
@@ -336,29 +336,21 @@ test("tactics DOUBLE/TRIPLE objectives use the same scoring and pressure semanti
 
   const overlay = documentRef.getElementById(OVERLAY_ID);
   assert.ok(overlay);
-  const doubleShapes = Array.from(overlay.children || []).filter((node) => {
-    return String(node?.dataset?.targetLabel || "") === "DOUBLE";
+  const shapes14 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "14";
   });
-  const tripleShapes = Array.from(overlay.children || []).filter((node) => {
-    return String(node?.dataset?.targetLabel || "") === "TRIPLE";
+  const shapes10 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "10";
   });
 
-  assert.equal(doubleShapes.length, 20);
-  assert.equal(tripleShapes.length, 20);
+  assert.equal(shapes14.length, 4);
+  assert.equal(shapes10.length, 4);
   assert.equal(
-    doubleShapes.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.scoring)),
+    shapes14.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.scoring)),
     true
   );
   assert.equal(
-    tripleShapes.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.pressure)),
-    true
-  );
-  assert.equal(
-    doubleShapes.every((shape) => shape.classList?.contains(`${TARGET_SLOT_CLASS_PREFIX}double-ring`)),
-    true
-  );
-  assert.equal(
-    tripleShapes.every((shape) => shape.classList?.contains(`${TARGET_SLOT_CLASS_PREFIX}triple-ring`)),
+    shapes10.every((shape) => shape.classList?.contains(PRESENTATION_CLASS.pressure)),
     true
   );
 });
@@ -649,10 +641,10 @@ test("board perspective remains active-player based for 3 players across cricket
       "16": [3, 3, 3],
       "15": [0, 0, 0],
       BULL: [1, 1, 1],
-      Double: [0, 3, 2],
-      Triple: [3, 0, 0],
+      "14": [0, 3, 2],
+      "10": [3, 0, 0],
     },
-    ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"]
+    ["20", "19", "18", "17", "16", "15", "14", "10", "BULL"]
   );
 
   const marksByLabel = {
@@ -663,8 +655,8 @@ test("board perspective remains active-player based for 3 players across cricket
     "16": [3, 3, 3],
     "15": [0, 0, 0],
     BULL: [1, 1, 1],
-    DOUBLE: [0, 3, 2],
-    TRIPLE: [3, 0, 0],
+    "14": [0, 3, 2],
+    "10": [3, 0, 0],
   };
 
   [0, 1, 2].forEach((activePlayerIndex) => {
@@ -1030,21 +1022,21 @@ test("tactics board dims inactive sectors with smoke style", () => {
   createBoard(documentRef);
 
   const renderState = {
-    targetOrder: ["DOUBLE", "TRIPLE"],
+    targetOrder: ["14", "10"],
     stateMap: new Map([
       [
-        "DOUBLE",
+        "14",
         {
-          label: "DOUBLE",
+          label: "14",
           boardPresentation: "scoring",
           presentation: "scoring",
           isHighlightActive: true,
         },
       ],
       [
-        "TRIPLE",
+        "10",
         {
-          label: "TRIPLE",
+          label: "10",
           boardPresentation: "pressure",
           presentation: "pressure",
           isHighlightActive: true,
@@ -1076,21 +1068,21 @@ test("tactics board dims inactive sectors with smoke style", () => {
   const overlay = documentRef.getElementById(OVERLAY_ID);
   assert.ok(overlay);
 
-  const shapesDouble = Array.from(overlay.children || []).filter((node) => {
-    return String(node?.dataset?.targetLabel || "") === "DOUBLE";
+  const shapes14 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "14";
   });
-  assert.equal(shapesDouble.length, 20);
+  assert.equal(shapes14.length, 4);
   assert.equal(
-    shapesDouble.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    shapes14.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
     true
   );
 
-  const shapesTriple = Array.from(overlay.children || []).filter((node) => {
-    return String(node?.dataset?.targetLabel || "") === "TRIPLE";
+  const shapes10 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "10";
   });
-  assert.equal(shapesTriple.length, 20);
+  assert.equal(shapes10.length, 4);
   assert.equal(
-    shapesTriple.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
+    shapes10.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
     true
   );
 
@@ -1388,21 +1380,21 @@ test("tactics board hides inactive sectors when dimIrrelevantBoardTargets is dis
   createBoard(documentRef);
 
   const renderState = {
-    targetOrder: ["DOUBLE", "TRIPLE"],
+    targetOrder: ["14", "10"],
     stateMap: new Map([
       [
-        "DOUBLE",
+        "14",
         {
-          label: "DOUBLE",
+          label: "14",
           boardPresentation: "scoring",
           presentation: "scoring",
           isHighlightActive: true,
         },
       ],
       [
-        "TRIPLE",
+        "10",
         {
-          label: "TRIPLE",
+          label: "10",
           boardPresentation: "pressure",
           presentation: "pressure",
           isHighlightActive: true,
@@ -1430,29 +1422,29 @@ test("tactics board hides inactive sectors when dimIrrelevantBoardTargets is dis
   const overlay = documentRef.getElementById(OVERLAY_ID);
   assert.ok(overlay);
 
-  const shapesDouble = Array.from(overlay.children || []).filter((node) => {
-    return String(node?.dataset?.targetLabel || "") === "DOUBLE";
+  const shapes14 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "14";
   });
-  assert.equal(shapesDouble.length, 20);
+  assert.equal(shapes14.length, 4);
   assert.equal(
-    shapesDouble.every((shape) => String(shape?.style?.display || "") !== "none"),
+    shapes14.every((shape) => String(shape?.style?.display || "") !== "none"),
     true
   );
   assert.equal(
-    shapesDouble.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
+    shapes14.every((shape) => String(shape?.dataset?.targetPresentation || "") === "scoring"),
     true
   );
 
-  const shapesTriple = Array.from(overlay.children || []).filter((node) => {
-    return String(node?.dataset?.targetLabel || "") === "TRIPLE";
+  const shapes10 = Array.from(overlay.children || []).filter((node) => {
+    return String(node?.dataset?.targetLabel || "") === "10";
   });
-  assert.equal(shapesTriple.length, 20);
+  assert.equal(shapes10.length, 4);
   assert.equal(
-    shapesTriple.every((shape) => String(shape?.style?.display || "") !== "none"),
+    shapes10.every((shape) => String(shape?.style?.display || "") !== "none"),
     true
   );
   assert.equal(
-    shapesTriple.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
+    shapes10.every((shape) => String(shape?.dataset?.targetPresentation || "") === "pressure"),
     true
   );
 

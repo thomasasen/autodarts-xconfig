@@ -505,7 +505,7 @@ test("buildCricketRenderState infers tactics from 10..14 when no explicit mode e
   assert.equal(renderState?.stateMap.has("10"), true);
 });
 
-test("buildCricketRenderState keeps dynamic tactics objectives from visible grid labels", () => {
+test("buildCricketRenderState ignores DOUBLE/TRIPLE compatibility labels in official tactics state", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
 
@@ -531,10 +531,13 @@ test("buildCricketRenderState keeps dynamic tactics objectives from visible grid
     }),
   });
 
-  assert.equal(renderState?.targetOrder.includes("DOUBLE"), true);
-  assert.equal(renderState?.targetOrder.includes("TRIPLE"), true);
-  assert.equal(renderState?.stateMap.get("DOUBLE")?.boardPresentation, "pressure");
-  assert.equal(renderState?.stateMap.get("TRIPLE")?.boardPresentation, "scoring");
+  assert.equal(renderState?.targetOrder.includes("DOUBLE"), false);
+  assert.equal(renderState?.targetOrder.includes("TRIPLE"), false);
+  assert.equal(renderState?.targetOrder.includes("20"), true);
+  assert.equal(renderState?.targetOrder.includes("19"), true);
+  assert.equal(renderState?.targetOrder.includes("BULL"), true);
+  assert.equal(renderState?.stateMap.has("DOUBLE"), false);
+  assert.equal(renderState?.stateMap.has("TRIPLE"), false);
 });
 
 test("buildCricketRenderState exposes tactics precision token without changing scoring semantics", () => {
@@ -1582,11 +1585,11 @@ test("render state prefers the live theme objective strip over the broader match
   assert.equal(renderState?.stateMap.get("BULL")?.boardPresentation, "open");
 });
 
-test("render state keeps tactics numeric, bull and special objectives on the same 4-state model", () => {
+test("render state keeps tactics numeric targets and bull on the same 4-state model", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
 
-  const labels = ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"];
+  const labels = ["20", "19", "18", "17", "16", "15", "14", "10", "BULL"];
   const marksByRow = {
     "20": [3, 0],
     "19": [1, 0],
@@ -1594,8 +1597,8 @@ test("render state keeps tactics numeric, bull and special objectives on the sam
     "17": [0, 3],
     "16": [3, 3],
     "15": [0, 0],
-    Double: [3, 0],
-    Triple: [0, 3],
+    "14": [3, 0],
+    "10": [0, 3],
     BULL: [3, 3],
   };
 
@@ -1622,8 +1625,8 @@ test("render state keeps tactics numeric, bull and special objectives on the sam
     ["17", [0, 3]],
     ["16", [3, 3]],
     ["15", [0, 0]],
-    ["DOUBLE", [3, 0]],
-    ["TRIPLE", [0, 3]],
+    ["14", [3, 0]],
+    ["10", [0, 3]],
     ["BULL", [3, 3]],
   ].forEach(([label, marksByPlayer]) => {
     assert.equal(
@@ -1943,11 +1946,11 @@ test("state index is used when visible DOM player roster is incomplete", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
 
-  createGrid(documentRef, ["20", "18", "Double", "Triple", "BULL"], {
+  createGrid(documentRef, ["20", "18", "14", "10", "BULL"], {
     "20": [3, 0, 3],
     "18": [2, 0, 1],
-    Double: [0, 3, 2],
-    Triple: [3, 0, 0],
+    "14": [0, 3, 2],
+    "10": [3, 0, 0],
     BULL: [3, 3, 3],
   });
 
@@ -1969,14 +1972,14 @@ test("state index is used when visible DOM player roster is incomplete", () => {
 
   assert.equal(renderState?.activePlayerIndex, 2);
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
-  assert.equal(renderState?.stateMap.get("DOUBLE")?.boardPresentation, "pressure");
+  assert.equal(renderState?.stateMap.get("14")?.boardPresentation, "pressure");
 });
 
 test("virtual 3-player cricket+tactics match keeps grid owner states stable and board perspective dynamic", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
 
-  const uiLabels = ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"];
+  const uiLabels = ["20", "19", "18", "17", "16", "15", "14", "10", "Double", "Triple", "BULL"];
   const normalizedTargets = cricketRules.resolveTargetOrderByGameModeAndLabels("tactics", uiLabels);
   const marksByLabel = normalizedTargets.reduce((acc, label) => {
     acc[label] = [0, 0, 0];
@@ -2102,19 +2105,19 @@ test("virtual 3-player cricket+tactics match keeps grid owner states stable and 
   state = buildState(1);
   assertLabel(state, "20", 1); // dead / dead / dead
 
-  // Tactics extras follow the same 4-state semantics.
-  setMarksDirect("DOUBLE", [0, 3, 2]);
-  setMarksDirect("TRIPLE", [3, 0, 0]);
+  // Tactics numeric-only targets follow the same 4-state semantics.
+  setMarksDirect("14", [0, 3, 2]);
+  setMarksDirect("10", [3, 0, 0]);
   state = buildState(1);
-  assertLabel(state, "DOUBLE", 1); // pressure / scoring / pressure
-  assertLabel(state, "TRIPLE", 1); // scoring / pressure / pressure
+  assertLabel(state, "14", 1); // pressure / scoring / pressure
+  assertLabel(state, "10", 1); // scoring / pressure / pressure
 });
 
 test("multi-round 3-player cricket+tactics color scenarios stay rule-correct across active-player switches", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Tactics";
 
-  const labels = ["20", "19", "18", "17", "16", "15", "Double", "Triple", "BULL"];
+  const labels = ["20", "19", "18", "17", "16", "15", "14", "10", "BULL"];
   const marksByRow = labels.reduce((acc, label) => {
     acc[label] = [0, 0, 0];
     return acc;
@@ -2192,11 +2195,11 @@ test("multi-round 3-player cricket+tactics color scenarios stay rule-correct acr
         "19": [0, 0, 0],
         "18": [0, 0, 0],
         "17": [0, 0, 0],
-        "DOUBLE": [0, 0, 0],
-        "TRIPLE": [0, 0, 0],
+        "14": [0, 0, 0],
+        "10": [0, 0, 0],
         BULL: [0, 0, 0],
       },
-      labels: ["20", "19", "18", "17", "DOUBLE", "TRIPLE", "BULL"],
+      labels: ["20", "19", "18", "17", "14", "10", "BULL"],
     },
     {
       name: "r2-single-hit-stays-open-active-p2",
@@ -2250,18 +2253,18 @@ test("multi-round 3-player cricket+tactics color scenarios stay rule-correct acr
       name: "r7-tactics-mixed-states-active-p2",
       active: 1,
       marks: {
-        "DOUBLE": [0, 3, 2],
-        "TRIPLE": [3, 0, 0],
+        "14": [0, 3, 2],
+        "10": [3, 0, 0],
       },
-      labels: ["DOUBLE", "TRIPLE", "20", "19"],
+      labels: ["14", "10", "20", "19"],
     },
     {
       name: "r8-tactics-dead-active-p1",
       active: 0,
       marks: {
-        "DOUBLE": [3, 3, 3],
+        "14": [3, 3, 3],
       },
-      labels: ["DOUBLE", "TRIPLE", "20"],
+      labels: ["14", "10", "20"],
     },
   ];
 

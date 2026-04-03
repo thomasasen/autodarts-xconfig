@@ -28,7 +28,6 @@ export const CRICKET_DISCOVERY_TARGET_ORDER = [
 
 const TARGET_SET = new Set(CRICKET_DISCOVERY_TARGET_ORDER);
 const TACTICS_ONLY_TARGETS = new Set(["14", "13", "12", "11", "10"]);
-const TACTICS_EXTRA_TARGET_SET = new Set(TACTICS_EXTRA_TARGETS);
 const WIN_EVALUATORS_BY_SCORING_MODE = Object.freeze({
   standard({ score, highestScore, allTargetsClosed }) {
     const leading = score === highestScore;
@@ -263,12 +262,37 @@ function getResolvedModeFamily(gameMode, targetOrder) {
 
   if (
     Array.isArray(targetOrder) &&
-    targetOrder.some((label) => TACTICS_ONLY_TARGETS.has(label) || TACTICS_EXTRA_TARGET_SET.has(label))
+    targetOrder
+      .map((label) => normalizeCricketLabel(label))
+      .some((label) => TACTICS_ONLY_TARGETS.has(label))
   ) {
     return "tactics";
   }
 
   return "cricket";
+}
+
+function sanitizeTargetOrderForMode(targetOrder, gameMode, fallbackToDefault = true) {
+  const modeFamily = getResolvedModeFamily(gameMode, targetOrder);
+  const officialOrder = getTargetOrderByGameMode(modeFamily);
+  const officialTargetSet = new Set(officialOrder);
+  const normalizedLabels = Array.isArray(targetOrder)
+    ? targetOrder.map((label) => normalizeCricketLabel(label)).filter(Boolean)
+    : [];
+
+  if (!normalizedLabels.length) {
+    return fallbackToDefault ? officialOrder.slice() : [];
+  }
+
+  const normalizedSet = new Set(
+    normalizedLabels.filter((label) => officialTargetSet.has(label))
+  );
+  const resolvedOrder = officialOrder.filter((label) => normalizedSet.has(label));
+  if (resolvedOrder.length) {
+    return resolvedOrder;
+  }
+
+  return fallbackToDefault ? officialOrder.slice() : [];
 }
 
 function getOpenOpponentIndexes(marksByPlayer, playerIndex) {
@@ -393,9 +417,7 @@ export function inferCricketGameModeByLabels(labels) {
   }
 
   if (
-    normalizedLabels.some(
-      (label) => TACTICS_ONLY_TARGETS.has(label) || TACTICS_EXTRA_TARGET_SET.has(label)
-    )
+    normalizedLabels.some((label) => TACTICS_ONLY_TARGETS.has(label))
   ) {
     return "tactics";
   }
@@ -414,25 +436,12 @@ export function resolveTargetOrderByGameModeAndLabels(gameMode, labels) {
     return CRICKET_TARGET_ORDER.slice();
   }
 
-  const normalizedLabels = Array.isArray(labels)
-    ? labels.map((label) => normalizeCricketLabel(label)).filter(Boolean)
-    : [];
-  if (!normalizedLabels.length) {
-    return TACTICS_TARGET_ORDER.slice();
-  }
-
-  const labelSet = new Set(normalizedLabels);
-  const numericAndBull = TACTICS_TARGET_ORDER.filter((label) => labelSet.has(label));
-  const tacticalExtras = TACTICS_EXTRA_TARGETS.filter((label) => labelSet.has(label));
-  const dynamicOrder = [...numericAndBull, ...tacticalExtras];
-  return dynamicOrder.length ? dynamicOrder : TACTICS_TARGET_ORDER.slice();
+  return sanitizeTargetOrderForMode(labels, mode, true);
 }
 
 export function createEmptyMarksByLabel(targetOrder, playerCount = 0) {
   const normalizedPlayerCount = toSafePlayerCount(playerCount);
-  const order = Array.isArray(targetOrder) && targetOrder.length
-    ? targetOrder
-    : CRICKET_TARGET_ORDER;
+  const order = sanitizeTargetOrderForMode(targetOrder, "", true);
 
   return order.reduce((result, label) => {
     result[label] = Array.from({ length: normalizedPlayerCount }, () => 0);
@@ -502,9 +511,14 @@ export function parseCricketThrowSegment(throwEntry) {
 }
 
 export function applyCricketThrowsToState(options = {}) {
-  const explicitTargetOrder = Array.isArray(options.targetOrder) && options.targetOrder.length
-    ? options.targetOrder.filter(Boolean)
-    : CRICKET_TARGET_ORDER;
+  const providedTargetOrder = Array.isArray(options.targetOrder) ? options.targetOrder.filter(Boolean) : [];
+  const inferredMode = inferCricketGameModeByLabels([
+    ...providedTargetOrder,
+    ...Object.keys(options.baseMarksByLabel || {}),
+  ]);
+  const explicitTargetOrder = providedTargetOrder.length
+    ? sanitizeTargetOrderForMode(providedTargetOrder, options.gameMode || inferredMode, true)
+    : getTargetOrderByGameMode(options.gameMode || inferredMode);
   const playerIndex = Number.isFinite(Number(options.playerIndex))
     ? Math.max(0, Math.round(Number(options.playerIndex)))
     : 0;
@@ -652,7 +666,7 @@ export function computeTargetStates(marksByLabel, options = {}) {
   const inferredMode = inferCricketGameModeByLabels(Object.keys(marksByLabel || {}));
   const modeFamily = getResolvedModeFamily(options.gameMode || inferredMode, options.targetOrder);
   const targetOrder = Array.isArray(options.targetOrder) && options.targetOrder.length
-    ? options.targetOrder.filter(Boolean)
+    ? sanitizeTargetOrderForMode(options.targetOrder, modeFamily, true)
     : getTargetOrderByGameMode(modeFamily);
   const scoringModeNormalized = resolveScoringModeNormalized(options);
 
@@ -727,14 +741,14 @@ function toTargetOrderForDiff(options = {}) {
     ? options.targetOrder.filter(Boolean)
     : [];
   if (explicitTargetOrder.length) {
-    return explicitTargetOrder;
+    return sanitizeTargetOrderForMode(explicitTargetOrder, "", true);
   }
 
   const previousLabels = Object.keys(options.previousMarksByLabel || {});
   const nextLabels = Object.keys(options.nextMarksByLabel || {});
   const combined = Array.from(new Set([...previousLabels, ...nextLabels]));
   if (combined.length) {
-    return combined;
+    return sanitizeTargetOrderForMode(combined, inferCricketGameModeByLabels(combined), true);
   }
 
   return TACTICS_TARGET_ORDER.slice();
@@ -745,7 +759,7 @@ function resolveTargetOrderForWinState(options = {}) {
     ? options.targetOrder.filter(Boolean)
     : [];
   if (explicitTargetOrder.length) {
-    return explicitTargetOrder;
+    return sanitizeTargetOrderForMode(explicitTargetOrder, options.gameMode, true);
   }
 
   const inferredMode = inferCricketGameModeByLabels(Object.keys(options.marksByLabel || {}));
@@ -881,9 +895,16 @@ export function diffMarksByLabel(options = {}) {
 export function deriveTargetTransitions(options = {}) {
   const previousStateMap = options.previousStateMap instanceof Map ? options.previousStateMap : new Map();
   const nextStateMap = options.nextStateMap instanceof Map ? options.nextStateMap : new Map();
-  const targetOrder = Array.isArray(options.targetOrder)
+  const explicitTargetOrder = Array.isArray(options.targetOrder)
     ? options.targetOrder.filter(Boolean)
-    : Array.from(new Set([...previousStateMap.keys(), ...nextStateMap.keys()]));
+    : [];
+  const targetOrder = explicitTargetOrder.length
+    ? sanitizeTargetOrderForMode(explicitTargetOrder, "", true)
+    : sanitizeTargetOrderForMode(
+        Array.from(new Set([...previousStateMap.keys(), ...nextStateMap.keys()])),
+        "",
+        false
+      );
 
   const transitionMap = new Map();
   targetOrder.forEach((label) => {

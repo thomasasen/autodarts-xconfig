@@ -46,6 +46,8 @@ export function getCheckoutSuggestionState(context = {}) {
   const documentRef = context.documentRef;
   const x01Rules = context.x01Rules;
   const outMode = String(context.outMode || "");
+  const activeScore = context.activeScore;
+  const dartsRemaining = context.dartsRemaining;
 
   if (!documentRef || typeof documentRef.querySelector !== "function") {
     return null;
@@ -60,7 +62,56 @@ export function getCheckoutSuggestionState(context = {}) {
     return null;
   }
 
-  return x01Rules.parseCheckoutSuggestionState(suggestionNode.textContent || "", outMode);
+  const suggestionText = suggestionNode.textContent || "";
+
+  if (typeof x01Rules.parseCheckoutSuggestionStateForScore === "function") {
+    return x01Rules.parseCheckoutSuggestionStateForScore(
+      suggestionText,
+      activeScore,
+      outMode,
+      dartsRemaining
+    );
+  }
+
+  return x01Rules.parseCheckoutSuggestionState(suggestionText, outMode);
+}
+
+function normalizeDartsRemaining(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+
+  const normalized = Math.trunc(numeric);
+  if (normalized < 0) {
+    return 0;
+  }
+  if (normalized > 3) {
+    return 3;
+  }
+  return normalized;
+}
+
+export function getReliableDartsRemaining(context = {}) {
+  const explicit = normalizeDartsRemaining(context.dartsRemaining);
+  if (Number.isFinite(explicit)) {
+    return explicit;
+  }
+
+  const gameState = context.gameState;
+  const activeThrows =
+    gameState && typeof gameState.getActiveThrows === "function" ? gameState.getActiveThrows() : null;
+  if (Array.isArray(activeThrows)) {
+    return normalizeDartsRemaining(3 - activeThrows.length);
+  }
+
+  const activeTurn =
+    gameState && typeof gameState.getActiveTurn === "function" ? gameState.getActiveTurn() : null;
+  if (Array.isArray(activeTurn?.throws)) {
+    return normalizeDartsRemaining(3 - activeTurn.throws.length);
+  }
+
+  return null;
 }
 
 export function getAllScoreNodes(documentRef) {
@@ -142,14 +193,23 @@ export function computeShouldHighlight(context = {}) {
     return false;
   }
 
+  const activeScore = getActiveScoreValue(context);
+  const dartsRemaining = getReliableDartsRemaining(context);
   const suggestionState = getCheckoutSuggestionState({
     ...context,
     outMode,
+    activeScore,
+    dartsRemaining,
   });
-  const activeScore = getActiveScoreValue(context);
   const scoreCheckoutPossible =
-    x01Rules && typeof x01Rules.isCheckoutPossibleFromScoreForOutMode === "function"
-      ? x01Rules.isCheckoutPossibleFromScoreForOutMode(activeScore, outMode)
+    x01Rules && typeof x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts === "function"
+      ? x01Rules.isCheckoutPossibleFromScoreForOutModeWithDarts(
+          activeScore,
+          outMode,
+          Number.isFinite(dartsRemaining) ? dartsRemaining : 3
+        )
+      : x01Rules && typeof x01Rules.isCheckoutPossibleFromScoreForOutMode === "function"
+        ? x01Rules.isCheckoutPossibleFromScoreForOutMode(activeScore, outMode)
       : x01Rules && typeof x01Rules.isCheckoutPossibleFromScore === "function"
         ? x01Rules.isCheckoutPossibleFromScore(activeScore)
       : false;

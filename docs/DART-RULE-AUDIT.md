@@ -9,7 +9,8 @@ Die Domain-Regeln sind für `v1.1.0` regelkonform dokumentiert, szenariobasiert 
 ### 1. X01-Out-Modi werden konsequent berücksichtigt
 
 - `src/domain/x01-rules.js` bewertet Checkout-Machbarkeit, One-Dart-Finishes und Busts out-mode-aware.
-- `checkout-score-pulse` und `tv-board-zoom` konsumieren diese Regeln statt eigener Annahmen.
+- `checkout-score-pulse` validiert explizite Suggestions zusätzlich gegen echten Score, Out-Modus und vorhandene verlässliche Darts-im-Visit-Informationen.
+- `tv-board-zoom` konsumiert dieselben X01-Regeln statt eigener Annahmen.
 
 ### 2. Bull-Semantik bleibt konsistent
 
@@ -27,6 +28,7 @@ Die Domain-Regeln sind für `v1.1.0` regelkonform dokumentiert, szenariobasiert 
 - `src/domain/cricket-rules.js` trennt `gameMode`, `scoringMode`, Target-States und Gewinnerermittlung.
 - Neuer reiner Helfer: `evaluateCricketWinState({ marksByLabel, scoresByPlayer, scoringMode, targetOrder })`
 - Für Cut-Throat gilt im Audit: niedrigster Punktestand gewinnt.
+- Für Tactics bleibt die offizielle Zielmenge `20..10 + BULL`; `DOUBLE` und `TRIPLE` bleiben nur kompatible Host-/DOM-Artefakte und gehen nicht in offizielle Zielreihenfolge oder Gewinnerlogik ein.
 
 ### 5. Feature-Regeln bleiben Verbraucher, nicht Regelquelle
 

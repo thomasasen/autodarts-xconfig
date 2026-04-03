@@ -31,6 +31,7 @@ import {
   parseCheckoutTargetsFromSuggestion,
   parseExplicitCheckoutSegments,
   parseCheckoutSuggestionState,
+  parseCheckoutSuggestionStateForScore,
 } from "../../src/domain/x01-rules.js";
 
 test("IMPOSSIBLE_CHECKOUT_SCORES include known impossible finishes", () => {
@@ -235,6 +236,15 @@ test("parseCheckoutSuggestionState follows explicit finish validity per out mode
   assert.equal(parseCheckoutSuggestionState("T20", "master"), true);
   assert.equal(parseCheckoutSuggestionState("T20", "double"), false);
   assert.equal(parseCheckoutSuggestionState("Single 20", "straight"), true);
+});
+
+test("parseCheckoutSuggestionStateForScore validates explicit suggestions against score, out mode and reliable darts", () => {
+  assert.equal(parseCheckoutSuggestionStateForScore("No Checkout", 40, "double"), false);
+  assert.equal(parseCheckoutSuggestionStateForScore("T20 D20", 100, "double"), true);
+  assert.equal(parseCheckoutSuggestionStateForScore("T20 D20", 159, "double"), null);
+  assert.equal(parseCheckoutSuggestionStateForScore("T20 D20", 100, "double", 1), null);
+  assert.equal(parseCheckoutSuggestionStateForScore("T20", 60, "master"), true);
+  assert.equal(parseCheckoutSuggestionStateForScore("T20", 60, "double"), null);
 });
 
 test("normalizeOutMode accepts common mode labels", () => {

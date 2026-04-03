@@ -19,7 +19,7 @@ Sekundärquellen für Randfälle:
 
 ### Grundprinzip
 
-- X01 startet mit einem festen Restwert wie `301`, `501` oder `701`.
+- X01 startet mit einem festen Restwert; im Repository werden mindestens `121`, `170`, `301`, `501`, `701` und `901` als gültige Base-Scores behandelt.
 - Jeder Dart zieht seinen Punktewert vom Restwert ab.
 - Das Leg endet nur dann, wenn exakt `0` erreicht wird und der letzte Dart zum aktiven Out-Modus passt.
 
@@ -51,6 +51,7 @@ Sekundärquellen für Randfälle:
 
 - Standard-Cricket nutzt `20`, `19`, `18`, `17`, `16`, `15`, `BULL`.
 - Tactics nutzt dieselbe Mark-Logik, erweitert die Zielmenge aber auf `20..10` plus `BULL`.
+- `DOUBLE` und `TRIPLE` dürfen als Host-/DOM-Kompatibilitätslabels erkannt werden, sind aber keine offizielle Tactics-Zielmenge.
 - Tactics-Token wie `strict` und `slop` werden als kompatible Submodus-Hinweise eingeordnet; ohne belegte Autodarts-Abweichung wird keine zusätzliche Projekt-Semantik erzwungen.
 
 ### Marks

@@ -26,7 +26,7 @@ export const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
   ".ad-ext-player-active p.ad-ext-player-score",
 ]);
-export const START_SCORE_PATTERN = /\b(121|170|\d+01)\b/i;
+export const START_SCORE_PATTERN = /^(121|170|\d+01)$/i;
 export const WIDTH_PROPERTY = "--ad-ext-x01-score-progress-width";
 export const DEBUG_MAX_CARD_SAMPLES = 4;
 export const COLOR_THEME_ATTRIBUTE = "data-ad-ext-x01-score-progress-color-theme";
@@ -442,13 +442,40 @@ export function parseDisplayedScore(text) {
 }
 
 export function extractStartScore(value) {
-  const match = String(value || "").match(START_SCORE_PATTERN);
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  const match = normalized.match(START_SCORE_PATTERN);
   if (!match) {
     return null;
   }
 
   const startScore = Number(match[1]);
   return Number.isFinite(startScore) ? startScore : null;
+}
+
+function extractStartScoreFromPatterns(value, patterns = []) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const direct = extractStartScore(normalized);
+  if (isFiniteNumber(direct)) {
+    return direct;
+  }
+
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (!match) {
+      continue;
+    }
+
+    const resolved = extractStartScore(match[1]);
+    if (isFiniteNumber(resolved)) {
+      return resolved;
+    }
+  }
+
+  return null;
 }
 
 export function isSupportedX01VariantText(value) {
@@ -478,7 +505,18 @@ export function getVariantTexts(context = {}) {
 }
 
 export function resolveStartScoreFromVariantText(value) {
-  return extractStartScore(value);
+  return extractStartScoreFromPatterns(value, [
+    /(?:^|\b)X01(?:\s*[:/-]\s*|\s+)(121|170|\d+01)(?:\b|$)/i,
+    /(?:^|\b)(121|170|\d+01)\s+X01(?:\b|$)/i,
+  ]);
+}
+
+function resolveStartScoreFromScopedText(value) {
+  return extractStartScoreFromPatterns(value, [
+    /(?:^|\b)X01(?:\s*[:/-]\s*|\s+)(121|170|\d+01)(?:\b|$)/i,
+    /(?:^|\b)(?:BEST\s+OF|FIRST\s+TO)\s+\d+\s*[/|-]\s*(121|170|\d+01)(?:\b|$)/i,
+    /(?:^|\b)(?:BASE|START(?:\s+SCORE)?)(?:\s*[:/-]\s*|\s+)(121|170|\d+01)(?:\b|$)/i,
+  ]);
 }
 
 function collectVariantStripNodes(documentRef) {
@@ -551,7 +589,7 @@ export function readVariantStripTexts(documentRef) {
 export function resolveStartScoreFromVariantStrip(documentRef, preparedTexts = null) {
   const texts = Array.isArray(preparedTexts) ? preparedTexts : readVariantStripTexts(documentRef);
   for (const text of texts) {
-    const resolved = extractStartScore(text);
+    const resolved = resolveStartScoreFromScopedText(text);
     if (isFiniteNumber(resolved)) {
       return resolved;
     }
@@ -577,24 +615,10 @@ export function resolveStartScoreFromDom(documentRef) {
     const nodes = queryAll(documentRef, selector).filter(isCandidateNodeAllowed);
     for (const node of nodes) {
       for (const candidateValue of readNodeCandidateValues(node)) {
-        const resolved = extractStartScore(candidateValue);
+        const resolved = resolveStartScoreFromScopedText(candidateValue);
         if (isFiniteNumber(resolved)) {
           return resolved;
         }
-      }
-    }
-  }
-
-  const fallbackNodes = queryAll(
-    documentRef,
-    "option, button, [role='tab'], [role='button'], .chakra-button, .chakra-badge, .chakra-tag"
-  ).filter(isCandidateNodeAllowed);
-
-  for (const node of fallbackNodes) {
-    for (const candidateValue of readNodeCandidateValues(node)) {
-      const resolved = extractStartScore(candidateValue);
-      if (isFiniteNumber(resolved)) {
-        return resolved;
       }
     }
   }

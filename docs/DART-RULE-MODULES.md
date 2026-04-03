@@ -13,7 +13,7 @@ Diese Übersicht benennt alle Module, die Dart-Regeln implementieren, ableiten o
 | Variantenregeln | `src/domain/variant-rules.js` | Klassifikation von X01-, Cricket- und Tactics-Modi | Varianten |
 | Dart-Regel-Aggregator | `src/domain/dart-rules.js` | Zentrale Re-Exports der Domain-Regeln | Domain-Schnittstelle |
 | Game-State-Store | `src/core/game-state-store.js` | Liest Match-State aus WebSocket-Nachrichten und trennt Variant, Out-Mode und Cricket-Modi | Runtime-State-Bridge |
-| Checkout Score Pulse Logic | `src/features/checkout-score-pulse/logic.js` | Konsumiert X01-Regeln für Checkout-Hervorhebung | UI-Verbraucher |
+| Checkout Score Pulse Logic | `src/features/checkout-score-pulse/logic.js` | Konsumiert X01-Regeln für score- und out-mode-validierte Checkout-Hervorhebung | UI-Verbraucher |
 | TV Board Zoom Logic | `src/features/tv-board-zoom/logic.js` | Konsumiert X01-Regeln für Checkout- und Setup-Ziele | UI-Verbraucher |
 | Checkout Board Targets Logic | `src/features/checkout-board-targets/logic.js` | Rendert Segment- und Bull-Overlays ohne eigene Regelwahrheit | UI-Rendering |
 | Cricket Highlighter Logic | `src/features/cricket-highlighter/logic.js` | Übersetzt DOM-Zustand in Eingaben für `cricket-rules` | UI-Verbraucher |

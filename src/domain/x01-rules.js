@@ -887,6 +887,76 @@ export function parseCheckoutSuggestionState(text, outMode = "double") {
   return isOneDartCheckoutSegmentForOutMode(lastSegment, outMode);
 }
 
+export function parseCheckoutSuggestionStateForScore(
+  text,
+  score,
+  outMode = "double",
+  dartsRemaining = null
+) {
+  const normalized = normalizeCheckoutSuggestionText(text);
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (/NO\s*(OUT|CHECKOUT|SHOT)/.test(normalized)) {
+    return false;
+  }
+
+  if (/BUST/.test(normalized)) {
+    return false;
+  }
+
+  const explicitSegments = parseExplicitCheckoutSegments(normalized);
+  if (!explicitSegments.length) {
+    return null;
+  }
+
+  const numericScore = toNumber(score);
+  if (!Number.isFinite(numericScore) || numericScore <= 0) {
+    return null;
+  }
+
+  if (
+    dartsRemaining !== null &&
+    dartsRemaining !== undefined &&
+    Number.isFinite(Number(dartsRemaining))
+  ) {
+    const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
+    if (normalizedDartsRemaining < 1 || explicitSegments.length > normalizedDartsRemaining) {
+      return null;
+    }
+  }
+
+  let remainingScore = numericScore;
+  for (let index = 0; index < explicitSegments.length; index += 1) {
+    const outcome = evaluateThrowOutcome({
+      scoreBefore: remainingScore,
+      segmentName: explicitSegments[index],
+      outMode,
+    });
+
+    if (outcome.isBust || outcome.reason === "invalid-input") {
+      return null;
+    }
+
+    if (outcome.isFinish) {
+      return index === explicitSegments.length - 1;
+    }
+
+    if (index === explicitSegments.length - 1) {
+      return null;
+    }
+
+    remainingScore = outcome.scoreAfter;
+    if (!Number.isFinite(remainingScore) || remainingScore <= 0) {
+      return null;
+    }
+  }
+
+  return null;
+}
+
 export function canFinishWithSegment(remainingScore, segmentName, outMode) {
   const required = toNumber(remainingScore);
   const parsedSegment = parseSegment(segmentName);

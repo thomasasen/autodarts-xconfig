@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.8] - 2026-04-03
+
+### Fixed
+
+- Nutzerwirkung: X01-Checkout-Hinweise, X01-Score-Progress und Tactics-Zielauswertung bleiben jetzt fachlich enger am dokumentierten Regelwerk; stale Checkout-Suggestions erzwingen keine falschen Highlights mehr, gültige X01-Bases wie `121` und `170` bleiben erhalten, und Tactics behandelt `DOUBLE`/`TRIPLE` nicht länger als offizielle Pflichtziele.
+  Technik: `x01-rules` validiert explizite Checkout-Suggestions jetzt gegen echten Score und Out-Mode, `x01-score-progress` liest Base-Scores nur noch aus streng gebundenen Quellen statt aus freiem Score-/Checkout-Text, und `cricket-rules` sanitisiert die offizielle Tactics-Zielmenge zentral auf `20..10 + BULL`, während `DOUBLE`/`TRIPLE` nur noch als kompatible Host-/DOM-Artefakte toleriert werden; dazu wurden gezielte Domain-, Runtime- und Regeldoku-Regressionen ergänzt.
+
 ## [2.1.7] - 2026-04-03
 
 ### Fixed
@@ -1218,7 +1225,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...HEAD
+[2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...HEAD
+[2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...5d99934
 [2.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/59708e4...4d2f8fd
 [2.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...59708e4
 [2.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/ba5e325...fa4ca1f

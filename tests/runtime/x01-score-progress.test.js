@@ -113,6 +113,101 @@ test("resolveStartScore resolves from variant strip sibling text on match routes
   assert.equal(startScore, 501);
 });
 
+test("resolveStartScore accepts 170 from the snapshot variant when it is the actual X01 base", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "X01";
+
+  const startScore = resolveStartScore(
+    {
+      documentRef,
+      windowRef,
+      gameState: {
+        getSnapshot: () => ({
+          match: {
+            id: "match-170",
+            variant: "X01 170",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.equal(startScore, 170);
+});
+
+test("resolveStartScore accepts 121 from an active base control on match routes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "X01";
+
+  const selectedButton = documentRef.createElement("button");
+  selectedButton.setAttribute("aria-pressed", "true");
+  selectedButton.textContent = "Best of 5 / 121";
+  documentRef.main.appendChild(selectedButton);
+
+  const startScore = resolveStartScore(
+    {
+      documentRef,
+      windowRef,
+      gameState: {
+        getSnapshot: () => ({
+          match: {
+            id: "match-121",
+            variant: "X01",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.equal(startScore, 121);
+});
+
+test("resolveStartScore ignores checkout-like texts even when they contain valid X01 base numbers", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "X01";
+
+  const startBadge = documentRef.createElement("span");
+  startBadge.textContent = "Checkout 170";
+  documentRef.main.insertBefore(startBadge, documentRef.suggestionElement);
+
+  const selectedButton = documentRef.createElement("button");
+  selectedButton.setAttribute("aria-pressed", "true");
+  selectedButton.textContent = "Finish 121";
+  documentRef.main.appendChild(selectedButton);
+
+  const startScore = resolveStartScore(
+    {
+      documentRef,
+      windowRef,
+      gameState: {
+        getSnapshot: () => ({
+          match: {
+            id: "match-checkout-text",
+            variant: "X01",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.equal(startScore, null);
+});
+
 test("syncScoreProgress renders active and inactive bars from the X01 start score", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

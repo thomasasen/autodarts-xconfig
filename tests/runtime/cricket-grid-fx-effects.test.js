@@ -2570,19 +2570,19 @@ test("cricket grid fx decorates both player columns in merged rows after reload 
   clearCricketGridFxState(state);
 });
 
-test("cricket grid fx uses the same owner-perspective states for tactics objectives", () => {
+test("cricket grid fx uses the same owner-perspective states for official tactics objectives", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Tactics";
 
   const rowsByLabel = createObjectiveGrid(
     documentRef,
-    ["20", "19", "DOUBLE", "TRIPLE", "BULL"],
+    ["20", "19", "14", "10", "BULL"],
     {
       "20": [3, 0],
       "19": [0, 3],
-      DOUBLE: [3, 0],
-      TRIPLE: [0, 3],
+      "14": [3, 0],
+      "10": [0, 3],
       BULL: [3, 3],
     }
   );
@@ -2634,13 +2634,13 @@ test("cricket grid fx uses the same owner-perspective states for tactics objecti
     turnToken: "fallback:0:0",
   });
 
-  const rowDouble = rowsByLabel.get("DOUBLE");
-  const rowTriple = rowsByLabel.get("TRIPLE");
+  const row14 = rowsByLabel.get("14");
+  const row10 = rowsByLabel.get("10");
   const rowBull = rowsByLabel.get("BULL");
-  assert.equal(rowDouble?.playerCells?.[0]?.classList?.contains(SCORE_CLASS), true);
-  assert.equal(rowDouble?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS), true);
-  assert.equal(rowTriple?.playerCells?.[0]?.classList?.contains(PRESSURE_CLASS), true);
-  assert.equal(rowTriple?.playerCells?.[1]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(row14?.playerCells?.[0]?.classList?.contains(SCORE_CLASS), true);
+  assert.equal(row14?.playerCells?.[1]?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(row10?.playerCells?.[0]?.classList?.contains(PRESSURE_CLASS), true);
+  assert.equal(row10?.playerCells?.[1]?.classList?.contains(SCORE_CLASS), true);
   assert.equal(rowBull?.playerCells?.[0]?.classList?.contains(DEAD_CLASS), true);
   assert.equal(rowBull?.playerCells?.[1]?.classList?.contains(DEAD_CLASS), true);
 
@@ -2652,7 +2652,7 @@ test("cricket grid fx keeps every cricket+tactics objective in scoring/pressure 
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Tactics";
 
-  const labels = ["20", "19", "18", "17", "16", "15", "DOUBLE", "TRIPLE", "BULL"];
+  const labels = ["20", "19", "18", "17", "16", "15", "14", "10", "BULL"];
   const marksByLabel = labels.reduce((acc, label) => {
     acc[label] = [0, 0];
     return acc;
@@ -2738,7 +2738,7 @@ test("cricket grid fx keeps all objectives and all 3 player columns stable under
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Tactics";
 
-  const labels = ["20", "19", "18", "17", "16", "15", "DOUBLE", "TRIPLE", "BULL"];
+  const labels = ["20", "19", "18", "17", "16", "15", "14", "10", "BULL"];
   const marksByLabel = labels.reduce((acc, label) => {
     acc[label] = [0, 0, 0];
     return acc;
@@ -2858,7 +2858,7 @@ test("cricket grid fx keeps 3-player owner colors stable across active-player sw
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Tactics";
 
-  const labels = ["20", "19", "18", "17", "16", "15", "DOUBLE", "TRIPLE", "BULL"];
+  const labels = ["20", "19", "18", "17", "16", "15", "14", "10", "BULL"];
   const marksByLabel = {
     "20": [3, 1, 3],
     "19": [1, 3, 0],
@@ -2866,8 +2866,8 @@ test("cricket grid fx keeps 3-player owner colors stable across active-player sw
     "17": [3, 3, 0],
     "16": [3, 3, 3],
     "15": [0, 0, 0],
-    DOUBLE: [0, 3, 2],
-    TRIPLE: [3, 0, 0],
+    "14": [0, 3, 2],
+    "10": [3, 0, 0],
     BULL: [1, 1, 1],
   };
 
