@@ -2,10 +2,12 @@
 import path from "node:path";
 import { xconfigDescriptors } from "../src/features/xconfig-ui/descriptors.js";
 import {
+  buildRecommendedDefaultsSection,
   buildXConfigOverviewSection,
   buildFeaturesDocSection,
   buildReadmeFeatureSection,
 } from "../src/features/xconfig-ui/copy.js";
+import { createRecommendedFeatureConfig } from "../src/config/feature-config-spec.js";
 import { defaultFeatureDefinitions } from "../src/features/feature-registry.js";
 
 const repoRoot = process.cwd();
@@ -15,6 +17,11 @@ const featuresDocPath = path.resolve(repoRoot, "docs", "FEATURES.md");
 const definitionByFeatureKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );
+
+function resolveRecommendedConfig(featureKey) {
+  const definition = definitionByFeatureKey.get(String(featureKey || "").trim());
+  return definition?.configKey ? createRecommendedFeatureConfig(definition.configKey) : null;
+}
 
 const orderedEntries = xconfigDescriptors
   .map((descriptor) => ({
@@ -61,6 +68,12 @@ function buildReadmeFeatureDocs() {
 
   return [
     buildQuickNavigation().trim(),
+    "",
+    buildRecommendedDefaultsSection(
+      "Empfohlene Standards",
+      xconfigDescriptors,
+      resolveRecommendedConfig
+    ).trim(),
     "",
     "## Themen",
     "",
@@ -112,6 +125,12 @@ function buildFeaturesDocSections() {
 
   return [
     introSection.trim(),
+    "",
+    buildRecommendedDefaultsSection(
+      "Empfohlene Standards",
+      xconfigDescriptors,
+      resolveRecommendedConfig
+    ).trim(),
     "",
     buildFeaturesDocGroup("Themes", themeEntries).trim(),
     "",

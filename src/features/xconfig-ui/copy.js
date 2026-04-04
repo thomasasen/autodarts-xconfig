@@ -2257,6 +2257,358 @@ export function buildXConfigOverviewSection(title, summary = {}) {
   return `${lines.join("\n")}\n`;
 }
 
+const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
+  {
+    title: "Themen",
+    sections: [
+      {
+        title: "In allen Themen",
+        fields: [
+          {
+            label: "Alle aktiviert",
+            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            key: "enabled",
+          },
+          {
+            label: "Kontrast-Preset",
+            featureKey: "theme-bull-off",
+            key: "contrastPreset",
+          },
+          {
+            label: "Hintergrund-Darstellung",
+            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            key: "backgroundDisplayMode",
+          },
+          {
+            label: "Hintergrundbild-Deckkraft",
+            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            key: "backgroundOpacity",
+          },
+          {
+            label: "Spielerfelder-Transparenz",
+            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            key: "playerFieldTransparency",
+          },
+          {
+            label: "Debug",
+            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            key: "debug",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Animationen",
+    sections: [
+      {
+        title: "In allen Animationen",
+        fields: [
+          {
+            label: "Alle aktiviert",
+            featureKeys: [
+              "turn-start-sweep",
+              "turn-points-count",
+              "average-trend-arrow",
+              "triple-double-bull-hits",
+              "dart-marker-darts",
+              "dart-marker-emphasis",
+              "remove-darts-notification",
+              "single-bull-sound",
+              "winner-fireworks",
+              "style-checkout-suggestions",
+              "checkout-score-pulse",
+              "x01-score-progress",
+              "checkout-board-targets",
+              "tv-board-zoom",
+              "cricket-highlighter",
+              "cricket-grid-fx",
+            ],
+            key: "enabled",
+          },
+          {
+            label: "Debug",
+            featureKeys: [
+              "turn-start-sweep",
+              "turn-points-count",
+              "average-trend-arrow",
+              "triple-double-bull-hits",
+              "dart-marker-darts",
+              "dart-marker-emphasis",
+              "remove-darts-notification",
+              "single-bull-sound",
+              "winner-fireworks",
+              "style-checkout-suggestions",
+              "checkout-score-pulse",
+              "x01-score-progress",
+              "checkout-board-targets",
+              "tv-board-zoom",
+              "cricket-highlighter",
+              "cricket-grid-fx",
+            ],
+            key: "debug",
+          },
+        ],
+      },
+      {
+        title: "Turn Start Sweep",
+        featureKey: "turn-start-sweep",
+        fields: [
+          { label: "Sweep-Geschwindigkeit", key: "durationMs" },
+          { label: "Sweep-Stil", key: "sweepStyle" },
+        ],
+      },
+      {
+        title: "Turn Points Count",
+        featureKey: "turn-points-count",
+        fields: [
+          { label: "Animationsdauer", key: "durationMs" },
+          { label: "Aufblitz-Effekt", key: "flashOnChange" },
+          { label: "Aufblitz-Modus", key: "flashMode" },
+        ],
+      },
+      {
+        title: "Average Trend Arrow",
+        featureKey: "average-trend-arrow",
+        fields: [
+          { label: "Animationsdauer", key: "durationMs" },
+          { label: "Pfeil-Größe", key: "size" },
+        ],
+      },
+      {
+        title: "Triple/Double/Bull Hits",
+        featureKey: "triple-double-bull-hits",
+        fields: [
+          { label: "Farbstil", key: "colorTheme" },
+          { label: "Animationsstil", key: "animationStyle" },
+        ],
+      },
+      {
+        title: "Dart Marker Darts",
+        featureKey: "dart-marker-darts",
+        fields: [
+          { label: "Dart Design", key: "design" },
+          { label: "Dart-Fluganimation", key: "animateDarts" },
+          { label: "Dart-Größe", key: "sizePercent" },
+          { label: "Original-Marker ausblenden", key: "hideOriginalMarkers" },
+          { label: "Einschlag-Schatten", key: "enableShadow" },
+          { label: "Einschlag-Wobble", key: "enableWobble" },
+          { label: "Fluggeschwindigkeit", key: "flightSpeed" },
+        ],
+      },
+      {
+        title: "Dart Marker Emphasis",
+        featureKey: "dart-marker-emphasis",
+        fields: [
+          { label: "Marker-Größe", key: "size" },
+          { label: "Marker-Farbe", key: "color" },
+          { label: "Effekt", key: "effect" },
+          { label: "Marker-Sichtbarkeit", key: "opacityPercent" },
+          { label: "Outline-Farbe", key: "outline" },
+        ],
+      },
+      {
+        title: "Remove Darts Notification",
+        featureKey: "remove-darts-notification",
+        fields: [
+          { label: "Bildgröße", key: "imageSize" },
+          { label: "Pulse-Animation", key: "pulseAnimation" },
+          { label: "Pulse-Stärke", key: "pulseScale" },
+        ],
+      },
+      {
+        title: "Single Bull Sound",
+        featureKey: "single-bull-sound",
+        fields: [
+          { label: "Lautstärke", key: "volume" },
+          { label: "Wiederholsperre", key: "cooldownMs" },
+          { label: "Fallback-Scan", key: "pollIntervalMs" },
+        ],
+      },
+      {
+        title: "Winner Fireworks",
+        featureKey: "winner-fireworks",
+        fields: [
+          { label: "Style", key: "style" },
+          { label: "Farbe", key: "colorTheme" },
+          { label: "Intensität", key: "intensity" },
+          { label: "Bei Bull-Out aktiv", key: "includeBullOut" },
+          { label: "Klick beendet Effekt", key: "pointerDismiss" },
+        ],
+      },
+      {
+        title: "Style Checkout Suggestions",
+        featureKey: "style-checkout-suggestions",
+        fields: [
+          { label: "Stil", key: "style" },
+          { label: "Labeltext", key: "labelText" },
+          { label: "Farbthema", key: "colorTheme" },
+        ],
+      },
+      {
+        title: "Checkout Score Pulse",
+        featureKey: "checkout-score-pulse",
+        fields: [
+          { label: "Effekt", key: "effect" },
+          { label: "Farbthema", key: "colorTheme" },
+          { label: "Intensität", key: "intensity" },
+          { label: "Trigger-Quelle", key: "triggerSource" },
+        ],
+      },
+      {
+        title: "X01 Score Progress",
+        featureKey: "x01-score-progress",
+        fields: [
+          { label: "Farben", key: "colorTheme" },
+          { label: "Balkengröße", key: "barSize" },
+          { label: "Effekt", key: "effect" },
+        ],
+      },
+      {
+        title: "Checkout Board Targets",
+        featureKey: "checkout-board-targets",
+        fields: [
+          { label: "Darstellung", key: "visualPreset" },
+          { label: "Segmentstil", key: "segmentStyle" },
+          { label: "Zielauswahl", key: "targetSelectionMode" },
+          { label: "Farbthema", key: "colorTheme" },
+        ],
+      },
+      {
+        title: "TV Board Zoom",
+        featureKey: "tv-board-zoom",
+        fields: [
+          { label: "Zoom-Stufe", key: "zoomLevel" },
+          { label: "Zoom-Geschwindigkeit", key: "zoomSpeed" },
+          { label: "Checkout-Zoom", key: "checkoutZoomEnabled" },
+          { label: "Checkout-Ziel", key: "checkoutZoomTarget" },
+          { label: "T20-Setup-Zoom", key: "t20SetupZoomEnabled" },
+        ],
+      },
+      {
+        title: "Cricket Highlighter",
+        featureKey: "cricket-highlighter",
+        fields: [
+          { label: "OPEN-Ziele anzeigen", key: "showOpenObjectives" },
+          { label: "DEAD-Ziele anzeigen", key: "showDeadObjectives" },
+          { label: "Irrelevante Felder abdunkeln", key: "irrelevantBoardDimStyle" },
+          { label: "Farbthema", key: "colorTheme" },
+          { label: "Intensität", key: "intensity" },
+        ],
+      },
+      {
+        title: "Cricket Grid FX",
+        featureKey: "cricket-grid-fx",
+        fields: [
+          { label: "Zeilen-Sweep", key: "rowWave" },
+          { label: "Ziel-Badge-Hinweis", key: "badgeBeacon" },
+          { label: "Mark-Fortschritt", key: "markProgress" },
+          { label: "PRESSURE-Kante", key: "pressureEdge" },
+          { label: "SCORING-Streifen", key: "scoringStripe" },
+          { label: "DEAD-Zeilen abdunkeln", key: "deadRowMuted" },
+          { label: "Delta-Chips", key: "deltaChips" },
+          { label: "Treffer-Impuls", key: "hitSpark" },
+          { label: "Zugwechsel-Übergang", key: "roundTransitionWipe" },
+          { label: "PRESSURE-Overlay", key: "pressureOverlay" },
+          { label: "Farbthema", key: "colorTheme" },
+          { label: "Intensität", key: "intensity" },
+        ],
+      },
+    ],
+  },
+]);
+
+function getRecommendedDescriptorField(descriptorsByFeatureKey, featureKey, fieldKey) {
+  const descriptor = descriptorsByFeatureKey.get(String(featureKey || "").trim());
+  if (!descriptor) {
+    return null;
+  }
+
+  return (descriptor.fields || []).find((field) => String(field.key || "").trim() === String(fieldKey || "").trim()) || null;
+}
+
+function resolveRecommendedValueLabel(descriptorsByFeatureKey, featureKey, fieldKey, resolveFeatureConfig) {
+  const recommendedConfig = typeof resolveFeatureConfig === "function" ? resolveFeatureConfig(featureKey) : null;
+  const fieldValue = recommendedConfig?.[fieldKey];
+  if (typeof fieldValue === "boolean") {
+    return fieldValue ? "An" : "Aus";
+  }
+
+  const descriptorField = getRecommendedDescriptorField(descriptorsByFeatureKey, featureKey, fieldKey);
+  if (descriptorField?.control === "select" && Array.isArray(descriptorField.options)) {
+    const selectedOption = descriptorField.options.find(
+      (option) => String(option?.value ?? "") === String(fieldValue ?? "")
+    );
+    if (selectedOption?.label) {
+      return selectedOption.label;
+    }
+  }
+
+  return String(fieldValue ?? "").trim();
+}
+
+function resolveRecommendedFieldLabel(
+  descriptorsByFeatureKey,
+  fieldDefinition = {},
+  resolveFeatureConfig,
+  fallbackFeatureKey = ""
+) {
+  const featureKeys = Array.isArray(fieldDefinition.featureKeys)
+    ? fieldDefinition.featureKeys
+    : [fieldDefinition.featureKey || fallbackFeatureKey].filter(Boolean);
+  const uniqueLabels = Array.from(
+    new Set(
+      featureKeys
+        .map((featureKey) =>
+          resolveRecommendedValueLabel(
+            descriptorsByFeatureKey,
+            featureKey,
+            fieldDefinition.key,
+            resolveFeatureConfig
+          )
+        )
+        .filter(Boolean)
+    )
+  );
+
+  return uniqueLabels.join(" / ");
+}
+
+export function buildRecommendedDefaultsSection(title, descriptors = [], resolveFeatureConfig = null) {
+  const sectionTitle = String(title || "Empfohlene Standards").trim() || "Empfohlene Standards";
+  const descriptorsByFeatureKey = new Map(
+    (Array.isArray(descriptors) ? descriptors : [])
+      .map((descriptor) => [String(descriptor?.featureKey || "").trim(), descriptor])
+      .filter(([featureKey]) => featureKey)
+  );
+  const lines = [
+    `## ${sectionTitle}`,
+    "",
+    "Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:",
+    "",
+  ];
+
+  RECOMMENDED_DEFAULTS_DOC_GROUPS.forEach((group) => {
+    lines.push(`### ${group.title}`, "");
+    group.sections.forEach((section) => {
+      lines.push(`**${section.title}**`);
+      section.fields.forEach((fieldDefinition) => {
+        lines.push(
+          `- \`${fieldDefinition.label}\`: ${resolveRecommendedFieldLabel(
+            descriptorsByFeatureKey,
+            fieldDefinition,
+            resolveFeatureConfig,
+            section.featureKey
+          )}`
+        );
+      });
+      lines.push("");
+    });
+  });
+
+  return `${lines.join("\n").trim()}\n`;
+}
+
 export function formatVariantLabel(variants = []) {
   if (!Array.isArray(variants) || !variants.length) {
     return "`alle Modi`";

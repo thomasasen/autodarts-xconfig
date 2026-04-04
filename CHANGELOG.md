@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.15] - 2026-04-04
+
+### Changed
+
+- Nutzerwirkung: `Empfohlene Standards` setzt jetzt repoweit das neue empfohlene Gesamtprofil mit aktivierten Themes und Animationen, klar definierten Modul-Defaults wie `Stripe`, `Electric Arc`, `Signal`, `Fireworks` und dem breiteren, statischen `X01 Score Progress`; dieselbe Profilbelegung ist außerdem in README und `FEATURES.md` jetzt direkt nachvollziehbar dokumentiert.
+  Technik: Die empfohlenen Runtime-Defaults in `feature-config-spec` wurden auf das neue Preset umgestellt, die Doku erhält die Profilübersicht jetzt aus einer gemeinsamen abgeleiteten Quelle in `xconfig-ui/copy`, der Doc-Sync schreibt diese Sektion nach README und `docs/FEATURES.md`, und die betroffenen Runtime-, Shell- und Doku-Regressionen wurden auf die neue Preset-Belegung aktualisiert.
+
 ## [2.1.14] - 2026-04-04
 
 ### Fixed
@@ -1257,7 +1264,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...HEAD
+[2.1.15]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...HEAD
+[2.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...2a4d191
 [2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...ba09193
 [2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...1b33189
 [2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...35bc075

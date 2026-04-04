@@ -17,6 +17,126 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 ![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)
 
+## Empfohlene Standards
+
+Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
+
+### Themen
+
+**In allen Themen**
+- `Alle aktiviert`: An
+- `Kontrast-Preset`: Standard
+- `Hintergrund-Darstellung`: Füllen
+- `Hintergrundbild-Deckkraft`: 25 %
+- `Spielerfelder-Transparenz`: 10 %
+- `Debug`: Aus
+
+### Animationen
+
+**In allen Animationen**
+- `Alle aktiviert`: An
+- `Debug`: Aus
+
+**Turn Start Sweep**
+- `Sweep-Geschwindigkeit`: Standard
+- `Sweep-Stil`: Standard
+
+**Turn Points Count**
+- `Animationsdauer`: Standard
+- `Aufblitz-Effekt`: Aus
+- `Aufblitz-Modus`: Nur bei Änderung
+
+**Average Trend Arrow**
+- `Animationsdauer`: Standard
+- `Pfeil-Größe`: Standard
+
+**Triple/Double/Bull Hits**
+- `Farbstil`: Rot/Blau/Grün
+- `Animationsstil`: Electric Arc
+
+**Dart Marker Darts**
+- `Dart Design`: Autodarts
+- `Dart-Fluganimation`: An
+- `Dart-Größe`: Standard
+- `Original-Marker ausblenden`: An
+- `Einschlag-Schatten`: An
+- `Einschlag-Wobble`: An
+- `Fluggeschwindigkeit`: Standard
+
+**Dart Marker Emphasis**
+- `Marker-Größe`: Standard
+- `Marker-Farbe`: Blau
+- `Effekt`: Pulse
+- `Marker-Sichtbarkeit`: 100 %
+- `Outline-Farbe`: Weiß
+
+**Remove Darts Notification**
+- `Bildgröße`: Groß
+- `Pulse-Animation`: An
+- `Pulse-Stärke`: Standard
+
+**Single Bull Sound**
+- `Lautstärke`: Standard
+- `Wiederholsperre`: 700 ms
+- `Fallback-Scan`: Nur live
+
+**Winner Fireworks**
+- `Style`: Fireworks
+- `Farbe`: Autodarts
+- `Intensität`: Standard
+- `Bei Bull-Out aktiv`: An
+- `Klick beendet Effekt`: An
+
+**Style Checkout Suggestions**
+- `Stil`: Stripe
+- `Labeltext`: CHECKOUT
+- `Farbthema`: Amber
+
+**Checkout Score Pulse**
+- `Effekt`: Scale
+- `Farbthema`: Autodarts Grün
+- `Intensität`: Standard
+- `Trigger-Quelle`: Vorschlag zuerst
+
+**X01 Score Progress**
+- `Farben`: Checkout Focus
+- `Balkengröße`: Breit
+- `Effekt`: Aus
+
+**Checkout Board Targets**
+- `Darstellung`: Signal
+- `Segmentstil`: Nur Fläche
+- `Zielauswahl`: Nächstes Feld
+- `Farbthema`: Cyan
+
+**TV Board Zoom**
+- `Zoom-Stufe`: 2,75
+- `Zoom-Geschwindigkeit`: Mittel
+- `Checkout-Zoom`: An
+- `Checkout-Ziel`: Nur Finish-Feld
+- `T20-Setup-Zoom`: An
+
+**Cricket Highlighter**
+- `OPEN-Ziele anzeigen`: Aus
+- `DEAD-Ziele anzeigen`: An
+- `Irrelevante Felder abdunkeln`: Hatch+
+- `Farbthema`: Standard
+- `Intensität`: Standard
+
+**Cricket Grid FX**
+- `Zeilen-Sweep`: An
+- `Ziel-Badge-Hinweis`: An
+- `Mark-Fortschritt`: An
+- `PRESSURE-Kante`: An
+- `SCORING-Streifen`: An
+- `DEAD-Zeilen abdunkeln`: An
+- `Delta-Chips`: An
+- `Treffer-Impuls`: An
+- `Zugwechsel-Übergang`: An
+- `PRESSURE-Overlay`: An
+- `Farbthema`: Standard
+- `Intensität`: Standard
+
 ## Themes
 
 ### Theme Bull-off

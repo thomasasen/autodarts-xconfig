@@ -220,21 +220,21 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
 
 const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutScorePulse: { effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first" },
-  checkoutBoardTargets: { visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber" },
+  checkoutBoardTargets: { visualPreset: "signal", segmentStyle: "surface-only", singleRing: "both", targetSelectionMode: "next", colorTheme: "cyan" },
   tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
-  styleCheckoutSuggestions: { style: "outline", labelText: "CHECKOUT", colorTheme: "amber" },
+  styleCheckoutSuggestions: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
   averageTrendArrow: { durationMs: 320, size: "standard" },
-  turnStartSweep: { durationMs: 420, sweepStyle: "subtle" },
-  tripleDoubleBullHits: { colorTheme: "kind-signal", animationStyle: "impact-pop" },
-  cricketHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal" },
-  cricketGridFx: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: false, colorTheme: "standard", intensity: "subtle" },
-  dartMarkerEmphasis: { size: 6, color: "rgb(49, 130, 206)", effect: "glow", opacityPercent: 85, outline: "aus" },
-  dartMarkerDarts: { design: "autodarts", animateDarts: true, sizePercent: 100, hideOriginalMarkers: true, enableShadow: true, enableWobble: false, flightSpeed: "standard" },
-  removeDartsNotification: { imageSize: "standard", pulseAnimation: true, pulseScale: 1.04 },
-  singleBullSound: { volume: 0.75, cooldownMs: 700, pollIntervalMs: 0 },
-  turnPointsCount: { durationMs: 416, flashOnChange: true, flashMode: "on-change" },
-  winnerFireworks: { style: "realistic", colorTheme: "autodarts", intensity: "dezent", includeBullOut: true, pointerDismiss: true },
-  x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core" },
+  turnStartSweep: { durationMs: 420, sweepStyle: "standard" },
+  tripleDoubleBullHits: { colorTheme: "kind-signal", animationStyle: "electric-arc" },
+  cricketHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
+  cricketGridFx: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal" },
+  dartMarkerEmphasis: { size: 6, color: "rgb(49, 130, 206)", effect: "pulse", opacityPercent: 100, outline: "weiss" },
+  dartMarkerDarts: { design: "autodarts", animateDarts: true, sizePercent: 100, hideOriginalMarkers: true, enableShadow: true, enableWobble: true, flightSpeed: "standard" },
+  removeDartsNotification: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
+  singleBullSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
+  turnPointsCount: { durationMs: 416, flashOnChange: false, flashMode: "on-change" },
+  winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true },
+  x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.bermuda": { backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -564,7 +564,7 @@ export const featureConfigSpecs = Object.freeze(
           normalizedKey,
           Object.freeze({
             createDefaultConfig() {
-              return deepClone(DEFAULT_FEATURE_CONFIGS[normalizedKey] || {});
+              return createDefaultFeatureConfig(normalizedKey);
             },
             createRecommendedConfig() {
               return deepClone(RECOMMENDED_FEATURE_CONFIGS[normalizedKey] || {});
@@ -597,6 +597,27 @@ export function getThemeConfigKeys() {
     .filter((entry) => entry.configKey.startsWith("themes."))
     .map((entry) => splitFeaturePath(entry.configKey)[1])
     .filter(Boolean);
+}
+
+export function createDefaultFeatureConfig(configKey) {
+  const normalizedKey = String(configKey || "").trim();
+  return deepClone(DEFAULT_FEATURE_CONFIGS[normalizedKey] || {});
+}
+
+export function createRecommendedFeatureConfig(configKey) {
+  const normalizedKey = String(configKey || "").trim();
+  const defaultConfig = createDefaultFeatureConfig(normalizedKey);
+  if (!normalizedKey) {
+    return defaultConfig;
+  }
+
+  const recommendedConfig = {
+    ...defaultConfig,
+    enabled: true,
+    ...(Object.prototype.hasOwnProperty.call(defaultConfig, "debug") ? { debug: false } : {}),
+    ...deepClone(RECOMMENDED_FEATURE_CONFIGS[normalizedKey] || {}),
+  };
+  return recommendedConfig;
 }
 
 export function createDefaultConfigFromFeatureSpecs() {

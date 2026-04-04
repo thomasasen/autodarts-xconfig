@@ -285,15 +285,26 @@ test("runtime applyRecommendedDefaults enables all features and preserves theme 
 
   assert.equal(snapshot.features["checkout-score-pulse"].enabled, true);
   assert.equal(storedConfig.features.checkoutScorePulse.enabled, true);
-  assert.equal(storedConfig.features.checkoutBoardTargets.colorTheme, "amber");
-  assert.equal(storedConfig.features.styleCheckoutSuggestions.style, "outline");
+  assert.equal(storedConfig.features.checkoutBoardTargets.visualPreset, "signal");
+  assert.equal(storedConfig.features.checkoutBoardTargets.colorTheme, "cyan");
+  assert.equal(storedConfig.features.styleCheckoutSuggestions.style, "stripe");
   assert.equal(storedConfig.features.turnStartSweep.durationMs, 420);
-  assert.equal(storedConfig.features.tripleDoubleBullHits.animationStyle, "impact-pop");
-  assert.equal(storedConfig.features.cricketGridFx.intensity, "subtle");
-  assert.equal(storedConfig.features.cricketGridFx.pressureOverlay, false);
+  assert.equal(storedConfig.features.turnStartSweep.sweepStyle, "standard");
+  assert.equal(storedConfig.features.tripleDoubleBullHits.animationStyle, "electric-arc");
+  assert.equal(storedConfig.features.cricketHighlighter.irrelevantBoardDimStyle, "hatch");
+  assert.equal(storedConfig.features.cricketGridFx.intensity, "normal");
+  assert.equal(storedConfig.features.cricketGridFx.pressureOverlay, true);
+  assert.equal(storedConfig.features.dartMarkerEmphasis.effect, "pulse");
+  assert.equal(storedConfig.features.dartMarkerEmphasis.opacityPercent, 100);
   assert.equal(storedConfig.features.dartMarkerDarts.hideOriginalMarkers, true);
-  assert.equal(storedConfig.features.singleBullSound.volume, 0.75);
-  assert.equal(storedConfig.features.winnerFireworks.intensity, "dezent");
+  assert.equal(storedConfig.features.dartMarkerDarts.enableWobble, true);
+  assert.equal(storedConfig.features.removeDartsNotification.imageSize, "large");
+  assert.equal(storedConfig.features.singleBullSound.volume, 0.9);
+  assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
+  assert.equal(storedConfig.features.winnerFireworks.style, "fireworks");
+  assert.equal(storedConfig.features.winnerFireworks.intensity, "standard");
+  assert.equal(storedConfig.features.x01ScoreProgress.barSize, "breit");
+  assert.equal(storedConfig.features.x01ScoreProgress.effect, "off");
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
   assert.equal(
     storedConfig.features.themes.cricket.backgroundImageDataUrl,

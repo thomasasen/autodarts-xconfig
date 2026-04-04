@@ -1362,16 +1362,24 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
 
       return (
         allEnabled &&
-        config.features.checkoutBoardTargets.colorTheme === "amber" &&
-        config.features.styleCheckoutSuggestions.style === "outline" &&
+        config.features.checkoutBoardTargets.visualPreset === "signal" &&
+        config.features.checkoutBoardTargets.colorTheme === "cyan" &&
+        config.features.styleCheckoutSuggestions.style === "stripe" &&
         config.features.styleCheckoutSuggestions.labelText === "CHECKOUT" &&
-        config.features.turnStartSweep.sweepStyle === "subtle" &&
-        config.features.tripleDoubleBullHits.animationStyle === "impact-pop" &&
-        config.features.cricketGridFx.intensity === "subtle" &&
-        config.features.cricketGridFx.pressureOverlay === false &&
+        config.features.turnStartSweep.sweepStyle === "standard" &&
+        config.features.tripleDoubleBullHits.animationStyle === "electric-arc" &&
+        config.features.cricketHighlighter.irrelevantBoardDimStyle === "hatch" &&
+        config.features.cricketGridFx.intensity === "normal" &&
+        config.features.cricketGridFx.pressureOverlay === true &&
+        config.features.dartMarkerEmphasis.effect === "pulse" &&
         config.features.dartMarkerDarts.hideOriginalMarkers === true &&
-        config.features.singleBullSound.volume === 0.75 &&
-        config.features.winnerFireworks.intensity === "dezent" &&
+        config.features.dartMarkerDarts.enableWobble === true &&
+        config.features.removeDartsNotification.imageSize === "large" &&
+        config.features.singleBullSound.volume === 0.9 &&
+        config.features.winnerFireworks.style === "fireworks" &&
+        config.features.winnerFireworks.intensity === "standard" &&
+        config.features.x01ScoreProgress.barSize === "breit" &&
+        config.features.x01ScoreProgress.effect === "off" &&
         config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
       );
     }, { timeoutMs: 2000, intervalMs: 8 });

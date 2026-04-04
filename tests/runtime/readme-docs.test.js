@@ -6,10 +6,12 @@ import crypto from "node:crypto";
 import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import {
+  buildRecommendedDefaultsSection,
   buildXConfigOverviewSection,
   buildFeaturesDocSection,
   buildReadmeFeatureSection,
 } from "../../src/features/xconfig-ui/copy.js";
+import { createRecommendedFeatureConfig } from "../../src/config/feature-config-spec.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 
 const readmePath = path.resolve(process.cwd(), "README.md");
@@ -40,6 +42,10 @@ const mojibakePattern =
 const featureDefinitionByKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );
+function resolveRecommendedConfig(featureKey) {
+  const definition = featureDefinitionByKey.get(String(featureKey || "").trim());
+  return definition?.configKey ? createRecommendedFeatureConfig(definition.configKey) : null;
+}
 const overviewCounts = {
   totalModules: xconfigDescriptors.length,
   animationModules: xconfigDescriptors.filter((descriptor) => descriptor.tab !== "themes").length,
@@ -118,6 +124,19 @@ test("README and FEATURES share the generated xConfig overview copy", () => {
 
   assert.match(readme, new RegExp(escapeRegExp(readmeOverviewCopy)));
   assert.match(featuresDoc, new RegExp(escapeRegExp(featuresOverviewCopy)));
+});
+
+test("README and FEATURES share the generated recommended defaults profile", () => {
+  const readme = readText(readmePath);
+  const featuresDoc = readText(featuresDocPath);
+  const recommendedDefaultsCopy = buildRecommendedDefaultsSection(
+    "Empfohlene Standards",
+    xconfigDescriptors,
+    resolveRecommendedConfig
+  ).trim();
+
+  assert.match(readme, new RegExp(escapeRegExp(recommendedDefaultsCopy)));
+  assert.match(featuresDoc, new RegExp(escapeRegExp(recommendedDefaultsCopy)));
 });
 
 test("README and FEATURES keep beginner-facing German text free of mojibake", () => {
