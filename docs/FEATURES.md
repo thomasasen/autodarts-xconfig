@@ -1,3 +1,4 @@
+<!-- xconfig-generated:start -->
 # Feature-Übersicht
 
 `autodarts-xconfig` bündelt `21` Module in einem Userscript:
@@ -757,8 +758,8 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 ![Winner Fireworks](screenshots/animation-winner-fireworks.gif)
 ![xConfig Test-Button](screenshots/xConfig-testbutton.png)
-
-## Hinweise zur Konfiguration
+<!-- xconfig-generated:end -->
+## Weitere Hinweise zur Konfiguration
 
 - Alle Einstellungen werden lokal gespeichert.
 - Theme-Hintergründe werden pro Theme als Data-URL abgelegt.

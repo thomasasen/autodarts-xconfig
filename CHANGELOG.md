@@ -17,7 +17,7 @@ direkt zu einer versionierten Release-Sektion.
 ### Changed
 
 - Nutzerwirkung: `Empfohlene Standards` setzt jetzt repoweit das neue empfohlene Gesamtprofil mit aktivierten Themes und Animationen, klar definierten Modul-Defaults wie `Stripe`, `Electric Arc`, `Signal`, `Fireworks` und dem breiteren, statischen `X01 Score Progress`; dieselbe Profilbelegung ist außerdem in README und `FEATURES.md` jetzt direkt nachvollziehbar dokumentiert.
-  Technik: Die empfohlenen Runtime-Defaults in `feature-config-spec` wurden auf das neue Preset umgestellt, die Doku erhält die Profilübersicht jetzt aus einer gemeinsamen abgeleiteten Quelle in `xconfig-ui/copy`, der Doc-Sync schreibt diese Sektion nach README und `docs/FEATURES.md`, und die betroffenen Runtime-, Shell- und Doku-Regressionen wurden auf die neue Preset-Belegung aktualisiert.
+  Technik: Die empfohlenen Runtime-Defaults in `feature-config-spec` wurden auf das neue Preset umgestellt, die Doku erhält die Profilübersicht jetzt aus einer gemeinsamen abgeleiteten Quelle in `xconfig-ui/copy`, der Doc-Sync schreibt diese Sektion nach README und `docs/FEATURES.md`, der Sync wurde zusätzlich auf stabile Marker statt fragile Heading-Grenzen gehärtet, `package.json` führt dafür jetzt einen offiziellen `sync:xconfig-docs`-Einstieg, und direkte Config-/Runtime-/Doku-Regressionen sichern sowohl die Preset-Belegung als auch die zugehörige Dokumentation ab.
 
 ## [2.1.14] - 2026-04-04
 

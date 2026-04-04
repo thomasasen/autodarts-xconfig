@@ -137,6 +137,7 @@ Je nach Theme kannst du dein Hintergrundbild zusätzlich anpassen:
 
 Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. Im normalen Spielbetrieb sollte sie deaktiviert bleiben.
 
+<!-- xconfig-generated:start -->
 ## Schnellnavigation
 
 ### Themen
@@ -1036,7 +1037,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 ![Winner Fireworks](docs/screenshots/animation-winner-fireworks.gif)
 ![xConfig Test-Button](docs/screenshots/xConfig-testbutton.png)
-
+<!-- xconfig-generated:end -->
 ## Weitere Dokumentation
 
 ### Für Nutzer

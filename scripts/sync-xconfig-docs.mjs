@@ -13,6 +13,8 @@ import { defaultFeatureDefinitions } from "../src/features/feature-registry.js";
 const repoRoot = process.cwd();
 const readmePath = path.resolve(repoRoot, "README.md");
 const featuresDocPath = path.resolve(repoRoot, "docs", "FEATURES.md");
+const GENERATED_SECTION_START_MARKER = "<!-- xconfig-generated:start -->";
+const GENERATED_SECTION_END_MARKER = "<!-- xconfig-generated:end -->";
 
 const definitionByFeatureKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
@@ -143,38 +145,30 @@ function buildFeaturesDocSections() {
   ].join("\n");
 }
 
-function replaceSection(documentText, startHeading, endHeading, replacement) {
-  const startIndex = documentText.indexOf(startHeading);
-  const endIndex = documentText.lastIndexOf(endHeading);
+function replaceMarkedSection(documentText, replacement) {
+  const startIndex = documentText.indexOf(GENERATED_SECTION_START_MARKER);
+  const endIndex = documentText.indexOf(GENERATED_SECTION_END_MARKER);
 
   if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
-    throw new Error(`Unable to replace section between "${startHeading}" and "${endHeading}".`);
+    throw new Error("Unable to replace generated section between sync markers.");
   }
 
-  return `${documentText.slice(0, startIndex)}${replacement}\n${documentText.slice(endIndex)}`;
+  const before = documentText.slice(0, startIndex + GENERATED_SECTION_START_MARKER.length);
+  const after = documentText.slice(endIndex);
+  return `${before}\n${replacement.trim()}\n${after}`;
 }
 
 function syncReadme() {
   const current = readFileSync(readmePath, "utf8");
   const replacement = buildReadmeFeatureDocs();
-  const next = replaceSection(
-    current,
-    "## Schnellnavigation",
-    "## Weitere Dokumentation",
-    replacement
-  );
+  const next = replaceMarkedSection(current, replacement);
   writeFileSync(readmePath, next, "utf8");
 }
 
 function syncFeaturesDoc() {
   const current = readFileSync(featuresDocPath, "utf8");
   const replacement = buildFeaturesDocSections();
-  const next = replaceSection(
-    current,
-    '# Feature-Übersicht',
-    '## Hinweise zur Konfiguration',
-    replacement
-  );
+  const next = replaceMarkedSection(current, replacement);
   writeFileSync(featuresDocPath, next, "utf8");
 }
 
