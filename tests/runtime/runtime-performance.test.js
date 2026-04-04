@@ -276,13 +276,13 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
   const outlinedConfig = resolveBoardTargetVisualConfig({
     visualPreset: "focus",
     segmentStyle: "surface-outline",
-    singleRing: "inner",
+    singleRing: "both",
     colorTheme: "violet",
   });
   const surfaceOnlyConfig = resolveBoardTargetVisualConfig({
     visualPreset: "signal",
     segmentStyle: "surface-only",
-    singleRing: "inner",
+    singleRing: "both",
     colorTheme: "amber",
   });
 
@@ -298,7 +298,7 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
 
   const overlay = group.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
   assert.ok(overlay);
-  assert.equal(overlay.children.length, 2);
+  assert.equal(overlay.children.length, 4);
 
   const firstShapeNode = overlay.children[0];
 
@@ -312,7 +312,7 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
     visualConfig: surfaceOnlyConfig,
   });
 
-  assert.equal(overlay.children.length, 1);
+  assert.equal(overlay.children.length, 2);
   assert.equal(overlay.children[0], firstShapeNode);
   assert.equal(overlay.querySelector(`.${OUTLINE_CLASS}`), null);
   assert.equal(firstShapeNode.classList.contains(EFFECT_CLASSES.signal), true);
@@ -323,7 +323,7 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
   assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
 });
 
-test("checkout-board-targets keeps Single-Ring and Segmentstil combinations distinct for single targets", () => {
+test("checkout-board-targets always uses both single rings while Segmentstil still controls outlines", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -337,14 +337,14 @@ test("checkout-board-targets keeps Single-Ring and Segmentstil combinations dist
     {
       singleRing: "inner",
       segmentStyle: "surface-outline",
-      expectedShapeCount: 1,
-      expectedOutlineCount: 1,
+      expectedShapeCount: 2,
+      expectedOutlineCount: 2,
     },
     {
       singleRing: "outer",
       segmentStyle: "surface-outline",
-      expectedShapeCount: 1,
-      expectedOutlineCount: 1,
+      expectedShapeCount: 2,
+      expectedOutlineCount: 2,
     },
     {
       singleRing: "both",
@@ -406,10 +406,13 @@ test("checkout-board-targets keeps Single-Ring and Segmentstil combinations dist
   assert.ok(outerPaths);
   assert.ok(bothOutlinedPaths);
   assert.ok(bothSurfaceOnlyPaths);
-  assert.notDeepEqual(Array.from(innerPaths), Array.from(outerPaths));
   assert.deepEqual(
-    Array.from(bothOutlinedPaths).sort(),
-    Array.from(new Set([...innerPaths, ...outerPaths])).sort()
+    Array.from(innerPaths).sort(),
+    Array.from(bothOutlinedPaths).sort()
+  );
+  assert.deepEqual(
+    Array.from(outerPaths).sort(),
+    Array.from(bothOutlinedPaths).sort()
   );
   assert.deepEqual(
     Array.from(bothSurfaceOnlyPaths).sort(),

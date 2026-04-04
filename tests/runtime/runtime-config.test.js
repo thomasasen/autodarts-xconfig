@@ -74,7 +74,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.turnPointsCount.flashMode, "on-change");
   assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
   assert.equal(config.features.checkoutBoardTargets.segmentStyle, "surface-outline");
-  assert.equal(config.features.checkoutBoardTargets.singleRing, "inner");
+  assert.equal(config.features.checkoutBoardTargets.singleRing, "both");
   assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
   assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
@@ -291,7 +291,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
 
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "signal");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").segmentStyle, "surface-only");
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "inner");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "both");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").targetSelectionMode, "all");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomSpeed, "schnell");

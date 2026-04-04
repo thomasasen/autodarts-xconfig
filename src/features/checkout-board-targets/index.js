@@ -311,7 +311,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       ? config.getFeatureConfig("checkoutBoardTargets")
       : {
           visualPreset: "focus",
-          singleRing: "inner",
+          singleRing: "both",
           targetSelectionMode: "next",
           colorTheme: "amber",
         };

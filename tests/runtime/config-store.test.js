@@ -253,7 +253,7 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.checkoutScorePulse.debug, true);
   assert.equal(importedConfig.featureToggles.checkoutBoardTargets, true);
   assert.equal(importedConfig.features.checkoutBoardTargets.visualPreset, "signal");
-  assert.equal(importedConfig.features.checkoutBoardTargets.singleRing, "outer");
+  assert.equal(importedConfig.features.checkoutBoardTargets.singleRing, "both");
   assert.equal(importedConfig.features.checkoutBoardTargets.targetSelectionMode, "all");
   assert.equal(importedConfig.features.checkoutBoardTargets.colorTheme, "cyan");
   assert.equal(importedConfig.features.checkoutBoardTargets.debug, true);

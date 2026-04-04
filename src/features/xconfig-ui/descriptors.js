@@ -312,11 +312,6 @@ export const xconfigDescriptors = Object.freeze([
         { value: "surface-outline", label: "Fläche + Rahmen" },
         { value: "surface-only", label: "Nur Fläche" },
       ]),
-      selectField("singleRing", "Single-Ring", [
-        { value: "inner", label: "Innen" },
-        { value: "outer", label: "Außen" },
-        { value: "both", label: "Beide" },
-      ]),
       selectField("targetSelectionMode", "Zielauswahl", [
         { value: "next", label: "Nächstes Feld" },
         { value: "all", label: "Alle Felder" },

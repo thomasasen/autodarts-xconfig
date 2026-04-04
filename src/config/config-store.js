@@ -240,7 +240,7 @@ const LEGACY_IMPORTERS_BY_CONFIG_KEY = Object.freeze({
         readLegacySetting(settings, "VISUAL_PRESET", ""),
         readLegacySetting(settings, "EFFEKT", "pulse")
       ),
-      singleRing: readLegacySetting(settings, "SINGLE_RING", "inner"),
+      singleRing: "both",
       targetSelectionMode: readLegacySetting(settings, "ZIELAUSWAHL", "next"),
       colorTheme: readLegacySetting(settings, "FARBTHEMA", "amber"),
       debug: readLegacySetting(settings, "DEBUG", false),

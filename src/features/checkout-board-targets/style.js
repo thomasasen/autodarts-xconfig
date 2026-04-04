@@ -269,11 +269,7 @@ export function resolveBoardTargetVisualConfig(featureConfig = {}) {
     segmentStyle,
     renderOutline: segmentStyle !== "surface-only",
     renderShapeStroke: segmentStyle !== "surface-only",
-    singleRing: ["inner", "outer", "both"].includes(
-      String(featureConfig.singleRing || "").trim().toLowerCase()
-    )
-      ? String(featureConfig.singleRing || "").trim().toLowerCase()
-      : "inner",
+    singleRing: "both",
     strokeWidthRatio: 0.0056,
     animationMs: presetProfile.animationMs,
     edgePaddingPx: 0.6,

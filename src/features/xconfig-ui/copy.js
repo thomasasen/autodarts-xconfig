@@ -288,7 +288,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.",
     visualDescription:
-      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont.",
+      "Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont. Single-Ziele markieren standardmäßig immer beide Single-Ringe des Segments.",
     usefulWhen:
       "Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.",
     images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
@@ -302,11 +302,6 @@ export const xconfigFeatureCopy = deepFreeze({
         "Legt fest, ob die Ziele als farbige Fläche mit Rahmen oder nur als farbige Fläche erscheinen.",
         "Bestimmt, ob die Checkout-Markierung zusätzlich eine farbige Segmentkontur und die weiße Zielkontur verwendet oder ob nur die farbige Fläche selbst sichtbar bleibt. Farben, Presets, Glow und Bewegungsverhalten laufen in beiden Modi weiter auf der Fläche.",
         "Legt fest, ob die Ziele mit Rahmen oder nur über die farbige Fläche markiert werden."
-      ),
-      singleRing: fieldCopy(
-        "Bestimmt bei Single-Zielen, ob der innere, äußere oder beide Single-Ringe markiert werden.",
-        "Wirkt nur dann, wenn ein Checkout-Segment ein Single-Feld ist. Grafisch kann die Markierung auf den inneren Single-Ring, den äußeren Ring oder beide gelegt werden.",
-        "Bestimmt, welche Single-Ringe bei Single-Zielen markiert werden."
       ),
       targetSelectionMode: fieldCopy(
         "Legt fest, ob das nächste sinnvolle Feld, die ganze Route oder nur das Finish-Feld markiert werden.",
@@ -1158,24 +1153,6 @@ const BOARD_TARGET_SEGMENT_STYLE_OPTION_COPY = deepFreeze({
   ),
 });
 
-
-const BOARD_TARGET_SINGLE_RING_OPTION_COPY = deepFreeze({
-  both: optionCopy(
-    "Markiert bei Single-Zielen inneren und äußeren Single-Ring zugleich.",
-    "Wenn ein Single-Feld Ziel eines Checkouts ist, werden beide Single-Bereiche des Segments hervorgehoben. Das erzeugt die breiteste visuelle Markierung.",
-    "Bei Single-Zielen werden sowohl der innere als auch der äußere Single-Ring des betreffenden Segments markiert. Das ist die flächigste und am leichtesten erkennbare Variante."
-  ),
-  inner: optionCopy(
-    "Markiert nur den inneren Single-Ring.",
-    "Die Hervorhebung sitzt ausschließlich zwischen Triple- und Bull-Bereich. Der äußere Single-Ring bleibt unbelegt.",
-    "Bei Single-Zielen wird nur der innere Single-Ring sichtbar markiert. Dadurch bleibt die Zielmarkierung schmaler und konzentriert sich stärker auf den innenliegenden Bereich des Segments."
-  ),
-  outer: optionCopy(
-    "Markiert nur den äußeren Single-Ring.",
-    "Die Hervorhebung liegt ausschließlich im äußeren Single-Bereich zwischen Double-Ring und Triple-Ring. Der innere Bereich bleibt frei.",
-    "Diese Einstellung zeichnet bei Single-Zielen nur den äußeren Single-Ring nach. Das ist sinnvoll, wenn du die Markierung näher an der Außenzone des Boards sehen möchtest."
-  ),
-});
 
 const BOARD_TARGET_COLOR_OPTION_COPY = deepFreeze({
   violet: optionCopy(
@@ -2158,7 +2135,6 @@ const xconfigFieldOptionCopy = deepFreeze({
   "checkout-board-targets": {
     visualPreset: BOARD_TARGET_VISUAL_PRESET_OPTION_COPY,
     segmentStyle: BOARD_TARGET_SEGMENT_STYLE_OPTION_COPY,
-    singleRing: BOARD_TARGET_SINGLE_RING_OPTION_COPY,
     targetSelectionMode: BOARD_TARGET_SELECTION_MODE_OPTION_COPY,
     colorTheme: BOARD_TARGET_COLOR_OPTION_COPY,
   },

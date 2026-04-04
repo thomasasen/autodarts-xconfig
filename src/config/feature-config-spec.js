@@ -7,7 +7,6 @@ const CHECKOUT_TRIGGER_SOURCES = new Set(["suggestion-first", "score-only", "sug
 const CHECKOUT_COLORS = new Set(["159, 219, 88", "56, 189, 248", "245, 158, 11", "248, 113, 113"]);
 const BOARD_TARGET_VISUAL_PRESETS = new Set(["focus", "signal", "steady"]);
 const BOARD_TARGET_SEGMENT_STYLES = new Set(["surface-outline", "surface-only"]);
-const BOARD_TARGET_SINGLE_RING = new Set(["both", "inner", "outer"]);
 const BOARD_TARGET_SELECTION_MODES = new Set(["next", "all", "finish"]);
 const BOARD_TARGET_THEMES = new Set(["violet", "cyan", "amber"]);
 const TV_ZOOM_LEVELS = new Set([2.35, 2.75, 3.15]);
@@ -197,7 +196,7 @@ function normalizeThemeBaseConfig(rawConfig = {}, defaults = {}) {
 
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutScorePulse: { enabled: true, effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
-  checkoutBoardTargets: { enabled: false, visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "inner", targetSelectionMode: "next", colorTheme: "amber", debug: false },
+  checkoutBoardTargets: { enabled: false, visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
   styleCheckoutSuggestions: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
   averageTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
@@ -221,7 +220,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
 
 const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutScorePulse: { effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first" },
-  checkoutBoardTargets: { visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "inner", targetSelectionMode: "next", colorTheme: "amber" },
+  checkoutBoardTargets: { visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber" },
   tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
   styleCheckoutSuggestions: { style: "outline", labelText: "CHECKOUT", colorTheme: "amber" },
   averageTrendArrow: { durationMs: 320, size: "standard" },
@@ -270,7 +269,7 @@ const LEGACY_IMPORTERS = Object.freeze({
         outlineIntensity: readLegacySetting(settings, "KONTUR_INTENSITAET", "standard"),
       }),
       segmentStyle: "surface-outline",
-      singleRing: readLegacySetting(settings, "SINGLE_RING", "both"),
+      singleRing: "both",
       targetSelectionMode: readLegacySetting(settings, "ZIELAUSWAHL", "next"),
       colorTheme: readLegacySetting(settings, "FARBTHEMA", "violet"),
       debug: readLegacySetting(settings, "DEBUG", false),
@@ -473,7 +472,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, true), effect: normalizeStringChoice(rawConfig.effect, "scale", CHECKOUT_EFFECTS), colorTheme: CHECKOUT_COLORS.has(String(rawConfig.colorTheme || "").trim()) ? String(rawConfig.colorTheme).trim() : "159, 219, 88", intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   checkoutBoardTargets(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: resolveLegacyBoardTargetVisualPreset(rawConfig), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: normalizeStringChoice(rawConfig.singleRing, "inner", BOARD_TARGET_SINGLE_RING), targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: resolveLegacyBoardTargetVisualPreset(rawConfig), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: "both", targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   tvBoardZoom(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
