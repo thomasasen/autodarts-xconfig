@@ -139,19 +139,5 @@ export function buildStyleText() {
     0 0 0 2px rgba(255, 255, 255, 0.25) inset,
     0 12px 24px rgba(0, 0, 0, 0.2);
 }
-
-.${STYLE_CLASSES.outline}::after {
-  content: "";
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 12px;
-  height: 12px;
-  background: var(--ad-ext-accent);
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
-  pointer-events: none;
-  z-index: 2;
-}
 `;
 }

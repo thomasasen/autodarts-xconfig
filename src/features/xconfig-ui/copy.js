@@ -1284,9 +1284,9 @@ const CHECKOUT_SUGGESTION_STYLE_OPTION_COPY = deepFreeze({
     "Diese Variante formt den Suggestion-Block wie ein Ticket mit eigener Labelzone und gestrichelter Trennlinie. Dadurch wirkt die Empfehlung spielerischer und stärker wie ein separates Element."
   ),
   outline: optionCopy(
-    "Zeigt den Vorschlag mit kräftigem Außenrahmen und Akzentpunkt.",
-    "Die Empfehlung wird vor allem über einen starken Outline-Rahmen und einen kleinen Akzentpunkt oben rechts hervorgehoben. Das wirkt am saubersten und technischsten.",
-    "Diese Variante hält die Fläche selbst relativ ruhig und setzt auf eine kräftige äußere Kontur mit zusätzlichem Akzentpunkt. Der Vorschlag wirkt dadurch klar, präzise und eher technisch als verspielt."
+    "Zeigt den Vorschlag mit kräftigem Außenrahmen.",
+    "Die Empfehlung wird vor allem über einen starken Outline-Rahmen hervorgehoben. Das wirkt am saubersten und technischsten.",
+    "Diese Variante hält die Fläche selbst relativ ruhig und setzt auf eine kräftige äußere Kontur. Der Vorschlag wirkt dadurch klar, präzise und eher technisch als verspielt."
   ),
 });
 

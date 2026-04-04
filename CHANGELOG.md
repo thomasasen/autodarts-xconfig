@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.13] - 2026-04-04
+
+### Fixed
+
+- Nutzerwirkung: `style-checkout-suggestions` zeigt im `Outline`-Stil keinen zusätzlichen Punkt oben rechts mehr; die Hervorhebung bleibt sonst unverändert beim klaren Rahmen-Look.
+  Technik: Der `Outline`-Stil rendert im Source-CSS kein zusätzliches kreisförmiges `::after`-Dekoelement mehr, und die betroffenen UI- und Doku-Beschreibungen wurden auf den jetzt reinen Rahmen-Look synchronisiert.
+
 ## [2.1.12] - 2026-04-04
 
 ### Fixed
@@ -1247,7 +1254,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...HEAD
+[2.1.13]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...HEAD
+[2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...ba09193
 [2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...1b33189
 [2.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/5d99934...35bc075
 [2.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/4d2f8fd...5d99934
