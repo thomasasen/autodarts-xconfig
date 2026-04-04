@@ -99,7 +99,7 @@ function installZoomFixture(documentRef) {
   };
 }
 
-function startTvBoardZoom({ documentRef, windowRef, gameState }) {
+function startTvBoardZoom({ documentRef, windowRef, gameState, featureConfig = {}, featureDebug = null }) {
   return initializeTvBoardZoom({
     documentRef,
     windowRef,
@@ -116,9 +116,11 @@ function startTvBoardZoom({ documentRef, windowRef, gameState }) {
           zoomLevel: 2.75,
           zoomSpeed: "schnell",
           checkoutZoomEnabled: true,
+          ...featureConfig,
         };
       },
     },
+    featureDebug,
     helpers: { createRafScheduler },
   });
 }
@@ -164,6 +166,53 @@ test("tv-board-zoom keeps active zoom during a short missing-board gap", async (
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
     assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
     assert.match(String(targetNode.style.transform || ""), /scale\(/);
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom applies a direct finish zoom at runtime for D5 in finish-only mode", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const logs = [];
+  const gameState = createMutableX01GameState({
+    activeScore: 10,
+    throws: [],
+  });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+    featureConfig: {
+      checkoutZoomTarget: "finish-only",
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        logs.push(args);
+      },
+    },
+  });
+
+  try {
+    timers.advance(25);
+
+    const applyEvent = logs.find((entry) => entry[1]?.status === "apply");
+    assert.ok(applyEvent);
+    assert.equal(applyEvent[1]?.reason, "checkout");
+    assert.equal(applyEvent[1]?.segment, "D5");
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+    assert.match(String(targetNode.style.transform || ""), /translate\(.+scale\(/);
   } finally {
     cleanup();
     timers.restoreGlobals();

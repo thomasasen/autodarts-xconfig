@@ -382,6 +382,40 @@ test("tv-board-zoom uses out-mode-aware one-dart checkout targets", () => {
   });
 });
 
+test("tv-board-zoom resolves direct checkout zoom intents for low double finishes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+
+  const expectations = [
+    { activeScore: 10, segment: "D5" },
+    { activeScore: 22, segment: "D11" },
+  ];
+
+  expectations.forEach(({ activeScore, segment }) => {
+    const intent = computeZoomIntent({
+      gameState: createX01GameState({
+        activeScore,
+        outMode: "Double Out",
+        activeThrows: [],
+      }),
+      x01Rules,
+      state: createZoomState(),
+      documentRef,
+      windowRef,
+      featureConfig: {
+        checkoutZoomEnabled: true,
+        checkoutZoomTarget: "finish-only",
+      },
+      nowTs: 1010 + activeScore,
+    });
+
+    assert.deepEqual(intent, {
+      reason: "checkout",
+      segment,
+    });
+  });
+});
+
 test("tv-board-zoom keeps the third-dart T20 guard aligned with bust rules", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -571,6 +605,65 @@ test("tv-board-zoom finish-only mode falls back to the direct checkout when a vi
   });
 });
 
+test("tv-board-zoom finish-only mode does not bypass a valid visible S10,D20 route with BULL at 50", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "S10";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D20";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 50,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 3425,
+  });
+
+  assert.equal(intent, null);
+});
+
+test("tv-board-zoom finish-only mode falls back to BULL at 50 when no authoritative visible route exists", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 50,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 3426,
+  });
+
+  assert.deepEqual(intent, {
+    reason: "checkout",
+    segment: "BULL",
+  });
+});
+
 test("tv-board-zoom finish-only mode prefers the visible DOM score over a stale gameState score", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "121";
@@ -639,6 +732,40 @@ test("tv-board-zoom route-first mode keeps the first visible checkout route fiel
   assert.deepEqual(intent, {
     reason: "route-first",
     segment: "T20",
+  });
+});
+
+test("tv-board-zoom route-first mode keeps the visible setup-first S10,D20 route at score 50", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "S10";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D20";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 50,
+      outMode: "Double Out",
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "route-first",
+    },
+    nowTs: 3460,
+  });
+
+  assert.deepEqual(intent, {
+    reason: "route-first",
+    segment: "S10",
   });
 });
 

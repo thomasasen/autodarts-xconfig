@@ -165,9 +165,35 @@ function mapTargetForDebug(target) {
   };
 }
 
+function isDebugNodeVisible(node, windowRef) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return false;
+  }
+
+  const rect = node.getBoundingClientRect();
+  if (!(rect?.width > 0) || !(rect?.height > 0)) {
+    return false;
+  }
+
+  try {
+    const style = windowRef?.getComputedStyle?.(node);
+    if (!style) {
+      return true;
+    }
+    return !(
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      style.opacity === "0"
+    );
+  } catch (_) {
+    return true;
+  }
+}
+
 function buildDebugPayload(options = {}) {
   const documentRef = options.documentRef;
   const board = options.board || null;
+  const windowRef = options.windowRef || null;
   return {
     status: String(options.status || "unknown"),
     active: options.active === true,
@@ -197,7 +223,18 @@ function buildDebugPayload(options = {}) {
     board: {
       found: Boolean(board?.group && board?.svg && board?.radius),
       radius: Number.isFinite(board?.radius) ? Number(board.radius) : null,
+      svgTag: String(board?.svg?.tagName || "").toUpperCase() || null,
+      svgVisible: isDebugNodeVisible(board?.svg || null, windowRef),
+      svgClassName:
+        typeof board?.svg?.getAttribute === "function"
+          ? String(board.svg.getAttribute("class") || "").trim() || null
+          : null,
       groupTag: String(board?.group?.tagName || "").toUpperCase() || null,
+      groupId:
+        typeof board?.group?.getAttribute === "function"
+          ? String(board.group.getAttribute("id") || "").trim() || null
+          : null,
+      groupVisible: isDebugNodeVisible(board?.group || null, windowRef),
       svgConnected: board?.svg?.isConnected !== false,
       groupConnected: board?.group?.isConnected !== false,
     },
@@ -235,6 +272,10 @@ function buildDebugSignature(payload = {}) {
       : "",
     payload.board?.found ? 1 : 0,
     payload.board?.radius ?? "null",
+    payload.board?.svgTag || "-",
+    payload.board?.groupId || "-",
+    payload.board?.svgVisible ? 1 : 0,
+    payload.board?.groupVisible ? 1 : 0,
     payload.board?.groupTag || "-",
   ].join("::");
 }
@@ -256,7 +297,11 @@ function buildDebugSummary(payload = {}) {
     Array.isArray(payload.targets)
       ? payload.targets.map((target) => `${target.ring}${target.value ?? ""}`).join(",")
       : ""
-  }" boardFound=${payload.board?.found ? "yes" : "no"} boardRadius=${payload.board?.radius ?? "null"} svgCount=${
+  }" boardFound=${payload.board?.found ? "yes" : "no"} boardRadius=${payload.board?.radius ?? "null"} svgVisible=${
+    payload.board?.svgVisible ? "yes" : "no"
+  } groupVisible=${payload.board?.groupVisible ? "yes" : "no"} groupId="${
+    payload.board?.groupId || "-"
+  }" svgCount=${
     Number(payload.svgCount) || 0
   }`;
 }
@@ -522,6 +567,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
         targetSelectionMode,
         selectionSource: "none",
         documentRef,
+        windowRef,
         routeEntries,
         routeSegments,
         selectedSegments: [],
@@ -590,6 +636,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       targetSelectionMode,
       selectionSource: renderSelectionSource,
       documentRef,
+      windowRef,
       routeEntries,
       routeSegments,
       selectedSegments: renderSelectedSegments,

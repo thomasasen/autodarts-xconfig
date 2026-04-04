@@ -15,6 +15,7 @@ import {
   resolveZoomSpeedConfig,
 } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -47,6 +48,84 @@ function resolveZoomLevel(zoomLevel) {
   return 2.75;
 }
 
+function getNodeClassName(node) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return "";
+  }
+  return String(node.getAttribute("class") || "").trim();
+}
+
+function mapRect(rect) {
+  if (!rect) {
+    return null;
+  }
+  return {
+    left: Number.isFinite(rect.left) ? Number(rect.left) : null,
+    top: Number.isFinite(rect.top) ? Number(rect.top) : null,
+    width: Number.isFinite(rect.width) ? Number(rect.width) : null,
+    height: Number.isFinite(rect.height) ? Number(rect.height) : null,
+    right: Number.isFinite(rect.right) ? Number(rect.right) : null,
+    bottom: Number.isFinite(rect.bottom) ? Number(rect.bottom) : null,
+  };
+}
+
+function createDebugState(featureDebug) {
+  return {
+    featureDebug,
+    lastSignature: "",
+  };
+}
+
+function buildDebugSignature(payload = {}) {
+  return [
+    payload.status || "unknown",
+    payload.reason || "",
+    payload.segment || "",
+    payload.targetClassName || "",
+    payload.hostClassName || "",
+    payload.tx ?? "null",
+    payload.ty ?? "null",
+    payload.anchorX ?? "null",
+    payload.anchorY ?? "null",
+    payload.targetRect?.left ?? "null",
+    payload.targetRect?.top ?? "null",
+    payload.viewportRect?.left ?? "null",
+    payload.viewportRect?.top ?? "null",
+  ].join("|");
+}
+
+function buildDebugSummary(payload = {}) {
+  return `status="${payload.status || "unknown"}" reason="${payload.reason || "-"}" segment="${
+    payload.segment || "-"
+  }" target="${payload.targetClassName || "-"}" host="${payload.hostClassName || "-"}" tx="${
+    payload.tx ?? "-"
+  }" ty="${payload.ty ?? "-"}" anchor="${payload.anchorX ?? "-"},${payload.anchorY ?? "-"}"`;
+}
+
+function emitDebugEvent(debugState, level, payload = {}) {
+  if (!debugState?.featureDebug?.enabled) {
+    return;
+  }
+
+  const signature = buildDebugSignature(payload);
+  if (debugState.lastSignature === signature) {
+    return;
+  }
+  debugState.lastSignature = signature;
+
+  const logger =
+    level === "warn" && typeof debugState.featureDebug.warn === "function"
+      ? debugState.featureDebug.warn.bind(debugState.featureDebug)
+      : typeof debugState.featureDebug.log === "function"
+        ? debugState.featureDebug.log.bind(debugState.featureDebug)
+        : null;
+  if (!logger) {
+    return;
+  }
+
+  logger(buildDebugSummary(payload), payload);
+}
+
 export function initializeTvBoardZoom(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -57,6 +136,7 @@ export function initializeTvBoardZoom(context = {}) {
   const x01Rules = context.domain?.x01Rules;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
+  const featureDebug = context.featureDebug || null;
 
   if (!documentRef || !windowRef || !domGuards || !schedulerFactory || !x01Rules) {
     return () => {};
@@ -96,23 +176,29 @@ export function initializeTvBoardZoom(context = {}) {
     transientResetTimerId: 0,
   };
   const boardCache = {
-    svg: null,
+    surface: null,
   };
+  const debugState = createDebugState(featureDebug);
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   function invalidateBoardCache() {
-    boardCache.svg = null;
+    boardCache.surface = null;
   }
 
-  function getBoardSvg() {
-    if (boardCache.svg && boardCache.svg.isConnected !== false) {
-      return boardCache.svg;
+  function getBoardSurface() {
+    const cachedSurface = boardCache.surface;
+    if (
+      cachedSurface?.svg &&
+      cachedSurface.svg.isConnected !== false &&
+      cachedSurface.group?.isConnected !== false
+    ) {
+      return cachedSurface;
     }
 
-    const boardSvg = findBoardSvg(documentRef);
-    boardCache.svg = boardSvg;
-    return boardSvg;
+    const boardSurface = resolveBoardRenderSurface(documentRef);
+    boardCache.surface = boardSurface;
+    return boardSurface;
   }
 
   let scheduler = null;
@@ -157,6 +243,10 @@ export function initializeTvBoardZoom(context = {}) {
     if (forceReset || !hasActiveZoom) {
       clearTransientResetState();
       resetZoom(speedConfig, zoomState);
+      emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
+        status: "reset",
+        reason,
+      });
       return;
     }
 
@@ -175,16 +265,21 @@ export function initializeTvBoardZoom(context = {}) {
 
     clearTransientResetState();
     resetZoom(speedConfig, zoomState);
+    emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
+      status: "reset",
+      reason,
+    });
   }
 
   scheduler = schedulerFactory(() => {
-    const boardSvg = getBoardSvg();
+    const boardSurface = getBoardSurface();
+    const boardSvg = boardSurface?.svg || findBoardSvg(documentRef);
     if (!boardSvg) {
       requestZoomReset("board-missing");
       return;
     }
 
-    const targetNode = resolveZoomTarget(boardSvg);
+    const targetNode = boardSurface?.zoomTarget || resolveZoomTarget(boardSvg);
     if (!targetNode) {
       requestZoomReset("target-missing");
       return;
@@ -205,11 +300,24 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     clearTransientResetState();
-    const hostNode = resolveZoomHost(targetNode);
-    applyZoom(targetNode, hostNode, boardSvg, zoomLevel, speedConfig, intent, zoomState, {
+    const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
+    const zoomData = applyZoom(targetNode, hostNode, boardSvg, zoomLevel, speedConfig, intent, zoomState, {
       x01Rules,
       windowRef,
       documentRef,
+    });
+    emitDebugEvent(debugState, "log", {
+      status: zoomData ? "apply" : "apply-missing-transform",
+      reason: String(intent?.reason || ""),
+      segment: String(intent?.segment || ""),
+      targetClassName: getNodeClassName(targetNode),
+      hostClassName: getNodeClassName(hostNode),
+      tx: Number.isFinite(zoomData?.tx) ? Number(zoomData.tx.toFixed(2)) : null,
+      ty: Number.isFinite(zoomData?.ty) ? Number(zoomData.ty.toFixed(2)) : null,
+      anchorX: Number.isFinite(zoomData?.anchor?.x) ? Number(zoomData.anchor.x.toFixed(4)) : null,
+      anchorY: Number.isFinite(zoomData?.anchor?.y) ? Number(zoomData.anchor.y.toFixed(4)) : null,
+      targetRect: mapRect(zoomData?.targetRect || targetNode.getBoundingClientRect?.()),
+      viewportRect: mapRect(zoomData?.viewportRect || hostNode?.getBoundingClientRect?.()),
     });
   }, { windowRef });
   const isManagedNode = createManagedNodeMatcher({

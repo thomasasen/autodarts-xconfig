@@ -9,7 +9,7 @@ import {
 import {
   clearNodeChildren,
   ensureOverlayGroup,
-  findCheckoutCompatibleBoardSnapshot,
+  resolveBoardRenderSurface,
 } from "../../shared/dartboard-svg.js";
 
 const SEGMENT_ORDER = Object.freeze([
@@ -104,7 +104,7 @@ function createBull(ownerDocument, radius, innerRatio, outerRatio, solid, option
 }
 
 export function findBoard(documentRef) {
-  return findCheckoutCompatibleBoardSnapshot(documentRef);
+  return resolveBoardRenderSurface(documentRef);
 }
 
 export function ensureOverlay(boardGroup) {

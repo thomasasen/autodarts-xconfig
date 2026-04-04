@@ -110,6 +110,13 @@ function applyTransformToLocalPoint(targetNode, transformData, point) {
   };
 }
 
+function applyTransformToScreenPoint(baseRect, transformData, point) {
+  return {
+    x: baseRect.left + transformData.tx + transformData.scale * point.x,
+    y: baseRect.top + transformData.ty + transformData.scale * point.y,
+  };
+}
+
 function resolveEstimatedNumberRingPoint(segmentPoint, boardSvg) {
   const viewBox = segmentPoint?.viewBox || parseViewBox(boardSvg);
   const centerX = viewBox.x + viewBox.width / 2;
@@ -168,6 +175,15 @@ function createZoomFixture() {
     targetNode,
     boardSvg,
   };
+}
+
+function createOffsetMismatchZoomFixture() {
+  const fixture = createZoomFixture();
+  fixture.targetNode.__rect = { left: 920, top: 24, width: 820, height: 1060 };
+  fixture.targetNode.offsetLeft = 860;
+  fixture.targetNode.offsetTop = 10;
+  fixture.boardSvg.__rect = { left: 1040, top: 144, width: 520, height: 520 };
+  return fixture;
 }
 
 function createZoomIsolationFixture(options = {}) {
@@ -474,6 +490,43 @@ test("tv-board-zoom keeps checkout number-ring labels visible for D5 across zoom
       `checkout anchor should keep top guard for D5 at zoom ${zoomLevel}`
     );
   });
+});
+
+test("tv-board-zoom keeps the focused segment aligned when target rect and offset parent metrics diverge", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createOffsetMismatchZoomFixture();
+  const transformData = buildZoomTransform({
+    targetNode,
+    hostNode,
+    boardSvg,
+    zoomLevel: 2.75,
+    intent: {
+      reason: "route-first",
+      segment: "S10",
+    },
+    x01Rules,
+    windowRef,
+    documentRef,
+  });
+
+  assert.ok(transformData);
+  const parsed = parseTransform(transformData.transform);
+  assert.ok(parsed);
+
+  const segmentPoint = resolveSegmentPoint("S10", boardSvg, x01Rules);
+  const localSegmentPoint = projectViewBoxPointToTargetLocal(boardSvg, targetNode, segmentPoint);
+  assert.ok(localSegmentPoint);
+
+  const transformedSegmentPoint = applyTransformToScreenPoint(
+    targetNode.getBoundingClientRect(),
+    parsed,
+    localSegmentPoint
+  );
+  const hostRect = hostNode.getBoundingClientRect();
+  const expectedAnchorX = hostRect.left + hostRect.width * transformData.anchor.x;
+  const expectedAnchorY = hostRect.top + hostRect.height * transformData.anchor.y;
+
+  assert.ok(Math.abs(transformedSegmentPoint.x - expectedAnchorX) <= 1.5);
+  assert.ok(Math.abs(transformedSegmentPoint.y - expectedAnchorY) <= 1.5);
 });
 
 test("tv-board-zoom applies host clipping and restores it on immediate cleanup", () => {

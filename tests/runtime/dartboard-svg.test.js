@@ -197,7 +197,7 @@ test("findBoardSvgGroup prefers visible board groups within the same svg over hi
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
 });
 
-test("findCheckoutCompatibleBoardSnapshot preserves the legacy hidden larger group when canonical selects the visible board group", () => {
+test("findCheckoutCompatibleBoardSnapshot prefers the visible canonical board group over a hidden larger legacy group", () => {
   const documentRef = new FakeDocument();
   const shell = documentRef.createElement("div");
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -229,9 +229,9 @@ test("findCheckoutCompatibleBoardSnapshot preserves the legacy hidden larger gro
   const boardSnapshot = findCheckoutCompatibleBoardSnapshot(documentRef);
 
   assert.equal(boardSnapshot?.svg, svg);
-  assert.equal(boardSnapshot?.group, hiddenGroup);
-  assert.equal(boardSnapshot?.radius, 640);
-  assert.equal(Object.prototype.hasOwnProperty.call(boardSnapshot || {}, "modeKey"), false);
+  assert.equal(boardSnapshot?.group, visibleGroup);
+  assert.equal(boardSnapshot?.radius, 500);
+  assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
 });
 
 test("findBoardSvgGroup prefers unlabeled board-like geometry over decorative single-circle svg", () => {
@@ -352,7 +352,7 @@ test("findBoardSvgGroup prefers the specific board child group over a larger wra
   assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
 });
 
-test("findCheckoutCompatibleBoardSnapshot preserves the legacy wrapper group and radius when canonical selects a nested board group", () => {
+test("findCheckoutCompatibleBoardSnapshot prefers the nested visible board group over a larger wrapper group", () => {
   const documentRef = new FakeDocument();
   const shell = documentRef.createElement("div");
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -385,9 +385,9 @@ test("findCheckoutCompatibleBoardSnapshot preserves the legacy wrapper group and
   const boardSnapshot = findCheckoutCompatibleBoardSnapshot(documentRef);
 
   assert.equal(boardSnapshot?.svg, svg);
-  assert.equal(boardSnapshot?.group, wrapperGroup);
-  assert.equal(boardSnapshot?.radius, 690);
-  assert.equal(Object.prototype.hasOwnProperty.call(boardSnapshot || {}, "modeKey"), false);
+  assert.equal(boardSnapshot?.group, boardGroup);
+  assert.equal(boardSnapshot?.radius, 500);
+  assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
 });
 
 test("findBoardSvgGroup prefers board candidates with panel control context over decorative board-like svg", () => {

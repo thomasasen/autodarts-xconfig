@@ -672,6 +672,106 @@ function isNodeVisible(node) {
   return hasClientRects(node) || getRenderableArea(node) > 0;
 }
 
+function getNodeRect(node) {
+  if (!node || typeof node.getBoundingClientRect !== "function") {
+    return null;
+  }
+
+  try {
+    const rect = node.getBoundingClientRect();
+    if (!(Number(rect?.width) > 0) || !(Number(rect?.height) > 0)) {
+      return null;
+    }
+    return rect;
+  } catch (_) {
+    return null;
+  }
+}
+
+function rectContainsRect(outerRect, innerRect, tolerancePx = 0) {
+  if (!outerRect || !innerRect) {
+    return false;
+  }
+
+  return (
+    innerRect.left >= outerRect.left - tolerancePx &&
+    innerRect.top >= outerRect.top - tolerancePx &&
+    innerRect.right <= outerRect.right + tolerancePx &&
+    innerRect.bottom <= outerRect.bottom + tolerancePx
+  );
+}
+
+function rectsOverlap(leftRect, rightRect, tolerancePx = 0) {
+  if (!leftRect || !rightRect) {
+    return false;
+  }
+
+  return !(
+    leftRect.right < rightRect.left - tolerancePx ||
+    leftRect.left > rightRect.right + tolerancePx ||
+    leftRect.bottom < rightRect.top - tolerancePx ||
+    leftRect.top > rightRect.bottom + tolerancePx
+  );
+}
+
+function isUsableBoardSnapshot(snapshot, documentRef) {
+  return Boolean(snapshot) && isReusableBoardSnapshot(snapshot, documentRef);
+}
+
+function resolvePreferredBoardSnapshot(documentRef) {
+  const canonicalSnapshot = findBoardSvgGroup(documentRef);
+  if (isUsableBoardSnapshot(canonicalSnapshot, documentRef)) {
+    return canonicalSnapshot;
+  }
+
+  const legacySnapshot = findLegacyBoardSvgGroupSnapshot(documentRef);
+  if (isUsableBoardSnapshot(legacySnapshot, documentRef)) {
+    return legacySnapshot;
+  }
+
+  return canonicalSnapshot || legacySnapshot || null;
+}
+
+function isValidZoomTargetCandidate(candidateNode, boardSvg) {
+  if (!candidateNode || !boardSvg) {
+    return false;
+  }
+  if (!elementContains(candidateNode, boardSvg) || !isNodeVisible(candidateNode)) {
+    return false;
+  }
+
+  const candidateRect = getNodeRect(candidateNode);
+  const boardRect = getNodeRect(boardSvg);
+  if (!candidateRect || !boardRect) {
+    return false;
+  }
+
+  if (candidateRect.width + 2 < boardRect.width || candidateRect.height + 2 < boardRect.height) {
+    return false;
+  }
+
+  const tolerancePx = Math.max(6, Math.min(boardRect.width, boardRect.height) * 0.08);
+  return rectContainsRect(candidateRect, boardRect, tolerancePx);
+}
+
+function isValidZoomHostCandidate(candidateNode, zoomTarget) {
+  if (!candidateNode || !zoomTarget) {
+    return false;
+  }
+  if (!elementContains(candidateNode, zoomTarget) || !isNodeVisible(candidateNode)) {
+    return false;
+  }
+
+  const candidateRect = getNodeRect(candidateNode);
+  const targetRect = getNodeRect(zoomTarget);
+  if (!candidateRect || !targetRect) {
+    return false;
+  }
+
+  const tolerancePx = Math.max(6, Math.min(targetRect.width, targetRect.height) * 0.08);
+  return rectsOverlap(candidateRect, targetRect, tolerancePx);
+}
+
 export function isReusableBoardSnapshot(snapshot, documentRef) {
   if (!isSnapshotGroupReusable(snapshot)) {
     return false;
@@ -731,14 +831,102 @@ function areBoardSnapshotsEquivalent(left, right) {
 }
 
 export function findCheckoutCompatibleBoardSnapshot(documentRef) {
+  const preferredSnapshot = resolvePreferredBoardSnapshot(documentRef);
+  if (preferredSnapshot) {
+    return preferredSnapshot;
+  }
+
   const legacySnapshot = findLegacyBoardSvgGroupSnapshot(documentRef);
   const canonicalSnapshot = findBoardSvgGroup(documentRef);
-
   if (areBoardSnapshotsEquivalent(legacySnapshot, canonicalSnapshot)) {
     return canonicalSnapshot;
   }
 
-  return legacySnapshot;
+  return canonicalSnapshot || legacySnapshot || null;
+}
+
+export function resolveBoardZoomTargetNode(boardSvg) {
+  if (!boardSvg || typeof boardSvg.closest !== "function") {
+    return null;
+  }
+
+  const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
+  const showAnimations = boardSvg.closest(".showAnimations");
+  const directParent = boardSvg.parentElement || null;
+  const candidateOrder = [];
+
+  if (
+    directParent &&
+    directParent !== stableBoardCanvas &&
+    directParent !== showAnimations
+  ) {
+    candidateOrder.push(directParent);
+  }
+  if (stableBoardCanvas) {
+    candidateOrder.push(stableBoardCanvas);
+  }
+  if (showAnimations) {
+    candidateOrder.push(showAnimations);
+  }
+  if (directParent) {
+    candidateOrder.push(directParent);
+  }
+  candidateOrder.push(boardSvg);
+
+  const seen = new Set();
+  for (const candidateNode of candidateOrder) {
+    if (!candidateNode || seen.has(candidateNode)) {
+      continue;
+    }
+    seen.add(candidateNode);
+    if (isValidZoomTargetCandidate(candidateNode, boardSvg)) {
+      return candidateNode;
+    }
+  }
+
+  return directParent || stableBoardCanvas || showAnimations || boardSvg;
+}
+
+export function resolveBoardZoomHostNode(zoomTarget) {
+  if (!zoomTarget || typeof zoomTarget.closest !== "function") {
+    return null;
+  }
+
+  const candidateOrder = [
+    zoomTarget.closest(".ad-ext-theme-board-viewport"),
+    zoomTarget.closest(".css-tqsk66"),
+    zoomTarget.parentElement || null,
+    zoomTarget.closest(".showAnimations"),
+  ];
+
+  const seen = new Set();
+  for (const candidateNode of candidateOrder) {
+    if (!candidateNode || seen.has(candidateNode)) {
+      continue;
+    }
+    seen.add(candidateNode);
+    if (isValidZoomHostCandidate(candidateNode, zoomTarget)) {
+      return candidateNode;
+    }
+  }
+
+  return zoomTarget.parentElement || zoomTarget.closest(".showAnimations") || null;
+}
+
+export function resolveBoardRenderSurface(documentRef) {
+  const snapshot = findCheckoutCompatibleBoardSnapshot(documentRef);
+  if (!snapshot?.svg || !snapshot?.group || !snapshot?.radius) {
+    return null;
+  }
+
+  const zoomTarget = resolveBoardZoomTargetNode(snapshot.svg);
+  const zoomHost = resolveBoardZoomHostNode(zoomTarget);
+
+  return {
+    ...snapshot,
+    zoomTarget,
+    zoomHost,
+  };
 }
 
 export function ensureOverlayGroup(boardGroup, overlayId, svgNs = "http://www.w3.org/2000/svg") {

@@ -1160,6 +1160,89 @@ test("checkout-board-targets next mode overrides an implausible route-first step
   }
 });
 
+test("checkout-board-targets finish mode stays empty for a valid visible S10,D20 route at 50", () => {
+  const documentRef = new FakeDocument();
+  const events = [];
+  documentRef.activeScoreElement.textContent = "50";
+  documentRef.suggestionElement.textContent = "S10";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const secondSuggestion = documentRef.createElement("div");
+  secondSuggestion.classList.add("suggestion");
+  secondSuggestion.textContent = "D20";
+  secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
+  documentRef.main.appendChild(secondSuggestion);
+  appendBoardFixture(documentRef);
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 50,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "finish",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        events.push(args);
+      },
+      warn(...args) {
+        events.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    assert.equal(events.length, 1);
+    assert.equal(events[0][1]?.status, "no-selected-segments");
+    assert.equal(events[0][1]?.selectionSource, "validated-visible-route");
+    assert.deepEqual(events[0][1]?.routeSegments, ["S10", "D20"]);
+    assert.deepEqual(events[0][1]?.selectedSegments, []);
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    assert.equal(overlay.children.length, 0);
+  } finally {
+    cleanup();
+  }
+});
+
 test("checkout-board-targets next mode keeps the visible route-first target when the game state score lags behind the DOM", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "61";
@@ -1409,6 +1492,84 @@ test("checkout-board-targets next mode falls back to the active score checkout w
   } finally {
     cleanup();
   }
+});
+
+test("checkout-board-targets next mode renders direct double finishes when no suggestion route is visible", () => {
+  const cases = [
+    { activeScore: 10, segment: "D", value: "5" },
+    { activeScore: 22, segment: "D", value: "11" },
+  ];
+
+  cases.forEach(({ activeScore, segment, value }) => {
+    const documentRef = new FakeDocument();
+    documentRef.activeScoreElement.textContent = String(activeScore);
+    documentRef.suggestionElement.textContent = "";
+    appendBoardFixture(documentRef);
+
+    const cleanup = initializeCheckoutBoardTargets({
+      documentRef,
+      windowRef: createFakeWindow({ documentRef }),
+      domGuards: createDomGuards({ documentRef }),
+      registries: {
+        observers: createObserverRegistry(),
+      },
+      gameState: {
+        isX01Variant: () => true,
+        getActiveScore: () => activeScore,
+        getOutMode: () => "Double Out",
+        subscribe() {
+          return () => {};
+        },
+      },
+      domain: {
+        x01Rules,
+        variantRules: {
+          isX01VariantText: () => true,
+        },
+      },
+      config: {
+        getFeatureConfig() {
+          return {
+            visualPreset: "focus",
+            segmentStyle: "surface-outline",
+            targetSelectionMode: "next",
+            colorTheme: "amber",
+          };
+        },
+      },
+      helpers: {
+        createRafScheduler(callback) {
+          return {
+            schedule() {
+              callback();
+            },
+            cancel() {},
+            isScheduled() {
+              return false;
+            },
+          };
+        },
+      },
+    });
+
+    try {
+      const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+      assert.ok(overlay, `missing overlay for score ${activeScore}`);
+      assert.equal(overlay.children.length >= 2, true, `missing target nodes for score ${activeScore}`);
+      assert.equal(
+        overlay.children[0]?.getAttribute("data-target-ring"),
+        segment,
+        `unexpected ring for score ${activeScore}`
+      );
+      assert.equal(
+        overlay.children[0]?.getAttribute("data-target-value"),
+        value,
+        `unexpected value for score ${activeScore}`
+      );
+    } finally {
+      cleanup();
+    }
+  });
 });
 
 test("checkout-board-targets keeps the last drawable target during a transient no-route gap", async () => {

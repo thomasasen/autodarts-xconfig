@@ -4,7 +4,12 @@ import {
   getFirstCheckoutRouteSegment,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
-import { findBoardSvgRoot } from "../../shared/dartboard-svg.js";
+import {
+  findBoardSvgRoot,
+  resolveBoardRenderSurface,
+  resolveBoardZoomHostNode,
+  resolveBoardZoomTargetNode,
+} from "../../shared/dartboard-svg.js";
 
 const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
@@ -226,7 +231,7 @@ function getBoardRadius(rootNode) {
 }
 
 export function findBoardSvg(documentRef) {
-  return findBoardSvgRoot(documentRef);
+  return resolveBoardRenderSurface(documentRef)?.svg || findBoardSvgRoot(documentRef);
 }
 
 function segmentAngles(value) {
@@ -301,44 +306,11 @@ export function resolveSegmentPoint(segmentName, boardSvg, x01Rules) {
 }
 
 export function resolveZoomTarget(boardSvg) {
-  if (!boardSvg || typeof boardSvg.closest !== "function") {
-    return null;
-  }
-
-  const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
-  const showAnimations = boardSvg.closest(".showAnimations");
-  const directParent = boardSvg.parentElement || null;
-
-  if (
-    directParent &&
-    directParent !== stableBoardCanvas &&
-    directParent !== showAnimations
-  ) {
-    return directParent;
-  }
-
-  if (stableBoardCanvas) {
-    return stableBoardCanvas;
-  }
-
-  if (showAnimations) {
-    return showAnimations;
-  }
-
-  return directParent || boardSvg;
+  return resolveBoardZoomTargetNode(boardSvg);
 }
 
 export function resolveZoomHost(zoomTarget) {
-  if (!zoomTarget || typeof zoomTarget.closest !== "function") {
-    return null;
-  }
-  return (
-    zoomTarget.closest(".ad-ext-theme-board-viewport") ||
-    zoomTarget.closest(".css-tqsk66") ||
-    zoomTarget.parentElement ||
-    zoomTarget.closest(".showAnimations") ||
-    null
-  );
+  return resolveBoardZoomHostNode(zoomTarget);
 }
 
 export function getThrowSegmentName(throwEntry, x01Rules) {
@@ -884,7 +856,6 @@ export function buildZoomTransform(options = {}) {
   const intent = options.intent || null;
   const x01Rules = options.x01Rules || null;
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
-  const documentRef = options.documentRef || (typeof document !== "undefined" ? document : null);
   const providedBaseTransform =
     typeof options.baseTransform === "string" ? options.baseTransform : null;
 
@@ -928,35 +899,21 @@ export function buildZoomTransform(options = {}) {
     return null;
   }
 
-  const offsetParent =
-    targetNode.offsetParent ||
-    documentRef?.documentElement ||
-    documentRef?.body ||
-    null;
-  const offsetParentRect = offsetParent?.getBoundingClientRect?.() || { left: 0, top: 0 };
-  const baseLeft = Number(targetNode.offsetLeft || 0);
-  const baseTop = Number(targetNode.offsetTop || 0);
-
   const anchor = resolveZoomAnchor(
     { ...intent, zoomLevel },
     segmentPoint.parsedSegment,
     segmentPoint
   );
-  const viewportLeftInParent = viewportRect.left - offsetParentRect.left;
-  const viewportTopInParent = viewportRect.top - offsetParentRect.top;
-  const viewportRightInParent = viewportLeftInParent + viewportRect.width;
-  const viewportBottomInParent = viewportTopInParent + viewportRect.height;
+  const anchorXInViewport = viewportRect.left + viewportRect.width * anchor.x;
+  const anchorYInViewport = viewportRect.top + viewportRect.height * anchor.y;
 
-  const anchorXInParent = viewportLeftInParent + viewportRect.width * anchor.x;
-  const anchorYInParent = viewportTopInParent + viewportRect.height * anchor.y;
+  const rawTx = anchorXInViewport - targetRect.left - zoomLevel * targetLocal.x;
+  const rawTy = anchorYInViewport - targetRect.top - zoomLevel * targetLocal.y;
 
-  const rawTx = anchorXInParent - baseLeft - zoomLevel * targetLocal.x;
-  const rawTy = anchorYInParent - baseTop - zoomLevel * targetLocal.y;
-
-  const minTx = viewportRightInParent - baseLeft - zoomLevel * layoutWidth;
-  const maxTx = viewportLeftInParent - baseLeft;
-  const minTy = viewportBottomInParent - baseTop - zoomLevel * layoutHeight;
-  const maxTy = viewportTopInParent - baseTop;
+  const minTx = viewportRect.right - targetRect.left - zoomLevel * layoutWidth;
+  const maxTx = viewportRect.left - targetRect.left;
+  const minTy = viewportRect.bottom - targetRect.top - zoomLevel * layoutHeight;
+  const maxTy = viewportRect.top - targetRect.top;
 
   const tx = clamp(rawTx, minTx, maxTx);
   const ty = clamp(rawTy, minTy, maxTy);
@@ -988,6 +945,24 @@ export function buildZoomTransform(options = {}) {
     baseTransform,
     signature,
     anchor,
+    tx,
+    ty,
+    targetRect: {
+      left: Number(targetRect.left),
+      top: Number(targetRect.top),
+      width: Number(targetRect.width),
+      height: Number(targetRect.height),
+      right: Number(targetRect.right),
+      bottom: Number(targetRect.bottom),
+    },
+    viewportRect: {
+      left: Number(viewportRect.left),
+      top: Number(viewportRect.top),
+      width: Number(viewportRect.width),
+      height: Number(viewportRect.height),
+      right: Number(viewportRect.right),
+      bottom: Number(viewportRect.bottom),
+    },
   };
 }
 
@@ -1205,6 +1180,8 @@ export function computeZoomIntent(options = {}) {
     const canUseCheckoutSurfaceForIntent =
       checkoutSurface.surfaceKind === "visible-explicit-checkout" ||
       checkoutSurface.surfaceKind === "score-route";
+    const hasValidatedVisibleCheckoutRoute =
+      checkoutSurface.selectionSource === "validated-visible-route";
 
     if (canUseCheckoutSurfaceForIntent && checkoutZoomTarget === "route-first") {
       const intent = buildCheckoutRouteIntent(firstRouteSegment, authoritativeRouteSegments, {
@@ -1234,7 +1211,7 @@ export function computeZoomIntent(options = {}) {
       }
     }
 
-    if (scoreCheckoutSegment) {
+    if (scoreCheckoutSegment && !hasValidatedVisibleCheckoutRoute) {
       const intent = { reason: "checkout", segment: scoreCheckoutSegment };
       state.activeIntent = intent;
       return intent;
@@ -1318,7 +1295,7 @@ export function applyZoom(
   });
 
   if (!zoomData) {
-    return;
+    return null;
   }
   if (hostNode?.classList) {
     cacheHostStyle(state, hostNode);
@@ -1334,7 +1311,7 @@ export function applyZoom(
     : zoomData.transform;
   if (state.zoomedElement === targetNode && state.lastAppliedSignature === zoomData.signature) {
     state.zoomHost = hostNode || null;
-    return;
+    return zoomData;
   }
 
   targetNode.classList.add(ZOOM_CLASS);
@@ -1346,6 +1323,7 @@ export function applyZoom(
   state.zoomedElement = targetNode;
   state.zoomHost = hostNode || null;
   state.lastAppliedSignature = zoomData.signature;
+  return zoomData;
 }
 
 export function resetZoom(speedConfig, state, immediate = false) {

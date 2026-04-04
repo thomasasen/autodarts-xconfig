@@ -12,7 +12,12 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.15] - 2026-04-04
+## [2.1.16] - 2026-04-04
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` und `TV Board Zoom` folgen auf verschachtelten oder stale Board-DOMs jetzt wieder der sichtbaren Live-Scheibe; direkte Finishes wie `10 / D5` und `22 / D11` bleiben dadurch am Board markiert und zoomen wieder zuverlässig ein, während mehrstufige Fälle wie `50` mit `S10 -> D20` nicht mehr auf einen falschen mittigen Ausschnitt driften.
+  Technik: Die gemeinsame Board-Surface-Wahrheit bevorzugt fuer Checkout-/Zoom-Features jetzt den kanonischen sichtbaren Board-Snapshot statt versteckter Legacy-Wrapper, `tv-board-zoom` berechnet Translation und Clamping vollständig im Viewport-Koordinatensystem statt `getBoundingClientRect()` mit `offsetLeft/Top` zu mischen, beide Features konsumieren denselben Shared-Board-Resolver, und neue Runtime-/Layout-Regressionen sichern direkte Double-Finishes, `50` mit `S10 -> D20` sowie verschachtelte Board-Gruppen explizit ab.
 
 ### Changed
 
@@ -1264,7 +1269,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.15]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...HEAD
+[2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...HEAD
 [2.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...2a4d191
 [2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...ba09193
 [2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...1b33189
