@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.19] - 2026-04-05
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom`, `Checkout Board Targets` und `Checkout Score Pulse` folgen in X01 jetzt derselben sichtbaren Checkout-Wahrheit, sodass stale Score-Mismatches zwischen DOM und internem Match-State keine widersprüchigen Zooms, Board-Ziele oder Score-Pulse mehr auslösen; zugleich bleibt der Board-Zoom bei aktiven Checkout-Situationen stabiler und nachvollziehbarer bis zum Leg-Ende stehen.
+  Technik: Eine gemeinsame X01-Checkout-Context-Schicht zentralisiert aktive Score-Auflösung, sichtbare Route und Checkout-Surface für die betroffenen X01-Features; `tv-board-zoom`, `checkout-board-targets` und `checkout-score-pulse` konsumieren jetzt denselben Shared-Snapshot statt eigener Score-Arbitration, der Zoom nutzt nur noch den gemeinsamen Board-Surface-Resolver, und neue Runtime-Regressionen sichern DOM-vs-Game-State-Mismatch, Sticky-Leg-Ende-Verhalten und Zoom-Stabilität ausdrücklich ab.
+
 ## [2.1.18] - 2026-04-05
 
 ### Changed
@@ -1283,7 +1290,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...HEAD
+[2.1.19]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...HEAD
+[2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...ea036d3
 [2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...c7223d6
 [2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...ff5d323
 [2.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...2a4d191
