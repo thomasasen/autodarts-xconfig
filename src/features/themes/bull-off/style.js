@@ -1,5 +1,5 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
-import { buildCenteredPlayerCardLayoutCss } from "../shared/player-card-layout.js";
+import { buildSharedPlayerDisplayCss } from "../shared/player-card-layout.js";
 import { normalizeBoolean } from "../shared/theme-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-bull-off-style";
@@ -123,17 +123,6 @@ div.css-nfhdnc {
   background: linear-gradient(90deg, rgba(102, 187, 106, var(--bull-turn-gradient-alpha)), rgba(239, 83, 80, var(--bull-turn-gradient-alpha)));
 }
 
-#ad-ext-player-display .ad-ext-player{
-  border-radius: 14px;
-  overflow: hidden;
-  backdrop-filter: blur(1px);
-}
-
-#ad-ext-player-display .ad-ext-player > .chakra-stack{
-  grid-template-rows: max-content max-content !important;
-  align-content: center !important;
-}
-
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active{
   border: 2px solid rgba(102, 187, 106, var(--bull-active-border-alpha)) !important;
   box-shadow:
@@ -148,23 +137,14 @@ div.css-nfhdnc {
   border-color: rgba(239, 83, 80, var(--bull-inactive-border-alpha)) !important;
 }
 
-#ad-ext-player-display .ad-ext-player .ad-ext-player-score{
-  font-size: 7.2em !important;
-  letter-spacing: 0.03em;
-  text-shadow: 0 0 18px rgba(0, 0, 0, var(--bull-score-shadow-alpha));
-}
-
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score{
   color: #ffffff !important;
+  text-shadow: 0 0 18px rgba(0, 0, 0, var(--bull-score-shadow-alpha));
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score{
   color: #9ca8b9 !important;
-}
-
-#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
-#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p{
-  font-size: 7.2em !important;
+  text-shadow: 0 0 18px rgba(0, 0, 0, var(--bull-score-shadow-alpha));
 }
 
 span.css-3fr5p8{
@@ -260,8 +240,8 @@ span.css-3fr5p8{
 
 export function buildBullOffThemeCss(featureConfig = {}) {
   const resolved = resolveThemeBullOffConfig(featureConfig);
-  const playerCardLayoutCss = buildCenteredPlayerCardLayoutCss();
-  return buildThemeCssBundle(featureConfig, `${playerCardLayoutCss}${buildBullOffCss(resolved)}`);
+  const playerDisplayCss = buildSharedPlayerDisplayCss();
+  return buildThemeCssBundle(featureConfig, `${playerDisplayCss}${buildBullOffCss(resolved)}`);
 }
 
 export { PREVIEW_PLACEMENT };

@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.18] - 2026-04-05
+
+### Changed
+
+- Nutzerwirkung: `Theme Bull-off` und `Theme Shanghai` verwenden in der Spieleranzeige jetzt denselben Kartenaufbau wie `Theme X01`, sodass Namen, Zusatzinfos und Scores über alle drei Modi sichtbar konsistenter und ruhiger wirken.
+  Technik: Die X01-Spieleranzeige wurde als gemeinsamer Shared-Player-Display-Baustein zentralisiert, `Bull-Off` und `Shanghai` binden jetzt dieselben Layout-, Typografie- und Stat-Scaling-Regeln ein, abweichende Bull-Off-Karten-Overrides im Spielerbereich wurden zurückgebaut, und die CSS-Parity-Regressionen prüfen die gemeinsame Kartenlogik ausdrücklich mit ab.
+
 ## [2.1.17] - 2026-04-05
 
 ### Fixed
@@ -1276,7 +1283,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...HEAD
+[2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...HEAD
+[2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...c7223d6
 [2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...ff5d323
 [2.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...2a4d191
 [2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...ba09193

@@ -96,7 +96,8 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
     shanghaiCss,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*justify-self:\s*end\s*!important;[^}]*min-width:\s*max-content\s*!important;[^}]*white-space:\s*nowrap\s*!important;/s
   );
-  assert.doesNotMatch(
+  assert.match(shanghaiCss, /--ad-ext-stat-scale:\s*0\.6/);
+  assert.match(
     shanghaiCss,
     /div\.ad-ext-player\.ad-ext-player-active\s+p\.chakra-text\.ad-ext-player-score\s*\{[^}]*font-size:\s*9em;/s
   );
@@ -109,13 +110,10 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
 
   assert.equal(PREVIEW_BULL_OFF.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
+  assert.match(css, /--ad-ext-stat-scale:\s*0\.6/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
-  );
-  assert.match(
-    css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
   );
   assert.match(
     css,
@@ -127,8 +125,9 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+p\.chakra-text\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-inactive\s+\.ad-ext_winner-score-wrapper\s*>\s*p\s*\{[^}]*font-size:\s*7\.2em\s*!important;/s
+    /div\.ad-ext-player\.ad-ext-player-active\s+p\.chakra-text\.ad-ext-player-score\s*\{[^}]*font-size:\s*9em;/s
   );
+  assert.doesNotMatch(css, /font-size:\s*7\.2em\s*!important;/s);
   assert.match(css, /grid-template-columns:\s*0\.94fr 1\.06fr\s*!important;/);
   assert.match(
     css,
