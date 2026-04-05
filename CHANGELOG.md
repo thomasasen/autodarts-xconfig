@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.23] - 2026-04-06
+
+### Fixed
+
+- Nutzerwirkung: Die Spieleranzeige in `Theme X01`, `Theme Shanghai` und `Theme Bull-off` hält die größeren Score-Fontgrößen jetzt auch in der finalen Kartenhöhe sauber aus; inaktive Karten bekommen genug Platz für Namen, Meta und Score ohne gequetschten oder abgeschnittenen Inhalt, und die aktive Karte zeigt wieder einen sichtbaren grün hervorgehobenen Rahmen mit denselben abgerundeten Ecken wie die obere Trefferanzeige.
+  Technik: Die Shared-Player-Card-Logik berücksichtigt jetzt die echte verschachtelte DOM-Struktur unter `#ad-ext-player-display`, zieht Zwischen-Wrapper bei Unterstützung per `display: contents` aus dem Layout, gibt aktiven und inaktiven Karten dynamische Mindesthöhen passend zum neuen Score-Fokus-Profil, entfernt die alte starre `12%`-Begrenzung aus `Theme X01`, und der gemeinsame Aktiv-Rahmen wird wieder als echter grüner `2px`-Border mit `12px` Radius am Shared-Theme-CSS gesetzt; die Theme-Parity-Regressionen decken Größenanker, Mindesthöhen und den abgerundeten Aktiv-Rahmen explizit ab.
+
 ## [2.1.22] - 2026-04-06
 
 ### Fixed
@@ -1293,7 +1300,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.22]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...HEAD
+[2.1.23]: https://github.com/thomasasen/autodarts-xconfig/compare/b7334c0...HEAD
+[2.1.22]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...b7334c0
 [2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...ea036d3
 [2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...c7223d6
 [2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...ff5d323

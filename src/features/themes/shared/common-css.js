@@ -122,7 +122,12 @@ p.chakra-text.ad-ext-player-score.css-18w03sn { color: #9fdb58; }
 span.css-3fr5p8 { background-color: #9fdb58; color: #222; }
 p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: #9fdb58; }
 div.suggestion.css-1dkgpmk { font-size: 6px; background-color: #222; border-color: #434343; }
-div.ad-ext-player.ad-ext-player-active.css-1en42kf { border-color: var(--theme-text-highlight-color); border-style: solid; }
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner {
+  border: 2px solid var(--theme-text-highlight-color) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 0 1px rgba(159, 219, 88, 0.18) !important;
+}
 div.chakra-menu__menu-list.css-yskgbr { background-color: #434343; }
 button.chakra-tabs__tab.css-1vm7g5b { color: #9fdb58; }
 span.chakra-switch__track.css-v4l15v { background-color: #38761d; }

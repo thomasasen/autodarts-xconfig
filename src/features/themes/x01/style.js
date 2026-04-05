@@ -33,12 +33,6 @@ p.chakra-text.css-1j0bqop{
 }
 `;
 
-const x01LayoutOverrides = `
-.css-hjw8x4{
-  max-height: 12%;
-}
-`;
-
   const navigationOverride = `
 div.chakra-stack.navigation.css-19ml6yu,
 div.chakra-stack.navigation.css-ege71s,
@@ -57,7 +51,7 @@ div.chakra-stack.navigation.css-ege71s,
 
   return buildThemeCssBundle(
     featureConfig,
-    `${navigationOverride}${previewCss}${avgVisibilityCss}${playerDisplayCss}${overlayPriorityCss}${x01LayoutOverrides}`
+    `${navigationOverride}${previewCss}${avgVisibilityCss}${playerDisplayCss}${overlayPriorityCss}`
   );
 }
 

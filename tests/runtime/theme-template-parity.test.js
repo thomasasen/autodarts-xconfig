@@ -35,11 +35,23 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   assert.match(css, /--ad-ext-stat-scale:\s*1\.2/);
   assert.match(
     css,
-    /#ad-ext-player-display\s*>\s*\.ad-ext-player\s*\{[^}]*--ad-ext-player-score-max:\s*4\.8rem;[^}]*--ad-ext-player-score-size:\s*clamp\(4rem,\s*8vw,\s*var\(--ad-ext-player-score-max\)\);[^}]*flex:\s*var\(--ad-ext-player-flex\)\s+1\s+0\s*!important;[^}]*container-type:\s*size\s*!important;/s
+    /#ad-ext-player-display\s*>\s*\*\s*\{[^}]*flex:\s*1\s+1\s+0\s*!important;[^}]*display:\s*flex\s*!important;[^}]*align-items:\s*stretch\s*!important;/s
   );
   assert.match(
     css,
-    /@supports\s*\(font-size:\s*1cqi\)\s*\{[^}]*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*min\(25\.6cqi,\s*44\.8cqb\)/s
+    /@supports\s*\(display:\s*contents\)\s*\{[^}]*#ad-ext-player-display\s*>\s*\*\s*\{[^}]*display:\s*contents\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-player-score-max:\s*4\.8rem;[^}]*--ad-ext-player-score-size:\s*clamp\(4rem,\s*8vw,\s*var\(--ad-ext-player-score-max\)\);[^}]*flex:\s*var\(--ad-ext-player-flex\)\s+1\s+0\s*!important;[^}]*min-height:\s*clamp\(7\.25rem,\s*20cqb,\s*11rem\)\s*!important;[^}]*container-type:\s*size\s*!important;[^}]*container-name:\s*ad-ext-player-card\s*!important;/s
+  );
+  assert.match(
+    css,
+    /@supports\s*\(font-size:\s*1cqi\)\s*\{[^}]*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*min\(25\.6cqi,\s*44\.8cqb\)/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*min-height:\s*clamp\(12rem,\s*42cqb,\s*24rem\)\s*!important;/s
   );
   assert.match(
     css,
@@ -71,8 +83,9 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   );
   assert.match(
     css,
-    /div\.ad-ext-player\.ad-ext-player-active\.css-1en42kf\s*\{[^}]*border-color:\s*var\(--theme-text-highlight-color\);[^}]*border-style:\s*solid;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--theme-text-highlight-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+rgba\(159,\s*219,\s*88,\s*0\.18\)\s*!important;/s
   );
+  assert.doesNotMatch(css, /\.css-hjw8x4\s*\{[^}]*max-height:\s*12%/s);
   assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
   assertNoFragileLayoutSelectors(css);
 });
@@ -111,11 +124,15 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
   assert.match(shanghaiCss, /--ad-ext-stat-scale:\s*1\.2/);
   assert.match(
     shanghaiCss,
-    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(5\.333rem,\s*10\.667vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(5\.333rem,\s*10\.667vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
   );
   assert.match(
     shanghaiCss,
-    /div\.ad-ext-player\.ad-ext-player-active\.css-1en42kf\s*\{[^}]*border-color:\s*var\(--theme-text-highlight-color\);[^}]*border-style:\s*solid;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*min-height:\s*clamp\(12rem,\s*42cqb,\s*24rem\)\s*!important;/s
+  );
+  assert.match(
+    shanghaiCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--theme-text-highlight-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+rgba\(159,\s*219,\s*88,\s*0\.18\)\s*!important;/s
   );
   assertNoFragileLayoutSelectors(shanghaiCss);
   assertNoFragileLayoutSelectors(bermudaCss);
@@ -141,7 +158,11 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(5\.333rem,\s*10\.667vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(5\.333rem,\s*10\.667vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*min-height:\s*clamp\(7\.25rem,\s*20cqb,\s*11rem\)\s*!important;/s
   );
   assert.doesNotMatch(css, /font-size:\s*7\.2em\s*!important;/s);
   assert.doesNotMatch(css, /--ad-ext-player-score-max:\s*6\.2rem;/s);

@@ -11,8 +11,14 @@ const INACTIVE_PLAYER_SCORE_MAX_REM = 4.8;
 const INACTIVE_PLAYER_NAME_MAX_REM = 1.5625;
 const INACTIVE_PLAYER_META_MAX_REM = 1.1875;
 const INACTIVE_PLAYER_BADGE_MAX_REM = 1.4375;
+const INACTIVE_PLAYER_MIN_HEIGHT_REM = 7.25;
+const ACTIVE_PLAYER_MIN_HEIGHT_REM = 12;
 
 export function buildSharedPlayerDisplayCss() {
+  const playerShellSelector = "#ad-ext-player-display > *";
+  const playerSelector = "#ad-ext-player-display .ad-ext-player";
+  const activePlayerSelector = `${playerSelector}.ad-ext-player-active,\n${playerSelector}.ad-ext-player-winner`;
+  const inactivePlayerSelector = `${playerSelector}.ad-ext-player-inactive,\n${playerSelector}:not(.ad-ext-player-active):not(.ad-ext-player-winner)`;
   const stackSelector = "#ad-ext-player-display .ad-ext-player > .chakra-stack";
   return `
 #ad-ext-player-display{
@@ -22,7 +28,22 @@ export function buildSharedPlayerDisplayCss() {
   gap:clamp(.3rem,.72vh,.58rem) !important;
 }
 
-#ad-ext-player-display > .ad-ext-player{
+${playerShellSelector}{
+  flex:1 1 0 !important;
+  min-height:0 !important;
+  min-width:0 !important;
+  display:flex !important;
+  align-items:stretch !important;
+  overflow:hidden !important;
+}
+
+@supports (display: contents) {
+  ${playerShellSelector}{
+    display:contents !important;
+  }
+}
+
+${playerSelector}{
   --ad-ext-player-flex:${DEFAULT_PLAYER_FLEX};
   --ad-ext-stat-scale:${INACTIVE_STAT_SCALE};
   --ad-ext-player-score-max:${INACTIVE_PLAYER_SCORE_MAX_REM}rem;
@@ -34,7 +55,7 @@ export function buildSharedPlayerDisplayCss() {
   --ad-ext-player-meta-size:clamp(1rem,2vw,var(--ad-ext-player-meta-max));
   --ad-ext-player-badge-size:clamp(1.16rem,2.3vw,var(--ad-ext-player-badge-max));
   flex:var(--ad-ext-player-flex) 1 0 !important;
-  min-height:0 !important;
+  min-height:clamp(${INACTIVE_PLAYER_MIN_HEIGHT_REM}rem,20cqb,11rem) !important;
   min-width:0 !important;
   max-height:100% !important;
   display:flex !important;
@@ -44,18 +65,17 @@ export function buildSharedPlayerDisplayCss() {
   container-name:ad-ext-player-card !important;
 }
 
-#ad-ext-player-display > .ad-ext-player.ad-ext-player-active,
-#ad-ext-player-display > .ad-ext-player.ad-ext-player-winner{
+${activePlayerSelector}{
   --ad-ext-player-flex:${ACTIVE_PLAYER_FLEX};
   --ad-ext-stat-scale:${ACTIVE_STAT_SCALE};
   --ad-ext-player-score-size:clamp(5.333rem,10.667vw,calc(var(--ad-ext-player-score-max) * ${ACTIVE_PLAYER_RATIO}));
   --ad-ext-player-name-size:clamp(1.707rem,3.467vw,calc(var(--ad-ext-player-name-max) * ${ACTIVE_PLAYER_RATIO}));
   --ad-ext-player-meta-size:clamp(1.333rem,2.667vw,calc(var(--ad-ext-player-meta-max) * ${ACTIVE_PLAYER_RATIO}));
   --ad-ext-player-badge-size:clamp(1.547rem,3.067vw,calc(var(--ad-ext-player-badge-max) * ${ACTIVE_PLAYER_RATIO}));
+  min-height:clamp(${ACTIVE_PLAYER_MIN_HEIGHT_REM}rem,42cqb,24rem) !important;
 }
 
-#ad-ext-player-display > .ad-ext-player.ad-ext-player-inactive,
-#ad-ext-player-display > .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner){
+${inactivePlayerSelector}{
   --ad-ext-stat-scale:${INACTIVE_STAT_SCALE};
   --ad-ext-player-score-size:clamp(4rem,8vw,var(--ad-ext-player-score-max));
   --ad-ext-player-name-size:clamp(1.28rem,2.6vw,var(--ad-ext-player-name-max));
@@ -64,16 +84,14 @@ export function buildSharedPlayerDisplayCss() {
 }
 
 @supports (font-size: 1cqi) {
-  #ad-ext-player-display > .ad-ext-player.ad-ext-player-active,
-  #ad-ext-player-display > .ad-ext-player.ad-ext-player-winner{
+  ${activePlayerSelector}{
     --ad-ext-player-score-size:clamp(5.333rem,min(25.6cqi,44.8cqb),calc(var(--ad-ext-player-score-max) * ${ACTIVE_PLAYER_RATIO}));
     --ad-ext-player-name-size:clamp(1.707rem,min(8.363cqi,13.056cqb),calc(var(--ad-ext-player-name-max) * ${ACTIVE_PLAYER_RATIO}));
     --ad-ext-player-meta-size:clamp(1.333rem,min(6.336cqi,9.36cqb),calc(var(--ad-ext-player-meta-max) * ${ACTIVE_PLAYER_RATIO}));
     --ad-ext-player-badge-size:clamp(1.547rem,min(7.666cqi,11.458cqb),calc(var(--ad-ext-player-badge-max) * ${ACTIVE_PLAYER_RATIO}));
   }
 
-  #ad-ext-player-display > .ad-ext-player.ad-ext-player-inactive,
-  #ad-ext-player-display > .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner){
+  ${inactivePlayerSelector}{
     --ad-ext-player-score-size:clamp(4rem,min(19.2cqi,33.6cqb),var(--ad-ext-player-score-max));
     --ad-ext-player-name-size:clamp(1.28rem,min(6.275cqi,9.792cqb),var(--ad-ext-player-name-max));
     --ad-ext-player-meta-size:clamp(1rem,min(4.752cqi,7.02cqb),var(--ad-ext-player-meta-max));
