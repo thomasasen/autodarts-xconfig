@@ -12,6 +12,9 @@ Priority: truthfulness, correctness, proportional validation.
 - never hand-edit generated files; refresh them only through the build flow when release work is explicitly requested
 - use `.agents/skills/repo-validation/SKILL.md` after changes to choose the smallest sufficient validation
 - use `.agents/skills/userscript-release/SKILL.md` only for explicitly requested release, finalize, package, ship, or publish work
+- whenever Codex completes a successful repo build, include a proposed commit message in the final output even if no commit is created
+- proposed commit messages must stay draft-only, be derived from the actual diff for that run, follow `type(optional-scope): concise summary` with an optional body of 1-5 concrete bullets, and say explicitly when there is no meaningful change instead of inventing details
+- never run `git commit`, push, or create a release automatically unless the user explicitly asks
 - report exactly what changed, what was validated, and what remains unverified
 - do not declare completion if `npm run lint` was required and failed or was not run; report the lint result explicitly
 
