@@ -4,6 +4,7 @@ import {
   getEffectClassList,
 } from "./style.js";
 import { collectVisibleCheckoutRoute, resolveCheckoutSurfaceSemantics } from "../x01-checkout-route.js";
+import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 
 export const SCORE_SELECTOR = "p.ad-ext-player-score";
 export const ACTIVE_SCORE_SELECTOR =
@@ -11,45 +12,27 @@ export const ACTIVE_SCORE_SELECTOR =
 export const SUGGESTION_SELECTOR = ".suggestion";
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 
-export function parseScore(text) {
-  const match = String(text || "").match(/\d+/);
-  if (!match) {
-    return null;
-  }
-
-  const value = Number(match[0]);
-  return Number.isFinite(value) ? value : null;
-}
-
-export function getActiveScoreValue(context = {}) {
-  const gameState = context.gameState;
-  const documentRef = context.documentRef;
-
-  if (gameState && typeof gameState.getActiveScore === "function") {
-    const score = gameState.getActiveScore();
-    if (Number.isFinite(score)) {
-      return score;
-    }
-  }
-
-  if (!documentRef || typeof documentRef.querySelector !== "function") {
-    return null;
-  }
-
-  const node =
-    documentRef.querySelector(ACTIVE_SCORE_SELECTOR) ||
-    documentRef.querySelector(SCORE_SELECTOR);
-
-  return parseScore(node?.textContent || "");
-}
-
 export function getCheckoutSuggestionState(context = {}) {
-  const suggestionSignal = resolveCheckoutSuggestionSignal(context);
+  const checkoutContext = resolveX01CheckoutContext({
+    ...context,
+    x01Rules: context.x01Rules,
+  });
+  const outMode =
+    context.gameState && typeof context.gameState.getOutMode === "function"
+      ? String(context.gameState.getOutMode() || "")
+      : String(context.outMode || "");
+  const dartsRemaining = getReliableDartsRemaining(context);
+  const suggestionSignal = resolveCheckoutSuggestionSignal({
+    ...context,
+    outMode,
+    activeScore: checkoutContext.activeScore,
+    dartsRemaining,
+  });
   if (!suggestionSignal) {
     return null;
   }
 
-  return suggestionSignal.shouldHighlight === true;
+  return suggestionSignal.shouldHighlight === true && Number.isFinite(checkoutContext.activeScore);
 }
 
 function isDirectCheckoutPossible(activeScore, outMode, dartsRemaining, x01Rules) {
@@ -277,7 +260,12 @@ export function computeShouldHighlight(context = {}) {
     return false;
   }
 
-  const activeScore = getActiveScoreValue(context);
+  const activeScore = resolveX01CheckoutContext({
+    ...context,
+    outMode,
+    dartsRemaining: getReliableDartsRemaining(context),
+    x01Rules,
+  }).activeScore;
   const dartsRemaining = getReliableDartsRemaining(context);
   const suggestionSignal = resolveCheckoutSuggestionSignal({
     ...context,

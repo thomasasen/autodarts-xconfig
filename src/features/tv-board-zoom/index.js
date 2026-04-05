@@ -1,7 +1,6 @@
 import {
   applyZoom,
   computeZoomIntent,
-  findBoardSvg,
   markManualZoomPause,
   resetZoom,
   resolveZoomHost,
@@ -315,6 +314,7 @@ export function initializeTvBoardZoom(context = {}) {
     lastThrowCount: -1,
     lastAppliedSignature: "",
     lastAppliedIntentSignature: "",
+    lastAppliedZoomTransform: null,
     releaseTimeoutId: 0,
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
@@ -425,7 +425,7 @@ export function initializeTvBoardZoom(context = {}) {
 
   scheduler = schedulerFactory(() => {
     const boardSurface = getBoardSurface();
-    const boardSvg = boardSurface?.svg || findBoardSvg(documentRef);
+    const boardSvg = boardSurface?.svg || null;
     if (!boardSvg) {
       requestZoomReset("board-missing");
       return;

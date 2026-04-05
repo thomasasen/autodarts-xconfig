@@ -1,21 +1,14 @@
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "./style.js";
 import {
-  collectVisibleCheckoutRoute,
   getFirstCheckoutRouteSegment,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
+import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import {
-  findBoardSvgRoot,
-  resolveBoardRenderSurface,
   resolveBoardZoomHostNode,
   resolveBoardZoomTargetNode,
 } from "../../shared/dartboard-svg.js";
 
-const ACTIVE_SCORE_SELECTORS = Object.freeze([
-  ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
-  ".ad-ext-player-active p.ad-ext-player-score",
-  "p.ad-ext-player-score",
-]);
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
 ]);
@@ -35,39 +28,6 @@ const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
   max: 3.15,
 });
 const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
-
-function parseScoreText(text) {
-  const match = String(text || "").match(/-?\d+/);
-  if (!match) {
-    return Number.NaN;
-  }
-  const numeric = Number(match[0]);
-  return Number.isFinite(numeric) ? numeric : Number.NaN;
-}
-
-function isElementVisible(element, windowRef) {
-  if (!element || typeof element.getBoundingClientRect !== "function") {
-    return false;
-  }
-  const rect = element.getBoundingClientRect();
-  if (!(rect.width > 0 && rect.height > 0)) {
-    return false;
-  }
-
-  try {
-    const style = windowRef?.getComputedStyle?.(element);
-    if (!style) {
-      return true;
-    }
-    return !(
-      style.display === "none" ||
-      style.visibility === "hidden" ||
-      style.opacity === "0"
-    );
-  } catch (_) {
-    return true;
-  }
-}
 
 function parseViewBox(svgNode) {
   if (!svgNode || typeof svgNode.getAttribute !== "function") {
@@ -119,51 +79,6 @@ function clamp(value, minValue, maxValue) {
     return (minValue + maxValue) / 2;
   }
   return Math.min(maxValue, Math.max(minValue, value));
-}
-
-function getNodeVisualWeight(node, windowRef) {
-  if (!node || typeof node.getBoundingClientRect !== "function") {
-    return 0;
-  }
-
-  try {
-    const rect = node.getBoundingClientRect();
-    const fontSize = Number.parseFloat(windowRef?.getComputedStyle?.(node)?.fontSize) || 0;
-    const area =
-      Number.isFinite(rect?.width) && Number.isFinite(rect?.height)
-        ? rect.width * rect.height
-        : 0;
-    return fontSize * 10000 + area;
-  } catch (_) {
-    return 0;
-  }
-}
-
-export function getBestVisibleScoreFromDom(documentRef, windowRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return null;
-  }
-
-  const candidates = [];
-  ACTIVE_SCORE_SELECTORS.forEach((selector) => {
-    Array.from(documentRef.querySelectorAll(selector)).forEach((node) => {
-      const value = parseScoreText(node?.textContent);
-      if (!Number.isFinite(value) || value < 0) {
-        return;
-      }
-      if (!isElementVisible(node, windowRef)) {
-        return;
-      }
-      candidates.push({ value, weight: getNodeVisualWeight(node, windowRef) });
-    });
-  });
-
-  if (!candidates.length) {
-    return null;
-  }
-
-  candidates.sort((left, right) => right.weight - left.weight);
-  return candidates[0].value;
 }
 
 function quantizeForSignature(value, step = TRANSFORM_SIGNATURE_STEP_PX) {
@@ -242,10 +157,6 @@ function getBoardRadius(rootNode) {
     const radius = Number.parseFloat(circle?.getAttribute?.("r"));
     return Number.isFinite(radius) && radius > max ? radius : max;
   }, 0);
-}
-
-export function findBoardSvg(documentRef) {
-  return resolveBoardRenderSurface(documentRef)?.svg || findBoardSvgRoot(documentRef);
 }
 
 function segmentAngles(value) {
@@ -848,17 +759,100 @@ function clearPendingRelease(state) {
   state.releaseTimeoutId = 0;
 }
 
-function getScreenPointFromViewBoxPoint(boardSvg, point, viewBox) {
-  const svgRect = boardSvg?.getBoundingClientRect?.();
-  if (!(svgRect?.width > 0 && svgRect?.height > 0)) {
+function normalizeRect(rect) {
+  if (!(rect?.width > 0 && rect?.height > 0)) {
+    return null;
+  }
+
+  return {
+    left: Number(rect.left),
+    top: Number(rect.top),
+    width: Number(rect.width),
+    height: Number(rect.height),
+    right: Number(rect.right),
+    bottom: Number(rect.bottom),
+  };
+}
+
+function normalizeRectForActiveZoom(rect, zoomTransform) {
+  const normalizedRect = normalizeRect(rect);
+  const scale = Number(zoomTransform?.scale);
+  const tx = Number(zoomTransform?.tx);
+  const ty = Number(zoomTransform?.ty);
+  if (!normalizedRect || !(Number.isFinite(scale) && scale > 0)) {
+    return normalizedRect;
+  }
+
+  const left = normalizedRect.left - (Number.isFinite(tx) ? tx : 0);
+  const top = normalizedRect.top - (Number.isFinite(ty) ? ty : 0);
+  const width = normalizedRect.width / scale;
+  const height = normalizedRect.height / scale;
+  return {
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+  };
+}
+
+function shouldNormalizeRectForActiveZoom(rect, zoomTransform) {
+  const normalizedRect = normalizeRect(rect);
+  const scale = Number(zoomTransform?.scale);
+  const baseWidth = Number(zoomTransform?.baseWidth);
+  const baseHeight = Number(zoomTransform?.baseHeight);
+  if (
+    !normalizedRect ||
+    !(Number.isFinite(scale) && scale > 1) ||
+    !(Number.isFinite(baseWidth) && baseWidth > 0) ||
+    !(Number.isFinite(baseHeight) && baseHeight > 0)
+  ) {
+    return false;
+  }
+
+  const expectedZoomedWidth = baseWidth * scale;
+  const expectedZoomedHeight = baseHeight * scale;
+  const widthTolerance = Math.max(1.5, expectedZoomedWidth * 0.02);
+  const heightTolerance = Math.max(1.5, expectedZoomedHeight * 0.02);
+  const widthDiffToZoomed = Math.abs(normalizedRect.width - expectedZoomedWidth);
+  const heightDiffToZoomed = Math.abs(normalizedRect.height - expectedZoomedHeight);
+  const widthDiffToBase = Math.abs(normalizedRect.width - baseWidth);
+  const heightDiffToBase = Math.abs(normalizedRect.height - baseHeight);
+
+  return (
+    widthDiffToZoomed <= widthTolerance &&
+    heightDiffToZoomed <= heightTolerance &&
+    widthDiffToZoomed + 0.5 < widthDiffToBase &&
+    heightDiffToZoomed + 0.5 < heightDiffToBase
+  );
+}
+
+function resolveStableMeasuredRect(measuredRect, activeZoomTransform, expectedNode, fallbackRect = null) {
+  if (
+    activeZoomTransform &&
+    activeZoomTransform.node === expectedNode &&
+    shouldNormalizeRectForActiveZoom(measuredRect, activeZoomTransform)
+  ) {
+    const restoredRect = normalizeRectForActiveZoom(measuredRect, activeZoomTransform);
+    if (restoredRect) {
+      return restoredRect;
+    }
+  }
+
+  return normalizeRect(measuredRect) || fallbackRect;
+}
+
+function getScreenPointFromRect(point, viewBox, rect) {
+  if (!(rect?.width > 0 && rect?.height > 0)) {
     return null;
   }
 
   const normalizedX = (point.x - viewBox.x) / viewBox.width;
   const normalizedY = (point.y - viewBox.y) / viewBox.height;
   return {
-    x: svgRect.left + normalizedX * svgRect.width,
-    y: svgRect.top + normalizedY * svgRect.height,
+    x: rect.left + normalizedX * rect.width,
+    y: rect.top + normalizedY * rect.height,
   };
 }
 
@@ -872,6 +866,8 @@ export function buildZoomTransform(options = {}) {
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   const providedBaseTransform =
     typeof options.baseTransform === "string" ? options.baseTransform : null;
+  const activeTargetZoomTransform = options.activeTargetZoomTransform || null;
+  const activeBoardZoomTransform = options.activeBoardZoomTransform || null;
 
   if (!targetNode || !boardSvg || !hostNode || !Number.isFinite(zoomLevel) || zoomLevel <= 0 || !intent) {
     return null;
@@ -882,8 +878,17 @@ export function buildZoomTransform(options = {}) {
     return null;
   }
 
-  const targetRect = targetNode.getBoundingClientRect?.();
-  const viewportRect = hostNode.getBoundingClientRect?.();
+  const targetRect = resolveStableMeasuredRect(
+    targetNode.getBoundingClientRect?.(),
+    activeTargetZoomTransform,
+    targetNode
+  );
+  const boardRect = resolveStableMeasuredRect(
+    boardSvg.getBoundingClientRect?.(),
+    activeBoardZoomTransform,
+    boardSvg
+  );
+  const viewportRect = normalizeRect(hostNode.getBoundingClientRect?.());
   if (!(targetRect?.width > 0 && targetRect?.height > 0 && viewportRect?.width > 0 && viewportRect?.height > 0)) {
     return null;
   }
@@ -900,7 +905,7 @@ export function buildZoomTransform(options = {}) {
     return null;
   }
 
-  const screenPoint = getScreenPointFromViewBoxPoint(boardSvg, segmentPoint, segmentPoint.viewBox);
+  const screenPoint = getScreenPointFromRect(segmentPoint, segmentPoint.viewBox, boardRect);
   if (!screenPoint) {
     return null;
   }
@@ -980,6 +985,14 @@ export function buildZoomTransform(options = {}) {
       height: Number(viewportRect.height),
       right: Number(viewportRect.right),
       bottom: Number(viewportRect.bottom),
+    },
+    boardRect: {
+      left: Number(boardRect.left),
+      top: Number(boardRect.top),
+      width: Number(boardRect.width),
+      height: Number(boardRect.height),
+      right: Number(boardRect.right),
+      bottom: Number(boardRect.bottom),
     },
   };
 }
@@ -1082,59 +1095,32 @@ export function computeZoomIntent(options = {}) {
     state.activeIntent = null;
   }
 
-  const stateScoreCandidate = gameState.getActiveScore?.();
-  const stateActiveScore =
-    Number.isFinite(stateScoreCandidate) && stateScoreCandidate >= 0
-      ? stateScoreCandidate
-      : null;
-  const domActiveScore = getBestVisibleScoreFromDom(documentRef, windowRef);
-  const visibleRouteSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
-  let activeScore = Number.isFinite(stateActiveScore) ? stateActiveScore : domActiveScore;
-
-  if (
-    Number.isFinite(stateActiveScore) &&
-    Number.isFinite(domActiveScore) &&
-    domActiveScore !== stateActiveScore &&
-    visibleRouteSegments.length > 1
-  ) {
-    const gameStateSurface = resolveCheckoutSurfaceSemantics({
-      routeSegments: visibleRouteSegments,
-      activeScore: stateActiveScore,
-      outMode,
-      dartsRemaining: Math.max(0, 3 - throwCount),
-      x01Rules,
-    });
-    const domSurface = resolveCheckoutSurfaceSemantics({
-      routeSegments: visibleRouteSegments,
-      activeScore: domActiveScore,
-      outMode,
-      dartsRemaining: Math.max(0, 3 - throwCount),
-      x01Rules,
-    });
-    const gameStateLooksLikeDirectFinish =
-      gameStateSurface.selectionSource === "score-route" &&
-      gameStateSurface.canUseAuthoritativeFinishNow;
-    const domLooksLikeVisibleMultiStepRoute =
-      String(domSurface.selectionSource || "").startsWith("validated-visible-route") &&
-      !domSurface.canUseAuthoritativeFinishNow;
-
-    if (gameStateLooksLikeDirectFinish && domLooksLikeVisibleMultiStepRoute) {
-      activeScore = domActiveScore;
-    }
-  }
-
-  if (state.stickyUntilLegEnd && stateActiveScore === 0 && throwCount === 0) {
-    if (Number.isFinite(domActiveScore) && domActiveScore > 0) {
-      activeScore = domActiveScore;
-    }
-  }
-  const checkoutSurface = resolveCheckoutSurfaceSemantics({
-    routeSegments: visibleRouteSegments,
-    activeScore,
+  const x01CheckoutContext = resolveX01CheckoutContext({
+    gameState,
+    documentRef,
+    windowRef,
     outMode,
     dartsRemaining: Math.max(0, 3 - throwCount),
     x01Rules,
   });
+  let activeScore = x01CheckoutContext.activeScore;
+  let checkoutSurface = x01CheckoutContext.checkoutSurface;
+  if (
+    state.stickyUntilLegEnd &&
+    x01CheckoutContext.gameStateScore === 0 &&
+    throwCount === 0 &&
+    Number.isFinite(x01CheckoutContext.domScore) &&
+    x01CheckoutContext.domScore > 0
+  ) {
+    activeScore = x01CheckoutContext.domScore;
+    checkoutSurface = resolveCheckoutSurfaceSemantics({
+      routeSegments: x01CheckoutContext.routeSegments,
+      activeScore,
+      outMode,
+      dartsRemaining: Math.max(0, 3 - throwCount),
+      x01Rules,
+    });
+  }
   const authoritativeRouteSegments = checkoutSurface.authoritativeRouteSegments;
   const firstRouteSegment = getFirstCheckoutRouteSegment(authoritativeRouteSegments);
   const finishRouteSegment = checkoutSurface.authoritativeFinishSegment;
@@ -1311,6 +1297,28 @@ export function applyZoom(
     windowRef,
     documentRef,
     baseTransform: cachedBaseTransform,
+    activeTargetZoomTransform:
+      state.zoomedElement === targetNode && state.lastAppliedZoomTransform?.targetNode === targetNode
+        ? {
+            node: targetNode,
+            scale: state.lastAppliedZoomTransform.scale,
+            tx: state.lastAppliedZoomTransform.tx,
+            ty: state.lastAppliedZoomTransform.ty,
+            baseWidth: state.lastAppliedZoomTransform.targetBaseWidth,
+            baseHeight: state.lastAppliedZoomTransform.targetBaseHeight,
+          }
+        : null,
+    activeBoardZoomTransform:
+      state.zoomedElement === targetNode && state.lastAppliedZoomTransform?.boardSvg === boardSvg
+        ? {
+            node: boardSvg,
+            scale: state.lastAppliedZoomTransform.scale,
+            tx: state.lastAppliedZoomTransform.tx,
+            ty: state.lastAppliedZoomTransform.ty,
+            baseWidth: state.lastAppliedZoomTransform.boardBaseWidth,
+            baseHeight: state.lastAppliedZoomTransform.boardBaseHeight,
+          }
+        : null,
   });
 
   if (!zoomData) {
@@ -1359,6 +1367,18 @@ export function applyZoom(
   state.zoomHost = hostNode || null;
   state.lastAppliedSignature = zoomData.signature;
   state.lastAppliedIntentSignature = zoomData.intentSignature;
+  state.lastAppliedZoomTransform = {
+    targetNode,
+    boardSvg,
+    hostNode: hostNode || null,
+    tx: zoomData.tx,
+    ty: zoomData.ty,
+    scale: zoomLevel,
+    targetBaseWidth: zoomData.targetRect.width,
+    targetBaseHeight: zoomData.targetRect.height,
+    boardBaseWidth: zoomData.boardRect.width,
+    boardBaseHeight: zoomData.boardRect.height,
+  };
   return zoomData;
 }
 
@@ -1380,6 +1400,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
     state.hostStyleSnapshot = null;
     state.lastAppliedSignature = "";
     state.lastAppliedIntentSignature = "";
+    state.lastAppliedZoomTransform = null;
     return;
   }
 
@@ -1396,6 +1417,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
     state.hostStyleSnapshot = null;
     state.lastAppliedSignature = "";
     state.lastAppliedIntentSignature = "";
+    state.lastAppliedZoomTransform = null;
     return;
   }
 
@@ -1423,5 +1445,6 @@ export function resetZoom(speedConfig, state, immediate = false) {
 
     state.lastAppliedSignature = "";
     state.lastAppliedIntentSignature = "";
+    state.lastAppliedZoomTransform = null;
   }, releaseDelay);
 }

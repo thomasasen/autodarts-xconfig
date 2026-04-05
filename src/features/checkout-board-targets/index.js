@@ -6,95 +6,14 @@ import {
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import {
-  collectVisibleCheckoutRouteEntries,
   mapRouteSegmentsToBoardTargets,
-  resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
+import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const TRANSIENT_ROUTE_RETENTION_MS = 1500;
-const SCORE_SELECTOR = "p.ad-ext-player-score";
-const ACTIVE_SCORE_SELECTOR =
-  ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score, .ad-ext-player-active p.ad-ext-player-score";
-
-function parseScore(text) {
-  const match = String(text || "").match(/\d+/);
-  if (!match) {
-    return NaN;
-  }
-
-  const value = Number(match[0]);
-  return Number.isFinite(value) ? value : NaN;
-}
-
-function readDomActiveScore(documentRef) {
-  if (!documentRef || typeof documentRef.querySelector !== "function") {
-    return NaN;
-  }
-
-  const node =
-    documentRef.querySelector(ACTIVE_SCORE_SELECTOR) ||
-    documentRef.querySelector(SCORE_SELECTOR);
-  return parseScore(node?.textContent || "");
-}
-
-function resolveActiveScoreState(gameState, documentRef) {
-  const gameStateScore =
-    gameState && typeof gameState.getActiveScore === "function"
-      ? Number(gameState.getActiveScore())
-      : NaN;
-  const domScore = readDomActiveScore(documentRef);
-
-  if (Number.isFinite(domScore) && Number.isFinite(gameStateScore)) {
-    if (domScore === gameStateScore) {
-      return {
-        activeScore: domScore,
-        domScore,
-        gameStateScore,
-        scoreSource: "game-state+dom",
-        scoreAgreement: "match",
-      };
-    }
-
-    return {
-      activeScore: domScore,
-      domScore,
-      gameStateScore,
-      scoreSource: "dom-preferred",
-      scoreAgreement: "mismatch",
-    };
-  }
-
-  if (Number.isFinite(domScore)) {
-    return {
-      activeScore: domScore,
-      domScore,
-      gameStateScore,
-      scoreSource: "dom",
-      scoreAgreement: "dom-only",
-    };
-  }
-
-  if (Number.isFinite(gameStateScore)) {
-    return {
-      activeScore: gameStateScore,
-      domScore,
-      gameStateScore,
-      scoreSource: "game-state",
-      scoreAgreement: "game-state-only",
-    };
-  }
-
-  return {
-    activeScore: NaN,
-    domScore,
-    gameStateScore,
-    scoreSource: "none",
-    scoreAgreement: "none",
-  };
-}
 
 function resolveDartsRemaining(gameState) {
   const throws = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
@@ -523,26 +442,27 @@ export function initializeCheckoutBoardTargets(context = {}) {
       documentRef,
       variantRules,
     });
-    const routeEntries = collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules);
-    const routeSegments = routeEntries.flatMap((entry) =>
-      Array.isArray(entry?.segments) ? entry.segments : []
-    );
     const variantText = String(
       documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || ""
     ).trim();
-    const outMode =
-      gameState && typeof gameState.getOutMode === "function"
-        ? String(gameState.getOutMode() || "")
-        : "";
-    const activeScoreState = resolveActiveScoreState(gameState, documentRef);
-    const activeScore = activeScoreState.activeScore;
     const { dartsRemaining } = resolveDartsRemaining(gameState);
+    const x01CheckoutContext = resolveX01CheckoutContext({
+      gameState,
+      documentRef,
+      windowRef,
+      dartsRemaining,
+      x01Rules,
+    });
+    const routeEntries = x01CheckoutContext.routeEntries;
+    const routeSegments = x01CheckoutContext.routeSegments;
+    const outMode = x01CheckoutContext.outMode;
+    const activeScore = x01CheckoutContext.activeScore;
     const signature = [
       active ? "x01" : "other",
       routeSegments.join(">"),
       Number.isFinite(activeScore) ? activeScore : "null",
-      Number.isFinite(activeScoreState.domScore) ? activeScoreState.domScore : "null",
-      Number.isFinite(activeScoreState.gameStateScore) ? activeScoreState.gameStateScore : "null",
+      Number.isFinite(x01CheckoutContext.domScore) ? x01CheckoutContext.domScore : "null",
+      Number.isFinite(x01CheckoutContext.gameStateScore) ? x01CheckoutContext.gameStateScore : "null",
       outMode,
       dartsRemaining,
     ].join("|");
@@ -558,10 +478,10 @@ export function initializeCheckoutBoardTargets(context = {}) {
         status: "inactive",
         active,
         activeScore,
-        domScore: activeScoreState.domScore,
-        gameStateScore: activeScoreState.gameStateScore,
-        scoreSource: activeScoreState.scoreSource,
-        scoreAgreement: activeScoreState.scoreAgreement,
+        domScore: x01CheckoutContext.domScore,
+        gameStateScore: x01CheckoutContext.gameStateScore,
+        scoreSource: x01CheckoutContext.scoreSource,
+        scoreAgreement: x01CheckoutContext.scoreAgreement,
         variantText,
         outMode,
         targetSelectionMode,
@@ -579,13 +499,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
 
-    const checkoutSurface = resolveCheckoutSurfaceSemantics({
-      routeSegments,
-      activeScore,
-      outMode,
-      dartsRemaining,
-      x01Rules,
-    });
+    const checkoutSurface = x01CheckoutContext.checkoutSurface;
     const { selectedSegments } = selectRouteSegments(checkoutSurface);
     const selectionSource = checkoutSurface.selectionSource || "none";
     const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
@@ -627,10 +541,10 @@ export function initializeCheckoutBoardTargets(context = {}) {
       status,
       active,
       activeScore,
-      domScore: activeScoreState.domScore,
-      gameStateScore: activeScoreState.gameStateScore,
-      scoreSource: activeScoreState.scoreSource,
-      scoreAgreement: activeScoreState.scoreAgreement,
+      domScore: x01CheckoutContext.domScore,
+      gameStateScore: x01CheckoutContext.gameStateScore,
+      scoreSource: x01CheckoutContext.scoreSource,
+      scoreAgreement: x01CheckoutContext.scoreAgreement,
       variantText,
       outMode,
       targetSelectionMode,

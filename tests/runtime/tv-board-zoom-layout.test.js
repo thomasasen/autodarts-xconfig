@@ -26,6 +26,7 @@ function createZoomState() {
     lastThrowCount: -1,
     lastAppliedSignature: "",
     lastAppliedIntentSignature: "",
+    lastAppliedZoomTransform: null,
     releaseTimeoutId: 0,
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
@@ -806,6 +807,72 @@ test("tv-board-zoom keeps the same transform through subpixel layout drift on an
   assert.ok(secondZoomData);
   assert.equal(secondZoomData.intentSignature, firstZoomData.intentSignature);
   assert.equal(secondZoomData.signature, firstZoomData.signature);
+  assert.equal(String(targetNode.style.transform || ""), firstTransform);
+});
+
+test("tv-board-zoom keeps the active translated zoom when layout reads reflect the already-zoomed board", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+  const intent = { reason: "checkout", segment: "D20" };
+
+  applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    intent,
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  const firstTransform = String(targetNode.style.transform || "");
+  const parsedFirstTransform = parseTransform(firstTransform);
+  assert.ok(parsedFirstTransform);
+  assert.notEqual(parsedFirstTransform.tx, 0);
+  assert.notEqual(parsedFirstTransform.ty, 0);
+
+  const originalTargetRect = targetNode.getBoundingClientRect.bind(targetNode);
+  const originalBoardRect = boardSvg.getBoundingClientRect.bind(boardSvg);
+  targetNode.getBoundingClientRect = () => {
+    const rect = originalTargetRect();
+    return {
+      left: rect.left + parsedFirstTransform.tx,
+      top: rect.top + parsedFirstTransform.ty,
+      width: rect.width * parsedFirstTransform.scale,
+      height: rect.height * parsedFirstTransform.scale,
+      right: rect.left + parsedFirstTransform.tx + rect.width * parsedFirstTransform.scale,
+      bottom: rect.top + parsedFirstTransform.ty + rect.height * parsedFirstTransform.scale,
+    };
+  };
+  boardSvg.getBoundingClientRect = () => {
+    const rect = originalBoardRect();
+    return {
+      left: rect.left + parsedFirstTransform.tx,
+      top: rect.top + parsedFirstTransform.ty,
+      width: rect.width * parsedFirstTransform.scale,
+      height: rect.height * parsedFirstTransform.scale,
+      right: rect.left + parsedFirstTransform.tx + rect.width * parsedFirstTransform.scale,
+      bottom: rect.top + parsedFirstTransform.ty + rect.height * parsedFirstTransform.scale,
+    };
+  };
+
+  applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    intent,
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
   assert.equal(String(targetNode.style.transform || ""), firstTransform);
 });
 
