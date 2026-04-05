@@ -129,6 +129,11 @@ div.css-nfhdnc {
   backdrop-filter: blur(1px);
 }
 
+#ad-ext-player-display .ad-ext-player > .chakra-stack{
+  grid-template-rows: max-content max-content !important;
+  align-content: center !important;
+}
+
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active{
   border: 2px solid rgba(102, 187, 106, var(--bull-active-border-alpha)) !important;
   box-shadow:
@@ -155,6 +160,11 @@ div.css-nfhdnc {
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score{
   color: #9ca8b9 !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p{
+  font-size: 7.2em !important;
 }
 
 span.css-3fr5p8{

@@ -5,7 +5,10 @@ import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
-import { initializeTvBoardZoom } from "../../src/features/tv-board-zoom/index.js";
+import {
+  initializeTvBoardZoom,
+  shouldScheduleTvBoardZoomMutation,
+} from "../../src/features/tv-board-zoom/index.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
@@ -285,6 +288,135 @@ test("tv-board-zoom keeps immediate correction zoom-out behavior with manual pau
     timers.advance(35);
 
     assert.equal(String(targetNode.style.transform || ""), "");
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom ignores attribute churn on board descendants but still reacts to structural board changes", () => {
+  const documentRef = new FakeDocument();
+  const { hostNode, targetNode, boardSvg } = installZoomFixture(documentRef);
+  const boardPath = documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  boardPath.setAttribute("d", "M 0 0 L 5 5");
+  boardSvg.appendChild(boardPath);
+
+  const unrelatedMutation = {
+    type: "attributes",
+    target: boardPath,
+    attributeName: "class",
+    addedNodes: [],
+    removedNodes: [],
+  };
+  const structuralMutation = {
+    type: "childList",
+    target: targetNode,
+    addedNodes: [],
+    removedNodes: [boardSvg],
+  };
+
+  assert.equal(
+    shouldScheduleTvBoardZoomMutation([unrelatedMutation], {
+      boardSurface: {
+        svg: boardSvg,
+        zoomTarget: targetNode,
+        zoomHost: hostNode,
+      },
+      zoomState: {
+        zoomedElement: targetNode,
+        zoomHost: hostNode,
+      },
+    }),
+    false
+  );
+  assert.equal(
+    shouldScheduleTvBoardZoomMutation([structuralMutation], {
+      boardSurface: {
+        svg: boardSvg,
+        zoomTarget: targetNode,
+        zoomHost: hostNode,
+      },
+      zoomState: {
+        zoomedElement: targetNode,
+        zoomHost: hostNode,
+      },
+    }),
+    true
+  );
+});
+
+test("tv-board-zoom does not reapply the zoom after unrelated board-svg attribute churn", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({
+    activeScore: 10,
+    throws: [],
+  });
+  const { targetNode, boardSvg } = installZoomFixture(documentRef);
+  const boardPath = documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  boardPath.setAttribute("d", "M 0 0 L 4 6");
+  boardSvg.appendChild(boardPath);
+
+  const originalTargetRect = targetNode.getBoundingClientRect.bind(targetNode);
+  const originalBoardRect = boardSvg.getBoundingClientRect.bind(boardSvg);
+  let targetDriftPhase = 0;
+  let boardDriftPhase = 0;
+  targetNode.getBoundingClientRect = () => {
+    const rect = originalTargetRect();
+    const driftX = targetDriftPhase * 1.2;
+    const driftY = targetDriftPhase * 0.8;
+    return {
+      ...rect,
+      left: rect.left + driftX,
+      top: rect.top + driftY,
+      right: rect.right + driftX,
+      bottom: rect.bottom + driftY,
+    };
+  };
+  boardSvg.getBoundingClientRect = () => {
+    const rect = originalBoardRect();
+    const driftX = boardDriftPhase * 1.2;
+    const driftY = boardDriftPhase * 0.8;
+    return {
+      ...rect,
+      left: rect.left + driftX,
+      top: rect.top + driftY,
+      right: rect.right + driftX,
+      bottom: rect.bottom + driftY,
+    };
+  };
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+    featureConfig: {
+      checkoutZoomTarget: "finish-only",
+    },
+  });
+
+  try {
+    timers.advance(25);
+    const firstTransform = String(targetNode.style.transform || "");
+    assert.match(firstTransform, /scale\(/);
+
+    targetDriftPhase = 1;
+    boardDriftPhase = 1;
+    documentRef.flushMutations([
+      {
+        type: "attributes",
+        target: boardPath,
+        attributeName: "class",
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ]);
+    timers.advance(35);
+
+    assert.equal(String(targetNode.style.transform || ""), firstTransform);
   } finally {
     cleanup();
     timers.restoreGlobals();

@@ -25,6 +25,7 @@ function createZoomState() {
     lastTurnId: "",
     lastThrowCount: -1,
     lastAppliedSignature: "",
+    lastAppliedIntentSignature: "",
     releaseTimeoutId: 0,
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
@@ -754,6 +755,58 @@ test("tv-board-zoom keeps transform idempotent across repeated apply calls", () 
 
   assert.equal(secondTransform, firstTransform);
   assert.equal((secondTransform.match(/scale\(/g) || []).length, 1);
+});
+
+test("tv-board-zoom keeps the same transform through subpixel layout drift on an unchanged intent", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+  const intent = { reason: "checkout", segment: "D20" };
+
+  const firstZoomData = applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    intent,
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  const firstTransform = String(targetNode.style.transform || "");
+
+  targetNode.__rect = {
+    ...targetNode.__rect,
+    left: targetNode.__rect.left + 0.18,
+    top: targetNode.__rect.top + 0.16,
+  };
+  boardSvg.__rect = {
+    ...boardSvg.__rect,
+    left: boardSvg.__rect.left + 0.18,
+    top: boardSvg.__rect.top + 0.16,
+  };
+
+  const secondZoomData = applyZoom(
+    targetNode,
+    hostNode,
+    boardSvg,
+    2.75,
+    speedConfig,
+    intent,
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.ok(firstZoomData);
+  assert.ok(secondZoomData);
+  assert.equal(secondZoomData.intentSignature, firstZoomData.intentSignature);
+  assert.equal(secondZoomData.signature, firstZoomData.signature);
+  assert.equal(String(targetNode.style.transform || ""), firstTransform);
 });
 
 test("tv-board-zoom delayed reset clears zoom classes and restores host overflow", async () => {

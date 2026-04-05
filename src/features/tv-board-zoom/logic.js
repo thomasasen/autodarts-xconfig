@@ -34,6 +34,7 @@ const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
   min: 2.35,
   max: 3.15,
 });
+const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
 
 function parseScoreText(text) {
   const match = String(text || "").match(/-?\d+/);
@@ -163,6 +164,19 @@ export function getBestVisibleScoreFromDom(documentRef, windowRef) {
 
   candidates.sort((left, right) => right.weight - left.weight);
   return candidates[0].value;
+}
+
+function quantizeForSignature(value, step = TRANSFORM_SIGNATURE_STEP_PX) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  const numericStep = Number(step);
+  if (!Number.isFinite(numericStep) || numericStep <= 0) {
+    return value;
+  }
+
+  return Math.round(value / numericStep) * numericStep;
 }
 
 function parseSegmentWithFallback(segmentName, x01Rules) {
@@ -931,18 +945,22 @@ export function buildZoomTransform(options = {}) {
   }
 
   const transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${zoomLevel.toFixed(4)})`;
-  const signature = [
-    baseTransform || "none",
-    tx.toFixed(2),
-    ty.toFixed(2),
-    zoomLevel.toFixed(4),
+  const intentSignature = [
     String(segmentPoint.parsedSegment?.normalized || intent.segment || ""),
     String(intent.reason || ""),
+    zoomLevel.toFixed(4),
+  ].join("|");
+  const signature = [
+    baseTransform || "none",
+    quantizeForSignature(tx).toFixed(2),
+    quantizeForSignature(ty).toFixed(2),
+    intentSignature,
   ].join("|");
 
   return {
     transform,
     baseTransform,
+    intentSignature,
     signature,
     anchor,
     tx,
@@ -1271,6 +1289,7 @@ export function applyZoom(
     restoreTargetStyle(state, state.zoomedElement);
     state.zoomedElement = null;
     state.lastAppliedSignature = "";
+    state.lastAppliedIntentSignature = "";
   }
   if (state.zoomHost && state.zoomHost !== hostNode) {
     restoreHostStyle(state, state.zoomHost);
@@ -1299,30 +1318,47 @@ export function applyZoom(
   }
   if (hostNode?.classList) {
     cacheHostStyle(state, hostNode);
-    hostNode.classList.add(ZOOM_HOST_CLASS);
-    setStyleWithPriority(hostNode.style, "overflow", "hidden", "important");
-    setStyleWithPriority(hostNode.style, "overflow-x", "hidden", "important");
-    setStyleWithPriority(hostNode.style, "overflow-y", "hidden", "important");
+    if (!hostNode.classList.contains(ZOOM_HOST_CLASS)) {
+      hostNode.classList.add(ZOOM_HOST_CLASS);
+    }
+    if (getStyleValue(hostNode.style, "overflow") !== "hidden") {
+      setStyleWithPriority(hostNode.style, "overflow", "hidden", "important");
+    }
+    if (getStyleValue(hostNode.style, "overflow-x") !== "hidden") {
+      setStyleWithPriority(hostNode.style, "overflow-x", "hidden", "important");
+    }
+    if (getStyleValue(hostNode.style, "overflow-y") !== "hidden") {
+      setStyleWithPriority(hostNode.style, "overflow-y", "hidden", "important");
+    }
   }
   applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
 
   const composedTransform = zoomData.baseTransform
     ? `${zoomData.baseTransform} ${zoomData.transform}`
     : zoomData.transform;
+  const isSameVisualIntent =
+    state.zoomedElement === targetNode &&
+    state.zoomHost === (hostNode || null) &&
+    state.lastAppliedIntentSignature === zoomData.intentSignature;
   if (state.zoomedElement === targetNode && state.lastAppliedSignature === zoomData.signature) {
     state.zoomHost = hostNode || null;
     return zoomData;
   }
 
-  targetNode.classList.add(ZOOM_CLASS);
+  if (!targetNode.classList.contains(ZOOM_CLASS)) {
+    targetNode.classList.add(ZOOM_CLASS);
+  }
   targetNode.style.transformOrigin = "0 0";
   targetNode.style.willChange = "transform";
-  targetNode.style.transition = `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`;
+  targetNode.style.transition = isSameVisualIntent
+    ? "none"
+    : `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`;
   targetNode.style.transform = composedTransform;
 
   state.zoomedElement = targetNode;
   state.zoomHost = hostNode || null;
   state.lastAppliedSignature = zoomData.signature;
+  state.lastAppliedIntentSignature = zoomData.intentSignature;
   return zoomData;
 }
 
@@ -1343,6 +1379,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
     state.zoomHost = null;
     state.hostStyleSnapshot = null;
     state.lastAppliedSignature = "";
+    state.lastAppliedIntentSignature = "";
     return;
   }
 
@@ -1358,6 +1395,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
     state.targetStyleSnapshot = null;
     state.hostStyleSnapshot = null;
     state.lastAppliedSignature = "";
+    state.lastAppliedIntentSignature = "";
     return;
   }
 
@@ -1384,5 +1422,6 @@ export function resetZoom(speedConfig, state, immediate = false) {
     }
 
     state.lastAppliedSignature = "";
+    state.lastAppliedIntentSignature = "";
   }, releaseDelay);
 }
