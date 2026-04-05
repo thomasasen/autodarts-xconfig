@@ -225,14 +225,14 @@ span.css-3fr5p8{
 }
 
 @media (max-width: 1200px){
-  #ad-ext-player-display .ad-ext-player .ad-ext-player-score{
-    font-size: 6.2em !important;
+  #ad-ext-player-display .ad-ext-player{
+    --ad-ext-player-score-max: 6.2rem;
   }
 }
 
 @media (max-width: 900px){
-  #ad-ext-player-display .ad-ext-player .ad-ext-player-score{
-    font-size: 5.2em !important;
+  #ad-ext-player-display .ad-ext-player{
+    --ad-ext-player-score-max: 5.2rem;
   }
 }
 `;

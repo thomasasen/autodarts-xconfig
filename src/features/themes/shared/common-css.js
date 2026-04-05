@@ -79,7 +79,7 @@ div.ad-ext-player.ad-ext-player-active p.chakra-text.css-0 {
 }
 
 div.ad-ext-player.ad-ext-player-active p.chakra-text.ad-ext-player-score {
-  font-size: 7em;
+  font-size: var(--ad-ext-player-score-size, 7em) !important;
 }
 
 button.chakra-button.css-d6eevf {
@@ -111,7 +111,7 @@ div.css-rrf7rv {
 span.chakra-badge.css-1j1ty0z,
 span.chakra-badge.css-1c4630i,
 span.chakra-badge.css-n2903v {
-  font-size: 30px;
+  font-size: var(--ad-ext-player-badge-size, 30px) !important;
 }
 
 .correction-bg {
@@ -122,7 +122,7 @@ p.chakra-text.ad-ext-player-score.css-18w03sn { color: #9fdb58; }
 span.css-3fr5p8 { background-color: #9fdb58; color: #222; }
 p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: #9fdb58; }
 div.suggestion.css-1dkgpmk { font-size: 6px; background-color: #222; border-color: #434343; }
-div.ad-ext-player.ad-ext-player-active.css-1en42kf { border-color: #434343; border-style: solid; }
+div.ad-ext-player.ad-ext-player-active.css-1en42kf { border-color: var(--theme-text-highlight-color); border-style: solid; }
 div.chakra-menu__menu-list.css-yskgbr { background-color: #434343; }
 button.chakra-tabs__tab.css-1vm7g5b { color: #9fdb58; }
 span.chakra-switch__track.css-v4l15v { background-color: #38761d; }
@@ -162,7 +162,7 @@ export const commonLayoutCss = `
 }
 
 .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > div > p {
-  font-size: 3em !important;
+  font-size: var(--ad-ext-player-score-size, 3em) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
   text-shadow: var(
     --ad-ext-theme-cricket-score-shadow,
@@ -173,7 +173,7 @@ export const commonLayoutCss = `
 
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
 .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p {
-  font-size: 3em !important;
+  font-size: var(--ad-ext-player-score-size, 3em) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
   text-shadow: var(
     --ad-ext-theme-cricket-score-shadow,
@@ -183,15 +183,12 @@ export const commonLayoutCss = `
 }
 
 .ad-ext-player-inactive .chakra-stack.css-37hv00:not([data-ad-ext-cricket-row="true"]) {
-  height: 20px !important;
-}
-
-.ad-ext-player.ad-ext-player-inactive.css-1en42kf{
-  display: ruby-text !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
 
 .ad-ext-player-inactive .chakra-text.css-11cuipc {
-  font-size: x-large !important;
+  font-size: var(--ad-ext-player-name-size, x-large) !important;
 }
 
 .chakra-avatar{ --avatar-size: 2.5rem; }
@@ -201,6 +198,8 @@ export const commonLayoutCss = `
   display:flex;
   flex-direction: column;
   align-items: stretch;
+  min-height: 0 !important;
+  overflow: hidden !important;
   grid-column-start: 1 !important;
   grid-column-end: 2 !important;
   grid-row-start: 3 !important;
@@ -213,9 +212,9 @@ export const commonLayoutCss = `
 .css-g0ywsj{ min-width: auto; }
 .css-1k3nd6z > span{ justify-content: center; height: 100%; }
 .css-3fr5p8 { background-color: var(--theme-player-badge-bg); }
-.css-3fr5p8 > p{ font-size: 30px; }
+.css-3fr5p8 > p{ font-size: var(--ad-ext-player-badge-size, 30px) !important; }
 
-.css-1j0bqop { font-size: 25px; }
+.css-1j0bqop { font-size: var(--ad-ext-player-meta-size, 25px) !important; }
 
 #ad-ext-turn{
   grid-column-start: 1 !important;

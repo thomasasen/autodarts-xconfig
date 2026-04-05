@@ -32,7 +32,15 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   assert.equal(PREVIEW_X01.mode, "under-throws");
   assert.equal(PREVIEW_X01.activationMode, "autodarts-tools-zoom");
   assert.match(css, /ad-ext-turn-preview-space/);
-  assert.match(css, /--ad-ext-stat-scale:\s*0\.6/);
+  assert.match(css, /--ad-ext-stat-scale:\s*0\.84/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\.ad-ext-player\s*\{[^}]*--ad-ext-player-score-max:\s*8\.85rem;[^}]*--ad-ext-player-score-size:\s*clamp\(2\.7rem,\s*5\.7vw,\s*var\(--ad-ext-player-score-max\)\);[^}]*flex:\s*var\(--ad-ext-player-flex\)\s+1\s+0\s*!important;[^}]*container-type:\s*size\s*!important;/s
+  );
+  assert.match(
+    css,
+    /@supports\s*\(font-size:\s*1cqi\)\s*\{[^}]*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*min\(20cqi,\s*35cqb\)/s
+  );
   assert.match(
     css,
     /ad-ext-avg-trend-arrow\.ad-ext-avg-trend-up\s*\{[^}]*border-bottom:\s*calc\(23px \* var\(--ad-ext-stat-scale\)\)\s*solid\s*#9fdb58;/s
@@ -60,6 +68,10 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   assert.match(
     css,
     /#ad-ext-player-display,\s*#ad-ext-turn\s*\{[^}]*position:\s*relative\s*!important;[^}]*z-index:\s*7\s*!important;/s
+  );
+  assert.match(
+    css,
+    /div\.ad-ext-player\.ad-ext-player-active\.css-1en42kf\s*\{[^}]*border-color:\s*var\(--theme-text-highlight-color\);[^}]*border-style:\s*solid;/s
   );
   assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
   assertNoFragileLayoutSelectors(css);
@@ -96,10 +108,14 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
     shanghaiCss,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*justify-self:\s*end\s*!important;[^}]*min-width:\s*max-content\s*!important;[^}]*white-space:\s*nowrap\s*!important;/s
   );
-  assert.match(shanghaiCss, /--ad-ext-stat-scale:\s*0\.6/);
+  assert.match(shanghaiCss, /--ad-ext-stat-scale:\s*0\.84/);
   assert.match(
     shanghaiCss,
-    /div\.ad-ext-player\.ad-ext-player-active\s+p\.chakra-text\.ad-ext-player-score\s*\{[^}]*font-size:\s*9em;/s
+    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-score-size:\s*clamp\(3\.15rem,\s*6\.6vw,\s*var\(--ad-ext-player-score-max\)\);/s
+  );
+  assert.match(
+    shanghaiCss,
+    /div\.ad-ext-player\.ad-ext-player-active\.css-1en42kf\s*\{[^}]*border-color:\s*var\(--theme-text-highlight-color\);[^}]*border-style:\s*solid;/s
   );
   assertNoFragileLayoutSelectors(shanghaiCss);
   assertNoFragileLayoutSelectors(bermudaCss);
@@ -110,7 +126,7 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
 
   assert.equal(PREVIEW_BULL_OFF.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
-  assert.match(css, /--ad-ext-stat-scale:\s*0\.6/);
+  assert.match(css, /--ad-ext-stat-scale:\s*0\.84/);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
@@ -125,9 +141,13 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
   );
   assert.match(
     css,
-    /div\.ad-ext-player\.ad-ext-player-active\s+p\.chakra-text\.ad-ext-player-score\s*\{[^}]*font-size:\s*9em;/s
+    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-score-size:\s*clamp\(3\.15rem,\s*6\.6vw,\s*var\(--ad-ext-player-score-max\)\);/s
   );
   assert.doesNotMatch(css, /font-size:\s*7\.2em\s*!important;/s);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\{[^}]*border:\s*2px\s+solid\s+rgba\(102,\s*187,\s*106,\s*var\(--bull-active-border-alpha\)\)\s*!important;/s
+  );
   assert.match(css, /grid-template-columns:\s*0\.94fr 1\.06fr\s*!important;/);
   assert.match(
     css,
@@ -198,17 +218,17 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   assertNoFragileLayoutSelectors(commonLayoutCss);
 });
 
-test("shared theme visual settings keep player cards full-height to avoid active-row split lines", () => {
+test("shared theme visual settings keep player cards shrinkable while preserving full-height stacks", () => {
   const visualCss = buildThemeVisualSettingsCss({
     playerFieldTransparency: 10,
   });
 
   assert.match(
     visualCss,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*min-height:\s*100%\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*min-height:\s*0\s*!important;[^}]*height:\s*auto\s*!important;/s
   );
   assert.match(
     visualCss,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*min-height:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*min-height:\s*0\s*!important;[^}]*height:\s*100%\s*!important;/s
   );
 });

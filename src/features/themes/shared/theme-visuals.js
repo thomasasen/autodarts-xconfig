@@ -55,10 +55,11 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
 
   const playerFieldCss = `
 #ad-ext-player-display .ad-ext-player{
-  min-height: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
-  min-height: 100% !important;
+  min-height: 0 !important;
   height: 100% !important;
   background: rgba(8, 12, 24, ${playerFieldAlpha.toFixed(3)}) !important;
 }
