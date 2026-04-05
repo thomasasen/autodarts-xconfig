@@ -7,6 +7,10 @@ const ACTIVE_STAT_SCALE = 1.6;
 const ACTIVE_PLAYER_RATIO = 1.333333;
 const ACTIVE_PLAYER_FLEX = 1.333333;
 const DEFAULT_PLAYER_FLEX = 1;
+const INACTIVE_PLAYER_SCORE_MAX_REM = 4.8;
+const INACTIVE_PLAYER_NAME_MAX_REM = 1.5625;
+const INACTIVE_PLAYER_META_MAX_REM = 1.1875;
+const INACTIVE_PLAYER_BADGE_MAX_REM = 1.4375;
 
 export function buildSharedPlayerDisplayCss() {
   const stackSelector = "#ad-ext-player-display .ad-ext-player > .chakra-stack";
@@ -21,14 +25,14 @@ export function buildSharedPlayerDisplayCss() {
 #ad-ext-player-display > .ad-ext-player{
   --ad-ext-player-flex:${DEFAULT_PLAYER_FLEX};
   --ad-ext-stat-scale:${INACTIVE_STAT_SCALE};
-  --ad-ext-player-score-max:10rem;
-  --ad-ext-player-name-max:3rem;
-  --ad-ext-player-meta-max:2.4rem;
-  --ad-ext-player-badge-max:2.5rem;
-  --ad-ext-player-score-size:clamp(5rem,10vw,var(--ad-ext-player-score-max));
-  --ad-ext-player-name-size:clamp(2.04rem,4.1vw,var(--ad-ext-player-name-max));
-  --ad-ext-player-meta-size:clamp(1.76rem,3.52vw,var(--ad-ext-player-meta-max));
-  --ad-ext-player-badge-size:clamp(1.84rem,3.68vw,var(--ad-ext-player-badge-max));
+  --ad-ext-player-score-max:${INACTIVE_PLAYER_SCORE_MAX_REM}rem;
+  --ad-ext-player-name-max:${INACTIVE_PLAYER_NAME_MAX_REM}rem;
+  --ad-ext-player-meta-max:${INACTIVE_PLAYER_META_MAX_REM}rem;
+  --ad-ext-player-badge-max:${INACTIVE_PLAYER_BADGE_MAX_REM}rem;
+  --ad-ext-player-score-size:clamp(4rem,8vw,var(--ad-ext-player-score-max));
+  --ad-ext-player-name-size:clamp(1.28rem,2.6vw,var(--ad-ext-player-name-max));
+  --ad-ext-player-meta-size:clamp(1rem,2vw,var(--ad-ext-player-meta-max));
+  --ad-ext-player-badge-size:clamp(1.16rem,2.3vw,var(--ad-ext-player-badge-max));
   flex:var(--ad-ext-player-flex) 1 0 !important;
   min-height:0 !important;
   min-width:0 !important;
@@ -44,36 +48,36 @@ export function buildSharedPlayerDisplayCss() {
 #ad-ext-player-display > .ad-ext-player.ad-ext-player-winner{
   --ad-ext-player-flex:${ACTIVE_PLAYER_FLEX};
   --ad-ext-stat-scale:${ACTIVE_STAT_SCALE};
-  --ad-ext-player-score-size:clamp(6.666rem,13.333vw,calc(var(--ad-ext-player-score-max) * ${ACTIVE_PLAYER_RATIO}));
-  --ad-ext-player-name-size:clamp(2.72rem,5.467vw,calc(var(--ad-ext-player-name-max) * ${ACTIVE_PLAYER_RATIO}));
-  --ad-ext-player-meta-size:clamp(2.347rem,4.693vw,calc(var(--ad-ext-player-meta-max) * ${ACTIVE_PLAYER_RATIO}));
-  --ad-ext-player-badge-size:clamp(2.453rem,4.907vw,calc(var(--ad-ext-player-badge-max) * ${ACTIVE_PLAYER_RATIO}));
+  --ad-ext-player-score-size:clamp(5.333rem,10.667vw,calc(var(--ad-ext-player-score-max) * ${ACTIVE_PLAYER_RATIO}));
+  --ad-ext-player-name-size:clamp(1.707rem,3.467vw,calc(var(--ad-ext-player-name-max) * ${ACTIVE_PLAYER_RATIO}));
+  --ad-ext-player-meta-size:clamp(1.333rem,2.667vw,calc(var(--ad-ext-player-meta-max) * ${ACTIVE_PLAYER_RATIO}));
+  --ad-ext-player-badge-size:clamp(1.547rem,3.067vw,calc(var(--ad-ext-player-badge-max) * ${ACTIVE_PLAYER_RATIO}));
 }
 
 #ad-ext-player-display > .ad-ext-player.ad-ext-player-inactive,
 #ad-ext-player-display > .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner){
   --ad-ext-stat-scale:${INACTIVE_STAT_SCALE};
-  --ad-ext-player-score-size:clamp(5rem,10vw,var(--ad-ext-player-score-max));
-  --ad-ext-player-name-size:clamp(2.04rem,4.1vw,var(--ad-ext-player-name-max));
-  --ad-ext-player-meta-size:clamp(1.76rem,3.52vw,var(--ad-ext-player-meta-max));
-  --ad-ext-player-badge-size:clamp(1.84rem,3.68vw,var(--ad-ext-player-badge-max));
+  --ad-ext-player-score-size:clamp(4rem,8vw,var(--ad-ext-player-score-max));
+  --ad-ext-player-name-size:clamp(1.28rem,2.6vw,var(--ad-ext-player-name-max));
+  --ad-ext-player-meta-size:clamp(1rem,2vw,var(--ad-ext-player-meta-max));
+  --ad-ext-player-badge-size:clamp(1.16rem,2.3vw,var(--ad-ext-player-badge-max));
 }
 
 @supports (font-size: 1cqi) {
   #ad-ext-player-display > .ad-ext-player.ad-ext-player-active,
   #ad-ext-player-display > .ad-ext-player.ad-ext-player-winner{
-    --ad-ext-player-score-size:clamp(6.666rem,min(26.667cqi,46.667cqb),calc(var(--ad-ext-player-score-max) * ${ACTIVE_PLAYER_RATIO}));
-    --ad-ext-player-name-size:clamp(2.72rem,min(10.933cqi,17.067cqb),calc(var(--ad-ext-player-name-max) * ${ACTIVE_PLAYER_RATIO}));
-    --ad-ext-player-meta-size:clamp(2.347rem,min(9.387cqi,13.867cqb),calc(var(--ad-ext-player-meta-max) * ${ACTIVE_PLAYER_RATIO}));
-    --ad-ext-player-badge-size:clamp(2.453rem,min(9.813cqi,14.667cqb),calc(var(--ad-ext-player-badge-max) * ${ACTIVE_PLAYER_RATIO}));
+    --ad-ext-player-score-size:clamp(5.333rem,min(25.6cqi,44.8cqb),calc(var(--ad-ext-player-score-max) * ${ACTIVE_PLAYER_RATIO}));
+    --ad-ext-player-name-size:clamp(1.707rem,min(8.363cqi,13.056cqb),calc(var(--ad-ext-player-name-max) * ${ACTIVE_PLAYER_RATIO}));
+    --ad-ext-player-meta-size:clamp(1.333rem,min(6.336cqi,9.36cqb),calc(var(--ad-ext-player-meta-max) * ${ACTIVE_PLAYER_RATIO}));
+    --ad-ext-player-badge-size:clamp(1.547rem,min(7.666cqi,11.458cqb),calc(var(--ad-ext-player-badge-max) * ${ACTIVE_PLAYER_RATIO}));
   }
 
   #ad-ext-player-display > .ad-ext-player.ad-ext-player-inactive,
   #ad-ext-player-display > .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner){
-    --ad-ext-player-score-size:clamp(5rem,min(20cqi,35cqb),var(--ad-ext-player-score-max));
-    --ad-ext-player-name-size:clamp(2.04rem,min(8.2cqi,12.8cqb),var(--ad-ext-player-name-max));
-    --ad-ext-player-meta-size:clamp(1.76rem,min(7.04cqi,10.4cqb),var(--ad-ext-player-meta-max));
-    --ad-ext-player-badge-size:clamp(1.84rem,min(7.36cqi,11cqb),var(--ad-ext-player-badge-max));
+    --ad-ext-player-score-size:clamp(4rem,min(19.2cqi,33.6cqb),var(--ad-ext-player-score-max));
+    --ad-ext-player-name-size:clamp(1.28rem,min(6.275cqi,9.792cqb),var(--ad-ext-player-name-max));
+    --ad-ext-player-meta-size:clamp(1rem,min(4.752cqi,7.02cqb),var(--ad-ext-player-meta-max));
+    --ad-ext-player-badge-size:clamp(1.16rem,min(5.75cqi,8.594cqb),var(--ad-ext-player-badge-max));
   }
 }
 

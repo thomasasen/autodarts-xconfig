@@ -35,11 +35,11 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   assert.match(css, /--ad-ext-stat-scale:\s*1\.2/);
   assert.match(
     css,
-    /#ad-ext-player-display\s*>\s*\.ad-ext-player\s*\{[^}]*--ad-ext-player-score-max:\s*10rem;[^}]*--ad-ext-player-score-size:\s*clamp\(5rem,\s*10vw,\s*var\(--ad-ext-player-score-max\)\);[^}]*flex:\s*var\(--ad-ext-player-flex\)\s+1\s+0\s*!important;[^}]*container-type:\s*size\s*!important;/s
+    /#ad-ext-player-display\s*>\s*\.ad-ext-player\s*\{[^}]*--ad-ext-player-score-max:\s*4\.8rem;[^}]*--ad-ext-player-score-size:\s*clamp\(4rem,\s*8vw,\s*var\(--ad-ext-player-score-max\)\);[^}]*flex:\s*var\(--ad-ext-player-flex\)\s+1\s+0\s*!important;[^}]*container-type:\s*size\s*!important;/s
   );
   assert.match(
     css,
-    /@supports\s*\(font-size:\s*1cqi\)\s*\{[^}]*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*min\(26\.667cqi,\s*46\.667cqb\)/s
+    /@supports\s*\(font-size:\s*1cqi\)\s*\{[^}]*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*min\(25\.6cqi,\s*44\.8cqb\)/s
   );
   assert.match(
     css,
@@ -111,7 +111,7 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
   assert.match(shanghaiCss, /--ad-ext-stat-scale:\s*1\.2/);
   assert.match(
     shanghaiCss,
-    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(6\.666rem,\s*13\.333vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
+    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(5\.333rem,\s*10\.667vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
   );
   assert.match(
     shanghaiCss,
@@ -141,9 +141,11 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(6\.666rem,\s*13\.333vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
+    /#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s*>\s*\.ad-ext-player\.ad-ext-player-winner\{[^}]*--ad-ext-player-flex:\s*1\.333333;[^}]*--ad-ext-player-score-size:\s*clamp\(5\.333rem,\s*10\.667vw,\s*calc\(var\(--ad-ext-player-score-max\)\s\*\s1\.333333\)\);/s
   );
   assert.doesNotMatch(css, /font-size:\s*7\.2em\s*!important;/s);
+  assert.doesNotMatch(css, /--ad-ext-player-score-max:\s*6\.2rem;/s);
+  assert.doesNotMatch(css, /--ad-ext-player-score-max:\s*5\.2rem;/s);
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\{[^}]*border:\s*2px\s+solid\s+rgba\(102,\s*187,\s*106,\s*var\(--bull-active-border-alpha\)\)\s*!important;/s

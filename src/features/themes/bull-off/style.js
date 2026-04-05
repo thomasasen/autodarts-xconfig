@@ -224,17 +224,6 @@ span.css-3fr5p8{
   height: min(100%, 92vh) !important;
 }
 
-@media (max-width: 1200px){
-  #ad-ext-player-display .ad-ext-player{
-    --ad-ext-player-score-max: 6.2rem;
-  }
-}
-
-@media (max-width: 900px){
-  #ad-ext-player-display .ad-ext-player{
-    --ad-ext-player-score-max: 5.2rem;
-  }
-}
 `;
 }
 

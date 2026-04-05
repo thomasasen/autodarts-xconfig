@@ -162,7 +162,7 @@ export const commonLayoutCss = `
 }
 
 .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > div > p {
-  font-size: var(--ad-ext-player-score-size, 3em) !important;
+  font-size: var(--ad-ext-player-score-size, 4.8rem) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
   text-shadow: var(
     --ad-ext-theme-cricket-score-shadow,
@@ -173,7 +173,7 @@ export const commonLayoutCss = `
 
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
 .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p {
-  font-size: var(--ad-ext-player-score-size, 3em) !important;
+  font-size: var(--ad-ext-player-score-size, 4.8rem) !important;
   color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
   text-shadow: var(
     --ad-ext-theme-cricket-score-shadow,
@@ -188,7 +188,7 @@ export const commonLayoutCss = `
 }
 
 .ad-ext-player-inactive .chakra-text.css-11cuipc {
-  font-size: var(--ad-ext-player-name-size, x-large) !important;
+  font-size: var(--ad-ext-player-name-size, 1.5625rem) !important;
 }
 
 .chakra-avatar{ --avatar-size: 2.5rem; }
@@ -212,9 +212,9 @@ export const commonLayoutCss = `
 .css-g0ywsj{ min-width: auto; }
 .css-1k3nd6z > span{ justify-content: center; height: 100%; }
 .css-3fr5p8 { background-color: var(--theme-player-badge-bg); }
-.css-3fr5p8 > p{ font-size: var(--ad-ext-player-badge-size, 30px) !important; }
+.css-3fr5p8 > p{ font-size: var(--ad-ext-player-badge-size, 1.4375rem) !important; }
 
-.css-1j0bqop { font-size: var(--ad-ext-player-meta-size, 25px) !important; }
+.css-1j0bqop { font-size: var(--ad-ext-player-meta-size, 1.1875rem) !important; }
 
 #ad-ext-turn{
   grid-column-start: 1 !important;
