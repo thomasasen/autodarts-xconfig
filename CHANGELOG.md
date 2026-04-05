@@ -12,15 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.20] - 2026-04-05
+## [2.1.21] - 2026-04-06
 
 ### Fixed
 
 - Nutzerwirkung: `TV Board Zoom`, `Checkout Board Targets` und `Checkout Score Pulse` folgen in X01 jetzt derselben sichtbaren Checkout-Wahrheit, sodass stale Score-Mismatches zwischen DOM und internem Match-State keine widersprüchigen Zooms, Board-Ziele oder Score-Pulse mehr auslösen; zugleich bleibt der Board-Zoom bei aktiven Checkout-Situationen stabiler und nachvollziehbarer bis zum Leg-Ende stehen.
   Technik: Eine gemeinsame X01-Checkout-Context-Schicht zentralisiert aktive Score-Auflösung, sichtbare Route und Checkout-Surface für die betroffenen X01-Features; `tv-board-zoom`, `checkout-board-targets` und `checkout-score-pulse` konsumieren jetzt denselben Shared-Snapshot statt eigener Score-Arbitration, der Zoom nutzt nur noch den gemeinsamen Board-Surface-Resolver, und neue Runtime-Regressionen sichern DOM-vs-Game-State-Mismatch, Sticky-Leg-Ende-Verhalten und Zoom-Stabilität ausdrücklich ab.
 
-- Nutzerwirkung: Die Spieleranzeige in `Theme X01`, `Theme Shanghai` und `Theme Bull-off` skaliert aktive und inaktive Spielerkarten jetzt sauberer mit dem verfügbaren Platz; inaktive Karten bleiben dabei leicht kleiner, werden aber nicht mehr größer als die aktive Karte, und der aktive Rahmen in X01/Shanghai folgt jetzt dem gleichen Grün wie der Punkte-Text.
-  Technik: Die Shared-Player-Card-CSS wurde auf gemeinsame responsive Größenvariablen mit Container-basierten Fallbacks umgestellt, widersprüchliche feste Inaktiv-Fontgrößen im gemeinsamen Theme-CSS wurden entfernt, `theme-visuals` erlaubt den Karten jetzt echtes Flex-Shrinking statt erzwungener Vollhöhe, `Bull-Off` begrenzt seine mobilen Score-Overrides nur noch über dieselbe Shared-Maxgröße, und die Theme-Parity-Regressionen sichern Größenbudget, grünen Aktiv-Rahmen und Shrink-Vertrag explizit ab.
+- Nutzerwirkung: Die Spieleranzeige in `Theme X01`, `Theme Shanghai` und `Theme Bull-off` skaliert aktive und inaktive Spielerkarten jetzt sauberer mit dem verfügbaren Platz; Scores, Namen und Zusatztexte bleiben insgesamt deutlich größer lesbar, inaktive Karten werden nicht größer als die aktive Karte, und der aktive Spieler steht sichtbar im 4:3-Verhältnis über den Inaktiven, während der aktive Rahmen in X01/Shanghai jetzt dem gleichen Grün wie der Punkte-Text folgt.
+  Technik: Die Shared-Player-Card-CSS nutzt jetzt gemeinsame responsive Größenvariablen mit deutlich höherem Basisbudget fuer Score-, Namen- und Meta-Typografie; aktive Karten erhalten explizit das 4:3-Groessen- und Flex-Verhaeltnis ueber dieselben Shared-Variablen, widerspruechliche feste Inaktiv-Fontgroessen im gemeinsamen Theme-CSS wurden entfernt, `theme-visuals` erlaubt den Karten echtes Flex-Shrinking statt erzwungener Vollhoehe, `Bull-Off` begrenzt seine mobilen Score-Overrides nur noch ueber dieselbe Shared-Maxgroesse, und die Theme-Parity-Regressionen sichern Groessenbudget, aktives 4:3-Verhaeltnis, gruenen Aktiv-Rahmen und Shrink-Vertrag explizit ab.
 
 ## [2.1.18] - 2026-04-05
 
@@ -1293,7 +1293,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.20]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...HEAD
+[2.1.21]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...HEAD
 [2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...ea036d3
 [2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...c7223d6
 [2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...ff5d323
