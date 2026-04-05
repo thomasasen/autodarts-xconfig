@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.17] - 2026-04-05
+
+### Fixed
+
+- Nutzerwirkung: `Theme Bull-off` richtet aktive und Sieger-Spielerkarten jetzt wieder sichtbar zentriert im Karten-Container aus, sodass Namen, Metadaten und Score näher am X01-/Shanghai-Look stehen, ohne dass sich das übrige Bull-Off-Layout oder die Board-Gewichtung verändert.
+  Technik: Bull-Off nutzt für das Spieler-Kartenraster jetzt denselben bestehenden Shared-Layout-Baustein wie die anderen zentrierten Score-Themes statt eine Theme-zu-Theme-Abhängigkeit aufzubauen; zusätzliche CSS-Parity-Regressionen sichern Grid-, Overflow- und Zentrierungsanker für Bull-Off explizit gegen künftige Layout-Drifts ab.
+
 ## [2.1.16] - 2026-04-04
 
 ### Fixed
@@ -1269,7 +1276,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...HEAD
+[2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...HEAD
+[2.1.16]: https://github.com/thomasasen/autodarts-xconfig/compare/2a4d191...ff5d323
 [2.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/ba09193...2a4d191
 [2.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/1b33189...ba09193
 [2.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/35bc075...1b33189

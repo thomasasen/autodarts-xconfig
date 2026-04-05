@@ -1,4 +1,5 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
+import { buildCenteredPlayerCardLayoutCss } from "../shared/player-card-layout.js";
 import { normalizeBoolean } from "../shared/theme-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-bull-off-style";
@@ -249,7 +250,8 @@ span.css-3fr5p8{
 
 export function buildBullOffThemeCss(featureConfig = {}) {
   const resolved = resolveThemeBullOffConfig(featureConfig);
-  return buildThemeCssBundle(featureConfig, buildBullOffCss(resolved));
+  const playerCardLayoutCss = buildCenteredPlayerCardLayoutCss();
+  return buildThemeCssBundle(featureConfig, `${playerCardLayoutCss}${buildBullOffCss(resolved)}`);
 }
 
 export { PREVIEW_PLACEMENT };

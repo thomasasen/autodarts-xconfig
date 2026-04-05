@@ -1,3 +1,10 @@
 node_modules/
 test-run.log
 test-run2.log
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

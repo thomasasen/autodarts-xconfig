@@ -109,6 +109,18 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
 
   assert.equal(PREVIEW_BULL_OFF.mode, "standard");
   assert.doesNotMatch(css, /ad-ext-turn-preview-space/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s*>\s*\.chakra-stack,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;[^}]*min-width:\s*0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*justify-self:\s*end\s*!important;[^}]*min-width:\s*max-content\s*!important;[^}]*white-space:\s*nowrap\s*!important;/s
+  );
   assert.match(css, /grid-template-columns:\s*0\.94fr 1\.06fr\s*!important;/);
   assert.match(
     css,
