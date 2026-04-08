@@ -63,6 +63,32 @@ function canFinishWithSegment(activeScore, segmentName, outMode, x01Rules) {
   return false;
 }
 
+function resolveExplicitCheckoutSuggestionState(x01Rules, suggestionText, activeScore, outMode, dartsRemaining) {
+  if (typeof x01Rules?.parseCheckoutSuggestionStateForScore !== "function") {
+    return null;
+  }
+  return x01Rules.parseCheckoutSuggestionStateForScore(
+    suggestionText,
+    activeScore,
+    outMode,
+    dartsRemaining
+  );
+}
+
+function resolveRouteLessCheckoutSuggestionSignal(x01Rules, suggestionText, outMode) {
+  const fallbackSuggestionState =
+    typeof x01Rules.parseCheckoutSuggestionState === "function"
+      ? x01Rules.parseCheckoutSuggestionState(suggestionText, outMode)
+      : null;
+  if (fallbackSuggestionState === false) {
+    return {
+      shouldHighlight: false,
+      shouldFallbackToScore: false,
+    };
+  }
+  return null;
+}
+
 function resolveCheckoutSuggestionSignal(context = {}) {
   const documentRef = context.documentRef;
   const x01Rules = context.x01Rules;
@@ -87,33 +113,22 @@ function resolveCheckoutSuggestionSignal(context = {}) {
   const suggestionText = suggestionNode.textContent || "";
   const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
 
-  if (typeof x01Rules.parseCheckoutSuggestionStateForScore === "function") {
-    const explicitSuggestionState = x01Rules.parseCheckoutSuggestionStateForScore(
-      suggestionText,
-      activeScore,
-      outMode,
-      dartsRemaining
-    );
-    if (explicitSuggestionState === false) {
-      return {
-        shouldHighlight: false,
-        shouldFallbackToScore: false,
-      };
-    }
+  const explicitSuggestionState = resolveExplicitCheckoutSuggestionState(
+    x01Rules,
+    suggestionText,
+    activeScore,
+    outMode,
+    dartsRemaining
+  );
+  if (explicitSuggestionState === false) {
+    return {
+      shouldHighlight: false,
+      shouldFallbackToScore: false,
+    };
   }
 
   if (!routeSegments.length) {
-    const fallbackSuggestionState =
-      typeof x01Rules.parseCheckoutSuggestionState === "function"
-        ? x01Rules.parseCheckoutSuggestionState(suggestionText, outMode)
-        : null;
-    if (fallbackSuggestionState === false) {
-      return {
-        shouldHighlight: false,
-        shouldFallbackToScore: false,
-      };
-    }
-    return null;
+    return resolveRouteLessCheckoutSuggestionSignal(x01Rules, suggestionText, outMode);
   }
 
   const checkoutSurface = resolveCheckoutSurfaceSemantics({

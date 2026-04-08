@@ -8,7 +8,6 @@ import {
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup } from "../../../shared/dartboard-svg.js";
 import {
-  BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
   isBoardInputModeControl,
 } from "../../../shared/board-input-mode.js";
 import {

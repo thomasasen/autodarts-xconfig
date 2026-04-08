@@ -48,12 +48,11 @@ function buildThrowKeys(activeTurn, throwEntry, throwIndex) {
 function syncProcessedThrowScope(state, activeTurn) {
   const turnId = buildTurnId(activeTurn);
   if (state.lastProcessedTurnId === turnId) {
-    return turnId;
+    return;
   }
 
   state.lastProcessedTurnId = turnId;
   state.processedThrowKeys.clear();
-  return turnId;
 }
 
 function normalizeThrowKeys(throwKeys) {

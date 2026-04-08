@@ -31,11 +31,8 @@ import {
 import { createShellRenderController } from "./render-controller.js";
 import { createShellRouteController } from "./route-controller.js";
 import {
-  applyThemeBackgroundStatusNode,
   buildThemeBackgroundStatus,
-  clearThemeBackgroundImage,
   formatThemeBackgroundSummary,
-  uploadThemeBackgroundImage,
 } from "./theme-background.js";
 import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";

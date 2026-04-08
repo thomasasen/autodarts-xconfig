@@ -561,6 +561,18 @@ function selectHigherSpecificBoardGroup(left, right) {
     return left;
   }
 
+  const containmentWinner = selectContainedBoardGroup(left, right);
+  if (containmentWinner) {
+    return containmentWinner;
+  }
+
+  if (right.score === left.score) {
+    return selectScoreTiedBoardGroup(left, right);
+  }
+  return right.score > left.score ? right : left;
+}
+
+function selectContainedBoardGroup(left, right) {
   const leftContainsRight = elementContains(left.group, right.group) && left.group !== right.group;
   const rightContainsLeft = elementContains(right.group, left.group) && right.group !== left.group;
   if (leftContainsRight && !rightContainsLeft) {
@@ -569,14 +581,14 @@ function selectHigherSpecificBoardGroup(left, right) {
   if (rightContainsLeft && !leftContainsRight) {
     return left;
   }
+  return null;
+}
 
-  if (right.score === left.score) {
-    if (right.meta.groupDepth !== left.meta.groupDepth) {
-      return right.meta.groupDepth > left.meta.groupDepth ? right : left;
-    }
-    return right.meta.radius > left.meta.radius ? right : left;
+function selectScoreTiedBoardGroup(left, right) {
+  if (right.meta.groupDepth !== left.meta.groupDepth) {
+    return right.meta.groupDepth > left.meta.groupDepth ? right : left;
   }
-  return right.score > left.score ? right : left;
+  return right.meta.radius > left.meta.radius ? right : left;
 }
 
 function resolveBestBoardSvg(svgNodes = []) {

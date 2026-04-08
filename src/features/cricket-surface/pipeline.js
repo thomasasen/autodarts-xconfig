@@ -6,11 +6,6 @@ import {
 } from "./render-state.js";
 import { cloneLabelDiagnostics, createLabelDiagnostics } from "./diagnostics.js";
 import {
-  collectTargetLabelsInNode as collectTargetLabelsInNodeLayout,
-  resolveBadgeNode as resolveBadgeNodeLayout,
-  resolveLabelCell as resolveLabelCellLayout,
-} from "./label-layout.js";
-import {
   normalizeCricketLabelNode,
 } from "./label-utils.js";
 import { parseTextMarkValue } from "./mark-parser.js";

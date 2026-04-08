@@ -39,7 +39,6 @@ import {
   normalizeCricketLabelValue,
 } from "../cricket-surface/label-utils.js";
 import {
-  collectTargetLabelsInNode as sharedCollectTargetLabelsInNode,
   hasExplicitMarkHints,
   resolveBadgeNode as sharedResolveBadgeNode,
   resolveLabelCell as sharedResolveLabelCell,

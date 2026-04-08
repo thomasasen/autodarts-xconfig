@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.25] - 2026-04-09
+
+### Fixed
+
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; kleine Sonar-bedingte Bereinigungen halten Checkout-Hinweise, Board-Erkennung und den Single-Bull-Sound auf ihrem bisherigen Verhalten, reduzieren aber unnötigen Wartungsballast in diesen Pfaden.
+  Technik: Unbenutzte Imports und auskommentierter Altcode wurden in mehreren Quellmodulen entfernt, `syncProcessedThrowScope(...)` gibt im Single-Bull-Sound keinen ungenutzten konstanten Wert mehr zurück, und zwei eng begrenzte Helper-Zuschnitte reduzieren die Cognitive Complexity in `selectHigherSpecificBoardGroup(...)` sowie `resolveCheckoutSuggestionSignal(...)`, ohne deren Heuristiken oder Highlight-/Fallback-Semantik zu ändern.
+
 ## [2.1.24] - 2026-04-08
 
 ### Added
@@ -1307,7 +1314,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.24]: https://github.com/thomasasen/autodarts-xconfig/compare/17ef31c...HEAD
+[2.1.25]: https://github.com/thomasasen/autodarts-xconfig/compare/8d47a9c...HEAD
+[2.1.24]: https://github.com/thomasasen/autodarts-xconfig/compare/17ef31c...8d47a9c
 [2.1.23]: https://github.com/thomasasen/autodarts-xconfig/compare/b7334c0...17ef31c
 [2.1.22]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...b7334c0
 [2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...ea036d3
