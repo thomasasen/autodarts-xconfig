@@ -47,6 +47,14 @@ function appendRawLines(lines, entries = []) {
   });
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 function getFieldAppendixLines(copy, fieldKey, variant) {
   if (!copy || !fieldKey) {
     return [];
@@ -101,7 +109,77 @@ const THEME_CLEAR_FIELD = fieldCopy(
   "Entfernt nur das für dieses Theme gespeicherte Hintergrundbild."
 );
 
+const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD = fieldCopy(
+  "Wählt eine kuratierte Schrift für stabile Template-Bereiche wie Scores, Würfe oder Namen.",
+  "Wählt eine kuratierte Remote-Schrift für die Template-Typografie. Die Schrift wirkt nur in den unterstützten Bereichen des aktiven xConfig-Themes und verwendet bei Ladeproblemen automatisch einen lokalen Fallback-Stack.",
+  "Wählt eine kuratierte Schrift für unterstützte Template-Bereiche."
+);
+
+const THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD = fieldCopy(
+  "Legt per Mehrfachauswahl fest, ob Scores, Würfe und/oder Namen die gewählte Schrift erhalten.",
+  "Bestimmt per Mehrfachauswahl, welche stabilen Textbereiche des aktiven xConfig-Themes die gewählte Schrift übernehmen. V1 beschränkt sich bewusst auf Scores, Würfe und Spielernamen.",
+  "Legt fest, welche stabilen Template-Bereiche die Schrift übernehmen."
+);
+
+const THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY = deepFreeze({
+  scores: optionCopy(
+    "Greift bei stabilen Score- und Punkteanzeigen.",
+    "Wendet die Schrift auf stabile Score- und Punkteanzeigen an.",
+    "Greift bei stabilen Score- und Punkteanzeigen."
+  ),
+  throws: optionCopy(
+    "Greift in der Wurfanzeige und bei stabilen Turn-Karten.",
+    "Wendet die Schrift auf die Wurfanzeige im Turn-Bereich und auf stabile nachgeladene Turn-Karten an.",
+    "Greift in der Wurfanzeige und bei stabilen Turn-Karten."
+  ),
+  names: optionCopy(
+    "Greift bei Spielernamen in den Theme-Karten.",
+    "Wendet die Schrift auf Spielernamen in den unterstützten Theme-Karten an.",
+    "Greift bei Spielernamen in den Theme-Karten."
+  ),
+});
+
+function buildThemeGlobalTypographyFontOptionCopy() {
+  return deepFreeze(
+    Object.fromEntries(
+      THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => [
+        preset.value,
+        preset.value === "system"
+          ? optionCopy(
+            "Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.",
+            "Belässt die unterstützten Template-Bereiche bei einer normalen Systemschrift. Es wird keine externe Font geladen.",
+            "Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download."
+          )
+          : optionCopy(
+            `Setzt die unterstützten Bereiche auf ${preset.label}.`,
+            `Lädt ${preset.label} als kuratierte Remote-Schrift für die unterstützten Template-Bereiche und fällt bei Bedarf still auf den definierten Fallback-Stack zurück.`,
+            `Setzt die unterstützten Bereiche auf ${preset.label}.`
+          ),
+      ])
+    )
+  );
+}
+
+const THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY = buildThemeGlobalTypographyFontOptionCopy();
+const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
+const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
+
 export const xconfigFeatureCopy = deepFreeze({
+  "theme-global-typography": featureCopy({
+    cardDescription:
+      "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
+    visibleDescription:
+      "Wählt eine kuratierte Schrift für stabile Bereiche des aktiven xConfig-Themes.",
+    visualDescription:
+      "Die gewählte Schrift wird nur in klar definierten Score-, Wurf- oder Namensbereichen aktiver xConfig-Themes angewendet. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.",
+    usefulWhen:
+      "Wenn du Scores, Würfe oder Spielernamen klarer und eigenständiger typografisch gestalten möchtest, ohne das ganze Template umzubauen.",
+    fields: {
+      fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD,
+      applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD,
+      debug: DEBUG_FIELD,
+    },
+  }),
   "theme-x01": featureCopy({
     cardDescription: "Ruhiges X01-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild.",
     visibleDescription: "Ein ruhiges X01-Layout mit eigener Bildfläche und optionaler AVG-Zeile.",
@@ -2095,6 +2173,10 @@ const WINNER_INTENSITY_OPTION_COPY = deepFreeze({
 });
 
 const xconfigFieldOptionCopy = deepFreeze({
+  "theme-global-typography": {
+    fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
+    applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
+  },
   "theme-x01": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
@@ -2292,6 +2374,28 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Debug",
             featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            key: "debug",
+          },
+        ],
+      },
+      {
+        title: "Templates Global",
+        featureKey: "theme-global-typography",
+        fields: [
+          {
+            label: "Aktiv",
+            key: "enabled",
+          },
+          {
+            label: "Schriftart",
+            key: "fontPreset",
+          },
+          {
+            label: "Greift bei",
+            key: "applyTo",
+          },
+          {
+            label: "Debug",
             key: "debug",
           },
         ],
@@ -2643,7 +2747,21 @@ export function formatVariantLabel(variants = []) {
   return labels.map((label) => `\`${label}\``).join(", ");
 }
 
-function appendFieldWithOptions(lines, field, description, optionDescriptionKey) {
+function buildThemeGlobalTypographyReadmeOptionLine(option) {
+  const label = escapeHtml(String(option?.label || "").trim());
+  if (!label) {
+    return "";
+  }
+
+  const previewFontFamily = escapeHtml(String(option?.previewFontFamily || "").trim());
+  if (!previewFontFamily || String(option?.value || "").trim() === "system") {
+    return `  - ${label}`;
+  }
+
+  return `  - <span style="font-family: ${previewFontFamily}; font-size: 1.08em;">${label}</span>`;
+}
+
+function appendFieldWithOptions(lines, field, description, optionDescriptionKey, options = {}) {
   const text = String(description || "").trim();
   if (!text) {
     return;
@@ -2655,6 +2773,13 @@ function appendFieldWithOptions(lines, field, description, optionDescriptionKey)
   }
 
   field.options.forEach((option) => {
+    if (typeof options.optionLineBuilder === "function") {
+      const optionLine = String(options.optionLineBuilder(option) || "");
+      if (optionLine.trim()) {
+        lines.push(optionLine);
+      }
+      return;
+    }
     const optionText = String(option?.[optionDescriptionKey] || "").trim();
     if (!optionText) {
       return;
@@ -2700,7 +2825,13 @@ export function buildReadmeFeatureSection(descriptor, definition) {
 
   (descriptor.fields || []).forEach((field) => {
     const docsDescription = String(field.docsDescription || "").trim();
-    appendFieldWithOptions(lines, field, docsDescription, "docsDescription");
+    appendFieldWithOptions(lines, field, docsDescription, "docsDescription", {
+      optionLineBuilder:
+        featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
+        String(field?.key || "").trim() === THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY
+          ? buildThemeGlobalTypographyReadmeOptionLine
+          : null,
+    });
     appendRawLines(lines, getFieldAppendixLines(copy, field.key, "readme"));
   });
 
@@ -2751,3 +2882,6 @@ export function buildFeaturesDocSection(descriptor, definition) {
 
   return `${lines.join("\n")}\n`;
 }
+import {
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+} from "../../shared/theme-global-typography-presets.js";

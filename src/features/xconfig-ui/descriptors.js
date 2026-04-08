@@ -1,5 +1,9 @@
 import { getXConfigFeatureCopy, getXConfigFieldCopy, getXConfigFieldOptionCopy } from "./copy.js";
 import { buildFeatureIndex, buildFeatureMap, normalizeFeatureKey } from "../feature-metadata.js";
+import {
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+  THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
+} from "../../shared/theme-global-typography-presets.js";
 
 function checkboxField(key, label) {
   return Object.freeze({
@@ -9,16 +13,18 @@ function checkboxField(key, label) {
   });
 }
 
-function selectField(key, label, options = []) {
+function selectField(key, label, options = [], fieldOptions = {}) {
   return Object.freeze({
     key,
     label,
     control: "select",
+    multiple: fieldOptions.multiple === true,
     options: Object.freeze(
       options.map((option) =>
         Object.freeze({
           value: option.value,
           label: option.label,
+          previewFontFamily: String(option.previewFontFamily || "").trim(),
         })
       )
     ),
@@ -106,6 +112,19 @@ const PLAYER_FIELD_TRANSPARENCY_OPTIONS = Object.freeze([
 ]);
 
 export const xconfigDescriptors = Object.freeze([
+  descriptorEntry({
+    featureKey: "theme-global-typography",
+    tab: "themes",
+    readmeAnchor: "template-global-typography",
+    description: "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
+    fields: [
+      selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS),
+      selectField("applyTo", "Greift bei", THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS, {
+        multiple: true,
+      }),
+      checkboxField("debug", "Debug"),
+    ],
+  }),
   descriptorEntry({
     featureKey: "theme-bull-off",
     tab: "themes",

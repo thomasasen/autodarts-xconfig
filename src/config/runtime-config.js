@@ -180,7 +180,16 @@ function applyRecommendedFeatureDefaults(configValue) {
       return;
     }
 
-    Object.assign(featureConfig, entry.createRecommendedConfig());
+    const recommendedConfig = entry.createRecommendedConfig();
+    Object.assign(featureConfig, recommendedConfig);
+
+    if (
+      configValue.featureToggles &&
+      typeof configValue.featureToggles === "object" &&
+      Object.prototype.hasOwnProperty.call(recommendedConfig, "enabled")
+    ) {
+      configValue.featureToggles[entry.configKey] = Boolean(recommendedConfig.enabled);
+    }
   });
 }
 

@@ -19,6 +19,7 @@ import {
 } from "./layout-utils.js";
 import {
   buildFeatureSettingPatch,
+  isBackgroundThemeFeature,
   isThemeFeature,
   themeKeyFromConfigKey,
 } from "./path-utils.js";
@@ -40,6 +41,7 @@ import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { styleText } from "./shell-style.js";
+import { buildThemeGlobalTypographyPreviewImports } from "../../shared/theme-global-typography-presets.js";
 import {
   buildMenuIconElement,
   buildShellContent,
@@ -57,6 +59,7 @@ const MENU_LABEL_COLLAPSE_WIDTH = 120;
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
 const STYLE_ID = "ad-xconfig-shell-style";
+const PREVIEW_FONTS_STYLE_ID = "ad-xconfig-preview-fonts-style";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
@@ -64,6 +67,7 @@ const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
+const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -256,7 +260,7 @@ function ensureXConfigShell(options = {}) {
     }
 
     const feature = getFeatures().find((entry) => entry?.featureKey === normalizedFeatureKey) || null;
-    if (!feature || !isThemeFeature(feature)) {
+    if (!feature || !isBackgroundThemeFeature(feature)) {
       return;
     }
 
@@ -283,6 +287,17 @@ function ensureXConfigShell(options = {}) {
   function queueSync() {
     queueWindowSync(state, windowRef, () => {
       domGuards.ensureStyle(STYLE_ID, styleText);
+      if (
+        isConfigRoute() &&
+        state.activeSettingsFeatureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
+      ) {
+        domGuards.ensureStyle(
+          PREVIEW_FONTS_STYLE_ID,
+          `${buildThemeGlobalTypographyPreviewImports()}\n#${PANEL_HOST_ID} [data-adxconfig-preview-font]{font-kerning:normal;}`
+        );
+      } else {
+        domGuards.removeNodeById(PREVIEW_FONTS_STYLE_ID);
+      }
       ensureMenuButton();
       syncVisibility();
     });
@@ -308,7 +323,7 @@ function ensureXConfigShell(options = {}) {
   });
 
   const isManagedNode = createManagedNodeMatcher({
-    ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID],
+    ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID, PREVIEW_FONTS_STYLE_ID],
   });
 
   routeController = createShellRouteController({
@@ -412,6 +427,7 @@ function ensureXConfigShell(options = {}) {
     startAutoUpdateChecks,
     state,
     stopAutoUpdateChecks,
+    extraNodeIds: [PREVIEW_FONTS_STYLE_ID],
     styleId: STYLE_ID,
     styleText,
     windowRef,

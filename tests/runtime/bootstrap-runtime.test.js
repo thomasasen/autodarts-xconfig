@@ -258,7 +258,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   runtime.stop();
 });
 
-test("runtime applyRecommendedDefaults enables all features and preserves theme images", async () => {
+test("runtime applyRecommendedDefaults applies the documented recommended profile and preserves theme images", async () => {
   const localStorage = new FakeStorage({
     [CONFIG_STORAGE_KEY]: JSON.stringify({
       featureToggles: {
@@ -312,10 +312,11 @@ test("runtime applyRecommendedDefaults enables all features and preserves theme 
   );
 
   defaultFeatureDefinitions.forEach((definition) => {
-    assert.equal(storedConfig.featureToggles[definition.configKey], true, definition.configKey);
+    const expectedEnabled = definition.featureKey === "theme-global-typography" ? false : true;
+    assert.equal(storedConfig.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(storedConfig, definition.configKey).enabled,
-      true,
+      expectedEnabled,
       definition.configKey
     );
   });

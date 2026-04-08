@@ -19,6 +19,7 @@ import { mountThemeShanghai } from "./themes/shanghai/index.js";
 import { mountThemeBermuda } from "./themes/bermuda/index.js";
 import { mountThemeCricket } from "./themes/cricket/index.js";
 import { mountThemeBullOff } from "./themes/bull-off/index.js";
+import { mountThemeGlobalTypography } from "./themes/global-typography/index.js";
 import { normalizeFeatureIdentity, normalizeFeatureKey } from "./feature-metadata.js";
 import { featureCatalog } from "../shared/feature-catalog.js";
 
@@ -144,6 +145,7 @@ const featureInitializers = Object.freeze({
   "turn-points-count": mountTurnPointsCount,
   "winner-fireworks": mountWinnerFireworks,
   "x01-score-progress": mountX01ScoreProgress,
+  "theme-global-typography": mountThemeGlobalTypography,
   "theme-x01": mountThemeX01,
   "theme-shanghai": mountThemeShanghai,
   "theme-bermuda": mountThemeBermuda,

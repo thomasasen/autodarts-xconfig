@@ -1,5 +1,11 @@
 import { setNestedValue, splitFeaturePath } from "./feature-path-utils.js";
 import { featureCatalog } from "../shared/feature-catalog.js";
+import {
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+  THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
+  getThemeGlobalTypographyScopeValues,
+} from "../shared/theme-global-typography-presets.js";
+import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 
 const CHECKOUT_EFFECTS = new Set(["pulse", "glow", "scale", "blink"]);
 const CHECKOUT_INTENSITIES = new Set(["dezent", "standard", "stark"]);
@@ -45,6 +51,12 @@ const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "cente
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 25, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
 const THEME_CONTRAST_PRESETS = new Set(["soft", "standard", "high"]);
+const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
+);
+const THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS = new Set(
+  THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS.map((option) => option.value)
+);
 const LEGACY_COLOR_THEME_ALIASES = Object.freeze({
   ["159,219,88"]: "159, 219, 88",
   ["56,189,248"]: "56, 189, 248",
@@ -68,6 +80,25 @@ function deepClone(value) {
 function normalizeStringChoice(value, fallbackValue, allowedSet) {
   const normalized = String(value || "").trim().toLowerCase();
   return allowedSet.has(normalized) ? normalized : fallbackValue;
+}
+
+function normalizeStringChoiceArray(value, fallbackValues, allowedSet, legacyNormalizer = null) {
+  const rawValues = Array.isArray(value) ? value : [value];
+  const normalizedValues = rawValues.flatMap((entry) => {
+    const normalized = String(entry || "").trim().toLowerCase();
+    if (!normalized) {
+      return [];
+    }
+    if (allowedSet.has(normalized)) {
+      return [normalized];
+    }
+    if (typeof legacyNormalizer === "function") {
+      return legacyNormalizer(normalized).filter((candidate) => allowedSet.has(candidate));
+    }
+    return [];
+  });
+  const uniqueValues = Array.from(new Set(normalizedValues));
+  return uniqueValues.length ? uniqueValues : [...fallbackValues];
 }
 
 function normalizeMappedStringChoice(value, fallbackValue, aliasMap) {
@@ -211,6 +242,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   turnPointsCount: { enabled: false, durationMs: 416, flashOnChange: true, flashMode: "on-change", debug: false },
   winnerFireworks: { enabled: false, style: "realistic", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true, debug: false },
   x01ScoreProgress: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core", debug: false },
+  "themes.globalTypography": { enabled: false, fontPreset: "system", applyTo: ["scores"], debug: false },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.shanghai": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.bermuda": { enabled: false, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -235,6 +267,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   turnPointsCount: { durationMs: 416, flashOnChange: false, flashMode: "on-change" },
   winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true },
   x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
+  "themes.globalTypography": { enabled: false, fontPreset: "system", applyTo: ["scores"] },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.bermuda": { backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -533,6 +566,19 @@ const FEATURE_NORMALIZERS = Object.freeze({
     const normalizedColorTheme = normalizeStringChoice(rawConfig.colorTheme, legacyThresholdColorMode || "checkout-focus", X01_SCORE_PROGRESS_COLOR_THEMES);
     return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizedColorTheme, barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_SCORE_PROGRESS_BAR_SIZES), effect: normalizeMappedStringChoice(rawConfig.effect, "pulse-core", { "": "pulse-core", off: "off", "pulse-core": "pulse-core", "glass-charge": "glass-charge", "segment-drain": "segment-drain", "ghost-trail": "ghost-trail", "signal-sweep": "signal-sweep", "electric-surge": "signal-sweep", "pulse-on-change": "pulse-core", "charge-release": "pulse-core", "sheen-sweep": "glass-charge", "checkout-glow": "glass-charge", "burn-down": "segment-drain", "segment-pop": "segment-drain", "spark-trail": "ghost-trail", "heat-edge": "signal-sweep", "danger-flicker": "signal-sweep", "electric-border": "signal-sweep", "arc-burst": "signal-sweep" }), debug: normalizeBoolean(rawConfig.debug, false) };
   },
+  "themes.globalTypography"(rawConfig = {}) {
+    return {
+      enabled: normalizeBoolean(rawConfig.enabled, false),
+      fontPreset: normalizeStringChoice(rawConfig.fontPreset, "system", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS),
+      applyTo: normalizeStringChoiceArray(
+        rawConfig.applyTo,
+        ["scores"],
+        THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS,
+        getThemeGlobalTypographyScopeValues
+      ),
+      debug: normalizeBoolean(rawConfig.debug, false),
+    };
+  },
   "themes.x01"(rawConfig = {}) {
     return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
   },
@@ -595,7 +641,7 @@ export function getFeatureConfigKeys() {
 export function getThemeConfigKeys() {
   return featureCatalog
     .filter((entry) => entry.configKey.startsWith("themes."))
-    .map((entry) => splitFeaturePath(entry.configKey)[1])
+    .map((entry) => normalizeThemeKey(splitFeaturePath(entry.configKey)[1]))
     .filter(Boolean);
 }
 

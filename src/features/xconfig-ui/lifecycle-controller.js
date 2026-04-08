@@ -9,6 +9,7 @@ export function createShellLifecycleController(options = {}) {
   const eventBus = options.eventBus || null;
   const styleId = String(options.styleId || "").trim();
   const styleText = String(options.styleText || "");
+  const extraNodeIds = Array.isArray(options.extraNodeIds) ? options.extraNodeIds : [];
   const rootObserverKey = String(options.rootObserverKey || "").trim();
   const listenerKeys = options.listenerKeys || {};
   const queueSync = typeof options.queueSync === "function" ? options.queueSync : () => {};
@@ -181,6 +182,7 @@ export function createShellLifecycleController(options = {}) {
     removeNodeById(documentRef, options.menuItemId);
     removeNodeById(documentRef, options.panelHostId);
     removeNodeById(documentRef, styleId);
+    extraNodeIds.forEach((nodeId) => removeNodeById(documentRef, nodeId));
   }
 
   function bindRuntimeLifecycle() {

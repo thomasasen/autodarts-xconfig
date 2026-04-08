@@ -37,3 +37,9 @@ test("xConfig descriptors stay aligned with registry definitions and exported or
     assert.equal(xconfigDescriptorOrder.get(featureKey), index);
   });
 });
+
+test("theme global typography stays first in the themes descriptor order", () => {
+  const themeDescriptors = xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes");
+  assert.ok(themeDescriptors.length > 0);
+  assert.equal(themeDescriptors[0]?.featureKey, "theme-global-typography");
+});

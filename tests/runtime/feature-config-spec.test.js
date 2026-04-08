@@ -52,6 +52,12 @@ test("feature config spec carries remove-key rules for retired config fields", (
 });
 
 test("createRecommendedFeatureConfig returns the documented recommended defaults", () => {
+  assert.deepEqual(createRecommendedFeatureConfig("themes.globalTypography"), {
+    enabled: false,
+    fontPreset: "system",
+    applyTo: ["scores"],
+    debug: false,
+  });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
     enabled: true,
     contrastPreset: "standard",
@@ -101,4 +107,61 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     pointerDismiss: true,
     debug: false,
   });
+});
+
+test("theme global typography defaults and normalization stay stable", () => {
+  assert.deepEqual(getDefaultFeatureConfig("themes.globalTypography"), {
+    enabled: false,
+    fontPreset: "system",
+    applyTo: ["scores"],
+    debug: false,
+  });
+
+  const spec = getFeatureConfigSpec("themes.globalTypography");
+  assert.ok(spec);
+
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "true",
+      fontPreset: "fragment-mono",
+      applyTo: ["scores", "names"],
+      debug: "true",
+    }),
+    {
+      enabled: true,
+      fontPreset: "fragment-mono",
+      applyTo: ["scores", "names"],
+      debug: true,
+    }
+  );
+
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "true",
+      fontPreset: "fragment-mono",
+      applyTo: "scores-and-names",
+      debug: "false",
+    }),
+    {
+      enabled: true,
+      fontPreset: "fragment-mono",
+      applyTo: ["scores", "names"],
+      debug: false,
+    }
+  );
+
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "no",
+      fontPreset: "missing-font",
+      applyTo: "everything",
+      debug: "no",
+    }),
+    {
+      enabled: false,
+      fontPreset: "system",
+      applyTo: ["scores"],
+      debug: false,
+    }
+  );
 });

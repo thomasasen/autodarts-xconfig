@@ -108,9 +108,9 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 21);
+  assert.equal(overviewCounts.totalModules, 22);
   assert.equal(overviewCounts.animationModules, 16);
-  assert.equal(overviewCounts.themeModules, 5);
+  assert.equal(overviewCounts.themeModules, 6);
 });
 
 test("README and FEATURES share the generated xConfig overview copy", () => {
@@ -218,6 +218,21 @@ test("README contains the generated xConfig feature sections and all setting exp
       `README drift for ${descriptor.featureKey}`
     );
   });
+});
+
+test("Templates Global README renders font names as preview labels instead of repeated option copy", () => {
+  const descriptor = xconfigDescriptors.find(
+    (entry) => entry.featureKey === "theme-global-typography"
+  );
+  assert.ok(descriptor);
+  const definition = featureDefinitionByKey.get("theme-global-typography");
+  assert.ok(definition);
+
+  const section = buildReadmeFeatureSection(descriptor, definition);
+  assert.match(section, /<span style="font-family: .*">Aldrich<\/span>/);
+  assert.match(section, /<span style="font-family: .*">Inconsolata<\/span>/);
+  assert.doesNotMatch(section, /\s{2}- `Aldrich`:/);
+  assert.doesNotMatch(section, /\s{2}- `Inconsolata`:/);
 });
 
 test("FEATURES doc screenshot paths exist in docs/screenshots", () => {

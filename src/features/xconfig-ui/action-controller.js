@@ -213,8 +213,50 @@ export function createShellActionController(options = {}) {
       return;
     }
 
-    syncSelectOptionButtons(documentRef, actionNode, settingRawValue);
-    const nextValue = parseFieldValue(field, settingRawValue, false);
+    const optionValues = Array.isArray(field.options)
+      ? field.options.map((option) => String(option?.value ?? ""))
+      : [];
+    const inputWrap =
+      actionNode?.closest?.(".ad-xconfig-setting-input") ||
+      actionNode?.parentElement ||
+      null;
+    const currentValues = field.multiple === true
+      ? Array.from(
+          new Set(
+            (
+              Array.from(
+                inputWrap?.querySelectorAll?.(
+                  `[data-adxconfig-action='set-setting-select-option'][data-setting-key='${settingKey}'][data-active='true']`
+                ) || []
+              ).map((node) => String(node?.getAttribute?.("data-setting-value") ?? "")) ||
+              []
+            )
+              .concat(
+                (Array.isArray(feature?.config?.[settingKey])
+                  ? feature.config[settingKey]
+                  : [feature?.config?.[settingKey]])
+                  .map((value) => String(value ?? ""))
+              )
+              .filter((value) => optionValues.includes(value))
+          )
+        )
+      : [];
+    const nextSelection = field.multiple === true
+      ? (() => {
+        const nextValues = currentValues.includes(settingRawValue)
+          ? currentValues.filter((value) => value !== settingRawValue)
+          : [...currentValues, settingRawValue];
+        return nextValues.length ? nextValues : [optionValues[0] || ""];
+      })()
+      : [settingRawValue];
+    const nextValue = field.multiple === true
+      ? nextSelection.map((value) => parseFieldValue(field, value, false))
+      : parseFieldValue(field, nextSelection[0] || "", false);
+    syncSelectOptionButtons(
+      documentRef,
+      actionNode,
+      field.multiple === true ? nextSelection : nextSelection[0] || ""
+    );
     withRuntimeCall(
       runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextValue)),
       "Einstellung gespeichert.",

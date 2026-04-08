@@ -1,16 +1,16 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `21` Module in einem Userscript:
+`autodarts-xconfig` bündelt `22` Module in einem Userscript:
 
 - `16` Animationen und Komfortfunktionen
-- `5` Themes
+- `6` Themes
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `21` Module: `16` Animationen und Komfortfunktionen sowie `5` Themes.
+- Insgesamt `22` Module: `16` Animationen und Komfortfunktionen sowie `6` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro Bild.
@@ -30,6 +30,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrund-Darstellung`: Füllen
 - `Hintergrundbild-Deckkraft`: 25 %
 - `Spielerfelder-Transparenz`: 10 %
+- `Debug`: Aus
+
+**Templates Global**
+- `Aktiv`: Aus
+- `Schriftart`: Standard (deaktiviert)
+- `Greift bei`: Scores
 - `Debug`: Aus
 
 ### Animationen
@@ -139,6 +145,69 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Intensität`: Standard
 
 ## Themes
+
+### Templates Global
+
+- Gilt für: `alle Modi`
+- Kurz: Wählt eine kuratierte Schrift für stabile Bereiche des aktiven xConfig-Themes.
+- Grafisch: Die gewählte Schrift wird nur in klar definierten Score-, Wurf- oder Namensbereichen aktiver xConfig-Themes angewendet. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
+- `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Template-Bereiche.
+  - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
+  - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
+  - `Allerta`: Setzt die unterstützten Bereiche auf Allerta.
+  - `Alumni Sans`: Setzt die unterstützten Bereiche auf Alumni Sans.
+  - `Alumni Sans Inline One`: Setzt die unterstützten Bereiche auf Alumni Sans Inline One.
+  - `Anton`: Setzt die unterstützten Bereiche auf Anton.
+  - `Anybody`: Setzt die unterstützten Bereiche auf Anybody.
+  - `Archivo Black`: Setzt die unterstützten Bereiche auf Archivo Black.
+  - `Armata`: Setzt die unterstützten Bereiche auf Armata.
+  - `Audiowide`: Setzt die unterstützten Bereiche auf Audiowide.
+  - `Averia Libre`: Setzt die unterstützten Bereiche auf Averia Libre.
+  - `Averia Sans Libre`: Setzt die unterstützten Bereiche auf Averia Sans Libre.
+  - `Bai Jamjuree`: Setzt die unterstützten Bereiche auf Bai Jamjuree.
+  - `Big Shoulders Stencil`: Setzt die unterstützten Bereiche auf Big Shoulders Stencil.
+  - `Black Ops One`: Setzt die unterstützten Bereiche auf Black Ops One.
+  - `Bruno Ace`: Setzt die unterstützten Bereiche auf Bruno Ace.
+  - `Bungee`: Setzt die unterstützten Bereiche auf Bungee.
+  - `Bungee Inline`: Setzt die unterstützten Bereiche auf Bungee Inline.
+  - `Bungee Shade`: Setzt die unterstützten Bereiche auf Bungee Shade.
+  - `Cairo Play`: Setzt die unterstützten Bereiche auf Cairo Play.
+  - `Caramel`: Setzt die unterstützten Bereiche auf Caramel.
+  - `Caveat`: Setzt die unterstützten Bereiche auf Caveat.
+  - `Caveat Brush`: Setzt die unterstützten Bereiche auf Caveat Brush.
+  - `Chakra Petch`: Setzt die unterstützten Bereiche auf Chakra Petch.
+  - `Chilanka`: Setzt die unterstützten Bereiche auf Chilanka.
+  - `Courier Prime`: Setzt die unterstützten Bereiche auf Courier Prime.
+  - `Cute Font`: Setzt die unterstützten Bereiche auf Cute Font.
+  - `Dangrek`: Setzt die unterstützten Bereiche auf Dangrek.
+  - `Days One`: Setzt die unterstützten Bereiche auf Days One.
+  - `Ewert`: Setzt die unterstützten Bereiche auf Ewert.
+  - `Faster One`: Setzt die unterstützten Bereiche auf Faster One.
+  - `Finger Paint`: Setzt die unterstützten Bereiche auf Finger Paint.
+  - `Foldit`: Setzt die unterstützten Bereiche auf Foldit.
+  - `Fragment Mono`: Setzt die unterstützten Bereiche auf Fragment Mono.
+  - `Fredericka the Great`: Setzt die unterstützten Bereiche auf Fredericka the Great.
+  - `Frijole`: Setzt die unterstützten Bereiche auf Frijole.
+  - `Fugaz One`: Setzt die unterstützten Bereiche auf Fugaz One.
+  - `Goldman`: Setzt die unterstützten Bereiche auf Goldman.
+  - `Inconsolata`: Setzt die unterstützten Bereiche auf Inconsolata.
+  - `Indie Flower`: Setzt die unterstützten Bereiche auf Indie Flower.
+  - `Inria Sans`: Setzt die unterstützten Bereiche auf Inria Sans.
+  - `Jersey 15`: Setzt die unterstützten Bereiche auf Jersey 15.
+  - `Keania One`: Setzt die unterstützten Bereiche auf Keania One.
+  - `Permanent Marker`: Setzt die unterstützten Bereiche auf Permanent Marker.
+  - `Plaster`: Setzt die unterstützten Bereiche auf Plaster.
+  - `Saira Stencil One`: Setzt die unterstützten Bereiche auf Saira Stencil One.
+  - `Share Tech Mono`: Setzt die unterstützten Bereiche auf Share Tech Mono.
+  - `Stardos Stencil`: Setzt die unterstützten Bereiche auf Stardos Stencil.
+  - `Wallpoet`: Setzt die unterstützten Bereiche auf Wallpoet.
+  - `Zen Dots`: Setzt die unterstützten Bereiche auf Zen Dots.
+  - `Zilla Slab Highlight`: Setzt die unterstützten Bereiche auf Zilla Slab Highlight.
+- `Greift bei`: Legt fest, welche stabilen Template-Bereiche die Schrift übernehmen.
+  - `Scores`: Greift bei stabilen Score- und Punkteanzeigen.
+  - `Würfe`: Greift in der Wurfanzeige und bei stabilen Turn-Karten.
+  - `Namen`: Greift bei Spielernamen in den Theme-Karten.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ### Theme Bull-off
 

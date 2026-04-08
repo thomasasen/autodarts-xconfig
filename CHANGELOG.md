@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.24] - 2026-04-08
+
+### Added
+
+- Nutzerwirkung: Im Themes-Tab gibt es jetzt das neue Modul `Templates Global`, mit dem sich eine kuratierte Remote-Schrift gezielt für stabile Score-, Wurf- oder Namensbereiche aktiver xConfig-Themes auswählen lässt; im Font-Picker werden die Schriftoptionen dabei nur noch über ihren eigenen Namen in der jeweiligen Schrift gezeigt, ohne zusätzliche Muster- oder Beschreibungstexte.
+  Technik: `themes.globalTypography` wurde als themes-nahes Runtime-Feature mit eigener Style-Node, lokaler Aktivitätsprüfung und exakt auf stabile `.ad-ext-*`-Selektoren begrenzten Wirkbereichen eingeführt; Bunny-Font-Presets und xConfig-only Preview-Imports wurden sauber integriert, `Empfohlene Standards` respektiert für dieses Modul jetzt explizit `enabled: false`, und Config-, UI-, Runtime- sowie Doku-Regressionen sichern Presets, Scopes, Preview-Verhalten und Release-Doku ab.
+
 ## [2.1.23] - 2026-04-06
 
 ### Fixed
@@ -1300,7 +1307,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.23]: https://github.com/thomasasen/autodarts-xconfig/compare/b7334c0...HEAD
+[2.1.24]: https://github.com/thomasasen/autodarts-xconfig/compare/17ef31c...HEAD
+[2.1.23]: https://github.com/thomasasen/autodarts-xconfig/compare/b7334c0...17ef31c
 [2.1.22]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...b7334c0
 [2.1.18]: https://github.com/thomasasen/autodarts-xconfig/compare/c7223d6...ea036d3
 [2.1.17]: https://github.com/thomasasen/autodarts-xconfig/compare/ff5d323...c7223d6

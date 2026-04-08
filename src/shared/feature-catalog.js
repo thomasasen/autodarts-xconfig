@@ -128,6 +128,14 @@ const rawFeatureCatalog = [
     legacyFeatureId: "",
   },
   {
+    featureKey: "theme-global-typography",
+    configKey: "themes.globalTypography",
+    title: "Templates Global",
+    variants: ["all"],
+    migratedFrom: "",
+    legacyFeatureId: "",
+  },
+  {
     featureKey: "theme-x01",
     configKey: "themes.x01",
     title: "Theme X01",

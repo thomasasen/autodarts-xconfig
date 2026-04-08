@@ -20,7 +20,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Im Überblick
 
-- Insgesamt `21` Module: `16` Animationen und Komfortfunktionen sowie `5` Themes.
+- Insgesamt `22` Module: `16` Animationen und Komfortfunktionen sowie `6` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro Bild.
@@ -142,6 +142,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 ### Themen
 
+- [Templates Global](#template-global-typography)
 - [Theme Bull-off](#template-autodarts-theme-bull-off)
 - [Theme X01](#template-autodarts-theme-x01)
 - [Theme Cricket](#template-autodarts-theme-cricket)
@@ -179,6 +180,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrund-Darstellung`: Füllen
 - `Hintergrundbild-Deckkraft`: 25 %
 - `Spielerfelder-Transparenz`: 10 %
+- `Debug`: Aus
+
+**Templates Global**
+- `Aktiv`: Aus
+- `Schriftart`: Standard (deaktiviert)
+- `Greift bei`: Scores
 - `Debug`: Aus
 
 ### Animationen
@@ -288,6 +295,75 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Intensität`: Standard
 
 ## Themen
+
+<a id="template-global-typography"></a>
+
+### Templates Global
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Wählt eine kuratierte Schrift für stabile Bereiche des aktiven xConfig-Themes.
+- Grafisch: Die gewählte Schrift wird nur in klar definierten Score-, Wurf- oder Namensbereichen aktiver xConfig-Themes angewendet. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
+- Wann sinnvoll? Wenn du Scores, Würfe oder Spielernamen klarer und eigenständiger typografisch gestalten möchtest, ohne das ganze Template umzubauen.
+
+**Einstellungen einfach erklärt**
+
+- `Schriftart`: Wählt eine kuratierte Remote-Schrift für die Template-Typografie. Die Schrift wirkt nur in den unterstützten Bereichen des aktiven xConfig-Themes und verwendet bei Ladeproblemen automatisch einen lokalen Fallback-Stack.
+  - Standard (deaktiviert)
+  - <span style="font-family: &quot;Aldrich&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Aldrich</span>
+  - <span style="font-family: &quot;Allerta&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Allerta</span>
+  - <span style="font-family: &quot;Alumni Sans&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Alumni Sans</span>
+  - <span style="font-family: &quot;Alumni Sans Inline One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Alumni Sans Inline One</span>
+  - <span style="font-family: &quot;Anton&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Anton</span>
+  - <span style="font-family: &quot;Anybody&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Anybody</span>
+  - <span style="font-family: &quot;Archivo Black&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Archivo Black</span>
+  - <span style="font-family: &quot;Armata&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Armata</span>
+  - <span style="font-family: &quot;Audiowide&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Audiowide</span>
+  - <span style="font-family: &quot;Averia Libre&quot;, Georgia, &quot;Times New Roman&quot;, serif; font-size: 1.08em;">Averia Libre</span>
+  - <span style="font-family: &quot;Averia Sans Libre&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Averia Sans Libre</span>
+  - <span style="font-family: &quot;Bai Jamjuree&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Bai Jamjuree</span>
+  - <span style="font-family: &quot;Big Shoulders Stencil&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Big Shoulders Stencil</span>
+  - <span style="font-family: &quot;Black Ops One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Black Ops One</span>
+  - <span style="font-family: &quot;Bruno Ace&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Bruno Ace</span>
+  - <span style="font-family: &quot;Bungee&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Bungee</span>
+  - <span style="font-family: &quot;Bungee Inline&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Bungee Inline</span>
+  - <span style="font-family: &quot;Bungee Shade&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Bungee Shade</span>
+  - <span style="font-family: &quot;Cairo Play&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Cairo Play</span>
+  - <span style="font-family: &quot;Caramel&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Caramel</span>
+  - <span style="font-family: &quot;Caveat&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Caveat</span>
+  - <span style="font-family: &quot;Caveat Brush&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Caveat Brush</span>
+  - <span style="font-family: &quot;Chakra Petch&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Chakra Petch</span>
+  - <span style="font-family: &quot;Chilanka&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Chilanka</span>
+  - <span style="font-family: &quot;Courier Prime&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 1.08em;">Courier Prime</span>
+  - <span style="font-family: &quot;Cute Font&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Cute Font</span>
+  - <span style="font-family: &quot;Dangrek&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Dangrek</span>
+  - <span style="font-family: &quot;Days One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Days One</span>
+  - <span style="font-family: &quot;Ewert&quot;, Georgia, &quot;Times New Roman&quot;, serif; font-size: 1.08em;">Ewert</span>
+  - <span style="font-family: &quot;Faster One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Faster One</span>
+  - <span style="font-family: &quot;Finger Paint&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Finger Paint</span>
+  - <span style="font-family: &quot;Foldit&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Foldit</span>
+  - <span style="font-family: &quot;Fragment Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 1.08em;">Fragment Mono</span>
+  - <span style="font-family: &quot;Fredericka the Great&quot;, Georgia, &quot;Times New Roman&quot;, serif; font-size: 1.08em;">Fredericka the Great</span>
+  - <span style="font-family: &quot;Frijole&quot;, Georgia, &quot;Times New Roman&quot;, serif; font-size: 1.08em;">Frijole</span>
+  - <span style="font-family: &quot;Fugaz One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Fugaz One</span>
+  - <span style="font-family: &quot;Goldman&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Goldman</span>
+  - <span style="font-family: &quot;Inconsolata&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 1.08em;">Inconsolata</span>
+  - <span style="font-family: &quot;Indie Flower&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Indie Flower</span>
+  - <span style="font-family: &quot;Inria Sans&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Inria Sans</span>
+  - <span style="font-family: &quot;Jersey 15&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Jersey 15</span>
+  - <span style="font-family: &quot;Keania One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Keania One</span>
+  - <span style="font-family: &quot;Permanent Marker&quot;, &quot;Segoe Print&quot;, &quot;Bradley Hand&quot;, cursive; font-size: 1.08em;">Permanent Marker</span>
+  - <span style="font-family: &quot;Plaster&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Plaster</span>
+  - <span style="font-family: &quot;Saira Stencil One&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Saira Stencil One</span>
+  - <span style="font-family: &quot;Share Tech Mono&quot;, &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 1.08em;">Share Tech Mono</span>
+  - <span style="font-family: &quot;Stardos Stencil&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Stardos Stencil</span>
+  - <span style="font-family: &quot;Wallpoet&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Wallpoet</span>
+  - <span style="font-family: &quot;Zen Dots&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Zen Dots</span>
+  - <span style="font-family: &quot;Zilla Slab Highlight&quot;, Georgia, &quot;Times New Roman&quot;, serif; font-size: 1.08em;">Zilla Slab Highlight</span>
+- `Greift bei`: Bestimmt per Mehrfachauswahl, welche stabilen Textbereiche des aktiven xConfig-Themes die gewählte Schrift übernehmen. V1 beschränkt sich bewusst auf Scores, Würfe und Spielernamen.
+  - `Scores`: Wendet die Schrift auf stabile Score- und Punkteanzeigen an.
+  - `Würfe`: Wendet die Schrift auf die Wurfanzeige im Turn-Bereich und auf stabile nachgeladene Turn-Karten an.
+  - `Namen`: Wendet die Schrift auf Spielernamen in den unterstützten Theme-Karten an.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="template-autodarts-theme-bull-off"></a>
 

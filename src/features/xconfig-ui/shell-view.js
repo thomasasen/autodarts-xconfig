@@ -19,6 +19,7 @@ import {
 } from "./layout-utils.js";
 import {
   buildFeatureSettingPatch,
+  isBackgroundThemeFeature,
   isThemeFeature,
   themeKeyFromConfigKey,
 } from "./path-utils.js";
@@ -39,6 +40,7 @@ import {
 import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
+import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -54,6 +56,8 @@ const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
+const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
+const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -236,6 +240,9 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-active="false"] .ad-xconfig-option-label{color:rgba(232,244,255,.92)}
 #${PANEL_HOST_ID} .ad-xconfig-option-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-label{font-size:.75rem;font-weight:700;color:#fff}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font{padding:.72rem .82rem;min-height:4.1rem;border-radius:11px}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font .ad-xconfig-option-head{align-items:flex-start}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font .ad-xconfig-option-label{font-size:1.08rem;line-height:1.2;font-weight:600;letter-spacing:.01em}
 #${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
 #${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design{display:grid;grid-template-columns:minmax(0,1fr) 4.2rem auto;grid-template-rows:auto auto;align-items:center;column-gap:.5rem;row-gap:.14rem}
@@ -345,6 +352,10 @@ export function parseFieldValue(field, rawValue, checked) {
     : null;
 
   return matchingOption ? matchingOption.value : rawValue;
+}
+
+function isMultiSelectField(field) {
+  return field?.control === "select" && field?.multiple === true;
 }
 
 function sortFeatures(left, right) {
@@ -661,6 +672,14 @@ function isDartDesignSelectField(feature, field) {
     String(field?.key || "").trim() === DART_MARKER_DARTS_DESIGN_SETTING_KEY;
 }
 
+function isThemeGlobalTypographyFontField(feature, field) {
+  if (field?.control !== "select") {
+    return false;
+  }
+  return feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
+    String(field?.key || "").trim() === THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY;
+}
+
 function buildOptionActiveBadge(documentRef) {
   return createElement(documentRef, "span", {
     className: "ad-xconfig-option-active",
@@ -673,6 +692,20 @@ function resolveFieldOptionPreview(feature, field, optionValue) {
     return "";
   }
   return resolveDartDesignAsset(optionValue);
+}
+
+function buildThemeGlobalTypographyOptionLabel(documentRef, option) {
+  const labelNode = createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: option?.label || "",
+  });
+  const preset = getThemeGlobalTypographyPreset(option?.value);
+  const previewFontFamily = String(preset?.previewFontFamily || "").trim();
+  if (previewFontFamily && preset?.remote) {
+    labelNode.style.fontFamily = previewFontFamily;
+    labelNode.setAttribute("data-adxconfig-preview-font", preset.value);
+  }
+  return labelNode;
 }
 
 function buildDartDesignOptionLayout(
@@ -766,7 +799,7 @@ function buildFeatureField(documentRef, feature, field) {
         text: noteText,
       }));
     }
-    if (isThemeFeature(feature) && field.action === "uploadThemeBackground") {
+    if (isBackgroundThemeFeature(feature) && field.action === "uploadThemeBackground") {
       wrapper.appendChild(buildThemeBackgroundStatus(documentRef, feature));
       wrapper.appendChild(createElement(documentRef, "p", {
         className: "ad-xconfig-note ad-xconfig-theme-action-feedback",
@@ -826,7 +859,7 @@ function buildFeatureField(documentRef, feature, field) {
     return wrapper;
   }
 
-  const selectedOptionValue = resolveSelectFieldValue(feature, field);
+  const selectedOptionValues = resolveSelectFieldValues(feature, field);
   const list = createElement(documentRef, "div", {
     id: fieldId,
     className: "ad-xconfig-option-list",
@@ -836,19 +869,23 @@ function buildFeatureField(documentRef, feature, field) {
       "data-config-key": feature.configKey,
       "data-setting-key": field.key,
       "data-setting-control": "select",
-      "data-selected-value": selectedOptionValue,
+      "data-selected-value": selectedOptionValues.join(","),
+      "data-multiple": isMultiSelectField(field) ? "true" : "false",
     },
   });
 
   field.options.forEach((option) => {
     const optionValue = String(option?.value ?? "");
-    const isActive = optionValue === selectedOptionValue;
+    const isActive = selectedOptionValues.includes(optionValue);
     const isDartDesignField = isDartDesignSelectField(feature, field);
+    const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
     const optionButton = createElement(documentRef, "button", {
       type: "button",
-      className: isDartDesignField
-        ? "ad-xconfig-option-item ad-xconfig-option-item--dart-design"
-        : "ad-xconfig-option-item",
+      className: [
+        "ad-xconfig-option-item",
+        isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
+        isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
+      ].filter(Boolean).join(" "),
       attributes: {
         "data-adxconfig-action": "set-setting-select-option",
         "data-adxconfig-option-note": "true",
@@ -858,11 +895,14 @@ function buildFeatureField(documentRef, feature, field) {
         "data-setting-value": optionValue,
         "data-option-value": optionValue,
         "data-option-description": String(option?.description || "").trim(),
+        "data-multiple": isMultiSelectField(field) ? "true" : "false",
         "data-active": isActive ? "true" : "false",
         "aria-pressed": isActive ? "true" : "false",
       },
     });
-    const optionDescription = String(option?.description || "").trim();
+    const optionDescription = isTypographyFontField
+      ? ""
+      : String(option?.description || "").trim();
 
     if (isDartDesignField) {
       const optionPreviewUrl = resolveFieldOptionPreview(feature, field, optionValue);
@@ -879,10 +919,14 @@ function buildFeatureField(documentRef, feature, field) {
       const head = createElement(documentRef, "div", {
         className: "ad-xconfig-option-head",
       });
-      head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-option-label",
-        text: option.label,
-      }));
+      head.appendChild(
+        isTypographyFontField
+          ? buildThemeGlobalTypographyOptionLabel(documentRef, option)
+          : createElement(documentRef, "span", {
+            className: "ad-xconfig-option-label",
+            text: option.label,
+          })
+      );
       if (isActive) {
         head.appendChild(buildOptionActiveBadge(documentRef));
       }
@@ -906,21 +950,28 @@ function getFieldNoteText(field) {
   return String(field?.description || "").trim();
 }
 
-function resolveSelectFieldValue(feature, field) {
+function resolveSelectFieldValues(feature, field) {
   const options = Array.isArray(field?.options) ? field.options : [];
   if (!options.length) {
-    return "";
+    return [];
   }
 
-  const configuredValue = String(feature?.config?.[field.key] ?? "");
-  const hasConfiguredValue = options.some(
-    (option) => String(option?.value ?? "") === configuredValue
+  const allowedValues = new Set(options.map((option) => String(option?.value ?? "")));
+  const rawValues = isMultiSelectField(field)
+    ? (Array.isArray(feature?.config?.[field.key]) ? feature.config[field.key] : [feature?.config?.[field.key]])
+    : [feature?.config?.[field.key]];
+  const configuredValues = Array.from(
+    new Set(
+      rawValues
+        .map((value) => String(value ?? ""))
+        .filter((value) => allowedValues.has(value))
+    )
   );
-  if (hasConfiguredValue) {
-    return configuredValue;
+  if (configuredValues.length) {
+    return configuredValues;
   }
 
-  return String(options[0]?.value ?? "");
+  return [String(options[0]?.value ?? "")].filter(Boolean);
 }
 
 function setSelectOptionActiveState(documentRef, optionNode, isActive) {
@@ -973,17 +1024,20 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
       `[data-adxconfig-action='set-setting-select-option'][data-setting-key='${settingKey}']`
     )
   );
+  const selectedValues = Array.isArray(selectedValue)
+    ? selectedValue.map((value) => String(value ?? ""))
+    : [String(selectedValue ?? "")];
 
   optionButtons.forEach((optionNode) => {
     const optionValue = String(optionNode.getAttribute("data-setting-value") ?? "");
-    setSelectOptionActiveState(documentRef, optionNode, optionValue === selectedValue);
+    setSelectOptionActiveState(documentRef, optionNode, selectedValues.includes(optionValue));
   });
 
   const optionList = inputWrap.querySelector?.(
     `[data-adxconfig-setting='true'][data-setting-control='select'][data-setting-key='${settingKey}']`
   );
   if (optionList) {
-    optionList.setAttribute("data-selected-value", selectedValue);
+    optionList.setAttribute("data-selected-value", selectedValues.join(","));
   }
 }
 
@@ -1092,13 +1146,13 @@ function buildFeatureCard(documentRef, feature) {
 
   cardContent.appendChild(createElement(documentRef, "p", {
     className: "ad-xconfig-note",
-    attributes: isThemeFeature(feature)
+    attributes: isBackgroundThemeFeature(feature)
       ? {
           "data-adxconfig-theme-card-status": "true",
           "data-feature-key": feature.featureKey,
         }
       : {},
-    text: isThemeFeature(feature)
+    text: isBackgroundThemeFeature(feature)
       ? formatThemeBackgroundSummary(feature)
       : "Änderungen werden sofort gespeichert und direkt angewendet.",
   }));

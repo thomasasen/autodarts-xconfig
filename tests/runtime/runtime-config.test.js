@@ -109,7 +109,7 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.themes.bullOff.debug, false);
 });
 
-test("createRecommendedRuntimeConfig enables every feature and preserves theme images", () => {
+test("createRecommendedRuntimeConfig applies the documented recommended profile and preserves theme images", () => {
   const config = createRecommendedRuntimeConfig({
     features: {
       themes: {
@@ -124,8 +124,13 @@ test("createRecommendedRuntimeConfig enables every feature and preserves theme i
   });
 
   defaultFeatureDefinitions.forEach((definition) => {
-    assert.equal(config.featureToggles[definition.configKey], true, definition.configKey);
-    assert.equal(getStoredFeatureConfig(config, definition.configKey).enabled, true, definition.configKey);
+    const expectedEnabled = definition.featureKey === "theme-global-typography" ? false : true;
+    assert.equal(config.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
+    assert.equal(
+      getStoredFeatureConfig(config, definition.configKey).enabled,
+      expectedEnabled,
+      definition.configKey
+    );
   });
 
   assert.equal(config.features.checkoutScorePulse.enabled, true);

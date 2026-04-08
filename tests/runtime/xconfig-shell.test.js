@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
@@ -1113,6 +1114,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""))
     .filter((featureKey) => featureKey.startsWith("theme-"));
   assert.deepEqual(themeCardFeatureKeys, [
+    "theme-global-typography",
     "theme-bull-off",
     "theme-x01",
     "theme-cricket",
@@ -1354,14 +1356,17 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
       true
     );
     await waitForStoredConfig(localStorage, (config) => {
-      const allEnabled = runtime.listFeatures().every((feature) => {
+      const expectedRecommendedState = runtime.listFeatures().every((feature) => {
         const toggleValue = config.featureToggles[feature.configKey];
         const featureConfig = getFeatureConfigValue(config, feature.configKey);
+        if (feature.featureKey === "theme-global-typography") {
+          return toggleValue === false && featureConfig?.enabled === false;
+        }
         return toggleValue === true && featureConfig?.enabled === true;
       });
 
       return (
-        allEnabled &&
+        expectedRecommendedState &&
         config.features.checkoutBoardTargets.visualPreset === "signal" &&
         config.features.checkoutBoardTargets.colorTheme === "cyan" &&
         config.features.styleCheckoutSuggestions.style === "stripe" &&
@@ -1711,6 +1716,145 @@ test("xConfig shell links every card README button to the matching README anchor
       `https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md#${descriptor.readmeAnchor}`
     );
   }
+
+  runtime.stop();
+});
+
+test("xConfig shell renders Templates Global font options as preview buttons and scopes preview font loading to the modal", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const themeCards = documentRef.querySelectorAll(".ad-xconfig-card");
+  assert.ok(themeCards.length > 0);
+  assert.equal(themeCards[0]?.getAttribute("data-feature-key"), "theme-global-typography");
+  assert.equal(documentRef.getElementById("ad-xconfig-preview-fonts-style"), null);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
+  assert.ok(previewStyleNode);
+  assert.match(String(previewStyleNode.textContent || ""), /fonts\.bunny\.net/);
+
+  const fontOptionButtons = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='fontPreset']"
+  );
+  assert.equal(fontOptionButtons.length, THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.length);
+  assert.equal(
+    new Set(THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)).size,
+    THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.length
+  );
+  assert.deepEqual(
+    fontOptionButtons.map((button) =>
+      String(button.querySelector(".ad-xconfig-option-label")?.textContent || "").trim()
+    ),
+    THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.label)
+  );
+  assert.deepEqual(
+    THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.slice(1).map((preset) => preset.label),
+    THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS
+      .slice(1)
+      .map((preset) => preset.label)
+      .slice()
+      .sort((left, right) => left.localeCompare(right, "de", { sensitivity: "base" }))
+  );
+
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.forEach((preset) => {
+    const optionButton = documentRef.querySelector(
+      `[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='fontPreset'][data-setting-value='${preset.value}']`
+    );
+    assert.ok(optionButton, `missing option button for ${preset.value}`);
+    assert.equal(optionButton.classList.contains("ad-xconfig-option-item--typography-font"), true);
+
+    const optionLabels = optionButton.querySelectorAll(".ad-xconfig-option-label");
+    assert.equal(optionLabels.length, 1, `unexpected preview layout for ${preset.value}`);
+    assert.equal(String(optionLabels[0].textContent || "").trim(), preset.label);
+
+    if (preset.value === "system") {
+      assert.equal(optionLabels[0].getAttribute("data-adxconfig-preview-font"), null);
+      return;
+    }
+
+    assert.equal(optionLabels[0].getAttribute("data-adxconfig-preview-font"), preset.value);
+    assert.match(String(optionLabels[0].style.fontFamily || ""), new RegExp(preset.familyName));
+  });
+
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='fontPreset'] .ad-xconfig-option-copy"
+    ).length,
+    0
+  );
+
+  const shellStyleNode = documentRef.getElementById("ad-xconfig-shell-style");
+  assert.ok(shellStyleNode);
+  assert.equal(
+    String(shellStyleNode.textContent || "").includes("padding:.79rem .9rem;min-height:4.51rem"),
+    true
+  );
+  assert.equal(
+    String(shellStyleNode.textContent || "").includes("font-size:1.19rem;line-height:1.2;font-weight:600;letter-spacing:.01em"),
+    true
+  );
+
+  const scopeOptionButtons = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='applyTo']"
+  );
+  assert.equal(scopeOptionButtons.length, 3);
+  assert.equal(
+    scopeOptionButtons.filter((node) => node.getAttribute("data-active") === "true").length,
+    1
+  );
+  assert.equal(
+    scopeOptionButtons.find((node) => node.getAttribute("data-setting-value") === "scores")?.getAttribute("data-active"),
+    "true"
+  );
+
+  clickSelectSettingOption(documentRef, "theme-global-typography", "applyTo", "throws");
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      Array.isArray(config.features?.themes?.globalTypography?.applyTo) &&
+      config.features.themes.globalTypography.applyTo.includes("scores") &&
+      config.features.themes.globalTypography.applyTo.includes("throws")
+  );
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["scores", "throws"]);
+  assert.equal(
+    documentRef.querySelector(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='applyTo'][data-setting-value='throws']"
+    )?.getAttribute("data-active"),
+    "true"
+  );
+
+  clickSelectSettingOption(documentRef, "theme-global-typography", "applyTo", "scores");
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      Array.isArray(config.features?.themes?.globalTypography?.applyTo) &&
+      config.features.themes.globalTypography.applyTo.length === 1 &&
+      config.features.themes.globalTypography.applyTo[0] === "throws"
+  );
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["throws"]);
+
+  const closeSettingsButton = documentRef.querySelector("[data-adxconfig-action='close-settings']");
+  assert.ok(closeSettingsButton);
+  closeSettingsButton.click();
+  await waitForSettingsClosed(documentRef);
+  await waitFor(() => !documentRef.getElementById("ad-xconfig-preview-fonts-style"));
 
   runtime.stop();
 });
