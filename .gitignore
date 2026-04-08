@@ -1,6 +1,9 @@
 node_modules/
 test-run.log
 test-run2.log
+.scannerwork/
+.sonar/
+.github/instructions/sonarqube_mcp.instructions.md
 
 # Playwright
 /test-results/
