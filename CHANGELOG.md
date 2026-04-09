@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.26] - 2026-04-09
+
+### Fixed
+
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die Runtime- und Release-Absicherung bildet jetzt mehrere echte Autodarts-Matchoberflächen robuster nach, sodass DOM-nahe Tests class-basierte Selektoren, Turn-Previews und Board-Zweige für Cricket, Tactics, Shanghai und Bull-off näher an den beobachteten Host-Oberflächen prüfen.
+  Technik: `tests/runtime/fake-dom.js` synchronisiert `className` jetzt mit `classList`, und neue schmale Contract-Tests sichern die gemeinsam beobachteten Host-Pfade über `#ad-ext-game-variant`, `#ad-ext-player-display`, `#ad-ext-turn`, `.score`/`.ad-ext-turn-throw` sowie `.showAnimations`-Boardzweige einschließlich image-backed Bull-off-Media-Root explizit gegen künftige Drift ab.
+
 ## [2.1.25] - 2026-04-09
 
 ### Fixed
@@ -1317,7 +1324,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.25]: https://github.com/thomasasen/autodarts-xconfig/compare/8d47a9c...HEAD
+[2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...HEAD
+[2.1.25]: https://github.com/thomasasen/autodarts-xconfig/compare/8d47a9c...325e508
 [2.1.24]: https://github.com/thomasasen/autodarts-xconfig/compare/17ef31c...8d47a9c
 [2.1.23]: https://github.com/thomasasen/autodarts-xconfig/compare/b7334c0...17ef31c
 [2.1.22]: https://github.com/thomasasen/autodarts-xconfig/compare/ea036d3...b7334c0
