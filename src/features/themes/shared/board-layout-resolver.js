@@ -1,11 +1,3 @@
-import { createRafScheduler } from "../../../shared/raf-scheduler.js";
-import {
-  PREVIEW_SPACE_CLASS,
-  isPreviewPlacementEnabled,
-  isThemeVariantActive,
-  togglePreviewSpace,
-} from "./theme-utils.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup } from "../../../shared/dartboard-svg.js";
 import {
   isBoardInputModeControl,
@@ -1155,7 +1147,7 @@ function resolveRetainedLayoutRecheckDelay(state, nowMs) {
   const graceMs = Math.max(0, Number(retention.graceMs) || 0);
   const bufferMs = Math.max(0, Number(retention.recheckBufferMs) || 0);
   const lastHealthyAtMs = Math.max(0, Number(retention.lastHealthyAtMs) || 0);
-  if (!(graceMs > 0) || !(lastHealthyAtMs > 0)) {
+  if (graceMs <= 0 || lastHealthyAtMs <= 0) {
     return -1;
   }
 
@@ -1179,7 +1171,7 @@ function maybeRetainLayoutHooks(state, status, previous, nowMs) {
   }
 
   const recheckDelayMs = resolveRetainedLayoutRecheckDelay(state, nowMs);
-  if (!(recheckDelayMs > 0)) {
+  if (recheckDelayMs <= 0) {
     removeBoardGapHold(previous);
     clearRetainedLayoutStatus(state);
     return {

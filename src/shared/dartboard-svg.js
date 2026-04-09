@@ -691,7 +691,7 @@ function getNodeRect(node) {
 
   try {
     const rect = node.getBoundingClientRect();
-    if (!(Number(rect?.width) > 0) || !(Number(rect?.height) > 0)) {
+    if (Number(rect?.width) <= 0 || Number(rect?.height) <= 0) {
       return null;
     }
     return rect;

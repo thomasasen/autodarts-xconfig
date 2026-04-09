@@ -19,6 +19,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; kleine Sonar-bedingte Bereinigungen halten Checkout-Hinweise, Board-Erkennung und den Single-Bull-Sound auf ihrem bisherigen Verhalten, reduzieren aber unnötigen Wartungsballast in diesen Pfaden.
   Technik: Unbenutzte Imports und auskommentierter Altcode wurden in mehreren Quellmodulen entfernt, `syncProcessedThrowScope(...)` gibt im Single-Bull-Sound keinen ungenutzten konstanten Wert mehr zurück, und zwei eng begrenzte Helper-Zuschnitte reduzieren die Cognitive Complexity in `selectHigherSpecificBoardGroup(...)` sowie `resolveCheckoutSuggestionSignal(...)`, ohne deren Heuristiken oder Highlight-/Fallback-Semantik zu ändern.
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; einige niedrig riskante Sonar-Bereinigungen machen interne DOM- und Testpfade lesbarer, ohne Checkout-Overlays, Turn-Points-Frames oder Board-Rechtecke fachlich anders zu behandeln.
+  Technik: Kleinere Vergleiche und Attributzugriffe wurden auf direktere moderne APIs umgestellt, Test-Assertions und der Fake-DOM erhielten die dazu passende minimale Modernisierung, und `getNodeRect(...)` prüft positive Rechteckgrößen jetzt äquivalent mit direkteren Gegenoperatoren statt negierter Vergleiche.
+
 ## [2.1.24] - 2026-04-08
 
 ### Added

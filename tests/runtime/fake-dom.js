@@ -394,6 +394,18 @@ class FakeElement extends FakeEventTarget {
     return this.appendChild(element);
   }
 
+  before(...nodes) {
+    if (!this.parentNode) {
+      return;
+    }
+
+    nodes.flat().forEach((node) => {
+      if (node) {
+        this.parentNode.insertBefore(node, this);
+      }
+    });
+  }
+
   removeChild(child) {
     const index = this.children.indexOf(child);
     if (index >= 0) {

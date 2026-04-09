@@ -1,11 +1,3 @@
-import { createRafScheduler } from "../../../shared/raf-scheduler.js";
-import {
-  PREVIEW_SPACE_CLASS,
-  isPreviewPlacementEnabled,
-  isThemeVariantActive,
-  togglePreviewSpace,
-} from "./theme-utils.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 import { findBoardSvgGroup } from "../../../shared/dartboard-svg.js";
 import {
   isBoardInputModeControl,

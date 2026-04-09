@@ -75,7 +75,7 @@ function createFakeShadowRoot() {
       return childNodes.find((node) => node?.id === id) || null;
     },
     querySelector(selector) {
-      const idMatch = String(selector || "").trim().match(/^#(.+)$/);
+      const idMatch = /^#(.+)$/.exec(String(selector || "").trim());
       return idMatch ? this.getElementById(idMatch[1]) : null;
     },
   };

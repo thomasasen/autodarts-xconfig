@@ -458,26 +458,26 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
   assert.ok(singleShape);
   assert.ok(singleOutline);
   assertApprox(
-    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.15
   );
   assertApprox(
-    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width")),
     5.1
   );
   assertApprox(
-    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.56
   );
   assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.988");
   assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.046");
   assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
-    parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
     5.1
   );
   assertApprox(
-    parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    Number.parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
     0.46
   );
 
@@ -501,15 +501,15 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
   assert.ok(outerShape);
   assert.ok(outerOutline);
   assertApprox(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.8
   );
   assertApprox(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.3
   );
   assertApprox(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.64
   );
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.985");
@@ -519,11 +519,11 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
     /drop-shadow/
   );
   assertApprox(
-    parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.3
   );
   assertApprox(
-    parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    Number.parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
     0.52
   );
 
@@ -547,15 +547,15 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
   assert.ok(bullShape);
   assert.ok(bullOutline);
   assertApprox(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     4
   );
   assertApprox(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.7
   );
   assertApprox(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.76
   );
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.983");
@@ -565,24 +565,24 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
     /drop-shadow/
   );
   assertApprox(
-    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.7
   );
   assertApprox(
-    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    Number.parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
     0.62
   );
   assert.ok(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
-      parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
+      Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
   );
   assert.ok(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
-      parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"))
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
+      Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width"))
   );
   assert.ok(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
-      parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width"))
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")) >
+      Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width"))
   );
 });
 
@@ -627,7 +627,7 @@ test("checkout-board-targets keeps outline clones isolated from target effect cl
   assert.equal(bullOutline.classList.contains(TARGET_CLASS), false);
   assert.equal(bullOutline.classList.contains(EFFECT_CLASSES.focus), false);
   assertApprox(
-    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.7
   );
 });
@@ -689,16 +689,16 @@ test("checkout-board-targets softens and staggers follow-up targets in multi-tar
   assert.equal(secondaryOuter.style.getPropertyValue("--ad-ext-target-animation-delay"), "120ms");
   assert.equal(tertiaryBull.style.getPropertyValue("--ad-ext-target-animation-delay"), "240ms");
   assert.ok(
-    parseFloat(secondaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) <
-      parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+    Number.parseFloat(secondaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) <
+      Number.parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
   );
   assert.ok(
-    parseFloat(secondaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) <
-      parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+    Number.parseFloat(secondaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) <
+      Number.parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
   );
   assert.ok(
-    parseFloat(tertiaryBull.style.getPropertyValue("--ad-ext-target-outline-width")) <
-      parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-outline-width"))
+    Number.parseFloat(tertiaryBull.style.getPropertyValue("--ad-ext-target-outline-width")) <
+      Number.parseFloat(primaryOuter.style.getPropertyValue("--ad-ext-target-outline-width"))
   );
 });
 
@@ -772,22 +772,22 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.ok(singleOutline);
   assert.equal(singleShape.classList.contains(EFFECT_CLASSES.signal), true);
   assertApprox(
-    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.15
   );
   assertApprox(
-    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-outline-width")),
     5.3
   );
   assertApprox(
-    parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.16
   );
   assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.968");
   assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
   assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
-    parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    Number.parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
     0.22
   );
 
@@ -812,22 +812,22 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.ok(outerOutline);
   assert.equal(outerShape.classList.contains(EFFECT_CLASSES.signal), true);
   assertApprox(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.65
   );
   assertApprox(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.3
   );
   assertApprox(
-    parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.24
   );
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.964");
   assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.11");
   assert.match(outerShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
-    parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    Number.parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
     0.26
   );
 
@@ -852,15 +852,15 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.ok(bullOutline);
   assert.equal(bullShape.classList.contains(EFFECT_CLASSES.signal), true);
   assertApprox(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.85
   );
   assertApprox(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")),
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.8
   );
   assertApprox(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.3
   );
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.958");
@@ -868,12 +868,12 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-opacity"), "1");
   assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
-    parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
+    Number.parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
     0.32
   );
   assert.ok(
-    parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
-      parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
+    Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")) >
+      Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"))
   );
 });
 
@@ -1557,12 +1557,12 @@ test("checkout-board-targets next mode renders direct double finishes when no su
       assert.ok(overlay, `missing overlay for score ${activeScore}`);
       assert.equal(overlay.children.length >= 2, true, `missing target nodes for score ${activeScore}`);
       assert.equal(
-        overlay.children[0]?.getAttribute("data-target-ring"),
+        overlay.children[0]?.dataset.targetRing,
         segment,
         `unexpected ring for score ${activeScore}`
       );
       assert.equal(
-        overlay.children[0]?.getAttribute("data-target-value"),
+        overlay.children[0]?.dataset.targetValue,
         value,
         `unexpected value for score ${activeScore}`
       );
@@ -2057,7 +2057,7 @@ test("checkout-board-targets rerenders after board replacement even when suggest
   assert.ok(firstBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`));
 
   const secondBoard = createBoard();
-  documentRef.main.removeChild(firstBoard.svg);
+  firstBoard.svg.remove();
   documentRef.main.appendChild(secondBoard.svg);
 
   const observer = observerRegistry.get("checkout-board-targets:dom-observer");

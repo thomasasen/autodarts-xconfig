@@ -312,7 +312,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   );
 
   defaultFeatureDefinitions.forEach((definition) => {
-    const expectedEnabled = definition.featureKey === "theme-global-typography" ? false : true;
+    const expectedEnabled = definition.featureKey !== "theme-global-typography";
     assert.equal(storedConfig.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(storedConfig, definition.configKey).enabled,

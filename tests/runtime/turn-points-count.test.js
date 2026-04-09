@@ -30,8 +30,8 @@ function createTurnPointsFrame(documentRef) {
   frameNode.classList.add("ad-ext-turn-points-row");
 
   if (currentParent) {
-    currentParent.insertBefore(frameNode, scoreNode);
-    currentParent.removeChild(scoreNode);
+    scoreNode.before(frameNode);
+    scoreNode.remove();
   }
   frameNode.appendChild(scoreNode);
 

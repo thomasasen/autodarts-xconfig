@@ -20,7 +20,7 @@ test("feature catalog stays aligned across registry, defaults, and xconfig descr
     assert.equal(descriptorKeys.has(featureKey), true, `missing descriptor for ${featureKey}`);
     assert.equal(getXConfigDescriptor(featureKey)?.featureKey, featureKey);
     assert.equal(
-      Object.prototype.hasOwnProperty.call(defaultConfig.featureToggles, configKey),
+      Object.hasOwn(defaultConfig.featureToggles, configKey),
       true,
       `missing feature toggle default for ${featureKey}`
     );
