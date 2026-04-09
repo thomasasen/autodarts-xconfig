@@ -964,13 +964,13 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 ### Dart Marker Darts
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Standardmarker können durch kleine Dart-Grafiken ersetzt werden. Im Koordinatenmodus der Liveboard-Ansicht pausiert das Modul automatisch.
+- Was macht es sichtbar? Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
 - Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
 - Wann sinnvoll? Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.
 
 **Wichtiger Hinweis**
 
-- Im Koordinatenmodus der Autodarts-Liveboard-Ansicht pausiert `Dart Marker Darts` automatisch. So bleibt die Eingabeansicht frei von zusätzlichen Dart-Overlays und missverständlichen Marker-Ersatzgrafiken.
+- Auf dem virtuellen Board bleibt `Dart Marker Darts` aktiv und ersetzt sichtbare Treffer-Marker durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
 
 **Einstellungen einfach erklärt**
 
@@ -993,7 +993,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `Klein`: Der eingeblendete Dart bleibt kompakter und lässt mehr Segmentfläche frei. Das wirkt aufgeräumter und weniger dominant.
   - `Standard`: Der Dart entspricht der vorgesehenen Grundgröße des Moduls. Das ist der Mittelweg zwischen Präsenz und freier Segmentfläche.
   - `Groß`: Der Dart füllt mehr vom Segment aus und fällt stärker ins Auge. Das ist die plakativste Größenstufe.
-- `Original-Marker ausblenden`: Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Im Koordinatenmodus der Liveboard-Ansicht pausiert `Dart Marker Darts` jedoch vollständig automatisch.
+- `Original-Marker ausblenden`: Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Darts` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.
 - `Einschlag-Schatten`: Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt.
 - `Einschlag-Wobble`: Aktiviert eine kurze Wackelbewegung des Dart-Bildes direkt nach der Landung. Das verstärkt den Einschlag-Effekt visuell.
 - `Fluggeschwindigkeit`: Wählt die Dauer der Einfluganimation neuer Dart-Bilder. `Schnell` landet zügig, `Cinematic` hält die Flugphase sichtbar länger.

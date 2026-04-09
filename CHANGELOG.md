@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.27] - 2026-04-09
+
+### Fixed
+
+- Nutzerwirkung: `Dart Marker Darts` bleibt auf dem virtuellen Board jetzt aktiv und ersetzt dort sichtbare Treffer-Marker wieder durch Dart-Grafiken; im `Live-Modus` pausiert das Modul stattdessen automatisch, damit die Live-Ansicht ohne zusätzliche Dart-Overlays bleibt.
+  Technik: Die Modus-Guard für `dart-marker-darts` schaltet von `Koordinatenmodus` auf `Live-Modus` um, ein neuer `isLiveBoardInputModeActive(...)`-Helper kapselt die Erkennung zentral, Runtime-Regressionen sichern die neue Aktiv-/Pause-Grenze ab, und die generierten README-/Feature-Texte wurden auf den geänderten Board-Modus-Vertrag synchronisiert.
+
 ## [2.1.26] - 2026-04-09
 
 ### Fixed
@@ -1324,7 +1331,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...HEAD
+[2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...HEAD
+[2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...95e8963
 [2.1.25]: https://github.com/thomasasen/autodarts-xconfig/compare/8d47a9c...325e508
 [2.1.24]: https://github.com/thomasasen/autodarts-xconfig/compare/17ef31c...8d47a9c
 [2.1.23]: https://github.com/thomasasen/autodarts-xconfig/compare/b7334c0...17ef31c

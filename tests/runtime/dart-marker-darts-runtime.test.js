@@ -8,6 +8,7 @@ import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import {
   getActiveBoardInputMode,
   isCoordinateBoardInputModeActive,
+  isLiveBoardInputModeActive,
 } from "../../src/shared/board-input-mode.js";
 import {
   clearDartMarkerDartsState,
@@ -257,19 +258,23 @@ test("coordinate input mode detection recognizes multiple active-state contracts
 
   assert.equal(getActiveBoardInputMode(documentRef), "coords");
   assert.equal(isCoordinateBoardInputModeActive(documentRef), true);
+  assert.equal(isLiveBoardInputModeActive(documentRef), false);
 
   setModeButtonActive(buttons.coords, "aria-pressed", false);
   setModeButtonActive(buttons.live, "aria-selected", true);
   assert.equal(getActiveBoardInputMode(documentRef), "live");
+  assert.equal(isLiveBoardInputModeActive(documentRef), true);
 
   setModeButtonActive(buttons.live, "aria-selected", false);
   setModeButtonActive(buttons.segments, "data-state", true);
   assert.equal(getActiveBoardInputMode(documentRef), "segments");
+  assert.equal(isLiveBoardInputModeActive(documentRef), false);
 
   setModeButtonActive(buttons.segments, "data-state", false);
   setModeButtonActive(buttons.coords, "data-active-empty", true);
   assert.equal(getActiveBoardInputMode(documentRef), "coords");
   assert.equal(isCoordinateBoardInputModeActive(documentRef), true);
+  assert.equal(isLiveBoardInputModeActive(documentRef), false);
 });
 
 test("dart-marker-darts separates flight container, rotation group, and image node", () => {
@@ -536,7 +541,7 @@ test("dart-marker-darts cleanup restores marker opacity, removes overlay artifac
   assert.equal(animation.playState, "idle");
 });
 
-test("dart-marker-darts pauses completely while coordinate input mode is active", () => {
+test("dart-marker-darts stays active in coordinate mode and pauses completely while live input mode is active", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const { markers } = installBoardFixture(documentRef, [
@@ -574,12 +579,12 @@ test("dart-marker-darts pauses completely while coordinate input mode is active"
     },
   });
 
-  assert.equal(state.entriesByMarker.size, 0);
-  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
-  assert.equal(markers[0].style.opacity, "");
+  assert.equal(state.entriesByMarker.size, 1);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), true);
+  assert.equal(markers[0].style.opacity, "0");
 
   setModeButtonActive(buttons.coords, "aria-selected", false);
-  setModeButtonActive(buttons.segments, "data-state", true);
+  setModeButtonActive(buttons.live, "data-state", true);
   updateDartMarkerDarts({
     documentRef,
     state,
@@ -589,9 +594,9 @@ test("dart-marker-darts pauses completely while coordinate input mode is active"
     },
   });
 
-  assert.equal(state.entriesByMarker.size, 1);
-  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), true);
-  assert.equal(markers[0].style.opacity, "0");
+  assert.equal(state.entriesByMarker.size, 0);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
+  assert.equal(markers[0].style.opacity, "");
 
   clearDartMarkerDartsState(state);
 });

@@ -279,3 +279,7 @@ export function getActiveBoardInputMode(documentRef) {
 export function isCoordinateBoardInputModeActive(documentRef) {
   return getActiveBoardInputMode(documentRef) === "coords";
 }
+
+export function isLiveBoardInputModeActive(documentRef) {
+  return getActiveBoardInputMode(documentRef) === "live";
+}
