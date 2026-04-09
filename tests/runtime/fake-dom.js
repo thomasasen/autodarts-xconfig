@@ -319,6 +319,18 @@ class FakeElement extends FakeEventTarget {
     this.__animations = [];
   }
 
+  get className() {
+    return this.classList.toString();
+  }
+
+  set className(value) {
+    this.classList = new FakeClassList(
+      String(value || "")
+        .split(/\s+/)
+        .filter(Boolean)
+    );
+  }
+
   appendChild(child) {
     if (!child) {
       return child;
