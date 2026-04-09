@@ -14,6 +14,11 @@ import { FakeDocument } from "./fake-dom.js";
 function createBoardModeButtons(documentRef, activeMode = "segments", options = {}) {
   const toolbar = documentRef.createElement("div");
   const buttons = {};
+  const activeState = options.activeState || {
+    name: "aria-pressed",
+    activeValue: "true",
+    inactiveValue: "false",
+  };
   if (options.hidden === true) {
     toolbar.setAttribute("aria-hidden", "true");
   }
@@ -26,7 +31,11 @@ function createBoardModeButtons(documentRef, activeMode = "segments", options = 
     const button = documentRef.createElement("button");
     button.type = "button";
     button.setAttribute("aria-label", label);
-    button.setAttribute("aria-pressed", modeKey === activeMode ? "true" : "false");
+    if (modeKey === activeMode) {
+      button.setAttribute(activeState.name, String(activeState.activeValue ?? ""));
+    } else if (activeState.inactiveValue !== null && activeState.inactiveValue !== undefined) {
+      button.setAttribute(activeState.name, String(activeState.inactiveValue));
+    }
     toolbar.appendChild(button);
     buttons[modeKey] = button;
   });
@@ -51,6 +60,71 @@ function appendBoardLikeGeometry(documentRef, groupNode, boardRadius) {
     );
     groupNode.appendChild(path);
   }
+}
+
+function createSparseImageBackedBoardFixture(documentRef, options = {}) {
+  const panel = documentRef.createElement("div");
+  const controls = documentRef.createElement("div");
+  const eventShell = documentRef.createElement("div");
+  const boardBranch = documentRef.createElement("div");
+  const mediaRoot = documentRef.createElement("div");
+  const boardImage = documentRef.createElement("img");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const wrapperGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const labelsGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const boardRadius = Number(options.boardRadius) > 0 ? Number(options.boardRadius) : 500;
+
+  panel.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  controls.__rect = { width: 120, height: 48 };
+  eventShell.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  boardBranch.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  mediaRoot.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  boardImage.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+  svg.__rect = { width: Number(options.width) || 720, height: Number(options.height) || 720 };
+
+  eventShell.classList.add("showAnimations");
+  boardBranch.classList.add("css-aiihgx");
+  mediaRoot.classList.add("css-79elbk");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+
+  const undoButton = documentRef.createElement("button");
+  undoButton.textContent = "Undo";
+  const nextButton = documentRef.createElement("button");
+  nextButton.textContent = "Next";
+  controls.appendChild(undoButton);
+  controls.appendChild(nextButton);
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", String(boardRadius));
+  wrapperGroup.appendChild(outerRing);
+  wrapperGroup.appendChild(labelsGroup);
+
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    labelsGroup.appendChild(labelNode);
+  }
+
+  svg.appendChild(wrapperGroup);
+  mediaRoot.appendChild(boardImage);
+  mediaRoot.appendChild(svg);
+  boardBranch.appendChild(mediaRoot);
+  eventShell.appendChild(boardBranch);
+  panel.appendChild(controls);
+  panel.appendChild(eventShell);
+  documentRef.main.appendChild(panel);
+
+  return {
+    panel,
+    controls,
+    eventShell,
+    boardBranch,
+    mediaRoot,
+    boardImage,
+    svg,
+    wrapperGroup,
+    labelsGroup,
+  };
 }
 
 function createBoardFixture(documentRef, options = {}) {
@@ -120,6 +194,45 @@ test("getActiveBoardInputMode ignores hidden stale controls and picks the visibl
   createBoardModeButtons(documentRef, "live");
 
   assert.equal(getActiveBoardInputMode(documentRef), "live");
+});
+
+test("getActiveBoardInputMode treats a present empty data-active attribute as an active host control", () => {
+  const documentRef = new FakeDocument();
+  createBoardModeButtons(documentRef, "coords", {
+    activeState: {
+      name: "data-active",
+      activeValue: "",
+      inactiveValue: null,
+    },
+  });
+  createBoardFixture(documentRef, { withPanelControls: true });
+
+  assert.equal(getActiveBoardInputMode(documentRef), "coords");
+  assert.equal(findBoardSvgGroup(documentRef)?.modeKey, "coords");
+});
+
+test("findBoardSvgGroup accepts sparse image-backed live boards with a virtual number ring", () => {
+  const documentRef = new FakeDocument();
+  createBoardModeButtons(documentRef, "live", {
+    activeState: {
+      name: "data-active",
+      activeValue: "",
+      inactiveValue: null,
+    },
+  });
+  const liveBoard = createSparseImageBackedBoardFixture(documentRef, {
+    boardRadius: 500,
+    width: 192,
+    height: 192,
+  });
+
+  const boardSnapshot = findBoardSvgGroup(documentRef);
+
+  assert.equal(boardSnapshot?.svg, liveBoard.svg);
+  assert.equal(boardSnapshot?.group, liveBoard.wrapperGroup);
+  assert.equal(boardSnapshot?.radius, 500);
+  assert.equal(boardSnapshot?.modeKey, "live");
+  assert.equal(isReusableBoardSnapshot(boardSnapshot, documentRef), true);
 });
 
 test("findBoardSvgGroup prefers the visible board over a hidden stale board layer", () => {

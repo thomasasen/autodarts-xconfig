@@ -59,6 +59,28 @@ function appendThrowRow(documentRef, text = "") {
   };
 }
 
+function appendExternalThrowPlaceholder(documentRef, parentId = "", text = "") {
+  const parent = documentRef.createElement("div");
+  if (parentId) {
+    parent.id = parentId;
+  }
+
+  const row = documentRef.createElement("div");
+  row.classList.add("ad-ext-turn-throw");
+  const textNode = documentRef.createElement("p");
+  textNode.classList.add("chakra-text");
+  textNode.textContent = String(text || "");
+  row.appendChild(textNode);
+  parent.appendChild(row);
+  documentRef.main.appendChild(parent);
+
+  return {
+    parent,
+    row,
+    textNode,
+  };
+}
+
 function appendSplitThrowRow(documentRef, scoreText = "", segmentText = "") {
   const row = documentRef.createElement("div");
   row.classList.add("ad-ext-turn-throw");
@@ -239,6 +261,57 @@ test("single-bull-sound still plays for the next throw index in the same turn", 
       config,
     });
     assert.equal(playCalls.length, 2);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("single-bull-sound ignores empty center zoom placeholder rows outside #ad-ext-turn", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.throwTextElement.textContent = "S25";
+
+  appendExternalThrowPlaceholder(documentRef, "autodarts-tools-zoom-center");
+  appendExternalThrowPlaceholder(documentRef, "autodarts-tools-zoom-center");
+  appendExternalThrowPlaceholder(documentRef, "autodarts-tools-zoom-center");
+
+  const playCalls = [];
+  const state = createAudioState(playCalls);
+  const config = {
+    volume: 0.9,
+    cooldownMs: 700,
+  };
+  const activeTurn = {
+    id: "turn-center-placeholders",
+    round: 2,
+    turn: 1,
+    playerId: "player-1",
+  };
+
+  const originalDateNow = Date.now;
+  let fakeNow = 5_000;
+  Date.now = () => fakeNow;
+
+  try {
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(activeTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+    await flushMicrotasks();
+    assert.equal(playCalls.length, 1);
+
+    fakeNow = 5_350;
+    updateSingleBullSound({
+      documentRef,
+      gameState: createGameState(activeTurn, []),
+      x01Rules,
+      state,
+      config,
+    });
+    await flushMicrotasks();
+    assert.equal(playCalls.length, 1);
   } finally {
     Date.now = originalDateNow;
   }

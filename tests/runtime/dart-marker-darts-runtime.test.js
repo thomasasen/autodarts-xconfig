@@ -186,6 +186,11 @@ function setModeButtonActive(button, contract = "aria-pressed", isActive = false
     return button;
   }
 
+  if (contract === "data-active-empty") {
+    button.setAttribute("data-active", "");
+    return button;
+  }
+
   button.setAttribute(contract, "true");
   return button;
 }
@@ -260,6 +265,11 @@ test("coordinate input mode detection recognizes multiple active-state contracts
   setModeButtonActive(buttons.live, "aria-selected", false);
   setModeButtonActive(buttons.segments, "data-state", true);
   assert.equal(getActiveBoardInputMode(documentRef), "segments");
+
+  setModeButtonActive(buttons.segments, "data-state", false);
+  setModeButtonActive(buttons.coords, "data-active-empty", true);
+  assert.equal(getActiveBoardInputMode(documentRef), "coords");
+  assert.equal(isCoordinateBoardInputModeActive(documentRef), true);
 });
 
 test("dart-marker-darts separates flight container, rotation group, and image node", () => {

@@ -2,7 +2,7 @@ const ACTIVE_ATTRIBUTE_RULES = Object.freeze([
   Object.freeze({ name: "aria-pressed", values: ["true"] }),
   Object.freeze({ name: "aria-selected", values: ["true"] }),
   Object.freeze({ name: "aria-checked", values: ["true"] }),
-  Object.freeze({ name: "data-active", values: ["true"] }),
+  Object.freeze({ name: "data-active", values: ["true"], allowPresentEmptyValue: true }),
   Object.freeze({ name: "data-selected", values: ["true"] }),
   Object.freeze({ name: "data-checked", values: ["true"] }),
   Object.freeze({ name: "data-pressed", values: ["true"] }),
@@ -196,8 +196,12 @@ function getNodeActiveStrength(node) {
   }
 
   ACTIVE_ATTRIBUTE_RULES.forEach((rule) => {
+    const rawValue = node.getAttribute?.(rule.name);
     const value = normalizeText(node.getAttribute?.(rule.name));
-    if (Boolean(value) && rule.values.includes(value)) {
+    if (
+      (Boolean(value) && rule.values.includes(value)) ||
+      (rule.allowPresentEmptyValue === true && rawValue === "")
+    ) {
       strength += 1;
     }
   });

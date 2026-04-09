@@ -241,6 +241,49 @@ function createZoomIsolationFixture(options = {}) {
   };
 }
 
+function createImageBackedLiveBoardZoomFixture() {
+  const documentRef = new FakeDocument();
+  const showAnimations = documentRef.createElement("div");
+  const boardBranch = documentRef.createElement("div");
+  const mediaRoot = documentRef.createElement("div");
+  const boardImage = documentRef.createElement("img");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const outerCircle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+  showAnimations.classList.add("showAnimations");
+  boardBranch.classList.add("css-aiihgx");
+  mediaRoot.classList.add("css-79elbk");
+  showAnimations.__rect = { left: 129, top: 405, width: 1334, height: 256 };
+  boardBranch.__rect = { left: 700, top: 438, width: 192, height: 192 };
+  mediaRoot.__rect = { left: 700, top: 438, width: 192, height: 192 };
+  boardImage.__rect = { left: 687, top: 425, width: 218, height: 218 };
+  boardSvg.__rect = { left: 700, top: 438, width: 192, height: 192 };
+
+  boardSvg.setAttribute("viewBox", "0 0 1000 1000");
+  outerCircle.setAttribute("r", "500");
+  boardSvg.appendChild(outerCircle);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    boardSvg.appendChild(labelNode);
+  }
+
+  mediaRoot.appendChild(boardImage);
+  mediaRoot.appendChild(boardSvg);
+  boardBranch.appendChild(mediaRoot);
+  showAnimations.appendChild(boardBranch);
+  documentRef.main.appendChild(showAnimations);
+
+  return {
+    documentRef,
+    showAnimations,
+    boardBranch,
+    mediaRoot,
+    boardImage,
+    boardSvg,
+  };
+}
+
 test("tv-board-zoom prefers the inner board layer over .showAnimations", () => {
   const documentRef = new FakeDocument();
   const showAnimations = documentRef.createElement("div");
@@ -287,6 +330,12 @@ test("tv-board-zoom falls back to stable board-canvas hook when .showAnimations 
   documentRef.main.appendChild(stableCanvas);
 
   assert.equal(resolveZoomTarget(boardSvg), stableCanvas);
+});
+
+test("tv-board-zoom prefers the image-backed media root for live boards with a virtual number ring", () => {
+  const { boardSvg, mediaRoot } = createImageBackedLiveBoardZoomFixture();
+
+  assert.equal(resolveZoomTarget(boardSvg), mediaRoot);
 });
 
 test("tv-board-zoom keeps fail-soft parent fallback when no zoom-target selectors match", () => {

@@ -27,6 +27,120 @@ function appendSuggestion(documentRef, text, left, top) {
   return node;
 }
 
+function createHostCheckoutSuggestionCard(documentRef, scoreText, segmentText, left, top) {
+  const node = documentRef.createElement("div");
+  const imageNode = documentRef.createElement("img");
+  const textNode = documentRef.createElement("p");
+  const scoreNode = documentRef.createElement("div");
+  const segmentNode = documentRef.createElement("div");
+
+  node.classList.add("suggestion");
+  node.__rect = {
+    left,
+    top,
+    width: 356,
+    height: 125,
+  };
+  node.textContent = `${scoreText}${segmentText}`;
+  node.innerText = `${scoreText}\n${segmentText}`;
+
+  textNode.classList.add("chakra-text");
+  textNode.textContent = `${scoreText}${segmentText}`;
+  textNode.innerText = `${scoreText}\n${segmentText}`;
+  scoreNode.textContent = String(scoreText || "");
+  segmentNode.textContent = String(segmentText || "");
+  textNode.appendChild(scoreNode);
+  textNode.appendChild(segmentNode);
+
+  node.appendChild(imageNode);
+  node.appendChild(textNode);
+  return node;
+}
+
+function createHostThrowRow(documentRef, scoreText, segmentText, left, top) {
+  const rowNode = documentRef.createElement("div");
+  const imageNode = documentRef.createElement("img");
+  const textNode = documentRef.createElement("p");
+  const scoreNode = documentRef.createElement("div");
+  const segmentNode = documentRef.createElement("div");
+
+  rowNode.classList.add("ad-ext-turn-throw");
+  rowNode.__rect = {
+    left,
+    top,
+    width: 356,
+    height: 125,
+  };
+  rowNode.textContent = `${scoreText}${segmentText}`;
+  rowNode.innerText = `${scoreText}\n${segmentText}`;
+
+  textNode.classList.add("chakra-text");
+  textNode.textContent = `${scoreText}${segmentText}`;
+  textNode.innerText = `${scoreText}\n${segmentText}`;
+  scoreNode.textContent = String(scoreText || "");
+  segmentNode.textContent = String(segmentText || "");
+  textNode.appendChild(scoreNode);
+  textNode.appendChild(segmentNode);
+
+  rowNode.appendChild(imageNode);
+  rowNode.appendChild(textNode);
+  return rowNode;
+}
+
+function installHostCheckoutTurnSurface(documentRef, route = [], options = {}) {
+  documentRef.suggestionElement.remove();
+  documentRef.turnPointsElement.remove();
+  documentRef.turnContainer.replaceChildren();
+
+  const pointsFrame = documentRef.createElement("div");
+  const pointsText = documentRef.createElement("p");
+  const throwRows = Array.isArray(options.throwRows) ? options.throwRows : [];
+  const previewSlots = Number.isFinite(options.previewSlots) ? Math.max(0, Number(options.previewSlots)) : 1;
+  let left = 129;
+
+  pointsFrame.classList.add("css-rrf7rv");
+  pointsFrame.__rect = { left, top: 264, width: 240, height: 125 };
+  pointsText.classList.add("ad-ext-turn-points");
+  pointsText.textContent = String(options.pointsText ?? "0");
+  pointsFrame.appendChild(pointsText);
+  documentRef.turnContainer.appendChild(pointsFrame);
+  left += 248;
+
+  throwRows.forEach(({ scoreText, segmentText }) => {
+    const throwRowNode = createHostThrowRow(
+      documentRef,
+      scoreText,
+      segmentText,
+      left,
+      264
+    );
+    documentRef.turnContainer.appendChild(throwRowNode);
+    left += 365;
+  });
+
+  route.forEach(({ scoreText, segmentText }) => {
+    const cardNode = createHostCheckoutSuggestionCard(
+      documentRef,
+      scoreText,
+      segmentText,
+      left,
+      264
+    );
+    documentRef.turnContainer.appendChild(cardNode);
+    left += 365;
+  });
+
+  for (let index = 0; index < previewSlots; index += 1) {
+    const previewSlot = documentRef.createElement("div");
+    const previewImage = documentRef.createElement("img");
+    previewSlot.classList.add("score");
+    previewSlot.__rect = { left, top: 264, width: 356, height: 125 };
+    previewSlot.appendChild(previewImage);
+    documentRef.turnContainer.appendChild(previewSlot);
+    left += 365;
+  }
+}
+
 test("x01 checkout route collects visible suggestion nodes left-to-right and ignores invalid text", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "";
@@ -41,6 +155,18 @@ test("x01 checkout route collects visible suggestion nodes left-to-right and ign
   assert.deepEqual(route, ["T16", "D8"]);
   assert.equal(getFirstCheckoutRouteSegment(route), "T16");
   assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D8");
+  assert.equal(getSingleSuggestionSegmentFromRoute(route), "");
+});
+
+test("x01 checkout route returns an empty route when the base surface has no suggestion nodes", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.remove();
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, []);
+  assert.equal(getFirstCheckoutRouteSegment(route), "");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "");
   assert.equal(getSingleSuggestionSegmentFromRoute(route), "");
 });
 
@@ -192,6 +318,109 @@ test("x01 checkout route falls back to leaf text when wrapper text is collapsed"
   assert.deepEqual(route, ["S14"]);
 });
 
+test("x01 checkout route parses host checkout cards inside #ad-ext-turn with points and preview siblings", () => {
+  const documentRef = new FakeDocument();
+  installHostCheckoutTurnSurface(documentRef, [
+    { scoreText: "16", segmentText: "S16" },
+    { scoreText: "40", segmentText: "D20" },
+  ]);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["S16", "D20"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "S16");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D20");
+});
+
+test("x01 checkout route isolates a direct D20 finish card from surrounding throw and preview rows", () => {
+  const documentRef = new FakeDocument();
+  installHostCheckoutTurnSurface(
+    documentRef,
+    [{ scoreText: "40", segmentText: "D20" }],
+    {
+      pointsText: "16",
+      throwRows: [{ scoreText: "16", segmentText: "S16" }],
+      previewSlots: 1,
+    }
+  );
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["D20"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "D20");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D20");
+  assert.equal(getSingleSuggestionSegmentFromRoute(route), "D20");
+});
+
+test("x01 checkout route isolates a visible setup-only S3 card after S16 and S5 throw rows", () => {
+  const documentRef = new FakeDocument();
+  installHostCheckoutTurnSurface(
+    documentRef,
+    [{ scoreText: "3", segmentText: "S3" }],
+    {
+      pointsText: "21",
+      throwRows: [
+        { scoreText: "16", segmentText: "S16" },
+        { scoreText: "5", segmentText: "S5" },
+      ],
+      previewSlots: 0,
+    }
+  );
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["S3"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "S3");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "");
+  assert.equal(getSingleSuggestionSegmentFromRoute(route), "S3");
+});
+
+test("x01 checkout route isolates a direct D10 finish card after S16 and S20 throw rows", () => {
+  const documentRef = new FakeDocument();
+  installHostCheckoutTurnSurface(
+    documentRef,
+    [{ scoreText: "20", segmentText: "D10" }],
+    {
+      pointsText: "36",
+      throwRows: [
+        { scoreText: "16", segmentText: "S16" },
+        { scoreText: "20", segmentText: "S20" },
+      ],
+      previewSlots: 0,
+    }
+  );
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["D10"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "D10");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D10");
+  assert.equal(getSingleSuggestionSegmentFromRoute(route), "D10");
+});
+
+test("x01 checkout route reads scoreless D10 host cards when enhanced scoring display is disabled", () => {
+  const documentRef = new FakeDocument();
+  installHostCheckoutTurnSurface(
+    documentRef,
+    [{ scoreText: "", segmentText: "D10" }],
+    {
+      pointsText: "36",
+      throwRows: [
+        { scoreText: "", segmentText: "S16" },
+        { scoreText: "", segmentText: "S20" },
+      ],
+      previewSlots: 0,
+    }
+  );
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["D10"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "D10");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D10");
+  assert.equal(getSingleSuggestionSegmentFromRoute(route), "D10");
+});
+
 test("x01 checkout route resolves semantic snapshot for a valid explicit visible checkout route", () => {
   const resolved = resolveCheckoutSurfaceSemantics({
     routeSegments: ["25", "D18"],
@@ -211,6 +440,75 @@ test("x01 checkout route resolves semantic snapshot for a valid explicit visible
     authoritativeFinishSegment: "D18",
     canUseAuthoritativeFinishNow: false,
     singleVisibleSegment: "",
+    surfaceKind: "visible-explicit-checkout",
+  });
+});
+
+test("x01 checkout route resolves semantic snapshot for a direct visible D20 checkout", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["D20"],
+    activeScore: 40,
+    outMode: "Double Out",
+    dartsRemaining: 2,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["D20"],
+    authoritativeRouteSegments: ["D20"],
+    selectionSource: "validated-visible-route",
+    visibleSegmentsUsed: 1,
+    firstVisibleSegment: "D20",
+    visibleFinishSegment: "D20",
+    authoritativeFinishSegment: "D20",
+    canUseAuthoritativeFinishNow: true,
+    singleVisibleSegment: "D20",
+    surfaceKind: "visible-explicit-checkout",
+  });
+});
+
+test("x01 checkout route resolves semantic snapshot for a direct visible S3 setup after the checkout was lost", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["S3"],
+    activeScore: 35,
+    outMode: "Double Out",
+    dartsRemaining: 1,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["S3"],
+    authoritativeRouteSegments: ["S3"],
+    selectionSource: "visible-setup-segment",
+    visibleSegmentsUsed: 1,
+    firstVisibleSegment: "S3",
+    visibleFinishSegment: "",
+    authoritativeFinishSegment: "",
+    canUseAuthoritativeFinishNow: false,
+    singleVisibleSegment: "S3",
+    surfaceKind: "visible-setup-only",
+  });
+});
+
+test("x01 checkout route resolves semantic snapshot for a direct visible D10 checkout after S20 keeps checkout alive", () => {
+  const resolved = resolveCheckoutSurfaceSemantics({
+    routeSegments: ["D10"],
+    activeScore: 20,
+    outMode: "Double Out",
+    dartsRemaining: 1,
+    x01Rules,
+  });
+
+  assert.deepEqual(resolved, {
+    visibleRouteSegments: ["D10"],
+    authoritativeRouteSegments: ["D10"],
+    selectionSource: "validated-visible-route",
+    visibleSegmentsUsed: 1,
+    firstVisibleSegment: "D10",
+    visibleFinishSegment: "D10",
+    authoritativeFinishSegment: "D10",
+    canUseAuthoritativeFinishNow: true,
+    singleVisibleSegment: "D10",
     surfaceKind: "visible-explicit-checkout",
   });
 });
