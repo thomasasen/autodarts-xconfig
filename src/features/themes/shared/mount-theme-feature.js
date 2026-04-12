@@ -56,6 +56,10 @@ export function mountThemeFeature(context = {}, options = {}) {
     typeof options.buildThemeCss === "function"
       ? options.buildThemeCss
       : () => "";
+  const isSupportedContext =
+    typeof options.isSupportedContext === "function"
+      ? options.isSupportedContext
+      : null;
   const themePolicy = resolveThemePolicy({
     ...options,
     featureKey,
@@ -142,6 +146,22 @@ export function mountThemeFeature(context = {}, options = {}) {
     });
 
     if (!isActive) {
+      deactivateTheme();
+      return;
+    }
+
+    if (
+      isSupportedContext &&
+      isSupportedContext({
+        config,
+        documentRef,
+        featureConfig,
+        gameState,
+        runtimeContext: context,
+        themePolicy,
+        windowRef,
+      }) !== true
+    ) {
       deactivateTheme();
       return;
     }

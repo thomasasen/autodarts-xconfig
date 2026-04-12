@@ -244,6 +244,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   x01ScoreProgress: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core", debug: false },
   "themes.globalTypography": { enabled: false, fontPreset: "system", applyTo: ["scores"], debug: false },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
+  "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.shanghai": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.bermuda": { enabled: false, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.cricket": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -269,6 +270,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
   "themes.globalTypography": { enabled: false, fontPreset: "system", applyTo: ["scores"] },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
+  "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.bermuda": { backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.cricket": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -581,6 +583,9 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   "themes.x01"(rawConfig = {}) {
     return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
+  },
+  "themes.x01TwoPlayer"(rawConfig = {}) {
+    return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01TwoPlayer"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
   },
   "themes.shanghai"(rawConfig = {}) {
     return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.shanghai"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };

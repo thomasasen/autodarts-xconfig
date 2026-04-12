@@ -209,6 +209,39 @@ export const xconfigFeatureCopy = deepFreeze({
       clearThemeBackground: THEME_CLEAR_FIELD,
     },
   }),
+  "theme-x01-2player": featureCopy({
+    cardDescription:
+      "Beta-Theme für genau zwei X01-Spieler mit Board-Fokus; wird weiter ausgebaut und stabilisiert.",
+    visibleDescription:
+      "Eine Beta-Version des dunklen X01-Layouts für exakt 2 Spieler mit Board-Fokus, seitlichen Spieler-Karten und optionaler AVG-Zeile.",
+    visualDescription:
+      "Das Theme legt zwei große Spieler-Karten links und rechts um ein betontes Board an. Farben, Flächen und Kontraste werden neu interpretiert; außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.",
+    usefulWhen:
+      "Wenn du das neue TV-artige 2-Spieler-X01-Layout schon nutzen möchtest und Beta-Stand, weitere Stabilisierung sowie spätere xConfig-Ausbaustufen für Farben und Feineinstellungen für dich in Ordnung sind.",
+    readmeDetailHeading: "Beta-Hinweis",
+    readmeDetails: [
+      "Diese Variante ist bewusst als Beta-Version markiert und wird weiter ausgebaut sowie stabilisiert.",
+      "Zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.",
+    ],
+    featuresDetails: [
+      "Beta-Hinweis: Diese Variante wird weiter ausgebaut sowie stabilisiert.",
+      "Zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.",
+    ],
+    images: [image("Theme X01 2Player in AD xConfig", "template-theme-x01-2player-xConfig.jpg")],
+    fields: {
+      showAvg: fieldCopy(
+        "Blendet die AVG-Anzeige im 2Player-Theme ein oder aus.",
+        "Schaltet die AVG-Anzeige im X01-2Player-Theme sichtbar an oder aus. Das 2-Spieler-Layout und die Board-Platzierung bleiben dabei unverändert.",
+        "Blendet die AVG-Anzeige im X01-2Player-Theme ein oder aus."
+      ),
+      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
+      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
+      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
+      debug: DEBUG_FIELD,
+      uploadThemeBackground: THEME_UPLOAD_FIELD,
+      clearThemeBackground: THEME_CLEAR_FIELD,
+    },
+  }),
   "theme-shanghai": featureCopy({
     cardDescription:
       "Aufgeräumtes Shanghai-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild.",
@@ -2178,6 +2211,11 @@ const xconfigFieldOptionCopy = deepFreeze({
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
   },
   "theme-x01": {
+    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
+    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
+    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
+  },
+  "theme-x01-2player": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,

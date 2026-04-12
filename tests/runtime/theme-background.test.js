@@ -190,6 +190,7 @@ test("uploadThemeBackgroundImage normalizes and persists successful uploads, but
   const notices = [];
   const feedback = [];
   const indicators = [];
+  const createdInputs = [];
   let queueCount = 0;
 
   const originalCreateElement = documentRef.createElement.bind(documentRef);
@@ -198,14 +199,19 @@ test("uploadThemeBackgroundImage normalizes and persists successful uploads, but
       return originalCreateElement(tagName);
     }
 
-    return {
+    const input = {
       type: "",
       accept: "",
       style: {},
+      tabIndex: 0,
       files: [file],
       parentNode: null,
       onchange: null,
       removed: false,
+      attributes: new Map(),
+      setAttribute(name, value) {
+        this.attributes.set(String(name), String(value));
+      },
       click() {
         this.onchange?.();
       },
@@ -213,6 +219,8 @@ test("uploadThemeBackgroundImage normalizes and persists successful uploads, but
         this.removed = true;
       },
     };
+    createdInputs.push(input);
+    return input;
   };
 
   const runtimeApi = {
@@ -247,6 +255,16 @@ test("uploadThemeBackgroundImage normalizes and persists successful uploads, but
 
   await wait(5);
 
+  assert.equal(createdInputs.length >= 1, true);
+  assert.equal(createdInputs[0].style.display, undefined);
+  assert.equal(createdInputs[0].style.position, "fixed");
+  assert.equal(createdInputs[0].style.left, "-9999px");
+  assert.equal(createdInputs[0].style.width, "1px");
+  assert.equal(createdInputs[0].style.height, "1px");
+  assert.equal(createdInputs[0].style.opacity, "0");
+  assert.equal(createdInputs[0].style.pointerEvents, "none");
+  assert.equal(createdInputs[0].tabIndex, -1);
+  assert.equal(createdInputs[0].attributes.get("aria-hidden"), "true");
   assert.equal(calls.length, 1);
   assert.equal(calls[0].themeKey, "x01");
   assert.equal(calls[0].dataUrl.startsWith("data:image/webp"), true);

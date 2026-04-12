@@ -1,4 +1,8 @@
-import { SCORE_FLASH_CLASS, SCORE_FRAME_CLASS, SCORE_SELECTOR } from "./style.js";
+import {
+  SCORE_FLASH_CLASS,
+  SCORE_FRAME_CLASS,
+  SCORE_SELECTOR,
+} from "./style.js";
 
 const FLASH_MODE_ON_CHANGE = "on-change";
 const FLASH_MODE_PERMANENT = "permanent";

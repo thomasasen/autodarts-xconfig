@@ -6,6 +6,10 @@ import {
   buildX01ThemeCss,
 } from "../../src/features/themes/x01/style.js";
 import {
+  PREVIEW_PLACEMENT as PREVIEW_X01_TWO_PLAYER,
+  buildX01TwoPlayerThemeCss,
+} from "../../src/features/themes/x01-2player/style.js";
+import {
   PREVIEW_PLACEMENT as PREVIEW_SHANGHAI,
   buildShanghaiThemeCss,
 } from "../../src/features/themes/shanghai/style.js";
@@ -87,6 +91,163 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   );
   assert.doesNotMatch(css, /\.css-hjw8x4\s*\{[^}]*max-height:\s*12%/s);
   assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
+  assertNoFragileLayoutSelectors(css);
+});
+
+test("x01 2player theme keeps stable board-first contracts without fragile layout selectors", () => {
+  const css = buildX01TwoPlayerThemeCss({ showAvg: true });
+
+  assert.equal(PREVIEW_X01_TWO_PLAYER.mode, "under-throws");
+  assert.equal(PREVIEW_X01_TWO_PLAYER.activationMode, "autodarts-tools-zoom");
+  assert.match(css, /ad-ext-turn-preview-space/);
+  assert.match(
+    css,
+    /--ad-ext-x01-2player-side-width:clamp\(15\.75rem,\s*18\.5vw,\s*20\.75rem\);[^}]*--ad-ext-x01-2player-live-turn-height:var\(--ad-ext-x01-2player-turn-height\);[^}]*--ad-ext-x01-2player-throw-points-size:clamp\(1\.2rem,\s*1\.8vw,\s*1\.65rem\);[^}]*--ad-ext-x01-2player-live-throw-points-size:var\(--ad-ext-x01-2player-throw-points-size\);[^}]*--ad-ext-x01-2player-turn-clearance:clamp\(0\.28rem,\s*0\.58vh,\s*0\.5rem\);[^}]*--ad-ext-x01-2player-controls-height:clamp\(1\.95rem,\s*3\.2vh,\s*2\.3rem\);[^}]*--ad-ext-x01-2player-board-gap:clamp\(0\.32rem,\s*0\.6vh,\s*0\.52rem\);[^}]*--ad-ext-x01-2player-board-top-pad:calc\(\s*var\(--ad-ext-x01-2player-live-turn-height\)\s*\+\s*var\(--ad-ext-x01-2player-turn-clearance\)\s*\+\s*var\(--ad-ext-x01-2player-controls-height\)\s*\+\s*var\(--ad-ext-x01-2player-board-gap\)\s*\);/s
+  );
+  assert.match(css, /--theme-player-badge-bg:transparent;[^}]*--theme-player-name-bg:transparent;[^}]*--theme-current-bg:transparent;/s);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(7\.056rem,\s*min\(27\.8cqi,\s*18cqb,\s*15vh\),\s*11\.2rem\);[^}]*--ad-ext-x01-2player-score-scale:1\.2;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.72\);/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-stack="true"\]\{[^}]*grid-template-columns:minmax\(0,\s*1fr\)\s*!important;[^}]*grid-template-rows:max-content max-content minmax\(var\(--ad-ext-x01-2player-score-min-block-size\),\s*max-content\) max-content\s*!important;[^}]*row-gap:var\(--ad-ext-x01-2player-stack-gap\)\s*!important;[^}]*isolation:isolate\s*!important;/s
+  );
+  assert.match(
+    css,
+    /Final slot-order guard:[\s\S]*?grid-template-rows:max-content max-content minmax\(var\(--ad-ext-x01-2player-score-min-block-size\),\s*max-content\) max-content\s*!important;[\s\S]*?grid-template-areas:\s*"meta"\s*"identity"\s*"score"\s*"progress"\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*grid-row:1\s*!important;[^}]*display:grid\s*!important;[^}]*padding-block-end:var\(--ad-ext-x01-2player-header-meta-pad-block-end\)\s*!important;[^}]*background:transparent\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\]\{[^}]*grid-row:2\s*!important;[^}]*display:grid\s*!important;[^}]*grid-template-columns:max-content minmax\(0,\s*1fr\)\s*!important;[^}]*padding-block-end:var\(--ad-ext-x01-2player-identity-pad-block-end\)\s*!important;[^}]*background:transparent\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\{[^}]*display:block\s*!important;[^}]*font-size:clamp\(1\.2rem,\s*min\(7\.9cqi,\s*3\.25cqb\),\s*1\.82rem\)\s*!important;[^}]*line-height:0\.96\s*!important;[^}]*font-weight:800\s*!important;[^}]*text-transform:none\s*!important;[^}]*text-align:left\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.chakra-text\.css-11cuipc\{[^}]*display:block\s*!important;[^}]*white-space:nowrap\s*!important;[^}]*overflow-wrap:normal\s*!important;[^}]*text-overflow:ellipsis\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-g0ywsj,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-g0ywsj\s*>\s*p\{[^}]*display:block\s*!important;[^}]*min-width:0\s*!important;[^}]*width:100%\s*!important;[^}]*align-self:center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.chakra-text\.css-11cuipc\{[^}]*font-size:inherit\s*!important;[^}]*line-height:inherit\s*!important;[^}]*text-transform:inherit\s*!important;[^}]*text-align:inherit\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*span\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8\{[^}]*display:flex\s*!important;[^}]*justify-content:center\s*!important;[^}]*width:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*height:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*background:#8fe28d\s*!important;[^}]*background-image:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*visibility:visible\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\{[^}]*display:inline-grid\s*!important;[^}]*inline-size:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*block-size:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*aspect-ratio:1 \/ 1\s*!important;[^}]*background:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*background-color:#8fe28d\s*!important;[^}]*color:#142112\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\s*>\s*p\{[^}]*font-size:clamp\(1\.02rem,\s*min\(5\.1cqi,\s*2\.18cqb\),\s*1\.28rem\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\{[^}]*grid-template-columns:minmax\(0,\s*1fr\)\s*!important;[^}]*grid-auto-rows:max-content\s*!important;[^}]*row-gap:clamp\(0\.08rem,\s*0\.2vh,\s*0\.16rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-g0ywsj\{[^}]*grid-column:1\s*!important;[^}]*justify-self:stretch\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.chakra-badge,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-n2903v,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-3fr5p8\{[^}]*grid-column:1\s*!important;[^}]*justify-self:start\s*!important;[^}]*font-size:clamp\(0\.86rem,\s*min\(4\.2cqi,\s*1\.7cqb\),\s*1\.02rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="score"\],\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\]\s*>\s*p\{[^}]*grid-row:3\s*!important;[^}]*display:grid\s*!important;[^}]*min-block-size:var\(--ad-ext-x01-2player-score-min-block-size\)\s*!important;[^}]*padding-block:var\(--ad-ext-x01-2player-score-pad-block\)\s*!important;[^}]*font-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\)\s*!important;[^}]*text-align:center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="progress"\]\{[^}]*grid-row:4\s*!important;[^}]*min-block-size:clamp\(0\.95rem,\s*1\.65vh,\s*1\.3rem\)\s*!important;[^}]*padding-block-start:var\(--ad-ext-x01-2player-progress-pad-block-start\)\s*!important;[^}]*margin-top:var\(--ad-ext-x01-2player-progress-gap\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-theme-x01-2player-active="true"\],\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*border:1px solid var\(--theme-text-highlight-color\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="false"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="false"\]\.ad-ext-player-active\{[^}]*border:1px solid rgba\(236,\s*247,\s*240,\s*0\.16\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*min-width:3\.3ch\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;[^}]*font-weight:800\s*!important;[^}]*line-height:1\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s*>\s*\.ad-ext-turn-throw\{[^}]*display:flex\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-throw-points-size\)\s*!important;[^}]*line-height:1\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]:not\(\[data-ad-ext-x01-2player-stack="true"\]\)/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\{[^}]*padding-left:0\s*!important;[^}]*background:transparent\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="score"\]\.css-1r7jzhg,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-1r7jzhg\{[^}]*grid-column-start:1\s*!important;[^}]*grid-row-start:3\s*!important;[^}]*grid-row-end:4\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\]\.css-37hv00,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-37hv00\{[^}]*display:grid\s*!important;[^}]*grid-row-start:2\s*!important;[^}]*grid-row-end:3\s*!important;[^}]*padding-left:0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\),\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*display:grid\s*!important;[^}]*grid-row-start:1\s*!important;[^}]*grid-row-end:2\s*!important;[^}]*padding-left:0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\],\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*\*,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*\*\s*>\s*\*,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*\*\s*>\s*\*\s*>\s*\*\{[^}]*background:transparent\s*!important;[^}]*background-color:transparent\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+table\s+td,\s*#ad-ext-player-display\s+\.ad-ext-player\s+table\s+th\{[^}]*font-size:var\(--ad-ext-x01-2player-table-cell-font-size\)\s*!important;[^}]*text-align:center\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-controls\s*\{[^}]*min-height:var\(--ad-ext-x01-2player-controls-height\)\s*!important;[^}]*gap:0\.28rem\s*!important;[^}]*padding:0\.12rem\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-controls\s*>\s*\*,\s*\.ad-ext-theme-board-controls\s+button\{[^}]*min-height:calc\(var\(--ad-ext-x01-2player-controls-height\) - 0\.24rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-canvas\{[^}]*max-width:100%\s*!important;[^}]*max-height:100%\s*!important;/s
+  );
+  assert.match(
+    css,
+    /@media \(max-width: 1180px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(6\.048rem,\s*min\(24vw,\s*14\.4vh\),\s*9\.25rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.14;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.8rem,\s*min\(6\.7vw,\s*4\.5vh\),\s*2\.35rem\);/s
+  );
+  assert.match(
+    css,
+    /@media \(max-width: 820px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(5\.616rem,\s*min\(22vw,\s*12vh\),\s*8\.3rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.08;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.6rem,\s*min\(5\.8vw,\s*3\.9vh\),\s*2\.05rem\);/s
+  );
+  assert.match(
+    css,
+    /@media \(max-height: 860px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(5\.76rem,\s*min\(23\.5cqi,\s*12\.8vh\),\s*8\.8rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.06;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.55rem,\s*min\(5\.4cqi,\s*3\.7vh\),\s*2rem\);/s
+  );
+  assert.doesNotMatch(css, /font-size:\s*2em\s*!important/);
+  assert.doesNotMatch(css, /--ad-ext-theme-board-size:min\(/);
+  assert.doesNotMatch(css, /\[data-ad-ext-turn-points-node=/);
+  assert.doesNotMatch(css, /(^|,)\s*svg\[viewBox="0 0 1000 1000"\]/m);
+  assert.doesNotMatch(css, /\.css-hjw8x4/);
+  assert.doesNotMatch(css, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name[^}]*text-transform:uppercase/s);
+  assert.doesNotMatch(css, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name[^}]*-webkit-line-clamp/s);
   assertNoFragileLayoutSelectors(css);
 });
 
@@ -253,5 +414,18 @@ test("shared theme visual settings keep player cards shrinkable while preserving
   assert.match(
     visualCss,
     /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*min-height:\s*0\s*!important;[^}]*height:\s*100%\s*!important;/s
+  );
+});
+
+test("shared theme visual settings stretch uploaded backgrounds across the full viewport shells", () => {
+  const visualCss = buildThemeVisualSettingsCss({
+    backgroundDisplayMode: "stretch",
+    backgroundOpacity: 30,
+    backgroundImageDataUrl: "data:image/png;base64,AAAA",
+  });
+
+  assert.match(
+    visualCss,
+    /html,\s*body,\s*div\.css-gmuwbf,\s*div\.css-tkevr6,\s*div\.css-nfhdnc\s*\{[^}]*background-size:\s*100% 100%\s*!important;[^}]*background-position:\s*center center\s*!important;[^}]*background-repeat:\s*no-repeat\s*!important;/s
   );
 });

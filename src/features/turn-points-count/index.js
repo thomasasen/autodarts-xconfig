@@ -3,7 +3,11 @@ import {
   releaseElectricFilterDefs,
   retainElectricFilterDefs,
 } from "../../shared/electric-border-engine.js";
-import { collectScoreNodes, stopAnimation, updateTurnPoints } from "./logic.js";
+import {
+  collectScoreNodes,
+  stopAnimation,
+  updateTurnPoints,
+} from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 

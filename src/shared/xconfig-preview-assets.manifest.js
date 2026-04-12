@@ -1,5 +1,6 @@
 export const XCONFIG_PREVIEW_SCREENSHOTS = Object.freeze({
   "theme-x01": "template-theme-x01-xConfig.png",
+  "theme-x01-2player": "template-theme-x01-2player-xConfig.jpg",
   "theme-shanghai": "template-theme-shanghai-xConfig.png",
   "theme-bermuda": "template-theme-bermuda-xConfig.png",
   "theme-cricket": "template-theme-cricket-xConfig.png",

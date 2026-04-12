@@ -13,8 +13,10 @@ import {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
   THEME_CRICKET_READABILITY,
 } from "./theme-layout-contract.js";
+import { createX01TwoPlayerThemePolicy } from "../x01-2player/policy.js";
 
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
+const X01_TWO_PLAYER_THEME_FEATURE_KEY = "theme-x01-2player";
 
 function createCricketThemePolicy() {
   return Object.freeze({
@@ -99,6 +101,10 @@ export function resolveThemePolicy(options = {}) {
 
   if (featureKey === CRICKET_THEME_FEATURE_KEY) {
     return createCricketThemePolicy();
+  }
+
+  if (featureKey === X01_TWO_PLAYER_THEME_FEATURE_KEY) {
+    return createX01TwoPlayerThemePolicy();
   }
 
   return null;

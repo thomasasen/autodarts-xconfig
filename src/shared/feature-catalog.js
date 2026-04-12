@@ -144,6 +144,14 @@ const rawFeatureCatalog = [
     legacyFeatureId: "theme-x01",
   },
   {
+    featureKey: "theme-x01-2player",
+    configKey: "themes.x01TwoPlayer",
+    title: "Theme X01 2Player (Beta)",
+    variants: ["x01"],
+    migratedFrom: "",
+    legacyFeatureId: "",
+  },
+  {
     featureKey: "theme-shanghai",
     configKey: "themes.shanghai",
     title: "Theme Shanghai",

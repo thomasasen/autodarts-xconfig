@@ -393,7 +393,17 @@ export function uploadThemeBackgroundImage(options = {}) {
   const input = documentRef.createElement("input");
   input.type = "file";
   input.accept = "image/*";
-  input.style.display = "none";
+  input.tabIndex = -1;
+  if (typeof input.setAttribute === "function") {
+    input.setAttribute("aria-hidden", "true");
+  }
+  input.style.position = "fixed";
+  input.style.top = "0";
+  input.style.left = "-9999px";
+  input.style.width = "1px";
+  input.style.height = "1px";
+  input.style.opacity = "0";
+  input.style.pointerEvents = "none";
   input.onchange = () => {
     const file = input.files && input.files[0];
     if (!file) {

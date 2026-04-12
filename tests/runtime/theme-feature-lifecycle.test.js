@@ -12,7 +12,14 @@ import { ROOT_CLASS } from "../../src/features/cricket-grid-fx/style.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
 import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
+import { mountThemeX01TwoPlayer } from "../../src/features/themes/x01-2player/index.js";
 import { mountThemeCricket } from "../../src/features/themes/cricket/index.js";
+import {
+  X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_SLOTS,
+  X01_TWO_PLAYER_SLOT_ATTRIBUTE,
+  X01_TWO_PLAYER_STACK_ATTRIBUTE,
+} from "../../src/features/themes/x01-2player/layout-contract.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
@@ -1619,6 +1626,638 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
   );
 
   runtime.stop();
+});
+
+test("theme-x01-2player mounts only for exact 2-player x01 matches and cleans up normally", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 2);
+  const windowRef = createMatchWindow(documentRef, "theme-x01-2player-two-players");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("x01TwoPlayer", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  runtime.context.gameState.applyMatch({
+    variant: "501",
+    players: [{ name: "A" }, { name: "B" }],
+    turns: [],
+  });
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), true);
+  assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
+  assertThemeHookState(boardNodes, true);
+
+  runtime.stop();
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), false);
+  assertThemeHookState(boardNodes, false);
+});
+
+function createX01TwoPlayerTestCard(documentRef, score, name, options = {}) {
+  const {
+    stackClassNames = [],
+    scoreClassNames = [],
+    progressClassNames = [],
+    identityClassNames = [],
+    headerMetaClassNames = [],
+    stackChildOrder = ["identity", "score", "progress"],
+  } = options;
+  const playerWrapperNode = documentRef.createElement("div");
+  const playerNode = documentRef.createElement("div");
+  playerNode.classList.add("ad-ext-player");
+
+  const stackNode = documentRef.createElement("div");
+  stackNode.classList.add("chakra-stack");
+  stackClassNames.forEach((className) => stackNode.classList.add(className));
+
+  const identityNode = documentRef.createElement("div");
+  identityNode.classList.add("chakra-stack");
+  identityClassNames.forEach((className) => identityNode.classList.add(className));
+  identityNode.appendChild(documentRef.createElement("div"));
+
+  const identityMetaNode = documentRef.createElement("div");
+  const identityMetaSpan = documentRef.createElement("span");
+  const nameNode = documentRef.createElement("p");
+  nameNode.classList.add("ad-ext-player-name");
+  nameNode.textContent = name;
+  const statsNode = documentRef.createElement("div");
+  const statsTextNode = documentRef.createElement("p");
+  statsTextNode.classList.add("css-1j0bqop");
+  statsTextNode.textContent = "AVG 50";
+  statsNode.appendChild(statsTextNode);
+  identityMetaSpan.appendChild(nameNode);
+  identityMetaSpan.appendChild(statsNode);
+  identityMetaNode.appendChild(identityMetaSpan);
+  identityNode.appendChild(identityMetaNode);
+
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("ad-ext-player-score");
+  scoreClassNames.forEach((className) => scoreNode.classList.add(className));
+  scoreNode.textContent = String(score);
+
+  const progressNode = documentRef.createElement("div");
+  progressClassNames.forEach((className) => progressNode.classList.add(className));
+  progressNode.setAttribute("data-ad-ext-x01-score-progress", "true");
+
+  const headerMetaNode = documentRef.createElement("div");
+  headerMetaNode.classList.add("chakra-stack");
+  headerMetaClassNames.forEach((className) => headerMetaNode.classList.add(className));
+  const headerMetaTextNode = documentRef.createElement("p");
+  headerMetaTextNode.classList.add("chakra-text", "css-1j0bqop");
+  headerMetaTextNode.textContent = "#1 | AVG 50";
+  headerMetaNode.appendChild(headerMetaTextNode);
+
+  const tableSlotNode = documentRef.createElement("div");
+  const tableInnerNode = documentRef.createElement("div");
+  const tableNode = documentRef.createElement("table");
+  const tableRowNode = documentRef.createElement("tr");
+  const tableCellNode = documentRef.createElement("td");
+  tableCellNode.textContent = "140";
+  tableRowNode.appendChild(tableCellNode);
+  tableNode.appendChild(tableRowNode);
+  tableInnerNode.appendChild(tableNode);
+  tableSlotNode.appendChild(tableInnerNode);
+
+  const stackChildren = {
+    meta: headerMetaNode,
+    identity: identityNode,
+    score: scoreNode,
+    progress: progressNode,
+  };
+  stackChildOrder.forEach((slotKey) => {
+    const childNode = stackChildren[slotKey];
+    if (childNode) {
+      stackNode.appendChild(childNode);
+    }
+  });
+  playerNode.appendChild(stackNode);
+  playerNode.appendChild(tableSlotNode);
+  playerWrapperNode.appendChild(playerNode);
+
+  return {
+    playerWrapperNode,
+    playerNode,
+    stackNode,
+    identityNode,
+    headerMetaNode,
+    scoreNode,
+    progressNode,
+    tableSlotNode,
+  };
+}
+
+function createX01TwoPlayerLifecycleGameState(initialActivePlayerIndex = 0) {
+  let activePlayerIndex = Number(initialActivePlayerIndex) || 0;
+  const listeners = new Set();
+
+  return {
+    getActivePlayerIndex() {
+      return activePlayerIndex;
+    },
+    setActivePlayerIndex(nextIndex) {
+      activePlayerIndex = Number(nextIndex) || 0;
+      listeners.forEach((listener) => listener());
+    },
+    isX01Variant() {
+      return true;
+    },
+    getSnapshot() {
+      return {
+        match: {
+          players: [{ name: "A" }, { name: "B" }],
+        },
+      };
+    },
+    subscribe(listener) {
+      if (typeof listener === "function") {
+        listeners.add(listener);
+      }
+      return () => listeners.delete(listener);
+    },
+  };
+}
+
+function createFakeResizeObserverController() {
+  const instances = [];
+
+  class FakeResizeObserver {
+    constructor(callback) {
+      this.callback = callback;
+      this.targets = new Set();
+      instances.push(this);
+    }
+
+    observe(target) {
+      if (target) {
+        this.targets.add(target);
+      }
+    }
+
+    unobserve(target) {
+      this.targets.delete(target);
+    }
+
+    disconnect() {
+      this.targets.clear();
+    }
+  }
+
+  return {
+    ResizeObserver: FakeResizeObserver,
+    trigger(target) {
+      instances.forEach((instance) => {
+        if (!target || instance.targets.has(target)) {
+          instance.callback([{ target }], instance);
+        }
+      });
+    },
+  };
+}
+
+test("theme-x01-2player syncs semantic slot markers and active attributes from game state", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 301, "A");
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 170, "B");
+  firstPlayer.playerNode.classList.add("ad-ext-player-active");
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
+
+  const gameState = createX01TwoPlayerLifecycleGameState(1);
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-semantic-markers"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState,
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(firstPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "false");
+  assert.equal(secondPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "true");
+  assert.equal(firstPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), "true");
+  assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.identity);
+  assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.score);
+  assert.equal(firstPlayer.progressNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.progress);
+  assert.equal(firstPlayer.tableSlotNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.table);
+
+  gameState.setActivePlayerIndex(0);
+  await wait(5);
+
+  assert.equal(firstPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "true");
+  assert.equal(secondPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "false");
+
+  cleanup();
+
+  assert.equal(firstPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), null);
+  assert.equal(firstPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), null);
+  assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+  assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+  assert.equal(firstPlayer.progressNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+  assert.equal(firstPlayer.tableSlotNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+});
+
+test("theme-x01-2player keeps marker slots stable against shared score-progress chakra classes", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 501, "TEST1", {
+    stackClassNames: ["css-y3hfdd"],
+    scoreClassNames: ["chakra-text", "css-1r7jzhg"],
+    identityClassNames: ["css-37hv00"],
+    stackChildOrder: ["score", "progress", "identity"],
+  });
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(createX01TwoPlayerTestCard(documentRef, 301, "TEST2").playerWrapperNode);
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-legacy-stack-fence"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(firstPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), "true");
+  assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.score);
+  assert.equal(firstPlayer.progressNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.progress);
+  assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.identity);
+  assert.equal(firstPlayer.stackNode.children[0], firstPlayer.scoreNode);
+  assert.equal(firstPlayer.stackNode.children[1], firstPlayer.progressNode);
+  assert.equal(firstPlayer.stackNode.children[2], firstPlayer.identityNode);
+
+  cleanup();
+});
+
+test("theme-x01-2player leaves header meta unmarked while separating it from the identity slot", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 481, "TORNADO T", {
+    stackClassNames: ["css-y3hfdd"],
+    scoreClassNames: ["chakra-text", "css-1r7jzhg"],
+    identityClassNames: ["css-37hv00"],
+    headerMetaClassNames: ["css-1igwmid"],
+    stackChildOrder: ["score", "meta", "progress", "identity"],
+  });
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(createX01TwoPlayerTestCard(documentRef, 501, "TEST1").playerWrapperNode);
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-header-meta-row"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(firstPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), "true");
+  assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.identity);
+  assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.score);
+  assert.equal(firstPlayer.progressNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.progress);
+  assert.equal(firstPlayer.headerMetaNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+  assert.equal(firstPlayer.stackNode.children[1], firstPlayer.headerMetaNode);
+  assert.equal(firstPlayer.stackNode.children[3], firstPlayer.identityNode);
+
+  cleanup();
+});
+
+test("theme-x01-2player recomputes board layout after late turn-surface resizes", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1440, height: 720 };
+  boardNodes.contentBoard.__rect = { width: 760, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  documentRef.turnContainer.__rect = { width: 920, height: 48 };
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 301, "A");
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 170, "B");
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
+
+  const resizeController = createFakeResizeObserverController();
+  const windowRef = createMatchWindow(documentRef, "theme-x01-2player-late-turn-resize");
+  windowRef.ResizeObserver = resizeController.ResizeObserver;
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-turn-height"),
+    "48px"
+  );
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-throw-points-size"),
+    ""
+  );
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "620px"
+  );
+
+  documentRef.turnContainer.__rect = { width: 920, height: 124 };
+  boardNodes.contentBoard.__rect = { width: 760, height: 540 };
+  boardNodes.boardViewport.__rect = { width: 540, height: 540 };
+  boardNodes.boardCanvas.__rect = { width: 540, height: 540 };
+  resizeController.trigger(documentRef.turnContainer);
+  await wait(5);
+
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-turn-height"),
+    "124px"
+  );
+  assert.equal(
+    boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
+    "540px"
+  );
+
+  cleanup();
+
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-turn-height"),
+    ""
+  );
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-throw-points-size"),
+    ""
+  );
+});
+
+test("theme-x01-2player mirrors late throw font-size changes onto the shared live size variable", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 301, "A");
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 170, "B");
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
+
+  const resizeController = createFakeResizeObserverController();
+  const windowRef = createMatchWindow(documentRef, "theme-x01-2player-live-throw-size");
+  let throwFontSize = "26px";
+  let throwScoreFontSize = "26px";
+  const throwScoreNode = documentRef.createElement("div");
+  const throwSegmentNode = documentRef.createElement("div");
+  const throwWrapperNode = documentRef.createElement("div");
+  documentRef.throwTextElement.replaceChildren();
+  throwScoreNode.textContent = "3";
+  throwSegmentNode.textContent = "S3";
+  throwWrapperNode.appendChild(throwScoreNode);
+  throwWrapperNode.appendChild(throwSegmentNode);
+  documentRef.throwTextElement.appendChild(throwWrapperNode);
+  windowRef.ResizeObserver = resizeController.ResizeObserver;
+  windowRef.getComputedStyle = (node) => ({
+    display: "",
+    visibility: "",
+    opacity: "1",
+    fontSize:
+      node === throwScoreNode
+        ? throwScoreFontSize
+        : node === documentRef.throwTextElement || node === documentRef.throwRow
+          ? throwFontSize
+          : "",
+  });
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-throw-points-size"),
+    "26px"
+  );
+
+  throwFontSize = "18px";
+  throwScoreFontSize = "34px";
+  resizeController.trigger(documentRef.turnContainer);
+  await wait(5);
+
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-throw-points-size"),
+    "34px"
+  );
+
+  cleanup();
+
+  assert.equal(
+    documentRef.documentElement.style.getPropertyValue("--ad-ext-x01-2player-live-throw-points-size"),
+    ""
+  );
+});
+
+test("theme-x01-2player does not mount for 1-player or 3-player x01 matches", async () => {
+  for (const [matchId, playerCount] of [
+    ["theme-x01-2player-one-player", 1],
+    ["theme-x01-2player-three-players", 3],
+  ]) {
+    const documentRef = new FakeDocument();
+    documentRef.variantElement.textContent = "501";
+    createBoardFixture(documentRef, { withContentSlot: true });
+    addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), playerCount);
+    const windowRef = createMatchWindow(documentRef, matchId);
+    const runtime = createBootstrap({
+      windowRef,
+      documentRef,
+      config: createThemeConfig("x01TwoPlayer", {
+        showAvg: true,
+      }),
+    });
+
+    runtime.start();
+    runtime.context.gameState.applyMatch({
+      variant: "501",
+      players: Array.from({ length: playerCount }, (_, index) => ({ name: `P${index + 1}` })),
+      turns: [],
+    });
+    await wait(5);
+
+    assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), false);
+    assert.equal(documentRef.turnContainer.classList.contains("ad-ext-turn-preview-space"), false);
+
+    runtime.stop();
+  }
+});
+
+test("theme-x01-2player falls back to the visible player-card DOM when the snapshot player count is unavailable", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 2);
+  const windowRef = createMatchWindow(documentRef, "theme-x01-2player-dom-fallback");
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      isX01Variant() {
+        return true;
+      },
+      subscribe() {
+        return () => {};
+      },
+      getSnapshot() {
+        return null;
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), true);
+  assertThemeHookState(boardNodes, true);
+
+  cleanup();
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), false);
 });
 
 test("theme-cricket keeps layout hooks during a short missing-board gap", async () => {

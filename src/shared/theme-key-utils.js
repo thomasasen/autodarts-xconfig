@@ -1,5 +1,6 @@
 export const VALID_THEME_KEYS = Object.freeze([
   "x01",
+  "x01TwoPlayer",
   "shanghai",
   "bermuda",
   "cricket",
@@ -8,6 +9,12 @@ export const VALID_THEME_KEYS = Object.freeze([
 
 const THEME_KEY_ALIASES = Object.freeze({
   x01: "x01",
+  x01twoplayer: "x01TwoPlayer",
+  "x01-2player": "x01TwoPlayer",
+  "x01 2player": "x01TwoPlayer",
+  "x01 two player": "x01TwoPlayer",
+  "x01_two_player": "x01TwoPlayer",
+  "x01-two-player": "x01TwoPlayer",
   shanghai: "shanghai",
   bermuda: "bermuda",
   cricket: "cricket",

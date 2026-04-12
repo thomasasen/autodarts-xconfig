@@ -129,6 +129,45 @@ test("theme global typography only resolves an active theme inside the matching 
     "themes.x01"
   );
 
+  const x01TwoPlayerConfig = createRuntimeConfig({
+    featureToggles: {
+      "themes.globalTypography": true,
+      "themes.x01": false,
+      "themes.x01TwoPlayer": true,
+    },
+    features: {
+      themes: {
+        globalTypography: {
+          enabled: true,
+          fontPreset: "system",
+          applyTo: ["scores"],
+        },
+        x01: {
+          enabled: false,
+        },
+        x01TwoPlayer: {
+          enabled: true,
+        },
+      },
+    },
+  });
+  assert.equal(
+    resolveThemeGlobalTypographyActiveTheme({
+      config: x01TwoPlayerConfig,
+      gameState: {
+        isX01Variant() {
+          return true;
+        },
+        isCricketVariant() {
+          return false;
+        },
+      },
+      documentRef,
+      windowRef,
+    })?.configKey,
+    "themes.x01TwoPlayer"
+  );
+
   const inactiveConfig = createRuntimeConfig({
     featureToggles: {
       "themes.globalTypography": true,

@@ -108,9 +108,9 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 22);
+  assert.equal(overviewCounts.totalModules, 23);
   assert.equal(overviewCounts.animationModules, 16);
-  assert.equal(overviewCounts.themeModules, 6);
+  assert.equal(overviewCounts.themeModules, 7);
 });
 
 test("README and FEATURES share the generated xConfig overview copy", () => {
@@ -309,6 +309,7 @@ test("xConfig preview screenshot manifest points only to existing canonical scre
 test("xConfig preview manifest covers the key animation/theme cards with visual backgrounds", () => {
   const requiredPreviewFeatureKeys = [
     "theme-x01",
+    "theme-x01-2player",
     "theme-shanghai",
     "theme-bermuda",
     "theme-cricket",

@@ -178,6 +178,31 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   descriptorEntry({
+    featureKey: "theme-x01-2player",
+    tab: "themes",
+    readmeAnchor: "template-autodarts-theme-x01-2player",
+    description:
+      "Eigenständiges X01-Theme für genau zwei Spieler mit zentriertem Board und eigenem Hintergrundbild.",
+    fields: [
+      checkboxField("showAvg", "AVG anzeigen"),
+      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
+      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
+      selectField(
+        "playerFieldTransparency",
+        "Spielerfelder-Transparenz",
+        PLAYER_FIELD_TRANSPARENCY_OPTIONS
+      ),
+      checkboxField("debug", "Debug"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
+    ],
+  }),
+  descriptorEntry({
     featureKey: "theme-cricket",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-cricket",

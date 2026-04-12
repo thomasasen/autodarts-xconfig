@@ -1,4 +1,5 @@
 import themeX01Png from "../../docs/screenshots/template-theme-x01-xConfig.png";
+import themeX01TwoPlayerJpg from "../../docs/screenshots/template-theme-x01-2player-xConfig.jpg";
 import themeShanghaiPng from "../../docs/screenshots/template-theme-shanghai-xConfig.png";
 import themeBermudaPng from "../../docs/screenshots/template-theme-bermuda-xConfig.png";
 import themeCricketPng from "../../docs/screenshots/template-theme-cricket-xConfig.png";
@@ -22,6 +23,7 @@ import winnerFireworksGif from "../../docs/screenshots/animation-winner-firework
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-x01": themeX01Png,
+  "theme-x01-2player": themeX01TwoPlayerJpg,
   "theme-shanghai": themeShanghaiPng,
   "theme-bermuda": themeBermudaPng,
   "theme-cricket": themeCricketPng,

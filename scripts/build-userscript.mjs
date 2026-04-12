@@ -44,6 +44,8 @@ await build({
   legalComments: "none",
   loader: {
     ".png": "dataurl",
+    ".jpg": "dataurl",
+    ".jpeg": "dataurl",
     ".gif": "dataurl",
     ".mp3": "dataurl",
   },

@@ -1117,6 +1117,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "theme-global-typography",
     "theme-bull-off",
     "theme-x01",
+    "theme-x01-2player",
     "theme-cricket",
     "theme-shanghai",
     "theme-bermuda",
@@ -1359,7 +1360,10 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
       const expectedRecommendedState = runtime.listFeatures().every((feature) => {
         const toggleValue = config.featureToggles[feature.configKey];
         const featureConfig = getFeatureConfigValue(config, feature.configKey);
-        if (feature.featureKey === "theme-global-typography") {
+        if (
+          feature.featureKey === "theme-global-typography" ||
+          feature.featureKey === "theme-x01-2player"
+        ) {
           return toggleValue === false && featureConfig?.enabled === false;
         }
         return toggleValue === true && featureConfig?.enabled === true;

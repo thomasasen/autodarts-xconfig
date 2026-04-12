@@ -15,6 +15,7 @@ import { mountTurnPointsCount } from "./turn-points-count/index.js";
 import { mountWinnerFireworks, runWinnerFireworksAction } from "./winner-fireworks/index.js";
 import { mountX01ScoreProgress } from "./x01-score-progress/index.js";
 import { mountThemeX01 } from "./themes/x01/index.js";
+import { mountThemeX01TwoPlayer } from "./themes/x01-2player/index.js";
 import { mountThemeShanghai } from "./themes/shanghai/index.js";
 import { mountThemeBermuda } from "./themes/bermuda/index.js";
 import { mountThemeCricket } from "./themes/cricket/index.js";
@@ -147,6 +148,7 @@ const featureInitializers = Object.freeze({
   "x01-score-progress": mountX01ScoreProgress,
   "theme-global-typography": mountThemeGlobalTypography,
   "theme-x01": mountThemeX01,
+  "theme-x01-2player": mountThemeX01TwoPlayer,
   "theme-shanghai": mountThemeShanghai,
   "theme-bermuda": mountThemeBermuda,
   "theme-cricket": mountThemeCricket,

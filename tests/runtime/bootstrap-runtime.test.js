@@ -152,6 +152,13 @@ test("runtime public config API persists updates and survives feature toggles", 
   assert.equal(storedConfig.features.themes.x01.enabled, true);
   assert.equal(runtime.getSnapshot().features["theme-x01"].mounted, true);
 
+  await runtime.setFeatureEnabled("theme-x01-2player", true);
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.featureToggles["themes.x01TwoPlayer"], true);
+  assert.equal(storedConfig.features.themes.x01TwoPlayer.enabled, true);
+  assert.equal(runtime.getSnapshot().features["theme-x01-2player"].mounted, true);
+
   await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,AAAA");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
@@ -166,6 +173,19 @@ test("runtime public config API persists updates and survives feature toggles", 
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+
+  await runtime.setThemeBackgroundImage("x01TwoPlayer", "data:image/png;base64,BBBB");
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(
+    storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl,
+    "data:image/png;base64,BBBB"
+  );
+
+  await runtime.clearThemeBackgroundImage("x01TwoPlayer");
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
 
   runtime.stop();
 });
@@ -250,6 +270,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "x01-score-progress"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "winner-fireworks"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "theme-x01-2player"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-shanghai"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-bermuda"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-cricket"), true);
@@ -306,13 +327,16 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.x01ScoreProgress.barSize, "breit");
   assert.equal(storedConfig.features.x01ScoreProgress.effect, "off");
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
+  assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
   assert.equal(
     storedConfig.features.themes.cricket.backgroundImageDataUrl,
     "data:image/png;base64,BBBB"
   );
 
   defaultFeatureDefinitions.forEach((definition) => {
-    const expectedEnabled = definition.featureKey !== "theme-global-typography";
+    const expectedEnabled =
+      definition.featureKey !== "theme-global-typography" &&
+      definition.featureKey !== "theme-x01-2player";
     assert.equal(storedConfig.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(storedConfig, definition.configKey).enabled,

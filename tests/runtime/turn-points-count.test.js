@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { stopAnimation, updateTurnPoints } from "../../src/features/turn-points-count/logic.js";
+import {
+  stopAnimation,
+  updateTurnPoints,
+} from "../../src/features/turn-points-count/logic.js";
 import {
   SCORE_FRAME_CLASS,
   SCORE_FLASH_CLASS,

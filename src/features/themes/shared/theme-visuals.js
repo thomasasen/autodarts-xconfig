@@ -74,6 +74,8 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
 
   const escapedDataUrl = escapeCssUrl(backgroundDataUrl);
   return `
+html,
+body,
 div.css-gmuwbf,
 div.css-tkevr6,
 div.css-nfhdnc {

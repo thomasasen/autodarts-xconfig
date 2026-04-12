@@ -12,7 +12,12 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.27] - 2026-04-09
+## [2.1.27] - 2026-04-12
+
+### Added
+
+- Nutzerwirkung: Im Themes-Tab steht jetzt `Theme X01 2Player (Beta)` als eigenständige X01-Variante bereit; das Layout richtet sich gezielt an Matches mit genau zwei Spielern, betont das Board mittig zwischen zwei großen Spieler-Karten und bringt dafür ein eigenes Hintergrundbild-Setup samt separater xConfig-Vorschau mit. Die Variante ist bewusst als Beta-Version gekennzeichnet und wird weiter ausgebaut sowie stabilisiert; zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.
+  Technik: `theme-x01-2player` wurde als neues Theme-Feature mit eigener `themes.x01TwoPlayer`-Konfiguration, stabilem 2-Spieler-Guard über Match-Snapshot plus DOM-Fallback, eigener Preview-Asset-/Theme-Key-Verdrahtung, aktualisierten xConfig-Deskriptoren/Docs und neuen Runtime-/CSS-Regressionsprüfungen in Registry, Theme-Lifecycle, Config-Normalisierung und README/FEATURES integriert; die empfohlenen Defaults halten die neue Alternative standardmäßig ausgeschaltet, damit sie nicht ungefragt parallel zur bestehenden X01-Variante aktiviert wird, und die Beta-Kennzeichnung ist jetzt über xConfig, README und Feature-Doku hinweg synchronisiert.
 
 ### Fixed
 
