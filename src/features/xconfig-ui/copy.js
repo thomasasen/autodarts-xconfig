@@ -121,6 +121,30 @@ const THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD = fieldCopy(
   "Legt fest, welche stabilen Template-Bereiche die Schrift übernehmen."
 );
 
+const THEME_GLOBAL_TYPOGRAPHY_ACCENT_COLOR_FIELD = fieldCopy(
+  "Setzt den Aktiv-Akzent für aktive oder gewinnende Spieler inklusive Rahmen und aktiver Hauptzahl.",
+  "Legt die semantische Akzentfarbe für aktive und gewinnende Spieler fest. Die Farbe wirkt im aktiven xConfig-Theme auf Rahmen, Outline/Glow und die aktive Hauptzahl, ohne zusätzliche Zustandsfarben einzeln freizuschalten.",
+  "Setzt die Akzentfarbe für aktive oder gewinnende Spieler."
+);
+
+const THEME_GLOBAL_TYPOGRAPHY_SCORE_COLOR_FIELD = fieldCopy(
+  "Steuert normale große Scores und große Turn-Punkte außerhalb der aktiven Hervorhebung.",
+  "Legt die Farbe für normale beziehungsweise inaktive Hauptzahlen sowie große Turn-Punkte fest. Die aktive Hauptzahl bleibt bewusst weiter an den Aktiv-Akzent gebunden.",
+  "Steuert normale Hauptzahlen und Turn-Punkte."
+);
+
+const THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD = fieldCopy(
+  "Setzt Namen und Meta-Texte wie AVG oder MPR in allen Zuständen auf eine gemeinsame Sekundärfarbe.",
+  "Legt eine gemeinsame Sekundärfarbe für Namen und Meta-Texte fest. Dadurch bleiben diese Bereiche ruhig und konsistent, während Scores und Aktiv-Akzente separat geführt werden.",
+  "Setzt Namen und Meta-Texte auf eine gemeinsame Sekundärfarbe."
+);
+
+const THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD = fieldCopy(
+  "Färbt Wurf-, Suggestion- und Checkout-Texte separat von den großen Zahlen ein.",
+  "Legt die Farbe für Wurf-Labels, Suggestion-Texte und Checkout-Hinweise fest, ohne die großen Turn-Punkte mitzunehmen. So lassen sich Hilfstexte ruhiger oder klarer vom Hauptscore trennen.",
+  "Färbt Wurf-, Suggestion- und Checkout-Texte separat ein."
+);
+
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY = deepFreeze({
   scores: optionCopy(
     "Greift bei stabilen Score- und Punkteanzeigen.",
@@ -167,16 +191,26 @@ const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 export const xconfigFeatureCopy = deepFreeze({
   "theme-global-typography": featureCopy({
     cardDescription:
-      "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
+      "Template-weite Schrift- und Farbsteuerung für stabile Score-, Wurf- und Namensbereiche.",
     visibleDescription:
-      "Wählt eine kuratierte Schrift für stabile Bereiche des aktiven xConfig-Themes.",
+      "Wählt eine kuratierte Schrift und wenige feste Farbrollen für stabile Bereiche des aktiven xConfig-Themes.",
     visualDescription:
-      "Die gewählte Schrift wird nur in klar definierten Score-, Wurf- oder Namensbereichen aktiver xConfig-Themes angewendet. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.",
+      "Die gewählte Schrift und die festen Farbrollen greifen nur in klar definierten Score-, Wurf-, Namens- und Zustandsbereichen aktiver xConfig-Themes. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.",
     usefulWhen:
-      "Wenn du Scores, Würfe oder Spielernamen klarer und eigenständiger typografisch gestalten möchtest, ohne das ganze Template umzubauen.",
+      "Wenn du Scores, Würfe, Spielernamen und den Aktiv-Akzent gezielt anpassen möchtest, ohne das ganze Template mit vielen Einzelreglern zu überladen.",
+    images: [
+      image(
+        "Templates Global mit lila Aktiv-Akzent in AD xConfig",
+        "template-theme-global-typography-xConfig.png"
+      ),
+    ],
     fields: {
       fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD,
       applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD,
+      accentColor: THEME_GLOBAL_TYPOGRAPHY_ACCENT_COLOR_FIELD,
+      scoreColor: THEME_GLOBAL_TYPOGRAPHY_SCORE_COLOR_FIELD,
+      secondaryTextColor: THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD,
+      throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
       debug: DEBUG_FIELD,
     },
   }),

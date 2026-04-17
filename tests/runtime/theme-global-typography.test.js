@@ -87,6 +87,7 @@ test("theme global typography builds stable CSS with fallback stacks and only on
     applyTo: ["scores", "throws"],
   });
   assert.doesNotMatch(systemStyle, /fonts\.bunny\.net/);
+  assert.doesNotMatch(systemStyle, /--ad-ext-theme-accent-color:/);
   assert.match(systemStyle, /\.ad-ext-player-score/);
   assert.match(systemStyle, /#ad-ext-turn > \.ad-ext-turn-throw/);
   assert.match(systemStyle, /#ad-ext-turn > \.suggestion/);
@@ -102,6 +103,34 @@ test("theme global typography builds stable CSS with fallback stacks and only on
   assert.match(remoteStyle, /\.ad-ext-player-name/);
   assert.doesNotMatch(remoteStyle, /#ad-ext-turn > \.ad-ext-turn-throw/);
   assert.match(remoteStyle, /"Fragment Mono", "SFMono-Regular", Consolas/);
+});
+
+test("theme global typography emits semantic color overrides only for configured roles", () => {
+  const colorStyle = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    accentColor: "#9fdb58",
+    scoreColor: "#123456",
+    secondaryTextColor: "#abcdef",
+    throwLabelColor: "#fedcba",
+  });
+
+  assert.match(colorStyle, /:root \{/);
+  assert.match(colorStyle, /--ad-ext-theme-accent-color: #9FDB58;/);
+  assert.match(colorStyle, /--ad-ext-theme-card-active-border-color: #9FDB58;/);
+  assert.match(
+    colorStyle,
+    /--ad-ext-theme-card-active-outline-color: rgba\(159, 219, 88, 0\.24\);/
+  );
+  assert.match(colorStyle, /--ad-ext-theme-score-active-color: #9FDB58;/);
+  assert.match(colorStyle, /--ad-ext-theme-score-winner-color: #9FDB58;/);
+  assert.match(colorStyle, /--ad-ext-theme-text-primary-color: #123456;/);
+  assert.match(colorStyle, /--ad-ext-theme-score-inactive-color: #123456;/);
+  assert.match(colorStyle, /--ad-ext-theme-turn-points-color: #123456;/);
+  assert.match(colorStyle, /--ad-ext-theme-text-secondary-color: #ABCDEF;/);
+  assert.match(colorStyle, /--ad-ext-theme-name-active-color: #ABCDEF;/);
+  assert.match(colorStyle, /--ad-ext-theme-meta-winner-color: #ABCDEF;/);
+  assert.match(colorStyle, /--ad-ext-theme-throw-label-color: #FEDCBA;/);
 });
 
 test("theme global typography only resolves an active theme inside the matching game context", () => {
@@ -286,6 +315,61 @@ test("theme global typography mounts only for enabled theme contexts and removes
   cleanup();
   assert.equal(documentRef.getElementById(STYLE_ID), null);
   assert.equal(toolsHost.shadowRoot.getElementById(TOOLS_SHADOW_STYLE_ID), null);
+});
+
+test("theme global typography re-appends its style after theme styles so color overrides stay authoritative", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/abc",
+  });
+  const toolsHost = documentRef.createElement("autodarts-tools-wxt");
+  toolsHost.shadowRoot = createFakeShadowRoot();
+  documentRef.body.appendChild(toolsHost);
+
+  const staleTypographyStyle = documentRef.createElement("style");
+  staleTypographyStyle.id = STYLE_ID;
+  staleTypographyStyle.textContent = ":root { --ad-ext-theme-accent-color: #000000; }";
+  documentRef.head.appendChild(staleTypographyStyle);
+  const themeStyle = documentRef.createElement("style");
+  themeStyle.id = "ad-ext-theme-x01-style";
+  themeStyle.textContent = ":root { --ad-ext-theme-accent-color: #9fdb58; }";
+  documentRef.head.appendChild(themeStyle);
+
+  const cleanup = mountThemeGlobalTypography({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    config: createEnabledTypographyConfig({
+      globalTypography: {
+        fontPreset: "system",
+        applyTo: ["scores"],
+        accentColor: "#ff00a2",
+      },
+    }),
+    gameState: {
+      subscribe() {
+        return () => {};
+      },
+      isX01Variant() {
+        return true;
+      },
+      isCricketVariant() {
+        return false;
+      },
+    },
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(),
+    },
+  });
+
+  assert.equal(documentRef.head.lastElementChild?.id, STYLE_ID);
+
+  cleanup();
 });
 
 test("theme global typography does not mount without an active xConfig theme for the current variant", () => {

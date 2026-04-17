@@ -126,10 +126,27 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-modal-title{margin:0;font-size:1.05rem;line-height:1.3}
 #${PANEL_HOST_ID} .ad-xconfig-modal-subtitle{margin:.35rem 0 0;color:rgba(255,255,255,.75);font-size:.82rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-body{margin-top:.95rem;display:grid;gap:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-settings-section{display:grid;gap:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-settings-section + .ad-xconfig-settings-section{margin-top:.15rem}
+#${PANEL_HOST_ID} .ad-xconfig-settings-section-title{margin:0;font-size:.76rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgba(196,230,255,.96)}
+#${PANEL_HOST_ID} .ad-xconfig-settings-section-body{display:grid;gap:.65rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-row{border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);padding:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-row--debug{border-color:rgba(255,128,128,.36);background:linear-gradient(145deg,rgba(255,96,96,.14),rgba(255,120,120,.07))}
 #${PANEL_HOST_ID} .ad-xconfig-setting-label{display:block;font-weight:700;font-size:.86rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-input{margin-top:.58rem}
+#${PANEL_HOST_ID} .ad-xconfig-color-field{display:grid;gap:.45rem}
+#${PANEL_HOST_ID} .ad-xconfig-color-controls{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:.55rem}
+#${PANEL_HOST_ID} .ad-xconfig-color-swatch{width:2.35rem;height:2.35rem;border-radius:10px;border:1px solid rgba(255,255,255,.24);background:transparent;background-image:linear-gradient(45deg,rgba(255,255,255,.12) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.12) 50%,rgba(255,255,255,.12) 75%,transparent 75%,transparent);background-size:.7rem .7rem;box-shadow:inset 0 0 0 1px rgba(9,16,34,.42)}
+#${PANEL_HOST_ID} .ad-xconfig-color-picker{appearance:none;width:2.6rem;min-width:2.6rem;height:2.35rem;padding:0;border-radius:10px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.08);cursor:pointer}
+#${PANEL_HOST_ID} .ad-xconfig-color-picker::-webkit-color-swatch-wrapper{padding:.18rem}
+#${PANEL_HOST_ID} .ad-xconfig-color-picker::-webkit-color-swatch{border:none;border-radius:7px}
+#${PANEL_HOST_ID} .ad-xconfig-color-code{width:100%;min-height:2.35rem;padding:.58rem .72rem;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(9,16,34,.58);color:#fff;font:inherit;text-transform:uppercase}
+#${PANEL_HOST_ID} .ad-xconfig-color-code::placeholder{color:rgba(214,229,245,.48);text-transform:none}
+#${PANEL_HOST_ID} .ad-xconfig-color-code:focus-visible,#${PANEL_HOST_ID} .ad-xconfig-color-picker:focus-visible{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.3)}
+#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset:disabled{opacity:.45;cursor:not-allowed}
+#${PANEL_HOST_ID} .ad-xconfig-color-field[data-invalid="true"] .ad-xconfig-color-code{border-color:rgba(255,128,128,.72);box-shadow:0 0 0 1px rgba(255,128,128,.16) inset}
+#${PANEL_HOST_ID} .ad-xconfig-color-status{margin:.05rem 0 0}
+#${PANEL_HOST_ID} .ad-xconfig-color-status--error{color:rgba(255,198,198,.98)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action{display:grid;gap:.45rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn{border:1px solid rgba(255,255,255,.3);border-radius:10px;min-height:2.65rem;padding:.55rem .8rem;background:rgba(22,38,82,.72);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary{border-color:rgba(126,216,255,.92);background:linear-gradient(145deg,rgba(58,148,255,.52),rgba(88,200,255,.34));box-shadow:0 0 0 1px rgba(126,216,255,.24),0 4px 14px rgba(58,148,255,.24)}
@@ -148,6 +165,7 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-hidden-input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
 `;
 
 

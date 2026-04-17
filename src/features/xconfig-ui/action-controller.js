@@ -36,6 +36,10 @@ export function createShellActionController(options = {}) {
     typeof options.syncSelectOptionButtons === "function"
       ? options.syncSelectOptionButtons
       : () => {};
+  const syncColorFieldControl =
+    typeof options.syncColorFieldControl === "function"
+      ? options.syncColorFieldControl
+      : () => {};
   const themeKeyFromConfigKey =
     typeof options.themeKeyFromConfigKey === "function" ? options.themeKeyFromConfigKey : () => "";
   const clearThemeBackgroundImage =
@@ -264,6 +268,31 @@ export function createShellActionController(options = {}) {
     );
   }
 
+  function handleClearSettingColor(actionNode, feature) {
+    if (!feature || !runtimeApi || typeof runtimeApi.saveConfig !== "function") {
+      return;
+    }
+
+    const configKey = actionNode?.getAttribute?.("data-config-key") || feature.configKey;
+    const settingKey = String(actionNode?.getAttribute?.("data-setting-key") || "").trim();
+    if (!configKey || !settingKey) {
+      return;
+    }
+
+    const fieldNode =
+      actionNode?.closest?.("[data-adxconfig-color-field='true']") ||
+      actionNode?.parentElement?.closest?.("[data-adxconfig-color-field='true']") ||
+      null;
+    syncColorFieldControl(fieldNode, {
+      value: "",
+    });
+    withRuntimeCall(
+      runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, "")),
+      "Theme-Default wieder aktiv.",
+      "Einstellung konnte nicht gespeichert werden."
+    );
+  }
+
   function handleRunFeatureAction(actionNode, feature) {
     if (!feature || !runtimeApi || typeof runtimeApi.runFeatureAction !== "function") {
       return;
@@ -351,6 +380,7 @@ export function createShellActionController(options = {}) {
     ["set-setting-toggle", (actionNode, feature) => handleSetSettingToggle(actionNode, feature)],
     ["set-setting-select-option", (actionNode, feature) =>
       handleSetSettingSelectOption(actionNode, feature)],
+    ["clear-setting-color", (actionNode, feature) => handleClearSettingColor(actionNode, feature)],
     ["run-feature-action", (actionNode, feature) => handleRunFeatureAction(actionNode, feature)],
     ["clearThemeBackground", (_actionNode, feature) => {
       if (!feature) {

@@ -152,6 +152,17 @@ function clickHeaderAction(documentRef, action) {
   button.click();
 }
 
+function changeSettingInput(documentRef, selector, value) {
+  const input = documentRef.querySelector(selector);
+  assert.ok(input, `missing setting input for ${selector}`);
+  input.value = value;
+  documentRef.dispatchEvent(new FakeEvent("change", {
+    bubbles: true,
+    cancelable: true,
+    target: input,
+  }));
+}
+
 function readNestedValue(rootValue, pathParts) {
   return (Array.isArray(pathParts) ? pathParts : []).reduce((current, part) => {
     if (!current || typeof current !== "object") {
@@ -1746,6 +1757,11 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
+  const sectionTitles = documentRef
+    .querySelectorAll(".ad-xconfig-settings-section-title")
+    .map((node) => String(node.textContent || "").trim());
+  assert.deepEqual(sectionTitles, ["Schrift", "Farben"]);
+
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
   assert.ok(previewStyleNode);
   assert.match(String(previewStyleNode.textContent || ""), /fonts\.bunny\.net/);
@@ -1853,6 +1869,103 @@ test("xConfig shell renders Templates Global font options as preview buttons and
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["throws"]);
+
+  const colorFields = documentRef.querySelectorAll(
+    "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.equal(colorFields.length, 4);
+  assert.deepEqual(
+    colorFields.map((node) => String(node.getAttribute("data-setting-key") || "").trim()),
+    ["accentColor", "scoreColor", "secondaryTextColor", "throwLabelColor"]
+  );
+
+  changeSettingInput(
+    documentRef,
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='accentColor'][data-color-input-role='picker']",
+    "#123456"
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.accentColor === "#123456"
+  );
+
+  let accentField = documentRef.querySelector(
+    "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography'][data-setting-key='accentColor']"
+  );
+  assert.ok(accentField);
+  assert.equal(accentField.getAttribute("data-color-value"), "#123456");
+  assert.equal(accentField.getAttribute("data-invalid"), "false");
+  assert.equal(
+    accentField.querySelector("[data-adxconfig-color-status='true']")?.textContent,
+    "Gespeichert: #123456"
+  );
+
+  changeSettingInput(
+    documentRef,
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='secondaryTextColor'][data-color-input-role='hex']",
+    "#abc"
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.secondaryTextColor === "#AABBCC"
+  );
+
+  let storedTypographyConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedTypographyConfig.features.themes.globalTypography.secondaryTextColor, "#AABBCC");
+
+  let secondaryField = documentRef.querySelector(
+    "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography'][data-setting-key='secondaryTextColor']"
+  );
+  assert.ok(secondaryField);
+  assert.equal(secondaryField.getAttribute("data-color-value"), "#AABBCC");
+  assert.equal(
+    secondaryField.querySelector("[data-adxconfig-setting='true'][data-color-input-role='hex']")?.value,
+    "#AABBCC"
+  );
+
+  changeSettingInput(
+    documentRef,
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='throwLabelColor'][data-color-input-role='hex']",
+    "invalid"
+  );
+  await wait(5);
+
+  const throwLabelField = documentRef.querySelector(
+    "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography'][data-setting-key='throwLabelColor']"
+  );
+  assert.ok(throwLabelField);
+  assert.equal(throwLabelField.getAttribute("data-invalid"), "true");
+  assert.equal(
+    throwLabelField.querySelector("[data-adxconfig-setting='true'][data-color-input-role='hex']")?.value,
+    "invalid"
+  );
+  assert.equal(
+    throwLabelField.querySelector("[data-adxconfig-color-status='true']")?.textContent,
+    "Ungültiger Hex-Code. Erlaubt sind #RGB oder #RRGGBB."
+  );
+
+  storedTypographyConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedTypographyConfig.features.themes.globalTypography.throwLabelColor, "");
+
+  const resetAccentButton = accentField.querySelector(
+    "[data-adxconfig-action='clear-setting-color'][data-setting-key='accentColor']"
+  );
+  assert.ok(resetAccentButton);
+  resetAccentButton.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.accentColor === ""
+  );
+
+  accentField = documentRef.querySelector(
+    "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography'][data-setting-key='accentColor']"
+  );
+  assert.ok(accentField);
+  assert.equal(accentField.getAttribute("data-color-value"), "");
+  assert.equal(
+    accentField.querySelector("[data-adxconfig-color-status='true']")?.textContent,
+    "Theme-Default aktiv."
+  );
 
   const closeSettingsButton = documentRef.querySelector("[data-adxconfig-action='close-settings']");
   assert.ok(closeSettingsButton);

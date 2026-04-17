@@ -38,6 +38,7 @@ import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
+import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -55,6 +56,7 @@ const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
+const XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -342,6 +344,10 @@ export function parseFieldValue(field, rawValue, checked) {
 
   if (field.control === "checkbox") {
     return Boolean(checked);
+  }
+
+  if (field.control === "color") {
+    return normalizeHexColor(rawValue, "");
   }
 
   const matchingOption = Array.isArray(field.options)
@@ -684,6 +690,70 @@ function buildOptionActiveBadge(documentRef) {
   });
 }
 
+function getColorFieldValue(feature, field) {
+  return normalizeHexColor(feature?.config?.[field?.key], "");
+}
+
+function getColorPickerDisplayValue(colorValue) {
+  return normalizeHexColor(colorValue, "") || XCONFIG_COLOR_INPUT_DEFAULT;
+}
+
+function buildColorFieldStatusText(colorValue, invalid) {
+  if (invalid) {
+    return "Ungültiger Hex-Code. Erlaubt sind #RGB oder #RRGGBB.";
+  }
+
+  return colorValue ? `Gespeichert: ${colorValue}` : "Theme-Default aktiv.";
+}
+
+export function syncColorFieldControl(fieldNode, options = {}) {
+  if (!fieldNode || typeof fieldNode.setAttribute !== "function") {
+    return;
+  }
+
+  const normalizedValue = normalizeHexColor(options.value, "");
+  const invalid = options.invalid === true;
+  const displayValue = invalid
+    ? String(options.displayValue ?? "")
+    : normalizedValue;
+  const pickerValue = getColorPickerDisplayValue(normalizedValue);
+  const swatchNode = fieldNode.querySelector?.("[data-adxconfig-color-swatch='true']") || null;
+  const pickerNode =
+    fieldNode.querySelector?.("[data-adxconfig-setting='true'][data-color-input-role='picker']") ||
+    null;
+  const codeNode =
+    fieldNode.querySelector?.("[data-adxconfig-setting='true'][data-color-input-role='hex']") ||
+    null;
+  const resetNode =
+    fieldNode.querySelector?.("[data-adxconfig-action='clear-setting-color']") || null;
+  const statusNode =
+    fieldNode.querySelector?.("[data-adxconfig-color-status='true']") || null;
+
+  fieldNode.setAttribute("data-invalid", invalid ? "true" : "false");
+  fieldNode.setAttribute("data-has-custom-value", normalizedValue ? "true" : "false");
+  fieldNode.setAttribute("data-color-value", normalizedValue);
+
+  if (swatchNode) {
+    swatchNode.style.background = normalizedValue || "";
+  }
+  if (pickerNode) {
+    pickerNode.value = pickerValue;
+  }
+  if (codeNode) {
+    codeNode.value = displayValue;
+    codeNode.setAttribute("aria-invalid", invalid ? "true" : "false");
+  }
+  if (resetNode) {
+    resetNode.disabled = !normalizedValue;
+  }
+  if (statusNode) {
+    statusNode.textContent = buildColorFieldStatusText(normalizedValue, invalid);
+    statusNode.className = invalid
+      ? "ad-xconfig-note ad-xconfig-color-status ad-xconfig-color-status--error"
+      : "ad-xconfig-note ad-xconfig-color-status";
+  }
+}
+
 function resolveFieldOptionPreview(feature, field, optionValue) {
   if (!isDartDesignSelectField(feature, field)) {
     return "";
@@ -853,6 +923,89 @@ function buildFeatureField(documentRef, feature, field) {
         "data-active": input.checked ? "false" : "true",
       },
     }));
+    return wrapper;
+  }
+
+  if (field.control === "color") {
+    const colorValue = getColorFieldValue(feature, field);
+    const wrapper = createElement(documentRef, "div", {
+      className: "ad-xconfig-color-field",
+      attributes: {
+        "data-adxconfig-color-field": "true",
+        "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey,
+        "data-setting-key": field.key,
+        "data-invalid": "false",
+        "data-has-custom-value": colorValue ? "true" : "false",
+        "data-color-value": colorValue,
+      },
+    });
+    const controls = createElement(documentRef, "div", {
+      className: "ad-xconfig-color-controls",
+    });
+
+    controls.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-color-swatch",
+      attributes: {
+        "data-adxconfig-color-swatch": "true",
+        "aria-hidden": "true",
+      },
+    }));
+    controls.appendChild(createElement(documentRef, "input", {
+      id: `${fieldId}-picker`,
+      type: "color",
+      className: "ad-xconfig-color-picker",
+      attributes: {
+        "data-adxconfig-setting": "true",
+        "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey,
+        "data-setting-key": field.key,
+        "data-setting-control": field.control,
+        "data-color-input-role": "picker",
+        "aria-label": `${field.label} per Farbwähler wählen`,
+      },
+    }));
+    controls.appendChild(createElement(documentRef, "input", {
+      id: `${fieldId}-hex`,
+      type: "text",
+      className: "ad-xconfig-color-code",
+      attributes: {
+        "data-adxconfig-setting": "true",
+        "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey,
+        "data-setting-key": field.key,
+        "data-setting-control": field.control,
+        "data-color-input-role": "hex",
+        autocomplete: "off",
+        autocapitalize: "characters",
+        spellcheck: "false",
+        inputmode: "text",
+        placeholder: "#RRGGBB",
+        "aria-label": `${field.label} als Hex-Code`,
+      },
+    }));
+    controls.appendChild(createElement(documentRef, "button", {
+      type: "button",
+      className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--color-reset",
+      text: "Zurücksetzen",
+      attributes: {
+        "data-adxconfig-action": "clear-setting-color",
+        "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey,
+        "data-setting-key": field.key,
+      },
+    }));
+
+    wrapper.appendChild(controls);
+    wrapper.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-note ad-xconfig-color-status",
+      attributes: {
+        "data-adxconfig-color-status": "true",
+      },
+    }));
+    syncColorFieldControl(wrapper, {
+      value: colorValue,
+    });
     return wrapper;
   }
 
@@ -1223,7 +1376,32 @@ function buildSettingsModal(documentRef, state, features) {
   const body = createElement(documentRef, "div", {
     className: "ad-xconfig-modal-body",
   });
+  const sectionBodies = new Map();
   fields.forEach((field) => {
+    const sectionLabel = String(field.section || "").trim();
+    let sectionBody = body;
+    if (sectionLabel) {
+      if (!sectionBodies.has(sectionLabel)) {
+        const section = createElement(documentRef, "section", {
+          className: "ad-xconfig-settings-section",
+          attributes: {
+            "data-adxconfig-settings-section": sectionLabel.toLowerCase(),
+          },
+        });
+        section.appendChild(createElement(documentRef, "h4", {
+          className: "ad-xconfig-settings-section-title",
+          text: sectionLabel,
+        }));
+        const nextSectionBody = createElement(documentRef, "div", {
+          className: "ad-xconfig-settings-section-body",
+        });
+        section.appendChild(nextSectionBody);
+        body.appendChild(section);
+        sectionBodies.set(sectionLabel, nextSectionBody);
+      }
+      sectionBody = sectionBodies.get(sectionLabel) || body;
+    }
+
     const row = createElement(documentRef, "div", {
       className: String(field.key || field.action || "").toLowerCase() === "debug"
         ? "ad-xconfig-setting-row ad-xconfig-setting-row--debug"
@@ -1247,7 +1425,7 @@ function buildSettingsModal(documentRef, state, features) {
     }
     inputWrap.appendChild(buildFeatureField(documentRef, feature, field));
     row.appendChild(inputWrap);
-    body.appendChild(row);
+    sectionBody.appendChild(row);
   });
   modal.appendChild(body);
 

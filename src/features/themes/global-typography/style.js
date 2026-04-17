@@ -3,6 +3,10 @@ import {
   getThemeGlobalTypographyPreset,
   getThemeGlobalTypographyScopeValues,
 } from "../../../shared/theme-global-typography-presets.js";
+import {
+  hexColorToRgba,
+  normalizeHexColor,
+} from "../../../shared/hex-color-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-global-typography-style";
 export const TOOLS_SHADOW_STYLE_ID = "ad-ext-theme-global-typography-tools-style";
@@ -37,18 +41,68 @@ export function getThemeGlobalTypographySelectors(applyTo = ["scores"]) {
     : [...THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.scores];
 }
 
+function buildThemeGlobalTypographyColorDeclarations(featureConfig = {}) {
+  const accentColor = normalizeHexColor(featureConfig.accentColor, "");
+  const scoreColor = normalizeHexColor(featureConfig.scoreColor, "");
+  const secondaryTextColor = normalizeHexColor(featureConfig.secondaryTextColor, "");
+  const throwLabelColor = normalizeHexColor(featureConfig.throwLabelColor, "");
+  const declarations = [];
+
+  if (accentColor) {
+    declarations.push(`--ad-ext-theme-accent-color: ${accentColor};`);
+    declarations.push(`--ad-ext-theme-card-active-border-color: ${accentColor};`);
+    declarations.push(
+      `--ad-ext-theme-card-active-outline-color: ${hexColorToRgba(accentColor, 0.24)};`
+    );
+    declarations.push(`--ad-ext-theme-score-active-color: ${accentColor};`);
+    declarations.push(`--ad-ext-theme-score-winner-color: ${accentColor};`);
+  }
+
+  if (scoreColor) {
+    declarations.push(`--ad-ext-theme-text-primary-color: ${scoreColor};`);
+    declarations.push(`--ad-ext-theme-score-color: ${scoreColor};`);
+    declarations.push(`--ad-ext-theme-score-inactive-color: ${scoreColor};`);
+    declarations.push(`--ad-ext-theme-turn-points-color: ${scoreColor};`);
+  }
+
+  if (secondaryTextColor) {
+    declarations.push(`--ad-ext-theme-text-secondary-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-name-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-name-active-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-name-inactive-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-name-winner-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-meta-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-meta-active-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-meta-inactive-color: ${secondaryTextColor};`);
+    declarations.push(`--ad-ext-theme-meta-winner-color: ${secondaryTextColor};`);
+  }
+
+  if (throwLabelColor) {
+    declarations.push(`--ad-ext-theme-throw-label-color: ${throwLabelColor};`);
+  }
+
+  return declarations;
+}
+
 export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
   const preset = getThemeGlobalTypographyPreset(featureConfig.fontPreset);
   const selectors = getThemeGlobalTypographySelectors(featureConfig.applyTo);
-  if (!preset || !Array.isArray(selectors) || !selectors.length) {
-    return "";
+  const colorDeclarations = buildThemeGlobalTypographyColorDeclarations(featureConfig);
+  const blocks = [];
+  let imports = "";
+
+  if (preset && Array.isArray(selectors) && selectors.length) {
+    const remoteUrl = preset.remote
+      ? buildThemeGlobalTypographyBunnyUrl(preset.familyName)
+      : "";
+    imports = remoteUrl ? `@import url("${remoteUrl}");\n\n` : "";
+    const selectorText = selectors.join(",\n");
+    blocks.push(`${selectorText} {\n  font-family: ${preset.fontFamily} !important;\n}`);
   }
 
-  const remoteUrl = preset.remote
-    ? buildThemeGlobalTypographyBunnyUrl(preset.familyName)
-    : "";
-  const imports = remoteUrl ? `@import url("${remoteUrl}");\n\n` : "";
-  const selectorText = selectors.join(",\n");
+  if (colorDeclarations.length) {
+    blocks.push(`:root {\n  ${colorDeclarations.join("\n  ")}\n}`);
+  }
 
-  return `${imports}${selectorText} {\n  font-family: ${preset.fontFamily} !important;\n}`;
+  return blocks.length ? `${imports}${blocks.join("\n\n")}` : "";
 }

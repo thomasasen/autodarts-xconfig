@@ -42,12 +42,17 @@ import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { styleText } from "./shell-style.js";
 import { buildThemeGlobalTypographyPreviewImports } from "../../shared/theme-global-typography-presets.js";
 import {
+  isHexColorInputValue,
+  normalizeHexColor,
+} from "../../shared/hex-color-utils.js";
+import {
   buildMenuIconElement,
   buildShellContent,
   createElement,
   openChangelog,
   openReadme,
   parseFieldValue,
+  syncColorFieldControl,
   syncSelectOptionButtons,
 } from "./shell-view.js";
 
@@ -392,6 +397,7 @@ function ensureXConfigShell(options = {}) {
     setNotice,
     setThemeActionFeedback,
     state,
+    syncColorFieldControl,
     syncSelectOptionButtons,
     syncThemeBackgroundIndicators,
     themeKeyFromConfigKey,
@@ -529,6 +535,45 @@ function ensureXConfigShell(options = {}) {
 
     const descriptor = getXConfigDescriptor(featureKey);
     const field = descriptor?.fields?.find((entry) => entry.key === settingKey) || null;
+    if (field?.control === "color") {
+      const fieldNode =
+        target.closest?.("[data-adxconfig-color-field='true']") ||
+        target.parentElement?.closest?.("[data-adxconfig-color-field='true']") ||
+        null;
+      const rawValue = String(target.value || "").trim();
+      if (!rawValue) {
+        syncColorFieldControl(fieldNode, {
+          value: "",
+        });
+        withRuntimeCall(
+          runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, "")),
+          "Theme-Default wieder aktiv.",
+          "Einstellung konnte nicht gespeichert werden."
+        );
+        return;
+      }
+
+      if (!isHexColorInputValue(rawValue)) {
+        syncColorFieldControl(fieldNode, {
+          value: fieldNode?.getAttribute?.("data-color-value") || "",
+          displayValue: rawValue,
+          invalid: true,
+        });
+        return;
+      }
+
+      const nextColorValue = normalizeHexColor(rawValue, "");
+      syncColorFieldControl(fieldNode, {
+        value: nextColorValue,
+      });
+      withRuntimeCall(
+        runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextColorValue)),
+        "Einstellung gespeichert.",
+        "Einstellung konnte nicht gespeichert werden."
+      );
+      return;
+    }
+
     const nextValue = parseFieldValue(field, target.value, target.checked);
     withRuntimeCall(
       runtimeApi.saveConfig(buildFeatureSettingPatch(configKey, settingKey, nextValue)),

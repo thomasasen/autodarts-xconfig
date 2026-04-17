@@ -1,3 +1,4 @@
+import themeGlobalTypographyPng from "../../docs/screenshots/template-theme-global-typography-xConfig.png";
 import themeX01Png from "../../docs/screenshots/template-theme-x01-xConfig.png";
 import themeX01TwoPlayerJpg from "../../docs/screenshots/template-theme-x01-2player-xConfig.jpg";
 import themeShanghaiPng from "../../docs/screenshots/template-theme-shanghai-xConfig.png";
@@ -22,6 +23,7 @@ import turnPointsCountGif from "../../docs/screenshots/animation-turn-points-cou
 import winnerFireworksGif from "../../docs/screenshots/animation-winner-fireworks.gif";
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
+  "theme-global-typography": themeGlobalTypographyPng,
   "theme-x01": themeX01Png,
   "theme-x01-2player": themeX01TwoPlayerJpg,
   "theme-shanghai": themeShanghaiPng,

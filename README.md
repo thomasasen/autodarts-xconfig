@@ -302,9 +302,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Wählt eine kuratierte Schrift für stabile Bereiche des aktiven xConfig-Themes.
-- Grafisch: Die gewählte Schrift wird nur in klar definierten Score-, Wurf- oder Namensbereichen aktiver xConfig-Themes angewendet. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
-- Wann sinnvoll? Wenn du Scores, Würfe oder Spielernamen klarer und eigenständiger typografisch gestalten möchtest, ohne das ganze Template umzubauen.
+- Was macht es sichtbar? Wählt eine kuratierte Schrift und wenige feste Farbrollen für stabile Bereiche des aktiven xConfig-Themes.
+- Grafisch: Die gewählte Schrift und die festen Farbrollen greifen nur in klar definierten Score-, Wurf-, Namens- und Zustandsbereichen aktiver xConfig-Themes. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
+- Wann sinnvoll? Wenn du Scores, Würfe, Spielernamen und den Aktiv-Akzent gezielt anpassen möchtest, ohne das ganze Template mit vielen Einzelreglern zu überladen.
 
 **Einstellungen einfach erklärt**
 
@@ -364,7 +364,13 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Scores`: Wendet die Schrift auf stabile Score- und Punkteanzeigen an.
   - `Würfe`: Wendet die Schrift auf die Wurfanzeige im Turn-Bereich und auf stabile nachgeladene Turn-Karten an.
   - `Namen`: Wendet die Schrift auf Spielernamen in den unterstützten Theme-Karten an.
+- `Aktiv-Akzent`: Legt die semantische Akzentfarbe für aktive und gewinnende Spieler fest. Die Farbe wirkt im aktiven xConfig-Theme auf Rahmen, Outline/Glow und die aktive Hauptzahl, ohne zusätzliche Zustandsfarben einzeln freizuschalten.
+- `Hauptzahlen`: Legt die Farbe für normale beziehungsweise inaktive Hauptzahlen sowie große Turn-Punkte fest. Die aktive Hauptzahl bleibt bewusst weiter an den Aktiv-Akzent gebunden.
+- `Sekundärtext`: Legt eine gemeinsame Sekundärfarbe für Namen und Meta-Texte fest. Dadurch bleiben diese Bereiche ruhig und konsistent, während Scores und Aktiv-Akzente separat geführt werden.
+- `Wurf-/Checkout-Text`: Legt die Farbe für Wurf-Labels, Suggestion-Texte und Checkout-Hinweise fest, ohne die großen Turn-Punkte mitzunehmen. So lassen sich Hilfstexte ruhiger oder klarer vom Hauptscore trennen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+
+![Templates Global mit lila Aktiv-Akzent in AD xConfig](docs/screenshots/template-theme-global-typography-xConfig.png)
 
 <a id="template-autodarts-theme-bull-off"></a>
 

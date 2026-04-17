@@ -18,6 +18,7 @@ function selectField(key, label, options = [], fieldOptions = {}) {
     key,
     label,
     control: "select",
+    section: String(fieldOptions.section || "").trim(),
     multiple: fieldOptions.multiple === true,
     options: Object.freeze(
       options.map((option) =>
@@ -28,6 +29,15 @@ function selectField(key, label, options = [], fieldOptions = {}) {
         })
       )
     ),
+  });
+}
+
+function colorField(key, label, fieldOptions = {}) {
+  return Object.freeze({
+    key,
+    label,
+    control: "color",
+    section: String(fieldOptions.section || "").trim(),
   });
 }
 
@@ -118,9 +128,24 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "template-global-typography",
     description: "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
     fields: [
-      selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS),
+      selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS, {
+        section: "Schrift",
+      }),
       selectField("applyTo", "Greift bei", THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS, {
         multiple: true,
+        section: "Schrift",
+      }),
+      colorField("accentColor", "Aktiv-Akzent", {
+        section: "Farben",
+      }),
+      colorField("scoreColor", "Hauptzahlen", {
+        section: "Farben",
+      }),
+      colorField("secondaryTextColor", "Sekundärtext", {
+        section: "Farben",
+      }),
+      colorField("throwLabelColor", "Wurf-/Checkout-Text", {
+        section: "Farben",
       }),
       checkboxField("debug", "Debug"),
     ],

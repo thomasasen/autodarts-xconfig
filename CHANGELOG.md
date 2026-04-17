@@ -12,12 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.27] - 2026-04-12
+## [2.1.28] - 2026-04-18
 
 ### Added
 
 - Nutzerwirkung: Im Themes-Tab steht jetzt `Theme X01 2Player (Beta)` als eigenständige X01-Variante bereit; das Layout richtet sich gezielt an Matches mit genau zwei Spielern, betont das Board mittig zwischen zwei großen Spieler-Karten und bringt dafür ein eigenes Hintergrundbild-Setup samt separater xConfig-Vorschau mit. Die Variante ist bewusst als Beta-Version gekennzeichnet und wird weiter ausgebaut sowie stabilisiert; zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.
   Technik: `theme-x01-2player` wurde als neues Theme-Feature mit eigener `themes.x01TwoPlayer`-Konfiguration, stabilem 2-Spieler-Guard über Match-Snapshot plus DOM-Fallback, eigener Preview-Asset-/Theme-Key-Verdrahtung, aktualisierten xConfig-Deskriptoren/Docs und neuen Runtime-/CSS-Regressionsprüfungen in Registry, Theme-Lifecycle, Config-Normalisierung und README/FEATURES integriert; die empfohlenen Defaults halten die neue Alternative standardmäßig ausgeschaltet, damit sie nicht ungefragt parallel zur bestehenden X01-Variante aktiviert wird, und die Beta-Kennzeichnung ist jetzt über xConfig, README und Feature-Doku hinweg synchronisiert.
+
+- Nutzerwirkung: `Templates Global` bietet im Themes-Tab jetzt zusätzlich vier feste globale Schriftfarb-Rollen mit Farbwähler, Hex-Eingabe und Einzel-Reset: `Aktiv-Akzent`, `Hauptzahlen`, `Sekundärtext` sowie `Wurf-/Checkout-Text`; damit lassen sich aktive Rahmen/Hauptzahlen, normale Scores/Turn-Punkte, Namen/Meta und Hilfstexte kompakt anpassen, ohne separate Aktiv-/Inaktiv-Farbpaare verstehen zu müssen.
+  Technik: `themes.globalTypography` wurde um vier hex-normalisierte Farbwerte erweitert, die xConfig-Shell rendert dafür einen neuen `color`-Control-Typ mit nativer Picker-/Hex-/Reset-Kombination samt Inline-Validierung, `buildThemeGlobalTypographyStyleText(...)` mappt die Werte auf die zuvor eingeführten semantischen Theme-Variablen, und neue Config-, Shell-, README-/FEATURES- sowie Runtime-Regressionen sichern Normalisierung, UI-Verhalten und CSS-Rollen-Mapping gegen Drift ab.
+
+- Nutzerwirkung: `Templates Global` zeigt in xConfig, README und `FEATURES.md` jetzt eine echte Match-Vorschau mit lila Aktiv-Akzent, damit sich der Nutzen der globalen Schrift- und Farbrollen direkt an einem realen X01-Setup nachvollziehen lässt.
+  Technik: Ein neuer Preview-Screenshot aus dem aktiven Match-Tab ist als kanonisches Asset in die Feature-Copy, die xConfig-Preview-Manifest-/Browser-Verdrahtung und die generierten README-/FEATURES-Abschnitte aufgenommen; die Doku-Regressionen sichern die neue Vorschau-Datei und das Mapping gegen Drift ab.
 
 ### Fixed
 
@@ -26,6 +32,9 @@ direkt zu einer versionierten Release-Sektion.
 
 - Nutzerwirkung: Die Spieler- und Wurfbereiche in `Theme X01 2Player`, `Theme Cricket`, `Theme Bull-off` und den gemeinsamen Karten-Layouts verhalten sich bei aktivem, inaktivem und Sieger-Zustand jetzt farblich konsistenter; aktive Rahmen bleiben klar am selben Akzent orientiert, Sieger folgen derselben Hervorhebungslogik, und zentrale Textbereiche wie Score, Name, Meta sowie Turn-Punkte greifen nachvollziehbarer ineinander.
   Technik: Die Shared-Theme-Schicht nutzt jetzt einen internen semantischen Farbvertrag für `accent`, primäre und sekundäre Textrollen sowie abgeleitete `active`-/`inactive`-/`winner`-Zustände; gemeinsame Karten- und Turn-Styles wurden auf diese Variablen umgestellt, Bull-off/Cricket/X01-2Player überschreiben nur noch gezielt kontrastkritische Ableitungen, und neue Theme-Regressionsprüfungen sichern Rahmen-, Score-, Name-, Meta- und Turn-Farbpfade gegen Drift ab.
+
+- Nutzerwirkung: Der globale `Aktiv-Akzent` aus `Templates Global` bleibt im Browser jetzt auch dann sichtbar, wenn das aktive Theme seine eigenen CSS-Variablen nachlädt; aktive Rahmen und die aktive Hauptzahl folgen damit wieder zuverlässig der gewählten Akzentfarbe.
+  Technik: Die Style-Node von `theme-global-typography` wird nach Updates bewusst erneut ans Ende des `<head>` gehängt, damit ihre semantischen Farb-Overrides autoritativ hinter den Theme-Styles stehen; eine Runtime-Regression prüft die Style-Reihenfolge und verhindert erneute Farbverluste durch spätere Theme-Injektionen.
 
 ## [2.1.26] - 2026-04-09
 
@@ -1339,7 +1348,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...HEAD
+[2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...HEAD
+[2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...2f3e796
 [2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...95e8963
 [2.1.25]: https://github.com/thomasasen/autodarts-xconfig/compare/8d47a9c...325e508
 [2.1.24]: https://github.com/thomasasen/autodarts-xconfig/compare/17ef31c...8d47a9c

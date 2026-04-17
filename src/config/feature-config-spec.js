@@ -5,6 +5,7 @@ import {
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
   getThemeGlobalTypographyScopeValues,
 } from "../shared/theme-global-typography-presets.js";
+import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 
 const CHECKOUT_EFFECTS = new Set(["pulse", "glow", "scale", "blink"]);
@@ -242,7 +243,16 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   turnPointsCount: { enabled: false, durationMs: 416, flashOnChange: true, flashMode: "on-change", debug: false },
   winnerFireworks: { enabled: false, style: "realistic", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true, debug: false },
   x01ScoreProgress: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core", debug: false },
-  "themes.globalTypography": { enabled: false, fontPreset: "system", applyTo: ["scores"], debug: false },
+  "themes.globalTypography": {
+    enabled: false,
+    fontPreset: "system",
+    applyTo: ["scores"],
+    accentColor: "",
+    scoreColor: "",
+    secondaryTextColor: "",
+    throwLabelColor: "",
+    debug: false,
+  },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.shanghai": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -268,7 +278,15 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   turnPointsCount: { durationMs: 416, flashOnChange: false, flashMode: "on-change" },
   winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true },
   x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
-  "themes.globalTypography": { enabled: false, fontPreset: "system", applyTo: ["scores"] },
+  "themes.globalTypography": {
+    enabled: false,
+    fontPreset: "system",
+    applyTo: ["scores"],
+    accentColor: "",
+    scoreColor: "",
+    secondaryTextColor: "",
+    throwLabelColor: "",
+  },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -578,6 +596,10 @@ const FEATURE_NORMALIZERS = Object.freeze({
         THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS,
         getThemeGlobalTypographyScopeValues
       ),
+      accentColor: normalizeHexColor(rawConfig.accentColor, ""),
+      scoreColor: normalizeHexColor(rawConfig.scoreColor, ""),
+      secondaryTextColor: normalizeHexColor(rawConfig.secondaryTextColor, ""),
+      throwLabelColor: normalizeHexColor(rawConfig.throwLabelColor, ""),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },

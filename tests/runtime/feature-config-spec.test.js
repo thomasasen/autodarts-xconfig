@@ -56,6 +56,10 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     enabled: false,
     fontPreset: "system",
     applyTo: ["scores"],
+    accentColor: "",
+    scoreColor: "",
+    secondaryTextColor: "",
+    throwLabelColor: "",
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
@@ -114,6 +118,10 @@ test("theme global typography defaults and normalization stay stable", () => {
     enabled: false,
     fontPreset: "system",
     applyTo: ["scores"],
+    accentColor: "",
+    scoreColor: "",
+    secondaryTextColor: "",
+    throwLabelColor: "",
     debug: false,
   });
 
@@ -125,12 +133,20 @@ test("theme global typography defaults and normalization stay stable", () => {
       enabled: "true",
       fontPreset: "fragment-mono",
       applyTo: ["scores", "names"],
+      accentColor: "#9fdb58",
+      scoreColor: "#123456",
+      secondaryTextColor: "#abc",
+      throwLabelColor: "#dEf012",
       debug: "true",
     }),
     {
       enabled: true,
       fontPreset: "fragment-mono",
       applyTo: ["scores", "names"],
+      accentColor: "#9FDB58",
+      scoreColor: "#123456",
+      secondaryTextColor: "#AABBCC",
+      throwLabelColor: "#DEF012",
       debug: true,
     }
   );
@@ -140,12 +156,20 @@ test("theme global typography defaults and normalization stay stable", () => {
       enabled: "true",
       fontPreset: "fragment-mono",
       applyTo: "scores-and-names",
+      accentColor: "#abc",
+      scoreColor: "",
+      secondaryTextColor: "#123123",
+      throwLabelColor: "#456",
       debug: "false",
     }),
     {
       enabled: true,
       fontPreset: "fragment-mono",
       applyTo: ["scores", "names"],
+      accentColor: "#AABBCC",
+      scoreColor: "",
+      secondaryTextColor: "#123123",
+      throwLabelColor: "#445566",
       debug: false,
     }
   );
@@ -155,12 +179,20 @@ test("theme global typography defaults and normalization stay stable", () => {
       enabled: "no",
       fontPreset: "missing-font",
       applyTo: "everything",
+      accentColor: "rgb(0,0,0)",
+      scoreColor: "#12",
+      secondaryTextColor: "blue",
+      throwLabelColor: "#12345g",
       debug: "no",
     }),
     {
       enabled: false,
       fontPreset: "system",
       applyTo: ["scores"],
+      accentColor: "",
+      scoreColor: "",
+      secondaryTextColor: "",
+      throwLabelColor: "",
       debug: false,
     }
   );

@@ -149,8 +149,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Kurz: Wählt eine kuratierte Schrift für stabile Bereiche des aktiven xConfig-Themes.
-- Grafisch: Die gewählte Schrift wird nur in klar definierten Score-, Wurf- oder Namensbereichen aktiver xConfig-Themes angewendet. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
+- Kurz: Wählt eine kuratierte Schrift und wenige feste Farbrollen für stabile Bereiche des aktiven xConfig-Themes.
+- Grafisch: Die gewählte Schrift und die festen Farbrollen greifen nur in klar definierten Score-, Wurf-, Namens- und Zustandsbereichen aktiver xConfig-Themes. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Template-Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
@@ -207,7 +207,13 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Scores`: Greift bei stabilen Score- und Punkteanzeigen.
   - `Würfe`: Greift in der Wurfanzeige und bei stabilen Turn-Karten.
   - `Namen`: Greift bei Spielernamen in den Theme-Karten.
+- `Aktiv-Akzent`: Setzt die Akzentfarbe für aktive oder gewinnende Spieler.
+- `Hauptzahlen`: Steuert normale Hauptzahlen und Turn-Punkte.
+- `Sekundärtext`: Setzt Namen und Meta-Texte auf eine gemeinsame Sekundärfarbe.
+- `Wurf-/Checkout-Text`: Färbt Wurf-, Suggestion- und Checkout-Texte separat ein.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)
 
 ### Theme Bull-off
 

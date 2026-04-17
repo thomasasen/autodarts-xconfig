@@ -201,7 +201,10 @@ export function mountThemeGlobalTypography(context = {}) {
         return;
       }
 
-      domGuards.ensureStyle(STYLE_ID, cssText);
+      const styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
+      if (styleNode?.parentNode && typeof styleNode.parentNode.appendChild === "function") {
+        styleNode.parentNode.appendChild(styleNode);
+      }
       ensureToolsShadowStyle(documentRef, cssText);
     },
   });

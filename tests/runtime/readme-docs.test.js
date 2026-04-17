@@ -308,6 +308,7 @@ test("xConfig preview screenshot manifest points only to existing canonical scre
 
 test("xConfig preview manifest covers the key animation/theme cards with visual backgrounds", () => {
   const requiredPreviewFeatureKeys = [
+    "theme-global-typography",
     "theme-x01",
     "theme-x01-2player",
     "theme-shanghai",
