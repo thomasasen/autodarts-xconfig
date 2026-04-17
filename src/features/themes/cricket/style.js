@@ -1055,8 +1055,9 @@ p.chakra-text.css-1qlemha {
 }
 `;
 
-export function buildCricketThemeCss(featureConfig = {}) {
+export function buildCricketThemeCss(featureConfig = {}, options = {}) {
   const resolved = resolveThemeCricketConfig(featureConfig);
+  const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
   const avgVisibilityCss = resolved.showAvg
     ? ""
@@ -1070,7 +1071,11 @@ export function buildCricketThemeCss(featureConfig = {}) {
 }
 `;
 
-  return buildThemeCssBundle(featureConfig, `${cricketThemeCss}${avgVisibilityCss}${previewCss}`);
+  return buildThemeCssBundle(
+    featureConfig,
+    `${cricketThemeCss}${avgVisibilityCss}${previewCss}`,
+    visualConfig
+  );
 }
 
 export { PREVIEW_PLACEMENT };

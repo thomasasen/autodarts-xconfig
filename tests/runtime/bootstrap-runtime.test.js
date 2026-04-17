@@ -187,6 +187,19 @@ test("runtime public config API persists updates and survives feature toggles", 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
 
+  await runtime.setThemeBackgroundImage("globalTypography", "data:image/png;base64,GGGG");
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(
+    storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
+    "data:image/png;base64,GGGG"
+  );
+
+  await runtime.clearThemeBackgroundImage("globalTypography");
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
+
   runtime.stop();
 });
 
@@ -287,6 +300,9 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
       },
       features: {
         themes: {
+          globalTypography: {
+            backgroundImageDataUrl: "data:image/png;base64,GGGG",
+          },
           x01: {
             backgroundImageDataUrl: "data:image/png;base64,AAAA",
           },
@@ -326,6 +342,10 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.winnerFireworks.intensity, "standard");
   assert.equal(storedConfig.features.x01ScoreProgress.barSize, "breit");
   assert.equal(storedConfig.features.x01ScoreProgress.effect, "off");
+  assert.equal(
+    storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
+    "data:image/png;base64,GGGG"
+  );
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
   assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
   assert.equal(
@@ -360,6 +380,10 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
           effect: "blink",
         },
         themes: {
+          globalTypography: {
+            enabled: true,
+            backgroundImageDataUrl: "data:image/png;base64,GGGG",
+          },
           x01: {
             enabled: true,
             backgroundImageDataUrl: "data:image/png;base64,AAAA",
@@ -379,6 +403,8 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
   assert.equal(storedConfig.featureToggles.checkoutScorePulse, false);
   assert.equal(storedConfig.features.checkoutScorePulse.enabled, false);
   assert.equal(storedConfig.features.checkoutScorePulse.effect, "scale");
+  assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
+  assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
   assert.equal(storedConfig.features.themes.x01.enabled, false);
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
 

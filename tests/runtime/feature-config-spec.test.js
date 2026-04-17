@@ -60,6 +60,10 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     scoreColor: "",
     secondaryTextColor: "",
     throwLabelColor: "",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
@@ -122,6 +126,10 @@ test("theme global typography defaults and normalization stay stable", () => {
     scoreColor: "",
     secondaryTextColor: "",
     throwLabelColor: "",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
     debug: false,
   });
 
@@ -137,6 +145,10 @@ test("theme global typography defaults and normalization stay stable", () => {
       scoreColor: "#123456",
       secondaryTextColor: "#abc",
       throwLabelColor: "#dEf012",
+      backgroundDisplayMode: "fit",
+      backgroundOpacity: "40",
+      playerFieldTransparency: "30",
+      backgroundImageDataUrl: "data:image/png;base64,AAAA",
       debug: "true",
     }),
     {
@@ -147,6 +159,10 @@ test("theme global typography defaults and normalization stay stable", () => {
       scoreColor: "#123456",
       secondaryTextColor: "#AABBCC",
       throwLabelColor: "#DEF012",
+      backgroundDisplayMode: "fit",
+      backgroundOpacity: 40,
+      playerFieldTransparency: 30,
+      backgroundImageDataUrl: "data:image/png;base64,AAAA",
       debug: true,
     }
   );
@@ -160,6 +176,10 @@ test("theme global typography defaults and normalization stay stable", () => {
       scoreColor: "",
       secondaryTextColor: "#123123",
       throwLabelColor: "#456",
+      backgroundDisplayMode: "tile",
+      backgroundOpacity: "70",
+      playerFieldTransparency: "45",
+      backgroundImageDataUrl: "invalid",
       debug: "false",
     }),
     {
@@ -170,6 +190,10 @@ test("theme global typography defaults and normalization stay stable", () => {
       scoreColor: "",
       secondaryTextColor: "#123123",
       throwLabelColor: "#445566",
+      backgroundDisplayMode: "tile",
+      backgroundOpacity: 70,
+      playerFieldTransparency: 45,
+      backgroundImageDataUrl: "",
       debug: false,
     }
   );
@@ -183,6 +207,10 @@ test("theme global typography defaults and normalization stay stable", () => {
       scoreColor: "#12",
       secondaryTextColor: "blue",
       throwLabelColor: "#12345g",
+      backgroundDisplayMode: "wallpaper",
+      backgroundOpacity: "12",
+      playerFieldTransparency: "88",
+      backgroundImageDataUrl: "https://example.invalid/bg.png",
       debug: "no",
     }),
     {
@@ -193,6 +221,10 @@ test("theme global typography defaults and normalization stay stable", () => {
       scoreColor: "",
       secondaryTextColor: "",
       throwLabelColor: "",
+      backgroundDisplayMode: "fill",
+      backgroundOpacity: 25,
+      playerFieldTransparency: 10,
+      backgroundImageDataUrl: "",
       debug: false,
     }
   );

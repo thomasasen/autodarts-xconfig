@@ -45,6 +45,27 @@ function sanitizeBackgroundDataUrl(rawValue) {
   return dataUrl;
 }
 
+function normalizeThemeVisualConfig(candidate) {
+  return candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
+}
+
+export function resolveThemeVisualSettingsConfig(themeFeatureConfig = {}, globalTypographyConfig = {}) {
+  const themeConfig = normalizeThemeVisualConfig(themeFeatureConfig);
+  const globalConfig = normalizeThemeVisualConfig(globalTypographyConfig);
+  const themeHasStoredImage = Boolean(sanitizeBackgroundDataUrl(themeConfig.backgroundImageDataUrl));
+  const globalHasStoredImage = Boolean(sanitizeBackgroundDataUrl(globalConfig.backgroundImageDataUrl));
+
+  if (themeHasStoredImage) {
+    return themeConfig;
+  }
+
+  if (globalConfig.enabled && globalHasStoredImage) {
+    return globalConfig;
+  }
+
+  return themeConfig;
+}
+
 export function buildThemeVisualSettingsCss(featureConfig = {}) {
   const displayMode = BACKGROUND_DISPLAY_MODES[normalizeBackgroundMode(featureConfig.backgroundDisplayMode)];
   const backgroundOpacity = clampNumber(featureConfig.backgroundOpacity, 0, 100, 25);

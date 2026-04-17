@@ -3,7 +3,7 @@ import {
   createDefaultConfigFromFeatureSpecs,
   getFeatureConfigKeys,
   getFeatureConfigSpec,
-  getThemeConfigKeys,
+  getThemeBackgroundHostKeys,
   listFeatureConfigSpecs,
 } from "./feature-config-spec.js";
 import { getNestedValue, setNestedValue, splitFeaturePath } from "./feature-path-utils.js";
@@ -150,7 +150,7 @@ function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClea
     return;
   }
 
-  getThemeConfigKeys().forEach((themeKey) => {
+  getThemeBackgroundHostKeys().forEach((themeKey) => {
     const targetThemeConfig = themeConfigs[themeKey];
     if (!targetThemeConfig || typeof targetThemeConfig !== "object" || Array.isArray(targetThemeConfig)) {
       return;

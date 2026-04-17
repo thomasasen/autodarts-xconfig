@@ -23,7 +23,10 @@ import {
 } from "../../src/features/themes/bull-off/style.js";
 import { commonLayoutCss, commonThemeCss } from "../../src/features/themes/shared/common-css.js";
 import { buildSharedPlayerDisplayCss } from "../../src/features/themes/shared/player-card-layout.js";
-import { buildThemeVisualSettingsCss } from "../../src/features/themes/shared/theme-visuals.js";
+import {
+  buildThemeVisualSettingsCss,
+  resolveThemeVisualSettingsConfig,
+} from "../../src/features/themes/shared/theme-visuals.js";
 
 function assertNoFragileLayoutSelectors(cssText) {
   assert.doesNotMatch(cssText, /\[data-ad-theme-slot=/);
@@ -462,5 +465,43 @@ test("shared theme visual settings stretch uploaded backgrounds across the full 
   assert.match(
     visualCss,
     /html,\s*body,\s*div\.css-gmuwbf,\s*div\.css-tkevr6,\s*div\.css-nfhdnc\s*\{[^}]*background-size:\s*100% 100%\s*!important;[^}]*background-position:\s*center center\s*!important;[^}]*background-repeat:\s*no-repeat\s*!important;/s
+  );
+});
+
+test("shared theme visual settings prefer the theme image and otherwise fall back to Templates Global", () => {
+  const globalTypographyConfig = {
+    enabled: true,
+    backgroundDisplayMode: "tile",
+    backgroundOpacity: 70,
+    playerFieldTransparency: 45,
+    backgroundImageDataUrl: "data:image/png;base64,GGGG",
+  };
+  const themeWithoutImage = {
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
+  };
+  const themeWithImage = {
+    backgroundDisplayMode: "fit",
+    backgroundOpacity: 40,
+    playerFieldTransparency: 30,
+    backgroundImageDataUrl: "data:image/png;base64,AAAA",
+  };
+
+  assert.equal(
+    resolveThemeVisualSettingsConfig(themeWithoutImage, globalTypographyConfig),
+    globalTypographyConfig
+  );
+  assert.equal(
+    resolveThemeVisualSettingsConfig(themeWithImage, globalTypographyConfig),
+    themeWithImage
+  );
+  assert.equal(
+    resolveThemeVisualSettingsConfig(themeWithoutImage, {
+      ...globalTypographyConfig,
+      enabled: false,
+    }),
+    themeWithoutImage
   );
 });

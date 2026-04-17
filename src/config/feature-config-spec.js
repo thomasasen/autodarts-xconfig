@@ -5,6 +5,7 @@ import {
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
   getThemeGlobalTypographyScopeValues,
 } from "../shared/theme-global-typography-presets.js";
+import { normalizeThemeBackgroundHost } from "../shared/theme-background-host-utils.js";
 import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 
@@ -251,6 +252,10 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     scoreColor: "",
     secondaryTextColor: "",
     throwLabelColor: "",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
     debug: false,
   },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -286,6 +291,9 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     scoreColor: "",
     secondaryTextColor: "",
     throwLabelColor: "",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
   },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -600,6 +608,26 @@ const FEATURE_NORMALIZERS = Object.freeze({
       scoreColor: normalizeHexColor(rawConfig.scoreColor, ""),
       secondaryTextColor: normalizeHexColor(rawConfig.secondaryTextColor, ""),
       throwLabelColor: normalizeHexColor(rawConfig.throwLabelColor, ""),
+      backgroundDisplayMode: normalizeStringChoice(
+        rawConfig.backgroundDisplayMode,
+        String(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundDisplayMode || "fill"),
+        THEME_BACKGROUND_DISPLAY_MODES
+      ),
+      backgroundOpacity: normalizeNumberChoice(
+        rawConfig.backgroundOpacity,
+        Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundOpacity || 25),
+        THEME_BACKGROUND_OPACITY
+      ),
+      playerFieldTransparency: normalizeNumberChoice(
+        rawConfig.playerFieldTransparency,
+        Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].playerFieldTransparency || 10),
+        THEME_PLAYER_FIELD_TRANSPARENCY
+      ),
+      backgroundImageDataUrl: normalizeThemeBackgroundImage(
+        rawConfig.backgroundImageDataUrl ||
+          DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundImageDataUrl ||
+          ""
+      ),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },
@@ -669,6 +697,13 @@ export function getThemeConfigKeys() {
   return featureCatalog
     .filter((entry) => entry.configKey.startsWith("themes."))
     .map((entry) => normalizeThemeKey(splitFeaturePath(entry.configKey)[1]))
+    .filter(Boolean);
+}
+
+export function getThemeBackgroundHostKeys() {
+  return featureCatalog
+    .filter((entry) => entry.configKey.startsWith("themes."))
+    .map((entry) => normalizeThemeBackgroundHost(splitFeaturePath(entry.configKey)[1]))
     .filter(Boolean);
 }
 

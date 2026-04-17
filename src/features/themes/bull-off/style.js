@@ -239,10 +239,15 @@ span.css-3fr5p8{
 `;
 }
 
-export function buildBullOffThemeCss(featureConfig = {}) {
+export function buildBullOffThemeCss(featureConfig = {}, options = {}) {
   const resolved = resolveThemeBullOffConfig(featureConfig);
+  const visualConfig = options.visualConfig || featureConfig;
   const playerDisplayCss = buildSharedPlayerDisplayCss();
-  return buildThemeCssBundle(featureConfig, `${playerDisplayCss}${buildBullOffCss(resolved)}`);
+  return buildThemeCssBundle(
+    featureConfig,
+    `${playerDisplayCss}${buildBullOffCss(resolved)}`,
+    visualConfig
+  );
 }
 
 export { PREVIEW_PLACEMENT };

@@ -13,7 +13,8 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 - Insgesamt `23` Module: `16` Animationen und Komfortfunktionen sowie `7` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
-- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro Bild.
+- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
+- Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
 
 ![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)
@@ -36,6 +37,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Aktiv`: Aus
 - `Schriftart`: Standard (deaktiviert)
 - `Greift bei`: Scores
+- `Hintergrund-Darstellung`: Füllen
+- `Hintergrundbild-Deckkraft`: 25 %
+- `Spielerfelder-Transparenz`: 10 %
 - `Debug`: Aus
 
 ### Animationen
@@ -149,8 +153,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Kurz: Wählt eine kuratierte Schrift und wenige feste Farbrollen für stabile Bereiche des aktiven xConfig-Themes.
-- Grafisch: Die gewählte Schrift und die festen Farbrollen greifen nur in klar definierten Score-, Wurf-, Namens- und Zustandsbereichen aktiver xConfig-Themes. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
+- Kurz: Wählt eine kuratierte Schrift, wenige feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Die gewählte Schrift, die festen Farbrollen und das globale Fallback-Hintergrundbild greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Template-Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
@@ -211,6 +215,30 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hauptzahlen`: Steuert normale Hauptzahlen und Turn-Punkte.
 - `Sekundärtext`: Setzt Namen und Meta-Texte auf eine gemeinsame Sekundärfarbe.
 - `Wurf-/Checkout-Text`: Färbt Wurf-, Suggestion- und Checkout-Texte separat ein.
+- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
+  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
+  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
+  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
+  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
+  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
+- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
+  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
+  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
+  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
+  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
+  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
+  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
+  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
+  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
+  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
+  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
+  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
+  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
+  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
+  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
+- `Hintergrundbild hochladen`: Speichert ein globales Fallback-Hintergrundbild bis 1,5 MiB.
+- `Hintergrundbild entfernen`: Entfernt nur das globale Fallback-Hintergrundbild.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)

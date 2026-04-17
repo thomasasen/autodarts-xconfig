@@ -290,13 +290,18 @@ export function readThemeBackgroundImageInfo(feature) {
 
 export function formatThemeBackgroundSummary(feature) {
   const imageInfo = readThemeBackgroundImageInfo(feature);
+  const isGlobalBackgroundFallback = String(feature?.configKey || "").trim() === "themes.globalTypography";
   if (!imageInfo.hasImage) {
-    return "Kein eigenes Hintergrundbild gespeichert.";
+    return isGlobalBackgroundFallback
+      ? "Kein globales Fallback-Hintergrundbild gespeichert."
+      : "Kein eigenes Hintergrundbild gespeichert.";
   }
 
   const sizeText = formatByteSize(imageInfo.byteSize);
   const detailText = sizeText ? `${imageInfo.mimeType}, ${sizeText}` : imageInfo.mimeType;
-  return `Eigenes Hintergrundbild: ${detailText}.`;
+  return isGlobalBackgroundFallback
+    ? `Globales Fallback-Bild: ${detailText}.`
+    : `Eigenes Hintergrundbild: ${detailText}.`;
 }
 
 export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature) {

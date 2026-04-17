@@ -8,11 +8,14 @@ import { createBootstrap } from "../core/bootstrap.js";
 import { createRecommendedRuntimeConfig } from "../config/runtime-config.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
-import { normalizeThemeKey, VALID_THEME_KEYS } from "../shared/theme-key-utils.js";
+import {
+  normalizeThemeBackgroundHost,
+  VALID_THEME_BACKGROUND_HOSTS,
+} from "../shared/theme-background-host-utils.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
 const RUNTIME_INIT_PROMISE_KEY = "__runtimeInitPromise";
-const VALID_THEME_KEY_SET = new Set(VALID_THEME_KEYS);
+const VALID_THEME_BACKGROUND_HOST_SET = new Set(VALID_THEME_BACKGROUND_HOSTS);
 
 function buildFeatureEnabledPatch(configKey, enabled) {
   const normalizedKey = String(configKey || "").trim();
@@ -199,10 +202,10 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     }
 
     async function setThemeBackgroundImage(themeKey, dataUrl) {
-      const normalizedThemeKey = normalizeThemeKey(themeKey);
+      const normalizedThemeKey = normalizeThemeBackgroundHost(themeKey);
       const normalizedDataUrl = String(dataUrl || "").trim();
 
-      if (!VALID_THEME_KEY_SET.has(normalizedThemeKey)) {
+      if (!VALID_THEME_BACKGROUND_HOST_SET.has(normalizedThemeKey)) {
         return runtime.getSnapshot();
       }
       if (!normalizedDataUrl.startsWith("data:image/")) {
@@ -225,8 +228,8 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     }
 
     async function clearThemeBackgroundImage(themeKey) {
-      const normalizedThemeKey = normalizeThemeKey(themeKey);
-      if (!VALID_THEME_KEY_SET.has(normalizedThemeKey)) {
+      const normalizedThemeKey = normalizeThemeBackgroundHost(themeKey);
+      if (!VALID_THEME_BACKGROUND_HOST_SET.has(normalizedThemeKey)) {
         return runtime.getSnapshot();
       }
 

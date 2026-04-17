@@ -8,7 +8,7 @@ function joinCss(...parts) {
     .join("\n\n");
 }
 
-export function buildThemeCssBundle(featureConfig = {}, extraCss = "") {
-  return joinCss(commonThemeCss, commonLayoutCss, extraCss, buildThemeVisualSettingsCss(featureConfig));
+export function buildThemeCssBundle(featureConfig = {}, extraCss = "", visualConfig = featureConfig) {
+  return joinCss(commonThemeCss, commonLayoutCss, extraCss, buildThemeVisualSettingsCss(visualConfig));
 }
 

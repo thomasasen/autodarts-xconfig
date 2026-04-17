@@ -147,6 +147,30 @@ export const xconfigDescriptors = Object.freeze([
       colorField("throwLabelColor", "Wurf-/Checkout-Text", {
         section: "Farben",
       }),
+      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS, {
+        section: "Hintergrund",
+      }),
+      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS, {
+        section: "Hintergrund",
+      }),
+      selectField(
+        "playerFieldTransparency",
+        "Spielerfelder-Transparenz",
+        PLAYER_FIELD_TRANSPARENCY_OPTIONS,
+        {
+          section: "Hintergrund",
+        }
+      ),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        section: "Hintergrund",
+        description:
+          "Speichert ein globales Fallback-Hintergrundbild. Ein eigenes Bild des aktiven Themes überschreibt es vollständig.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        section: "Hintergrund",
+        description: "Entfernt nur das globale Fallback-Hintergrundbild aus Templates Global.",
+        successMessage: "Globales Hintergrundbild entfernt.",
+      }),
       checkboxField("debug", "Debug"),
     ],
   }),

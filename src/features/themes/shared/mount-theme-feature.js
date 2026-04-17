@@ -21,6 +21,7 @@ import {
   THEME_LAYOUT_HOOK_CLASSES,
 } from "./theme-layout-contract.js";
 import { resolveThemePolicy } from "./theme-policies.js";
+import { resolveThemeVisualSettingsConfig } from "./theme-visuals.js";
 
 export {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
@@ -136,6 +137,10 @@ export function mountThemeFeature(context = {}, options = {}) {
       config && typeof config.getFeatureConfig === "function"
         ? config.getFeatureConfig(configKey)
         : {};
+    const globalTypographyConfig =
+      config && typeof config.getFeatureConfig === "function"
+        ? config.getFeatureConfig("themes.globalTypography")
+        : {};
 
     const isActive = isThemeVariantActive({
       variantName,
@@ -166,7 +171,12 @@ export function mountThemeFeature(context = {}, options = {}) {
       return;
     }
 
-    const cssText = String(buildThemeCss(featureConfig) || "").trim();
+    const cssText = String(
+      buildThemeCss(featureConfig, {
+        globalTypographyConfig,
+        visualConfig: resolveThemeVisualSettingsConfig(featureConfig, globalTypographyConfig),
+      }) || ""
+    ).trim();
     if (!cssText) {
       deactivateTheme();
       return;

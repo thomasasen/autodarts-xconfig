@@ -2,7 +2,7 @@ import {
   setNestedValue as setSharedNestedValue,
   splitFeaturePath as splitSharedFeaturePath,
 } from "../../config/feature-path-utils.js";
-import { normalizeThemeKey } from "../../shared/theme-key-utils.js";
+import { normalizeThemeBackgroundHost } from "../../shared/theme-background-host-utils.js";
 
 export function splitFeaturePath(featureKey) {
   return splitSharedFeaturePath(featureKey);
@@ -33,7 +33,7 @@ export function themeKeyFromConfigKey(configKey) {
   if (!path.length || path[0] !== "themes") {
     return "";
   }
-  return normalizeThemeKey(path[1] || "");
+  return normalizeThemeBackgroundHost(path[1] || "");
 }
 
 export function isThemeFeature(feature) {

@@ -191,13 +191,13 @@ const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 export const xconfigFeatureCopy = deepFreeze({
   "theme-global-typography": featureCopy({
     cardDescription:
-      "Template-weite Schrift- und Farbsteuerung für stabile Score-, Wurf- und Namensbereiche.",
+      "Template-weite Schrift-, Farb- und Fallback-Hintergrundsteuerung für stabile Theme-Bereiche.",
     visibleDescription:
-      "Wählt eine kuratierte Schrift und wenige feste Farbrollen für stabile Bereiche des aktiven xConfig-Themes.",
+      "Wählt eine kuratierte Schrift, wenige feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.",
     visualDescription:
-      "Die gewählte Schrift und die festen Farbrollen greifen nur in klar definierten Score-, Wurf-, Namens- und Zustandsbereichen aktiver xConfig-Themes. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.",
+      "Die gewählte Schrift, die festen Farbrollen und das globale Fallback-Hintergrundbild greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig.",
     usefulWhen:
-      "Wenn du Scores, Würfe, Spielernamen und den Aktiv-Akzent gezielt anpassen möchtest, ohne das ganze Template mit vielen Einzelreglern zu überladen.",
+      "Wenn du Scores, Würfe, Spielernamen, den Aktiv-Akzent und bei Bedarf ein gemeinsames Hintergrundbild anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
     images: [
       image(
         "Templates Global mit lila Aktiv-Akzent in AD xConfig",
@@ -211,6 +211,19 @@ export const xconfigFeatureCopy = deepFreeze({
       scoreColor: THEME_GLOBAL_TYPOGRAPHY_SCORE_COLOR_FIELD,
       secondaryTextColor: THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD,
       throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
+      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
+      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
+      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
+      uploadThemeBackground: fieldCopy(
+        "Speichert ein globales Fallback-Bild bis 1,5 MiB für unterstützte xConfig-Themes.",
+        "Öffnet die Dateiauswahl, optimiert das Bild lokal auf maximal 1920×1080 und speichert es als globales Fallback für unterstützte xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Bild, überschreibt dieses Theme-Bild weiterhin den kompletten globalen Background-Block.",
+        "Speichert ein globales Fallback-Hintergrundbild bis 1,5 MiB."
+      ),
+      clearThemeBackground: fieldCopy(
+        "Entfernt nur das globale Fallback-Bild aus Templates Global.",
+        "Löscht nur das in Templates Global gespeicherte Fallback-Bild. Einzelne Themes mit eigenem Bild bleiben unverändert; Themes ohne eigenes Bild fallen danach wieder auf ihren normalen Theme-Background ohne globales Bild zurück.",
+        "Entfernt nur das globale Fallback-Hintergrundbild."
+      ),
       debug: DEBUG_FIELD,
     },
   }),
@@ -2243,6 +2256,9 @@ const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
+    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
+    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
+    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
   },
   "theme-x01": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
@@ -2405,7 +2421,8 @@ export function buildXConfigOverviewSection(title, summary = {}) {
     `- Insgesamt \`${totalModules}\` Module: \`${animationModules}\` Animationen und Komfortfunktionen sowie \`${themeModules}\` Themes.`,
     `- \`↺ Zurücksetzen\`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.`,
     `- \`Empfohlene Standards\`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.`,
-    `- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von \`${themeImageLimit}\` pro Bild.`,
+    `- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.`,
+    `- Bildgröße: Als Orientierung gilt ein empfohlenes Limit von \`${themeImageLimit}\` pro gespeichertem Bild.`,
   ];
 
   return `${lines.join("\n")}\n`;
@@ -2465,6 +2482,18 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Greift bei",
             key: "applyTo",
+          },
+          {
+            label: "Hintergrund-Darstellung",
+            key: "backgroundDisplayMode",
+          },
+          {
+            label: "Hintergrundbild-Deckkraft",
+            key: "backgroundOpacity",
+          },
+          {
+            label: "Spielerfelder-Transparenz",
+            key: "playerFieldTransparency",
           },
           {
             label: "Debug",

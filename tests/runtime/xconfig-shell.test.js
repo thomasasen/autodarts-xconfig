@@ -1760,7 +1760,7 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   const sectionTitles = documentRef
     .querySelectorAll(".ad-xconfig-settings-section-title")
     .map((node) => String(node.textContent || "").trim());
-  assert.deepEqual(sectionTitles, ["Schrift", "Farben"]);
+  assert.deepEqual(sectionTitles, ["Schrift", "Farben", "Hintergrund"]);
 
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
   assert.ok(previewStyleNode);
@@ -1878,6 +1878,29 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     colorFields.map((node) => String(node.getAttribute("data-setting-key") || "").trim()),
     ["accentColor", "scoreColor", "secondaryTextColor", "throwLabelColor"]
   );
+  const backgroundSelectFields = documentRef.querySelectorAll(
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-control='select']"
+  );
+  assert.equal(
+    backgroundSelectFields.some(
+      (node) => node.getAttribute("data-setting-key") === "backgroundDisplayMode"
+    ),
+    true
+  );
+  assert.equal(
+    backgroundSelectFields.some(
+      (node) => node.getAttribute("data-setting-key") === "backgroundOpacity"
+    ),
+    true
+  );
+  assert.equal(
+    backgroundSelectFields.some(
+      (node) => node.getAttribute("data-setting-key") === "playerFieldTransparency"
+    ),
+    true
+  );
+  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-uploadThemeBackground"));
+  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-clearThemeBackground"));
 
   changeSettingInput(
     documentRef,
@@ -2243,6 +2266,144 @@ test("xConfig shell theme background upload and clear actions persist and expose
   assert.equal(
     String(clearedCardNote.textContent || "").trim(),
     "Kein eigenes Hintergrundbild gespeichert."
+  );
+
+  runtime.stop();
+});
+
+test("xConfig shell supports global background upload and clear actions for Templates Global", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  const originalCreateElement = documentRef.createElement.bind(documentRef);
+  documentRef.createElement = (tagName) => {
+    if (String(tagName || "").toLowerCase() === "canvas") {
+      return {
+        width: 0,
+        height: 0,
+        getContext() {
+          return {
+            drawImage() {},
+          };
+        },
+        toDataURL(mimeType) {
+          if (mimeType === "image/webp") {
+            return `data:image/webp;base64,${"g".repeat(40)}`;
+          }
+          return "data:image/png;base64,ZmFrZS1kYXRh";
+        },
+      };
+    }
+
+    const node = originalCreateElement(tagName);
+    if (String(tagName || "").toLowerCase() === "input") {
+      const originalClick = typeof node.click === "function" ? node.click.bind(node) : null;
+      node.click = () => {
+        if (node.type === "file") {
+          node.files = [{ name: "global-bg.png", type: "image/png" }];
+          if (typeof node.onchange === "function") {
+            node.onchange();
+          }
+          return;
+        }
+        if (originalClick) {
+          originalClick();
+        }
+      };
+    }
+    return node;
+  };
+  windowRef.createImageBitmap = async () => ({
+    width: 2400,
+    height: 1800,
+    close() {},
+  });
+  windowRef.FileReader = class FakeFileReader {
+    readAsDataURL() {
+      this.result = "data:image/png;base64,ZmFrZS1kYXRh";
+      if (typeof this.onload === "function") {
+        this.onload();
+      }
+    }
+  };
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const openThemeSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(openThemeSettings);
+  openThemeSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  let status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "empty");
+
+  const uploadButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-uploadThemeBackground"
+  );
+  assert.ok(uploadButton);
+  uploadButton.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features.themes.globalTypography.backgroundImageDataUrl ===
+      `data:image/webp;base64,${"g".repeat(40)}`
+  );
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(
+    storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
+    `data:image/webp;base64,${"g".repeat(40)}`
+  );
+  const uploadFeedback = documentRef.querySelector(
+    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(uploadFeedback);
+  assert.match(String(uploadFeedback.textContent || ""), /optimiert gespeichert/);
+  assert.match(String(uploadFeedback.textContent || ""), /global-bg\.png/);
+
+  status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "present");
+  assert.equal(status.getAttribute("data-theme-image-type"), "image/webp");
+
+  const themeCardNote = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-typography'] .ad-xconfig-note"
+  );
+  assert.ok(themeCardNote);
+  assert.match(String(themeCardNote.textContent || ""), /Globales Fallback-Bild/);
+
+  const clearButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-clearThemeBackground"
+  );
+  assert.ok(clearButton);
+  clearButton.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalTypography.backgroundImageDataUrl === ""
+  );
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
+  assert.match(String(uploadFeedback.textContent || ""), /entfernt/);
+
+  const clearedCardNote = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-typography'] .ad-xconfig-note"
+  );
+  assert.ok(clearedCardNote);
+  assert.equal(
+    String(clearedCardNote.textContent || "").trim(),
+    "Kein globales Fallback-Hintergrundbild gespeichert."
   );
 
   runtime.stop();

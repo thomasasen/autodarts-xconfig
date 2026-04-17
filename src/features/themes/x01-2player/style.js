@@ -31,8 +31,9 @@ function resolveThemeX01TwoPlayerConfig(rawConfig = {}) {
   };
 }
 
-export function buildX01TwoPlayerThemeCss(featureConfig = {}) {
+export function buildX01TwoPlayerThemeCss(featureConfig = {}, options = {}) {
   const resolved = resolveThemeX01TwoPlayerConfig(featureConfig);
+  const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
   const avgVisibilityCss = resolved.showAvg
     ? ""
@@ -1358,5 +1359,9 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 }
 `;
 
-  return buildThemeCssBundle(featureConfig, `${previewCss}${avgVisibilityCss}${themeCss}`);
+  return buildThemeCssBundle(
+    featureConfig,
+    `${previewCss}${avgVisibilityCss}${themeCss}`,
+    visualConfig
+  );
 }

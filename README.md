@@ -16,14 +16,15 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 - ruhigere oder auffälligere Themes
 - besser sichtbare Hinweise für Checkouts, Spielerwechsel und Treffer
 - Einstellungen direkt im Spiel statt in einzelnen Skripten
-- eigene Hintergrundbilder für Themes, jeweils getrennt pro Theme und empfohlen bis `1,5 MiB` pro Bild
+- eigene Hintergrundbilder pro Theme und zusätzlich ein globales Fallback-Bild über `Templates Global`, jeweils empfohlen bis `1,5 MiB` pro gespeichertem Bild
 
 ## Im Überblick
 
 - Insgesamt `23` Module: `16` Animationen und Komfortfunktionen sowie `7` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
-- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro Bild.
+- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
+- Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
 
 ## Was du zuerst lesen solltest
 
@@ -129,6 +130,8 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 Bei den Themes kannst du ein eigenes Hintergrundbild hochladen und später auch wieder entfernen. Das Bild wird nur für das jeweilige Theme gespeichert.
 Empfohlen ist dabei ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
 
+`Templates Global` bietet zusätzlich denselben Hintergrundblock als globales Fallback. Solange das aktive Theme kein eigenes Bild gespeichert hat, greifen Bild, Darstellung, Deckkraft und Spielerfelder-Transparenz aus `Templates Global`. Sobald ein Theme ein eigenes Bild speichert, überschreibt dieses Theme den kompletten globalen Background-Block wieder vollständig.
+
 Je nach Theme kannst du dein Hintergrundbild zusätzlich anpassen:
 
 - `Hintergrund-Darstellung`: Hier legst du fest, wie das Bild platziert wird.
@@ -187,6 +190,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Aktiv`: Aus
 - `Schriftart`: Standard (deaktiviert)
 - `Greift bei`: Scores
+- `Hintergrund-Darstellung`: Füllen
+- `Hintergrundbild-Deckkraft`: 25 %
+- `Spielerfelder-Transparenz`: 10 %
 - `Debug`: Aus
 
 ### Animationen
@@ -302,9 +308,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Wählt eine kuratierte Schrift und wenige feste Farbrollen für stabile Bereiche des aktiven xConfig-Themes.
-- Grafisch: Die gewählte Schrift und die festen Farbrollen greifen nur in klar definierten Score-, Wurf-, Namens- und Zustandsbereichen aktiver xConfig-Themes. Außerhalb des unterstützten Theme-Kontexts bleibt die Seite unverändert.
-- Wann sinnvoll? Wenn du Scores, Würfe, Spielernamen und den Aktiv-Akzent gezielt anpassen möchtest, ohne das ganze Template mit vielen Einzelreglern zu überladen.
+- Was macht es sichtbar? Wählt eine kuratierte Schrift, wenige feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Die gewählte Schrift, die festen Farbrollen und das globale Fallback-Hintergrundbild greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig.
+- Wann sinnvoll? Wenn du Scores, Würfe, Spielernamen, den Aktiv-Akzent und bei Bedarf ein gemeinsames Hintergrundbild anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
 
 **Einstellungen einfach erklärt**
 
@@ -368,6 +374,30 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hauptzahlen`: Legt die Farbe für normale beziehungsweise inaktive Hauptzahlen sowie große Turn-Punkte fest. Die aktive Hauptzahl bleibt bewusst weiter an den Aktiv-Akzent gebunden.
 - `Sekundärtext`: Legt eine gemeinsame Sekundärfarbe für Namen und Meta-Texte fest. Dadurch bleiben diese Bereiche ruhig und konsistent, während Scores und Aktiv-Akzente separat geführt werden.
 - `Wurf-/Checkout-Text`: Legt die Farbe für Wurf-Labels, Suggestion-Texte und Checkout-Hinweise fest, ohne die großen Turn-Punkte mitzunehmen. So lassen sich Hilfstexte ruhiger oder klarer vom Hauptscore trennen.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+  - `Füllen`: Das Bild legt sich wie ein Vollflächen-Hintergrund über den gesamten Spielbereich. Leere Ränder entstehen nicht, dafür können Randbereiche abgeschnitten werden.
+  - `Einpassen`: Das komplette Bild bleibt sichtbar und wird in die verfügbare Fläche eingepasst. Wenn das Seitenverhältnis nicht passt, bleiben am Rand freie Bereiche des Themes sichtbar.
+  - `Strecken`: Das Bild wird auf Breite und Höhe des Bereichs gestreckt. Dadurch wird alles ausgefüllt, aber Kreise, Personen oder Logos können sichtbar verzerrt wirken.
+  - `Zentriert`: Das Bild sitzt mittig und bleibt in seiner natürlichen Größe. Ist es kleiner als der Bereich, bleibt rundherum der normale Theme-Hintergrund sichtbar.
+  - `Kacheln`: Das Bild wird nicht skaliert, sondern links oben gestartet und über die Fläche wiederholt. Dadurch entsteht eher ein Musterteppich als ein einzelnes zentriertes Motiv.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+  - `100 %`: Das Hintergrundbild bleibt fast ohne dunkle Dämpfung sichtbar. Farben, Kontraste und Details treten sehr klar hervor.
+  - `85 %`: Das Bild bleibt sehr präsent, wird aber leicht durch die dunkle Theme-Schicht beruhigt. Details bleiben klar lesbar, ohne ganz so dominant wie bei 100 % zu wirken.
+  - `70 %`: Das Bild bleibt gut erkennbar, während die dunkle Überlagerung bereits spürbar für Ruhe sorgt. Motive und Farben sind noch klar da, aber weniger dominant.
+  - `55 %`: Das Bild bleibt sichtbar, wird aber schon spürbar abgedunkelt. Dadurch wirkt die Fläche ruhiger und konkurriert weniger mit Texten und Karten.
+  - `40 %`: Das Motiv bleibt sichtbar, rückt aber klar in den Hintergrund. Farbflächen und Konturen wirken gedämpfter und dienen mehr als Stimmung als als Hauptmotiv.
+  - `25 %`: Das Bild schimmert eher subtil durch die dunkle Fläche. Einzelne Formen und Farben bleiben sichtbar, ohne die Lesbarkeit des Layouts zu stören.
+  - `10 %`: Das Bild wird sehr stark gedämpft. Erkennbar bleiben meist nur grobe Formen, helle Bereiche oder größere Farbflächen.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+  - `0 %`: Die Spielerfelder bleiben fast vollständig geschlossen. Der Hintergrund tritt kaum durch und die Karten wirken sehr kompakt.
+  - `5 %`: Die Spielerfelder bleiben überwiegend geschlossen, lassen aber minimal mehr Hintergrund durch als 0 %. Der Unterschied ist dezent, aber sichtbar ruhiger als höhere Stufen.
+  - `10 %`: Die Spielerfelder bleiben klar lesbar, wirken aber nicht mehr komplett geschlossen. Das Hintergrundbild schimmert leicht durch die Flächen.
+  - `15 %`: Die Spielerfelder wirken bereits lockerer und lassen das Hintergrundbild sichtbar mitspielen. Texte und Werte bleiben dabei weiter klar getrennt.
+  - `30 %`: Der Hintergrund tritt nun klar hinter den Spielerfeldern hervor. Die Karten wirken leichter und weniger massiv als bei den niedrigen Stufen.
+  - `45 %`: Die Spielerfelder wirken sichtbar glasiger. Das Hintergrundmotiv bleibt unter den Flächen deutlich erkennbar und prägt den Gesamteindruck stärker.
+  - `60 %`: Die Spielerfelder lassen den Hintergrund sehr deutlich sichtbar werden. Diese Stufe wirkt am luftigsten, kann aber je nach Bild die Ruhe der Oberfläche reduzieren.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl, optimiert das Bild lokal auf maximal 1920×1080 und speichert es als globales Fallback für unterstützte xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Bild, überschreibt dieses Theme-Bild weiterhin den kompletten globalen Background-Block.
+- `Hintergrundbild entfernen`: Löscht nur das in Templates Global gespeicherte Fallback-Bild. Einzelne Themes mit eigenem Bild bleiben unverändert; Themes ohne eigenes Bild fallen danach wieder auf ihren normalen Theme-Background ohne globales Bild zurück.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](docs/screenshots/template-theme-global-typography-xConfig.png)

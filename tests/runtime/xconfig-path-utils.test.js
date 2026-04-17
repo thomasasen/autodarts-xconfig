@@ -12,7 +12,7 @@ import {
 test("xconfig path utils split nested config keys and resolve theme keys", () => {
   assert.deepEqual(splitFeaturePath(" themes.x01 "), ["themes", "x01"]);
   assert.equal(themeKeyFromConfigKey("themes.x01"), "x01");
-  assert.equal(themeKeyFromConfigKey("themes.globalTypography"), "");
+  assert.equal(themeKeyFromConfigKey("themes.globalTypography"), "globalTypography");
   assert.equal(themeKeyFromConfigKey("checkoutScorePulse"), "");
 });
 
@@ -51,6 +51,6 @@ test("xconfig path utils build nested feature setting patches without changing p
     isBackgroundThemeFeature({
       configKey: "themes.globalTypography",
     }),
-    false
+    true
   );
 });

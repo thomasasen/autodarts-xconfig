@@ -17,8 +17,9 @@ function resolveThemeShanghaiConfig(rawConfig = {}) {
   };
 }
 
-export function buildShanghaiThemeCss(featureConfig = {}) {
+export function buildShanghaiThemeCss(featureConfig = {}, options = {}) {
   const resolved = resolveThemeShanghaiConfig(featureConfig);
+  const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
   const playerDisplayCss = buildSharedPlayerDisplayCss();
   const avgVisibilityCss = resolved.showAvg
@@ -33,7 +34,11 @@ p.chakra-text.css-1j0bqop{
 }
 `;
 
-  return buildThemeCssBundle(featureConfig, `${avgVisibilityCss}${previewCss}${playerDisplayCss}`);
+  return buildThemeCssBundle(
+    featureConfig,
+    `${avgVisibilityCss}${previewCss}${playerDisplayCss}`,
+    visualConfig
+  );
 }
 
 export { PREVIEW_PLACEMENT };

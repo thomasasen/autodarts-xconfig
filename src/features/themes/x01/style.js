@@ -17,8 +17,9 @@ function resolveThemeX01Config(rawConfig = {}) {
   };
 }
 
-export function buildX01ThemeCss(featureConfig = {}) {
+export function buildX01ThemeCss(featureConfig = {}, options = {}) {
   const resolved = resolveThemeX01Config(featureConfig);
+  const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
   const playerDisplayCss = buildSharedPlayerDisplayCss();
   const avgVisibilityCss = resolved.showAvg
@@ -51,7 +52,8 @@ div.chakra-stack.navigation.css-ege71s,
 
   return buildThemeCssBundle(
     featureConfig,
-    `${navigationOverride}${previewCss}${avgVisibilityCss}${playerDisplayCss}${overlayPriorityCss}`
+    `${navigationOverride}${previewCss}${avgVisibilityCss}${playerDisplayCss}${overlayPriorityCss}`,
+    visualConfig
   );
 }
 

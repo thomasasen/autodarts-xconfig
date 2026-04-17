@@ -14,6 +14,7 @@ import {
   TOOLS_SHADOW_STYLE_ID,
   buildThemeGlobalTypographyStyleText,
 } from "../../src/features/themes/global-typography/style.js";
+import { buildX01ThemeCss } from "../../src/features/themes/x01/style.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
 
 function createImmediateSchedulerFactory() {
@@ -131,6 +132,31 @@ test("theme global typography emits semantic color overrides only for configured
   assert.match(colorStyle, /--ad-ext-theme-name-active-color: #ABCDEF;/);
   assert.match(colorStyle, /--ad-ext-theme-meta-winner-color: #ABCDEF;/);
   assert.match(colorStyle, /--ad-ext-theme-throw-label-color: #FEDCBA;/);
+});
+
+test("theme CSS can use Templates Global as the active background fallback visual config", () => {
+  const themeCss = buildX01ThemeCss(
+    {
+      showAvg: true,
+      backgroundDisplayMode: "fill",
+      backgroundOpacity: 25,
+      playerFieldTransparency: 10,
+      backgroundImageDataUrl: "",
+    },
+    {
+      visualConfig: {
+        enabled: true,
+        backgroundDisplayMode: "tile",
+        backgroundOpacity: 70,
+        playerFieldTransparency: 45,
+        backgroundImageDataUrl: "data:image/png;base64,GGGG",
+      },
+    }
+  );
+
+  assert.match(themeCss, /url\("data:image\/png;base64,GGGG"\)/);
+  assert.match(themeCss, /background-size:\s*auto\s*!important;/);
+  assert.match(themeCss, /background-repeat:\s*repeat\s*!important;/);
 });
 
 test("theme global typography only resolves an active theme inside the matching game context", () => {

@@ -25,6 +25,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `Templates Global` zeigt in xConfig, README und `FEATURES.md` jetzt eine echte Match-Vorschau mit lila Aktiv-Akzent, damit sich der Nutzen der globalen Schrift- und Farbrollen direkt an einem realen X01-Setup nachvollziehen lässt.
   Technik: Ein neuer Preview-Screenshot aus dem aktiven Match-Tab ist als kanonisches Asset in die Feature-Copy, die xConfig-Preview-Manifest-/Browser-Verdrahtung und die generierten README-/FEATURES-Abschnitte aufgenommen; die Doku-Regressionen sichern die neue Vorschau-Datei und das Mapping gegen Drift ab.
 
+- Nutzerwirkung: `Templates Global` bietet jetzt zusätzlich denselben Hintergrundblock wie die Einzel-Themes und kann damit ein globales Fallback-Hintergrundbild für unterstützte xConfig-Themes bereitstellen; solange das aktive Theme kein eigenes Bild gespeichert hat, greifen Darstellung, Bild-Deckkraft und Spielerfelder-Transparenz aus `Templates Global`, während ein gespeichertes Theme-Bild weiterhin den kompletten globalen Background-Block vollständig überschreibt.
+  Technik: `themes.globalTypography` wurde um den vollständigen Background-Block inklusive persistiertem Bildfeld erweitert, die bestehende Runtime-/xConfig-Bildinfrastruktur akzeptiert dafür jetzt einen separaten `globalTypography`-Background-Host ohne die Match-Theme-Logik umzubiegen, die Shared-Theme-Schicht löst Theme-gegen-Global-Priorität zentral auf, und neue Config-, Runtime-, Theme- und Shell-Regressionen sichern Bild-Persistenz, Reset-/Recommended-Verhalten, CSS-Fallback-Auflösung sowie Upload-/Clear-Status für `Templates Global` ab.
+
 ### Fixed
 
 - Nutzerwirkung: `Dart Marker Darts` bleibt auf dem virtuellen Board jetzt aktiv und ersetzt dort sichtbare Treffer-Marker wieder durch Dart-Grafiken; im `Live-Modus` pausiert das Modul stattdessen automatisch, damit die Live-Ansicht ohne zusätzliche Dart-Overlays bleibt.

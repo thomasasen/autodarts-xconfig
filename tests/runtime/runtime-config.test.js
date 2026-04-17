@@ -87,6 +87,9 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   const config = createHardResetRuntimeConfig({
     features: {
       themes: {
+        globalTypography: {
+          backgroundImageDataUrl: "data:image/png;base64,GGGG",
+        },
         x01: {
           backgroundImageDataUrl: "data:image/png;base64,AAAA",
         },
@@ -105,6 +108,8 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.tvBoardZoom.enabled, false);
   assert.equal(config.features.tripleDoubleBullHits.enabled, false);
   assert.equal(config.features.cricketGridFx.enabled, false);
+  assert.equal(config.features.themes.globalTypography.enabled, false);
+  assert.equal(config.features.themes.globalTypography.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.x01.enabled, false);
   assert.equal(config.features.themes.x01.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
@@ -117,6 +122,9 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   const config = createRecommendedRuntimeConfig({
     features: {
       themes: {
+        globalTypography: {
+          backgroundImageDataUrl: "data:image/png;base64,GGGG",
+        },
         x01: {
           backgroundImageDataUrl: "data:image/png;base64,AAAA",
         },
@@ -174,6 +182,11 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
   assert.equal(config.features.themes.shanghai.enabled, true);
   assert.equal(config.features.themes.cricket.enabled, true);
+  assert.equal(config.features.themes.globalTypography.enabled, false);
+  assert.equal(
+    config.features.themes.globalTypography.backgroundImageDataUrl,
+    "data:image/png;base64,GGGG"
+  );
   assert.equal(config.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
   assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.cricket.backgroundImageDataUrl, "data:image/png;base64,BBBB");
@@ -279,6 +292,19 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         pointerDismiss: "false",
       },
       themes: {
+        globalTypography: {
+          enabled: "true",
+          fontPreset: "fragment-mono",
+          applyTo: "scores-and-names",
+          accentColor: "#abc",
+          scoreColor: "#123456",
+          secondaryTextColor: "#fed",
+          throwLabelColor: "#0F0f0f",
+          backgroundDisplayMode: "tile",
+          backgroundOpacity: "70",
+          playerFieldTransparency: "45",
+          backgroundImageDataUrl: "data:image/png;base64,GGGG",
+        },
         x01: {
           showAvg: "false",
           backgroundDisplayMode: "FIT",
@@ -378,6 +404,32 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "glass-charge");
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").enabled, true);
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").fontPreset, "fragment-mono");
+  assert.deepEqual(runtimeConfig.getFeatureConfig("themes.globalTypography").applyTo, ["scores", "names"]);
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").accentColor, "#AABBCC");
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").scoreColor, "#123456");
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").secondaryTextColor,
+    "#FFEEDD"
+  );
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").throwLabelColor,
+    "#0F0F0F"
+  );
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundDisplayMode,
+    "tile"
+  );
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundOpacity, 70);
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").playerFieldTransparency,
+    45
+  );
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundImageDataUrl,
+    "data:image/png;base64,GGGG"
+  );
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").intensity, "stark");

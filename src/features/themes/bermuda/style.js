@@ -10,9 +10,10 @@ const PREVIEW_PLACEMENT = Object.freeze({
   previewGapPx: 8,
 });
 
-export function buildBermudaThemeCss(featureConfig = {}) {
+export function buildBermudaThemeCss(featureConfig = {}, options = {}) {
+  const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
-  return buildThemeCssBundle(featureConfig, previewCss);
+  return buildThemeCssBundle(featureConfig, previewCss, visualConfig);
 }
 
 export { PREVIEW_PLACEMENT };
