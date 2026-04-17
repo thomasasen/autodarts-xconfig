@@ -122,6 +122,7 @@ ${stackSelector} > .chakra-stack {
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name,
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name > p {
   font-size: var(--ad-ext-player-name-size) !important;
+  color: var(--ad-ext-theme-name-color) !important;
   line-height: 1.05 !important;
   min-width: 0 !important;
   max-width: 100% !important;
@@ -136,6 +137,7 @@ ${stackSelector} > .chakra-stack {
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
   font-size: var(--ad-ext-player-score-size) !important;
+  color: var(--ad-ext-theme-score-color) !important;
   line-height: .88 !important;
   justify-self: end !important;
   min-width: max-content !important;
@@ -146,7 +148,48 @@ ${stackSelector} > .chakra-stack {
 
 p.chakra-text.css-1j0bqop {
   font-size: var(--ad-ext-player-meta-size) !important;
+  color: var(--ad-ext-theme-meta-color) !important;
   line-height: ${STAT_AVG_LINE_HEIGHT};
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext_winner-score-wrapper > p {
+  color: var(--ad-ext-theme-score-active-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext_winner-score-wrapper > p {
+  color: var(--ad-ext-theme-score-winner-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name > p {
+  color: var(--ad-ext-theme-name-active-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-name > p {
+  color: var(--ad-ext-theme-name-winner-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-name > p,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-name > p {
+  color: var(--ad-ext-theme-name-inactive-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .css-1j0bqop {
+  color: var(--ad-ext-theme-meta-active-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .css-1j0bqop {
+  color: var(--ad-ext-theme-meta-winner-color) !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .css-1j0bqop,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .css-1j0bqop {
+  color: var(--ad-ext-theme-meta-inactive-color) !important;
 }
 
 span.css-3fr5p8 > p,
@@ -174,6 +217,19 @@ span.chakra-badge.css-1c4630i {
   border-left: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
   border-right: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
   border-top: calc(${STAT_AVG_ARROW_HEIGHT_PX}px * var(--ad-ext-stat-scale)) solid #f87171;
+}
+
+#ad-ext-turn .ad-ext-turn-points,
+#ad-ext-turn .ad-ext-hit-score {
+  color: var(--ad-ext-theme-turn-points-color) !important;
+}
+
+#ad-ext-turn > .ad-ext-turn-throw,
+#ad-ext-turn > .suggestion,
+#ad-ext-turn > .suggestion *,
+.ad-ext-checkout-suggestion,
+.ad-ext-checkout-suggestion * {
+  color: var(--ad-ext-theme-throw-label-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack,

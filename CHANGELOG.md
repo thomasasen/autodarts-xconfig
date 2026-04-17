@@ -24,6 +24,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `Dart Marker Darts` bleibt auf dem virtuellen Board jetzt aktiv und ersetzt dort sichtbare Treffer-Marker wieder durch Dart-Grafiken; im `Live-Modus` pausiert das Modul stattdessen automatisch, damit die Live-Ansicht ohne zusätzliche Dart-Overlays bleibt.
   Technik: Die Modus-Guard für `dart-marker-darts` schaltet von `Koordinatenmodus` auf `Live-Modus` um, ein neuer `isLiveBoardInputModeActive(...)`-Helper kapselt die Erkennung zentral, Runtime-Regressionen sichern die neue Aktiv-/Pause-Grenze ab, und die generierten README-/Feature-Texte wurden auf den geänderten Board-Modus-Vertrag synchronisiert.
 
+- Nutzerwirkung: Die Spieler- und Wurfbereiche in `Theme X01 2Player`, `Theme Cricket`, `Theme Bull-off` und den gemeinsamen Karten-Layouts verhalten sich bei aktivem, inaktivem und Sieger-Zustand jetzt farblich konsistenter; aktive Rahmen bleiben klar am selben Akzent orientiert, Sieger folgen derselben Hervorhebungslogik, und zentrale Textbereiche wie Score, Name, Meta sowie Turn-Punkte greifen nachvollziehbarer ineinander.
+  Technik: Die Shared-Theme-Schicht nutzt jetzt einen internen semantischen Farbvertrag für `accent`, primäre und sekundäre Textrollen sowie abgeleitete `active`-/`inactive`-/`winner`-Zustände; gemeinsame Karten- und Turn-Styles wurden auf diese Variablen umgestellt, Bull-off/Cricket/X01-2Player überschreiben nur noch gezielt kontrastkritische Ableitungen, und neue Theme-Regressionsprüfungen sichern Rahmen-, Score-, Name-, Meta- und Turn-Farbpfade gegen Drift ab.
+
 ## [2.1.26] - 2026-04-09
 
 ### Fixed

@@ -83,6 +83,15 @@ function buildBullOffCss(config = {}) {
   --theme-alt-bg: #1f2e25;
   --bull-green: #66bb6a;
   --bull-red: #ef5350;
+  --ad-ext-theme-accent-color: var(--bull-green);
+  --ad-ext-theme-text-primary-color: #9ca8b9;
+  --ad-ext-theme-text-secondary-color: #f2f5ff;
+  --ad-ext-theme-card-active-border-color: rgba(102, 187, 106, var(--bull-active-border-alpha));
+  --ad-ext-theme-card-active-outline-color: rgba(102, 187, 106, 0.18);
+  --ad-ext-theme-score-active-color: #ffffff;
+  --ad-ext-theme-score-inactive-color: #9ca8b9;
+  --ad-ext-theme-turn-points-color: #ffffff;
+  --ad-ext-theme-throw-label-color: rgba(242, 245, 255, 0.76);
   --bull-variant-border-alpha: ${contrast.variantBorderAlpha};
   --bull-turn-border-alpha: ${contrast.turnBorderAlpha};
   --bull-turn-gradient-alpha: ${contrast.turnGradientAlpha};
@@ -123,8 +132,9 @@ div.css-nfhdnc {
   background: linear-gradient(90deg, rgba(102, 187, 106, var(--bull-turn-gradient-alpha)), rgba(239, 83, 80, var(--bull-turn-gradient-alpha)));
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active{
-  border: 2px solid rgba(102, 187, 106, var(--bull-active-border-alpha)) !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
+  border: 2px solid var(--ad-ext-theme-card-active-border-color) !important;
   box-shadow:
     0 10px 26px rgba(0, 0, 0, var(--bull-active-shadow-alpha)),
     inset 0 0 0 1px rgba(102, 187, 106, var(--bull-active-inset-alpha));
@@ -137,13 +147,15 @@ div.css-nfhdnc {
   border-color: rgba(239, 83, 80, var(--bull-inactive-border-alpha)) !important;
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score{
-  color: #ffffff !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-score{
+  color: var(--ad-ext-theme-score-active-color) !important;
   text-shadow: 0 0 18px rgba(0, 0, 0, var(--bull-score-shadow-alpha));
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score{
-  color: #9ca8b9 !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score{
+  color: var(--ad-ext-theme-score-inactive-color) !important;
   text-shadow: 0 0 18px rgba(0, 0, 0, var(--bull-score-shadow-alpha));
 }
 

@@ -11,6 +11,25 @@ export const commonThemeCss = `
   --theme-current-bg: #0c343d;
   --theme-border-color: #434343;
   --theme-alt-bg: #274e13;
+  --ad-ext-theme-accent-color: var(--theme-text-highlight-color);
+  --ad-ext-theme-text-primary-color: rgba(214, 229, 245, 0.84);
+  --ad-ext-theme-text-secondary-color: rgba(226, 232, 240, 0.92);
+  --ad-ext-theme-card-active-border-color: var(--ad-ext-theme-accent-color);
+  --ad-ext-theme-card-active-outline-color: rgba(159, 219, 88, 0.18);
+  --ad-ext-theme-score-color: var(--ad-ext-theme-accent-color);
+  --ad-ext-theme-score-active-color: var(--ad-ext-theme-score-color);
+  --ad-ext-theme-score-inactive-color: var(--ad-ext-theme-text-primary-color);
+  --ad-ext-theme-score-winner-color: var(--ad-ext-theme-score-active-color);
+  --ad-ext-theme-name-color: var(--ad-ext-theme-text-secondary-color);
+  --ad-ext-theme-name-active-color: var(--ad-ext-theme-name-color);
+  --ad-ext-theme-name-inactive-color: var(--ad-ext-theme-name-color);
+  --ad-ext-theme-name-winner-color: var(--ad-ext-theme-name-active-color);
+  --ad-ext-theme-meta-color: var(--ad-ext-theme-text-secondary-color);
+  --ad-ext-theme-meta-active-color: var(--ad-ext-theme-meta-color);
+  --ad-ext-theme-meta-inactive-color: var(--ad-ext-theme-meta-color);
+  --ad-ext-theme-meta-winner-color: var(--ad-ext-theme-meta-active-color);
+  --ad-ext-theme-turn-points-color: #ffffff;
+  --ad-ext-theme-throw-label-color: rgba(255, 255, 255, 0.72);
 }
 
 /* Hide native scrollbars across active theme surfaces without clipping overflow content. */
@@ -118,15 +137,15 @@ span.chakra-badge.css-n2903v {
   background-color: #d69d2e !important;
 }
 
-p.chakra-text.ad-ext-player-score.css-18w03sn { color: #9fdb58; }
+p.chakra-text.ad-ext-player-score.css-18w03sn { color: var(--ad-ext-theme-score-active-color); }
 span.css-3fr5p8 { background-color: #9fdb58; color: #222; }
-p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: #9fdb58; }
+p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: var(--ad-ext-theme-score-active-color); }
 div.suggestion.css-1dkgpmk { font-size: 6px; background-color: #222; border-color: #434343; }
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner {
-  border: 2px solid var(--theme-text-highlight-color) !important;
+  border: 2px solid var(--ad-ext-theme-card-active-border-color) !important;
   border-radius: 12px !important;
-  box-shadow: 0 0 0 1px rgba(159, 219, 88, 0.18) !important;
+  box-shadow: 0 0 0 1px var(--ad-ext-theme-card-active-outline-color) !important;
 }
 div.chakra-menu__menu-list.css-yskgbr { background-color: #434343; }
 button.chakra-tabs__tab.css-1vm7g5b { color: #9fdb58; }
@@ -168,7 +187,7 @@ export const commonLayoutCss = `
 
 .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > div > p {
   font-size: var(--ad-ext-player-score-size, 4.8rem) !important;
-  color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
+  color: var(--ad-ext-theme-score-inactive-color) !important;
   text-shadow: var(
     --ad-ext-theme-cricket-score-shadow,
     0 1px 0 rgba(4, 10, 20, 0.92),
@@ -179,7 +198,7 @@ export const commonLayoutCss = `
 .ad-ext-player.ad-ext-player-inactive p.chakra-text.ad-ext-player-score,
 .ad-ext-player.ad-ext-player-inactive .ad-ext_winner-score-wrapper > p {
   font-size: var(--ad-ext-player-score-size, 4.8rem) !important;
-  color: var(--ad-ext-theme-cricket-score-inactive-color, rgba(214, 229, 245, 0.84)) !important;
+  color: var(--ad-ext-theme-score-inactive-color) !important;
   text-shadow: var(
     --ad-ext-theme-cricket-score-shadow,
     0 1px 0 rgba(4, 10, 20, 0.92),
@@ -219,7 +238,10 @@ export const commonLayoutCss = `
 .css-3fr5p8 { background-color: var(--theme-player-badge-bg); }
 .css-3fr5p8 > p{ font-size: var(--ad-ext-player-badge-size, 1.4375rem) !important; }
 
-.css-1j0bqop { font-size: var(--ad-ext-player-meta-size, 1.1875rem) !important; }
+.css-1j0bqop {
+  font-size: var(--ad-ext-player-meta-size, 1.1875rem) !important;
+  color: var(--ad-ext-theme-meta-color) !important;
+}
 
 #ad-ext-turn{
   grid-column-start: 1 !important;
@@ -250,7 +272,7 @@ div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]){
 
 div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > p,
 div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > .ad-ext_winner-score-wrapper > p{
-  color: var(--theme-text-highlight-color);
+  color: var(--ad-ext-theme-score-active-color);
   grid-row-start: 1 !important;
   grid-row-end: 3 !important;
   margin-bottom:0 !important;

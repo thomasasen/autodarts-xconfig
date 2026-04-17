@@ -46,6 +46,19 @@ const cricketThemeCss = `
   --theme-current-bg: #0d3f56;
   --theme-border-color: #2f415c;
   --theme-alt-bg: #1a3c2f;
+  --ad-ext-theme-accent-color: var(--theme-text-highlight-color);
+  --ad-ext-theme-text-primary-color: rgba(214, 229, 245, 0.84);
+  --ad-ext-theme-text-secondary-color: rgba(236, 248, 255, 0.96);
+  --ad-ext-theme-card-active-border-color: var(--ad-ext-cricket-active-ring);
+  --ad-ext-theme-card-active-outline-color: rgba(159, 232, 112, 0.24);
+  --ad-ext-theme-score-active-color: var(--theme-text-highlight-color);
+  --ad-ext-theme-score-inactive-color: rgba(214, 229, 245, 0.84);
+  --ad-ext-theme-name-active-color: var(--ad-ext-theme-score-active-color);
+  --ad-ext-theme-name-inactive-color: var(--ad-ext-theme-score-inactive-color);
+  --ad-ext-theme-name-winner-color: var(--ad-ext-theme-name-active-color);
+  --ad-ext-theme-meta-active-color: rgba(236, 248, 255, 0.96);
+  --ad-ext-theme-meta-inactive-color: var(--ad-ext-theme-score-inactive-color);
+  --ad-ext-theme-meta-winner-color: var(--ad-ext-theme-meta-active-color);
   --ad-ext-cricket-surface: rgba(8, 16, 30, 0.9);
   --ad-ext-cricket-surface-strong: rgba(10, 22, 44, 0.96);
   --ad-ext-cricket-line: rgba(148, 181, 220, 0.24);
@@ -395,6 +408,15 @@ const cricketThemeCss = `
   line-height: 1.15 !important;
 }
 
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p,
+#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR},
+#ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p {
+  color: var(--ad-ext-theme-meta-active-color) !important;
+}
+
 * {
   scrollbar-width: none !important;
 }
@@ -443,8 +465,10 @@ div.css-nfhdnc {
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name,
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name > p {
-  color: var(--ad-ext-theme-cricket-score-active-color) !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-name > p,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-name > p {
+  color: var(--ad-ext-theme-name-active-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-score {
@@ -465,13 +489,14 @@ div.css-nfhdnc {
   text-shadow: var(--ad-ext-theme-cricket-score-shadow) !important;
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score {
-  color: var(--ad-ext-theme-cricket-score-active-color) !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-score {
+  color: var(--ad-ext-theme-score-active-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) .ad-ext-player-score {
-  color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
+  color: var(--ad-ext-theme-score-inactive-color) !important;
 }
 
 @supports (font-size: 1cqi) {
@@ -480,6 +505,7 @@ div.css-nfhdnc {
   }
 
   #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
+  #ad-ext-player-display .ad-ext-player.ad-ext-player-winner,
   #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"]{
     --ad-ext-theme-cricket-score-size: clamp(3rem, 23.2cqi, 5.88rem);
   }
@@ -693,16 +719,18 @@ span.chakra-switch__track.css-v4l15v {
   opacity: 0.9;
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR} {
-  border-color: var(--ad-ext-cricket-active-ring) !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR} {
+  border-color: var(--ad-ext-theme-card-active-border-color) !important;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 0 1px rgba(159, 232, 112, 0.24),
+    0 0 0 1px var(--ad-ext-theme-card-active-outline-color),
     0 0 20px rgba(159, 232, 112, 0.28),
     0 12px 28px rgba(0, 0, 0, 0.44);
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}::after {
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${STACK_SELECTOR}::after,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -711,11 +739,11 @@ span.chakra-switch__track.css-v4l15v {
   box-shadow: inset 0 0 18px rgba(159, 232, 112, 0.08), 0 0 24px var(--ad-ext-cricket-card-glow);
 }
 
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > ${STACK_SELECTOR} {
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > ${STACK_SELECTOR} {
   filter: saturate(0.76) brightness(0.9);
 }
 
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active) > ${STACK_SELECTOR}::after {
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > ${STACK_SELECTOR}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -724,10 +752,10 @@ span.chakra-switch__track.css-v4l15v {
 }
 
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] > ${STACK_SELECTOR} {
-  border-color: var(--ad-ext-cricket-active-ring) !important;
+  border-color: var(--ad-ext-theme-card-active-border-color) !important;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 0 1px rgba(159, 232, 112, 0.24),
+    0 0 0 1px var(--ad-ext-theme-card-active-outline-color),
     0 0 20px rgba(159, 232, 112, 0.28),
     0 12px 28px rgba(0, 0, 0, 0.44) !important;
   filter: none !important;
@@ -760,32 +788,32 @@ span.chakra-switch__track.css-v4l15v {
 
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] .ad-ext-player-name,
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] .ad-ext-player-name > p {
-  color: var(--ad-ext-theme-cricket-score-active-color) !important;
+  color: var(--ad-ext-theme-name-active-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] .ad-ext-player-name,
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] .ad-ext-player-name > p {
-  color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
+  color: var(--ad-ext-theme-name-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"] .ad-ext-player-score {
-  color: var(--ad-ext-theme-cricket-score-active-color) !important;
+  color: var(--ad-ext-theme-score-active-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] .ad-ext-player-score {
-  color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
+  color: var(--ad-ext-theme-score-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR},
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p,
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR},
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p {
-  color: var(--ad-ext-theme-cricket-score-inactive-color) !important;
+  color: var(--ad-ext-theme-meta-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-3fr5p8,
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="false"] > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-3fr5p8 {
-  background: var(--ad-ext-theme-cricket-score-inactive-color) !important;
+  background: var(--ad-ext-theme-score-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-1hcjh09,
@@ -902,15 +930,22 @@ p.chakra-text.css-1qlemha {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
+#ad-ext-player-display + div > div,
+.ad-ext-theme-content-left > #ad-ext-player-display + div > div,
 .css-rfeml4 > div {
   position: relative;
   border: 1px solid rgba(54, 72, 98, 0.78) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
+#ad-ext-player-display + div > .css-1yso2z2,
+.ad-ext-theme-content-left > #ad-ext-player-display + div > .css-1yso2z2,
 .css-rfeml4 > div:nth-child(odd) {
   background: linear-gradient(120deg, rgba(10, 18, 32, 0.88), rgba(8, 15, 28, 0.9)) !important;
 }
 
+#ad-ext-player-display + div > .css-jpb1ox,
+.ad-ext-theme-content-left > #ad-ext-player-display + div > .css-jpb1ox,
 .css-rfeml4 > div:nth-child(even) {
   background: linear-gradient(120deg, rgba(11, 18, 32, 0.88), rgba(8, 15, 28, 0.9)) !important;
 }

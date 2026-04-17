@@ -21,7 +21,8 @@ import {
   PREVIEW_PLACEMENT as PREVIEW_BULL_OFF,
   buildBullOffThemeCss,
 } from "../../src/features/themes/bull-off/style.js";
-import { commonLayoutCss } from "../../src/features/themes/shared/common-css.js";
+import { commonLayoutCss, commonThemeCss } from "../../src/features/themes/shared/common-css.js";
+import { buildSharedPlayerDisplayCss } from "../../src/features/themes/shared/player-card-layout.js";
 import { buildThemeVisualSettingsCss } from "../../src/features/themes/shared/theme-visuals.js";
 
 function assertNoFragileLayoutSelectors(cssText) {
@@ -87,7 +88,7 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--theme-text-highlight-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+rgba\(159,\s*219,\s*88,\s*0\.18\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--ad-ext-theme-card-active-border-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+var\(--ad-ext-theme-card-active-outline-color\)\s*!important;/s
   );
   assert.doesNotMatch(css, /\.css-hjw8x4\s*\{[^}]*max-height:\s*12%/s);
   assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
@@ -175,11 +176,19 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-theme-x01-2player-active="true"\],\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*border:1px solid var\(--theme-text-highlight-color\)\s*!important;/s
+    /\[data-ad-ext-theme-x01-2player-active="true"\],\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*border:1px solid var\(--ad-ext-theme-card-active-border-color\)\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="false"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="false"\]\.ad-ext-player-active\{[^}]*border:1px solid rgba\(236,\s*247,\s*240,\s*0\.16\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="true"\]\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\][^}]*color:var\(--ad-ext-theme-score-active-color\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\][^}]*color:var\(--ad-ext-theme-score-active-color\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="false"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-x01-2player-active="false"\]\.ad-ext-player-active\{[^}]*border:1px solid var\(--ad-ext-theme-card-inactive-border-color\)\s*!important;/s
   );
   assert.match(
     css,
@@ -293,7 +302,7 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
   );
   assert.match(
     shanghaiCss,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--theme-text-highlight-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+rgba\(159,\s*219,\s*88,\s*0\.18\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--ad-ext-theme-card-active-border-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+var\(--ad-ext-theme-card-active-outline-color\)\s*!important;/s
   );
   assertNoFragileLayoutSelectors(shanghaiCss);
   assertNoFragileLayoutSelectors(bermudaCss);
@@ -330,7 +339,7 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
   assert.doesNotMatch(css, /--ad-ext-player-score-max:\s*5\.2rem;/s);
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\{[^}]*border:\s*2px\s+solid\s+rgba\(102,\s*187,\s*106,\s*var\(--bull-active-border-alpha\)\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\{[^}]*border:\s*2px\s+solid\s+var\(--ad-ext-theme-card-active-border-color\)\s*!important;/s
   );
   assert.match(css, /grid-template-columns:\s*0\.94fr 1\.06fr\s*!important;/);
   assert.match(
@@ -341,6 +350,16 @@ test("bull-off keeps oldrepo board-first grid and no preview spacer", () => {
 });
 
 test("shared common layout keeps oldrepo baseline grid contract", () => {
+  const sharedPlayerDisplayCss = buildSharedPlayerDisplayCss();
+
+  assert.match(
+    commonThemeCss,
+    /--ad-ext-theme-accent-color:\s*var\(--theme-text-highlight-color\);[^}]*--ad-ext-theme-text-primary-color:\s*rgba\(214,\s*229,\s*245,\s*0\.84\);[^}]*--ad-ext-theme-text-secondary-color:\s*rgba\(226,\s*232,\s*240,\s*0\.92\);/s
+  );
+  assert.match(
+    commonThemeCss,
+    /--ad-ext-theme-score-active-color:\s*var\(--ad-ext-theme-score-color\);[^}]*--ad-ext-theme-score-inactive-color:\s*var\(--ad-ext-theme-text-primary-color\);[^}]*--ad-ext-theme-name-color:\s*var\(--ad-ext-theme-text-secondary-color\);[^}]*--ad-ext-theme-meta-color:\s*var\(--ad-ext-theme-text-secondary-color\);/s
+  );
   assert.match(
     commonLayoutCss,
     /grid-template-areas:\s*"header header"\s*"footer footer"\s*"players board"/
@@ -396,6 +415,22 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   assert.match(
     commonLayoutCss,
     /\.ad-ext-theme-board-svg\[viewBox="0 0 1000 1000"\]\s*\{[^}]*width:\s*100%\s*!important;[^}]*height:\s*100%\s*!important;[^}]*max-width:\s*100%\s*!important;[^}]*max-height:\s*100%\s*!important;[^}]*aspect-ratio:\s*1 \/ 1;/s
+  );
+  assert.match(
+    sharedPlayerDisplayCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-name-color\)\s*!important;/s
+  );
+  assert.match(
+    sharedPlayerDisplayCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-score-color\)\s*!important;/s
+  );
+  assert.match(
+    sharedPlayerDisplayCss,
+    /p\.chakra-text\.css-1j0bqop\s*\{[^}]*color:\s*var\(--ad-ext-theme-meta-color\)\s*!important;/s
+  );
+  assert.match(
+    sharedPlayerDisplayCss,
+    /#ad-ext-turn\s+\.ad-ext-turn-points,\s*#ad-ext-turn\s+\.ad-ext-hit-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-turn-points-color\)\s*!important;/s
   );
   assert.doesNotMatch(commonLayoutCss, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
   assert.doesNotMatch(commonLayoutCss, /96cqw|96cqh/);

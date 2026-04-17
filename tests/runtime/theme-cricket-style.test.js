@@ -144,6 +144,10 @@ test("cricket theme keeps row labels fully visible inside viewport", () => {
 
   assert.match(css, /p\.chakra-text\.css-1qlemha\s*\{[^}]*left:\s*0\s*!important;/s);
   assert.doesNotMatch(css, /left:\s*calc\(var\(--chakra-space-2\)\s*\*\s*-5\)/);
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div\s*>\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*>\s*div,\s*\.css-rfeml4\s*>\s*div\s*\{[^}]*position:\s*relative;[^}]*border:\s*1px solid rgba\(54,\s*72,\s*98,\s*0\.78\)\s*!important;[^}]*box-shadow:\s*inset 0 0 0 1px rgba\(255,\s*255,\s*255,\s*0\.03\);/s
+  );
 });
 
 test("cricket theme keeps score and active-card hierarchy on stable selectors", () => {
@@ -286,15 +290,15 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   assert.match(scoreSlotRule, /margin:\s*0\s*!important;/);
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s+\.ad-ext-player-name\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-name-inactive-color\)\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\]\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\],\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="stats"\]\s*>\s*p\s*\{[^}]*color:\s*var\(--ad-ext-theme-meta-inactive-color\)\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-row="true"\]\s*>\s*\[data-ad-ext-cricket-slot="marks"\]\s+\.css-3fr5p8\s*\{[^}]*background:\s*var\(--ad-ext-theme-cricket-score-inactive-color\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="false"\]\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-row="true"\]\s*>\s*\[data-ad-ext-cricket-slot="marks"\]\s+\.css-3fr5p8\s*\{[^}]*background:\s*var\(--ad-ext-theme-score-inactive-color\)\s*!important;/s
   );
   assert.match(
     css,

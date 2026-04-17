@@ -59,6 +59,19 @@ p.chakra-text.css-1j0bqop{
   --theme-current-bg:transparent;
   --theme-border-color:#2a353d;
   --theme-alt-bg:#163128;
+  --ad-ext-theme-accent-color:var(--theme-text-highlight-color);
+  --ad-ext-theme-text-primary-color:#f6fbf7;
+  --ad-ext-theme-text-secondary-color:#f0f8f3;
+  --ad-ext-theme-card-active-border-color:var(--theme-text-highlight-color);
+  --ad-ext-theme-card-active-outline-color:rgba(143, 226, 141, 0.24);
+  --ad-ext-theme-card-inactive-border-color:rgba(236, 247, 240, 0.16);
+  --ad-ext-theme-score-active-color:var(--ad-ext-theme-accent-color);
+  --ad-ext-theme-score-inactive-color:#f6fbf7;
+  --ad-ext-theme-meta-color:rgba(219, 230, 223, 0.9);
+  --ad-ext-theme-meta-active-color:var(--ad-ext-theme-meta-color);
+  --ad-ext-theme-meta-inactive-color:var(--ad-ext-theme-meta-color);
+  --ad-ext-theme-turn-points-color:#f4f8f6;
+  --ad-ext-theme-throw-label-color:rgba(244, 248, 246, 0.72);
   --ad-ext-x01-2player-side-width:clamp(15.75rem, 18.5vw, 20.75rem);
   --ad-ext-x01-2player-column-gap:clamp(0.9rem, 1.6vw, 1.4rem);
   --ad-ext-x01-2player-row-gap:clamp(0.6rem, 1.1vw, 0.95rem);
@@ -175,7 +188,7 @@ div.chakra-stack.navigation.css-ege71s{
   place-items:center !important;
   font-size:clamp(2.7rem, 4.6vw, 3.7rem) !important;
   font-weight:800 !important;
-  color:#f4f8f6 !important;
+  color:var(--ad-ext-theme-turn-points-color) !important;
 }
 
 #ad-ext-turn > .ad-ext-turn-throw{
@@ -617,7 +630,7 @@ div.chakra-stack.navigation.css-ege71s{
   line-height:0.96 !important;
   font-weight:800 !important;
   letter-spacing:0.012em !important;
-  color:#f0f8f3 !important;
+  color:var(--ad-ext-theme-name-color) !important;
   text-transform:none !important;
   text-align:left !important;
 }
@@ -678,7 +691,7 @@ div.chakra-stack.navigation.css-ege71s{
   font-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale)) !important;
   line-height:0.78 !important;
   font-weight:800 !important;
-  color:#f6fbf7 !important;
+  color:var(--ad-ext-theme-score-inactive-color) !important;
   text-shadow:0 0 26px rgba(255, 255, 255, 0.08) !important;
   text-align:center !important;
   margin:0 !important;
@@ -703,8 +716,11 @@ div.chakra-stack.navigation.css-ege71s{
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext-player-score,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${LEGACY_PROGRESS_STACK_SELECTOR} > p.chakra-text.ad-ext-player-score,
-#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext_winner-score-wrapper > p{
-  color:var(--theme-text-highlight-color) !important;
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${LEGACY_PROGRESS_STACK_SELECTOR} > p.chakra-text.ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext_winner-score-wrapper > p,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext_winner-score-wrapper > p{
+  color:var(--ad-ext-theme-score-active-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > [data-ad-ext-x01-score-progress="true"]{
@@ -726,7 +742,7 @@ div.chakra-stack.navigation.css-ege71s{
   white-space:nowrap !important;
   overflow:hidden !important;
   text-overflow:ellipsis !important;
-  color:rgba(219, 230, 223, 0.9) !important;
+  color:var(--ad-ext-theme-meta-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z{
@@ -934,7 +950,7 @@ div.chakra-stack.navigation.css-ege71s{
   line-height:0.74 !important;
   font-weight:800 !important;
   text-align:center !important;
-  color:#f6fbf7 !important;
+  color:var(--ad-ext-theme-score-inactive-color) !important;
   background:transparent !important;
   background-color:transparent !important;
   box-shadow:none !important;
@@ -1002,24 +1018,26 @@ div.chakra-stack.navigation.css-ege71s{
 
 ${ACTIVE_CARD_SELECTOR},
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
-  border:1px solid var(--theme-text-highlight-color) !important;
+  border:1px solid var(--ad-ext-theme-card-active-border-color) !important;
 }
 
 ${INACTIVE_CARD_SELECTOR},
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active{
-  border:1px solid rgba(236, 247, 240, 0.16) !important;
+  border:1px solid var(--ad-ext-theme-card-inactive-border-color) !important;
 }
 
 ${ACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
-${ACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
-  color:var(--theme-text-highlight-color) !important;
+${ACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
+  color:var(--ad-ext-theme-score-active-color) !important;
 }
 
 ${INACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
 ${INACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
-  color:#f6fbf7 !important;
+  color:var(--ad-ext-theme-score-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${TABLE_SLOT_SELECTOR}{
