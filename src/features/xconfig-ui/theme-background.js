@@ -379,12 +379,9 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
       ? "ad-xconfig-theme-image-status"
       : "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty"
   );
-  statusNode.setAttribute("data-theme-image-state", imageInfo.hasImage ? "present" : "empty");
-  statusNode.setAttribute("data-theme-image-type", imageInfo.sourceType || imageInfo.mimeType || "");
-  statusNode.setAttribute(
-    "data-theme-image-size",
-    imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : ""
-  );
+  statusNode.dataset.themeImageState = imageInfo.hasImage ? "present" : "empty";
+  statusNode.dataset.themeImageType = imageInfo.sourceType || imageInfo.mimeType || "";
+  statusNode.dataset.themeImageSize = imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : "";
 
   const summaryText = imageInfo.hasImage
     ? imageInfo.sourceType === "preset-asset"
@@ -427,8 +424,8 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
 export function buildThemeBackgroundStatus(documentRef, feature) {
   const status = documentRef.createElement("div");
   status.setAttribute("class", "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty");
-  status.setAttribute("data-adxconfig-theme-image-status", "true");
-  status.setAttribute("data-feature-key", feature.featureKey);
+  status.dataset.adxconfigThemeImageStatus = "true";
+  status.dataset.featureKey = feature.featureKey;
   applyThemeBackgroundStatusNode(documentRef, status, feature);
   return status;
 }

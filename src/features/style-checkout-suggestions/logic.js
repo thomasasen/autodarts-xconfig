@@ -104,8 +104,8 @@ export function applySuggestionStyle(node, featureConfig = {}) {
   node.classList.add(desiredClass);
   node.classList.toggle(NO_LABEL_CLASS, !labelText);
 
-  if (labelText && typeof node.setAttribute === "function") {
-    node.setAttribute("data-ad-ext-label", labelText);
+  if (labelText) {
+    node.dataset.adExtLabel = labelText;
   } else if (typeof node.removeAttribute === "function") {
     node.removeAttribute("data-ad-ext-label");
   }

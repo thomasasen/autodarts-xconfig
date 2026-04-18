@@ -67,15 +67,16 @@ function isDecoratableBadgeNode(badgeNode, labelCell, cricketRules, label) {
 }
 
 export function hasExplicitMarkHints(node) {
-  if (!node || typeof node.getAttribute !== "function") {
+  if (!node || typeof node !== "object") {
     return false;
   }
 
+  const dataset = node.dataset;
   if (
-    node.getAttribute("data-marks") !== null ||
-    node.getAttribute("data-mark") !== null ||
-    node.getAttribute("data-hits") !== null ||
-    node.getAttribute("data-hit") !== null
+    dataset?.marks !== undefined ||
+    dataset?.mark !== undefined ||
+    dataset?.hits !== undefined ||
+    dataset?.hit !== undefined
   ) {
     return true;
   }
@@ -182,7 +183,7 @@ export function resolveLabelCell(options = {}) {
 
   const normalizedLabel = normalizeCricketLabelValue(
     cricketRules,
-    fallbackLabel || labelNode?.getAttribute?.("data-row-label") || labelNode?.textContent || ""
+    fallbackLabel || labelNode?.dataset?.rowLabel || labelNode?.textContent || ""
   );
 
   let cursor = labelNode?.parentElement || null;

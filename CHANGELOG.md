@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere kleine Sonar-Welle hält Cricket-Label-Erkennung, Checkout-Hinweise und Theme-Bildstatus auf denselben fachlichen Pfaden, liest interne Datenattribute aber direkter und konsistenter aus.
+  Technik: `label-layout`, `style-checkout-suggestions` und `theme-background` verwenden ausgewählte `data-*`-Felder jetzt über `dataset` statt über manuelle Attribut-Lese-/Schreibzugriffe; neue gezielte Runtime-Regressionen sichern explizite Cricket-Mark-Hints, Checkout-Label-Reset und die Theme-Bildstatus-Metadaten gegen Drift ab.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere Low-Risk-Sonar-Welle modernisiert interne Datenattribut-, Menü- und Overlay-Helfer, ohne Cricket-, X01-, xConfig- oder Theme-Abläufe fachlich umzubauen.
   Technik: Mehrere Runtime- und UI-Pfade lesen und schreiben `data-*`-Felder jetzt konsistent über `dataset`, kleine Klarheitsrefactors glätten optionale Config-/Legacy-Zweige sowie einzelne DOM-Einfügepfade, `electric-border-engine` nutzt im Fallback wieder korrekt `parentNode.removeChild(...)`, und der Fake-DOM plus gezielte Runtime-Regressionen sichern `dataset`-/`before`-/`after`-Semantik sowie den Defs-Cleanup gegen Drift ab.
 

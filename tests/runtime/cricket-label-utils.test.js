@@ -8,6 +8,7 @@ import {
   normalizeCricketLabelValue,
 } from "../../src/features/cricket-surface/label-utils.js";
 import {
+  hasExplicitMarkHints,
   resolveBadgeNode,
   resolveLabelCell,
 } from "../../src/features/cricket-surface/label-layout.js";
@@ -88,6 +89,16 @@ test("cricket label layout resolves merged label cells through the shared helper
     }),
     labelCell
   );
+});
+
+test("cricket label layout treats dataset-backed mark hints as explicit metadata", () => {
+  const documentRef = new FakeDocument();
+  const node = documentRef.createElement("div");
+
+  assert.equal(hasExplicitMarkHints(node), false);
+
+  node.dataset.marks = "2";
+  assert.equal(hasExplicitMarkHints(node), true);
 });
 
 test("cricket label layout resolves decoratable badge nodes through the shared helper", () => {

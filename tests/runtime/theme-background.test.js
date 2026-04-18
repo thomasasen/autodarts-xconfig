@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  applyThemeBackgroundStatusNode,
+  buildThemeBackgroundStatus,
   normalizeThemeBackgroundUpload,
   uploadThemeBackgroundImage,
 } from "../../src/features/xconfig-ui/theme-background.js";
@@ -311,4 +313,33 @@ test("uploadThemeBackgroundImage normalizes and persists successful uploads, but
 
   canvas.restore();
   documentRef.createElement = originalCreateElement;
+});
+
+test("theme background status nodes keep image metadata in dataset-backed attributes", () => {
+  const documentRef = new FakeDocument();
+  const status = buildThemeBackgroundStatus(documentRef, {
+    featureKey: "theme-x01",
+    title: "Theme X01",
+    config: {
+      backgroundImageDataUrl: `data:image/webp;base64,${"a".repeat(40)}`,
+    },
+  });
+
+  assert.equal(status.dataset.adxconfigThemeImageStatus, "true");
+  assert.equal(status.dataset.featureKey, "theme-x01");
+  assert.equal(status.dataset.themeImageState, "present");
+  assert.equal(status.dataset.themeImageType, "upload");
+  assert.equal(status.dataset.themeImageSize, "30");
+
+  applyThemeBackgroundStatusNode(documentRef, status, {
+    featureKey: "theme-x01",
+    title: "Theme X01",
+    config: {
+      backgroundImageDataUrl: "",
+    },
+  });
+
+  assert.equal(status.dataset.themeImageState, "empty");
+  assert.equal(status.dataset.themeImageType, "");
+  assert.equal(status.dataset.themeImageSize, "");
 });
