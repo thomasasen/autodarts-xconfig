@@ -11,7 +11,7 @@ export function parseTextMarkValue(value, cricketRules) {
     if (/^(?:0|1|2|3)$/.test(rawValue)) {
       return true;
     }
-    return /(^|[^0-9])(?:0|1|2|3)([^0-9]|$)/.test(rawValue);
+    return /(^|\D)(?:0|1|2|3)(\D|$)/.test(rawValue);
   })();
   if (!hasExplicitMarkToken) {
     return null;

@@ -347,7 +347,7 @@ export function parseCricketMarkValue(value) {
   }
 
   // Accept a single standalone mark digit wrapped by non-digits.
-  const digit = normalized.match(/^[^0-9]*([0-3])[^0-9]*$/);
+  const digit = normalized.match(/^\D*([0-3])\D*$/);
   if (digit) {
     return clampMarks(Number.parseInt(digit[1], 10));
   }
@@ -401,7 +401,7 @@ export function normalizeCricketLabel(value) {
   }
 
   const numberMatch = text.match(
-    /(?:^|[^0-9])(20|19|18|17|16|15|14|13|12|11|10)(?:[^0-9]|$)/
+    /(?:^|\D)(20|19|18|17|16|15|14|13|12|11|10)(?:\D|$)/
   );
 
   return numberMatch ? numberMatch[1] : "";

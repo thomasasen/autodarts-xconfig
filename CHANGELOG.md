@@ -30,6 +30,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die nächste Sonar-Welle modernisiert weitere ungefährliche DOM- und Text-Helfer, sodass Runtime-, Theme- und Testpfade dieselben Entfernungs- und String-Normalisierungen mit direkteren Standard-APIs ausdrücken, ohne Host-Verhalten oder Cricket-/X01-Logik fachlich zu ändern.
   Technik: Verbleibende `removeChild(...)`-Aufrufe aus der ausgewählten Low-Risk-Gruppe verwenden jetzt `remove()` auf den betroffenen Knoten, der Fake-DOM spiegelt dieses Verhalten intern konsistent nach, und einige einfache globale Regex-Ersetzungen für feste Literale wechseln auf stringbasierte `replaceAll(...)`-Aufrufe in Domain-, Theme-, Runtime- und Test-Utilities.
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere sehr kleine Sonar-Bereinigung hält Cricket-Markenerkennung und Label-Helfer semantisch unverändert, drückt einfache Ziffer-/Nichtziffer-Prüfungen aber kompakter aus.
+  Technik: In `parseCricketMarkValue(...)`, `normalizeCricketLabel(...)`, `hasTextualMarkHints(...)` und `parseTextMarkValue(...)` wurden nur `javascript:S6353`-Treffer aus der ausgewählten Low-Risk-Gruppe von `[0-9]`/`[^0-9]` auf die äquivalenten Regex-Kurzformen `\d`/`\D` umgestellt; bestehende Cricket-Domain-, Mark-Parser- und Row-Repair-Regressionen sichern dabei die unveränderte Parser-Semantik ab.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added

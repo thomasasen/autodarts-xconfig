@@ -12,7 +12,7 @@ function hasTextualMarkHints(node) {
     return true;
   }
 
-  return /(^|[^0-9])[1-3]([^0-9]|$)/.test(text);
+  return /(^|\D)[1-3](\D|$)/.test(text);
 }
 
 function maybeIncludeLabelCellAsPlayerCell(
