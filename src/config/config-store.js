@@ -460,7 +460,7 @@ function mapLegacyConfig(legacyConfig) {
     }
 
     const importedFeature = importer(legacyFeatureState);
-    if (!importedFeature || !importedFeature.configKey) {
+    if (!importedFeature?.configKey) {
       return;
     }
 

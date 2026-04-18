@@ -55,7 +55,7 @@ function createGrid(documentRef, labels, marksByRow) {
 
     const labelCell = documentRef.createElement("td");
     labelCell.classList.add("label-cell");
-    labelCell.setAttribute("data-row-label", label === "BULL" ? "Bull" : String(label));
+    labelCell.dataset.rowLabel = label === "BULL" ? "Bull" : String(label);
     labelCell.textContent = label === "BULL" ? "Bull" : `Ziel ${label}`;
     row.appendChild(labelCell);
 
@@ -63,8 +63,8 @@ function createGrid(documentRef, labels, marksByRow) {
     marks.forEach((value, index) => {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
-      cell.setAttribute("data-player-index", String(index));
-      cell.setAttribute("data-marks", String(value));
+      cell.dataset.playerIndex = String(index);
+      cell.dataset.marks = String(value);
       cell.textContent = String(value);
       row.appendChild(cell);
     });
@@ -1364,9 +1364,9 @@ test("hit progression '/' -> 'X' -> '⊗' keeps grid and board colors rule-corre
   const setRow18BySymbol = (symbol) => {
     const marks = Number(HIT_SYMBOL_TO_MARKS[symbol] || 0);
     marksByRow["18"] = [marks, 0];
-    row18Cells[0].setAttribute("data-marks", String(marks));
+    row18Cells[0].dataset.marks = String(marks);
     row18Cells[0].textContent = symbol;
-    row18Cells[1].setAttribute("data-marks", "0");
+    row18Cells[1].dataset.marks = "0";
     row18Cells[1].textContent = "";
   };
 
@@ -1428,9 +1428,9 @@ test("hit progression '/' -> 'X' -> '⊗' keeps grid and board colors rule-corre
 
   // All players closed -> DEAD (grey) for grid and board regardless of active player.
   marksByRow["18"] = [3, 3];
-  row18Cells[0].setAttribute("data-marks", "3");
+  row18Cells[0].dataset.marks = "3";
   row18Cells[0].textContent = "⊗";
-  row18Cells[1].setAttribute("data-marks", "3");
+  row18Cells[1].dataset.marks = "3";
   row18Cells[1].textContent = "⊗";
 
   const deadActive0 = buildForActive(0);
@@ -1508,10 +1508,10 @@ test("render state ignores collapsed mixed-content pseudo rows from generic cric
     labelNode.textContent = `Dummy Cricket First to 2 TORNADO TOM Ziel ${label} Undo Next`;
 
     const firstPlayerCell = documentRef.createElement("div");
-    firstPlayerCell.setAttribute("data-marks", "0");
+    firstPlayerCell.dataset.marks = "0";
 
     const secondPlayerCell = documentRef.createElement("div");
-    secondPlayerCell.setAttribute("data-marks", "0");
+    secondPlayerCell.dataset.marks = "0";
 
     row.appendChild(labelNode);
     row.appendChild(firstPlayerCell);
@@ -2028,7 +2028,7 @@ test("virtual 3-player cricket+tactics match keeps grid owner states stable and 
     const cells = Array.from(row?.querySelectorAll?.("td") || []).slice(1);
     cells.forEach((cell, index) => {
       const value = cricketRules.clampMarks(marks[index] || 0);
-      cell.setAttribute("data-marks", String(value));
+      cell.dataset.marks = String(value);
       cell.textContent = String(value);
     });
   };
@@ -2156,7 +2156,7 @@ test("multi-round 3-player cricket+tactics color scenarios stay rule-correct acr
     const cells = Array.from(row?.querySelectorAll?.("td") || []).slice(1);
     marks.forEach((mark, index) => {
       const normalized = cricketRules.clampMarks(mark);
-      cells[index]?.setAttribute("data-marks", String(normalized));
+      cells[index].dataset.marks = String(normalized);
       cells[index].textContent = String(normalized);
     });
   };

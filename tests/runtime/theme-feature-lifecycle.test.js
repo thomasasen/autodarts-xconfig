@@ -3073,7 +3073,7 @@ test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DO
   });
   replacementPlayer.classList.add("ad-ext-player-active");
 
-  playerDisplayNode.insertBefore(replacementPlayer, originalFirstPlayer);
+  originalFirstPlayer.before(replacementPlayer);
   originalFirstPlayer.remove();
   documentRef.flushMutations();
   await wait(5);

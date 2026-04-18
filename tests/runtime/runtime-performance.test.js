@@ -259,8 +259,8 @@ test("checkout-board-targets reuses identical overlay nodes across rerenders so 
   assert.equal(overlay.children[1], firstOutlineNode);
   assert.equal(firstShapeNode.classList.contains("ad-ext-checkout-target--signal"), true);
   assert.match(firstShapeNode.style.getPropertyValue("--ad-ext-target-color"), /245, 158, 11/);
-  assert.equal(firstShapeNode.getAttribute("data-target-ring"), "T");
-  assert.equal(firstShapeNode.getAttribute("data-target-value"), "20");
+  assert.equal(firstShapeNode.dataset.targetRing, "T");
+  assert.equal(firstShapeNode.dataset.targetValue, "20");
 });
 
 test("checkout-board-targets surface-only mode keeps the S20 fill animated but removes stroke and outline", () => {
@@ -668,18 +668,18 @@ test("checkout-board-targets softens and staggers follow-up targets in multi-tar
   const targetShapes = Array.from(overlay.querySelectorAll(`.${TARGET_CLASS}`));
   const primaryOuter = targetShapes.find(
     (node) =>
-      node.getAttribute("data-target-ring") === "T" &&
-      node.getAttribute("data-target-value") === "20"
+      node.dataset.targetRing === "T" &&
+      node.dataset.targetValue === "20"
   );
   const secondaryOuter = targetShapes.find(
     (node) =>
-      node.getAttribute("data-target-ring") === "D" &&
-      node.getAttribute("data-target-value") === "10"
+      node.dataset.targetRing === "D" &&
+      node.dataset.targetValue === "10"
   );
   const tertiaryBull = targetShapes.find(
     (node) =>
-      node.getAttribute("data-target-ring") === "SB" &&
-      node.getAttribute("data-target-value") === "25"
+      node.dataset.targetRing === "SB" &&
+      node.dataset.targetValue === "25"
   );
 
   assert.ok(primaryOuter);
@@ -978,8 +978,8 @@ test("checkout-board-targets selects next, finish or all segments from the autho
   try {
     assert.equal(nextSelection.overlay.children.length, 2);
     assert.equal(String(nextSelection.overlay.children[0]?.tagName || ""), "PATH");
-    assert.equal(nextSelection.overlay.children[0]?.getAttribute("data-target-ring"), "T");
-    assert.equal(nextSelection.overlay.children[0]?.getAttribute("data-target-value"), "20");
+    assert.equal(nextSelection.overlay.children[0]?.dataset?.targetRing, "T");
+    assert.equal(nextSelection.overlay.children[0]?.dataset?.targetValue, "20");
   } finally {
     nextSelection.cleanup();
   }
@@ -1067,8 +1067,8 @@ test("checkout-board-targets finish mode falls back to the current one-dart chec
     const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
     assert.ok(overlay);
     assert.equal(overlay.children.length, 2);
-    assert.equal(overlay.children[0]?.getAttribute("data-target-ring"), "D");
-    assert.equal(overlay.children[0]?.getAttribute("data-target-value"), "18");
+    assert.equal(overlay.children[0]?.dataset?.targetRing, "D");
+    assert.equal(overlay.children[0]?.dataset?.targetValue, "18");
   } finally {
     cleanup();
   }
@@ -2249,8 +2249,8 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
     for (let index = 0; index < 2; index += 1) {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
-      cell.setAttribute("data-player-index", String(index));
-      cell.setAttribute("data-marks", label === "20" && index === 0 ? "3" : "0");
+      cell.dataset.playerIndex = String(index);
+      cell.dataset.marks = label === "20" && index === 0 ? "3" : "0";
       cell.textContent = label === "20" && index === 0 ? "3" : "0";
       row.appendChild(cell);
     }
@@ -2366,8 +2366,8 @@ test("cricket-highlighter repairs stale style contract at mount and logs once", 
     for (let index = 0; index < 2; index += 1) {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
-      cell.setAttribute("data-player-index", String(index));
-      cell.setAttribute("data-marks", label === "20" && index === 0 ? "3" : "0");
+      cell.dataset.playerIndex = String(index);
+      cell.dataset.marks = label === "20" && index === 0 ? "3" : "0";
       cell.textContent = label === "20" && index === 0 ? "3" : "0";
       row.appendChild(cell);
     }
@@ -2658,9 +2658,9 @@ test("cricket-highlighter rerenders on throw updates even when board state stays
     for (let index = 0; index < 2; index += 1) {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
-      cell.setAttribute("data-player-index", String(index));
+      cell.dataset.playerIndex = String(index);
       const marks = label === "20" && index === 0 ? "3" : "0";
-      cell.setAttribute("data-marks", marks);
+      cell.dataset.marks = marks;
       cell.textContent = marks;
       row.appendChild(cell);
     }
@@ -2753,10 +2753,10 @@ test("cricket-highlighter rerenders on throw updates even when board state stays
 
   const readPresentation = (label) => {
     const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
-    const shapes = Array.from(overlay?.children || []).filter((node) => {
+    const shape = Array.from(overlay?.children || []).find((node) => {
       return String(node?.dataset?.targetLabel || "") === label;
     });
-    return String(shapes[0]?.dataset?.targetPresentation || "");
+    return String(shape?.dataset?.targetPresentation || "");
   };
 
   assert.equal(readPresentation("20"), "scoring");
@@ -2808,12 +2808,12 @@ test("cricket-highlighter reacts to attribute-only hydration updates for marks a
     for (let index = 0; index < 2; index += 1) {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
-      cell.setAttribute("data-player-index", String(index));
+      cell.dataset.playerIndex = String(index);
       let marks = "0";
       if (label === "18") {
         marks = "3";
       }
-      cell.setAttribute("data-marks", marks);
+      cell.dataset.marks = marks;
       cell.textContent = marks;
       row.appendChild(cell);
     }
@@ -2834,10 +2834,10 @@ test("cricket-highlighter reacts to attribute-only hydration updates for marks a
 
   const readPresentation = (label) => {
     const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
-    const shapes = Array.from(overlay?.children || []).filter((node) => {
+    const shape = Array.from(overlay?.children || []).find((node) => {
       return String(node?.dataset?.targetLabel || "") === label;
     });
-    return String(shapes[0]?.dataset?.targetPresentation || "");
+    return String(shape?.dataset?.targetPresentation || "");
   };
 
   const observers = createObserverRegistry();
@@ -3044,9 +3044,9 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
       for (let playerIndex = 0; playerIndex < 2; playerIndex += 1) {
         const cell = documentRef.createElement("td");
         cell.classList.add("player-cell");
-        cell.setAttribute("data-player-index", String(playerIndex));
+        cell.dataset.playerIndex = String(playerIndex);
         const marks = label === "20" && playerIndex === 0 ? 3 : 0;
-        cell.setAttribute("data-marks", String(marks));
+        cell.dataset.marks = String(marks);
         row.appendChild(cell);
       }
 
@@ -3175,12 +3175,12 @@ test("cricket-grid-fx reacts to attribute-only mark updates and ignores self cla
     for (let playerIndex = 0; playerIndex < 2; playerIndex += 1) {
       const cell = documentRef.createElement("td");
       cell.classList.add("player-cell");
-      cell.setAttribute("data-player-index", String(playerIndex));
+      cell.dataset.playerIndex = String(playerIndex);
       let marks = "0";
       if (label === "18") {
         marks = "3";
       }
-      cell.setAttribute("data-marks", marks);
+      cell.dataset.marks = marks;
       cell.textContent = marks;
       row.appendChild(cell);
     }
@@ -3457,10 +3457,10 @@ test("cricket-highlighter schedules for alt-attribute mutations on mark icons in
 
   const readPresentation = (label) => {
     const overlay = documentRef.getElementById(CRICKET_OVERLAY_ID);
-    const shapes = Array.from(overlay?.children || []).filter((node) => {
+    const shape = Array.from(overlay?.children || []).find((node) => {
       return String(node?.dataset?.targetLabel || "") === label;
     });
-    return String(shapes[0]?.dataset?.targetPresentation || "");
+    return String(shape?.dataset?.targetPresentation || "");
   };
 
   const observers = createObserverRegistry();

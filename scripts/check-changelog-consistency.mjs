@@ -135,7 +135,11 @@ function validateSectionEntries(section) {
       continue;
     }
 
-    if (/^- /.test(line) && !/^- Nutzerwirkung:\s+\S/.test(line)) {
+    const hasUserImpactPrefix = line.startsWith("- Nutzerwirkung: ");
+    if (
+      line.startsWith("- ") &&
+      (!hasUserImpactPrefix || !line.slice("- Nutzerwirkung: ".length).trim())
+    ) {
       errors.push(`Abschnitt ${section.name}: Listenpunkte müssen mit "Nutzerwirkung:" beginnen.`);
     }
 

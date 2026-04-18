@@ -32,11 +32,11 @@ function createRowMeta(documentRef, label, { labelMarks = "", playerCells = [], 
   const rowNode = documentRef.createElement("div");
   const labelCell = documentRef.createElement("div");
   const labelNode = documentRef.createElement("span");
-  labelNode.setAttribute("data-row-label", label);
+  labelNode.dataset.rowLabel = label;
   labelNode.textContent = label;
   labelCell.appendChild(labelNode);
   if (labelMarks) {
-    labelCell.setAttribute("data-marks", labelMarks);
+    labelCell.dataset.marks = labelMarks;
   }
   rowNode.appendChild(labelCell);
 
@@ -65,7 +65,7 @@ test("cricket row repair includes label cells as mark sources for shortfall repa
   const documentRef = new FakeDocument();
   const cricketRules = createCricketRules();
   const playerCell = documentRef.createElement("div");
-  playerCell.setAttribute("data-marks", "1");
+  playerCell.dataset.marks = "1";
 
   const rowMeta = createRowMeta(documentRef, "20", {
     labelMarks: "2",
@@ -101,11 +101,11 @@ test("cricket row repair honors explicit player indexes and stable-row recovery"
   const documentRef = new FakeDocument();
   const cricketRules = createCricketRules();
   const secondPlayerCell = documentRef.createElement("div");
-  secondPlayerCell.setAttribute("data-marks", "2");
-  secondPlayerCell.setAttribute("data-player-index", "1");
+  secondPlayerCell.dataset.marks = "2";
+  secondPlayerCell.dataset.playerIndex = "1";
   const firstPlayerCell = documentRef.createElement("div");
-  firstPlayerCell.setAttribute("data-marks", "1");
-  firstPlayerCell.setAttribute("data-player-index", "0");
+  firstPlayerCell.dataset.marks = "1";
+  firstPlayerCell.dataset.playerIndex = "0";
 
   const rowMeta = createRowMeta(documentRef, "19", {
     playerCells: [secondPlayerCell, firstPlayerCell],
@@ -113,7 +113,7 @@ test("cricket row repair honors explicit player indexes and stable-row recovery"
   const recoveredMeta = createRowMeta(documentRef, "18", {
     playerCells: [documentRef.createElement("div")],
   });
-  recoveredMeta.playerCells[0].setAttribute("data-marks", "3");
+  recoveredMeta.playerCells[0].dataset.marks = "3";
 
   const snapshot = buildGridRowSnapshot({
     cachedStableRows: new Map([["18", recoveredMeta]]),
@@ -151,11 +151,11 @@ test("cricket row repair falls back to shortfall-aligned columns when explicit i
   const documentRef = new FakeDocument();
   const cricketRules = createCricketRules();
   const firstVisibleCell = documentRef.createElement("div");
-  firstVisibleCell.setAttribute("data-marks", "1");
-  firstVisibleCell.setAttribute("data-player-index", "0");
+  firstVisibleCell.dataset.marks = "1";
+  firstVisibleCell.dataset.playerIndex = "0";
   const secondVisibleCell = documentRef.createElement("div");
-  secondVisibleCell.setAttribute("data-marks", "2");
-  secondVisibleCell.setAttribute("data-player-index", "2");
+  secondVisibleCell.dataset.marks = "2";
+  secondVisibleCell.dataset.playerIndex = "2";
 
   const rowMeta = createRowMeta(documentRef, "20", {
     playerCells: [firstVisibleCell, secondVisibleCell],

@@ -565,7 +565,12 @@ const FEATURE_NORMALIZERS = Object.freeze({
     const showDeadValue = Object.hasOwn(rawConfig, "showDeadTargets") ? rawConfig.showDeadTargets : rawConfig.showDeadObjectives;
     const normalizedDimStyle = normalizeStringChoice(rawConfig.irrelevantBoardDimStyle, "smoke", CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES);
     const hasLegacyDimSetting = Object.hasOwn(rawConfig, "dimIrrelevantBoardTargets");
-    const irrelevantBoardDimStyle = hasLegacyDimSetting && normalizedDimStyle === "smoke" ? normalizeBoolean(rawConfig.dimIrrelevantBoardTargets, true) ? "smoke" : "off" : normalizedDimStyle;
+    let irrelevantBoardDimStyle = normalizedDimStyle;
+    if (hasLegacyDimSetting && normalizedDimStyle === "smoke") {
+      irrelevantBoardDimStyle = normalizeBoolean(rawConfig.dimIrrelevantBoardTargets, true)
+        ? "smoke"
+        : "off";
+    }
     return { enabled: normalizeBoolean(rawConfig.enabled, false), showOpenObjectives: normalizeBoolean(showOpenValue, false), showDeadObjectives: normalizeBoolean(showDeadValue, true), irrelevantBoardDimStyle, dimIrrelevantBoardTargets: irrelevantBoardDimStyle !== "off", colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   cricketGridFx(rawConfig = {}) {
@@ -590,7 +595,12 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   turnPointsCount(rawConfig = {}) {
     const hasLegacyFlashPermanent = Object.hasOwn(rawConfig, "flashPermanent");
-    const legacyFlashMode = hasLegacyFlashPermanent ? normalizeBoolean(rawConfig.flashPermanent, false) ? "permanent" : "on-change" : "on-change";
+    let legacyFlashMode = "on-change";
+    if (hasLegacyFlashPermanent) {
+      legacyFlashMode = normalizeBoolean(rawConfig.flashPermanent, false)
+        ? "permanent"
+        : "on-change";
+    }
     const normalizedFlashMode = normalizeMappedStringChoice(rawConfig.flashMode, legacyFlashMode, { "": "on-change", "on-change": "on-change", onchange: "on-change", appear: "on-change", burst: "on-change", "nur-bei-Ã¤nderung": "on-change", "nur-bei-aenderung": "on-change", permanent: "permanent", always: "permanent", persistent: "permanent", dauerhaft: "permanent" });
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 416, TURN_POINTS_COUNT_DURATIONS), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
   },

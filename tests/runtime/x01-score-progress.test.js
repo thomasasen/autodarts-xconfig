@@ -92,7 +92,7 @@ test("resolveStartScore resolves from variant strip sibling text on match routes
 
   const startBadge = documentRef.createElement("span");
   startBadge.textContent = "501";
-  documentRef.main.insertBefore(startBadge, documentRef.suggestionElement);
+  documentRef.suggestionElement.before(startBadge);
 
   const startScore = resolveStartScore(
     {
@@ -182,7 +182,7 @@ test("resolveStartScore ignores checkout-like texts even when they contain valid
 
   const startBadge = documentRef.createElement("span");
   startBadge.textContent = "Checkout 170";
-  documentRef.main.insertBefore(startBadge, documentRef.suggestionElement);
+  documentRef.suggestionElement.before(startBadge);
 
   const selectedButton = documentRef.createElement("button");
   selectedButton.setAttribute("aria-pressed", "true");

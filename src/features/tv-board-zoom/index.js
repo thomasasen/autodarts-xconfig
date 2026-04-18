@@ -61,8 +61,8 @@ function resolveZoomLevel(zoomLevel) {
   return 2.75;
 }
 
-function toElementNode(node) {
-  let current = node || null;
+function toElementNode(node = null) {
+  let current = node;
   while (current && current.nodeType !== 1) {
     current = current.parentNode || null;
   }

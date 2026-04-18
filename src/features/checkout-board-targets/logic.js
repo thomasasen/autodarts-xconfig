@@ -125,8 +125,8 @@ function buildRenderableNodeKey(node) {
   return [
     role,
     String(node.tagName || ""),
-    String(node.getAttribute("data-target-ring") || ""),
-    String(node.getAttribute("data-target-value") || ""),
+    String(node.dataset?.targetRing || ""),
+    String(node.dataset?.targetValue || ""),
     String(node.getAttribute("d") || ""),
     String(node.getAttribute("r") || ""),
     String(node.getAttribute("fill-rule") || ""),
@@ -368,9 +368,15 @@ function applyTargetMetadata(shapeNode, target, styleProfile) {
   }
 
   shapeNode.setAttribute(TARGET_FAMILY_ATTRIBUTE, String(styleProfile.family || "single"));
-  shapeNode.setAttribute("data-target-ring", String(target?.ring || ""));
+  if (shapeNode.dataset) {
+    shapeNode.dataset.targetRing = String(target?.ring || "");
+  }
   if (Number.isFinite(target?.value)) {
-    shapeNode.setAttribute("data-target-value", String(target.value));
+    if (shapeNode.dataset) {
+      shapeNode.dataset.targetValue = String(target.value);
+    }
+  } else if (shapeNode.dataset) {
+    delete shapeNode.dataset.targetValue;
   }
 }
 
@@ -694,6 +700,10 @@ export function renderCheckoutTargets(options = {}) {
     if (referenceNode === node) {
       return;
     }
-    overlay.insertBefore(node, referenceNode);
+    if (referenceNode) {
+      referenceNode.before(node);
+      return;
+    }
+    overlay.appendChild(node);
   });
 }

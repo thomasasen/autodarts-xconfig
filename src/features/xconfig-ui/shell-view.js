@@ -702,9 +702,9 @@ export function syncColorFieldControl(fieldNode, options = {}) {
   const statusNode =
     fieldNode.querySelector?.("[data-adxconfig-color-status='true']") || null;
 
-  fieldNode.setAttribute("data-invalid", invalid ? "true" : "false");
-  fieldNode.setAttribute("data-has-custom-value", normalizedValue ? "true" : "false");
-  fieldNode.setAttribute("data-color-value", normalizedValue);
+  fieldNode.dataset.invalid = invalid ? "true" : "false";
+  fieldNode.dataset.hasCustomValue = normalizedValue ? "true" : "false";
+  fieldNode.dataset.colorValue = normalizedValue;
 
   if (swatchNode) {
     swatchNode.style.background = normalizedValue || "";
@@ -743,7 +743,7 @@ function buildThemeGlobalTypographyOptionLabel(documentRef, option) {
   const previewFontFamily = String(preset?.previewFontFamily || "").trim();
   if (previewFontFamily && preset?.remote) {
     labelNode.style.fontFamily = previewFontFamily;
-    labelNode.setAttribute("data-adxconfig-preview-font", preset.value);
+    labelNode.dataset.adxconfigPreviewFont = preset.value;
   }
   return labelNode;
 }
@@ -1102,7 +1102,7 @@ function setSelectOptionActiveState(documentRef, optionNode, isActive) {
     return;
   }
 
-  optionNode.setAttribute("data-active", isActive ? "true" : "false");
+  optionNode.dataset.active = isActive ? "true" : "false";
   optionNode.setAttribute("aria-pressed", isActive ? "true" : "false");
 
   const activeContainer =
@@ -1125,11 +1125,11 @@ function setSelectOptionActiveState(documentRef, optionNode, isActive) {
 }
 
 export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) {
-  if (!actionNode || typeof actionNode.getAttribute !== "function") {
+  if (!actionNode) {
     return;
   }
 
-  const settingKey = String(actionNode.getAttribute("data-setting-key") || "").trim();
+  const settingKey = String(actionNode.dataset?.settingKey || "").trim();
   if (!settingKey) {
     return;
   }
@@ -1152,7 +1152,7 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
     : [String(selectedValue ?? "")];
 
   optionButtons.forEach((optionNode) => {
-    const optionValue = String(optionNode.getAttribute("data-setting-value") ?? "");
+    const optionValue = String(optionNode.dataset?.settingValue ?? "");
     setSelectOptionActiveState(documentRef, optionNode, selectedValues.includes(optionValue));
   });
 
@@ -1160,7 +1160,7 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
     `[data-adxconfig-setting='true'][data-setting-control='select'][data-setting-key='${settingKey}']`
   );
   if (optionList) {
-    optionList.setAttribute("data-selected-value", selectedValues.join(","));
+    optionList.dataset.selectedValue = selectedValues.join(",");
   }
 }
 

@@ -229,6 +229,43 @@ function normalizeDatasetKey(attrName) {
     .replaceAll(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
 }
 
+function toDatasetAttributeName(key) {
+  return `data-${String(key || "").replaceAll(/([A-Z])/g, "-$1").toLowerCase()}`;
+}
+
+function createDatasetProxy(ownerElement, initial = {}) {
+  const store = { ...initial };
+  return new Proxy(store, {
+    deleteProperty(target, property) {
+      const key = String(property);
+      delete target[key];
+      ownerElement.attributes.delete(toDatasetAttributeName(key));
+      return true;
+    },
+    get(target, property) {
+      return target[property];
+    },
+    getOwnPropertyDescriptor(target, property) {
+      return {
+        configurable: true,
+        enumerable: true,
+        value: target[property],
+        writable: true,
+      };
+    },
+    ownKeys(target) {
+      return Reflect.ownKeys(target);
+    },
+    set(target, property, value) {
+      const key = String(property);
+      const normalizedValue = String(value);
+      target[key] = normalizedValue;
+      ownerElement.attributes.set(toDatasetAttributeName(key), normalizedValue);
+      return true;
+    },
+  });
+}
+
 function propagateOwnerSvg(node, ownerSvgElement) {
   if (!node || typeof node !== "object") {
     return;
@@ -302,8 +339,8 @@ class FakeElement extends FakeEventTarget {
     this.style = new FakeStyleDecl();
     this.parentNode = null;
     this.children = [];
-    this.dataset = {};
     this.attributes = new Map();
+    this.dataset = createDatasetProxy(this);
     this.ownerDocument = null;
     this.namespaceURI = null;
     this.ownerSVGElement = null;
@@ -418,6 +455,18 @@ class FakeElement extends FakeEventTarget {
     });
   }
 
+  after(...nodes) {
+    if (!this.parentNode) {
+      return;
+    }
+
+    nodes.flat().forEach((node) => {
+      if (node) {
+        this.parentNode.insertBefore(node, this.nextElementSibling);
+      }
+    });
+  }
+
   removeChild(child) {
     const index = this.children.indexOf(child);
     if (index >= 0) {
@@ -468,8 +517,8 @@ class FakeElement extends FakeEventTarget {
     clone.type = this.type;
     clone.title = this.title;
     clone.tabIndex = this.tabIndex;
-    clone.dataset = { ...this.dataset };
     clone.attributes = new Map(this.attributes);
+    clone.dataset = createDatasetProxy(clone, { ...this.dataset });
     clone.ownerDocument = this.ownerDocument;
     clone.namespaceURI = this.namespaceURI;
     clone.ownerSVGElement = this.ownerSVGElement;
@@ -604,12 +653,10 @@ class FakeElement extends FakeEventTarget {
   }
 
   closest(selector) {
-    let current = this;
-    while (current) {
-      if (matchesSelectorList(current, selector)) {
-        return current;
+    for (let node = this; node; node = node.parentNode || null) {
+      if (matchesSelectorList(node, selector)) {
+        return node;
       }
-      current = current.parentNode || null;
     }
     return null;
   }
@@ -662,13 +709,13 @@ class FakeElement extends FakeEventTarget {
       event.target = this;
     }
 
-    let current = this;
-    while (current) {
-      FakeEventTarget.prototype.dispatchEvent.call(current, event);
+    let current = null;
+    for (let node = this; node; node = node.parentNode || null) {
+      current = node;
+      FakeEventTarget.prototype.dispatchEvent.call(node, event);
       if (!event.bubbles || event._stopped) {
         break;
       }
-      current = current.parentNode || null;
     }
 
     if (event.bubbles && !event._stopped && this.ownerDocument && current !== this.ownerDocument) {

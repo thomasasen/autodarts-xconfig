@@ -480,7 +480,7 @@ function ensureXConfigShell(options = {}) {
 
     const tabNode = target.closest("[data-adxconfig-tab]");
     if (tabNode) {
-      const tabId = tabNode.getAttribute("data-adxconfig-tab") || "themes";
+      const tabId = tabNode.dataset?.adxconfigTab || "themes";
       if (TAB_DEFINITIONS.some((tab) => tab.id === tabId)) {
         state.activeTab = tabId;
         state.activeSettingsFeatureKey = "";
@@ -499,7 +499,7 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
-    const action = actionNode.getAttribute("data-adxconfig-action");
+    const action = actionNode.dataset?.adxconfigAction || "";
 
     if (action === "close-settings-backdrop") {
       const insideModal = target.closest("[data-adxconfig-modal='true']");
@@ -509,7 +509,7 @@ function ensureXConfigShell(options = {}) {
     }
 
     event.preventDefault?.();
-    const featureKey = actionNode.getAttribute("data-feature-key");
+    const featureKey = actionNode.dataset?.featureKey || "";
     const feature = getFeatures().find((entry) => entry.featureKey === featureKey) || null;
     handleAction(action, actionNode, feature);
   }
@@ -520,8 +520,8 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
-    if (target.getAttribute("data-adxconfig-feature-toggle") === "true") {
-      const featureKey = target.getAttribute("data-feature-key");
+    if (target.dataset?.adxconfigFeatureToggle === "true") {
+      const featureKey = target.dataset?.featureKey || "";
       if (featureKey && typeof runtimeApi.setFeatureEnabled === "function") {
         withRuntimeCall(
           runtimeApi.setFeatureEnabled(featureKey, Boolean(target.checked)),
@@ -532,13 +532,13 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
-    if (target.getAttribute("data-adxconfig-setting") !== "true") {
+    if (target.dataset?.adxconfigSetting !== "true") {
       return;
     }
 
-    const featureKey = target.getAttribute("data-feature-key");
-    const configKey = target.getAttribute("data-config-key");
-    const settingKey = target.getAttribute("data-setting-key");
+    const featureKey = target.dataset?.featureKey || "";
+    const configKey = target.dataset?.configKey || "";
+    const settingKey = target.dataset?.settingKey || "";
     if (!featureKey || !configKey || !settingKey || typeof runtimeApi.saveConfig !== "function") {
       return;
     }

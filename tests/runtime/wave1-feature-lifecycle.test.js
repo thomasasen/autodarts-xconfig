@@ -90,7 +90,9 @@ function runtimeBootstrapAudio(windowRef) {
       return Promise.resolve();
     }
 
-    pause() {}
+    pause() {
+      return undefined;
+    }
   };
 }
 

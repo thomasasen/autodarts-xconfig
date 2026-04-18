@@ -63,7 +63,7 @@ export function createShellRenderController(options = {}) {
       return;
     }
     if (isConfigRoute()) {
-      button.setAttribute("data-active", "true");
+      button.dataset.active = "true";
     } else {
       button.removeAttribute("data-active");
     }
@@ -82,12 +82,12 @@ export function createShellRenderController(options = {}) {
       : menuLabel;
 
     if (hasUpdate) {
-      button.setAttribute("data-update-available", "true");
+      button.dataset.updateAvailable = "true";
     } else {
       button.removeAttribute("data-update-available");
     }
 
-    button.setAttribute("data-update-state", String(state.updateStatus?.status || ""));
+    button.dataset.updateState = String(state.updateStatus?.status || "");
     button.setAttribute("title", title);
     button.setAttribute("aria-label", title);
   }
@@ -129,16 +129,16 @@ export function createShellRenderController(options = {}) {
       boardsAnchor ||
       sidebarLinks.find((link) => sidebarRouteHints.has(toRoutePathname(windowRef, link.getAttribute("href")))) ||
       null;
-    const templateCandidates = [
+    const template = [
       insertionAnchor,
       ...Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []),
       sidebar.lastElementChild,
-    ]
-      .filter(Boolean)
-      .filter((node) => node.id !== menuItemId)
-      .filter((node) => !node.closest?.(`#${panelHostId}`))
-      .filter((node) => String(node.getAttribute?.("data-adxconfig-tab") || "").trim() === "");
-    const template = templateCandidates[0] || null;
+    ].find((node) => {
+      return Boolean(node) &&
+        node.id !== menuItemId &&
+        !node.closest?.(`#${panelHostId}`) &&
+        String(node.dataset?.adxconfigTab || "").trim() === "";
+    }) || null;
 
     let item = documentRef.getElementById?.(menuItemId);
     const shouldRebuildExistingItem =
@@ -171,7 +171,7 @@ export function createShellRenderController(options = {}) {
     item.setAttribute("tabindex", "0");
     item.setAttribute("aria-label", menuLabel);
     item.setAttribute("title", menuLabel);
-    item.setAttribute("data-adxconfig-action", "open");
+    item.dataset.adxconfigAction = "open";
     item.style.cursor = "pointer";
 
     if (String(item.tagName || "").toLowerCase() === "a") {
@@ -198,7 +198,7 @@ export function createShellRenderController(options = {}) {
 
     if (insertionAnchor) {
       if (insertionAnchor.nextElementSibling !== item) {
-        insertionAnchor.insertAdjacentElement("afterend", item);
+        insertionAnchor.after(item);
       }
     } else if (item.parentNode !== sidebar) {
       sidebar.appendChild(item);

@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere Low-Risk-Sonar-Welle modernisiert interne Datenattribut-, Menü- und Overlay-Helfer, ohne Cricket-, X01-, xConfig- oder Theme-Abläufe fachlich umzubauen.
+  Technik: Mehrere Runtime- und UI-Pfade lesen und schreiben `data-*`-Felder jetzt konsistent über `dataset`, kleine Klarheitsrefactors glätten optionale Config-/Legacy-Zweige sowie einzelne DOM-Einfügepfade, `electric-border-engine` nutzt im Fallback wieder korrekt `parentNode.removeChild(...)`, und der Fake-DOM plus gezielte Runtime-Regressionen sichern `dataset`-/`before`-/`after`-Semantik sowie den Defs-Cleanup gegen Drift ab.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; mehrere kleine Sonar-getriebene Bereinigungen halten Runtime-, xConfig-, Theme- und Testpfade auf moderneren Standard-APIs, ohne die Fachlogik der Module sichtbar umzubauen.
   Technik: Niedrigrisiko-Refactorings vereinheitlichen `Object.hasOwn(...)`, `globalThis.window`, `Number.NaN`, `replaceAll(...)`, `String.raw`, `.at(...)` und einzelne Re-exports/Import-Aufräumer; dazu wurden nur eng begrenzte Test- und Helper-Anpassungen ergänzt, damit Sortierungen, Regex-Helfer, DOM-Klassenlisten und Changelog-/Build-Checks weiter stabil gegen Drift abgesichert bleiben.
 
