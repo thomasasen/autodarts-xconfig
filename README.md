@@ -16,14 +16,14 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 - ruhigere oder auffälligere Themes
 - besser sichtbare Hinweise für Checkouts, Spielerwechsel und Treffer
 - Einstellungen direkt im Spiel statt in einzelnen Skripten
-- eigene Hintergrundbilder pro Theme und zusätzlich ein globales Fallback-Bild über `Templates Global`, jeweils empfohlen bis `1,5 MiB` pro gespeichertem Bild
+- eigene Hintergrundbilder pro Theme und zusätzlich ein globales Fallback-Bild oder Preset-Wallpaper über `Templates Global`, jeweils empfohlen bis `1,5 MiB` pro gespeichertem Bild
 
 ## Im Überblick
 
 - Insgesamt `23` Module: `16` Animationen und Komfortfunktionen sowie `7` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
-- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
+- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
 - Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
 
 ## Was du zuerst lesen solltest
@@ -130,7 +130,7 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 Bei den Themes kannst du ein eigenes Hintergrundbild hochladen und später auch wieder entfernen. Das Bild wird nur für das jeweilige Theme gespeichert.
 Empfohlen ist dabei ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
 
-`Templates Global` bietet zusätzlich denselben Hintergrundblock als globales Fallback. Solange das aktive Theme kein eigenes Bild gespeichert hat, greifen Bild, Darstellung, Deckkraft und Spielerfelder-Transparenz aus `Templates Global`. Sobald ein Theme ein eigenes Bild speichert, überschreibt dieses Theme den kompletten globalen Background-Block wieder vollständig.
+`Templates Global` bietet zusätzlich denselben Hintergrundblock als globales Fallback oder als Preset-Wallpaper. Solange das aktive Theme kein eigenes Bild gespeichert hat, greifen Bild, Darstellung, Deckkraft und Spielerfelder-Transparenz aus `Templates Global`. Sobald ein Theme ein eigenes Bild speichert, überschreibt dieses Theme den kompletten globalen Background-Block wieder vollständig.
 
 Je nach Theme kannst du dein Hintergrundbild zusätzlich anpassen:
 
@@ -308,12 +308,19 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Wählt eine kuratierte Schrift, wenige feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Die gewählte Schrift, die festen Farbrollen und das globale Fallback-Hintergrundbild greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig.
-- Wann sinnvoll? Wenn du Scores, Würfe, Spielernamen, den Aktiv-Akzent und bei Bedarf ein gemeinsames Hintergrundbild anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
+- Was macht es sichtbar? Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
+- Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
 
 **Einstellungen einfach erklärt**
 
+- `Classic`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Classic. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Broadcast`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Broadcast. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `British Flag`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf British Flag. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Cyberpunk`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Cyberpunk. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Matrix`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Matrix. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Fire`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Fire. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Ice`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Ice. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
 - `Schriftart`: Wählt eine kuratierte Remote-Schrift für die Template-Typografie. Die Schrift wirkt nur in den unterstützten Bereichen des aktiven xConfig-Themes und verwendet bei Ladeproblemen automatisch einen lokalen Fallback-Stack.
   - Standard (deaktiviert)
   - <span style="font-family: &quot;Aldrich&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Aldrich</span>
@@ -396,8 +403,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `30 %`: Der Hintergrund tritt nun klar hinter den Spielerfeldern hervor. Die Karten wirken leichter und weniger massiv als bei den niedrigen Stufen.
   - `45 %`: Die Spielerfelder wirken sichtbar glasiger. Das Hintergrundmotiv bleibt unter den Flächen deutlich erkennbar und prägt den Gesamteindruck stärker.
   - `60 %`: Die Spielerfelder lassen den Hintergrund sehr deutlich sichtbar werden. Diese Stufe wirkt am luftigsten, kann aber je nach Bild die Ruhe der Oberfläche reduzieren.
-- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl, optimiert das Bild lokal auf maximal 1920×1080 und speichert es als globales Fallback für unterstützte xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Bild, überschreibt dieses Theme-Bild weiterhin den kompletten globalen Background-Block.
-- `Hintergrundbild entfernen`: Löscht nur das in Templates Global gespeicherte Fallback-Bild. Einzelne Themes mit eigenem Bild bleiben unverändert; Themes ohne eigenes Bild fallen danach wieder auf ihren normalen Theme-Background ohne globales Bild zurück.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl, optimiert das Bild lokal auf maximal 1920×1080 und speichert es als globales Fallback für unterstützte xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Bild, überschreibt dieses Theme-Bild weiterhin den kompletten globalen Background-Block; ohne eigenes Theme-Bild überstimmt das gespeicherte Fallback auch ein Preset-Wallpaper aus Templates Global.
+- `Hintergrundbild entfernen`: Löscht nur das in Templates Global gespeicherte Fallback-Bild. Einzelne Themes mit eigenem Bild bleiben unverändert; Themes ohne eigenes Bild fallen danach wieder auf ihr aktives Preset-Wallpaper oder den normalen Theme-Background zurück.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](docs/screenshots/template-theme-global-typography-xConfig.png)

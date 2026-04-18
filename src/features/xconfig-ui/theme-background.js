@@ -1,3 +1,6 @@
+import { resolveThemePresetAsset } from "#theme-preset-assets";
+import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
+
 function estimateBase64ByteSize(rawPayload) {
   const payload = String(rawPayload || "").replace(/\s+/g, "");
   if (!payload) {
@@ -288,13 +291,73 @@ export function readThemeBackgroundImageInfo(feature) {
   return parseDataUrlInfo(feature?.config?.backgroundImageDataUrl || "");
 }
 
+export function readThemeBackgroundPreviewInfo(feature) {
+  const uploadedImageInfo = readThemeBackgroundImageInfo(feature);
+  if (uploadedImageInfo.hasImage) {
+    return {
+      ...uploadedImageInfo,
+      sourceType: "upload",
+      previewUrl: uploadedImageInfo.dataUrl,
+      presetLabel: "",
+    };
+  }
+
+  const isGlobalBackgroundFallback = String(feature?.configKey || "").trim() === "themes.globalTypography";
+  if (!isGlobalBackgroundFallback) {
+    return {
+      hasImage: false,
+      mimeType: "",
+      byteSize: 0,
+      dataUrl: "",
+      sourceType: "",
+      previewUrl: "",
+      presetLabel: "",
+    };
+  }
+
+  const assetKey = String(feature?.config?.backgroundAssetKey || "").trim();
+  const presetLabel = getThemeGlobalTemplatePreset(assetKey)?.label || "";
+  const assetUrl = resolveThemePresetAsset(assetKey);
+  if (!assetUrl) {
+    return {
+      hasImage: false,
+      mimeType: "",
+      byteSize: 0,
+      dataUrl: "",
+      sourceType: "",
+      previewUrl: "",
+      presetLabel: "",
+    };
+  }
+
+  return {
+    hasImage: true,
+    mimeType: "preset-asset",
+    byteSize: 0,
+    dataUrl: "",
+    sourceType: "preset-asset",
+    previewUrl: assetUrl,
+    presetLabel,
+  };
+}
+
+export function resolveThemeBackgroundPreviewUrl(feature) {
+  return String(readThemeBackgroundPreviewInfo(feature).previewUrl || "").trim();
+}
+
 export function formatThemeBackgroundSummary(feature) {
-  const imageInfo = readThemeBackgroundImageInfo(feature);
+  const imageInfo = readThemeBackgroundPreviewInfo(feature);
   const isGlobalBackgroundFallback = String(feature?.configKey || "").trim() === "themes.globalTypography";
   if (!imageInfo.hasImage) {
     return isGlobalBackgroundFallback
       ? "Kein globales Fallback-Hintergrundbild gespeichert."
       : "Kein eigenes Hintergrundbild gespeichert.";
+  }
+
+  if (imageInfo.sourceType === "preset-asset") {
+    return isGlobalBackgroundFallback
+      ? `Globales Preset-Wallpaper: ${imageInfo.presetLabel || "aktiv"}.`
+      : "Preset-Wallpaper aktiv.";
   }
 
   const sizeText = formatByteSize(imageInfo.byteSize);
@@ -309,7 +372,7 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
     return;
   }
 
-  const imageInfo = readThemeBackgroundImageInfo(feature);
+  const imageInfo = readThemeBackgroundPreviewInfo(feature);
   statusNode.setAttribute(
     "class",
     imageInfo.hasImage
@@ -317,14 +380,16 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
       : "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty"
   );
   statusNode.setAttribute("data-theme-image-state", imageInfo.hasImage ? "present" : "empty");
-  statusNode.setAttribute("data-theme-image-type", imageInfo.mimeType || "");
+  statusNode.setAttribute("data-theme-image-type", imageInfo.sourceType || imageInfo.mimeType || "");
   statusNode.setAttribute(
     "data-theme-image-size",
     imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : ""
   );
 
   const summaryText = imageInfo.hasImage
-    ? `Aktuelles Bild: ${imageInfo.mimeType}${imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : ""}.`
+    ? imageInfo.sourceType === "preset-asset"
+      ? `Aktuelles Bild: Preset ${imageInfo.presetLabel || "aktiv"}.`
+      : `Aktuelles Bild: ${imageInfo.mimeType}${imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : ""}.`
     : "Aktuelles Bild: keines.";
 
   let summaryNode = statusNode.querySelector?.(".ad-xconfig-theme-image-status-summary") || null;
@@ -340,14 +405,14 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
   const existingPreview = statusNode.querySelector?.(".ad-xconfig-theme-image-preview") || null;
   if (imageInfo.hasImage) {
     if (existingPreview) {
-      existingPreview.setAttribute("src", imageInfo.dataUrl);
+      existingPreview.setAttribute("src", imageInfo.previewUrl);
       existingPreview.setAttribute("alt", `${feature.title} Hintergrundbild`);
       return;
     }
     if (typeof documentRef?.createElement === "function") {
       const preview = documentRef.createElement("img");
       preview.setAttribute("class", "ad-xconfig-theme-image-preview");
-      preview.setAttribute("src", imageInfo.dataUrl);
+      preview.setAttribute("src", imageInfo.previewUrl);
       preview.setAttribute("alt", `${feature.title} Hintergrundbild`);
       preview.setAttribute("loading", "lazy");
       preview.setAttribute("decoding", "async");

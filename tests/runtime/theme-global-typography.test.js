@@ -159,6 +159,31 @@ test("theme CSS can use Templates Global as the active background fallback visua
   assert.match(themeCss, /background-repeat:\s*repeat\s*!important;/);
 });
 
+test("theme CSS can use Templates Global preset wallpaper assets as fallback visuals", () => {
+  const themeCss = buildX01ThemeCss(
+    {
+      showAvg: true,
+      backgroundDisplayMode: "fill",
+      backgroundOpacity: 25,
+      playerFieldTransparency: 10,
+      backgroundImageDataUrl: "",
+    },
+    {
+      visualConfig: {
+        enabled: true,
+        backgroundDisplayMode: "fill",
+        backgroundOpacity: 25,
+        playerFieldTransparency: 15,
+        backgroundImageDataUrl: "",
+        backgroundAssetKey: "matrix",
+      },
+    }
+  );
+
+  assert.match(themeCss, /theme-presets\/matrix\.png/);
+  assert.doesNotMatch(themeCss, /data:image/);
+});
+
 test("theme global typography only resolves an active theme inside the matching game context", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

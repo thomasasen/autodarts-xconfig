@@ -505,3 +505,36 @@ test("shared theme visual settings prefer the theme image and otherwise fall bac
     themeWithoutImage
   );
 });
+
+test("shared theme visual settings fall back to preset wallpaper assets after uploaded images", () => {
+  const globalTypographyConfig = {
+    enabled: true,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 40,
+    playerFieldTransparency: 15,
+    backgroundImageDataUrl: "",
+    backgroundAssetKey: "ice",
+  };
+  const themeWithoutImage = {
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
+  };
+  const themeWithImage = {
+    backgroundDisplayMode: "fit",
+    backgroundOpacity: 40,
+    playerFieldTransparency: 30,
+    backgroundImageDataUrl: "data:image/png;base64,AAAA",
+  };
+
+  assert.equal(
+    resolveThemeVisualSettingsConfig(themeWithoutImage, globalTypographyConfig),
+    globalTypographyConfig
+  );
+  assert.equal(
+    resolveThemeVisualSettingsConfig(themeWithImage, globalTypographyConfig),
+    themeWithImage
+  );
+  assert.match(buildThemeVisualSettingsCss(globalTypographyConfig), /theme-presets\/ice\.jpg/);
+});

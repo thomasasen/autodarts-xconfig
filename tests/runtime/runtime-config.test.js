@@ -89,6 +89,7 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
       themes: {
         globalTypography: {
           backgroundImageDataUrl: "data:image/png;base64,GGGG",
+          backgroundAssetKey: "cyberpunk",
         },
         x01: {
           backgroundImageDataUrl: "data:image/png;base64,AAAA",
@@ -110,6 +111,7 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.cricketGridFx.enabled, false);
   assert.equal(config.features.themes.globalTypography.enabled, false);
   assert.equal(config.features.themes.globalTypography.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.globalTypography.backgroundAssetKey, "");
   assert.equal(config.features.themes.x01.enabled, false);
   assert.equal(config.features.themes.x01.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
@@ -304,6 +306,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
           backgroundOpacity: "70",
           playerFieldTransparency: "45",
           backgroundImageDataUrl: "data:image/png;base64,GGGG",
+          backgroundAssetKey: "matrix",
         },
         x01: {
           showAvg: "false",
@@ -429,6 +432,10 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(
     runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
+  );
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundAssetKey,
+    "matrix"
   );
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");

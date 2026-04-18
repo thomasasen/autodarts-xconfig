@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.1.29] - 2026-04-18
+
+### Added
+
+- Nutzerwirkung: `Templates Global` bietet jetzt sieben Preset-Aktionen (`Classic`, `Broadcast`, `British Flag`, `Cyberpunk`, `Matrix`, `Fire`, `Ice`), die Schrift, Farbrollen und den globalen Hintergrund mit einem Klick setzen; Themes ohne eigenes Bild nutzen dabei direkt das jeweilige Preset-Wallpaper als sichtbares Fallback und Vorschau.
+  Technik: Neue Preset-Definitionen samt Asset-Manifest und Browser-/Node-Auflösung verdrahten `backgroundAssetKey` als normalisierte `themes.globalTypography`-Konfiguration; xConfig rendert dafür einen eigenen Presets-Bereich mit Bestätigungsdialog, Status-/Kartenvorschau und Runtime-Speicherung, und neue Runtime-, Shell- und Theme-Regressionen sichern Upload-vs.-Preset-Priorität, Reset-Verhalten sowie Asset-Fallbacks gegen Drift.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added
@@ -1351,7 +1358,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...HEAD
+[2.1.29]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...HEAD
+[2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...982f5f1
 [2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...2f3e796
 [2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...95e8963
 [2.1.25]: https://github.com/thomasasen/autodarts-xconfig/compare/8d47a9c...325e508

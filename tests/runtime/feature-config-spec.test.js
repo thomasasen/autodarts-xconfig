@@ -64,6 +64,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
+    backgroundAssetKey: "",
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
@@ -130,6 +131,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
+    backgroundAssetKey: "",
     debug: false,
   });
 
@@ -149,6 +151,7 @@ test("theme global typography defaults and normalization stay stable", () => {
       backgroundOpacity: "40",
       playerFieldTransparency: "30",
       backgroundImageDataUrl: "data:image/png;base64,AAAA",
+      backgroundAssetKey: "cyberpunk",
       debug: "true",
     }),
     {
@@ -163,6 +166,7 @@ test("theme global typography defaults and normalization stay stable", () => {
       backgroundOpacity: 40,
       playerFieldTransparency: 30,
       backgroundImageDataUrl: "data:image/png;base64,AAAA",
+      backgroundAssetKey: "cyberpunk",
       debug: true,
     }
   );
@@ -180,6 +184,7 @@ test("theme global typography defaults and normalization stay stable", () => {
       backgroundOpacity: "70",
       playerFieldTransparency: "45",
       backgroundImageDataUrl: "invalid",
+      backgroundAssetKey: "ice",
       debug: "false",
     }),
     {
@@ -194,6 +199,7 @@ test("theme global typography defaults and normalization stay stable", () => {
       backgroundOpacity: 70,
       playerFieldTransparency: 45,
       backgroundImageDataUrl: "",
+      backgroundAssetKey: "ice",
       debug: false,
     }
   );
@@ -211,6 +217,7 @@ test("theme global typography defaults and normalization stay stable", () => {
       backgroundOpacity: "12",
       playerFieldTransparency: "88",
       backgroundImageDataUrl: "https://example.invalid/bg.png",
+      backgroundAssetKey: "missing-preset",
       debug: "no",
     }),
     {
@@ -225,6 +232,7 @@ test("theme global typography defaults and normalization stay stable", () => {
       backgroundOpacity: 25,
       playerFieldTransparency: 10,
       backgroundImageDataUrl: "",
+      backgroundAssetKey: "",
       debug: false,
     }
   );

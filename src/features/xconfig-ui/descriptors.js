@@ -4,6 +4,7 @@ import {
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
 } from "../../shared/theme-global-typography-presets.js";
+import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
 
 function checkboxField(key, label) {
   return Object.freeze({
@@ -43,10 +44,12 @@ function colorField(key, label, fieldOptions = {}) {
 
 function actionField(action, label, options = {}) {
   return Object.freeze({
+    key: String(options.key || "").trim(),
     action,
     label,
     actionId: String(options.actionId || "").trim(),
     buttonLabel: String(options.buttonLabel || label).trim(),
+    section: String(options.section || "").trim(),
     description: String(options.description || "").trim(),
     successMessage: String(options.successMessage || "").trim(),
     errorMessage: String(options.errorMessage || "").trim(),
@@ -128,6 +131,14 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "template-global-typography",
     description: "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
     fields: [
+      ...THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) =>
+        actionField("applyThemeGlobalPreset", preset.label, {
+          key: `preset-${preset.key}`,
+          actionId: preset.key,
+          buttonLabel: preset.label,
+          section: "Presets",
+        })
+      ),
       selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS, {
         section: "Schrift",
       }),

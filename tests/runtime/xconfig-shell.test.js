@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-template-presets.js";
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
@@ -1760,7 +1761,16 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   const sectionTitles = documentRef
     .querySelectorAll(".ad-xconfig-settings-section-title")
     .map((node) => String(node.textContent || "").trim());
-  assert.deepEqual(sectionTitles, ["Schrift", "Farben", "Hintergrund"]);
+  assert.deepEqual(sectionTitles, ["Presets", "Schrift", "Farben", "Hintergrund"]);
+
+  const presetButtons = documentRef.querySelectorAll(
+    "[data-adxconfig-action='applyThemeGlobalPreset'][data-feature-key='theme-global-typography']"
+  );
+  assert.equal(presetButtons.length, THEME_GLOBAL_TEMPLATE_PRESETS.length);
+  assert.deepEqual(
+    presetButtons.map((button) => String(button.textContent || "").trim()),
+    THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) => preset.label)
+  );
 
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
   assert.ok(previewStyleNode);
@@ -1999,6 +2009,113 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   runtime.stop();
 });
 
+test("xConfig shell applies Templates Global presets with confirmation and asset-backed preview wallpaper", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const confirmMessages = [];
+  windowRef.confirm = (message) => {
+    confirmMessages.push(String(message || ""));
+    return true;
+  };
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const presetButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-preset-cyberpunk"
+  );
+  assert.ok(presetButton);
+  presetButton.click();
+
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.featureToggles?.["themes.globalTypography"] === true &&
+      config.features?.themes?.globalTypography?.enabled === true &&
+      config.features.themes.globalTypography.fontPreset === "audiowide" &&
+      config.features.themes.globalTypography.backgroundAssetKey === "cyberpunk" &&
+      config.features.themes.globalTypography.backgroundImageDataUrl === ""
+  );
+
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.featureToggles["themes.globalTypography"], true);
+  assert.deepEqual(storedConfig.features.themes.globalTypography, {
+    enabled: true,
+    fontPreset: "audiowide",
+    applyTo: ["scores", "throws", "names"],
+    accentColor: "#2EF2FF",
+    scoreColor: "#E8FF5A",
+    secondaryTextColor: "#FFD0F5",
+    throwLabelColor: "#FF5CD6",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 40,
+    playerFieldTransparency: 30,
+    backgroundImageDataUrl: "",
+    backgroundAssetKey: "cyberpunk",
+    debug: false,
+  });
+
+  assert.equal(confirmMessages.length, 1);
+  assert.match(confirmMessages[0], /Preset "Cyberpunk"/);
+  assert.match(confirmMessages[0], /Wallpaper/);
+
+  let status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(status);
+  assert.equal(
+    await waitFor(
+      () =>
+        documentRef
+          .querySelector(
+            "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
+          )
+          ?.getAttribute("data-theme-image-state") === "present",
+      { timeoutMs: 500, intervalMs: 8 }
+    ),
+    true
+  );
+  status = documentRef.querySelector(
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(status);
+  assert.equal(status.getAttribute("data-theme-image-state"), "present");
+  assert.equal(status.getAttribute("data-theme-image-type"), "preset-asset");
+
+  const summary = status.querySelector(".ad-xconfig-theme-image-status-summary");
+  assert.ok(summary);
+  assert.match(String(summary.textContent || ""), /Preset Cyberpunk/);
+
+  const preview = status.querySelector(".ad-xconfig-theme-image-preview");
+  assert.ok(preview);
+  assert.match(String(preview.getAttribute("src") || ""), /theme-presets\/cyberpunk\.jpg/);
+
+  const themeCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-typography']"
+  );
+  assert.ok(themeCard);
+
+  const themeCardNote = themeCard.querySelector(".ad-xconfig-note");
+  assert.ok(themeCardNote);
+  assert.match(String(themeCardNote.textContent || ""), /Globales Preset-Wallpaper: Cyberpunk/);
+
+  const themeCardPreview = themeCard.querySelector(".ad-xconfig-card-bg img");
+  assert.ok(themeCardPreview);
+  assert.match(String(themeCardPreview.getAttribute("src") || ""), /theme-presets\/cyberpunk\.jpg/);
+
+  runtime.stop();
+});
+
 test("xConfig shell links every settings modal README button to the matching README anchor", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -2222,7 +2339,7 @@ test("xConfig shell theme background upload and clear actions persist and expose
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "present");
-  assert.equal(status.getAttribute("data-theme-image-type"), "image/webp");
+  assert.equal(status.getAttribute("data-theme-image-type"), "upload");
   assert.equal(status.getAttribute("data-theme-image-size"), "30");
 
   const uploadedSummary = status.querySelector(".ad-xconfig-theme-image-status-summary");
@@ -2375,7 +2492,7 @@ test("xConfig shell supports global background upload and clear actions for Temp
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "present");
-  assert.equal(status.getAttribute("data-theme-image-type"), "image/webp");
+  assert.equal(status.getAttribute("data-theme-image-type"), "upload");
 
   const themeCardNote = documentRef.querySelector(
     ".ad-xconfig-card[data-feature-key='theme-global-typography'] .ad-xconfig-note"

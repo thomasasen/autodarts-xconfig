@@ -5,6 +5,7 @@ import {
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
   getThemeGlobalTypographyScopeValues,
 } from "../shared/theme-global-typography-presets.js";
+import { THEME_PRESET_ASSET_KEYS } from "../shared/theme-preset-assets.manifest.js";
 import { normalizeThemeBackgroundHost } from "../shared/theme-background-host-utils.js";
 import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
@@ -56,6 +57,7 @@ const THEME_CONTRAST_PRESETS = new Set(["soft", "standard", "high"]);
 const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
 );
+const THEME_PRESET_ASSET_KEY_SET = new Set(THEME_PRESET_ASSET_KEYS);
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS.map((option) => option.value)
 );
@@ -135,6 +137,11 @@ function normalizeBoolean(value, fallbackValue) {
 function normalizeThemeBackgroundImage(rawValue) {
   const dataUrl = String(rawValue || "").trim();
   return dataUrl.startsWith("data:image/") ? dataUrl : "";
+}
+
+function normalizeThemeBackgroundAssetKey(rawValue) {
+  const normalized = String(rawValue || "").trim().toLowerCase();
+  return THEME_PRESET_ASSET_KEY_SET.has(normalized) ? normalized : "";
 }
 
 function normalizeLegacyColorTheme(value, fallbackValue) {
@@ -256,6 +263,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
+    backgroundAssetKey: "",
     debug: false,
   },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -626,6 +634,11 @@ const FEATURE_NORMALIZERS = Object.freeze({
       backgroundImageDataUrl: normalizeThemeBackgroundImage(
         rawConfig.backgroundImageDataUrl ||
           DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundImageDataUrl ||
+          ""
+      ),
+      backgroundAssetKey: normalizeThemeBackgroundAssetKey(
+        rawConfig.backgroundAssetKey ||
+          DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundAssetKey ||
           ""
       ),
       debug: normalizeBoolean(rawConfig.debug, false),

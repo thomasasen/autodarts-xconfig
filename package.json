@@ -1,6 +1,6 @@
 {
   "name": "autodarts-xconfig",
-  "version": "2.1.28",
+  "version": "2.1.29",
   "description": "Clean successor architecture for autodarts xConfig userscript modules",
   "type": "module",
   "imports": {
@@ -11,6 +11,10 @@
     "#xconfig-preview-assets": {
       "node": "./src/shared/xconfig-preview-assets.node.js",
       "default": "./src/shared/xconfig-preview-assets.browser.js"
+    },
+    "#theme-preset-assets": {
+      "node": "./src/shared/theme-preset-assets.node.js",
+      "default": "./src/shared/theme-preset-assets.browser.js"
     }
   },
   "scripts": {

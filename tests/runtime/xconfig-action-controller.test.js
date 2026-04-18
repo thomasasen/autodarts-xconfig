@@ -126,6 +126,10 @@ test("createShellActionController dispatches runtime, update and theme commands"
       clearThemeBackgroundImage: () => {
         calls.push("clear-theme-runtime");
       },
+      saveConfig: (patch) => {
+        calls.push(["save-config", patch]);
+        return Promise.resolve("config-updated");
+      },
     },
     clearThemeBackgroundImage: (options) => calls.push(["clear-theme", options.themeKey]),
     uploadThemeBackgroundImage: (options) => calls.push(["upload-theme", options.themeKey]),
@@ -142,6 +146,16 @@ test("createShellActionController dispatches runtime, update and theme commands"
   controller.handleAction("uploadThemeBackground", null, {
     configKey: "themes.x01",
   });
+  controller.handleAction(
+    "applyThemeGlobalPreset",
+    createActionNode({
+      "data-feature-action-id": "cyberpunk",
+    }),
+    {
+      featureKey: "theme-global-typography",
+      configKey: "themes.globalTypography",
+    }
+  );
 
   await flushMicrotasks();
 
@@ -154,6 +168,38 @@ test("createShellActionController dispatches runtime, update and theme commands"
     "defaults",
     ["clear-theme", "x01"],
     ["upload-theme", "x01"],
+    [
+      "confirm",
+      'Preset "Cyberpunk" anwenden? Dadurch werden alle Einstellungen in Templates Global inklusive globalem Wallpaper überschrieben.',
+    ],
+    [
+      "save-config",
+      {
+        featureToggles: {
+          "themes.globalTypography": true,
+        },
+        features: {
+          themes: {
+            globalTypography: {
+              enabled: true,
+              fontPreset: "audiowide",
+              applyTo: ["scores", "throws", "names"],
+              accentColor: "#2EF2FF",
+              scoreColor: "#E8FF5A",
+              secondaryTextColor: "#FFD0F5",
+              throwLabelColor: "#FF5CD6",
+              backgroundDisplayMode: "fill",
+              backgroundOpacity: 40,
+              playerFieldTransparency: 30,
+              backgroundImageDataUrl: "",
+              backgroundAssetKey: "cyberpunk",
+              debug: false,
+            },
+          },
+        },
+      },
+    ],
+    "sync",
     "sync",
     "sync",
   ]);
@@ -161,6 +207,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
     ["info", "Installations-Tab geöffnet. Bestätige das Update in Tampermonkey."],
     ["info", "Hard Reset ausgeführt."],
     ["info", "Empfohlene Standards angewendet."],
+    ["success", 'Preset "Cyberpunk" angewendet.'],
   ]);
 });
 

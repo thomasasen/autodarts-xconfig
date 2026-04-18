@@ -33,6 +33,7 @@ import { createShellRouteController } from "./route-controller.js";
 import {
   buildThemeBackgroundStatus,
   formatThemeBackgroundSummary,
+  resolveThemeBackgroundPreviewUrl,
 } from "./theme-background.js";
 import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
@@ -1200,7 +1201,7 @@ function buildFeatureCard(documentRef, feature) {
     },
   });
   const previewUrl =
-    String(feature.config?.backgroundImageDataUrl || "").trim() ||
+    resolveThemeBackgroundPreviewUrl(feature) ||
     resolveXConfigPreviewAsset(feature.featureKey);
   if (previewUrl) {
     const bg = createElement(documentRef, "div", {

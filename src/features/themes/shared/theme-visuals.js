@@ -1,4 +1,5 @@
 import { clampNumber } from "./theme-utils.js";
+import { resolveThemePresetAsset } from "#theme-preset-assets";
 
 const BACKGROUND_DISPLAY_MODES = Object.freeze({
   fill: {
@@ -45,6 +46,23 @@ function sanitizeBackgroundDataUrl(rawValue) {
   return dataUrl;
 }
 
+function sanitizeBackgroundUrl(rawValue) {
+  const normalized = String(rawValue || "").trim();
+  if (!normalized) {
+    return "";
+  }
+  return normalized;
+}
+
+function resolveConfiguredBackgroundUrl(featureConfig = {}) {
+  const storedImageUrl = sanitizeBackgroundDataUrl(featureConfig.backgroundImageDataUrl);
+  if (storedImageUrl) {
+    return storedImageUrl;
+  }
+
+  return sanitizeBackgroundUrl(resolveThemePresetAsset(featureConfig.backgroundAssetKey));
+}
+
 function normalizeThemeVisualConfig(candidate) {
   return candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
 }
@@ -52,14 +70,14 @@ function normalizeThemeVisualConfig(candidate) {
 export function resolveThemeVisualSettingsConfig(themeFeatureConfig = {}, globalTypographyConfig = {}) {
   const themeConfig = normalizeThemeVisualConfig(themeFeatureConfig);
   const globalConfig = normalizeThemeVisualConfig(globalTypographyConfig);
-  const themeHasStoredImage = Boolean(sanitizeBackgroundDataUrl(themeConfig.backgroundImageDataUrl));
-  const globalHasStoredImage = Boolean(sanitizeBackgroundDataUrl(globalConfig.backgroundImageDataUrl));
+  const themeHasBackground = Boolean(resolveConfiguredBackgroundUrl(themeConfig));
+  const globalHasBackground = Boolean(resolveConfiguredBackgroundUrl(globalConfig));
 
-  if (themeHasStoredImage) {
+  if (themeHasBackground) {
     return themeConfig;
   }
 
-  if (globalConfig.enabled && globalHasStoredImage) {
+  if (globalConfig.enabled && globalHasBackground) {
     return globalConfig;
   }
 
@@ -72,7 +90,7 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
   const playerFieldTransparency = clampNumber(featureConfig.playerFieldTransparency, 0, 95, 10);
   const overlayAlpha = clampNumber((100 - backgroundOpacity) / 100, 0, 1, 0.75);
   const playerFieldAlpha = clampNumber((100 - playerFieldTransparency) / 100, 0.05, 1, 0.9);
-  const backgroundDataUrl = sanitizeBackgroundDataUrl(featureConfig.backgroundImageDataUrl);
+  const backgroundUrl = resolveConfiguredBackgroundUrl(featureConfig);
 
   const playerFieldCss = `
 #ad-ext-player-display .ad-ext-player{
@@ -89,11 +107,11 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
 }
 `;
 
-  if (!backgroundDataUrl) {
+  if (!backgroundUrl) {
     return playerFieldCss;
   }
 
-  const escapedDataUrl = escapeCssUrl(backgroundDataUrl);
+  const escapedBackgroundUrl = escapeCssUrl(backgroundUrl);
   return `
 html,
 body,
@@ -103,7 +121,7 @@ div.css-nfhdnc {
   background-color: #06080d !important;
   background-image:
     linear-gradient(rgba(6, 8, 13, ${overlayAlpha.toFixed(3)}), rgba(6, 8, 13, ${overlayAlpha.toFixed(3)})),
-    url("${escapedDataUrl}") !important;
+    url("${escapedBackgroundUrl}") !important;
   background-size: ${displayMode.size} !important;
   background-position: ${displayMode.position} !important;
   background-repeat: ${displayMode.repeat} !important;

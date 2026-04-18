@@ -1,3 +1,8 @@
+import {
+  createThemeGlobalTemplatePresetPatch,
+  getThemeGlobalTemplatePreset,
+} from "../../shared/theme-global-template-presets.js";
+
 export function createShellActionController(options = {}) {
   const windowRef = options.windowRef || null;
   const documentRef = options.documentRef || null;
@@ -316,6 +321,34 @@ export function createShellActionController(options = {}) {
     );
   }
 
+  function handleApplyThemeGlobalPreset(actionNode, feature) {
+    if (!feature || !runtimeApi || typeof runtimeApi.saveConfig !== "function") {
+      return;
+    }
+
+    const presetKey = String(actionNode?.getAttribute?.("data-feature-action-id") || "").trim();
+    const preset = getThemeGlobalTemplatePreset(presetKey);
+    const patch = createThemeGlobalTemplatePresetPatch(presetKey);
+    if (!preset || !patch) {
+      return;
+    }
+
+    const confirmed = confirmAction(
+      `Preset "${preset.label}" anwenden? Dadurch werden alle Einstellungen in Templates Global inklusive globalem Wallpaper überschrieben.`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    withRuntimeCall(
+      Promise.resolve(runtimeApi.saveConfig(patch)).then(() => {
+        syncThemeBackgroundIndicators(feature.featureKey);
+      }),
+      `Preset "${preset.label}" angewendet.`,
+      `Preset "${preset.label}" konnte nicht angewendet werden.`
+    );
+  }
+
   function handleClearThemeBackground(feature) {
     const themeKey = themeKeyFromConfigKey(feature.configKey);
     if (!themeKey || typeof runtimeApi?.clearThemeBackgroundImage !== "function") {
@@ -382,6 +415,12 @@ export function createShellActionController(options = {}) {
       handleSetSettingSelectOption(actionNode, feature)],
     ["clear-setting-color", (actionNode, feature) => handleClearSettingColor(actionNode, feature)],
     ["run-feature-action", (actionNode, feature) => handleRunFeatureAction(actionNode, feature)],
+    ["applyThemeGlobalPreset", (actionNode, feature) => {
+      if (!feature) {
+        return;
+      }
+      handleApplyThemeGlobalPreset(actionNode, feature);
+    }],
     ["clearThemeBackground", (_actionNode, feature) => {
       if (!feature) {
         return;

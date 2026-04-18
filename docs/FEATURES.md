@@ -13,7 +13,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 - Insgesamt `23` Module: `16` Animationen und Komfortfunktionen sowie `7` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
-- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
+- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
 - Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
 
 ![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
@@ -153,8 +153,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Kurz: Wählt eine kuratierte Schrift, wenige feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Die gewählte Schrift, die festen Farbrollen und das globale Fallback-Hintergrundbild greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig.
+- Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
+- `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
+- `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
+- `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.
+- `Cyberpunk`: Wendet das Preset Cyberpunk mit einem Klick auf Templates Global an.
+- `Matrix`: Wendet das Preset Matrix mit einem Klick auf Templates Global an.
+- `Fire`: Wendet das Preset Fire mit einem Klick auf Templates Global an.
+- `Ice`: Wendet das Preset Ice mit einem Klick auf Templates Global an.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Template-Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.

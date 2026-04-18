@@ -34,6 +34,7 @@ import {
   applyThemeBackgroundStatusNode,
   clearThemeBackgroundImage,
   formatThemeBackgroundSummary,
+  resolveThemeBackgroundPreviewUrl,
   uploadThemeBackgroundImage,
 } from "./theme-background.js";
 import { createShellActionController } from "./action-controller.js";
@@ -274,6 +275,16 @@ function ensureXConfigShell(options = {}) {
     const cardStatusText = formatThemeBackgroundSummary(feature);
     cardStatusNodes.forEach((node) => {
       node.textContent = cardStatusText;
+    });
+    const nextCardPreviewUrl =
+      resolveThemeBackgroundPreviewUrl(feature) ||
+      resolveXConfigPreviewAsset(feature.featureKey);
+    const cardPreviewNodes = Array.from(documentRef.querySelectorAll(
+      `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}'] .ad-xconfig-card-bg img`
+    ));
+    cardPreviewNodes.forEach((node) => {
+      node.setAttribute("src", nextCardPreviewUrl);
+      node.setAttribute("alt", `${feature.title} Vorschau`);
     });
 
     const modalStatusNodes = Array.from(documentRef.querySelectorAll(
