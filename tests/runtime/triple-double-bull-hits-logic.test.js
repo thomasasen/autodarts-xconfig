@@ -820,7 +820,7 @@ test("electric-arc timeline keeps subtle frame jitter and moderated score spacin
   );
   assert.equal(
     electricRowStep?.step?.keyframes?.some((frame) =>
-      Object.prototype.hasOwnProperty.call(frame, "skewX")
+      Object.hasOwn(frame, "skewX")
     ),
     false
   );

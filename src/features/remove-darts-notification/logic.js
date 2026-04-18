@@ -53,7 +53,7 @@ const NODE_FILTER_SHOW_ELEMENT =
     : 1;
 
 function normalizeText(value) {
-  return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  return String(value || "").replaceAll(/\s+/g, " ").trim().toLowerCase();
 }
 
 const NORMALIZED_TAKEOUT_STATUS_TEXTS = Object.freeze(
@@ -78,7 +78,7 @@ function normalizeRoutePath(pathValue) {
   if (!normalized.startsWith("/")) {
     normalized = `/${normalized}`;
   }
-  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
+  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
   if (normalized.length > 1) {
     normalized = normalized.replace(/\/+$/, "");
   }

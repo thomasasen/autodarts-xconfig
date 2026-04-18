@@ -22,6 +22,10 @@ const newSystemInventoryText = readFileSync(newSystemInventoryPath, "utf8");
 const featureParityPath = path.resolve(process.cwd(), "docs", "FEATURE-PARITY.md");
 const featureParityText = readFileSync(featureParityPath, "utf8");
 
+function escapeRegExp(text) {
+  return String(text || "").replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
 const LEGACY_USER_SCRIPTS = Object.freeze([
   "Animation/Autodarts Animate Average Trend Arrow.user.js",
   "Animation/Autodarts Animate Checkout Board Targets.user.js",
@@ -59,7 +63,7 @@ test("LEGACY-PARITY-MATRIX covers all legacy user scripts", () => {
   LEGACY_USER_SCRIPTS.forEach((scriptPath) => {
     assert.match(
       matrixText,
-      new RegExp(scriptPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      new RegExp(escapeRegExp(scriptPath))
     );
   });
 });

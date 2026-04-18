@@ -226,7 +226,7 @@ function matchesSelectorList(node, selector) {
 function normalizeDatasetKey(attrName) {
   return String(attrName || "")
     .replace(/^data-/, "")
-    .replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
+    .replaceAll(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
 }
 
 function propagateOwnerSvg(node, ownerSvgElement) {
@@ -681,7 +681,7 @@ class FakeElement extends FakeEventTarget {
   }
 
   get lastElementChild() {
-    return this.children.length ? this.children[this.children.length - 1] : null;
+    return this.children.at(-1) || null;
   }
 
   get previousElementSibling() {

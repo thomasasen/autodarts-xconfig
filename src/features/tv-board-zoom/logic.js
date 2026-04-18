@@ -863,7 +863,7 @@ export function buildZoomTransform(options = {}) {
   const zoomLevel = Number(options.zoomLevel);
   const intent = options.intent || null;
   const x01Rules = options.x01Rules || null;
-  const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const providedBaseTransform =
     typeof options.baseTransform === "string" ? options.baseTransform : null;
   const activeTargetZoomTransform = options.activeTargetZoomTransform || null;
@@ -1267,7 +1267,7 @@ export function applyZoom(
   }
 
   const x01Rules = options.x01Rules || null;
-  const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const documentRef = options.documentRef || (typeof document !== "undefined" ? document : null);
   clearPendingRelease(state);
 

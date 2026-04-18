@@ -43,7 +43,7 @@ function createCleanupStack() {
 
 export function createFeatureMountHarness(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const observerRegistry = context.registries?.observers || null;
   const listenerRegistry = context.registries?.listeners || null;
   const gameState = context.gameState || null;

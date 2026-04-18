@@ -154,12 +154,12 @@ function getLegacyFeatureSettings(legacyFeatureState) {
 }
 
 function readLegacySetting(settings, shortKey, fallbackValue) {
-  if (Object.prototype.hasOwnProperty.call(settings, shortKey)) {
+  if (Object.hasOwn(settings, shortKey)) {
     return settings[shortKey];
   }
 
   const prefixedKey = `xConfig_${shortKey}`;
-  if (Object.prototype.hasOwnProperty.call(settings, prefixedKey)) {
+  if (Object.hasOwn(settings, prefixedKey)) {
     return settings[prefixedKey];
   }
 
@@ -184,7 +184,7 @@ function normalizeLegacyColorTheme(value, fallbackValue) {
     return fallbackValue;
   }
 
-  const compact = rawValue.replace(/\s+/g, "");
+  const compact = rawValue.replaceAll(/\s+/g, "");
   return LEGACY_COLOR_THEME_ALIASES[compact] || rawValue;
 }
 

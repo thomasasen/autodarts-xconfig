@@ -48,7 +48,7 @@ function getGlobalNamespace(windowRef) {
 
 export async function initializeTampermonkeyRuntime(options = {}) {
   const windowRef =
-    options.windowRef || (typeof window !== "undefined" ? window : null);
+    options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const documentRef =
     options.documentRef ||
     (windowRef && windowRef.document ? windowRef.document : null);
@@ -325,7 +325,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     return await runtimePromise;
   } finally {
     const namespace = getGlobalNamespace(windowRef);
-    if (namespace && Object.prototype.hasOwnProperty.call(namespace, RUNTIME_INIT_PROMISE_KEY)) {
+    if (namespace && Object.hasOwn(namespace, RUNTIME_INIT_PROMISE_KEY)) {
       try {
         delete namespace[RUNTIME_INIT_PROMISE_KEY];
       } catch (_) {

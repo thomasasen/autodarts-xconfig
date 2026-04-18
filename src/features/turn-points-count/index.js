@@ -19,7 +19,7 @@ const LISTENER_KEYS = Object.freeze({
 
 export function initializeTurnPointsCount(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
   const domGuards = context.domGuards;

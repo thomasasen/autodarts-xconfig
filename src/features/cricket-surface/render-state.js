@@ -31,7 +31,7 @@ export function buildPipelineSignature(extracted, stateMap) {
       `${label}:${entry?.boardPresentation || entry?.presentation || "open"}:${entry?.uiBucket || ""}:${entry?.isHighlightActive ? "1" : "0"}:${(entry?.marksByPlayer || []).join(",")}`
     );
   });
-  entries.sort();
+  entries.sort((left, right) => left.localeCompare(right));
   return [...baseParts, entries.join("|")].join("::");
 }
 

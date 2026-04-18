@@ -26,7 +26,7 @@ function buildUnusedVariableRule(overrides = {}) {
 }
 
 function escapeRegExp(value) {
-  return String(value).replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+  return String(value).replaceAll(/[\\^$.*+?()[\]{}|]/g, String.raw`\$&`);
 }
 
 function buildExactNamePattern(names, { allowUnderscorePrefix = false } = {}) {

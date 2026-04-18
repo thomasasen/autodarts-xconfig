@@ -200,7 +200,7 @@ function getDisplayLabel(label) {
 
 function maybeIncludeLabelCellAsPlayerCell(playerCells, labelCell, expectedPlayerCount = 0) {
   const normalizedCells = Array.isArray(playerCells)
-    ? playerCells.filter((cell) => Boolean(cell))
+    ? playerCells.filter(Boolean)
     : [];
   if (!labelCell || normalizedCells.includes(labelCell)) {
     return normalizedCells;

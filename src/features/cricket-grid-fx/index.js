@@ -107,7 +107,7 @@ function collectRuntimeWatchNodes(state, renderState, documentRef) {
 
 export function initializeCricketGridFx(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const domGuards = context.domGuards;
   const cricketRules = context.domain?.cricketRules;
   const config = context.config;

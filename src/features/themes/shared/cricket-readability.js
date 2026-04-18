@@ -105,8 +105,8 @@ function hasExactBoardViewBox(node) {
 
   const rawViewBox = String(node.getAttribute("viewBox") || "")
     .trim()
-    .replace(/,/g, " ")
-    .replace(/\s+/g, " ");
+    .replaceAll(/,/g, " ")
+    .replaceAll(/\s+/g, " ");
   return rawViewBox === "0 0 1000 1000";
 }
 
@@ -1224,13 +1224,13 @@ function getAttributeText(node, attributeName) {
 function normalizeCricketNameText(value) {
   return String(value || "")
     .trim()
-    .replace(/\s+/g, " ");
+    .replaceAll(/\s+/g, " ");
 }
 
 function normalizeComparableCricketName(value) {
   return normalizeCricketNameText(value)
     .toLowerCase()
-    .replace(/[\s.]+/g, "");
+    .replaceAll(/[\s.]+/g, "");
 }
 
 function isLikelyTruncatedCricketName(value) {

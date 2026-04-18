@@ -626,14 +626,14 @@ test("shared cricket runtime marks ready-to-missing-board gaps as boardGapDeferr
   });
 
   try {
-    const readyLifecycle = lifecycleEvents[lifecycleEvents.length - 1] || null;
+    const readyLifecycle = lifecycleEvents.at(-1) || null;
     assert.equal(readyLifecycle?.surfaceStatus, "ready");
     assert.equal(readyLifecycle?.boardGapDeferred, false);
 
     healthyFixture.rightPane.removeChild(healthyFixture.boardShell);
     sharedRuntime.scheduler.schedule();
 
-    const deferredLifecycle = lifecycleEvents[lifecycleEvents.length - 1] || null;
+    const deferredLifecycle = lifecycleEvents.at(-1) || null;
     assert.equal(deferredLifecycle?.surfaceStatus, "missing-board");
     assert.equal(deferredLifecycle?.boardGapDeferred, true);
     assert.equal(deferredLifecycle?.pendingDegradedHostRecheck, false);

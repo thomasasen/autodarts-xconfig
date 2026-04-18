@@ -40,5 +40,5 @@ export function setNestedValue(rootValue, pathParts = [], value) {
     current = current[part];
   }
 
-  current[pathParts[pathParts.length - 1]] = value;
+  current[pathParts.at(-1)] = value;
 }

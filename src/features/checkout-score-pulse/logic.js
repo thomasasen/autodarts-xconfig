@@ -218,7 +218,7 @@ export function getScoreNodes(documentRef, gameState = null) {
   const activePlayerIndex =
     gameState && typeof gameState.getActivePlayerIndex === "function"
       ? Number(gameState.getActivePlayerIndex())
-      : NaN;
+      : Number.NaN;
   if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
     const playerRows = Array.from(documentRef.querySelectorAll(".ad-ext-player")).filter((rowNode) => {
       return Boolean(rowNode?.querySelector?.(SCORE_SELECTOR));

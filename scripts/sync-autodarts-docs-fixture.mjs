@@ -32,7 +32,7 @@ async function fetchDoc(url) {
 
 function normalizeText(value) {
   return String(value || "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }

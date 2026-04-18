@@ -11,15 +11,9 @@ import {
   clearBoardLayoutHooks,
   hasBoardLayoutHookMutation,
   hasBoardInputModeMutation,
-  resolveThemeBoardCanvasTarget,
-  selectWidestContentLayoutCandidate,
   updateBoardLayoutHooks,
 } from "./board-layout-resolver.js";
-import {
-  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
-  THEME_CRICKET_READABILITY,
-  THEME_LAYOUT_HOOK_CLASSES,
-} from "./theme-layout-contract.js";
+import { THEME_LAYOUT_HOOK_CLASSES } from "./theme-layout-contract.js";
 import { resolveThemePolicy } from "./theme-policies.js";
 import { resolveThemeVisualSettingsConfig } from "./theme-visuals.js";
 
@@ -27,13 +21,15 @@ export {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
   THEME_CRICKET_READABILITY,
   THEME_LAYOUT_HOOK_CLASSES,
+} from "./theme-layout-contract.js";
+export {
   resolveThemeBoardCanvasTarget,
   selectWidestContentLayoutCandidate,
-};
+} from "./board-layout-resolver.js";
 
 export function mountThemeFeature(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const domGuards = context.domGuards;
   const gameState = context.gameState;
   const config = context.config;

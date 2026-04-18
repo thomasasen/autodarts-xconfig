@@ -8,7 +8,7 @@ export function normalizeRoutePath(pathValue) {
     normalized = `/${normalized}`;
   }
 
-  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
+  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
   if (normalized.length > 1) {
     normalized = normalized.replace(/\/+$/, "");
   }

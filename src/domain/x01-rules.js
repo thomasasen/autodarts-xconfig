@@ -10,7 +10,7 @@ export const IMPOSSIBLE_CHECKOUT_SCORES = new Set([
 
 function toNumber(value) {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : NaN;
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
 const CHECKOUT_TOKEN_PATTERN = /DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
@@ -54,15 +54,15 @@ export function normalizeSegmentName(value) {
 function normalizeCheckoutSuggestionText(value) {
   return String(value || "")
     .toUpperCase()
-    .replace(/DOUBLE\s*[-:]?\s*BULL(?:SEYE)?/g, "BULL")
-    .replace(/INNER\s*BULL(?:SEYE)?/g, "BULL")
-    .replace(/SINGLE\s*BULL/g, "SB")
-    .replace(/OUTER\s*BULL/g, "SB")
-    .replace(/BULLSEYE/g, "BULL")
-    .replace(/DOUBLE\s*[-:]?\s*(\d{1,2})/g, "D$1")
-    .replace(/TRIPLE\s*[-:]?\s*(\d{1,2})/g, "T$1")
-    .replace(/SINGLE\s*[-:]?\s*(\d{1,2})/g, "S$1")
-    .replace(/\s+/g, " ")
+    .replaceAll(/DOUBLE\s*[-:]?\s*BULL(?:SEYE)?/g, "BULL")
+    .replaceAll(/INNER\s*BULL(?:SEYE)?/g, "BULL")
+    .replaceAll(/SINGLE\s*BULL/g, "SB")
+    .replaceAll(/OUTER\s*BULL/g, "SB")
+    .replaceAll(/BULLSEYE/g, "BULL")
+    .replaceAll(/DOUBLE\s*[-:]?\s*(\d{1,2})/g, "D$1")
+    .replaceAll(/TRIPLE\s*[-:]?\s*(\d{1,2})/g, "T$1")
+    .replaceAll(/SINGLE\s*[-:]?\s*(\d{1,2})/g, "S$1")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 
@@ -191,8 +191,8 @@ function getThrowSegmentName(throwEntry) {
     return namedSegment;
   }
 
-  const numericValue = Number(descriptor?.number ?? descriptor?.value ?? NaN);
-  const multiplier = Number(descriptor?.multiplier ?? descriptor?.marks ?? NaN);
+  const numericValue = Number(descriptor?.number ?? descriptor?.value ?? Number.NaN);
+  const multiplier = Number(descriptor?.multiplier ?? descriptor?.marks ?? Number.NaN);
   const bed = String(descriptor?.bed || "").trim().toLowerCase();
 
   if (numericValue === 25) {
@@ -228,7 +228,7 @@ function getThrowSegmentName(throwEntry) {
 
 function getThrowPoints(throwEntry) {
   if (!throwEntry || typeof throwEntry !== "object") {
-    return NaN;
+    return Number.NaN;
   }
 
   const candidates = [
@@ -247,7 +247,7 @@ function getThrowPoints(throwEntry) {
     }
   }
 
-  return NaN;
+  return Number.NaN;
 }
 
 export function isSingleBullThrowEntry(throwEntry) {
@@ -530,8 +530,8 @@ function compareCheckoutRoutes(leftRoute = [], rightRoute = [], outMode) {
     return bullSetupDelta;
   }
 
-  const leftFinish = leftRoute[leftRoute.length - 1] || null;
-  const rightFinish = rightRoute[rightRoute.length - 1] || null;
+  const leftFinish = leftRoute.at(-1) || null;
+  const rightFinish = rightRoute.at(-1) || null;
   const finishComparison = compareOneDartSegments(leftFinish, rightFinish, outMode);
   if (finishComparison !== 0) {
     return finishComparison;
@@ -547,7 +547,7 @@ function compareCheckoutRoutes(leftRoute = [], rightRoute = [], outMode) {
 
 export function getSegmentScore(segmentName) {
   const parsed = parseSegment(segmentName);
-  return parsed ? parsed.score : NaN;
+  return parsed ? parsed.score : Number.NaN;
 }
 
 export function isDoubleSegment(segmentName) {
@@ -883,7 +883,7 @@ export function parseCheckoutSuggestionState(text, outMode = "double") {
     return null;
   }
 
-  const lastSegment = explicitSegments[explicitSegments.length - 1];
+  const lastSegment = explicitSegments.at(-1);
   return isOneDartCheckoutSegmentForOutMode(lastSegment, outMode);
 }
 

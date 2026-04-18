@@ -163,7 +163,7 @@ function resolveScoringModeNormalized(options = {}) {
     return options.scoringModeNormalized.trim().toLowerCase();
   }
 
-  if (Object.prototype.hasOwnProperty.call(options, "scoringMode")) {
+  if (Object.hasOwn(options, "scoringMode")) {
     return classifyCricketScoringMode(options.scoringMode);
   }
 
@@ -226,8 +226,8 @@ function buildSegmentNameFromDescriptor(segment) {
     return name;
   }
 
-  const numericValue = Number(segment?.number ?? segment?.value ?? NaN);
-  const multiplier = Number(segment?.multiplier ?? segment?.marks ?? NaN);
+  const numericValue = Number(segment?.number ?? segment?.value ?? Number.NaN);
+  const multiplier = Number(segment?.multiplier ?? segment?.marks ?? Number.NaN);
   const bed = String(segment?.bed || "").trim().toLowerCase();
 
   if (numericValue === 25) {
@@ -324,7 +324,7 @@ export function parseCricketMarkValue(value) {
   }
 
   const normalized = raw
-    .replace(/\s+/g, "")
+    .replaceAll(/\s+/g, "")
     .toUpperCase();
 
   if (!normalized) {
@@ -357,7 +357,7 @@ export function parseCricketMarkValue(value) {
 
 export function normalizeCricketLabel(value) {
   const text = String(value || "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toUpperCase();
 
@@ -703,7 +703,7 @@ export function computeTargetStates(marksByLabel, options = {}) {
       label: targetLabel,
       modeFamily,
       rawMode: String(options.gameMode || ""),
-      scoringMode: Object.prototype.hasOwnProperty.call(options, "scoringMode")
+      scoringMode: Object.hasOwn(options, "scoringMode")
         ? String(options.scoringMode || "")
         : "",
       scoringModeNormalized,

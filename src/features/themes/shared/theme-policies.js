@@ -9,10 +9,7 @@ import {
 } from "./cricket-readability.js";
 import { createLayoutHookRetentionState } from "./board-layout-resolver.js";
 import { acquireSharedCricketRuntime } from "../../cricket-surface/shared-runtime.js";
-import {
-  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
-  THEME_CRICKET_READABILITY,
-} from "./theme-layout-contract.js";
+import { THEME_CRICKET_READABILITY } from "./theme-layout-contract.js";
 import { createX01TwoPlayerThemePolicy } from "../x01-2player/policy.js";
 
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
@@ -110,4 +107,7 @@ export function resolveThemePolicy(options = {}) {
   return null;
 }
 
-export { CRICKET_ACTIVE_PLAYER_ATTRIBUTE, THEME_CRICKET_READABILITY };
+export {
+  CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+  THEME_CRICKET_READABILITY,
+} from "./theme-layout-contract.js";

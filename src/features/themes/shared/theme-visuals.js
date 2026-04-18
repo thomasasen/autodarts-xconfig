@@ -30,7 +30,9 @@ const BACKGROUND_DISPLAY_MODES = Object.freeze({
 });
 
 function escapeCssUrl(urlValue) {
-  return String(urlValue || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return String(urlValue || "")
+    .replaceAll(/\\/g, String.raw`\\`)
+    .replaceAll(/"/g, String.raw`\"`);
 }
 
 function normalizeBackgroundMode(modeValue) {

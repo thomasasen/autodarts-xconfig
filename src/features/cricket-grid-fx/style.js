@@ -96,16 +96,16 @@ function normalizeIntensityKey(value) {
 export function resolveCricketGridFxConfig(featureConfig = {}) {
   const themeKey = normalizeThemeKey(featureConfig.colorTheme);
   const intensityKey = normalizeIntensityKey(featureConfig.intensity);
-  const pressureEdgeValue = Object.prototype.hasOwnProperty.call(featureConfig, "pressureEdge")
+  const pressureEdgeValue = Object.hasOwn(featureConfig, "pressureEdge")
     ? featureConfig.pressureEdge
     : featureConfig.threatEdge;
-  const scoringStripeValue = Object.prototype.hasOwnProperty.call(featureConfig, "scoringStripe")
+  const scoringStripeValue = Object.hasOwn(featureConfig, "scoringStripe")
     ? featureConfig.scoringStripe
     : featureConfig.scoringLane;
-  const deadRowMutedValue = Object.prototype.hasOwnProperty.call(featureConfig, "deadRowMuted")
+  const deadRowMutedValue = Object.hasOwn(featureConfig, "deadRowMuted")
     ? featureConfig.deadRowMuted
     : featureConfig.deadRowCollapse;
-  const pressureOverlayValue = Object.prototype.hasOwnProperty.call(featureConfig, "pressureOverlay")
+  const pressureOverlayValue = Object.hasOwn(featureConfig, "pressureOverlay")
     ? featureConfig.pressureOverlay
     : featureConfig.opponentPressureOverlay;
   const themePreset = THEME_PRESETS[themeKey];

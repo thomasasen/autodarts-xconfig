@@ -2,42 +2,14 @@ import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
 import { resolveDartDesignAsset } from "#feature-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
-  openUserscriptInstall,
-  readStoredUpdateStatus,
-} from "./update-check.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
-import {
-  currentRoute,
-  getContentElement,
-  getSidebarElement,
-  isConfigHash,
-  isLegacyConfigPath,
-  isNavigationElement,
-  normalizeRoutePath,
-  removeNodeById,
-  toRoutePathname,
-} from "./layout-utils.js";
-import {
-  buildFeatureSettingPatch,
   isBackgroundThemeFeature,
   isThemeFeature,
-  themeKeyFromConfigKey,
 } from "./path-utils.js";
-import { cancelWindowSync, queueWindowSync } from "./sync-scheduler.js";
-import {
-  buildShellRenderSignature,
-  parseShellRenderSignature,
-} from "./render-signature.js";
-import { createShellRenderController } from "./render-controller.js";
-import { createShellRouteController } from "./route-controller.js";
 import {
   buildThemeBackgroundStatus,
   formatThemeBackgroundSummary,
   resolveThemeBackgroundPreviewUrl,
 } from "./theme-background.js";
-import { createShellActionController } from "./action-controller.js";
-import { createUpdateStatusController } from "./update-controller.js";
-import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 

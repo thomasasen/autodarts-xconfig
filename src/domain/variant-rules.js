@@ -1,6 +1,6 @@
 export function normalizeVariant(value) {
   return String(value || "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }
@@ -30,7 +30,7 @@ export function classifyCricketGameMode(value) {
 }
 
 export function classifyCricketScoringMode(value) {
-  const normalized = normalizeVariant(value).replace(/[_\s]+/g, "-");
+  const normalized = normalizeVariant(value).replaceAll(/[_\s]+/g, "-");
   if (!normalized) {
     return "unknown";
   }
@@ -39,7 +39,7 @@ export function classifyCricketScoringMode(value) {
     return "standard";
   }
 
-  if (normalized === "cut-throat" || normalized.replace(/-/g, "") === "cutthroat") {
+  if (normalized === "cut-throat" || normalized.replaceAll(/-/g, "") === "cutthroat") {
     return "cutthroat";
   }
 
@@ -59,7 +59,7 @@ export function classifyCricketScoringMode(value) {
 }
 
 export function classifyCricketTacticsPrecision(value) {
-  const normalized = normalizeVariant(value).replace(/[_\s]+/g, "-");
+  const normalized = normalizeVariant(value).replaceAll(/[_\s]+/g, "-");
   if (!normalized) {
     return "unknown";
   }

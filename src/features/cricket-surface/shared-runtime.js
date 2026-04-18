@@ -277,7 +277,7 @@ function clearSharedRuntimeStore(windowRef, documentRef, runtime) {
 
 function createSharedCricketRuntime(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
   const gameState = context.gameState;
@@ -851,7 +851,7 @@ function createSharedCricketRuntime(context = {}) {
 
 export function acquireSharedCricketRuntime(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
 
   const existingRuntime = getSharedRuntimeStore(windowRef, documentRef);
   if (existingRuntime) {

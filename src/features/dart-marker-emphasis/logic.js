@@ -46,7 +46,7 @@ function isHiddenByDartOverlay(marker) {
   if (!marker || !marker.dataset) {
     return false;
   }
-  return Object.prototype.hasOwnProperty.call(marker.dataset, HIDDEN_MARKER_DATASET_KEY);
+  return Object.hasOwn(marker.dataset, HIDDEN_MARKER_DATASET_KEY);
 }
 
 function applyMarker(marker, visualConfig) {

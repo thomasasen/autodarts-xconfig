@@ -54,11 +54,11 @@ const overviewCounts = {
 };
 
 function readText(filePath) {
-  return readFileSync(filePath, "utf8").replace(/\r\n/g, "\n");
+  return readFileSync(filePath, "utf8").replaceAll(/\r\n/g, "\n");
 }
 
 function escapeRegExp(text) {
-  return String(text || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return String(text || "").replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 test("README references the canonical userscript install target", () => {
@@ -95,7 +95,7 @@ test("README uses the current AD xConfig overview screenshots", () => {
   const readme = readText(readmePath);
 
   requiredReadmeOverviewScreenshots.forEach((screenshotPath) => {
-    assert.match(readme, new RegExp(screenshotPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(readme, new RegExp(escapeRegExp(screenshotPath)));
   });
 });
 
@@ -214,7 +214,7 @@ test("README contains the generated xConfig feature sections and all setting exp
     const expectedSection = buildReadmeFeatureSection(descriptor, definition).trim();
     assert.match(
       readme,
-      new RegExp(expectedSection.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      new RegExp(escapeRegExp(expectedSection)),
       `README drift for ${descriptor.featureKey}`
     );
   });
@@ -255,7 +255,7 @@ test("FEATURES uses the current AD xConfig overview screenshots", () => {
   const featuresDoc = readText(featuresDocPath);
 
   requiredFeaturesOverviewScreenshots.forEach((screenshotPath) => {
-    assert.match(featuresDoc, new RegExp(screenshotPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(featuresDoc, new RegExp(escapeRegExp(screenshotPath)));
   });
 });
 
@@ -268,7 +268,7 @@ test("FEATURES doc contains the generated xConfig feature sections and all setti
     const expectedSection = buildFeaturesDocSection(descriptor, definition).trim();
     assert.match(
       featuresDoc,
-      new RegExp(expectedSection.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      new RegExp(escapeRegExp(expectedSection)),
       `FEATURES drift for ${descriptor.featureKey}`
     );
   });
@@ -334,7 +334,7 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
 
   requiredPreviewFeatureKeys.forEach((featureKey) => {
     assert.equal(
-      Object.prototype.hasOwnProperty.call(XCONFIG_PREVIEW_SCREENSHOTS, featureKey),
+      Object.hasOwn(XCONFIG_PREVIEW_SCREENSHOTS, featureKey),
       true,
       `missing preview mapping for ${featureKey}`
     );

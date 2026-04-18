@@ -392,7 +392,7 @@ function summarizeNode(node) {
 
   const tag = String(node.tagName || node.nodeName || "node").toLowerCase();
   const className = readClassName(node);
-  return className ? `${tag}.${className.replace(/\s+/g, ".")}` : tag;
+  return className ? `${tag}.${className.replaceAll(/\s+/g, ".")}` : tag;
 }
 
 function readRect(node) {
@@ -424,7 +424,7 @@ function readComputedDisplay(windowRef, node) {
 }
 
 function toCompactText(value, maxLength = 90) {
-  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  const normalized = String(value || "").replaceAll(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) {
     return normalized;
   }
@@ -442,7 +442,7 @@ export function parseDisplayedScore(text) {
 }
 
 export function extractStartScore(value) {
-  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  const normalized = String(value || "").replaceAll(/\s+/g, " ").trim();
   const match = normalized.match(START_SCORE_PATTERN);
   if (!match) {
     return null;
@@ -453,7 +453,7 @@ export function extractStartScore(value) {
 }
 
 function extractStartScoreFromPatterns(value, patterns = []) {
-  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  const normalized = String(value || "").replaceAll(/\s+/g, " ").trim();
   if (!normalized) {
     return null;
   }
@@ -823,7 +823,7 @@ function resolveCardIdentity(cardNode, scoreNode, cardIndex) {
     cardNode?.querySelector?.(".ad-ext-player-name") ||
     cardNode?.querySelector?.(".chakra-avatar + p") ||
     null;
-  const nameText = String(nameNode?.textContent || "").replace(/\s+/g, " ").trim();
+  const nameText = String(nameNode?.textContent || "").replaceAll(/\s+/g, " ").trim();
   if (nameText) {
     return `name:${nameText}`;
   }
@@ -981,7 +981,7 @@ function cancelEffectAnimation(fillNode) {
       // Ignore stale animation handles.
     }
   }
-  if (fillNode && Object.prototype.hasOwnProperty.call(fillNode, EFFECT_ANIMATION_SLOT)) {
+  if (fillNode && Object.hasOwn(fillNode, EFFECT_ANIMATION_SLOT)) {
     fillNode[EFFECT_ANIMATION_SLOT] = null;
   }
 }
@@ -1000,7 +1000,7 @@ function clearTrailState(trailNode) {
     }
   }
 
-  if (Object.prototype.hasOwnProperty.call(trailNode, TRAIL_ANIMATION_SLOT)) {
+  if (Object.hasOwn(trailNode, TRAIL_ANIMATION_SLOT)) {
     trailNode[TRAIL_ANIMATION_SLOT] = null;
   }
 
@@ -1308,7 +1308,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   let renderedCards = 0;
   let removedCardsMissingScore = 0;
   const sampledCards = [];
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const activePlayerIndex = Number.isFinite(context.gameState?.getActivePlayerIndex?.())
     ? Number(context.gameState.getActivePlayerIndex())
     : Number.NaN;

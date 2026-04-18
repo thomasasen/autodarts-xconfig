@@ -298,7 +298,7 @@ test("turn-points-count style exports the scoped flash animation contract", () =
   const css = buildStyleText();
 
   assert.equal(STYLE_ID, "ad-ext-turn-points-count-style");
-  assert.match(css, new RegExp(`${SCORE_SELECTOR.replace(".", "\\.")}\\.${SCORE_FLASH_CLASS}`));
+  assert.match(css, new RegExp(`${SCORE_SELECTOR.replace(".", String.raw`\.`)}\\.${SCORE_FLASH_CLASS}`));
   assert.equal(css.includes(`.${SCORE_FRAME_CLASS}{`), true);
   assert.equal(css.includes("ad-ext-turn-points-electric-filter-strong"), true);
   assert.equal(css.includes("@keyframes ad-ext-turn-points-count-flash"), true);

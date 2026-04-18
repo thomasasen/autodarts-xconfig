@@ -19,7 +19,7 @@ const LISTENER_KEYS = Object.freeze({
 
 export function initializeSingleBullSound(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const gameState = context.gameState;
   const x01Rules = context.domain?.x01Rules;
   const config = context.config;

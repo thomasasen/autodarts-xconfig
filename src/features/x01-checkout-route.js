@@ -191,7 +191,7 @@ export function getSingleSuggestionSegmentFromRoute(routeSegments = []) {
 
 export function getCheckoutFinishSegmentFromRoute(routeSegments = [], outMode, x01Rules) {
   const lastSegment = Array.isArray(routeSegments) && routeSegments.length
-    ? String(routeSegments[routeSegments.length - 1] || "")
+    ? String(routeSegments.at(-1) || "")
     : "";
   if (!lastSegment) {
     return "";

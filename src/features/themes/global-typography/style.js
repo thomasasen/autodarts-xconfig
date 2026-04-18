@@ -49,32 +49,36 @@ function buildThemeGlobalTypographyColorDeclarations(featureConfig = {}) {
   const declarations = [];
 
   if (accentColor) {
-    declarations.push(`--ad-ext-theme-accent-color: ${accentColor};`);
-    declarations.push(`--ad-ext-theme-card-active-border-color: ${accentColor};`);
     declarations.push(
-      `--ad-ext-theme-card-active-outline-color: ${hexColorToRgba(accentColor, 0.24)};`
+      `--ad-ext-theme-accent-color: ${accentColor};`,
+      `--ad-ext-theme-card-active-border-color: ${accentColor};`,
+      `--ad-ext-theme-card-active-outline-color: ${hexColorToRgba(accentColor, 0.24)};`,
+      `--ad-ext-theme-score-active-color: ${accentColor};`,
+      `--ad-ext-theme-score-winner-color: ${accentColor};`
     );
-    declarations.push(`--ad-ext-theme-score-active-color: ${accentColor};`);
-    declarations.push(`--ad-ext-theme-score-winner-color: ${accentColor};`);
   }
 
   if (scoreColor) {
-    declarations.push(`--ad-ext-theme-text-primary-color: ${scoreColor};`);
-    declarations.push(`--ad-ext-theme-score-color: ${scoreColor};`);
-    declarations.push(`--ad-ext-theme-score-inactive-color: ${scoreColor};`);
-    declarations.push(`--ad-ext-theme-turn-points-color: ${scoreColor};`);
+    declarations.push(
+      `--ad-ext-theme-text-primary-color: ${scoreColor};`,
+      `--ad-ext-theme-score-color: ${scoreColor};`,
+      `--ad-ext-theme-score-inactive-color: ${scoreColor};`,
+      `--ad-ext-theme-turn-points-color: ${scoreColor};`
+    );
   }
 
   if (secondaryTextColor) {
-    declarations.push(`--ad-ext-theme-text-secondary-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-name-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-name-active-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-name-inactive-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-name-winner-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-meta-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-meta-active-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-meta-inactive-color: ${secondaryTextColor};`);
-    declarations.push(`--ad-ext-theme-meta-winner-color: ${secondaryTextColor};`);
+    declarations.push(
+      `--ad-ext-theme-text-secondary-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-name-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-name-active-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-name-inactive-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-name-winner-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-meta-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-meta-active-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-meta-inactive-color: ${secondaryTextColor};`,
+      `--ad-ext-theme-meta-winner-color: ${secondaryTextColor};`
+    );
   }
 
   if (throwLabelColor) {

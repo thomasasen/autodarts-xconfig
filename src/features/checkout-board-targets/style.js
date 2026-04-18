@@ -241,7 +241,7 @@ function resolvePreset(presets, presetKey, fallbackKey) {
 
 function resolveLegacyVisualPreset(featureConfig = {}) {
   const explicitPreset = String(featureConfig.visualPreset || "").trim().toLowerCase();
-  if (Object.prototype.hasOwnProperty.call(EFFECT_CLASSES, explicitPreset)) {
+  if (Object.hasOwn(EFFECT_CLASSES, explicitPreset)) {
     return explicitPreset;
   }
 

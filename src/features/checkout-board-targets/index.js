@@ -297,7 +297,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
   const retainedRenderState = {
     selectedSegments: [],
     targets: [],
-    activeScore: NaN,
+    activeScore: Number.NaN,
     outMode: "",
     validUntilMs: 0,
   };
@@ -319,7 +319,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
   function resetRetainedRenderState() {
     retainedRenderState.selectedSegments = [];
     retainedRenderState.targets = [];
-    retainedRenderState.activeScore = NaN;
+    retainedRenderState.activeScore = Number.NaN;
     retainedRenderState.outMode = "";
     retainedRenderState.validUntilMs = 0;
     clearRetainExpiryTimer();
@@ -332,7 +332,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
     retainedRenderState.targets = Array.isArray(targets)
       ? targets.map((target) => ({ ...target }))
       : [];
-    retainedRenderState.activeScore = Number.isFinite(activeScore) ? activeScore : NaN;
+    retainedRenderState.activeScore = Number.isFinite(activeScore) ? activeScore : Number.NaN;
     retainedRenderState.outMode = String(outMode || "");
     retainedRenderState.validUntilMs = nowMs() + TRANSIENT_ROUTE_RETENTION_MS;
     clearRetainExpiryTimer();

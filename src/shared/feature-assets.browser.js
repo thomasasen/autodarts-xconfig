@@ -14,7 +14,7 @@ import dartYellowSkullPng from "../assets/darts/Dart_yellowscull.png";
 import takeOutPng from "../assets/TakeOut.png";
 import singleBullMp3 from "../assets/singlebull.mp3";
 
-import { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
+export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
 
 export const DART_DESIGNS = Object.freeze({
   autodarts: dartAutodartsPng,
@@ -31,8 +31,6 @@ export const DART_DESIGNS = Object.freeze({
   yellow: dartYellowPng,
   yellowscull: dartYellowSkullPng,
 });
-
-export { DART_DESIGN_KEYS };
 
 export function resolveDartDesignAsset(designKey) {
   const key = String(designKey || "").trim().toLowerCase();

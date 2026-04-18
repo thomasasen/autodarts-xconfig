@@ -9,7 +9,7 @@ const SIGNAL_COOLDOWN_MS = 250;
 const PROCESSED_THROW_KEY_LIMIT = 400;
 
 function normalizeText(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "").replaceAll(/\s+/g, " ").trim();
 }
 
 function collectThrowTextNodes(documentRef) {

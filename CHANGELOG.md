@@ -19,6 +19,11 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `Templates Global` bietet jetzt sieben Preset-Aktionen (`Classic`, `Broadcast`, `British Flag`, `Cyberpunk`, `Matrix`, `Fire`, `Ice`), die Schrift, Farbrollen und den globalen Hintergrund mit einem Klick setzen; Themes ohne eigenes Bild nutzen dabei direkt das jeweilige Preset-Wallpaper als sichtbares Fallback und Vorschau.
   Technik: Neue Preset-Definitionen samt Asset-Manifest und Browser-/Node-Auflösung verdrahten `backgroundAssetKey` als normalisierte `themes.globalTypography`-Konfiguration; xConfig rendert dafür einen eigenen Presets-Bereich mit Bestätigungsdialog, Status-/Kartenvorschau und Runtime-Speicherung, und neue Runtime-, Shell- und Theme-Regressionen sichern Upload-vs.-Preset-Priorität, Reset-Verhalten sowie Asset-Fallbacks gegen Drift.
 
+### Fixed
+
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; mehrere kleine Sonar-getriebene Bereinigungen halten Runtime-, xConfig-, Theme- und Testpfade auf moderneren Standard-APIs, ohne die Fachlogik der Module sichtbar umzubauen.
+  Technik: Niedrigrisiko-Refactorings vereinheitlichen `Object.hasOwn(...)`, `globalThis.window`, `Number.NaN`, `replaceAll(...)`, `String.raw`, `.at(...)` und einzelne Re-exports/Import-Aufräumer; dazu wurden nur eng begrenzte Test- und Helper-Anpassungen ergänzt, damit Sortierungen, Regex-Helfer, DOM-Klassenlisten und Changelog-/Build-Checks weiter stabil gegen Drift abgesichert bleiben.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added

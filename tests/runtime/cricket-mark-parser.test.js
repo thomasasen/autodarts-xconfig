@@ -18,7 +18,7 @@ function createNode(options = {}) {
       ...(options.dataset || {}),
     },
     getAttribute(name) {
-      return Object.prototype.hasOwnProperty.call(attributes, name) ? attributes[name] : null;
+      return Object.hasOwn(attributes, name) ? attributes[name] : null;
     },
     querySelectorAll() {
       return Array.isArray(options.querySelectorAll) ? options.querySelectorAll : [];

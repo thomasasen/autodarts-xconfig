@@ -77,13 +77,13 @@ function isElementDisabled(node) {
 
 function normalizeRawText(value) {
   return String(value || "")
-    .replace(/\u00a0/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\u00a0/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 
 function escapeRegExp(value) {
-  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return String(value || "").replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 function truncateDebugText(value) {
@@ -350,7 +350,7 @@ function clearInlineAnimationStyles(node) {
     if (typeof node.style.removeProperty === "function") {
       node.style.removeProperty(propertyName);
     }
-    const camelName = propertyName.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
+    const camelName = propertyName.replaceAll(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
     try {
       node.style[camelName] = "";
     } catch (_) {
@@ -393,7 +393,7 @@ function annotateHitTextRoles(rowNode, hitMeta, roleStateByRow = null) {
   const expectedScore = deriveHitScore(hitMeta);
   const expectedSegment = normalizeSegmentLabel(hitMeta?.segment || hitMeta?.label || "");
   const scorePattern = expectedScore
-    ? new RegExp(`(?:^|\\D)${escapeRegExp(expectedScore)}(?:\\D|$)`, "i")
+    ? new RegExp(String.raw`(?:^|\D)${escapeRegExp(expectedScore)}(?:\D|$)`, "i")
     : null;
   const segmentPattern = expectedSegment ? new RegExp(escapeRegExp(expectedSegment), "i") : null;
 
@@ -674,12 +674,14 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
   stopRowAnimation(rowNode, options);
   clearTextRoles(rowNode, options.roleStateByRow || null);
 
-  rowNode.classList.remove(HIT_BASE_CLASS);
-  rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
-  rowNode.classList.remove(HIT_IDLE_LOOP_CLASS);
-  rowNode.classList.remove(...KIND_CLASS_NAMES);
-  rowNode.classList.remove(...THEME_CLASS_NAMES);
-  rowNode.classList.remove(...ANIMATION_CLASS_NAMES);
+  rowNode.classList.remove(
+    HIT_BASE_CLASS,
+    HIT_ANIMATION_TRIGGER_CLASS,
+    HIT_IDLE_LOOP_CLASS,
+    ...KIND_CLASS_NAMES,
+    ...THEME_CLASS_NAMES,
+    ...ANIMATION_CLASS_NAMES
+  );
   rowNode.style.removeProperty("--ad-ext-hit-delay-ms");
   rowNode.removeAttribute("data-ad-ext-hit-signature");
   rowNode.removeAttribute("data-ad-ext-hit-kind");
@@ -993,7 +995,7 @@ function buildBurstTimeline(animeRef, context = {}) {
               filter: "brightness(1.22)",
             },
             {
-              translateX: reducedMotion ? 1 : 1,
+              translateX: 1,
               letterSpacing: "0.08em",
               opacity: 1,
               filter: "brightness(1.16)",

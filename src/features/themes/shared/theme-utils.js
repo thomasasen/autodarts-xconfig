@@ -35,7 +35,7 @@ export function normalizeThemeKey(themeKey) {
 
 export function normalizeVariant(value) {
   return String(value || "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }
@@ -50,7 +50,7 @@ export function normalizeRoutePath(pathValue) {
     normalized = `/${normalized}`;
   }
 
-  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
+  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
   if (normalized.length > 1) {
     normalized = normalized.replace(/\/+$/, "");
   }

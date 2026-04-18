@@ -180,7 +180,7 @@ test("cricket grid discovery drops nested wrapper labels and skips turn preview 
   );
 
   assert.deepEqual(
-    labels.map((entry) => entry.label).sort(),
+    labels.map((entry) => entry.label).sort((left, right) => left.localeCompare(right)),
     ["18", "20"]
   );
   assert.equal(labels.find((entry) => entry.label === "20")?.node, innerLabel);

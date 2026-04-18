@@ -107,7 +107,7 @@ function normalizeRoutePath(pathValue) {
   if (!normalized.startsWith("/")) {
     normalized = `/${normalized}`;
   }
-  normalized = normalized.replace(/[?#].*$/, "").replace(/\/{2,}/g, "/");
+  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
   if (normalized.length > 1) {
     normalized = normalized.replace(/\/+$/, "");
   }
@@ -239,7 +239,7 @@ function readNodeRect(node) {
 }
 
 function readCompactNodeText(node) {
-  return String(node?.textContent || "").replace(/\s+/g, "").trim();
+  return String(node?.textContent || "").replaceAll(/\s+/g, "").trim();
 }
 
 function containsNode(parentNode, childNode) {
@@ -393,7 +393,7 @@ function resolveDegradedHostGate(windowRef, documentRef, matchRouteId, isCandida
 function countCoordinateBands(values, tolerancePx) {
   const numericValues = Array.isArray(values)
     ? values
-      .map((value) => Number(value))
+      .map(Number)
       .filter((value) => Number.isFinite(value))
       .sort((left, right) => left - right)
     : [];

@@ -2,8 +2,8 @@ function getWindowRef(explicitWindowRef = null) {
   if (explicitWindowRef && typeof explicitWindowRef === "object") {
     return explicitWindowRef;
   }
-  if (typeof window !== "undefined") {
-    return window;
+  if (typeof globalThis.window !== "undefined") {
+    return globalThis.window;
   }
   return null;
 }
@@ -97,7 +97,7 @@ export async function ensureAnimeLoaded(windowRef = null) {
   if (
     loadedAnime &&
     !hadAnimeGlobalBeforeImport &&
-    Object.prototype.hasOwnProperty.call(resolvedWindow, "anime")
+    Object.hasOwn(resolvedWindow, "anime")
   ) {
     try {
       delete resolvedWindow.anime;
@@ -138,7 +138,7 @@ export async function ensureConfettiLoaded(windowRef = null) {
   if (
     loadedConfetti &&
     !hadConfettiGlobalBeforeImport &&
-    Object.prototype.hasOwnProperty.call(resolvedWindow, "confetti")
+    Object.hasOwn(resolvedWindow, "confetti")
   ) {
     try {
       delete resolvedWindow.confetti;

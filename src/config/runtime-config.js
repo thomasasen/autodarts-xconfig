@@ -96,7 +96,7 @@ function collectFeatureKeysFromObject(value, prefix = "", result = new Set()) {
       return;
     }
 
-    if (Object.prototype.hasOwnProperty.call(entry, "enabled")) {
+    if (Object.hasOwn(entry, "enabled")) {
       result.add(nextPrefix);
     }
 
@@ -117,7 +117,7 @@ function applyFeatureToggleState(configValue, enabled) {
 
   const normalizedEnabled = Boolean(enabled);
   getFeatureConfigKeys().forEach((featureKey) => {
-    if (Object.prototype.hasOwnProperty.call(configValue.featureToggles || {}, featureKey)) {
+    if (Object.hasOwn(configValue.featureToggles || {}, featureKey)) {
       configValue.featureToggles[featureKey] = normalizedEnabled;
     }
   });
@@ -130,7 +130,7 @@ function applyFeatureToggleState(configValue, enabled) {
     }
 
     featureConfig.enabled = normalizedEnabled;
-    if (Object.prototype.hasOwnProperty.call(featureConfig, "debug")) {
+    if (Object.hasOwn(featureConfig, "debug")) {
       featureConfig.debug = false;
     }
   });
@@ -186,7 +186,7 @@ function applyRecommendedFeatureDefaults(configValue) {
     if (
       configValue.featureToggles &&
       typeof configValue.featureToggles === "object" &&
-      Object.prototype.hasOwnProperty.call(recommendedConfig, "enabled")
+      Object.hasOwn(recommendedConfig, "enabled")
     ) {
       configValue.featureToggles[entry.configKey] = Boolean(recommendedConfig.enabled);
     }
@@ -231,7 +231,7 @@ export function createRuntimeConfig(overrides = {}) {
       return undefined;
     }
 
-    if (Object.prototype.hasOwnProperty.call(rawConfig?.featureToggles || {}, normalizedKey)) {
+    if (Object.hasOwn(rawConfig?.featureToggles || {}, normalizedKey)) {
       return rawConfig.featureToggles[normalizedKey];
     }
 

@@ -151,7 +151,7 @@ export function getThemeGlobalTypographyScopeValues(value) {
     if (scopeOptionsByValue.has(normalized)) {
       return [normalized];
     }
-    if (Object.prototype.hasOwnProperty.call(LEGACY_SCOPE_VALUE_MAP, normalized)) {
+    if (Object.hasOwn(LEGACY_SCOPE_VALUE_MAP, normalized)) {
       return [...LEGACY_SCOPE_VALUE_MAP[normalized]];
     }
     return [];

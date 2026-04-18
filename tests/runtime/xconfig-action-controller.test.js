@@ -14,7 +14,7 @@ function createActionNode(attributes = {}, parentElement = null) {
     checked: false,
     getAttribute(name) {
       const key = String(name || "");
-      return Object.prototype.hasOwnProperty.call(this.attributes, key)
+      return Object.hasOwn(this.attributes, key)
         ? this.attributes[key]
         : null;
     },

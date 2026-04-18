@@ -1,4 +1,5 @@
-import { DART_DESIGN_FILES, DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
+import { DART_DESIGN_FILES } from "./feature-assets.manifest.js";
+export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
 
 function toAssetUrl(relativePath) {
   return new URL(relativePath, import.meta.url).href;
@@ -11,8 +12,6 @@ export const DART_DESIGNS = Object.freeze(
     })
   )
 );
-
-export { DART_DESIGN_KEYS };
 
 export function resolveDartDesignAsset(designKey) {
   const key = String(designKey || "").trim().toLowerCase();

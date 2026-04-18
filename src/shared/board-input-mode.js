@@ -38,7 +38,7 @@ function normalizeText(value) {
   return String(value || "")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, " ");
+    .replaceAll(/\s+/g, " ");
 }
 
 function getComputedStyleRef(node) {

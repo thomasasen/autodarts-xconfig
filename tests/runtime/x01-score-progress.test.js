@@ -485,7 +485,7 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
   await wait(5);
   cleanup();
 
-  assert.equal(logs.length >= 0, true);
+  assert.equal(Array.isArray(logs), true);
   assert.equal(warnings.length > 0, true);
   assert.match(String(warnings[0][0] || ""), /reason="missing-start-score"/);
   assert.match(String(warnings[0][0] || ""), /payload=\{.*"reason":"missing-start-score"/s);

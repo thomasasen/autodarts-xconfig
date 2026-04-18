@@ -407,16 +407,16 @@ test("checkout-board-targets always uses both single rings while Segmentstil sti
   assert.ok(bothOutlinedPaths);
   assert.ok(bothSurfaceOnlyPaths);
   assert.deepEqual(
-    Array.from(innerPaths).sort(),
-    Array.from(bothOutlinedPaths).sort()
+    Array.from(innerPaths).sort((left, right) => left.localeCompare(right)),
+    Array.from(bothOutlinedPaths).sort((left, right) => left.localeCompare(right))
   );
   assert.deepEqual(
-    Array.from(outerPaths).sort(),
-    Array.from(bothOutlinedPaths).sort()
+    Array.from(outerPaths).sort((left, right) => left.localeCompare(right)),
+    Array.from(bothOutlinedPaths).sort((left, right) => left.localeCompare(right))
   );
   assert.deepEqual(
-    Array.from(bothSurfaceOnlyPaths).sort(),
-    Array.from(bothOutlinedPaths).sort()
+    Array.from(bothSurfaceOnlyPaths).sort((left, right) => left.localeCompare(right)),
+    Array.from(bothOutlinedPaths).sort((left, right) => left.localeCompare(right))
   );
 });
 
@@ -883,7 +883,7 @@ test("checkout-board-targets style text animates scale and keeps signal close to
   assert.match(
     css,
     new RegExp(
-      `\\.${EFFECT_CLASSES.signal}\\s*\\{[^}]*animation:\\s*ad-ext-checkout-signal\\s+var\\(--ad-ext-target-duration\\)\\s+ease-in-out\\s+infinite;`,
+      String.raw`\.${EFFECT_CLASSES.signal}\s*\{[^}]*animation:\s*ad-ext-checkout-signal\s+var\(--ad-ext-target-duration\)\s+ease-in-out\s+infinite;`,
       "s"
     )
   );
@@ -899,7 +899,7 @@ test("checkout-board-targets style text animates scale and keeps signal close to
   assert.match(
     css,
     new RegExp(
-      `\\.${TARGET_CLASS}\\s*\\{[^}]*will-change:\\s*opacity,\\s*filter,\\s*transform;`,
+      String.raw`\.${TARGET_CLASS}\s*\{[^}]*will-change:\s*opacity,\s*filter,\s*transform;`,
       "s"
     )
   );

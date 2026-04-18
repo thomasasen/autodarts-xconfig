@@ -83,7 +83,7 @@ function formatRowDebug(rows) {
 
 export function initializeTripleDoubleBullHits(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const featureDebug = context.featureDebug || null;
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;

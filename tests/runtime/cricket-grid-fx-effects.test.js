@@ -287,8 +287,7 @@ function createMergedNonSemanticGrid(documentRef, labels, marksByLabel, options 
   const wrapper = documentRef.createElement("div");
   wrapper.classList.add("chakra-stack");
   const grid = documentRef.createElement("div");
-  grid.classList.add("css-rfeml4");
-  grid.classList.add("ad-ext-crfx-root");
+  grid.classList.add("css-rfeml4", "ad-ext-crfx-root");
   const rowStateByLabel = new Map();
   const nestedLabelWrappers = options?.nestedLabelWrappers === true;
 

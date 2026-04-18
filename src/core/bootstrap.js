@@ -121,7 +121,7 @@ function getAffectedFeatureDefinitions(featureDefinitions, partialConfig = {}) {
 
 export function createBootstrap(options = {}) {
   const windowRef =
-    options.windowRef || (typeof window !== "undefined" ? window : null);
+    options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const documentRef =
     options.documentRef ||
     (windowRef && windowRef.document ? windowRef.document : null);
@@ -389,7 +389,7 @@ export function createBootstrap(options = {}) {
 
 export function initializeRuntime(options = {}) {
   const windowRef =
-    options.windowRef || (typeof window !== "undefined" ? window : null);
+    options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
 
   if (
     windowRef &&

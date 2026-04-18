@@ -17,12 +17,16 @@ const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const bootstrapPath = path.resolve(process.cwd(), "src", "core", "bootstrap.js");
 const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
 
+function escapeRegExp(text) {
+  return String(text || "").replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
 test("checked-in userscript bundle contains metadata header and runtime bootstrap entry", () => {
   const text = readFileSync(bundlePath, "utf8");
   const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
 
   assert.match(text, /\/\/ ==UserScript==/);
-  assert.match(text, new RegExp(`@version\\s+${packageVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.match(text, new RegExp(String.raw`@version\s+${escapeRegExp(packageVersion)}`));
   assert.match(text, /@match\s+https:\/\/play\.autodarts\.io\/\*/);
   assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards/);
   assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
@@ -96,7 +100,7 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
   const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
 
   assert.match(text, /\/\/ ==UserScript==/);
-  assert.match(text, new RegExp(`@version\\s+${packageVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.match(text, new RegExp(String.raw`@version\s+${escapeRegExp(packageVersion)}`));
   assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards/);
   assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
   assert.match(

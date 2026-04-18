@@ -373,8 +373,8 @@ function parseViewBoxMetrics(node) {
 
   const rawViewBox = String(node.getAttribute("viewBox") || "")
     .trim()
-    .replace(/,/g, " ")
-    .replace(/\s+/g, " ");
+    .replaceAll(/,/g, " ")
+    .replaceAll(/\s+/g, " ");
   if (!rawViewBox) {
     return {
       hasSquareViewBox: false,
@@ -662,7 +662,7 @@ function isSnapshotSemanticallyReusable(snapshot) {
 
 function isSnapshotModeReusable(snapshot, documentRef) {
   const currentModeKey = getActiveBoardInputMode(documentRef);
-  if (Object.prototype.hasOwnProperty.call(snapshot, "modeKey") && snapshot.modeKey !== currentModeKey) {
+  if (Object.hasOwn(snapshot, "modeKey") && snapshot.modeKey !== currentModeKey) {
     return false;
   }
   return true;

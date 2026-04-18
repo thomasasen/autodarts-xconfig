@@ -15,7 +15,7 @@ export function normalizeCricketLabelNode(cricketRules, node) {
     return normalizeCricketLabelValue(cricketRules, explicitLabel);
   }
 
-  const textContent = String(node?.textContent || "").replace(/\s+/g, " ").trim();
+  const textContent = String(node?.textContent || "").replaceAll(/\s+/g, " ").trim();
   if (!textContent || textContent.length > MAX_INFERRED_DOM_LABEL_TEXT_LENGTH) {
     return "";
   }

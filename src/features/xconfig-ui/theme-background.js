@@ -2,7 +2,7 @@ import { resolveThemePresetAsset } from "#theme-preset-assets";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
 
 function estimateBase64ByteSize(rawPayload) {
-  const payload = String(rawPayload || "").replace(/\s+/g, "");
+  const payload = String(rawPayload || "").replaceAll(/\s+/g, "");
   if (!payload) {
     return 0;
   }

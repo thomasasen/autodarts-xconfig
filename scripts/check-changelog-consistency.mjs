@@ -19,10 +19,10 @@ const semanticReleaseFloor = "2.0.81";
 export function compareSemver(left, right) {
   const leftParts = String(left || "")
     .split(".")
-    .map((part) => Number(part));
+    .map(Number);
   const rightParts = String(right || "")
     .split(".")
-    .map((part) => Number(part));
+    .map(Number);
 
   for (let index = 0; index < 3; index += 1) {
     const leftPart = Number.isFinite(leftParts[index]) ? leftParts[index] : 0;
@@ -36,7 +36,7 @@ export function compareSemver(left, right) {
 }
 
 export function parseChangelogSections(text) {
-  const normalizedText = String(text || "").replace(/\r\n/g, "\n");
+  const normalizedText = String(text || "").replaceAll(/\r\n/g, "\n");
   const matches = Array.from(normalizedText.matchAll(versionHeadingPattern));
 
   return matches.map((match, index) => {
@@ -57,7 +57,7 @@ export function parseChangelogSections(text) {
 }
 
 export function isChangelogRelevantFile(filePath) {
-  const normalizedPath = String(filePath || "").replace(/\\/g, "/");
+  const normalizedPath = String(filePath || "").replaceAll(/\\/g, "/");
   if (!normalizedPath) {
     return false;
   }
@@ -76,7 +76,7 @@ export function isChangelogRelevantFile(filePath) {
 
 function parseLinkReferences(text) {
   const references = new Map();
-  const normalizedText = String(text || "").replace(/\r\n/g, "\n");
+  const normalizedText = String(text || "").replaceAll(/\r\n/g, "\n");
   const matches = normalizedText.matchAll(linkReferencePattern);
 
   for (const match of matches) {
@@ -219,7 +219,7 @@ export function validateChangelogDocument({
   changedFiles = [],
 }) {
   const errors = [];
-  const normalizedText = String(text || "").replace(/\r\n/g, "\n");
+  const normalizedText = String(text || "").replaceAll(/\r\n/g, "\n");
 
   if (!normalizedText.trim()) {
     return ["CHANGELOG.md ist leer."];
@@ -280,7 +280,7 @@ export function validateChangelogDocument({
 
   const hasRelevantChanges = changedFiles.some((filePath) => isChangelogRelevantFile(filePath));
   const changelogWasChanged = changedFiles.some(
-    (filePath) => String(filePath || "").replace(/\\/g, "/") === "CHANGELOG.md"
+    (filePath) => String(filePath || "").replaceAll(/\\/g, "/") === "CHANGELOG.md"
   );
   if (hasRelevantChanges && !changelogWasChanged) {
     errors.push(

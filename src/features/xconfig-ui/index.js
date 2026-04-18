@@ -1,5 +1,4 @@
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
-import { resolveDartDesignAsset } from "#feature-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
   openUserscriptInstall,
@@ -152,7 +151,7 @@ const shellByWindow = new WeakMap();
 
 
 function ensureXConfigShell(options = {}) {
-  const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   if (!windowRef) {
     return null;
   }

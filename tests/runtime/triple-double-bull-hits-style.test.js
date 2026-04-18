@@ -86,7 +86,7 @@ test("triple-double-bull-hits keeps displacement filter scoped to electric-arc s
   const neonBlock =
     css.match(
       new RegExp(
-        `\\.ad-ext-turn-throw\\.${HIT_BASE_CLASS}\\.ad-ext-hit-animation--neon-pulse\\.ad-ext-hit-highlight--animate\\{[^}]+\\}`,
+        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.ad-ext-hit-animation--neon-pulse\.ad-ext-hit-highlight--animate\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";

@@ -98,12 +98,12 @@ test("resolveThemePolicy returns specialized policies for cricket and x01 2playe
     "ad-ext-theme-cricket-readability-notice",
   ]);
   assert.deepEqual(
-    cricketPolicy.getManagedClassNames().sort(),
+    cricketPolicy.getManagedClassNames().sort((left, right) => left.localeCompare(right)),
     [
       "ad-ext-theme-cricket-readability-notice",
       "ad-ext-theme-cricket-readability-text",
       "ad-ext-theme-cricket-readability-toggle",
-    ].sort()
+    ].sort((left, right) => left.localeCompare(right))
   );
   assert.deepEqual(cricketPolicy.getObservedAttributeFilter(), ["class"]);
   assert.equal(resolveThemePolicy({ featureKey: "theme-x01" }), null);

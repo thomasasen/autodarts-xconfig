@@ -1,4 +1,5 @@
-import { THEME_PRESET_ASSET_FILES, THEME_PRESET_ASSET_KEYS } from "./theme-preset-assets.manifest.js";
+import { THEME_PRESET_ASSET_FILES } from "./theme-preset-assets.manifest.js";
+export { THEME_PRESET_ASSET_KEYS } from "./theme-preset-assets.manifest.js";
 
 function toAssetUrl(relativePath) {
   return new URL(relativePath, import.meta.url).href;
@@ -11,8 +12,6 @@ export const THEME_PRESET_ASSETS = Object.freeze(
     })
   )
 );
-
-export { THEME_PRESET_ASSET_KEYS };
 
 export function resolveThemePresetAsset(assetKey) {
   const key = String(assetKey || "").trim().toLowerCase();

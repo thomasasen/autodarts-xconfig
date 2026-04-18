@@ -11,7 +11,7 @@ const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
 export function initializeTurnStartSweep(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
+  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const domGuards = context.domGuards;
   const config = context.config;
 

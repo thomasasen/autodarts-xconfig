@@ -674,11 +674,11 @@ test("x01-score-progress drops retired design preset fields from normalized conf
   });
 
   const featureConfig = runtimeConfig.getFeatureConfig("x01ScoreProgress");
-  assert.equal(Object.prototype.hasOwnProperty.call(featureConfig, "designPreset"), false);
+  assert.equal(Object.hasOwn(featureConfig, "designPreset"), false);
 
   const normalized = runtimeConfig.getNormalized();
   assert.equal(
-    Object.prototype.hasOwnProperty.call(normalized.features.x01ScoreProgress, "designPreset"),
+    Object.hasOwn(normalized.features.x01ScoreProgress, "designPreset"),
     false
   );
 });

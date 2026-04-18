@@ -110,8 +110,10 @@ export function updateAverageTrendArrows(options = {}) {
     }
 
     arrow.classList.remove(UP_CLASS, DOWN_CLASS);
-    arrow.classList.add(VISIBLE_CLASS);
-    arrow.classList.add(averageValue > previousValue ? UP_CLASS : DOWN_CLASS);
+    arrow.classList.add(
+      VISIBLE_CLASS,
+      averageValue > previousValue ? UP_CLASS : DOWN_CLASS
+    );
     animateArrowNode(arrow, durationMs, timeoutByArrow);
   });
 }

@@ -12,7 +12,7 @@ function createX01GameState(overrides = {}) {
   const outMode = String(overrides.outMode || "");
   const activeScore = Number.isFinite(overrides.activeScore) ? overrides.activeScore : null;
   const activeThrows = Array.isArray(overrides.activeThrows) ? overrides.activeThrows : [];
-  const hasSnapshot = Object.prototype.hasOwnProperty.call(overrides, "snapshot");
+  const hasSnapshot = Object.hasOwn(overrides, "snapshot");
   const snapshot = hasSnapshot ? overrides.snapshot : null;
   const activeTurn = overrides.activeTurn || {
     id: "turn-1",

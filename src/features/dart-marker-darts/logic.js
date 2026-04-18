@@ -516,7 +516,7 @@ function setMarkerHidden(marker, shouldHide, state) {
 
   if (
     marker.dataset &&
-    Object.prototype.hasOwnProperty.call(marker.dataset, MARKER_OPACITY_DATA_KEY)
+    Object.hasOwn(marker.dataset, MARKER_OPACITY_DATA_KEY)
   ) {
     delete marker.dataset[MARKER_OPACITY_DATA_KEY];
   }
@@ -535,7 +535,7 @@ function restoreHiddenMarkers(state) {
     marker.style.opacity = opacity;
     if (
       marker.dataset &&
-      Object.prototype.hasOwnProperty.call(marker.dataset, MARKER_OPACITY_DATA_KEY)
+      Object.hasOwn(marker.dataset, MARKER_OPACITY_DATA_KEY)
     ) {
       delete marker.dataset[MARKER_OPACITY_DATA_KEY];
     }

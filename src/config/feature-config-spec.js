@@ -110,7 +110,7 @@ function normalizeMappedStringChoice(value, fallbackValue, aliasMap) {
     return fallbackValue;
   }
   const normalized = String(value || "").trim().toLowerCase();
-  return Object.prototype.hasOwnProperty.call(aliasMap, normalized)
+  return Object.hasOwn(aliasMap, normalized)
     ? aliasMap[normalized]
     : fallbackValue;
 }
@@ -150,7 +150,7 @@ function normalizeLegacyColorTheme(value, fallbackValue) {
     return fallbackValue;
   }
 
-  const compact = rawValue.replace(/\s+/g, "");
+  const compact = rawValue.replaceAll(/\s+/g, "");
   return LEGACY_COLOR_THEME_ALIASES[compact] || rawValue;
 }
 
@@ -199,12 +199,12 @@ function getLegacyFeatureSettings(legacyFeatureState) {
 }
 
 function readLegacySetting(settings, shortKey, fallbackValue) {
-  if (Object.prototype.hasOwnProperty.call(settings, shortKey)) {
+  if (Object.hasOwn(settings, shortKey)) {
     return settings[shortKey];
   }
 
   const prefixedKey = `xConfig_${shortKey}`;
-  if (Object.prototype.hasOwnProperty.call(settings, prefixedKey)) {
+  if (Object.hasOwn(settings, prefixedKey)) {
     return settings[prefixedKey];
   }
 
@@ -561,18 +561,18 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizeStringChoice(rawConfig.colorTheme, fallbackColorTheme, TRIPLE_DOUBLE_BULL_COLOR_THEMES), animationStyle: normalizeStringChoice(rawConfig.animationStyle, "charge-release", TRIPLE_DOUBLE_BULL_ANIMATION_STYLES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   cricketHighlighter(rawConfig = {}) {
-    const showOpenValue = Object.prototype.hasOwnProperty.call(rawConfig, "showOpenTargets") ? rawConfig.showOpenTargets : rawConfig.showOpenObjectives;
-    const showDeadValue = Object.prototype.hasOwnProperty.call(rawConfig, "showDeadTargets") ? rawConfig.showDeadTargets : rawConfig.showDeadObjectives;
+    const showOpenValue = Object.hasOwn(rawConfig, "showOpenTargets") ? rawConfig.showOpenTargets : rawConfig.showOpenObjectives;
+    const showDeadValue = Object.hasOwn(rawConfig, "showDeadTargets") ? rawConfig.showDeadTargets : rawConfig.showDeadObjectives;
     const normalizedDimStyle = normalizeStringChoice(rawConfig.irrelevantBoardDimStyle, "smoke", CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES);
-    const hasLegacyDimSetting = Object.prototype.hasOwnProperty.call(rawConfig, "dimIrrelevantBoardTargets");
+    const hasLegacyDimSetting = Object.hasOwn(rawConfig, "dimIrrelevantBoardTargets");
     const irrelevantBoardDimStyle = hasLegacyDimSetting && normalizedDimStyle === "smoke" ? normalizeBoolean(rawConfig.dimIrrelevantBoardTargets, true) ? "smoke" : "off" : normalizedDimStyle;
     return { enabled: normalizeBoolean(rawConfig.enabled, false), showOpenObjectives: normalizeBoolean(showOpenValue, false), showDeadObjectives: normalizeBoolean(showDeadValue, true), irrelevantBoardDimStyle, dimIrrelevantBoardTargets: irrelevantBoardDimStyle !== "off", colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   cricketGridFx(rawConfig = {}) {
-    const pressureEdgeValue = Object.prototype.hasOwnProperty.call(rawConfig, "threatEdge") ? rawConfig.threatEdge : rawConfig.pressureEdge;
-    const scoringStripeValue = Object.prototype.hasOwnProperty.call(rawConfig, "scoringLane") ? rawConfig.scoringLane : rawConfig.scoringStripe;
-    const deadRowMutedValue = Object.prototype.hasOwnProperty.call(rawConfig, "deadRowCollapse") ? rawConfig.deadRowCollapse : rawConfig.deadRowMuted;
-    const pressureOverlayValue = Object.prototype.hasOwnProperty.call(rawConfig, "opponentPressureOverlay") ? rawConfig.opponentPressureOverlay : rawConfig.pressureOverlay;
+    const pressureEdgeValue = Object.hasOwn(rawConfig, "threatEdge") ? rawConfig.threatEdge : rawConfig.pressureEdge;
+    const scoringStripeValue = Object.hasOwn(rawConfig, "scoringLane") ? rawConfig.scoringLane : rawConfig.scoringStripe;
+    const deadRowMutedValue = Object.hasOwn(rawConfig, "deadRowCollapse") ? rawConfig.deadRowCollapse : rawConfig.deadRowMuted;
+    const pressureOverlayValue = Object.hasOwn(rawConfig, "opponentPressureOverlay") ? rawConfig.opponentPressureOverlay : rawConfig.pressureOverlay;
     return { enabled: normalizeBoolean(rawConfig.enabled, false), rowWave: normalizeBoolean(rawConfig.rowWave, true), badgeBeacon: normalizeBoolean(rawConfig.badgeBeacon, true), markProgress: normalizeBoolean(rawConfig.markProgress, true), pressureEdge: normalizeBoolean(pressureEdgeValue, true), scoringStripe: normalizeBoolean(scoringStripeValue, true), deadRowMuted: normalizeBoolean(deadRowMutedValue, true), deltaChips: normalizeBoolean(rawConfig.deltaChips, true), hitSpark: normalizeBoolean(rawConfig.hitSpark, true), roundTransitionWipe: normalizeBoolean(rawConfig.roundTransitionWipe, true), pressureOverlay: normalizeBoolean(pressureOverlayValue, true), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   dartMarkerEmphasis(rawConfig = {}) {
@@ -589,7 +589,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), volume: normalizeNumberChoice(rawConfig.volume, 0.9, SINGLE_BULL_SOUND_VOLUME), cooldownMs: normalizeNumberChoice(rawConfig.cooldownMs, 700, SINGLE_BULL_SOUND_COOLDOWN), pollIntervalMs: normalizeNumberChoice(rawConfig.pollIntervalMs, 0, SINGLE_BULL_SOUND_POLL_INTERVAL), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   turnPointsCount(rawConfig = {}) {
-    const hasLegacyFlashPermanent = Object.prototype.hasOwnProperty.call(rawConfig, "flashPermanent");
+    const hasLegacyFlashPermanent = Object.hasOwn(rawConfig, "flashPermanent");
     const legacyFlashMode = hasLegacyFlashPermanent ? normalizeBoolean(rawConfig.flashPermanent, false) ? "permanent" : "on-change" : "on-change";
     const normalizedFlashMode = normalizeMappedStringChoice(rawConfig.flashMode, legacyFlashMode, { "": "on-change", "on-change": "on-change", onchange: "on-change", appear: "on-change", burst: "on-change", "nur-bei-Ã¤nderung": "on-change", "nur-bei-aenderung": "on-change", permanent: "permanent", always: "permanent", persistent: "permanent", dauerhaft: "permanent" });
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 416, TURN_POINTS_COUNT_DURATIONS), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
@@ -735,7 +735,7 @@ export function createRecommendedFeatureConfig(configKey) {
   const recommendedConfig = {
     ...defaultConfig,
     enabled: true,
-    ...(Object.prototype.hasOwnProperty.call(defaultConfig, "debug") ? { debug: false } : {}),
+    ...(Object.hasOwn(defaultConfig, "debug") ? { debug: false } : {}),
     ...deepClone(RECOMMENDED_FEATURE_CONFIGS[normalizedKey] || {}),
   };
   return recommendedConfig;

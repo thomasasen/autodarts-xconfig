@@ -68,7 +68,7 @@ function normalizeStatusToken(value) {
   return String(value || "")
     .trim()
     .toLowerCase()
-    .replace(/[\s_]+/g, "-");
+    .replaceAll(/[\s_]+/g, "-");
 }
 
 function hasTerminalStatus(match) {
@@ -123,7 +123,7 @@ function hasStateWinner(match) {
     return false;
   }
 
-  const playerCount = Array.isArray(match.players) ? match.players.length : NaN;
+  const playerCount = Array.isArray(match.players) ? match.players.length : Number.NaN;
   const winnerIndex = parseWinnerIndex(match.winner, playerCount);
   const gameWinnerIndex = parseWinnerIndex(match.gameWinner, playerCount);
 

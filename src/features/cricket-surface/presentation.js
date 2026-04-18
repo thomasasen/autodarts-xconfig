@@ -85,10 +85,10 @@ export function resolveCricketRowPresentation(stateEntry = null) {
     if (tokens.every((token) => token === CRICKET_PRESENTATION.DEAD)) {
       return CRICKET_PRESENTATION.DEAD;
     }
-    if (tokens.some((token) => token === CRICKET_PRESENTATION.SCORING)) {
+    if (tokens.includes(CRICKET_PRESENTATION.SCORING)) {
       return CRICKET_PRESENTATION.SCORING;
     }
-    if (tokens.some((token) => token === CRICKET_PRESENTATION.PRESSURE)) {
+    if (tokens.includes(CRICKET_PRESENTATION.PRESSURE)) {
       return CRICKET_PRESENTATION.PRESSURE;
     }
     return CRICKET_PRESENTATION.OPEN;

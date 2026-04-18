@@ -22,7 +22,7 @@ function maybeIncludeLabelCellAsPlayerCell(
   diagnostics = null
 ) {
   const normalizedCells = Array.isArray(playerCells)
-    ? playerCells.filter((cell) => Boolean(cell))
+    ? playerCells.filter(Boolean)
     : [];
   const expectedCount = Number.isFinite(Number(expectedPlayerCount))
     ? Math.max(0, Math.round(Number(expectedPlayerCount)))

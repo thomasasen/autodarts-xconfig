@@ -70,7 +70,7 @@ export function normalizeEffect(value) {
   if (EFFECT_SET.has(normalized)) {
     return normalized;
   }
-  if (Object.prototype.hasOwnProperty.call(EFFECT_ALIASES, normalized)) {
+  if (Object.hasOwn(EFFECT_ALIASES, normalized)) {
     return EFFECT_ALIASES[normalized];
   }
   return "pulse-core";
