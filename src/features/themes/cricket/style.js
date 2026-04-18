@@ -950,6 +950,74 @@ p.chakra-text.css-1qlemha {
   background: linear-gradient(120deg, rgba(11, 18, 32, 0.88), rgba(8, 15, 28, 0.9)) !important;
 }
 
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-open,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-open {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8, 35, 52, 0.24) 0%,
+      rgba(8, 35, 52, 0.08) 100%
+    ) !important;
+}
+
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-open-inactive,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-open-inactive {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 26, 38, 0.28) 0%,
+      rgba(9, 26, 38, 0.1) 100%
+    ) !important;
+}
+
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-active-column,
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-open-active,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-active-column,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-open-active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 197, 255, 0.12) 0%,
+      rgba(34, 197, 255, 0.04) 100%
+    ) !important;
+}
+
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-score,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-score {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.64)) 0%,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.26)) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.88)) 0px,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.88)) 8px,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.38)) 8px,
+      rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.38)) 16px
+    ) !important;
+}
+
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-threat,
+#ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-pressure,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-threat,
+.ad-ext-theme-content-left > #ad-ext-player-display + div.ad-ext-crfx-root > .ad-ext-crfx-cell.ad-ext-crfx-pressure {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 0%,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.16)) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 0px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.34)) 8px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 8px,
+      rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.12)) 16px
+    ) !important;
+}
+
 .ad-ext-theme-content-board {
   position: relative;
   min-width: 0 !important;

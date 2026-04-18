@@ -148,6 +148,18 @@ test("cricket theme keeps row labels fully visible inside viewport", () => {
     css,
     /#ad-ext-player-display\s*\+\s*div\s*>\s*div,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\s*>\s*div,\s*\.css-rfeml4\s*>\s*div\s*\{[^}]*position:\s*relative;[^}]*border:\s*1px solid rgba\(54,\s*72,\s*98,\s*0\.78\)\s*!important;[^}]*box-shadow:\s*inset 0 0 0 1px rgba\(255,\s*255,\s*255,\s*0\.03\);/s
   );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-score,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*repeating-linear-gradient\(/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-threat,\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-pressure,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-threat,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*repeating-linear-gradient\(/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-active-column,\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-open-active,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-active-column,\s*\.ad-ext-theme-content-left\s*>\s*#ad-ext-player-display\s*\+\s*div\.ad-ext-crfx-root\s*>\s*\.ad-ext-crfx-cell\.ad-ext-crfx-open-active\s*\{[^}]*rgba\(34,\s*197,\s*255,\s*0\.12\)/s
+  );
 });
 
 test("cricket theme keeps score and active-card hierarchy on stable selectors", () => {

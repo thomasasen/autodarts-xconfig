@@ -14,6 +14,8 @@ import {
   TOOLS_SHADOW_STYLE_ID,
   buildThemeGlobalTypographyStyleText,
 } from "../../src/features/themes/global-typography/style.js";
+import { buildStyleText as buildCricketGridFxStyleText } from "../../src/features/cricket-grid-fx/style.js";
+import { buildCricketThemeCss } from "../../src/features/themes/cricket/style.js";
 import { buildX01ThemeCss } from "../../src/features/themes/x01/style.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
 
@@ -184,6 +186,36 @@ test("theme CSS can use Templates Global preset wallpaper assets as fallback vis
   assert.doesNotMatch(themeCss, /data:image/);
 });
 
+test("cricket theme CSS can use Templates Global semantic colors without typography bleeding into grid-fx cells", () => {
+  const themeCss = buildCricketThemeCss({ showAvg: true });
+  const gridFxCss = buildCricketGridFxStyleText();
+  const typographyCss = buildThemeGlobalTypographyStyleText({
+    fontPreset: "archivo-black",
+    applyTo: ["scores", "names", "throws"],
+    accentColor: "#00d9ff",
+    scoreColor: "#ffffff",
+    secondaryTextColor: "#dce9ff",
+    throwLabelColor: "#8fa9c2",
+  });
+  const combinedCss = `${themeCss}\n\n${typographyCss}`;
+
+  assert.match(typographyCss, /--ad-ext-theme-accent-color: #00D9FF;/);
+  assert.match(typographyCss, /--ad-ext-theme-score-inactive-color: #FFFFFF;/);
+  assert.match(typographyCss, /--ad-ext-theme-name-color: #DCE9FF;/);
+  assert.match(typographyCss, /--ad-ext-theme-throw-label-color: #8FA9C2;/);
+  assert.match(typographyCss, /\.ad-ext-player-score,\s*\.ad-ext-turn-points,\s*#ad-ext-turn > \.score,/s);
+  assert.match(
+    typographyCss,
+    /\.ad-ext-player-score,\s*\.ad-ext-turn-points,\s*#ad-ext-turn > \.score,\s*\.ad-ext-player-name,\s*\.ad-ext-player-name > p,/s
+  );
+  assert.doesNotMatch(typographyCss, /ad-ext-crfx-cell/);
+  assert.doesNotMatch(typographyCss, /ad-ext-crfx-label-cell/);
+  assert.doesNotMatch(typographyCss, /ad-ext-cricket-target/);
+  assert.match(combinedCss, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;/s);
+  assert.match(combinedCss, /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-name,[^}]*color:\s*var\(--ad-ext-theme-name-active-color\)\s*!important;/s);
+  assert.match(gridFxCss, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*repeating-linear-gradient\(/s);
+});
+
 test("theme global typography only resolves an active theme inside the matching game context", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
@@ -246,6 +278,46 @@ test("theme global typography only resolves an active theme inside the matching 
       windowRef,
     })?.configKey,
     "themes.x01TwoPlayer"
+  );
+
+  const cricketConfig = createRuntimeConfig({
+    featureToggles: {
+      "themes.globalTypography": true,
+      "themes.x01": false,
+      "themes.cricket": true,
+    },
+    features: {
+      themes: {
+        globalTypography: {
+          enabled: true,
+          fontPreset: "system",
+          applyTo: ["scores", "names"],
+        },
+        x01: {
+          enabled: false,
+        },
+        cricket: {
+          enabled: true,
+          showAvg: true,
+        },
+      },
+    },
+  });
+  assert.equal(
+    resolveThemeGlobalTypographyActiveTheme({
+      config: cricketConfig,
+      gameState: {
+        isX01Variant() {
+          return false;
+        },
+        isCricketVariant() {
+          return true;
+        },
+      },
+      documentRef,
+      windowRef,
+    })?.configKey,
+    "themes.cricket"
   );
 
   const inactiveConfig = createRuntimeConfig({

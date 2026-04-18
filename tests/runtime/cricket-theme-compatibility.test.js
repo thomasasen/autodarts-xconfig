@@ -170,7 +170,7 @@ function appendThemeLikeReportedPlayerCard(documentRef, playerDisplayNode, optio
   return { playerNode, stackNode, scoreNode, rowNode, statsNode };
 }
 
-function createLiveThemeObjectiveStripFixture(documentRef, marksByLabel) {
+function createLiveThemeObjectiveStripFixture(documentRef, marksByLabel, options = {}) {
   const wrapper = documentRef.createElement("div");
   wrapper.setAttribute("class", "chakra-stack animate__animated animate__fadeIn css-1k7iu8k");
 
@@ -194,7 +194,7 @@ function createLiveThemeObjectiveStripFixture(documentRef, marksByLabel) {
   wrapper.appendChild(boardNodes.contentSlot);
 
   const objectiveStrip = documentRef.createElement("div");
-  objectiveStrip.setAttribute("class", "css-rfeml4");
+  objectiveStrip.setAttribute("class", String(options.objectiveStripClass || "css-1f26ant"));
   const targetOrder = cricketRules.getTargetOrderByGameMode("cricket");
   const rowStateByLabel = new Map();
 
@@ -803,7 +803,7 @@ test("theme-like cricket grid-fx does not decorate player-card scores when the a
   assert.equal(stackNode.classList.contains(OPEN_CLASS), false);
 });
 
-test("live-like theme objective strip keeps board overlay and grid-fx aligned on the strip root", () => {
+test("live-like sibling theme objective strip keeps board overlay and grid-fx aligned on the strip root", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -853,6 +853,7 @@ test("live-like theme objective strip keeps board overlay and grid-fx aligned on
 
   assert.equal(renderState?.gridSnapshot?.root, fixture.objectiveStrip);
   assert.notEqual(renderState?.gridSnapshot?.root, fixture.wrapper);
+  assert.equal(String(fixture.objectiveStrip.className), "css-1f26ant");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
 
   const highlightStats = {};

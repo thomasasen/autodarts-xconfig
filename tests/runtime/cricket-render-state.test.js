@@ -233,7 +233,7 @@ function createCollapsedObjectiveStrip(documentRef, labels) {
   return wrapper;
 }
 
-function createLiveThemeObjectiveStripLayout(documentRef, marksByRow) {
+function createLiveThemeObjectiveStripLayout(documentRef, marksByRow, options = {}) {
   const wrapper = documentRef.createElement("div");
   wrapper.setAttribute("class", "chakra-stack animate__animated animate__fadeIn css-1k7iu8k");
 
@@ -260,7 +260,7 @@ function createLiveThemeObjectiveStripLayout(documentRef, marksByRow) {
   const playerDisplay = documentRef.createElement("div");
   playerDisplay.id = "ad-ext-player-display";
   const objectiveStrip = documentRef.createElement("div");
-  objectiveStrip.setAttribute("class", "css-rfeml4");
+  objectiveStrip.setAttribute("class", String(options.objectiveStripClass || "css-1f26ant"));
   const contentBoard = documentRef.createElement("div");
   contentBoard.setAttribute("class", "ad-ext-theme-content-board");
   const boardPanel = documentRef.createElement("div");
@@ -1548,7 +1548,7 @@ test("render state ignores collapsed horizontal objective strips from live crick
   assert.equal(Number(renderState?.discoveredUniqueLabelCount) || 0, 0);
 });
 
-test("render state prefers the live theme objective strip over the broader match wrapper", () => {
+test("render state prefers the sibling live theme objective strip host over the broader match wrapper", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
 
@@ -1579,6 +1579,7 @@ test("render state prefers the live theme objective strip over the broader match
   assert.equal(renderState?.surfaceStatus, "ready");
   assert.equal(renderState?.gridSnapshot?.root, fixture.objectiveStrip);
   assert.notEqual(renderState?.gridSnapshot?.root, fixture.wrapper);
+  assert.equal(String(fixture.objectiveStrip.className), "css-1f26ant");
   assert.equal(renderState?.marksByLabel["20"]?.join(","), "3,0");
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");

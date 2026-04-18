@@ -537,6 +537,26 @@ function getRootScore(rootNode, cricketRules, targetSet) {
   return { score, labels, diagnostics, rowsWithPlayerCells, coverage };
 }
 
+function collectPreferredGridRoots(documentRef) {
+  const playerDisplays = queryAll(documentRef, "#ad-ext-player-display");
+  const candidates = [];
+  const seen = new Set();
+
+  playerDisplays.forEach((playerDisplay) => {
+    const siblingRoot = playerDisplay?.nextElementSibling || null;
+    if (!siblingRoot || seen.has(siblingRoot)) {
+      return;
+    }
+    if (isProtectedCricketGridRootCandidate(siblingRoot)) {
+      return;
+    }
+    seen.add(siblingRoot);
+    candidates.push(siblingRoot);
+  });
+
+  return candidates;
+}
+
 export function findCricketGrid(options = {}) {
   const documentRef = options.documentRef;
   const cricketRules = options.cricketRules;
@@ -551,6 +571,18 @@ export function findCricketGrid(options = {}) {
   let bestDiagnostics = createLabelDiagnostics();
   let bestRowsWithPlayerCells = 0;
   let bestCoverage = 0;
+
+  collectPreferredGridRoots(documentRef).forEach((candidate) => {
+    const snapshot = getRootScore(candidate, cricketRules, targetSet);
+    if (snapshot.score > bestScore) {
+      bestRoot = candidate;
+      bestScore = snapshot.score;
+      bestLabels = snapshot.labels;
+      bestDiagnostics = cloneLabelDiagnostics(snapshot.diagnostics);
+      bestRowsWithPlayerCells = Number(snapshot.rowsWithPlayerCells) || 0;
+      bestCoverage = Number(snapshot.coverage) || 0;
+    }
+  });
 
   GRID_ROOT_SELECTORS.forEach((selector) => {
     queryAll(documentRef, selector).forEach((candidate) => {
