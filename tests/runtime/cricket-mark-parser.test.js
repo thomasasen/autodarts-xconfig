@@ -11,10 +11,21 @@ function createNode(options = {}) {
   const attributes = {
     ...options.attributes,
   };
+  const derivedDataset = Object.entries(attributes).reduce((result, [name, value]) => {
+    if (!name.startsWith("data-")) {
+      return result;
+    }
+    const datasetKey = name
+      .slice(5)
+      .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    result[datasetKey] = value;
+    return result;
+  }, {});
 
   return {
     textContent: options.textContent || "",
     dataset: {
+      ...derivedDataset,
       ...options.dataset,
     },
     getAttribute(name) {
@@ -66,12 +77,26 @@ test("parseMarksValue reads direct attributes and icon fallbacks with shared sem
   assert.equal(parseMarksValue(iconNode, cricketRules, { countMultipleIcons: false }), 0);
 });
 
+test("parseTextMarkValue ignores throw-like score tokens and accepts wrapped mark digits", () => {
+  const cricketRules = {
+    parseCricketMarkValue(value) {
+      return /^\(3\)$/.test(String(value || "").trim()) ? 3 : null;
+    },
+    clampMarks(value) {
+      return Math.max(0, Math.min(3, value));
+    },
+  };
+
+  assert.equal(parseTextMarkValue("D18"), null);
+  assert.equal(parseTextMarkValue("(3)", cricketRules), 3);
+});
+
 test("readCellPlayerIndex accepts both dataset and column index fallbacks", () => {
   assert.equal(
     readCellPlayerIndex(
       createNode({
-        attributes: {
-          "data-column-index": "2",
+        dataset: {
+          columnIndex: "2",
         },
       })
     ),
@@ -81,8 +106,8 @@ test("readCellPlayerIndex accepts both dataset and column index fallbacks", () =
   assert.equal(
     readCellPlayerIndex(
       createNode({
-        attributes: {
-          "data-column-index": "2",
+        dataset: {
+          columnIndex: "2",
         },
       }),
       { includeColumnIndex: true }

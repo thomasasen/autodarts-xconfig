@@ -33,6 +33,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere sehr kleine Sonar-Bereinigung hält Cricket-Markenerkennung und Label-Helfer semantisch unverändert, drückt einfache Ziffer-/Nichtziffer-Prüfungen aber kompakter aus.
   Technik: In `parseCricketMarkValue(...)`, `normalizeCricketLabel(...)`, `hasTextualMarkHints(...)` und `parseTextMarkValue(...)` wurden nur `javascript:S6353`-Treffer aus der ausgewählten Low-Risk-Gruppe von `[0-9]`/`[^0-9]` auf die äquivalenten Regex-Kurzformen `\d`/`\D` umgestellt; bestehende Cricket-Domain-, Mark-Parser- und Row-Repair-Regressionen sichern dabei die unveränderte Parser-Semantik ab.
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die Cricket-Surface bleibt bei gemergten Reihen, Label-Markern und aktiver Spielerperspektive fachlich gleich, ist intern aber robuster gegen Sonar-bedingte Parser- und Row-Recovery-Bereinigungen abgesichert.
+  Technik: `mark-parser`, `row-repair` und angrenzende `pipeline`-Helfer wurden lokal in kleinere Hilfsfunktionen zerlegt, nutzen `dataset` für Mark-/Spielerindex-Felder, entfernen einen fehlerhaften Extra-Argument-Aufruf im Grid-Row-Building und glätten einige eng benachbarte Pipeline-Klarheitsstellen; zusätzliche Parser-, Row-Repair- und Cricket-Render-State-Regressionen sichern Mark-Parsing, Shortfall-Recovery, explizite Spielerindizes und die Cricket-Board-Perspektive gegen Drift ab.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added

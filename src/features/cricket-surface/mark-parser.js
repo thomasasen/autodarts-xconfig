@@ -1,19 +1,92 @@
-export function parseTextMarkValue(value, cricketRules) {
-  const rawValue = String(value || "").trim();
-  if (!rawValue) {
+const MARK_ICON_SELECTOR =
+  "img[alt], img[title], [data-marks], [data-mark], [data-hits], [data-hit], [aria-label], [title]";
+const MARK_SYMBOL_PATTERN = /[/Xx\u2A02\u2297\u29BB|\u2715\u2716\u2573]/u;
+const STANDALONE_MARK_DIGIT_PATTERN = /(^|\D)[0-3](\D|$)/;
+
+function clampMarkCount(value, cricketRules) {
+  if (typeof cricketRules?.clampMarks === "function") {
+    return cricketRules.clampMarks(value);
+  }
+  return Math.max(0, Math.min(3, Number(value) || 0));
+}
+
+function hasExplicitMarkToken(rawValue) {
+  return (
+    MARK_SYMBOL_PATTERN.test(rawValue) ||
+    /^[0-3]$/.test(rawValue) ||
+    STANDALONE_MARK_DIGIT_PATTERN.test(rawValue)
+  );
+}
+
+function parseMarkCandidate(value, cricketRules) {
+  const parsed = parseTextMarkValue(value, cricketRules);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function readAttributeValue(node, name) {
+  if (!node || typeof node.getAttribute !== "function") {
+    return null;
+  }
+  return node.getAttribute(name);
+}
+
+function readDirectMarkCandidates(node) {
+  return [
+    node?.dataset?.marks,
+    node?.dataset?.mark,
+    node?.dataset?.hits,
+    node?.dataset?.hit,
+    readAttributeValue(node, "aria-label"),
+    readAttributeValue(node, "title"),
+    readAttributeValue(node, "alt"),
+  ];
+}
+
+function readIconMarkValue(icon, cricketRules) {
+  const candidates = readDirectMarkCandidates(icon);
+  return candidates
+    .map((candidate) => parseMarkCandidate(candidate, cricketRules))
+    .find((value) => Number.isFinite(value));
+}
+
+function parseMarksFromDirectCandidates(node, cricketRules) {
+  return readDirectMarkCandidates(node)
+    .map((candidate) => parseMarkCandidate(candidate, cricketRules))
+    .find((value) => Number.isFinite(value));
+}
+
+function parseMarksFromIcons(node, cricketRules, countMultipleIcons) {
+  if (typeof node?.querySelectorAll !== "function") {
     return null;
   }
 
-  const hasExplicitMarkToken = (() => {
-    if (/[/Xx\u2A02\u2297\u29BB|\u2715\u2716\u2573]/u.test(rawValue)) {
-      return true;
-    }
-    if (/^(?:0|1|2|3)$/.test(rawValue)) {
-      return true;
-    }
-    return /(^|\D)(?:0|1|2|3)(\D|$)/.test(rawValue);
-  })();
-  if (!hasExplicitMarkToken) {
+  const icons = Array.from(node.querySelectorAll(MARK_ICON_SELECTOR));
+  if (!icons.length) {
+    return null;
+  }
+
+  const parsedIconValue = icons
+    .map((icon) => readIconMarkValue(icon, cricketRules))
+    .find((value) => Number.isFinite(value));
+  if (Number.isFinite(parsedIconValue)) {
+    return parsedIconValue;
+  }
+
+  if (countMultipleIcons && icons.length > 1) {
+    return clampMarkCount(icons.length, cricketRules);
+  }
+
+  return null;
+}
+
+function parseIndexCandidate(value) {
+  const parsed = Number.parseInt(String(value || "").trim(), 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+export function parseTextMarkValue(value, cricketRules) {
+  const rawValue = String(value || "").trim();
+  if (!rawValue || !hasExplicitMarkToken(rawValue)) {
     return null;
   }
 
@@ -22,103 +95,50 @@ export function parseTextMarkValue(value, cricketRules) {
     if (!Number.isFinite(parsed)) {
       return null;
     }
-    return typeof cricketRules.clampMarks === "function" ? cricketRules.clampMarks(parsed) : parsed;
+    return clampMarkCount(parsed, cricketRules);
   }
 
   const numeric = Number.parseInt(rawValue, 10);
-  if (!Number.isFinite(numeric)) {
-    return null;
-  }
-  return Math.max(0, Math.min(3, numeric));
+  return Number.isFinite(numeric) ? clampMarkCount(numeric, cricketRules) : null;
 }
 
 export function parseMarksValue(node, cricketRules, options = {}) {
   if (!node) {
     return 0;
   }
+
   const countMultipleIcons = options.countMultipleIcons !== false;
-
-  const readMark = (value) => {
-    const parsed = parseTextMarkValue(value, cricketRules);
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-
-  const directCandidates = [];
-  if (typeof node.getAttribute === "function") {
-    directCandidates.push(
-      node.getAttribute("data-marks"),
-      node.getAttribute("data-mark"),
-      node.getAttribute("data-hits"),
-      node.getAttribute("data-hit"),
-      node.getAttribute("aria-label"),
-      node.getAttribute("title"),
-      node.getAttribute("alt")
-    );
-  }
-  for (const candidate of directCandidates) {
-    const parsed = readMark(candidate);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
+  const directValue = parseMarksFromDirectCandidates(node, cricketRules);
+  if (Number.isFinite(directValue)) {
+    return directValue;
   }
 
-  if (typeof node.querySelectorAll === "function") {
-    const icons = Array.from(
-      node.querySelectorAll(
-        "img[alt], img[title], [data-marks], [data-mark], [data-hits], [data-hit], [aria-label], [title]"
-      )
-    );
-    if (icons.length > 0) {
-      const parsedIconValue = icons
-        .map((icon) => {
-          return readMark(
-            icon?.getAttribute?.("data-marks") ||
-              icon?.getAttribute?.("data-mark") ||
-              icon?.getAttribute?.("data-hits") ||
-              icon?.getAttribute?.("data-hit") ||
-              icon?.getAttribute?.("aria-label") ||
-              icon?.getAttribute?.("title") ||
-              icon?.getAttribute?.("alt") ||
-              ""
-          );
-        })
-        .find((value) => Number.isFinite(value));
-      if (Number.isFinite(parsedIconValue)) {
-        return parsedIconValue;
-      }
-      if (countMultipleIcons && icons.length > 1) {
-        if (typeof cricketRules?.clampMarks === "function") {
-          return cricketRules.clampMarks(icons.length);
-        }
-        return Math.max(0, Math.min(3, icons.length));
-      }
-    }
+  const iconValue = parseMarksFromIcons(node, cricketRules, countMultipleIcons);
+  if (Number.isFinite(iconValue)) {
+    return iconValue;
   }
 
-  const textValue = readMark(node.textContent || "");
+  const textValue = parseMarkCandidate(node.textContent || "", cricketRules);
   return Number.isFinite(textValue) ? textValue : 0;
 }
 
 export function readCellPlayerIndex(cellNode, options = {}) {
-  if (!cellNode || typeof cellNode.getAttribute !== "function") {
+  if (!cellNode) {
     return null;
   }
-  const includeColumnIndex = options.includeColumnIndex === true;
 
+  const includeColumnIndex = options.includeColumnIndex === true;
   const candidates = [
-    cellNode.getAttribute("data-player-index"),
-    cellNode.getAttribute("data-player"),
     cellNode.dataset?.playerIndex,
     cellNode.dataset?.player,
   ];
   if (includeColumnIndex) {
-    candidates.splice(1, 0, cellNode.getAttribute("data-column-index"));
-    candidates.splice(4, 0, cellNode.dataset?.columnIndex);
+    candidates.splice(1, 0, cellNode.dataset?.columnIndex);
   }
 
   for (const candidate of candidates) {
-    const parsed = Number.parseInt(String(candidate || "").trim(), 10);
-    if (Number.isFinite(parsed) && parsed >= 0) {
+    const parsed = parseIndexCandidate(candidate);
+    if (Number.isFinite(parsed)) {
       return parsed;
     }
   }

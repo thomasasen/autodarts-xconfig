@@ -776,11 +776,12 @@ function resolveActivePlayerIndex(gameState, documentRef, playerCount, options =
       ? visiblePlayerNodes.length >= playerCount
       : visiblePlayerNodes.length > 0;
   const canTrustDomActive = domActiveIndex >= 0 && hasCompleteVisibleRoster;
-  const candidate = canTrustDomActive
-    ? domActiveIndex
-    : Number.isFinite(stateIndex)
-      ? stateIndex
-      : domActiveIndex;
+  let candidate = domActiveIndex;
+  if (canTrustDomActive) {
+    candidate = domActiveIndex;
+  } else if (Number.isFinite(stateIndex)) {
+    candidate = stateIndex;
+  }
 
   if (!Number.isFinite(candidate) || playerCount <= 0) {
     return 0;
@@ -836,12 +837,12 @@ function resolveScoringModeState(gameState, variantRules, gameModeNormalized) {
       ? String(gameState.getCricketScoringModeNormalized() || "").trim()
       : "";
 
-  const rawMode =
-    typeof gameState?.getCricketScoringMode === "function"
-      ? String(gameState.getCricketScoringMode() || "").trim()
-      : typeof gameState?.getCricketMode === "function"
-        ? String(gameState.getCricketMode() || "").trim()
-        : "";
+  let rawMode = "";
+  if (typeof gameState?.getCricketScoringMode === "function") {
+    rawMode = String(gameState.getCricketScoringMode() || "").trim();
+  } else if (typeof gameState?.getCricketMode === "function") {
+    rawMode = String(gameState.getCricketMode() || "").trim();
+  }
 
   const rawScoringMode = rawNormalizedInput || rawMode || "unknown";
   const classified = classifyScoringMode(rawScoringMode, variantRules);
@@ -1166,10 +1167,10 @@ function buildMarksByLabelSnapshot(options = {}) {
       : cricketRules.getTargetOrderByGameMode(gameModeNormalized);
   const targetSet = new Set(targetOrder);
   const labelDiagnostics = cloneLabelDiagnostics(grid.diagnostics);
-  if (!(labelDiagnostics.atomicLabelCount > 0)) {
+  if (labelDiagnostics.atomicLabelCount <= 0) {
     labelDiagnostics.atomicLabelCount = grid.labels.length;
   }
-  if (!(labelDiagnostics.atomicUniqueLabelCount > 0)) {
+  if (labelDiagnostics.atomicUniqueLabelCount <= 0) {
     labelDiagnostics.atomicUniqueLabelCount = new Set(grid.labels.map((entry) => entry.label)).size;
   }
   const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
@@ -1189,8 +1190,8 @@ function buildMarksByLabelSnapshot(options = {}) {
     shortfallRepairLabels,
   } = buildGridRowSnapshot({
     cachedStableRows,
-    collectPlayerCellsForLabel: (labelNode, label) =>
-      collectPlayerCellsForLabel(labelNode, cricketRules, targetSet, label),
+    collectPlayerCellsForLabel: (labelNode) =>
+      collectPlayerCellsForLabel(labelNode, cricketRules, targetSet),
     cricketRules,
     expectedPlayerCount,
     getRowNode,
@@ -1445,11 +1446,12 @@ export function extractScoreboardState(options = {}) {
     Boolean(degradedHostCandidate),
     options
   );
-  const surfaceStatus = hasBoard
-    ? CRICKET_SURFACE_STATUS.READY
-    : degradedHostCandidate && degradedHostGate.eligible
-      ? CRICKET_SURFACE_STATUS.DEGRADED_HOST
-      : CRICKET_SURFACE_STATUS.MISSING_BOARD;
+  let surfaceStatus = CRICKET_SURFACE_STATUS.MISSING_BOARD;
+  if (hasBoard) {
+    surfaceStatus = CRICKET_SURFACE_STATUS.READY;
+  } else if (degradedHostCandidate && degradedHostGate.eligible) {
+    surfaceStatus = CRICKET_SURFACE_STATUS.DEGRADED_HOST;
+  }
 
   return {
     ...extracted,

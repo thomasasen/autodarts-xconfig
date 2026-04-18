@@ -95,222 +95,253 @@ function resolveStableRowLabelNode(rowMeta, cricketRules, label) {
   );
 }
 
-export function buildGridRowSnapshot(options = {}) {
-  const cricketRules = options.cricketRules || null;
+function createRowRepairContext(options = {}) {
   const targetOrder = Array.isArray(options.targetOrder) ? options.targetOrder : [];
-  const targetSet =
-    options.targetSet instanceof Set
-      ? options.targetSet
-      : new Set(Array.isArray(options.targetSet) ? options.targetSet : targetOrder);
-  const gridLabels = Array.isArray(options.gridLabels) ? options.gridLabels : [];
-  const expectedPlayerCount = Number.isFinite(Number(options.expectedPlayerCount))
-    ? Math.max(0, Math.round(Number(options.expectedPlayerCount)))
-    : 0;
-  const cachedStableRows = options.cachedStableRows instanceof Map ? options.cachedStableRows : null;
-  const collectPlayerCellsForLabel =
-    typeof options.collectPlayerCellsForLabel === "function"
-      ? options.collectPlayerCellsForLabel
-      : () => [];
-  const resolveLabelCell =
-    typeof options.resolveLabelCell === "function" ? options.resolveLabelCell : () => null;
-  const resolveBadgeNode =
-    typeof options.resolveBadgeNode === "function" ? options.resolveBadgeNode : () => null;
-  const getRowNode = typeof options.getRowNode === "function" ? options.getRowNode : () => null;
-  const isInsideTurnPreview =
-    typeof options.isInsideTurnPreview === "function" ? options.isInsideTurnPreview : () => false;
 
-  const marksByLabel = cricketRules.createEmptyMarksByLabel(targetOrder, 0);
-  let maxPlayerCount = 0;
-  const rowMetaByLabel = new Map();
-  const labelCellMarkSourceLabels = [];
-  const labelCellMarkSourceSet = new Set();
-  const shortfallRepairLabels = [];
-  const shortfallRepairSet = new Set();
-  const recoveredStableLabels = [];
-  let hasIndexedPlayerColumns = false;
-
-  const applyRowMetaForLabel = (label, node, fallbackRowMeta = null) => {
-    if (!targetSet.has(label) || rowMetaByLabel.has(label) || !node || node.isConnected === false) {
-      return;
-    }
-    if (isInsideTurnPreview(node)) {
-      return;
-    }
-
-    const labelCell = resolveLabelCell(node, label) || fallbackRowMeta?.labelCell || null;
-    const discoveredPlayerCells = collectPlayerCellsForLabel(node, label).filter(Boolean);
-    const fallbackPlayerCells = Array.isArray(fallbackRowMeta?.playerCells)
-      ? fallbackRowMeta.playerCells.filter((cell) => cell && cell.isConnected !== false)
-      : [];
-    const playerCells = discoveredPlayerCells.length > 0 ? discoveredPlayerCells : fallbackPlayerCells;
-    const badgeNode =
-      resolveBadgeNode(node, labelCell, label) ||
-      (fallbackRowMeta?.badgeNode?.isConnected === false ? null : fallbackRowMeta?.badgeNode || null);
-
-    const markSourceMeta = {};
-    const markSourceCells = maybeIncludeLabelCellAsPlayerCell(
-      playerCells,
-      labelCell,
-      expectedPlayerCount,
-      markSourceMeta
-    );
-    const hasConcreteLabelMarkHints =
-      Boolean(markSourceMeta.labelCellHasExplicitMarkHints) ||
-      Boolean(markSourceMeta.labelCellHasTextMarkHints);
-    if (
-      markSourceMeta.labelCellIncluded &&
-      hasConcreteLabelMarkHints &&
-      !labelCellMarkSourceSet.has(label)
-    ) {
-      labelCellMarkSourceSet.add(label);
-      labelCellMarkSourceLabels.push(label);
-    }
-    if (
-      markSourceMeta.shortfallRepairApplied &&
-      hasConcreteLabelMarkHints &&
-      !shortfallRepairSet.has(label)
-    ) {
-      shortfallRepairSet.add(label);
-      shortfallRepairLabels.push(label);
-    }
-
-    const parsedCells = markSourceCells.map((cell) => {
-      const marks = cricketRules.clampMarks(parseMarksValue(cell, cricketRules));
-      const explicitPlayerIndex = readCellPlayerIndex(cell);
-      return {
-        cellNode: cell,
-        marks,
-        explicitPlayerIndex: Number.isFinite(explicitPlayerIndex)
-          ? Math.round(explicitPlayerIndex)
-          : null,
-      };
-    });
-    const rowNode = getRowNode(node) || fallbackRowMeta?.rowNode || null;
-    if (!parsedCells.length) {
-      rowMetaByLabel.set(label, {
-        label,
-        labelNode: node,
-        labelCell,
-        badgeNode,
-        rowNode,
-        playerCells,
-        playerCellsByIndex: [],
-      });
-      return;
-    }
-
-    const expectedRowLength = Math.max(expectedPlayerCount, parsedCells.length);
-    const shortfallOffset =
-      parsedCells.length < expectedRowLength
-        ? Math.max(0, expectedRowLength - parsedCells.length)
-        : 0;
-    const explicitPlayerIndexes = parsedCells
-      .map((entry) => entry.explicitPlayerIndex)
-      .filter((value) => Number.isFinite(value));
-    const explicitCoverageComplete =
-      explicitPlayerIndexes.length === parsedCells.length && parsedCells.length > 0;
-    const explicitUnique = new Set(explicitPlayerIndexes).size === explicitPlayerIndexes.length;
-    const explicitInBounds = explicitPlayerIndexes.every((value) => {
-      return value >= 0 && value < expectedRowLength;
-    });
-    const explicitRespectsShortfall =
-      parsedCells.length >= expectedRowLength ||
-      explicitPlayerIndexes.every((value) => value >= shortfallOffset);
-    const useExplicitPlayerIndexes =
-      explicitCoverageComplete &&
-      explicitUnique &&
-      explicitInBounds &&
-      explicitRespectsShortfall;
-
-    if (useExplicitPlayerIndexes) {
-      hasIndexedPlayerColumns = true;
-    }
-
-    const maxExplicitColumn = useExplicitPlayerIndexes
-      ? explicitPlayerIndexes.reduce((max, value) => {
-        return value > max ? value : max;
-      }, -1)
-      : -1;
-    const marksByPlayer = Array.from(
-      {
-        length: Math.max(expectedRowLength, maxExplicitColumn + 1, 1),
-      },
-      () => 0
-    );
-    const playerCellsByIndex = Array.from({ length: marksByPlayer.length }, () => null);
-    const occupiedColumns = new Set();
-    let cursor = shortfallOffset;
-
-    parsedCells.forEach((entry) => {
-      let targetIndex =
-        useExplicitPlayerIndexes && Number.isFinite(entry.explicitPlayerIndex)
-          ? entry.explicitPlayerIndex
-          : null;
-
-      if (!Number.isFinite(targetIndex)) {
-        while (occupiedColumns.has(cursor) && cursor < marksByPlayer.length) {
-          cursor += 1;
-        }
-        if (cursor >= marksByPlayer.length) {
-          marksByPlayer.push(0);
-        }
-        targetIndex = Math.max(0, Math.min(cursor, marksByPlayer.length - 1));
-        cursor = targetIndex + 1;
-      } else if (targetIndex >= marksByPlayer.length) {
-        while (marksByPlayer.length <= targetIndex) {
-          marksByPlayer.push(0);
-        }
-      }
-
-      marksByPlayer[targetIndex] = cricketRules.clampMarks(entry.marks);
-      if (entry.cellNode && entry.cellNode.isConnected !== false) {
-        playerCellsByIndex[targetIndex] = entry.cellNode;
-      }
-      occupiedColumns.add(targetIndex);
-    });
-
-    rowMetaByLabel.set(label, {
-      label,
-      labelNode: node,
-      labelCell,
-      badgeNode,
-      rowNode,
-      playerCells,
-      playerCellsByIndex,
-    });
-
-    marksByLabel[label] = marksByPlayer.map((value) => cricketRules.clampMarks(value));
-    maxPlayerCount = Math.max(maxPlayerCount, marksByLabel[label].length);
+  return {
+    cricketRules: options.cricketRules || null,
+    targetOrder,
+    targetSet:
+      options.targetSet instanceof Set
+        ? options.targetSet
+        : new Set(Array.isArray(options.targetSet) ? options.targetSet : targetOrder),
+    gridLabels: Array.isArray(options.gridLabels) ? options.gridLabels : [],
+    expectedPlayerCount: Number.isFinite(Number(options.expectedPlayerCount))
+      ? Math.max(0, Math.round(Number(options.expectedPlayerCount)))
+      : 0,
+    cachedStableRows: options.cachedStableRows instanceof Map ? options.cachedStableRows : null,
+    collectPlayerCellsForLabel:
+      typeof options.collectPlayerCellsForLabel === "function"
+        ? options.collectPlayerCellsForLabel
+        : () => [],
+    resolveLabelCell:
+      typeof options.resolveLabelCell === "function" ? options.resolveLabelCell : () => null,
+    resolveBadgeNode:
+      typeof options.resolveBadgeNode === "function" ? options.resolveBadgeNode : () => null,
+    getRowNode: typeof options.getRowNode === "function" ? options.getRowNode : () => null,
+    isInsideTurnPreview:
+      typeof options.isInsideTurnPreview === "function" ? options.isInsideTurnPreview : () => false,
+    marksByLabel: options.cricketRules.createEmptyMarksByLabel(targetOrder, 0),
+    maxPlayerCount: 0,
+    rowMetaByLabel: new Map(),
+    labelCellMarkSourceLabels: [],
+    labelCellMarkSourceSet: new Set(),
+    shortfallRepairLabels: [],
+    shortfallRepairSet: new Set(),
+    recoveredStableLabels: [],
+    hasIndexedPlayerColumns: false,
   };
+}
 
-  gridLabels.forEach(({ node, label }) => {
-    applyRowMetaForLabel(label, node);
+function addUniqueLabel(targetList, targetSet, label) {
+  if (targetSet.has(label)) {
+    return;
+  }
+  targetSet.add(label);
+  targetList.push(label);
+}
+
+function recordMarkSourceLabels(context, label, markSourceMeta) {
+  const hasConcreteLabelMarkHints =
+    Boolean(markSourceMeta.labelCellHasExplicitMarkHints) ||
+    Boolean(markSourceMeta.labelCellHasTextMarkHints);
+  if (!hasConcreteLabelMarkHints) {
+    return;
+  }
+
+  if (markSourceMeta.labelCellIncluded) {
+    addUniqueLabel(context.labelCellMarkSourceLabels, context.labelCellMarkSourceSet, label);
+  }
+  if (markSourceMeta.shortfallRepairApplied) {
+    addUniqueLabel(context.shortfallRepairLabels, context.shortfallRepairSet, label);
+  }
+}
+
+function resolvePlayerCellsForRow(context, label, node, fallbackRowMeta) {
+  const discoveredPlayerCells = context.collectPlayerCellsForLabel(node, label).filter(Boolean);
+  if (discoveredPlayerCells.length > 0) {
+    return discoveredPlayerCells;
+  }
+  return Array.isArray(fallbackRowMeta?.playerCells)
+    ? fallbackRowMeta.playerCells.filter((cell) => cell && cell.isConnected !== false)
+    : [];
+}
+
+function parseRowCells(cells, cricketRules) {
+  return cells.map((cell) => {
+    const explicitPlayerIndex = readCellPlayerIndex(cell);
+    return {
+      cellNode: cell,
+      marks: cricketRules.clampMarks(parseMarksValue(cell, cricketRules)),
+      explicitPlayerIndex: Number.isFinite(explicitPlayerIndex) ? Math.round(explicitPlayerIndex) : null,
+    };
+  });
+}
+
+function resolveExplicitColumnPlan(parsedCells, expectedPlayerCount) {
+  const expectedRowLength = Math.max(expectedPlayerCount, parsedCells.length);
+  const shortfallOffset = parsedCells.length < expectedRowLength
+    ? Math.max(0, expectedRowLength - parsedCells.length)
+    : 0;
+  const explicitPlayerIndexes = parsedCells
+    .map((entry) => entry.explicitPlayerIndex)
+    .filter((value) => Number.isFinite(value));
+  const useExplicitPlayerIndexes =
+    explicitPlayerIndexes.length === parsedCells.length &&
+    parsedCells.length > 0 &&
+    new Set(explicitPlayerIndexes).size === explicitPlayerIndexes.length &&
+    explicitPlayerIndexes.every((value) => value >= 0 && value < expectedRowLength) &&
+    (
+      parsedCells.length >= expectedRowLength ||
+      explicitPlayerIndexes.every((value) => value >= shortfallOffset)
+    );
+  const maxExplicitColumn = useExplicitPlayerIndexes
+    ? explicitPlayerIndexes.reduce((max, value) => (value > max ? value : max), -1)
+    : -1;
+
+  return {
+    expectedRowLength,
+    maxExplicitColumn,
+    shortfallOffset,
+    useExplicitPlayerIndexes,
+  };
+}
+
+function assignParsedCellsToColumns(parsedCells, cricketRules, columnPlan) {
+  const marksByPlayer = Array.from(
+    { length: Math.max(columnPlan.expectedRowLength, columnPlan.maxExplicitColumn + 1, 1) },
+    () => 0
+  );
+  const playerCellsByIndex = Array.from({ length: marksByPlayer.length }, () => null);
+  const occupiedColumns = new Set();
+  let cursor = columnPlan.shortfallOffset;
+
+  parsedCells.forEach((entry) => {
+    let targetIndex = columnPlan.useExplicitPlayerIndexes && Number.isFinite(entry.explicitPlayerIndex)
+      ? entry.explicitPlayerIndex
+      : null;
+
+    if (!Number.isFinite(targetIndex)) {
+      while (occupiedColumns.has(cursor) && cursor < marksByPlayer.length) {
+        cursor += 1;
+      }
+      if (cursor >= marksByPlayer.length) {
+        marksByPlayer.push(0);
+      }
+      targetIndex = Math.max(0, Math.min(cursor, marksByPlayer.length - 1));
+      cursor = targetIndex + 1;
+    } else if (targetIndex >= marksByPlayer.length) {
+      while (marksByPlayer.length <= targetIndex) {
+        marksByPlayer.push(0);
+      }
+    }
+
+    marksByPlayer[targetIndex] = cricketRules.clampMarks(entry.marks);
+    if (entry.cellNode && entry.cellNode.isConnected !== false) {
+      playerCellsByIndex[targetIndex] = entry.cellNode;
+    }
+    occupiedColumns.add(targetIndex);
   });
 
-  if (cachedStableRows) {
-    targetOrder.forEach((label) => {
-      if (rowMetaByLabel.has(label)) {
+  return { marksByPlayer, playerCellsByIndex };
+}
+
+function createEmptyRowMeta(label, node, labelCell, badgeNode, rowNode, playerCells) {
+  return {
+    label,
+    labelNode: node,
+    labelCell,
+    badgeNode,
+    rowNode,
+    playerCells,
+    playerCellsByIndex: [],
+  };
+}
+
+function applyRowMetaForLabel(context, label, node, fallbackRowMeta = null) {
+  if (!context.targetSet.has(label) || context.rowMetaByLabel.has(label) || !node || node.isConnected === false) {
+    return;
+  }
+  if (context.isInsideTurnPreview(node)) {
+    return;
+  }
+
+  const labelCell = context.resolveLabelCell(node, label) || fallbackRowMeta?.labelCell || null;
+  const playerCells = resolvePlayerCellsForRow(context, label, node, fallbackRowMeta);
+  const badgeNode =
+    context.resolveBadgeNode(node, labelCell, label) ||
+    (fallbackRowMeta?.badgeNode?.isConnected === false ? null : fallbackRowMeta?.badgeNode || null);
+  const markSourceMeta = {};
+  const markSourceCells = maybeIncludeLabelCellAsPlayerCell(
+    playerCells,
+    labelCell,
+    context.expectedPlayerCount,
+    markSourceMeta
+  );
+  recordMarkSourceLabels(context, label, markSourceMeta);
+
+  const parsedCells = parseRowCells(markSourceCells, context.cricketRules);
+  const rowNode = context.getRowNode(node) || fallbackRowMeta?.rowNode || null;
+  if (!parsedCells.length) {
+    context.rowMetaByLabel.set(
+      label,
+      createEmptyRowMeta(label, node, labelCell, badgeNode, rowNode, playerCells)
+    );
+    return;
+  }
+
+  const columnPlan = resolveExplicitColumnPlan(parsedCells, context.expectedPlayerCount);
+  const rowAssignments = assignParsedCellsToColumns(parsedCells, context.cricketRules, columnPlan);
+  if (columnPlan.useExplicitPlayerIndexes) {
+    context.hasIndexedPlayerColumns = true;
+  }
+
+  context.rowMetaByLabel.set(label, {
+    label,
+    labelNode: node,
+    labelCell,
+    badgeNode,
+    rowNode,
+    playerCells,
+    playerCellsByIndex: rowAssignments.playerCellsByIndex,
+  });
+  context.marksByLabel[label] = rowAssignments.marksByPlayer.map((value) => {
+    return context.cricketRules.clampMarks(value);
+  });
+  context.maxPlayerCount = Math.max(context.maxPlayerCount, context.marksByLabel[label].length);
+}
+
+export function buildGridRowSnapshot(options = {}) {
+  const context = createRowRepairContext(options);
+
+  context.gridLabels.forEach(({ node, label }) => {
+    applyRowMetaForLabel(context, label, node);
+  });
+
+  if (context.cachedStableRows) {
+    context.targetOrder.forEach((label) => {
+      if (context.rowMetaByLabel.has(label)) {
         return;
       }
-      const fallbackRowMeta = cachedStableRows.get(label);
-      const stableLabelNode = resolveStableRowLabelNode(fallbackRowMeta, cricketRules, label);
+      const fallbackRowMeta = context.cachedStableRows.get(label);
+      const stableLabelNode = resolveStableRowLabelNode(fallbackRowMeta, context.cricketRules, label);
       if (!stableLabelNode) {
         return;
       }
-      applyRowMetaForLabel(label, stableLabelNode, fallbackRowMeta);
-      if (rowMetaByLabel.has(label)) {
-        recoveredStableLabels.push(label);
+      applyRowMetaForLabel(context, label, stableLabelNode, fallbackRowMeta);
+      if (context.rowMetaByLabel.has(label)) {
+        context.recoveredStableLabels.push(label);
       }
     });
   }
 
   return {
-    hasIndexedPlayerColumns,
-    labelCellMarkSourceLabels,
-    marksByLabel,
-    maxPlayerCount,
-    recoveredStableLabels,
-    rowMetaByLabel,
-    shortfallRepairLabels,
+    hasIndexedPlayerColumns: context.hasIndexedPlayerColumns,
+    labelCellMarkSourceLabels: context.labelCellMarkSourceLabels,
+    marksByLabel: context.marksByLabel,
+    maxPlayerCount: context.maxPlayerCount,
+    recoveredStableLabels: context.recoveredStableLabels,
+    rowMetaByLabel: context.rowMetaByLabel,
+    shortfallRepairLabels: context.shortfallRepairLabels,
   };
 }
