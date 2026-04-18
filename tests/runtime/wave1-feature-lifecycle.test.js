@@ -58,7 +58,7 @@ function createFeatureConfig(configEntries = {}) {
     const enabled = Boolean(featureConfig);
     featureToggles[key] = enabled;
     features[key] = {
-      ...(featureConfig || {}),
+      ...featureConfig,
       enabled,
     };
   });

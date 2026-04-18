@@ -62,7 +62,7 @@ function createStorageAdapter(options = {}) {
     try {
       if (typeof gmGetValue === "function") {
         const gmValue = await toPromise(gmGetValue(key, fallbackValue));
-        if (typeof gmValue !== "undefined" && gmValue !== null) {
+        if (gmValue !== undefined && gmValue !== null) {
           return gmValue;
         }
       }

@@ -1362,7 +1362,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     marksByLabelDebug,
     marksMergeByLabelDebug,
     activeThrowPreviewDebug: {
-      ...(activeThrowPreview?.debug || {}),
+      ...activeThrowPreview?.debug,
       labels: Array.from(activeThrowPreview?.marksByLabel?.keys?.() || []),
     },
     marksByLabel: enrichedMarksByLabel,

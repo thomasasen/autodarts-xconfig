@@ -36,7 +36,7 @@ export function compareSemver(left, right) {
 }
 
 export function parseChangelogSections(text) {
-  const normalizedText = String(text || "").replaceAll(/\r\n/g, "\n");
+  const normalizedText = String(text || "").replaceAll("\r\n", "\n");
   const matches = Array.from(normalizedText.matchAll(versionHeadingPattern));
 
   return matches.map((match, index) => {
@@ -57,7 +57,7 @@ export function parseChangelogSections(text) {
 }
 
 export function isChangelogRelevantFile(filePath) {
-  const normalizedPath = String(filePath || "").replaceAll(/\\/g, "/");
+  const normalizedPath = String(filePath || "").replaceAll("\\", "/");
   if (!normalizedPath) {
     return false;
   }
@@ -76,7 +76,7 @@ export function isChangelogRelevantFile(filePath) {
 
 function parseLinkReferences(text) {
   const references = new Map();
-  const normalizedText = String(text || "").replaceAll(/\r\n/g, "\n");
+  const normalizedText = String(text || "").replaceAll("\r\n", "\n");
   const matches = normalizedText.matchAll(linkReferencePattern);
 
   for (const match of matches) {
@@ -219,7 +219,7 @@ export function validateChangelogDocument({
   changedFiles = [],
 }) {
   const errors = [];
-  const normalizedText = String(text || "").replaceAll(/\r\n/g, "\n");
+  const normalizedText = String(text || "").replaceAll("\r\n", "\n");
 
   if (!normalizedText.trim()) {
     return ["CHANGELOG.md ist leer."];
@@ -280,7 +280,7 @@ export function validateChangelogDocument({
 
   const hasRelevantChanges = changedFiles.some((filePath) => isChangelogRelevantFile(filePath));
   const changelogWasChanged = changedFiles.some(
-    (filePath) => String(filePath || "").replaceAll(/\\/g, "/") === "CHANGELOG.md"
+    (filePath) => String(filePath || "").replaceAll("\\", "/") === "CHANGELOG.md"
   );
   if (hasRelevantChanges && !changelogWasChanged) {
     errors.push(

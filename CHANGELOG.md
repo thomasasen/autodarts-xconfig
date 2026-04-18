@@ -24,6 +24,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; mehrere kleine Sonar-getriebene Bereinigungen halten Runtime-, xConfig-, Theme- und Testpfade auf moderneren Standard-APIs, ohne die Fachlogik der Module sichtbar umzubauen.
   Technik: Niedrigrisiko-Refactorings vereinheitlichen `Object.hasOwn(...)`, `globalThis.window`, `Number.NaN`, `replaceAll(...)`, `String.raw`, `.at(...)` und einzelne Re-exports/Import-Aufräumer; dazu wurden nur eng begrenzte Test- und Helper-Anpassungen ergänzt, damit Sortierungen, Regex-Helfer, DOM-Klassenlisten und Changelog-/Build-Checks weiter stabil gegen Drift abgesichert bleiben.
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere kleine Sonar-Bereinigungswelle räumt verbleibende mechanische Modernisierungen in Runtime-, Test- und Script-Pfaden auf, ohne xConfig-Verhalten, Host-Integrationen oder Theme-/Cricket-Abläufe fachlich umzubauen.
+  Technik: Harmlose Objekt-Spreads verzichten jetzt auf leere Fallback-Objekte, zwei lokal deklarierte `undefined`-Vergleiche prüfen direkt statt per `typeof`, und der Changelog-Konsistenzcheck ersetzt globale Regex-Ersetzungen durch stringbasierte `replaceAll(...)`-Aufrufe; die betroffenen Cricket-/Lifecycle-Tests und Debug-Helfer behalten dabei ihre bisherige Semantik.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added

@@ -10,7 +10,7 @@ const CHANNEL_MATCHES = "autodarts.matches";
 const TOPIC_STATE_SUFFIX = ".state";
 
 function safeClone(value) {
-  if (value === null || typeof value === "undefined") {
+  if (value === null || value === undefined) {
     return value;
   }
 

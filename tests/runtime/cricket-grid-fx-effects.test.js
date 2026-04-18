@@ -667,7 +667,7 @@ test("cricket grid fx never decorates or flattens the app root when a transient 
   const degradedRenderState = {
     ...renderState,
     gridSnapshot: {
-      ...(renderState?.gridSnapshot || {}),
+      ...renderState?.gridSnapshot,
       rows: degradedRows,
       rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
     },
@@ -766,7 +766,7 @@ test("cricket grid fx never snapshots or flattens a large visible host wrapper w
   const degradedRenderState = {
     ...renderState,
     gridSnapshot: {
-      ...(renderState?.gridSnapshot || {}),
+      ...renderState?.gridSnapshot,
       rows: degradedRows,
       rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
     },
@@ -907,7 +907,7 @@ test("cricket grid fx backfills missing snapshot rows from grid root in merged d
   const truncatedRenderState = {
     ...renderState,
     gridSnapshot: {
-      ...(renderState?.gridSnapshot || {}),
+      ...renderState?.gridSnapshot,
       rows: truncatedRows,
     },
   };
@@ -1322,7 +1322,7 @@ test("cricket grid fx keeps owner scoring classes in merged owner-label rows for
     activePlayerIndex: 0,
     stateMap: canonicalStateMap,
     gridSnapshot: {
-      ...(discoveredRenderState?.gridSnapshot || {}),
+      ...discoveredRenderState?.gridSnapshot,
       root: discoveredRenderState?.gridSnapshot?.root || documentRef.getElementById("grid"),
       rows: shortfallRows,
       rowMap: new Map(shortfallRows.map((row) => [row.label, row])),
@@ -1604,7 +1604,7 @@ test("cricket grid fx repairs complete-but-incomplete row snapshots and restores
     activePlayerIndex: 0,
     stateMap: canonicalStateMap,
     gridSnapshot: {
-      ...(discoveredRenderState?.gridSnapshot || {}),
+      ...discoveredRenderState?.gridSnapshot,
       root: discoveredRenderState?.gridSnapshot?.root || documentRef.getElementById("grid"),
       rows: intentionallyBrokenRows,
       rowMap: new Map(intentionallyBrokenRows.map((row) => [row.label, row])),
@@ -1710,7 +1710,7 @@ test("cricket grid fx repairs missing label anchors so open 15 keeps owner-align
     activePlayerIndex: 0,
     stateMap: canonicalStateMap,
     gridSnapshot: {
-      ...(discoveredRenderState?.gridSnapshot || {}),
+      ...discoveredRenderState?.gridSnapshot,
       root: discoveredRenderState?.gridSnapshot?.root || documentRef.getElementById("grid"),
       rows: contaminatedRows,
       rowMap: new Map(contaminatedRows.map((row) => [row.label, row])),
@@ -1822,7 +1822,7 @@ test("cricket grid fx repairs contaminated same-length rows so active-player ope
     activePlayerIndex: 1,
     stateMap: canonicalStateMap,
     gridSnapshot: {
-      ...(discoveredRenderState?.gridSnapshot || {}),
+      ...discoveredRenderState?.gridSnapshot,
       root: discoveredRenderState?.gridSnapshot?.root || documentRef.getElementById("grid"),
       rows: contaminatedRows,
       rowMap: new Map(contaminatedRows.map((row) => [row.label, row])),
@@ -1942,7 +1942,7 @@ test("cricket grid fx repairs same-length contamination for every cricket row an
     const degradedRenderState = {
       ...renderState,
       gridSnapshot: {
-        ...(renderState?.gridSnapshot || {}),
+        ...renderState?.gridSnapshot,
         rows: contaminatedRows,
         rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
       },
@@ -2042,7 +2042,7 @@ test("cricket grid fx repairs contaminated bull row mapping so active open colum
   const degradedRenderState = {
     ...renderState,
     gridSnapshot: {
-      ...(renderState?.gridSnapshot || {}),
+      ...renderState?.gridSnapshot,
       rows: contaminatedRows,
       rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
     },
@@ -2139,7 +2139,7 @@ test("cricket grid fx prefers row-local owner mapping over stale indexed snapsho
   const degradedRenderState = {
     ...renderState,
     gridSnapshot: {
-      ...(renderState?.gridSnapshot || {}),
+      ...renderState?.gridSnapshot,
       rows: contaminatedRows,
       rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
     },
@@ -2821,7 +2821,7 @@ test("cricket grid fx keeps all objectives and all 3 player columns stable under
     const degradedRenderState = {
       ...renderState,
       gridSnapshot: {
-        ...(renderState?.gridSnapshot || {}),
+        ...renderState?.gridSnapshot,
         rows: contaminatedRows,
         rowMap: new Map(contaminatedRows.map((row) => [String(row?.label || ""), row])),
       },
@@ -3305,7 +3305,7 @@ test("cricket grid fx clears stale untracked open-active classes during partial 
   const degradedRenderState = {
     ...renderStateInitial,
     gridSnapshot: {
-      ...(renderStateInitial?.gridSnapshot || {}),
+      ...renderStateInitial?.gridSnapshot,
       rows: degradedRows,
       rowMap: new Map(degradedRows.map((row) => [String(row?.label || ""), row])),
     },

@@ -9,13 +9,13 @@ import {
 
 function createNode(options = {}) {
   const attributes = {
-    ...(options.attributes || {}),
+    ...options.attributes,
   };
 
   return {
     textContent: options.textContent || "",
     dataset: {
-      ...(options.dataset || {}),
+      ...options.dataset,
     },
     getAttribute(name) {
       return Object.hasOwn(attributes, name) ? attributes[name] : null;
