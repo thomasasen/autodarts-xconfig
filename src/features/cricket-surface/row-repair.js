@@ -97,30 +97,20 @@ function resolveStableRowLabelNode(rowMeta, cricketRules, label) {
 
 function createRowRepairContext(options = {}) {
   const targetOrder = Array.isArray(options.targetOrder) ? options.targetOrder : [];
+  const targetSet = resolveContextTargetSet(options.targetSet, targetOrder);
 
   return {
     cricketRules: options.cricketRules || null,
     targetOrder,
-    targetSet:
-      options.targetSet instanceof Set
-        ? options.targetSet
-        : new Set(Array.isArray(options.targetSet) ? options.targetSet : targetOrder),
+    targetSet,
     gridLabels: Array.isArray(options.gridLabels) ? options.gridLabels : [],
-    expectedPlayerCount: Number.isFinite(Number(options.expectedPlayerCount))
-      ? Math.max(0, Math.round(Number(options.expectedPlayerCount)))
-      : 0,
+    expectedPlayerCount: resolveExpectedPlayerCount(options.expectedPlayerCount),
     cachedStableRows: options.cachedStableRows instanceof Map ? options.cachedStableRows : null,
-    collectPlayerCellsForLabel:
-      typeof options.collectPlayerCellsForLabel === "function"
-        ? options.collectPlayerCellsForLabel
-        : () => [],
-    resolveLabelCell:
-      typeof options.resolveLabelCell === "function" ? options.resolveLabelCell : () => null,
-    resolveBadgeNode:
-      typeof options.resolveBadgeNode === "function" ? options.resolveBadgeNode : () => null,
-    getRowNode: typeof options.getRowNode === "function" ? options.getRowNode : () => null,
-    isInsideTurnPreview:
-      typeof options.isInsideTurnPreview === "function" ? options.isInsideTurnPreview : () => false,
+    collectPlayerCellsForLabel: resolveOptionalCallback(options.collectPlayerCellsForLabel, () => []),
+    resolveLabelCell: resolveOptionalCallback(options.resolveLabelCell, () => null),
+    resolveBadgeNode: resolveOptionalCallback(options.resolveBadgeNode, () => null),
+    getRowNode: resolveOptionalCallback(options.getRowNode, () => null),
+    isInsideTurnPreview: resolveOptionalCallback(options.isInsideTurnPreview, () => false),
     marksByLabel: options.cricketRules.createEmptyMarksByLabel(targetOrder, 0),
     maxPlayerCount: 0,
     rowMetaByLabel: new Map(),
@@ -131,6 +121,28 @@ function createRowRepairContext(options = {}) {
     recoveredStableLabels: [],
     hasIndexedPlayerColumns: false,
   };
+}
+
+function resolveContextTargetSet(targetSet, targetOrder) {
+  if (targetSet instanceof Set) {
+    return targetSet;
+  }
+  if (Array.isArray(targetSet)) {
+    return new Set(targetSet);
+  }
+  return new Set(targetOrder);
+}
+
+function resolveExpectedPlayerCount(expectedPlayerCount) {
+  const numeric = Number(expectedPlayerCount);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.max(0, Math.round(numeric));
+}
+
+function resolveOptionalCallback(candidate, fallback) {
+  return typeof candidate === "function" ? candidate : fallback;
 }
 
 function addUniqueLabel(targetList, targetSet, label) {
@@ -180,24 +192,20 @@ function parseRowCells(cells, cricketRules) {
 
 function resolveExplicitColumnPlan(parsedCells, expectedPlayerCount) {
   const expectedRowLength = Math.max(expectedPlayerCount, parsedCells.length);
-  const shortfallOffset = parsedCells.length < expectedRowLength
-    ? Math.max(0, expectedRowLength - parsedCells.length)
-    : 0;
+  const shortfallOffset = Math.max(0, expectedRowLength - parsedCells.length);
   const explicitPlayerIndexes = parsedCells
     .map((entry) => entry.explicitPlayerIndex)
     .filter((value) => Number.isFinite(value));
-  const useExplicitPlayerIndexes =
+  const hasCompleteExplicitIndexes =
     explicitPlayerIndexes.length === parsedCells.length &&
     parsedCells.length > 0 &&
     new Set(explicitPlayerIndexes).size === explicitPlayerIndexes.length &&
-    explicitPlayerIndexes.every((value) => value >= 0 && value < expectedRowLength) &&
-    (
-      parsedCells.length >= expectedRowLength ||
-      explicitPlayerIndexes.every((value) => value >= shortfallOffset)
-    );
-  const maxExplicitColumn = useExplicitPlayerIndexes
-    ? explicitPlayerIndexes.reduce((max, value) => (value > max ? value : max), -1)
-    : -1;
+    explicitPlayerIndexes.every((value) => value >= 0 && value < expectedRowLength);
+  const explicitIndexesRespectShortfall =
+    parsedCells.length >= expectedRowLength ||
+    explicitPlayerIndexes.every((value) => value >= shortfallOffset);
+  const useExplicitPlayerIndexes = hasCompleteExplicitIndexes && explicitIndexesRespectShortfall;
+  const maxExplicitColumn = useExplicitPlayerIndexes ? Math.max(-1, ...explicitPlayerIndexes) : -1;
 
   return {
     expectedRowLength,

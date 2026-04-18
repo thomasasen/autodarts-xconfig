@@ -125,7 +125,7 @@ function normalizeHashValue(hashValue) {
 export function extractMatchRouteId(windowRef, documentRef) {
   const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
   const routePath = normalizeRoutePath(locationRef?.pathname || "");
-  const match = routePath.match(MATCH_ROUTE_PATTERN);
+  const match = MATCH_ROUTE_PATTERN.exec(routePath);
   return match?.[1] || "";
 }
 
@@ -272,6 +272,51 @@ function hasDegradedControlPaneText(node) {
   return /(20|19|18|17|16|15|bull)/i.test(compactText) || /\d{6,}/.test(compactText);
 }
 
+function selectDegradedHostPanePair(hostRect, childEntries) {
+  if (!hostRect || childEntries.length < 2) {
+    return null;
+  }
+
+  const dominantChildren = childEntries
+    .filter((entry) => entry.rect.height >= hostRect.height * DEGRADED_HOST_MIN_PANE_HEIGHT_RATIO)
+    .sort((left, right) => {
+      const leftArea = left.rect.width * left.rect.height;
+      const rightArea = right.rect.width * right.rect.height;
+      return rightArea - leftArea;
+    })
+    .slice(0, 2)
+    .sort((left, right) => left.rect.left - right.rect.left);
+
+  return dominantChildren.length === 2 ? dominantChildren : null;
+}
+
+function buildDegradedHostCandidate(current, gridRoot, hostRect, panePair) {
+  if (!Array.isArray(panePair) || panePair.length !== 2) {
+    return null;
+  }
+
+  const [leftPane, rightPane] = panePair;
+  const paneSpan = leftPane.rect.width + rightPane.rect.width;
+  const leftWidthRatio = hostRect.width > 0 ? leftPane.rect.width / hostRect.width : 0;
+  const rightWidthRatio = hostRect.width > 0 ? rightPane.rect.width / hostRect.width : 0;
+  if (
+    !containsNode(leftPane.node, gridRoot) ||
+    paneSpan < hostRect.width * DEGRADED_HOST_MIN_PANE_SPAN_RATIO ||
+    leftWidthRatio < DEGRADED_HOST_MIN_LEFT_PANE_WIDTH_RATIO ||
+    rightWidthRatio < DEGRADED_HOST_MIN_RIGHT_PANE_WIDTH_RATIO ||
+    !hasDegradedControlPaneText(rightPane.node)
+  ) {
+    return null;
+  }
+
+  return {
+    hostNode: current,
+    leftPaneNode: leftPane.node,
+    rightPaneNode: rightPane.node,
+    rightPaneText: readCompactNodeText(rightPane.node),
+  };
+}
+
 function findDegradedHostCandidate(extracted, options = {}) {
   const gridRoot = extracted?.gridSnapshot?.root || null;
   const documentRef = options.documentRef || extracted?.documentRef || null;
@@ -293,37 +338,10 @@ function findDegradedHostCandidate(extracted, options = {}) {
   while (current && current !== documentRef.body && current !== documentRef.documentElement) {
     const hostRect = readNodeRect(current);
     const childEntries = readVisibleChildEntries(current);
-    if (hostRect && childEntries.length >= 2) {
-      const dominantChildren = childEntries
-        .filter((entry) => entry.rect.height >= hostRect.height * DEGRADED_HOST_MIN_PANE_HEIGHT_RATIO)
-        .sort((left, right) => {
-          const leftArea = left.rect.width * left.rect.height;
-          const rightArea = right.rect.width * right.rect.height;
-          return rightArea - leftArea;
-        })
-        .slice(0, 2)
-        .sort((left, right) => left.rect.left - right.rect.left);
-
-      if (dominantChildren.length === 2) {
-        const [leftPane, rightPane] = dominantChildren;
-        const paneSpan = leftPane.rect.width + rightPane.rect.width;
-        const leftWidthRatio = hostRect.width > 0 ? leftPane.rect.width / hostRect.width : 0;
-        const rightWidthRatio = hostRect.width > 0 ? rightPane.rect.width / hostRect.width : 0;
-        if (
-          containsNode(leftPane.node, gridRoot) &&
-          paneSpan >= hostRect.width * DEGRADED_HOST_MIN_PANE_SPAN_RATIO &&
-          leftWidthRatio >= DEGRADED_HOST_MIN_LEFT_PANE_WIDTH_RATIO &&
-          rightWidthRatio >= DEGRADED_HOST_MIN_RIGHT_PANE_WIDTH_RATIO &&
-          hasDegradedControlPaneText(rightPane.node)
-        ) {
-          return {
-            hostNode: current,
-            leftPaneNode: leftPane.node,
-            rightPaneNode: rightPane.node,
-            rightPaneText: readCompactNodeText(rightPane.node),
-          };
-        }
-      }
+    const panePair = selectDegradedHostPanePair(hostRect, childEntries);
+    const candidate = buildDegradedHostCandidate(current, gridRoot, hostRect, panePair);
+    if (candidate) {
+      return candidate;
     }
 
     current = current.parentElement || null;
@@ -631,7 +649,7 @@ function hasOwnMarkValue(node, options = {}) {
   }
   const cricketRules = options.cricketRules;
   const allowTextMarkValue = options.allowTextMarkValue !== false;
-  if (typeof node.getAttribute === "function" && node.getAttribute("data-marks") !== null) {
+  if (Object.hasOwn(node?.dataset || {}, "marks")) {
     return true;
   }
   if (typeof node.querySelectorAll === "function") {
@@ -963,6 +981,92 @@ function haveEquivalentThrowSignatures(leftThrows, rightThrows, cricketRules, ta
   return left.every((entry, index) => entry === right[index]);
 }
 
+function createActiveThrowPreviewDebug(activeThrows, cricketRules, targetOrder) {
+  return {
+    throwCount: activeThrows.length,
+    applied: false,
+    suppressionReason: "",
+    activeTurnFinished: false,
+    matchedFinishedTurn: false,
+    activeThrowsSignature: toThrowSignatureParts(activeThrows, cricketRules, targetOrder).join(","),
+    activeTurnSignature: "",
+  };
+}
+
+function readActiveTurnPreviewState(gameState, cricketRules, targetOrder) {
+  const activeTurn =
+    gameState && typeof gameState.getActiveTurn === "function"
+      ? gameState.getActiveTurn()
+      : null;
+  if (!activeTurn || typeof activeTurn !== "object") {
+    return {
+      finished: false,
+      signature: "",
+    };
+  }
+
+  return {
+    finished: Boolean(String(activeTurn.finishedAt || "").trim()),
+    signature: toThrowSignatureParts(
+      Array.isArray(activeTurn.throws) ? activeTurn.throws : [],
+      cricketRules,
+      targetOrder
+    ).join(","),
+  };
+}
+
+function listSnapshotTurns(snapshotMatch) {
+  return Array.isArray(snapshotMatch?.turns)
+    ? snapshotMatch.turns.filter((turn) => turn && typeof turn === "object")
+    : [];
+}
+
+function isTurnOwnedByPlayer(turn, playerId) {
+  return String(turn?.playerId || "").trim() === playerId;
+}
+
+function isFinishedTurnWithThrows(turn) {
+  return Boolean(String(turn?.finishedAt || "").trim()) &&
+    Array.isArray(turn?.throws) &&
+    turn.throws.length > 0;
+}
+
+function shouldSuppressPreviewForFinishedSnapshotTurn(
+  snapshotMatch,
+  activePlayerIndex,
+  activeThrows,
+  cricketRules,
+  targetOrder
+) {
+  const activePlayerId = getPlayerIdByIndex(snapshotMatch, activePlayerIndex);
+  if (!activePlayerId) {
+    return false;
+  }
+
+  const turns = listSnapshotTurns(snapshotMatch);
+  const unfinishedTurnsForActivePlayer = turns.filter((turn) => {
+    return isTurnOwnedByPlayer(turn, activePlayerId) && !String(turn.finishedAt || "").trim();
+  });
+  if (unfinishedTurnsForActivePlayer.length > 0) {
+    return false;
+  }
+
+  const newestFinishedTurn = selectNewestTurnCandidate(
+    turns.filter((turn) => {
+      return isTurnOwnedByPlayer(turn, activePlayerId) && isFinishedTurnWithThrows(turn);
+    })
+  );
+  return Boolean(
+    newestFinishedTurn &&
+      haveEquivalentThrowSignatures(
+        newestFinishedTurn.throws,
+        activeThrows,
+        cricketRules,
+        targetOrder
+      )
+  );
+}
+
 function shouldApplyActiveThrowPreview(options = {}) {
   const gameState = options.gameState;
   const cricketRules = options.cricketRules;
@@ -973,75 +1077,34 @@ function shouldApplyActiveThrowPreview(options = {}) {
     : 0;
   const snapshotMatch = options.snapshotMatch || null;
 
-  const debug = {
-    throwCount: activeThrows.length,
-    applied: false,
-    suppressionReason: "",
-    activeTurnFinished: false,
-    matchedFinishedTurn: false,
-    activeThrowsSignature: toThrowSignatureParts(activeThrows, cricketRules, targetOrder).join(","),
-    activeTurnSignature: "",
-  };
+  const debug = createActiveThrowPreviewDebug(activeThrows, cricketRules, targetOrder);
 
   if (!activeThrows.length) {
     debug.suppressionReason = "no-active-throws";
     return debug;
   }
 
-  const activeTurn =
-    gameState && typeof gameState.getActiveTurn === "function"
-      ? gameState.getActiveTurn()
-      : null;
-
-  if (activeTurn && typeof activeTurn === "object") {
-    debug.activeTurnSignature = toThrowSignatureParts(
-      Array.isArray(activeTurn.throws) ? activeTurn.throws : [],
-      cricketRules,
-      targetOrder
-    ).join(",");
-    debug.activeTurnFinished = Boolean(String(activeTurn.finishedAt || "").trim());
-  }
+  const activeTurnState = readActiveTurnPreviewState(gameState, cricketRules, targetOrder);
+  debug.activeTurnSignature = activeTurnState.signature;
+  debug.activeTurnFinished = activeTurnState.finished;
 
   if (debug.activeTurnFinished) {
     debug.suppressionReason = "active-turn-finished";
     return debug;
   }
 
-  if (snapshotMatch && Array.isArray(snapshotMatch.turns)) {
-    const activePlayerId = getPlayerIdByIndex(snapshotMatch, activePlayerIndex);
-    const turns = snapshotMatch.turns.filter((turn) => turn && typeof turn === "object");
-    const unfinishedTurnsForActivePlayer = turns.filter((turn) => {
-      return (
-        String(turn.playerId || "").trim() === activePlayerId &&
-        !String(turn.finishedAt || "").trim()
-      );
-    });
-
-    if (activePlayerId && unfinishedTurnsForActivePlayer.length === 0) {
-      const finishedTurnsForActivePlayer = turns.filter((turn) => {
-        return (
-          String(turn.playerId || "").trim() === activePlayerId &&
-          String(turn.finishedAt || "").trim() &&
-          Array.isArray(turn.throws) &&
-          turn.throws.length > 0
-        );
-      });
-
-      const newestFinishedTurn = selectNewestTurnCandidate(finishedTurnsForActivePlayer);
-      if (
-        newestFinishedTurn &&
-        haveEquivalentThrowSignatures(
-          newestFinishedTurn.throws,
-          activeThrows,
-          cricketRules,
-          targetOrder
-        )
-      ) {
-        debug.matchedFinishedTurn = true;
-        debug.suppressionReason = "matches-last-finished-turn";
-        return debug;
-      }
-    }
+  if (
+    shouldSuppressPreviewForFinishedSnapshotTurn(
+      snapshotMatch,
+      activePlayerIndex,
+      activeThrows,
+      cricketRules,
+      targetOrder
+    )
+  ) {
+    debug.matchedFinishedTurn = true;
+    debug.suppressionReason = "matches-last-finished-turn";
+    return debug;
   }
 
   debug.applied = true;

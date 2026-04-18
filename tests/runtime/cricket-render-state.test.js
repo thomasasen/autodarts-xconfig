@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
+import { extractMatchRouteId } from "../../src/features/cricket-surface/pipeline.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function expectedPresentationByRule(marksByPlayer, playerIndex) {
@@ -442,6 +443,22 @@ function injectTurnPreviewWithCricketLikeText(documentRef) {
 }
 
 const VISUAL_CONFIG = { showDeadTargets: true };
+
+test("extractMatchRouteId normalizes duplicate slashes and strips query/hash fragments", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io//matches/Test-Match/?tab=board#preview",
+  });
+  const otherDocumentRef = new FakeDocument();
+  const otherWindowRef = createFakeWindow({
+    documentRef: otherDocumentRef,
+    href: "https://play.autodarts.io/lobbies",
+  });
+
+  assert.equal(extractMatchRouteId(windowRef, documentRef), "test-match");
+  assert.equal(extractMatchRouteId(otherWindowRef, otherDocumentRef), "");
+});
 
 test("buildCricketRenderState pauses cricket surfaces on hash-based xConfig route", () => {
   const documentRef = new FakeDocument();

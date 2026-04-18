@@ -146,3 +146,43 @@ test("cricket row repair honors explicit player indexes and stable-row recovery"
   assert.deepEqual(snapshot.recoveredStableLabels, ["18"]);
   assert.deepEqual(snapshot.marksByLabel["18"], [0, 3]);
 });
+
+test("cricket row repair falls back to shortfall-aligned columns when explicit indexes would fill a missing lead player", () => {
+  const documentRef = new FakeDocument();
+  const cricketRules = createCricketRules();
+  const firstVisibleCell = documentRef.createElement("div");
+  firstVisibleCell.setAttribute("data-marks", "1");
+  firstVisibleCell.setAttribute("data-player-index", "0");
+  const secondVisibleCell = documentRef.createElement("div");
+  secondVisibleCell.setAttribute("data-marks", "2");
+  secondVisibleCell.setAttribute("data-player-index", "2");
+
+  const rowMeta = createRowMeta(documentRef, "20", {
+    playerCells: [firstVisibleCell, secondVisibleCell],
+  });
+
+  const snapshot = buildGridRowSnapshot({
+    cricketRules,
+    targetOrder: ["20"],
+    targetSet: new Set(["20"]),
+    gridLabels: [{ label: "20", node: rowMeta.labelNode }],
+    expectedPlayerCount: 3,
+    collectPlayerCellsForLabel() {
+      return [firstVisibleCell, secondVisibleCell];
+    },
+    resolveLabelCell() {
+      return rowMeta.labelCell;
+    },
+    resolveBadgeNode() {
+      return rowMeta.badgeNode;
+    },
+    getRowNode() {
+      return rowMeta.rowNode;
+    },
+  });
+
+  assert.equal(snapshot.hasIndexedPlayerColumns, false);
+  assert.deepEqual(snapshot.marksByLabel["20"], [0, 1, 2]);
+  assert.equal(snapshot.rowMetaByLabel.get("20")?.playerCellsByIndex[1], firstVisibleCell);
+  assert.equal(snapshot.rowMetaByLabel.get("20")?.playerCellsByIndex[2], secondVisibleCell);
+});

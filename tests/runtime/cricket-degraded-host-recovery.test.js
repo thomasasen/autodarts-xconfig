@@ -306,6 +306,54 @@ test("buildCricketRenderState upgrades persistent degraded match host from missi
   }
 });
 
+test("buildCricketRenderState still detects degraded match hosts when a smaller sibling pane is present", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/with-banner",
+  });
+  const timerHarness = createFakeTimerHarness({ now: 1_500 });
+  timerHarness.installGlobals();
+  timerHarness.installOnWindow(windowRef);
+
+  try {
+    documentRef.variantElement.textContent = "Cricket";
+    const degradedFixture = createDegradedMatchHostFixture(documentRef);
+    const banner = documentRef.createElement("div");
+    banner.className = "css-mini-banner";
+    banner.textContent = "Round 3";
+    banner.__rect = { left: 216, top: 150, width: 140, height: 32 };
+    degradedFixture.host.appendChild(banner);
+
+    const firstRenderState = buildCricketRenderState({
+      documentRef,
+      windowRef,
+      gameState: createGameState(),
+      cricketRules,
+      variantRules,
+      cache: { grid: null, board: null },
+    });
+    assert.equal(firstRenderState?.surfaceStatus, "missing-board");
+
+    timerHarness.advance(301);
+
+    const secondRenderState = buildCricketRenderState({
+      documentRef,
+      windowRef,
+      gameState: createGameState(),
+      cricketRules,
+      variantRules,
+      cache: { grid: null, board: null },
+    });
+
+    assert.equal(secondRenderState?.surfaceStatus, "degraded-host");
+    assert.equal(secondRenderState?.matchRouteId, "with-banner");
+    assert.match(String(secondRenderState?.degradedHostInfo?.rightPaneText || ""), /UndoNext/i);
+  } finally {
+    timerHarness.restoreGlobals();
+  }
+});
+
 test("buildCricketRenderState keeps healthy direct board loads ready", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

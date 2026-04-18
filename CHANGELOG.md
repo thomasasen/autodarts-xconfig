@@ -36,6 +36,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die Cricket-Surface bleibt bei gemergten Reihen, Label-Markern und aktiver Spielerperspektive fachlich gleich, ist intern aber robuster gegen Sonar-bedingte Parser- und Row-Recovery-Bereinigungen abgesichert.
   Technik: `mark-parser`, `row-repair` und angrenzende `pipeline`-Helfer wurden lokal in kleinere Hilfsfunktionen zerlegt, nutzen `dataset` für Mark-/Spielerindex-Felder, entfernen einen fehlerhaften Extra-Argument-Aufruf im Grid-Row-Building und glätten einige eng benachbarte Pipeline-Klarheitsstellen; zusätzliche Parser-, Row-Repair- und Cricket-Render-State-Regressionen sichern Mark-Parsing, Shortfall-Recovery, explizite Spielerindizes und die Cricket-Board-Perspektive gegen Drift ab.
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die Cricket-Surface behandelt Match-Routen, degradierte Host-Erkennung und Row-Recovery weiterhin fachlich gleich, ist in diesen Pfaden aber enger gegen Sonar-bedingte Strukturbereinigungen und benachbarte DOM-Sonderfälle abgesichert.
+  Technik: `pipeline` und `row-repair` wurden in kleine Helper für Match-Route-Normalisierung, Degraded-Host-Pane-Auswahl, Active-Throw-Suppression und explizite Spaltenplanung zerlegt; ergänzende Runtime-Regressionen sichern dabei Query-/Hash-bereinigte Match-IDs, degradierte Hosts mit zusätzlichem Nebenknoten und Shortfall-ausgerichtete Cricket-Reihen ohne riskanten Snapshot-Breitumbau gegen Drift ab.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added
