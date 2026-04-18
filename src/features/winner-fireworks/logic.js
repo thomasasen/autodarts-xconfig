@@ -408,8 +408,8 @@ export function stopWinnerFireworks(state) {
   state.confettiRunner = null;
   state.running = false;
 
-  if (state.overlayNode?.parentNode && typeof state.overlayNode.parentNode.removeChild === "function") {
-    state.overlayNode.parentNode.removeChild(state.overlayNode);
+  if (typeof state.overlayNode?.remove === "function") {
+    state.overlayNode.remove();
   }
   state.overlayNode = null;
   state.canvasNode = null;

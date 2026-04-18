@@ -414,7 +414,7 @@ function ensureStripedPattern(overlay, options = {}) {
   }
 
   while (pattern.firstChild) {
-    pattern.removeChild(pattern.firstChild);
+    pattern.firstChild.remove();
   }
 
   const baseColor = options.color || { r: 0, g: 0, b: 0 };
@@ -742,8 +742,8 @@ export function clearCricketHighlights(documentRef) {
   const overlay = board.group.querySelector?.(`#${OVERLAY_ID}`);
   if (overlay) {
     clearNodeChildren(overlay);
-    if (overlay.parentNode && typeof overlay.parentNode.removeChild === "function") {
-      overlay.parentNode.removeChild(overlay);
+    if (typeof overlay.remove === "function") {
+      overlay.remove();
     }
   }
 }

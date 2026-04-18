@@ -27,6 +27,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere kleine Sonar-Bereinigungswelle räumt verbleibende mechanische Modernisierungen in Runtime-, Test- und Script-Pfaden auf, ohne xConfig-Verhalten, Host-Integrationen oder Theme-/Cricket-Abläufe fachlich umzubauen.
   Technik: Harmlose Objekt-Spreads verzichten jetzt auf leere Fallback-Objekte, zwei lokal deklarierte `undefined`-Vergleiche prüfen direkt statt per `typeof`, und der Changelog-Konsistenzcheck ersetzt globale Regex-Ersetzungen durch stringbasierte `replaceAll(...)`-Aufrufe; die betroffenen Cricket-/Lifecycle-Tests und Debug-Helfer behalten dabei ihre bisherige Semantik.
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die nächste Sonar-Welle modernisiert weitere ungefährliche DOM- und Text-Helfer, sodass Runtime-, Theme- und Testpfade dieselben Entfernungs- und String-Normalisierungen mit direkteren Standard-APIs ausdrücken, ohne Host-Verhalten oder Cricket-/X01-Logik fachlich zu ändern.
+  Technik: Verbleibende `removeChild(...)`-Aufrufe aus der ausgewählten Low-Risk-Gruppe verwenden jetzt `remove()` auf den betroffenen Knoten, der Fake-DOM spiegelt dieses Verhalten intern konsistent nach, und einige einfache globale Regex-Ersetzungen für feste Literale wechseln auf stringbasierte `replaceAll(...)`-Aufrufe in Domain-, Theme-, Runtime- und Test-Utilities.
+
 ## [2.1.28] - 2026-04-18
 
 ### Added

@@ -493,7 +493,7 @@ function cleanupOverlayNode(state) {
     return;
   }
 
-  overlayNode.parentNode.removeChild(overlayNode);
+  overlayNode.remove();
   state.overlayNode = null;
 }
 

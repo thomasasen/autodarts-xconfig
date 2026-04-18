@@ -979,7 +979,7 @@ test("syncScoreProgress keeps intact progress nodes stable on passive re-sync an
   assert.equal(stableTrailNode.__lastAnimation, stableAnimation);
   assert.equal(stableAnimation.playState, "running");
 
-  stableTrackNode.removeChild(stableTrailNode);
+  stableTrailNode.remove();
   runSync();
 
   const repairedTrackNode = hostNode.querySelector(`.${TRACK_CLASS}`);

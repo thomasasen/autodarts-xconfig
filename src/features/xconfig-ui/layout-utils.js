@@ -204,7 +204,7 @@ export function getContentElement(windowRef, documentRef, sidebarElement, option
 
 export function removeNodeById(documentRef, nodeId) {
   const node = documentRef?.getElementById?.(nodeId);
-  if (node?.parentNode?.removeChild) {
-    node.parentNode.removeChild(node);
+  if (typeof node?.remove === "function") {
+    node.remove();
   }
 }

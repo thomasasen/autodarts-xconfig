@@ -85,8 +85,8 @@ export function initializeAverageTrendArrow(context = {}) {
       if (timeout) {
         clearTimeoutRef(timeout);
       }
-      if (arrowNode && arrowNode.parentNode && typeof arrowNode.parentNode.removeChild === "function") {
-        arrowNode.parentNode.removeChild(arrowNode);
+      if (arrowNode && typeof arrowNode.remove === "function") {
+        arrowNode.remove();
       }
     });
     arrowNodes.clear();

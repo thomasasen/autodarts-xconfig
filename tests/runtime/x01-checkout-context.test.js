@@ -228,7 +228,7 @@ test("x01 checkout context falls back to DOM-only score truth when no game-state
 
 test("x01 checkout context falls back to game-state score truth when no DOM score is available", () => {
   const documentRef = new FakeDocument();
-  documentRef.activePlayerRow.removeChild(documentRef.activeScoreElement);
+  documentRef.activeScoreElement.remove();
 
   const resolved = resolveX01ActiveScoreState({
     documentRef,

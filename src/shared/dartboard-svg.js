@@ -970,6 +970,6 @@ export function clearNodeChildren(node) {
   }
 
   while (node.firstChild) {
-    node.removeChild(node.firstChild);
+    node.firstChild.remove();
   }
 }

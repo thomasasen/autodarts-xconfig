@@ -77,7 +77,7 @@ function isElementDisabled(node) {
 
 function normalizeRawText(value) {
   return String(value || "")
-    .replaceAll(/\u00a0/g, " ")
+    .replaceAll("\u00a0", " ")
     .replaceAll(/\s+/g, " ")
     .trim();
 }

@@ -174,7 +174,7 @@ function hasExactBoardViewBox(node) {
 
   const rawViewBox = String(node.getAttribute("viewBox") || "")
     .trim()
-    .replaceAll(/,/g, " ")
+    .replaceAll(",", " ")
     .replaceAll(/\s+/g, " ");
   return rawViewBox === "0 0 1000 1000";
 }

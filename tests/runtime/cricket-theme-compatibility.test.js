@@ -1271,7 +1271,7 @@ test("theme-like cricket highlighter restores overlay after external removal and
   assert.equal(Boolean(initialOverlay), true);
   assert.equal((initialOverlay?.children?.length || 0) > 0, true);
 
-  initialOverlay.parentNode?.removeChild(initialOverlay);
+  initialOverlay.remove();
 
   const observer = observers.get("cricket-highlighter:dom-observer");
   assert.ok(observer);

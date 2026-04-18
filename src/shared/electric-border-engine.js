@@ -284,7 +284,7 @@ export function releaseElectricFilterDefs(options = {}) {
     nodeToRemove.parentNode &&
     typeof nodeToRemove.parentNode.removeChild === "function"
   ) {
-    nodeToRemove.parentNode.removeChild(nodeToRemove);
+    nodeToRemove.remove();
   }
 
   setReadyClass(documentRef, false);

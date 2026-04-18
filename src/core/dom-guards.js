@@ -83,7 +83,7 @@ export function removeNodeById(nodeId, options = {}) {
     return false;
   }
 
-  existing.parentNode.removeChild(existing);
+  existing.remove();
   return true;
 }
 

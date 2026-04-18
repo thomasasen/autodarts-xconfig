@@ -269,7 +269,7 @@ function createNestedShowAnimationsBoardFixture(documentRef, options = {}) {
   const eventOverlay = documentRef.createElement("div");
   innerBoardLayer.classList.add("css-13u3cwk");
   eventOverlay.classList.add("css-event-overlay");
-  nodes.boardCanvas.removeChild(nodes.boardSvg);
+  nodes.boardSvg.remove();
   innerBoardLayer.appendChild(nodes.boardSvg);
   nodes.boardCanvas.appendChild(eventOverlay);
   nodes.boardCanvas.appendChild(innerBoardLayer);
@@ -967,7 +967,7 @@ test("theme clears stale hooks when previous valid board subtree is removed and 
   assert.equal(boardNodes.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), true);
   assert.equal(boardNodes.contentSlot.classList.contains(THEME_LAYOUT_HOOK_CLASSES.contentSlot), true);
 
-  documentRef.main.removeChild(boardNodes.contentSlot);
+  boardNodes.contentSlot.remove();
   createDecorativeBoardLikeSvgFixture(documentRef, {
     width: 1120,
     height: 1120,
@@ -1597,7 +1597,7 @@ test("theme-cricket keeps image-backed board hooks stable while the overlay svg 
   );
   assert.equal(boardNodes.boardCanvas.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardCanvas), true);
 
-  boardNodes.boardMediaRoot.removeChild(boardNodes.boardSvg);
+  boardNodes.boardSvg.remove();
   documentRef.flushMutations();
   await wait(5);
 
@@ -2292,7 +2292,7 @@ test("theme-cricket keeps layout hooks during a short missing-board gap", async 
     false
   );
 
-  boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+  boardNodes.boardSvg.remove();
   documentRef.flushMutations([
     {
       type: "childList",
@@ -2348,7 +2348,7 @@ test("theme-cricket refreshes retained layout hooks when the board returns withi
     false
   );
 
-  boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+  boardNodes.boardSvg.remove();
   documentRef.flushMutations([
     {
       type: "childList",
@@ -2420,7 +2420,7 @@ test("theme-cricket clears retained layout hooks after grace when the board stay
     false
   );
 
-  boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+  boardNodes.boardSvg.remove();
   documentRef.flushMutations([
     {
       type: "childList",
@@ -2464,7 +2464,7 @@ test("theme-cricket keeps layout hooks through transient invalid-context host re
   assertThemeHookState(boardNodes, true);
 
   const undoButton = boardNodes.boardControls.querySelector("button");
-  boardNodes.boardControls.removeChild(undoButton);
+  undoButton.remove();
   documentRef.flushMutations([
     {
       type: "childList",
@@ -2638,7 +2638,7 @@ test("theme-cricket keeps theme hooks and cricket surface overlays during a shor
     assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), true);
     assert.equal(Boolean(documentRef.querySelector(`.${ROOT_CLASS}`)), true);
 
-    boardNodes.boardCanvas.removeChild(boardNodes.boardSvg);
+    boardNodes.boardSvg.remove();
     documentRef.flushMutations([
       {
         type: "childList",
@@ -3074,7 +3074,7 @@ test("theme-cricket re-normalizes replaced player-card hosts when the wrapper DO
   replacementPlayer.classList.add("ad-ext-player-active");
 
   playerDisplayNode.insertBefore(replacementPlayer, originalFirstPlayer);
-  playerDisplayNode.removeChild(originalFirstPlayer);
+  originalFirstPlayer.remove();
   documentRef.flushMutations();
   await wait(5);
 

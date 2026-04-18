@@ -3289,8 +3289,8 @@ test("cricket grid fx clears stale untracked open-active classes during partial 
   staleOpponentCell.textContent = "";
   if (bullRow?.opponentCell?.parentNode) {
     const parentNode = bullRow.opponentCell.parentNode;
-    if (typeof parentNode.removeChild === "function") {
-      parentNode.removeChild(bullRow.opponentCell);
+    if (typeof bullRow.opponentCell.remove === "function") {
+      bullRow.opponentCell.remove();
     }
     if (typeof parentNode.appendChild === "function") {
       parentNode.appendChild(staleOpponentCell);

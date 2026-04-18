@@ -56,6 +56,7 @@ function createFakeShadowRoot() {
   const childNodes = [];
 
   return {
+    childNodes,
     appendChild(node) {
       if (!node) {
         return node;

@@ -386,8 +386,8 @@ function appendTransientNode(state, parentNode, className, timeoutMs, options = 
   const handle = timeoutRef(() => {
     state.timeoutHandles.delete(handle);
     state.transientNodes.delete(node);
-    if (node.parentNode && typeof node.parentNode.removeChild === "function") {
-      node.parentNode.removeChild(node);
+    if (typeof node.remove === "function") {
+      node.remove();
     }
   }, Math.max(100, Number(timeoutMs) || 600));
 
@@ -402,8 +402,8 @@ function removeTransientNodes(parentNode, className, state = null) {
 
   queryAll(parentNode, `.${className}`).forEach((node) => {
     state?.transientNodes?.delete?.(node);
-    if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
-      node.parentNode.removeChild(node);
+    if (typeof node?.remove === "function") {
+      node.remove();
     }
   });
 }
@@ -422,8 +422,8 @@ function clearTransientState(state) {
   state.timeoutHandles.clear();
 
   state.transientNodes.forEach((node) => {
-    if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
-      node.parentNode.removeChild(node);
+    if (typeof node?.remove === "function") {
+      node.remove();
     }
   });
   state.transientNodes.clear();
@@ -453,8 +453,8 @@ function clearPersistentState(state) {
       }
     });
     queryAll(state.gridRoot, `[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`).forEach((node) => {
-      if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
-        node.parentNode.removeChild(node);
+      if (typeof node?.remove === "function") {
+        node.remove();
       }
     });
   }
@@ -464,8 +464,8 @@ function clearPersistentState(state) {
   state.trackedProgressTargets.forEach((node) => clearProgressClasses(node));
 
   state.syntheticBadges.forEach((node) => {
-    if (node?.parentNode && typeof node.parentNode.removeChild === "function") {
-      node.parentNode.removeChild(node);
+    if (typeof node?.remove === "function") {
+      node.remove();
     }
   });
   state.hiddenLabelNodes.forEach((node) => {

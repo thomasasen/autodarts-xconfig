@@ -29,7 +29,7 @@ function appendPlayerRow(documentRef, scoreText, { active = false } = {}) {
 test("checkout-score-pulse resolves hydration gaps to the active player index", () => {
   const documentRef = new FakeDocument();
   documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
-  documentRef.main.removeChild(documentRef.activePlayerRow);
+  documentRef.activePlayerRow.remove();
 
   const first = appendPlayerRow(documentRef, "170");
   const second = appendPlayerRow(documentRef, "40");
@@ -52,7 +52,7 @@ test("checkout-score-pulse resolves hydration gaps to the active player index", 
 test("checkout-score-pulse returns no score nodes when a hydration gap cannot be mapped safely", () => {
   const documentRef = new FakeDocument();
   documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
-  documentRef.main.removeChild(documentRef.activePlayerRow);
+  documentRef.activePlayerRow.remove();
 
   const first = appendPlayerRow(documentRef, "170");
   const second = appendPlayerRow(documentRef, "40");

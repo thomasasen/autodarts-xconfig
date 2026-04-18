@@ -54,7 +54,7 @@ const overviewCounts = {
 };
 
 function readText(filePath) {
-  return readFileSync(filePath, "utf8").replaceAll(/\r\n/g, "\n");
+  return readFileSync(filePath, "utf8").replaceAll("\r\n", "\n");
 }
 
 function escapeRegExp(text) {

@@ -58,7 +58,7 @@ function normalizeCheckoutSuggestionText(value) {
     .replaceAll(/INNER\s*BULL(?:SEYE)?/g, "BULL")
     .replaceAll(/SINGLE\s*BULL/g, "SB")
     .replaceAll(/OUTER\s*BULL/g, "SB")
-    .replaceAll(/BULLSEYE/g, "BULL")
+    .replaceAll("BULLSEYE", "BULL")
     .replaceAll(/DOUBLE\s*[-:]?\s*(\d{1,2})/g, "D$1")
     .replaceAll(/TRIPLE\s*[-:]?\s*(\d{1,2})/g, "T$1")
     .replaceAll(/SINGLE\s*[-:]?\s*(\d{1,2})/g, "S$1")

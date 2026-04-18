@@ -195,7 +195,7 @@ test("turn-points-count removes frame flash classes when a score node is detache
   assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
   assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-  frameNode.removeChild(scoreNode);
+  scoreNode.remove();
   updateTurnPoints({
     documentRef,
     state,

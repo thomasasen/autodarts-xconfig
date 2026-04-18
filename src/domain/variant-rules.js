@@ -39,7 +39,7 @@ export function classifyCricketScoringMode(value) {
     return "standard";
   }
 
-  if (normalized === "cut-throat" || normalized.replaceAll(/-/g, "") === "cutthroat") {
+  if (normalized === "cut-throat" || normalized.replaceAll("-", "") === "cutthroat") {
     return "cutthroat";
   }
 

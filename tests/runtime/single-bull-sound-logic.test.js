@@ -159,7 +159,7 @@ test("single-bull-sound does not replay the same hit when DOM and gameState repo
 
 test("single-bull-sound does not replay when score and segment nodes of the same throw update separately", () => {
   const documentRef = new FakeDocument();
-  documentRef.turnContainer.removeChild(documentRef.throwRow);
+  documentRef.throwRow.remove();
 
   const splitRow = appendSplitThrowRow(documentRef, "25", "");
 

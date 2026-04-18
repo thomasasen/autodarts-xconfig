@@ -686,7 +686,7 @@ export function renderCheckoutTargets(options = {}) {
     if (nextNodes.includes(childNode)) {
       return;
     }
-    overlay.removeChild(childNode);
+    childNode.remove();
   });
 
   nextNodes.forEach((node, index) => {

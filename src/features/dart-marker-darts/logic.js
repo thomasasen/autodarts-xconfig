@@ -398,7 +398,7 @@ function clearOverlayChildren(state) {
   }
 
   while (state.overlaySceneNode.firstChild) {
-    state.overlaySceneNode.removeChild(state.overlaySceneNode.firstChild);
+    state.overlaySceneNode.firstChild.remove();
   }
 }
 

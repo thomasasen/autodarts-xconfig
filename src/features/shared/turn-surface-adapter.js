@@ -35,7 +35,7 @@ export function createTurnSurfaceObserveOptions(options = {}) {
 
 function normalizeText(value) {
   return String(value || "")
-    .replaceAll(/\u00a0/g, " ")
+    .replaceAll("\u00a0", " ")
     .replaceAll(/\s+/g, " ")
     .trim();
 }

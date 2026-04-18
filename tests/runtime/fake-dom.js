@@ -344,7 +344,7 @@ class FakeElement extends FakeEventTarget {
     }
 
     if (child.parentNode) {
-      child.parentNode.removeChild(child);
+      child.remove();
     }
 
     prepareChildForInsertion(this, child);
@@ -371,7 +371,7 @@ class FakeElement extends FakeEventTarget {
     }
 
     if (child.parentNode) {
-      child.parentNode.removeChild(child);
+      child.remove();
     }
 
     prepareChildForInsertion(this, child);
@@ -429,13 +429,23 @@ class FakeElement extends FakeEventTarget {
 
   remove() {
     if (this.parentNode) {
-      this.parentNode.removeChild(this);
+      const parent = this.parentNode;
+      const childList = Array.isArray(parent.children)
+        ? parent.children
+        : Array.isArray(parent.childNodes)
+          ? parent.childNodes
+          : null;
+      const index = childList ? childList.indexOf(this) : -1;
+      if (index >= 0) {
+        childList.splice(index, 1);
+      }
+      this.parentNode = null;
     }
   }
 
   replaceChildren(...nodes) {
     this.children.slice().forEach((child) => {
-      this.removeChild(child);
+      child.remove();
     });
     nodes.flat().forEach((node) => {
       if (node) {

@@ -295,7 +295,7 @@ export function createShellRenderController(options = {}) {
       return;
     } else {
       while (previousShellNode.firstChild) {
-        previousShellNode.removeChild(previousShellNode.firstChild);
+        previousShellNode.firstChild.remove();
       }
       Array.from(nextShellNode.children).forEach((child) => {
         previousShellNode.appendChild(child);

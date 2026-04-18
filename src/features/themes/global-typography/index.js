@@ -122,13 +122,8 @@ function removeToolsShadowStyles(documentRef) {
       return;
     }
 
-    if (styleNode.parentNode && typeof styleNode.parentNode.removeChild === "function") {
-      styleNode.parentNode.removeChild(styleNode);
-      return;
-    }
-
-    if (shadowRoot && typeof shadowRoot.removeChild === "function") {
-      shadowRoot.removeChild(styleNode);
+    if (typeof styleNode.remove === "function") {
+      styleNode.remove();
     }
   });
 }

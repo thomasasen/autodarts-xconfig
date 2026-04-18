@@ -256,7 +256,7 @@ function clearChildren(node) {
   }
 
   while (target.children.length) {
-    target.removeChild(target.children[0]);
+    target.children[0].remove();
   }
 }
 
@@ -557,7 +557,7 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
   try {
     assert.equal(countRecoveryNavigations(windowRef), 0);
 
-    healthyFixture.rightPane.removeChild(healthyFixture.boardShell);
+    healthyFixture.boardShell.remove();
     healthyFixture.rightPane.textContent = "UndoNext2011841361015217319";
     healthyFixture.host.classList.add("css-host-degraded");
 
@@ -630,7 +630,7 @@ test("shared cricket runtime marks ready-to-missing-board gaps as boardGapDeferr
     assert.equal(readyLifecycle?.surfaceStatus, "ready");
     assert.equal(readyLifecycle?.boardGapDeferred, false);
 
-    healthyFixture.rightPane.removeChild(healthyFixture.boardShell);
+    healthyFixture.boardShell.remove();
     sharedRuntime.scheduler.schedule();
 
     const deferredLifecycle = lifecycleEvents.at(-1) || null;
@@ -853,7 +853,7 @@ test("missing-board match gaps use the fallback grace delay even before degraded
   });
   assert.equal(readyRenderState?.surfaceStatus, "ready");
 
-  fixture.rightPane.removeChild(fixture.boardShell);
+  fixture.boardShell.remove();
 
   const missingBoardRenderState = buildCricketRenderState({
     documentRef,

@@ -1758,7 +1758,7 @@ test("checkout-board-targets reapplies retained targets onto a replaced board du
     documentRef.suggestionElement.textContent = "";
     secondSuggestion.textContent = "";
     const secondBoard = appendBoardFixture(documentRef);
-    documentRef.main.removeChild(firstBoard.svg);
+    firstBoard.svg.remove();
     observer.callback([
       {
         type: "childList",
@@ -2315,7 +2315,7 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   assert.equal(Boolean(initialOverlay), true);
   assert.equal((initialOverlay?.children?.length || 0) > 0, true);
 
-  initialOverlay.parentNode?.removeChild(initialOverlay);
+  initialOverlay.remove();
 
   const observer = observers.get("cricket-highlighter:dom-observer");
   assert.ok(observer);
@@ -3135,7 +3135,7 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
   assert.equal(Boolean(initialOwner20?.classList?.contains(SCORE_CLASS)), true);
 
   const replacementGrid = createGridTable();
-  documentRef.main.removeChild(initialGrid);
+  initialGrid.remove();
   documentRef.main.appendChild(replacementGrid);
 
   const observer = observers.get("cricket-grid-fx:dom-observer");
