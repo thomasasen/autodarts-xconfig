@@ -1002,25 +1002,337 @@ export function buildZoomTransform(options = {}) {
   };
 }
 
-export function computeZoomIntent(options = {}) {
+function resolveZoomIntentSettings(options = {}) {
   const gameState = options.gameState;
-  const x01Rules = options.x01Rules;
-  const state = options.state;
-  const documentRef = options.documentRef;
-  const windowRef = options.windowRef;
   const config = options.featureConfig;
-  const nowTs = Number.isFinite(options.nowTs) ? options.nowTs : Date.now();
-  const outMode =
-    gameState && typeof gameState.getOutMode === "function"
-      ? String(gameState.getOutMode() || "")
-      : "";
   const checkoutZoomTarget =
     String(config?.checkoutZoomTarget || "").trim().toLowerCase() === "route-first"
       ? "route-first"
       : "finish-only";
-  const t20SetupZoomEnabled = config?.t20SetupZoomEnabled !== false;
-  const finishOnlyCheckoutZoom = Boolean(config?.checkoutZoomEnabled) &&
-    checkoutZoomTarget === "finish-only";
+
+  return {
+    gameState,
+    x01Rules: options.x01Rules,
+    state: options.state,
+    documentRef: options.documentRef,
+    windowRef: options.windowRef,
+    config,
+    nowTs: Number.isFinite(options.nowTs) ? options.nowTs : Date.now(),
+    outMode:
+      gameState && typeof gameState.getOutMode === "function"
+        ? String(gameState.getOutMode() || "")
+        : "",
+    checkoutZoomTarget,
+    t20SetupZoomEnabled: config?.t20SetupZoomEnabled !== false,
+    finishOnlyCheckoutZoom: Boolean(config?.checkoutZoomEnabled) && checkoutZoomTarget === "finish-only",
+  };
+}
+
+function resetZoomIntentForBoundaryChange(state) {
+  state.holdUntilTs = 0;
+  state.activeIntent = null;
+  state.stickyUntilTurnChange = false;
+  state.stickyUntilLegEnd = false;
+  state.manualPause = false;
+  state.manualPauseThrowCount = -1;
+  state.lastTurnId = "";
+  state.lastThrowCount = -1;
+}
+
+function syncBoundaryTokenState(state, boundaryToken) {
+  const lastBoundaryToken = String(state.matchBoundaryToken || "");
+  if (boundaryToken && lastBoundaryToken && boundaryToken !== lastBoundaryToken) {
+    resetZoomIntentForBoundaryChange(state);
+  }
+  if (boundaryToken) {
+    state.matchBoundaryToken = boundaryToken;
+  }
+}
+
+function resolveTurnProgressState(state, gameState) {
+  const turn = typeof gameState.getActiveTurn === "function" ? gameState.getActiveTurn() : null;
+  const throws = Array.isArray(gameState.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
+  if (!turn) {
+    return null;
+  }
+
+  const turnId = getTurnId(turn);
+  const throwCount = throws.length;
+  return {
+    throws,
+    turnId,
+    throwCount,
+    previousThrowCount:
+      Number.isFinite(state.lastThrowCount) && state.lastThrowCount >= 0 ? state.lastThrowCount : -1,
+    turnChanged: turnId !== state.lastTurnId,
+  };
+}
+
+function resetZoomIntentForTurnChange(state) {
+  state.holdUntilTs = 0;
+  if (!state.stickyUntilLegEnd) {
+    state.activeIntent = null;
+  }
+  state.stickyUntilTurnChange = false;
+  state.manualPause = false;
+  state.manualPauseThrowCount = -1;
+}
+
+function persistTurnProgress(state, turnId, throwCount) {
+  state.lastTurnId = turnId;
+  state.lastThrowCount = throwCount;
+}
+
+function clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom) {
+  if (!t20SetupZoomEnabled && state.activeIntent?.reason === "t20-setup") {
+    state.holdUntilTs = 0;
+    state.activeIntent = null;
+    state.stickyUntilTurnChange = false;
+  }
+  if (finishOnlyCheckoutZoom && state.activeIntent?.reason === "smart-setup") {
+    state.holdUntilTs = 0;
+    state.activeIntent = null;
+  }
+}
+
+function resolveIntentCheckoutContext({
+  gameState,
+  documentRef,
+  windowRef,
+  outMode,
+  throwCount,
+  x01Rules,
+  state,
+}) {
+  const x01CheckoutContext = resolveX01CheckoutContext({
+    gameState,
+    documentRef,
+    windowRef,
+    outMode,
+    dartsRemaining: Math.max(0, 3 - throwCount),
+    x01Rules,
+  });
+  let activeScore = x01CheckoutContext.activeScore;
+  let checkoutSurface = x01CheckoutContext.checkoutSurface;
+
+  if (
+    state.stickyUntilLegEnd &&
+    x01CheckoutContext.gameStateScore === 0 &&
+    throwCount === 0 &&
+    Number.isFinite(x01CheckoutContext.domScore) &&
+    x01CheckoutContext.domScore > 0
+  ) {
+    activeScore = x01CheckoutContext.domScore;
+    checkoutSurface = resolveCheckoutSurfaceSemantics({
+      routeSegments: x01CheckoutContext.routeSegments,
+      activeScore,
+      outMode,
+      dartsRemaining: Math.max(0, 3 - throwCount),
+      x01Rules,
+    });
+  }
+
+  const authoritativeRouteSegments = checkoutSurface.authoritativeRouteSegments;
+  const suggestionSegment = checkoutSurface.singleVisibleSegment;
+  return {
+    activeScore,
+    checkoutSurface,
+    authoritativeRouteSegments,
+    firstRouteSegment: getFirstCheckoutRouteSegment(authoritativeRouteSegments),
+    finishRouteSegment: checkoutSurface.authoritativeFinishSegment,
+    suggestionSegment,
+    suggestionIsCheckout: isOneDartCheckoutSegmentForMode(suggestionSegment, outMode, x01Rules),
+    scoreCheckoutSegment: getScoreCheckoutSegment(activeScore, outMode, x01Rules),
+  };
+}
+
+function isManualPauseStillActive(state, throwCount) {
+  if (!state.manualPause) {
+    return false;
+  }
+
+  const baseline =
+    Number.isFinite(state.manualPauseThrowCount) && state.manualPauseThrowCount >= 0
+      ? state.manualPauseThrowCount
+      : -1;
+  if (throwCount <= baseline) {
+    return true;
+  }
+
+  state.manualPause = false;
+  state.manualPauseThrowCount = -1;
+  return false;
+}
+
+function resolveStickyIntent(state, activeScore) {
+  if (state.stickyUntilLegEnd && state.activeIntent) {
+    if (Number.isFinite(activeScore) && activeScore === 0) {
+      return state.activeIntent;
+    }
+    state.stickyUntilLegEnd = false;
+    state.activeIntent = null;
+  }
+
+  if (state.stickyUntilTurnChange && state.activeIntent) {
+    return state.activeIntent;
+  }
+
+  return null;
+}
+
+function resolveThirdDartStickyIntent({
+  state,
+  turnChanged,
+  previousThrowCount,
+  throwCount,
+  throws,
+  x01Rules,
+  activeScore,
+  nowTs,
+}) {
+  if (turnChanged || !state.activeIntent || previousThrowCount !== 2 || throwCount !== 3) {
+    return null;
+  }
+
+  const thirdSegment = getThrowSegmentName(throws[2], x01Rules);
+  if (state.activeIntent.reason === "t20-setup" && thirdSegment === "T20") {
+    state.holdUntilTs = 0;
+    state.stickyUntilTurnChange = true;
+    return state.activeIntent;
+  }
+
+  if (state.activeIntent.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
+    state.holdUntilTs = 0;
+    state.stickyUntilLegEnd = true;
+    return state.activeIntent;
+  }
+
+  state.holdUntilTs = nowTs + HOLD_AFTER_THIRD_MS;
+  return null;
+}
+
+function resolveFinishedCheckoutStickyIntent(state, activeScore) {
+  if (state.activeIntent?.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
+    state.holdUntilTs = 0;
+    state.stickyUntilLegEnd = true;
+    return state.activeIntent;
+  }
+  return null;
+}
+
+function buildAndStoreIntent(state, reason, segment) {
+  const intent = { reason, segment };
+  state.activeIntent = intent;
+  return intent;
+}
+
+function resolveCheckoutZoomIntent({
+  state,
+  config,
+  throwCount,
+  checkoutSurface,
+  checkoutZoomTarget,
+  firstRouteSegment,
+  authoritativeRouteSegments,
+  activeScore,
+  outMode,
+  x01Rules,
+  finishRouteSegment,
+  scoreCheckoutSegment,
+}) {
+  if (!config.checkoutZoomEnabled || throwCount > 2) {
+    return null;
+  }
+
+  const canUseCheckoutSurfaceForIntent =
+    checkoutSurface.surfaceKind === "visible-explicit-checkout" ||
+    checkoutSurface.surfaceKind === "score-route";
+  const hasValidatedVisibleCheckoutRoute =
+    checkoutSurface.selectionSource === "validated-visible-route";
+
+  if (canUseCheckoutSurfaceForIntent && checkoutZoomTarget === "route-first") {
+    const intent = buildCheckoutRouteIntent(firstRouteSegment, authoritativeRouteSegments, {
+      activeScore,
+      outMode,
+      x01Rules,
+      routeReason: "route-first",
+    });
+    if (intent) {
+      state.activeIntent = intent;
+      return intent;
+    }
+  }
+
+  if (
+    canUseCheckoutSurfaceForIntent &&
+    checkoutSurface.canUseAuthoritativeFinishNow &&
+    finishRouteSegment
+  ) {
+    return buildAndStoreIntent(state, "checkout", finishRouteSegment);
+  }
+
+  if (scoreCheckoutSegment && !hasValidatedVisibleCheckoutRoute) {
+    return buildAndStoreIntent(state, "checkout", scoreCheckoutSegment);
+  }
+
+  return null;
+}
+
+function resolveSetupZoomIntent({
+  state,
+  throwCount,
+  finishOnlyCheckoutZoom,
+  suggestionSegment,
+  suggestionIsCheckout,
+  config,
+  t20SetupZoomEnabled,
+  canUseT20Setup,
+}) {
+  if (throwCount > 2) {
+    return null;
+  }
+
+  const canUseSuggestionForSetup =
+    !finishOnlyCheckoutZoom &&
+    Boolean(suggestionSegment) &&
+    (config.checkoutZoomEnabled || !suggestionIsCheckout);
+  const canUseSuggestionSegment =
+    canUseSuggestionForSetup &&
+    (suggestionSegment !== "T20" || (t20SetupZoomEnabled && canUseT20Setup));
+
+  if (!canUseSuggestionSegment) {
+    return null;
+  }
+
+  return buildAndStoreIntent(
+    state,
+    suggestionSegment === "T20" ? "t20-setup" : "smart-setup",
+    suggestionSegment
+  );
+}
+
+function resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setup) {
+  if (!t20SetupZoomEnabled || !canUseT20Setup) {
+    return null;
+  }
+
+  return buildAndStoreIntent(state, "t20-setup", "T20");
+}
+
+export function computeZoomIntent(options = {}) {
+  const {
+    gameState,
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    config,
+    nowTs,
+    outMode,
+    checkoutZoomTarget,
+    t20SetupZoomEnabled,
+    finishOnlyCheckoutZoom,
+  } = resolveZoomIntentSettings(options);
 
   if (!gameState || typeof gameState.isX01Variant !== "function") {
     return null;
@@ -1040,213 +1352,110 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
-  const boundaryToken = resolveGameBoundaryToken(gameState);
-  const lastBoundaryToken = String(state.matchBoundaryToken || "");
-  if (boundaryToken && lastBoundaryToken && boundaryToken !== lastBoundaryToken) {
-    state.holdUntilTs = 0;
-    state.activeIntent = null;
-    state.stickyUntilTurnChange = false;
-    state.stickyUntilLegEnd = false;
-    state.manualPause = false;
-    state.manualPauseThrowCount = -1;
-    state.lastTurnId = "";
-    state.lastThrowCount = -1;
-  }
-  if (boundaryToken) {
-    state.matchBoundaryToken = boundaryToken;
-  }
+  syncBoundaryTokenState(state, resolveGameBoundaryToken(gameState));
 
-  const turn = typeof gameState.getActiveTurn === "function" ? gameState.getActiveTurn() : null;
-  const throws = Array.isArray(gameState.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
-  if (!turn) {
+  const turnProgress = resolveTurnProgressState(state, gameState);
+  if (!turnProgress) {
     return null;
   }
 
-  const turnId = getTurnId(turn);
-  const throwCount = throws.length;
-  const previousThrowCount =
-    Number.isFinite(state.lastThrowCount) && state.lastThrowCount >= 0
-      ? state.lastThrowCount
-      : -1;
-  const turnChanged = turnId !== state.lastTurnId;
-
+  const { throws, turnId, throwCount, previousThrowCount, turnChanged } = turnProgress;
   if (turnChanged) {
-    state.holdUntilTs = 0;
-    if (!state.stickyUntilLegEnd) {
-      state.activeIntent = null;
-    }
-    state.stickyUntilTurnChange = false;
-    state.manualPause = false;
-    state.manualPauseThrowCount = -1;
+    resetZoomIntentForTurnChange(state);
   }
 
   if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
     markManualZoomPause(state, throwCount);
-    state.lastTurnId = turnId;
-    state.lastThrowCount = throwCount;
+    persistTurnProgress(state, turnId, throwCount);
     return null;
   }
 
-  state.lastTurnId = turnId;
-  state.lastThrowCount = throwCount;
+  persistTurnProgress(state, turnId, throwCount);
+  clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom);
 
-  if (!t20SetupZoomEnabled && state.activeIntent?.reason === "t20-setup") {
-    state.holdUntilTs = 0;
-    state.activeIntent = null;
-    state.stickyUntilTurnChange = false;
-  }
-  if (finishOnlyCheckoutZoom && state.activeIntent?.reason === "smart-setup") {
-    state.holdUntilTs = 0;
-    state.activeIntent = null;
-  }
-
-  const x01CheckoutContext = resolveX01CheckoutContext({
+  const checkoutContext = resolveIntentCheckoutContext({
     gameState,
     documentRef,
     windowRef,
     outMode,
-    dartsRemaining: Math.max(0, 3 - throwCount),
+    throwCount,
     x01Rules,
+    state,
   });
-  let activeScore = x01CheckoutContext.activeScore;
-  let checkoutSurface = x01CheckoutContext.checkoutSurface;
-  if (
-    state.stickyUntilLegEnd &&
-    x01CheckoutContext.gameStateScore === 0 &&
-    throwCount === 0 &&
-    Number.isFinite(x01CheckoutContext.domScore) &&
-    x01CheckoutContext.domScore > 0
-  ) {
-    activeScore = x01CheckoutContext.domScore;
-    checkoutSurface = resolveCheckoutSurfaceSemantics({
-      routeSegments: x01CheckoutContext.routeSegments,
-      activeScore,
-      outMode,
-      dartsRemaining: Math.max(0, 3 - throwCount),
-      x01Rules,
-    });
-  }
-  const authoritativeRouteSegments = checkoutSurface.authoritativeRouteSegments;
-  const firstRouteSegment = getFirstCheckoutRouteSegment(authoritativeRouteSegments);
-  const finishRouteSegment = checkoutSurface.authoritativeFinishSegment;
-  const suggestionSegment = checkoutSurface.singleVisibleSegment;
-  const suggestionIsCheckout = isOneDartCheckoutSegmentForMode(suggestionSegment, outMode, x01Rules);
-  const scoreCheckoutSegment = getScoreCheckoutSegment(activeScore, outMode, x01Rules);
   const canUseT20Setup = canUseThirdDartT20Setup(
     throws,
     throwCount,
-    activeScore,
+    checkoutContext.activeScore,
     outMode,
     x01Rules
   );
 
-  if (state.manualPause) {
-    const baseline =
-      Number.isFinite(state.manualPauseThrowCount) && state.manualPauseThrowCount >= 0
-        ? state.manualPauseThrowCount
-        : -1;
-    if (throwCount <= baseline) {
-      return null;
-    }
-    state.manualPause = false;
-    state.manualPauseThrowCount = -1;
+  if (isManualPauseStillActive(state, throwCount)) {
+    return null;
   }
 
-  if (state.stickyUntilLegEnd && state.activeIntent) {
-    if (Number.isFinite(activeScore) && activeScore === 0) {
-      return state.activeIntent;
-    }
-    state.stickyUntilLegEnd = false;
-    state.activeIntent = null;
+  const stickyIntent = resolveStickyIntent(state, checkoutContext.activeScore);
+  if (stickyIntent) {
+    return stickyIntent;
   }
 
-  if (state.stickyUntilTurnChange && state.activeIntent) {
-    return state.activeIntent;
+  const thirdDartStickyIntent = resolveThirdDartStickyIntent({
+    state,
+    turnChanged,
+    previousThrowCount,
+    throwCount,
+    throws,
+    x01Rules,
+    activeScore: checkoutContext.activeScore,
+    nowTs,
+  });
+  if (thirdDartStickyIntent) {
+    return thirdDartStickyIntent;
   }
 
-  if (!turnChanged && state.activeIntent && previousThrowCount === 2 && throwCount === 3) {
-    const thirdSegment = getThrowSegmentName(throws[2], x01Rules);
-    if (state.activeIntent.reason === "t20-setup" && thirdSegment === "T20") {
-      state.holdUntilTs = 0;
-      state.stickyUntilTurnChange = true;
-      return state.activeIntent;
-    }
-    if (state.activeIntent.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
-      state.holdUntilTs = 0;
-      state.stickyUntilLegEnd = true;
-      return state.activeIntent;
-    }
-    state.holdUntilTs = nowTs + HOLD_AFTER_THIRD_MS;
+  const finishedCheckoutStickyIntent = resolveFinishedCheckoutStickyIntent(
+    state,
+    checkoutContext.activeScore
+  );
+  if (finishedCheckoutStickyIntent) {
+    return finishedCheckoutStickyIntent;
   }
 
-  if (state.activeIntent?.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
-    state.holdUntilTs = 0;
-    state.stickyUntilLegEnd = true;
-    return state.activeIntent;
+  const checkoutIntent = resolveCheckoutZoomIntent({
+    state,
+    config,
+    throwCount,
+    checkoutSurface: checkoutContext.checkoutSurface,
+    checkoutZoomTarget,
+    firstRouteSegment: checkoutContext.firstRouteSegment,
+    authoritativeRouteSegments: checkoutContext.authoritativeRouteSegments,
+    activeScore: checkoutContext.activeScore,
+    outMode,
+    x01Rules,
+    finishRouteSegment: checkoutContext.finishRouteSegment,
+    scoreCheckoutSegment: checkoutContext.scoreCheckoutSegment,
+  });
+  if (checkoutIntent) {
+    return checkoutIntent;
   }
 
-  if (config.checkoutZoomEnabled && throwCount <= 2) {
-    const canUseCheckoutSurfaceForIntent =
-      checkoutSurface.surfaceKind === "visible-explicit-checkout" ||
-      checkoutSurface.surfaceKind === "score-route";
-    const hasValidatedVisibleCheckoutRoute =
-      checkoutSurface.selectionSource === "validated-visible-route";
-
-    if (canUseCheckoutSurfaceForIntent && checkoutZoomTarget === "route-first") {
-      const intent = buildCheckoutRouteIntent(firstRouteSegment, authoritativeRouteSegments, {
-        activeScore,
-        outMode,
-        x01Rules,
-        routeReason: "route-first",
-      });
-      if (intent) {
-        state.activeIntent = intent;
-        return intent;
-      }
-    }
-
-    if (
-      canUseCheckoutSurfaceForIntent &&
-      checkoutSurface.canUseAuthoritativeFinishNow &&
-      finishRouteSegment
-    ) {
-      const intent = {
-        reason: "checkout",
-        segment: finishRouteSegment,
-      };
-      if (intent.segment) {
-        state.activeIntent = intent;
-        return intent;
-      }
-    }
-
-    if (scoreCheckoutSegment && !hasValidatedVisibleCheckoutRoute) {
-      const intent = { reason: "checkout", segment: scoreCheckoutSegment };
-      state.activeIntent = intent;
-      return intent;
-    }
+  const setupIntent = resolveSetupZoomIntent({
+    state,
+    throwCount,
+    finishOnlyCheckoutZoom,
+    suggestionSegment: checkoutContext.suggestionSegment,
+    suggestionIsCheckout: checkoutContext.suggestionIsCheckout,
+    config,
+    t20SetupZoomEnabled,
+    canUseT20Setup,
+  });
+  if (setupIntent) {
+    return setupIntent;
   }
 
-  if (throwCount <= 2) {
-    const canUseSuggestionForSetup =
-      !finishOnlyCheckoutZoom &&
-      Boolean(suggestionSegment) &&
-      (config.checkoutZoomEnabled || !suggestionIsCheckout);
-    const canUseSuggestionSegment =
-      canUseSuggestionForSetup &&
-      (suggestionSegment !== "T20" || (t20SetupZoomEnabled && canUseT20Setup));
-    if (canUseSuggestionSegment) {
-      const reason = suggestionSegment === "T20" ? "t20-setup" : "smart-setup";
-      const intent = { reason, segment: suggestionSegment };
-      state.activeIntent = intent;
-      return intent;
-    }
-  }
-
-  if (t20SetupZoomEnabled && canUseT20Setup) {
-    const intent = { reason: "t20-setup", segment: "T20" };
-    state.activeIntent = intent;
-    return intent;
+  const fallbackT20Intent = resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setup);
+  if (fallbackT20Intent) {
+    return fallbackT20Intent;
   }
 
   if (state.holdUntilTs > nowTs && state.activeIntent) {

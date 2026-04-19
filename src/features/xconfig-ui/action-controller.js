@@ -424,69 +424,39 @@ function handleShellAction(commandHandlers, action, actionNode, feature) {
   handler(actionNode, feature, normalizedAction);
 }
 
-export function createShellActionController(options = {}) {
-  const controller = {
+function resolveOptionalFunction(value, fallback) {
+  return typeof value === "function" ? value : fallback;
+}
+
+function buildShellActionControllerContext(options = {}) {
+  return {
     windowRef: options.windowRef || null,
     documentRef: options.documentRef || null,
     state: options.state || null,
     runtimeApi: options.runtimeApi || null,
-    setNotice: typeof options.setNotice === "function" ? options.setNotice : () => {},
-    queueSync: typeof options.queueSync === "function" ? options.queueSync : () => {},
-    refreshUpdateStatus:
-      typeof options.refreshUpdateStatus === "function"
-        ? options.refreshUpdateStatus
-        : () => Promise.resolve(),
-    navigateToConfigRoute:
-      typeof options.navigateToConfigRoute === "function"
-        ? options.navigateToConfigRoute
-        : () => {},
-    navigateBack:
-      typeof options.navigateBack === "function" ? options.navigateBack : () => {},
-    openReadme:
-      typeof options.openReadme === "function" ? options.openReadme : () => {},
-    openChangelog:
-      typeof options.openChangelog === "function" ? options.openChangelog : () => {},
-    openUserscriptInstall:
-      typeof options.openUserscriptInstall === "function"
-        ? options.openUserscriptInstall
-        : () => false,
-    getXConfigDescriptor:
-      typeof options.getXConfigDescriptor === "function"
-        ? options.getXConfigDescriptor
-        : () => null,
-    buildFeatureSettingPatch:
-      typeof options.buildFeatureSettingPatch === "function"
-        ? options.buildFeatureSettingPatch
-        : () => ({ features: {} }),
-    parseFieldValue:
-      typeof options.parseFieldValue === "function" ? options.parseFieldValue : (_field, value) => value,
-    syncSelectOptionButtons:
-      typeof options.syncSelectOptionButtons === "function"
-        ? options.syncSelectOptionButtons
-        : () => {},
-    syncColorFieldControl:
-      typeof options.syncColorFieldControl === "function"
-        ? options.syncColorFieldControl
-        : () => {},
-    themeKeyFromConfigKey:
-      typeof options.themeKeyFromConfigKey === "function" ? options.themeKeyFromConfigKey : () => "",
-    clearThemeBackgroundImage:
-      typeof options.clearThemeBackgroundImage === "function"
-        ? options.clearThemeBackgroundImage
-        : () => {},
-    uploadThemeBackgroundImage:
-      typeof options.uploadThemeBackgroundImage === "function"
-        ? options.uploadThemeBackgroundImage
-        : () => {},
-    syncThemeBackgroundIndicators:
-      typeof options.syncThemeBackgroundIndicators === "function"
-        ? options.syncThemeBackgroundIndicators
-        : () => {},
-    setThemeActionFeedback:
-      typeof options.setThemeActionFeedback === "function"
-        ? options.setThemeActionFeedback
-        : () => {},
+    setNotice: resolveOptionalFunction(options.setNotice, () => {}),
+    queueSync: resolveOptionalFunction(options.queueSync, () => {}),
+    refreshUpdateStatus: resolveOptionalFunction(options.refreshUpdateStatus, () => Promise.resolve()),
+    navigateToConfigRoute: resolveOptionalFunction(options.navigateToConfigRoute, () => {}),
+    navigateBack: resolveOptionalFunction(options.navigateBack, () => {}),
+    openReadme: resolveOptionalFunction(options.openReadme, () => {}),
+    openChangelog: resolveOptionalFunction(options.openChangelog, () => {}),
+    openUserscriptInstall: resolveOptionalFunction(options.openUserscriptInstall, () => false),
+    getXConfigDescriptor: resolveOptionalFunction(options.getXConfigDescriptor, () => null),
+    buildFeatureSettingPatch: resolveOptionalFunction(options.buildFeatureSettingPatch, () => ({ features: {} })),
+    parseFieldValue: resolveOptionalFunction(options.parseFieldValue, (_field, value) => value),
+    syncSelectOptionButtons: resolveOptionalFunction(options.syncSelectOptionButtons, () => {}),
+    syncColorFieldControl: resolveOptionalFunction(options.syncColorFieldControl, () => {}),
+    themeKeyFromConfigKey: resolveOptionalFunction(options.themeKeyFromConfigKey, () => ""),
+    clearThemeBackgroundImage: resolveOptionalFunction(options.clearThemeBackgroundImage, () => {}),
+    uploadThemeBackgroundImage: resolveOptionalFunction(options.uploadThemeBackgroundImage, () => {}),
+    syncThemeBackgroundIndicators: resolveOptionalFunction(options.syncThemeBackgroundIndicators, () => {}),
+    setThemeActionFeedback: resolveOptionalFunction(options.setThemeActionFeedback, () => {}),
   };
+}
+
+export function createShellActionController(options = {}) {
+  const controller = buildShellActionControllerContext(options);
   const commandHandlers = buildCommandHandlers(controller);
 
   return {

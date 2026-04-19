@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; xConfig-Shell und TV-Board-Zoom laufen in dieser Sonar-Welle weiter auf denselben fachlichen Verträgen, trennen interne Options-, Lifecycle- und Intent-Pfade aber klarer.
+  Technik: `xconfig-ui/action-controller`, `lifecycle-controller` und `render-controller` ziehen ihre lange Options-Normalisierung in kleine Context-Builder, und `tv-board-zoom/computeZoomIntent(...)` zerlegt Boundary-/Turn-Reset, Checkout-Kontext, Sticky-/Manual-Pause-Logik sowie Intent-Auswahl in explizite Helfer, ohne die öffentlichen Controller-APIs oder die Checkout-/Setup-/Hold-Semantik umzubauen; die bestehenden Shell-, Action- und TV-Zoom-Regressionen bleiben dabei der fachliche Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; xConfig-Themenaktionen, Cricket-Highlighting und Dart-Marker-Darts laufen fachlich weiter auf denselben Pfaden, drücken in dieser Sonar-Welle aber einige kleine Guard- und Debug-Signaturen direkter aus.
   Technik: `xconfig-ui/shell-view` ersetzt den letzten verschachtelten Hintergrundbild-Hinweis durch einen kleinen Action-Text-Helper, `cricket-highlighter` bereinigt einen lokalen Shape-Guard per Optional-Chaining, und `dart-marker-darts` bündelt zwei rein interne Debug-/Geometrie-Signaturen auf kleine Objektparameter statt 8-Parameter-Helfer; die bestehenden Shell-, Cricket- und Dart-Marker-Regressionen bleiben dabei der fachliche Schutz gegen Drift.
 

@@ -327,8 +327,12 @@ function syncShellVisibility(controller) {
   syncMenuUpdateState(controller);
 }
 
-export function createShellRenderController(options = {}) {
-  const controller = {
+function resolveOptionalFunction(value, fallback) {
+  return typeof value === "function" ? value : fallback;
+}
+
+function buildShellRenderControllerContext(options = {}) {
+  return {
     windowRef: options.windowRef || null,
     documentRef: options.documentRef || null,
     state: options.state || null,
@@ -338,28 +342,22 @@ export function createShellRenderController(options = {}) {
     menuLabelCollapseWidth: Number(options.menuLabelCollapseWidth) || 0,
     installedVersion: String(options.installedVersion || "").trim(),
     sidebarRouteHints: normalizeSidebarRouteHints(options.sidebarRouteHints),
-    buildMenuIconElement:
-      typeof options.buildMenuIconElement === "function" ? options.buildMenuIconElement : () => null,
-    buildShellContent:
-      typeof options.buildShellContent === "function" ? options.buildShellContent : () => null,
-    createElement:
-      typeof options.createElement === "function" ? options.createElement : null,
-    getContentElement:
-      typeof options.getContentElement === "function" ? options.getContentElement : () => null,
-    getSidebarElement:
-      typeof options.getSidebarElement === "function" ? options.getSidebarElement : () => null,
-    isConfigRoute:
-      typeof options.isConfigRoute === "function" ? options.isConfigRoute : () => false,
-    isNavigationElement:
-      typeof options.isNavigationElement === "function" ? options.isNavigationElement : () => false,
-    parseShellRenderSignature:
-      typeof options.parseShellRenderSignature === "function" ? options.parseShellRenderSignature : () => null,
-    buildShellRenderSignature:
-      typeof options.buildShellRenderSignature === "function" ? options.buildShellRenderSignature : () => "",
-    toRoutePathname:
-      typeof options.toRoutePathname === "function" ? options.toRoutePathname : () => "",
-    getFeatures: typeof options.getFeatures === "function" ? options.getFeatures : () => [],
+    buildMenuIconElement: resolveOptionalFunction(options.buildMenuIconElement, () => null),
+    buildShellContent: resolveOptionalFunction(options.buildShellContent, () => null),
+    createElement: resolveOptionalFunction(options.createElement, null),
+    getContentElement: resolveOptionalFunction(options.getContentElement, () => null),
+    getSidebarElement: resolveOptionalFunction(options.getSidebarElement, () => null),
+    isConfigRoute: resolveOptionalFunction(options.isConfigRoute, () => false),
+    isNavigationElement: resolveOptionalFunction(options.isNavigationElement, () => false),
+    parseShellRenderSignature: resolveOptionalFunction(options.parseShellRenderSignature, () => null),
+    buildShellRenderSignature: resolveOptionalFunction(options.buildShellRenderSignature, () => ""),
+    toRoutePathname: resolveOptionalFunction(options.toRoutePathname, () => ""),
+    getFeatures: resolveOptionalFunction(options.getFeatures, () => []),
   };
+}
+
+export function createShellRenderController(options = {}) {
+  const controller = buildShellRenderControllerContext(options);
 
   return {
     ensureMenuButton: () => ensureMenuButton(controller),

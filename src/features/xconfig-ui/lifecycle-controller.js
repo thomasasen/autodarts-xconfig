@@ -182,8 +182,12 @@ function bindShellRuntimeLifecycle(controller) {
   };
 }
 
-export function createShellLifecycleController(options = {}) {
-  const controller = {
+function resolveOptionalFunction(value, fallback) {
+  return typeof value === "function" ? value : fallback;
+}
+
+function buildShellLifecycleControllerContext(options = {}) {
+  return {
     windowRef: options.windowRef || null,
     documentRef: options.documentRef || null,
     runtime: options.runtime || null,
@@ -199,38 +203,27 @@ export function createShellLifecycleController(options = {}) {
     listenerKeys: options.listenerKeys || {},
     menuItemId: String(options.menuItemId || "").trim(),
     panelHostId: String(options.panelHostId || "").trim(),
-    queueSync: typeof options.queueSync === "function" ? options.queueSync : () => {},
-    cancelQueuedSync:
-      typeof options.cancelQueuedSync === "function" ? options.cancelQueuedSync : () => {},
-    clearNoticeTimer:
-      typeof options.clearNoticeTimer === "function" ? options.clearNoticeTimer : () => {},
-    restoreContent:
-      typeof options.restoreContent === "function" ? options.restoreContent : () => {},
-    removeNodeById:
-      typeof options.removeNodeById === "function" ? options.removeNodeById : () => {},
+    queueSync: resolveOptionalFunction(options.queueSync, () => {}),
+    cancelQueuedSync: resolveOptionalFunction(options.cancelQueuedSync, () => {}),
+    clearNoticeTimer: resolveOptionalFunction(options.clearNoticeTimer, () => {}),
+    restoreContent: resolveOptionalFunction(options.restoreContent, () => {}),
+    removeNodeById: resolveOptionalFunction(options.removeNodeById, () => {}),
     normalizeLegacyConfigPathIfNeeded:
-      typeof options.normalizeLegacyConfigPathIfNeeded === "function"
-        ? options.normalizeLegacyConfigPathIfNeeded
-        : () => false,
-    onVisibilityChange:
-      typeof options.onVisibilityChange === "function" ? options.onVisibilityChange : () => {},
-    onDocumentClick:
-      typeof options.onDocumentClick === "function" ? options.onDocumentClick : () => {},
-    onDocumentChange:
-      typeof options.onDocumentChange === "function" ? options.onDocumentChange : () => {},
-    onDocumentKeydown:
-      typeof options.onDocumentKeydown === "function" ? options.onDocumentKeydown : () => {},
-    startAutoUpdateChecks:
-      typeof options.startAutoUpdateChecks === "function" ? options.startAutoUpdateChecks : () => {},
-    stopAutoUpdateChecks:
-      typeof options.stopAutoUpdateChecks === "function" ? options.stopAutoUpdateChecks : () => {},
-    refreshUpdateStatus:
-      typeof options.refreshUpdateStatus === "function" ? options.refreshUpdateStatus : () => Promise.resolve(),
-    hasExternalDomMutation:
-      typeof options.hasExternalDomMutation === "function" ? options.hasExternalDomMutation : () => true,
-    isManagedNode:
-      typeof options.isManagedNode === "function" ? options.isManagedNode : () => false,
+      resolveOptionalFunction(options.normalizeLegacyConfigPathIfNeeded, () => false),
+    onVisibilityChange: resolveOptionalFunction(options.onVisibilityChange, () => {}),
+    onDocumentClick: resolveOptionalFunction(options.onDocumentClick, () => {}),
+    onDocumentChange: resolveOptionalFunction(options.onDocumentChange, () => {}),
+    onDocumentKeydown: resolveOptionalFunction(options.onDocumentKeydown, () => {}),
+    startAutoUpdateChecks: resolveOptionalFunction(options.startAutoUpdateChecks, () => {}),
+    stopAutoUpdateChecks: resolveOptionalFunction(options.stopAutoUpdateChecks, () => {}),
+    refreshUpdateStatus: resolveOptionalFunction(options.refreshUpdateStatus, () => Promise.resolve()),
+    hasExternalDomMutation: resolveOptionalFunction(options.hasExternalDomMutation, () => true),
+    isManagedNode: resolveOptionalFunction(options.isManagedNode, () => false),
   };
+}
+
+export function createShellLifecycleController(options = {}) {
+  const controller = buildShellLifecycleControllerContext(options);
 
   return {
     bindRuntimeLifecycle: () => bindShellRuntimeLifecycle(controller),
