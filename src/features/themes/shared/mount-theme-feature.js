@@ -40,6 +40,104 @@ function readThemeConfigs(config, configKey) {
   };
 }
 
+function resolveThemeRuntimeContext(context = {}) {
+  return {
+    documentRef: context.documentRef || (typeof document !== "undefined" ? document : null),
+    windowRef: context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null),
+    domGuards: context.domGuards,
+    gameState: context.gameState,
+    config: context.config,
+    observerRegistry: context.registries?.observers,
+    listenerRegistry: context.registries?.listeners,
+  };
+}
+
+function resolveThemeMountOptions(options = {}) {
+  const featureKey = String(options.featureKey || "").trim();
+  const configKey = String(options.configKey || "").trim();
+  const styleId = String(options.styleId || "").trim();
+  const variantName = String(options.variantName || "").trim();
+  const matchMode = String(options.matchMode || "equals").trim().toLowerCase();
+  const previewPlacement = options.previewPlacement || {};
+  const previewSpaceClass = String(
+    previewPlacement.previewSpaceClass || PREVIEW_SPACE_CLASS
+  ).trim();
+
+  return {
+    buildThemeCss:
+      typeof options.buildThemeCss === "function"
+        ? options.buildThemeCss
+        : () => "",
+    configKey,
+    featureKey,
+    isSupportedContext:
+      typeof options.isSupportedContext === "function"
+        ? options.isSupportedContext
+        : null,
+    matchMode,
+    previewPlacement,
+    previewSpaceClass,
+    resolvedPreviewPlacement: {
+      ...previewPlacement,
+      previewSpaceClass,
+    },
+    styleId,
+    themePolicy: resolveThemePolicy({
+      ...options,
+      featureKey,
+      configKey,
+    }),
+    variantName,
+  };
+}
+
+function createThemeState(themePolicy) {
+  return {
+    layoutHookTargets: {},
+    ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
+  };
+}
+
+function resolveManagedThemeClassNames(previewSpaceClass, themePolicy, themeState) {
+  return Array.from(
+    new Set(
+      [
+        previewSpaceClass,
+        ...Object.values(THEME_LAYOUT_HOOK_CLASSES),
+        ...(
+          themePolicy && typeof themePolicy.getManagedClassNames === "function"
+            ? themePolicy.getManagedClassNames(themeState)
+            : []
+        ),
+      ].filter(Boolean)
+    )
+  );
+}
+
+function resolveManagedThemeNodeIds(styleId, themePolicy, themeState) {
+  return [
+    styleId,
+    ...(
+      themePolicy && typeof themePolicy.getManagedNodeIds === "function"
+        ? themePolicy.getManagedNodeIds(themeState)
+        : []
+    ),
+  ].filter(Boolean);
+}
+
+function resolveObservedThemeAttributeFilter(themePolicy, themeState) {
+  return Array.from(
+    new Set([
+      ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+      ...(
+        themePolicy && typeof themePolicy.getObservedAttributeFilter === "function"
+          ? themePolicy.getObservedAttributeFilter(themeState)
+          : []
+      ),
+    ])
+  );
+}
+
 function createThemeLifecycleContext(options = {}) {
   return {
     config: options.config,
@@ -131,41 +229,119 @@ function deactivateThemeFeature(options = {}) {
   }
 }
 
-export function mountThemeFeature(context = {}, options = {}) {
-  const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
-  const domGuards = context.domGuards;
-  const gameState = context.gameState;
-  const config = context.config;
-  const observerRegistry = context.registries?.observers;
-  const listenerRegistry = context.registries?.listeners;
+function createThemeStateEvaluator(options = {}) {
+  return function evaluateThemeState() {
+    const { featureConfig, globalTypographyConfig } = readThemeConfigs(
+      options.config,
+      options.configKey
+    );
 
-  const featureKey = String(options.featureKey || "").trim();
-  const configKey = String(options.configKey || "").trim();
-  const styleId = String(options.styleId || "").trim();
-  const variantName = String(options.variantName || "").trim();
-  const matchMode = String(options.matchMode || "equals").trim().toLowerCase();
-  const previewPlacement = options.previewPlacement || {};
-  const previewSpaceClass = String(
-    previewPlacement.previewSpaceClass || PREVIEW_SPACE_CLASS
-  ).trim();
-  const resolvedPreviewPlacement = {
-    ...previewPlacement,
-    previewSpaceClass,
+    const isActive = isThemeVariantActive({
+      variantName: options.variantName,
+      matchMode: options.matchMode,
+      gameState: options.gameState,
+      windowRef: options.windowRef,
+      documentRef: options.documentRef,
+    });
+
+    const lifecycleContext = createThemeLifecycleContext({
+      config: options.config,
+      documentRef: options.documentRef,
+      featureConfig,
+      gameState: options.gameState,
+      runtimeContext: options.runtimeContext,
+      themePolicy: options.themePolicy,
+      themeState: options.themeState,
+      windowRef: options.windowRef,
+    });
+    if (!isActive || !isThemeContextSupported(options.isSupportedContext, lifecycleContext)) {
+      deactivateThemeFeature(options);
+      return;
+    }
+
+    const cssText = resolveThemeCssText(
+      options.buildThemeCss,
+      featureConfig,
+      globalTypographyConfig
+    );
+    if (!cssText) {
+      deactivateThemeFeature(options);
+      return;
+    }
+
+    options.domGuards.ensureStyle(options.styleId, cssText);
+    const previewSpaceEnabled = isPreviewPlacementEnabled(
+      options.documentRef,
+      options.previewPlacement,
+      options.windowRef
+    );
+    togglePreviewSpace(
+      options.documentRef,
+      options.resolvedPreviewPlacement,
+      previewSpaceEnabled
+    );
+    const layoutResult = updateBoardLayoutHooks(options.documentRef, options.themeState);
+    if (layoutResult?.retained) {
+      options.layoutHookRecheck.schedule(layoutResult);
+    } else {
+      options.layoutHookRecheck.clear();
+    }
+
+    if (options.themePolicy && typeof options.themePolicy.onActivate === "function") {
+      options.themePolicy.onActivate({
+        ...lifecycleContext,
+        scheduler: options.schedulerRef.current,
+      });
+    }
   };
-  const buildThemeCss =
-    typeof options.buildThemeCss === "function"
-      ? options.buildThemeCss
-      : () => "";
-  const isSupportedContext =
-    typeof options.isSupportedContext === "function"
-      ? options.isSupportedContext
-      : null;
-  const themePolicy = resolveThemePolicy({
-    ...options,
-    featureKey,
+}
+
+function createThemeMutationCallback(options = {}) {
+  return function handleThemeMutations(mutations = []) {
+    const policyMutation = options.themePolicy &&
+      typeof options.themePolicy.shouldScheduleMutation === "function" &&
+      options.themePolicy.shouldScheduleMutation(mutations, {
+        documentRef: options.documentRef,
+        gameState: options.gameState,
+        themeState: options.themeState,
+        windowRef: options.windowRef,
+      });
+
+    if (
+      !policyMutation &&
+      !hasBoardLayoutHookMutation(mutations, options.themeState) &&
+      !hasBoardInputModeMutation(mutations) &&
+      !hasExternalDomMutation(mutations, options.isManagedNode)
+    ) {
+      return;
+    }
+    options.schedulerRef.current?.schedule?.();
+  };
+}
+
+export function mountThemeFeature(context = {}, options = {}) {
+  const {
+    documentRef,
+    windowRef,
+    domGuards,
+    gameState,
+    config,
+    observerRegistry,
+    listenerRegistry,
+  } = resolveThemeRuntimeContext(context);
+  const {
+    buildThemeCss,
     configKey,
-  });
+    featureKey,
+    isSupportedContext,
+    matchMode,
+    previewPlacement,
+    previewSpaceClass,
+    resolvedPreviewPlacement,
+    styleId,
+    themePolicy,
+    variantName,
+  } = resolveThemeMountOptions(options);
 
   if (!documentRef || !domGuards || !featureKey || !configKey || !styleId || !variantName) {
     return () => {};
@@ -174,153 +350,63 @@ export function mountThemeFeature(context = {}, options = {}) {
   const observerKey = `${featureKey}:theme-observer`;
   const resizeListenerKey = `${featureKey}:theme-resize`;
   const scrollListenerKey = `${featureKey}:theme-scroll`;
-  const themeState = {
-    layoutHookTargets: {},
-    ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
+  const themeState = createThemeState(themePolicy);
+  const schedulerRef = {
+    current: null,
   };
-  let scheduler = null;
-  const layoutHookRecheck = createLayoutHookRecheckController(windowRef, () => scheduler?.schedule?.());
+  const layoutHookRecheck = createLayoutHookRecheckController(windowRef, () => {
+    schedulerRef.current?.schedule?.();
+  });
+  const themeEvaluator = createThemeStateEvaluator({
+    buildThemeCss,
+    config,
+    configKey,
+    documentRef,
+    domGuards,
+    gameState,
+    isSupportedContext,
+    layoutHookRecheck,
+    matchMode,
+    previewPlacement,
+    resolvedPreviewPlacement,
+    runtimeContext: context,
+    schedulerRef,
+    styleId,
+    themePolicy,
+    themeState,
+    variantName,
+    windowRef,
+  });
 
-  function evaluateThemeState() {
-    const { featureConfig, globalTypographyConfig } = readThemeConfigs(config, configKey);
-
-    const isActive = isThemeVariantActive({
-      variantName,
-      matchMode,
-      gameState,
-      windowRef,
-      documentRef,
-    });
-
-    const lifecycleContext = createThemeLifecycleContext({
-      config,
-      documentRef,
-      featureConfig,
-      gameState,
-      runtimeContext: context,
-      themePolicy,
-      themeState,
-      windowRef,
-    });
-    if (!isActive || !isThemeContextSupported(isSupportedContext, lifecycleContext)) {
-      deactivateThemeFeature({
-        documentRef,
-        domGuards,
-        gameState,
-        layoutHookRecheck,
-        resolvedPreviewPlacement,
-        runtimeContext: context,
-        styleId,
-        themePolicy,
-        themeState,
-        windowRef,
-      });
-      return;
-    }
-
-    const cssText = resolveThemeCssText(buildThemeCss, featureConfig, globalTypographyConfig);
-    if (!cssText) {
-      deactivateThemeFeature({
-        documentRef,
-        domGuards,
-        gameState,
-        layoutHookRecheck,
-        resolvedPreviewPlacement,
-        runtimeContext: context,
-        styleId,
-        themePolicy,
-        themeState,
-        windowRef,
-      });
-      return;
-    }
-
-    domGuards.ensureStyle(styleId, cssText);
-    const previewSpaceEnabled = isPreviewPlacementEnabled(
-      documentRef,
-      previewPlacement,
-      windowRef
-    );
-    togglePreviewSpace(documentRef, resolvedPreviewPlacement, previewSpaceEnabled);
-    const layoutResult = updateBoardLayoutHooks(documentRef, themeState);
-    if (layoutResult?.retained) {
-      layoutHookRecheck.schedule(layoutResult);
-    } else {
-      layoutHookRecheck.clear();
-    }
-
-    if (themePolicy && typeof themePolicy.onActivate === "function") {
-      themePolicy.onActivate({
-        ...lifecycleContext,
-        scheduler,
-      });
-    }
-  }
-
-  const managedClassNames = Array.from(
-    new Set(
-      [
-        previewSpaceClass,
-        ...Object.values(THEME_LAYOUT_HOOK_CLASSES),
-        ...(
-          themePolicy && typeof themePolicy.getManagedClassNames === "function"
-            ? themePolicy.getManagedClassNames(themeState)
-            : []
-        ),
-      ].filter(Boolean)
-    )
+  const managedClassNames = resolveManagedThemeClassNames(
+    previewSpaceClass,
+    themePolicy,
+    themeState
   );
-  scheduler =
+  schedulerRef.current =
     context.helpers && typeof context.helpers.createRafScheduler === "function"
-      ? context.helpers.createRafScheduler(evaluateThemeState)
-      : createRafScheduler(evaluateThemeState, { windowRef });
+      ? context.helpers.createRafScheduler(themeEvaluator)
+      : createRafScheduler(themeEvaluator, { windowRef });
   const isManagedNode = createManagedNodeMatcher({
-    ids: [
-      styleId,
-      ...(
-        themePolicy && typeof themePolicy.getManagedNodeIds === "function"
-          ? themePolicy.getManagedNodeIds(themeState)
-          : []
-      ),
-    ].filter(Boolean),
+    ids: resolveManagedThemeNodeIds(styleId, themePolicy, themeState),
     classNames: managedClassNames,
   });
-  const observedAttributeFilter = Array.from(
-    new Set([
-      ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
-      ...(
-        themePolicy && typeof themePolicy.getObservedAttributeFilter === "function"
-          ? themePolicy.getObservedAttributeFilter(themeState)
-          : []
-      ),
-    ])
-  );
+  const observedAttributeFilter = resolveObservedThemeAttributeFilter(themePolicy, themeState);
 
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: observerKey,
       target: rootNode,
-      callback: (mutations = []) => {
-        const policyMutation = themePolicy &&
-          typeof themePolicy.shouldScheduleMutation === "function" &&
-          themePolicy.shouldScheduleMutation(mutations, {
-            documentRef,
-            gameState,
-            themeState,
-            windowRef,
-          });
-
-        if (
-          !policyMutation &&
-          !hasBoardLayoutHookMutation(mutations, themeState) &&
-          !hasBoardInputModeMutation(mutations) &&
-          !hasExternalDomMutation(mutations, isManagedNode)
-        ) {
-          return;
-        }
-        scheduler.schedule();
-      },
+      callback: createThemeMutationCallback({
+        documentRef,
+        gameState,
+        isManagedNode,
+        schedulerRef,
+        themePolicy,
+        themeState,
+        windowRef,
+      }),
       observeOptions: {
         childList: true,
         subtree: true,
@@ -337,24 +423,24 @@ export function mountThemeFeature(context = {}, options = {}) {
       key: resizeListenerKey,
       target: windowRef,
       type: "resize",
-      handler: () => scheduler.schedule(),
+      handler: () => schedulerRef.current?.schedule?.(),
     });
 
     listenerRegistry.register({
       key: scrollListenerKey,
       target: windowRef,
       type: "scroll",
-      handler: () => scheduler.schedule(),
+      handler: () => schedulerRef.current?.schedule?.(),
       options: true,
     });
   }
 
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
+      ? gameState.subscribe(() => schedulerRef.current?.schedule?.())
       : () => {};
 
-  scheduler.schedule();
+  schedulerRef.current.schedule();
 
   let cleanedUp = false;
   return function cleanupThemeFeature() {
@@ -363,7 +449,7 @@ export function mountThemeFeature(context = {}, options = {}) {
     }
     cleanedUp = true;
 
-    scheduler.cancel();
+    schedulerRef.current.cancel();
     deactivateThemeFeature({
       documentRef,
       domGuards,

@@ -11,5 +11,9 @@
   "eslint.format.enable": false,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "never"
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "http-192-168-2-50-9005",
+    "projectKey": "xConfig"
   }
 }
