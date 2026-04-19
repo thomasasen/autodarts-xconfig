@@ -52,7 +52,7 @@ function getElementChildren(node) {
   if (!node || typeof node !== "object" || !node.children) {
     return [];
   }
-  return Array.from(node.children).filter((child) => child && child.nodeType === 1);
+  return Array.from(node.children).filter((child) => child?.nodeType === 1);
 }
 
 function countButtons(rootNode) {
@@ -560,14 +560,14 @@ function getSmallestPositiveDimension(values = []) {
 }
 
 function clearBoardSizeVariable(node) {
-  if (!node || !node.style || typeof node.style.removeProperty !== "function") {
+  if (!node?.style || typeof node.style.removeProperty !== "function") {
     return;
   }
   node.style.removeProperty(BOARD_SIZE_CSS_VARIABLE);
 }
 
 function updateBoardSizeVariable(node, sizingNode = null, options = {}) {
-  if (!node || !node.style || typeof node.style.setProperty !== "function") {
+  if (!node?.style || typeof node.style.setProperty !== "function") {
     return;
   }
 
@@ -592,8 +592,7 @@ function updateBoardSizeVariable(node, sizingNode = null, options = {}) {
 
 function clearStyleVariable(node, variableName) {
   if (
-    !node ||
-    !node.style ||
+    !node?.style ||
     typeof node.style.removeProperty !== "function" ||
     !variableName
   ) {
@@ -604,8 +603,7 @@ function clearStyleVariable(node, variableName) {
 
 function updateStyleVariable(node, variableName, value) {
   if (
-    !node ||
-    !node.style ||
+    !node?.style ||
     typeof node.style.setProperty !== "function" ||
     !variableName
   ) {
@@ -646,7 +644,7 @@ export function selectWidestContentLayoutCandidate(candidates = []) {
   let bestMeta = null;
 
   candidates.forEach((candidate, index) => {
-    if (!candidate || !candidate.contentSlot || !candidate.contentLeft || !candidate.contentBoard) {
+    if (!candidate?.contentSlot || !candidate?.contentLeft || !candidate?.contentBoard) {
       return;
     }
 
@@ -771,7 +769,7 @@ function hasCompleteContentLayoutTargets(contentTargets) {
 }
 
 function isBoardLayoutContextConsistent(targets) {
-  if (!targets || !targets.boardSvg || !targets.boardPanel || !targets.boardViewport || !targets.boardCanvas) {
+  if (!targets?.boardSvg || !targets.boardPanel || !targets.boardViewport || !targets.boardCanvas) {
     return false;
   }
 
@@ -1038,7 +1036,7 @@ function countCricketPlayerCards(playerDisplayNode) {
   }
 
   const directChildren = Array.isArray(playerDisplayNode.children)
-    ? playerDisplayNode.children.filter((child) => child && child.nodeType === 1)
+    ? playerDisplayNode.children.filter((child) => child?.nodeType === 1)
     : [];
   const directCards = directChildren.filter((child) =>
     Boolean(child?.classList?.contains?.("ad-ext-player"))
@@ -1130,7 +1128,7 @@ function findOwningChild(containerNode, targetNode) {
   }
 
   let current = targetNode;
-  while (current && current.parentElement && current.parentElement !== containerNode) {
+  while (current?.parentElement && current.parentElement !== containerNode) {
     current = current.parentElement;
   }
 
@@ -1593,7 +1591,7 @@ function measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode) {
 }
 
 function restoreCricketReadabilityProbeVariables(contentSlotNode, snapshot = new Map()) {
-  if (!contentSlotNode || !contentSlotNode.style || typeof contentSlotNode.style.setProperty !== "function") {
+  if (!contentSlotNode?.style || typeof contentSlotNode.style.setProperty !== "function") {
     return;
   }
 
@@ -1677,16 +1675,15 @@ function measureCricketPlayerAreaProbeWidth(
   }
 }
 
-function measureCricketRequiredPlayerWidth(
-  contentSlotNode,
-  contentLeftNode,
-  playerDisplayNode,
-  playerCount,
-  probePlayerAreaWidthPx,
-  slotWidth,
-  contentGapPx,
-  maximumAutoBoardWidth
-) {
+function measureCricketRequiredPlayerWidth(contentNodes, options = {}) {
+  const contentSlotNode = contentNodes?.contentSlotNode || null;
+  const contentLeftNode = contentNodes?.contentLeftNode || null;
+  const playerDisplayNode = contentNodes?.playerDisplayNode || null;
+  const playerCount = Number(options.playerCount);
+  const probePlayerAreaWidthPx = Number(options.probePlayerAreaWidthPx);
+  const slotWidth = Number(options.slotWidth);
+  const contentGapPx = Number(options.contentGapPx);
+  const maximumAutoBoardWidth = Number(options.maximumAutoBoardWidth);
   const minimumPlayerWidth = computeCricketRequiredPlayerWidth(playerCount);
   const measuredCurrentWidth = measureCricketLeftContentWidth(contentLeftNode, playerDisplayNode);
   const normalizedSlotWidth = Number.isFinite(slotWidth) ? Math.max(0, Math.floor(slotWidth)) : 0;
@@ -2115,14 +2112,18 @@ export function applyCricketReadabilityPolicy(documentRef, state, scheduler) {
     Math.floor(Math.max(0, slotWidth - maximumAutoBoardWidth - contentGapPx))
   );
   const requiredPlayerWidth = measureCricketRequiredPlayerWidth(
-    contentSlotNode,
-    contentLeftNode,
-    playerDisplayNode,
-    playerCount,
-    probePlayerAreaWidth,
-    slotWidth,
-    contentGapPx,
-    maximumAutoBoardWidth
+    {
+      contentSlotNode,
+      contentLeftNode,
+      playerDisplayNode,
+    },
+    {
+      playerCount,
+      probePlayerAreaWidthPx: probePlayerAreaWidth,
+      slotWidth,
+      contentGapPx,
+      maximumAutoBoardWidth,
+    }
   );
   const boardWidthAtRequiredPlayers = Math.max(0, slotWidth - requiredPlayerWidth - contentGapPx);
   const autoVisibleBoardWidth = Math.min(maximumAutoBoardWidth, boardWidthAtRequiredPlayers);

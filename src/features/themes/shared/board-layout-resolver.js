@@ -65,7 +65,7 @@ function getElementChildren(node) {
   if (!node || typeof node !== "object" || !node.children) {
     return [];
   }
-  return Array.from(node.children).filter((child) => child && child.nodeType === 1);
+  return Array.from(node.children).filter((child) => child?.nodeType === 1);
 }
 
 function countButtons(rootNode) {
@@ -703,14 +703,14 @@ function getSmallestPositiveDimension(values = []) {
 }
 
 function clearBoardSizeVariable(node) {
-  if (!node || !node.style || typeof node.style.removeProperty !== "function") {
+  if (!node?.style || typeof node.style.removeProperty !== "function") {
     return;
   }
   node.style.removeProperty(BOARD_SIZE_CSS_VARIABLE);
 }
 
 function updateBoardSizeVariable(node, sizingNode = null, options = {}) {
-  if (!node || !node.style || typeof node.style.setProperty !== "function") {
+  if (!node?.style || typeof node.style.setProperty !== "function") {
     return;
   }
 
@@ -735,8 +735,7 @@ function updateBoardSizeVariable(node, sizingNode = null, options = {}) {
 
 function clearStyleVariable(node, variableName) {
   if (
-    !node ||
-    !node.style ||
+    !node?.style ||
     typeof node.style.removeProperty !== "function" ||
     !variableName
   ) {
@@ -747,8 +746,7 @@ function clearStyleVariable(node, variableName) {
 
 function updateStyleVariable(node, variableName, value) {
   if (
-    !node ||
-    !node.style ||
+    !node?.style ||
     typeof node.style.setProperty !== "function" ||
     !variableName
   ) {
@@ -794,7 +792,7 @@ export function selectWidestContentLayoutCandidate(candidates = []) {
   let bestMeta = null;
 
   comparableCandidates.forEach((candidate, index) => {
-    if (!candidate || !candidate.contentSlot || !candidate.contentLeft || !candidate.contentBoard) {
+    if (!candidate?.contentSlot || !candidate?.contentLeft || !candidate?.contentBoard) {
       return;
     }
 
@@ -919,7 +917,7 @@ function hasCompleteContentLayoutTargets(contentTargets) {
 }
 
 function isBoardLayoutContextConsistent(targets) {
-  if (!targets || !targets.boardSvg || !targets.boardPanel || !targets.boardViewport || !targets.boardCanvas) {
+  if (!targets?.boardSvg || !targets.boardPanel || !targets.boardViewport || !targets.boardCanvas) {
     return false;
   }
 

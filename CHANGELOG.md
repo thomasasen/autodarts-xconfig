@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die geteilten Theme-Layout- und Cricket-Readability-Pfade verhalten sich weiter wie bisher, drücken kleine DOM- und Mess-Guards intern aber direkter aus.
+  Technik: `board-layout-resolver` und `cricket-readability` bereinigen in dieser Sonar-Welle nur lokale `S6582`-Treffer per Optional-Chaining und bündeln die interne Messsignatur von `measureCricketRequiredPlayerWidth(...)` in `cricket-readability` auf ein kleines Optionsobjekt, ohne die Layout-Auflösung, Board-Hide-Policy oder die Readability-Messschleife fachlich umzubauen; die bestehenden Theme-Lifecycle- und Cricket-Readability-Regressionen bleiben dabei der Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine breitere Low-Risk-Sonar-Welle hält Checkout-Board, Cricket-Surface, Theme-/Runtime-Helfer und xConfig-Randpfade auf denselben fachlichen Verträgen, drückt kleine Guard-, Logger- und Auswahlzweige intern aber direkter aus.
   Technik: `checkout-board-targets`, `turn-surface-adapter`, `cricket-surface/*`, `cricket-highlighter/style`, `dart-marker-emphasis`, `theme-utils`, `bootstrap-runtime`, `checkout-score-pulse`, `layout-utils` und `render-controller` bereinigen nur lokale `S3358`- und `S6582`-Treffer durch kleine Helper und Optional-Chaining-Guards, ohne Observer-, Render-, Overlay-, Route- oder Runtime-Semantik umzubauen; die bestehenden Runtime-, Cricket-, Checkout- und Shell-Regressionen bleiben dabei der fachliche Schutz gegen Drift.
 
