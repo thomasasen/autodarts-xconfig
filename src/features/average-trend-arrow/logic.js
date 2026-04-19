@@ -58,13 +58,25 @@ export function ensureArrowNode(avgNode, arrowByAverageNode, arrowNodes = null) 
   return arrow;
 }
 
+function forceAnimationReflow(node) {
+  if (!node) {
+    return 0;
+  }
+
+  if (Number.isFinite(node.offsetWidth)) {
+    return node.offsetWidth;
+  }
+
+  return Number(node.getBoundingClientRect?.().width || 0);
+}
+
 export function animateArrowNode(arrowNode, durationMs, timeoutByArrow) {
   if (!arrowNode?.classList) {
     return;
   }
 
   arrowNode.classList.remove(ANIMATE_CLASS);
-  void arrowNode.offsetWidth;
+  forceAnimationReflow(arrowNode);
   arrowNode.classList.add(ANIMATE_CLASS);
 
   const previousTimeout = timeoutByArrow.get(arrowNode);

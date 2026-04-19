@@ -373,7 +373,7 @@ function parseViewBoxMetrics(node) {
 
   const rawViewBox = String(node.getAttribute("viewBox") || "")
     .trim()
-    .replaceAll(/,/g, " ")
+    .replaceAll(",", " ")
     .replaceAll(/\s+/g, " ");
   if (!rawViewBox) {
     return {

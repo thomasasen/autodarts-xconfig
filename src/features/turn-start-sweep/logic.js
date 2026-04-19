@@ -24,6 +24,18 @@ export function findActivePlayerNode(documentRef) {
   return findBySelectors(documentRef, ACTIVE_PLAYER_SELECTORS);
 }
 
+function forceAnimationReflow(node) {
+  if (!node) {
+    return 0;
+  }
+
+  if (Number.isFinite(node.offsetWidth)) {
+    return node.offsetWidth;
+  }
+
+  return Number(node.getBoundingClientRect?.().width || 0);
+}
+
 export function runTurnStartSweep(node, state, config = {}, windowRef = null) {
   if (!node?.classList || !state) {
     return;
@@ -42,7 +54,7 @@ export function runTurnStartSweep(node, state, config = {}, windowRef = null) {
 
   node.classList.remove(SWEEP_CLASS);
   // Force style recalculation so class re-apply retriggers the keyframes.
-  void node.offsetWidth;
+  forceAnimationReflow(node);
   node.classList.add(SWEEP_CLASS);
   state.nodes.add(node);
 

@@ -21,6 +21,12 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; ausgewählte Board-, Sweep- und Trend-Animationen sowie der interne Changelog-Check laufen auf denselben fachlichen Pfaden weiter, sind aber in dieser Sonar-Welle klarer und direkter ausgedrückt.
+  Technik: Die vier `void`-basierten Reflow-Trigger in `average-trend-arrow`, `turn-start-sweep` und `cricket-grid-fx` verwenden jetzt explizite lokale Reflow-Helfer statt des `void`-Operators, das kleine `S3776` in `scripts/check-changelog-consistency.mjs` wurde nur durch lokale Helper-Aufteilung reduziert, und neue direkte Runtime-Tests sichern die Re-Trigger-/Cleanup-Verträge der Sweep- und Trend-Animationen auf dem Fake-DOM gegen Drift ab.
+
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die Board-SVG-Erkennung verarbeitet `viewBox`-Werte weiterhin identisch, drückt eine rein mechanische String-Normalisierung aber direkter aus.
+  Technik: In `dartboard-svg` wurde ein einzelner Sonar-Reliability-Treffer (`S7781`) mit dem kleinstmöglichen Diff bereinigt, indem die feste Komma-Ersetzung von einer Regex-Variante auf `replaceAll(\",\", \" \")` umgestellt wurde; die bestehende Runtime-Abdeckung für ViewBox-Parsing und Board-Erkennung bleibt dabei unverändert der fachliche Schutz.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die nächste sichere Sonar-Welle hält `Triple/Double/Bull Hits` bei denselben Throw-, Burst- und Korrekturpfaden, räumt interne Dekorations-Metadaten aber konsequent auf moderneren DOM-Zugriff um.
   Technik: In `triple-double-bull-hits/logic` wurden die verbliebenen mechanischen `dataset`- und Optional-Chaining-Treffer lokal ersetzt, ohne Signaturen oder Ablaufsteuerung zu ändern; die bestehenden Runtime-Regressionen prüfen jetzt zusätzlich, dass Theme-/Burst-Metadaten beim Setzen und Löschen der Hit-Dekoration weiterhin korrekt über `dataset` und Attributspiegelung synchron bleiben.
 

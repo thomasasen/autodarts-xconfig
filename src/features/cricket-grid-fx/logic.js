@@ -557,13 +557,25 @@ function setBadgeStateClasses(badgeNode, stateToken) {
   badgeNode.classList.add(BADGE_STATE_CLASS.neutral);
 }
 
+function forceAnimationReflow(node) {
+  if (!node) {
+    return 0;
+  }
+
+  if (Number.isFinite(node.offsetWidth)) {
+    return node.offsetWidth;
+  }
+
+  return Number(node.getBoundingClientRect?.().width || 0);
+}
+
 function toggleTimedClass(state, node, className, timeoutMs = 700) {
   if (!state || !node?.classList || !className) {
     return;
   }
 
   node.classList.remove(className);
-  void node.offsetWidth;
+  forceAnimationReflow(node);
   node.classList.add(className);
 
   const timeoutRef =
@@ -602,7 +614,7 @@ function triggerMarkProgress(state, cellNode, marks, visualConfig) {
   }
 
   clearProgressClasses(targetNode);
-  void targetNode.offsetWidth;
+  forceAnimationReflow(targetNode);
   targetNode.classList.add(MARK_PROGRESS_CLASS);
   const clampedMarks = Math.max(0, Math.min(3, Number(marks) || 0));
   targetNode.classList.add(

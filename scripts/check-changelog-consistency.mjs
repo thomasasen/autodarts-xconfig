@@ -109,6 +109,73 @@ function parseCompareLink(link) {
   };
 }
 
+function isSectionSubheadingLine(line) {
+  return /^###\s+/.test(line);
+}
+
+function isIndentedTechnikLine(line) {
+  return /^\s+Technik:\s+\S/.test(line);
+}
+
+function isIndentedNonTechnikContentLine(line) {
+  return /^\s{2,}\S/.test(line) && !isIndentedTechnikLine(line);
+}
+
+function isStartedUserImpactLine(line) {
+  return /^- Nutzerwirkung:\s+\S/.test(line);
+}
+
+function validateSectionEntryLine(sectionName, line, currentEntryState, errors) {
+  if (!line.trim()) {
+    return currentEntryState;
+  }
+
+  if (isSectionSubheadingLine(line)) {
+    return null;
+  }
+
+  if (isIndentedNonTechnikContentLine(line)) {
+    if (!currentEntryState) {
+      errors.push(
+        `Abschnitt ${sectionName}: Eingerückter Fließtext muss zu einem Nutzerwirkung-/Technik-Eintrag gehören.`
+      );
+    }
+    return currentEntryState;
+  }
+
+  if (line.startsWith("- ") && !isStartedUserImpactLine(line)) {
+    errors.push(`Abschnitt ${sectionName}: Listenpunkte müssen mit "Nutzerwirkung:" beginnen.`);
+  }
+
+  if (/^Technik:\s+\S/.test(line)) {
+    errors.push(
+      `Abschnitt ${sectionName}: "Technik:" muss eingerückt direkt unter "Nutzerwirkung:" stehen.`
+    );
+  }
+
+  if (isStartedUserImpactLine(line)) {
+    if (currentEntryState === "user") {
+      errors.push(
+        `Abschnitt ${sectionName}: Ein "Nutzerwirkung:"-Eintrag wurde begonnen, aber der zugehörige "Technik:"-Teil fehlt noch.`
+      );
+    }
+    return "user";
+  }
+
+  if (!isIndentedTechnikLine(line)) {
+    return currentEntryState;
+  }
+
+  if (currentEntryState !== "user") {
+    errors.push(
+      `Abschnitt ${sectionName}: "Technik:" darf nur direkt auf einen "Nutzerwirkung:"-Eintrag folgen.`
+    );
+    return currentEntryState;
+  }
+
+  return "tech";
+}
+
 function validateSectionEntries(section) {
   const errors = [];
   const lines = section.body.split("\n");
@@ -117,57 +184,11 @@ function validateSectionEntries(section) {
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    if (!line.trim()) {
-      continue;
-    }
-
-    if (/^###\s+/.test(line)) {
-      currentEntryState = null;
-      continue;
-    }
-
-    if (/^\s{2,}\S/.test(line) && !/^\s+Technik:\s+\S/.test(line)) {
-      if (!currentEntryState) {
-        errors.push(
-          `Abschnitt ${section.name}: Eingerückter Fließtext muss zu einem Nutzerwirkung-/Technik-Eintrag gehören.`
-        );
-      }
-      continue;
-    }
-
-    const hasUserImpactPrefix = line.startsWith("- Nutzerwirkung: ");
-    if (
-      line.startsWith("- ") &&
-      (!hasUserImpactPrefix || !line.slice("- Nutzerwirkung: ".length).trim())
-    ) {
-      errors.push(`Abschnitt ${section.name}: Listenpunkte müssen mit "Nutzerwirkung:" beginnen.`);
-    }
-
-    if (/^Technik:\s+\S/.test(line)) {
-      errors.push(
-        `Abschnitt ${section.name}: "Technik:" muss eingerückt direkt unter "Nutzerwirkung:" stehen.`
-      );
-    }
-
-    if (/^- Nutzerwirkung:\s+\S/.test(line)) {
-      if (currentEntryState === "user") {
-        errors.push(
-          `Abschnitt ${section.name}: Ein "Nutzerwirkung:"-Eintrag wurde begonnen, aber der zugehörige "Technik:"-Teil fehlt noch.`
-        );
-      }
+    if (isStartedUserImpactLine(line)) {
       entryCount += 1;
-      currentEntryState = "user";
     }
 
-    if (/^\s+Technik:\s+\S/.test(line)) {
-      if (currentEntryState !== "user") {
-        errors.push(
-          `Abschnitt ${section.name}: "Technik:" darf nur direkt auf einen "Nutzerwirkung:"-Eintrag folgen.`
-        );
-      } else {
-        currentEntryState = "tech";
-      }
-    }
+    currentEntryState = validateSectionEntryLine(section.name, line, currentEntryState, errors);
   }
 
   if (currentEntryState === "user") {
