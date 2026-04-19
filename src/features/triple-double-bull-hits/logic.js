@@ -288,7 +288,7 @@ function findBestRoleNode(rowNode, matcher) {
   let bestRank = -Infinity;
 
   candidates.forEach((candidate) => {
-    if (!candidate || !candidate.classList) {
+    if (!candidate?.classList) {
       return;
     }
     const candidateText = normalizeRawText(candidate.textContent || "");
@@ -342,7 +342,7 @@ function deriveHitScore(hitMeta) {
 }
 
 function clearInlineAnimationStyles(node) {
-  if (!node || !node.style) {
+  if (!node?.style) {
     return;
   }
 
@@ -370,7 +370,7 @@ function clearTextRoles(rowNode, roleStateByRow = null) {
   }
 
   [roleState.scoreNode, roleState.segmentNode].forEach((node) => {
-    if (!node || !node.classList) {
+    if (!node?.classList) {
       return;
     }
     node.classList.remove(HIT_SCORE_CLASS, HIT_SEGMENT_CLASS);
@@ -381,7 +381,7 @@ function clearTextRoles(rowNode, roleStateByRow = null) {
 }
 
 function annotateHitTextRoles(rowNode, hitMeta, roleStateByRow = null) {
-  if (!rowNode || !rowNode.classList) {
+  if (!rowNode?.classList) {
     return {
       scoreNode: null,
       segmentNode: null,
@@ -542,7 +542,7 @@ export function getHitMetaFromRow(rowNode) {
 }
 
 function isRowDecorated(rowNode, signatureByRow = null) {
-  if (!rowNode || !rowNode.classList) {
+  if (!rowNode?.classList) {
     return false;
   }
 
@@ -554,7 +554,7 @@ function isRowDecorated(rowNode, signatureByRow = null) {
 }
 
 function setExclusiveClass(rowNode, classNames, activeClassName) {
-  if (!rowNode || !rowNode.classList || !Array.isArray(classNames)) {
+  if (!rowNode?.classList || !Array.isArray(classNames)) {
     return;
   }
 
@@ -601,7 +601,7 @@ function clearBurstTriggerResetTimer(rowNode, triggerResetTimersByRow = null, wi
 }
 
 function scheduleBurstTriggerReset(rowNode, options = {}) {
-  if (!rowNode || !rowNode.classList) {
+  if (!rowNode?.classList) {
     return;
   }
 
@@ -655,7 +655,7 @@ function stopRowAnimation(rowNode, options = {}) {
 }
 
 export function clearHitDecoration(rowNode, signatureByRow = null, options = {}) {
-  if (!rowNode || !rowNode.classList) {
+  if (!rowNode?.classList) {
     return false;
   }
   const hadDecoration = isRowDecorated(rowNode, signatureByRow);
@@ -760,31 +760,33 @@ function addTimelineStep(timeline, step, offset = 0) {
   }
 }
 
-function buildBurstTimeline(animeRef, context = {}) {
-  if (typeof animeRef !== "function") {
-    return null;
-  }
+function appendBurstTimelineSteps(timeline, steps) {
+  (Array.isArray(steps) ? steps : []).forEach(({ step, offset = 0 }) => {
+    addTimelineStep(timeline, step, offset);
+  });
+}
 
+function getBurstTimelineTargets(context = {}) {
   const rowNode = context.rowNode || null;
-  const scoreNode = context.scoreNode || null;
-  const segmentNode = context.segmentNode || null;
-  const animationStyle = String(context.animationStyle || "").trim().toLowerCase();
-  if (!rowNode) {
-    return null;
-  }
+  return {
+    rowNode,
+    scoreTarget: context.scoreNode || rowNode,
+    segmentTarget: context.segmentNode || rowNode,
+  };
+}
 
-  const timeline = createTimeline(animeRef);
+function getBurstTimelineSteps(context = {}) {
+  const { rowNode, scoreTarget, segmentTarget } = getBurstTimelineTargets(context);
   const reducedMotion = Boolean(context.reducedMotion);
   const baseDuration = reducedMotion ? 180 : 520;
   const spinY = reducedMotion ? 18 : 360;
   const spinX = reducedMotion ? -22 : -360;
   const heavyWobble = reducedMotion ? 3 : 11;
-
-  switch (animationStyle) {
-    case "impact-pop":
-      addTimelineStep(
-        timeline,
-        {
+  const builders = {
+    "impact-pop": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? baseDuration : 620,
           easing: "easeOutBack(1.7)",
@@ -795,12 +797,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0, rotateZ: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? baseDuration - 40 : 540,
           easing: "easeOutBack(2.1)",
           keyframes: [
@@ -809,12 +810,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0, letterSpacing: "0em" },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 70,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 200 : 360,
           easing: "easeOutQuad",
           keyframes: [
@@ -822,13 +822,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateY: 0, opacity: 1, letterSpacing: "0.1em" },
           ],
         },
-        70
-      );
-      break;
-    case "shockwave":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    shockwave: () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 260 : 720,
           easing: "easeOutExpo",
@@ -839,12 +838,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 240 : 500,
           easing: "easeOutExpo",
           keyframes: [
@@ -852,12 +850,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, letterSpacing: "0em", translateY: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 90,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 220 : 420,
           easing: "easeOutQuad",
           keyframes: [
@@ -865,13 +862,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, opacity: 1, translateY: 0 },
           ],
         },
-        90
-      );
-      break;
-    case "sweep-shine":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "sweep-shine": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 240 : 660,
           easing: "easeOutCubic",
@@ -881,12 +877,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, skewX: "0deg", scale: 1 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 60,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 430,
           easing: "easeOutQuad",
           keyframes: [
@@ -894,12 +889,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, scale: 1, letterSpacing: "0em" },
           ],
         },
-        60
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 110,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 180 : 320,
           easing: "easeOutQuad",
           keyframes: [
@@ -907,13 +901,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, opacity: 1, letterSpacing: "0.1em" },
           ],
         },
-        110
-      );
-      break;
-    case "electric-arc":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "electric-arc": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 300 : 760,
           easing: "easeOutExpo",
@@ -944,12 +937,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 260 : 620,
           easing: "linear",
           keyframes: [
@@ -974,12 +966,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateX: 0, letterSpacing: "0.01em", filter: "brightness(1.03)" },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 95,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 220 : 440,
           easing: "linear",
           keyframes: [
@@ -998,13 +989,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, letterSpacing: "0.1em", opacity: 1 },
           ],
         },
-        95
-      );
-      break;
-    case "neon-pulse":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "neon-pulse": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 260 : 720,
           easing: "easeOutExpo",
@@ -1015,12 +1005,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 240 : 560,
           easing: "easeOutExpo",
           keyframes: [
@@ -1028,12 +1017,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, opacity: 1, letterSpacing: "0em" },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 80,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 220 : 500,
           easing: "easeOutSine",
           keyframes: [
@@ -1041,13 +1029,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, opacity: 1, translateY: 0 },
           ],
         },
-        80
-      );
-      break;
-    case "snap-bounce":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "snap-bounce": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 220 : 620,
           easing: "easeOutElastic(1, .55)",
@@ -1057,12 +1044,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateY: 0, scale: 1 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 420,
           easing: "easeOutBack(2.2)",
           keyframes: [
@@ -1070,13 +1056,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateY: 0, scale: 1, rotateZ: 0 },
           ],
         },
-        0
-      );
-      break;
-    case "card-slam":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "card-slam": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 260 : 760,
           easing: "easeOutExpo",
@@ -1086,12 +1071,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { rotateX: 0, translateY: 0, scale: 1 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 25,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 460,
           easing: "easeOutBack(2.3)",
           keyframes: [
@@ -1100,12 +1084,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateY: 0, scale: 1, rotateZ: 0 },
           ],
         },
-        25
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 85,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 180 : 340,
           easing: "easeOutQuad",
           keyframes: [
@@ -1113,13 +1096,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateY: 0, opacity: 1, letterSpacing: "0.1em" },
           ],
         },
-        85
-      );
-      break;
-    case "signal-blink":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "signal-blink": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 220 : 620,
           easing: "linear",
@@ -1130,12 +1112,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { opacity: 1, translateX: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 200 : 520,
           easing: "linear",
           keyframes: [
@@ -1145,12 +1126,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateX: 0, rotateZ: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 80,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 180 : 400,
           easing: "linear",
           keyframes: [
@@ -1159,13 +1139,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, letterSpacing: "0.1em" },
           ],
         },
-        80
-      );
-      break;
-    case "stagger-wave":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "stagger-wave": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 280 : 720,
           easing: "easeOutQuart",
@@ -1175,22 +1154,23 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, rotateZ: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 420,
           easing: "easeOutBack(1.8)",
-          keyframes: [{ translateY: -10, scale: 1.2, rotateZ: -1 }, { translateY: 0, scale: 1, rotateZ: 0 }],
+          keyframes: [
+            { translateY: -10, scale: 1.2, rotateZ: -1 },
+            { translateY: 0, scale: 1, rotateZ: 0 },
+          ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 120,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 220 : 400,
           easing: "easeOutBack(1.5)",
           keyframes: [
@@ -1198,13 +1178,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateY: 0, scale: 1, letterSpacing: "0.1em" },
           ],
         },
-        120
-      );
-      break;
-    case "flip-edge":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "flip-edge": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 300 : 860,
           easing: "easeOutExpo",
@@ -1214,12 +1193,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { rotateY: 0, scale: 1, translateY: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 45,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 460,
           easing: "easeOutBack(2.1)",
           keyframes: [
@@ -1227,12 +1205,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0, rotateZ: 0 },
           ],
         },
-        45
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 90,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 180 : 360,
           easing: "easeOutQuad",
           keyframes: [
@@ -1240,24 +1217,22 @@ function buildBurstTimeline(animeRef, context = {}) {
             { letterSpacing: "0.1em", translateY: 0, opacity: 1 },
           ],
         },
-        90
-      );
-      break;
-    case "outline-trace":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "outline-trace": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 220 : 640,
           easing: "easeOutCubic",
           keyframes: [{ scale: 1.04, translateY: -2 }, { scale: 1, translateY: 0 }],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 420,
           easing: "easeOutQuad",
           keyframes: [
@@ -1265,12 +1240,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { letterSpacing: "0em", scale: 1, translateY: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 90,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 180 : 340,
           easing: "easeOutQuad",
           keyframes: [
@@ -1278,13 +1252,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { letterSpacing: "0.04em", opacity: 1, translateX: 0 },
           ],
         },
-        90
-      );
-      break;
-    case "charge-release":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "charge-release": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 280 : 860,
           easing: "easeOutExpo",
@@ -1295,12 +1268,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 60,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 240 : 620,
           easing: "easeOutBack(2)",
           keyframes: [
@@ -1309,12 +1281,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0, letterSpacing: "0em" },
           ],
         },
-        60
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 130,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 220 : 460,
           easing: "easeOutQuad",
           keyframes: [
@@ -1322,13 +1293,12 @@ function buildBurstTimeline(animeRef, context = {}) {
             { scale: 1, translateY: 0, opacity: 1, letterSpacing: "0.1em" },
           ],
         },
-        130
-      );
-      break;
-    case "alternate-flick":
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    "alternate-flick": () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: reducedMotion ? 260 : 720,
           easing: "easeOutQuart",
@@ -1339,12 +1309,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, rotateZ: 0 },
           ],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 20,
+        step: {
+          targets: scoreTarget,
           duration: reducedMotion ? 220 : 480,
           easing: "easeOutBack(1.9)",
           keyframes: [
@@ -1352,12 +1321,11 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, scale: 1, rotateZ: 0 },
           ],
         },
-        20
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: segmentNode || rowNode,
+      },
+      {
+        offset: 90,
+        step: {
+          targets: segmentTarget,
           duration: reducedMotion ? 200 : 420,
           easing: "easeOutBack(1.6)",
           keyframes: [
@@ -1365,32 +1333,46 @@ function buildBurstTimeline(animeRef, context = {}) {
             { translateX: 0, opacity: 1, letterSpacing: "0.1em" },
           ],
         },
-        90
-      );
-      break;
-    default:
-      addTimelineStep(
-        timeline,
-        {
+      },
+    ],
+    default: () => [
+      {
+        offset: 0,
+        step: {
           targets: rowNode,
           duration: baseDuration,
           easing: "easeOutBack(1.7)",
           keyframes: [{ scale: 1.075 }, { scale: 1 }],
         },
-        0
-      );
-      addTimelineStep(
-        timeline,
-        {
-          targets: scoreNode || rowNode,
+      },
+      {
+        offset: 0,
+        step: {
+          targets: scoreTarget,
           duration: 360,
           easing: "easeOutQuad",
           keyframes: [{ scale: 1.14 }, { scale: 1 }],
         },
-        0
-      );
-      break;
+      },
+    ],
+  };
+  const style = String(context.animationStyle || "").trim().toLowerCase();
+  const buildSteps = builders[style] || builders.default;
+  return buildSteps();
+}
+
+function buildBurstTimeline(animeRef, context = {}) {
+  if (typeof animeRef !== "function") {
+    return null;
   }
+
+  const rowNode = context.rowNode || null;
+  if (!rowNode) {
+    return null;
+  }
+
+  const timeline = createTimeline(animeRef);
+  appendBurstTimelineSteps(timeline, getBurstTimelineSteps(context));
 
   if (typeof timeline.play === "function") {
     try {
@@ -1462,7 +1444,7 @@ export function applyHitDecoration(rowNode, options = {}) {
   const animeRef = options.animeRef || null;
   const rowText = normalizeRawText(options.rowText || rowNode?.textContent || "");
 
-  if (!rowNode || !rowNode.classList || !hitMeta) {
+  if (!rowNode?.classList || !hitMeta) {
     return {
       applied: false,
       replayed: false,

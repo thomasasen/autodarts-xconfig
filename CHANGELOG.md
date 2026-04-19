@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; `cricket-grid-fx` und `triple-double-bull-hits` laufen in dieser Sonar-Welle weiter auf denselben Grid-, Delta-, Badge-, Burst- und Hit-Dekorationspfaden, drücken ihre großen internen Auswahlschleifen und Animations-Dispatcher aber klarer getrennt aus.
+  Technik: `cricket-grid-fx/logic` zieht Zell-Descriptor-Selektion, Badge-/Label-Bindung sowie Row-Anwendung in explizite Helper, ohne Grid-Discovery-, Stable-Row-, Delta-, Wave- oder Merged-Owner-Semantik zu ändern; `triple-double-bull-hits/logic` ersetzt den großen Burst-Timeline-Switch durch stylebasierte Step-Builder und bereinigt rein mechanische Guard-Pfade per Optional-Chaining, sodass Throw-Klassifikation, Burst-Animationen und Dataset-/Role-Verträge fachlich unverändert bleiben. Die bestehenden Cricket- und Hit-Regressionen bleiben dabei der Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; xConfig-Shell und TV-Board-Zoom laufen in dieser Sonar-Welle weiter auf denselben fachlichen Verträgen, trennen interne Options-, Lifecycle- und Intent-Pfade aber klarer.
   Technik: `xconfig-ui/action-controller`, `lifecycle-controller` und `render-controller` ziehen ihre lange Options-Normalisierung in kleine Context-Builder, und `tv-board-zoom/computeZoomIntent(...)` zerlegt Boundary-/Turn-Reset, Checkout-Kontext, Sticky-/Manual-Pause-Logik sowie Intent-Auswahl in explizite Helfer, ohne die öffentlichen Controller-APIs oder die Checkout-/Setup-/Hold-Semantik umzubauen; die bestehenden Shell-, Action- und TV-Zoom-Regressionen bleiben dabei der fachliche Schutz gegen Drift.
 

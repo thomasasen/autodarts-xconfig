@@ -99,33 +99,41 @@ function resolveGridRoot(documentRef, cricketRules, targetOrder) {
   let bestRoot = null;
   let bestScore = 0;
 
-  GRID_ROOT_SELECTORS.forEach((selector) => {
-    queryAll(documentRef, selector).forEach((candidate) => {
+  for (const selector of GRID_ROOT_SELECTORS) {
+    for (const candidate of queryAll(documentRef, selector)) {
       if (!isVisible(candidate)) {
-        return;
+        continue;
       }
-      const labelHits = new Set();
-      LABEL_NODE_SELECTORS.forEach((labelSelector) => {
-        queryAll(candidate, labelSelector).forEach((node) => {
-          if (isInsideTurnPreview(node) || isProtectedCricketHostNode(node)) {
-            return;
-          }
-          const normalized = normalizeCricketLabelNode(cricketRules, node);
-          if (normalized && targetSet.has(normalized)) {
-            labelHits.add(normalized);
-          }
-        });
-      });
 
+      const labelHits = collectGridRootLabelHits(candidate, cricketRules, targetSet);
       const score = labelHits.size * 100 + (candidate.tagName === "TABLE" ? 10 : 0);
       if (score > bestScore) {
         bestScore = score;
         bestRoot = candidate;
       }
-    });
-  });
+    }
+  }
 
   return bestRoot;
+}
+
+function collectGridRootLabelHits(candidate, cricketRules, targetSet) {
+  const labelHits = new Set();
+
+  for (const labelSelector of LABEL_NODE_SELECTORS) {
+    for (const node of queryAll(candidate, labelSelector)) {
+      if (isInsideTurnPreview(node) || isProtectedCricketHostNode(node)) {
+        continue;
+      }
+
+      const normalized = normalizeCricketLabelNode(cricketRules, node);
+      if (normalized && targetSet.has(normalized)) {
+        labelHits.add(normalized);
+      }
+    }
+  }
+
+  return labelHits;
 }
 
 function collectLabelNodes(gridRoot, cricketRules, targetSet) {
@@ -302,7 +310,7 @@ function toggleClass(node, className, enabled) {
 }
 
 function clearCellClasses(node) {
-  if (!node || !node.classList) {
+  if (!node?.classList) {
     return;
   }
   node.classList.remove(
@@ -319,7 +327,7 @@ function clearCellClasses(node) {
 }
 
 function clearLabelClasses(node) {
-  if (!node || !node.classList) {
+  if (!node?.classList) {
     return;
   }
   node.classList.remove(
@@ -492,7 +500,7 @@ function normalizePresentationToken(value) {
 }
 
 function setLabelStateClasses(labelNode, stateToken) {
-  if (!labelNode || !labelNode.classList) {
+  if (!labelNode?.classList) {
     return;
   }
 
@@ -525,7 +533,7 @@ function setLabelStateClasses(labelNode, stateToken) {
 }
 
 function setBadgeStateClasses(badgeNode, stateToken) {
-  if (!badgeNode || !badgeNode.classList) {
+  if (!badgeNode?.classList) {
     return;
   }
 
@@ -617,9 +625,7 @@ function triggerMarkProgress(state, cellNode, marks, visualConfig) {
   forceAnimationReflow(targetNode);
   targetNode.classList.add(MARK_PROGRESS_CLASS);
   const clampedMarks = Math.max(0, Math.min(3, Number(marks) || 0));
-  targetNode.classList.add(
-    clampedMarks <= 1 ? MARK_L1_CLASS : clampedMarks === 2 ? MARK_L2_CLASS : MARK_L3_CLASS
-  );
+  targetNode.classList.add(resolveMarkProgressLevelClass(clampedMarks));
   state.trackedProgressTargets.add(targetNode);
 
   const timeoutRef =
@@ -633,6 +639,16 @@ function triggerMarkProgress(state, cellNode, marks, visualConfig) {
   }, 520);
 
   state.timeoutHandles.add(handle);
+}
+
+function resolveMarkProgressLevelClass(clampedMarks) {
+  if (clampedMarks <= 1) {
+    return MARK_L1_CLASS;
+  }
+  if (clampedMarks === 2) {
+    return MARK_L2_CLASS;
+  }
+  return MARK_L3_CLASS;
 }
 
 function triggerRowWave(state, row, visualConfig) {
@@ -650,7 +666,7 @@ function triggerRowWave(state, row, visualConfig) {
 }
 
 function applyRootCssVars(gridRoot, visualConfig) {
-  if (!gridRoot || !gridRoot.style || !visualConfig) {
+  if (!gridRoot?.style || !visualConfig) {
     return;
   }
 
@@ -689,6 +705,16 @@ function getRowNode(labelNode) {
     labelNode ||
     null
   );
+}
+
+function resolveGridFxIndexOffset(normalizedCells, labelCellIncluded, playerStateCount) {
+  if (normalizedCells.length >= playerStateCount) {
+    return 0;
+  }
+  if (labelCellIncluded) {
+    return 0;
+  }
+  return Math.max(0, playerStateCount - normalizedCells.length);
 }
 
 function applyCellPresentationClasses(cellNode, presentation, visualConfig) {
@@ -747,6 +773,1025 @@ export function createCricketGridFxState(windowRef = null) {
   };
 }
 
+function initializeCricketGridFxDebugStats(debugStats) {
+  if (!debugStats) {
+    return;
+  }
+
+  debugStats.status = "init";
+  debugStats.rowCount = 0;
+  debugStats.stateTargetCount = 0;
+  debugStats.labelCellCount = 0;
+  debugStats.badgeCount = 0;
+  debugStats.scoringRowCount = 0;
+  debugStats.offenseRowCount = 0;
+  debugStats.dangerRowCount = 0;
+  debugStats.pressureRowCount = 0;
+  debugStats.scoreCellCount = 0;
+  debugStats.rowsWithoutPlayerCells = 0;
+  debugStats.activeColumnResolvedCount = 0;
+  debugStats.activeColumnMissingCount = 0;
+  debugStats.activeColumnMissingLabels = [];
+  debugStats.rowWaveDeltaCount = 0;
+  debugStats.rowWaveTacticalCount = 0;
+  debugStats.badgeFallbackCount = 0;
+  debugStats.turnTokenChanged = false;
+}
+
+function setCricketGridFxFailure(state, debugStats, status) {
+  clearCricketGridFxState(state);
+  if (debugStats) {
+    debugStats.status = status;
+  }
+}
+
+function computeGridFxRowIntegrityScore(candidateRow, cricketRules, targetSet) {
+  const label = String(candidateRow?.label || "");
+  if (!label) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const labelNode = candidateRow?.labelNode || null;
+  const labelCell = candidateRow?.labelCell || null;
+  const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
+  const playerCells = Array.isArray(candidateRow?.playerCells)
+    ? candidateRow.playerCells.filter(Boolean)
+    : [];
+  const rowContainer = rowNode || labelCell?.parentElement || labelNode?.parentElement || null;
+  let score = 0;
+
+  if (labelCell) {
+    score += 2;
+  }
+  if (labelNode) {
+    score += 2;
+  }
+  if (
+    labelCell &&
+    labelNode &&
+    typeof labelCell.contains === "function" &&
+    labelCell.contains(labelNode)
+  ) {
+    score += 2;
+  }
+  if (labelCell && playerCells.includes(labelCell)) {
+    score += 2;
+  }
+
+  playerCells.forEach((cellNode) => {
+    if (!cellNode) {
+      return;
+    }
+    if (cellNode === labelCell) {
+      score += 1;
+      return;
+    }
+    if (rowContainer && typeof rowContainer.contains === "function" && rowContainer.contains(cellNode)) {
+      score += 2;
+    }
+
+    const candidateLabel = normalizeCricketLabelValue(
+      cricketRules,
+      cellNode.getAttribute?.("data-row-label") ||
+        cellNode.getAttribute?.("data-target-label") ||
+        cellNode.textContent ||
+        ""
+    );
+    if (candidateLabel && candidateLabel !== label && targetSet.has(candidateLabel)) {
+      score -= 4;
+    }
+  });
+
+  return score;
+}
+
+function buildGridFxRowCellsFromRowNode(candidateRow, expectedPlayerCount, cricketRules, targetSet) {
+  const labelNode = candidateRow?.labelNode || null;
+  const label = String(candidateRow?.label || "");
+  const labelCell = candidateRow?.labelCell || null;
+  const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
+  if (!rowNode || typeof rowNode.querySelectorAll !== "function") {
+    return [];
+  }
+
+  const tagName = String(rowNode?.tagName || "").toUpperCase();
+  const isSemanticRow =
+    tagName === "TR" || String(rowNode?.getAttribute?.("role") || "").toLowerCase() === "row";
+  if (!isSemanticRow) {
+    const discoveredLabels = new Set();
+    queryAll(
+      rowNode,
+      "[data-row-label], [data-target-label], .label-cell, .ad-ext-crfx-badge, .chakra-text, p, th, td, div, span"
+    ).forEach((node) => {
+      const normalized = normalizeCricketLabelValue(
+        cricketRules,
+        node?.getAttribute?.("data-row-label") ||
+          node?.getAttribute?.("data-target-label") ||
+          node?.textContent ||
+          ""
+      );
+      if (normalized && targetSet.has(normalized)) {
+        discoveredLabels.add(normalized);
+      }
+    });
+    if (discoveredLabels.size > 1 || (discoveredLabels.size === 1 && !discoveredLabels.has(label))) {
+      return [];
+    }
+  }
+
+  const rowCellCandidates = queryAll(
+    rowNode,
+    "td, th, [role='cell'], .player-cell, [data-player-index], [data-marks]"
+  ).filter((cellNode) => {
+    if (!cellNode || cellNode === labelNode || cellNode === labelCell) {
+      return false;
+    }
+    if (isInsideTurnPreview(cellNode)) {
+      return false;
+    }
+    return true;
+  });
+
+  return maybeIncludeLabelCellAsPlayerCell(
+    rowCellCandidates,
+    labelCell,
+    expectedPlayerCount
+  );
+}
+
+function resolveGridFxBestPlayerCells(candidateRow, expectedPlayerCount, cricketRules, targetSet) {
+  const labelNode = candidateRow?.labelNode || null;
+  const labelCell = candidateRow?.labelCell || null;
+  const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
+  const baseCells = maybeIncludeLabelCellAsPlayerCell(
+    Array.isArray(candidateRow?.playerCells) ? candidateRow.playerCells.filter(Boolean) : [],
+    labelCell,
+    expectedPlayerCount
+  );
+  const rowCells = buildGridFxRowCellsFromRowNode(
+    { label: candidateRow?.label || "", labelNode, labelCell, rowNode },
+    expectedPlayerCount,
+    cricketRules,
+    targetSet
+  );
+  if (!rowCells.length) {
+    return baseCells;
+  }
+
+  const baseScore = computeGridFxRowIntegrityScore({
+    label: candidateRow?.label || "",
+    labelNode,
+    labelCell,
+    rowNode,
+    playerCells: baseCells,
+  }, cricketRules, targetSet);
+  const rowScore = computeGridFxRowIntegrityScore({
+    label: candidateRow?.label || "",
+    labelNode,
+    labelCell,
+    rowNode,
+    playerCells: rowCells,
+  }, cricketRules, targetSet);
+
+  const expectedCount = Number.isFinite(Number(expectedPlayerCount))
+    ? Math.max(0, Math.round(Number(expectedPlayerCount)))
+    : 0;
+  const rowMeetsExpected = expectedCount > 0 ? rowCells.length >= expectedCount : rowCells.length > 0;
+  const baseMeetsExpected = expectedCount > 0 ? baseCells.length >= expectedCount : baseCells.length > 0;
+  if ((rowMeetsExpected && !baseMeetsExpected) || rowScore > baseScore) {
+    return rowCells;
+  }
+
+  return baseCells;
+}
+
+function hasConnectedGridFxAnchor(normalizedRow) {
+  const isConnectedAnchor = (node) => Boolean(node && node.isConnected !== false);
+  return (
+    isConnectedAnchor(normalizedRow.labelNode) ||
+    isConnectedAnchor(normalizedRow.labelCell) ||
+    isConnectedAnchor(normalizedRow.rowNode)
+  );
+}
+
+function computeGridFxAnchorScore(row) {
+  return (row.labelCell ? 1 : 0) + (row.labelNode ? 1 : 0) + (row.badgeNode ? 1 : 0);
+}
+
+function countGridFxIndexedCells(row) {
+  return Array.isArray(row.playerCellsByIndex)
+    ? row.playerCellsByIndex.filter(Boolean).length
+    : 0;
+}
+
+function shouldReplaceGridFxRow(existing, normalizedRow, expectedPlayerCount, cricketRules, targetSet) {
+  const existingPlayerCellCount = Array.isArray(existing.playerCells)
+    ? existing.playerCells.length
+    : 0;
+  const nextPlayerCellCount = normalizedRow.playerCells.length;
+  const existingMeetsExpected =
+    expectedPlayerCount > 0 && existingPlayerCellCount >= expectedPlayerCount;
+  const nextMeetsExpected =
+    expectedPlayerCount > 0 && nextPlayerCellCount >= expectedPlayerCount;
+  const existingAnchorScore = computeGridFxAnchorScore(existing);
+  const nextAnchorScore = computeGridFxAnchorScore(normalizedRow);
+  const existingIndexedCount = countGridFxIndexedCells(existing);
+  const nextIndexedCount = countGridFxIndexedCells(normalizedRow);
+  const existingIntegrityScore = computeGridFxRowIntegrityScore(existing, cricketRules, targetSet);
+  const nextIntegrityScore = computeGridFxRowIntegrityScore(normalizedRow, cricketRules, targetSet);
+
+  return (
+    (nextMeetsExpected && !existingMeetsExpected) ||
+    (nextIndexedCount > existingIndexedCount) ||
+    (!existing.labelCell && Boolean(normalizedRow.labelCell)) ||
+    (!existing.badgeNode && Boolean(normalizedRow.badgeNode)) ||
+    (existingPlayerCellCount === 0 && nextPlayerCellCount > 0) ||
+    (nextPlayerCellCount > existingPlayerCellCount) ||
+    (nextAnchorScore > existingAnchorScore && nextIntegrityScore >= existingIntegrityScore) ||
+    (nextIntegrityScore > existingIntegrityScore)
+  );
+}
+
+function upsertGridFxRow(rowByLabel, candidateRow, context = {}) {
+  const label = String(candidateRow?.label || "");
+  if (!label || !context.targetSet?.has(label)) {
+    return;
+  }
+
+  const stateEntry = context.renderState?.stateMap?.get(label);
+  const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
+    ? stateEntry.cellStates.length
+    : 0;
+  const resolvedLabelNode = candidateRow?.labelNode || candidateRow?.badgeNode || null;
+  const resolvedLabelCell =
+    candidateRow?.labelCell ||
+    (resolvedLabelNode
+      ? resolveLabelCell({
+          labelNode: resolvedLabelNode,
+          cricketRules: context.cricketRules,
+          targetSet: context.targetSet,
+          fallbackLabel: label,
+          isInsideTurnPreview,
+          queryAll,
+        })
+      : null);
+  const resolvedBadgeNode =
+    candidateRow?.badgeNode ||
+    (resolvedLabelCell
+      ? resolveBadgeNode({
+          labelNode: resolvedLabelNode,
+          labelCell: resolvedLabelCell,
+          cricketRules: context.cricketRules,
+          label,
+          queryAll,
+        })
+      : null);
+
+  const normalizedRow = {
+    label,
+    labelNode: resolvedLabelNode,
+    labelCell: resolvedLabelCell,
+    badgeNode: resolvedBadgeNode,
+    rowNode:
+      candidateRow?.rowNode ||
+      getRowNode(candidateRow?.labelNode || candidateRow?.labelCell || null),
+    playerCells: Array.isArray(candidateRow?.playerCells)
+      ? candidateRow.playerCells.filter(Boolean)
+      : [],
+    playerCellsByIndex: Array.isArray(candidateRow?.playerCellsByIndex)
+      ? candidateRow.playerCellsByIndex.map((cell) => (cell && cell.isConnected !== false ? cell : null))
+      : [],
+  };
+  normalizedRow.playerCells = resolveGridFxBestPlayerCells(
+    normalizedRow,
+    expectedPlayerCount,
+    context.cricketRules,
+    context.targetSet
+  );
+
+  if (!hasConnectedGridFxAnchor(normalizedRow)) {
+    return;
+  }
+  if (
+    isInsideTurnPreview(normalizedRow.labelNode) ||
+    isInsideTurnPreview(normalizedRow.labelCell) ||
+    isInsideTurnPreview(normalizedRow.rowNode)
+  ) {
+    return;
+  }
+
+  const existing = rowByLabel.get(label);
+  if (!existing) {
+    rowByLabel.set(label, normalizedRow);
+    return;
+  }
+
+  if (shouldReplaceGridFxRow(existing, normalizedRow, expectedPlayerCount, context.cricketRules, context.targetSet)) {
+    rowByLabel.set(label, normalizedRow);
+  }
+}
+
+function resolveGridFxRows(options = {}) {
+  const targetOrder = Array.isArray(options.targetOrder) ? options.targetOrder : [];
+  const targetSet = options.targetSet instanceof Set ? options.targetSet : new Set(targetOrder);
+  const rowByLabel = new Map();
+  const context = {
+    cricketRules: options.cricketRules,
+    targetSet,
+    renderState: options.renderState,
+  };
+
+  (Array.isArray(options.sourceRows) ? options.sourceRows : []).forEach((row) => {
+    upsertGridFxRow(rowByLabel, row, context);
+  });
+
+  if (options.stableRowsByLabel instanceof Map) {
+    targetOrder.forEach((label) => {
+      const stableRow = options.stableRowsByLabel.get(label);
+      if (stableRow) {
+        upsertGridFxRow(rowByLabel, stableRow, context);
+      }
+    });
+  }
+
+  collectLabelNodes(options.gridRoot, options.cricketRules, targetSet).forEach((entry) => {
+    const label = String(entry?.label || "");
+    if (!label || !targetSet.has(label)) {
+      return;
+    }
+
+    const stateEntry = options.renderState?.stateMap?.get(label);
+    const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
+      ? stateEntry.cellStates.length
+      : 0;
+    const labelNode = entry?.labelNode || null;
+    const labelCell = resolveLabelCell(labelNode, options.cricketRules, targetSet, label);
+    const fallbackPlayerCells = collectPlayerCells(labelNode, options.cricketRules, targetSet, {
+      expectedPlayerCount,
+    });
+
+    upsertGridFxRow(rowByLabel, {
+      label,
+      labelNode,
+      labelCell,
+      badgeNode: entry?.badgeNode || resolveBadgeNode(labelNode, labelCell, options.cricketRules, label),
+      rowNode: getRowNode(labelNode || labelCell || null),
+      playerCells: fallbackPlayerCells,
+    }, context);
+  });
+
+  return targetOrder
+    .map((label) => rowByLabel.get(label))
+    .filter(Boolean);
+}
+
+function buildGridFxIndexedCellDescriptors(playerCellsByIndex, playerStateCount) {
+  return Array.isArray(playerCellsByIndex)
+    ? playerCellsByIndex
+        .map((cellNode, playerIndex) => {
+          return { cellNode, playerIndex };
+        })
+        .filter((entry) => {
+          return (
+            entry.cellNode?.classList &&
+            Number.isFinite(entry.playerIndex) &&
+            entry.playerIndex >= 0 &&
+            entry.playerIndex < playerStateCount
+          );
+        })
+    : [];
+}
+
+function buildGridFxCellDescriptors(cells, labelCellNode, playerStateCount) {
+  const normalizedCells = Array.isArray(cells) ? cells.filter(Boolean) : [];
+  if (!normalizedCells.length || playerStateCount <= 0) {
+    return [];
+  }
+
+  const labelCellIncluded = Boolean(labelCellNode) && normalizedCells.includes(labelCellNode);
+  const indexOffset = resolveGridFxIndexOffset(
+    normalizedCells,
+    labelCellIncluded,
+    playerStateCount
+  );
+  const explicitPlayerIndexes = normalizedCells.map((cellNode) => {
+    const explicitIndex = readCellPlayerIndex(cellNode);
+    return Number.isFinite(explicitIndex) ? Math.round(explicitIndex) : null;
+  });
+  const explicitIndexValues = explicitPlayerIndexes.filter((value) => Number.isFinite(value));
+  const explicitCoverageComplete =
+    normalizedCells.length > 0 && explicitIndexValues.length === normalizedCells.length;
+  const explicitUnique = new Set(explicitIndexValues).size === explicitIndexValues.length;
+  const explicitInBounds = explicitIndexValues.every((value) => {
+    return value >= 0 && value < playerStateCount;
+  });
+  const explicitRespectsShortfall =
+    normalizedCells.length >= playerStateCount ||
+    explicitIndexValues.every((value) => value >= indexOffset);
+  const useExplicitPlayerIndexes =
+    explicitCoverageComplete &&
+    explicitUnique &&
+    explicitInBounds &&
+    explicitRespectsShortfall;
+
+  return normalizedCells
+    .map((cellNode, index) => {
+      const explicitPlayerIndex = explicitPlayerIndexes[index];
+      const playerIndex =
+        useExplicitPlayerIndexes && Number.isFinite(explicitPlayerIndex)
+          ? explicitPlayerIndex
+          : index + indexOffset;
+      return {
+        cellNode,
+        playerIndex,
+      };
+    })
+    .filter((entry) => {
+      return (
+        entry.cellNode?.classList &&
+        Number.isFinite(entry.playerIndex) &&
+        entry.playerIndex >= 0 &&
+        entry.playerIndex < playerStateCount
+      );
+    });
+}
+
+function isGridFxCellInsideRow(cellNode, rowNode) {
+  if (!cellNode || !rowNode || typeof rowNode.contains !== "function") {
+    return true;
+  }
+  return rowNode === cellNode || rowNode.contains(cellNode);
+}
+
+function getGridFxDescriptorScore(options = {}) {
+  const descriptors = Array.isArray(options.descriptors) ? options.descriptors : [];
+  if (!descriptors.length) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const rowScoreNode = options.rowScoreNode || null;
+  const stateEntry = options.stateEntry || null;
+  const playerStateCount = Number(options.playerStateCount) || 0;
+  const activePlayerIndex = Number(options.activePlayerIndex);
+  const labelCellNode = options.labelCellNode || null;
+  const cricketRules = options.cricketRules || null;
+  const usedPlayerIndexes = new Set();
+  let score = 0;
+
+  descriptors.forEach((entry) => {
+    const cellNode = entry?.cellNode || null;
+    const playerIndex = Number(entry?.playerIndex);
+    if (!cellNode?.classList || !Number.isFinite(playerIndex)) {
+      score -= 4;
+      return;
+    }
+    if (!isGridFxCellInsideRow(cellNode, rowScoreNode)) {
+      score -= 6;
+    }
+    const expectedMarks = Number(stateEntry?.marksByPlayer?.[playerIndex] || 0);
+    const observedMarks = parseMarksValue(cellNode, cricketRules);
+    score -= Math.abs(expectedMarks - observedMarks) * 3;
+    if (expectedMarks === observedMarks) {
+      score += 2;
+    }
+    const explicitPlayerIndex = readCellPlayerIndex(cellNode);
+    if (Number.isFinite(explicitPlayerIndex) && explicitPlayerIndex === playerIndex) {
+      score += 4;
+    }
+    if (usedPlayerIndexes.has(playerIndex)) {
+      score -= 5;
+    }
+    usedPlayerIndexes.add(playerIndex);
+  });
+
+  if (labelCellNode) {
+    const labelDescriptor = descriptors.find((entry) => entry?.cellNode === labelCellNode);
+    if (labelDescriptor) {
+      score += Number(labelDescriptor.playerIndex) === 0 ? 2 : -2;
+    }
+  }
+
+  score -= Math.max(0, playerStateCount - usedPlayerIndexes.size) * 4;
+  if (
+    Number.isFinite(activePlayerIndex) &&
+    descriptors.some((entry) => Number(entry?.playerIndex) === activePlayerIndex)
+  ) {
+    score += 1;
+  }
+
+  return score;
+}
+
+function getGridFxDescriptorPreference(candidate, labelCellNode) {
+  if (!candidate || !Array.isArray(candidate.descriptors)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const descriptors = candidate.descriptors;
+  const allExplicit = descriptors.every((entry) => {
+    const explicit = readCellPlayerIndex(entry?.cellNode || null);
+    return Number.isFinite(explicit) && explicit === Number(entry?.playerIndex);
+  });
+  const labelAsOwner = Boolean(
+    labelCellNode &&
+      descriptors.some((entry) => {
+        return entry?.cellNode === labelCellNode && Number(entry?.playerIndex) === 0;
+      })
+  );
+
+  return (allExplicit ? 10 : 0) + (labelAsOwner ? 3 : 0) + (candidate.source === "strict" ? 1 : 0);
+}
+
+function selectGridFxCellDescriptors(options = {}) {
+  const row = options.row || {};
+  const stateEntry = options.stateEntry || null;
+  const cricketRules = options.cricketRules || null;
+  const labelCellNode = row.labelCell || row.labelNode || null;
+  const activePlayerIndex = Number(stateEntry?.activePlayerIndex);
+  const playerStateCount = Array.isArray(stateEntry?.cellStates)
+    ? stateEntry.cellStates.length
+    : 0;
+  const resolvedRowNode = row.rowNode || getRowNode(row.labelNode || row.labelCell || null);
+  const rowScoreNode =
+    resolvedRowNode &&
+    labelCellNode &&
+    typeof resolvedRowNode.contains === "function" &&
+    resolvedRowNode !== labelCellNode &&
+    resolvedRowNode.contains(labelCellNode)
+      ? resolvedRowNode
+      : null;
+  const indexedCellDescriptors = buildGridFxIndexedCellDescriptors(
+    row.playerCellsByIndex,
+    playerStateCount
+  );
+  const inferredRowCells = maybeIncludeLabelCellAsPlayerCell(
+    row.playerCells,
+    labelCellNode,
+    playerStateCount
+  );
+  const inferredCellDescriptors = buildGridFxCellDescriptors(
+    inferredRowCells,
+    labelCellNode,
+    playerStateCount
+  );
+  const strictRowCells = buildGridFxRowCellsFromRowNode(
+    {
+      label: row.label,
+      labelNode: row.labelNode || null,
+      labelCell: row.labelCell || null,
+      rowNode: resolvedRowNode,
+    },
+    playerStateCount,
+    cricketRules,
+    new Set([row.label])
+  );
+  const strictCellDescriptors = buildGridFxCellDescriptors(
+    strictRowCells,
+    labelCellNode,
+    playerStateCount
+  );
+  const candidateDescriptorSets = [];
+  if (indexedCellDescriptors.length) {
+    candidateDescriptorSets.push({
+      source: "indexed",
+      descriptors: indexedCellDescriptors,
+    });
+  }
+  if (inferredCellDescriptors.length) {
+    candidateDescriptorSets.push({
+      source: "inferred",
+      descriptors: inferredCellDescriptors,
+    });
+  }
+  if (strictCellDescriptors.length) {
+    candidateDescriptorSets.push({
+      source: "strict",
+      descriptors: strictCellDescriptors,
+    });
+  }
+
+  let selectedCandidate = null;
+  candidateDescriptorSets.forEach((candidate) => {
+    const descriptorScore = getGridFxDescriptorScore({
+      descriptors: candidate.descriptors,
+      rowScoreNode,
+      stateEntry,
+      playerStateCount,
+      activePlayerIndex,
+      labelCellNode,
+      cricketRules,
+    });
+    const descriptorPreference = getGridFxDescriptorPreference(candidate, labelCellNode);
+    if (!selectedCandidate || descriptorScore > selectedCandidate.descriptorScore) {
+      selectedCandidate = {
+        ...candidate,
+        descriptorScore,
+        descriptorPreference,
+      };
+      return;
+    }
+    if (
+      descriptorScore === selectedCandidate.descriptorScore &&
+      descriptorPreference > selectedCandidate.descriptorPreference
+    ) {
+      selectedCandidate = {
+        ...candidate,
+        descriptorScore,
+        descriptorPreference,
+      };
+    }
+  });
+
+  return {
+    labelCellNode,
+    activePlayerIndex,
+    playerStateCount,
+    resolvedRowNode,
+    cellDescriptors: Array.isArray(selectedCandidate?.descriptors)
+      ? selectedCandidate.descriptors
+      : [],
+  };
+}
+
+function resolveGridFxBadgeBinding(options = {}) {
+  const row = options.row || {};
+  const labelCellNode = options.labelCellNode || null;
+  const state = options.state || null;
+  let badgeNode =
+    row.badgeNode?.classList &&
+    row.badgeNode !== labelCellNode &&
+    row.badgeNode.isConnected !== false
+      ? row.badgeNode
+      : null;
+  const safeLabelCellNode = isProtectedCricketHostNode(labelCellNode) ? null : labelCellNode;
+  let badgeFallbackCount = 0;
+
+  if (isProtectedCricketHostNode(badgeNode)) {
+    badgeNode = null;
+  }
+  if (!badgeNode && safeLabelCellNode?.ownerDocument?.createElement) {
+    badgeNode = safeLabelCellNode.ownerDocument.createElement("span");
+    badgeNode.setAttribute(SYNTHETIC_BADGE_ATTRIBUTE, "true");
+    badgeNode.textContent = getDisplayLabel(row.label);
+    safeLabelCellNode.appendChild(badgeNode);
+    state.syntheticBadges.add(badgeNode);
+    if (typeof safeLabelCellNode.setAttribute === "function") {
+      safeLabelCellNode.setAttribute(HIDDEN_LABEL_ATTRIBUTE, "true");
+      state.hiddenLabelNodes.add(safeLabelCellNode);
+    }
+    badgeFallbackCount += 1;
+  }
+
+  return {
+    safeLabelCellNode,
+    badgeNode,
+    badgeFallbackCount,
+  };
+}
+
+function buildGridFxResolvedCellDescriptors(options = {}) {
+  const cellDescriptors = Array.isArray(options.cellDescriptors) ? options.cellDescriptors : [];
+  const labelCellNode = options.labelCellNode || null;
+  const resolvedRowNode = options.resolvedRowNode || null;
+  const rowPresentation = String(options.rowPresentation || "");
+  const playerStateCount = Number(options.playerStateCount) || 0;
+  const activePlayerIndex = Number(options.activePlayerIndex);
+  const uniqueByPlayerIndex = new Map();
+
+  cellDescriptors.forEach((entry) => {
+    const playerIndex = Number(entry?.playerIndex);
+    const cellNode = entry?.cellNode || null;
+    if (!cellNode?.classList || !Number.isFinite(playerIndex)) {
+      return;
+    }
+    if (!uniqueByPlayerIndex.has(playerIndex)) {
+      uniqueByPlayerIndex.set(playerIndex, {
+        cellNode,
+        playerIndex,
+      });
+      return;
+    }
+
+    const currentEntry = uniqueByPlayerIndex.get(playerIndex);
+    const currentInsideRow = isGridFxCellInsideRow(currentEntry?.cellNode || null, resolvedRowNode);
+    const nextInsideRow = isGridFxCellInsideRow(cellNode, resolvedRowNode);
+    if (nextInsideRow && !currentInsideRow) {
+      uniqueByPlayerIndex.set(playerIndex, {
+        cellNode,
+        playerIndex,
+      });
+    }
+  });
+
+  const mergedOwnerLabelColumn =
+    playerStateCount >= 2 &&
+    Boolean(labelCellNode?.classList) &&
+    typeof labelCellNode?.closest === "function" &&
+    !labelCellNode.closest("tr");
+  if (mergedOwnerLabelColumn) {
+    const hasOwnerLabelDescriptor = Array.from(uniqueByPlayerIndex.values()).some((entry) => {
+      return entry?.cellNode === labelCellNode;
+    });
+    const descriptorAtZero = uniqueByPlayerIndex.get(0);
+    const hasDescriptorAtOne = uniqueByPlayerIndex.has(1);
+    const descriptorAtZeroIsForeignCell =
+      descriptorAtZero?.cellNode && descriptorAtZero.cellNode !== labelCellNode;
+    if (!hasOwnerLabelDescriptor) {
+      if (
+        descriptorAtZeroIsForeignCell &&
+        !hasDescriptorAtOne &&
+        Number.isFinite(playerStateCount) &&
+        playerStateCount > 1
+      ) {
+        uniqueByPlayerIndex.delete(0);
+        uniqueByPlayerIndex.set(1, {
+          cellNode: descriptorAtZero.cellNode,
+          playerIndex: 1,
+        });
+      }
+
+      if (!uniqueByPlayerIndex.has(0)) {
+        uniqueByPlayerIndex.set(0, {
+          cellNode: labelCellNode,
+          playerIndex: 0,
+        });
+      }
+    }
+  }
+
+  if (
+    rowPresentation === "open" &&
+    Number.isFinite(activePlayerIndex) &&
+    activePlayerIndex === 0 &&
+    !uniqueByPlayerIndex.has(activePlayerIndex) &&
+    labelCellNode?.classList
+  ) {
+    uniqueByPlayerIndex.set(activePlayerIndex, {
+      cellNode: labelCellNode,
+      playerIndex: activePlayerIndex,
+    });
+  }
+
+  return {
+    mergedOwnerLabelColumn,
+    resolvedCellDescriptors: Array.from(uniqueByPlayerIndex.values())
+      .sort((left, right) => {
+        return Number(left?.playerIndex || 0) - Number(right?.playerIndex || 0);
+      })
+      .filter(({ cellNode }) => !isProtectedCricketHostNode(cellNode)),
+  };
+}
+
+function applyGridFxResolvedCells(options = {}) {
+  const stateEntry = options.stateEntry || null;
+  const state = options.state || null;
+  const safeLabelCellNode = options.safeLabelCellNode || null;
+  const resolvedCellDescriptors = Array.isArray(options.resolvedCellDescriptors)
+    ? options.resolvedCellDescriptors
+    : [];
+  const rowPresentation = String(options.rowPresentation || "");
+  const mergedOwnerLabelColumn = options.mergedOwnerLabelColumn === true;
+  const activePlayerIndex = Number(options.activePlayerIndex);
+  const diffEntry = options.diffEntry || null;
+  const visualConfig = options.visualConfig || null;
+  const enforceLabelOwnerOpen =
+    rowPresentation === "open" &&
+    mergedOwnerLabelColumn &&
+    Boolean(safeLabelCellNode?.classList);
+  let activeOpenAssigned = false;
+  let scoreCellCount = 0;
+
+  if (enforceLabelOwnerOpen) {
+    const labelActiveOpen = Number.isFinite(activePlayerIndex) && activePlayerIndex === 0;
+    applyCellPresentationClasses(safeLabelCellNode, "open", visualConfig);
+    toggleClass(safeLabelCellNode, ACTIVE_COLUMN_CLASS, labelActiveOpen);
+    toggleClass(safeLabelCellNode, OPEN_ACTIVE_CLASS, labelActiveOpen);
+    toggleClass(safeLabelCellNode, OPEN_INACTIVE_CLASS, !labelActiveOpen);
+    state.trackedCells.add(safeLabelCellNode);
+    activeOpenAssigned = labelActiveOpen;
+  }
+
+  resolvedCellDescriptors.forEach(({ cellNode, playerIndex }) => {
+    if (enforceLabelOwnerOpen && cellNode === safeLabelCellNode) {
+      return;
+    }
+    const normalizedPlayerIndex =
+      enforceLabelOwnerOpen && playerIndex === 0 ? 1 : playerIndex;
+    const cellState = Array.isArray(stateEntry?.cellStates)
+      ? stateEntry.cellStates[normalizedPlayerIndex]
+      : null;
+    const cellPresentation = normalizePresentationToken(cellState?.presentation || "open");
+    const marks = Number(stateEntry?.marksByPlayer?.[normalizedPlayerIndex] || 0);
+    const scoreCell =
+      (visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true) &&
+      cellPresentation === "scoring";
+    const activeOpenCell =
+      Number.isFinite(activePlayerIndex) &&
+      normalizedPlayerIndex === activePlayerIndex &&
+      cellPresentation === "open" &&
+      !activeOpenAssigned;
+
+    applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
+    toggleClass(cellNode, ACTIVE_COLUMN_CLASS, activeOpenCell);
+    toggleClass(
+      cellNode,
+      OPEN_ACTIVE_CLASS,
+      cellPresentation === "open" && activeOpenCell
+    );
+    toggleClass(
+      cellNode,
+      OPEN_INACTIVE_CLASS,
+      cellPresentation === "open" && !activeOpenCell
+    );
+    if (activeOpenCell) {
+      activeOpenAssigned = true;
+    }
+    if (scoreCell) {
+      scoreCellCount += 1;
+    }
+
+    const delta = Number(diffEntry?.playerDeltas?.[normalizedPlayerIndex] || 0);
+    if (delta > 0 && visualConfig?.deltaChips) {
+      appendTransientNode(state, cellNode, DELTA_CLASS, 940, {
+        textContent: `+${delta}`,
+      });
+    }
+
+    if (delta > 0 && visualConfig?.hitSpark) {
+      removeTransientNodes(cellNode, SPARK_CLASS, state);
+      appendTransientNode(state, cellNode, SPARK_CLASS, 460);
+    }
+
+    if (delta > 0) {
+      triggerMarkProgress(state, cellNode, marks, visualConfig);
+    }
+
+    state.trackedCells.add(cellNode);
+  });
+
+  return {
+    scoreCellCount,
+  };
+}
+
+function applyGridFxRow(options = {}) {
+  const row = options.row || {};
+  const stateEntry = options.stateEntry || null;
+  const state = options.state || null;
+  const marksDiff = options.marksDiff || new Map();
+  const transitions = options.transitions || new Map();
+  const visualConfig = options.visualConfig || null;
+  const cricketRules = options.cricketRules || null;
+  const {
+    cellDescriptors,
+    labelCellNode,
+    activePlayerIndex,
+    playerStateCount,
+    resolvedRowNode,
+  } = selectGridFxCellDescriptors({
+    row,
+    stateEntry,
+    cricketRules,
+  });
+  const resolvedPlayerCells = cellDescriptors.map((entry) => entry.cellNode);
+  const hasPlayerCells = resolvedPlayerCells.length > 0;
+  const activeColumnMissingLabels = [];
+  let rowsWithoutPlayerCells = 0;
+  let activeColumnResolvedCount = 0;
+  let activeColumnMissingCount = 0;
+  let scoringRowCount = 0;
+  let pressureRowCount = 0;
+  let badgeCount = 0;
+  let badgeFallbackCount = 0;
+  let rowWaveDeltaCount = 0;
+  let rowWaveTacticalCount = 0;
+
+  if (!hasPlayerCells) {
+    rowsWithoutPlayerCells += 1;
+  }
+  if (hasPlayerCells) {
+    const hasActiveColumn = cellDescriptors.some((entry) => {
+      return entry.playerIndex === activePlayerIndex;
+    });
+    if (Number.isFinite(activePlayerIndex) && hasActiveColumn) {
+      activeColumnResolvedCount += 1;
+    } else {
+      activeColumnMissingCount += 1;
+      activeColumnMissingLabels.push(row.label);
+    }
+  }
+
+  const presentation = resolveRowPresentation(stateEntry);
+  if (presentation === "scoring") {
+    scoringRowCount += 1;
+  } else if (presentation === "pressure") {
+    pressureRowCount += 1;
+  }
+
+  const labelCellDescriptor = cellDescriptors.find((entry) => {
+    return entry.cellNode === labelCellNode;
+  });
+  const labelCellState =
+    Number.isFinite(labelCellDescriptor?.playerIndex) &&
+    Array.isArray(stateEntry?.cellStates)
+      ? stateEntry.cellStates[labelCellDescriptor.playerIndex]
+      : null;
+  const labelPresentation = normalizePresentationToken(
+    labelCellState?.presentation || presentation
+  );
+  const {
+    safeLabelCellNode,
+    badgeNode,
+    badgeFallbackCount: rowBadgeFallbackCount,
+  } = resolveGridFxBadgeBinding({
+    row,
+    labelCellNode,
+    state,
+  });
+  badgeFallbackCount += rowBadgeFallbackCount;
+
+  if (safeLabelCellNode?.classList) {
+    safeLabelCellNode.classList.add(LABEL_CLASS);
+    setLabelStateClasses(safeLabelCellNode, labelPresentation);
+    toggleClass(
+      safeLabelCellNode,
+      BADGE_BEACON_CLASS,
+      !badgeNode &&
+        visualConfig?.badgeBeacon &&
+        (labelPresentation === "scoring" || labelPresentation === "pressure")
+    );
+    state.trackedLabels.add(safeLabelCellNode);
+  }
+
+  if (badgeNode?.classList) {
+    badgeNode.classList.add(BADGE_CLASS);
+    setBadgeStateClasses(badgeNode, labelPresentation);
+    toggleClass(
+      badgeNode,
+      BADGE_BEACON_CLASS,
+      visualConfig?.badgeBeacon &&
+        (labelPresentation === "scoring" || labelPresentation === "pressure")
+    );
+    state.trackedLabels.add(badgeNode);
+    badgeCount += 1;
+  }
+
+  const diffEntry = marksDiff.get(row.label) || null;
+  const transition = transitions.get(row.label) || null;
+  const hasIncrease = Boolean(diffEntry?.hasIncrease);
+  const becameTactical =
+    Boolean(transition?.becameScoring) ||
+    Boolean(transition?.becamePressure);
+
+  if (hasIncrease || becameTactical) {
+    triggerRowWave(state, { ...row, playerCells: resolvedPlayerCells }, visualConfig);
+    if (hasIncrease) {
+      rowWaveDeltaCount += 1;
+    } else {
+      rowWaveTacticalCount += 1;
+    }
+  }
+
+  if (badgeNode?.classList && hasIncrease) {
+    toggleTimedClass(state, badgeNode, BADGE_BURST_CLASS, 700);
+  }
+
+  const rowPresentation = normalizePresentationToken(presentation);
+  const { mergedOwnerLabelColumn, resolvedCellDescriptors } = buildGridFxResolvedCellDescriptors({
+    cellDescriptors,
+    labelCellNode,
+    resolvedRowNode,
+    rowPresentation,
+    playerStateCount,
+    activePlayerIndex,
+  });
+  const cellResult = applyGridFxResolvedCells({
+    stateEntry,
+    state,
+    safeLabelCellNode,
+    resolvedCellDescriptors,
+    rowPresentation,
+    mergedOwnerLabelColumn,
+    activePlayerIndex,
+    diffEntry,
+    visualConfig,
+  });
+
+  return {
+    scoringRowCount,
+    pressureRowCount,
+    scoreCellCount: cellResult.scoreCellCount,
+    rowsWithoutPlayerCells,
+    activeColumnResolvedCount,
+    activeColumnMissingCount,
+    activeColumnMissingLabels,
+    badgeCount,
+    badgeFallbackCount,
+    rowWaveDeltaCount,
+    rowWaveTacticalCount,
+  };
+}
+
 export function clearCricketGridFxState(state) {
   if (!state) {
     return;
@@ -776,42 +1821,17 @@ export function updateCricketGridFx(options = {}) {
     ? options.debugStats
     : null;
 
-  if (debugStats) {
-    debugStats.status = "init";
-    debugStats.rowCount = 0;
-    debugStats.stateTargetCount = 0;
-    debugStats.labelCellCount = 0;
-    debugStats.badgeCount = 0;
-    debugStats.scoringRowCount = 0;
-    debugStats.offenseRowCount = 0;
-    debugStats.dangerRowCount = 0;
-    debugStats.pressureRowCount = 0;
-    debugStats.scoreCellCount = 0;
-    debugStats.rowsWithoutPlayerCells = 0;
-    debugStats.activeColumnResolvedCount = 0;
-    debugStats.activeColumnMissingCount = 0;
-    debugStats.activeColumnMissingLabels = [];
-    debugStats.rowWaveDeltaCount = 0;
-    debugStats.rowWaveTacticalCount = 0;
-    debugStats.badgeFallbackCount = 0;
-    debugStats.turnTokenChanged = false;
-  }
+  initializeCricketGridFxDebugStats(debugStats);
 
   if (!documentRef || !cricketRules || !renderState || !state || !visualConfig) {
-    clearCricketGridFxState(state);
-    if (debugStats) {
-      debugStats.status = "invalid-input";
-    }
+    setCricketGridFxFailure(state, debugStats, "invalid-input");
     return;
   }
 
   const targetOrder = Array.isArray(renderState.targetOrder) ? renderState.targetOrder : [];
   const targetSet = new Set(targetOrder);
   if (!targetOrder.length || !(renderState.stateMap instanceof Map)) {
-    clearCricketGridFxState(state);
-    if (debugStats) {
-      debugStats.status = "invalid-state";
-    }
+    setCricketGridFxFailure(state, debugStats, "invalid-state");
     return;
   }
 
@@ -824,340 +1844,25 @@ export function updateCricketGridFx(options = {}) {
     : null;
   const gridRoot = gridSnapshot?.root || null;
   if (!gridRoot) {
-    clearCricketGridFxState(state);
-    if (debugStats) {
-      debugStats.status = "missing-grid";
-    }
+    setCricketGridFxFailure(state, debugStats, "missing-grid");
     return;
   }
 
-  const sourceRows = Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [];
-  const rowByLabel = new Map();
   const stableRowsByLabel =
     state?.renderCache?.gridStableRowsByLabel instanceof Map
       ? state.renderCache.gridStableRowsByLabel
       : null;
-  const computeRowIntegrityScore = (candidateRow) => {
-    const label = String(candidateRow?.label || "");
-    if (!label) {
-      return Number.NEGATIVE_INFINITY;
-    }
-
-    const labelNode = candidateRow?.labelNode || null;
-    const labelCell = candidateRow?.labelCell || null;
-    const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
-    const playerCells = Array.isArray(candidateRow?.playerCells)
-      ? candidateRow.playerCells.filter(Boolean)
-      : [];
-    const rowContainer = rowNode || labelCell?.parentElement || labelNode?.parentElement || null;
-    let score = 0;
-
-    if (labelCell) {
-      score += 2;
-    }
-    if (labelNode) {
-      score += 2;
-    }
-    if (
-      labelCell &&
-      labelNode &&
-      typeof labelCell.contains === "function" &&
-      labelCell.contains(labelNode)
-    ) {
-      score += 2;
-    }
-    if (labelCell && playerCells.includes(labelCell)) {
-      score += 2;
-    }
-
-    playerCells.forEach((cellNode) => {
-      if (!cellNode) {
-        return;
-      }
-      if (cellNode === labelCell) {
-        score += 1;
-        return;
-      }
-      if (rowContainer && typeof rowContainer.contains === "function" && rowContainer.contains(cellNode)) {
-        score += 2;
-      }
-
-      const candidateLabel = normalizeCricketLabelValue(
-        cricketRules,
-        cellNode.getAttribute?.("data-row-label") ||
-          cellNode.getAttribute?.("data-target-label") ||
-          cellNode.textContent ||
-          ""
-      );
-      if (candidateLabel && candidateLabel !== label && targetSet.has(candidateLabel)) {
-        score -= 4;
-      }
-    });
-
-    return score;
-  };
-  const buildRowCellsFromRowNode = (candidateRow, expectedPlayerCount = 0) => {
-    const labelNode = candidateRow?.labelNode || null;
-    const label = String(candidateRow?.label || "");
-    const labelCell = candidateRow?.labelCell || null;
-    const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
-    if (!rowNode || typeof rowNode.querySelectorAll !== "function") {
-      return [];
-    }
-    const tagName = String(rowNode?.tagName || "").toUpperCase();
-    const isSemanticRow =
-      tagName === "TR" || String(rowNode?.getAttribute?.("role") || "").toLowerCase() === "row";
-    if (!isSemanticRow) {
-      const discoveredLabels = new Set();
-      queryAll(
-        rowNode,
-        "[data-row-label], [data-target-label], .label-cell, .ad-ext-crfx-badge, .chakra-text, p, th, td, div, span"
-      ).forEach((node) => {
-        const normalized = normalizeCricketLabelValue(
-          cricketRules,
-          node?.getAttribute?.("data-row-label") ||
-            node?.getAttribute?.("data-target-label") ||
-            node?.textContent ||
-            ""
-        );
-        if (normalized && targetSet.has(normalized)) {
-          discoveredLabels.add(normalized);
-        }
-      });
-      if (discoveredLabels.size > 1 || (discoveredLabels.size === 1 && !discoveredLabels.has(label))) {
-        return [];
-      }
-    }
-
-    const rowCellCandidates = queryAll(
-      rowNode,
-      "td, th, [role='cell'], .player-cell, [data-player-index], [data-marks]"
-    ).filter((cellNode) => {
-      if (!cellNode || cellNode === labelNode || cellNode === labelCell) {
-        return false;
-      }
-      if (isInsideTurnPreview(cellNode)) {
-        return false;
-      }
-      return true;
-    });
-
-    return maybeIncludeLabelCellAsPlayerCell(
-      rowCellCandidates,
-      labelCell,
-      expectedPlayerCount
-    );
-  };
-  const resolveBestPlayerCells = (candidateRow, expectedPlayerCount = 0) => {
-    const labelNode = candidateRow?.labelNode || null;
-    const labelCell = candidateRow?.labelCell || null;
-    const rowNode = candidateRow?.rowNode || getRowNode(labelNode || labelCell || null);
-    const baseCells = maybeIncludeLabelCellAsPlayerCell(
-      Array.isArray(candidateRow?.playerCells) ? candidateRow.playerCells.filter(Boolean) : [],
-      labelCell,
-      expectedPlayerCount
-    );
-    const rowCells = buildRowCellsFromRowNode(
-      { label: candidateRow?.label || "", labelNode, labelCell, rowNode },
-      expectedPlayerCount
-    );
-    if (!rowCells.length) {
-      return baseCells;
-    }
-
-    const baseScore = computeRowIntegrityScore({
-      label: candidateRow?.label || "",
-      labelNode,
-      labelCell,
-      rowNode,
-      playerCells: baseCells,
-    });
-    const rowScore = computeRowIntegrityScore({
-      label: candidateRow?.label || "",
-      labelNode,
-      labelCell,
-      rowNode,
-      playerCells: rowCells,
-    });
-
-    const expectedCount = Number.isFinite(Number(expectedPlayerCount))
-      ? Math.max(0, Math.round(Number(expectedPlayerCount)))
-      : 0;
-    const rowMeetsExpected = expectedCount > 0 ? rowCells.length >= expectedCount : rowCells.length > 0;
-    const baseMeetsExpected = expectedCount > 0 ? baseCells.length >= expectedCount : baseCells.length > 0;
-    if ((rowMeetsExpected && !baseMeetsExpected) || rowScore > baseScore) {
-      return rowCells;
-    }
-
-    return baseCells;
-  };
-
-  const upsertRow = (candidateRow) => {
-    const label = String(candidateRow?.label || "");
-    if (!label || !targetSet.has(label)) {
-      return;
-    }
-    const stateEntry = renderState.stateMap.get(label);
-    const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
-      ? stateEntry.cellStates.length
-      : 0;
-
-    const resolvedLabelNode = candidateRow?.labelNode || candidateRow?.badgeNode || null;
-    const resolvedLabelCell =
-      candidateRow?.labelCell ||
-      (resolvedLabelNode
-        ? resolveLabelCell({
-            labelNode: resolvedLabelNode,
-            cricketRules,
-            targetSet,
-            fallbackLabel: label,
-            isInsideTurnPreview,
-            queryAll,
-          })
-        : null);
-    const resolvedBadgeNode =
-      candidateRow?.badgeNode ||
-      (resolvedLabelCell
-        ? resolveBadgeNode({
-            labelNode: resolvedLabelNode,
-            labelCell: resolvedLabelCell,
-            cricketRules,
-            label,
-            queryAll,
-          })
-        : null);
-
-    const normalizedRow = {
-      label,
-      labelNode: resolvedLabelNode,
-      labelCell: resolvedLabelCell,
-      badgeNode: resolvedBadgeNode,
-      rowNode:
-        candidateRow?.rowNode ||
-        getRowNode(candidateRow?.labelNode || candidateRow?.labelCell || null),
-      playerCells: Array.isArray(candidateRow?.playerCells)
-        ? candidateRow.playerCells.filter(Boolean)
-        : [],
-      playerCellsByIndex: Array.isArray(candidateRow?.playerCellsByIndex)
-        ? candidateRow.playerCellsByIndex.map((cell) => (cell && cell.isConnected !== false ? cell : null))
-        : [],
-    };
-    normalizedRow.playerCells = resolveBestPlayerCells(normalizedRow, expectedPlayerCount);
-
-    const isConnectedAnchor = (node) => {
-      return Boolean(node && node.isConnected !== false);
-    };
-    const hasAnchorNode =
-      isConnectedAnchor(normalizedRow.labelNode) ||
-      isConnectedAnchor(normalizedRow.labelCell) ||
-      isConnectedAnchor(normalizedRow.rowNode);
-    if (!hasAnchorNode) {
-      return;
-    }
-    if (
-      isInsideTurnPreview(normalizedRow.labelNode) ||
-      isInsideTurnPreview(normalizedRow.labelCell) ||
-      isInsideTurnPreview(normalizedRow.rowNode)
-    ) {
-      return;
-    }
-
-    const existing = rowByLabel.get(label);
-    if (!existing) {
-      rowByLabel.set(label, normalizedRow);
-      return;
-    }
-
-    const existingPlayerCellCount = Array.isArray(existing.playerCells)
-      ? existing.playerCells.length
-      : 0;
-    const nextPlayerCellCount = normalizedRow.playerCells.length;
-    const existingMeetsExpected =
-      expectedPlayerCount > 0 && existingPlayerCellCount >= expectedPlayerCount;
-    const nextMeetsExpected =
-      expectedPlayerCount > 0 && nextPlayerCellCount >= expectedPlayerCount;
-    const existingAnchorScore =
-      (existing.labelCell ? 1 : 0) +
-      (existing.labelNode ? 1 : 0) +
-      (existing.badgeNode ? 1 : 0);
-    const nextAnchorScore =
-      (normalizedRow.labelCell ? 1 : 0) +
-      (normalizedRow.labelNode ? 1 : 0) +
-      (normalizedRow.badgeNode ? 1 : 0);
-    const existingIndexedCount = Array.isArray(existing.playerCellsByIndex)
-      ? existing.playerCellsByIndex.filter(Boolean).length
-      : 0;
-    const nextIndexedCount = Array.isArray(normalizedRow.playerCellsByIndex)
-      ? normalizedRow.playerCellsByIndex.filter(Boolean).length
-      : 0;
-    const existingIntegrityScore = computeRowIntegrityScore(existing);
-    const nextIntegrityScore = computeRowIntegrityScore(normalizedRow);
-    const shouldReplace =
-      (nextMeetsExpected && !existingMeetsExpected) ||
-      (nextIndexedCount > existingIndexedCount) ||
-      (!existing.labelCell && Boolean(normalizedRow.labelCell)) ||
-      (!existing.badgeNode && Boolean(normalizedRow.badgeNode)) ||
-      (existingPlayerCellCount === 0 && nextPlayerCellCount > 0) ||
-      (nextPlayerCellCount > existingPlayerCellCount) ||
-      (nextAnchorScore > existingAnchorScore &&
-        nextIntegrityScore >= existingIntegrityScore) ||
-      (nextIntegrityScore > existingIntegrityScore);
-
-    if (shouldReplace) {
-      rowByLabel.set(label, normalizedRow);
-    }
-  };
-
-  sourceRows.forEach((row) => {
-    upsertRow(row);
+  const rows = resolveGridFxRows({
+    sourceRows: Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [],
+    stableRowsByLabel,
+    targetOrder,
+    targetSet,
+    gridRoot,
+    cricketRules,
+    renderState,
   });
-
-  if (stableRowsByLabel) {
-    targetOrder.forEach((label) => {
-      const stableRow = stableRowsByLabel.get(label);
-      if (stableRow) {
-        upsertRow(stableRow);
-      }
-    });
-  }
-
-  const fallbackLabelRows = collectLabelNodes(gridRoot, cricketRules, targetSet);
-  fallbackLabelRows.forEach((entry) => {
-    const label = String(entry?.label || "");
-    if (!label || !targetSet.has(label)) {
-      return;
-    }
-
-    const stateEntry = renderState.stateMap.get(label);
-    const expectedPlayerCount = Array.isArray(stateEntry?.cellStates)
-      ? stateEntry.cellStates.length
-      : 0;
-    const labelNode = entry?.labelNode || null;
-    const labelCell = resolveLabelCell(labelNode, cricketRules, targetSet, label);
-    const fallbackPlayerCells = collectPlayerCells(labelNode, cricketRules, targetSet, {
-      expectedPlayerCount,
-    });
-
-    upsertRow({
-      label,
-      labelNode,
-      labelCell,
-      badgeNode:
-        entry?.badgeNode ||
-        resolveBadgeNode(labelNode, labelCell, cricketRules, label),
-      rowNode: getRowNode(labelNode || labelCell || null),
-      playerCells: fallbackPlayerCells,
-    });
-  });
-
-  const rows = targetOrder
-    .map((label) => rowByLabel.get(label))
-    .filter(Boolean);
   if (!rows.length) {
-    clearCricketGridFxState(state);
-    if (debugStats) {
-      debugStats.status = "missing-grid";
-    }
+    setCricketGridFxFailure(state, debugStats, "missing-grid");
     return;
   }
   if (debugStats) {
@@ -1235,500 +1940,32 @@ export function updateCricketGridFx(options = {}) {
   let rowWaveDeltaCount = 0;
   let rowWaveTacticalCount = 0;
   const activeColumnMissingLabels = [];
-  const toCellDescriptors = (cells, labelCellNode, playerStateCount) => {
-    const normalizedCells = Array.isArray(cells) ? cells.filter(Boolean) : [];
-    if (!normalizedCells.length || playerStateCount <= 0) {
-      return [];
-    }
-
-    const labelCellIncluded = Boolean(labelCellNode) && normalizedCells.includes(labelCellNode);
-    const indexOffset =
-      normalizedCells.length < playerStateCount
-        ? labelCellIncluded
-          ? 0
-          : Math.max(0, playerStateCount - normalizedCells.length)
-        : 0;
-    const explicitPlayerIndexes = normalizedCells.map((cellNode) => {
-      const explicitIndex = readCellPlayerIndex(cellNode);
-      return Number.isFinite(explicitIndex) ? Math.round(explicitIndex) : null;
-    });
-    const explicitIndexValues = explicitPlayerIndexes.filter((value) => Number.isFinite(value));
-    const explicitCoverageComplete =
-      normalizedCells.length > 0 && explicitIndexValues.length === normalizedCells.length;
-    const explicitUnique = new Set(explicitIndexValues).size === explicitIndexValues.length;
-    const explicitInBounds = explicitIndexValues.every((value) => {
-      return value >= 0 && value < playerStateCount;
-    });
-    const explicitRespectsShortfall =
-      normalizedCells.length >= playerStateCount ||
-      explicitIndexValues.every((value) => value >= indexOffset);
-    const useExplicitPlayerIndexes =
-      explicitCoverageComplete &&
-      explicitUnique &&
-      explicitInBounds &&
-      explicitRespectsShortfall;
-
-    return normalizedCells
-      .map((cellNode, index) => {
-        const explicitPlayerIndex = explicitPlayerIndexes[index];
-        const playerIndex =
-          useExplicitPlayerIndexes && Number.isFinite(explicitPlayerIndex)
-            ? explicitPlayerIndex
-            : index + indexOffset;
-        return {
-          cellNode,
-          playerIndex,
-        };
-      })
-      .filter((entry) => {
-        return (
-          entry.cellNode?.classList &&
-          Number.isFinite(entry.playerIndex) &&
-          entry.playerIndex >= 0 &&
-          entry.playerIndex < playerStateCount
-        );
-      });
-  };
-  const isCellInsideRow = (cellNode, rowNode) => {
-    if (!cellNode || !rowNode || typeof rowNode.contains !== "function") {
-      return true;
-    }
-    return rowNode === cellNode || rowNode.contains(cellNode);
-  };
-
   rows.forEach((row) => {
     const stateEntry = renderState.stateMap.get(row.label);
     if (!stateEntry) {
       return;
     }
-    const labelCellNode = row.labelCell || row.labelNode || null;
-    const activePlayerIndex = Number(stateEntry.activePlayerIndex);
-    const playerStateCount = Array.isArray(stateEntry.cellStates)
-      ? stateEntry.cellStates.length
-      : 0;
-    const indexedCellDescriptors = Array.isArray(row.playerCellsByIndex)
-      ? row.playerCellsByIndex
-          .map((cellNode, playerIndex) => {
-            return { cellNode, playerIndex };
-          })
-          .filter((entry) => {
-            return (
-              entry.cellNode?.classList &&
-              Number.isFinite(entry.playerIndex) &&
-              entry.playerIndex >= 0 &&
-              entry.playerIndex < playerStateCount
-            );
-          })
-      : [];
-    const inferredRowCells = maybeIncludeLabelCellAsPlayerCell(
-      row.playerCells,
-      row.labelCell || row.labelNode || null,
-      playerStateCount
-    );
-    const inferredCellDescriptors = toCellDescriptors(
-      inferredRowCells,
-      labelCellNode,
-      playerStateCount
-    );
-    const resolvedRowNode = row.rowNode || getRowNode(row.labelNode || row.labelCell || null);
-    const rowScoreNode =
-      resolvedRowNode &&
-      labelCellNode &&
-      typeof resolvedRowNode.contains === "function" &&
-      resolvedRowNode !== labelCellNode &&
-      resolvedRowNode.contains(labelCellNode)
-        ? resolvedRowNode
-        : null;
-    const strictRowCells = buildRowCellsFromRowNode(
-      {
-        label: row.label,
-        labelNode: row.labelNode || null,
-        labelCell: row.labelCell || null,
-        rowNode: resolvedRowNode,
-      },
-      playerStateCount
-    );
-    const strictCellDescriptors = toCellDescriptors(
-      strictRowCells,
-      labelCellNode,
-      playerStateCount
-    );
-    const candidateDescriptorSets = [];
-    if (indexedCellDescriptors.length) {
-      candidateDescriptorSets.push({
-        source: "indexed",
-        descriptors: indexedCellDescriptors,
-      });
-    }
-    if (inferredCellDescriptors.length) {
-      candidateDescriptorSets.push({
-        source: "inferred",
-        descriptors: inferredCellDescriptors,
-      });
-    }
-    if (strictCellDescriptors.length) {
-      candidateDescriptorSets.push({
-        source: "strict",
-        descriptors: strictCellDescriptors,
-      });
-    }
-    const getDescriptorScore = (descriptors) => {
-      if (!Array.isArray(descriptors) || descriptors.length === 0) {
-        return Number.NEGATIVE_INFINITY;
-      }
-      const usedPlayerIndexes = new Set();
-      let score = 0;
-      descriptors.forEach((entry) => {
-        const cellNode = entry?.cellNode || null;
-        const playerIndex = Number(entry?.playerIndex);
-        if (!cellNode?.classList || !Number.isFinite(playerIndex)) {
-          score -= 4;
-          return;
-        }
-        if (!isCellInsideRow(cellNode, rowScoreNode)) {
-          score -= 6;
-        }
-        const expectedMarks = Number(stateEntry.marksByPlayer?.[playerIndex] || 0);
-        const observedMarks = parseMarksValue(cellNode, cricketRules);
-        score -= Math.abs(expectedMarks - observedMarks) * 3;
-        if (expectedMarks === observedMarks) {
-          score += 2;
-        }
-        const explicitPlayerIndex = readCellPlayerIndex(cellNode);
-        if (Number.isFinite(explicitPlayerIndex) && explicitPlayerIndex === playerIndex) {
-          score += 4;
-        }
-        if (usedPlayerIndexes.has(playerIndex)) {
-          score -= 5;
-        }
-        usedPlayerIndexes.add(playerIndex);
-      });
-      if (labelCellNode) {
-        const labelDescriptor = descriptors.find((entry) => entry?.cellNode === labelCellNode);
-        if (labelDescriptor) {
-          if (Number(labelDescriptor.playerIndex) === 0) {
-            score += 2;
-          } else {
-            score -= 2;
-          }
-        }
-      }
-      score -= Math.max(0, playerStateCount - usedPlayerIndexes.size) * 4;
-      if (
-        Number.isFinite(activePlayerIndex) &&
-        descriptors.some((entry) => Number(entry?.playerIndex) === activePlayerIndex)
-      ) {
-        score += 1;
-      }
-      return score;
-    };
-    const getDescriptorPreference = (candidate) => {
-      if (!candidate || !Array.isArray(candidate.descriptors)) {
-        return Number.NEGATIVE_INFINITY;
-      }
-      const descriptors = candidate.descriptors;
-      const allExplicit = descriptors.every((entry) => {
-        const explicit = readCellPlayerIndex(entry?.cellNode || null);
-        return Number.isFinite(explicit) && explicit === Number(entry?.playerIndex);
-      });
-      const labelAsOwner = Boolean(
-        labelCellNode &&
-          descriptors.some((entry) => {
-            return entry?.cellNode === labelCellNode && Number(entry?.playerIndex) === 0;
-          })
-      );
-      return (allExplicit ? 10 : 0) + (labelAsOwner ? 3 : 0) + (candidate.source === "strict" ? 1 : 0);
-    };
-    let selectedCandidate = null;
-    candidateDescriptorSets.forEach((candidate) => {
-      const descriptorScore = getDescriptorScore(candidate.descriptors);
-      const descriptorPreference = getDescriptorPreference(candidate);
-      if (!selectedCandidate) {
-        selectedCandidate = {
-          ...candidate,
-          descriptorScore,
-          descriptorPreference,
-        };
-        return;
-      }
-      if (descriptorScore > selectedCandidate.descriptorScore) {
-        selectedCandidate = {
-          ...candidate,
-          descriptorScore,
-          descriptorPreference,
-        };
-        return;
-      }
-      if (
-        descriptorScore === selectedCandidate.descriptorScore &&
-        descriptorPreference > selectedCandidate.descriptorPreference
-      ) {
-        selectedCandidate = {
-          ...candidate,
-          descriptorScore,
-          descriptorPreference,
-        };
-      }
-    });
-    const cellDescriptors = Array.isArray(selectedCandidate?.descriptors)
-      ? selectedCandidate.descriptors
-      : [];
-    const resolvedPlayerCells = cellDescriptors.map((entry) => entry.cellNode);
-    const hasPlayerCells = Array.isArray(resolvedPlayerCells) && resolvedPlayerCells.length > 0;
-    if (!hasPlayerCells) {
-      rowsWithoutPlayerCells += 1;
-    }
-    if (hasPlayerCells) {
-      const hasActiveColumn = cellDescriptors.some((entry) => {
-        return entry.playerIndex === activePlayerIndex;
-      });
-      if (Number.isFinite(activePlayerIndex) && hasActiveColumn) {
-        activeColumnResolvedCount += 1;
-      } else {
-        activeColumnMissingCount += 1;
-        activeColumnMissingLabels.push(row.label);
-      }
-    }
-
-    const presentation = resolveRowPresentation(stateEntry);
-    if (presentation === "scoring") {
-      scoringRowCount += 1;
-    } else if (presentation === "pressure") {
-      pressureRowCount += 1;
-    }
-
-    const labelCellDescriptor = cellDescriptors.find((entry) => {
-      return entry.cellNode === labelCellNode;
-    });
-    const labelCellState =
-      Number.isFinite(labelCellDescriptor?.playerIndex) &&
-      Array.isArray(stateEntry.cellStates)
-        ? stateEntry.cellStates[labelCellDescriptor.playerIndex]
-        : null;
-    const labelPresentation = normalizePresentationToken(
-      labelCellState?.presentation || presentation
-    );
-    const hasDistinctBadgeNode =
-      row.badgeNode?.classList &&
-      row.badgeNode !== labelCellNode &&
-      row.badgeNode.isConnected !== false;
-    const safeLabelCellNode = isProtectedCricketHostNode(labelCellNode) ? null : labelCellNode;
-    let badgeNode = null;
-    if (hasDistinctBadgeNode) {
-      badgeNode = row.badgeNode;
-    }
-    if (isProtectedCricketHostNode(badgeNode)) {
-      badgeNode = null;
-    }
-    if (!badgeNode && safeLabelCellNode?.ownerDocument?.createElement) {
-      badgeNode = safeLabelCellNode.ownerDocument.createElement("span");
-      badgeNode.setAttribute(SYNTHETIC_BADGE_ATTRIBUTE, "true");
-      badgeNode.textContent = getDisplayLabel(row.label);
-      safeLabelCellNode.appendChild(badgeNode);
-      state.syntheticBadges.add(badgeNode);
-      if (typeof safeLabelCellNode.setAttribute === "function") {
-        safeLabelCellNode.setAttribute(HIDDEN_LABEL_ATTRIBUTE, "true");
-        state.hiddenLabelNodes.add(safeLabelCellNode);
-      }
-      badgeFallbackCount += 1;
-    }
-    if (safeLabelCellNode?.classList) {
-      safeLabelCellNode.classList.add(LABEL_CLASS);
-      setLabelStateClasses(safeLabelCellNode, labelPresentation);
-      toggleClass(
-        safeLabelCellNode,
-        BADGE_BEACON_CLASS,
-        !badgeNode &&
-          visualConfig.badgeBeacon &&
-          (labelPresentation === "scoring" || labelPresentation === "pressure")
-      );
-      state.trackedLabels.add(safeLabelCellNode);
-    }
-
-    if (badgeNode?.classList) {
-      badgeNode.classList.add(BADGE_CLASS);
-      setBadgeStateClasses(badgeNode, labelPresentation);
-      toggleClass(
-        badgeNode,
-        BADGE_BEACON_CLASS,
-        visualConfig.badgeBeacon &&
-          (labelPresentation === "scoring" || labelPresentation === "pressure")
-      );
-      state.trackedLabels.add(badgeNode);
-      badgeCount += 1;
-    }
-
-    const diffEntry = marksDiff.get(row.label) || null;
-    const transition = transitions.get(row.label) || null;
-    const hasIncrease = Boolean(diffEntry?.hasIncrease);
-    const becameTactical =
-      Boolean(transition?.becameScoring) ||
-      Boolean(transition?.becamePressure);
-
-    if (hasIncrease) {
-      triggerRowWave(state, { ...row, playerCells: resolvedPlayerCells }, visualConfig);
-      rowWaveDeltaCount += 1;
-    } else if (becameTactical) {
-      triggerRowWave(state, { ...row, playerCells: resolvedPlayerCells }, visualConfig);
-      rowWaveTacticalCount += 1;
-    }
-
-    if (badgeNode?.classList && hasIncrease) {
-      toggleTimedClass(state, badgeNode, BADGE_BURST_CLASS, 700);
-    }
-
-    const rowPresentation = normalizePresentationToken(presentation);
-    const mergedOwnerLabelColumn =
-      playerStateCount >= 2 &&
-      Boolean(labelCellNode?.classList) &&
-      typeof labelCellNode?.closest === "function" &&
-      !labelCellNode.closest("tr");
-
-    const uniqueByPlayerIndex = new Map();
-    cellDescriptors.forEach((entry) => {
-      const playerIndex = Number(entry?.playerIndex);
-      const cellNode = entry?.cellNode || null;
-      if (!cellNode?.classList || !Number.isFinite(playerIndex)) {
-        return;
-      }
-      if (!uniqueByPlayerIndex.has(playerIndex)) {
-        uniqueByPlayerIndex.set(playerIndex, {
-          cellNode,
-          playerIndex,
-        });
-        return;
-      }
-
-      const currentEntry = uniqueByPlayerIndex.get(playerIndex);
-      const currentInsideRow = isCellInsideRow(currentEntry?.cellNode || null, resolvedRowNode);
-      const nextInsideRow = isCellInsideRow(cellNode, resolvedRowNode);
-      if (nextInsideRow && !currentInsideRow) {
-        uniqueByPlayerIndex.set(playerIndex, {
-          cellNode,
-          playerIndex,
-        });
-      }
+    const rowResult = applyGridFxRow({
+      row,
+      stateEntry,
+      state,
+      marksDiff,
+      transitions,
+      visualConfig,
+      cricketRules,
     });
 
-    if (mergedOwnerLabelColumn) {
-      const hasOwnerLabelDescriptor = Array.from(uniqueByPlayerIndex.values()).some((entry) => {
-        return entry?.cellNode === labelCellNode;
-      });
-      const descriptorAtZero = uniqueByPlayerIndex.get(0);
-      const hasDescriptorAtOne = uniqueByPlayerIndex.has(1);
-      const descriptorAtZeroIsForeignCell =
-        descriptorAtZero?.cellNode && descriptorAtZero.cellNode !== labelCellNode;
-      if (!hasOwnerLabelDescriptor) {
-        if (
-          descriptorAtZeroIsForeignCell &&
-          !hasDescriptorAtOne &&
-          Number.isFinite(playerStateCount) &&
-          playerStateCount > 1
-        ) {
-          uniqueByPlayerIndex.delete(0);
-          uniqueByPlayerIndex.set(1, {
-            cellNode: descriptorAtZero.cellNode,
-            playerIndex: 1,
-          });
-        }
-
-        if (!uniqueByPlayerIndex.has(0)) {
-          uniqueByPlayerIndex.set(0, {
-            cellNode: labelCellNode,
-            playerIndex: 0,
-          });
-        }
-      }
-    }
-
-    if (
-      rowPresentation === "open" &&
-      Number.isFinite(activePlayerIndex) &&
-      activePlayerIndex === 0 &&
-      !uniqueByPlayerIndex.has(activePlayerIndex) &&
-      labelCellNode?.classList
-    ) {
-      uniqueByPlayerIndex.set(activePlayerIndex, {
-        cellNode: labelCellNode,
-        playerIndex: activePlayerIndex,
-      });
-    }
-
-    const resolvedCellDescriptors = Array.from(uniqueByPlayerIndex.values()).sort((left, right) => {
-      return Number(left?.playerIndex || 0) - Number(right?.playerIndex || 0);
-    }).filter(({ cellNode }) => !isProtectedCricketHostNode(cellNode));
-
-    const enforceLabelOwnerOpen =
-      rowPresentation === "open" &&
-      mergedOwnerLabelColumn &&
-      Boolean(safeLabelCellNode?.classList);
-    let activeOpenAssigned = false;
-    if (enforceLabelOwnerOpen) {
-      const labelActiveOpen = Number.isFinite(activePlayerIndex) && activePlayerIndex === 0;
-      applyCellPresentationClasses(safeLabelCellNode, "open", visualConfig);
-      toggleClass(safeLabelCellNode, ACTIVE_COLUMN_CLASS, labelActiveOpen);
-      toggleClass(safeLabelCellNode, OPEN_ACTIVE_CLASS, labelActiveOpen);
-      toggleClass(safeLabelCellNode, OPEN_INACTIVE_CLASS, !labelActiveOpen);
-      state.trackedCells.add(safeLabelCellNode);
-      activeOpenAssigned = labelActiveOpen;
-    }
-    resolvedCellDescriptors.forEach(({ cellNode, playerIndex }) => {
-      if (enforceLabelOwnerOpen && cellNode === safeLabelCellNode) {
-        return;
-      }
-      const normalizedPlayerIndex =
-        enforceLabelOwnerOpen && playerIndex === 0 ? 1 : playerIndex;
-      const cellState = Array.isArray(stateEntry.cellStates)
-        ? stateEntry.cellStates[normalizedPlayerIndex]
-        : null;
-      const cellPresentation = normalizePresentationToken(cellState?.presentation || "open");
-      const marks = Number(stateEntry.marksByPlayer?.[normalizedPlayerIndex] || 0);
-      const scoreCell =
-        (visualConfig?.scoringStripe ?? visualConfig?.scoringLane ?? true) &&
-        cellPresentation === "scoring";
-      const activeOpenCell =
-        Number.isFinite(activePlayerIndex) &&
-        normalizedPlayerIndex === activePlayerIndex &&
-        cellPresentation === "open" &&
-        !activeOpenAssigned;
-
-      applyCellPresentationClasses(cellNode, cellPresentation, visualConfig);
-      toggleClass(cellNode, ACTIVE_COLUMN_CLASS, activeOpenCell);
-      toggleClass(
-        cellNode,
-        OPEN_ACTIVE_CLASS,
-        cellPresentation === "open" && activeOpenCell
-      );
-      toggleClass(
-        cellNode,
-        OPEN_INACTIVE_CLASS,
-        cellPresentation === "open" && !activeOpenCell
-      );
-      if (activeOpenCell) {
-        activeOpenAssigned = true;
-      }
-      if (scoreCell) {
-        scoreCellCount += 1;
-      }
-
-      const delta = Number(diffEntry?.playerDeltas?.[normalizedPlayerIndex] || 0);
-      if (delta > 0 && visualConfig.deltaChips) {
-        appendTransientNode(state, cellNode, DELTA_CLASS, 940, {
-          textContent: `+${delta}`,
-        });
-      }
-
-      if (delta > 0 && visualConfig.hitSpark) {
-        removeTransientNodes(cellNode, SPARK_CLASS, state);
-        appendTransientNode(state, cellNode, SPARK_CLASS, 460);
-      }
-
-      if (delta > 0) {
-        triggerMarkProgress(state, cellNode, marks, visualConfig);
-      }
-
-      state.trackedCells.add(cellNode);
-    });
+    scoringRowCount += rowResult.scoringRowCount;
+    pressureRowCount += rowResult.pressureRowCount;
+    scoreCellCount += rowResult.scoreCellCount;
+    rowsWithoutPlayerCells += rowResult.rowsWithoutPlayerCells;
+    activeColumnResolvedCount += rowResult.activeColumnResolvedCount;
+    activeColumnMissingCount += rowResult.activeColumnMissingCount;
+    activeColumnMissingLabels.push(...rowResult.activeColumnMissingLabels);
+    badgeCount += rowResult.badgeCount;
+    badgeFallbackCount += rowResult.badgeFallbackCount;
+    rowWaveDeltaCount += rowResult.rowWaveDeltaCount;
+    rowWaveTacticalCount += rowResult.rowWaveTacticalCount;
   });
 
   state.previousMarksByLabel = cloneMarksByLabel(renderState.marksByLabel);
