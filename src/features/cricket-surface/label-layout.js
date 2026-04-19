@@ -194,7 +194,7 @@ export function resolveLabelCell(options = {}) {
     fallback = cursor;
     if (!isInsideTurnPreview(cursor)) {
       const parent = cursor.parentElement || null;
-      const hasSiblings = Boolean(parent && parent.children && parent.children.length > 1);
+      const hasSiblings = Boolean(parent?.children && parent.children.length > 1);
       if (hasSiblings) {
         const hasCellPeer = hasPeerLikeSibling(cursor);
         if (!hasCellPeer && !hasExplicitMarkHints(cursor)) {

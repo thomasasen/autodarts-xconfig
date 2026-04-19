@@ -67,15 +67,21 @@ const INTENSITY_PRESETS = Object.freeze({
   },
 });
 
+function resolveIrrelevantBoardDimStyle(featureConfig) {
+  const rawDimStyle = String(featureConfig.irrelevantBoardDimStyle || "").trim().toLowerCase();
+  if (IRRELEVANT_DIM_STYLES.has(rawDimStyle)) {
+    return rawDimStyle;
+  }
+  if (featureConfig.dimIrrelevantBoardTargets === false) {
+    return "off";
+  }
+  return "smoke";
+}
+
 export function resolveCricketVisualConfig(featureConfig = {}) {
   const themeKey = String(featureConfig.colorTheme || "").trim().toLowerCase();
   const intensityKey = String(featureConfig.intensity || "").trim().toLowerCase();
-  const rawDimStyle = String(featureConfig.irrelevantBoardDimStyle || "").trim().toLowerCase();
-  const irrelevantBoardDimStyle = IRRELEVANT_DIM_STYLES.has(rawDimStyle)
-    ? rawDimStyle
-    : featureConfig.dimIrrelevantBoardTargets === false
-      ? "off"
-      : "smoke";
+  const irrelevantBoardDimStyle = resolveIrrelevantBoardDimStyle(featureConfig);
   const theme = THEME_PRESETS[themeKey] || THEME_PRESETS.standard;
   const intensity = INTENSITY_PRESETS[intensityKey] || INTENSITY_PRESETS.normal;
   const showOpenObjectives =

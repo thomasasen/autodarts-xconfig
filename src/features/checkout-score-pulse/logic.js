@@ -320,7 +320,7 @@ export function applyHighlightState(nodes, options = {}) {
   const effectClassList = getEffectClassList();
 
   nodes.forEach((node) => {
-    if (!node || !node.classList) {
+    if (!node?.classList) {
       return;
     }
 

@@ -23,17 +23,22 @@ export function normalizeCricketLabelNode(cricketRules, node) {
   return normalizeCricketLabelValue(cricketRules, textContent);
 }
 
+function resolveClassListTokens(node) {
+  if (typeof node.classList?.toArray === "function") {
+    return node.classList.toArray();
+  }
+  if (Array.isArray(node.classList)) {
+    return node.classList;
+  }
+  return null;
+}
+
 export function getClassTokens(node) {
   if (!node || typeof node !== "object") {
     return [];
   }
 
-  const listTokens =
-    typeof node.classList?.toArray === "function"
-      ? node.classList.toArray()
-      : Array.isArray(node.classList)
-        ? node.classList
-        : null;
+  const listTokens = resolveClassListTokens(node);
   if (Array.isArray(listTokens) && listTokens.length > 0) {
     return listTokens.filter(Boolean).map((entry) => String(entry).trim()).filter(Boolean);
   }

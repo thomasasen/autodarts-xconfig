@@ -47,6 +47,16 @@ function createDebugState(featureDebug) {
   };
 }
 
+function resolveFeatureDebugLogger(featureDebug, level) {
+  if (level === "warn" && typeof featureDebug?.warn === "function") {
+    return featureDebug.warn.bind(featureDebug);
+  }
+  if (typeof featureDebug?.log === "function") {
+    return featureDebug.log.bind(featureDebug);
+  }
+  return null;
+}
+
 function emitDebugEvent(debugState, level, signature, summary, payload) {
   if (!debugState?.featureDebug?.enabled || !signature) {
     return;
@@ -58,12 +68,7 @@ function emitDebugEvent(debugState, level, signature, summary, payload) {
   }
   debugState[signatureKey] = signature;
 
-  const logger =
-    level === "warn" && typeof debugState.featureDebug.warn === "function"
-      ? debugState.featureDebug.warn.bind(debugState.featureDebug)
-      : typeof debugState.featureDebug.log === "function"
-        ? debugState.featureDebug.log.bind(debugState.featureDebug)
-        : null;
+  const logger = resolveFeatureDebugLogger(debugState.featureDebug, level);
   if (!logger) {
     return;
   }

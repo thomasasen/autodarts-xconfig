@@ -55,8 +55,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
   const existingNamespace = getGlobalNamespace(windowRef);
 
   if (
-    existingNamespace &&
-    existingNamespace[RUNTIME_INIT_PROMISE_KEY] &&
+    existingNamespace?.[RUNTIME_INIT_PROMISE_KEY] &&
     typeof existingNamespace[RUNTIME_INIT_PROMISE_KEY].then === "function"
   ) {
     return existingNamespace[RUNTIME_INIT_PROMISE_KEY];

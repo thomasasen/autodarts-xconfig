@@ -278,7 +278,7 @@ export function togglePreviewSpace(documentRef, previewOptions = {}, enabled = f
   }
 
   const turnNode = documentRef.getElementById("ad-ext-turn");
-  if (!turnNode || !turnNode.classList || typeof turnNode.classList.toggle !== "function") {
+  if (!turnNode?.classList || typeof turnNode.classList.toggle !== "function") {
     return;
   }
 

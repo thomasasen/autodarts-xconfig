@@ -43,7 +43,7 @@ function restoreSnapshot(marker, snapshot) {
 }
 
 function isHiddenByDartOverlay(marker) {
-  if (!marker || !marker.dataset) {
+  if (!marker?.dataset) {
     return false;
   }
   return Object.hasOwn(marker.dataset, HIDDEN_MARKER_DATASET_KEY);

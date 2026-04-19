@@ -79,6 +79,16 @@ export function collectTurnThrowRows(documentRef) {
   });
 }
 
+function resolveRowSource(turnContainer, throwRows) {
+  if (turnContainer) {
+    return "turn-container";
+  }
+  if (throwRows.length > 0) {
+    return "document-fallback";
+  }
+  return "none";
+}
+
 export function getTurnSurfaceSnapshot(documentRef, options = {}) {
   const turnContainer = findTurnContainer(documentRef);
   const throwRows = collectTurnThrowRows(documentRef);
@@ -91,7 +101,7 @@ export function getTurnSurfaceSnapshot(documentRef, options = {}) {
     turnContainer,
     throwRows,
     turnPointsToken,
-    rowSource: turnContainer ? "turn-container" : throwRows.length > 0 ? "document-fallback" : "none",
+    rowSource: resolveRowSource(turnContainer, throwRows),
   };
 }
 

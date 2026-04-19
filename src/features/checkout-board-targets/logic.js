@@ -76,6 +76,16 @@ function segmentAngles(value) {
   };
 }
 
+function resolveFamilyEffectProfile(effectProfiles, family, baseEffectProfile) {
+  if (family === "outer") {
+    return effectProfiles.outer || baseEffectProfile;
+  }
+  if (family === "bull") {
+    return effectProfiles.bull || baseEffectProfile;
+  }
+  return baseEffectProfile;
+}
+
 function createWedge(ownerDocument, radius, innerRatio, outerRatio, startDeg, endDeg, edgePaddingPx) {
   const path = ownerDocument.createElementNS(SVG_NS, "path");
   const innerRadius = Math.max(0, radius * innerRatio);
@@ -249,12 +259,7 @@ function resolveTargetStyleProfile(target, radius, visualConfig, renderContext =
   const family = resolveTargetFamily(target);
   const effectProfiles = visualConfig.effectProfiles?.[visualConfig.effect] || {};
   const baseEffectProfile = effectProfiles.base || {};
-  const familyEffectProfile =
-    family === "outer"
-      ? effectProfiles.outer || baseEffectProfile
-      : family === "bull"
-        ? effectProfiles.bull || baseEffectProfile
-        : baseEffectProfile;
+  const familyEffectProfile = resolveFamilyEffectProfile(effectProfiles, family, baseEffectProfile);
   const priorityProfile =
     renderContext.priorityProfile ||
     resolvePriorityProfile(
@@ -381,7 +386,7 @@ function applyTargetMetadata(shapeNode, target, styleProfile) {
 }
 
 function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
-  if (!shapeNode || !shapeNode.classList || !shapeNode.style) {
+  if (!shapeNode?.classList || !shapeNode.style) {
     return;
   }
 
@@ -444,7 +449,7 @@ function applyShapeStyle(shapeNode, visualConfig, styleProfile) {
   );
   if (
     visualConfig.renderShapeStroke === false ||
-    (shapeNode.dataset && shapeNode.dataset.noStroke === "true")
+    shapeNode.dataset?.noStroke === "true"
   ) {
     shapeNode.style.setProperty("stroke", "none");
     shapeNode.style.setProperty("stroke-width", "0");
@@ -463,7 +468,7 @@ function cloneShapeAsOutline(shapeNode, ownerDocument) {
 }
 
 function applyOutlineStyle(outlineNode, visualConfig, styleProfile) {
-  if (!outlineNode || !outlineNode.classList || !outlineNode.style) {
+  if (!outlineNode?.classList || !outlineNode.style) {
     return;
   }
 
@@ -502,7 +507,7 @@ function applyOutlineStyle(outlineNode, visualConfig, styleProfile) {
 
 function buildTargetShapes(ownerDocument, radius, target, visualConfig) {
   const shapes = [];
-  if (!ownerDocument || !target || !target.ring) {
+  if (!ownerDocument || !target?.ring) {
     return shapes;
   }
 
@@ -604,7 +609,7 @@ export function renderCheckoutTargets(options = {}) {
   const checkoutTargets = Array.isArray(options.checkoutTargets) ? options.checkoutTargets : [];
   const visualConfig = options.visualConfig;
 
-  if (!board || !board.group || !board.radius || !visualConfig) {
+  if (!board?.group || !board?.radius || !visualConfig) {
     return;
   }
 

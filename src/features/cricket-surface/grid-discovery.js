@@ -118,6 +118,13 @@ export function filterAtomicLabelNodes(labelEntries, diagnostics = null) {
   return resolved;
 }
 
+function normalizeTargetSet(targetSet) {
+  if (targetSet instanceof Set) {
+    return targetSet;
+  }
+  return new Set(Array.isArray(targetSet) ? targetSet : []);
+}
+
 export function collectLabelNodes(
   rootNode,
   cricketRules,
@@ -129,10 +136,7 @@ export function collectLabelNodes(
   const selectorList = Array.isArray(selectors) ? selectors : [];
   const fallbackSelector = String(options.fallbackSelector || "").trim();
   const skipNode = typeof options.skipNode === "function" ? options.skipNode : () => false;
-  const normalizedTargetSet =
-    targetSet instanceof Set
-      ? targetSet
-      : new Set(Array.isArray(targetSet) ? targetSet : []);
+  const normalizedTargetSet = normalizeTargetSet(targetSet);
   const seen = new Set();
   const labels = [];
   const pushLabelNode = (node) => {

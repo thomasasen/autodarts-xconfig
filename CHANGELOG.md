@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine breitere Low-Risk-Sonar-Welle hält Checkout-Board, Cricket-Surface, Theme-/Runtime-Helfer und xConfig-Randpfade auf denselben fachlichen Verträgen, drückt kleine Guard-, Logger- und Auswahlzweige intern aber direkter aus.
+  Technik: `checkout-board-targets`, `turn-surface-adapter`, `cricket-surface/*`, `cricket-highlighter/style`, `dart-marker-emphasis`, `theme-utils`, `bootstrap-runtime`, `checkout-score-pulse`, `layout-utils` und `render-controller` bereinigen nur lokale `S3358`- und `S6582`-Treffer durch kleine Helper und Optional-Chaining-Guards, ohne Observer-, Render-, Overlay-, Route- oder Runtime-Semantik umzubauen; die bestehenden Runtime-, Cricket-, Checkout- und Shell-Regressionen bleiben dabei der fachliche Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; TV-Board-Zoom und die Browser-Asset-Auflösung bleiben fachlich unverändert, drücken interne Übergabe- und Reexport-Pfade in dieser Sonar-Welle aber direkter aus.
   Technik: `tv-board-zoom/applyZoom(...)` bündelt die drei internen Knotenparameter jetzt in ein kleines Objekt statt über eine 8-Parameter-Signatur, alle direkten Layout-Regressionen wurden auf dieselbe interne Form umgestellt, und `feature-assets.browser` exportiert die zwei Asset-Bindings nun direkt per `export ... from` ohne zusätzlichen Alias-Zwischenschritt; Zoom-Transform-, Host-Overflow- und Asset-Konsumentenpfade bleiben dabei unverändert der fachliche Vertrag.
 

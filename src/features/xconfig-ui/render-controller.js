@@ -1,3 +1,10 @@
+function normalizeSidebarRouteHints(values) {
+  if (values instanceof Set) {
+    return values;
+  }
+  return new Set(Array.isArray(values) ? values : []);
+}
+
 export function createShellRenderController(options = {}) {
   const windowRef = options.windowRef || null;
   const documentRef = options.documentRef || null;
@@ -7,10 +14,7 @@ export function createShellRenderController(options = {}) {
   const menuLabel = String(options.menuLabel || "").trim();
   const menuLabelCollapseWidth = Number(options.menuLabelCollapseWidth) || 0;
   const installedVersion = String(options.installedVersion || "").trim();
-  const sidebarRouteHints =
-    options.sidebarRouteHints instanceof Set
-      ? options.sidebarRouteHints
-      : new Set(Array.isArray(options.sidebarRouteHints) ? options.sidebarRouteHints : []);
+  const sidebarRouteHints = normalizeSidebarRouteHints(options.sidebarRouteHints);
   const buildMenuIconElement =
     typeof options.buildMenuIconElement === "function" ? options.buildMenuIconElement : () => null;
   const buildShellContent =

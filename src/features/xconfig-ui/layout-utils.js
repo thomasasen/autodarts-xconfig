@@ -23,6 +23,13 @@ function normalizeHashValue(hashValue) {
   return normalized.startsWith("#") ? normalized : `#${normalized}`;
 }
 
+function normalizeSidebarRouteHints(values) {
+  if (values instanceof Set) {
+    return values;
+  }
+  return new Set(Array.isArray(values) ? values : []);
+}
+
 export function toRoutePathname(windowRef, hrefValue) {
   const href = String(hrefValue || "").trim();
   if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
@@ -60,10 +67,7 @@ function scoreSidebarCandidate(windowRef, candidate, options = {}) {
     return -1;
   }
 
-  const sidebarRouteHints =
-    options.sidebarRouteHints instanceof Set
-      ? options.sidebarRouteHints
-      : new Set(Array.isArray(options.sidebarRouteHints) ? options.sidebarRouteHints : []);
+  const sidebarRouteHints = normalizeSidebarRouteHints(options.sidebarRouteHints);
   const anchors = Array.from(candidate.querySelectorAll("a[href]"));
   const routeMatches = anchors.reduce((count, anchor) => {
     return count + (sidebarRouteHints.has(toRoutePathname(windowRef, anchor.getAttribute("href"))) ? 1 : 0);
