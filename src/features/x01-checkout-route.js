@@ -189,9 +189,10 @@ export function getSingleSuggestionSegmentFromRoute(routeSegments = []) {
     : "";
 }
 
-export function getCheckoutFinishSegmentFromRoute(routeSegments = [], outMode, x01Rules) {
-  const lastSegment = Array.isArray(routeSegments) && routeSegments.length
-    ? String(routeSegments.at(-1) || "")
+export function getCheckoutFinishSegmentFromRoute(routeSegments, outMode, x01Rules) {
+  const normalizedRouteSegments = Array.isArray(routeSegments) ? routeSegments : [];
+  const lastSegment = normalizedRouteSegments.length
+    ? String(normalizedRouteSegments.at(-1) || "")
     : "";
   if (!lastSegment) {
     return "";
@@ -267,9 +268,10 @@ export function segmentNameToBoardTarget(segmentName, x01Rules) {
   };
 }
 
-export function mapRouteSegmentsToBoardTargets(routeSegments = [], x01Rules) {
+export function mapRouteSegmentsToBoardTargets(routeSegments, x01Rules) {
+  const normalizedRouteSegments = Array.isArray(routeSegments) ? routeSegments : [];
   const seen = new Set();
-  return (Array.isArray(routeSegments) ? routeSegments : [])
+  return normalizedRouteSegments
     .map((segment) => segmentNameToBoardTarget(segment, x01Rules))
     .filter((target) => {
       if (!target) {
@@ -301,8 +303,9 @@ function normalizeDartsRemaining(value) {
   return normalized;
 }
 
-function normalizeRouteSegments(routeSegments = [], x01Rules) {
-  return (Array.isArray(routeSegments) ? routeSegments : [])
+function normalizeRouteSegments(routeSegments, x01Rules) {
+  const normalizedRouteSegments = Array.isArray(routeSegments) ? routeSegments : [];
+  return normalizedRouteSegments
     .map((segmentName) =>
       typeof x01Rules?.normalizeSegmentName === "function"
         ? x01Rules.normalizeSegmentName(segmentName)

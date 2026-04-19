@@ -500,7 +500,12 @@ export function parseCricketThrowSegment(throwEntry) {
     return null;
   }
 
-  const marks = ring === "T" ? 3 : ring === "D" ? 2 : 1;
+  let marks = 1;
+  if (ring === "T") {
+    marks = 3;
+  } else if (ring === "D") {
+    marks = 2;
+  }
   return {
     ring,
     value,
@@ -874,9 +879,7 @@ export function diffMarksByLabel(options = {}) {
     });
     const changed = playerDeltas.some((delta) => delta !== 0);
     const hasIncrease = playerDeltas.some((delta) => delta > 0);
-    const maxIncrease = playerDeltas.reduce((max, delta) => {
-      return delta > max ? delta : max;
-    }, 0);
+    const maxIncrease = playerDeltas.reduce((max, delta) => Math.max(max, delta), 0);
 
     diffMap.set(label, {
       label,

@@ -101,7 +101,12 @@ export function parseSegment(normalizedSegmentName) {
     return null;
   }
 
-  const multiplier = ring === "D" ? 2 : ring === "T" ? 3 : 1;
+  let multiplier = 1;
+  if (ring === "D") {
+    multiplier = 2;
+  } else if (ring === "T") {
+    multiplier = 3;
+  }
 
   return {
     normalized,
@@ -132,7 +137,12 @@ export function classifyThrowHitText(text) {
     return null;
   }
 
-  const kind = parsed.ring === "T" ? "triple" : parsed.ring === "D" ? "double" : "single";
+  let kind = "single";
+  if (parsed.ring === "T") {
+    kind = "triple";
+  } else if (parsed.ring === "D") {
+    kind = "double";
+  }
 
   return {
     kind,
@@ -492,55 +502,59 @@ function countBullSetupSegments(route = []) {
   }, 0);
 }
 
-function compareCheckoutRoutes(leftRoute = [], rightRoute = [], outMode) {
-  if (leftRoute.length !== rightRoute.length) {
-    return leftRoute.length - rightRoute.length;
+function compareCheckoutRoutes(leftRoute, rightRoute, outMode) {
+  const normalizedLeftRoute = Array.isArray(leftRoute) ? leftRoute : [];
+  const normalizedRightRoute = Array.isArray(rightRoute) ? rightRoute : [];
+
+  if (normalizedLeftRoute.length !== normalizedRightRoute.length) {
+    return normalizedLeftRoute.length - normalizedRightRoute.length;
   }
 
-  const leftFirstScore = Number(leftRoute[0]?.score || 0);
-  const rightFirstScore = Number(rightRoute[0]?.score || 0);
+  const leftFirstScore = Number(normalizedLeftRoute[0]?.score || 0);
+  const rightFirstScore = Number(normalizedRightRoute[0]?.score || 0);
   if (leftFirstScore !== rightFirstScore) {
     return rightFirstScore - leftFirstScore;
   }
 
-  const leftSecondScore = Number(leftRoute[1]?.score || 0);
-  const rightSecondScore = Number(rightRoute[1]?.score || 0);
+  const leftSecondScore = Number(normalizedLeftRoute[1]?.score || 0);
+  const rightSecondScore = Number(normalizedRightRoute[1]?.score || 0);
   if (leftSecondScore !== rightSecondScore) {
     return rightSecondScore - leftSecondScore;
   }
 
-  const setupLength = Math.max(0, leftRoute.length - 1);
+  const setupLength = Math.max(0, normalizedLeftRoute.length - 1);
   for (let index = 0; index < setupLength; index += 1) {
-    const leftSetupPreference = getSetupSegmentPreference(leftRoute[index]);
-    const rightSetupPreference = getSetupSegmentPreference(rightRoute[index]);
+    const leftSetupPreference = getSetupSegmentPreference(normalizedLeftRoute[index]);
+    const rightSetupPreference = getSetupSegmentPreference(normalizedRightRoute[index]);
     if (leftSetupPreference !== rightSetupPreference) {
       return rightSetupPreference - leftSetupPreference;
     }
 
-    const leftValue = Number(leftRoute[index]?.value || 0);
-    const rightValue = Number(rightRoute[index]?.value || 0);
+    const leftValue = Number(normalizedLeftRoute[index]?.value || 0);
+    const rightValue = Number(normalizedRightRoute[index]?.value || 0);
     if (leftValue !== rightValue) {
       return rightValue - leftValue;
     }
   }
 
-  const bullSetupDelta = countBullSetupSegments(leftRoute) - countBullSetupSegments(rightRoute);
+  const bullSetupDelta =
+    countBullSetupSegments(normalizedLeftRoute) - countBullSetupSegments(normalizedRightRoute);
   if (bullSetupDelta !== 0) {
     return bullSetupDelta;
   }
 
-  const leftFinish = leftRoute.at(-1) || null;
-  const rightFinish = rightRoute.at(-1) || null;
+  const leftFinish = normalizedLeftRoute.at(-1) || null;
+  const rightFinish = normalizedRightRoute.at(-1) || null;
   const finishComparison = compareOneDartSegments(leftFinish, rightFinish, outMode);
   if (finishComparison !== 0) {
     return finishComparison;
   }
 
-  return leftRoute
+  return normalizedLeftRoute
     .map((segment) => String(segment?.normalized || ""))
     .join(">")
     .localeCompare(
-      rightRoute.map((segment) => String(segment?.normalized || "")).join(">")
+      normalizedRightRoute.map((segment) => String(segment?.normalized || "")).join(">")
     );
 }
 

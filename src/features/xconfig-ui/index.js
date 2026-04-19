@@ -448,20 +448,8 @@ function ensureXConfigShell(options = {}) {
     windowRef,
   });
 
-  function observeRoot() {
-    lifecycleController?.observeRoot();
-  }
-
-  function patchHistory() {
-    lifecycleController?.patchHistory();
-  }
-
   function navigateToConfigRoute() {
     routeController?.navigateToConfigRoute();
-  }
-
-  function navigateBack() {
-    routeController?.navigateBack();
   }
 
   function withRuntimeCall(promiseLike, successMessage, errorMessage, successType = "success") {

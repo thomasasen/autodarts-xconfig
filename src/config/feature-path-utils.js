@@ -26,19 +26,20 @@ export function getNestedValue(rootValue, pathParts = []) {
   return typeof current === "undefined" ? null : current;
 }
 
-export function setNestedValue(rootValue, pathParts = [], value) {
-  if (!isObjectLike(rootValue) || !Array.isArray(pathParts) || !pathParts.length) {
+export function setNestedValue(rootValue, pathParts, value) {
+  const normalizedPathParts = Array.isArray(pathParts) ? pathParts : [];
+  if (!isObjectLike(rootValue) || !normalizedPathParts.length) {
     return;
   }
 
   let current = rootValue;
-  for (let index = 0; index < pathParts.length - 1; index += 1) {
-    const part = pathParts[index];
+  for (let index = 0; index < normalizedPathParts.length - 1; index += 1) {
+    const part = normalizedPathParts[index];
     if (!isObjectLike(current[part])) {
       current[part] = {};
     }
     current = current[part];
   }
 
-  current[pathParts.at(-1)] = value;
+  current[normalizedPathParts.at(-1)] = value;
 }

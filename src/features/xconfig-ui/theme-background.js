@@ -6,7 +6,14 @@ function estimateBase64ByteSize(rawPayload) {
   if (!payload) {
     return 0;
   }
-  const padding = payload.endsWith("==") ? 2 : payload.endsWith("=") ? 1 : 0;
+
+  let padding = 0;
+  if (payload.endsWith("==")) {
+    padding = 2;
+  } else if (payload.endsWith("=")) {
+    padding = 1;
+  }
+
   return Math.max(0, Math.floor((payload.length * 3) / 4) - padding);
 }
 
@@ -367,6 +374,33 @@ export function formatThemeBackgroundSummary(feature) {
     : `Eigenes Hintergrundbild: ${detailText}.`;
 }
 
+function buildThemeBackgroundStatusSummary(imageInfo) {
+  if (!imageInfo?.hasImage) {
+    return "Aktuelles Bild: keines.";
+  }
+
+  if (imageInfo.sourceType === "preset-asset") {
+    return `Aktuelles Bild: Preset ${imageInfo.presetLabel || "aktiv"}.`;
+  }
+
+  const sizeText =
+    imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : "";
+  return `Aktuelles Bild: ${imageInfo.mimeType}${sizeText}.`;
+}
+
+function buildThemeBackgroundUploadSuccessMessage(fileName, resized) {
+  const normalizedFileName = String(fileName || "").trim();
+  if (resized) {
+    return normalizedFileName
+      ? `Hintergrundbild optimiert gespeichert: ${normalizedFileName}.`
+      : "Hintergrundbild optimiert gespeichert.";
+  }
+
+  return normalizedFileName
+    ? `Hintergrundbild gespeichert: ${normalizedFileName}.`
+    : "Hintergrundbild gespeichert.";
+}
+
 export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature) {
   if (!statusNode) {
     return;
@@ -383,11 +417,7 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
   statusNode.dataset.themeImageType = imageInfo.sourceType || imageInfo.mimeType || "";
   statusNode.dataset.themeImageSize = imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : "";
 
-  const summaryText = imageInfo.hasImage
-    ? imageInfo.sourceType === "preset-asset"
-      ? `Aktuelles Bild: Preset ${imageInfo.presetLabel || "aktiv"}.`
-      : `Aktuelles Bild: ${imageInfo.mimeType}${imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : ""}.`
-    : "Aktuelles Bild: keines.";
+  const summaryText = buildThemeBackgroundStatusSummary(imageInfo);
 
   let summaryNode = statusNode.querySelector?.(".ad-xconfig-theme-image-status-summary") || null;
   if (!summaryNode && typeof documentRef?.createElement === "function") {
@@ -496,13 +526,10 @@ export function uploadThemeBackgroundImage(options = {}) {
     )
       .then((normalizedImage) => {
         const fileName = String(file.name || "").trim();
-        const successMessage = normalizedImage.resized
-          ? fileName
-            ? `Hintergrundbild optimiert gespeichert: ${fileName}.`
-            : "Hintergrundbild optimiert gespeichert."
-          : fileName
-            ? `Hintergrundbild gespeichert: ${fileName}.`
-            : "Hintergrundbild gespeichert.";
+        const successMessage = buildThemeBackgroundUploadSuccessMessage(
+          fileName,
+          normalizedImage.resized
+        );
 
         return Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, normalizedImage.dataUrl))
           .then(() => {

@@ -182,8 +182,7 @@ function validateSectionEntries(section) {
   let entryCount = 0;
   let currentEntryState = null;
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
+  for (const line of lines) {
     if (isStartedUserImpactLine(line)) {
       entryCount += 1;
     }

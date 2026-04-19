@@ -10,20 +10,20 @@
   return Object.freeze(value);
 }
 
-function fieldCopy(description, docsDescription, featuresDescription = "") {
-  return deepFreeze({
+function buildCopyEntry(description, docsDescription, featuresDescription = "") {
+  return {
     description: String(description || "").trim(),
     docsDescription: String(docsDescription || "").trim(),
     featuresDescription: String(featuresDescription || docsDescription || "").trim(),
-  });
+  };
+}
+
+function fieldCopy(description, docsDescription, featuresDescription = "") {
+  return deepFreeze(buildCopyEntry(description, docsDescription, featuresDescription));
 }
 
 function optionCopy(description, docsDescription, featuresDescription = "") {
-  return deepFreeze({
-    description: String(description || "").trim(),
-    docsDescription: String(docsDescription || "").trim(),
-    featuresDescription: String(featuresDescription || docsDescription || "").trim(),
-  });
+  return deepFreeze(buildCopyEntry(description, docsDescription, featuresDescription));
 }
 
 function image(alt, fileName) {
@@ -2767,13 +2767,15 @@ function resolveRecommendedValueLabel(descriptorsByFeatureKey, featureKey, field
 
 function resolveRecommendedFieldLabel(
   descriptorsByFeatureKey,
-  fieldDefinition = {},
+  fieldDefinition,
   resolveFeatureConfig,
   fallbackFeatureKey = ""
 ) {
-  const featureKeys = Array.isArray(fieldDefinition.featureKeys)
-    ? fieldDefinition.featureKeys
-    : [fieldDefinition.featureKey || fallbackFeatureKey].filter(Boolean);
+  const normalizedFieldDefinition =
+    fieldDefinition && typeof fieldDefinition === "object" ? fieldDefinition : {};
+  const featureKeys = Array.isArray(normalizedFieldDefinition.featureKeys)
+    ? normalizedFieldDefinition.featureKeys
+    : [normalizedFieldDefinition.featureKey || fallbackFeatureKey].filter(Boolean);
   const uniqueLabels = Array.from(
     new Set(
       featureKeys
@@ -2781,7 +2783,7 @@ function resolveRecommendedFieldLabel(
           resolveRecommendedValueLabel(
             descriptorsByFeatureKey,
             featureKey,
-            fieldDefinition.key,
+            normalizedFieldDefinition.key,
             resolveFeatureConfig
           )
         )

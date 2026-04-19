@@ -490,9 +490,9 @@ function getBoardCandidateScore(candidateNode, options = {}) {
   candidate.isBoardLike = isBoardLikeCandidate(candidate, options);
   candidate.score = candidate.isBoardLike
     ? (
-        (candidate.hasExactBoardViewBox ? 500_000 : 0) +
-        (candidate.hasSquareViewBox ? 300_000 : 0) +
-        (candidate.hasBoardControlContext ? 1_500_000 : 0) +
+        Number(candidate.hasExactBoardViewBox) * 500_000 +
+        Number(candidate.hasSquareViewBox) * 300_000 +
+        Number(candidate.hasBoardControlContext) * 1_500_000 +
         candidate.numberCount * 200_000 +
         candidate.pathCount * 2_500 +
         candidate.drawableCount * 350 +
@@ -662,10 +662,7 @@ function isSnapshotSemanticallyReusable(snapshot) {
 
 function isSnapshotModeReusable(snapshot, documentRef) {
   const currentModeKey = getActiveBoardInputMode(documentRef);
-  if (Object.hasOwn(snapshot, "modeKey") && snapshot.modeKey !== currentModeKey) {
-    return false;
-  }
-  return true;
+  return !Object.hasOwn(snapshot, "modeKey") || snapshot.modeKey === currentModeKey;
 }
 
 function isNodeVisible(node) {

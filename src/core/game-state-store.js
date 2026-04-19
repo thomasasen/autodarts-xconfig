@@ -14,11 +14,15 @@ function safeClone(value) {
     return value;
   }
 
-  try {
-    return JSON.parse(JSON.stringify(value));
-  } catch (_) {
-    return value;
+  if (typeof structuredClone === "function") {
+    try {
+      return structuredClone(value);
+    } catch (_) {
+      return value;
+    }
   }
+
+  return value;
 }
 
 function parseTimestamp(value) {
@@ -100,7 +104,8 @@ export function createGameStateStore(options = {}) {
     options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const documentRef =
     options.documentRef ||
-    (windowRef && windowRef.document ? windowRef.document : null);
+    windowRef?.document ||
+    null;
 
   const subscribers = new Set();
   const state = {

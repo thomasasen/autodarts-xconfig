@@ -277,11 +277,10 @@ export function releaseElectricFilterDefs(options = {}) {
       ? documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)
       : null;
   const nodeToRemove = nodeFromDocument || state.defsNode || null;
-  if (nodeToRemove && typeof nodeToRemove.remove === "function") {
+  if (typeof nodeToRemove?.remove === "function") {
     nodeToRemove.remove();
   } else if (
-    nodeToRemove &&
-    nodeToRemove.parentNode &&
+    nodeToRemove?.parentNode &&
     typeof nodeToRemove.parentNode.removeChild === "function"
   ) {
     nodeToRemove.parentNode.removeChild(nodeToRemove);
