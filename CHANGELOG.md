@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; xConfig-Themenaktionen, Cricket-Highlighting und Dart-Marker-Darts laufen fachlich weiter auf denselben Pfaden, drücken in dieser Sonar-Welle aber einige kleine Guard- und Debug-Signaturen direkter aus.
+  Technik: `xconfig-ui/shell-view` ersetzt den letzten verschachtelten Hintergrundbild-Hinweis durch einen kleinen Action-Text-Helper, `cricket-highlighter` bereinigt einen lokalen Shape-Guard per Optional-Chaining, und `dart-marker-darts` bündelt zwei rein interne Debug-/Geometrie-Signaturen auf kleine Objektparameter statt 8-Parameter-Helfer; die bestehenden Shell-, Cricket- und Dart-Marker-Regressionen bleiben dabei der fachliche Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die xConfig-Shell reagiert weiterhin gleich auf Menü-, Settings-, Update- und Lifecycle-Aktionen, drückt die internen Controller-Pfade in dieser Sonar-Welle aber klarer getrennt aus.
   Technik: `xconfig-ui/action-controller`, `render-controller` und `lifecycle-controller` ziehen ihre lokalen Action-, Render- und Lifecycle-Helfer in äußere Hilfsfunktionen, bereinigen dabei einen verschachtelten Select-Ternary und lassen die öffentliche Controller-API sowie das bestehende Event-, Queue-, Modal- und Teardown-Verhalten unverändert; die vorhandenen Action- und Shell-Regressionen bleiben dabei der Schutz gegen Drift.
 

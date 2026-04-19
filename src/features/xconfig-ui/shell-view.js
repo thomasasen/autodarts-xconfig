@@ -803,6 +803,18 @@ function buildDartDesignOptionLayout(
   return layout;
 }
 
+function resolveThemeActionNoteText(action) {
+  if (action === "clearThemeBackground") {
+    return "Entfernt das gespeicherte Bild für dieses Theme.";
+  }
+
+  if (action === "uploadThemeBackground") {
+    return "Öffnet die Dateiauswahl und speichert das Bild für dieses Theme.";
+  }
+
+  return "";
+}
+
 function buildFeatureField(documentRef, feature, field) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
@@ -825,14 +837,7 @@ function buildFeatureField(documentRef, feature, field) {
       },
     });
     wrapper.appendChild(button);
-    const noteText = String(
-      field.description ||
-        (field.action === "clearThemeBackground"
-          ? "Entfernt das gespeicherte Bild für dieses Theme."
-          : field.action === "uploadThemeBackground"
-            ? "Öffnet die Dateiauswahl und speichert das Bild für dieses Theme."
-            : "")
-    ).trim();
+    const noteText = String(field.description || resolveThemeActionNoteText(field.action)).trim();
     if (noteText) {
       wrapper.appendChild(createElement(documentRef, "p", {
         className: "ad-xconfig-note",

@@ -286,7 +286,7 @@ function ensureOverlaySvg(state, documentRef) {
   }
 
   let overlay = state.overlayNode;
-  if (overlay && overlay.isConnected) {
+  if (overlay?.isConnected) {
     if (String(overlay.tagName || "").toLowerCase() === "svg") {
       return overlay;
     }
@@ -854,7 +854,16 @@ function getFlightOffsets(center, boardCenter, dartLength) {
   return { start, mid };
 }
 
-function buildGeometryPayload(marker, index, screenPoint, overlayRect, svgRect, groupRect, entry, extra = {}) {
+function buildGeometryPayload({
+  marker,
+  index,
+  screenPoint,
+  overlayRect,
+  svgRect,
+  groupRect,
+  entry,
+  extra = {},
+}) {
   const payload = {
     markerKey: buildMarkerKey(marker),
     index,
@@ -1107,7 +1116,7 @@ function buildOverlaySignature(overlayRect, dartLength) {
   ].join("|");
 }
 
-function maybeEmitBoardAndOverlayDebug(
+function maybeEmitBoardAndOverlayDebug({
   state,
   featureDebug,
   board,
@@ -1115,8 +1124,8 @@ function maybeEmitBoardAndOverlayDebug(
   groupRect,
   overlayRect,
   dartLength,
-  clipPath
-) {
+  clipPath,
+}) {
   const boardSignature = buildBoardSignature(board, boardRect, groupRect);
   if (state.lastBoardSignature !== boardSignature) {
     state.lastBoardSignature = boardSignature;
@@ -1334,7 +1343,7 @@ export function updateDartMarkerDarts(options = {}) {
     y: boardRect.top + boardRect.height / 2 - overlayRect.top,
   };
 
-  maybeEmitBoardAndOverlayDebug(
+  maybeEmitBoardAndOverlayDebug({
     state,
     featureDebug,
     board,
@@ -1342,8 +1351,8 @@ export function updateDartMarkerDarts(options = {}) {
     groupRect,
     overlayRect,
     dartLength,
-    clipPath
-  );
+    clipPath,
+  });
 
   const markerSet = new Set(markers);
   let removed = 0;
@@ -1417,15 +1426,15 @@ export function updateDartMarkerDarts(options = {}) {
       visualConfig,
     });
 
-    const geometryPayload = buildGeometryPayload(
+    const geometryPayload = buildGeometryPayload({
       marker,
       index,
       screenPoint,
       overlayRect,
-      boardRect,
+      svgRect: boardRect,
       groupRect,
-      entry
-    );
+      entry,
+    });
     emitDebug(state, featureDebug, "geometry-apply", geometryPayload);
 
     if (isNew) {

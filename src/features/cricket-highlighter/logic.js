@@ -470,7 +470,7 @@ function ensurePresentationPatterns(overlay, visualConfig) {
 }
 
 function applyShapeStyle(shape, presentation, targetLabel) {
-  if (!shape || !shape.classList || !shape.style) {
+  if (!shape?.classList || !shape.style) {
     return;
   }
   const normalizedPresentation = resolvePresentationToken(presentation);
