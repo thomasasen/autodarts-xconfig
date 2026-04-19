@@ -5,361 +5,371 @@ function normalizeSidebarRouteHints(values) {
   return new Set(Array.isArray(values) ? values : []);
 }
 
-export function createShellRenderController(options = {}) {
-  const windowRef = options.windowRef || null;
-  const documentRef = options.documentRef || null;
-  const state = options.state || null;
-  const menuItemId = String(options.menuItemId || "").trim();
-  const panelHostId = String(options.panelHostId || "").trim();
-  const menuLabel = String(options.menuLabel || "").trim();
-  const menuLabelCollapseWidth = Number(options.menuLabelCollapseWidth) || 0;
-  const installedVersion = String(options.installedVersion || "").trim();
-  const sidebarRouteHints = normalizeSidebarRouteHints(options.sidebarRouteHints);
-  const buildMenuIconElement =
-    typeof options.buildMenuIconElement === "function" ? options.buildMenuIconElement : () => null;
-  const buildShellContent =
-    typeof options.buildShellContent === "function" ? options.buildShellContent : () => null;
-  const createElement =
-    typeof options.createElement === "function" ? options.createElement : null;
-  const getContentElement =
-    typeof options.getContentElement === "function" ? options.getContentElement : () => null;
-  const getSidebarElement =
-    typeof options.getSidebarElement === "function" ? options.getSidebarElement : () => null;
-  const isConfigRoute =
-    typeof options.isConfigRoute === "function" ? options.isConfigRoute : () => false;
-  const isNavigationElement =
-    typeof options.isNavigationElement === "function" ? options.isNavigationElement : () => false;
-  const parseShellRenderSignature =
-    typeof options.parseShellRenderSignature === "function" ? options.parseShellRenderSignature : () => null;
-  const buildShellRenderSignature =
-    typeof options.buildShellRenderSignature === "function" ? options.buildShellRenderSignature : () => "";
-  const toRoutePathname =
-    typeof options.toRoutePathname === "function" ? options.toRoutePathname : () => "";
-  const getFeatures = typeof options.getFeatures === "function" ? options.getFeatures : () => [];
-
-  function restoreContent() {
-    state.hiddenDisplays.forEach((displayValue, node) => {
-      if (node?.isConnected) {
-        node.style.display = displayValue;
-      }
-    });
-    state.hiddenDisplays.clear();
-    state.contentHidden = false;
-  }
-
-  function hideContent(content, host) {
-    Array.from(content?.children || []).forEach((child) => {
-      if (child === host || isNavigationElement(child)) {
-        return;
-      }
-
-      if (!state.hiddenDisplays.has(child)) {
-        state.hiddenDisplays.set(child, child.style.display || "");
-      }
-      child.style.display = "none";
-    });
-    state.contentHidden = true;
-  }
-
-  function syncMenuButtonState() {
-    const button = documentRef.getElementById?.(menuItemId);
-    if (!button) {
-      return;
+function restoreShellContent(controller) {
+  controller.state.hiddenDisplays.forEach((displayValue, node) => {
+    if (node?.isConnected) {
+      node.style.display = displayValue;
     }
-    if (isConfigRoute()) {
-      button.dataset.active = "true";
-    } else {
-      delete button.dataset.active;
-    }
-  }
+  });
+  controller.state.hiddenDisplays.clear();
+  controller.state.contentHidden = false;
+}
 
-  function syncMenuUpdateState(item) {
-    const button = item || documentRef.getElementById?.(menuItemId);
-    if (!button) {
+function hideShellContent(controller, content, host) {
+  Array.from(content?.children || []).forEach((child) => {
+    if (child === host || controller.isNavigationElement(child)) {
       return;
     }
 
-    const hasUpdate = Boolean(state.updateStatus?.available);
-    const remoteVersion = String(state.updateStatus?.remoteVersion || "").trim();
-    const title = hasUpdate && remoteVersion
-      ? `${menuLabel} - Update verfügbar (${installedVersion} -> ${remoteVersion})`
-      : menuLabel;
-
-    if (hasUpdate) {
-      button.dataset.updateAvailable = "true";
-    } else {
-      delete button.dataset.updateAvailable;
+    if (!controller.state.hiddenDisplays.has(child)) {
+      controller.state.hiddenDisplays.set(child, child.style.display || "");
     }
+    child.style.display = "none";
+  });
+  controller.state.contentHidden = true;
+}
 
-    button.dataset.updateState = String(state.updateStatus?.status || "");
-    button.setAttribute("title", title);
-    button.setAttribute("aria-label", title);
+function syncMenuButtonState(controller) {
+  const button = controller.documentRef.getElementById?.(controller.menuItemId);
+  if (!button) {
+    return;
+  }
+  if (controller.isConfigRoute()) {
+    button.dataset.active = "true";
+  } else {
+    delete button.dataset.active;
+  }
+}
+
+function syncMenuUpdateState(controller, item = null) {
+  const button = item || controller.documentRef.getElementById?.(controller.menuItemId);
+  if (!button) {
+    return;
   }
 
-  function syncMenuLabelForWidth(sidebar, item) {
-    const menuItem = item || documentRef.getElementById?.(menuItemId);
-    const sidebarElement =
-      sidebar ||
-      getSidebarElement(windowRef, documentRef, {
-        panelHostId,
-        sidebarRouteHints,
-      });
-    if (!menuItem || !sidebarElement) {
-      return;
-    }
-    const label = menuItem.querySelector?.(".ad-xconfig-menu-label");
-    if (!label) {
-      return;
-    }
-    const width = Number(sidebarElement.getBoundingClientRect?.().width || 0);
-    label.style.display = width > 0 && width < menuLabelCollapseWidth ? "none" : "inline";
+  const hasUpdate = Boolean(controller.state.updateStatus?.available);
+  const remoteVersion = String(controller.state.updateStatus?.remoteVersion || "").trim();
+  const title = hasUpdate && remoteVersion
+    ? `${controller.menuLabel} - Update verfügbar (${controller.installedVersion} -> ${remoteVersion})`
+    : controller.menuLabel;
+
+  if (hasUpdate) {
+    button.dataset.updateAvailable = "true";
+  } else {
+    delete button.dataset.updateAvailable;
   }
 
-  function ensureMenuButton() {
-    const sidebar = getSidebarElement(windowRef, documentRef, {
-      panelHostId,
-      sidebarRouteHints,
+  button.dataset.updateState = String(controller.state.updateStatus?.status || "");
+  button.setAttribute("title", title);
+  button.setAttribute("aria-label", title);
+}
+
+function syncMenuLabelForWidth(controller, sidebar = null, item = null) {
+  const menuItem = item || controller.documentRef.getElementById?.(controller.menuItemId);
+  const sidebarElement =
+    sidebar ||
+    controller.getSidebarElement(controller.windowRef, controller.documentRef, {
+      panelHostId: controller.panelHostId,
+      sidebarRouteHints: controller.sidebarRouteHints,
     });
-    if (!sidebar) {
-      return null;
-    }
+  if (!menuItem || !sidebarElement) {
+    return;
+  }
+  const label = menuItem.querySelector?.(".ad-xconfig-menu-label");
+  if (!label) {
+    return;
+  }
+  const width = Number(sidebarElement.getBoundingClientRect?.().width || 0);
+  label.style.display = width > 0 && width < controller.menuLabelCollapseWidth ? "none" : "inline";
+}
 
-    const sidebarLinks = Array.from(sidebar.querySelectorAll("a[href]"));
-    const boardsAnchor =
-      sidebarLinks.find((link) => toRoutePathname(windowRef, link.getAttribute("href")) === "/boards") ||
-      sidebarLinks.find((link) => String(link.textContent || "").trim().toLowerCase() === "meine boards") ||
-      null;
-    const insertionAnchor =
-      boardsAnchor ||
-      sidebarLinks.find((link) => sidebarRouteHints.has(toRoutePathname(windowRef, link.getAttribute("href")))) ||
-      null;
-    const template = [
-      insertionAnchor,
-      ...Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []),
-      sidebar.lastElementChild,
-    ].find((node) => {
-      return Boolean(node) &&
-        node.id !== menuItemId &&
-        !node.closest?.(`#${panelHostId}`) &&
-        String(node.dataset?.adxconfigTab || "").trim() === "";
-    }) || null;
+function resolveSidebarTemplate(controller, sidebar, insertionAnchor) {
+  return [
+    insertionAnchor,
+    ...Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []),
+    sidebar.lastElementChild,
+  ].find((node) => {
+    return Boolean(node) &&
+      node.id !== controller.menuItemId &&
+      !node.closest?.(`#${controller.panelHostId}`) &&
+      String(node.dataset?.adxconfigTab || "").trim() === "";
+  }) || null;
+}
 
-    let item = documentRef.getElementById?.(menuItemId);
-    const shouldRebuildExistingItem =
-      Boolean(item) &&
-      (
-        Boolean(item.closest?.(`#${panelHostId}`)) ||
-        item.getAttribute?.("data-adxconfig-tab") !== null ||
-        String(item.getAttribute?.("data-adxconfig-action") || "").trim() !== "open" ||
-        !item.querySelector?.(".ad-xconfig-menu-label")
-      );
-    if (shouldRebuildExistingItem) {
-      item.remove?.();
-      item = null;
-    }
-
-    if (!item) {
-      item = template ? template.cloneNode(true) : createElement(documentRef, "button", { type: "button" });
-      const icon = buildMenuIconElement(documentRef, template);
-      const label = createElement(documentRef, "span", {
-        className: "ad-xconfig-menu-label",
-        text: menuLabel,
-      });
-      item.replaceChildren(icon, label);
-    }
-
-    item.id = menuItemId;
-    item.classList?.remove?.("ad-xconfig-tab");
-    item.removeAttribute?.("data-adxconfig-tab");
-    item.setAttribute("role", "button");
-    item.setAttribute("tabindex", "0");
-    item.setAttribute("aria-label", menuLabel);
-    item.setAttribute("title", menuLabel);
-    item.dataset.adxconfigAction = "open";
-    item.style.cursor = "pointer";
-
-    if (String(item.tagName || "").toLowerCase() === "a") {
-      item.removeAttribute("href");
-    } else if (String(item.tagName || "").toLowerCase() === "button") {
-      item.setAttribute("type", "button");
-    }
-
-    const labelNode = item.querySelector?.(".ad-xconfig-menu-label");
-    if (!labelNode) {
-      const icon = buildMenuIconElement(documentRef, template);
-      const label = createElement(documentRef, "span", {
-        className: "ad-xconfig-menu-label",
-        text: menuLabel,
-      });
-      item.replaceChildren(icon, label);
-    } else {
-      labelNode.textContent = menuLabel;
-      if (!item.querySelector?.(".ad-xconfig-menu-icon")) {
-        const icon = buildMenuIconElement(documentRef, template);
-        item.insertBefore?.(icon, item.firstChild || null);
-      }
-    }
-
-    if (insertionAnchor) {
-      if (insertionAnchor.nextElementSibling !== item) {
-        insertionAnchor.after(item);
-      }
-    } else if (item.parentNode !== sidebar) {
-      sidebar.appendChild(item);
-    }
-
-    syncMenuButtonState();
-    syncMenuUpdateState(item);
-    syncMenuLabelForWidth(sidebar, item);
-    return item;
+function ensureMenuButton(controller) {
+  const sidebar = controller.getSidebarElement(controller.windowRef, controller.documentRef, {
+    panelHostId: controller.panelHostId,
+    sidebarRouteHints: controller.sidebarRouteHints,
+  });
+  if (!sidebar) {
+    return null;
   }
 
-  function ensurePanelHost() {
-    const sidebar = getSidebarElement(windowRef, documentRef, {
-      panelHostId,
-      sidebarRouteHints,
+  const sidebarLinks = Array.from(sidebar.querySelectorAll("a[href]"));
+  const boardsAnchor =
+    sidebarLinks.find((link) => controller.toRoutePathname(controller.windowRef, link.getAttribute("href")) === "/boards") ||
+    sidebarLinks.find((link) => String(link.textContent || "").trim().toLowerCase() === "meine boards") ||
+    null;
+  const insertionAnchor =
+    boardsAnchor ||
+    sidebarLinks.find((link) => controller.sidebarRouteHints.has(controller.toRoutePathname(controller.windowRef, link.getAttribute("href")))) ||
+    null;
+  const template = resolveSidebarTemplate(controller, sidebar, insertionAnchor);
+
+  let item = controller.documentRef.getElementById?.(controller.menuItemId);
+  const shouldRebuildExistingItem =
+    Boolean(item) &&
+    (
+      Boolean(item.closest?.(`#${controller.panelHostId}`)) ||
+      item.getAttribute?.("data-adxconfig-tab") !== null ||
+      String(item.getAttribute?.("data-adxconfig-action") || "").trim() !== "open" ||
+      !item.querySelector?.(".ad-xconfig-menu-label")
+    );
+  if (shouldRebuildExistingItem) {
+    item.remove?.();
+    item = null;
+  }
+
+  if (!item) {
+    item = template ? template.cloneNode(true) : controller.createElement(controller.documentRef, "button", { type: "button" });
+    const icon = controller.buildMenuIconElement(controller.documentRef, template);
+    const label = controller.createElement(controller.documentRef, "span", {
+      className: "ad-xconfig-menu-label",
+      text: controller.menuLabel,
     });
-    const content = getContentElement(windowRef, documentRef, sidebar, {
-      panelHostId,
-      sidebarRouteHints,
+    item.replaceChildren(icon, label);
+  }
+
+  item.id = controller.menuItemId;
+  item.classList?.remove?.("ad-xconfig-tab");
+  item.removeAttribute?.("data-adxconfig-tab");
+  item.setAttribute("role", "button");
+  item.setAttribute("tabindex", "0");
+  item.setAttribute("aria-label", controller.menuLabel);
+  item.setAttribute("title", controller.menuLabel);
+  item.dataset.adxconfigAction = "open";
+  item.style.cursor = "pointer";
+
+  if (String(item.tagName || "").toLowerCase() === "a") {
+    item.removeAttribute("href");
+  } else if (String(item.tagName || "").toLowerCase() === "button") {
+    item.setAttribute("type", "button");
+  }
+
+  const labelNode = item.querySelector?.(".ad-xconfig-menu-label");
+  if (!labelNode) {
+    const icon = controller.buildMenuIconElement(controller.documentRef, template);
+    const label = controller.createElement(controller.documentRef, "span", {
+      className: "ad-xconfig-menu-label",
+      text: controller.menuLabel,
     });
-    if (!content) {
-      return null;
+    item.replaceChildren(icon, label);
+  } else {
+    labelNode.textContent = controller.menuLabel;
+    if (!item.querySelector?.(".ad-xconfig-menu-icon")) {
+      const icon = controller.buildMenuIconElement(controller.documentRef, template);
+      item.insertBefore?.(icon, item.firstChild || null);
     }
+  }
 
-    let host = documentRef.getElementById?.(panelHostId);
-    if (!host) {
-      host = createElement(documentRef, "section", {
-        id: panelHostId,
-      });
+  if (insertionAnchor) {
+    if (insertionAnchor.nextElementSibling !== item) {
+      insertionAnchor.after(item);
     }
+  } else if (item.parentNode !== sidebar) {
+    sidebar.appendChild(item);
+  }
 
-    if (content === host || host.contains?.(content)) {
-      return host;
-    }
+  syncMenuButtonState(controller);
+  syncMenuUpdateState(controller, item);
+  syncMenuLabelForWidth(controller, sidebar, item);
+  return item;
+}
 
-    if (host.parentNode !== content) {
-      content.appendChild(host);
-    }
+function ensurePanelHost(controller) {
+  const sidebar = controller.getSidebarElement(controller.windowRef, controller.documentRef, {
+    panelHostId: controller.panelHostId,
+    sidebarRouteHints: controller.sidebarRouteHints,
+  });
+  const content = controller.getContentElement(controller.windowRef, controller.documentRef, sidebar, {
+    panelHostId: controller.panelHostId,
+    sidebarRouteHints: controller.sidebarRouteHints,
+  });
+  if (!content) {
+    return null;
+  }
 
+  let host = controller.documentRef.getElementById?.(controller.panelHostId);
+  if (!host) {
+    host = controller.createElement(controller.documentRef, "section", {
+      id: controller.panelHostId,
+    });
+  }
+
+  if (content === host || host.contains?.(content)) {
     return host;
   }
 
-  function render() {
-    if (!state.started) {
-      return;
-    }
-
-    const host = ensurePanelHost();
-    if (!host) {
-      return;
-    }
-    const features = getFeatures();
-    const routeActive = isConfigRoute();
-    const nextSignature = buildShellRenderSignature(state, features, routeActive);
-    const previousSignaturePayload = parseShellRenderSignature(state.renderSignature);
-    const keepModalStable =
-      Boolean(previousSignaturePayload?.routeActive) &&
-      String(previousSignaturePayload?.activeSettingsFeatureKey || "") !== "" &&
-      String(previousSignaturePayload?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
-      Boolean(routeActive);
-
-    if (
-      state.shellNode &&
-      state.shellNode.parentNode === host &&
-      state.renderSignature === nextSignature
-    ) {
-      return;
-    }
-
-    const previousShellNode =
-      state.shellNode && state.shellNode.parentNode === host ? state.shellNode : null;
-    const hostScrollTop = Number(host.scrollTop || 0);
-    const previousModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
-    const previousModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
-    const previousModalScrollTop = Number(previousModal?.scrollTop || 0);
-    const previousModalBodyScrollTop = Number(previousModalBody?.scrollTop || 0);
-
-    const nextShellNode = buildShellContent(documentRef, state, features);
-
-    if (!previousShellNode) {
-      host.appendChild(nextShellNode);
-      state.shellNode = nextShellNode;
-    } else if (keepModalStable) {
-      state.renderSignature = nextSignature;
-      host.scrollTop = hostScrollTop;
-      const stableModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
-      const stableModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
-      if (stableModal) {
-        stableModal.scrollTop = previousModalScrollTop;
-      }
-      if (stableModalBody) {
-        stableModalBody.scrollTop = previousModalBodyScrollTop;
-      }
-      return;
-    } else {
-      while (previousShellNode.firstChild) {
-        previousShellNode.firstChild.remove();
-      }
-      Array.from(nextShellNode.children).forEach((child) => {
-        previousShellNode.appendChild(child);
-      });
-      state.shellNode = previousShellNode;
-    }
-
-    state.renderSignature = nextSignature;
-    host.scrollTop = hostScrollTop;
-
-    const nextModal = state.shellNode?.querySelector?.(".ad-xconfig-modal") || null;
-    const nextModalBody = state.shellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
-    if (nextModal) {
-      nextModal.scrollTop = previousModalScrollTop;
-    }
-    if (nextModalBody) {
-      nextModalBody.scrollTop = previousModalBodyScrollTop;
-    }
+  if (host.parentNode !== content) {
+    content.appendChild(host);
   }
 
-  function syncVisibility() {
-    const sidebar = getSidebarElement(windowRef, documentRef, {
-      panelHostId,
-      sidebarRouteHints,
-    });
-    const content = getContentElement(windowRef, documentRef, sidebar, {
-      panelHostId,
-      sidebarRouteHints,
-    });
-    const host = ensurePanelHost();
+  return host;
+}
 
-    if (!content || !host) {
-      return;
-    }
+function shouldKeepModalStable(previousSignaturePayload, state, routeActive) {
+  return Boolean(previousSignaturePayload?.routeActive) &&
+    String(previousSignaturePayload?.activeSettingsFeatureKey || "") !== "" &&
+    String(previousSignaturePayload?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
+    Boolean(routeActive);
+}
 
-    if (isConfigRoute()) {
-      render();
-      hideContent(content, host);
-      host.style.display = "block";
-    } else {
-      if (state.contentHidden) {
-        restoreContent();
-      }
-      state.activeSettingsFeatureKey = "";
-      host.style.display = "none";
-    }
+function captureModalScrollState(previousShellNode, host) {
+  const previousModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
+  const previousModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+  return {
+    hostScrollTop: Number(host.scrollTop || 0),
+    previousModalScrollTop: Number(previousModal?.scrollTop || 0),
+    previousModalBodyScrollTop: Number(previousModalBody?.scrollTop || 0),
+  };
+}
 
-    syncMenuButtonState();
-    syncMenuUpdateState();
+function restoreModalScrollState(shellNode, modalScrollState) {
+  const nextModal = shellNode?.querySelector?.(".ad-xconfig-modal") || null;
+  const nextModalBody = shellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+  if (nextModal) {
+    nextModal.scrollTop = modalScrollState.previousModalScrollTop;
   }
+  if (nextModalBody) {
+    nextModalBody.scrollTop = modalScrollState.previousModalBodyScrollTop;
+  }
+}
+
+function renderShell(controller) {
+  if (!controller.state.started) {
+    return;
+  }
+
+  const host = ensurePanelHost(controller);
+  if (!host) {
+    return;
+  }
+  const features = controller.getFeatures();
+  const routeActive = controller.isConfigRoute();
+  const nextSignature = controller.buildShellRenderSignature(controller.state, features, routeActive);
+  const previousSignaturePayload = controller.parseShellRenderSignature(controller.state.renderSignature);
+  const keepModalStable = shouldKeepModalStable(previousSignaturePayload, controller.state, routeActive);
+
+  if (
+    controller.state.shellNode &&
+    controller.state.shellNode.parentNode === host &&
+    controller.state.renderSignature === nextSignature
+  ) {
+    return;
+  }
+
+  const previousShellNode =
+    controller.state.shellNode && controller.state.shellNode.parentNode === host ? controller.state.shellNode : null;
+  const modalScrollState = captureModalScrollState(previousShellNode, host);
+  const nextShellNode = controller.buildShellContent(controller.documentRef, controller.state, features);
+
+  if (!previousShellNode) {
+    host.appendChild(nextShellNode);
+    controller.state.shellNode = nextShellNode;
+  } else if (keepModalStable) {
+    controller.state.renderSignature = nextSignature;
+    host.scrollTop = modalScrollState.hostScrollTop;
+    restoreModalScrollState(previousShellNode, modalScrollState);
+    return;
+  } else {
+    while (previousShellNode.firstChild) {
+      previousShellNode.firstChild.remove();
+    }
+    Array.from(nextShellNode.children).forEach((child) => {
+      previousShellNode.appendChild(child);
+    });
+    controller.state.shellNode = previousShellNode;
+  }
+
+  controller.state.renderSignature = nextSignature;
+  host.scrollTop = modalScrollState.hostScrollTop;
+  restoreModalScrollState(controller.state.shellNode, modalScrollState);
+}
+
+function syncShellVisibility(controller) {
+  const sidebar = controller.getSidebarElement(controller.windowRef, controller.documentRef, {
+    panelHostId: controller.panelHostId,
+    sidebarRouteHints: controller.sidebarRouteHints,
+  });
+  const content = controller.getContentElement(controller.windowRef, controller.documentRef, sidebar, {
+    panelHostId: controller.panelHostId,
+    sidebarRouteHints: controller.sidebarRouteHints,
+  });
+  const host = ensurePanelHost(controller);
+
+  if (!content || !host) {
+    return;
+  }
+
+  if (controller.isConfigRoute()) {
+    renderShell(controller);
+    hideShellContent(controller, content, host);
+    host.style.display = "block";
+  } else {
+    if (controller.state.contentHidden) {
+      restoreShellContent(controller);
+    }
+    controller.state.activeSettingsFeatureKey = "";
+    host.style.display = "none";
+  }
+
+  syncMenuButtonState(controller);
+  syncMenuUpdateState(controller);
+}
+
+export function createShellRenderController(options = {}) {
+  const controller = {
+    windowRef: options.windowRef || null,
+    documentRef: options.documentRef || null,
+    state: options.state || null,
+    menuItemId: String(options.menuItemId || "").trim(),
+    panelHostId: String(options.panelHostId || "").trim(),
+    menuLabel: String(options.menuLabel || "").trim(),
+    menuLabelCollapseWidth: Number(options.menuLabelCollapseWidth) || 0,
+    installedVersion: String(options.installedVersion || "").trim(),
+    sidebarRouteHints: normalizeSidebarRouteHints(options.sidebarRouteHints),
+    buildMenuIconElement:
+      typeof options.buildMenuIconElement === "function" ? options.buildMenuIconElement : () => null,
+    buildShellContent:
+      typeof options.buildShellContent === "function" ? options.buildShellContent : () => null,
+    createElement:
+      typeof options.createElement === "function" ? options.createElement : null,
+    getContentElement:
+      typeof options.getContentElement === "function" ? options.getContentElement : () => null,
+    getSidebarElement:
+      typeof options.getSidebarElement === "function" ? options.getSidebarElement : () => null,
+    isConfigRoute:
+      typeof options.isConfigRoute === "function" ? options.isConfigRoute : () => false,
+    isNavigationElement:
+      typeof options.isNavigationElement === "function" ? options.isNavigationElement : () => false,
+    parseShellRenderSignature:
+      typeof options.parseShellRenderSignature === "function" ? options.parseShellRenderSignature : () => null,
+    buildShellRenderSignature:
+      typeof options.buildShellRenderSignature === "function" ? options.buildShellRenderSignature : () => "",
+    toRoutePathname:
+      typeof options.toRoutePathname === "function" ? options.toRoutePathname : () => "",
+    getFeatures: typeof options.getFeatures === "function" ? options.getFeatures : () => [],
+  };
 
   return {
-    ensureMenuButton,
-    ensurePanelHost,
-    hideContent,
-    render,
-    restoreContent,
-    syncMenuButtonState,
-    syncMenuLabelForWidth,
-    syncMenuUpdateState,
-    syncVisibility,
+    ensureMenuButton: () => ensureMenuButton(controller),
+    ensurePanelHost: () => ensurePanelHost(controller),
+    hideContent: (content, host) => hideShellContent(controller, content, host),
+    render: () => renderShell(controller),
+    restoreContent: () => restoreShellContent(controller),
+    syncMenuButtonState: () => syncMenuButtonState(controller),
+    syncMenuLabelForWidth: (sidebar, item) => syncMenuLabelForWidth(controller, sidebar, item),
+    syncMenuUpdateState: (item) => syncMenuUpdateState(controller, item),
+    syncVisibility: () => syncShellVisibility(controller),
   };
 }

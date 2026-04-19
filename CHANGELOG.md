@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die xConfig-Shell reagiert weiterhin gleich auf Menü-, Settings-, Update- und Lifecycle-Aktionen, drückt die internen Controller-Pfade in dieser Sonar-Welle aber klarer getrennt aus.
+  Technik: `xconfig-ui/action-controller`, `render-controller` und `lifecycle-controller` ziehen ihre lokalen Action-, Render- und Lifecycle-Helfer in äußere Hilfsfunktionen, bereinigen dabei einen verschachtelten Select-Ternary und lassen die öffentliche Controller-API sowie das bestehende Event-, Queue-, Modal- und Teardown-Verhalten unverändert; die vorhandenen Action- und Shell-Regressionen bleiben dabei der Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die geteilten Theme-Layout- und Cricket-Readability-Pfade verhalten sich weiter wie bisher, drücken kleine DOM- und Mess-Guards intern aber direkter aus.
   Technik: `board-layout-resolver` und `cricket-readability` bereinigen in dieser Sonar-Welle nur lokale `S6582`-Treffer per Optional-Chaining und bündeln die interne Messsignatur von `measureCricketRequiredPlayerWidth(...)` in `cricket-readability` auf ein kleines Optionsobjekt, ohne die Layout-Auflösung, Board-Hide-Policy oder die Readability-Messschleife fachlich umzubauen; die bestehenden Theme-Lifecycle- und Cricket-Readability-Regressionen bleiben dabei der Schutz gegen Drift.
 
