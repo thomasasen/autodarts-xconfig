@@ -355,7 +355,7 @@ function readNodeCandidateValues(node) {
     String(node.textContent || ""),
     String(node.value || ""),
     String(node.getAttribute("value") || ""),
-    String(node.getAttribute("data-value") || ""),
+    String(node.dataset?.value || ""),
     String(node.getAttribute("aria-label") || ""),
     String(node.getAttribute("title") || ""),
   ];
@@ -543,12 +543,12 @@ function collectVariantStripNodes(documentRef) {
   pushUnique(variantElement);
 
   const parent = variantElement.parentNode || null;
-  if (parent && parent.children) {
+  if (parent?.children) {
     Array.from(parent.children).forEach(pushUnique);
   }
 
   const grandParent = parent?.parentNode || null;
-  if (grandParent && grandParent.children) {
+  if (grandParent?.children) {
     Array.from(grandParent.children).forEach((node) => {
       if (node !== parent) {
         pushUnique(node);
@@ -899,13 +899,13 @@ export function ensureProgressHost(cardNode, documentRef) {
   stackNode?.setAttribute?.(STACK_ATTRIBUTE, "true");
   const scoreNode = getPlayerScoreNode(cardNode);
   if (hostNode.parentNode !== stackNode) {
-    if (scoreNode && scoreNode.parentNode === stackNode && typeof scoreNode.insertAdjacentElement === "function") {
-      scoreNode.insertAdjacentElement("afterend", hostNode);
+    if (scoreNode && scoreNode.parentNode === stackNode && typeof scoreNode.after === "function") {
+      scoreNode.after(hostNode);
     } else {
       stackNode.appendChild(hostNode);
     }
   } else if (scoreNode && hostNode.previousElementSibling !== scoreNode && scoreNode.parentNode === stackNode) {
-    scoreNode.insertAdjacentElement?.("afterend", hostNode);
+    scoreNode.after?.(hostNode);
   }
 
   ensureProgressChildren(hostNode, documentRef);
@@ -1144,7 +1144,7 @@ function triggerScoreChangeEffect(
 }
 
 export function updateProgressHost(hostNode, options = {}) {
-  if (!hostNode || !hostNode.classList || !hostNode.style) {
+  if (!hostNode?.classList || !hostNode.style) {
     return;
   }
 
@@ -1165,7 +1165,7 @@ export function updateProgressHost(hostNode, options = {}) {
   if (active) {
     hostNode.classList.add(sizeClass);
   }
-  hostNode.setAttribute("data-ad-ext-x01-score-progress-state", active ? "active" : "inactive");
+  hostNode.dataset.adExtX01ScoreProgressState = active ? "active" : "inactive";
   hostNode.setAttribute(COLOR_THEME_ATTRIBUTE, colorTheme);
   hostNode.setAttribute(SIZE_ATTRIBUTE, normalizeBarSize(options.barSize));
   hostNode.setAttribute(EFFECT_ATTRIBUTE, effect);

@@ -3,12 +3,22 @@ import assert from "node:assert/strict";
 
 import { createShellActionController } from "../../src/features/xconfig-ui/action-controller.js";
 
+function datasetKeyFromAttribute(name) {
+  return String(name || "")
+    .replace(/^data-/, "")
+    .replaceAll(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
+}
+
+function datasetAttributeFromKey(key) {
+  return `data-${String(key || "").replaceAll(/([A-Z])/g, "-$1").toLowerCase()}`;
+}
+
 function flushMicrotasks() {
   return new Promise((resolve) => setImmediate(resolve));
 }
 
 function createActionNode(attributes = {}, parentElement = null) {
-  return {
+  const node = {
     attributes: { ...attributes },
     parentElement,
     checked: false,
@@ -19,9 +29,35 @@ function createActionNode(attributes = {}, parentElement = null) {
         : null;
     },
     setAttribute(name, value) {
-      this.attributes[String(name || "")] = String(value);
+      const key = String(name || "");
+      const normalizedValue = String(value);
+      this.attributes[key] = normalizedValue;
+      if (key.startsWith("data-")) {
+        this.dataset[datasetKeyFromAttribute(key)] = normalizedValue;
+      }
     },
   };
+
+  const datasetStore = {};
+  Object.entries(node.attributes).forEach(([name, value]) => {
+    if (String(name).startsWith("data-")) {
+      datasetStore[datasetKeyFromAttribute(name)] = String(value);
+    }
+  });
+  node.dataset = new Proxy(datasetStore, {
+    get(target, property) {
+      return target[String(property)];
+    },
+    set(target, property, value) {
+      const key = String(property);
+      const normalizedValue = String(value);
+      target[key] = normalizedValue;
+      node.attributes[datasetAttributeFromKey(key)] = normalizedValue;
+      return true;
+    },
+  });
+
+  return node;
 }
 
 function createToggleGroup(settingKey) {

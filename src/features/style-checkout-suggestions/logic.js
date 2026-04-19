@@ -71,14 +71,12 @@ export function isX01Active({ gameState, documentRef, variantRules }) {
 }
 
 export function resetSuggestionNode(node) {
-  if (!node || !node.classList || !node.style) {
+  if (!node?.classList || !node.style) {
     return;
   }
 
   node.classList.remove(BASE_CLASS, NO_LABEL_CLASS, ...STYLE_CLASS_LIST);
-  if (typeof node.removeAttribute === "function") {
-    node.removeAttribute("data-ad-ext-label");
-  }
+  delete node.dataset?.adExtLabel;
   node.style.removeProperty("--ad-ext-accent");
   node.style.removeProperty("--ad-ext-accent-soft");
   node.style.removeProperty("--ad-ext-accent-strong");
@@ -89,7 +87,7 @@ export function resetSuggestionNode(node) {
 }
 
 export function applySuggestionStyle(node, featureConfig = {}) {
-  if (!node || !node.classList || !node.style) {
+  if (!node?.classList || !node.style) {
     return;
   }
 
@@ -106,8 +104,8 @@ export function applySuggestionStyle(node, featureConfig = {}) {
 
   if (labelText) {
     node.dataset.adExtLabel = labelText;
-  } else if (typeof node.removeAttribute === "function") {
-    node.removeAttribute("data-ad-ext-label");
+  } else {
+    delete node.dataset?.adExtLabel;
   }
 
   node.style.setProperty("--ad-ext-accent", theme.accentColor);

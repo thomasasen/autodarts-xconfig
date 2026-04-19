@@ -228,7 +228,7 @@ export function canUseCheckoutFinishSegmentNow(options = {}) {
 
     const parsedSegment =
       typeof x01Rules?.parseSegment === "function" ? x01Rules.parseSegment(finishSegment) : null;
-    if (!parsedSegment || parsedSegment.score !== activeScore) {
+    if (parsedSegment?.score !== activeScore) {
       return false;
     }
 

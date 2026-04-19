@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere sichere Sonar-Welle modernisiert ausgewählte X01-, TV-Zoom- und xConfig-UI-Helfer, ohne Checkout-Logik, Score-Progress, Shell-Verhalten oder Theme-Uploads fachlich umzubauen.
+  Technik: In `x01-score-progress`, `x01-checkout-context`, `x01-checkout-route`, `tv-board-zoom`, `render-controller`, `action-controller`, `style-checkout-suggestions` und `theme-background` wurden nur mechanische `dataset`-, `after(...)`- und Optional-Chaining-Bereinigungen aus der Low-Risk-Gruppe umgesetzt; die bestehenden Runtime-, Shell-, TV-Zoom- und X01-Regressionen sichern diese Pfade weiter gegen Drift ab.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere kleine Sonar-Welle hält Cricket-Label-Erkennung, Checkout-Hinweise und Theme-Bildstatus auf denselben fachlichen Pfaden, liest interne Datenattribute aber direkter und konsistenter aus.
   Technik: `label-layout`, `style-checkout-suggestions` und `theme-background` verwenden ausgewählte `data-*`-Felder jetzt über `dataset` statt über manuelle Attribut-Lese-/Schreibzugriffe; neue gezielte Runtime-Regressionen sichern explizite Cricket-Mark-Hints, Checkout-Label-Reset und die Theme-Bildstatus-Metadaten gegen Drift ab.
 

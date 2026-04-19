@@ -244,7 +244,7 @@ export function resolveX01ActiveScoreState(context = {}) {
 }
 
 function resolveCheckoutScoreState(activeScoreState, routeSegments, outMode, dartsRemaining, x01Rules) {
-  if (!activeScoreState || activeScoreState.scoreAgreement !== "mismatch") {
+  if (activeScoreState?.scoreAgreement !== "mismatch") {
     return activeScoreState;
   }
 

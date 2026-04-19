@@ -547,7 +547,7 @@ function restoreStyleWithPriority(styleDecl, propertyName, snapshot) {
 }
 
 function cacheHostStyle(state, hostNode) {
-  if (!hostNode || !hostNode.style || state.hostStyleSnapshot?.node === hostNode) {
+  if (!hostNode?.style || state.hostStyleSnapshot?.node === hostNode) {
     return;
   }
 
@@ -569,7 +569,7 @@ function cacheHostStyle(state, hostNode) {
 }
 
 function restoreHostStyle(state, hostNode) {
-  if (!hostNode || !hostNode.style) {
+  if (!hostNode?.style) {
     return;
   }
 
@@ -587,7 +587,7 @@ function restoreHostStyle(state, hostNode) {
 }
 
 function cacheTargetStyle(state, targetNode) {
-  if (!targetNode || !targetNode.style || state.targetStyleSnapshot?.node === targetNode) {
+  if (!targetNode?.style || state.targetStyleSnapshot?.node === targetNode) {
     return;
   }
 
@@ -601,7 +601,7 @@ function cacheTargetStyle(state, targetNode) {
 }
 
 function restoreTargetStyle(state, targetNode) {
-  if (!targetNode || !targetNode.style) {
+  if (!targetNode?.style) {
     return;
   }
 
@@ -683,7 +683,7 @@ function restoreGifOverlayStyles(state) {
   const snapshots = Array.isArray(state?.gifStyleSnapshots) ? state.gifStyleSnapshots : [];
   snapshots.forEach((snapshot) => {
     const node = snapshot?.node;
-    if (!node || !node.style) {
+    if (!node?.style) {
       return;
     }
 

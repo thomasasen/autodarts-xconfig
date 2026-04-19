@@ -170,7 +170,7 @@ export function createShellActionController(options = {}) {
       ) || []
     );
     toggleButtons.forEach((buttonNode) => {
-      buttonNode.setAttribute("data-active", buttonNode === actionNode ? "true" : "false");
+      buttonNode.dataset.active = buttonNode === actionNode ? "true" : "false";
     });
   }
 

@@ -472,7 +472,7 @@ export function uploadThemeBackgroundImage(options = {}) {
   input.style.opacity = "0";
   input.style.pointerEvents = "none";
   input.onchange = () => {
-    const file = input.files && input.files[0];
+    const file = input.files?.[0];
     if (!file) {
       input.onchange = null;
       input.remove?.();

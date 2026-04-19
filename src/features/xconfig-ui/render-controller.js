@@ -35,7 +35,7 @@ export function createShellRenderController(options = {}) {
 
   function restoreContent() {
     state.hiddenDisplays.forEach((displayValue, node) => {
-      if (node && node.isConnected) {
+      if (node?.isConnected) {
         node.style.display = displayValue;
       }
     });
@@ -65,7 +65,7 @@ export function createShellRenderController(options = {}) {
     if (isConfigRoute()) {
       button.dataset.active = "true";
     } else {
-      button.removeAttribute("data-active");
+      delete button.dataset.active;
     }
   }
 
@@ -84,7 +84,7 @@ export function createShellRenderController(options = {}) {
     if (hasUpdate) {
       button.dataset.updateAvailable = "true";
     } else {
-      button.removeAttribute("data-update-available");
+      delete button.dataset.updateAvailable;
     }
 
     button.dataset.updateState = String(state.updateStatus?.status || "");
