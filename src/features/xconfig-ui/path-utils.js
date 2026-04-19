@@ -8,8 +8,9 @@ export function splitFeaturePath(featureKey) {
   return splitSharedFeaturePath(featureKey);
 }
 
-export function setNestedValue(rootValue, pathParts = [], value) {
-  return setSharedNestedValue(rootValue, pathParts, value);
+export function setNestedValue(rootValue, pathParts, value) {
+  const normalizedPathParts = Array.isArray(pathParts) ? pathParts : [];
+  return setSharedNestedValue(rootValue, normalizedPathParts, value);
 }
 
 export function buildFeatureSettingPatch(configKey, settingKey, value) {

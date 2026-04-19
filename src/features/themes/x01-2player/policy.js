@@ -324,7 +324,7 @@ function findTableSlot(cardNode, stackNode) {
 
 function resolveFallbackActiveIndex(playerCards) {
   const classIndex = playerCards.findIndex((node) => node?.classList?.contains?.("ad-ext-player-active"));
-  return classIndex >= 0 ? classIndex : 0;
+  return Math.max(0, classIndex);
 }
 
 function resolveActivePlayerIndex(playerCards, gameState) {

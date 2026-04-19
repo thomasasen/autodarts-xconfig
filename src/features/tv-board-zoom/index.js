@@ -162,14 +162,7 @@ export function shouldScheduleTvBoardZoomMutation(mutations = [], context = {}) 
       return false;
     }
 
-    const mutationType = String(
-      mutation.type ||
-        (mutation.attributeName
-          ? "attributes"
-          : mutation.addedNodes || mutation.removedNodes
-            ? "childList"
-            : "")
-    );
+    const mutationType = resolveMutationType(mutation);
 
     if (mutationType === "attributes") {
       return (
@@ -196,6 +189,19 @@ export function shouldScheduleTvBoardZoomMutation(mutations = [], context = {}) 
 
     return false;
   });
+}
+
+function resolveMutationType(mutation) {
+  if (mutation?.type) {
+    return String(mutation.type);
+  }
+  if (mutation?.attributeName) {
+    return "attributes";
+  }
+  if (mutation?.addedNodes || mutation?.removedNodes) {
+    return "childList";
+  }
+  return "";
 }
 
 function getNodeClassName(node) {
@@ -252,6 +258,16 @@ function buildDebugSummary(payload = {}) {
   }" ty="${payload.ty ?? "-"}" anchor="${payload.anchorX ?? "-"},${payload.anchorY ?? "-"}"`;
 }
 
+function resolveFeatureDebugLogger(featureDebug, level) {
+  if (level === "warn" && typeof featureDebug?.warn === "function") {
+    return featureDebug.warn.bind(featureDebug);
+  }
+  if (typeof featureDebug?.log === "function") {
+    return featureDebug.log.bind(featureDebug);
+  }
+  return null;
+}
+
 function emitDebugEvent(debugState, level, payload = {}) {
   if (!debugState?.featureDebug?.enabled) {
     return;
@@ -263,12 +279,7 @@ function emitDebugEvent(debugState, level, payload = {}) {
   }
   debugState.lastSignature = signature;
 
-  const logger =
-    level === "warn" && typeof debugState.featureDebug.warn === "function"
-      ? debugState.featureDebug.warn.bind(debugState.featureDebug)
-      : typeof debugState.featureDebug.log === "function"
-        ? debugState.featureDebug.log.bind(debugState.featureDebug)
-        : null;
+  const logger = resolveFeatureDebugLogger(debugState.featureDebug, level);
   if (!logger) {
     return;
   }

@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere kleine Sonar-Welle hält Update-Status, Winner-Animation, TV-Zoom, Cricket-Snapshot-Cache sowie ausgewählte xConfig-Helfer auf denselben fachlichen Pfaden, drückt einige Status- und Auswahlzweige intern aber direkter aus.
+  Technik: `update-check`, `winner-fireworks`, `tv-board-zoom`, `cricket-surface/snapshot-cache`, `x01-2player/policy`, `xconfig-ui/path-utils` und `shell-view` bereinigen nur lokale `S3358`-, `S1788`- und `S7766`-Treffer durch kleine Helper und unveränderte Fallback-Pfade; Observer-, Snapshot-, Select- und Update-Semantik bleiben dabei gleich, und die bestehenden Runtime-, Domain- und Changelog-Regressionen bleiben der fachliche Schutz gegen Drift.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; Theme-Mounting, Checkout-Board-Ziele sowie die Cricket-Wrapper für Highlighting und Grid-FX laufen auf denselben fachlichen Pfaden weiter, sind intern aber in dieser Sonar-Welle klarer in Status- und Aktivierungsblöcke getrennt.
   Technik: `mount-theme-feature`, `checkout-board-targets`, `cricket-highlighter` und `cricket-grid-fx` ziehen kleine Aktivierungs-, Renderstatus- und Nicht-Ready-Statuspfade jetzt in lokale Helper; `mount-theme-feature` kapselt zusätzlich Theme-Evaluator und Mutation-Callback in eigene lokale Fabriken, ohne öffentliche Signaturen oder die beobachtbare Overlay-/Lifecycle-Semantik zu ändern. Die bestehenden Theme-, Lifecycle-, Runtime-Performance- und Degraded-Host-Regressionen sichern diese Wrapper-Refactors gegen Drift ab.
 

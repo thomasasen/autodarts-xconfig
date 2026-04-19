@@ -16,6 +16,13 @@ const TERMINAL_STATUS_TOKENS = new Set([
   "match-over",
   "won",
 ]);
+const STYLE_INTERVAL_MS = Object.freeze({
+  sides: 16,
+  fireworks: 250,
+  victorystorm: 620,
+  stars: 980,
+  default: 920,
+});
 
 function randomInRange(min, max) {
   return Math.random() * (max - min) + min;
@@ -293,15 +300,7 @@ function runStyleBurst(state) {
 }
 
 function getStyleIntervalMs(style, intensityPreset) {
-  const base = style === "sides"
-    ? 16
-    : style === "fireworks"
-      ? 250
-      : style === "victorystorm"
-        ? 620
-        : style === "stars"
-          ? 980
-          : 920;
+  const base = STYLE_INTERVAL_MS[style] ?? STYLE_INTERVAL_MS.default;
   return scaledInterval(base, intensityPreset);
 }
 

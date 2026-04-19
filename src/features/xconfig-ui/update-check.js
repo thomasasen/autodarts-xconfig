@@ -117,6 +117,24 @@ function createBaseUpdateStatus(installedVersion, capable) {
   };
 }
 
+function normalizeCheckedAt(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return 0;
+  }
+  return Math.max(0, numericValue);
+}
+
+function resolveUpdateStatus(normalizedRemoteVersion, comparison, error) {
+  if (normalizedRemoteVersion) {
+    return comparison > 0 ? "available" : "current";
+  }
+  if (error) {
+    return "error";
+  }
+  return "idle";
+}
+
 function safeParseJson(value) {
   if (typeof value !== "string" || !value.trim()) {
     return null;
@@ -224,16 +242,10 @@ function createResolvedUpdateStatus({
 
   return {
     ...baseStatus,
-    status: normalizedRemoteVersion
-      ? comparison > 0
-        ? "available"
-        : "current"
-      : error
-        ? "error"
-        : "idle",
+    status: resolveUpdateStatus(normalizedRemoteVersion, comparison, error),
     remoteVersion: normalizedRemoteVersion,
     available: normalizedRemoteVersion ? comparison > 0 : false,
-    checkedAt: Number(checkedAt) > 0 ? Number(checkedAt) : 0,
+    checkedAt: normalizeCheckedAt(checkedAt),
     sourceUrl: String(sourceUrl || "").trim(),
     error: String(error || "").trim(),
     stale: Boolean(stale),
@@ -263,7 +275,7 @@ function writeStoredPayload(storageRef, payload) {
       UPDATE_STATUS_STORAGE_KEY,
       JSON.stringify({
         remoteVersion: normalizeVersion(payload?.remoteVersion),
-        checkedAt: Number(payload?.checkedAt) > 0 ? Number(payload.checkedAt) : 0,
+        checkedAt: normalizeCheckedAt(payload?.checkedAt),
         sourceUrl: String(payload?.sourceUrl || "").trim(),
         validators: normalizeValidatorsMap(payload?.validators),
       })

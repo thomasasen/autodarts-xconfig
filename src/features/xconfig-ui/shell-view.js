@@ -1073,6 +1073,14 @@ function getFieldNoteText(field) {
   return String(field?.description || "").trim();
 }
 
+function resolveConfiguredFieldValues(feature, field) {
+  const configuredValue = feature?.config?.[field.key];
+  if (isMultiSelectField(field)) {
+    return Array.isArray(configuredValue) ? configuredValue : [configuredValue];
+  }
+  return [configuredValue];
+}
+
 function resolveSelectFieldValues(feature, field) {
   const options = Array.isArray(field?.options) ? field.options : [];
   if (!options.length) {
@@ -1080,9 +1088,7 @@ function resolveSelectFieldValues(feature, field) {
   }
 
   const allowedValues = new Set(options.map((option) => String(option?.value ?? "")));
-  const rawValues = isMultiSelectField(field)
-    ? (Array.isArray(feature?.config?.[field.key]) ? feature.config[field.key] : [feature?.config?.[field.key]])
-    : [feature?.config?.[field.key]];
+  const rawValues = resolveConfiguredFieldValues(feature, field);
   const configuredValues = Array.from(
     new Set(
       rawValues
