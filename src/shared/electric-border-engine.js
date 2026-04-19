@@ -227,6 +227,33 @@ function setReadyClass(documentRef, enabled) {
   rootNode.classList.toggle(ELECTRIC_FILTER_READY_CLASS, enabled === true);
 }
 
+function tryRemoveNodeViaPrototype(node) {
+  const prototypeRemove = Object.getPrototypeOf(node)?.remove;
+  if (typeof prototypeRemove !== "function") {
+    return false;
+  }
+
+  try {
+    prototypeRemove.call(node);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function removeElectricDefsNode(node) {
+  if (!node) {
+    return;
+  }
+
+  if (typeof node.remove === "function") {
+    node.remove();
+    return;
+  }
+
+  tryRemoveNodeViaPrototype(node);
+}
+
 export function retainElectricFilterDefs(options = {}) {
   const documentRef = getDocument(options.documentRef);
   if (!documentRef) {
@@ -277,14 +304,7 @@ export function releaseElectricFilterDefs(options = {}) {
       ? documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)
       : null;
   const nodeToRemove = nodeFromDocument || state.defsNode || null;
-  if (typeof nodeToRemove?.remove === "function") {
-    nodeToRemove.remove();
-  } else if (
-    nodeToRemove?.parentNode &&
-    typeof nodeToRemove.parentNode.removeChild === "function"
-  ) {
-    nodeToRemove.parentNode.removeChild(nodeToRemove);
-  }
+  removeElectricDefsNode(nodeToRemove);
 
   setReadyClass(documentRef, false);
   REF_COUNT_BY_DOCUMENT.delete(documentRef);

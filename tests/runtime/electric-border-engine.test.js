@@ -36,7 +36,7 @@ test("electric-border-engine mounts one shared defs node per document and cleans
   assert.equal(documentRef.documentElement.classList.contains(ELECTRIC_FILTER_READY_CLASS), false);
 });
 
-test("electric-border-engine falls back to parent removeChild when defs nodes do not expose remove", () => {
+test("electric-border-engine falls back to the prototype remove when defs nodes shadow remove", () => {
   const documentRef = new FakeDocument();
   const domGuards = createDomGuards({ documentRef });
   retainElectricFilterDefs({ documentRef, domGuards });
@@ -45,16 +45,8 @@ test("electric-border-engine falls back to parent removeChild when defs nodes do
   assert.ok(defsNode);
 
   defsNode.remove = undefined;
-  const parentNode = defsNode.parentNode;
-  let removedByParent = false;
-  const originalRemoveChild = parentNode.removeChild.bind(parentNode);
-  parentNode.removeChild = (child) => {
-    removedByParent = child === defsNode;
-    return originalRemoveChild(child);
-  };
 
   assert.equal(releaseElectricFilterDefs({ documentRef }), 0);
-  assert.equal(removedByParent, true);
   assert.equal(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID), null);
   assert.equal(documentRef.documentElement.classList.contains(ELECTRIC_FILTER_READY_CLASS), false);
 });

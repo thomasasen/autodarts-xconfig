@@ -12,7 +12,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.29] - 2026-04-18
+## [2.1.30] - 2026-04-19
 
 ### Added
 
@@ -20,6 +20,9 @@ direkt zu einer versionierten Release-Sektion.
   Technik: Neue Preset-Definitionen samt Asset-Manifest und Browser-/Node-Auflösung verdrahten `backgroundAssetKey` als normalisierte `themes.globalTypography`-Konfiguration; xConfig rendert dafür einen eigenen Presets-Bereich mit Bestätigungsdialog, Status-/Kartenvorschau und Runtime-Speicherung, und neue Runtime-, Shell- und Theme-Regressionen sichern Upload-vs.-Preset-Priorität, Reset-Verhalten sowie Asset-Fallbacks gegen Drift.
 
 ### Fixed
+
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; der geteilte Electric-Border-Defs-Cleanup bleibt kompatibel zu bestehenden Runtime- und Testumgebungen, räumt den letzten verbleibenden Sonar-Restpunkt jetzt aber ohne den alten `removeChild(...)`-Pfad auf.
+  Technik: `electric-border-engine` entfernt das gemeinsame SVG-Defs-Node beim letzten Release-Schritt jetzt bevorzugt über `remove()` und fällt bei überschatteten Instanzmethoden auf den prototypbasierten `remove`-Aufruf zurück, statt einen separaten `parentNode.removeChild(...)`-Zweig zu halten; die vorhandenen Runtime-Regressionen sichern Refcount-, Cleanup- und Defs-Parität dabei weiter gegen Drift ab.
 
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; `cricket-grid-fx` und `triple-double-bull-hits` laufen in dieser Sonar-Welle weiter auf denselben Grid-, Delta-, Badge-, Burst- und Hit-Dekorationspfaden, drücken ihre großen internen Auswahlschleifen und Animations-Dispatcher aber klarer getrennt aus.
   Technik: `cricket-grid-fx/logic` zieht Zell-Descriptor-Selektion, Badge-/Label-Bindung sowie Row-Anwendung in explizite Helper, ohne Grid-Discovery-, Stable-Row-, Delta-, Wave- oder Merged-Owner-Semantik zu ändern; `triple-double-bull-hits/logic` ersetzt den großen Burst-Timeline-Switch durch stylebasierte Step-Builder und bereinigt rein mechanische Guard-Pfade per Optional-Chaining, sodass Throw-Klassifikation, Burst-Animationen und Dataset-/Role-Verträge fachlich unverändert bleiben. Die bestehenden Cricket- und Hit-Regressionen bleiben dabei der Schutz gegen Drift.
@@ -1429,7 +1432,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.29]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...HEAD
+[2.1.30]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...HEAD
 [2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...982f5f1
 [2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...2f3e796
 [2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...95e8963
