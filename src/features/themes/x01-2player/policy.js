@@ -1,5 +1,7 @@
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
+  X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE,
   X01_TWO_PLAYER_SLOTS,
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
@@ -28,6 +30,30 @@ function queryAll(rootNode, selector) {
   } catch (_) {
     return [];
   }
+}
+
+function findDirectPlayerWrapper(cardNode) {
+  if (!cardNode || cardNode.nodeType !== 1) {
+    return null;
+  }
+
+  const parentNode = cardNode.parentElement || cardNode.parentNode || null;
+  if (
+    parentNode &&
+    parentNode.nodeType === 1 &&
+    typeof parentNode.matches === "function" &&
+    parentNode.matches(PLAYER_DISPLAY_SELECTOR)
+  ) {
+    return cardNode;
+  }
+
+  if (!parentNode || parentNode.nodeType !== 1) {
+    return null;
+  }
+
+  return typeof parentNode.closest === "function" && parentNode.closest(PLAYER_DISPLAY_SELECTOR)
+    ? parentNode
+    : null;
 }
 
 function getPlayerCards(documentRef) {
@@ -211,6 +237,12 @@ function clearPlayerMarkers(documentRef) {
   queryAll(documentRef, `[${X01_TWO_PLAYER_ACTIVE_ATTRIBUTE}]`).forEach((node) => {
     node.removeAttribute?.(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE);
   });
+  queryAll(documentRef, `[${X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE}]`).forEach((node) => {
+    node.removeAttribute?.(X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE);
+  });
+  queryAll(documentRef, `[${X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE}]`).forEach((node) => {
+    node.removeAttribute?.(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE);
+  });
   queryAll(documentRef, `[${X01_TWO_PLAYER_STACK_ATTRIBUTE}]`).forEach((node) => {
     node.removeAttribute?.(X01_TWO_PLAYER_STACK_ATTRIBUTE);
   });
@@ -353,6 +385,9 @@ export function syncX01TwoPlayerLayoutState(documentRef, gameState) {
 
   const activePlayerIndex = resolveActivePlayerIndex(playerCards, gameState);
   playerCards.forEach((cardNode, cardIndex) => {
+    const wrapperNode = findDirectPlayerWrapper(cardNode);
+    wrapperNode?.setAttribute?.(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE, "true");
+    wrapperNode?.setAttribute?.(X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE, String(cardIndex));
     cardNode.setAttribute?.(
       X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
       cardIndex === activePlayerIndex ? "true" : "false"

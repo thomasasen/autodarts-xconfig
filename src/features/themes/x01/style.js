@@ -48,6 +48,14 @@ div.chakra-stack.navigation.css-ege71s,
   position: relative !important;
   z-index: 7 !important;
 }
+
+#ad-ext-turn {
+  pointer-events: none !important;
+}
+
+#ad-ext-turn > * {
+  pointer-events: auto !important;
+}
 `;
 
   return buildThemeCssBundle(

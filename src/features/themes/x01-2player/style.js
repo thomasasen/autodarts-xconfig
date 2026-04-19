@@ -2,6 +2,8 @@ import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
 import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
+  X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE,
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
 } from "./layout-contract.js";
@@ -17,6 +19,12 @@ export const PREVIEW_PLACEMENT = Object.freeze({
 
 const ACTIVE_CARD_SELECTOR = `#ad-ext-player-display .ad-ext-player[${X01_TWO_PLAYER_ACTIVE_ATTRIBUTE}="true"]`;
 const INACTIVE_CARD_SELECTOR = `#ad-ext-player-display .ad-ext-player[${X01_TWO_PLAYER_ACTIVE_ATTRIBUTE}="false"]`;
+const PLAYER_WRAPPER_SELECTOR = `[${X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE}="true"]`;
+const DIRECT_PLAYER_WRAPPER_SELECTOR = `#ad-ext-player-display > ${PLAYER_WRAPPER_SELECTOR}`;
+const FIRST_PLAYER_WRAPPER_SELECTOR =
+  `#ad-ext-player-display > [${X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE}="0"]`;
+const SECOND_PLAYER_WRAPPER_SELECTOR =
+  `#ad-ext-player-display > [${X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE}="1"]`;
 const STACK_SELECTOR = `[${X01_TWO_PLAYER_STACK_ATTRIBUTE}="true"]`;
 const IDENTITY_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="identity"]`;
 const PROGRESS_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="progress"]`;
@@ -115,6 +123,10 @@ div.chakra-stack.navigation.css-ege71s{
   z-index:7 !important;
 }
 
+#ad-ext-turn{
+  pointer-events:none !important;
+}
+
 .css-tkevr6 > .chakra-stack{
   grid-template-columns:
     var(--ad-ext-x01-2player-side-width)
@@ -169,6 +181,7 @@ div.chakra-stack.navigation.css-ege71s{
 
 #ad-ext-turn > *{
   min-width:0 !important;
+  pointer-events:auto !important;
 }
 
 #ad-ext-turn > .score,
@@ -263,6 +276,12 @@ div.chakra-stack.navigation.css-ege71s{
   padding-top:var(--ad-ext-x01-2player-board-top-pad) !important;
   position:relative !important;
   z-index:2 !important;
+  pointer-events:none !important;
+}
+
+.ad-ext-theme-content-slot > .ad-ext-theme-content-board > *,
+.ad-ext-theme-content-board > *{
+  pointer-events:auto !important;
 }
 
 #ad-ext-player-display{
@@ -281,7 +300,7 @@ div.chakra-stack.navigation.css-ege71s{
   pointer-events:none !important;
 }
 
-#ad-ext-player-display > *{
+${DIRECT_PLAYER_WRAPPER_SELECTOR}{
   min-width:0 !important;
   display:flex !important;
   align-items:stretch !important;
@@ -290,19 +309,16 @@ div.chakra-stack.navigation.css-ege71s{
   pointer-events:auto !important;
 }
 
-#ad-ext-player-display > *:first-child{
+${FIRST_PLAYER_WRAPPER_SELECTOR}{
   grid-column:1 !important;
 }
 
-#ad-ext-player-display > *:nth-child(2){
+${SECOND_PLAYER_WRAPPER_SELECTOR}{
   grid-column:3 !important;
 }
 
-#ad-ext-player-display > *:nth-child(n + 3){
-  grid-column:1 / -1 !important;
-}
-
-#ad-ext-player-display > * > .ad-ext-player{
+${DIRECT_PLAYER_WRAPPER_SELECTOR},
+${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   width:100% !important;
 }
 
@@ -506,14 +522,14 @@ div.chakra-stack.navigation.css-ege71s{
   line-height:1 !important;
 }
 
-#ad-ext-player-display > :last-child .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > :nth-child(3) > :last-child{
+${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > :nth-child(3) > :last-child{
   flex:1 1 auto !important;
   width:auto !important;
   max-width:none !important;
   min-width:0 !important;
 }
 
-#ad-ext-player-display > :last-child .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > :nth-child(3) > :last-child > span{
+${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > :nth-child(3) > :last-child > span{
   display:grid !important;
   grid-template-columns:max-content minmax(0, 1fr) !important;
   align-items:center !important;
@@ -522,7 +538,7 @@ div.chakra-stack.navigation.css-ege71s{
   min-width:0 !important;
 }
 
-#ad-ext-player-display > :last-child .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > :nth-child(3) > :last-child > span > :last-child{
+${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > :nth-child(3) > :last-child > span > :last-child{
   width:100% !important;
   max-width:100% !important;
   min-width:0 !important;
@@ -647,8 +663,8 @@ div.chakra-stack.navigation.css-ege71s{
   text-overflow:ellipsis !important;
 }
 
-#ad-ext-player-display > :last-child .ad-ext-player .ad-ext-player-name,
-#ad-ext-player-display > :last-child .ad-ext-player .ad-ext-player-name > p{
+${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name,
+${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   width:100% !important;
   max-width:100% !important;
   max-inline-size:100% !important;
@@ -1272,9 +1288,8 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
     pointer-events:auto !important;
   }
 
-  #ad-ext-player-display > *:first-child,
-  #ad-ext-player-display > *:nth-child(2),
-  #ad-ext-player-display > *:nth-child(n + 3){
+  ${FIRST_PLAYER_WRAPPER_SELECTOR},
+  ${SECOND_PLAYER_WRAPPER_SELECTOR}{
     grid-column:auto !important;
   }
 

@@ -91,6 +91,14 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   );
   assert.match(
     css,
+    /#ad-ext-turn\s*\{[^}]*pointer-events:\s*none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s*>\s*\*\s*\{[^}]*pointer-events:\s*auto\s*!important;/s
+  );
+  assert.match(
+    css,
     /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s*\{[^}]*border:\s*2px\s+solid\s+var\(--ad-ext-theme-card-active-border-color\)\s*!important;[^}]*border-radius:\s*12px\s*!important;[^}]*box-shadow:\s*0\s+0\s+0\s+1px\s+var\(--ad-ext-theme-card-active-outline-color\)\s*!important;/s
   );
   assert.doesNotMatch(css, /\.css-hjw8x4\s*\{[^}]*max-height:\s*12%/s);
@@ -112,6 +120,26 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(7\.056rem,\s*min\(27\.8cqi,\s*18cqb,\s*15vh\),\s*11\.2rem\);[^}]*--ad-ext-x01-2player-score-scale:1\.2;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.72\);/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\[data-ad-ext-x01-2player-player-wrapper="true"\]\s*\{[^}]*display:flex\s*!important;[^}]*pointer-events:auto\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\[data-ad-ext-x01-2player-player-index="0"\]\s*\{[^}]*grid-column:1\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\[data-ad-ext-x01-2player-player-index="1"\]\s*\{[^}]*grid-column:3\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-board\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1 \/ -1\s*!important;[^}]*pointer-events:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-board\s*>\s*\*\{[^}]*pointer-events:auto\s*!important;/s
   );
   assert.match(
     css,
@@ -199,6 +227,14 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
+    /#ad-ext-turn\s*\{[^}]*pointer-events:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s*>\s*\*\s*\{[^}]*pointer-events:auto\s*!important;/s
+  );
+  assert.match(
+    css,
     /#ad-ext-turn\s*>\s*\.ad-ext-turn-throw\{[^}]*display:flex\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-throw-points-size\)\s*!important;[^}]*line-height:1\s*!important;/s
   );
   assert.match(
@@ -256,6 +292,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.doesNotMatch(css, /font-size:\s*2em\s*!important/);
   assert.doesNotMatch(css, /--ad-ext-theme-board-size:min\(/);
   assert.doesNotMatch(css, /\[data-ad-ext-turn-points-node=/);
+  assert.doesNotMatch(css, /#ad-ext-player-display\s*>\s*\*(?!\s*>)/);
   assert.doesNotMatch(css, /(^|,)\s*svg\[viewBox="0 0 1000 1000"\]/m);
   assert.doesNotMatch(css, /\.css-hjw8x4/);
   assert.doesNotMatch(css, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name[^}]*text-transform:uppercase/s);

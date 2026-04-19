@@ -16,6 +16,8 @@ import { mountThemeX01TwoPlayer } from "../../src/features/themes/x01-2player/in
 import { mountThemeCricket } from "../../src/features/themes/cricket/index.js";
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
+  X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE,
   X01_TWO_PLAYER_SLOTS,
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
@@ -2213,7 +2215,11 @@ test("theme-x01-2player falls back to the visible player-card DOM when the snaps
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
   const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
-  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 2);
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  addPlayerCards(documentRef, playerDisplayNode, 2);
+  const variantField = documentRef.createElement("div");
+  variantField.textContent = "X01";
+  playerDisplayNode.appendChild(variantField);
   const windowRef = createMatchWindow(documentRef, "theme-x01-2player-dom-fallback");
   const cleanup = mountThemeX01TwoPlayer({
     windowRef,
@@ -2255,6 +2261,18 @@ test("theme-x01-2player falls back to the visible player-card DOM when the snaps
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), true);
   assertThemeHookState(boardNodes, true);
+  assert.equal(
+    playerDisplayNode.querySelectorAll(`[${X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE}="true"]`).length,
+    2
+  );
+  assert.equal(
+    variantField.getAttribute?.(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE) || null,
+    null
+  );
+  assert.equal(
+    variantField.getAttribute?.(X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE) || null,
+    null
+  );
 
   cleanup();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), false);

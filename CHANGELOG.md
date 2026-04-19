@@ -12,7 +12,7 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.1.30] - 2026-04-19
+## [2.1.31] - 2026-04-20
 
 ### Added
 
@@ -20,6 +20,9 @@ direkt zu einer versionierten Release-Sektion.
   Technik: Neue Preset-Definitionen samt Asset-Manifest und Browser-/Node-Auflösung verdrahten `backgroundAssetKey` als normalisierte `themes.globalTypography`-Konfiguration; xConfig rendert dafür einen eigenen Presets-Bereich mit Bestätigungsdialog, Status-/Kartenvorschau und Runtime-Speicherung, und neue Runtime-, Shell- und Theme-Regressionen sichern Upload-vs.-Preset-Priorität, Reset-Verhalten sowie Asset-Fallbacks gegen Drift.
 
 ### Fixed
+
+- Nutzerwirkung: In `Theme X01 2Player` blockieren zusätzliche Host-Blöcke oder leere Overlay-Flächen die Standardbuttons am Board nicht mehr; Schaltflächen wie `Stoppen`, `Zurücksetzen`, `Menü`, `Einstellungen` und das Zahnrad bleiben dadurch wieder klickbar.
+  Technik: Das Theme markiert und layoutet im `#ad-ext-player-display` nur noch echte Spieler-Wrapper mit expliziten Wrapper-/Index-Attributen, statt pauschal alle direkten Kindknoten zu behandeln; zusätzlich zählt der DOM-Fallback für die 2-Spieler-Aktivierung nur noch sichtbare Player-Container. Die zentrale Board-Spalte (`.ad-ext-theme-content-board`) und `#ad-ext-turn` wurden außerhalb ihrer echten Inhalte klickdurchlässig gemacht, damit weder Host-DOM-Drift noch leere Overlay-Zonen Header-Buttons abfangen; neue X01-2Player-Style- und Lifecycle-Regressionen sichern diese Pfade gegen Drift ab.
 
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; der geteilte Electric-Border-Defs-Cleanup bleibt kompatibel zu bestehenden Runtime- und Testumgebungen, räumt den letzten verbleibenden Sonar-Restpunkt jetzt aber ohne den alten `removeChild(...)`-Pfad auf.
   Technik: `electric-border-engine` entfernt das gemeinsame SVG-Defs-Node beim letzten Release-Schritt jetzt bevorzugt über `remove()` und fällt bei überschatteten Instanzmethoden auf den prototypbasierten `remove`-Aufruf zurück, statt einen separaten `parentNode.removeChild(...)`-Zweig zu halten; die vorhandenen Runtime-Regressionen sichern Refcount-, Cleanup- und Defs-Parität dabei weiter gegen Drift ab.
@@ -1432,7 +1435,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.30]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...HEAD
+[2.1.31]: https://github.com/thomasasen/autodarts-xconfig/compare/4e52392...HEAD
+[2.1.30]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...4e52392
 [2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...982f5f1
 [2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...2f3e796
 [2.1.26]: https://github.com/thomasasen/autodarts-xconfig/compare/325e508...95e8963

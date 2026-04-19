@@ -6,6 +6,22 @@ const CONFIG_KEY = "themes.x01TwoPlayer";
 
 const PLAYER_DISPLAY_ID = "ad-ext-player-display";
 
+function findVisiblePlayerCard(node) {
+  if (node?.nodeType !== 1) {
+    return null;
+  }
+
+  if (node.classList?.contains?.("ad-ext-player")) {
+    return node;
+  }
+
+  if (typeof node.querySelector !== "function") {
+    return null;
+  }
+
+  return node.querySelector(".ad-ext-player") || null;
+}
+
 function countSnapshotPlayers(gameState) {
   const snapshot =
     gameState && typeof gameState.getSnapshot === "function" ? gameState.getSnapshot() : null;
@@ -25,7 +41,7 @@ function countVisiblePlayerCards(documentRef, windowRef) {
   }
 
   return playerCards.filter((playerNode) => {
-    if (playerNode?.nodeType !== 1) {
+    if (!findVisiblePlayerCard(playerNode)) {
       return false;
     }
 
