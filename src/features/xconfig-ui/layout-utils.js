@@ -137,7 +137,7 @@ function isPanelHostElement(node, panelHostId) {
 }
 
 function isVisibleElement(node) {
-  if (!node || !node.style) {
+  if (!node?.style) {
     return true;
   }
   return String(node.style.display || "").toLowerCase() !== "none";

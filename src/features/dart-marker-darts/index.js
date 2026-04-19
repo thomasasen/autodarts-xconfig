@@ -25,7 +25,7 @@ const LISTENER_KEYS = Object.freeze({
 const LOCATION_POLL_INTERVAL_MS = 1000;
 
 function getCurrentHref(windowRef) {
-  if (!windowRef || !windowRef.location) {
+  if (!windowRef?.location) {
     return "";
   }
   return String(windowRef.location.href || "").trim();

@@ -21,6 +21,12 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; die nächste sichere Sonar-Welle hält `Triple/Double/Bull Hits` bei denselben Throw-, Burst- und Korrekturpfaden, räumt interne Dekorations-Metadaten aber konsequent auf moderneren DOM-Zugriff um.
+  Technik: In `triple-double-bull-hits/logic` wurden die verbliebenen mechanischen `dataset`- und Optional-Chaining-Treffer lokal ersetzt, ohne Signaturen oder Ablaufsteuerung zu ändern; die bestehenden Runtime-Regressionen prüfen jetzt zusätzlich, dass Theme-/Burst-Metadaten beim Setzen und Löschen der Hit-Dekoration weiterhin korrekt über `dataset` und Attributspiegelung synchron bleiben.
+
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere Low-Risk-Welle strafft ausgewählte Utility-, Theme- und Runtime-Helfer, ohne Board-Erkennung, Remove-Darts-Overlay, Turn-Sweep, X01-2Player oder Event-/Bootstrap-Verhalten fachlich umzubauen.
+  Technik: Kleine `S6582`-Bereinigungen in `dartboard-svg`, `dartboard-markers`, `remove-darts-notification`, `average-trend-arrow`, `turn-start-sweep`, `x01-2player`, `layout-utils`, `dart-marker-darts` sowie einzelnen Core-/Runtime-Helfern ersetzen nur triviale Guard-Muster durch äquivalentes Optional Chaining; die bestehenden Runtime-, Theme-, Utility- und Lifecycle-Regressionen sichern diese Pfade weiter gegen Drift ab.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere sichere Sonar-Welle modernisiert ausgewählte X01-, TV-Zoom- und xConfig-UI-Helfer, ohne Checkout-Logik, Score-Progress, Shell-Verhalten oder Theme-Uploads fachlich umzubauen.
   Technik: In `x01-score-progress`, `x01-checkout-context`, `x01-checkout-route`, `tv-board-zoom`, `render-controller`, `action-controller`, `style-checkout-suggestions` und `theme-background` wurden nur mechanische `dataset`-, `after(...)`- und Optional-Chaining-Bereinigungen aus der Low-Risk-Gruppe umgesetzt; die bestehenden Runtime-, Shell-, TV-Zoom- und X01-Regressionen sichern diese Pfade weiter gegen Drift ab.
 

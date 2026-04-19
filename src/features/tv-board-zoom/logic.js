@@ -751,7 +751,7 @@ function applyGifOverlayContainment(state, targetNode, hostNode) {
 }
 
 function clearPendingRelease(state) {
-  if (!state || !state.releaseTimeoutId) {
+  if (!state?.releaseTimeoutId) {
     return;
   }
 

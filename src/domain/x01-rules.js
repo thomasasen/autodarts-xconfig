@@ -167,8 +167,7 @@ export function isDoubleBullSegment(segmentName) {
 export function isSingleBullHitText(text) {
   const classification = classifyThrowHitText(text);
   return Boolean(
-    classification &&
-      classification.kind === "single" &&
+    classification?.kind === "single" &&
       Number(classification.value) === 25
   );
 }

@@ -51,7 +51,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const documentRef =
     options.documentRef ||
-    (windowRef && windowRef.document ? windowRef.document : null);
+    (windowRef?.document || null);
   const existingNamespace = getGlobalNamespace(windowRef);
 
   if (
@@ -190,7 +190,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       const featureState =
         snapshot.features[normalizedFeatureRef] ||
         Object.values(snapshot.features).find(
-          (feature) => feature && feature.configKey === normalizedFeatureRef
+          (feature) => feature?.configKey === normalizedFeatureRef
         ) ||
         null;
       const configKey = featureState?.configKey || normalizedFeatureRef;

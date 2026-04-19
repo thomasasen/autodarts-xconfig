@@ -124,7 +124,7 @@ export function createBootstrap(options = {}) {
     options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
   const documentRef =
     options.documentRef ||
-    (windowRef && windowRef.document ? windowRef.document : null);
+    (windowRef?.document || null);
 
   const eventBus = createEventBus();
   const observers = createObserverRegistry();

@@ -523,7 +523,7 @@ export function classifyThrowText(rawText) {
 
 export function collectThrowRows(documentRef) {
   return collectTurnThrowRows(documentRef).filter((rowNode) => {
-    return Boolean(rowNode && rowNode.classList);
+    return Boolean(rowNode?.classList);
   });
 }
 
@@ -547,13 +547,8 @@ function isRowDecorated(rowNode, signatureByRow = null) {
   }
 
   const hasBaseClass = rowNode.classList.contains(HIT_BASE_CLASS);
-  const hasSignatureAttribute =
-    typeof rowNode.getAttribute === "function" &&
-    Boolean(rowNode.getAttribute("data-ad-ext-hit-signature"));
-  const hasTrackedSignature =
-    signatureByRow &&
-    typeof signatureByRow.has === "function" &&
-    signatureByRow.has(rowNode);
+  const hasSignatureAttribute = Boolean(rowNode.dataset?.adExtHitSignature);
+  const hasTrackedSignature = signatureByRow?.has?.(rowNode);
 
   return hasBaseClass || hasSignatureAttribute || hasTrackedSignature;
 }
@@ -594,7 +589,7 @@ function clearBurstTriggerResetTimer(rowNode, triggerResetTimersByRow = null, wi
   }
 
   const clearTimer =
-    windowRef && typeof windowRef.clearTimeout === "function"
+    typeof windowRef?.clearTimeout === "function"
       ? windowRef.clearTimeout.bind(windowRef)
       : clearTimeout;
   try {
@@ -654,7 +649,7 @@ function stopRowAnimation(rowNode, options = {}) {
 
   targets.forEach((node) => clearInlineAnimationStyles(node));
 
-  if (activeAnimeByRow && typeof activeAnimeByRow.delete === "function") {
+  if (typeof activeAnimeByRow?.delete === "function") {
     activeAnimeByRow.delete(rowNode);
   }
 }
@@ -683,14 +678,14 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
     ...ANIMATION_CLASS_NAMES
   );
   rowNode.style.removeProperty("--ad-ext-hit-delay-ms");
-  rowNode.removeAttribute("data-ad-ext-hit-signature");
-  rowNode.removeAttribute("data-ad-ext-hit-kind");
-  rowNode.removeAttribute("data-ad-ext-hit-segment");
-  rowNode.removeAttribute("data-ad-ext-hit-theme");
-  rowNode.removeAttribute("data-ad-ext-hit-animation");
-  rowNode.removeAttribute("data-ad-ext-hit-burst-key");
+  delete rowNode.dataset.adExtHitSignature;
+  delete rowNode.dataset.adExtHitKind;
+  delete rowNode.dataset.adExtHitSegment;
+  delete rowNode.dataset.adExtHitTheme;
+  delete rowNode.dataset.adExtHitAnimation;
+  delete rowNode.dataset.adExtHitBurstKey;
 
-  if (signatureByRow && typeof signatureByRow.delete === "function") {
+  if (typeof signatureByRow?.delete === "function") {
     signatureByRow.delete(rowNode);
   }
 
@@ -1447,7 +1442,7 @@ function startBurstAnimation(rowNode, options = {}) {
     reducedMotion,
   });
 
-  if (timeline && activeAnimeByRow && typeof activeAnimeByRow.set === "function") {
+  if (timeline && typeof activeAnimeByRow?.set === "function") {
     activeAnimeByRow.set(rowNode, timeline);
   }
 
@@ -1541,21 +1536,21 @@ export function applyHitDecoration(rowNode, options = {}) {
   setExclusiveClass(rowNode, ANIMATION_CLASS_NAMES, animationClassName);
   rowNode.classList.toggle(HIT_IDLE_LOOP_CLASS, idleLoopActive);
   rowNode.style.setProperty("--ad-ext-hit-delay-ms", `${Math.max(0, Math.min(8, rowIndex)) * 65}ms`);
-  rowNode.setAttribute("data-ad-ext-hit-signature", signature);
-  rowNode.setAttribute("data-ad-ext-hit-kind", hitMeta.kind);
-  rowNode.setAttribute("data-ad-ext-hit-segment", hitMeta.segment);
-  rowNode.setAttribute("data-ad-ext-hit-theme", colorTheme);
-  rowNode.setAttribute("data-ad-ext-hit-animation", animationStyle);
+  rowNode.dataset.adExtHitSignature = signature;
+  rowNode.dataset.adExtHitKind = hitMeta.kind;
+  rowNode.dataset.adExtHitSegment = hitMeta.segment;
+  rowNode.dataset.adExtHitTheme = colorTheme;
+  rowNode.dataset.adExtHitAnimation = animationStyle;
 
   const textRoles = annotateHitTextRoles(rowNode, hitMeta, roleStateByRow);
 
-  if (signatureByRow && typeof signatureByRow.set === "function") {
+  if (typeof signatureByRow?.set === "function") {
     signatureByRow.set(rowNode, signature);
   }
 
-  if (burstKeyBySlot && typeof burstKeyBySlot.set === "function" && burstKey) {
+  if (typeof burstKeyBySlot?.set === "function" && burstKey) {
     burstKeyBySlot.set(rowIndex, burstKey);
-    rowNode.setAttribute("data-ad-ext-hit-burst-key", burstKey);
+    rowNode.dataset.adExtHitBurstKey = burstKey;
   }
 
   if (burst) {
@@ -1602,7 +1597,7 @@ export function updateHitDecorations(options = {}) {
   const turnContainer = turnSurface.turnContainer;
   const turnPointsToken = turnSurface.turnPointsToken;
   const currentRows = turnSurface.throwRows.filter((rowNode) => {
-    return Boolean(rowNode && rowNode.classList);
+    return Boolean(rowNode?.classList);
   });
   const currentRowSet = new Set(currentRows);
   const manualCorrectionActive =
@@ -1653,7 +1648,7 @@ export function updateHitDecorations(options = {}) {
     trackedRows.add(rowNode);
     const rowHasPendingCorrection = rowHasCorrectionMarker(rowNode);
     if (manualCorrectionActive && rowHasPendingCorrection) {
-      if (slotStateByIndex && typeof slotStateByIndex.set === "function") {
+      if (typeof slotStateByIndex?.set === "function") {
         slotStateByIndex.set(index, {
           rowNode,
           lifecycleKey: getRowLifecycleKey(rowNode),
@@ -1779,7 +1774,7 @@ export function updateHitDecorations(options = {}) {
     }
   });
 
-  if (slotStateByIndex && typeof slotStateByIndex.delete === "function") {
+  if (typeof slotStateByIndex?.delete === "function") {
     Array.from(slotStateByIndex.keys()).forEach((slotIndex) => {
       if (!seenSlots.has(slotIndex)) {
         slotStateByIndex.delete(slotIndex);

@@ -25,7 +25,7 @@ function countVisiblePlayerCards(documentRef, windowRef) {
   }
 
   return playerCards.filter((playerNode) => {
-    if (!playerNode || playerNode.nodeType !== 1) {
+    if (playerNode?.nodeType !== 1) {
       return false;
     }
 

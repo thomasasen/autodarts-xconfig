@@ -273,7 +273,7 @@ function findScoreSlot(stackNode) {
 
   return (
     Array.from(stackNode.children).find((node) => {
-      if (!node || node.nodeType !== 1) {
+      if (node?.nodeType !== 1) {
         return false;
       }
 
@@ -297,7 +297,7 @@ function findProgressSlot(stackNode) {
 
   return (
     Array.from(stackNode.children).find((node) => {
-      if (!node || node.nodeType !== 1) {
+      if (node?.nodeType !== 1) {
         return false;
       }
 

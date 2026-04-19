@@ -79,7 +79,7 @@ export function removeNodeById(nodeId, options = {}) {
   }
 
   const existing = doc.getElementById(nodeId);
-  if (!existing || !existing.parentNode || typeof existing.parentNode.removeChild !== "function") {
+  if (!existing || typeof existing.parentNode?.removeChild !== "function") {
     return false;
   }
 

@@ -38,7 +38,7 @@ export function createEventBus() {
   function emit(eventName, payload) {
     const normalizedEventName = String(eventName || "");
     const listeners = listenersByEvent.get(normalizedEventName);
-    if (!listeners || !listeners.size) {
+    if (!listeners?.size) {
       return 0;
     }
 

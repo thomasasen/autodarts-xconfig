@@ -25,7 +25,7 @@ export function findActivePlayerNode(documentRef) {
 }
 
 export function runTurnStartSweep(node, state, config = {}, windowRef = null) {
-  if (!node || !node.classList || !state) {
+  if (!node?.classList || !state) {
     return;
   }
 
@@ -71,14 +71,14 @@ export function clearTurnStartSweepState(state, windowRef = null) {
 
   state.timeoutsByNode.forEach((timeoutHandle, node) => {
     clearTimeoutRef(timeoutHandle);
-    if (node && node.classList) {
+    if (node?.classList) {
       node.classList.remove(SWEEP_CLASS);
     }
   });
 
   state.timeoutsByNode.clear();
   state.nodes.forEach((node) => {
-    if (node && node.classList) {
+    if (node?.classList) {
       node.classList.remove(SWEEP_CLASS);
     }
   });

@@ -67,7 +67,7 @@ function toFiniteNumber(value, fallbackValue = 0) {
 }
 
 function getCurrentHref(windowRef) {
-  if (!windowRef || !windowRef.location) {
+  if (!windowRef?.location) {
     return "";
   }
   return String(windowRef.location.href || "").trim();
@@ -496,7 +496,7 @@ function setImageSource(imageNode, sourceUrl) {
 }
 
 function setMarkerHidden(marker, shouldHide, state) {
-  if (!marker || !marker.style || !state) {
+  if (!marker?.style || !state) {
     return;
   }
 
@@ -528,7 +528,7 @@ function restoreHiddenMarkers(state) {
   }
 
   state.markerOpacityByMarker.forEach((opacity, marker) => {
-    if (!marker || !marker.style) {
+    if (!marker?.style) {
       return;
     }
 

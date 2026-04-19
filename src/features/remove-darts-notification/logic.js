@@ -429,7 +429,7 @@ function onlyContainsCurrentBranch(parentNode, currentNode) {
 }
 
 function resolveVisibleNoticeHost(noticeNode) {
-  if (!noticeNode || !noticeNode.parentElement) {
+  if (!noticeNode?.parentElement) {
     return null;
   }
 
@@ -466,7 +466,7 @@ function ensureOverlayNode(state, documentRef) {
 }
 
 function applyHiddenHost(hostNode) {
-  if (!hostNode || !hostNode.classList) {
+  if (!hostNode?.classList) {
     return;
   }
   if (isInsideXConfigScope(hostNode)) {
@@ -477,7 +477,7 @@ function applyHiddenHost(hostNode) {
 }
 
 function cleanupHostNotice(hostNode) {
-  if (!hostNode || !hostNode.classList) {
+  if (!hostNode?.classList) {
     return;
   }
 
@@ -486,7 +486,7 @@ function cleanupHostNotice(hostNode) {
 
 function cleanupOverlayNode(state) {
   const overlayNode = state?.overlayNode || null;
-  if (!overlayNode || !overlayNode.parentNode || typeof overlayNode.parentNode.removeChild !== "function") {
+  if (!overlayNode?.parentNode || typeof overlayNode.parentNode.removeChild !== "function") {
     if (state) {
       state.overlayNode = null;
     }

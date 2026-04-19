@@ -314,7 +314,7 @@ async function fetchRemoteVersionFromSource(fetchFn, sourceUrl, options = {}) {
     };
   }
 
-  if (!response || !response.ok) {
+  if (!response?.ok) {
     throw new Error(`HTTP ${statusCode}`);
   }
 

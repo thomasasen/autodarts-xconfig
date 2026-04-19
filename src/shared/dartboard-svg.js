@@ -95,13 +95,13 @@ function getElementChildren(node) {
     return [];
   }
   if (Array.isArray(node.children)) {
-    return node.children.filter((child) => child && child.nodeType === 1);
+    return node.children.filter((child) => child?.nodeType === 1);
   }
   const rawChildren = Array.from(node.children || []);
   if (!rawChildren.length) {
     return [];
   }
-  return rawChildren.filter((child) => child && child.nodeType === 1);
+  return rawChildren.filter((child) => child?.nodeType === 1);
 }
 
 function elementContains(rootNode, targetNode) {
@@ -965,7 +965,7 @@ export function ensureOverlayGroup(boardGroup, overlayId, svgNs = "http://www.w3
 }
 
 export function clearNodeChildren(node) {
-  if (!node || typeof node.firstChild === "undefined") {
+  if (typeof node?.firstChild === "undefined") {
     return;
   }
 

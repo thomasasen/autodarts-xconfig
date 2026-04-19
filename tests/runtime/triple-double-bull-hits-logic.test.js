@@ -251,6 +251,7 @@ test("updateHitDecorations applies configured color theme and defaults invalid v
 
   assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["ember-rush"]), true);
   assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["kind-signal"]), false);
+  assert.equal(documentRef.throwRow.dataset.adExtHitTheme, "ember-rush");
   assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-theme"), "ember-rush");
 
   updateHitDecorations({
@@ -266,6 +267,7 @@ test("updateHitDecorations applies configured color theme and defaults invalid v
 
   assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["kind-signal"]), true);
   assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["ember-rush"]), false);
+  assert.equal(documentRef.throwRow.dataset.adExtHitTheme, "kind-signal");
   assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-theme"), "kind-signal");
 });
 
@@ -901,6 +903,8 @@ test("clearHitDecoration removes row classes, text roles, and active anime state
   assert.equal(decorated.row.classList.contains(HIT_BASE_CLASS), true);
   assert.equal(decorated.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
   assert.equal(activeAnimeByRow.has(decorated.row), true);
+  assert.equal(Boolean(decorated.row.dataset.adExtHitSignature), true);
+  assert.equal(Boolean(decorated.row.dataset.adExtHitBurstKey), true);
 
   const wasCleared = clearHitDecoration(decorated.row, signatureByRow, {
     activeAnimeByRow,
@@ -916,6 +920,10 @@ test("clearHitDecoration removes row classes, text roles, and active anime state
   assert.equal(activeAnimeByRow.has(decorated.row), false);
   assert.equal(roleStateByRow.has(decorated.row), false);
   assert.equal(signatureByRow.has(decorated.row), false);
+  assert.equal(decorated.row.dataset.adExtHitSignature, undefined);
+  assert.equal(decorated.row.dataset.adExtHitBurstKey, undefined);
+  assert.equal(decorated.row.getAttribute("data-ad-ext-hit-signature"), null);
+  assert.equal(decorated.row.getAttribute("data-ad-ext-hit-burst-key"), null);
   assert.equal(animeRef._calls.some((entry) => entry.type === "timeline-pause"), true);
   assert.equal(animeRef._removes.length >= 1, true);
 });

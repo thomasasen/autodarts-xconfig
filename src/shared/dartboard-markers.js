@@ -4,7 +4,7 @@ const EXCLUDED_OVERLAY_SELECTOR =
   "#ad-ext-checkout-targets, #ad-ext-cricket-targets, #ad-ext-dart-image-overlay, #ad-ext-winner-fireworks";
 
 function getClassName(node) {
-  if (!node || !node.className) {
+  if (!node?.className) {
     return "";
   }
   if (typeof node.className === "string") {
@@ -17,7 +17,7 @@ function getClassName(node) {
 }
 
 function getDatasetKeys(node) {
-  if (!node || !node.dataset || typeof node.dataset !== "object") {
+  if (typeof node?.dataset !== "object") {
     return "";
   }
   return Object.keys(node.dataset).join(" ").toLowerCase();

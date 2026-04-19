@@ -59,7 +59,7 @@ export function ensureArrowNode(avgNode, arrowByAverageNode, arrowNodes = null) 
 }
 
 export function animateArrowNode(arrowNode, durationMs, timeoutByArrow) {
-  if (!arrowNode || !arrowNode.classList) {
+  if (!arrowNode?.classList) {
     return;
   }
 
@@ -105,7 +105,7 @@ export function updateAverageTrendArrows(options = {}) {
     }
 
     const arrow = ensureArrowNode(node, arrowByAverageNode, arrowNodes);
-    if (!arrow || !arrow.classList) {
+    if (!arrow?.classList) {
       return;
     }
 
