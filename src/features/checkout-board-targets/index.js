@@ -28,6 +28,17 @@ function nowMs() {
   return Date.now();
 }
 
+function resolveTargetSelectionMode(targetSelectionMode) {
+  const normalizedSelectionMode = String(targetSelectionMode || "").trim().toLowerCase();
+  if (normalizedSelectionMode === "all") {
+    return "all";
+  }
+  if (normalizedSelectionMode === "finish") {
+    return "finish";
+  }
+  return "next";
+}
+
 function createDebugState(featureDebug) {
   return {
     featureDebug,
@@ -249,6 +260,46 @@ function isX01Active({ gameState, documentRef, variantRules }) {
   });
 }
 
+function buildRenderSignature({
+  active,
+  routeSegments,
+  activeScore,
+  domScore,
+  gameStateScore,
+  outMode,
+  dartsRemaining,
+}) {
+  return [
+    active ? "x01" : "other",
+    routeSegments.join(">"),
+    Number.isFinite(activeScore) ? activeScore : "null",
+    Number.isFinite(domScore) ? domScore : "null",
+    Number.isFinite(gameStateScore) ? gameStateScore : "null",
+    outMode,
+    dartsRemaining,
+  ].join("|");
+}
+
+function resolveRenderStatus({ routeSegments, selectedSegments, targets, board }) {
+  if (!routeSegments.length && !selectedSegments.length) {
+    return "no-route";
+  }
+  if (!selectedSegments.length) {
+    return "no-selected-segments";
+  }
+  if (!targets.length) {
+    return "no-targets";
+  }
+  if (!board) {
+    return "no-board";
+  }
+  return "render";
+}
+
+function shouldUseRetainedRender(status) {
+  return status === "no-route" || status === "no-selected-segments" || status === "no-targets";
+}
+
 export function initializeCheckoutBoardTargets(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof window !== "undefined" ? window : null);
@@ -280,12 +331,7 @@ export function initializeCheckoutBoardTargets(context = {}) {
           colorTheme: "amber",
         };
   const visualConfig = resolveBoardTargetVisualConfig(featureConfig);
-  const targetSelectionMode =
-    String(featureConfig.targetSelectionMode || "").trim().toLowerCase() === "all"
-      ? "all"
-      : String(featureConfig.targetSelectionMode || "").trim().toLowerCase() === "finish"
-        ? "finish"
-        : "next";
+  const targetSelectionMode = resolveTargetSelectionMode(featureConfig.targetSelectionMode);
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
@@ -436,6 +482,78 @@ export function initializeCheckoutBoardTargets(context = {}) {
     };
   }
 
+  function buildInactivePayload(checkoutContext, variantText, activeScore, outMode, routeEntries, routeSegments) {
+    return buildDebugPayload({
+      status: "inactive",
+      active: false,
+      activeScore,
+      domScore: checkoutContext.domScore,
+      gameStateScore: checkoutContext.gameStateScore,
+      scoreSource: checkoutContext.scoreSource,
+      scoreAgreement: checkoutContext.scoreAgreement,
+      variantText,
+      outMode,
+      targetSelectionMode,
+      selectionSource: "none",
+      documentRef,
+      windowRef,
+      routeEntries,
+      routeSegments,
+      selectedSegments: [],
+      targets: [],
+      board: null,
+    });
+  }
+
+  function resolveActiveRenderPlan({ checkoutContext, selectedSegments, activeScore, outMode }) {
+    const routeSegments = Array.isArray(checkoutContext.routeSegments)
+      ? checkoutContext.routeSegments
+      : [];
+    const selectionSource = checkoutContext.checkoutSurface?.selectionSource || "none";
+    const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
+    const board = getBoard();
+    const status = resolveRenderStatus({
+      routeSegments,
+      selectedSegments,
+      targets,
+      board,
+    });
+
+    if (status === "render") {
+      rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode);
+      return {
+        board,
+        status,
+        selectedSegments,
+        targets,
+        selectionSource,
+      };
+    }
+
+    if (board && shouldUseRetainedRender(status)) {
+      const retainedRender = getRetainedRender(activeScore, outMode);
+      if (retainedRender) {
+        scheduleRetainedRenderExpiry();
+        return {
+          board,
+          status: "render-retained",
+          selectedSegments: retainedRender.selectedSegments,
+          targets: retainedRender.targets,
+          selectionSource: "retained-last-targets",
+        };
+      }
+    }
+
+    clearRetainExpiryTimer();
+    return {
+      board,
+      status,
+      selectedSegments,
+      targets,
+      selectionSource,
+    };
+  }
+
   function update() {
     const active = isX01Active({
       gameState,
@@ -457,15 +575,15 @@ export function initializeCheckoutBoardTargets(context = {}) {
     const routeSegments = x01CheckoutContext.routeSegments;
     const outMode = x01CheckoutContext.outMode;
     const activeScore = x01CheckoutContext.activeScore;
-    const signature = [
-      active ? "x01" : "other",
-      routeSegments.join(">"),
-      Number.isFinite(activeScore) ? activeScore : "null",
-      Number.isFinite(x01CheckoutContext.domScore) ? x01CheckoutContext.domScore : "null",
-      Number.isFinite(x01CheckoutContext.gameStateScore) ? x01CheckoutContext.gameStateScore : "null",
+    const signature = buildRenderSignature({
+      active,
+      routeSegments,
+      activeScore,
+      domScore: x01CheckoutContext.domScore,
+      gameStateScore: x01CheckoutContext.gameStateScore,
       outMode,
       dartsRemaining,
-    ].join("|");
+    });
 
     if (signature === lastRenderSignature) {
       return;
@@ -474,26 +592,14 @@ export function initializeCheckoutBoardTargets(context = {}) {
 
     if (!active) {
       resetRetainedRenderState();
-      const payload = buildDebugPayload({
-        status: "inactive",
-        active,
-        activeScore,
-        domScore: x01CheckoutContext.domScore,
-        gameStateScore: x01CheckoutContext.gameStateScore,
-        scoreSource: x01CheckoutContext.scoreSource,
-        scoreAgreement: x01CheckoutContext.scoreAgreement,
+      const payload = buildInactivePayload(
+        x01CheckoutContext,
         variantText,
+        activeScore,
         outMode,
-        targetSelectionMode,
-        selectionSource: "none",
-        documentRef,
-        windowRef,
         routeEntries,
-        routeSegments,
-        selectedSegments: [],
-        targets: [],
-        board: null,
-      });
+        routeSegments
+      );
       emitDebugEvent(debugState, "log", buildDebugSignature(payload), buildDebugSummary(payload), payload);
       clearCurrentOverlay();
       return;
@@ -501,44 +607,15 @@ export function initializeCheckoutBoardTargets(context = {}) {
 
     const checkoutSurface = x01CheckoutContext.checkoutSurface;
     const { selectedSegments } = selectRouteSegments(checkoutSurface);
-    const selectionSource = checkoutSurface.selectionSource || "none";
-    const targets = mapRouteSegmentsToBoardTargets(selectedSegments, x01Rules);
-    const board = getBoard();
-    let status = !routeSegments.length && !selectedSegments.length
-      ? "no-route"
-      : !selectedSegments.length
-        ? "no-selected-segments"
-        : !targets.length
-          ? "no-targets"
-          : !board
-            ? "no-board"
-            : "render";
-    let renderSelectedSegments = selectedSegments;
-    let renderTargets = targets;
-    let renderSelectionSource = selectionSource;
-
-    if (status === "render") {
-      rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode);
-    } else if (
-      board &&
-      (status === "no-route" || status === "no-selected-segments" || status === "no-targets")
-    ) {
-      const retainedRender = getRetainedRender(activeScore, outMode);
-      if (retainedRender) {
-        renderSelectedSegments = retainedRender.selectedSegments;
-        renderTargets = retainedRender.targets;
-        renderSelectionSource = "retained-last-targets";
-        status = "render-retained";
-        scheduleRetainedRenderExpiry();
-      }
-    }
-
-    if (status !== "render-retained" && status !== "render") {
-      clearRetainExpiryTimer();
-    }
+    const renderPlan = resolveActiveRenderPlan({
+      checkoutContext: x01CheckoutContext,
+      selectedSegments,
+      activeScore,
+      outMode,
+    });
 
     const payload = buildDebugPayload({
-      status,
+      status: renderPlan.status,
       active,
       activeScore,
       domScore: x01CheckoutContext.domScore,
@@ -548,29 +625,29 @@ export function initializeCheckoutBoardTargets(context = {}) {
       variantText,
       outMode,
       targetSelectionMode,
-      selectionSource: renderSelectionSource,
+      selectionSource: renderPlan.selectionSource,
       documentRef,
       windowRef,
       routeEntries,
       routeSegments,
-      selectedSegments: renderSelectedSegments,
-      targets: renderTargets,
-      board,
+      selectedSegments: renderPlan.selectedSegments,
+      targets: renderPlan.targets,
+      board: renderPlan.board,
     });
     emitDebugEvent(
       debugState,
-      status === "render" || status === "render-retained" ? "log" : "warn",
+      renderPlan.status === "render" || renderPlan.status === "render-retained" ? "log" : "warn",
       buildDebugSignature(payload),
       buildDebugSummary(payload),
       payload
     );
-    if (!board) {
+    if (!renderPlan.board) {
       return;
     }
 
     renderCheckoutTargets({
-      board,
-      checkoutTargets: renderTargets,
+      board: renderPlan.board,
+      checkoutTargets: renderPlan.targets,
       visualConfig,
     });
   }

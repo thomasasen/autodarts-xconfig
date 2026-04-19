@@ -136,6 +136,98 @@ function hasOverlayRemovalMutation(mutations = []) {
   });
 }
 
+function handleHighlighterSurfaceStatus(options = {}) {
+  const {
+    surfaceStatus,
+    statusSignature,
+    lastStatusSignature,
+    variantText,
+    lifecycle,
+    renderState,
+    debugState,
+    visualDebugContext,
+    clearAndReset,
+  } = options;
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset({ clearOverlay: true });
+    emitDebugLog(
+      debugState,
+      statusSignature,
+      `state paused route variant="${variantText || "-"}" ${visualDebugContext}`
+    );
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset({ clearOverlay: true });
+    emitDebugLog(
+      debugState,
+      statusSignature,
+      `state inactive variant="${variantText || "-"}" ${visualDebugContext}`
+    );
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset({ clearOverlay: false });
+    emitDebugWarning(
+      debugState,
+      statusSignature,
+      `warn kein Grid variant="${variantText || "-"}" ${visualDebugContext}`
+    );
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    if (lifecycle?.boardGapDeferred) {
+      emitDebugWarning(
+        debugState,
+        `${statusSignature}::pending-board-gap::${renderState?.matchRouteId || "-"}`,
+        `warn kein Board variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" pendingRecheck="true" ${visualDebugContext}`
+      );
+      return { handled: true, lastStatusSignature: statusSignature };
+    }
+    clearAndReset({ clearOverlay: false });
+    emitDebugWarning(
+      debugState,
+      statusSignature,
+      `warn kein Board variant="${variantText || "-"}" ${visualDebugContext}`
+    );
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset({ clearOverlay: true });
+    emitDebugWarning(
+      debugState,
+      `${statusSignature}::${lifecycle?.recovery?.status || "blocked"}::${renderState?.matchRouteId || "-"}`,
+      `warn degraded host variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" recovery="${lifecycle?.recovery?.status || "blocked"}" ${visualDebugContext}`
+    );
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  return {
+    handled: false,
+    lastStatusSignature: "",
+  };
+}
+
 export function initializeCricketHighlighter(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const domGuards = context.domGuards;
@@ -196,90 +288,22 @@ export function initializeCricketHighlighter(context = {}) {
       const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
       const statusSignature = buildStatusSignature(renderState);
       const variantText = renderState?.variantText || readVariantText(documentRef);
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset({ clearOverlay: true });
-        emitDebugLog(
-          debugState,
-          statusSignature,
-          `state paused route variant="${variantText || "-"}" ${visualDebugContext}`
-        );
+      const surfaceStatusResult = handleHighlighterSurfaceStatus({
+        surfaceStatus,
+        statusSignature,
+        lastStatusSignature,
+        variantText,
+        lifecycle,
+        renderState,
+        debugState,
+        visualDebugContext,
+        clearAndReset,
+      });
+      lastStatusSignature = surfaceStatusResult.lastStatusSignature;
+      if (surfaceStatusResult.handled) {
         return;
       }
 
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset({ clearOverlay: true });
-        emitDebugLog(
-          debugState,
-          statusSignature,
-          `state inactive variant="${variantText || "-"}" ${visualDebugContext}`
-        );
-        return;
-      }
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset({ clearOverlay: false });
-        emitDebugWarning(
-          debugState,
-          statusSignature,
-          `warn kein Grid variant="${variantText || "-"}" ${visualDebugContext}`
-        );
-        return;
-      }
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-        if (lifecycle.boardGapDeferred) {
-          if (statusSignature === lastStatusSignature) {
-            return;
-          }
-          lastStatusSignature = statusSignature;
-          emitDebugWarning(
-            debugState,
-            `${statusSignature}::pending-board-gap::${renderState?.matchRouteId || "-"}`,
-            `warn kein Board variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" pendingRecheck="true" ${visualDebugContext}`
-          );
-          return;
-        }
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset({ clearOverlay: false });
-        emitDebugWarning(
-          debugState,
-          statusSignature,
-          `warn kein Board variant="${variantText || "-"}" ${visualDebugContext}`
-        );
-        return;
-      }
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset({ clearOverlay: true });
-        emitDebugWarning(
-          debugState,
-          `${statusSignature}::${lifecycle.recovery?.status || "blocked"}::${renderState?.matchRouteId || "-"}`,
-          `warn degraded host variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" recovery="${lifecycle.recovery?.status || "blocked"}" ${visualDebugContext}`
-        );
-        return;
-      }
-
-      lastStatusSignature = "";
       const signature = String(renderState?.transitionSignature || renderState?.pipelineSignature || "");
       if (!signature) {
         clearAndReset({ clearOverlay: false });

@@ -27,6 +27,110 @@ export {
   selectWidestContentLayoutCandidate,
 } from "./board-layout-resolver.js";
 
+function readThemeConfigs(config, configKey) {
+  return {
+    featureConfig:
+      config && typeof config.getFeatureConfig === "function"
+        ? config.getFeatureConfig(configKey)
+        : {},
+    globalTypographyConfig:
+      config && typeof config.getFeatureConfig === "function"
+        ? config.getFeatureConfig("themes.globalTypography")
+        : {},
+  };
+}
+
+function createThemeLifecycleContext(options = {}) {
+  return {
+    config: options.config,
+    documentRef: options.documentRef,
+    featureConfig: options.featureConfig,
+    gameState: options.gameState,
+    runtimeContext: options.runtimeContext,
+    scheduler: options.scheduler,
+    themePolicy: options.themePolicy,
+    themeState: options.themeState,
+    windowRef: options.windowRef,
+  };
+}
+
+function isThemeContextSupported(isSupportedContext, lifecycleContext) {
+  if (typeof isSupportedContext !== "function") {
+    return true;
+  }
+  return isSupportedContext(lifecycleContext) === true;
+}
+
+function resolveThemeCssText(buildThemeCss, featureConfig, globalTypographyConfig) {
+  return String(
+    buildThemeCss(featureConfig, {
+      globalTypographyConfig,
+      visualConfig: resolveThemeVisualSettingsConfig(featureConfig, globalTypographyConfig),
+    }) || ""
+  ).trim();
+}
+
+function createLayoutHookRecheckController(windowRef, onRecheck) {
+  let pendingLayoutHookRecheckHandle = 0;
+  let pendingLayoutHookRecheckSignature = "";
+
+  function clear() {
+    if (pendingLayoutHookRecheckHandle && typeof windowRef?.clearTimeout === "function") {
+      windowRef.clearTimeout(pendingLayoutHookRecheckHandle);
+    }
+    pendingLayoutHookRecheckHandle = 0;
+    pendingLayoutHookRecheckSignature = "";
+  }
+
+  function schedule(result = {}) {
+    const delayMs = Math.max(0, Number(result?.recheckDelayMs) || 0);
+    if (!(delayMs > 0) || typeof windowRef?.setTimeout !== "function") {
+      clear();
+      return;
+    }
+
+    const signature = [
+      String(result?.status || ""),
+      Math.max(1, Math.round(delayMs)),
+      String(windowRef?.location?.pathname || ""),
+      String(windowRef?.location?.hash || ""),
+    ].join("::");
+    if (pendingLayoutHookRecheckHandle && pendingLayoutHookRecheckSignature === signature) {
+      return;
+    }
+
+    clear();
+    pendingLayoutHookRecheckSignature = signature;
+    pendingLayoutHookRecheckHandle = windowRef.setTimeout(() => {
+      pendingLayoutHookRecheckHandle = 0;
+      pendingLayoutHookRecheckSignature = "";
+      onRecheck?.();
+    }, delayMs);
+  }
+
+  return {
+    clear,
+    schedule,
+  };
+}
+
+function deactivateThemeFeature(options = {}) {
+  options.layoutHookRecheck?.clear?.();
+  options.domGuards?.removeNodeById?.(options.styleId);
+  togglePreviewSpace(options.documentRef, options.resolvedPreviewPlacement, false);
+  clearBoardLayoutHooks(options.themeState);
+
+  if (options.themePolicy && typeof options.themePolicy.onDeactivate === "function") {
+    options.themePolicy.onDeactivate({
+      documentRef: options.documentRef,
+      gameState: options.gameState,
+      themeState: options.themeState,
+      windowRef: options.windowRef,
+      runtimeContext: options.runtimeContext,
+    });
+  }
+}
+
 export function mountThemeFeature(context = {}, options = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
@@ -74,69 +178,11 @@ export function mountThemeFeature(context = {}, options = {}) {
     layoutHookTargets: {},
     ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
   };
-  let pendingLayoutHookRecheckHandle = 0;
-  let pendingLayoutHookRecheckSignature = "";
-
-  function clearPendingLayoutHookRecheck() {
-    if (pendingLayoutHookRecheckHandle && typeof windowRef?.clearTimeout === "function") {
-      windowRef.clearTimeout(pendingLayoutHookRecheckHandle);
-    }
-    pendingLayoutHookRecheckHandle = 0;
-    pendingLayoutHookRecheckSignature = "";
-  }
-
-  function schedulePendingLayoutHookRecheck(result = {}) {
-    const delayMs = Math.max(0, Number(result?.recheckDelayMs) || 0);
-    if (!(delayMs > 0) || typeof windowRef?.setTimeout !== "function") {
-      clearPendingLayoutHookRecheck();
-      return;
-    }
-
-    const signature = [
-      String(result?.status || ""),
-      Math.max(1, Math.round(delayMs)),
-      String(windowRef?.location?.pathname || ""),
-      String(windowRef?.location?.hash || ""),
-    ].join("::");
-    if (pendingLayoutHookRecheckHandle && pendingLayoutHookRecheckSignature === signature) {
-      return;
-    }
-
-    clearPendingLayoutHookRecheck();
-    pendingLayoutHookRecheckSignature = signature;
-    pendingLayoutHookRecheckHandle = windowRef.setTimeout(() => {
-      pendingLayoutHookRecheckHandle = 0;
-      pendingLayoutHookRecheckSignature = "";
-      scheduler.schedule();
-    }, delayMs);
-  }
-
-  function deactivateTheme() {
-    clearPendingLayoutHookRecheck();
-    domGuards.removeNodeById(styleId);
-    togglePreviewSpace(documentRef, resolvedPreviewPlacement, false);
-    clearBoardLayoutHooks(themeState);
-
-    if (themePolicy && typeof themePolicy.onDeactivate === "function") {
-      themePolicy.onDeactivate({
-        documentRef,
-        gameState,
-        themeState,
-        windowRef,
-        runtimeContext: context,
-      });
-    }
-  }
+  let scheduler = null;
+  const layoutHookRecheck = createLayoutHookRecheckController(windowRef, () => scheduler?.schedule?.());
 
   function evaluateThemeState() {
-    const featureConfig =
-      config && typeof config.getFeatureConfig === "function"
-        ? config.getFeatureConfig(configKey)
-        : {};
-    const globalTypographyConfig =
-      config && typeof config.getFeatureConfig === "function"
-        ? config.getFeatureConfig("themes.globalTypography")
-        : {};
+    const { featureConfig, globalTypographyConfig } = readThemeConfigs(config, configKey);
 
     const isActive = isThemeVariantActive({
       variantName,
@@ -146,35 +192,46 @@ export function mountThemeFeature(context = {}, options = {}) {
       documentRef,
     });
 
-    if (!isActive) {
-      deactivateTheme();
-      return;
-    }
-
-    if (
-      isSupportedContext &&
-      isSupportedContext({
-        config,
+    const lifecycleContext = createThemeLifecycleContext({
+      config,
+      documentRef,
+      featureConfig,
+      gameState,
+      runtimeContext: context,
+      themePolicy,
+      themeState,
+      windowRef,
+    });
+    if (!isActive || !isThemeContextSupported(isSupportedContext, lifecycleContext)) {
+      deactivateThemeFeature({
         documentRef,
-        featureConfig,
+        domGuards,
         gameState,
+        layoutHookRecheck,
+        resolvedPreviewPlacement,
         runtimeContext: context,
+        styleId,
         themePolicy,
+        themeState,
         windowRef,
-      }) !== true
-    ) {
-      deactivateTheme();
+      });
       return;
     }
 
-    const cssText = String(
-      buildThemeCss(featureConfig, {
-        globalTypographyConfig,
-        visualConfig: resolveThemeVisualSettingsConfig(featureConfig, globalTypographyConfig),
-      }) || ""
-    ).trim();
+    const cssText = resolveThemeCssText(buildThemeCss, featureConfig, globalTypographyConfig);
     if (!cssText) {
-      deactivateTheme();
+      deactivateThemeFeature({
+        documentRef,
+        domGuards,
+        gameState,
+        layoutHookRecheck,
+        resolvedPreviewPlacement,
+        runtimeContext: context,
+        styleId,
+        themePolicy,
+        themeState,
+        windowRef,
+      });
       return;
     }
 
@@ -187,19 +244,15 @@ export function mountThemeFeature(context = {}, options = {}) {
     togglePreviewSpace(documentRef, resolvedPreviewPlacement, previewSpaceEnabled);
     const layoutResult = updateBoardLayoutHooks(documentRef, themeState);
     if (layoutResult?.retained) {
-      schedulePendingLayoutHookRecheck(layoutResult);
+      layoutHookRecheck.schedule(layoutResult);
     } else {
-      clearPendingLayoutHookRecheck();
+      layoutHookRecheck.clear();
     }
 
     if (themePolicy && typeof themePolicy.onActivate === "function") {
       themePolicy.onActivate({
-        documentRef,
-        gameState,
-        themeState,
-        windowRef,
+        ...lifecycleContext,
         scheduler,
-        runtimeContext: context,
       });
     }
   }
@@ -217,7 +270,7 @@ export function mountThemeFeature(context = {}, options = {}) {
       ].filter(Boolean)
     )
   );
-  const scheduler =
+  scheduler =
     context.helpers && typeof context.helpers.createRafScheduler === "function"
       ? context.helpers.createRafScheduler(evaluateThemeState)
       : createRafScheduler(evaluateThemeState, { windowRef });
@@ -311,8 +364,18 @@ export function mountThemeFeature(context = {}, options = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
-    clearPendingLayoutHookRecheck();
-    deactivateTheme();
+    deactivateThemeFeature({
+      documentRef,
+      domGuards,
+      gameState,
+      layoutHookRecheck,
+      resolvedPreviewPlacement,
+      runtimeContext: context,
+      styleId,
+      themePolicy,
+      themeState,
+      windowRef,
+    });
 
     try {
       unsubscribeGameState();

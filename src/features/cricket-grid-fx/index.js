@@ -105,6 +105,81 @@ function collectRuntimeWatchNodes(state, renderState, documentRef) {
   });
 }
 
+function handleGridSurfaceStatus(options = {}) {
+  const {
+    surfaceStatus,
+    statusSignature,
+    lastStatusSignature,
+    variantText,
+    lifecycle,
+    renderState,
+    debugState,
+    clearAndReset,
+  } = options;
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset();
+    emitDebugLog(debugState, statusSignature, `state paused route variant="${variantText || "-"}"`);
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset();
+    emitDebugLog(debugState, statusSignature, `state inactive variant="${variantText || "-"}"`);
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset();
+    emitDebugWarning(debugState, statusSignature, `warn kein Grid variant="${variantText || "-"}"`);
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    if (lifecycle?.boardGapDeferred) {
+      emitDebugWarning(
+        debugState,
+        `${statusSignature}::pending-board-gap::${renderState?.matchRouteId || "-"}`,
+        `warn kein Board variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" pendingRecheck="true"`
+      );
+      return { handled: true, lastStatusSignature: statusSignature };
+    }
+    clearAndReset();
+    emitDebugWarning(debugState, statusSignature, `warn kein Board variant="${variantText || "-"}"`);
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
+    if (statusSignature === lastStatusSignature) {
+      return { handled: true, lastStatusSignature };
+    }
+    clearAndReset();
+    emitDebugWarning(
+      debugState,
+      `${statusSignature}::${lifecycle?.recovery?.status || "blocked"}::${renderState?.matchRouteId || "-"}`,
+      `warn degraded host variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" recovery="${lifecycle?.recovery?.status || "blocked"}"`
+    );
+    return { handled: true, lastStatusSignature: statusSignature };
+  }
+
+  return {
+    handled: false,
+    lastStatusSignature: "",
+  };
+}
+
 export function initializeCricketGridFx(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
@@ -167,90 +242,21 @@ export function initializeCricketGridFx(context = {}) {
       const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
       const statusSignature = buildStatusSignature(renderState);
       const variantText = renderState?.variantText || readVariantText(documentRef);
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.PAUSED_ROUTE) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset();
-        emitDebugLog(
-          debugState,
-          statusSignature,
-          `state paused route variant="${variantText || "-"}"`
-        );
+      const surfaceStatusResult = handleGridSurfaceStatus({
+        surfaceStatus,
+        statusSignature,
+        lastStatusSignature,
+        variantText,
+        lifecycle,
+        renderState,
+        debugState,
+        clearAndReset,
+      });
+      lastStatusSignature = surfaceStatusResult.lastStatusSignature;
+      if (surfaceStatusResult.handled) {
         return;
       }
 
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.INACTIVE_VARIANT) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset();
-        emitDebugLog(
-          debugState,
-          statusSignature,
-          `state inactive variant="${variantText || "-"}"`
-        );
-        return;
-      }
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_GRID) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset();
-        emitDebugWarning(
-          debugState,
-          statusSignature,
-          `warn kein Grid variant="${variantText || "-"}"`
-        );
-        return;
-      }
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
-        if (lifecycle.boardGapDeferred) {
-          if (statusSignature === lastStatusSignature) {
-            return;
-          }
-          lastStatusSignature = statusSignature;
-          emitDebugWarning(
-            debugState,
-            `${statusSignature}::pending-board-gap::${renderState?.matchRouteId || "-"}`,
-            `warn kein Board variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" pendingRecheck="true"`
-          );
-          return;
-        }
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset();
-        emitDebugWarning(
-          debugState,
-          statusSignature,
-          `warn kein Board variant="${variantText || "-"}"`
-        );
-        return;
-      }
-
-      if (surfaceStatus === CRICKET_SURFACE_STATUS.DEGRADED_HOST) {
-        if (statusSignature === lastStatusSignature) {
-          return;
-        }
-        lastStatusSignature = statusSignature;
-        clearAndReset();
-        emitDebugWarning(
-          debugState,
-          `${statusSignature}::${lifecycle.recovery?.status || "blocked"}::${renderState?.matchRouteId || "-"}`,
-          `warn degraded host variant="${variantText || "-"}" match="${renderState?.matchRouteId || "-"}" recovery="${lifecycle.recovery?.status || "blocked"}"`
-        );
-        return;
-      }
-
-      lastStatusSignature = "";
       const transitionSignature = String(renderState?.transitionSignature || "");
       if (!transitionSignature) {
         clearAndReset();
