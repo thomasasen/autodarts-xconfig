@@ -79,6 +79,55 @@ async function waitForSettingsModal(documentRef) {
   );
 }
 
+function getRuntimeFootprint(runtimeApi) {
+  const snapshot =
+    runtimeApi && typeof runtimeApi.getSnapshot === "function"
+      ? runtimeApi.getSnapshot()
+      : null;
+  const inspect =
+    runtimeApi && typeof runtimeApi.inspect === "function"
+      ? runtimeApi.inspect()
+      : null;
+  const mountedCount = snapshot
+    ? Object.values(snapshot.features || {}).filter((feature) => feature?.mounted === true).length
+    : 0;
+
+  return JSON.stringify({
+    mountedCount,
+    observerCount: inspect?.observerCount || 0,
+    listenerCount: inspect?.listenerCount || 0,
+  });
+}
+
+async function waitForRuntimeToSettle(runtimeApi, options = {}) {
+  const timeoutMs = Math.max(40, Number(options.timeoutMs) || 320);
+  const intervalMs = Math.max(4, Number(options.intervalMs) || 12);
+  const stablePassesRequired = Math.max(1, Number(options.stablePassesRequired) || 3);
+  let previousFootprint = "";
+  let stablePasses = 0;
+
+  assert.equal(
+    await waitFor(() => {
+      const nextFootprint = getRuntimeFootprint(runtimeApi);
+      if (!nextFootprint) {
+        previousFootprint = "";
+        stablePasses = 0;
+        return false;
+      }
+
+      if (nextFootprint === previousFootprint) {
+        stablePasses += 1;
+      } else {
+        previousFootprint = nextFootprint;
+        stablePasses = 1;
+      }
+
+      return stablePasses >= stablePassesRequired;
+    }, { timeoutMs, intervalMs }),
+    true
+  );
+}
+
 async function waitForSettingsClosed(documentRef) {
   assert.equal(
     await waitFor(() => !documentRef.querySelector("[data-adxconfig-modal='true']")),
@@ -594,6 +643,7 @@ test("xConfig shell stays idempotent across repeated init and DOM mutation sync"
   const windowRef = createFakeWindow({ documentRef, localStorage });
 
   const first = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForRuntimeToSettle(windowRef.__adXConfig);
   const initialInspect = windowRef.__adXConfig.inspect();
   const second = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   await waitForMenuButton(documentRef);
@@ -603,6 +653,7 @@ test("xConfig shell stays idempotent across repeated init and DOM mutation sync"
 
   documentRef.flushMutations();
   await waitForMenuButton(documentRef);
+  await waitForRuntimeToSettle(windowRef.__adXConfig);
 
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-panel-host").length, 1);
@@ -2739,6 +2790,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
     documentRef: secondDocument,
   });
   await waitForMenuButton(secondDocument);
+  await waitForRuntimeToSettle(secondRuntime);
 
   const secondSnapshot = secondRuntime.getSnapshot();
   assert.equal(secondSnapshot.features["theme-x01"].enabled, true);

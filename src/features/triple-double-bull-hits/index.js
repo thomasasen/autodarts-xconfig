@@ -6,6 +6,7 @@ import {
 import { clearHitDecoration, updateHitDecorations } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "triple-double-bull-hits";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -81,6 +82,64 @@ function formatRowDebug(rows) {
     .join(" || ");
 }
 
+function usesElectricArc(featureConfig = {}) {
+  return String(featureConfig.animationStyle || "").trim().toLowerCase() === "electric-arc";
+}
+
+function isTurnSurfaceNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  if (String(node.id || "").trim() === "ad-ext-turn") {
+    return true;
+  }
+
+  if (node.classList?.contains?.("ad-ext-turn-throw") || node.classList?.contains?.("ad-ext-turn-points")) {
+    return true;
+  }
+
+  if (typeof node.closest === "function") {
+    return Boolean(node.closest("#ad-ext-turn"));
+  }
+
+  return false;
+}
+
+function nodeContainsTurnSurface(node) {
+  if (isTurnSurfaceNode(node)) {
+    return true;
+  }
+
+  if (!node || typeof node.querySelector !== "function") {
+    return false;
+  }
+
+  return Boolean(node.querySelector("#ad-ext-turn, .ad-ext-turn-throw, .ad-ext-turn-points"));
+}
+
+function hasRelevantTurnSurfaceMutation(mutations = [], isManagedNode = null) {
+  if (!hasExternalDomMutation(mutations, isManagedNode)) {
+    return false;
+  }
+
+  if (!Array.isArray(mutations) || mutations.length === 0) {
+    return true;
+  }
+
+  return mutations.some((mutation) => {
+    if (mutation?.type === "attributes") {
+      return isTurnSurfaceNode(mutation?.target || null);
+    }
+
+    return [
+      mutation?.target || null,
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].some((node) => nodeContainsTurnSurface(node));
+  });
+}
+
 export function initializeTripleDoubleBullHits(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
@@ -111,12 +170,24 @@ export function initializeTripleDoubleBullHits(context = {}) {
   const slotStateByIndex = new Map();
   const activeAnimeByRow = new Map();
   const roleStateByRow = new Map();
+  const replayTimersByRow = new Map();
   const triggerResetTimersByRow = new Map();
   let animeRef = getAnime(windowRef);
   let disposed = false;
+  const isManagedNode = createManagedNodeMatcher({
+    ids: ["ad-ext-electric-filter-defs"],
+    classNames: [],
+    predicates: [
+      (node) => node?.id === STYLE_ID,
+    ],
+  });
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
-  retainElectricFilterDefs({ documentRef, domGuards });
+  if (usesElectricArc(featureConfig)) {
+    retainElectricFilterDefs({ documentRef, domGuards });
+  } else {
+    releaseElectricFilterDefs({ documentRef });
+  }
 
   const scheduler = schedulerFactory(() => {
     const stats = updateHitDecorations({
@@ -128,6 +199,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       slotStateByIndex,
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       animeRef,
       windowRef,
@@ -201,7 +273,12 @@ export function initializeTripleDoubleBullHits(context = {}) {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasRelevantTurnSurfaceMutation(mutations, isManagedNode)) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: createTurnSurfaceObserveOptions(),
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -270,6 +347,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       clearHitDecoration(rowNode, signatureByRow, {
         activeAnimeByRow,
         roleStateByRow,
+        replayTimersByRow,
         triggerResetTimersByRow,
         windowRef,
         animeRef,
@@ -281,6 +359,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
     slotStateByIndex.clear();
     activeAnimeByRow.clear();
     roleStateByRow.clear();
+    replayTimersByRow.clear();
     triggerResetTimersByRow.clear();
 
     domGuards.removeNodeById(STYLE_ID);

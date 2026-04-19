@@ -3,10 +3,21 @@ import assert from "node:assert/strict";
 
 import { createBootstrap, initializeRuntime } from "../../src/core/bootstrap.js";
 import { HIGHLIGHT_CLASS, STYLE_ID } from "../../src/features/checkout-score-pulse/style.js";
-import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitFor(check, { timeoutMs = 160, intervalMs = 5 } = {}) {
+  const deadline = Date.now() + Math.max(0, Number(timeoutMs) || 0);
+  while (Date.now() < deadline) {
+    if (check()) {
+      return true;
+    }
+    await wait(intervalMs);
+  }
+  return Boolean(check());
 }
 
 test("bootstrap start/stop are idempotent and keep a single runtime namespace", () => {
@@ -71,7 +82,10 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
   });
 
   runtime.start();
-  await wait(5);
+  assert.equal(
+    await waitFor(() => documentRef.activeScoreElement.classList.contains(HIGHLIGHT_CLASS)),
+    true
+  );
 
   assert.equal(documentRef.activeScoreElement.classList.contains(HIGHLIGHT_CLASS), true);
   assert.equal(Boolean(documentRef.getElementById(STYLE_ID)), true);
@@ -117,7 +131,10 @@ test("config updates remount affected mounted features without duplicating obser
   });
 
   runtime.start();
-  await wait(5);
+  assert.equal(
+    await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--scale")),
+    true
+  );
 
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--scale"), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
@@ -129,7 +146,10 @@ test("config updates remount affected mounted features without duplicating obser
       },
     },
   });
-  await wait(5);
+  assert.equal(
+    await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--blink")),
+    true
+  );
 
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--scale"), false);
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--blink"), true);
@@ -183,6 +203,140 @@ test("bootstrap resolves feature references by config key for toggle and action 
 
   const actionResult = await runtime.runFeatureAction("custom.group.flag", "ping");
   assert.equal(actionResult, "handled:ping");
+
+  runtime.stop();
+});
+
+test("bootstrap defers non-critical startup features while mounting immediate features synchronously", () => {
+  const timerHarness = createFakeTimerHarness();
+  const documentRef = new FakeDocument();
+  const windowRef = timerHarness.installOnWindow(createFakeWindow({ documentRef }));
+  const mounts = [];
+
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: {
+      featureToggles: {
+        immediateFeature: true,
+        deferredFeature: true,
+      },
+      features: {
+        immediateFeature: { enabled: true },
+        deferredFeature: { enabled: true },
+      },
+    },
+    featureDefinitions: [
+      {
+        featureKey: "immediate-feature",
+        configKey: "immediateFeature",
+        startupTiming: "immediate",
+        mount: () => {
+          mounts.push("immediate-mount");
+          return () => mounts.push("immediate-unmount");
+        },
+      },
+      {
+        featureKey: "deferred-feature",
+        configKey: "deferredFeature",
+        startupTiming: "deferred",
+        mount: () => {
+          mounts.push("deferred-mount");
+          return () => mounts.push("deferred-unmount");
+        },
+      },
+    ],
+  });
+
+  runtime.start();
+
+  assert.deepEqual(mounts, ["immediate-mount"]);
+  assert.equal(runtime.getSnapshot().features["immediate-feature"].mounted, true);
+  assert.equal(runtime.getSnapshot().features["deferred-feature"].mounted, false);
+
+  timerHarness.flush();
+
+  assert.deepEqual(mounts, ["immediate-mount", "deferred-mount"]);
+  assert.equal(runtime.getSnapshot().features["deferred-feature"].mounted, true);
+
+  runtime.stop();
+});
+
+test("bootstrap cancels deferred startup mounts when stopped before timers flush", () => {
+  const timerHarness = createFakeTimerHarness();
+  const documentRef = new FakeDocument();
+  const windowRef = timerHarness.installOnWindow(createFakeWindow({ documentRef }));
+  const mounts = [];
+
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: {
+      featureToggles: {
+        deferredFeature: true,
+      },
+      features: {
+        deferredFeature: { enabled: true },
+      },
+    },
+    featureDefinitions: [
+      {
+        featureKey: "deferred-feature",
+        configKey: "deferredFeature",
+        startupTiming: "deferred",
+        mount: () => {
+          mounts.push("deferred-mount");
+          return () => mounts.push("deferred-unmount");
+        },
+      },
+    ],
+  });
+
+  runtime.start();
+  runtime.stop();
+  timerHarness.runAll();
+
+  assert.deepEqual(mounts, []);
+  assert.equal(runtime.getSnapshot().features["deferred-feature"].mounted, false);
+});
+
+test("features enabled after startup mount immediately even when marked deferred", () => {
+  const timerHarness = createFakeTimerHarness();
+  const documentRef = new FakeDocument();
+  const windowRef = timerHarness.installOnWindow(createFakeWindow({ documentRef }));
+  const mounts = [];
+
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: {
+      featureToggles: {
+        deferredFeature: false,
+      },
+      features: {
+        deferredFeature: { enabled: false },
+      },
+    },
+    featureDefinitions: [
+      {
+        featureKey: "deferred-feature",
+        configKey: "deferredFeature",
+        startupTiming: "deferred",
+        mount: () => {
+          mounts.push("deferred-mount");
+          return () => mounts.push("deferred-unmount");
+        },
+      },
+    ],
+  });
+
+  runtime.start();
+  assert.deepEqual(mounts, []);
+
+  runtime.setFeatureEnabled("deferred-feature", true);
+
+  assert.deepEqual(mounts, ["deferred-mount"]);
+  assert.equal(runtime.getSnapshot().features["deferred-feature"].mounted, true);
 
   runtime.stop();
 });

@@ -6,6 +6,7 @@ import {
   THEME_LAYOUT_HOOK_CLASSES,
   THEME_LAYOUT_RETENTION_CLASSES,
 } from "./theme-layout-contract.js";
+import { createMeasurementCacheManager } from "./measurement-cache.js";
 
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
@@ -15,13 +16,8 @@ const CRICKET_PLAYER_COUNT_CSS_VARIABLE = "--ad-ext-theme-cricket-player-count";
 const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 export const CRICKET_THEME_TRANSIENT_BOARD_GAP_GRACE_MS = 700;
 export const CRICKET_THEME_TRANSIENT_BOARD_GAP_RECHECK_BUFFER_MS = 16;
-const CRICKET_READABILITY_POLICY = Object.freeze({
-  playerCardMinWidthPx: 228,
-  playerCardGapPx: 0,
-  playerAreaPaddingPx: 12,
-  contentGapPx: 8,
-  boardAutoMinWidthPx: 288,
-  boardManualMinWidthPx: 160,
+const layoutMeasurements = createMeasurementCacheManager({
+  customCacheKeys: ["hiddenByNode"],
 });
 function createCricketReadabilityState() {
   return {
@@ -105,18 +101,26 @@ function isNodeExplicitlyHidden(node) {
     return true;
   }
 
+  const hiddenCache = layoutMeasurements.getCustomCache("hiddenByNode");
+  if (hiddenCache?.has(node)) {
+    return hiddenCache.get(node);
+  }
+
   if (node.hidden === true) {
+    hiddenCache?.set(node, true);
     return true;
   }
 
   const ariaHidden = normalizeText(node.getAttribute?.("aria-hidden"));
   if (ariaHidden === "true") {
+    hiddenCache?.set(node, true);
     return true;
   }
 
   const hiddenAttribute =
     typeof node.getAttribute === "function" ? node.getAttribute("hidden") : null;
   if (hiddenAttribute !== null) {
+    hiddenCache?.set(node, true);
     return true;
   }
 
@@ -129,18 +133,23 @@ function isNodeExplicitlyHidden(node) {
     inlineVisibility === "collapse" ||
     inlineOpacity === "0"
   ) {
+    hiddenCache?.set(node, true);
     return true;
   }
 
   const computedStyle = getComputedStyleRef(node);
   if (!computedStyle) {
+    hiddenCache?.set(node, false);
     return false;
   }
 
   const display = normalizeText(computedStyle.display);
   const visibility = normalizeText(computedStyle.visibility);
   const opacity = normalizeText(computedStyle.opacity);
-  return display === "none" || visibility === "hidden" || visibility === "collapse" || opacity === "0";
+  const isHidden =
+    display === "none" || visibility === "hidden" || visibility === "collapse" || opacity === "0";
+  hiddenCache?.set(node, isHidden);
+  return isHidden;
 }
 
 function isInteractiveControlAncestor(node) {
@@ -573,31 +582,11 @@ function findDirectChildContaining(rootNode, targetNode) {
 }
 
 function getElementWidth(node) {
-  if (!node || typeof node.getBoundingClientRect !== "function") {
-    return 0;
-  }
-
-  try {
-    const rect = node.getBoundingClientRect();
-    const width = Number.parseFloat(rect?.width);
-    return Number.isFinite(width) && width > 0 ? width : 0;
-  } catch (_) {
-    return 0;
-  }
+  return layoutMeasurements.getWidth(node);
 }
 
 function getElementHeight(node) {
-  if (!node || typeof node.getBoundingClientRect !== "function") {
-    return 0;
-  }
-
-  try {
-    const rect = node.getBoundingClientRect();
-    const height = Number.parseFloat(rect?.height);
-    return Number.isFinite(height) && height > 0 ? height : 0;
-  } catch (_) {
-    return 0;
-  }
+  return layoutMeasurements.getHeight(node);
 }
 
 function isRenderableLayoutNode(node, options = {}) {
@@ -1323,80 +1312,82 @@ export function hasBoardLayoutHookMutation(mutations = [], state = {}) {
 }
 
 export function updateBoardLayoutHooks(documentRef, state, options = {}) {
-  const nowMs = Number.isFinite(Number(options.nowMs)) ? Number(options.nowMs) : Date.now();
-  const resolution = resolveBoardLayoutTargets(documentRef);
-  const nextTargets = resolution?.targets || {};
-  const previous = state.layoutHookTargets || {};
+  return layoutMeasurements.withCache(() => {
+    const nowMs = Number.isFinite(Number(options.nowMs)) ? Number(options.nowMs) : Date.now();
+    const resolution = resolveBoardLayoutTargets(documentRef);
+    const nextTargets = resolution?.targets || {};
+    const previous = state.layoutHookTargets || {};
 
-  if (!resolution || resolution.status === "missing-board") {
-    const retainedLayout = maybeRetainLayoutHooks(state, "missing-board", previous, nowMs);
-    if (retainedLayout.retained) {
-      return retainedLayout;
+    if (!resolution || resolution.status === "missing-board") {
+      const retainedLayout = maybeRetainLayoutHooks(state, "missing-board", previous, nowMs);
+      if (retainedLayout.retained) {
+        return retainedLayout;
+      }
+      clearBoardLayoutHooks(state);
+      clearRetainedLayoutStatus(state);
+      return {
+        status: "missing-board",
+        retained: false,
+        recheckDelayMs: -1,
+      };
     }
-    clearBoardLayoutHooks(state);
-    clearRetainedLayoutStatus(state);
-    return {
-      status: "missing-board",
-      retained: false,
-      recheckDelayMs: -1,
-    };
-  }
 
-  if (resolution.status !== "valid") {
-    const retainedLayout = maybeRetainLayoutHooks(state, resolution.status, previous, nowMs);
-    if (retainedLayout.retained) {
-      return retainedLayout;
+    if (resolution.status !== "valid") {
+      const retainedLayout = maybeRetainLayoutHooks(state, resolution.status, previous, nowMs);
+      if (retainedLayout.retained) {
+        return retainedLayout;
+      }
+      clearBoardLayoutHooks(state);
+      clearRetainedLayoutStatus(state);
+      return {
+        status: resolution.status,
+        retained: false,
+        recheckDelayMs: -1,
+      };
     }
-    clearBoardLayoutHooks(state);
-    clearRetainedLayoutStatus(state);
-    return {
-      status: resolution.status,
-      retained: false,
-      recheckDelayMs: -1,
-    };
-  }
 
-  if (previous.boardCanvas && previous.boardCanvas !== nextTargets.boardCanvas) {
-    clearBoardSizeVariable(previous.boardCanvas);
-  }
-  if (
-    previous.boardEventShell &&
-    previous.boardEventShell !== nextTargets.boardEventShell &&
-    previous.boardEventShell !== previous.boardCanvas
-  ) {
-    clearBoardSizeVariable(previous.boardEventShell);
-  }
-
-  Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
-    if (previous[key] && previous[key] !== nextTargets[key]) {
-      removeClass(previous[key], className);
+    if (previous.boardCanvas && previous.boardCanvas !== nextTargets.boardCanvas) {
+      clearBoardSizeVariable(previous.boardCanvas);
     }
-  });
-  removeBoardGapHold(previous);
+    if (
+      previous.boardEventShell &&
+      previous.boardEventShell !== nextTargets.boardEventShell &&
+      previous.boardEventShell !== previous.boardCanvas
+    ) {
+      clearBoardSizeVariable(previous.boardEventShell);
+    }
 
-  Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
-    addClass(nextTargets[key], className);
-  });
+    Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
+      if (previous[key] && previous[key] !== nextTargets[key]) {
+        removeClass(previous[key], className);
+      }
+    });
+    removeBoardGapHold(previous);
 
-  updateBoardSizeVariable(
-    nextTargets.boardCanvas,
-    nextTargets.boardViewport || nextTargets.boardPanel || nextTargets.boardCanvas
-  );
-  if (
-    nextTargets.boardEventShell &&
-    nextTargets.boardEventShell !== nextTargets.boardCanvas
-  ) {
+    Object.entries(THEME_LAYOUT_HOOK_CLASSES).forEach(([key, className]) => {
+      addClass(nextTargets[key], className);
+    });
+
     updateBoardSizeVariable(
-      nextTargets.boardEventShell,
+      nextTargets.boardCanvas,
       nextTargets.boardViewport || nextTargets.boardPanel || nextTargets.boardCanvas
     );
-  }
+    if (
+      nextTargets.boardEventShell &&
+      nextTargets.boardEventShell !== nextTargets.boardCanvas
+    ) {
+      updateBoardSizeVariable(
+        nextTargets.boardEventShell,
+        nextTargets.boardViewport || nextTargets.boardPanel || nextTargets.boardCanvas
+      );
+    }
 
-  state.layoutHookTargets = nextTargets;
-  markHealthyLayoutRetention(state, nowMs);
-  return {
-    status: "valid",
-    retained: false,
-    recheckDelayMs: -1,
-  };
+    state.layoutHookTargets = nextTargets;
+    markHealthyLayoutRetention(state, nowMs);
+    return {
+      status: "valid",
+      retained: false,
+      recheckDelayMs: -1,
+    };
+  });
 }

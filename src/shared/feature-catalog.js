@@ -1,3 +1,14 @@
+export const FEATURE_STARTUP_TIMINGS = Object.freeze({
+  IMMEDIATE: "immediate",
+  DEFERRED: "deferred",
+});
+
+export function normalizeFeatureStartupTiming(value) {
+  return value === FEATURE_STARTUP_TIMINGS.IMMEDIATE
+    ? FEATURE_STARTUP_TIMINGS.IMMEDIATE
+    : FEATURE_STARTUP_TIMINGS.DEFERRED;
+}
+
 const rawFeatureCatalog = [
   {
     featureKey: "checkout-score-pulse",
@@ -28,6 +39,7 @@ const rawFeatureCatalog = [
     configKey: "styleCheckoutSuggestions",
     title: "Style Checkout Suggestions",
     variants: ["x01"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "Animation/Autodarts Style Checkout Suggestions.user.js",
     legacyFeatureId: "a-checkout-style",
   },
@@ -124,6 +136,7 @@ const rawFeatureCatalog = [
     configKey: "x01ScoreProgress",
     title: "X01 Score Progress",
     variants: ["x01"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "",
     legacyFeatureId: "",
   },
@@ -132,6 +145,7 @@ const rawFeatureCatalog = [
     configKey: "themes.globalTypography",
     title: "Templates Global",
     variants: ["all"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "",
     legacyFeatureId: "",
   },
@@ -140,6 +154,7 @@ const rawFeatureCatalog = [
     configKey: "themes.x01",
     title: "Theme X01",
     variants: ["x01"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "Template/Autodarts Theme X01.user.js",
     legacyFeatureId: "theme-x01",
   },
@@ -148,6 +163,7 @@ const rawFeatureCatalog = [
     configKey: "themes.x01TwoPlayer",
     title: "Theme X01 2Player (Beta)",
     variants: ["x01"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "",
     legacyFeatureId: "",
   },
@@ -156,6 +172,7 @@ const rawFeatureCatalog = [
     configKey: "themes.shanghai",
     title: "Theme Shanghai",
     variants: ["shanghai"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "Template/Autodarts Theme Shanghai.user.js",
     legacyFeatureId: "theme-shanghai",
   },
@@ -164,6 +181,7 @@ const rawFeatureCatalog = [
     configKey: "themes.bermuda",
     title: "Theme Bermuda",
     variants: ["bermuda"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "Template/Autodarts Theme Bermuda.user.js",
     legacyFeatureId: "theme-bermuda",
   },
@@ -172,6 +190,7 @@ const rawFeatureCatalog = [
     configKey: "themes.cricket",
     title: "Theme Cricket",
     variants: ["cricket", "tactics"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "Template/Autodarts Theme Cricket.user.js",
     legacyFeatureId: "theme-cricket",
   },
@@ -180,6 +199,7 @@ const rawFeatureCatalog = [
     configKey: "themes.bullOff",
     title: "Theme Bull-off",
     variants: ["bull-off"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
     migratedFrom: "Template/Autodarts Theme Bull-off.user.js",
     legacyFeatureId: "theme-bull-off",
   },
@@ -196,6 +216,7 @@ export const featureCatalog = Object.freeze(
           ? entry.variants.map((variant) => String(variant || "").trim()).filter(Boolean)
           : []
       ),
+      startupTiming: normalizeFeatureStartupTiming(entry.startupTiming),
       migratedFrom: String(entry.migratedFrom || "").trim(),
       legacyFeatureId: String(entry.legacyFeatureId || "").trim(),
     })

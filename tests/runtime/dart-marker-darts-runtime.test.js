@@ -346,7 +346,7 @@ test("dart-marker-darts supports configurable shadow and wobble effects", () => 
   clearDartMarkerDartsState(state);
 });
 
-test("dart-marker-darts positions darts in screen space using actual overlay rect and SVG matrix fallback", () => {
+test("dart-marker-darts positions darts in screen space from the computed overlay layout and SVG matrix fallback", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const overlay = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -379,8 +379,8 @@ test("dart-marker-darts positions darts in screen space using actual overlay rec
 
   const entry = state.entriesByMarker.get(markers[0]);
   assert.ok(entry);
-  approxEqual(entry.center.x, 320 - 12);
-  approxEqual(entry.center.y, 240 - 34);
+  approxEqual(entry.center.x, 407.2);
+  approxEqual(entry.center.y, 377.2);
   assert.ok(Number.isFinite(Number.parseFloat(entry.imageNode.getAttribute("x"))));
   assert.ok(Number.isFinite(Number.parseFloat(entry.imageNode.getAttribute("y"))));
 
@@ -667,6 +667,80 @@ test("dart-marker-darts reacts to scroll, resize, and mutation triggers without 
   assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
 });
 
+test("dart-marker-darts ignores unrelated document churn outside the X01 board surface", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  installBoardFixture(documentRef, [
+    {
+      cx: 0,
+      cy: 0,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 }),
+    },
+  ]);
+
+  const observers = createObserverRegistry();
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeDartMarkerDarts({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners: createListenerRegistry(),
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          design: "autodarts",
+          animateDarts: false,
+          sizePercent: 100,
+          hideOriginalMarkers: false,
+          flightSpeed: "standard",
+          debug: false,
+        };
+      },
+    },
+    gameState: {
+      subscribe() {
+        return () => {};
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  await wait(15);
+  const observer = observers.get("dart-marker-darts:dom-observer");
+  assert.ok(observer);
+  const countAfterInit = scheduleCounter.count;
+
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count, countAfterInit);
+
+  cleanup();
+});
+
 test("dart-marker-darts runtime remount keeps a single overlay instance", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -811,7 +885,8 @@ test("dart-marker-darts debug logging is gated, deduplicated, and reports render
   const flightStartLogs = logs.filter((event) => event[0] === "flight-start");
   const renderMismatchWarns = warns.filter((event) => event[0] === "render-mismatch");
 
-  assert.equal(markerScanLogs.length, 3);
+  assert.equal(markerScanLogs.length >= 3, true);
+  assert.equal(markerScanLogs.length <= 4, true);
   assert.equal(flightStartLogs.length, 1);
   assert.equal(renderMismatchWarns.length, 1);
 

@@ -23,7 +23,11 @@ function getElementRect(element) {
   return element.getBoundingClientRect();
 }
 
-function isDecoratableBadgeNode(badgeNode, labelCell, cricketRules, label) {
+function resolveRectReader(getRect) {
+  return typeof getRect === "function" ? getRect : getElementRect;
+}
+
+function isDecoratableBadgeNode(badgeNode, labelCell, cricketRules, label, getRect = null) {
   if (!badgeNode || !labelCell || badgeNode === labelCell) {
     return false;
   }
@@ -39,8 +43,9 @@ function isDecoratableBadgeNode(badgeNode, labelCell, cricketRules, label) {
     return false;
   }
 
-  const badgeRect = getElementRect(badgeNode);
-  const cellRect = getElementRect(labelCell);
+  const readRect = resolveRectReader(getRect);
+  const badgeRect = readRect(badgeNode);
+  const cellRect = readRect(labelCell);
   if (!badgeRect || !cellRect) {
     return true;
   }
@@ -233,6 +238,7 @@ export function resolveBadgeNode(options = {}) {
     cricketRules,
     label,
     allowLabelNodeFallback = false,
+    getRect = null,
     queryAll = queryAllFallback,
   } = options;
   if (!labelCell) {
@@ -243,7 +249,7 @@ export function resolveBadgeNode(options = {}) {
     labelNode &&
     labelNode !== labelCell &&
     (
-      isDecoratableBadgeNode(labelNode, labelCell, cricketRules, label) ||
+      isDecoratableBadgeNode(labelNode, labelCell, cricketRules, label, getRect) ||
       (
         allowLabelNodeFallback &&
         normalizeCricketLabelNode(cricketRules, labelNode) === label
@@ -265,7 +271,7 @@ export function resolveBadgeNode(options = {}) {
 
   return (
     candidates.find((candidate) => {
-      return isDecoratableBadgeNode(candidate, labelCell, cricketRules, label);
+      return isDecoratableBadgeNode(candidate, labelCell, cricketRules, label, getRect);
     }) || null
   );
 }

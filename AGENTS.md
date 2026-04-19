@@ -9,7 +9,8 @@ Priority: truthfulness, correctness, proportional validation.
 - work in source, not `dist/`
 - keep standard ESLint coverage scoped to actively maintained source; exclude archive, backup, vendor, and generated trees from the default lint surface
 - run `npm run lint` before declaring done when changes touch linted JS/MJS source, tests, loader code, scripts, or lint configuration
-- when changes touch Sonar-scanned JS/MJS source or project-level analysis config and SonarQube access is available, include a SonarQube check in validation when it adds real signal; prefer the configured `xConfig` project on `192.168.2.50:9005`, and treat Sonar as complementary to lint/tests rather than a replacement
+- when changes touch Sonar-scanned JS/MJS source or project-level analysis config, treat a SonarQube check as part of the expected validation surface; prefer the configured `xConfig` project on `192.168.2.50:9005`, run it whenever server/auth access is available, and report it explicitly as executed or blocked rather than silently skipping it; treat Sonar as complementary to lint/tests rather than a replacement
+- when SonarQube reports new or still-open issues for the current work, fix them in-source and rerun the relevant local validation plus SonarQube in a loop until the touched scope is clean or a concrete blocker is reached; do not stop at a green quality gate if open issues, bugs, vulnerabilities, or code smells for the touched code still remain without explanation
 - never hand-edit generated files; refresh them only through the build flow when release work is explicitly requested
 - use `.agents/skills/repo-validation/SKILL.md` after changes to choose the smallest sufficient validation
 - when SonarQube access, project health, or issue triage is requested, prefer the configured local `sonarqube` MCP server or its configured base URL, use project key `xConfig` / project name `autodarts-xconfig` as the canonical mapping for this repo, and re-verify live server status and project visibility instead of assuming an earlier access check is still current
@@ -23,4 +24,4 @@ Priority: truthfulness, correctness, proportional validation.
 - report exactly what changed, what was validated, and what remains unverified
 - do not declare completion if `npm run lint` was required and failed or was not run; report the lint result explicitly
 
-Done means the change is in the right source layer, the validation for that scope ran or is clearly blocked, any required `npm run lint` pass completed and was reported, and any explicitly requested release work is either completed or called out as pending.
+Done means the change is in the right source layer, the validation for that scope ran or is clearly blocked, any required `npm run lint` pass completed and was reported, any expected SonarQube validation for touched Sonar-scanned code was either executed or called out as concretely blocked, any fixable SonarQube findings in the touched scope were rechecked until cleared or concretely blocked, and any explicitly requested release work is either completed or called out as pending.

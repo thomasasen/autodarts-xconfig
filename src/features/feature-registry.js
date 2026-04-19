@@ -22,7 +22,10 @@ import { mountThemeCricket } from "./themes/cricket/index.js";
 import { mountThemeBullOff } from "./themes/bull-off/index.js";
 import { mountThemeGlobalTypography } from "./themes/global-typography/index.js";
 import { normalizeFeatureIdentity, normalizeFeatureKey } from "./feature-metadata.js";
-import { featureCatalog } from "../shared/feature-catalog.js";
+import {
+  featureCatalog,
+  normalizeFeatureStartupTiming,
+} from "../shared/feature-catalog.js";
 
 function readFeatureDebugFlag(context, configKey) {
   const configRef = context?.config;
@@ -122,6 +125,7 @@ function normalizeDefinition(definition, options = {}) {
     variants: Array.isArray(definition.variants)
       ? definition.variants.map((variant) => String(variant || "").trim()).filter(Boolean)
       : [],
+    startupTiming: normalizeFeatureStartupTiming(definition.startupTiming),
     migratedFrom: String(definition.migratedFrom || "").trim(),
     initialize: wrappedInitialize,
     mount: wrappedInitialize,
@@ -213,6 +217,7 @@ export function createFeatureRegistry(options = {}) {
         configKey: definition.configKey,
         title: definition.title,
         variants: definition.variants.slice(),
+        startupTiming: definition.startupTiming,
         migratedFrom: definition.migratedFrom,
         enabled: Boolean(runtimeState.enabled),
         mounted: Boolean(runtimeState.mounted),

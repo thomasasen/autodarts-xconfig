@@ -1,6 +1,8 @@
 import {
   SCORE_FLASH_CLASS,
+  SCORE_FLASH_SEQUENCE_ATTRIBUTE,
   SCORE_FRAME_CLASS,
+  SCORE_FRAME_SEQUENCE_ATTRIBUTE,
   SCORE_SELECTOR,
 } from "./style.js";
 
@@ -64,12 +66,33 @@ function clearFlashTimer(node, state, windowRef = null) {
   state.flashTimeoutByNode?.delete?.(node);
 }
 
+function clearFlashRaf(node, state, windowRef = null) {
+  if (!node || !state) {
+    return;
+  }
+
+  const cancelRaf =
+    (windowRef && typeof windowRef.cancelAnimationFrame === "function"
+      ? windowRef.cancelAnimationFrame.bind(windowRef)
+      : cancelAnimationFrame);
+  const rafHandle = state.flashRafByNode?.get?.(node);
+  if (rafHandle) {
+    try {
+      cancelRaf(rafHandle);
+    } catch (_) {
+      // fail-soft
+    }
+  }
+  state.flashRafByNode?.delete?.(node);
+}
+
 function removeFlashClasses(node, state, options = {}) {
   if (!node || !state) {
     return;
   }
   const preserveFrame = options.preserveFrame === true;
   node.classList?.remove?.(SCORE_FLASH_CLASS);
+  node.removeAttribute?.(SCORE_FLASH_SEQUENCE_ATTRIBUTE);
   const frameNode = state.flashFrameByScoreNode?.get?.(node) || resolveFrameNode(node) || null;
   if (preserveFrame) {
     if (frameNode) {
@@ -79,12 +102,24 @@ function removeFlashClasses(node, state, options = {}) {
     return;
   }
   frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
+  frameNode?.removeAttribute?.(SCORE_FRAME_SEQUENCE_ATTRIBUTE);
   state.flashFrameByScoreNode?.delete?.(node);
 }
 
 function clearFlashState(node, state, windowRef = null, options = {}) {
+  clearFlashRaf(node, state, windowRef);
   clearFlashTimer(node, state, windowRef);
   removeFlashClasses(node, state, options);
+}
+
+function advanceSequence(node, attributeName) {
+  if (!node || !attributeName || typeof node.getAttribute !== "function") {
+    return "0";
+  }
+  const currentValue = String(node.getAttribute(attributeName) || "").trim();
+  const nextValue = currentValue === "1" ? "0" : "1";
+  node.setAttribute?.(attributeName, nextValue);
+  return nextValue;
 }
 
 function triggerScoreFlash(node, state, windowRef = null, options = {}) {
@@ -100,12 +135,12 @@ function triggerScoreFlash(node, state, windowRef = null, options = {}) {
   if (!preserveFrame) {
     frameNode?.classList?.remove?.(SCORE_FRAME_CLASS);
   }
-  if (typeof node.getBoundingClientRect === "function") {
-    node.getBoundingClientRect();
+
+  advanceSequence(node, SCORE_FLASH_SEQUENCE_ATTRIBUTE);
+  if (frameNode) {
+    advanceSequence(frameNode, SCORE_FRAME_SEQUENCE_ATTRIBUTE);
   }
-  if (!preserveFrame && typeof frameNode?.getBoundingClientRect === "function") {
-    frameNode.getBoundingClientRect();
-  }
+
   node.classList?.add?.(SCORE_FLASH_CLASS);
   if (frameNode) {
     frameNode.classList?.add?.(SCORE_FRAME_CLASS);

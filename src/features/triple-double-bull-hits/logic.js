@@ -577,6 +577,29 @@ function collectAnimationTargets(rowNode, roleStateByRow = null) {
   return [rowNode, roleState?.scoreNode || null, roleState?.segmentNode || null].filter(Boolean);
 }
 
+function clearReplayTimer(rowNode, replayTimersByRow = null, windowRef = null) {
+  if (!rowNode || !replayTimersByRow || typeof replayTimersByRow.get !== "function") {
+    return;
+  }
+
+  const timerHandle = replayTimersByRow.get(rowNode);
+  if (!timerHandle) {
+    replayTimersByRow.delete(rowNode);
+    return;
+  }
+
+  const clearTimer =
+    typeof windowRef?.clearTimeout === "function"
+      ? windowRef.clearTimeout.bind(windowRef)
+      : clearTimeout;
+  try {
+    clearTimer(timerHandle);
+  } catch (_) {
+    // fail-soft
+  }
+  replayTimersByRow.delete(rowNode);
+}
+
 function clearBurstTriggerResetTimer(rowNode, triggerResetTimersByRow = null, windowRef = null) {
   if (!rowNode || !triggerResetTimersByRow || typeof triggerResetTimersByRow.get !== "function") {
     return;
@@ -665,6 +688,7 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
     options.triggerResetTimersByRow || null,
     options.windowRef || null
   );
+  clearReplayTimer(rowNode, options.replayTimersByRow || null, options.windowRef || null);
 
   stopRowAnimation(rowNode, options);
   clearTextRoles(rowNode, options.roleStateByRow || null);
@@ -692,14 +716,29 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
   return hadDecoration;
 }
 
-function triggerAnimationReplay(rowNode) {
-  rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
-
-  if (typeof rowNode.getBoundingClientRect === "function") {
-    rowNode.getBoundingClientRect();
+function triggerAnimationReplay(rowNode, options = {}) {
+  if (!rowNode?.classList) {
+    return;
   }
 
-  rowNode.classList.add(HIT_ANIMATION_TRIGGER_CLASS);
+  const replayTimersByRow = options.replayTimersByRow || null;
+  const windowRef = options.windowRef || null;
+  const setTimer =
+    typeof windowRef?.setTimeout === "function"
+      ? windowRef.setTimeout.bind(windowRef)
+      : setTimeout;
+
+  clearReplayTimer(rowNode, replayTimersByRow, windowRef);
+  rowNode.classList.remove(HIT_ANIMATION_TRIGGER_CLASS);
+  const timerHandle = setTimer(() => {
+    replayTimersByRow?.delete?.(rowNode);
+    if (rowNode.isConnected === false) {
+      return;
+    }
+    rowNode.classList?.add?.(HIT_ANIMATION_TRIGGER_CLASS);
+    scheduleBurstTriggerReset(rowNode, options);
+  }, 0);
+  replayTimersByRow?.set?.(rowNode, timerHandle);
 }
 
 function createFallbackTimeline(animeRef) {
@@ -1404,8 +1443,8 @@ function startBurstAnimation(rowNode, options = {}) {
     roleStateByRow,
     animeRef,
   });
-  triggerAnimationReplay(rowNode);
-  scheduleBurstTriggerReset(rowNode, {
+  triggerAnimationReplay(rowNode, {
+    replayTimersByRow: options.replayTimersByRow || null,
     triggerResetTimersByRow: options.triggerResetTimersByRow || null,
     windowRef: options.windowRef || null,
     reducedMotion,
@@ -1438,6 +1477,7 @@ export function applyHitDecoration(rowNode, options = {}) {
   const burstKeyBySlot = options.burstKeyBySlot || null;
   const activeAnimeByRow = options.activeAnimeByRow || null;
   const roleStateByRow = options.roleStateByRow || null;
+  const replayTimersByRow = options.replayTimersByRow || null;
   const triggerResetTimersByRow = options.triggerResetTimersByRow || null;
   const rowIndex = Number(options.rowIndex) || 0;
   const windowRef = options.windowRef || null;
@@ -1463,6 +1503,7 @@ export function applyHitDecoration(rowNode, options = {}) {
     clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       windowRef,
       animeRef,
@@ -1488,6 +1529,7 @@ export function applyHitDecoration(rowNode, options = {}) {
     clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       windowRef,
       animeRef,
@@ -1540,6 +1582,7 @@ export function applyHitDecoration(rowNode, options = {}) {
       animeRef,
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       windowRef,
       animationStyle,
@@ -1568,6 +1611,7 @@ export function updateHitDecorations(options = {}) {
   const burstKeyBySlot = options.burstKeyBySlot || new Map();
   const activeAnimeByRow = options.activeAnimeByRow || new Map();
   const roleStateByRow = options.roleStateByRow || new Map();
+  const replayTimersByRow = options.replayTimersByRow || null;
   const triggerResetTimersByRow = options.triggerResetTimersByRow || null;
   const slotStateByIndex = options.slotStateByIndex || null;
   const includeRowDebug = options.debugRows === true;
@@ -1613,6 +1657,7 @@ export function updateHitDecorations(options = {}) {
     const wasCleared = clearHitDecoration(rowNode, signatureByRow, {
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       windowRef,
       animeRef,
@@ -1668,6 +1713,7 @@ export function updateHitDecorations(options = {}) {
       signatureByRow,
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       windowRef,
       animeRef,
@@ -1678,6 +1724,7 @@ export function updateHitDecorations(options = {}) {
       const wasCleared = clearHitDecoration(rowNode, signatureByRow, {
         activeAnimeByRow,
         roleStateByRow,
+        replayTimersByRow,
         triggerResetTimersByRow,
         windowRef,
         animeRef,
@@ -1710,6 +1757,7 @@ export function updateHitDecorations(options = {}) {
       burstKeyBySlot,
       activeAnimeByRow,
       roleStateByRow,
+      replayTimersByRow,
       triggerResetTimersByRow,
       rowIndex: index,
       windowRef,

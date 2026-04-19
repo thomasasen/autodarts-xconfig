@@ -47,6 +47,7 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.equal(listed[0].enabled, true);
   assert.equal(listed[0].mounted, true);
   assert.deepEqual(listed[0].variants, ["x01"]);
+  assert.equal(typeof listed[0].startupTiming, "string");
   assert.equal(listed.some((feature) => feature.featureKey === "tv-board-zoom"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "turn-start-sweep"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "triple-double-bull-hits"), true);
@@ -93,6 +94,7 @@ test("feature registry wires per-feature debug helper based on config.debug", ()
   });
 
   const [definition] = registry.getDefinitions();
+  assert.equal(definition.startupTiming, "deferred");
   const cleanup = definition.mount({
     config: {
       getFeatureConfig: () => ({ debug: true }),

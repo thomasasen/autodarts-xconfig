@@ -47,6 +47,7 @@ export function initializeTurnPointsCount(context = {}) {
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
     flashFrameByScoreNode: new Map(),
+    flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
   };
   let animeRef = getAnime(windowRef);
@@ -87,6 +88,33 @@ export function initializeTurnPointsCount(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
+        const hasRelevantTurnMutation =
+          !Array.isArray(mutations) ||
+          mutations.length === 0 ||
+          mutations.some((mutation) => {
+            if (mutation?.type === "characterData") {
+              const targetNode = mutation?.target?.parentNode || null;
+              return Boolean(targetNode?.closest?.("#ad-ext-turn"));
+            }
+
+            if (mutation?.type === "attributes") {
+              const attributeName = String(mutation?.attributeName || "").trim().toLowerCase();
+              if (
+                attributeName === "class" &&
+                (mutation?.target?.classList?.contains?.("ad-ext-turn-points-count--flash") ||
+                  mutation?.target?.classList?.contains?.("ad-ext-turn-points-count--frame"))
+              ) {
+                return false;
+              }
+              return Boolean(mutation?.target?.closest?.("#ad-ext-turn"));
+            }
+
+            return [
+              mutation?.target || null,
+              ...Array.from(mutation?.addedNodes || []),
+              ...Array.from(mutation?.removedNodes || []),
+            ].some((node) => Boolean(node?.closest?.("#ad-ext-turn")));
+          });
         if (
           Array.isArray(mutations) &&
           mutations.length &&
@@ -94,6 +122,9 @@ export function initializeTurnPointsCount(context = {}) {
             return mutation?.type === "characterData" && isAnimatingScoreNode(mutation?.target || null);
           })
         ) {
+          return;
+        }
+        if (!hasRelevantTurnMutation) {
           return;
         }
         scheduler.schedule();

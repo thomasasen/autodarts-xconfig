@@ -73,15 +73,15 @@ export function buildStyleText() {
     linear-gradient(165deg, var(--ad-ext-hit-surface-a) 0%, var(--ad-ext-hit-surface-b) 48%, var(--ad-ext-hit-surface-c) 100%);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 -12px 30px rgba(0, 0, 0, 0.36),
-    0 16px 30px rgba(0, 0, 0, 0.42),
+    inset 0 -8px 18px rgba(0, 0, 0, 0.28),
+    0 10px 18px rgba(0, 0, 0, 0.34),
     0 0 0 1px rgba(0, 0, 0, 0.28);
   transform-origin: center center;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   perspective: 1100px;
-  will-change: transform, filter, box-shadow, border-color;
-  transition: box-shadow 180ms ease-out, border-color 180ms ease-out, filter 180ms ease-out;
+  will-change: transform, opacity, border-color;
+  transition: box-shadow 180ms ease-out, border-color 180ms ease-out, opacity 180ms ease-out;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS} > * {
@@ -148,9 +148,8 @@ export function buildStyleText() {
   background-size: 120% 120%, 120% 120%, 240px 240px, 220% 220%, 220% 220%;
   background-position: 14% 22%, 78% 74%, 0 0, 0% 50%, 0% 50%;
   background-blend-mode: screen, screen, normal, overlay, normal;
-  filter: saturate(1.22) contrast(1.08) brightness(0.92);
+  filter: saturate(1.08) contrast(1.02) brightness(0.94);
   transform: translate3d(0, 0, 0) scale(1.03);
-  animation: ad-ext-hit-gradient-flow 9s linear infinite;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}::after {
@@ -161,10 +160,9 @@ export function buildStyleText() {
     linear-gradient(120deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 28%, rgba(255, 255, 255, 0) 72%, rgba(255, 255, 255, 0.09));
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 0 24px rgba(255, 255, 255, 0.03),
-    0 0 var(--ad-ext-hit-shadow-size) var(--ad-ext-hit-glow),
+    inset 0 0 16px rgba(255, 255, 255, 0.02),
+    0 0 calc(var(--ad-ext-hit-shadow-size) * 0.45) var(--ad-ext-hit-soft-glow),
     0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 82%, white 18%);
-  animation: ad-ext-hit-border-sweep 5.2s linear infinite;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SCORE_CLASS},
@@ -352,11 +350,11 @@ export function buildStyleText() {
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
-  animation: ad-ext-hit-gradient-flow 9s linear infinite, ad-ext-hit-burst-surface 900ms cubic-bezier(0.12, 0.9, 0.2, 1);
+  animation: ad-ext-hit-burst-surface 900ms cubic-bezier(0.12, 0.9, 0.2, 1);
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS}::after {
-  animation: ad-ext-hit-border-sweep 5.2s linear infinite, ad-ext-hit-burst-border 860ms ease-out;
+  animation: ad-ext-hit-burst-border 860ms ease-out;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
@@ -382,7 +380,7 @@ export function buildStyleText() {
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   --ad-ext-hit-gradient-opacity: 0.22;
   --ad-ext-hit-border-opacity: 1;
-  --ad-ext-hit-shadow-size: 56px;
+  --ad-ext-hit-shadow-size: 42px;
   overflow: visible;
   z-index: 2;
   animation-name: ad-ext-hit-row-electric-arc;
@@ -396,13 +394,13 @@ export function buildStyleText() {
     linear-gradient(112deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 66%, rgba(255, 255, 255, 0.22) 100%);
   background-blend-mode: normal;
   mix-blend-mode: screen;
-  opacity: 0.96;
+  opacity: 0.9;
   transform: translate3d(0, 0, 0);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 0 18px color-mix(in srgb, var(--ad-ext-hit-edge) 30%, transparent),
-    0 0 30px color-mix(in srgb, var(--ad-ext-hit-glow) 64%, white 36%),
-    0 0 66px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 72%, white 28%);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 8px color-mix(in srgb, var(--ad-ext-hit-edge) 18%, transparent),
+    0 0 12px color-mix(in srgb, var(--ad-ext-hit-glow) 42%, white 58%),
+    0 0 24px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 46%, white 54%);
   filter: var(--ad-ext-hit-electric-filter-strong);
   animation:
     ad-ext-hit-electric-arc-frame-electric 760ms steps(4, end),
@@ -413,12 +411,12 @@ export function buildStyleText() {
   inset: -12px;
   border-radius: calc(14px + 6px);
   border: none;
-  opacity: 0.74;
+  opacity: 0.62;
   background:
     radial-gradient(66% 150% at 50% 0%, color-mix(in srgb, var(--ad-ext-hit-edge) 52%, white 48%), transparent 74%),
     radial-gradient(66% 150% at 50% 100%, color-mix(in srgb, var(--ad-ext-hit-glow) 62%, white 38%), transparent 76%);
   box-shadow: none;
-  filter: var(--ad-ext-hit-electric-filter-soft) blur(5px);
+  filter: var(--ad-ext-hit-electric-filter-soft) brightness(1.02);
   animation: ad-ext-hit-electric-arc-frame-aura 760ms ease-out;
 }
 
@@ -579,15 +577,15 @@ export function buildStyleText() {
   }
   36% {
     transform: translate(-1px, .6px) scale(1.012);
-    filter: saturate(1.2) brightness(1.16);
+    filter: saturate(1.14) brightness(1.1);
   }
   68% {
     transform: translate(1px, -.7px) scale(1.006);
-    filter: saturate(1.12) brightness(1.08);
+    filter: saturate(1.08) brightness(1.04);
   }
   100% {
     transform: translate(0, 0) scale(1);
-    filter: saturate(1.12) brightness(1.04);
+    filter: saturate(1.06) brightness(1.02);
   }
 }
 
@@ -600,12 +598,12 @@ export function buildStyleText() {
   24% {
     transform: translateX(1.8px) scale(1.16);
     letter-spacing: 0.07em;
-    filter: brightness(1.38) drop-shadow(0 0 11px rgba(221,249,255,.7));
+    filter: brightness(1.24) drop-shadow(0 0 7px rgba(221,249,255,.56));
   }
   48% {
     transform: translateX(-1.6px) scale(1.06);
     letter-spacing: 0.05em;
-    filter: brightness(1.24) drop-shadow(0 0 7px rgba(180,250,255,.5));
+    filter: brightness(1.14) drop-shadow(0 0 5px rgba(180,250,255,.38));
   }
   70% {
     transform: translateX(1px) scale(1.03);
@@ -651,29 +649,29 @@ export function buildStyleText() {
   }
   38% {
     transform: translate(-1px, .5px);
-    filter: var(--ad-ext-hit-electric-filter-strong) brightness(1.2) saturate(1.12);
+    filter: var(--ad-ext-hit-electric-filter-strong) brightness(1.12) saturate(1.08);
   }
   72% {
     transform: translate(1.1px, -.8px);
-    filter: var(--ad-ext-hit-electric-filter-strong) brightness(1.1) saturate(1.06);
+    filter: var(--ad-ext-hit-electric-filter-strong) brightness(1.06) saturate(1.04);
   }
 }
 
 @keyframes ad-ext-hit-electric-arc-frame-glow {
   0%, 100% {
     box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-      inset 0 0 18px color-mix(in srgb, var(--ad-ext-hit-edge) 30%, transparent),
-      0 0 24px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 74%, white 26%),
-      0 0 50px color-mix(in srgb, var(--ad-ext-hit-glow) 62%, white 38%);
+      inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 0 12px color-mix(in srgb, var(--ad-ext-hit-edge) 24%, transparent),
+      0 0 18px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 58%, white 42%),
+      0 0 34px color-mix(in srgb, var(--ad-ext-hit-glow) 46%, white 54%);
     opacity: 0.82;
   }
   44% {
     box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-      inset 0 0 24px color-mix(in srgb, var(--ad-ext-hit-edge) 42%, transparent),
-      0 0 34px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 82%, white 18%),
-      0 0 72px color-mix(in srgb, var(--ad-ext-hit-glow) 72%, white 28%);
+      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+      inset 0 0 18px color-mix(in srgb, var(--ad-ext-hit-edge) 34%, transparent),
+      0 0 24px color-mix(in srgb, var(--ad-ext-hit-soft-glow) 64%, white 36%),
+      0 0 48px color-mix(in srgb, var(--ad-ext-hit-glow) 54%, white 46%);
     opacity: 1;
   }
 }

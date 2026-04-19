@@ -7,7 +7,9 @@ import {
 } from "../../src/features/turn-points-count/logic.js";
 import {
   SCORE_FRAME_CLASS,
+  SCORE_FLASH_SEQUENCE_ATTRIBUTE,
   SCORE_FLASH_CLASS,
+  SCORE_FRAME_SEQUENCE_ATTRIBUTE,
   SCORE_SELECTOR,
   STYLE_ID,
   buildStyleText,
@@ -22,6 +24,7 @@ function createState() {
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
     flashFrameByScoreNode: new Map(),
+    flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
   };
 }
@@ -294,12 +297,73 @@ test("turn-points-count supports a permanent frame mode while keeping score flas
   }
 });
 
+test("turn-points-count restarts score flash through sequence attributes without layout reads", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const { scoreNode, frameNode } = createTurnPointsFrame(documentRef);
+
+  scoreNode.getBoundingClientRect = () => {
+    throw new Error("score layout read not expected");
+  };
+  frameNode.getBoundingClientRect = () => {
+    throw new Error("frame layout read not expected");
+  };
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "45";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  assert.equal(scoreNode.getAttribute(SCORE_FLASH_SEQUENCE_ATTRIBUTE), "1");
+  assert.equal(frameNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), "1");
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+
+  animeRef.calls[0].complete();
+  assert.equal(scoreNode.getAttribute(SCORE_FLASH_SEQUENCE_ATTRIBUTE), null);
+  assert.equal(frameNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), null);
+  scoreNode.textContent = "60";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  assert.equal(scoreNode.getAttribute(SCORE_FLASH_SEQUENCE_ATTRIBUTE), "1");
+  assert.equal(frameNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), "1");
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+});
+
 test("turn-points-count style exports the scoped flash animation contract", () => {
   const css = buildStyleText();
 
   assert.equal(STYLE_ID, "ad-ext-turn-points-count-style");
-  assert.match(css, new RegExp(`${SCORE_SELECTOR.replace(".", String.raw`\.`)}\\.${SCORE_FLASH_CLASS}`));
+  assert.match(
+    css,
+    new RegExp(
+      `${SCORE_SELECTOR.replace(".", String.raw`\.`)}\\.${SCORE_FLASH_CLASS}\\[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="0"\\]`
+    )
+  );
   assert.equal(css.includes(`.${SCORE_FRAME_CLASS}{`), true);
   assert.equal(css.includes("ad-ext-turn-points-electric-filter-strong"), true);
-  assert.equal(css.includes("@keyframes ad-ext-turn-points-count-flash"), true);
+  assert.equal(css.includes(SCORE_FRAME_SEQUENCE_ATTRIBUTE), true);
+  assert.equal(css.includes("@keyframes ad-ext-turn-points-count-flash-a"), true);
+  assert.equal(css.includes("@keyframes ad-ext-turn-points-count-flash-b"), true);
 });

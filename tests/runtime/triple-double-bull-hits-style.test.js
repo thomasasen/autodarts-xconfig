@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   HIT_ANIMATION_CLASS,
+  HIT_ANIMATION_TRIGGER_CLASS,
   HIT_BASE_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
@@ -12,6 +13,34 @@ import {
 
 test("triple-double-bull-hits style defines centered text contract and strong row motion", () => {
   const css = buildStyleText();
+  const baseBeforeBlock =
+    css.match(
+      new RegExp(
+        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}::before\s*\{[^}]+\}`,
+        "s"
+      )
+    )?.[0] || "";
+  const baseAfterBlock =
+    css.match(
+      new RegExp(
+        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}::after\s*\{[^}]+\}`,
+        "s"
+      )
+    )?.[0] || "";
+  const triggerBeforeBlock =
+    css.match(
+      new RegExp(
+        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.${HIT_ANIMATION_TRIGGER_CLASS}::before\s*\{[^}]+\}`,
+        "s"
+      )
+    )?.[0] || "";
+  const triggerAfterBlock =
+    css.match(
+      new RegExp(
+        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.${HIT_ANIMATION_TRIGGER_CLASS}::after\s*\{[^}]+\}`,
+        "s"
+      )
+    )?.[0] || "";
 
   assert.equal(css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS} > p,`), true);
   assert.equal(css.includes("position: absolute !important;"), true);
@@ -46,6 +75,12 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   );
   assert.equal(css.includes("@keyframes ad-ext-hit-gradient-flow"), true);
   assert.equal(css.includes("--ad-ext-hit-surface-a:"), true);
+  assert.equal(baseBeforeBlock.includes("animation:"), false);
+  assert.equal(baseAfterBlock.includes("animation:"), false);
+  assert.equal(triggerBeforeBlock.includes("ad-ext-hit-burst-surface"), true);
+  assert.equal(triggerBeforeBlock.includes("ad-ext-hit-gradient-flow"), false);
+  assert.equal(triggerAfterBlock.includes("ad-ext-hit-burst-border"), true);
+  assert.equal(triggerAfterBlock.includes("ad-ext-hit-border-sweep"), false);
 
   assert.equal(
     css.includes(

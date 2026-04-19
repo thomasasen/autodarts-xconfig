@@ -22,6 +22,8 @@ export const ROW_WAVE_CLASS = "ad-ext-crfx-row-wave";
 export const DELTA_CLASS = "ad-ext-crfx-delta";
 export const SPARK_CLASS = "ad-ext-crfx-spark";
 export const WIPE_CLASS = "ad-ext-crfx-wipe";
+export const BADGE_BURST_SEQUENCE_ATTRIBUTE = "data-ad-ext-crfx-burst-seq";
+export const MARK_PROGRESS_SEQUENCE_ATTRIBUTE = "data-ad-ext-crfx-progress-seq";
 export const SYNTHETIC_BADGE_ATTRIBUTE = "data-ad-ext-crfx-synthetic-badge";
 export const HIDDEN_LABEL_ATTRIBUTE = "data-ad-ext-crfx-label-hidden";
 
@@ -274,8 +276,12 @@ export function buildStyleText() {
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_BURST_CLASS} {
-  animation: ad-ext-crfx-badge-burst 700ms ease;
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_BURST_CLASS}[${BADGE_BURST_SEQUENCE_ATTRIBUTE}="0"] {
+  animation: ad-ext-crfx-badge-burst-a 700ms ease;
+}
+
+.${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_BURST_CLASS}[${BADGE_BURST_SEQUENCE_ATTRIBUTE}="1"] {
+  animation: ad-ext-crfx-badge-burst-b 700ms ease;
 }
 
 .${ROOT_CLASS} .${CELL_CLASS}.${THREAT_CLASS} {
@@ -366,7 +372,14 @@ export function buildStyleText() {
 
 .${ROOT_CLASS} .${MARK_PROGRESS_CLASS} {
   transform-origin: center;
-  animation: ad-ext-crfx-mark 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}[${MARK_PROGRESS_SEQUENCE_ATTRIBUTE}="0"] {
+  animation: ad-ext-crfx-mark-a 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}[${MARK_PROGRESS_SEQUENCE_ATTRIBUTE}="1"] {
+  animation: ad-ext-crfx-mark-b 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L1_CLASS} {
@@ -458,13 +471,25 @@ export function buildStyleText() {
   100% { transform: translateX(110%); opacity: 0; }
 }
 
-@keyframes ad-ext-crfx-badge-burst {
+@keyframes ad-ext-crfx-badge-burst-a {
   0% { transform: translateY(-50%) scale(1); }
   24% { transform: translateY(-50%) scale(1.09); }
   100% { transform: translateY(-50%) scale(1); }
 }
 
-@keyframes ad-ext-crfx-mark {
+@keyframes ad-ext-crfx-badge-burst-b {
+  0% { transform: translateY(-50%) scale(1); }
+  24% { transform: translateY(-50%) scale(1.09); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+@keyframes ad-ext-crfx-mark-a {
+  0% { transform: scale(0.72); opacity: 0.55; }
+  45% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes ad-ext-crfx-mark-b {
   0% { transform: scale(0.72); opacity: 0.55; }
   45% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }

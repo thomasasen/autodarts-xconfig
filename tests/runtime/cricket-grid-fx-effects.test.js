@@ -13,6 +13,7 @@ import {
   ACTIVE_COLUMN_CLASS,
   BADGE_BEACON_CLASS,
   BADGE_BURST_CLASS,
+  BADGE_BURST_SEQUENCE_ATTRIBUTE,
   BADGE_CLASS,
   BADGE_STATE_CLASS,
   CELL_CLASS,
@@ -23,6 +24,7 @@ import {
   LABEL_STATE_CLASS,
   MARK_L2_CLASS,
   MARK_PROGRESS_CLASS,
+  MARK_PROGRESS_SEQUENCE_ATTRIBUTE,
   OPEN_ACTIVE_CLASS,
   OPEN_CLASS,
   OPEN_INACTIVE_CLASS,
@@ -513,13 +515,39 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(Boolean(playerCell20?.querySelector?.(`.${SPARK_CLASS}`)), true);
   assert.equal(documentRef.querySelectorAll(`.${ROW_WAVE_CLASS}`).length, 2);
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), true);
+  assert.equal(playerIcon20?.getAttribute?.(MARK_PROGRESS_SEQUENCE_ATTRIBUTE), "1");
   assert.equal(playerIcon20?.classList?.contains(MARK_L2_CLASS), true);
   assert.equal(resolveEffectiveBadge()?.classList?.contains(BADGE_BURST_CLASS), true);
+  assert.equal(resolveEffectiveBadge()?.getAttribute?.(BADGE_BURST_SEQUENCE_ATTRIBUTE), "1");
+
+  playerIcon20.setAttribute("alt", "3");
+  const completedRenderState = buildCricketRenderState({
+    documentRef,
+    gameState: createGameState(0),
+    cricketRules,
+    variantRules,
+    visualConfig,
+    cache: renderCache,
+  });
 
   updateCricketGridFx({
     documentRef,
     cricketRules,
-    renderState: increasedRenderState,
+    renderState: completedRenderState,
+    state,
+    visualConfig,
+    turnToken: "fallback:0:3",
+  });
+
+  assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), true);
+  assert.equal(playerIcon20?.getAttribute?.(MARK_PROGRESS_SEQUENCE_ATTRIBUTE), "1");
+  assert.equal(resolveEffectiveBadge()?.classList?.contains(BADGE_BURST_CLASS), true);
+  assert.equal(resolveEffectiveBadge()?.getAttribute?.(BADGE_BURST_SEQUENCE_ATTRIBUTE), "1");
+
+  updateCricketGridFx({
+    documentRef,
+    cricketRules,
+    renderState: completedRenderState,
     state,
     visualConfig,
     turnToken: "fallback:0:0",
@@ -538,6 +566,8 @@ test("cricket grid fx restores legacy badge and transient feedback effects on pl
   assert.equal(Boolean(documentRef.querySelector(`.${ROW_WAVE_CLASS}`)), false);
   assert.equal(Boolean(documentRef.querySelector(`.${WIPE_CLASS}`)), false);
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), false);
+  assert.equal(playerIcon20?.getAttribute?.(MARK_PROGRESS_SEQUENCE_ATTRIBUTE), null);
+  assert.equal(resolveEffectiveBadge()?.getAttribute?.(BADGE_BURST_SEQUENCE_ATTRIBUTE), null);
 });
 
 test("cricket grid fx renders the bull row with legacy text label and restores host text on cleanup", () => {

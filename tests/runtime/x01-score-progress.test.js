@@ -493,6 +493,95 @@ test("mountX01ScoreProgress emits detailed debug warning payloads", async () => 
   assert.equal(Array.isArray(warnings[0][1]?.sampledCards), true);
 });
 
+test("mountX01ScoreProgress ignores self-managed bar churn but reacts to player-display changes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+
+  const observerState = { callback: null };
+  const scheduleCounter = { count: 0 };
+  const cleanup = mountX01ScoreProgress({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: {
+        registerMutationObserver(options) {
+          observerState.callback = options.callback;
+        },
+        disconnect() {},
+      },
+    },
+    gameState: {
+      getSnapshot: () => ({
+        match: {
+          id: "match-progress-observer",
+          variant: "X01 501",
+        },
+      }),
+      subscribe: () => () => {},
+    },
+    config: {
+      getFeatureConfig: () => ({
+        colorTheme: "checkout-focus",
+        barSize: "standard",
+        effect: "pulse-core",
+      }),
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(typeof observerState.callback, "function");
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const initialCount = scheduleCounter.count;
+
+  observerState.callback([
+    {
+      type: "childList",
+      target: hostNode,
+      addedNodes: [documentRef.createElement("div")],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount);
+
+  observerState.callback([
+    {
+      type: "attributes",
+      target: player.cardNode,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount + 1);
+
+  cleanup();
+});
+
 test("syncScoreProgress keeps inactive styling untouched by active-only settings", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

@@ -27,8 +27,32 @@ export function isNodeVisible(node) {
   if (node.isConnected === false) {
     return false;
   }
+  if (node.hidden === true) {
+    return false;
+  }
 
-  if (typeof node.getClientRects === "function" && node.getClientRects().length === 0) {
+  const ariaHidden = String(node.getAttribute?.("aria-hidden") || "")
+    .trim()
+    .toLowerCase();
+  if (ariaHidden === "true") {
+    return false;
+  }
+
+  const hiddenAttribute =
+    typeof node.getAttribute === "function" ? node.getAttribute("hidden") : null;
+  if (hiddenAttribute !== null) {
+    return false;
+  }
+
+  const inlineDisplay = String(node.style?.display || "").trim().toLowerCase();
+  const inlineVisibility = String(node.style?.visibility || "").trim().toLowerCase();
+  const inlineOpacity = String(node.style?.opacity || "").trim().toLowerCase();
+  if (
+    inlineDisplay === "none" ||
+    inlineVisibility === "hidden" ||
+    inlineVisibility === "collapse" ||
+    inlineOpacity === "0"
+  ) {
     return false;
   }
 
@@ -41,6 +65,7 @@ export function isNodeVisible(node) {
     if (
       style.display === "none" ||
       style.visibility === "hidden" ||
+      style.visibility === "collapse" ||
       String(style.opacity || "1") === "0"
     ) {
       return false;

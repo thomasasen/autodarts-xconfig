@@ -868,11 +868,58 @@ test("burst trigger class is removed automatically after the replay window", asy
     windowRef,
   });
 
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
+  await wait(0);
   assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), true);
   await wait(10);
   assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
   assert.equal(triggerResetTimersByRow.has(documentRef.throwRow), false);
   assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), true);
+});
+
+test("clearHitDecoration cancels a pending burst replay before the trigger class is restored", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const replayTimersByRow = new Map();
+  const triggerResetTimersByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    replayTimersByRow,
+    triggerResetTimersByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-arc",
+    },
+    windowRef,
+  });
+
+  assert.equal(replayTimersByRow.has(documentRef.throwRow), true);
+
+  clearHitDecoration(documentRef.throwRow, signatureByRow, {
+    activeAnimeByRow,
+    roleStateByRow,
+    replayTimersByRow,
+    triggerResetTimersByRow,
+    windowRef,
+  });
+
+  await wait(0);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
+  assert.equal(replayTimersByRow.has(documentRef.throwRow), false);
 });
 
 test("clearHitDecoration removes row classes, text roles, and active anime state", () => {

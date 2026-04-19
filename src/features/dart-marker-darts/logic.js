@@ -41,6 +41,7 @@ const SHADOW_IMPACT_DURATION_MS = 160;
 const WOBBLE_DURATION_MS = 280;
 const WOBBLE_ANGLE_DEG = 4;
 const IMPACT_EASING = "cubic-bezier(0.2, 0.6, 0.2, 1)";
+const RENDER_CHECK_HEARTBEAT_TICKS = 15;
 
 function getTimerFns(windowRef) {
   return {
@@ -426,24 +427,44 @@ function updateOverlayLayout(overlay, boardRect, paddingPx) {
   const left = Number(boardRect.left) - paddingPx;
   const top = Number(boardRect.top) - paddingPx;
 
-  overlay.style.left = `${left}px`;
-  overlay.style.top = `${top}px`;
-  overlay.style.width = `${width}px`;
-  overlay.style.height = `${height}px`;
-  overlay.setAttribute("width", String(width));
-  overlay.setAttribute("height", String(height));
-  overlay.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  const leftPx = `${left}px`;
+  const topPx = `${top}px`;
+  const widthPx = `${width}px`;
+  const heightPx = `${height}px`;
+  const widthValue = String(width);
+  const heightValue = String(height);
+  const viewBox = `0 0 ${width} ${height}`;
 
-  return (
-    normalizeRect(overlay.getBoundingClientRect?.()) || {
-      left,
-      top,
-      width,
-      height,
-      right: left + width,
-      bottom: top + height,
-    }
-  );
+  if (overlay.style.left !== leftPx) {
+    overlay.style.left = leftPx;
+  }
+  if (overlay.style.top !== topPx) {
+    overlay.style.top = topPx;
+  }
+  if (overlay.style.width !== widthPx) {
+    overlay.style.width = widthPx;
+  }
+  if (overlay.style.height !== heightPx) {
+    overlay.style.height = heightPx;
+  }
+  if (overlay.getAttribute("width") !== widthValue) {
+    overlay.setAttribute("width", widthValue);
+  }
+  if (overlay.getAttribute("height") !== heightValue) {
+    overlay.setAttribute("height", heightValue);
+  }
+  if (overlay.getAttribute("viewBox") !== viewBox) {
+    overlay.setAttribute("viewBox", viewBox);
+  }
+
+  return {
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+  };
 }
 
 function createDartEntry(ownerDocument) {
@@ -484,6 +505,7 @@ function createDartEntry(ownerDocument) {
     flightStartedAt: 0,
     settleUntil: 0,
     lastTargetCenter: null,
+    lastRenderCheckSignature: "",
     lastRenderedSignature: "",
   };
 }
@@ -1061,8 +1083,13 @@ function clearEntries(state) {
   state.entriesByMarker.clear();
 }
 
-function collectDartNodesByDepth(markersWithEntries = []) {
-  return markersWithEntries
+function reorderDarts(state, markersWithEntries = []) {
+  const scene = state?.overlaySceneNode;
+  if (!scene) {
+    return;
+  }
+
+  const orderedItems = markersWithEntries
     .slice()
     .sort((left, right) => {
       const deltaY = Number(left.center?.y || 0) - Number(right.center?.y || 0);
@@ -1070,18 +1097,20 @@ function collectDartNodesByDepth(markersWithEntries = []) {
         return deltaY;
       }
       return Number(left.index || 0) - Number(right.index || 0);
-    })
-    .map((item) => item.entry?.container)
-    .filter(Boolean);
-}
+    });
+  const orderSignature = orderedItems
+    .map((item) => `${Number(item.index || 0)}:${Number(item.center?.y || 0).toFixed(2)}`)
+    .join("|");
 
-function reorderDarts(state, markersWithEntries = []) {
-  const scene = state?.overlaySceneNode;
-  if (!scene) {
+  if (state.lastDepthOrderSignature === orderSignature) {
     return;
   }
 
-  collectDartNodesByDepth(markersWithEntries).forEach((node) => scene.appendChild(node));
+  state.lastDepthOrderSignature = orderSignature;
+  orderedItems
+    .map((item) => item.entry?.container)
+    .filter(Boolean)
+    .forEach((node) => scene.appendChild(node));
 }
 
 function buildBoardSignature(board, boardRect, groupRect) {
@@ -1185,6 +1214,19 @@ function maybeMeasureRenderError(state, featureDebug, entry, screenPoint, geomet
     return Number.NaN;
   }
 
+  const renderCheckSignature = [
+    Number(screenPoint.x).toFixed(2),
+    Number(screenPoint.y).toFixed(2),
+    Number(entry.rotationDeg || 0).toFixed(2),
+  ].join("|");
+  if (
+    entry.lastRenderCheckSignature === renderCheckSignature &&
+    state.updateTick % RENDER_CHECK_HEARTBEAT_TICKS !== 0
+  ) {
+    return Number.NaN;
+  }
+  entry.lastRenderCheckSignature = renderCheckSignature;
+
   const renderedTip = getRenderedTipScreenPoint(entry);
   if (!renderedTip) {
     return Number.NaN;
@@ -1230,6 +1272,7 @@ export function createDartMarkerDartsState(windowRef = null) {
     lastHref: getCurrentHref(windowRef),
     lastBoardSignature: "",
     lastOverlaySignature: "",
+    lastDepthOrderSignature: "",
     debugSignatures: new Map(),
     debugWarningSignatures: new Map(),
     updateTick: 0,
@@ -1250,6 +1293,7 @@ export function clearDartMarkerDartsState(state, options = {}) {
   state.entriesByMarker.clear();
   state.lastBoardSignature = "";
   state.lastOverlaySignature = "";
+  state.lastDepthOrderSignature = "";
 
   emitDebug(state, options.featureDebug || null, "cleanup", {
     reason: String(options.reason || "clear"),

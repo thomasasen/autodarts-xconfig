@@ -1,4 +1,5 @@
 import { getActiveBoardInputMode } from "./board-input-mode.js";
+import { getRenderableArea, isNodeVisible } from "./dom-visibility.js";
 
 const BOARD_DRAWABLE_SELECTOR = "path, circle, line, polygon, polyline, text";
 const BOARD_EXACT_VIEWBOX = Object.freeze({
@@ -7,6 +8,16 @@ const BOARD_EXACT_VIEWBOX = Object.freeze({
   width: 1000,
   height: 1000,
 });
+const PREFERRED_BOARD_SVG_SELECTORS = Object.freeze([
+  "svg.ad-ext-theme-board-svg",
+  ".ad-ext-theme-board-viewport svg",
+  ".ad-ext-theme-board-canvas svg",
+  ".ad-ext-tv-board-zoom-host svg",
+  ".showAnimations svg",
+  ".css-aiihgx svg",
+  ".css-79elbk svg",
+]);
+const BOARD_SNAPSHOT_CACHE = new WeakMap();
 
 function getBoardRadius(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
@@ -24,7 +35,12 @@ export function findBoardSvgRoot(documentRef) {
     return null;
   }
 
-  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
+  const cachedSnapshot = getCachedBoardSnapshot(documentRef);
+  if (cachedSnapshot?.svg) {
+    return cachedSnapshot.svg;
+  }
+
+  const svgNodes = queryCandidateSvgNodes(documentRef);
   if (!svgNodes.length) {
     return null;
   }
@@ -214,94 +230,6 @@ function getNodeDepthWithin(node, ancestorNode) {
   return current === ancestorNode ? depth : 0;
 }
 
-function getComputedStyleRef(node) {
-  const viewRef = node?.ownerDocument?.defaultView;
-  if (!viewRef || typeof viewRef.getComputedStyle !== "function") {
-    return null;
-  }
-  try {
-    return viewRef.getComputedStyle(node);
-  } catch (_) {
-    return null;
-  }
-}
-
-function getRenderableArea(node) {
-  if (!node || typeof node.getBoundingClientRect !== "function") {
-    return 0;
-  }
-
-  try {
-    const rect = node.getBoundingClientRect();
-    const width = Number.parseFloat(rect?.width);
-    const height = Number.parseFloat(rect?.height);
-    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
-      return 0;
-    }
-    return Math.floor(width * height);
-  } catch (_) {
-    return 0;
-  }
-}
-
-function hasClientRects(node) {
-  if (!node || typeof node.getClientRects !== "function") {
-    return true;
-  }
-
-  try {
-    return node.getClientRects().length > 0;
-  } catch (_) {
-    return true;
-  }
-}
-
-function isNodeExplicitlyHidden(node) {
-  if (!node || typeof node !== "object") {
-    return true;
-  }
-
-  if (node.hidden === true) {
-    return true;
-  }
-
-  const ariaHidden = normalizeText(node.getAttribute?.("aria-hidden"));
-  if (ariaHidden === "true") {
-    return true;
-  }
-
-  const hiddenAttribute =
-    typeof node.getAttribute === "function" ? node.getAttribute("hidden") : null;
-  if (hiddenAttribute !== null) {
-    return true;
-  }
-
-  const state = normalizeText(node.getAttribute?.("data-state"));
-  if (state === "inactive" || state === "closed" || state === "hidden" || state === "off") {
-    return true;
-  }
-
-  const inlineDisplay = normalizeText(node.style?.display);
-  const inlineVisibility = normalizeText(node.style?.visibility);
-  const inlineOpacity = normalizeText(node.style?.opacity);
-  if (
-    inlineDisplay === "none" ||
-    inlineVisibility === "hidden" ||
-    inlineOpacity === "0"
-  ) {
-    return true;
-  }
-
-  const computedStyle = getComputedStyleRef(node);
-  if (!computedStyle) {
-    return false;
-  }
-
-  const display = normalizeText(computedStyle.display);
-  const visibility = normalizeText(computedStyle.visibility);
-  const opacity = normalizeText(computedStyle.opacity);
-  return display === "none" || visibility === "hidden" || visibility === "collapse" || opacity === "0";
-}
 
 function readNumberCoverage(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
@@ -665,20 +593,66 @@ function isSnapshotModeReusable(snapshot, documentRef) {
   return !Object.hasOwn(snapshot, "modeKey") || snapshot.modeKey === currentModeKey;
 }
 
-function isNodeVisible(node) {
-  if (!node || typeof node !== "object" || node.isConnected === false) {
-    return false;
+
+function queryCandidateSvgNodes(documentRef) {
+  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+    return [];
   }
 
-  let current = node;
-  while (current && current !== current.ownerDocument?.documentElement?.parentNode) {
-    if (isNodeExplicitlyHidden(current)) {
-      return false;
+  const seen = new Set();
+  const preferred = [];
+
+  PREFERRED_BOARD_SVG_SELECTORS.forEach((selector) => {
+    Array.from(documentRef.querySelectorAll(selector)).forEach((node) => {
+      if (!node || seen.has(node)) {
+        return;
+      }
+      seen.add(node);
+      preferred.push(node);
+    });
+  });
+
+  Array.from(documentRef.querySelectorAll("svg")).forEach((node) => {
+    if (!node || seen.has(node)) {
+      return;
     }
-    current = current.parentElement || current.parentNode || null;
+    seen.add(node);
+    preferred.push(node);
+  });
+
+  return preferred;
+}
+
+function getCachedBoardSnapshot(documentRef) {
+  const snapshot = BOARD_SNAPSHOT_CACHE.get(documentRef) || null;
+  if (!snapshot) {
+    return null;
   }
 
-  return hasClientRects(node) || getRenderableArea(node) > 0;
+  if (!isSnapshotGroupReusable(snapshot) || !hasReusableRadius(snapshot)) {
+    BOARD_SNAPSHOT_CACHE.delete(documentRef);
+    return null;
+  }
+
+  if (!isSnapshotModeReusable(snapshot, documentRef) || !isNodeVisible(snapshot.svg)) {
+    BOARD_SNAPSHOT_CACHE.delete(documentRef);
+    return null;
+  }
+
+  return snapshot;
+}
+
+function cacheBoardSnapshot(documentRef, snapshot) {
+  if (!documentRef) {
+    return snapshot || null;
+  }
+
+  if (snapshot) {
+    BOARD_SNAPSHOT_CACHE.set(documentRef, snapshot);
+  } else {
+    BOARD_SNAPSHOT_CACHE.delete(documentRef);
+  }
+  return snapshot || null;
 }
 
 function getNodeRect(node) {
@@ -802,29 +776,34 @@ export function findBoardSvgGroup(documentRef) {
     return null;
   }
 
-  const svgNodes = Array.from(documentRef.querySelectorAll("svg"));
+  const cachedSnapshot = getCachedBoardSnapshot(documentRef);
+  if (cachedSnapshot) {
+    return cachedSnapshot;
+  }
+
+  const svgNodes = queryCandidateSvgNodes(documentRef);
   if (!svgNodes.length) {
-    return null;
+    return cacheBoardSnapshot(documentRef, null);
   }
 
   const bestBoard = resolveBestBoardSvg(svgNodes);
   if (!bestBoard?.svg || !bestBoard?.meta) {
-    return null;
+    return cacheBoardSnapshot(documentRef, null);
   }
 
   const bestSvg = bestBoard.svg;
   const bestGroupCandidate = resolveBestBoardGroup(bestSvg);
   const radius = bestGroupCandidate.radius || bestBoard.meta.radius || getBoardRadius(bestSvg);
   if (!radius) {
-    return null;
+    return cacheBoardSnapshot(documentRef, null);
   }
 
-  return {
+  return cacheBoardSnapshot(documentRef, {
     svg: bestSvg,
     group: bestGroupCandidate.group || bestSvg,
     radius,
     modeKey: getActiveBoardInputMode(documentRef),
-  };
+  });
 }
 
 function areBoardSnapshotsEquivalent(left, right) {

@@ -31,6 +31,7 @@ import {
 } from "../../src/features/cricket-grid-fx/style.js";
 import { initializeRemoveDartsNotification } from "../../src/features/remove-darts-notification/index.js";
 import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
+import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
@@ -2214,6 +2215,60 @@ test("checkout-board-targets reacts to throw-surface attribute mutations", () =>
   }
 });
 
+test("checkout-board-targets skips X01 context resolution while a cricket variant is active", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  appendBoardFixture(documentRef);
+  const scheduleCounter = { count: 0 };
+
+  const originalQuerySelectorAll = documentRef.querySelectorAll.bind(documentRef);
+  documentRef.querySelectorAll = (selector) => {
+    const normalizedSelector = String(selector || "");
+    if (normalizedSelector.includes("ad-ext-player-score")) {
+      throw new Error("inactive checkout-board-targets should not resolve X01 score nodes");
+    }
+    return originalQuerySelectorAll(selector);
+  };
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    gameState: {
+      isX01Variant: () => false,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  try {
+    assert.equal(scheduleCounter.count, 1);
+    assert.equal(Boolean(documentRef.querySelector(`#${CHECKOUT_OVERLAY_ID}`)), false);
+  } finally {
+    cleanup();
+    documentRef.querySelectorAll = originalQuerySelectorAll;
+  }
+});
+
 test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -2626,6 +2681,62 @@ test("triple-double-bull-hits reacts to throw-surface attribute mutations", () =
   } finally {
     cleanup();
   }
+});
+
+test("triple-double-bull-hits only retains electric filter defs for explicit electric-arc runs", () => {
+  const baseContext = () => {
+    const documentRef = new FakeDocument();
+    const windowRef = createFakeWindow({ documentRef });
+    return {
+      documentRef,
+      windowRef,
+      domGuards: createDomGuards({ documentRef }),
+      registries: {
+        observers: createObserverRegistry(),
+        listeners: createListenerRegistry(),
+      },
+      gameState: {
+        subscribe() {
+          return () => {};
+        },
+      },
+      helpers: {
+        createRafScheduler: createCountingSchedulerFactory({ count: 0 }),
+      },
+    };
+  };
+
+  const impactContext = baseContext();
+  const cleanupImpact = initializeTripleDoubleBullHits({
+    ...impactContext,
+    config: {
+      getFeatureConfig() {
+        return {
+          colorTheme: "champagne-night",
+          animationStyle: "impact-pop",
+        };
+      },
+    },
+  });
+
+  assert.equal(Boolean(impactContext.documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), false);
+  cleanupImpact();
+
+  const electricContext = baseContext();
+  const cleanupElectric = initializeTripleDoubleBullHits({
+    ...electricContext,
+    config: {
+      getFeatureConfig() {
+        return {
+          colorTheme: "champagne-night",
+          animationStyle: "electric-arc",
+        };
+      },
+    },
+  });
+
+  assert.equal(Boolean(electricContext.documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), true);
+  cleanupElectric();
 });
 
 test("cricket-highlighter rerenders on throw updates even when board state stays the same", () => {

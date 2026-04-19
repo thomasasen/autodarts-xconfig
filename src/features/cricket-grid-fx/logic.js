@@ -7,6 +7,7 @@
   CELL_CLASS,
   DEAD_CLASS,
   DELTA_CLASS,
+  BADGE_BURST_SEQUENCE_ATTRIBUTE,
   HIDDEN_LABEL_ATTRIBUTE,
   LABEL_CLASS,
   LABEL_STATE_CLASS,
@@ -14,6 +15,7 @@
   MARK_L2_CLASS,
   MARK_L3_CLASS,
   MARK_PROGRESS_CLASS,
+  MARK_PROGRESS_SEQUENCE_ATTRIBUTE,
   OPEN_ACTIVE_CLASS,
   OPEN_CLASS,
   OPEN_INACTIVE_CLASS,
@@ -53,6 +55,7 @@ import {
   queryAll as queryAllFromDiscovery,
 } from "../cricket-surface/grid-discovery.js";
 import { parseMarksValue, readCellPlayerIndex } from "../cricket-surface/mark-parser.js";
+import { createMeasurementCacheManager } from "../themes/shared/measurement-cache.js";
 
 const GRID_ROOT_SELECTORS = Object.freeze([
   "#grid",
@@ -76,6 +79,8 @@ const LABEL_NODE_SELECTORS = Object.freeze([
   "div",
   "span",
 ]);
+
+const gridFxMeasurements = createMeasurementCacheManager();
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
 
 function queryAll(rootNode, selector) {
@@ -136,7 +141,7 @@ function collectGridRootLabelHits(candidate, cricketRules, targetSet) {
   return labelHits;
 }
 
-function collectLabelNodes(gridRoot, cricketRules, targetSet) {
+function collectLabelNodes(gridRoot, cricketRules, targetSet, getRect = null) {
   const labels = collectLabelNodesFromDiscovery(
     gridRoot,
     cricketRules,
@@ -160,7 +165,7 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet) {
       label,
       labelNode: node,
       labelCell,
-      badgeNode: resolveBadgeNode(node, labelCell, cricketRules, label),
+      badgeNode: resolveBadgeNode(node, labelCell, cricketRules, label, getRect),
     };
   });
 }
@@ -191,13 +196,14 @@ function resolveLabelCell(labelNode, cricketRules = null, targetSet = null, fall
   });
 }
 
-function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {
+function resolveBadgeNode(labelNode, labelCell, cricketRules, label, getRect = null) {
   return sharedResolveBadgeNode({
     labelNode,
     labelCell,
     cricketRules,
     label,
     allowLabelNodeFallback: true,
+    getRect,
     queryAll,
   });
 }
@@ -346,6 +352,9 @@ function clearLabelClasses(node) {
     BADGE_STATE_CLASS.pressure,
     BADGE_STATE_CLASS.dead
   );
+  if (typeof node.removeAttribute === "function") {
+    node.removeAttribute(BADGE_BURST_SEQUENCE_ATTRIBUTE);
+  }
 }
 
 function clearProgressClasses(node) {
@@ -358,6 +367,22 @@ function clearProgressClasses(node) {
     MARK_L2_CLASS,
     MARK_L3_CLASS
   );
+  if (typeof node.removeAttribute === "function") {
+    node.removeAttribute(MARK_PROGRESS_SEQUENCE_ATTRIBUTE);
+  }
+}
+
+function advanceAnimationSequence(node, attributeName) {
+  if (!node || !attributeName || typeof node.getAttribute !== "function") {
+    return "0";
+  }
+
+  const currentValue = String(node.getAttribute(attributeName) || "").trim();
+  const nextValue = currentValue === "1" ? "0" : "1";
+  if (typeof node.setAttribute === "function") {
+    node.setAttribute(attributeName, nextValue);
+  }
+  return nextValue;
 }
 
 function appendTransientNode(state, parentNode, className, timeoutMs, options = {}) {
@@ -565,25 +590,15 @@ function setBadgeStateClasses(badgeNode, stateToken) {
   badgeNode.classList.add(BADGE_STATE_CLASS.neutral);
 }
 
-function forceAnimationReflow(node) {
-  if (!node) {
-    return 0;
-  }
-
-  if (Number.isFinite(node.offsetWidth)) {
-    return node.offsetWidth;
-  }
-
-  return Number(node.getBoundingClientRect?.().width || 0);
-}
-
 function toggleTimedClass(state, node, className, timeoutMs = 700) {
   if (!state || !node?.classList || !className) {
     return;
   }
 
   node.classList.remove(className);
-  forceAnimationReflow(node);
+  if (className === BADGE_BURST_CLASS) {
+    advanceAnimationSequence(node, BADGE_BURST_SEQUENCE_ATTRIBUTE);
+  }
   node.classList.add(className);
 
   const timeoutRef =
@@ -622,7 +637,7 @@ function triggerMarkProgress(state, cellNode, marks, visualConfig) {
   }
 
   clearProgressClasses(targetNode);
-  forceAnimationReflow(targetNode);
+  advanceAnimationSequence(targetNode, MARK_PROGRESS_SEQUENCE_ATTRIBUTE);
   targetNode.classList.add(MARK_PROGRESS_CLASS);
   const clampedMarks = Math.max(0, Math.min(3, Number(marks) || 0));
   targetNode.classList.add(resolveMarkProgressLevelClass(clampedMarks));
@@ -1043,6 +1058,7 @@ function upsertGridFxRow(rowByLabel, candidateRow, context = {}) {
           labelCell: resolvedLabelCell,
           cricketRules: context.cricketRules,
           label,
+          getRect: context.getRect,
           queryAll,
         })
       : null);
@@ -1097,6 +1113,7 @@ function resolveGridFxRows(options = {}) {
   const rowByLabel = new Map();
   const context = {
     cricketRules: options.cricketRules,
+    getRect: options.getRect || null,
     targetSet,
     renderState: options.renderState,
   };
@@ -1114,7 +1131,7 @@ function resolveGridFxRows(options = {}) {
     });
   }
 
-  collectLabelNodes(options.gridRoot, options.cricketRules, targetSet).forEach((entry) => {
+  collectLabelNodes(options.gridRoot, options.cricketRules, targetSet, options.getRect).forEach((entry) => {
     const label = String(entry?.label || "");
     if (!label || !targetSet.has(label)) {
       return;
@@ -1134,7 +1151,9 @@ function resolveGridFxRows(options = {}) {
       label,
       labelNode,
       labelCell,
-      badgeNode: entry?.badgeNode || resolveBadgeNode(labelNode, labelCell, options.cricketRules, label),
+      badgeNode:
+        entry?.badgeNode ||
+        resolveBadgeNode(labelNode, labelCell, options.cricketRules, label, options.getRect),
       rowNode: getRowNode(labelNode || labelCell || null),
       playerCells: fallbackPlayerCells,
     }, context);
@@ -1852,15 +1871,18 @@ export function updateCricketGridFx(options = {}) {
     state?.renderCache?.gridStableRowsByLabel instanceof Map
       ? state.renderCache.gridStableRowsByLabel
       : null;
-  const rows = resolveGridFxRows({
-    sourceRows: Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [],
-    stableRowsByLabel,
-    targetOrder,
-    targetSet,
-    gridRoot,
-    cricketRules,
-    renderState,
-  });
+  const rows = gridFxMeasurements.withCache(() =>
+    resolveGridFxRows({
+      sourceRows: Array.isArray(gridSnapshot?.rows) ? gridSnapshot.rows : [],
+      stableRowsByLabel,
+      targetOrder,
+      targetSet,
+      gridRoot,
+      cricketRules,
+      renderState,
+      getRect: gridFxMeasurements.getRect,
+    })
+  );
   if (!rows.length) {
     setCricketGridFxFailure(state, debugStats, "missing-grid");
     return;

@@ -4,7 +4,8 @@ import {
   createScoreProgressState,
   syncScoreProgress,
 } from "./logic.js";
-import { buildStyleText, STYLE_ID } from "./style.js";
+import { buildStyleText, HOST_ATTRIBUTE, STACK_ATTRIBUTE, STYLE_ID } from "./style.js";
+import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "x01-score-progress";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -142,6 +143,65 @@ function shouldWarnDebugState(debugInfo = {}) {
   return false;
 }
 
+function isRelevantX01Node(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  if (String(node.id || "").trim() === "ad-ext-player-display") {
+    return true;
+  }
+
+  const tagName = String(node.tagName || node.nodeName || "").trim().toLowerCase();
+  if (tagName === "button" || tagName === "span" || tagName === "p") {
+    return true;
+  }
+
+  if (node.classList?.contains?.("ad-ext-player") || node.classList?.contains?.("ad-ext-player-score")) {
+    return true;
+  }
+
+  if (typeof node.closest === "function") {
+    return Boolean(node.closest("#ad-ext-player-display, #ad-ext-turn"));
+  }
+
+  return false;
+}
+
+function nodeContainsRelevantX01Node(node) {
+  if (isRelevantX01Node(node)) {
+    return true;
+  }
+
+  if (!node || typeof node.querySelector !== "function") {
+    return false;
+  }
+
+  return Boolean(node.querySelector("#ad-ext-player-display, .ad-ext-player, .ad-ext-player-score, #ad-ext-turn"));
+}
+
+function hasRelevantX01Mutation(mutations = [], isManagedNode = null) {
+  if (!hasExternalDomMutation(mutations, isManagedNode)) {
+    return false;
+  }
+
+  if (!Array.isArray(mutations) || mutations.length === 0) {
+    return true;
+  }
+
+  return mutations.some((mutation) => {
+    if (mutation?.type === "attributes") {
+      return isRelevantX01Node(mutation?.target || null);
+    }
+
+    return [
+      mutation?.target || null,
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].some((node) => nodeContainsRelevantX01Node(node));
+  });
+}
+
 export function mountX01ScoreProgress(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
@@ -150,6 +210,7 @@ export function mountX01ScoreProgress(context = {}) {
   const gameState = context.gameState;
   const config = context.config;
   const featureDebug = context.featureDebug || null;
+  const schedulerFactory = context.helpers?.createRafScheduler || createRafScheduler;
 
   if (!documentRef || !domGuards) {
     return () => {};
@@ -169,6 +230,14 @@ export function mountX01ScoreProgress(context = {}) {
 
   const featureState = createScoreProgressState();
   const debugState = createDebugState(featureDebug);
+  const isManagedNode = createManagedNodeMatcher({
+    ids: [STYLE_ID],
+    predicates: [
+      (node) =>
+        node?.getAttribute?.(HOST_ATTRIBUTE) === "true" ||
+        node?.getAttribute?.(STACK_ATTRIBUTE) === "true",
+    ],
+  });
   const update = () => {
     const result = syncScoreProgress(
       {
@@ -197,14 +266,19 @@ export function mountX01ScoreProgress(context = {}) {
     emitDebugLog(debugState, signature, message, debugInfo);
   };
 
-  const scheduler = createRafScheduler(update, { windowRef });
+  const scheduler = schedulerFactory(update, { windowRef });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations = []) => {
+        if (!hasRelevantX01Mutation(mutations, isManagedNode)) {
+          return;
+        }
+        scheduler.schedule();
+      },
       observeOptions: {
         childList: true,
         subtree: true,

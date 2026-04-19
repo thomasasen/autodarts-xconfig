@@ -22,13 +22,83 @@ const LISTENER_KEYS = Object.freeze({
   hashchange: `${FEATURE_KEY}:window-hashchange`,
   navigationCurrentEntry: `${FEATURE_KEY}:navigation-currententrychange`,
 });
-const LOCATION_POLL_INTERVAL_MS = 1000;
 
 function getCurrentHref(windowRef) {
   if (!windowRef?.location) {
     return "";
   }
   return String(windowRef.location.href || "").trim();
+}
+
+function isBoardMutationNode(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  const tagName = String(node.tagName || node.nodeName || "").trim().toLowerCase();
+  if (tagName === "svg" || tagName === "g" || tagName === "circle" || tagName === "path" || tagName === "text") {
+    return true;
+  }
+
+  if (String(node.id || "").trim() === "ad-ext-turn") {
+    return true;
+  }
+
+  if (node.classList?.contains?.("ad-ext-theme-board-svg")) {
+    return true;
+  }
+
+  if (typeof node.closest === "function") {
+    return Boolean(
+      node.closest(
+        ".ad-ext-theme-board-viewport, .ad-ext-theme-board-canvas, .ad-ext-tv-board-zoom-host, .showAnimations, #ad-ext-turn"
+      )
+    );
+  }
+
+  return false;
+}
+
+function nodeContainsRelevantBoardMutation(node) {
+  if (isBoardMutationNode(node)) {
+    return true;
+  }
+
+  if (!node || typeof node.querySelector !== "function") {
+    return false;
+  }
+
+  return Boolean(
+    node.querySelector(
+      "svg, circle, g, path, text, .ad-ext-theme-board-svg, .ad-ext-theme-board-viewport, .ad-ext-theme-board-canvas, .ad-ext-tv-board-zoom-host, .showAnimations, #ad-ext-turn"
+    )
+  );
+}
+
+function hasRelevantBoardMutation(mutations = [], isManagedNode = null) {
+  if (!hasExternalDomMutation(mutations, isManagedNode)) {
+    return false;
+  }
+
+  if (!Array.isArray(mutations) || mutations.length === 0) {
+    return true;
+  }
+
+  return mutations.some((mutation) => {
+    if (mutation?.type === "attributes") {
+      return isBoardMutationNode(mutation?.target || null);
+    }
+
+    if (isBoardMutationNode(mutation?.target || null)) {
+      return true;
+    }
+
+    const touchedNodes = [
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ];
+    return touchedNodes.some((node) => nodeContainsRelevantBoardMutation(node));
+  });
 }
 
 export function initializeDartMarkerDarts(context = {}) {
@@ -105,7 +175,7 @@ export function initializeDartMarkerDarts(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+        if (!hasRelevantBoardMutation(mutations, isManagedNode)) {
           return;
         }
         scheduleUpdate();
@@ -175,17 +245,6 @@ export function initializeDartMarkerDarts(context = {}) {
       ? gameState.subscribe(() => scheduleUpdate())
       : () => {};
 
-  let locationPollHandle = 0;
-  if (windowRef && typeof windowRef.setInterval === "function") {
-    locationPollHandle = windowRef.setInterval(() => {
-      const currentHref = getCurrentHref(windowRef);
-      if (!currentHref || currentHref === state.lastHref) {
-        return;
-      }
-      scheduleUpdate();
-    }, LOCATION_POLL_INTERVAL_MS);
-  }
-
   scheduleUpdate();
   let cleanedUp = false;
 
@@ -201,11 +260,6 @@ export function initializeDartMarkerDarts(context = {}) {
       unsubscribeGameState();
     } catch (_) {
       // fail-soft
-    }
-
-    if (locationPollHandle && windowRef && typeof windowRef.clearInterval === "function") {
-      windowRef.clearInterval(locationPollHandle);
-      locationPollHandle = 0;
     }
 
     if (observerRegistry && typeof observerRegistry.disconnect === "function") {

@@ -12,7 +12,10 @@ import {
   resolveBadgeNode,
   resolveLabelCell,
 } from "../../src/features/cricket-surface/label-layout.js";
-import { collectLabelNodes as collectLabelNodesFromDiscovery } from "../../src/features/cricket-surface/grid-discovery.js";
+import {
+  collectLabelNodes as collectLabelNodesFromDiscovery,
+  isNodeVisible,
+} from "../../src/features/cricket-surface/grid-discovery.js";
 import { FakeDocument } from "./fake-dom.js";
 
 test("cricket label utils normalize node text and label attributes consistently", () => {
@@ -140,6 +143,44 @@ test("cricket label layout resolves decoratable badge nodes through the shared h
   );
 });
 
+test("cricket label layout reuses a supplied rect reader for badge resolution", () => {
+  const documentRef = new FakeDocument();
+  const labelRules = {
+    normalizeCricketLabel(value) {
+      return String(value || "").trim().toUpperCase();
+    },
+  };
+  const labelCell = documentRef.createElement("div");
+  const labelNode = documentRef.createElement("span");
+  const badgeNode = documentRef.createElement("span");
+  labelNode.setAttribute("data-row-label", "20");
+  labelNode.textContent = "Target 20 label";
+  badgeNode.setAttribute("class", "ad-ext-crfx-badge");
+  badgeNode.textContent = "20";
+  labelCell.appendChild(labelNode);
+  labelCell.appendChild(badgeNode);
+  documentRef.body.appendChild(labelCell);
+
+  const rectReads = new Map();
+  const getRect = (node) => {
+    rectReads.set(node, (rectReads.get(node) || 0) + 1);
+    return node === labelCell ? { width: 120, height: 48 } : { width: 40, height: 18 };
+  };
+
+  assert.equal(
+    resolveBadgeNode({
+      labelNode,
+      labelCell,
+      cricketRules: labelRules,
+      label: "20",
+      getRect,
+    }),
+    badgeNode
+  );
+  assert.equal(rectReads.get(labelCell), 1);
+  assert.equal(rectReads.get(badgeNode), 1);
+});
+
 test("cricket grid discovery drops nested wrapper labels and skips turn preview rows", () => {
   const documentRef = new FakeDocument();
   const labelRules = {
@@ -216,4 +257,19 @@ test("normalizeCricketLabelNode still trusts explicit row-label attributes on wr
     "Dummy Cricket First to 2 TORNADO TOM HARDY BOY 20 19 18 17 16 15 Bull Undo Next";
 
   assert.equal(normalizeCricketLabelNode(cricketRules, node), "BULL");
+});
+
+test("cricket grid discovery visibility no longer depends on getClientRects layout reads", () => {
+  const documentRef = new FakeDocument();
+  const visibleNode = documentRef.createElement("div");
+  documentRef.body.appendChild(visibleNode);
+
+  visibleNode.getClientRects = () => {
+    throw new Error("layout read not expected");
+  };
+
+  assert.equal(isNodeVisible(visibleNode), true);
+
+  visibleNode.style.display = "none";
+  assert.equal(isNodeVisible(visibleNode), false);
 });

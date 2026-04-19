@@ -546,6 +546,35 @@ test("findBoardSvgGroup returns null for ambiguous unlabeled single-circle-only 
   assert.equal(boardSnapshot, null);
 });
 
+test("findBoardSvgGroup reuses the cached X01 board snapshot without rescanning svg candidates", () => {
+  const documentRef = new FakeDocument();
+  createBoardModeButtons(documentRef, "segments");
+  createBoardFixture(documentRef, {
+    boardRadius: 500,
+    width: 720,
+    height: 720,
+    withPanelControls: true,
+  });
+
+  const originalQuerySelectorAll = documentRef.querySelectorAll.bind(documentRef);
+  let svgQueryCount = 0;
+  documentRef.querySelectorAll = (selector) => {
+    if (String(selector || "").includes("svg")) {
+      svgQueryCount += 1;
+    }
+    return originalQuerySelectorAll(selector);
+  };
+
+  const firstSnapshot = findBoardSvgGroup(documentRef);
+  const queryCountAfterFirstLookup = svgQueryCount;
+  const secondSnapshot = findBoardSvgGroup(documentRef);
+
+  assert.ok(firstSnapshot);
+  assert.equal(secondSnapshot, firstSnapshot);
+  assert.equal(queryCountAfterFirstLookup > 0, true);
+  assert.equal(svgQueryCount, queryCountAfterFirstLookup);
+});
+
 test("cricket board snapshot cache invalidates across board-input mode switches when the visible board layer changes", () => {
   const documentRef = new FakeDocument();
   const modeButtons = createBoardModeButtons(documentRef, "segments");

@@ -379,14 +379,28 @@ test("cricket grid fx style exposes badge and state hierarchy", () => {
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell,\s*\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{[^}]*position:\s*absolute\s*!important;[^}]*left:\s*8px\s*!important;/s);
   assert.match(css, /\[data-ad-ext-crfx-label-hidden="true"\]\s*\{[^}]*color:\s*transparent\s*!important;/s);
-  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst 700ms ease;/s);
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\[data-ad-ext-crfx-burst-seq="0"\]\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst-a 700ms ease;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\.ad-ext-crfx-badge-burst\[data-ad-ext-crfx-burst-seq="1"\]\s*\{[^}]*animation:\s*ad-ext-crfx-badge-burst-b 700ms ease;/s
+  );
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*repeating-linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-pressure\s*\{[^}]*repeating-linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-open\s*\{[^}]*linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-open-inactive\s*\{[^}]*linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-active-column\s*\{[^}]*linear-gradient\(/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-open-active\s*\{[^}]*linear-gradient\(/s);
-  assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-mark-progress\s*\{[^}]*animation:\s*ad-ext-crfx-mark 420ms cubic-bezier\(0\.2,\s*0\.8,\s*0\.2,\s*1\);/s);
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-mark-progress\[data-ad-ext-crfx-progress-seq="0"\]\s*\{[^}]*animation:\s*ad-ext-crfx-mark-a 420ms cubic-bezier\(0\.2,\s*0\.8,\s*0\.2,\s*1\);/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-crfx-root\s+\.ad-ext-crfx-mark-progress\[data-ad-ext-crfx-progress-seq="1"\]\s*\{[^}]*animation:\s*ad-ext-crfx-mark-b 420ms cubic-bezier\(0\.2,\s*0\.8,\s*0\.2,\s*1\);/s
+  );
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-delta\s*\{[^}]*font-size:\s*2\.22rem;/s);
   assert.doesNotMatch(css, /ad-ext-crfx-cell-active/);
   assert.doesNotMatch(css, /ad-ext-crfx-cell-inactive/);

@@ -1,6 +1,10 @@
 import { createRuntimeConfig } from "../config/runtime-config.js";
 import { dartRules } from "../domain/dart-rules.js";
 import { defaultFeatureDefinitions } from "../features/feature-registry.js";
+import {
+  FEATURE_STARTUP_TIMINGS,
+  normalizeFeatureStartupTiming,
+} from "../shared/feature-catalog.js";
 import { createRafScheduler } from "../shared/raf-scheduler.js";
 import { createDomGuards } from "./dom-guards.js";
 import { createEventBus } from "./event-bus.js";
@@ -10,6 +14,29 @@ import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
 const API_VERSION = "2.1.30";
+const STARTUP_DEFER_INTERVAL_MS = 16;
+
+function getWindowTimerApi(windowRef) {
+  let setTimeoutRef = null;
+  let clearTimeoutRef = null;
+
+  if (windowRef && typeof windowRef.setTimeout === "function") {
+    setTimeoutRef = windowRef.setTimeout.bind(windowRef);
+  } else if (typeof globalThis.setTimeout === "function") {
+    setTimeoutRef = globalThis.setTimeout.bind(globalThis);
+  }
+
+  if (windowRef && typeof windowRef.clearTimeout === "function") {
+    clearTimeoutRef = windowRef.clearTimeout.bind(windowRef);
+  } else if (typeof globalThis.clearTimeout === "function") {
+    clearTimeoutRef = globalThis.clearTimeout.bind(globalThis);
+  }
+
+  return {
+    setTimeout: setTimeoutRef,
+    clearTimeout: clearTimeoutRef,
+  };
+}
 
 function normalizeFeatureDefinitions(definitions) {
   if (!Array.isArray(definitions) || !definitions.length) {
@@ -40,6 +67,7 @@ function normalizeFeatureDefinitions(definitions) {
       ...definition,
       featureKey,
       configKey,
+      startupTiming: normalizeFeatureStartupTiming(definition.startupTiming),
       mount: initialize,
       initialize,
     });
@@ -143,8 +171,10 @@ export function createBootstrap(options = {}) {
   });
 
   const featureCleanups = new Map();
+  const deferredFeatureMounts = new Map();
   const extraPublicApi = {};
   let started = false;
+  const timerApi = getWindowTimerApi(windowRef);
 
   const context = {
     eventBus,
@@ -198,7 +228,48 @@ export function createBootstrap(options = {}) {
     );
   }
 
+  function cancelDeferredMount(featureKey) {
+    const timeoutHandle = deferredFeatureMounts.get(featureKey);
+    if (timeoutHandle == null) {
+      return;
+    }
+
+    if (typeof timerApi.clearTimeout === "function") {
+      timerApi.clearTimeout(timeoutHandle);
+    }
+    deferredFeatureMounts.delete(featureKey);
+  }
+
+  function scheduleDeferredMount(definition, delayMs = 0) {
+    if (
+      !definition ||
+      featureCleanups.has(definition.featureKey) ||
+      deferredFeatureMounts.has(definition.featureKey)
+    ) {
+      return;
+    }
+
+    if (typeof timerApi.setTimeout !== "function") {
+      mountFeature(definition);
+      return;
+    }
+
+    const timeoutHandle = timerApi.setTimeout(() => {
+      deferredFeatureMounts.delete(definition.featureKey);
+
+      if (!started || !config.isFeatureEnabled(definition.configKey)) {
+        return;
+      }
+
+      mountFeature(definition);
+    }, Math.max(0, Number(delayMs) || 0));
+
+    deferredFeatureMounts.set(definition.featureKey, timeoutHandle);
+  }
+
   function unmountFeature(featureKey) {
+    cancelDeferredMount(featureKey);
+
     const cleanup = featureCleanups.get(featureKey);
     if (!cleanup) {
       return;
@@ -226,6 +297,8 @@ export function createBootstrap(options = {}) {
     const remountFeatureKeys = new Set(
       Array.isArray(options.remountFeatureKeys) ? options.remountFeatureKeys : []
     );
+    const deferNonCriticalMounts = options.deferNonCriticalMounts === true;
+    let deferredMountIndex = 0;
 
     featureDefinitions.forEach((definition) => {
       const enabled = config.isFeatureEnabled(definition.configKey);
@@ -239,6 +312,23 @@ export function createBootstrap(options = {}) {
         return;
       }
 
+      if (featureCleanups.has(definition.featureKey)) {
+        return;
+      }
+
+      if (
+        deferNonCriticalMounts &&
+        definition.startupTiming !== FEATURE_STARTUP_TIMINGS.IMMEDIATE
+      ) {
+        scheduleDeferredMount(
+          definition,
+          deferredMountIndex * STARTUP_DEFER_INTERVAL_MS
+        );
+        deferredMountIndex += 1;
+        return;
+      }
+
+      cancelDeferredMount(definition.featureKey);
       mountFeature(definition);
     });
   }
@@ -275,7 +365,7 @@ export function createBootstrap(options = {}) {
 
     started = true;
     gameState.start();
-    refreshFeatures();
+    refreshFeatures({ deferNonCriticalMounts: true });
     eventBus.emit("runtime:started", getSnapshot());
     syncGlobalNamespace();
 

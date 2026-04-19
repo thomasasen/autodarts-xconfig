@@ -487,29 +487,6 @@ export function initializeCheckoutBoardTargets(context = {}) {
     };
   }
 
-  function buildInactivePayload(checkoutContext, variantText, activeScore, outMode, routeEntries, routeSegments) {
-    return buildDebugPayload({
-      status: "inactive",
-      active: false,
-      activeScore,
-      domScore: checkoutContext.domScore,
-      gameStateScore: checkoutContext.gameStateScore,
-      scoreSource: checkoutContext.scoreSource,
-      scoreAgreement: checkoutContext.scoreAgreement,
-      variantText,
-      outMode,
-      targetSelectionMode,
-      selectionSource: "none",
-      documentRef,
-      windowRef,
-      routeEntries,
-      routeSegments,
-      selectedSegments: [],
-      targets: [],
-      board: null,
-    });
-  }
-
   function resolveActiveRenderPlan({ checkoutContext, selectedSegments, activeScore, outMode }) {
     const routeSegments = Array.isArray(checkoutContext.routeSegments)
       ? checkoutContext.routeSegments
@@ -568,6 +545,48 @@ export function initializeCheckoutBoardTargets(context = {}) {
     const variantText = String(
       documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || ""
     ).trim();
+    if (!active) {
+      const signature = buildRenderSignature({
+        active: false,
+        routeSegments: [],
+        activeScore: null,
+        domScore: null,
+        gameStateScore: null,
+        outMode: "",
+        dartsRemaining: null,
+      });
+
+      if (signature === lastRenderSignature) {
+        return;
+      }
+      lastRenderSignature = signature;
+
+      resetRetainedRenderState();
+      const payload = buildDebugPayload({
+        status: "inactive",
+        active: false,
+        activeScore: null,
+        domScore: null,
+        gameStateScore: null,
+        scoreSource: "inactive",
+        scoreAgreement: false,
+        variantText,
+        outMode: "",
+        targetSelectionMode,
+        selectionSource: "none",
+        documentRef,
+        windowRef,
+        routeEntries: [],
+        routeSegments: [],
+        selectedSegments: [],
+        targets: [],
+        board: null,
+      });
+      emitDebugEvent(debugState, "log", buildDebugSignature(payload), buildDebugSummary(payload), payload);
+      clearCurrentOverlay();
+      return;
+    }
+
     const { dartsRemaining } = resolveDartsRemaining(gameState);
     const x01CheckoutContext = resolveX01CheckoutContext({
       gameState,
@@ -594,21 +613,6 @@ export function initializeCheckoutBoardTargets(context = {}) {
       return;
     }
     lastRenderSignature = signature;
-
-    if (!active) {
-      resetRetainedRenderState();
-      const payload = buildInactivePayload(
-        x01CheckoutContext,
-        variantText,
-        activeScore,
-        outMode,
-        routeEntries,
-        routeSegments
-      );
-      emitDebugEvent(debugState, "log", buildDebugSignature(payload), buildDebugSummary(payload), payload);
-      clearCurrentOverlay();
-      return;
-    }
 
     const checkoutSurface = x01CheckoutContext.checkoutSurface;
     const { selectedSegments } = selectRouteSegments(checkoutSurface);
