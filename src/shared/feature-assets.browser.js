@@ -11,10 +11,9 @@ import dartWhitePng from "../assets/darts/Dart_white.png";
 import dartWhiteTriplePng from "../assets/darts/Dart_whitetrible.png";
 import dartYellowPng from "../assets/darts/Dart_yellow.png";
 import dartYellowSkullPng from "../assets/darts/Dart_yellowscull.png";
-import takeOutPng from "../assets/TakeOut.png";
-import singleBullMp3 from "../assets/singlebull.mp3";
-
 export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
+export { default as TAKEOUT_IMAGE_ASSET } from "../assets/TakeOut.png";
+export { default as SINGLE_BULL_SOUND_ASSET } from "../assets/singlebull.mp3";
 
 export const DART_DESIGNS = Object.freeze({
   autodarts: dartAutodartsPng,
@@ -37,5 +36,3 @@ export function resolveDartDesignAsset(designKey) {
   return DART_DESIGNS[key] || DART_DESIGNS.autodarts;
 }
 
-export const TAKEOUT_IMAGE_ASSET = takeOutPng;
-export const SINGLE_BULL_SOUND_ASSET = singleBullMp3;

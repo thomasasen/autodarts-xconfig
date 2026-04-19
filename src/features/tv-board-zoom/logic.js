@@ -140,7 +140,12 @@ function parseSegmentWithFallback(segmentName, x01Rules) {
   }
 
   const ring = match[1];
-  const multiplier = ring === "D" ? 2 : ring === "T" ? 3 : 1;
+  let multiplier = 1;
+  if (ring === "D") {
+    multiplier = 2;
+  } else if (ring === "T") {
+    multiplier = 3;
+  }
   return {
     normalized: `${ring}${value}`,
     ring,
@@ -1252,25 +1257,16 @@ export function computeZoomIntent(options = {}) {
   return null;
 }
 
-export function applyZoom(
-  targetNode,
-  hostNode,
-  boardSvg,
-  zoomLevel,
-  speedConfig,
-  intent,
-  state,
-  options = {}
-) {
-  if (!targetNode || !targetNode.style) {
-    return;
-  }
+function resolveApplyZoomNodes(zoomNodes) {
+  const normalizedZoomNodes = zoomNodes && typeof zoomNodes === "object" ? zoomNodes : {};
+  return {
+    targetNode: normalizedZoomNodes.targetNode || null,
+    hostNode: normalizedZoomNodes.hostNode || null,
+    boardSvg: normalizedZoomNodes.boardSvg || null,
+  };
+}
 
-  const x01Rules = options.x01Rules || null;
-  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
-  const documentRef = options.documentRef || (typeof document !== "undefined" ? document : null);
-  clearPendingRelease(state);
-
+function resetChangedZoomBindings(state, targetNode, hostNode) {
   if (state.zoomedElement && state.zoomedElement !== targetNode) {
     restoreTargetStyle(state, state.zoomedElement);
     state.zoomedElement = null;
@@ -1281,22 +1277,20 @@ export function applyZoom(
     restoreHostStyle(state, state.zoomHost);
     state.zoomHost = null;
   }
+}
 
-  cacheTargetStyle(state, targetNode);
-  const cachedBaseTransform =
-    state.targetStyleSnapshot?.node === targetNode
-      ? String(state.targetStyleSnapshot.transform || "")
-      : "";
-  const zoomData = buildZoomTransform({
+function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, state, options = {}) {
+  return buildZoomTransform({
     targetNode,
     hostNode: hostNode || targetNode,
     boardSvg,
     zoomLevel,
     intent,
-    x01Rules,
-    windowRef,
-    documentRef,
-    baseTransform: cachedBaseTransform,
+    x01Rules: options?.x01Rules || null,
+    windowRef: options?.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null),
+    documentRef: options?.documentRef || (typeof document !== "undefined" ? document : null),
+    baseTransform:
+      state.targetStyleSnapshot?.node === targetNode ? String(state.targetStyleSnapshot.transform || "") : "",
     activeTargetZoomTransform:
       state.zoomedElement === targetNode && state.lastAppliedZoomTransform?.targetNode === targetNode
         ? {
@@ -1320,25 +1314,43 @@ export function applyZoom(
           }
         : null,
   });
+}
+
+function applyZoomHostState(state, hostNode) {
+  if (!hostNode?.classList) {
+    return;
+  }
+
+  cacheHostStyle(state, hostNode);
+  if (!hostNode.classList.contains(ZOOM_HOST_CLASS)) {
+    hostNode.classList.add(ZOOM_HOST_CLASS);
+  }
+  if (getStyleValue(hostNode.style, "overflow") !== "hidden") {
+    setStyleWithPriority(hostNode.style, "overflow", "hidden", "important");
+  }
+  if (getStyleValue(hostNode.style, "overflow-x") !== "hidden") {
+    setStyleWithPriority(hostNode.style, "overflow-x", "hidden", "important");
+  }
+  if (getStyleValue(hostNode.style, "overflow-y") !== "hidden") {
+    setStyleWithPriority(hostNode.style, "overflow-y", "hidden", "important");
+  }
+}
+
+export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options = {}) {
+  const { targetNode, hostNode, boardSvg } = resolveApplyZoomNodes(zoomNodes);
+  if (!targetNode?.style) {
+    return;
+  }
+
+  clearPendingRelease(state);
+  resetChangedZoomBindings(state, targetNode, hostNode);
+  cacheTargetStyle(state, targetNode);
+  const zoomData = buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, state, options);
 
   if (!zoomData) {
     return null;
   }
-  if (hostNode?.classList) {
-    cacheHostStyle(state, hostNode);
-    if (!hostNode.classList.contains(ZOOM_HOST_CLASS)) {
-      hostNode.classList.add(ZOOM_HOST_CLASS);
-    }
-    if (getStyleValue(hostNode.style, "overflow") !== "hidden") {
-      setStyleWithPriority(hostNode.style, "overflow", "hidden", "important");
-    }
-    if (getStyleValue(hostNode.style, "overflow-x") !== "hidden") {
-      setStyleWithPriority(hostNode.style, "overflow-x", "hidden", "important");
-    }
-    if (getStyleValue(hostNode.style, "overflow-y") !== "hidden") {
-      setStyleWithPriority(hostNode.style, "overflow-y", "hidden", "important");
-    }
-  }
+  applyZoomHostState(state, hostNode);
   applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
 
   const composedTransform = zoomData.baseTransform

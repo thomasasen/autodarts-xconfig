@@ -21,6 +21,9 @@ direkt zu einer versionierten Release-Sektion.
 
 ### Fixed
 
+- Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; TV-Board-Zoom und die Browser-Asset-Auflösung bleiben fachlich unverändert, drücken interne Übergabe- und Reexport-Pfade in dieser Sonar-Welle aber direkter aus.
+  Technik: `tv-board-zoom/applyZoom(...)` bündelt die drei internen Knotenparameter jetzt in ein kleines Objekt statt über eine 8-Parameter-Signatur, alle direkten Layout-Regressionen wurden auf dieselbe interne Form umgestellt, und `feature-assets.browser` exportiert die zwei Asset-Bindings nun direkt per `export ... from` ohne zusätzlichen Alias-Zwischenschritt; Zoom-Transform-, Host-Overflow- und Asset-Konsumentenpfade bleiben dabei unverändert der fachliche Vertrag.
+
 - Nutzerwirkung: Keine beabsichtigte sichtbare Verhaltensänderung; eine weitere kleine Sonar-Welle hält Update-Status, Winner-Animation, TV-Zoom, Cricket-Snapshot-Cache sowie ausgewählte xConfig-Helfer auf denselben fachlichen Pfaden, drückt einige Status- und Auswahlzweige intern aber direkter aus.
   Technik: `update-check`, `winner-fireworks`, `tv-board-zoom`, `cricket-surface/snapshot-cache`, `x01-2player/policy`, `xconfig-ui/path-utils` und `shell-view` bereinigen nur lokale `S3358`-, `S1788`- und `S7766`-Treffer durch kleine Helper und unveränderte Fallback-Pfade; Observer-, Snapshot-, Select- und Update-Semantik bleiben dabei gleich, und die bestehenden Runtime-, Domain- und Changelog-Regressionen bleiben der fachliche Schutz gegen Drift.
 

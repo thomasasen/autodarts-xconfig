@@ -596,9 +596,7 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   targetNode.style.transform = "rotate(1deg)";
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "smart-setup", segment: "T20" },
@@ -645,9 +643,7 @@ test("tv-board-zoom scales only inner board layer and fits gif siblings proporti
   assert.equal(targetNode, innerBoardLayer);
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "smart-setup", segment: "T20" },
@@ -692,9 +688,7 @@ test("tv-board-zoom restores gif overlay styles on cleanup", () => {
   gifOverlay.style.objectFit = "fill";
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "smart-setup", segment: "T20" },
@@ -735,9 +729,7 @@ test("tv-board-zoom applies gif containment even when overlay size is unresolved
   };
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "smart-setup", segment: "T20" },
@@ -780,9 +772,7 @@ test("tv-board-zoom keeps transform idempotent across repeated apply calls", () 
   };
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "t20-setup", segment: "T20" },
@@ -792,9 +782,7 @@ test("tv-board-zoom keeps transform idempotent across repeated apply calls", () 
   const firstTransform = String(targetNode.style.transform || "");
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "t20-setup", segment: "T20" },
@@ -819,9 +807,7 @@ test("tv-board-zoom keeps the same transform through subpixel layout drift on an
   const intent = { reason: "checkout", segment: "D20" };
 
   const firstZoomData = applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     intent,
@@ -842,9 +828,7 @@ test("tv-board-zoom keeps the same transform through subpixel layout drift on an
   };
 
   const secondZoomData = applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     intent,
@@ -871,9 +855,7 @@ test("tv-board-zoom keeps the active translated zoom when layout reads reflect t
   const intent = { reason: "checkout", segment: "D20" };
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     intent,
@@ -912,9 +894,7 @@ test("tv-board-zoom keeps the active translated zoom when layout reads reflect t
   };
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     intent,
@@ -938,9 +918,7 @@ test("tv-board-zoom delayed reset clears zoom classes and restores host overflow
   hostNode.style.setProperty("overflow", "visible");
 
   applyZoom(
-    targetNode,
-    hostNode,
-    boardSvg,
+    { targetNode, hostNode, boardSvg },
     2.75,
     speedConfig,
     { reason: "checkout", segment: "D20" },

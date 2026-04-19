@@ -464,11 +464,18 @@ export function initializeTvBoardZoom(context = {}) {
 
     clearTransientResetState();
     const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
-    const zoomData = applyZoom(targetNode, hostNode, boardSvg, zoomLevel, speedConfig, intent, zoomState, {
-      x01Rules,
-      windowRef,
-      documentRef,
-    });
+    const zoomData = applyZoom(
+      { targetNode, hostNode, boardSvg },
+      zoomLevel,
+      speedConfig,
+      intent,
+      zoomState,
+      {
+        x01Rules,
+        windowRef,
+        documentRef,
+      }
+    );
     emitDebugEvent(debugState, "log", {
       status: zoomData ? "apply" : "apply-missing-transform",
       reason: String(intent?.reason || ""),
