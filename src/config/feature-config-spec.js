@@ -53,6 +53,8 @@ const WINNER_FIREWORKS_INTENSITIES = new Set(["dezent", "standard", "stark"]);
 const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "center", "tile"]);
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 25, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
+const THEME_GOTCHA_DELTA_PLACEMENTS = new Set(["below", "inline-divider"]);
+const THEME_GOTCHA_DELTA_ALIGNMENTS = new Set(["left", "right"]);
 const THEME_CONTRAST_PRESETS = new Set(["soft", "standard", "high"]);
 const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
@@ -267,6 +269,17 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     debug: false,
   },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
+  "themes.gotcha": {
+    enabled: false,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    deltaPlacement: "below",
+    deltaAlignment: "right",
+    deltaItalic: true,
+    backgroundImageDataUrl: "",
+    debug: false,
+  },
   "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.shanghai": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.bermuda": { enabled: false, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -304,6 +317,14 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     playerFieldTransparency: 10,
   },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
+  "themes.gotcha": {
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    deltaPlacement: "below",
+    deltaAlignment: "right",
+    deltaItalic: true,
+  },
   "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.bermuda": { backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -656,6 +677,22 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   "themes.x01"(rawConfig = {}) {
     return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
+  },
+  "themes.gotcha"(rawConfig = {}) {
+    return {
+      ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.gotcha"]),
+      deltaPlacement: normalizeStringChoice(
+        rawConfig.deltaPlacement,
+        "below",
+        THEME_GOTCHA_DELTA_PLACEMENTS
+      ),
+      deltaAlignment: normalizeStringChoice(
+        rawConfig.deltaAlignment,
+        "right",
+        THEME_GOTCHA_DELTA_ALIGNMENTS
+      ),
+      deltaItalic: normalizeBoolean(rawConfig.deltaItalic, true),
+    };
   },
   "themes.x01TwoPlayer"(rawConfig = {}) {
     return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01TwoPlayer"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };

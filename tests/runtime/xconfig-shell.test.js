@@ -1180,6 +1180,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "theme-global-typography",
     "theme-bull-off",
     "theme-x01",
+    "theme-gotcha",
     "theme-x01-2player",
     "theme-cricket",
     "theme-shanghai",

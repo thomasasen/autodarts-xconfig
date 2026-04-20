@@ -76,6 +76,17 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     backgroundImageDataUrl: "",
     debug: false,
   });
+  assert.deepEqual(createRecommendedFeatureConfig("themes.gotcha"), {
+    enabled: true,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    deltaPlacement: "below",
+    deltaAlignment: "right",
+    deltaItalic: true,
+    backgroundImageDataUrl: "",
+    debug: false,
+  });
   assert.deepEqual(createRecommendedFeatureConfig("checkoutBoardTargets"), {
     enabled: true,
     visualPreset: "signal",
@@ -233,6 +244,73 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: 10,
       backgroundImageDataUrl: "",
       backgroundAssetKey: "",
+      debug: false,
+    }
+  );
+});
+
+test("gotcha theme defaults and normalization stay stable", () => {
+  assert.deepEqual(getDefaultFeatureConfig("themes.gotcha"), {
+    enabled: false,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    deltaPlacement: "below",
+    deltaAlignment: "right",
+    deltaItalic: true,
+    backgroundImageDataUrl: "",
+    debug: false,
+  });
+
+  const spec = getFeatureConfigSpec("themes.gotcha");
+  assert.ok(spec);
+
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "true",
+      backgroundDisplayMode: "fit",
+      backgroundOpacity: "40",
+      playerFieldTransparency: "30",
+      deltaPlacement: "INLINE-DIVIDER",
+      deltaAlignment: "LEFT",
+      deltaItalic: "false",
+      backgroundImageDataUrl: "data:image/png;base64,AAAA",
+      debug: "true",
+    }),
+    {
+      enabled: true,
+      backgroundDisplayMode: "fit",
+      backgroundOpacity: 40,
+      playerFieldTransparency: 30,
+      deltaPlacement: "inline-divider",
+      deltaAlignment: "left",
+      deltaItalic: false,
+      backgroundImageDataUrl: "data:image/png;base64,AAAA",
+      debug: true,
+    }
+  );
+
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "no",
+      backgroundDisplayMode: "wallpaper",
+      backgroundOpacity: "12",
+      playerFieldTransparency: "88",
+      deltaPlacement: "inline",
+      deltaAlignment: "center",
+      deltaItalic: "invalid",
+      backgroundImageDataUrl: "https://example.invalid/bg.png",
+      debug: "no",
+    }),
+    {
+      enabled: false,
+      backgroundDisplayMode: "fill",
+      backgroundOpacity: 25,
+      playerFieldTransparency: 10,
+      deltaPlacement: "below",
+      deltaAlignment: "right",
+      deltaItalic: true,
+      backgroundImageDataUrl: "",
       debug: false,
     }
   );

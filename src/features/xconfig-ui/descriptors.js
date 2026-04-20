@@ -124,6 +124,16 @@ const PLAYER_FIELD_TRANSPARENCY_OPTIONS = Object.freeze([
   { value: 60, label: "60 %" },
 ]);
 
+const GOTCHA_DELTA_ALIGNMENT_OPTIONS = Object.freeze([
+  { value: "right", label: "Rechtsbündig" },
+  { value: "left", label: "Linksbündig" },
+]);
+
+const GOTCHA_DELTA_PLACEMENT_OPTIONS = Object.freeze([
+  { value: "below", label: "Unter Score" },
+  { value: "inline-divider", label: "Score-Zeile |" },
+]);
+
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
     featureKey: "theme-global-typography",
@@ -220,6 +230,32 @@ export const xconfigDescriptors = Object.freeze([
     description: "Klares X01-Layout mit optionalem AVG und eigenem Hintergrundbild.",
     fields: [
       checkboxField("showAvg", "AVG anzeigen"),
+      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
+      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
+      selectField(
+        "playerFieldTransparency",
+        "Spielerfelder-Transparenz",
+        PLAYER_FIELD_TRANSPARENCY_OPTIONS
+      ),
+      checkboxField("debug", "Debug"),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+        successMessage: "Hintergrundbild entfernt.",
+      }),
+    ],
+  }),
+  descriptorEntry({
+    featureKey: "theme-gotcha",
+    tab: "themes",
+    readmeAnchor: "template-autodarts-theme-gotcha",
+    description: "X01-nahes Gotcha-Theme mit integrierter Delta-Anzeige und eigenem Hintergrundbild.",
+    fields: [
+      selectField("deltaPlacement", "Delta-Position", GOTCHA_DELTA_PLACEMENT_OPTIONS),
+      selectField("deltaAlignment", "Delta-Ausrichtung", GOTCHA_DELTA_ALIGNMENT_OPTIONS),
+      checkboxField("deltaItalic", "Delta kursiv"),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
       selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
       selectField(

@@ -246,6 +246,7 @@ test("theme global typography only resolves an active theme inside the matching 
     featureToggles: {
       "themes.globalTypography": true,
       "themes.x01": false,
+      "themes.gotcha": false,
       "themes.x01TwoPlayer": true,
     },
     features: {
@@ -256,6 +257,9 @@ test("theme global typography only resolves an active theme inside the matching 
           applyTo: ["scores"],
         },
         x01: {
+          enabled: false,
+        },
+        gotcha: {
           enabled: false,
         },
         x01TwoPlayer: {
@@ -281,6 +285,47 @@ test("theme global typography only resolves an active theme inside the matching 
     "themes.x01TwoPlayer"
   );
 
+  documentRef.variantElement.textContent = "Gotcha";
+  const gotchaConfig = createRuntimeConfig({
+    featureToggles: {
+      "themes.globalTypography": true,
+      "themes.x01": false,
+      "themes.gotcha": true,
+    },
+    features: {
+      themes: {
+        globalTypography: {
+          enabled: true,
+          fontPreset: "system",
+          applyTo: ["scores"],
+        },
+        x01: {
+          enabled: false,
+        },
+        gotcha: {
+          enabled: true,
+        },
+      },
+    },
+  });
+  assert.equal(
+    resolveThemeGlobalTypographyActiveTheme({
+      config: gotchaConfig,
+      gameState: {
+        isX01Variant() {
+          return false;
+        },
+        isCricketVariant() {
+          return false;
+        },
+      },
+      documentRef,
+      windowRef,
+    })?.configKey,
+    "themes.gotcha"
+  );
+
+  documentRef.variantElement.textContent = "Cricket";
   const cricketConfig = createRuntimeConfig({
     featureToggles: {
       "themes.globalTypography": true,

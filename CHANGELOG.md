@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.2.0] - 2026-04-20
+
+### Added
+
+- Nutzerwirkung: Im Themes-Tab steht jetzt `Theme Gotcha` als eigene, an `Theme X01` orientierte Variante bereit; die Spieler-Karten übernehmen den X01-Look und blenden zusätzlich die Gotcha-Differenz aus dem aktivierten `Gotcha Helper` der `Tools für Autodarts` ein. Für die Hilfszeile lassen sich Platzierung unter dem Score oder in der Score-Zeile, Ausrichtung links/rechts sowie Kursivstil konfigurieren, und Segmentangaben wie `D20`, `T20`, `S20` oder `Bull` werden direkt als signierte Punktewerte wie `+40`, `+60`, `+20` oder `+50` dargestellt.
+  Technik: `theme-gotcha` wurde als neues Theme-Feature mit eigener Registry-, Theme-Key-, Background-, Preview- und xConfig-Verdrahtung auf Basis der X01-Shared-Player-Cards integriert; eine Runtime-Policy normalisiert die Shadow-DOM-Ausgabe von `autodarts-tools-gotcha`, hält Hilfstext und Italic-Styling auch bei Host-Rerenders stabil und ergänzt dafür neue Lifecycle-, Policy-, Config-, CSS- und Doku-Regressionen.
+
+### Fixed
+
+- Nutzerwirkung: Die Inline-Darstellung der Gotcha-Differenz bleibt in der Score-Zeile jetzt sauber an der Punkteanzeige ausgerichtet und wirkt etwas zurückhaltender; je nach Ausrichtung erscheint sie als `Differenz | Score` oder `Score | Differenz`, ohne an Badge- oder Namensblöcke anzudocken.
+  Technik: Das Inline-Layout des neuen Themes nutzt feste Grid-Slots für Identität, Meta, Score-Zone und X01-Progress statt impliziter Auto-Placement-Reihenfolge, die Delta-Zeile arbeitet mit angepasster Opacity und eigener Trenner-Logik, und die Theme-Parity- sowie Lifecycle-Regressionen sichern Reihenfolge, Slot-Aufteilung und Stilwerte gegen Drift ab.
+
 ## [2.1.31] - 2026-04-20
 
 ### Added
@@ -1435,7 +1447,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.1.31]: https://github.com/thomasasen/autodarts-xconfig/compare/4e52392...HEAD
+[2.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/6398977...HEAD
+[2.1.31]: https://github.com/thomasasen/autodarts-xconfig/compare/4e52392...6398977
 [2.1.30]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...4e52392
 [2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...982f5f1
 [2.1.27]: https://github.com/thomasasen/autodarts-xconfig/compare/95e8963...2f3e796

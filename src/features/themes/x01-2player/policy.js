@@ -33,27 +33,24 @@ function queryAll(rootNode, selector) {
 }
 
 function findDirectPlayerWrapper(cardNode) {
-  if (!cardNode || cardNode.nodeType !== 1) {
+  if (cardNode?.nodeType !== 1) {
     return null;
   }
 
   const parentNode = cardNode.parentElement || cardNode.parentNode || null;
   if (
-    parentNode &&
-    parentNode.nodeType === 1 &&
+    parentNode?.nodeType === 1 &&
     typeof parentNode.matches === "function" &&
     parentNode.matches(PLAYER_DISPLAY_SELECTOR)
   ) {
     return cardNode;
   }
 
-  if (!parentNode || parentNode.nodeType !== 1) {
+  if (parentNode?.nodeType !== 1) {
     return null;
   }
 
-  return typeof parentNode.closest === "function" && parentNode.closest(PLAYER_DISPLAY_SELECTOR)
-    ? parentNode
-    : null;
+  return parentNode.closest?.(PLAYER_DISPLAY_SELECTOR) ? parentNode : null;
 }
 
 function getPlayerCards(documentRef) {

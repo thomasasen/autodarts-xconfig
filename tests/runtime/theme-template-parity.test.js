@@ -6,6 +6,10 @@ import {
   buildX01ThemeCss,
 } from "../../src/features/themes/x01/style.js";
 import {
+  PREVIEW_PLACEMENT as PREVIEW_GOTCHA,
+  buildGotchaThemeCss,
+} from "../../src/features/themes/gotcha/style.js";
+import {
   PREVIEW_PLACEMENT as PREVIEW_X01_TWO_PLAYER,
   buildX01TwoPlayerThemeCss,
 } from "../../src/features/themes/x01-2player/style.js";
@@ -103,6 +107,40 @@ test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   );
   assert.doesNotMatch(css, /\.css-hjw8x4\s*\{[^}]*max-height:\s*12%/s);
   assert.doesNotMatch(css, /css-y3hfdd\s*\{[^}]*height:\s*25%/s);
+  assertNoFragileLayoutSelectors(css);
+});
+
+test("gotcha theme keeps x01 preview contracts and styles the live delta host semantically", () => {
+  const css = buildGotchaThemeCss({});
+  const leftAlignedCss = buildGotchaThemeCss({
+    deltaAlignment: "left",
+    deltaItalic: false,
+  });
+  const inlineCss = buildGotchaThemeCss({
+    deltaPlacement: "inline-divider",
+  });
+  const inlineLeftCss = buildGotchaThemeCss({
+    deltaPlacement: "inline-divider",
+    deltaAlignment: "left",
+  });
+
+  assert.equal(PREVIEW_GOTCHA.mode, PREVIEW_X01.mode);
+  assert.equal(PREVIEW_GOTCHA.activationMode, PREVIEW_X01.activationMode);
+  assert.match(css, /autodarts-tools-gotcha\{[^}]*grid-column:2\s*!important;[^}]*grid-row:2\s*!important;[^}]*justify-self:end\s*!important;[^}]*font-style:italic\s*!important;[^}]*opacity:0\.65\s*!important;[^}]*font-variant-numeric:tabular-nums\s*!important;[^}]*white-space:nowrap\s*!important;/s);
+  assert.match(css, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1 \/ 2\s*!important;/s);
+  assert.match(css, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\{[^}]*grid-template-rows:max-content max-content\s*!important;/s);
+  assert.match(css, /ad-ext-player-active\s+autodarts-tools-gotcha,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner\s+autodarts-tools-gotcha\{[^}]*--chakra-colors-chakra-body-text:var\(--ad-ext-theme-score-active-color\);/s);
+  assert.match(leftAlignedCss, /autodarts-tools-gotcha\{[^}]*justify-self:start\s*!important;[^}]*font-style:normal\s*!important;[^}]*text-align:left\s*!important;/s);
+  assert.match(inlineCss, /autodarts-tools-gotcha\{[^}]*display:inline-flex\s*!important;[^}]*grid-column:3\s*!important;[^}]*grid-row:1\s*!important;[^}]*justify-self:start\s*!important;[^}]*align-self:center\s*!important;[^}]*font-size:clamp\(1rem,2\.25vw,1\.24rem\)\s*!important;[^}]*line-height:0\.94\s*!important;[^}]*opacity:0\.70\s*!important;[^}]*white-space:nowrap\s*!important;[^}]*align-items:center\s*!important;/s);
+  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1 \/ 2\s*!important;[^}]*align-self:end\s*!important;[^}]*white-space:nowrap\s*!important;/s);
+  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\{[^}]*grid-template-columns:minmax\(0,\s*1fr\)\s*max-content\s*max-content\s*!important;[^}]*grid-template-rows:max-content max-content max-content\s*!important;[^}]*align-items:start\s*!important;[^}]*align-content:center\s*!important;[^}]*column-gap:clamp\(0\.36rem,0\.8vw,0\.6rem\)\s*!important;[^}]*row-gap:clamp\(0\.08rem,0\.18vh,0\.16rem\)\s*!important;/s);
+  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.css-37hv00\{[^}]*grid-column:1 \/ 2\s*!important;[^}]*grid-row:1 \/ 2\s*!important;[^}]*align-self:end\s*!important;[^}]*min-width:0\s*!important;/s);
+  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.css-1igwmid\{[^}]*grid-column:1 \/ 2\s*!important;[^}]*grid-row:2 \/ 3\s*!important;[^}]*align-self:start\s*!important;[^}]*min-width:0\s*!important;[^}]*padding-left:0\s*!important;[^}]*margin-top:0\s*!important;/s);
+  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\[data-ad-ext-x01-score-progress='true'\],\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-x01-score-progress--active,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-x01-score-progress--inactive\{[^}]*grid-column:1 \/ -1\s*!important;[^}]*grid-row:3 \/ 4\s*!important;[^}]*align-self:start\s*!important;/s);
+  assert.match(inlineCss, /autodarts-tools-gotcha::before\{[^}]*content:"\|"\s*!important;[^}]*opacity:0\.56\s*!important;/s);
+  assert.match(inlineLeftCss, /autodarts-tools-gotcha\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1\s*!important;[^}]*text-align:right\s*!important;/s);
+  assert.match(inlineLeftCss, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\{[^}]*grid-column:3\s*!important;[^}]*grid-row:1 \/ 2\s*!important;/s);
+  assert.match(inlineLeftCss, /autodarts-tools-gotcha::after\{[^}]*content:"\|"\s*!important;[^}]*opacity:0\.56\s*!important;/s);
   assertNoFragileLayoutSelectors(css);
 });
 

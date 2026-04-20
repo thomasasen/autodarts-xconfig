@@ -1,5 +1,6 @@
 export const VALID_THEME_BACKGROUND_HOSTS = Object.freeze([
   "x01",
+  "gotcha",
   "x01TwoPlayer",
   "shanghai",
   "bermuda",
@@ -10,6 +11,7 @@ export const VALID_THEME_BACKGROUND_HOSTS = Object.freeze([
 
 const THEME_BACKGROUND_HOST_ALIASES = Object.freeze({
   x01: "x01",
+  gotcha: "gotcha",
   x01twoplayer: "x01TwoPlayer",
   "x01-2player": "x01TwoPlayer",
   "x01 2player": "x01TwoPlayer",

@@ -12,6 +12,7 @@ import { ROOT_CLASS } from "../../src/features/cricket-grid-fx/style.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
 import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
+import { mountThemeGotcha } from "../../src/features/themes/gotcha/index.js";
 import { mountThemeX01TwoPlayer } from "../../src/features/themes/x01-2player/index.js";
 import { mountThemeCricket } from "../../src/features/themes/cricket/index.js";
 import {
@@ -1061,6 +1062,102 @@ test("theme-x01 removes style when xConfig hash route is active on a match path"
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-style")), false);
   runtime.stop();
+});
+
+test("theme-gotcha mounts on Gotcha matches and cleans up its style", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Gotcha";
+  const playerDisplayNode = documentRef.createElement("div");
+  playerDisplayNode.id = "ad-ext-player-display";
+  const playerNode = documentRef.createElement("div");
+  playerNode.classList.add("ad-ext-player", "ad-ext-player-active");
+  const gotchaHost = documentRef.createElement("autodarts-tools-gotcha");
+  const shadowRoot = documentRef.createElement("div");
+  const gotchaValueNode = documentRef.createElement("span");
+  gotchaValueNode.classList.add("gotcha");
+  gotchaValueNode.textContent = "D20";
+  shadowRoot.appendChild(gotchaValueNode);
+  gotchaHost.shadowRoot = shadowRoot;
+  playerNode.appendChild(gotchaHost);
+  playerDisplayNode.appendChild(playerNode);
+  documentRef.main.appendChild(playerDisplayNode);
+  const windowRef = createMatchWindow(documentRef, "theme-gotcha-idempotent");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("gotcha"),
+    definitions: [
+      {
+        featureKey: "theme-gotcha",
+        configKey: "themes.gotcha",
+        title: "Theme Gotcha",
+        initialize: mountThemeGotcha,
+      },
+    ],
+  });
+
+  runtime.start();
+  runtime.start();
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-gotcha-style")), true);
+  assert.equal(gotchaValueNode.textContent, "+40");
+  assert.equal(gotchaValueNode.style.getPropertyValue("font-style"), "italic");
+
+  gotchaValueNode.textContent = "T20";
+  documentRef.flushMutations([{ target: shadowRoot, addedNodes: [], removedNodes: [] }]);
+  await wait(5);
+
+  assert.equal(gotchaValueNode.textContent, "+60");
+  assert.equal(gotchaValueNode.style.getPropertyValue("font-style"), "italic");
+
+  runtime.stop();
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-gotcha-style")), false);
+  assert.equal(gotchaValueNode.textContent, "T20");
+  assert.equal(gotchaValueNode.style.getPropertyValue("font-style"), "");
+});
+
+test("theme-gotcha can disable italic directly on the helper value node", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Gotcha";
+  const playerDisplayNode = documentRef.createElement("div");
+  playerDisplayNode.id = "ad-ext-player-display";
+  const playerNode = documentRef.createElement("div");
+  playerNode.classList.add("ad-ext-player", "ad-ext-player-active");
+  const gotchaHost = documentRef.createElement("autodarts-tools-gotcha");
+  const shadowRoot = documentRef.createElement("div");
+  const gotchaValueNode = documentRef.createElement("span");
+  gotchaValueNode.classList.add("gotcha");
+  gotchaValueNode.textContent = "+31";
+  shadowRoot.appendChild(gotchaValueNode);
+  gotchaHost.shadowRoot = shadowRoot;
+  playerNode.appendChild(gotchaHost);
+  playerDisplayNode.appendChild(playerNode);
+  documentRef.main.appendChild(playerDisplayNode);
+  const windowRef = createMatchWindow(documentRef, "theme-gotcha-font-style");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("gotcha", {
+      deltaItalic: false,
+    }),
+    definitions: [
+      {
+        featureKey: "theme-gotcha",
+        configKey: "themes.gotcha",
+        title: "Theme Gotcha",
+        initialize: mountThemeGotcha,
+      },
+    ],
+  });
+
+  runtime.start();
+  await wait(5);
+
+  assert.equal(gotchaValueNode.style.getPropertyValue("font-style"), "normal");
+
+  runtime.stop();
+  assert.equal(gotchaValueNode.style.getPropertyValue("font-style"), "");
 });
 
 test("theme-x01 applies board layout hooks when board exists and removes them on cleanup", async () => {

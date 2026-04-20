@@ -38,6 +38,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.winnerFireworks, "object");
   assert.equal(typeof config.features.themes, "object");
   assert.equal(typeof config.features.themes.x01, "object");
+  assert.equal(typeof config.features.themes.gotcha, "object");
   assert.equal(typeof config.features.themes.x01TwoPlayer, "object");
   assert.equal(typeof config.features.themes.shanghai, "object");
   assert.equal(typeof config.features.themes.bermuda, "object");
@@ -57,6 +58,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles.x01ScoreProgress, false);
   assert.equal(config.featureToggles.winnerFireworks, false);
   assert.equal(config.featureToggles["themes.x01"], false);
+  assert.equal(config.featureToggles["themes.gotcha"], false);
   assert.equal(config.featureToggles["themes.x01TwoPlayer"], false);
   assert.equal(config.featureToggles["themes.shanghai"], false);
   assert.equal(config.featureToggles["themes.bermuda"], false);
@@ -114,6 +116,11 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.themes.globalTypography.backgroundAssetKey, "");
   assert.equal(config.features.themes.x01.enabled, false);
   assert.equal(config.features.themes.x01.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.gotcha.enabled, false);
+  assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
+  assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
+  assert.equal(config.features.themes.gotcha.deltaItalic, true);
+  assert.equal(config.features.themes.gotcha.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
   assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.shanghai.backgroundImageDataUrl, "");
@@ -181,6 +188,10 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.x01ScoreProgress.barSize, "breit");
   assert.equal(config.features.x01ScoreProgress.effect, "off");
   assert.equal(config.features.themes.x01.enabled, true);
+  assert.equal(config.features.themes.gotcha.enabled, true);
+  assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
+  assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
+  assert.equal(config.features.themes.gotcha.deltaItalic, true);
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
   assert.equal(config.features.themes.shanghai.enabled, true);
   assert.equal(config.features.themes.cricket.enabled, true);
@@ -190,6 +201,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
     "data:image/png;base64,GGGG"
   );
   assert.equal(config.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
+  assert.equal(config.features.themes.gotcha.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.cricket.backgroundImageDataUrl, "data:image/png;base64,BBBB");
   assert.equal(config.features.themes.bullOff.backgroundImageDataUrl, "");

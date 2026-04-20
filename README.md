@@ -20,7 +20,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Im Überblick
 
-- Insgesamt `23` Module: `16` Animationen und Komfortfunktionen sowie `7` Themes.
+- Insgesamt `24` Module: `16` Animationen und Komfortfunktionen sowie `8` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
@@ -148,6 +148,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 - [Templates Global](#template-global-typography)
 - [Theme Bull-off](#template-autodarts-theme-bull-off)
 - [Theme X01](#template-autodarts-theme-x01)
+- [Theme Gotcha](#template-autodarts-theme-gotcha)
 - [Theme X01 2Player (Beta)](#template-autodarts-theme-x01-2player)
 - [Theme Cricket](#template-autodarts-theme-cricket)
 - [Theme Shanghai](#template-autodarts-theme-shanghai)
@@ -493,6 +494,56 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Theme X01 in AD xConfig](docs/screenshots/template-theme-x01-xConfig.png)
 ![Theme X01 Vorschau Standard](docs/screenshots/template-theme-x01-preview-standard-readme.png)
 ![Theme X01 Vorschau unter Würfen](docs/screenshots/template-theme-x01-preview-under-throws-readme.png)
+
+<a id="template-autodarts-theme-gotcha"></a>
+
+### Theme Gotcha
+
+- Gilt für: `gotcha`
+- Was macht es sichtbar? Ein ruhiges Gotcha-Layout auf X01-Basis, das die Differenz zum führenden Gegner direkt in der Spielerkarte mitzieht. Dafür muss `Gotcha Helper` in `Tools für Autodarts` aktiv sein.
+- Grafisch: Die Karten folgen bewusst der X01-Optik, ergänzen aber die zusätzliche Gotcha-Differenz als eigene, klar abgesetzte Live-Zahl innerhalb derselben Theme-Struktur.
+- Wann sinnvoll? Wenn du Gotcha ähnlich ruhig wie X01 lesen möchtest, ohne auf die abgesetzte Delta-Information zwischen den Spielern zu verzichten.
+
+**Hinweis**
+
+- Die zusätzliche Gotcha-Differenz erscheint nur, wenn das Feature `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.
+
+**Einstellungen einfach erklärt**
+
+- `Delta-Position`: Legt fest, ob die zusätzliche Gotcha-Differenz als eigene Zeile unterhalb der Hauptzahl erscheint oder direkt in derselben Zeile mit einem Trenner `|`. Im Inline-Modus bestimmt die Delta-Ausrichtung zusätzlich die Reihenfolge links oder rechts vom Score.
+  - `Unter Score`: Platziert die zusätzliche Gotcha-Differenz als zweite, visuell abgesetzte Zeile direkt unterhalb der Hauptzahl. Das hält die Hierarchie zwischen Hauptscore und Zusatzinfo am ruhigsten.
+  - `Score-Zeile |`: Platziert die zusätzliche Gotcha-Differenz direkt rechts neben der Hauptzahl in derselben Zeile und fügt davor einen sichtbaren Trenner `|` ein. Dadurch bleibt die Zusatzinfo kompakt am Score, wirkt aber dichter als die getrennte Zeile.
+- `Delta-Ausrichtung`: Legt fest, ob die zusätzliche Gotcha-Differenz in der Score-Spalte unterhalb der Hauptzahl links- oder rechtsbündig steht. Im Modus `Score-Zeile |` steuert die Option zusätzlich die Reihenfolge: `Linksbündig` setzt `Differenz | Score`, `Rechtsbündig` setzt `Score | Differenz`.
+  - `Rechtsbündig`: Platziert die zusätzliche Gotcha-Differenz in der Score-Spalte unterhalb der Hauptzahl und richtet sie innerhalb dieser Spalte rechts aus. Das passt am stärksten zur bestehenden X01-Lesehierarchie.
+  - `Linksbündig`: Platziert die zusätzliche Gotcha-Differenz ebenfalls unterhalb der Hauptzahl, richtet sie innerhalb der Score-Spalte aber links aus. Dadurch wirkt die Zusatzinfo etwas lockerer und weniger an der Kantenlinie der Hauptzahl ausgerichtet.
+- `Delta kursiv`: Bestimmt, ob die zusätzliche Gotcha-Differenz in kursiver Schrift erscheint. Kursiv trennt die Sekundärinfo stärker vom Hauptscore; ausgeschaltet bleibt die Zahl ruhiger und sachlicher.
+- `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
+  - `Füllen`: Das Bild legt sich wie ein Vollflächen-Hintergrund über den gesamten Spielbereich. Leere Ränder entstehen nicht, dafür können Randbereiche abgeschnitten werden.
+  - `Einpassen`: Das komplette Bild bleibt sichtbar und wird in die verfügbare Fläche eingepasst. Wenn das Seitenverhältnis nicht passt, bleiben am Rand freie Bereiche des Themes sichtbar.
+  - `Strecken`: Das Bild wird auf Breite und Höhe des Bereichs gestreckt. Dadurch wird alles ausgefüllt, aber Kreise, Personen oder Logos können sichtbar verzerrt wirken.
+  - `Zentriert`: Das Bild sitzt mittig und bleibt in seiner natürlichen Größe. Ist es kleiner als der Bereich, bleibt rundherum der normale Theme-Hintergrund sichtbar.
+  - `Kacheln`: Das Bild wird nicht skaliert, sondern links oben gestartet und über die Fläche wiederholt. Dadurch entsteht eher ein Musterteppich als ein einzelnes zentriertes Motiv.
+- `Hintergrundbild-Deckkraft`: Steuert, wie stark das gespeicherte Hintergrundbild durch die dunkle Theme-Überlagerung durchscheint. Hohe Werte zeigen das Bild klarer, niedrige Werte dämpfen es stärker zugunsten der Lesbarkeit.
+  - `100 %`: Das Hintergrundbild bleibt fast ohne dunkle Dämpfung sichtbar. Farben, Kontraste und Details treten sehr klar hervor.
+  - `85 %`: Das Bild bleibt sehr präsent, wird aber leicht durch die dunkle Theme-Schicht beruhigt. Details bleiben klar lesbar, ohne ganz so dominant wie bei 100 % zu wirken.
+  - `70 %`: Das Bild bleibt gut erkennbar, während die dunkle Überlagerung bereits spürbar für Ruhe sorgt. Motive und Farben sind noch klar da, aber weniger dominant.
+  - `55 %`: Das Bild bleibt sichtbar, wird aber schon spürbar abgedunkelt. Dadurch wirkt die Fläche ruhiger und konkurriert weniger mit Texten und Karten.
+  - `40 %`: Das Motiv bleibt sichtbar, rückt aber klar in den Hintergrund. Farbflächen und Konturen wirken gedämpfter und dienen mehr als Stimmung als als Hauptmotiv.
+  - `25 %`: Das Bild schimmert eher subtil durch die dunkle Fläche. Einzelne Formen und Farben bleiben sichtbar, ohne die Lesbarkeit des Layouts zu stören.
+  - `10 %`: Das Bild wird sehr stark gedämpft. Erkennbar bleiben meist nur grobe Formen, helle Bereiche oder größere Farbflächen.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerflächen an. Hohe Werte lassen mehr vom Hintergrund durch, niedrige Werte machen die Flächen geschlossener und ruhiger.
+  - `0 %`: Die Spielerfelder bleiben fast vollständig geschlossen. Der Hintergrund tritt kaum durch und die Karten wirken sehr kompakt.
+  - `5 %`: Die Spielerfelder bleiben überwiegend geschlossen, lassen aber minimal mehr Hintergrund durch als 0 %. Der Unterschied ist dezent, aber sichtbar ruhiger als höhere Stufen.
+  - `10 %`: Die Spielerfelder bleiben klar lesbar, wirken aber nicht mehr komplett geschlossen. Das Hintergrundbild schimmert leicht durch die Flächen.
+  - `15 %`: Die Spielerfelder wirken bereits lockerer und lassen das Hintergrundbild sichtbar mitspielen. Texte und Werte bleiben dabei weiter klar getrennt.
+  - `30 %`: Der Hintergrund tritt nun klar hinter den Spielerfeldern hervor. Die Karten wirken leichter und weniger massiv als bei den niedrigen Stufen.
+  - `45 %`: Die Spielerfelder wirken sichtbar glasiger. Das Hintergrundmotiv bleibt unter den Flächen deutlich erkennbar und prägt den Gesamteindruck stärker.
+  - `60 %`: Die Spielerfelder lassen den Hintergrund sehr deutlich sichtbar werden. Diese Stufe wirkt am luftigsten, kann aber je nach Bild die Ruhe der Oberfläche reduzieren.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+- `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal auf maximal 1920×1080 optimiert, bis 1,5 MiB begrenzt und nach Reloads wieder für genau dieses Theme verwendet.
+- `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
+
+![Theme Gotcha in AD xConfig](docs/screenshots/template-theme-gotcha-xConfig.png)
 
 <a id="template-autodarts-theme-x01-2player"></a>
 

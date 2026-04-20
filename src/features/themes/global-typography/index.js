@@ -25,6 +25,11 @@ export const THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS = Object.freeze([
     matchMode: "equals",
   }),
   Object.freeze({
+    configKey: "themes.gotcha",
+    variantName: "gotcha",
+    matchMode: "equals",
+  }),
+  Object.freeze({
     configKey: "themes.x01TwoPlayer",
     variantName: "x01",
     matchMode: "equals",

@@ -164,6 +164,11 @@ test("runtime public config API persists updates and survives feature toggles", 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
 
+  await runtime.setThemeBackgroundImage("gotcha", "data:image/png;base64,CCCC");
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.gotcha.backgroundImageDataUrl, "data:image/png;base64,CCCC");
+
   await runtime.setThemeBackgroundImage("x01", "https://example.invalid/bg.png");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
@@ -173,6 +178,11 @@ test("runtime public config API persists updates and survives feature toggles", 
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+
+  await runtime.clearThemeBackgroundImage("gotcha");
+  await wait(5);
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.gotcha.backgroundImageDataUrl, "");
 
   await runtime.setThemeBackgroundImage("x01TwoPlayer", "data:image/png;base64,BBBB");
   await wait(5);
@@ -283,6 +293,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "x01-score-progress"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "winner-fireworks"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "theme-gotcha"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01-2player"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-shanghai"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-bermuda"), true);

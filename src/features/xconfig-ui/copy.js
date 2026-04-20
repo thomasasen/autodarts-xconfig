@@ -269,6 +269,47 @@ export const xconfigFeatureCopy = deepFreeze({
       clearThemeBackground: THEME_CLEAR_FIELD,
     },
   }),
+  "theme-gotcha": featureCopy({
+    cardDescription:
+      "X01-nahes Gotcha-Theme mit integrierter Delta-Anzeige und eigenem Hintergrundbild.",
+    visibleDescription:
+      "Ein ruhiges Gotcha-Layout auf X01-Basis, das die Differenz zum führenden Gegner direkt in der Spielerkarte mitzieht. Dafür muss `Gotcha Helper` in `Tools für Autodarts` aktiv sein.",
+    visualDescription:
+      "Die Karten folgen bewusst der X01-Optik, ergänzen aber die zusätzliche Gotcha-Differenz als eigene, klar abgesetzte Live-Zahl innerhalb derselben Theme-Struktur.",
+    usefulWhen:
+      "Wenn du Gotcha ähnlich ruhig wie X01 lesen möchtest, ohne auf die abgesetzte Delta-Information zwischen den Spielern zu verzichten.",
+    readmeDetailHeading: "Hinweis",
+    readmeDetails: [
+      "Die zusätzliche Gotcha-Differenz erscheint nur, wenn das Feature `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.",
+    ],
+    featuresDetails: [
+      "Hinweis: Die zusätzliche Gotcha-Differenz erscheint nur, wenn `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.",
+    ],
+    images: [image("Theme Gotcha in AD xConfig", "template-theme-gotcha-xConfig.png")],
+    fields: {
+      deltaPlacement: fieldCopy(
+        "Wählt, ob die Gotcha-Differenz unter dem Score oder in derselben Zeile mit `|` steht.",
+        "Legt fest, ob die zusätzliche Gotcha-Differenz als eigene Zeile unterhalb der Hauptzahl erscheint oder direkt in derselben Zeile mit einem Trenner `|`. Im Inline-Modus bestimmt die Delta-Ausrichtung zusätzlich die Reihenfolge links oder rechts vom Score.",
+        "Wählt, ob die Gotcha-Differenz unter dem Score oder in derselben Zeile mit `|` steht."
+      ),
+      deltaAlignment: fieldCopy(
+        "Richtet die zusätzliche Gotcha-Differenz unter dem Score links oder rechts aus.",
+        "Legt fest, ob die zusätzliche Gotcha-Differenz in der Score-Spalte unterhalb der Hauptzahl links- oder rechtsbündig steht. Im Modus `Score-Zeile |` steuert die Option zusätzlich die Reihenfolge: `Linksbündig` setzt `Differenz | Score`, `Rechtsbündig` setzt `Score | Differenz`.",
+        "Richtet die zusätzliche Gotcha-Differenz unter dem Score links oder rechts aus."
+      ),
+      deltaItalic: fieldCopy(
+        "Schaltet die Gotcha-Differenz kursiv oder normal.",
+        "Bestimmt, ob die zusätzliche Gotcha-Differenz in kursiver Schrift erscheint. Kursiv trennt die Sekundärinfo stärker vom Hauptscore; ausgeschaltet bleibt die Zahl ruhiger und sachlicher.",
+        "Schaltet die Gotcha-Differenz kursiv oder normal."
+      ),
+      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
+      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
+      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
+      debug: DEBUG_FIELD,
+      uploadThemeBackground: THEME_UPLOAD_FIELD,
+      clearThemeBackground: THEME_CLEAR_FIELD,
+    },
+  }),
   "theme-x01-2player": featureCopy({
     cardDescription:
       "Beta-Theme für genau zwei X01-Spieler mit Board-Fokus; wird weiter ausgebaut und stabilisiert.",
@@ -1293,6 +1334,32 @@ const CHECKOUT_SCORE_TRIGGER_OPTION_COPY = deepFreeze({
   ),
 });
 
+const GOTCHA_DELTA_ALIGNMENT_OPTION_COPY = deepFreeze({
+  right: optionCopy(
+    "Setzt die Gotcha-Differenz unter dem Score rechtsbündig.",
+    "Platziert die zusätzliche Gotcha-Differenz in der Score-Spalte unterhalb der Hauptzahl und richtet sie innerhalb dieser Spalte rechts aus. Das passt am stärksten zur bestehenden X01-Lesehierarchie.",
+    "Setzt die Gotcha-Differenz unter dem Score rechtsbündig."
+  ),
+  left: optionCopy(
+    "Setzt die Gotcha-Differenz unter dem Score linksbündig.",
+    "Platziert die zusätzliche Gotcha-Differenz ebenfalls unterhalb der Hauptzahl, richtet sie innerhalb der Score-Spalte aber links aus. Dadurch wirkt die Zusatzinfo etwas lockerer und weniger an der Kantenlinie der Hauptzahl ausgerichtet.",
+    "Setzt die Gotcha-Differenz unter dem Score linksbündig."
+  ),
+});
+
+const GOTCHA_DELTA_PLACEMENT_OPTION_COPY = deepFreeze({
+  below: optionCopy(
+    "Setzt die Gotcha-Differenz in eine eigene Zeile unter dem Score.",
+    "Platziert die zusätzliche Gotcha-Differenz als zweite, visuell abgesetzte Zeile direkt unterhalb der Hauptzahl. Das hält die Hierarchie zwischen Hauptscore und Zusatzinfo am ruhigsten.",
+    "Setzt die Gotcha-Differenz in eine eigene Zeile unter dem Score."
+  ),
+  ["inline-divider"]: optionCopy(
+    "Setzt die Gotcha-Differenz in dieselbe Zeile wie den Score und trennt sie mit `|`.",
+    "Platziert die zusätzliche Gotcha-Differenz direkt rechts neben der Hauptzahl in derselben Zeile und fügt davor einen sichtbaren Trenner `|` ein. Dadurch bleibt die Zusatzinfo kompakt am Score, wirkt aber dichter als die getrennte Zeile.",
+    "Setzt die Gotcha-Differenz in dieselbe Zeile wie den Score und trennt sie mit `|`."
+  ),
+});
+
 const BOARD_TARGET_VISUAL_PRESET_OPTION_COPY = deepFreeze({
   focus: optionCopy(
     "Betont das Ziel ruhig und fokussiert mit Kontur, Opazität und sanftem Halo.",
@@ -2278,6 +2345,13 @@ const xconfigFieldOptionCopy = deepFreeze({
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
   },
+  "theme-gotcha": {
+    deltaPlacement: GOTCHA_DELTA_PLACEMENT_OPTION_COPY,
+    deltaAlignment: GOTCHA_DELTA_ALIGNMENT_OPTION_COPY,
+    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
+    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
+    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
+  },
   "theme-x01-2player": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
@@ -2450,7 +2524,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         fields: [
           {
             label: "Alle aktiviert",
-            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
             key: "enabled",
           },
           {
@@ -2460,22 +2534,22 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           },
           {
             label: "Hintergrund-Darstellung",
-            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
             key: "backgroundDisplayMode",
           },
           {
             label: "Hintergrundbild-Deckkraft",
-            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
             key: "backgroundOpacity",
           },
           {
             label: "Spielerfelder-Transparenz",
-            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
             key: "playerFieldTransparency",
           },
           {
             label: "Debug",
-            featureKeys: ["theme-x01", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
+            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
             key: "debug",
           },
         ],

@@ -159,6 +159,15 @@ const rawFeatureCatalog = [
     legacyFeatureId: "theme-x01",
   },
   {
+    featureKey: "theme-gotcha",
+    configKey: "themes.gotcha",
+    title: "Theme Gotcha",
+    variants: ["gotcha"],
+    startupTiming: FEATURE_STARTUP_TIMINGS.IMMEDIATE,
+    migratedFrom: "",
+    legacyFeatureId: "",
+  },
+  {
     featureKey: "theme-x01-2player",
     configKey: "themes.x01TwoPlayer",
     title: "Theme X01 2Player (Beta)",
