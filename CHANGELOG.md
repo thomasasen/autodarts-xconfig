@@ -24,6 +24,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Die Inline-Darstellung der Gotcha-Differenz bleibt in der Score-Zeile jetzt sauber an der Punkteanzeige ausgerichtet und wirkt etwas zurückhaltender; je nach Ausrichtung erscheint sie als `Differenz | Score` oder `Score | Differenz`, ohne an Badge- oder Namensblöcke anzudocken.
   Technik: Das Inline-Layout des neuen Themes nutzt feste Grid-Slots für Identität, Meta, Score-Zone und X01-Progress statt impliziter Auto-Placement-Reihenfolge, die Delta-Zeile arbeitet mit angepasster Opacity und eigener Trenner-Logik, und die Theme-Parity- sowie Lifecycle-Regressionen sichern Reihenfolge, Slot-Aufteilung und Stilwerte gegen Drift ab.
 
+- Nutzerwirkung: `Average Trend Arrow` respektiert die konfigurierte Pfeilgröße im normalen Shared-Player-Card-Layout jetzt wieder sichtbar, statt durch das Theme immer auf eine feste Basisgröße gezogen zu werden.
+  Technik: Das Feature exportiert seine Preset-Größen jetzt als CSS-Variablen direkt am Pfeil, und das Shared-Player-Card-Layout skaliert diese Basiswerte nur noch weiter über `--ad-ext-stat-scale`, statt Margin- und Border-Geometrie mit eigenen festen Pixelwerten zu überschreiben; neue Runtime-Regressionen sichern Variablenübergabe und Theme-Skalierung gegen Drift ab.
+
 ## [2.1.31] - 2026-04-20
 
 ### Added

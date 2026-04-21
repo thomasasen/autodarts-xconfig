@@ -1,7 +1,4 @@
 const STAT_AVG_LINE_HEIGHT = 1.15;
-const STAT_AVG_ARROW_WIDTH_PX = 12;
-const STAT_AVG_ARROW_HEIGHT_PX = 23;
-const STAT_AVG_ARROW_MARGIN_LEFT_PX = 8;
 const INACTIVE_STAT_SCALE = 1.2;
 const ACTIVE_STAT_SCALE = 1.6;
 const ACTIVE_PLAYER_RATIO = 1.333333;
@@ -204,19 +201,19 @@ span.chakra-badge.css-1c4630i {
 }
 
 .ad-ext-avg-trend-arrow {
-  margin-left: calc(${STAT_AVG_ARROW_MARGIN_LEFT_PX}px * var(--ad-ext-stat-scale));
+  margin-left: calc(var(--ad-ext-avg-trend-margin-left-base, 8px) * var(--ad-ext-stat-scale));
 }
 
 .ad-ext-avg-trend-arrow.ad-ext-avg-trend-up {
-  border-left: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
-  border-right: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
-  border-bottom: calc(${STAT_AVG_ARROW_HEIGHT_PX}px * var(--ad-ext-stat-scale)) solid #9fdb58;
+  border-left: calc(var(--ad-ext-avg-trend-arrow-half-width-base, 12px) * var(--ad-ext-stat-scale)) solid transparent;
+  border-right: calc(var(--ad-ext-avg-trend-arrow-half-width-base, 12px) * var(--ad-ext-stat-scale)) solid transparent;
+  border-bottom: calc(var(--ad-ext-avg-trend-arrow-height-base, 23px) * var(--ad-ext-stat-scale)) solid #9fdb58;
 }
 
 .ad-ext-avg-trend-arrow.ad-ext-avg-trend-down {
-  border-left: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
-  border-right: calc(${STAT_AVG_ARROW_WIDTH_PX}px * var(--ad-ext-stat-scale)) solid transparent;
-  border-top: calc(${STAT_AVG_ARROW_HEIGHT_PX}px * var(--ad-ext-stat-scale)) solid #f87171;
+  border-left: calc(var(--ad-ext-avg-trend-arrow-half-width-base, 12px) * var(--ad-ext-stat-scale)) solid transparent;
+  border-right: calc(var(--ad-ext-avg-trend-arrow-half-width-base, 12px) * var(--ad-ext-stat-scale)) solid transparent;
+  border-top: calc(var(--ad-ext-avg-trend-arrow-height-base, 23px) * var(--ad-ext-stat-scale)) solid #f87171;
 }
 
 #ad-ext-turn .ad-ext-turn-points,

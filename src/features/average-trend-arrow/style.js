@@ -4,6 +4,9 @@ export const VISIBLE_CLASS = "ad-ext-avg-trend-visible";
 export const UP_CLASS = "ad-ext-avg-trend-up";
 export const DOWN_CLASS = "ad-ext-avg-trend-down";
 export const ANIMATE_CLASS = "ad-ext-avg-trend-animate";
+export const ARROW_MARGIN_LEFT_VAR = "--ad-ext-avg-trend-margin-left-base";
+export const ARROW_HALF_WIDTH_VAR = "--ad-ext-avg-trend-arrow-half-width-base";
+export const ARROW_HEIGHT_VAR = "--ad-ext-avg-trend-arrow-height-base";
 
 const SIZE_PRESETS = Object.freeze({
   klein: {
@@ -42,10 +45,13 @@ export function buildStyleText(options = {}) {
 
   return `
 .${ARROW_CLASS} {
+  ${ARROW_MARGIN_LEFT_VAR}: ${size.marginLeftPx}px;
+  ${ARROW_HALF_WIDTH_VAR}: ${size.arrowHalfWidthPx}px;
+  ${ARROW_HEIGHT_VAR}: ${size.arrowHeightPx}px;
   display: inline-block;
   width: 0;
   height: 0;
-  margin-left: ${size.marginLeftPx}px;
+  margin-left: var(${ARROW_MARGIN_LEFT_VAR});
   vertical-align: middle;
   opacity: 0;
   transition: opacity 120ms ease-out;
@@ -56,15 +62,15 @@ export function buildStyleText(options = {}) {
 }
 
 .${UP_CLASS} {
-  border-left: ${size.arrowHalfWidthPx}px solid transparent;
-  border-right: ${size.arrowHalfWidthPx}px solid transparent;
-  border-bottom: ${size.arrowHeightPx}px solid #9fdb58;
+  border-left: var(${ARROW_HALF_WIDTH_VAR}) solid transparent;
+  border-right: var(${ARROW_HALF_WIDTH_VAR}) solid transparent;
+  border-bottom: var(${ARROW_HEIGHT_VAR}) solid #9fdb58;
 }
 
 .${DOWN_CLASS} {
-  border-left: ${size.arrowHalfWidthPx}px solid transparent;
-  border-right: ${size.arrowHalfWidthPx}px solid transparent;
-  border-top: ${size.arrowHeightPx}px solid #f87171;
+  border-left: var(${ARROW_HALF_WIDTH_VAR}) solid transparent;
+  border-right: var(${ARROW_HALF_WIDTH_VAR}) solid transparent;
+  border-top: var(${ARROW_HEIGHT_VAR}) solid #f87171;
 }
 
 .${ANIMATE_CLASS} {
