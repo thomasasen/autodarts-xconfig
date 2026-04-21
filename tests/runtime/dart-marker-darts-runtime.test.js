@@ -621,7 +621,7 @@ test("dart-marker-darts cleanup restores marker opacity, removes overlay artifac
   assert.equal(animation.playState, "idle");
 });
 
-test("dart-marker-darts stays active in coordinate mode and pauses completely while live input mode is active", () => {
+test("dart-marker-darts stays active in coordinate mode and pauses completely while live input mode or bull-off is active", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const { markers } = installBoardFixture(documentRef, [
@@ -677,6 +677,42 @@ test("dart-marker-darts stays active in coordinate mode and pauses completely wh
   assert.equal(state.entriesByMarker.size, 0);
   assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
   assert.equal(markers[0].style.opacity, "");
+
+  setModeButtonActive(buttons.live, "data-state", false);
+  state.gameStateSnapshot = {
+    variantNormalized: "bull-off",
+    variant: "Bull-Off",
+  };
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: {
+      ...VISUAL_CONFIG,
+      hideOriginalMarkers: true,
+    },
+  });
+
+  assert.equal(state.entriesByMarker.size, 0);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
+  assert.equal(markers[0].style.opacity, "");
+
+  state.gameStateSnapshot = {
+    variantNormalized: "x01",
+    variant: "X01",
+  };
+  setModeButtonActive(buttons.segments, "aria-pressed", true);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: {
+      ...VISUAL_CONFIG,
+      hideOriginalMarkers: true,
+    },
+  });
+
+  assert.equal(state.entriesByMarker.size, 1);
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), true);
+  assert.equal(markers[0].style.opacity, "0");
 
   clearDartMarkerDartsState(state);
 });

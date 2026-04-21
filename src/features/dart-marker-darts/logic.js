@@ -1465,11 +1465,31 @@ function maybeMeasureRenderError(state, featureDebug, entry, screenPoint, geomet
   return renderErrorPx;
 }
 
+function isBullOffVariant(snapshot = null) {
+  const variantCandidates = [
+    snapshot?.variantNormalized,
+    snapshot?.variant,
+    snapshot?.match?.variant,
+    snapshot?.match?.game?.variant,
+  ];
+
+  return variantCandidates.some((value) => {
+    const normalized = String(value || "").trim().toLowerCase();
+    return (
+      normalized.includes("bull-off") ||
+      normalized.includes("bull out") ||
+      normalized.includes("bullout") ||
+      normalized.includes("bull-out")
+    );
+  });
+}
+
 export function createDartMarkerDartsState(windowRef = null) {
   return {
     windowRef,
     overlayNode: null,
     overlaySceneNode: null,
+    gameStateSnapshot: null,
     boardSnapshot: null,
     markerNodes: [],
     pendingUpdateReasons: new Set(),
@@ -1555,6 +1575,14 @@ export function updateDartMarkerDarts(options = {}) {
     return;
   }
 
+  if (isBullOffVariant(state.gameStateSnapshot)) {
+    clearDartMarkerDartsState(state, {
+      featureDebug,
+      reason: "bull-off",
+    });
+    return;
+  }
+
   const board = resolveBoardSnapshot(documentRef, state, requiresBoardRescan);
   if (!board?.svg || !board.radius) {
     clearDartMarkerDartsState(state, {
@@ -1629,7 +1657,6 @@ export function updateDartMarkerDarts(options = {}) {
     Number(dartLength || 0).toFixed(2),
     Number(dartHeight || 0).toFixed(2),
   ].join("|");
-  const layoutChanged = state.lastLayoutSignature !== layoutSignature;
   state.lastLayoutSignature = layoutSignature;
 
   const markerSet = new Set(markers);
@@ -1698,17 +1725,10 @@ export function updateDartMarkerDarts(options = {}) {
       sourceUrl: dartImageSource,
       visualConfig,
     });
-    if (!appliedGeometry && !layoutChanged) {
-      entry.lastTargetCenter = {
-        x: Number(screenPoint.x),
-        y: Number(screenPoint.y),
-      };
-    } else {
-      entry.lastTargetCenter = {
-        x: Number(screenPoint.x),
-        y: Number(screenPoint.y),
-      };
-    }
+    entry.lastTargetCenter = {
+      x: Number(screenPoint.x),
+      y: Number(screenPoint.y),
+    };
 
     const geometryPayload = buildGeometryPayload({
       marker,

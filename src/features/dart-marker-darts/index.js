@@ -215,6 +215,8 @@ export function initializeDartMarkerDarts(context = {}) {
 
   const state = createDartMarkerDartsState(windowRef);
   state.lastHref = getCurrentHref(windowRef);
+  state.gameStateSnapshot =
+    gameState && typeof gameState.getSnapshot === "function" ? gameState.getSnapshot() : null;
   ensurePendingUpdateReasons(state);
 
   let scheduler = null;
@@ -314,6 +316,7 @@ export function initializeDartMarkerDarts(context = {}) {
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
       ? gameState.subscribe((snapshot) => {
+          state.gameStateSnapshot = snapshot || null;
           const signature = buildGameStateSignature(snapshot);
           if (signature && signature === state.lastGameStateSignature) {
             return;
