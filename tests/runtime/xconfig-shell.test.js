@@ -2187,6 +2187,25 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
     ".ad-xconfig-card[data-feature-key='theme-global-typography']"
   );
   assert.ok(themeCard);
+  assert.match(String(themeCard.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
+  assert.equal(themeCard.getAttribute("data-card-kind"), "theme-global");
+
+  const themeGlobalSummary = themeCard.querySelector("[data-adxconfig-theme-global-summary='true']");
+  assert.ok(themeGlobalSummary);
+  const themeGlobalBadges = themeGlobalSummary
+    .querySelectorAll(".ad-xconfig-card-global-badge")
+    .map((node) => String(node.textContent || ""));
+  assert.deepEqual(themeGlobalBadges, ["Global", "Theme-Bild überschreibt"]);
+
+  const themeGlobalValues = themeGlobalSummary
+    .querySelectorAll(".ad-xconfig-card-global-value")
+    .map((node) => String(node.textContent || ""));
+  assert.deepEqual(themeGlobalValues, [
+    "Audiowide",
+    "Scores · Würfe · Namen",
+    "Theme-Bild > Templates Global",
+    "Zentrale Ebene für Presets und Fallbacks",
+  ]);
 
   const themeCardNote = themeCard.querySelector(".ad-xconfig-note");
   assert.ok(themeCardNote);
@@ -2266,6 +2285,14 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   assert.equal(String(styleNode.textContent || "").includes("flex-direction:column"), true);
   assert.equal(
     String(styleNode.textContent || "").includes(".ad-xconfig-card-head{display:flex;justify-content:space-between;align-items:flex-start"),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes(".ad-xconfig-card--theme-global{grid-column:1/-1;min-height:16.5rem"),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes(".ad-xconfig-card-global-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))"),
     true
   );
   assert.equal(

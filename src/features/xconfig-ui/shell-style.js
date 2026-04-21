@@ -70,14 +70,29 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-height:14rem;padding:.9rem;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.2);transition:transform .2s ease}
 #${PANEL_HOST_ID} .ad-xconfig-card:hover{transform:translateY(-2px)}
+#${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:1/-1;min-height:16.5rem;padding:1.05rem 1.1rem 1rem;border-color:rgba(116,229,255,.58);background:linear-gradient(160deg,rgba(11,30,60,.9) 0%,rgba(18,49,91,.88) 58%,rgba(16,37,70,.92) 100%);box-shadow:inset 0 0 0 1px rgba(120,230,255,.12),0 10px 28px rgba(6,18,38,.28)}
 #${PANEL_HOST_ID} .ad-xconfig-card-bg{position:absolute;inset:0;pointer-events:none}
 #${PANEL_HOST_ID} .ad-xconfig-card-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,27,67,.88) 0%,rgba(15,27,67,.84) 40%,rgba(15,27,67,.36) 70%,rgba(15,27,67,.2) 100%),radial-gradient(100% 100% at 90% 10%,rgba(45,108,198,.35) 0%,rgba(45,108,198,0) 70%)}
 #${PANEL_HOST_ID} .ad-xconfig-card-bg img{position:absolute;top:0;right:0;width:72%;height:100%;object-fit:cover;opacity:.5;filter:saturate(.85)}
+#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-bg::before{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(126,216,255,.16),rgba(126,216,255,0) 38%),repeating-linear-gradient(135deg,rgba(126,216,255,.08) 0 2px,transparent 2px 14px),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px 56px);opacity:.9}
+#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(8,20,42,.94) 0%,rgba(8,20,42,.88) 42%,rgba(8,20,42,.48) 70%,rgba(8,20,42,.24) 100%),radial-gradient(90% 90% at 92% 8%,rgba(60,207,255,.28) 0%,rgba(60,207,255,0) 72%)}
+#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-bg img{width:48%;opacity:.24;filter:saturate(1.05) contrast(1.05)}
+#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-content{max-width:min(60rem,100%)}
+#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-copy{max-width:48rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-content{position:relative;z-index:1}
 #${PANEL_HOST_ID} .ad-xconfig-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem;margin-bottom:.85rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-title{margin:0;font-size:.98rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-copy{margin:.4rem 0 0;color:rgba(255,255,255,.76);font-size:.84rem;line-height:1.35}
 #${PANEL_HOST_ID} .ad-xconfig-card-badges{margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-summary{margin-top:.85rem;display:grid;gap:.58rem}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-badges{display:flex;gap:.45rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-badge{display:inline-flex;align-items:center;padding:.22rem .62rem;border-radius:999px;font-size:.67rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-badge--primary{background:rgba(86,219,255,.18);border:1px solid rgba(132,231,255,.5);color:rgba(235,250,255,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-badge--muted{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:rgba(224,237,255,.9)}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-item{display:grid;gap:.2rem;padding:.58rem .65rem;border-radius:10px;border:1px solid rgba(128,218,255,.14);background:rgba(7,16,34,.34);backdrop-filter:blur(4px)}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-label{font-size:.67rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(176,219,242,.82)}
+#${PANEL_HOST_ID} .ad-xconfig-card-global-value{font-size:.77rem;line-height:1.3;color:rgba(245,250,255,.97)}
 #${PANEL_HOST_ID} .ad-xconfig-card-actions{margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-variant{display:inline-flex;margin-top:.55rem;padding:.2rem .55rem;border-radius:999px;background:rgba(163,191,250,.2);border:1px solid rgba(163,191,250,.7);font-size:.72rem}
 #${PANEL_HOST_ID} .ad-xconfig-mini-btn{border:1px solid rgba(255,255,255,.24);border-radius:7px;padding:.35rem .55rem;background:rgba(255,255,255,.08);color:#fff;font-size:.73rem;line-height:1;cursor:pointer}
@@ -163,9 +178,9 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--error{color:rgba(255,198,198,.98)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--info{color:rgba(187,232,255,.98)}
 #${PANEL_HOST_ID} .ad-xconfig-hidden-input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-@media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}}
+@media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}#${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:auto}#${PANEL_HOST_ID} .ad-xconfig-card-global-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-card-global-grid{grid-template-columns:1fr}#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
 `;
 
 

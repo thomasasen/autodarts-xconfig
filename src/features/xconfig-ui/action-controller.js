@@ -231,9 +231,13 @@ function handleSetSettingSelectOption(controller, actionNode, feature) {
   );
   withRuntimeCall(
     controller,
-    controller.runtimeApi.saveConfig(
-      controller.buildFeatureSettingPatch(configKey, settingKey, nextValue)
-    ),
+    Promise.resolve(
+      controller.runtimeApi.saveConfig(
+        controller.buildFeatureSettingPatch(configKey, settingKey, nextValue)
+      )
+    ).then(() => {
+      controller.syncThemeBackgroundIndicators(feature.featureKey);
+    }),
     "Einstellung gespeichert.",
     "Einstellung konnte nicht gespeichert werden."
   );

@@ -340,7 +340,7 @@ test("createShellActionController dispatches feature and setting payload command
   assert.deepEqual(notices, [
     ["success", "Checkout Score Pulse: An"],
     ["success", "Einstellung gespeichert."],
-    ["success", "Einstellung gespeichert."],
     ["info", "Aktion erledigt."],
+    ["success", "Einstellung gespeichert."],
   ]);
 });

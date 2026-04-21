@@ -40,6 +40,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrund-Darstellung`: Füllen
 - `Hintergrundbild-Deckkraft`: 25 %
 - `Spielerfelder-Transparenz`: 10 %
+- `Aktivspieler-Tönung`: 15 %
 - `Debug`: Aus
 
 ### Animationen
@@ -155,8 +156,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
+- Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen, die optionale Aktivkarten-Tönung und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
 - `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
 - `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
 - `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.
@@ -224,6 +225,13 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hauptzahlen`: Steuert normale Hauptzahlen und Turn-Punkte.
 - `Sekundärtext`: Setzt Namen und Meta-Texte auf eine gemeinsame Sekundärfarbe.
 - `Wurf-/Checkout-Text`: Färbt Wurf-, Suggestion- und Checkout-Texte separat ein.
+- `Aktivspieler-Tönung`: Regelt, wie stark der Aktiv-Akzent den Hintergrund aktiver Spielerfelder leicht einfärbt.
+  - `Aus`: Die Aktivkarten-Tönung bleibt komplett deaktiviert.
+  - `10 %`: Der Aktiv-Akzent färbt die Kartenfläche leicht ein.
+  - `15 %`: Der Aktiv-Akzent schimmert sichtbar, aber weiterhin ausgewogen durch die aktive Kartenfläche.
+  - `20 %`: Die Kartenfläche übernimmt den Aktiv-Akzent bereits deutlich.
+  - `25 %`: Die Aktivkarten-Tönung wird stark sichtbar und prägt den Kartenhintergrund klar.
+  - `30 %`: Die Aktivkarten-Tönung wird maximal sichtbar und prägt den Kartenhintergrund stark.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
   - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.

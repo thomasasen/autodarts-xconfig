@@ -40,7 +40,10 @@ import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { styleText } from "./shell-style.js";
-import { buildThemeGlobalTypographyPreviewImports } from "../../shared/theme-global-typography-presets.js";
+import {
+  buildThemeGlobalTypographyPreviewImports,
+  getThemeGlobalTypographyPreset,
+} from "../../shared/theme-global-typography-presets.js";
 import {
   isHexColorInputValue,
   normalizeHexColor,
@@ -72,6 +75,11 @@ const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
+const THEME_GLOBAL_SCOPE_LABELS = Object.freeze({
+  scores: "Scores",
+  throws: "Würfe",
+  names: "Namen",
+});
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
   click: "xconfig-shell:document-click",
@@ -148,6 +156,24 @@ const animationFeatureOrder = new Map(
   )
 );
 const shellByWindow = new WeakMap();
+
+function formatThemeGlobalScopeSummary(feature) {
+  const rawValues = Array.isArray(feature?.config?.applyTo)
+    ? feature.config.applyTo
+    : [feature?.config?.applyTo];
+  const labels = Array.from(
+    new Set(
+      rawValues
+        .map((value) => THEME_GLOBAL_SCOPE_LABELS[String(value || "").trim().toLowerCase()] || "")
+        .filter(Boolean)
+    )
+  );
+  return labels.length ? labels.join(" · ") : THEME_GLOBAL_SCOPE_LABELS.scores;
+}
+
+function formatThemeGlobalFontSummary(feature) {
+  return getThemeGlobalTypographyPreset(feature?.config?.fontPreset)?.label || "Standard (deaktiviert)";
+}
 
 
 function ensureXConfigShell(options = {}) {
@@ -233,6 +259,27 @@ function ensureXConfigShell(options = {}) {
     return Array.isArray(features) ? features : [];
   }
 
+  function syncThemeGlobalCardSummary(feature) {
+    if (String(feature?.featureKey || "").trim() !== THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY) {
+      return;
+    }
+
+    const valueMap = {
+      font: formatThemeGlobalFontSummary(feature),
+      scope: formatThemeGlobalScopeSummary(feature),
+      priority: "Theme-Bild > Templates Global",
+      role: "Zentrale Ebene für Presets und Fallbacks",
+    };
+    Object.entries(valueMap).forEach(([key, value]) => {
+      const nodes = Array.from(documentRef.querySelectorAll(
+        `.ad-xconfig-card[data-feature-key='${feature.featureKey}'] [data-adxconfig-theme-global-value='${key}']`
+      ));
+      nodes.forEach((node) => {
+        node.textContent = value;
+      });
+    });
+  }
+
   function setThemeActionFeedback(featureKey, type, message) {
     const normalizedFeatureKey = String(featureKey || "").trim();
     if (!normalizedFeatureKey) {
@@ -285,6 +332,7 @@ function ensureXConfigShell(options = {}) {
       node.setAttribute("src", nextCardPreviewUrl);
       node.setAttribute("alt", `${feature.title} Vorschau`);
     });
+    syncThemeGlobalCardSummary(feature);
 
     const modalStatusNodes = Array.from(documentRef.querySelectorAll(
       `[data-adxconfig-theme-image-status='true'][data-feature-key='${normalizedFeatureKey}']`

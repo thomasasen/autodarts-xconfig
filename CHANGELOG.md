@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.0] - 2026-04-21
+
+### Changed
+
+- Nutzerwirkung: `Templates Global` hebt sich im Themes-Tab jetzt klarer von den eigentlichen Theme-Kacheln ab und erscheint als breite, globale Steuerzentrale mit kompaktem Überblick zu Schrift, Geltungsbereich, Priorität und Rolle der Vorlagenlogik.
+  Technik: `theme-global-typography` rendert in der xConfig-Shell jetzt als eigene Hero-Kachel mit `Global`-/Override-Badges, responsivem Summary-Grid und synchronisierten Statuswerten nach Preset- und Select-Änderungen; dazu wurden Shell-View, Shell-Styles, Controller-Pfade und die Shell-Regressionen gezielt erweitert.
+
 ## [2.2.0] - 2026-04-20
 
 ### Added
@@ -1450,7 +1457,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/6398977...HEAD
+[2.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/da0d5b1...HEAD
+[2.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/6398977...da0d5b1
 [2.1.31]: https://github.com/thomasasen/autodarts-xconfig/compare/4e52392...6398977
 [2.1.30]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...4e52392
 [2.1.28]: https://github.com/thomasasen/autodarts-xconfig/compare/2f3e796...982f5f1

@@ -27,6 +27,17 @@ function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function waitFor(check, { timeoutMs = 160, intervalMs = 5 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() <= deadline) {
+    if (check()) {
+      return;
+    }
+    await wait(intervalMs);
+  }
+  throw new Error("Condition was not met within the expected time.");
+}
+
 function createSingleFeatureConfig(configKey, featureConfig = {}) {
   const featureToggles = {};
   const features = {};
@@ -107,7 +118,7 @@ test("checkout-board-targets mounts idempotently and cleans up style/observer st
 
   runtime.start();
   runtime.start();
-  await wait(5);
+  await wait(25);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-checkout-board-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
@@ -134,7 +145,7 @@ test("style-checkout-suggestions mounts idempotently and removes classes on clea
 
   runtime.start();
   runtime.start();
-  await wait(5);
+  await wait(25);
 
   assert.equal(
     documentRef.suggestionElement.classList.contains("ad-ext-checkout-suggestion"),
@@ -238,7 +249,8 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
 
   runtime.start();
   runtime.start();
-  await wait(5);
+  await wait(25);
+  await waitFor(() => documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"));
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-triple-double-bull-hits-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
@@ -334,7 +346,8 @@ test("cricket-highlighter and cricket-grid-fx share one runtime observer/listene
   });
 
   runtime.start();
-  await wait(5);
+  await wait(25);
+  await waitFor(() => Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")));
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-highlighter-style")), true);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")), true);

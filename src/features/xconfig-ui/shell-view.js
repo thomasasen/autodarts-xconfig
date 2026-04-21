@@ -285,6 +285,100 @@ function formatVariantLabel(variants = []) {
   return variants.map((variant) => toTitleCase(variant)).join(" / ");
 }
 
+const THEME_GLOBAL_SCOPE_LABELS = Object.freeze({
+  scores: "Scores",
+  throws: "Würfe",
+  names: "Namen",
+});
+
+function isThemeGlobalTypographyFeature(feature) {
+  return String(feature?.featureKey || "").trim() === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY;
+}
+
+function formatThemeGlobalScopeSummary(feature) {
+  const rawValues = Array.isArray(feature?.config?.applyTo)
+    ? feature.config.applyTo
+    : [feature?.config?.applyTo];
+  const labels = Array.from(
+    new Set(
+      rawValues
+        .map((value) => THEME_GLOBAL_SCOPE_LABELS[String(value || "").trim().toLowerCase()] || "")
+        .filter(Boolean)
+    )
+  );
+  return labels.length ? labels.join(" · ") : THEME_GLOBAL_SCOPE_LABELS.scores;
+}
+
+function formatThemeGlobalFontSummary(feature) {
+  return getThemeGlobalTypographyPreset(feature?.config?.fontPreset)?.label || "Standard (deaktiviert)";
+}
+
+function buildThemeGlobalCardSummary(documentRef, feature) {
+  const summary = createElement(documentRef, "section", {
+    className: "ad-xconfig-card-global-summary",
+    attributes: {
+      "data-adxconfig-theme-global-summary": "true",
+    },
+  });
+  const badges = createElement(documentRef, "div", {
+    className: "ad-xconfig-card-global-badges",
+  });
+  badges.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-card-global-badge ad-xconfig-card-global-badge--primary",
+    text: "Global",
+  }));
+  badges.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-card-global-badge ad-xconfig-card-global-badge--muted",
+    text: "Theme-Bild überschreibt",
+  }));
+  summary.appendChild(badges);
+
+  const grid = createElement(documentRef, "div", {
+    className: "ad-xconfig-card-global-grid",
+  });
+  [
+    {
+      key: "font",
+      label: "Schrift",
+      value: formatThemeGlobalFontSummary(feature),
+    },
+    {
+      key: "scope",
+      label: "Greift bei",
+      value: formatThemeGlobalScopeSummary(feature),
+    },
+    {
+      key: "priority",
+      label: "Priorität",
+      value: "Theme-Bild > Templates Global",
+    },
+    {
+      key: "role",
+      label: "Rolle",
+      value: "Zentrale Ebene für Presets und Fallbacks",
+    },
+  ].forEach((item) => {
+    const block = createElement(documentRef, "div", {
+      className: "ad-xconfig-card-global-item",
+    });
+    block.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-card-global-label",
+      text: item.label,
+    }));
+    block.appendChild(createElement(documentRef, "strong", {
+      className: "ad-xconfig-card-global-value",
+      attributes: {
+        "data-adxconfig-theme-global-value": item.key,
+      },
+      text: item.value,
+    }));
+    grid.appendChild(block);
+  });
+  summary.appendChild(grid);
+
+  return summary;
+}
+
 export function createElement(documentRef, tagName, options = {}) {
   const element = documentRef.createElement(tagName);
   if (options.id) {
@@ -1177,10 +1271,14 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
 
 function buildFeatureCard(documentRef, feature) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
+  const isThemeGlobalCard = isThemeGlobalTypographyFeature(feature);
   const card = createElement(documentRef, "article", {
-    className: "ad-xconfig-card",
+    className: isThemeGlobalCard
+      ? "ad-xconfig-card ad-xconfig-card--theme-global"
+      : "ad-xconfig-card",
     attributes: {
       "data-feature-key": feature.featureKey,
+      "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
     },
   });
   const previewUrl =
@@ -1238,6 +1336,9 @@ function buildFeatureCard(documentRef, feature) {
     }));
   }
   cardContent.appendChild(badges);
+  if (isThemeGlobalCard) {
+    cardContent.appendChild(buildThemeGlobalCardSummary(documentRef, feature));
+  }
 
   if (fieldCount > 0) {
     const actions = createElement(documentRef, "div", {

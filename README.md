@@ -194,6 +194,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrund-Darstellung`: Füllen
 - `Hintergrundbild-Deckkraft`: 25 %
 - `Spielerfelder-Transparenz`: 10 %
+- `Aktivspieler-Tönung`: 15 %
 - `Debug`: Aus
 
 ### Animationen
@@ -311,9 +312,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
-- Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
+- Was macht es sichtbar? Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen, die optionale Aktivkarten-Tönung und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
+- Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
 
 **Einstellungen einfach erklärt**
 
@@ -384,6 +385,13 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hauptzahlen`: Legt die Farbe für normale beziehungsweise inaktive Hauptzahlen sowie große Turn-Punkte fest. Die aktive Hauptzahl bleibt bewusst weiter an den Aktiv-Akzent gebunden.
 - `Sekundärtext`: Legt eine gemeinsame Sekundärfarbe für Namen und Meta-Texte fest. Dadurch bleiben diese Bereiche ruhig und konsistent, während Scores und Aktiv-Akzente separat geführt werden.
 - `Wurf-/Checkout-Text`: Legt die Farbe für Wurf-Labels, Suggestion-Texte und Checkout-Hinweise fest, ohne die großen Turn-Punkte mitzunehmen. So lassen sich Hilfstexte ruhiger oder klarer vom Hauptscore trennen.
+- `Aktivspieler-Tönung`: Regelt, wie stark die Farbe des aktiven Rahmens zusätzlich in den Kartenhintergrund aktiver oder gewinnender Spieler einfließt. `Aus` deaktiviert die Tönung vollständig; höhere Werte lassen den Aktiv-Akzent deutlicher durch die Kartenfläche schimmern.
+  - `Aus`: Es wird keine zusätzliche Hintergrundtönung für aktive oder gewinnende Spielerfelder gesetzt. Die Karten bleiben bei ihrer normalen Theme-Fläche.
+  - `10 %`: Der Rahmenfarbton schimmert leicht in den Hintergrund aktiver Spielerkarten hinein. Die Wirkung bleibt dezent und ergänzt den Grundlook nur vorsichtig.
+  - `15 %`: Der Aktiv-Akzent ist als leichte Hintergrundfärbung klar wahrnehmbar, ohne die Lesbarkeit oder die Theme-Fläche zu dominieren. Diese Stufe entspricht dem gedachten Standard-Look der Tönung.
+  - `20 %`: Die aktive Karte wirkt klarer eingefärbt und übernimmt mehr von der Rahmenfarbe. Der Effekt bleibt noch kontrolliert, tritt aber sichtbar präsenter hervor als bei 15 %.
+  - `25 %`: Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten deutlich und verändert den Kartencharakter spürbar. Diese Stufe ist markant, bleibt aber noch gut kontrollierbar.
+  - `30 %`: Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten sehr deutlich. Diese Stufe ist die markanteste Variante und verändert den Kartencharakter am stärksten.
 - `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
   - `Füllen`: Das Bild legt sich wie ein Vollflächen-Hintergrund über den gesamten Spielbereich. Leere Ränder entstehen nicht, dafür können Randbereiche abgeschnitten werden.
   - `Einpassen`: Das komplette Bild bleibt sichtbar und wird in die verfügbare Fläche eingepasst. Wenn das Seitenverhältnis nicht passt, bleiben am Rand freie Bereiche des Themes sichtbar.
