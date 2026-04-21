@@ -44,6 +44,11 @@ const ZOOM_SEMANTIC_CONTAINER_SELECTORS = Object.freeze([
   "#ad-ext-turn",
   ".ad-ext-turn-throw",
 ]);
+const ZOOM_STRUCTURE_CHILDLIST_SELECTORS = Object.freeze([
+  ...ZOOM_STRUCTURE_TARGET_SELECTORS,
+  ".ad-ext-tv-board-zoom-host",
+  ".ad-ext-tv-board-zoom",
+]);
 
 function isThrowHistoryClickTarget(targetNode) {
   if (!targetNode || typeof targetNode.closest !== "function") {
@@ -67,21 +72,6 @@ function toElementNode(node = null) {
     current = current.parentNode || null;
   }
   return current || null;
-}
-
-function elementMatchesAnySelector(node, selectors = []) {
-  const elementNode = toElementNode(node);
-  if (!elementNode || typeof elementNode.matches !== "function") {
-    return false;
-  }
-
-  return selectors.some((selector) => {
-    try {
-      return elementNode.matches(selector);
-    } catch (_) {
-      return false;
-    }
-  });
 }
 
 function nodeOrAncestorMatchesAnySelector(node, selectors = []) {
@@ -143,9 +133,45 @@ function isDescendantWatchedNodeMutation(mutation, watchedNodes = []) {
   });
 }
 
-export function shouldScheduleTvBoardZoomMutation(mutations = [], context = {}) {
-  if (!Array.isArray(mutations) || !mutations.length) {
+function isConnectedNode(node) {
+  return Boolean(node) && node.isConnected !== false;
+}
+
+function nodeContainsNode(rootNode, childNode) {
+  if (!rootNode || !childNode) {
     return false;
+  }
+  if (rootNode === childNode) {
+    return true;
+  }
+  return typeof rootNode.contains === "function" ? rootNode.contains(childNode) : false;
+}
+
+function shouldInvalidateBoardSurfaceForTvBoardZoomMutation(mutation, watchedNodes = []) {
+  if (!mutation || typeof mutation !== "object") {
+    return false;
+  }
+
+  const mutationType = resolveMutationType(mutation);
+  if (mutationType !== "childList") {
+    return false;
+  }
+
+  if (isDescendantWatchedNodeMutation(mutation, watchedNodes)) {
+    return true;
+  }
+
+  return getTouchedMutationNodes(mutation).some((node) =>
+    nodeOrAncestorMatchesAnySelector(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
+  );
+}
+
+export function resolveTvBoardZoomMutationReaction(mutations = [], context = {}) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return {
+      shouldSchedule: false,
+      shouldInvalidateBoardCache: false,
+    };
   }
 
   const watchedNodes = [
@@ -157,38 +183,61 @@ export function shouldScheduleTvBoardZoomMutation(mutations = [], context = {}) 
     context.zoomState?.zoomHost || null,
   ].filter(Boolean);
 
-  return mutations.some((mutation) => {
+  let shouldSchedule = false;
+  let shouldInvalidateBoardCache = false;
+
+  mutations.forEach((mutation) => {
+    if (shouldInvalidateBoardCache) {
+      return;
+    }
     if (!mutation || typeof mutation !== "object") {
-      return false;
+      return;
     }
 
     const mutationType = resolveMutationType(mutation);
 
     if (mutationType === "attributes") {
-      return (
+      if (
         isDirectWatchedNodeMutation(mutation, watchedNodes) ||
-        elementMatchesAnySelector(mutation.target, ZOOM_STRUCTURE_TARGET_SELECTORS)
-      );
+        nodeOrAncestorMatchesAnySelector(mutation.target, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
+      ) {
+        shouldSchedule = true;
+      }
+      return;
     }
 
     if (mutationType === "characterData") {
-      return nodeOrAncestorMatchesAnySelector(mutation.target, ZOOM_SEMANTIC_CONTAINER_SELECTORS);
+      if (nodeOrAncestorMatchesAnySelector(mutation.target, ZOOM_SEMANTIC_CONTAINER_SELECTORS)) {
+        shouldSchedule = true;
+      }
+      return;
     }
 
     if (mutationType === "childList") {
-      return (
-        isDescendantWatchedNodeMutation(mutation, watchedNodes) ||
-        getTouchedMutationNodes(mutation).some((node) =>
-          nodeOrAncestorMatchesAnySelector(node, [
-            ...ZOOM_STRUCTURE_TARGET_SELECTORS,
-            ...ZOOM_SEMANTIC_CONTAINER_SELECTORS,
-          ])
-        )
+      const invalidatesBoardSurface = shouldInvalidateBoardSurfaceForTvBoardZoomMutation(
+        mutation,
+        watchedNodes
       );
+      const touchesSemanticSurface = getTouchedMutationNodes(mutation).some((node) =>
+        nodeOrAncestorMatchesAnySelector(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
+      );
+      if (touchesSemanticSurface || invalidatesBoardSurface) {
+        shouldSchedule = true;
+      }
+      if (invalidatesBoardSurface) {
+        shouldInvalidateBoardCache = true;
+      }
     }
-
-    return false;
   });
+
+  return {
+    shouldSchedule,
+    shouldInvalidateBoardCache,
+  };
+}
+
+export function shouldScheduleTvBoardZoomMutation(mutations = [], context = {}) {
+  return resolveTvBoardZoomMutationReaction(mutations, context).shouldSchedule;
 }
 
 function resolveMutationType(mutation) {
@@ -223,6 +272,27 @@ function mapRect(rect) {
     right: Number.isFinite(rect.right) ? Number(rect.right) : null,
     bottom: Number.isFinite(rect.bottom) ? Number(rect.bottom) : null,
   };
+}
+
+function isReusableBoardSurface(surface) {
+  if (!surface?.svg || !surface?.group) {
+    return false;
+  }
+  if (!isConnectedNode(surface.svg) || !isConnectedNode(surface.group)) {
+    return false;
+  }
+  if (surface.zoomTarget) {
+    if (!isConnectedNode(surface.zoomTarget) || !nodeContainsNode(surface.zoomTarget, surface.svg)) {
+      return false;
+    }
+  }
+  if (surface.zoomHost) {
+    const containedNode = surface.zoomTarget || surface.svg;
+    if (!isConnectedNode(surface.zoomHost) || !nodeContainsNode(surface.zoomHost, containedNode)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function createDebugState(featureDebug) {
@@ -351,11 +421,7 @@ export function initializeTvBoardZoom(context = {}) {
 
   function getBoardSurface() {
     const cachedSurface = boardCache.surface;
-    if (
-      cachedSurface?.svg &&
-      cachedSurface.svg.isConnected !== false &&
-      cachedSurface.group?.isConnected !== false
-    ) {
+    if (isReusableBoardSurface(cachedSurface)) {
       return cachedSurface;
     }
 
@@ -507,10 +573,16 @@ export function initializeTvBoardZoom(context = {}) {
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
-        if (!shouldScheduleTvBoardZoomMutation(mutations, { boardSurface: boardCache.surface, zoomState })) {
+        const mutationReaction = resolveTvBoardZoomMutationReaction(mutations, {
+          boardSurface: boardCache.surface,
+          zoomState,
+        });
+        if (!mutationReaction.shouldSchedule) {
           return;
         }
-        invalidateBoardCache();
+        if (mutationReaction.shouldInvalidateBoardCache) {
+          invalidateBoardCache();
+        }
         scheduler.schedule();
       },
       observeOptions: {
@@ -535,7 +607,6 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "resize",
       handler: () => {
-        invalidateBoardCache();
         scheduler.schedule();
       },
       options: { passive: true },
@@ -545,7 +616,6 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "orientationchange",
       handler: () => {
-        invalidateBoardCache();
         scheduler.schedule();
       },
       options: { passive: true },
@@ -572,7 +642,6 @@ export function initializeTvBoardZoom(context = {}) {
       target: documentRef,
       type: "visibilitychange",
       handler: () => {
-        invalidateBoardCache();
         scheduler.schedule();
       },
     });

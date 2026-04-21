@@ -1559,20 +1559,25 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   if (!zoomData) {
     return null;
   }
-  applyZoomHostState(state, hostNode);
-  applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
 
   const composedTransform = zoomData.baseTransform
     ? `${zoomData.baseTransform} ${zoomData.transform}`
     : zoomData.transform;
+  const normalizedHostNode = hostNode || null;
   const isSameVisualIntent =
     state.zoomedElement === targetNode &&
-    state.zoomHost === (hostNode || null) &&
+    state.zoomHost === normalizedHostNode &&
     state.lastAppliedIntentSignature === zoomData.intentSignature;
-  if (state.zoomedElement === targetNode && state.lastAppliedSignature === zoomData.signature) {
-    state.zoomHost = hostNode || null;
+  if (
+    state.zoomedElement === targetNode &&
+    state.zoomHost === normalizedHostNode &&
+    state.lastAppliedSignature === zoomData.signature
+  ) {
     return zoomData;
   }
+
+  applyZoomHostState(state, hostNode);
+  applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
 
   if (!targetNode.classList.contains(ZOOM_CLASS)) {
     targetNode.classList.add(ZOOM_CLASS);
@@ -1585,7 +1590,7 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   targetNode.style.transform = composedTransform;
 
   state.zoomedElement = targetNode;
-  state.zoomHost = hostNode || null;
+  state.zoomHost = normalizedHostNode;
   state.lastAppliedSignature = zoomData.signature;
   state.lastAppliedIntentSignature = zoomData.intentSignature;
   state.lastAppliedZoomTransform = {

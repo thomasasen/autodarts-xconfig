@@ -7,6 +7,7 @@ import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import {
   initializeTvBoardZoom,
+  resolveTvBoardZoomMutationReaction,
   shouldScheduleTvBoardZoomMutation,
 } from "../../src/features/tv-board-zoom/index.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
@@ -342,6 +343,87 @@ test("tv-board-zoom ignores attribute churn on board descendants but still react
       },
     }),
     true
+  );
+});
+
+test("tv-board-zoom schedules semantic churn without invalidating the board surface cache", () => {
+  const documentRef = new FakeDocument();
+  const { hostNode, targetNode, boardSvg } = installZoomFixture(documentRef);
+  const suggestionNode = documentRef.createElement("div");
+  suggestionNode.classList.add("suggestion");
+  suggestionNode.textContent = "16 D8";
+  documentRef.body.appendChild(suggestionNode);
+
+  const semanticCharacterMutation = {
+    type: "characterData",
+    target: suggestionNode,
+    addedNodes: [],
+    removedNodes: [],
+  };
+  const watchedAttributeMutation = {
+    type: "attributes",
+    target: targetNode,
+    attributeName: "class",
+    addedNodes: [],
+    removedNodes: [],
+  };
+  const structureMutation = {
+    type: "childList",
+    target: targetNode,
+    addedNodes: [],
+    removedNodes: [boardSvg],
+  };
+
+  assert.deepEqual(
+    resolveTvBoardZoomMutationReaction([semanticCharacterMutation], {
+      boardSurface: {
+        svg: boardSvg,
+        zoomTarget: targetNode,
+        zoomHost: hostNode,
+      },
+      zoomState: {
+        zoomedElement: targetNode,
+        zoomHost: hostNode,
+      },
+    }),
+    {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: false,
+    }
+  );
+  assert.deepEqual(
+    resolveTvBoardZoomMutationReaction([watchedAttributeMutation], {
+      boardSurface: {
+        svg: boardSvg,
+        zoomTarget: targetNode,
+        zoomHost: hostNode,
+      },
+      zoomState: {
+        zoomedElement: targetNode,
+        zoomHost: hostNode,
+      },
+    }),
+    {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: false,
+    }
+  );
+  assert.deepEqual(
+    resolveTvBoardZoomMutationReaction([structureMutation], {
+      boardSurface: {
+        svg: boardSvg,
+        zoomTarget: targetNode,
+        zoomHost: hostNode,
+      },
+      zoomState: {
+        zoomedElement: targetNode,
+        zoomHost: hostNode,
+      },
+    }),
+    {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: true,
+    }
   );
 });
 
