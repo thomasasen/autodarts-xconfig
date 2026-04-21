@@ -46,6 +46,10 @@ function buildThemeGlobalTypographyColorDeclarations(featureConfig = {}) {
   const scoreColor = normalizeHexColor(featureConfig.scoreColor, "");
   const secondaryTextColor = normalizeHexColor(featureConfig.secondaryTextColor, "");
   const throwLabelColor = normalizeHexColor(featureConfig.throwLabelColor, "");
+  const activePlayerTintIntensity = Math.max(
+    0,
+    Number.parseInt(featureConfig.activePlayerTintIntensity, 10) || 0
+  );
   const declarations = [];
 
   if (accentColor) {
@@ -83,6 +87,17 @@ function buildThemeGlobalTypographyColorDeclarations(featureConfig = {}) {
 
   if (throwLabelColor) {
     declarations.push(`--ad-ext-theme-throw-label-color: ${throwLabelColor};`);
+  }
+
+  if (activePlayerTintIntensity > 0) {
+    const bottomIntensity = Math.max(
+      0,
+      Math.min(activePlayerTintIntensity, Math.round(activePlayerTintIntensity * 0.5))
+    );
+    declarations.push(
+      `--ad-ext-theme-active-card-tint-top: color-mix(in srgb, var(--ad-ext-theme-card-active-border-color) ${activePlayerTintIntensity}%, transparent);`,
+      `--ad-ext-theme-active-card-tint-bottom: color-mix(in srgb, var(--ad-ext-theme-card-active-border-color) ${bottomIntensity}%, transparent);`
+    );
   }
 
   return declarations;

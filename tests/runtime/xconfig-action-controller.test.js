@@ -224,6 +224,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
               scoreColor: "#E8FF5A",
               secondaryTextColor: "#FFD0F5",
               throwLabelColor: "#FF5CD6",
+              activePlayerTintIntensity: 15,
               backgroundDisplayMode: "fill",
               backgroundOpacity: 40,
               playerFieldTransparency: 30,

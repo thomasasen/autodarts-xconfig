@@ -132,6 +132,15 @@ const PLAYER_FIELD_TRANSPARENCY_OPTIONS = Object.freeze([
   { value: 60, label: "60 %" },
 ]);
 
+const ACTIVE_PLAYER_TINT_INTENSITY_OPTIONS = Object.freeze([
+  { value: 0, label: "Aus" },
+  { value: 10, label: "10 %" },
+  { value: 15, label: "15 %" },
+  { value: 20, label: "20 %" },
+  { value: 25, label: "25 %" },
+  { value: 30, label: "30 %" },
+]);
+
 const GOTCHA_DELTA_ALIGNMENT_OPTIONS = Object.freeze([
   { value: "right", label: "Rechtsbündig" },
   { value: "left", label: "Linksbündig" },
@@ -176,6 +185,14 @@ export const xconfigDescriptors = Object.freeze([
       colorField("throwLabelColor", "Wurf-/Checkout-Text", {
         section: "Farben",
       }),
+      selectField(
+        "activePlayerTintIntensity",
+        "Aktivspieler-Tönung",
+        ACTIVE_PLAYER_TINT_INTENSITY_OPTIONS,
+        {
+          section: "Farben",
+        }
+      ),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS, {
         section: "Hintergrund",
       }),

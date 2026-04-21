@@ -92,6 +92,7 @@ test("theme global typography builds stable CSS with fallback stacks and only on
   });
   assert.doesNotMatch(systemStyle, /fonts\.bunny\.net/);
   assert.doesNotMatch(systemStyle, /--ad-ext-theme-accent-color:/);
+  assert.doesNotMatch(systemStyle, /--ad-ext-theme-active-card-tint-top:/);
   assert.match(systemStyle, /\.ad-ext-player-score/);
   assert.match(systemStyle, /#ad-ext-turn > \.ad-ext-turn-throw/);
   assert.match(systemStyle, /#ad-ext-turn > \.suggestion/);
@@ -117,6 +118,7 @@ test("theme global typography emits semantic color overrides only for configured
     scoreColor: "#123456",
     secondaryTextColor: "#abcdef",
     throwLabelColor: "#fedcba",
+    activePlayerTintIntensity: 20,
   });
 
   assert.match(colorStyle, /:root \{/);
@@ -135,6 +137,14 @@ test("theme global typography emits semantic color overrides only for configured
   assert.match(colorStyle, /--ad-ext-theme-name-active-color: #ABCDEF;/);
   assert.match(colorStyle, /--ad-ext-theme-meta-winner-color: #ABCDEF;/);
   assert.match(colorStyle, /--ad-ext-theme-throw-label-color: #FEDCBA;/);
+  assert.match(
+    colorStyle,
+    /--ad-ext-theme-active-card-tint-top: color-mix\(in srgb, var\(--ad-ext-theme-card-active-border-color\) 20%, transparent\);/
+  );
+  assert.match(
+    colorStyle,
+    /--ad-ext-theme-active-card-tint-bottom: color-mix\(in srgb, var\(--ad-ext-theme-card-active-border-color\) 10%, transparent\);/
+  );
 });
 
 test("theme CSS can use Templates Global as the active background fallback visual config", () => {

@@ -1979,8 +1979,20 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     ),
     true
   );
+  assert.equal(
+    backgroundSelectFields.some(
+      (node) => node.getAttribute("data-setting-key") === "activePlayerTintIntensity"
+    ),
+    true
+  );
   assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-uploadThemeBackground"));
   assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-clearThemeBackground"));
+
+  clickSelectSettingOption(documentRef, "theme-global-typography", "activePlayerTintIntensity", 20);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.activePlayerTintIntensity === 20
+  );
 
   changeSettingInput(
     documentRef,
@@ -2127,6 +2139,7 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
     scoreColor: "#E8FF5A",
     secondaryTextColor: "#FFD0F5",
     throwLabelColor: "#FF5CD6",
+    activePlayerTintIntensity: 15,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 40,
     playerFieldTransparency: 30,

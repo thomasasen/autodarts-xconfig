@@ -145,6 +145,12 @@ const THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD = fieldCopy(
   "Färbt Wurf-, Suggestion- und Checkout-Texte separat ein."
 );
 
+const THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD = fieldCopy(
+  "Mischt den Aktiv-Akzent leicht in den Hintergrund aktiver Spielerfelder.",
+  "Regelt, wie stark die Farbe des aktiven Rahmens zusätzlich in den Kartenhintergrund aktiver oder gewinnender Spieler einfließt. `Aus` deaktiviert die Tönung vollständig; höhere Werte lassen den Aktiv-Akzent deutlicher durch die Kartenfläche schimmern.",
+  "Regelt, wie stark der Aktiv-Akzent den Hintergrund aktiver Spielerfelder leicht einfärbt."
+);
+
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY = deepFreeze({
   scores: optionCopy(
     "Greift bei stabilen Score- und Punkteanzeigen.",
@@ -203,13 +209,13 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY = deepFreeze(
 export const xconfigFeatureCopy = deepFreeze({
   "theme-global-typography": featureCopy({
     cardDescription:
-      "Template-weite Presets, Typografie, Farbrollen und globale Hintergrundsteuerung für stabile Theme-Bereiche.",
+      "Template-weite Presets, Typografie, Farbrollen, Aktivkarten-Tönung und globale Hintergrundsteuerung für stabile Theme-Bereiche.",
     visibleDescription:
-      "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.",
+      "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.",
     visualDescription:
-      "Die Presets, die gewählte Schrift, die festen Farbrollen und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.",
+      "Die Presets, die gewählte Schrift, die festen Farbrollen, die optionale Aktivkarten-Tönung und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.",
     usefulWhen:
-      "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
+      "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
     images: [
       image(
         "Templates Global mit lila Aktiv-Akzent in AD xConfig",
@@ -224,6 +230,7 @@ export const xconfigFeatureCopy = deepFreeze({
       scoreColor: THEME_GLOBAL_TYPOGRAPHY_SCORE_COLOR_FIELD,
       secondaryTextColor: THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD,
       throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
+      activePlayerTintIntensity: THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD,
       backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
       backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
       playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
@@ -1243,6 +1250,39 @@ const THEME_PLAYER_TRANSPARENCY_OPTION_COPY = deepFreeze({
     "Macht die Spielerfelder sehr transparent und leicht.",
     "Die Spielerfelder lassen den Hintergrund sehr deutlich sichtbar werden. Diese Stufe wirkt am luftigsten, kann aber je nach Bild die Ruhe der Oberfläche reduzieren.",
     "Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit."
+  ),
+});
+
+const THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY = deepFreeze({
+  "0": optionCopy(
+    "Schaltet die Aktivkarten-Tönung vollständig aus.",
+    "Es wird keine zusätzliche Hintergrundtönung für aktive oder gewinnende Spielerfelder gesetzt. Die Karten bleiben bei ihrer normalen Theme-Fläche.",
+    "Die Aktivkarten-Tönung bleibt komplett deaktiviert."
+  ),
+  "10": optionCopy(
+    "Lässt den Aktiv-Akzent leicht in die Karte einfließen.",
+    "Der Rahmenfarbton schimmert leicht in den Hintergrund aktiver Spielerkarten hinein. Die Wirkung bleibt dezent und ergänzt den Grundlook nur vorsichtig.",
+    "Der Aktiv-Akzent färbt die Kartenfläche leicht ein."
+  ),
+  "15": optionCopy(
+    "Setzt eine ausgewogene Standard-Tönung für aktive Karten.",
+    "Der Aktiv-Akzent ist als leichte Hintergrundfärbung klar wahrnehmbar, ohne die Lesbarkeit oder die Theme-Fläche zu dominieren. Diese Stufe entspricht dem gedachten Standard-Look der Tönung.",
+    "Der Aktiv-Akzent schimmert sichtbar, aber weiterhin ausgewogen durch die aktive Kartenfläche."
+  ),
+  "20": optionCopy(
+    "Lässt den Aktiv-Akzent deutlich stärker durch die Kartenfläche scheinen.",
+    "Die aktive Karte wirkt klarer eingefärbt und übernimmt mehr von der Rahmenfarbe. Der Effekt bleibt noch kontrolliert, tritt aber sichtbar präsenter hervor als bei 15 %.",
+    "Die Kartenfläche übernimmt den Aktiv-Akzent bereits deutlich."
+  ),
+  "25": optionCopy(
+    "Macht die Aktivkarten-Tönung sehr präsent.",
+    "Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten deutlich und verändert den Kartencharakter spürbar. Diese Stufe ist markant, bleibt aber noch gut kontrollierbar.",
+    "Die Aktivkarten-Tönung wird stark sichtbar und prägt den Kartenhintergrund klar."
+  ),
+  "30": optionCopy(
+    "Macht die Aktivkarten-Tönung am stärksten sichtbar.",
+    "Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten sehr deutlich. Diese Stufe ist die markanteste Variante und verändert den Kartencharakter am stärksten.",
+    "Die Aktivkarten-Tönung wird maximal sichtbar und prägt den Kartenhintergrund stark."
   ),
 });
 
@@ -2348,6 +2388,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
+    activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
@@ -2593,6 +2634,10 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Spielerfelder-Transparenz",
             key: "playerFieldTransparency",
+          },
+          {
+            label: "Aktivspieler-Tönung",
+            key: "activePlayerTintIntensity",
           },
           {
             label: "Debug",

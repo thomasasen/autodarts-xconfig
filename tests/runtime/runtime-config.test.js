@@ -314,6 +314,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
           scoreColor: "#123456",
           secondaryTextColor: "#fed",
           throwLabelColor: "#0F0f0f",
+          activePlayerTintIntensity: "20",
           backgroundDisplayMode: "tile",
           backgroundOpacity: "70",
           playerFieldTransparency: "45",
@@ -431,6 +432,10 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(
     runtimeConfig.getFeatureConfig("themes.globalTypography").throwLabelColor,
     "#0F0F0F"
+  );
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").activePlayerTintIntensity,
+    20
   );
   assert.equal(
     runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundDisplayMode,

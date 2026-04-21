@@ -350,6 +350,11 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   border:1px solid rgba(236, 247, 240, 0.16) !important;
   border-radius:1.2rem !important;
   background:
+    linear-gradient(
+      180deg,
+      var(--ad-ext-theme-card-tint-top-current),
+      var(--ad-ext-theme-card-tint-bottom-current)
+    ),
     linear-gradient(180deg, rgba(20, 24, 28, 0.94) 0%, rgba(14, 18, 21, 0.92) 48%, rgba(8, 11, 13, 0.92) 100%) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -407,6 +412,8 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
+  --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
+  --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
   border:1px solid rgba(236, 247, 240, 0.16) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -1035,6 +1042,8 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 
 ${ACTIVE_CARD_SELECTOR},
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
+  --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
+  --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
   border:1px solid var(--ad-ext-theme-card-active-border-color) !important;
 }
 

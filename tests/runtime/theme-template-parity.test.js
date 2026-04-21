@@ -436,7 +436,7 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   );
   assert.match(
     commonThemeCss,
-    /--ad-ext-theme-score-active-color:\s*var\(--ad-ext-theme-score-color\);[^}]*--ad-ext-theme-score-inactive-color:\s*var\(--ad-ext-theme-text-primary-color\);[^}]*--ad-ext-theme-name-color:\s*var\(--ad-ext-theme-text-secondary-color\);[^}]*--ad-ext-theme-meta-color:\s*var\(--ad-ext-theme-text-secondary-color\);/s
+    /--ad-ext-theme-score-active-color:\s*var\(--ad-ext-theme-score-color\);[^}]*--ad-ext-theme-score-inactive-color:\s*var\(--ad-ext-theme-text-primary-color\);[^}]*--ad-ext-theme-name-color:\s*var\(--ad-ext-theme-text-secondary-color\);[^}]*--ad-ext-theme-meta-color:\s*var\(--ad-ext-theme-text-secondary-color\);[^}]*--ad-ext-theme-active-card-tint-top:\s*transparent;[^}]*--ad-ext-theme-card-tint-top-current:\s*transparent;/s
   );
   assert.match(
     commonLayoutCss,
@@ -526,7 +526,7 @@ test("shared theme visual settings keep player cards shrinkable while preserving
   );
   assert.match(
     visualCss,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*min-height:\s*0\s*!important;[^}]*height:\s*100%\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*min-height:\s*0\s*!important;[^}]*height:\s*100%\s*!important;[^}]*linear-gradient\(\s*180deg,\s*var\(--ad-ext-theme-card-tint-top-current\),\s*var\(--ad-ext-theme-card-tint-bottom-current\)\s*\),/s
   );
 });
 

@@ -15,6 +15,9 @@ function createPreset(definition) {
     scoreColor: String(definition?.scoreColor || "").trim(),
     secondaryTextColor: String(definition?.secondaryTextColor || "").trim(),
     throwLabelColor: String(definition?.throwLabelColor || "").trim(),
+    activePlayerTintIntensity: Number.isFinite(definition?.activePlayerTintIntensity)
+      ? Number(definition.activePlayerTintIntensity)
+      : 15,
     backgroundDisplayMode: String(definition?.backgroundDisplayMode || "fill").trim(),
     backgroundOpacity: Number(definition?.backgroundOpacity) || 25,
     playerFieldTransparency: Number(definition?.playerFieldTransparency) || 10,
@@ -142,6 +145,7 @@ export function createThemeGlobalTemplatePresetPatch(presetKey) {
           scoreColor: preset.scoreColor,
           secondaryTextColor: preset.secondaryTextColor,
           throwLabelColor: preset.throwLabelColor,
+          activePlayerTintIntensity: preset.activePlayerTintIntensity,
           backgroundDisplayMode: preset.backgroundDisplayMode,
           backgroundOpacity: preset.backgroundOpacity,
           playerFieldTransparency: preset.playerFieldTransparency,

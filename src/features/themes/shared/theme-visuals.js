@@ -102,7 +102,13 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
 #ad-ext-player-display .ad-ext-player > .chakra-stack{
   min-height: 0 !important;
   height: 100% !important;
-  background: rgba(8, 12, 24, ${playerFieldAlpha.toFixed(3)}) !important;
+  background:
+    linear-gradient(
+      180deg,
+      var(--ad-ext-theme-card-tint-top-current),
+      var(--ad-ext-theme-card-tint-bottom-current)
+    ),
+    rgba(8, 12, 24, ${playerFieldAlpha.toFixed(3)}) !important;
 }
 #ad-ext-player-display .ad-ext-player > .chakra-stack > *{
   background: transparent !important;

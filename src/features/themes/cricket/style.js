@@ -169,6 +169,8 @@ const cricketThemeCss = `
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
 #ad-ext-player-display .ad-ext-player[${CRICKET_ACTIVE_PLAYER_ATTRIBUTE}="true"]{
+  --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
+  --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
   --ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);
   --ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);
   --ad-ext-theme-cricket-score-color: var(--ad-ext-theme-cricket-score-active-color);
@@ -701,7 +703,13 @@ span.chakra-switch__track.css-v4l15v {
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} {
   position: relative !important;
   overflow: hidden !important;
-  background: linear-gradient(165deg, rgba(6, 15, 34, 0.96), rgba(3, 10, 24, 0.94)) !important;
+  background:
+    linear-gradient(
+      180deg,
+      var(--ad-ext-theme-card-tint-top-current),
+      var(--ad-ext-theme-card-tint-bottom-current)
+    ),
+    linear-gradient(165deg, rgba(6, 15, 34, 0.96), rgba(3, 10, 24, 0.94)) !important;
   border: 1px solid var(--ad-ext-cricket-line) !important;
   border-radius: 0 !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 26px rgba(0, 0, 0, 0.42);

@@ -30,6 +30,10 @@ export const commonThemeCss = `
   --ad-ext-theme-meta-winner-color: var(--ad-ext-theme-meta-active-color);
   --ad-ext-theme-turn-points-color: #ffffff;
   --ad-ext-theme-throw-label-color: rgba(255, 255, 255, 0.72);
+  --ad-ext-theme-active-card-tint-top: transparent;
+  --ad-ext-theme-active-card-tint-bottom: transparent;
+  --ad-ext-theme-card-tint-top-current: transparent;
+  --ad-ext-theme-card-tint-bottom-current: transparent;
 }
 
 /* Hide native scrollbars across active theme surfaces without clipping overflow content. */
@@ -143,6 +147,8 @@ p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: var(--ad-ext-theme-score-
 div.suggestion.css-1dkgpmk { font-size: 6px; background-color: #222; border-color: #434343; }
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner {
+  --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
+  --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
   border: 2px solid var(--ad-ext-theme-card-active-border-color) !important;
   border-radius: 12px !important;
   box-shadow: 0 0 0 1px var(--ad-ext-theme-card-active-outline-color) !important;

@@ -139,6 +139,11 @@ div.css-nfhdnc {
     0 10px 26px rgba(0, 0, 0, var(--bull-active-shadow-alpha)),
     inset 0 0 0 1px rgba(102, 187, 106, var(--bull-active-inset-alpha));
   background:
+    linear-gradient(
+      180deg,
+      var(--ad-ext-theme-card-tint-top-current),
+      var(--ad-ext-theme-card-tint-bottom-current)
+    ),
     linear-gradient(135deg, rgba(102, 187, 106, 0.12), rgba(239, 83, 80, 0.16)),
     rgba(12, 16, 21, var(--bull-active-overlay-alpha));
 }

@@ -53,6 +53,7 @@ const WINNER_FIREWORKS_INTENSITIES = new Set(["dezent", "standard", "stark"]);
 const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "center", "tile"]);
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 25, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
+const THEME_ACTIVE_PLAYER_TINT_INTENSITY = new Set([0, 10, 15, 20, 25, 30]);
 const THEME_GOTCHA_DELTA_PLACEMENTS = new Set(["below", "inline-divider"]);
 const THEME_GOTCHA_DELTA_ALIGNMENTS = new Set(["left", "right"]);
 const THEME_CONTRAST_PRESETS = new Set(["soft", "standard", "high"]);
@@ -261,6 +262,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     scoreColor: "",
     secondaryTextColor: "",
     throwLabelColor: "",
+    activePlayerTintIntensity: 15,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
@@ -312,6 +314,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     scoreColor: "",
     secondaryTextColor: "",
     throwLabelColor: "",
+    activePlayerTintIntensity: 15,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
@@ -649,6 +652,11 @@ const FEATURE_NORMALIZERS = Object.freeze({
       scoreColor: normalizeHexColor(rawConfig.scoreColor, ""),
       secondaryTextColor: normalizeHexColor(rawConfig.secondaryTextColor, ""),
       throwLabelColor: normalizeHexColor(rawConfig.throwLabelColor, ""),
+      activePlayerTintIntensity: normalizeNumberChoice(
+        rawConfig.activePlayerTintIntensity,
+        Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].activePlayerTintIntensity || 0),
+        THEME_ACTIVE_PLAYER_TINT_INTENSITY
+      ),
       backgroundDisplayMode: normalizeStringChoice(
         rawConfig.backgroundDisplayMode,
         String(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundDisplayMode || "fill"),
