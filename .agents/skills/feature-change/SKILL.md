@@ -9,7 +9,6 @@ Implement feature changes in the existing architecture without creating drift be
 
 # Guardrails
 
-- work in source files, not generated output
 - patch the earliest correct layer
 - preserve the current separation between domain logic, runtime lifecycle, feature rendering, and config definitions
 - use proper German umlauts directly in user-facing wording
@@ -27,7 +26,6 @@ Before editing, identify:
 ## 2. Keep architecture intact
 
 Do not solve feature problems by:
-- hand-editing `dist/`
 - duplicating logic across modules
 - hiding semantic logic in CSS
 - introducing one-off hacks where a shared helper belongs
@@ -44,14 +42,12 @@ Check whether the feature change also needs updates in:
 ## 4. Protect the behavior
 
 - add or update the closest meaningful tests
-- run `npm run check:syntax` before final validation
 - leave final validation selection to `$repo-validation`
 - leave release packaging to `$userscript-release` when shipped behavior changed
 
 # Output requirements
 
 A valid result from this skill must:
-- place the change in source, not generated files
 - preserve the project architecture
 - include the necessary test updates
 - leave the repository ready for validation and release workflows

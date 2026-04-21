@@ -6,13 +6,15 @@ Priority: truthfulness, correctness, proportional validation.
 
 - prefer minimal diffs and existing conventions
 - preserve existing architecture boundaries unless the task explicitly requires changing them
+- keep Codex context small: prefer the smallest relevant source files for the task
+- do not inspect, quote, or diff `dist/**` unless the task explicitly requires release, build-artifact, packaged-output, or shipped-userscript verification work
+- do not inspect, quote, or diff `docs/**` by default; use docs only when the task is documentation, wording sync, feature audit, or explicitly cites a doc file
 - work in source, not `dist/`
-- keep standard ESLint coverage scoped to actively maintained source; exclude archive, backup, vendor, and generated trees from the default lint surface
-- run `npm run lint` before declaring done when changes touch linted JS/MJS source, tests, loader code, scripts, or lint configuration
-- when changes touch Sonar-scanned JS/MJS source or project-level analysis config, treat a SonarQube check as part of the expected validation surface; prefer the SonarQube connection and project data configured in `~/.codex/config.toml`, run it whenever server/auth access is available, and report it explicitly as executed or blocked rather than silently skipping it; treat Sonar as complementary to lint/tests rather than a replacement
-- when SonarQube reports new or still-open issues for the current work, fix them in-source and rerun the relevant local validation plus SonarQube in a loop until the touched scope is clean or a concrete blocker is reached; do not stop at a green quality gate if open issues, bugs, vulnerabilities, or code smells for the touched code still remain without explanation
 - never hand-edit generated files; refresh them only through the build flow when release work is explicitly requested
-- use `.agents/skills/repo-validation/SKILL.md` after changes to choose the smallest sufficient validation
+- keep standard ESLint coverage scoped to actively maintained source; exclude archive, backup, vendor, and generated trees from the default lint surface
+- use `.agents/skills/repo-validation/SKILL.md` after changes to choose and report the smallest sufficient validation
+- run `npm run lint` before declaring done when changes touch linted JS/MJS source, tests, loader code, scripts, or lint configuration
+- when changes touch Sonar-scanned JS/MJS source or project-level analysis config, include SonarQube validation whenever server/auth access is available, report it explicitly as executed or blocked, and iterate on fixable findings in the touched scope until clean or concretely blocked
 - when SonarQube access, project health, or issue triage is requested, prefer the configured local `sonarqube` MCP server or the SonarQube base URL, project key, and project name from `~/.codex/config.toml`, and re-verify live server status and project visibility instead of assuming an earlier access check is still current
 - never copy SonarQube tokens or other local credentials into repo-tracked files; rely on local MCP or environment configuration instead
 - when browser access is available, Codex may use the connected Chrome browser for analysis, tests, DOM inspection, console, network checks, and task-focused interactions, but only in the currently active tab; do not use other open tabs, switch tabs automatically, open additional tabs, or navigate outside the active tab unless the task explicitly requires it, keep any browser-side changes minimal and limited to debugging, reproduction, verification, or UI tests, use extra caution before potentially destructive actions, and if browser access is unavailable, continue normally and state what could not be verified
