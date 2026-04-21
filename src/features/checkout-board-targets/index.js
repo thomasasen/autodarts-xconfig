@@ -14,6 +14,173 @@ import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.
 const FEATURE_KEY = "checkout-board-targets";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const TRANSIENT_ROUTE_RETENTION_MS = 1500;
+const CHECKOUT_SEMANTIC_ATTRIBUTE_SELECTORS = Object.freeze([
+  "#ad-ext-game-variant",
+  ".suggestion",
+  "#ad-ext-turn",
+  ".ad-ext-turn-throw",
+  ".ad-ext-turn-points",
+]);
+const CHECKOUT_SEMANTIC_TEXT_SELECTORS = Object.freeze([
+  ...CHECKOUT_SEMANTIC_ATTRIBUTE_SELECTORS,
+  ".ad-ext-player-score",
+]);
+const CHECKOUT_SEMANTIC_CHILDLIST_SELECTORS = Object.freeze([
+  ...CHECKOUT_SEMANTIC_TEXT_SELECTORS,
+]);
+const BOARD_STRUCTURE_CHILDLIST_SELECTORS = Object.freeze([
+  "svg.ad-ext-theme-board-svg",
+  ".ad-ext-theme-board-viewport svg",
+  ".ad-ext-theme-board-canvas svg",
+  ".ad-ext-tv-board-zoom-host svg",
+  ".showAnimations svg",
+  ".css-aiihgx svg",
+  ".css-79elbk svg",
+]);
+
+function resolveMutationType(mutation) {
+  if (mutation?.type) {
+    return String(mutation.type);
+  }
+  if (mutation?.attributeName) {
+    return "attributes";
+  }
+  if (mutation?.addedNodes || mutation?.removedNodes) {
+    return "childList";
+  }
+  return "";
+}
+
+function toNodeArray(value) {
+  if (!value || typeof value[Symbol.iterator] !== "function") {
+    return [];
+  }
+
+  return Array.from(value).filter(Boolean);
+}
+
+function getTouchedMutationNodes(mutation) {
+  return [
+    mutation?.target || null,
+    ...toNodeArray(mutation?.addedNodes),
+    ...toNodeArray(mutation?.removedNodes),
+  ].filter(Boolean);
+}
+
+function nodeOrAncestorMatchesAnySelector(node, selectors = []) {
+  if (!node || !Array.isArray(selectors) || !selectors.length) {
+    return false;
+  }
+
+  return selectors.some((selector) => {
+    try {
+      return Boolean(node.closest?.(selector));
+    } catch (_) {
+      return false;
+    }
+  });
+}
+
+function nodesAreRelated(leftNode, rightNode) {
+  if (!leftNode || !rightNode) {
+    return false;
+  }
+  if (leftNode === rightNode) {
+    return true;
+  }
+  if (typeof leftNode.contains === "function" && leftNode.contains(rightNode)) {
+    return true;
+  }
+  if (typeof rightNode.contains === "function" && rightNode.contains(leftNode)) {
+    return true;
+  }
+  return false;
+}
+
+function shouldInvalidateBoardSurfaceForMutation(mutation, watchedNodes = []) {
+  if (resolveMutationType(mutation) !== "childList") {
+    return false;
+  }
+
+  const touchedNodes = getTouchedMutationNodes(mutation);
+  if (
+    watchedNodes.some((watchedNode) =>
+      touchedNodes.some((touchedNode) => nodesAreRelated(touchedNode, watchedNode))
+    )
+  ) {
+    return true;
+  }
+
+  return touchedNodes.some((node) =>
+    nodeOrAncestorMatchesAnySelector(node, BOARD_STRUCTURE_CHILDLIST_SELECTORS)
+  );
+}
+
+export function resolveCheckoutBoardMutationReaction(mutations = [], context = {}) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return {
+      shouldSchedule: false,
+      shouldInvalidateBoardCache: false,
+    };
+  }
+
+  const watchedNodes = [context.board?.svg || null, context.board?.group || null].filter(Boolean);
+  let shouldSchedule = false;
+  let shouldInvalidateBoardCache = false;
+
+  mutations.forEach((mutation) => {
+    if (shouldInvalidateBoardCache) {
+      return;
+    }
+    if (!mutation || typeof mutation !== "object") {
+      return;
+    }
+
+    const mutationType = resolveMutationType(mutation);
+    if (mutationType === "attributes") {
+      if (
+        nodeOrAncestorMatchesAnySelector(
+          mutation.target,
+          CHECKOUT_SEMANTIC_ATTRIBUTE_SELECTORS
+        )
+      ) {
+        shouldSchedule = true;
+      }
+      return;
+    }
+
+    if (mutationType === "characterData") {
+      if (
+        nodeOrAncestorMatchesAnySelector(mutation.target, CHECKOUT_SEMANTIC_TEXT_SELECTORS)
+      ) {
+        shouldSchedule = true;
+      }
+      return;
+    }
+
+    if (mutationType === "childList") {
+      const touchedNodes = getTouchedMutationNodes(mutation);
+      const touchesSemanticSurface = touchedNodes.some((node) =>
+        nodeOrAncestorMatchesAnySelector(node, CHECKOUT_SEMANTIC_CHILDLIST_SELECTORS)
+      );
+      const invalidatesBoardSurface = shouldInvalidateBoardSurfaceForMutation(
+        mutation,
+        watchedNodes
+      );
+      if (touchesSemanticSurface || invalidatesBoardSurface) {
+        shouldSchedule = true;
+      }
+      if (invalidatesBoardSurface) {
+        shouldInvalidateBoardCache = true;
+      }
+    }
+  });
+
+  return {
+    shouldSchedule,
+    shouldInvalidateBoardCache,
+  };
+}
 
 function resolveDartsRemaining(gameState) {
   const throws = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
@@ -674,7 +841,15 @@ export function initializeCheckoutBoardTargets(context = {}) {
         if (!hasExternalDomMutation(mutations, isManagedNode)) {
           return;
         }
-        invalidateBoardCache();
+        const mutationReaction = resolveCheckoutBoardMutationReaction(mutations, {
+          board: boardCache.value,
+        });
+        if (!mutationReaction.shouldSchedule) {
+          return;
+        }
+        if (mutationReaction.shouldInvalidateBoardCache) {
+          invalidateBoardCache();
+        }
         scheduler.schedule();
       },
       observeOptions: createTurnSurfaceObserveOptions(),

@@ -6,7 +6,10 @@ import { createEventBus } from "../../src/core/event-bus.js";
 import { createGameStateStore } from "../../src/core/game-state-store.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
-import { initializeCheckoutBoardTargets } from "../../src/features/checkout-board-targets/index.js";
+import {
+  initializeCheckoutBoardTargets,
+  resolveCheckoutBoardMutationReaction,
+} from "../../src/features/checkout-board-targets/index.js";
 import { renderCheckoutTargets } from "../../src/features/checkout-board-targets/logic.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
@@ -164,13 +167,149 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
     {
       type: "childList",
       target: documentRef.main,
-      addedNodes: [documentRef.createElement("div")],
+      addedNodes: [documentRef.suggestionElement],
       removedNodes: [],
     },
   ]);
   assert.equal(scheduleCounter.count, 2);
 
   cleanup();
+});
+
+test("checkout-board-targets classifies semantic and board mutations without promoting unrelated UI churn", () => {
+  const documentRef = new FakeDocument();
+  const board = appendBoardFixture(documentRef);
+
+  const unrelatedNode = documentRef.createElement("div");
+  unrelatedNode.classList.add("ad-ext-x01-score-progress__fill");
+  documentRef.main.appendChild(unrelatedNode);
+
+  assert.deepEqual(
+    resolveCheckoutBoardMutationReaction(
+      [
+        {
+          type: "attributes",
+          target: unrelatedNode,
+          attributeName: "class",
+          addedNodes: [],
+          removedNodes: [],
+        },
+      ],
+      { board }
+    ),
+    {
+      shouldSchedule: false,
+      shouldInvalidateBoardCache: false,
+    }
+  );
+
+  assert.deepEqual(
+    resolveCheckoutBoardMutationReaction(
+      [
+        {
+          type: "attributes",
+          target: documentRef.throwRow,
+          attributeName: "class",
+          addedNodes: [],
+          removedNodes: [],
+        },
+      ],
+      { board }
+    ),
+    {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: false,
+    }
+  );
+
+  const replacementBoard = appendBoardFixture(documentRef);
+  assert.deepEqual(
+    resolveCheckoutBoardMutationReaction(
+      [
+        {
+          type: "childList",
+          target: documentRef.main,
+          addedNodes: [replacementBoard.svg],
+          removedNodes: [board.svg],
+        },
+      ],
+      { board }
+    ),
+    {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: true,
+    }
+  );
+});
+
+test("checkout-board-targets ignores unrelated score-progress class churn", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const domGuards = createDomGuards({ documentRef });
+  const observerRegistry = createObserverRegistry();
+  const scheduleCounter = { count: 0 };
+
+  documentRef.suggestionElement.textContent = "D20";
+  appendBoardFixture(documentRef);
+
+  const noisyProgressNode = documentRef.createElement("div");
+  noisyProgressNode.classList.add("ad-ext-x01-score-progress__fill");
+  documentRef.main.appendChild(noisyProgressNode);
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          colorTheme: "violet",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createCountingSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  try {
+    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    assert.ok(observer);
+    assert.equal(scheduleCounter.count, 1);
+
+    noisyProgressNode.classList.add("ad-ext-x01-score-progress__fill--effect-off");
+    observer.callback([
+      {
+        type: "attributes",
+        target: noisyProgressNode,
+        attributeName: "class",
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ]);
+
+    assert.equal(scheduleCounter.count, 1);
+  } finally {
+    cleanup();
+  }
 });
 
 test("checkout-board-targets render helper draws every provided target once", () => {
