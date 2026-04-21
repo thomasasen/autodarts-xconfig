@@ -1360,6 +1360,31 @@ function buildSettingsModal(documentRef, state, features) {
   const body = createElement(documentRef, "div", {
     className: "ad-xconfig-modal-body",
   });
+  const settingsDetails = Array.isArray(descriptor?.settingsDetails)
+    ? descriptor.settingsDetails.filter(Boolean)
+    : [];
+  if (settingsDetails.length) {
+    const detailsRow = createElement(documentRef, "section", {
+      className: "ad-xconfig-setting-row",
+      attributes: {
+        "data-adxconfig-settings-summary": "true",
+      },
+    });
+    const settingsDetailHeading = String(descriptor?.settingsDetailHeading || "").trim();
+    if (settingsDetailHeading) {
+      detailsRow.appendChild(createElement(documentRef, "h4", {
+        className: "ad-xconfig-setting-label",
+        text: settingsDetailHeading,
+      }));
+    }
+    settingsDetails.forEach((entry) => {
+      detailsRow.appendChild(createElement(documentRef, "p", {
+        className: "ad-xconfig-note",
+        text: entry,
+      }));
+    });
+    body.appendChild(detailsRow);
+  }
   const sectionBodies = new Map();
   fields.forEach((field) => {
     const sectionLabel = String(field.section || "").trim();

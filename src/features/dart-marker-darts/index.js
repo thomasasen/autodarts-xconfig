@@ -14,6 +14,11 @@ import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom
 
 const FEATURE_KEY = "dart-marker-darts";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const UPDATE_REASON = Object.freeze({
+  full: "full",
+  reposition: "reposition",
+  rescan: "rescan",
+});
 const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
   resize: `${FEATURE_KEY}:window-resize`,
@@ -101,6 +106,65 @@ function hasRelevantBoardMutation(mutations = [], isManagedNode = null) {
   });
 }
 
+function ensurePendingUpdateReasons(state) {
+  if (!state) {
+    return new Set([UPDATE_REASON.full]);
+  }
+
+  if (!(state.pendingUpdateReasons instanceof Set)) {
+    state.pendingUpdateReasons = new Set([UPDATE_REASON.full]);
+  }
+
+  return state.pendingUpdateReasons;
+}
+
+function scheduleStateUpdate(state, reason = UPDATE_REASON.full) {
+  ensurePendingUpdateReasons(state).add(
+    Object.values(UPDATE_REASON).includes(reason) ? reason : UPDATE_REASON.full
+  );
+}
+
+function consumeUpdateMode(state) {
+  const reasons = ensurePendingUpdateReasons(state);
+  const activeReasons = reasons.size ? Array.from(reasons) : [UPDATE_REASON.full];
+  reasons.clear();
+
+  const requiresRescan =
+    activeReasons.includes(UPDATE_REASON.full) || activeReasons.includes(UPDATE_REASON.rescan);
+
+  return {
+    reasons: activeReasons,
+    requiresBoardRescan: requiresRescan,
+    requiresMarkerRescan: requiresRescan,
+  };
+}
+
+function buildGameStateSignature(snapshot = null) {
+  const activeTurn = snapshot?.match?.turns?.find?.(
+    (turn) => String(turn?.playerId || "") === String(snapshot?.match?.players?.[snapshot?.activePlayerIndex]?.id || "")
+  );
+  const activeThrows = Array.isArray(activeTurn?.throws) ? activeTurn.throws : [];
+
+  return [
+    String(snapshot?.variantNormalized || ""),
+    String(snapshot?.outMode || ""),
+    Number.isFinite(snapshot?.activePlayerIndex) ? String(snapshot.activePlayerIndex) : "",
+    Number.isFinite(snapshot?.activeScore) ? String(snapshot.activeScore) : "",
+    Array.isArray(snapshot?.match?.players) ? String(snapshot.match.players.length) : "",
+    Array.isArray(snapshot?.match?.turns) ? String(snapshot.match.turns.length) : "",
+    activeThrows
+      .map((throwEntry) =>
+        [
+          Number.isFinite(throwEntry?.round) ? throwEntry.round : "",
+          Number.isFinite(throwEntry?.turn) ? throwEntry.turn : "",
+          Number.isFinite(throwEntry?.points) ? throwEntry.points : "",
+          String(throwEntry?.segment || ""),
+        ].join(":")
+      )
+      .join("|"),
+  ].join("::");
+}
+
 export function initializeDartMarkerDarts(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
@@ -119,15 +183,17 @@ export function initializeDartMarkerDarts(context = {}) {
   const featureConfig =
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("dartMarkerDarts")
-      : {
-          design: "autodarts",
-          animateDarts: true,
-          sizePercent: 100,
-          hideOriginalMarkers: false,
-          enableShadow: true,
-          enableWobble: true,
-          flightSpeed: "standard",
-        };
+        : {
+            design: "autodarts",
+            animateDarts: true,
+            sizePercent: 100,
+            hideOriginalMarkers: false,
+            enableShadow: true,
+            enableShadowBlur: true,
+            enableWobble: true,
+            enableFlightBlur: true,
+            flightSpeed: "standard",
+          };
   const visualConfig = resolveDartMarkerDartsConfig(featureConfig);
 
   if (featureDebug?.enabled) {
@@ -137,7 +203,9 @@ export function initializeDartMarkerDarts(context = {}) {
       sizePercent: visualConfig.sizePercent,
       hideOriginalMarkers: visualConfig.hideOriginalMarkers,
       enableShadow: visualConfig.enableShadow,
+      enableShadowBlur: visualConfig.enableShadowBlur,
       enableWobble: visualConfig.enableWobble,
+      enableFlightBlur: visualConfig.enableFlightBlur,
       flightSpeed: visualConfig.flightSpeed,
       flightDurationMs: visualConfig.flightDurationMs,
     });
@@ -147,9 +215,11 @@ export function initializeDartMarkerDarts(context = {}) {
 
   const state = createDartMarkerDartsState(windowRef);
   state.lastHref = getCurrentHref(windowRef);
+  ensurePendingUpdateReasons(state);
 
   let scheduler = null;
-  function scheduleUpdate() {
+  function scheduleUpdate(reason = UPDATE_REASON.full) {
+    scheduleStateUpdate(state, reason);
     scheduler?.schedule?.();
   }
 
@@ -160,6 +230,7 @@ export function initializeDartMarkerDarts(context = {}) {
       visualConfig,
       featureDebug,
       scheduleUpdate,
+      updateMode: consumeUpdateMode(state),
     });
   }
 
@@ -178,7 +249,7 @@ export function initializeDartMarkerDarts(context = {}) {
         if (!hasRelevantBoardMutation(mutations, isManagedNode)) {
           return;
         }
-        scheduleUpdate();
+        scheduleUpdate(UPDATE_REASON.rescan);
       },
       observeOptions: {
         childList: true,
@@ -195,33 +266,33 @@ export function initializeDartMarkerDarts(context = {}) {
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduleUpdate(),
+      handler: () => scheduleUpdate(UPDATE_REASON.reposition),
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.resize,
       target: windowRef,
       type: "resize",
-      handler: () => scheduleUpdate(),
+      handler: () => scheduleUpdate(UPDATE_REASON.reposition),
       options: { passive: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.scroll,
       target: windowRef,
       type: "scroll",
-      handler: () => scheduleUpdate(),
+      handler: () => scheduleUpdate(UPDATE_REASON.reposition),
       options: { passive: true, capture: true },
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.popstate,
       target: windowRef,
       type: "popstate",
-      handler: () => scheduleUpdate(),
+      handler: () => scheduleUpdate(UPDATE_REASON.full),
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.hashchange,
       target: windowRef,
       type: "hashchange",
-      handler: () => scheduleUpdate(),
+      handler: () => scheduleUpdate(UPDATE_REASON.full),
     });
 
     const navigationApi =
@@ -235,17 +306,24 @@ export function initializeDartMarkerDarts(context = {}) {
         key: LISTENER_KEYS.navigationCurrentEntry,
         target: navigationApi,
         type: "currententrychange",
-        handler: () => scheduleUpdate(),
+        handler: () => scheduleUpdate(UPDATE_REASON.full),
       });
     }
   }
 
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduleUpdate())
+      ? gameState.subscribe((snapshot) => {
+          const signature = buildGameStateSignature(snapshot);
+          if (signature && signature === state.lastGameStateSignature) {
+            return;
+          }
+          state.lastGameStateSignature = signature;
+          scheduleUpdate(UPDATE_REASON.rescan);
+        })
       : () => {};
 
-  scheduleUpdate();
+  scheduleUpdate(UPDATE_REASON.full);
   let cleanedUp = false;
 
   return function cleanup() {

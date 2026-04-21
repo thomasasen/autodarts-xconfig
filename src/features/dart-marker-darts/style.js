@@ -48,7 +48,9 @@ export function resolveDartMarkerDartsConfig(featureConfig = {}) {
     sizeMultiplier: sizePercent / 100,
     hideOriginalMarkers: normalizeBoolean(featureConfig.hideOriginalMarkers, false),
     enableShadow: normalizeBoolean(featureConfig.enableShadow, true),
+    enableShadowBlur: normalizeBoolean(featureConfig.enableShadowBlur, true),
     enableWobble: normalizeBoolean(featureConfig.enableWobble, true),
+    enableFlightBlur: normalizeBoolean(featureConfig.enableFlightBlur, true),
     flightSpeed,
     flightDurationMs: flightDurationMsBySpeed[flightSpeed] || 320,
   };

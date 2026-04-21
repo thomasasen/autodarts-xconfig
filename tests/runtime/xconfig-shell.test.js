@@ -1446,7 +1446,9 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
         config.features.cricketGridFx.pressureOverlay === true &&
         config.features.dartMarkerEmphasis.effect === "pulse" &&
         config.features.dartMarkerDarts.hideOriginalMarkers === true &&
+        config.features.dartMarkerDarts.enableShadowBlur === true &&
         config.features.dartMarkerDarts.enableWobble === true &&
+        config.features.dartMarkerDarts.enableFlightBlur === true &&
         config.features.removeDartsNotification.imageSize === "large" &&
         config.features.singleBullSound.volume === 0.9 &&
         config.features.winnerFireworks.style === "fireworks" &&
@@ -1708,6 +1710,16 @@ test("xConfig dart design options render split layout with preview and active ba
     assert.ok(activeSlot);
   });
 
+  const settingsModal = documentRef.querySelector(".ad-xconfig-modal");
+  assert.ok(settingsModal);
+  const settingsSummaryNotes = Array.from(
+    documentRef.querySelectorAll("[data-adxconfig-settings-summary='true'] .ad-xconfig-note")
+  ).map((node) => String(node.textContent || "").trim());
+  assert.match(
+    settingsSummaryNotes.join(" "),
+    /schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen/i
+  );
+
   const activeBefore = designOptions.filter(
     (node) => node.getAttribute("data-active") === "true"
   );
@@ -1720,13 +1732,19 @@ test("xConfig dart design options render split layout with preview and active ba
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.design === "red");
   clickSettingToggle(documentRef, "dart-marker-darts", "enableShadow", false);
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableShadow === false);
+  clickSettingToggle(documentRef, "dart-marker-darts", "enableShadowBlur", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableShadowBlur === false);
   clickSettingToggle(documentRef, "dart-marker-darts", "enableWobble", false);
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableWobble === false);
+  clickSettingToggle(documentRef, "dart-marker-darts", "enableFlightBlur", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableFlightBlur === false);
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.dartMarkerDarts.design, "red");
   assert.equal(storedConfig.features.dartMarkerDarts.enableShadow, false);
+  assert.equal(storedConfig.features.dartMarkerDarts.enableShadowBlur, false);
   assert.equal(storedConfig.features.dartMarkerDarts.enableWobble, false);
+  assert.equal(storedConfig.features.dartMarkerDarts.enableFlightBlur, false);
 
   const activeAfter = designOptions.filter(
     (node) => node.getAttribute("data-active") === "true"

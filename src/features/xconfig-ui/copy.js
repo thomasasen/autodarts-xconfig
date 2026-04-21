@@ -950,9 +950,11 @@ export const xconfigFeatureCopy = deepFreeze({
     readmeDetailHeading: "Wichtiger Hinweis",
     readmeDetails: [
       "Auf dem virtuellen Board bleibt `Dart Marker Darts` aktiv und ersetzt sichtbare Treffer-Marker durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
+      "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern, verzögerter Darstellung oder weniger flüssigen Animationen führen.",
     ],
     featuresDetails: [
       "Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
+      "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
     ],
     images: [image("Dart Marker Darts", "animation-dart-marker-darts.png")],
     fields: {
@@ -962,9 +964,9 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wählt das Bilddesign der eingeblendeten Darts."
       ),
       animateDarts: fieldCopy(
-        "Schaltet die sichtbare Fluganimation der Dart-Bilder ein oder aus.",
-        "Bestimmt, ob neu gesetzte Dart-Bilder mit einer kurzen Flugbewegung ins Segment einlaufen oder sofort an ihrer Endposition erscheinen.",
-        "Schaltet die Fluganimation der Dart-Bilder ein oder aus."
+        "Schaltet die sichtbare Fluganimation der Dart-Bilder ein oder aus. Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
+        "Bestimmt, ob neu gesetzte Dart-Bilder mit einer kurzen Flugbewegung ins Segment einlaufen oder sofort an ihrer Endposition erscheinen. Die aktivierte Fluganimation erhöht je nach Szene die CPU- und GPU-Last und kann auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
+        "Schaltet die Fluganimation der Dart-Bilder ein oder aus. Auf schwächeren Geräten kann das die Animation weniger flüssig machen."
       ),
       sizePercent: fieldCopy(
         "Passt die Größe der Dart-Grafiken an.",
@@ -977,18 +979,28 @@ export const xconfigFeatureCopy = deepFreeze({
         "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch."
       ),
       enableShadow: fieldCopy(
-        "Schaltet den Einschlag-Schatten unter dem Dart ein oder aus.",
-        "Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt.",
+        "Schaltet den Einschlag-Schatten unter dem Dart ein oder aus. Zusätzliche Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
+        "Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt, erhöht aber je nach Szene auch die Grafiklast.",
         "Schaltet den Einschlag-Schatten der Dart-Grafik ein oder aus."
       ),
+      enableShadowBlur: fieldCopy(
+        "Schaltet die weiche Schattenzeichnung unter dem Dart ein oder aus. Auf schwächeren Geräten kann das zu Rucklern oder weniger flüssigen Animationen führen.",
+        "Bestimmt, ob der Einschlag-Schatten weichgezeichnet dargestellt wird oder als klarere, schärfere Schattenform erscheint. Die Weichzeichnung erzeugt den realistischeren Eindruck, benötigt aber mehr GPU-Leistung.",
+        "Schaltet die Weichzeichnung des Einschlag-Schattens ein oder aus."
+      ),
       enableWobble: fieldCopy(
-        "Schaltet das kurze Wobble beim Einschlag ein oder aus.",
-        "Aktiviert eine kurze Wackelbewegung des Dart-Bildes direkt nach der Landung. Das verstärkt den Einschlag-Effekt visuell.",
+        "Schaltet das kurze Wobble beim Einschlag ein oder aus. Zusätzliche Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
+        "Aktiviert eine kurze Wackelbewegung des Dart-Bildes direkt nach der Landung. Das verstärkt den Einschlag-Effekt visuell und erhöht je nach Szene die Animationslast leicht.",
         "Schaltet das kurze Wobble der Dart-Grafik beim Einschlag ein oder aus."
       ),
+      enableFlightBlur: fieldCopy(
+        "Schaltet den Blur-Effekt während der Fluganimation ein oder aus. Auf schwächeren Geräten kann das zu Rucklern oder weniger flüssigen Animationen führen.",
+        "Bestimmt, ob der einfliegende Dart während der Flugphase leicht weichgezeichnet wird. Das wirkt dynamischer, benötigt aber zusätzliche GPU-Leistung.",
+        "Schaltet den Blur-Effekt der Fluganimation ein oder aus."
+      ),
       flightSpeed: fieldCopy(
-        "Regelt die Dauer der Fluganimation der Darts.",
-        "Wählt die Dauer der Einfluganimation neuer Dart-Bilder. `Schnell` landet zügig, `Cinematic` hält die Flugphase sichtbar länger.",
+        "Regelt die Dauer der Fluganimation der Darts. Längere, sichtbare Animationen können auf schwächeren Geräten zu weniger flüssigen Bewegungen führen.",
+        "Wählt die Dauer der Einfluganimation neuer Dart-Bilder. `Schnell` landet zügig, `Cinematic` hält die Flugphase sichtbar länger und lässt belastende Effekte entsprechend länger sichtbar laufen.",
         "Regelt die Dauer der Fluganimation."
       ),
       debug: DEBUG_FIELD,
@@ -2684,7 +2696,9 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           { label: "Dart-Größe", key: "sizePercent" },
           { label: "Original-Marker ausblenden", key: "hideOriginalMarkers" },
           { label: "Einschlag-Schatten", key: "enableShadow" },
+          { label: "Schatten-Weichzeichnung", key: "enableShadowBlur" },
           { label: "Einschlag-Wobble", key: "enableWobble" },
+          { label: "Flug-Blur", key: "enableFlightBlur" },
           { label: "Fluggeschwindigkeit", key: "flightSpeed" },
         ],
       },

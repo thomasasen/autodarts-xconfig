@@ -71,7 +71,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Dart-Größe`: Standard
 - `Original-Marker ausblenden`: An
 - `Einschlag-Schatten`: An
+- `Schatten-Weichzeichnung`: An
 - `Einschlag-Wobble`: An
+- `Flug-Blur`: An
 - `Fluggeschwindigkeit`: Standard
 
 **Dart Marker Emphasis**
@@ -830,6 +832,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 - Kurz: Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
 - Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
 - Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
+- Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart Design`: Wählt das Bilddesign der eingeblendeten Darts.
   - `Autodarts`: Dieses Motiv zeigt einen silbernen Dart mit einem weichen violett-blauen Verlaufsflight. Der Look wirkt modern, leicht futuristisch und hebt sich klar von den einfarbigen Varianten ab.
   - `Black Blue`: Dieses Motiv kombiniert einen dunklen Flight mit prägnanten blauen Linien. Dadurch wirkt der Dart besonders technisch, modern und kontrastreich.
@@ -844,14 +847,16 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `White Trible`: Diese Variante kombiniert einen weißen Flight mit einem sichtbaren grauen Tribal-Muster. Dadurch bleibt der Dart hell, bekommt aber deutlich mehr Charakter als die reine Weiß-Version.
   - `Yellow`: Dieses Motiv setzt auf einen klar gelben Flight ohne zusätzliches Muster. Der Dart wirkt dadurch sehr hell und bleibt auch auf dunkleren Hintergründen deutlich sichtbar.
   - `Yellow Scull`: Diese Variante nutzt einen hellgelben Flight mit großem Totenkopf-Motiv. Dadurch wirkt der Dart besonders plakativ und deutlich dekorativer als die schlichte Gelb-Version.
-- `Dart-Fluganimation`: Schaltet die Fluganimation der Dart-Bilder ein oder aus.
+- `Dart-Fluganimation`: Schaltet die Fluganimation der Dart-Bilder ein oder aus. Auf schwächeren Geräten kann das die Animation weniger flüssig machen.
 - `Dart-Größe`: Passt die Größe der Dart-Grafiken an.
   - `Klein`: Diese Stufe reduziert die Dart-Grafik leicht unter die Standardgröße. Das Segment bleibt besser sichtbar, während der Dart weiterhin klar als Ersatzmarker erkennbar bleibt.
   - `Standard`: Diese Einstellung verwendet die reguläre Grundgröße für den Dart-Marker. Der Dart ist klar sichtbar, ohne den Trefferbereich unnötig stark zu füllen.
   - `Groß`: Diese Stufe vergrößert die Dart-Grafik sichtbar über die Standardgröße hinaus. Treffer wirken dadurch präsenter, nehmen aber auch mehr vom Segmentbild ein.
 - `Original-Marker ausblenden`: Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch.
 - `Einschlag-Schatten`: Schaltet den Einschlag-Schatten der Dart-Grafik ein oder aus.
+- `Schatten-Weichzeichnung`: Schaltet die Weichzeichnung des Einschlag-Schattens ein oder aus.
 - `Einschlag-Wobble`: Schaltet das kurze Wobble der Dart-Grafik beim Einschlag ein oder aus.
+- `Flug-Blur`: Schaltet den Blur-Effekt der Fluganimation ein oder aus.
 - `Fluggeschwindigkeit`: Regelt die Dauer der Fluganimation.
   - `Schnell`: Diese Stufe verkürzt die Flugphase deutlich. Neue Darts schießen schnell ins Segment und wirken dadurch sportlicher und unmittelbarer.
   - `Standard`: Diese Einstellung hält die Fluganimation sichtbar, aber kontrolliert. Der neue Dart ist gut wahrnehmbar und landet dennoch zügig am Zielpunkt.

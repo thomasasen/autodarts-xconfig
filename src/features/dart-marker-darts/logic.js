@@ -119,6 +119,142 @@ function getNodeRect(node) {
   return normalizeRect(node.getBoundingClientRect());
 }
 
+function buildRectSignature(rect) {
+  if (!rect) {
+    return "none";
+  }
+
+  return [
+    toFiniteNumber(rect.left).toFixed(2),
+    toFiniteNumber(rect.top).toFixed(2),
+    toFiniteNumber(rect.width).toFixed(2),
+    toFiniteNumber(rect.height).toFixed(2),
+  ].join("|");
+}
+
+function isConnectedNode(node) {
+  return Boolean(node && typeof node === "object" && node.isConnected !== false);
+}
+
+function isReusableBoardSnapshot(snapshot) {
+  if (!snapshot?.svg || !snapshot?.group || !snapshot?.radius) {
+    return false;
+  }
+
+  if (!isConnectedNode(snapshot.svg) || !isConnectedNode(snapshot.group)) {
+    return false;
+  }
+
+  if (
+    snapshot.group !== snapshot.svg &&
+    typeof snapshot.svg.contains === "function" &&
+    !snapshot.svg.contains(snapshot.group)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function resolveBoardSnapshot(documentRef, state, shouldRescan = true) {
+  if (!shouldRescan && isReusableBoardSnapshot(state?.boardSnapshot)) {
+    return state.boardSnapshot;
+  }
+
+  const nextBoard = findBoardSvgGroup(documentRef);
+  if (state) {
+    state.boardSnapshot = nextBoard?.svg ? nextBoard : null;
+  }
+  return nextBoard;
+}
+
+function areReusableMarkers(markers = [], board = null) {
+  if (!Array.isArray(markers) || !markers.length || !board?.svg) {
+    return false;
+  }
+
+  return markers.every((marker) => {
+    if (!isConnectedNode(marker)) {
+      return false;
+    }
+    if (typeof board.svg.contains === "function" && !board.svg.contains(marker)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function resolveBoardMarkers(documentRef, state, board, shouldRescan = true) {
+  if (!shouldRescan && areReusableMarkers(state?.markerNodes, board)) {
+    return state.markerNodes;
+  }
+
+  const markers = collectBoardMarkers(documentRef, { board });
+  if (state) {
+    state.markerNodes = markers;
+  }
+  return markers;
+}
+
+function setStyleIfChanged(styleRef, propertyName, value) {
+  if (!styleRef || !propertyName) {
+    return false;
+  }
+
+  const nextValue = String(value ?? "");
+  if (String(styleRef[propertyName] || "") === nextValue) {
+    return false;
+  }
+
+  styleRef[propertyName] = nextValue;
+  return true;
+}
+
+function setAttributeIfChanged(node, name, value) {
+  if (!node || typeof node.setAttribute !== "function") {
+    return false;
+  }
+
+  const nextValue = String(value ?? "");
+  if (String(node.getAttribute?.(name) || "") === nextValue) {
+    return false;
+  }
+
+  node.setAttribute(name, nextValue);
+  return true;
+}
+
+function setAttributeNsIfChanged(node, namespaceUri, name, value) {
+  if (!node || typeof node.setAttributeNS !== "function") {
+    return false;
+  }
+
+  const nextValue = String(value ?? "");
+  const currentValue =
+    typeof node.getAttributeNS === "function"
+      ? node.getAttributeNS(namespaceUri, name)
+      : node.getAttribute?.(name);
+  if (String(currentValue || "") === nextValue) {
+    return false;
+  }
+
+  node.setAttributeNS(namespaceUri, name, nextValue);
+  return true;
+}
+
+function removeAttributeIfPresent(node, name) {
+  if (!node || typeof node.removeAttribute !== "function") {
+    return false;
+  }
+
+  if (node.getAttribute?.(name) === null) {
+    return false;
+  }
+
+  node.removeAttribute(name);
+  return true;
+}
+
 function resolveClipViewportNode(boardSvg) {
   if (!boardSvg || typeof boardSvg.closest !== "function") {
     return null;
@@ -136,8 +272,8 @@ function clearOverlayClipPath(overlay) {
   if (!overlay?.style) {
     return;
   }
-  overlay.style.clipPath = "";
-  overlay.style.webkitClipPath = "";
+  setStyleIfChanged(overlay.style, "clipPath", "");
+  setStyleIfChanged(overlay.style, "webkitClipPath", "");
 }
 
 function clampToRange(value, minValue, maxValue) {
@@ -188,8 +324,8 @@ function applyOverlayViewportClip(overlay, overlayRect, viewportRect) {
   }
 
   const clipPath = `inset(${top.toFixed(2)}px ${right.toFixed(2)}px ${bottom.toFixed(2)}px ${left.toFixed(2)}px)`;
-  overlay.style.clipPath = clipPath;
-  overlay.style.webkitClipPath = clipPath;
+  setStyleIfChanged(overlay.style, "clipPath", clipPath);
+  setStyleIfChanged(overlay.style, "webkitClipPath", clipPath);
   return clipPath;
 }
 
@@ -335,7 +471,7 @@ function ensureOverlayScene(state, overlay) {
   return state.overlaySceneNode;
 }
 
-function ensureShadowFilter(overlay, enabled) {
+function ensureShadowFilter(overlay, enabled, enableShadowBlur = true) {
   if (!overlay || !enabled) {
     return null;
   }
@@ -364,30 +500,36 @@ function ensureShadowFilter(overlay, enabled) {
 
     const colorMatrix = overlay.ownerDocument?.createElementNS?.(SVG_NS, "feColorMatrix") || null;
     if (colorMatrix) {
-      colorMatrix.setAttribute("type", "matrix");
-      colorMatrix.setAttribute("in", "SourceGraphic");
-      colorMatrix.setAttribute("result", "shadowColor");
-      colorMatrix.setAttribute(
+      setAttributeIfChanged(colorMatrix, "type", "matrix");
+      setAttributeIfChanged(colorMatrix, "in", "SourceGraphic");
+      setAttributeIfChanged(colorMatrix, "result", "shadowColor");
+      setAttributeIfChanged(
+        colorMatrix,
         "values",
         "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"
       );
       filter.appendChild(colorMatrix);
     }
 
-    const blur = overlay.ownerDocument?.createElementNS?.(SVG_NS, "feGaussianBlur") || null;
-    if (blur) {
-      blur.setAttribute("in", "shadowColor");
-      blur.setAttribute("result", "shadowBlur");
-      blur.setAttribute("stdDeviation", String(SHADOW_BLUR_PX));
-      filter.appendChild(blur);
-    }
-
     defs.appendChild(filter);
   }
 
-  const blurNode = filter.querySelector("feGaussianBlur");
+  let blurNode = filter.querySelector("feGaussianBlur");
+  if (enableShadowBlur && !blurNode) {
+    blurNode = overlay.ownerDocument?.createElementNS?.(SVG_NS, "feGaussianBlur") || null;
+    if (blurNode) {
+      setAttributeIfChanged(blurNode, "in", "shadowColor");
+      setAttributeIfChanged(blurNode, "result", "shadowBlur");
+      filter.appendChild(blurNode);
+    }
+  }
+
   if (blurNode) {
-    blurNode.setAttribute("stdDeviation", String(SHADOW_BLUR_PX));
+    if (enableShadowBlur) {
+      setAttributeIfChanged(blurNode, "stdDeviation", String(SHADOW_BLUR_PX));
+    } else {
+      blurNode.remove?.();
+    }
   }
 
   return filter;
@@ -507,13 +649,18 @@ function createDartEntry(ownerDocument) {
     lastTargetCenter: null,
     lastRenderCheckSignature: "",
     lastRenderedSignature: "",
+    lastGeometrySignature: "",
   };
 }
 
 function setImageSource(imageNode, sourceUrl) {
-  imageNode.setAttribute("href", sourceUrl);
+  if (!imageNode) {
+    return;
+  }
+
+  setAttributeIfChanged(imageNode, "href", sourceUrl);
   if (typeof imageNode.setAttributeNS === "function") {
-    imageNode.setAttributeNS(XLINK_NS, "href", sourceUrl);
+    setAttributeNsIfChanged(imageNode, XLINK_NS, "href", sourceUrl);
   }
 }
 
@@ -527,12 +674,12 @@ function setMarkerHidden(marker, shouldHide, state) {
       state.markerOpacityByMarker.set(marker, marker.style.opacity || "");
     }
     marker.dataset[MARKER_OPACITY_DATA_KEY] = marker.style.opacity || "";
-    marker.style.opacity = "0";
+    setStyleIfChanged(marker.style, "opacity", "0");
     return;
   }
 
   if (state.markerOpacityByMarker.has(marker)) {
-    marker.style.opacity = state.markerOpacityByMarker.get(marker);
+    setStyleIfChanged(marker.style, "opacity", state.markerOpacityByMarker.get(marker));
     state.markerOpacityByMarker.delete(marker);
   }
 
@@ -554,7 +701,7 @@ function restoreHiddenMarkers(state) {
       return;
     }
 
-    marker.style.opacity = opacity;
+    setStyleIfChanged(marker.style, "opacity", opacity);
     if (
       marker.dataset &&
       Object.hasOwn(marker.dataset, MARKER_OPACITY_DATA_KEY)
@@ -637,6 +784,7 @@ function getShadowSettings(dartLength, dartOpacity, visualConfig) {
   const enabled = Boolean(visualConfig?.enableShadow);
   return {
     enabled,
+    blurEnabled: enabled && Boolean(visualConfig?.enableShadowBlur),
     baseOpacity: Math.min(1, Math.max(0, SHADOW_OPACITY * dartOpacity)),
     offsetX: dartLength * SHADOW_OFFSET_X_RATIO,
     offsetY: dartLength * SHADOW_OFFSET_Y_RATIO,
@@ -667,7 +815,9 @@ function setDartGeometry(entry, options = {}) {
   const offsets = getDartOffsets(dartLength, dartHeight);
   const x = center.x - offsets.offsetX;
   const y = center.y - offsets.offsetY;
-  const rotationDeg = getRotationDeg(center, boardCenter);
+  const rotationDeg = Number.isFinite(options.rotationDeg)
+    ? Number(options.rotationDeg)
+    : getRotationDeg(center, boardCenter);
   const dartOpacity = DART_OPACITY;
   const shadowSettings = getShadowSettings(dartLength, dartOpacity, visualConfig);
 
@@ -678,37 +828,45 @@ function setDartGeometry(entry, options = {}) {
     }
   }
 
-  imageNode.setAttribute("width", String(dartLength));
-  imageNode.setAttribute("height", String(dartHeight));
-  imageNode.setAttribute("x", String(x));
-  imageNode.setAttribute("y", String(y));
-  imageNode.removeAttribute("transform");
-  imageNode.style.opacity = String(dartOpacity);
+  setAttributeIfChanged(imageNode, "width", String(dartLength));
+  setAttributeIfChanged(imageNode, "height", String(dartHeight));
+  setAttributeIfChanged(imageNode, "x", String(x));
+  setAttributeIfChanged(imageNode, "y", String(y));
+  removeAttributeIfPresent(imageNode, "transform");
+  setStyleIfChanged(imageNode.style, "opacity", String(dartOpacity));
 
   if (dartLength > 0 && dartHeight > 0) {
     const originX = Math.min(100, Math.max(0, (offsets.offsetX / dartLength) * 100));
     const originY = Math.min(100, Math.max(0, (offsets.offsetY / dartHeight) * 100));
     const origin = `${originX}% ${originY}%`;
-    imageNode.style.transformOrigin = origin;
+    setStyleIfChanged(imageNode.style, "transformOrigin", origin);
     if (shadowNode) {
-      shadowNode.style.transformOrigin = origin;
+      setStyleIfChanged(shadowNode.style, "transformOrigin", origin);
     }
   } else {
-    imageNode.style.transformOrigin = "";
+    setStyleIfChanged(imageNode.style, "transformOrigin", "");
     if (shadowNode) {
-      shadowNode.style.transformOrigin = "";
+      setStyleIfChanged(shadowNode.style, "transformOrigin", "");
     }
   }
 
   if (shadowNode) {
-    shadowNode.setAttribute("width", String(dartLength));
-    shadowNode.setAttribute("height", String(dartHeight));
-    shadowNode.setAttribute("x", String(x));
-    shadowNode.setAttribute("y", String(y));
-    shadowNode.style.opacity = shadowSettings.enabled ? String(shadowSettings.baseOpacity) : "0";
-    shadowNode.style.display = shadowSettings.enabled ? "" : "none";
-    shadowNode.style.filter = "";
-    shadowNode.setAttribute("filter", shadowSettings.enabled ? `url(#${SHADOW_FILTER_ID})` : "");
+    setAttributeIfChanged(shadowNode, "width", String(dartLength));
+    setAttributeIfChanged(shadowNode, "height", String(dartHeight));
+    setAttributeIfChanged(shadowNode, "x", String(x));
+    setAttributeIfChanged(shadowNode, "y", String(y));
+    setStyleIfChanged(
+      shadowNode.style,
+      "opacity",
+      shadowSettings.enabled ? String(shadowSettings.baseOpacity) : "0"
+    );
+    setStyleIfChanged(shadowNode.style, "display", shadowSettings.enabled ? "" : "none");
+    setStyleIfChanged(shadowNode.style, "filter", "");
+    if (shadowSettings.enabled) {
+      setAttributeIfChanged(shadowNode, "filter", `url(#${SHADOW_FILTER_ID})`);
+    } else {
+      removeAttributeIfPresent(shadowNode, "filter");
+    }
 
     if (shadowSettings.enabled) {
       const tipRatioX = TIP_OFFSET_X_RATIO;
@@ -718,13 +876,13 @@ function setDartGeometry(entry, options = {}) {
       const localY = -shadowSettings.offsetX * Math.sin(theta) + shadowSettings.offsetY * Math.cos(theta);
       const scaleX = Math.max(0.2, 1 + localX / tailLength);
       const skewYDeg = (Math.atan2(localY, tailLength) * 180) / Math.PI;
-      shadowNode.style.transform = `scale(${scaleX}, 1) skewY(${skewYDeg}deg)`;
+      setStyleIfChanged(shadowNode.style, "transform", `scale(${scaleX}, 1) skewY(${skewYDeg}deg)`);
     } else {
-      shadowNode.style.transform = "";
+      setStyleIfChanged(shadowNode.style, "transform", "");
     }
   }
 
-  rotateGroup.setAttribute("transform", `rotate(${rotationDeg} ${center.x} ${center.y})`);
+  setAttributeIfChanged(rotateGroup, "transform", `rotate(${rotationDeg} ${center.x} ${center.y})`);
 
   entry.center = center;
   entry.dartLength = dartLength;
@@ -908,6 +1066,52 @@ function buildGeometryPayload({
   return payload;
 }
 
+function buildDartGeometrySignature({
+  center,
+  boardCenter,
+  dartLength,
+  dartHeight,
+  sourceUrl,
+  visualConfig,
+  rotationDeg,
+}) {
+  return [
+    Number(center?.x || 0).toFixed(2),
+    Number(center?.y || 0).toFixed(2),
+    Number(boardCenter?.x || 0).toFixed(2),
+    Number(boardCenter?.y || 0).toFixed(2),
+    Number(dartLength || 0).toFixed(2),
+    Number(dartHeight || 0).toFixed(2),
+    Number(rotationDeg || 0).toFixed(2),
+    String(sourceUrl || ""),
+    visualConfig?.enableShadow ? "shadow-on" : "shadow-off",
+    visualConfig?.enableShadowBlur ? "shadow-blur-on" : "shadow-blur-off",
+  ].join("|");
+}
+
+function applyDartGeometryIfNeeded(entry, options = {}) {
+  if (!entry) {
+    return false;
+  }
+
+  const rotationDeg = getRotationDeg(options.center, options.boardCenter);
+  const signature = buildDartGeometrySignature({
+    ...options,
+    rotationDeg,
+  });
+
+  if (entry.lastGeometrySignature === signature) {
+    return false;
+  }
+
+  setDartGeometry(entry, {
+    ...options,
+    rotationDeg,
+  });
+  entry.lastGeometrySignature = signature;
+  return true;
+}
+
 function triggerFlightAnimation(entry, state, visualConfig, boardCenter, featureDebug, geometryPayload) {
   if (!entry?.container || !entry.center || !visualConfig?.animateDarts) {
     return;
@@ -920,21 +1124,22 @@ function triggerFlightAnimation(entry, state, visualConfig, boardCenter, feature
   const flightGroup = entry.container;
   const offsets = getFlightOffsets(entry.center, boardCenter, entry.dartLength);
   const duration = Math.max(0, Number(visualConfig.flightDurationMs) || 0);
+  const flightBlurEnabled = Boolean(visualConfig.enableFlightBlur);
   const flightKeyframes = [
     {
       transform: `translate(${offsets.start.x}px, ${offsets.start.y}px) scale(0.94)`,
       opacity: 0.22,
-      filter: "blur(2px)",
+      ...(flightBlurEnabled ? { filter: "blur(2px)" } : {}),
     },
     {
       transform: `translate(${offsets.mid.x}px, ${offsets.mid.y}px) scale(0.97)`,
       opacity: 0.78,
-      filter: "blur(1px)",
+      ...(flightBlurEnabled ? { filter: "blur(1px)" } : {}),
     },
     {
       transform: "translate(0px, 0px) scale(1)",
       opacity: 1,
-      filter: "blur(0px)",
+      ...(flightBlurEnabled ? { filter: "blur(0px)" } : {}),
     },
   ];
 
@@ -1205,7 +1410,7 @@ function getRenderedTipScreenPoint(entry) {
 }
 
 function maybeMeasureRenderError(state, featureDebug, entry, screenPoint, geometryPayload) {
-  if (!entry || entry.flightAnimation) {
+  if (!featureDebug?.enabled || !entry || entry.flightAnimation) {
     return Number.NaN;
   }
 
@@ -1265,6 +1470,10 @@ export function createDartMarkerDartsState(windowRef = null) {
     windowRef,
     overlayNode: null,
     overlaySceneNode: null,
+    boardSnapshot: null,
+    markerNodes: [],
+    pendingUpdateReasons: new Set(),
+    lastGameStateSignature: "",
     entriesByMarker: new Map(),
     markerOpacityByMarker: new Map(),
     flightTimeoutByMarker: new Map(),
@@ -1272,6 +1481,7 @@ export function createDartMarkerDartsState(windowRef = null) {
     lastHref: getCurrentHref(windowRef),
     lastBoardSignature: "",
     lastOverlaySignature: "",
+    lastLayoutSignature: "",
     lastDepthOrderSignature: "",
     debugSignatures: new Map(),
     debugWarningSignatures: new Map(),
@@ -1290,9 +1500,16 @@ export function clearDartMarkerDartsState(state, options = {}) {
   clearEntries(state);
   clearOverlayChildren(state);
   removeOverlayNode(state);
+  state.boardSnapshot = null;
+  state.markerNodes = [];
+  if (state.pendingUpdateReasons instanceof Set) {
+    state.pendingUpdateReasons.clear();
+  }
+  state.lastGameStateSignature = "";
   state.entriesByMarker.clear();
   state.lastBoardSignature = "";
   state.lastOverlaySignature = "";
+  state.lastLayoutSignature = "";
   state.lastDepthOrderSignature = "";
 
   emitDebug(state, options.featureDebug || null, "cleanup", {
@@ -1306,6 +1523,7 @@ export function updateDartMarkerDarts(options = {}) {
   const visualConfig = options.visualConfig;
   const featureDebug = options.featureDebug || null;
   const scheduleUpdate = options.scheduleUpdate;
+  const updateMode = options.updateMode || null;
 
   if (!documentRef || !state || !visualConfig) {
     clearDartMarkerDartsState(state, {
@@ -1316,6 +1534,9 @@ export function updateDartMarkerDarts(options = {}) {
   }
 
   state.updateTick += 1;
+
+  const requiresBoardRescan = updateMode?.requiresBoardRescan !== false;
+  const requiresMarkerRescan = updateMode?.requiresMarkerRescan !== false;
 
   const currentHref = getCurrentHref(state.windowRef);
   if (state.lastHref && currentHref && currentHref !== state.lastHref) {
@@ -1334,7 +1555,7 @@ export function updateDartMarkerDarts(options = {}) {
     return;
   }
 
-  const board = findBoardSvgGroup(documentRef);
+  const board = resolveBoardSnapshot(documentRef, state, requiresBoardRescan);
   if (!board?.svg || !board.radius) {
     clearDartMarkerDartsState(state, {
       featureDebug,
@@ -1353,7 +1574,7 @@ export function updateDartMarkerDarts(options = {}) {
   }
 
   const groupRect = getNodeRect(board.group) || boardRect;
-  const markers = collectBoardMarkers(documentRef, { board });
+  const markers = resolveBoardMarkers(documentRef, state, board, requiresMarkerRescan);
   if (!markers.length) {
     clearDartMarkerDartsState(state, {
       featureDebug,
@@ -1371,7 +1592,7 @@ export function updateDartMarkerDarts(options = {}) {
     });
     return;
   }
-  ensureShadowFilter(overlay, visualConfig.enableShadow);
+  ensureShadowFilter(overlay, visualConfig.enableShadow, visualConfig.enableShadowBlur);
 
   const scale = getSvgScale(board.svg);
   const radiusPx = Math.max(1, Number(board.radius) * Math.max(1, scale));
@@ -1397,6 +1618,19 @@ export function updateDartMarkerDarts(options = {}) {
     dartLength,
     clipPath,
   });
+
+  const layoutSignature = [
+    buildRectSignature(boardRect),
+    buildRectSignature(groupRect),
+    buildRectSignature(overlayRect),
+    buildRectSignature(clipViewportRect),
+    String(clipPath || ""),
+    Number(scale || 0).toFixed(4),
+    Number(dartLength || 0).toFixed(2),
+    Number(dartHeight || 0).toFixed(2),
+  ].join("|");
+  const layoutChanged = state.lastLayoutSignature !== layoutSignature;
+  state.lastLayoutSignature = layoutSignature;
 
   const markerSet = new Set(markers);
   let removed = 0;
@@ -1456,12 +1690,7 @@ export function updateDartMarkerDarts(options = {}) {
     }
 
     entry.marker = marker;
-    entry.lastTargetCenter = {
-      x: Number(screenPoint.x),
-      y: Number(screenPoint.y),
-    };
-
-    setDartGeometry(entry, {
+    const appliedGeometry = applyDartGeometryIfNeeded(entry, {
       center,
       boardCenter,
       dartLength,
@@ -1469,6 +1698,17 @@ export function updateDartMarkerDarts(options = {}) {
       sourceUrl: dartImageSource,
       visualConfig,
     });
+    if (!appliedGeometry && !layoutChanged) {
+      entry.lastTargetCenter = {
+        x: Number(screenPoint.x),
+        y: Number(screenPoint.y),
+      };
+    } else {
+      entry.lastTargetCenter = {
+        x: Number(screenPoint.x),
+        y: Number(screenPoint.y),
+      };
+    }
 
     const geometryPayload = buildGeometryPayload({
       marker,
@@ -1479,7 +1719,9 @@ export function updateDartMarkerDarts(options = {}) {
       groupRect,
       entry,
     });
-    emitDebug(state, featureDebug, "geometry-apply", geometryPayload);
+    if (appliedGeometry) {
+      emitDebug(state, featureDebug, "geometry-apply", geometryPayload);
+    }
 
     if (isNew) {
       triggerFlightAnimation(

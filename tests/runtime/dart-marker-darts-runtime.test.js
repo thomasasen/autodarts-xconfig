@@ -33,7 +33,9 @@ const VISUAL_CONFIG = Object.freeze({
   sizeMultiplier: 1,
   hideOriginalMarkers: false,
   enableShadow: true,
+  enableShadowBlur: true,
   enableWobble: true,
+  enableFlightBlur: true,
   flightSpeed: "standard",
   flightDurationMs: 320,
 });
@@ -45,6 +47,21 @@ const ANIMATED_VISUAL_CONFIG = Object.freeze({
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForCondition(predicate, options = {}) {
+  const timeoutMs = Math.max(0, Number(options.timeoutMs) || 100);
+  const intervalMs = Math.max(1, Number(options.intervalMs) || 5);
+  const startTime = Date.now();
+
+  while (Date.now() - startTime <= timeoutMs) {
+    if (predicate()) {
+      return true;
+    }
+    await wait(intervalMs);
+  }
+
+  return Boolean(predicate());
 }
 
 function approxEqual(actual, expected, epsilon = 0.01) {
@@ -160,6 +177,8 @@ function createSingleFeatureRuntimeConfig() {
         animateDarts: true,
         sizePercent: 100,
         hideOriginalMarkers: false,
+        enableShadowBlur: true,
+        enableFlightBlur: true,
         flightSpeed: "standard",
       },
     },
@@ -314,7 +333,7 @@ test("dart-marker-darts separates flight container, rotation group, and image no
   clearDartMarkerDartsState(state);
 });
 
-test("dart-marker-darts supports configurable shadow and wobble effects", () => {
+test("dart-marker-darts supports configurable shadow, shadow blur, wobble, and flight blur effects", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const { markers } = installBoardFixture(documentRef, [
@@ -332,16 +351,77 @@ test("dart-marker-darts supports configurable shadow and wobble effects", () => 
     state,
     visualConfig: {
       ...ANIMATED_VISUAL_CONFIG,
-      enableShadow: false,
+      enableShadowBlur: false,
       enableWobble: false,
+      enableFlightBlur: false,
     },
   });
 
   const entry = state.entriesByMarker.get(markers[0]);
   assert.ok(entry);
-  assert.equal(entry.shadowNode.style.display, "none");
-  assert.equal(entry.shadowNode.__animations.length, 0);
+  assert.notEqual(entry.shadowNode.style.display, "none");
+  assert.equal(Boolean(documentRef.querySelector("feGaussianBlur")), false);
+  assert.equal(entry.shadowNode.__animations.length, 1);
   assert.equal(entry.imageNode.__animations.length, 0);
+  assert.equal(
+    Object.hasOwn(entry.container.__animations[0]?.keyframes?.[0] || {}, "filter"),
+    false
+  );
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts reuses entry geometry when board and marker layout are unchanged", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 10,
+      cy: 20,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 360, f: 280 }),
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+
+  const mutationCounter = { image: 0, shadow: 0, rotate: 0 };
+  const originalImageSetAttribute = entry.imageNode.setAttribute.bind(entry.imageNode);
+  const originalShadowSetAttribute = entry.shadowNode.setAttribute.bind(entry.shadowNode);
+  const originalRotateSetAttribute = entry.rotateGroup.setAttribute.bind(entry.rotateGroup);
+
+  entry.imageNode.setAttribute = (...args) => {
+    mutationCounter.image += 1;
+    return originalImageSetAttribute(...args);
+  };
+  entry.shadowNode.setAttribute = (...args) => {
+    mutationCounter.shadow += 1;
+    return originalShadowSetAttribute(...args);
+  };
+  entry.rotateGroup.setAttribute = (...args) => {
+    mutationCounter.rotate += 1;
+    return originalRotateSetAttribute(...args);
+  };
+
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+    updateMode: {
+      requiresBoardRescan: false,
+      requiresMarkerRescan: false,
+    },
+  });
+
+  assert.deepEqual(mutationCounter, { image: 0, shadow: 0, rotate: 0 });
 
   clearDartMarkerDartsState(state);
 });
@@ -629,6 +709,8 @@ test("dart-marker-darts reacts to scroll, resize, and mutation triggers without 
           animateDarts: false,
           sizePercent: 100,
           hideOriginalMarkers: false,
+          enableShadowBlur: true,
+          enableFlightBlur: true,
           flightSpeed: "standard",
           debug: false,
         };
@@ -696,6 +778,8 @@ test("dart-marker-darts ignores unrelated document churn outside the X01 board s
           animateDarts: false,
           sizePercent: 100,
           hideOriginalMarkers: false,
+          enableShadowBlur: true,
+          enableFlightBlur: true,
           flightSpeed: "standard",
           debug: false,
         };
@@ -741,6 +825,91 @@ test("dart-marker-darts ignores unrelated document churn outside the X01 board s
   cleanup();
 });
 
+test("dart-marker-darts ignores unchanged game-state snapshots for scheduling", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  installBoardFixture(documentRef, [
+    {
+      cx: 0,
+      cy: 0,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 }),
+    },
+  ]);
+
+  let gameStateListener = () => {};
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeDartMarkerDarts({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          design: "autodarts",
+          animateDarts: false,
+          sizePercent: 100,
+          hideOriginalMarkers: false,
+          enableShadowBlur: true,
+          enableFlightBlur: true,
+          flightSpeed: "standard",
+          debug: false,
+        };
+      },
+    },
+    gameState: {
+      subscribe(listener) {
+        gameStateListener = listener;
+        return () => {};
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const baseCount = scheduleCounter.count;
+  const snapshot = {
+    variantNormalized: "x01",
+    outMode: "double",
+    activePlayerIndex: 0,
+    activeScore: 301,
+    match: {
+      players: [{ id: "player-1" }],
+      turns: [{ playerId: "player-1", throws: [] }],
+    },
+  };
+
+  gameStateListener(snapshot);
+  assert.equal(scheduleCounter.count, baseCount + 1);
+
+  gameStateListener(snapshot);
+  assert.equal(scheduleCounter.count, baseCount + 1);
+
+  gameStateListener({
+    ...snapshot,
+    activeScore: 261,
+  });
+  assert.equal(scheduleCounter.count, baseCount + 2);
+
+  cleanup();
+});
+
 test("dart-marker-darts runtime remount keeps a single overlay instance", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -761,7 +930,10 @@ test("dart-marker-darts runtime remount keeps a single overlay instance", async 
 
   runtime.start();
   runtime.start();
-  await wait(15);
+  await waitForCondition(
+    () => documentRef.querySelectorAll(`#${OVERLAY_ID}`).length === 1,
+    { timeoutMs: 120 }
+  );
 
   assert.equal(documentRef.querySelectorAll(`#${OVERLAY_ID}`).length, 1);
 

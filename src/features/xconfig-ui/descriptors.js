@@ -67,6 +67,14 @@ function descriptorEntry(definition) {
     visibleDescription: featureCopy?.visibleDescription || "",
     visualDescription: featureCopy?.visualDescription || "",
     usefulWhen: featureCopy?.usefulWhen || "",
+    settingsDetailHeading: featureCopy?.readmeDetailHeading || "",
+    settingsDetails: Object.freeze(
+      Array.isArray(featureCopy?.featuresDetails)
+        ? featureCopy.featuresDetails
+            .map((entry) => String(entry || "").trim())
+            .filter(Boolean)
+        : []
+    ),
     fields: Object.freeze(
       (definition.fields || []).map((field) => {
         const fieldKey = String(field.key || field.action || "").trim();
@@ -706,7 +714,9 @@ export const xconfigDescriptors = Object.freeze([
       ]),
       checkboxField("hideOriginalMarkers", "Original-Marker ausblenden"),
       checkboxField("enableShadow", "Einschlag-Schatten"),
+      checkboxField("enableShadowBlur", "Schatten-Weichzeichnung"),
       checkboxField("enableWobble", "Einschlag-Wobble"),
+      checkboxField("enableFlightBlur", "Flug-Blur"),
       selectField("flightSpeed", "Fluggeschwindigkeit", [
         { value: "schnell", label: "Schnell" },
         { value: "standard", label: "Standard" },
