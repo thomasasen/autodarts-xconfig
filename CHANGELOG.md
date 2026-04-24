@@ -12,6 +12,16 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.1] - 2026-04-24
+
+### Changed
+
+- Nutzerwirkung: `Checkout Score Pulse` bleibt bei X01-Themes jetzt auch dann zuverlässig am richtigen Spieler-Score, wenn Autodarts Spielerflächen oder Score-Knoten während des Turns austauscht; `Turn Points Count` beobachtet nur noch die relevante Turn-Fläche und verursacht dadurch weniger unnötige DOM-Arbeit.
+  Technik: Ein geteilter `x01-player-surface-adapter` normalisiert Spielerflächen, Score-Knoten und Mutation-Signaturen für X01-Features; `checkout-score-pulse` nutzt diese Oberfläche für remount-stabile Score-Pulse, `turn-points-count` scoped seinen Observer auf die Turn-Surface, und neue Runtime-Regressionen sichern Surface-Austausch, Score-Mutation und Observer-Scope ab.
+
+- Nutzerwirkung: Keine sichtbare Änderung im Userscript; die Agent-/Skill-Anweisungen für Wartung und Release sind klarer getrennt und werden beim lokalen Check robuster validiert.
+  Technik: Deprecated Skill-Dateien wurden durch fokussierte Analyse-, Changelog-, Release- und Validierungs-Skills ersetzt; `scripts/check-agent-instructions.mjs` prüft referenzierte Skill-Dateien mit, und `check:agents` ist als npm-Script verdrahtet.
+
 ## [2.3.0] - 2026-04-21
 
 ### Changed
@@ -1457,7 +1467,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/da0d5b1...HEAD
+[2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...HEAD
+[2.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/da0d5b1...d17c15d
 [2.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/6398977...da0d5b1
 [2.1.31]: https://github.com/thomasasen/autodarts-xconfig/compare/4e52392...6398977
 [2.1.30]: https://github.com/thomasasen/autodarts-xconfig/compare/982f5f1...4e52392
