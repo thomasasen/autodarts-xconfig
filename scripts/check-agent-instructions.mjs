@@ -25,7 +25,7 @@ function parseFrontmatter(text, label) {
     return {};
   }
 
-  const normalized = text.replace(/\r\n/g, '\n');
+  const normalized = text.replaceAll('\r\n', '\n');
   const end = normalized.indexOf('\n---\n', 4);
   if (end === -1) {
     fail(`${label}: unterminated YAML frontmatter`);
@@ -34,12 +34,28 @@ function parseFrontmatter(text, label) {
 
   const fields = {};
   for (const line of normalized.slice(4, end).split('\n')) {
-    const match = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (match) {
-      fields[match[1]] = match[2].trim().replace(/^['"]|['"]$/g, '');
+    const separatorIndex = line.indexOf(':');
+    if (separatorIndex > 0) {
+      const key = line.slice(0, separatorIndex).trim();
+      if (!/^[A-Za-z0-9_-]+$/.test(key)) {
+        continue;
+      }
+      fields[key] = stripWrappingQuotes(line.slice(separatorIndex + 1).trim());
     }
   }
   return fields;
+}
+
+function stripWrappingQuotes(value) {
+  if (value.length < 2) {
+    return value;
+  }
+
+  const first = value.at(0);
+  const last = value.at(-1);
+  return (first === '"' && last === '"') || (first === "'" && last === "'")
+    ? value.slice(1, -1)
+    : value;
 }
 
 function collectInstructionFiles(skillDirs) {
@@ -55,7 +71,10 @@ function reportMatches(text, regex) {
 }
 
 function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const specialCharacters = new Set(['.', '*', '+', '?', '^', '$', '{', '}', '(', ')', '|', '[', ']', '\\']);
+  return Array.from(value, (character) =>
+    specialCharacters.has(character) ? `\\${character}` : character
+  ).join('');
 }
 
 if (!exists(agentsPath)) {

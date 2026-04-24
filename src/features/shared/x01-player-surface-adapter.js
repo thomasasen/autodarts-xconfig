@@ -146,7 +146,7 @@ export function getX01PlayerSurfaceSnapshot(documentRef) {
   return {
     playerDisplayRoot,
     playerCards,
-    players: playerCards.map(toPlayerEntry),
+    players: playerCards.map((node, index) => toPlayerEntry(node, index)),
     source: X01_PLAYER_SURFACE_SOURCE_TOOLS,
   };
 }

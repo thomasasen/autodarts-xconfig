@@ -22,6 +22,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Keine sichtbare Änderung im Userscript; die Agent-/Skill-Anweisungen für Wartung und Release sind klarer getrennt und werden beim lokalen Check robuster validiert.
   Technik: Deprecated Skill-Dateien wurden durch fokussierte Analyse-, Changelog-, Release- und Validierungs-Skills ersetzt; `scripts/check-agent-instructions.mjs` prüft referenzierte Skill-Dateien mit, und `check:agents` ist als npm-Script verdrahtet.
 
+- Nutzerwirkung: Keine sichtbare Änderung; die SonarQube-Nachprüfung für die 2.3.1-Änderungen ist jetzt ohne neue Reliability-Issues und ohne neue unreviewed Security Hotspots sauber.
+  Technik: `x01-player-surface-adapter` vermeidet den direkten `.map(...)`-Callback auf `toPlayerEntry`, und `check-agent-instructions` ersetzt die beanstandeten Regex-/Replace-Pfade durch stringbasierte Normalisierung, Quote-Trimming und deterministisches Regex-Escaping ohne globalen Hotspot-Parser.
+
 ## [2.3.0] - 2026-04-21
 
 ### Changed
