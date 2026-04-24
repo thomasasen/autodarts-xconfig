@@ -8,6 +8,7 @@ const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player-active p.ad-ext-player-score",
   "p.ad-ext-player-score",
 ]);
+const MATCH_ROUTE_PATTERN = /^\/matches\/([^/]+)$/i;
 
 export function parseScore(text) {
   const match = String(text || "").match(/-?\d+/);
@@ -30,6 +31,82 @@ function normalizeScore(value) {
 
   const numeric = Number(value);
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : Number.NaN;
+}
+
+function normalizeRoutePath(pathValue) {
+  let normalized = String(pathValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
+  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
+  if (normalized.length > 1) {
+    normalized = normalized.replace(/\/+$/, "");
+  }
+  return normalized;
+}
+
+function normalizeMatchId(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function extractCurrentMatchRouteId(windowRef, documentRef) {
+  const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
+  const routePath = normalizeRoutePath(locationRef?.pathname || "");
+  const match = MATCH_ROUTE_PATTERN.exec(routePath);
+  return normalizeMatchId(match?.[1] || "");
+}
+
+function extractTopicMatchId(topicValue) {
+  const topic = String(topicValue || "").trim();
+  if (!topic) {
+    return "";
+  }
+
+  const explicitMatch = /(?:^|[./:])matches?[./:]([^./:\s]+)/i.exec(topic);
+  if (explicitMatch?.[1]) {
+    return normalizeMatchId(explicitMatch[1]);
+  }
+
+  const stateTopicMatch = /^([^.\s]+)\.state$/i.exec(topic);
+  return normalizeMatchId(stateTopicMatch?.[1] || "");
+}
+
+function collectSnapshotMatchIds(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") {
+    return [];
+  }
+
+  const match = snapshot.match && typeof snapshot.match === "object" ? snapshot.match : null;
+  return [
+    match?.id,
+    match?._id,
+    match?.matchId,
+    snapshot.matchId,
+    extractTopicMatchId(snapshot.topic),
+  ]
+    .map(normalizeMatchId)
+    .filter(Boolean);
+}
+
+function isGameStateStaleForCurrentMatchRoute(gameState, windowRef, documentRef) {
+  if (!gameState || typeof gameState.getSnapshot !== "function") {
+    return false;
+  }
+
+  const routeMatchId = extractCurrentMatchRouteId(windowRef, documentRef);
+  if (!routeMatchId) {
+    return false;
+  }
+
+  const snapshotMatchIds = collectSnapshotMatchIds(gameState.getSnapshot());
+  if (!snapshotMatchIds.length) {
+    return false;
+  }
+
+  return !snapshotMatchIds.includes(routeMatchId);
 }
 
 function isElementStyleVisible(element, windowRef) {
@@ -191,7 +268,13 @@ function resolveDartsRemaining(gameState, explicitValue) {
 }
 
 export function resolveX01ActiveScoreState(context = {}) {
-  const gameStateScore = readGameStateActiveScore(context.gameState);
+  const gameStateScore = isGameStateStaleForCurrentMatchRoute(
+    context.gameState,
+    context.windowRef,
+    context.documentRef
+  )
+    ? Number.NaN
+    : readGameStateActiveScore(context.gameState);
   const domScore = readDomActiveScore(context.documentRef, context.windowRef);
 
   if (Number.isFinite(domScore) && Number.isFinite(gameStateScore)) {

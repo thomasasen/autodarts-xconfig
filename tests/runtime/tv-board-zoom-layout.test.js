@@ -119,6 +119,22 @@ function applyTransformToScreenPoint(baseRect, transformData, point) {
   };
 }
 
+function applyCurrentStyleTransformToRect(node, baseRect) {
+  const parsedTransform = parseTransform(node?.style?.transform || "");
+  if (!parsedTransform) {
+    return { ...baseRect };
+  }
+
+  return {
+    left: baseRect.left + parsedTransform.tx,
+    top: baseRect.top + parsedTransform.ty,
+    width: baseRect.width * parsedTransform.scale,
+    height: baseRect.height * parsedTransform.scale,
+    right: baseRect.left + parsedTransform.tx + baseRect.width * parsedTransform.scale,
+    bottom: baseRect.top + parsedTransform.ty + baseRect.height * parsedTransform.scale,
+  };
+}
+
 function resolveEstimatedNumberRingPoint(segmentPoint, boardSvg) {
   const viewBox = segmentPoint?.viewBox || parseViewBox(boardSvg);
   const centerX = viewBox.x + viewBox.width / 2;
@@ -902,6 +918,60 @@ test("tv-board-zoom keeps the active translated zoom when layout reads reflect t
     { x01Rules, windowRef, documentRef }
   );
 
+  assert.equal(String(targetNode.style.transform || ""), firstTransform);
+});
+
+test("tv-board-zoom converges when a second zoom state reads an already-transformed board", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const firstState = createZoomState();
+  const secondState = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+  const intent = { reason: "checkout", segment: "D20" };
+  const baseTargetRect = { ...targetNode.__rect };
+
+  boardSvg.__rect = { ...baseTargetRect };
+  boardSvg.clientWidth = baseTargetRect.width;
+  boardSvg.clientHeight = baseTargetRect.height;
+  targetNode.getBoundingClientRect = () =>
+    applyCurrentStyleTransformToRect(targetNode, baseTargetRect);
+  boardSvg.getBoundingClientRect = () =>
+    applyCurrentStyleTransformToRect(targetNode, baseTargetRect);
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    intent,
+    firstState,
+    { x01Rules, windowRef, documentRef }
+  );
+  const firstTransform = String(targetNode.style.transform || "");
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    intent,
+    secondState,
+    { x01Rules, windowRef, documentRef }
+  );
+  const secondTransform = String(targetNode.style.transform || "");
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    intent,
+    firstState,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.equal(secondTransform, firstTransform);
   assert.equal(String(targetNode.style.transform || ""), firstTransform);
 });
 

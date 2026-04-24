@@ -28,6 +28,8 @@ const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
   max: 3.15,
 });
 const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
+const APPLIED_ZOOM_TRANSFORM_PATTERN =
+  /(?:^|\s)translate\(\s*([-+]?\d*\.?\d+)px,\s*([-+]?\d*\.?\d+)px\)\s+scale\(\s*([-+]?\d*\.?\d+)\s*\)\s*$/;
 
 function parseViewBox(svgNode) {
   if (!svgNode || typeof svgNode.getAttribute !== "function") {
@@ -596,12 +598,19 @@ function cacheTargetStyle(state, targetNode) {
     return;
   }
 
+  const currentTransform = String(targetNode.style.transform || "");
+  const hasAppliedZoomTransform =
+    targetNode.classList?.contains?.(ZOOM_CLASS) &&
+    Boolean(parseAppliedZoomTransform(currentTransform));
+
   state.targetStyleSnapshot = {
     node: targetNode,
-    transform: String(targetNode.style.transform || ""),
-    transition: String(targetNode.style.transition || ""),
-    transformOrigin: String(targetNode.style.transformOrigin || ""),
-    willChange: String(targetNode.style.willChange || ""),
+    transform: hasAppliedZoomTransform
+      ? currentTransform.replace(APPLIED_ZOOM_TRANSFORM_PATTERN, "").trim()
+      : currentTransform,
+    transition: hasAppliedZoomTransform ? "" : String(targetNode.style.transition || ""),
+    transformOrigin: hasAppliedZoomTransform ? "" : String(targetNode.style.transformOrigin || ""),
+    willChange: hasAppliedZoomTransform ? "" : String(targetNode.style.willChange || ""),
   };
 }
 
@@ -802,11 +811,30 @@ function normalizeRectForActiveZoom(rect, zoomTransform) {
   };
 }
 
-function shouldNormalizeRectForActiveZoom(rect, zoomTransform) {
+function getNodeLayoutSize(node) {
+  if (!node) {
+    return {
+      width: Number.NaN,
+      height: Number.NaN,
+    };
+  }
+
+  return {
+    width: Number(node.offsetWidth || node.clientWidth || 0),
+    height: Number(node.offsetHeight || node.clientHeight || 0),
+  };
+}
+
+function shouldNormalizeRectForActiveZoom(rect, zoomTransform, expectedNode = null) {
   const normalizedRect = normalizeRect(rect);
   const scale = Number(zoomTransform?.scale);
-  const baseWidth = Number(zoomTransform?.baseWidth);
-  const baseHeight = Number(zoomTransform?.baseHeight);
+  const layoutSize = getNodeLayoutSize(expectedNode);
+  const baseWidth = Number.isFinite(zoomTransform?.baseWidth)
+    ? Number(zoomTransform.baseWidth)
+    : layoutSize.width;
+  const baseHeight = Number.isFinite(zoomTransform?.baseHeight)
+    ? Number(zoomTransform.baseHeight)
+    : layoutSize.height;
   if (
     !normalizedRect ||
     !(Number.isFinite(scale) && scale > 1) ||
@@ -837,7 +865,7 @@ function resolveStableMeasuredRect(measuredRect, activeZoomTransform, expectedNo
   if (
     activeZoomTransform &&
     activeZoomTransform.node === expectedNode &&
-    shouldNormalizeRectForActiveZoom(measuredRect, activeZoomTransform)
+    shouldNormalizeRectForActiveZoom(measuredRect, activeZoomTransform, expectedNode)
   ) {
     const restoredRect = normalizeRectForActiveZoom(measuredRect, activeZoomTransform);
     if (restoredRect) {
@@ -846,6 +874,42 @@ function resolveStableMeasuredRect(measuredRect, activeZoomTransform, expectedNo
   }
 
   return normalizeRect(measuredRect) || fallbackRect;
+}
+
+function parseAppliedZoomTransform(transformValue) {
+  const match = String(transformValue || "").match(APPLIED_ZOOM_TRANSFORM_PATTERN);
+  if (!match) {
+    return null;
+  }
+
+  const tx = Number(match[1]);
+  const ty = Number(match[2]);
+  const scale = Number(match[3]);
+  if (!(Number.isFinite(tx) && Number.isFinite(ty) && Number.isFinite(scale) && scale > 1)) {
+    return null;
+  }
+
+  return {
+    tx,
+    ty,
+    scale,
+  };
+}
+
+function resolveCurrentAppliedZoomTransform(targetNode, measuredNode) {
+  if (!targetNode?.classList?.contains?.(ZOOM_CLASS)) {
+    return null;
+  }
+
+  const parsedTransform = parseAppliedZoomTransform(targetNode.style?.transform || "");
+  if (!parsedTransform) {
+    return null;
+  }
+
+  return {
+    node: measuredNode || targetNode,
+    ...parsedTransform,
+  };
 }
 
 function getScreenPointFromRect(point, viewBox, rect) {
@@ -1489,6 +1553,9 @@ function resetChangedZoomBindings(state, targetNode, hostNode) {
 }
 
 function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, state, options = {}) {
+  const currentTargetZoomTransform = resolveCurrentAppliedZoomTransform(targetNode, targetNode);
+  const currentBoardZoomTransform = resolveCurrentAppliedZoomTransform(targetNode, boardSvg);
+
   return buildZoomTransform({
     targetNode,
     hostNode: hostNode || targetNode,
@@ -1510,7 +1577,7 @@ function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, s
             baseWidth: state.lastAppliedZoomTransform.targetBaseWidth,
             baseHeight: state.lastAppliedZoomTransform.targetBaseHeight,
           }
-        : null,
+        : currentTargetZoomTransform,
     activeBoardZoomTransform:
       state.zoomedElement === targetNode && state.lastAppliedZoomTransform?.boardSvg === boardSvg
         ? {
@@ -1521,7 +1588,7 @@ function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, s
             baseWidth: state.lastAppliedZoomTransform.boardBaseWidth,
             baseHeight: state.lastAppliedZoomTransform.boardBaseHeight,
           }
-        : null,
+        : currentBoardZoomTransform,
   });
 }
 

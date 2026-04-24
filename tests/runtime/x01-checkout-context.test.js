@@ -12,19 +12,27 @@ function createX01GameState(overrides = {}) {
   const outMode = String(overrides.outMode || "");
   const activeScore = Number.isFinite(overrides.activeScore) ? overrides.activeScore : null;
   const activeThrows = Array.isArray(overrides.activeThrows) ? overrides.activeThrows : [];
+  const hasSnapshot = Object.hasOwn(overrides, "snapshot");
+  const snapshot = hasSnapshot ? overrides.snapshot : null;
   const activeTurn = overrides.activeTurn || {
     id: "turn-1",
     playerId: "player-1",
     throws: activeThrows,
   };
 
-  return {
+  const gameState = {
     isX01Variant: () => true,
     getActiveScore: () => activeScore,
     getOutMode: () => outMode,
     getActiveTurn: () => activeTurn,
     getActiveThrows: () => activeThrows,
   };
+
+  if (hasSnapshot) {
+    gameState.getSnapshot = () => snapshot;
+  }
+
+  return gameState;
 }
 
 function appendSuggestion(documentRef, text, left = 300, top = 10) {
@@ -175,6 +183,34 @@ test("x01 checkout context reports matching DOM and game-state scores as a share
     scoreSource: "game-state+dom",
     scoreAgreement: "match",
   });
+});
+
+test("x01 checkout context ignores stale game-state from another match route", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "121";
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/current-match",
+  });
+
+  const resolved = resolveX01ActiveScoreState({
+    documentRef,
+    windowRef,
+    gameState: createX01GameState({
+      activeScore: 16,
+      outMode: "Double Out",
+      snapshot: {
+        topic: "old-match.state",
+        match: { id: "old-match" },
+      },
+    }),
+  });
+
+  assert.equal(resolved.activeScore, 121);
+  assert.equal(resolved.domScore, 121);
+  assert.equal(Number.isNaN(resolved.gameStateScore), true);
+  assert.equal(resolved.scoreSource, "dom");
+  assert.equal(resolved.scoreAgreement, "dom-only");
 });
 
 test("x01 checkout context prefers the visible DOM score when the game-state lags", () => {

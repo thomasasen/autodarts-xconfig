@@ -1471,6 +1471,73 @@ test("checkout-board-targets next mode keeps the visible route-first target when
   }
 });
 
+test("checkout-board-targets ignores a direct finish from a stale previous match snapshot", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "121";
+  documentRef.suggestionElement.textContent = "T20";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  appendBoardFixture(documentRef);
+
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({
+      documentRef,
+      href: "https://play.autodarts.io/matches/current-match",
+    }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 16,
+      getActiveThrows: () => [],
+      getOutMode: () => "Double Out",
+      getSnapshot: () => ({
+        topic: "old-match.state",
+        match: { id: "old-match" },
+      }),
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "amber",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory({ count: 0 }),
+    },
+  });
+
+  try {
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    const targetNode = Array.from(overlay.children).find((node) =>
+      node.classList?.contains?.(TARGET_CLASS)
+    );
+
+    assert.ok(targetNode);
+    assert.equal(targetNode.getAttribute("data-target-ring"), "T");
+    assert.equal(targetNode.getAttribute("data-target-value"), "20");
+  } finally {
+    cleanup();
+  }
+});
+
 test("checkout-board-targets next mode keeps the visible setup target when no finish route remains", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "102";
