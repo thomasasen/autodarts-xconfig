@@ -156,8 +156,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Templates Global
 
 - Gilt für: `alle Modi`
-- Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Die Presets, die gewählte Schrift, die festen Farbrollen, die optionale Aktivkarten-Tönung und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.
+- Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
+- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden.
 - `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
 - `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
 - `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.

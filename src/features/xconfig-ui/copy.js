@@ -209,11 +209,11 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY = deepFreeze(
 export const xconfigFeatureCopy = deepFreeze({
   "theme-global-typography": featureCopy({
     cardDescription:
-      "Template-weite Presets, Typografie, Farbrollen, Aktivkarten-Tönung und globale Hintergrundsteuerung für stabile Theme-Bereiche.",
+      "Legt den gemeinsamen Look für unterstützte xConfig-Themes fest: Presets, Schriften, Farbrollen, Aktivkarten-Tönung und ein globales Hintergrundbild dienen als Basis für alle Themes ohne eigenes Bild.",
     visibleDescription:
-      "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein globales Fallback-Hintergrundbild für aktive xConfig-Themes.",
+      "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.",
     visualDescription:
-      "Die Presets, die gewählte Schrift, die festen Farbrollen, die optionale Aktivkarten-Tönung und der globale Hintergrundblock greifen nur in klar definierten Bereichen aktiver xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Hintergrundbild, gewinnt dessen kompletter Hintergrundblock weiterhin vollständig; sonst kann Templates Global ein gespeichertes Fallback-Bild oder ein Preset-Wallpaper liefern.",
+      "Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden.",
     usefulWhen:
       "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
     images: [

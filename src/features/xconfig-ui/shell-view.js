@@ -153,18 +153,24 @@ const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="checking"] .ad-xconfig-update-link{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.08)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary{border-color:rgba(255,166,132,.72);background:linear-gradient(145deg,rgba(255,126,92,.34),rgba(255,196,118,.22));box-shadow:0 0 0 1px rgba(255,186,144,.12),0 5px 16px rgba(255,126,92,.12)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary:hover{background:linear-gradient(145deg,rgba(255,141,104,.42),rgba(255,203,128,.28))}
-#${PANEL_HOST_ID} .ad-xconfig-tabs{margin-top:1rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+#${PANEL_HOST_ID} .ad-xconfig-tabs-intro{margin-top:1rem;display:grid;gap:.2rem}
+#${PANEL_HOST_ID} .ad-xconfig-tabs-title{margin:0;font-size:1rem;font-weight:800;line-height:1.25;color:rgba(245,249,255,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-tabs-copy{margin:0;font-size:.82rem;line-height:1.35;color:rgba(222,236,252,.82)}
+#${PANEL_HOST_ID} .ad-xconfig-tabs{margin-top:1rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;padding:.28rem;border-radius:14px;border:1px solid rgba(168,204,255,.2);background:rgba(5,13,33,.28);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{border:1px solid rgba(255,255,255,.24);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-btn,#${PANEL_HOST_ID} .ad-xconfig-tab{padding:.55rem .85rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn:hover,#${PANEL_HOST_ID} .ad-xconfig-tab:hover{background:rgba(255,255,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
-#${PANEL_HOST_ID} .ad-xconfig-tab{border-color:rgba(166,196,255,.52);border-radius:11px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(74,178,255,.14));padding:.86rem .82rem;min-height:4.1rem;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.22rem;text-align:left;box-shadow:0 6px 18px rgba(12,31,72,.28),inset 0 0 0 1px rgba(255,255,255,.06);transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease}
-#${PANEL_HOST_ID} .ad-xconfig-tab:hover{border-color:rgba(173,214,255,.82);background:linear-gradient(145deg,rgba(255,255,255,.24),rgba(74,178,255,.18));transform:translateY(-1px)}
-#${PANEL_HOST_ID} .ad-xconfig-tab:focus-visible{outline:none;border-color:rgba(154,227,255,.98);box-shadow:0 0 0 2px rgba(112,196,255,.52),0 10px 24px rgba(12,31,72,.36)}
-#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]{border-color:rgba(112,196,255,.95);background:linear-gradient(145deg,rgba(138,204,255,.35),rgba(74,178,255,.28));box-shadow:0 10px 26px rgba(39,108,199,.28),inset 0 0 0 1px rgba(195,235,255,.24)}
-#${PANEL_HOST_ID} .ad-xconfig-tab-title{display:block;font-size:1rem;font-weight:800;line-height:1.2;letter-spacing:.01em}
-#${PANEL_HOST_ID} .ad-xconfig-tab-desc{display:block;font-size:.76rem;line-height:1.2;color:rgba(232,243,255,.92);font-weight:500}
+#${PANEL_HOST_ID} .ad-xconfig-tab{position:relative;overflow:hidden;border-color:rgba(166,196,255,.42);border-radius:12px;background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(38,82,146,.14));padding:.9rem .92rem;min-height:4.2rem;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.3rem;text-align:left;box-shadow:0 6px 16px rgba(8,20,48,.18),inset 0 0 0 1px rgba(255,255,255,.04);transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+#${PANEL_HOST_ID} .ad-xconfig-tab::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);pointer-events:none}
+#${PANEL_HOST_ID} .ad-xconfig-tab:hover{border-color:rgba(188,224,255,.82);background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(55,125,195,.18));box-shadow:0 10px 22px rgba(8,20,48,.26),inset 0 0 0 1px rgba(224,241,255,.08);transform:translateY(-1px)}
+#${PANEL_HOST_ID} .ad-xconfig-tab:focus-visible{outline:none;border-color:rgba(154,227,255,.98);box-shadow:0 0 0 2px rgba(112,196,255,.52),0 12px 28px rgba(12,31,72,.38)}
+#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]{border-color:rgba(126,220,255,.98);background:linear-gradient(160deg,rgba(150,230,255,.24),rgba(41,118,215,.3));box-shadow:0 12px 28px rgba(24,96,183,.24),inset 0 0 0 1px rgba(224,245,255,.16);transform:translateY(-1px)}
+#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]::before{content:"";position:absolute;left:.7rem;right:.7rem;bottom:0;height:.2rem;border-radius:999px;background:linear-gradient(90deg,rgba(174,247,255,.98),rgba(95,198,255,.98));box-shadow:0 0 0 1px rgba(198,245,255,.08)}
+#${PANEL_HOST_ID} .ad-xconfig-tab-title{display:flex;align-items:center;gap:.45rem;font-size:1rem;font-weight:800;line-height:1.2;letter-spacing:.01em}
+#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"] .ad-xconfig-tab-title{color:rgba(248,252,255,.99)}
+#${PANEL_HOST_ID} .ad-xconfig-tab-desc{display:block;font-size:.76rem;line-height:1.25;color:rgba(223,236,252,.88);font-weight:500}
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-content-head{display:flex;align-items:center;justify-content:space-between;gap:.55rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-content-title{margin:0;font-size:.9rem;font-weight:700;letter-spacing:.01em;color:rgba(232,243,255,.92)}
@@ -285,35 +291,11 @@ function formatVariantLabel(variants = []) {
   return variants.map((variant) => toTitleCase(variant)).join(" / ");
 }
 
-const THEME_GLOBAL_SCOPE_LABELS = Object.freeze({
-  scores: "Scores",
-  throws: "Würfe",
-  names: "Namen",
-});
-
 function isThemeGlobalTypographyFeature(feature) {
   return String(feature?.featureKey || "").trim() === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY;
 }
 
-function formatThemeGlobalScopeSummary(feature) {
-  const rawValues = Array.isArray(feature?.config?.applyTo)
-    ? feature.config.applyTo
-    : [feature?.config?.applyTo];
-  const labels = Array.from(
-    new Set(
-      rawValues
-        .map((value) => THEME_GLOBAL_SCOPE_LABELS[String(value || "").trim().toLowerCase()] || "")
-        .filter(Boolean)
-    )
-  );
-  return labels.length ? labels.join(" · ") : THEME_GLOBAL_SCOPE_LABELS.scores;
-}
-
-function formatThemeGlobalFontSummary(feature) {
-  return getThemeGlobalTypographyPreset(feature?.config?.fontPreset)?.label || "Standard (deaktiviert)";
-}
-
-function buildThemeGlobalCardSummary(documentRef, feature) {
+function buildThemeGlobalCardSummary(documentRef) {
   const summary = createElement(documentRef, "section", {
     className: "ad-xconfig-card-global-summary",
     attributes: {
@@ -327,54 +309,7 @@ function buildThemeGlobalCardSummary(documentRef, feature) {
     className: "ad-xconfig-card-global-badge ad-xconfig-card-global-badge--primary",
     text: "Global",
   }));
-  badges.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-card-global-badge ad-xconfig-card-global-badge--muted",
-    text: "Theme-Bild überschreibt",
-  }));
   summary.appendChild(badges);
-
-  const grid = createElement(documentRef, "div", {
-    className: "ad-xconfig-card-global-grid",
-  });
-  [
-    {
-      key: "font",
-      label: "Schrift",
-      value: formatThemeGlobalFontSummary(feature),
-    },
-    {
-      key: "scope",
-      label: "Greift bei",
-      value: formatThemeGlobalScopeSummary(feature),
-    },
-    {
-      key: "priority",
-      label: "Priorität",
-      value: "Theme-Bild > Templates Global",
-    },
-    {
-      key: "role",
-      label: "Rolle",
-      value: "Zentrale Ebene für Presets und Fallbacks",
-    },
-  ].forEach((item) => {
-    const block = createElement(documentRef, "div", {
-      className: "ad-xconfig-card-global-item",
-    });
-    block.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-card-global-label",
-      text: item.label,
-    }));
-    block.appendChild(createElement(documentRef, "strong", {
-      className: "ad-xconfig-card-global-value",
-      attributes: {
-        "data-adxconfig-theme-global-value": item.key,
-      },
-      text: item.value,
-    }));
-    grid.appendChild(block);
-  });
-  summary.appendChild(grid);
 
   return summary;
 }
@@ -1337,7 +1272,7 @@ function buildFeatureCard(documentRef, feature) {
   }
   cardContent.appendChild(badges);
   if (isThemeGlobalCard) {
-    cardContent.appendChild(buildThemeGlobalCardSummary(documentRef, feature));
+    cardContent.appendChild(buildThemeGlobalCardSummary(documentRef));
   }
 
   if (fieldCount > 0) {
@@ -1673,17 +1608,41 @@ export function buildShellContent(documentRef, state, features) {
     }));
   }
 
+  const tabsIntro = createElement(documentRef, "div", {
+    className: "ad-xconfig-tabs-intro",
+  });
+  tabsIntro.appendChild(createElement(documentRef, "h2", {
+    id: "ad-xconfig-tabs-title",
+    className: "ad-xconfig-tabs-title",
+    text: "Wähle deinen Bereich",
+  }));
+  tabsIntro.appendChild(createElement(documentRef, "p", {
+    id: "ad-xconfig-tabs-copy",
+    className: "ad-xconfig-tabs-copy",
+    text: "Wechsle zwischen Themen für Farben und Layout sowie Animationen für Effekte und Komfortfunktionen.",
+  }));
+  shell.appendChild(tabsIntro);
+
   const tabs = createElement(documentRef, "nav", {
     className: "ad-xconfig-tabs",
+    attributes: {
+      role: "tablist",
+      "aria-labelledby": "ad-xconfig-tabs-title",
+      "aria-describedby": "ad-xconfig-tabs-copy",
+    },
   });
   TAB_DEFINITIONS.forEach((tab) => {
+    const isActive = state.activeTab === tab.id;
     const button = createElement(documentRef, "button", {
       id: `ad-xconfig-tab-${tab.id}`,
       className: "ad-xconfig-tab",
       type: "button",
       attributes: {
         "data-adxconfig-tab": tab.id,
-        "data-active": state.activeTab === tab.id ? "true" : "false",
+        "data-active": isActive ? "true" : "false",
+        role: "tab",
+        "aria-selected": isActive ? "true" : "false",
+        tabindex: isActive ? "0" : "-1",
       },
     });
     button.appendChild(createElement(documentRef, "span", {
@@ -1706,6 +1665,11 @@ export function buildShellContent(documentRef, state, features) {
 
   const content = createElement(documentRef, "div", {
     className: "ad-xconfig-content",
+    id: `ad-xconfig-tabpanel-${state.activeTab}`,
+    attributes: {
+      role: "tabpanel",
+      "aria-labelledby": `ad-xconfig-tab-${state.activeTab}`,
+    },
   });
   if (state.activeTab === "themes" && activeTabFeatures.some((feature) => isThemeFeature(feature))) {
     const contentHead = createElement(documentRef, "div", {

@@ -1099,10 +1099,42 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
+  let themesTab = documentRef.getElementById("ad-xconfig-tab-themes");
+  let animationsTab = documentRef.getElementById("ad-xconfig-tab-animations");
+  const tablist = documentRef.querySelector(".ad-xconfig-tabs");
+  const tabsTitle = documentRef.getElementById("ad-xconfig-tabs-title");
+  const tabsCopy = documentRef.getElementById("ad-xconfig-tabs-copy");
+  const tabpanel = documentRef.querySelector(".ad-xconfig-content");
+  assert.equal(tablist?.getAttribute("role"), "tablist");
+  assert.equal(tablist?.getAttribute("aria-labelledby"), "ad-xconfig-tabs-title");
+  assert.equal(tablist?.getAttribute("aria-describedby"), "ad-xconfig-tabs-copy");
+  assert.equal(tabsTitle?.textContent, "Wähle deinen Bereich");
+  assert.equal(
+    tabsCopy?.textContent,
+    "Wechsle zwischen Themen für Farben und Layout sowie Animationen für Effekte und Komfortfunktionen."
+  );
+  assert.equal(themesTab?.getAttribute("role"), "tab");
+  assert.equal(themesTab?.getAttribute("aria-selected"), "true");
+  assert.equal(animationsTab?.getAttribute("aria-selected"), "false");
+  assert.equal(themesTab?.getAttribute("tabindex"), "0");
+  assert.equal(animationsTab?.getAttribute("tabindex"), "-1");
+  assert.equal(tabpanel?.getAttribute("role"), "tabpanel");
+  assert.equal(tabpanel?.getAttribute("aria-labelledby"), "ad-xconfig-tab-themes");
+
   clickFeatureToggle(documentRef, "theme-x01", true);
   await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.x01"] === true);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
+  themesTab = documentRef.getElementById("ad-xconfig-tab-themes");
+  animationsTab = documentRef.getElementById("ad-xconfig-tab-animations");
+  assert.equal(themesTab?.getAttribute("aria-selected"), "false");
+  assert.equal(animationsTab?.getAttribute("aria-selected"), "true");
+  assert.equal(themesTab?.getAttribute("tabindex"), "-1");
+  assert.equal(animationsTab?.getAttribute("tabindex"), "0");
+  assert.equal(
+    documentRef.querySelector(".ad-xconfig-content")?.getAttribute("aria-labelledby"),
+    "ad-xconfig-tab-animations"
+  );
   clickFeatureToggle(documentRef, "turn-start-sweep", true);
   await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnStartSweep === true);
 
@@ -2195,17 +2227,16 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   const themeGlobalBadges = themeGlobalSummary
     .querySelectorAll(".ad-xconfig-card-global-badge")
     .map((node) => String(node.textContent || ""));
-  assert.deepEqual(themeGlobalBadges, ["Global", "Theme-Bild überschreibt"]);
+  assert.deepEqual(themeGlobalBadges, ["Global"]);
 
   const themeGlobalValues = themeGlobalSummary
     .querySelectorAll(".ad-xconfig-card-global-value")
     .map((node) => String(node.textContent || ""));
-  assert.deepEqual(themeGlobalValues, [
-    "Audiowide",
-    "Scores · Würfe · Namen",
-    "Theme-Bild > Templates Global",
-    "Zentrale Ebene für Presets und Fallbacks",
-  ]);
+  assert.deepEqual(themeGlobalValues, []);
+
+  const themeCardCopy = themeCard.querySelector(".ad-xconfig-card-copy");
+  assert.match(String(themeCardCopy?.textContent || ""), /gemeinsamen Look/);
+  assert.match(String(themeCardCopy?.textContent || ""), /Themes ohne eigenes Bild/);
 
   const themeCardNote = themeCard.querySelector(".ad-xconfig-note");
   assert.ok(themeCardNote);
@@ -2291,10 +2322,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     String(styleNode.textContent || "").includes(".ad-xconfig-card--theme-global{grid-column:1/-1;min-height:16.5rem"),
     true
   );
-  assert.equal(
-    String(styleNode.textContent || "").includes(".ad-xconfig-card-global-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))"),
-    true
-  );
+  assert.equal(String(styleNode.textContent || "").includes(".ad-xconfig-card-global-grid"), false);
   assert.equal(
     String(styleNode.textContent || "").includes(".ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn"),
     true

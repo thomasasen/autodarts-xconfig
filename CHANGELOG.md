@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.2] - 2026-04-24
+
+### Changed
+
+- Nutzerwirkung: `Templates Global` wirkt im Themes-Tab jetzt ruhiger und verständlicher; die kleine Detailbox mit Schrift, Geltungsbereich, Priorität und Rolle entfällt, der Beschreibungstext erklärt die gemeinsame Basis für unterstützte Themes klarer, und die Bereichsauswahl zwischen `Themen` und `Animationen` ist mit sichtbarer Überschrift, klarerer Tab-Hervorhebung und standardnaher Tab-Semantik leichter zu erkennen.
+  Technik: Die xConfig-Shell entfernt die spezielle Summary-Grid-Logik samt Override-Badge für `theme-global-typography`, zieht die Kartenbeschreibung in präzisere Copy um, rendert die Hauptnavigation als `tablist` mit `tab`/`tabpanel`-Semantik inklusive `aria-selected` und Intro-Text, und erweitert die Runtime-Regressionen gezielt für Badge-/Copy-, Tab- und A11y-Verträge.
+
 ## [2.3.1] - 2026-04-24
 
 ### Changed
@@ -1470,7 +1477,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...HEAD
+[2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...HEAD
+[2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...7b4351b
 [2.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/da0d5b1...d17c15d
 [2.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/6398977...da0d5b1
 [2.1.31]: https://github.com/thomasasen/autodarts-xconfig/compare/4e52392...6398977
