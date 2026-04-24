@@ -132,6 +132,15 @@ for (const filePath of collectInstructionFiles(skillDirs)) {
     }
   }
 
+  if (path.basename(filePath) === 'SKILL.md' && path.dirname(filePath).startsWith(skillsRoot)) {
+    for (const match of reportMatches(text, /references\/[A-Za-z0-9._-]+\.md/g)) {
+      const referencePath = path.join(path.dirname(filePath), match[0]);
+      if (!exists(referencePath)) {
+        fail(`${rel}: ${match[0]} does not point to an existing reference file`);
+      }
+    }
+  }
+
   for (const match of reportMatches(text, /`npm run ([A-Za-z0-9:_-]+)`/g)) {
     const scriptName = match[1];
     if (!packageScripts.has(scriptName)) {
