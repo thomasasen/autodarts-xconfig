@@ -19,6 +19,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `Templates Global` wirkt im Themes-Tab jetzt ruhiger und verständlicher; die kleine Detailbox mit Schrift, Geltungsbereich, Priorität und Rolle entfällt, der Beschreibungstext erklärt die gemeinsame Basis für unterstützte Themes klarer, und die Bereichsauswahl zwischen `Themen` und `Animationen` ist mit sichtbarer Überschrift, klarerer Tab-Hervorhebung und standardnaher Tab-Semantik leichter zu erkennen.
   Technik: Die xConfig-Shell entfernt die spezielle Summary-Grid-Logik samt Override-Badge für `theme-global-typography`, zieht die Kartenbeschreibung in präzisere Copy um, rendert die Hauptnavigation als `tablist` mit `tab`/`tabpanel`-Semantik inklusive `aria-selected` und Intro-Text, und erweitert die Runtime-Regressionen gezielt für Badge-/Copy-, Tab- und A11y-Verträge.
 
+- Nutzerwirkung: Keine sichtbare Funktionsänderung; die xConfig-Shell verhält sich weiter wie in `2.3.2`, trägt ihre gemeinsamen Shell-Styles intern aber nicht mehr doppelt.
+  Technik: `shell-view` entfernt den versehentlich duplizierten Inline-CSS-Block und die dazugehörigen ungenutzten Konstanten, sodass die gemeinsame Shell-Optik nur noch aus `shell-style.js` stammt und SonarQube keine neue Duplikation mehr auf diesem Pfad meldet.
+
 ## [2.3.1] - 2026-04-24
 
 ### Changed
