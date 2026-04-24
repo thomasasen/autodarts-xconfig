@@ -1,29 +1,20 @@
 # AGENTS.md
 
-Repo-wide invariants only. Use the matching skill when the task clearly fits.
+Repo-wide constitution only. Use the matching skill for task-specific workflow.
 
 Priority: truthfulness, correctness, proportional validation.
 
 - prefer minimal diffs and existing conventions
-- preserve existing architecture boundaries unless the task explicitly requires changing them
-- keep Codex context small: prefer the smallest relevant source files for the task
-- do not inspect, quote, or diff `dist/**` unless the task explicitly requires release, build-artifact, packaged-output, or shipped-userscript verification work
-- do not inspect, quote, or diff `docs/**` by default; use docs only when the task is documentation, wording sync, feature audit, or explicitly cites a doc file
+- preserve architecture boundaries unless the task explicitly requires changing them
+- keep Codex context small and open the smallest relevant file set
 - work in source, not `dist/`
-- never hand-edit generated files; refresh them only through the build flow when release work is explicitly requested
-- keep standard ESLint coverage scoped to actively maintained source; exclude archive, backup, vendor, and generated trees from the default lint surface
-- use `.agents/skills/repo-validation/SKILL.md` after changes to choose and report the smallest sufficient validation
-- run `npm run lint` before declaring done when changes touch linted JS/MJS source, tests, loader code, scripts, or lint configuration
-- when changes touch Sonar-scanned JS/MJS source or project-level analysis config, include SonarQube validation whenever server/auth access is available, report it explicitly as executed or blocked, and iterate on fixable findings in the touched scope until clean or concretely blocked
-- when SonarQube access, project health, or issue triage is requested, prefer the configured local `sonarqube` MCP server or the SonarQube base URL, project key, and project name from `~/.codex/config.toml`, and re-verify live server status and project visibility instead of assuming an earlier access check is still current
-- never copy SonarQube tokens or other local credentials into repo-tracked files; rely on local MCP or environment configuration instead
-- when browser access is available, Codex may use the connected Chrome browser for analysis, tests, DOM inspection, console, network checks, and task-focused interactions, but only in the currently active tab; do not use other open tabs, switch tabs automatically, open additional tabs, or navigate outside the active tab unless the task explicitly requires it, keep any browser-side changes minimal and limited to debugging, reproduction, verification, or UI tests, use extra caution before potentially destructive actions, and if browser access is unavailable, continue normally and state what could not be verified
-- use `.agents/skills/userscript-release/SKILL.md` only for explicitly requested release, finalize, package, ship, or publish work
-- whenever Codex completes a successful repo build, include a proposed commit message in the final output even if no commit is created
-- proposed commit messages must stay draft-only, be derived from the actual diff for that run, follow `type(optional-scope): concise summary` with an optional body of 1-5 concrete bullets, and say explicitly when there is no meaningful change instead of inventing details
-- when a release, version bump, or build was part of the work, the proposed commit message must still summarize the substantive shipped change; do not use generic subjects like `release: bump version to X.Y.Z` unless the diff truly contains only release metadata with no meaningful product, source, test, or config change
-- never run `git commit`, push, or create a release automatically unless the user explicitly asks
-- report exactly what changed, what was validated, and what remains unverified
-- do not declare completion if `npm run lint` was required and failed or was not run; report the lint result explicitly
+- never hand-edit generated files
+- do not inspect, quote, or diff `dist/**` unless release, package, or shipped-output verification is explicitly requested
+- do not inspect, quote, or diff `docs/**` by default unless docs, wording sync, feature audit, or an explicitly cited doc file is in scope
+- use `$validate-repo-change` after changes to choose and report validation
+- use `$package-userscript-release` only when the user explicitly asks for release, finalize, package, ship, publish, version bump, `dist/` refresh, or publication verification
+- use `$maintain-changelog` only when changelog, release-note, or compare-link work is explicitly in scope
+- do not run `git commit`, push, create PRs, or create releases without an explicit user request
+- final output must state what changed, what was validated, what remains unverified, and include a draft commit message when there are meaningful file changes
 
-Done means the change is in the right source layer, the validation for that scope ran or is clearly blocked, any required `npm run lint` pass completed and was reported, any expected SonarQube validation for touched Sonar-scanned code was either executed or called out as concretely blocked, any fixable SonarQube findings in the touched scope were rechecked until cleared or concretely blocked, and any explicitly requested release work is either completed or called out as pending.
+Done means the change is in the right layer, scoped validation ran or is clearly blocked, and any skipped release, changelog, browser, or SonarQube verification is reported truthfully.

@@ -23,6 +23,13 @@ Before editing, identify:
 - whether the change is domain, runtime, feature-render, or config work
 - the tests that should prove it
 
+Context budget:
+- search first, then open likely owner files and nearest tests only
+- avoid broad tours through `src/**`
+- avoid `dist/**`
+- avoid `docs/**` unless user-facing wording is in scope
+- stop expanding context when the current evidence is sufficient
+
 ## 2. Keep architecture intact
 
 Do not solve feature problems by:
@@ -42,8 +49,8 @@ Check whether the feature change also needs updates in:
 ## 4. Protect the behavior
 
 - add or update the closest meaningful tests
-- leave final validation selection to `$repo-validation`
-- leave release packaging to `$userscript-release` when shipped behavior changed
+- leave final validation selection to `$validate-repo-change`
+- leave release packaging to `$package-userscript-release` when explicitly requested
 
 # Output requirements
 
