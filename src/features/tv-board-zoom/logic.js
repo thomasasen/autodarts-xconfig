@@ -28,8 +28,8 @@ const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
   max: 3.15,
 });
 const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
-const APPLIED_ZOOM_TRANSFORM_PATTERN =
-  /(?:^|\s)translate\(\s*([-+]?\d*\.?\d+)px,\s*([-+]?\d*\.?\d+)px\)\s+scale\(\s*([-+]?\d*\.?\d+)\s*\)\s*$/;
+const TRANSLATE_PREFIX = "translate(";
+const SCALE_PREFIX = "scale(";
 
 function parseViewBox(svgNode) {
   if (!svgNode || typeof svgNode.getAttribute !== "function") {
@@ -605,9 +605,7 @@ function cacheTargetStyle(state, targetNode) {
 
   state.targetStyleSnapshot = {
     node: targetNode,
-    transform: hasAppliedZoomTransform
-      ? currentTransform.replace(APPLIED_ZOOM_TRANSFORM_PATTERN, "").trim()
-      : currentTransform,
+    transform: hasAppliedZoomTransform ? stripAppliedZoomTransform(currentTransform) : currentTransform,
     transition: hasAppliedZoomTransform ? "" : String(targetNode.style.transition || ""),
     transformOrigin: hasAppliedZoomTransform ? "" : String(targetNode.style.transformOrigin || ""),
     willChange: hasAppliedZoomTransform ? "" : String(targetNode.style.willChange || ""),
@@ -877,14 +875,41 @@ function resolveStableMeasuredRect(measuredRect, activeZoomTransform, expectedNo
 }
 
 function parseAppliedZoomTransform(transformValue) {
-  const match = String(transformValue || "").match(APPLIED_ZOOM_TRANSFORM_PATTERN);
-  if (!match) {
+  const rawTransform = String(transformValue || "").trim();
+  const translateIndex = rawTransform.lastIndexOf(TRANSLATE_PREFIX);
+  if (translateIndex < 0) {
+    return null;
+  }
+  if (translateIndex > 0 && String(rawTransform[translateIndex - 1] || "").trim()) {
     return null;
   }
 
-  const tx = Number(match[1]);
-  const ty = Number(match[2]);
-  const scale = Number(match[3]);
+  const translateStart = translateIndex + TRANSLATE_PREFIX.length;
+  const translateEnd = rawTransform.indexOf(")", translateStart);
+  if (translateEnd < 0) {
+    return null;
+  }
+
+  const afterTranslate = rawTransform.slice(translateEnd + 1).trimStart();
+  if (!afterTranslate.startsWith(SCALE_PREFIX)) {
+    return null;
+  }
+
+  const scaleStart = SCALE_PREFIX.length;
+  const scaleEnd = afterTranslate.indexOf(")", scaleStart);
+  if (scaleEnd < 0 || afterTranslate.slice(scaleEnd + 1).trim()) {
+    return null;
+  }
+
+  const translateParts = rawTransform.slice(translateStart, translateEnd).split(",");
+  if (translateParts.length !== 2) {
+    return null;
+  }
+
+  const tx = parseCssPixelValue(translateParts[0]);
+  const ty = parseCssPixelValue(translateParts[1]);
+  const scale = Number(afterTranslate.slice(scaleStart, scaleEnd).trim());
+
   if (!(Number.isFinite(tx) && Number.isFinite(ty) && Number.isFinite(scale) && scale > 1)) {
     return null;
   }
@@ -894,6 +919,25 @@ function parseAppliedZoomTransform(transformValue) {
     ty,
     scale,
   };
+}
+
+function parseCssPixelValue(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized.endsWith("px")) {
+    return Number.NaN;
+  }
+
+  return Number(normalized.slice(0, -2).trim());
+}
+
+function stripAppliedZoomTransform(transformValue) {
+  const rawTransform = String(transformValue || "").trim();
+  const translateIndex = rawTransform.lastIndexOf(TRANSLATE_PREFIX);
+  if (translateIndex < 0 || !parseAppliedZoomTransform(rawTransform)) {
+    return rawTransform;
+  }
+
+  return rawTransform.slice(0, translateIndex).trim();
 }
 
 function resolveCurrentAppliedZoomTransform(targetNode, measuredNode) {

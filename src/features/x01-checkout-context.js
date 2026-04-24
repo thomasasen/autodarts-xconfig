@@ -41,11 +41,51 @@ function normalizeRoutePath(pathValue) {
   if (!normalized.startsWith("/")) {
     normalized = `/${normalized}`;
   }
-  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
+  normalized = collapseRepeatedSlashes(stripRouteSuffix(normalized));
   if (normalized.length > 1) {
-    normalized = normalized.replace(/\/+$/, "");
+    normalized = trimTrailingSlashes(normalized);
   }
   return normalized;
+}
+
+function stripRouteSuffix(pathValue) {
+  const queryIndex = pathValue.indexOf("?");
+  const hashIndex = pathValue.indexOf("#");
+  const suffixIndexes = [queryIndex, hashIndex].filter((index) => index >= 0);
+  if (!suffixIndexes.length) {
+    return pathValue;
+  }
+
+  return pathValue.slice(0, Math.min(...suffixIndexes));
+}
+
+function collapseRepeatedSlashes(pathValue) {
+  let collapsed = "";
+  let previousWasSlash = false;
+
+  for (const char of pathValue) {
+    if (char === "/") {
+      if (!previousWasSlash) {
+        collapsed += char;
+      }
+      previousWasSlash = true;
+      continue;
+    }
+
+    collapsed += char;
+    previousWasSlash = false;
+  }
+
+  return collapsed;
+}
+
+function trimTrailingSlashes(pathValue) {
+  let endIndex = pathValue.length;
+  while (endIndex > 1 && pathValue[endIndex - 1] === "/") {
+    endIndex -= 1;
+  }
+
+  return pathValue.slice(0, endIndex);
 }
 
 function normalizeMatchId(value) {

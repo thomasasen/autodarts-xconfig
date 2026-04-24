@@ -1,16 +1,23 @@
 param(
-  [Parameter(Mandatory = $true)]
-  [string]$SonarQubeUrl,
+  [string]$SonarQubeUrl = $env:SONARQUBE_URL,
 
-  [Parameter(Mandatory = $true)]
-  [string]$SonarQubeToken,
+  [string]$SonarQubeToken = $env:SONARQUBE_TOKEN,
 
   [string]$ProjectKey = "xConfig",
   [string]$JsProfileName = "autodarts-xconfig JS",
+  [string]$QualityGateName = "autodarts-xconfig",
   [switch]$RunAnalysis
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $SonarQubeUrl) {
+  throw "SONARQUBE_URL must be set."
+}
+
+if (-not $SonarQubeToken) {
+  throw "SONARQUBE_TOKEN must be set."
+}
 
 function New-AuthHeader {
   param([string]$Token)
@@ -29,6 +36,16 @@ function Invoke-SonarPost {
   )
 
   Invoke-RestMethod -Headers $Headers -Method Post -Uri "$BaseUrl$Path" -Body $Body | Out-Null
+}
+
+function Invoke-SonarGet {
+  param(
+    [hashtable]$Headers,
+    [string]$BaseUrl,
+    [string]$Path
+  )
+
+  Invoke-RestMethod -Headers $Headers -Uri "$BaseUrl$Path"
 }
 
 function Set-SonarMultiValue {
@@ -59,10 +76,48 @@ function Set-SonarMultiValue {
     -Body $body | Out-Null
 }
 
+function Set-SonarGateCondition {
+  param(
+    [hashtable]$Headers,
+    [string]$BaseUrl,
+    [string]$GateName,
+    [string]$Metric,
+    [string]$Op,
+    [string]$ErrorThreshold
+  )
+
+  $gate = Invoke-SonarGet `
+    -Headers $Headers `
+    -BaseUrl $BaseUrl `
+    -Path "/api/qualitygates/show?name=$([uri]::EscapeDataString($GateName))"
+
+  $existing = @($gate.conditions) | Where-Object { $_.metric -eq $Metric } | Select-Object -First 1
+
+  if ($existing) {
+    if ($existing.op -ne $Op -or [string]$existing.error -ne $ErrorThreshold) {
+      Invoke-SonarPost -Headers $Headers -BaseUrl $BaseUrl -Path "/api/qualitygates/update_condition" -Body @{
+        id = $existing.id
+        metric = $Metric
+        op = $Op
+        error = $ErrorThreshold
+      }
+    }
+
+    return
+  }
+
+  Invoke-SonarPost -Headers $Headers -BaseUrl $BaseUrl -Path "/api/qualitygates/create_condition" -Body @{
+    gateName = $GateName
+    metric = $Metric
+    op = $Op
+    error = $ErrorThreshold
+  }
+}
+
 $baseUrl = $SonarQubeUrl.TrimEnd("/")
 $headers = New-AuthHeader -Token $SonarQubeToken
 
-$profiles = Invoke-RestMethod -Headers $headers -Uri "$baseUrl/api/qualityprofiles/search?project=$ProjectKey"
+$profiles = Invoke-SonarGet -Headers $headers -BaseUrl $baseUrl -Path "/api/qualityprofiles/search?project=$ProjectKey"
 $jsProfile = $profiles.profiles | Where-Object { $_.language -eq "js" -and $_.name -eq $JsProfileName } | Select-Object -First 1
 
 if (-not $jsProfile) {
@@ -107,6 +162,16 @@ foreach ($rule in $deactivateRules) {
 
 Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualityprofiles/activate_rule" -Body @{
   key = $profileKey
+  rule = "javascript:S1128"
+}
+
+Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualityprofiles/activate_rule" -Body @{
+  key = $profileKey
+  rule = "javascript:S125"
+}
+
+Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualityprofiles/activate_rule" -Body @{
+  key = $profileKey
   rule = "javascript:S3776"
   severity = "MAJOR"
   params = "threshold=25"
@@ -125,6 +190,36 @@ Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualityprofiles
   severity = "MINOR"
 }
 
+$gate = $null
+
+try {
+  $gate = Invoke-SonarGet `
+    -Headers $headers `
+    -BaseUrl $baseUrl `
+    -Path "/api/qualitygates/show?name=$([uri]::EscapeDataString($QualityGateName))"
+} catch {
+  $gate = $null
+}
+
+if (-not $gate) {
+  Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualitygates/create" -Body @{
+    name = $QualityGateName
+  }
+}
+
+Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualitygates/select" -Body @{
+  projectKey = $ProjectKey
+  gateName = $QualityGateName
+}
+
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_reliability_rating" -Op "GT" -ErrorThreshold "1"
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_security_rating" -Op "GT" -ErrorThreshold "1"
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_security_review_rating" -Op "GT" -ErrorThreshold "1"
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_maintainability_rating" -Op "GT" -ErrorThreshold "1"
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_duplicated_lines_density" -Op "GT" -ErrorThreshold "3"
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_blocker_violations" -Op "GT" -ErrorThreshold "0"
+Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_critical_violations" -Op "GT" -ErrorThreshold "0"
+
 if ($RunAnalysis) {
   $env:SONAR_HOST_URL = $baseUrl
   $env:SONAR_TOKEN = $SonarQubeToken
@@ -134,10 +229,12 @@ if ($RunAnalysis) {
 $summary = [ordered]@{
   project = $ProjectKey
   jsProfile = $JsProfileName
-  activeRuleCount = (Invoke-RestMethod -Headers $headers -Uri "$baseUrl/api/qualityprofiles/search?project=$ProjectKey").profiles |
+  qualityGate = $QualityGateName
+  activeRuleCount = (Invoke-SonarGet -Headers $headers -BaseUrl $baseUrl -Path "/api/qualityprofiles/search?project=$ProjectKey").profiles |
     Where-Object { $_.language -eq "js" -and $_.name -eq $JsProfileName } |
     Select-Object -ExpandProperty activeRuleCount
-  settings = Invoke-RestMethod -Headers $headers -Uri "$baseUrl/api/settings/values?component=$ProjectKey&keys=sonar.exclusions,sonar.cpd.exclusions,sonar.coverage.exclusions"
+  settings = Invoke-SonarGet -Headers $headers -BaseUrl $baseUrl -Path "/api/settings/values?component=$ProjectKey&keys=sonar.exclusions,sonar.cpd.exclusions,sonar.coverage.exclusions"
+  gate = Invoke-SonarGet -Headers $headers -BaseUrl $baseUrl -Path "/api/qualitygates/show?name=$([uri]::EscapeDataString($QualityGateName))"
 }
 
 $summary | ConvertTo-Json -Depth 8
