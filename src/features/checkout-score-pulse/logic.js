@@ -196,33 +196,50 @@ export function getReliableDartsRemaining(context = {}) {
   return null;
 }
 
-export function getAllScoreNodes(documentRef) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+function queryAll(rootNode, selector) {
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return [];
   }
 
-  return Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
+  return Array.from(rootNode.querySelectorAll(selector));
 }
 
-export function getScoreNodes(documentRef, gameState = null) {
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+function resolveScoreLookupSurface(documentRef, options = {}) {
+  const playerSurfaceSnapshot = options.playerSurfaceSnapshot || null;
+  const rootNode =
+    options.rootNode || playerSurfaceSnapshot?.playerDisplayRoot || documentRef;
+  return { playerSurfaceSnapshot, rootNode };
+}
+
+export function getAllScoreNodes(documentRef, options = {}) {
+  const { rootNode } = resolveScoreLookupSurface(documentRef, options);
+  return queryAll(rootNode, SCORE_SELECTOR);
+}
+
+export function getScoreNodes(documentRef, gameState = null, options = {}) {
+  const { playerSurfaceSnapshot, rootNode } = resolveScoreLookupSurface(documentRef, options);
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return [];
   }
 
-  const activeScores = Array.from(documentRef.querySelectorAll(ACTIVE_SCORE_SELECTOR));
+  const activeScores = queryAll(rootNode, ACTIVE_SCORE_SELECTOR);
   if (activeScores.length) {
     return activeScores;
   }
 
-  const allScores = getAllScoreNodes(documentRef);
+  const allScores = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
   const activePlayerIndex =
     gameState && typeof gameState.getActivePlayerIndex === "function"
       ? Number(gameState.getActivePlayerIndex())
       : Number.NaN;
   if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
-    const playerRows = Array.from(documentRef.querySelectorAll(".ad-ext-player")).filter((rowNode) => {
-      return Boolean(rowNode?.querySelector?.(SCORE_SELECTOR));
-    });
+    const playerRows = playerSurfaceSnapshot?.playerDisplayRoot
+      ? playerSurfaceSnapshot.playerCards.filter((rowNode) =>
+          Boolean(rowNode?.querySelector?.(SCORE_SELECTOR))
+        )
+      : queryAll(rootNode, ".ad-ext-player").filter((rowNode) => {
+          return Boolean(rowNode?.querySelector?.(SCORE_SELECTOR));
+        });
     const activeRow = playerRows[activePlayerIndex] || null;
     const activeRowScores = activeRow
       ? Array.from(activeRow.querySelectorAll?.(SCORE_SELECTOR) || [])
