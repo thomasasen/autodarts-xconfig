@@ -5,6 +5,7 @@ import {
   stopAnimation,
   updateTurnPoints,
 } from "../../src/features/turn-points-count/logic.js";
+import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
 import {
   SCORE_FRAME_CLASS,
   SCORE_FLASH_SEQUENCE_ATTRIBUTE,
@@ -49,16 +50,149 @@ function createTurnPointsFrame(documentRef) {
 
 function createAnimeStub() {
   const calls = [];
+  const instances = [];
 
   const anime = (params = {}) => {
     calls.push(params);
-    return {
-      pause() {},
+    const instance = {
+      paused: false,
+      pause() {
+        this.paused = true;
+      },
     };
+    instances.push(instance);
+    return instance;
   };
 
   anime.calls = calls;
+  anime.instances = instances;
   return anime;
+}
+
+function createObserverRegistryProbe() {
+  const state = {
+    registration: null,
+    disconnects: [],
+  };
+
+  return {
+    state,
+    registry: {
+      registerMutationObserver(options = {}) {
+        state.registration = options;
+        return {};
+      },
+      disconnect(key) {
+        state.disconnects.push(String(key || ""));
+        return true;
+      },
+    },
+  };
+}
+
+function createListenerRegistryProbe() {
+  const state = {
+    registrations: [],
+    removals: [],
+  };
+
+  return {
+    state,
+    registry: {
+      register(options = {}) {
+        state.registrations.push(options);
+      },
+      remove(key) {
+        state.removals.push(String(key || ""));
+      },
+    },
+  };
+}
+
+function createImmediateSchedulerFactory(scheduleCounter) {
+  return function createImmediateScheduler(callback) {
+    let cancelled = false;
+
+    return {
+      schedule() {
+        if (cancelled) {
+          return;
+        }
+        scheduleCounter.count += 1;
+        callback();
+      },
+      cancel() {
+        cancelled = true;
+        scheduleCounter.cancelled = true;
+      },
+      isScheduled() {
+        return false;
+      },
+    };
+  };
+}
+
+function createMountHarness(options = {}) {
+  const documentRef = options.documentRef || new FakeDocument();
+  const windowRef = options.windowRef || createFakeWindow({ documentRef });
+  const animeRef = options.animeRef || createAnimeStub();
+  windowRef.anime = animeRef;
+  const observerProbe = createObserverRegistryProbe();
+  const listenerProbe = createListenerRegistryProbe();
+  const scheduleCounter = {
+    count: 0,
+    cancelled: false,
+  };
+  let unsubscribeCount = 0;
+  let gameStateListener = null;
+
+  const cleanup = initializeTurnPointsCount({
+    documentRef,
+    windowRef,
+    registries: {
+      observers: observerProbe.registry,
+      listeners: listenerProbe.registry,
+    },
+    gameState: {
+      subscribe(listener) {
+        gameStateListener = listener;
+        return () => {
+          unsubscribeCount += 1;
+        };
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          durationMs: 416,
+          flashOnChange: true,
+          flashMode: "on-change",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  return {
+    animeRef,
+    cleanup,
+    documentRef,
+    gameStateListener,
+    listenerProbe,
+    observerProbe,
+    scheduleCounter,
+    windowRef,
+    get unsubscribeCount() {
+      return unsubscribeCount;
+    },
+  };
+}
+
+function moveTurnPointsIntoTurnContainer(documentRef) {
+  documentRef.turnContainer.appendChild(documentRef.turnPointsElement);
+  return createTurnPointsFrame(documentRef);
 }
 
 test("turn-points-count keeps flash frame for a short afterglow after score animation completes", async () => {
@@ -349,6 +483,177 @@ test("turn-points-count restarts score flash through sequence attributes without
   assert.equal(frameNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), "1");
   assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
   assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+});
+
+test("turn-points-count observes the discovered turn surface when present", () => {
+  const harness = createMountHarness();
+
+  assert.equal(
+    harness.observerProbe.state.registration?.target,
+    harness.documentRef.turnContainer
+  );
+
+  harness.cleanup();
+});
+
+test("turn-points-count falls back to the document root when turn surface is absent", () => {
+  const documentRef = new FakeDocument();
+  documentRef.turnContainer.remove();
+  const harness = createMountHarness({ documentRef });
+
+  assert.equal(
+    harness.observerProbe.state.registration?.target,
+    documentRef.documentElement
+  );
+
+  harness.cleanup();
+});
+
+test("turn-points-count does not schedule for unrelated document mutations when scoped", () => {
+  const harness = createMountHarness();
+  const callback = harness.observerProbe.state.registration?.callback;
+  const initialScheduleCount = harness.scheduleCounter.count;
+  const unrelatedNode = harness.documentRef.createElement("div");
+  harness.documentRef.body.appendChild(unrelatedNode);
+
+  callback([
+    {
+      type: "childList",
+      target: harness.documentRef.body,
+      addedNodes: [unrelatedNode],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(harness.observerProbe.state.registration?.target, harness.documentRef.turnContainer);
+  assert.equal(harness.scheduleCounter.count, initialScheduleCount);
+
+  harness.cleanup();
+});
+
+test("turn-points-count schedules relevant turn text, child, and class mutations", () => {
+  const documentRef = new FakeDocument();
+  const { scoreNode } = moveTurnPointsIntoTurnContainer(documentRef);
+  const harness = createMountHarness({ documentRef });
+  const callback = harness.observerProbe.state.registration?.callback;
+  const textNode = {
+    nodeType: 3,
+    parentNode: scoreNode,
+  };
+  const addedNode = documentRef.createElement("div");
+  let expectedScheduleCount = harness.scheduleCounter.count;
+
+  callback([
+    {
+      type: "characterData",
+      target: textNode,
+    },
+  ]);
+  expectedScheduleCount += 1;
+  assert.equal(harness.scheduleCounter.count, expectedScheduleCount);
+
+  callback([
+    {
+      type: "childList",
+      target: documentRef.turnContainer,
+      addedNodes: [addedNode],
+      removedNodes: [],
+    },
+  ]);
+  expectedScheduleCount += 1;
+  assert.equal(harness.scheduleCounter.count, expectedScheduleCount);
+
+  callback([
+    {
+      type: "attributes",
+      attributeName: "class",
+      target: documentRef.throwRow,
+    },
+  ]);
+  expectedScheduleCount += 1;
+  assert.equal(harness.scheduleCounter.count, expectedScheduleCount);
+
+  harness.cleanup();
+});
+
+test("turn-points-count ignores self-generated animation mutations", () => {
+  const documentRef = new FakeDocument();
+  const { scoreNode, frameNode } = moveTurnPointsIntoTurnContainer(documentRef);
+  const harness = createMountHarness({ documentRef });
+  const callback = harness.observerProbe.state.registration?.callback;
+  const textNode = {
+    nodeType: 3,
+    parentNode: scoreNode,
+  };
+
+  scoreNode.textContent = "45";
+  callback([
+    {
+      type: "characterData",
+      target: textNode,
+    },
+  ]);
+
+  assert.equal(harness.animeRef.calls.length, 1);
+  const scheduleCountAfterAnimation = harness.scheduleCounter.count;
+
+  callback([
+    {
+      type: "characterData",
+      target: textNode,
+    },
+  ]);
+  callback([
+    {
+      type: "attributes",
+      attributeName: "class",
+      target: scoreNode,
+    },
+    {
+      type: "attributes",
+      attributeName: "class",
+      target: frameNode,
+    },
+  ]);
+
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+  assert.equal(harness.scheduleCounter.count, scheduleCountAfterAnimation);
+
+  harness.cleanup();
+});
+
+test("turn-points-count cleanup disconnects observer and stops active animations", () => {
+  const documentRef = new FakeDocument();
+  const { scoreNode, frameNode } = moveTurnPointsIntoTurnContainer(documentRef);
+  const harness = createMountHarness({ documentRef });
+  const callback = harness.observerProbe.state.registration?.callback;
+  const textNode = {
+    nodeType: 3,
+    parentNode: scoreNode,
+  };
+
+  scoreNode.textContent = "45";
+  callback([
+    {
+      type: "characterData",
+      target: textNode,
+    },
+  ]);
+
+  assert.equal(harness.animeRef.instances[0]?.paused, false);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
+
+  harness.cleanup();
+
+  assert.deepEqual(harness.observerProbe.state.disconnects, ["turn-points-count:dom-observer"]);
+  assert.equal(harness.listenerProbe.state.removals.includes("turn-points-count:document-visibility"), true);
+  assert.equal(harness.unsubscribeCount, 1);
+  assert.equal(harness.scheduleCounter.cancelled, true);
+  assert.equal(harness.animeRef.instances[0]?.paused, true);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
+  assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
 });
 
 test("turn-points-count style exports the scoped flash animation contract", () => {

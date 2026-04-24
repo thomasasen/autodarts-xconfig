@@ -9,7 +9,10 @@ import {
   updateTurnPoints,
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
-import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
+import {
+  createTurnSurfaceObserveOptions,
+  findTurnContainer,
+} from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "turn-points-count";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -74,7 +77,11 @@ export function initializeTurnPointsCount(context = {}) {
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
-  const rootNode = documentRef.documentElement || documentRef.body || documentRef;
+  const rootNode =
+    findTurnContainer(documentRef) ||
+    documentRef.documentElement ||
+    documentRef.body ||
+    documentRef;
   const isAnimatingScoreNode = (node) => {
     const candidate = node?.nodeType === 3 ? node.parentNode || null : node;
     return (
