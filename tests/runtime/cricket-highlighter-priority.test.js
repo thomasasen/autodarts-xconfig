@@ -5,10 +5,12 @@ import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import {
   buildCricketRenderState,
+  clearCricketHighlights,
   renderCricketHighlights,
 } from "../../src/features/cricket-highlighter/logic.js";
 import {
   OVERLAY_ID,
+  PRESENTATION_PATTERN_IDS,
   PRESENTATION_CLASS,
   PRESSURE_SUPPRESSED_CLASS,
   resolveCricketVisualConfig,
@@ -770,6 +772,213 @@ test("board scoring stays in the scoring bucket while open rows stay neutral", (
     open18Shapes.every((shape) => String(shape?.dataset?.targetPresentation || "") === "open"),
     true
   );
+});
+
+test("board highlighter reuses unchanged SVG presentation patterns across rerenders", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+  const visualConfig = resolveCricketVisualConfig({
+    showDeadTargets: true,
+    irrelevantBoardDimStyle: "hatch",
+    colorTheme: "standard",
+    intensity: "normal",
+  });
+  const cache = {};
+
+  assert.equal(renderCricketHighlights({ documentRef, renderState, visualConfig, cache }), true);
+  const scoringPattern = documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring);
+  assert.ok(scoringPattern);
+  const initialPatternChildren = Array.from(scoringPattern.children || []);
+  assert.equal(initialPatternChildren.length, 2);
+
+  assert.equal(renderCricketHighlights({ documentRef, renderState, visualConfig, cache }), true);
+  const rerenderedPattern = documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring);
+  assert.equal(rerenderedPattern, scoringPattern);
+  assert.deepEqual(Array.from(rerenderedPattern.children || []), initialPatternChildren);
+});
+
+test("board highlighter cleanup removes only owned SVG presentation patterns", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const foreignPattern = documentRef.createElementNS("http://www.w3.org/2000/svg", "pattern");
+  foreignPattern.setAttribute("id", "foreign-pattern");
+  const svg = documentRef.querySelector("svg");
+  const defs = documentRef.createElementNS("http://www.w3.org/2000/svg", "defs");
+  defs.appendChild(foreignPattern);
+  svg.appendChild(defs);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showDeadTargets: true,
+      irrelevantBoardDimStyle: "hatch",
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  }), true);
+  assert.ok(documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring));
+  assert.ok(documentRef.getElementById("foreign-pattern"));
+
+  clearCricketHighlights(documentRef);
+
+  assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
+  Object.values(PRESENTATION_PATTERN_IDS).forEach((patternId) => {
+    assert.equal(Boolean(documentRef.getElementById(patternId)), false);
+  });
+  assert.ok(documentRef.getElementById("foreign-pattern"));
+});
+
+test("board highlighter removes stale owned presentation patterns from other SVGs", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  createBoard(documentRef);
+  createGrid(documentRef, {
+    "20": [3, 0],
+    "19": [0, 0],
+    "18": [0, 0],
+    "17": [0, 0],
+    "16": [0, 0],
+    "15": [0, 0],
+    BULL: [0, 0],
+  });
+
+  const staleSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const staleDefs = documentRef.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const stalePattern = documentRef.createElementNS("http://www.w3.org/2000/svg", "pattern");
+  stalePattern.setAttribute("id", PRESENTATION_PATTERN_IDS.scoring);
+  staleDefs.appendChild(stalePattern);
+  staleSvg.appendChild(staleDefs);
+  documentRef.main.appendChild(staleSvg);
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    gameState: createGameState({
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+    }),
+  });
+
+  assert.equal(renderCricketHighlights({
+    documentRef,
+    renderState,
+    visualConfig: resolveCricketVisualConfig({
+      showDeadTargets: true,
+      irrelevantBoardDimStyle: "hatch",
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+  }), true);
+
+  assert.equal(Boolean(staleSvg.querySelector(`#${PRESENTATION_PATTERN_IDS.scoring}`)), false);
+  assert.equal(documentRef.querySelectorAll(`#${PRESENTATION_PATTERN_IDS.scoring}`).length, 1);
+});
+
+test("board highlighter never renders tactics DOUBLE or TRIPLE as board targets", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  createBoard(documentRef);
+
+  const debugStats = {};
+  const rendered = renderCricketHighlights({
+    documentRef,
+    renderState: {
+      targetOrder: ["20", "DOUBLE", "TRIPLE"],
+      stateMap: new Map([
+        [
+          "20",
+          {
+            label: "20",
+            boardPresentation: "scoring",
+            presentation: "scoring",
+            isHighlightActive: true,
+          },
+        ],
+        [
+          "DOUBLE",
+          {
+            label: "DOUBLE",
+            boardPresentation: "scoring",
+            presentation: "scoring",
+            isHighlightActive: true,
+          },
+        ],
+        [
+          "TRIPLE",
+          {
+            label: "TRIPLE",
+            boardPresentation: "pressure",
+            presentation: "pressure",
+            isHighlightActive: true,
+          },
+        ],
+      ]),
+    },
+    visualConfig: resolveCricketVisualConfig({
+      showOpenTargets: true,
+      showDeadTargets: true,
+      colorTheme: "standard",
+      intensity: "normal",
+    }),
+    cache: {},
+    debugStats,
+  });
+
+  assert.equal(rendered, true);
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+  const renderedLabels = new Set(
+    Array.from(overlay.children || []).map((node) => String(node?.dataset?.targetLabel || ""))
+  );
+  assert.equal(renderedLabels.has("DOUBLE"), false);
+  assert.equal(renderedLabels.has("TRIPLE"), false);
+  assert.equal(Object.hasOwn(debugStats.shapeCountByTarget || {}, "DOUBLE"), false);
+  assert.equal(Object.hasOwn(debugStats.shapeCountByTarget || {}, "TRIPLE"), false);
 });
 
 test("board active-player switch keeps pressure sectors visible and dead sectors use grey stripe patterns", () => {

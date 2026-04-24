@@ -4,6 +4,7 @@ import {
 } from "./logic.js";
 import {
   OVERLAY_ID,
+  PRESENTATION_PATTERN_IDS,
   STYLE_CONTRACT_VERSION,
   STYLE_ID,
   buildStyleText,
@@ -261,7 +262,7 @@ export function initializeCricketHighlighter(context = {}) {
 
   runtime.renderCache.overlayShapeState = null;
   const managedNodeMatcher = createManagedNodeMatcher({
-    ids: [OVERLAY_ID],
+    ids: [OVERLAY_ID, ...Object.values(PRESENTATION_PATTERN_IDS)],
   });
   let lastTransitionSignature = "";
   let lastStatusSignature = "";

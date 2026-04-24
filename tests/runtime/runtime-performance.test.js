@@ -25,6 +25,7 @@ import {
 } from "../../src/features/checkout-board-targets/style.js";
 import {
   OVERLAY_ID as CRICKET_OVERLAY_ID,
+  PRESENTATION_PATTERN_IDS,
   STYLE_ID as CRICKET_STYLE_ID,
 } from "../../src/features/cricket-highlighter/style.js";
 import {
@@ -2593,6 +2594,117 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   assert.equal(Boolean(restoredOverlay), true);
   assert.equal((restoredOverlay?.children?.length || 0) > 0, true);
   assert.equal(scheduleCounter.count >= 2, true);
+
+  cleanup();
+});
+
+test("cricket-highlighter ignores self-managed SVG pattern mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const { group } = appendBoardFixture(documentRef);
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    for (let index = 0; index < 2; index += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.dataset.playerIndex = String(index);
+      cell.dataset.marks = label === "20" && index === 0 ? "3" : "0";
+      cell.textContent = label === "20" && index === 0 ? "3" : "0";
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showDeadTargets: true,
+          irrelevantBoardDimStyle: "hatch",
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const observer = observers.get("cricket-highlighter:dom-observer");
+  const scoringPattern = documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring);
+  assert.ok(observer);
+  assert.ok(scoringPattern);
+  assert.equal(Boolean(documentRef.getElementById(CRICKET_OVERLAY_ID)), true);
+
+  const scheduleCountBefore = scheduleCounter.count;
+  observer.callback([
+    {
+      type: "childList",
+      target: scoringPattern,
+      addedNodes: [documentRef.createElementNS("http://www.w3.org/2000/svg", "rect")],
+      removedNodes: Array.from(scoringPattern.children || []).slice(0, 1),
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count, scheduleCountBefore);
+
+  observer.callback([
+    {
+      type: "childList",
+      target: group,
+      addedNodes: [documentRef.createElementNS("http://www.w3.org/2000/svg", "path")],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, scheduleCountBefore + 1);
 
   cleanup();
 });

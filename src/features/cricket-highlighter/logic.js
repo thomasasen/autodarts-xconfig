@@ -6,6 +6,7 @@
 } from "../../shared/dartboard-svg.js";
 import {
   OVERLAY_ID,
+  PRESENTATION_PATTERN_IDS,
   PRESENTATION_CLASS,
   PRESSURE_SUPPRESSED_CLASS,
   SVG_NS,
@@ -33,7 +34,7 @@ const BASE_BOARD_TARGETS = Object.freeze([
   ...Array.from({ length: 20 }, (_value, index) => String(index + 1)),
   "BULL",
 ]);
-const SPECIAL_OBJECTIVE_TARGETS = Object.freeze(["DOUBLE", "TRIPLE"]);
+const PRESENTATION_PATTERN_ID_VALUES = Object.freeze(Object.values(PRESENTATION_PATTERN_IDS));
 
 function resolvePresentationToken(value) {
   const token = String(value || "").trim().toLowerCase();
@@ -43,21 +44,8 @@ function resolvePresentationToken(value) {
   return normalizeCricketPresentationToken(token);
 }
 
-function resolveBoardTargets(renderState) {
-  const targets = BASE_BOARD_TARGETS.slice();
-  const labelSet = new Set(
-    Array.isArray(renderState?.targetOrder)
-      ? renderState.targetOrder.map((entry) => String(entry || "").trim().toUpperCase())
-      : []
-  );
-
-  SPECIAL_OBJECTIVE_TARGETS.forEach((label) => {
-    if (labelSet.has(label)) {
-      targets.push(label);
-    }
-  });
-
-  return targets;
+function resolveBoardTargets() {
+  return BASE_BOARD_TARGETS.slice();
 }
 
 function polar(radius, angleDeg) {
@@ -413,13 +401,32 @@ function ensureStripedPattern(overlay, options = {}) {
     defs.appendChild(pattern);
   }
 
+  const baseColor = options.color || { r: 0, g: 0, b: 0 };
+  const baseAlpha = clampAlpha(options.baseAlpha, 0.6);
+  const stripeAlpha = clampAlpha(options.stripeAlpha, 0.3);
+  const patternSignature = [
+    "8",
+    "8",
+    "rotate(135)",
+    Math.round(Number(baseColor.r) || 0),
+    Math.round(Number(baseColor.g) || 0),
+    Math.round(Number(baseColor.b) || 0),
+    baseAlpha.toFixed(4),
+    stripeAlpha.toFixed(4),
+  ].join("|");
+
+  if (
+    String(pattern.getAttribute?.("data-ad-ext-cricket-pattern-signature") || "") ===
+      patternSignature &&
+    pattern.children?.length === 2
+  ) {
+    return `url(#${patternId})`;
+  }
+
   while (pattern.firstChild) {
     pattern.firstChild.remove();
   }
 
-  const baseColor = options.color || { r: 0, g: 0, b: 0 };
-  const baseAlpha = clampAlpha(options.baseAlpha, 0.6);
-  const stripeAlpha = clampAlpha(options.stripeAlpha, 0.3);
   const baseRect = ownerDocument.createElementNS(SVG_NS, "rect");
   baseRect.setAttribute("width", "8");
   baseRect.setAttribute("height", "8");
@@ -430,37 +437,65 @@ function ensureStripedPattern(overlay, options = {}) {
   stripe.setAttribute("d", "M0 0 H8 V4 H0 Z");
   stripe.setAttribute("fill", rgbaColor(baseColor, stripeAlpha));
   pattern.appendChild(stripe);
+  pattern.setAttribute("data-ad-ext-cricket-pattern-signature", patternSignature);
 
   return `url(#${patternId})`;
 }
 
+function removePresentationPatternsFromSvg(svgRoot) {
+  if (!svgRoot || typeof svgRoot.querySelector !== "function") {
+    return;
+  }
+
+  PRESENTATION_PATTERN_ID_VALUES.forEach((patternId) => {
+    const pattern = svgRoot.querySelector(`#${patternId}`);
+    if (pattern && typeof pattern.remove === "function") {
+      pattern.remove();
+    }
+  });
+}
+
+function removeStalePresentationPatterns(ownerDocument, currentSvg) {
+  if (!ownerDocument || typeof ownerDocument.querySelectorAll !== "function" || !currentSvg) {
+    return;
+  }
+
+  Array.from(ownerDocument.querySelectorAll("svg")).forEach((svgNode) => {
+    if (svgNode !== currentSvg) {
+      removePresentationPatternsFromSvg(svgNode);
+    }
+  });
+}
+
 function ensurePresentationPatterns(overlay, visualConfig) {
+  removeStalePresentationPatterns(overlay?.ownerDocument || null, overlay?.ownerSVGElement || null);
+
   const scoringColor = visualConfig?.theme?.scoring || { r: 0, g: 178, b: 135 };
   const pressureColor = visualConfig?.theme?.pressure || { r: 239, g: 68, b: 68 };
   const deadColor = visualConfig?.deadColor || { r: 112, g: 118, b: 128 };
   const inactiveDimStyle = resolveInactiveDimStyle(visualConfig, visualConfig?.intensity || {});
   return {
     scoring: ensureStripedPattern(overlay, {
-      patternId: "ad-ext-cricket-scoring-pattern",
+      patternId: PRESENTATION_PATTERN_IDS.scoring,
       color: scoringColor,
       baseAlpha: 0.72,
       stripeAlpha: 0.32,
     }),
     pressure: ensureStripedPattern(overlay, {
-      patternId: "ad-ext-cricket-pressure-pattern",
+      patternId: PRESENTATION_PATTERN_IDS.pressure,
       color: pressureColor,
       baseAlpha: 0.64,
       stripeAlpha: 0.28,
     }),
     dead: ensureStripedPattern(overlay, {
-      patternId: "ad-ext-cricket-dead-pattern",
+      patternId: PRESENTATION_PATTERN_IDS.dead,
       color: deadColor,
       baseAlpha: 0.46,
       stripeAlpha: 0.22,
     }),
     inactive: inactiveDimStyle.usePattern
       ? ensureStripedPattern(overlay, {
-        patternId: "ad-ext-cricket-inactive-pattern",
+        patternId: PRESENTATION_PATTERN_IDS.inactive,
         color: inactiveDimStyle.color,
         baseAlpha: inactiveDimStyle.patternBaseAlpha,
         stripeAlpha: inactiveDimStyle.patternStripeAlpha,
@@ -611,7 +646,7 @@ export function renderCricketHighlights(options = {}) {
   }
 
   applyOverlayStyleVars(overlay, visualConfig, board.radius);
-  const boardTargets = resolveBoardTargets(renderState);
+  const boardTargets = resolveBoardTargets();
   const patterns = ensurePresentationPatterns(overlay, visualConfig);
   const overlayShapeState = ensureOverlayShapeCache(
     overlay,
@@ -735,6 +770,12 @@ export function renderCricketHighlights(options = {}) {
 }
 
 export function clearCricketHighlights(documentRef) {
+  if (documentRef && typeof documentRef.querySelectorAll === "function") {
+    Array.from(documentRef.querySelectorAll("svg")).forEach((svgNode) => {
+      removePresentationPatternsFromSvg(svgNode);
+    });
+  }
+
   const board = findBoardSvgGroup(documentRef);
   if (!board?.group) {
     return;

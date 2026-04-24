@@ -5,6 +5,12 @@ export const TARGET_CLASS = "ad-ext-cricket-target";
 export const TARGET_SLOT_CLASS_PREFIX = "ad-ext-cricket-slot-";
 export const PRESSURE_SUPPRESSED_CLASS = "ad-ext-cricket-pressure-muted";
 export const STYLE_CONTRACT_VERSION = "cricket-highlighter-style/v1";
+export const PRESENTATION_PATTERN_IDS = Object.freeze({
+  scoring: "ad-ext-cricket-scoring-pattern",
+  pressure: "ad-ext-cricket-pressure-pattern",
+  dead: "ad-ext-cricket-dead-pattern",
+  inactive: "ad-ext-cricket-inactive-pattern",
+});
 export const PRESENTATION_CLASS = Object.freeze({
   open: "is-open",
   closed: "is-dead",
