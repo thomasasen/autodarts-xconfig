@@ -29,6 +29,7 @@ const ROW_SELECTOR = `[${CRICKET_ROW_ATTRIBUTE}="true"]`;
 const SLOT_MARKS_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="marks"]`;
 const SLOT_IDENTITY_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="identity"]`;
 const SLOT_STATS_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="stats"]`;
+const SLOT_SCORE_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="score"]`;
 const SLOT_DECORATIVE_SELECTOR = `[${CRICKET_SLOT_ATTRIBUTE}="decorative"]`;
 const META_AVATAR_SELECTOR = `[${CRICKET_META_ATTRIBUTE}="avatar"]`;
 const META_NAME_SELECTOR = `[${CRICKET_META_ATTRIBUTE}="name"]`;
@@ -389,7 +390,8 @@ const cricketThemeCss = `
   display: none !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > .ad-ext-player-score {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_SCORE_SELECTOR} {
   grid-area: score !important;
   grid-column: 3 !important;
   grid-row: 2 / 6 !important;
@@ -403,6 +405,18 @@ const cricketThemeCss = `
   overflow: visible !important;
   text-overflow: initial !important;
   z-index: 3 !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_SCORE_SELECTOR}:not(.ad-ext-player-score) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  min-inline-size: var(--ad-ext-theme-cricket-score-min-width) !important;
+  inline-size: max-content !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_SCORE_SELECTOR}:not(.ad-ext-player-score) .ad-ext-player-score {
+  margin-inline-end: 0 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SLOT_STATS_SELECTOR} > p {

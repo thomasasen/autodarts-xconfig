@@ -503,7 +503,14 @@ function createReportedCricketPlayerCard(documentRef, index, options = {}) {
   const scoreNode = documentRef.createElement("p");
   scoreNode.classList.add("chakra-text", "ad-ext-player-score", "css-18w03sn");
   scoreNode.textContent = String(index * 10);
-  stackNode.appendChild(scoreNode);
+  if (options.wrapScore === true) {
+    const scoreWrapper = documentRef.createElement("div");
+    scoreWrapper.classList.add("ad-ext_winner-score-wrapper");
+    scoreWrapper.appendChild(scoreNode);
+    stackNode.appendChild(scoreWrapper);
+  } else {
+    stackNode.appendChild(scoreNode);
+  }
 
   const rowNode = documentRef.createElement("div");
   rowNode.classList.add("chakra-stack", options.altWrapper === true ? "css-alt-row" : "css-37hv00");
@@ -582,6 +589,7 @@ function createCricketPlayerCard(documentRef, index, options = {}) {
   const variant = String(options.variant || "simple").trim().toLowerCase();
   if (variant === "reported") {
     return createReportedCricketPlayerCard(documentRef, index, {
+      wrapScore: options.wrapScore,
       longName: options.longName,
       visibleName: options.visibleName,
       avatarAlt: options.avatarAlt,
@@ -591,6 +599,7 @@ function createCricketPlayerCard(documentRef, index, options = {}) {
     return createReportedCricketPlayerCard(documentRef, index, {
       altWrapper: true,
       swapRowOrder: true,
+      wrapScore: options.wrapScore,
       longName: options.longName,
       visibleName: options.visibleName,
       avatarAlt: options.avatarAlt,
@@ -3055,6 +3064,51 @@ test("theme-cricket normalizes the reported player-card DOM and uses free width 
   );
   assert.equal(
     firstPlayerNode.querySelector(`[${CRICKET_META_ATTRIBUTE}="wins"]`) !== null,
+    true
+  );
+
+  runtime.stop();
+});
+
+test("theme-cricket keeps wrapped reported player scores in the score slot after card normalization", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.contentSlot.__rect = { width: 1900, height: 680 };
+  boardNodes.contentLeft.__rect = { width: 1272, height: 680 };
+  boardNodes.contentBoard.__rect = { width: 620, height: 620 };
+  boardNodes.boardViewport.__rect = { width: 620, height: 620 };
+  boardNodes.boardCanvas.__rect = { width: 620, height: 620 };
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 3, {
+    variant: "reported",
+    wrapScore: true,
+  });
+
+  const windowRef = createMatchWindow(documentRef, "theme-cricket-wrapped-score");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemeConfig("cricket", {
+      showAvg: true,
+    }),
+  });
+
+  runtime.start();
+  await wait(5);
+
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  const secondPlayerNode = playerDisplayNode.children[1];
+  const scoreWrapper = secondPlayerNode.querySelector(".ad-ext_winner-score-wrapper");
+  const scoreNode = secondPlayerNode.querySelector(".ad-ext-player-score");
+
+  assert.equal(scoreWrapper?.getAttribute(CRICKET_SLOT_ATTRIBUTE), "score");
+  assert.equal(scoreNode?.textContent || "", "10");
+  assert.equal(
+    secondPlayerNode.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="decorative"]`) === scoreWrapper,
+    false
+  );
+  assert.equal(
+    secondPlayerNode.querySelector(`[${CRICKET_SLOT_ATTRIBUTE}="stats"]`) !== null,
     true
   );
 

@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.3] - 2026-04-25
+
+### Fixed
+
+- Nutzerwirkung: Im Cricket-Template bleibt die Punkteanzeige pro Spieler stabiler sichtbar, auch wenn Autodarts einzelne Spielerkarten oder Score-Wrapper waehrend des Spiels neu aufbaut; besonders Karten ab der zweiten Spalte verlieren den Score dadurch nicht mehr bis zum naechsten Reload.
+  Technik: Die Cricket-Readability-Normalisierung markiert direkte Score-Knoten und gewrappte Score-Container als eigenen `score`-Slot, das Cricket-Theme richtet diesen Slot unabhaengig von der aktuellen Host-DOM-Form im Spieler-Grid aus, und neue Runtime-Regressionen sichern gewrappte Reported-Player-Scores sowie den CSS-Slot-Vertrag ab.
+
 ## [2.3.2] - 2026-04-24
 
 ### Changed
@@ -1480,7 +1487,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...HEAD
+[2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...HEAD
+[2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...b420891
 [2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...7b4351b
 [2.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/da0d5b1...d17c15d
 [2.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/6398977...da0d5b1

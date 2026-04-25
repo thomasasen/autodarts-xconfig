@@ -1364,13 +1364,17 @@ function normalizeCricketPlayerCard(playerNode) {
     findClosestDescendant(stackNode, ".chakra-avatar") ||
     findClosestDescendant(stackNode, ".chakra-avatar__img");
   const scoreNode = findClosestDescendant(stackNode, ".ad-ext-player-score");
+  const scoreSlot = findOwningChild(stackNode, scoreNode) || scoreNode;
+  if (scoreSlot) {
+    setMarkerAttribute(scoreSlot, CRICKET_SLOT_ATTRIBUTE, "score");
+  }
 
   const rowNode = resolveCricketPlayerRowContainer(stackNode, [nameNode, badgeNode, avatarNode]);
   if (rowNode && rowNode !== stackNode) {
     setMarkerAttribute(rowNode, CRICKET_ROW_ATTRIBUTE);
   }
 
-  const statsNode = resolveCricketStatsSlot(stackNode, rowNode, scoreNode);
+  const statsNode = resolveCricketStatsSlot(stackNode, rowNode, scoreSlot || scoreNode);
   if (statsNode) {
     setMarkerAttribute(statsNode, CRICKET_SLOT_ATTRIBUTE, "stats");
   }
@@ -1384,12 +1388,12 @@ function normalizeCricketPlayerCard(playerNode) {
       (nodeContainsAnyTarget(rowNode, [nameNode, badgeNode, avatarNode]) ? rowNode : null);
     marksSlot =
       rowChildren.find((child) => {
-        return child !== identitySlot && !nodeContainsAnyTarget(child, [scoreNode, statsNode]);
+        return child !== identitySlot && !nodeContainsAnyTarget(child, [scoreSlot, scoreNode, statsNode]);
       }) || null;
   }
 
   if (!identitySlot) {
-    const directChildren = getElementChildren(stackNode).filter((child) => child !== scoreNode);
+    const directChildren = getElementChildren(stackNode).filter((child) => child !== scoreSlot);
     identitySlot =
       directChildren.find((child) => nodeContainsAnyTarget(child, [nameNode, badgeNode, avatarNode])) ||
       null;
@@ -1404,7 +1408,7 @@ function normalizeCricketPlayerCard(playerNode) {
   }
 
   getElementChildren(stackNode).forEach((child) => {
-    if (child === scoreNode || child === rowNode || child === statsNode) {
+    if (child === scoreSlot || child === scoreNode || child === rowNode || child === statsNode) {
       return;
     }
     if (child.getAttribute?.(CRICKET_SLOT_ATTRIBUTE)) {
@@ -1418,6 +1422,7 @@ function normalizeCricketPlayerCard(playerNode) {
     rowNode,
     identitySlot,
     marksSlot,
+    scoreSlot,
     statsNode,
   };
 }

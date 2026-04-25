@@ -94,6 +94,11 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   );
   assert.ok(
     css.includes(
+      `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "score")} {`
+    )
+  );
+  assert.ok(
+    css.includes(
       `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "decorative")} {`
     )
   );
@@ -165,10 +170,18 @@ test("cricket theme keeps row labels fully visible inside viewport", () => {
 test("cricket theme keeps score and active-card hierarchy on stable selectors", () => {
   const css = buildCricketThemeCss({ showAvg: true });
 
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="score"\]\s*\{/s
+  );
   assert.ok(
     css.includes(
-      `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > .ad-ext-player-score {`
+      `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "score")} {`
     )
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-cricket-stack="true"\]\s*>\s*\[data-ad-ext-cricket-slot="score"\]:not\(\.ad-ext-player-score\)\s*\{[^}]*display:\s*flex\s*!important;[^}]*justify-content:\s*flex-end\s*!important;[^}]*inline-size:\s*max-content\s*!important;/s
   );
   assert.match(
     css,
@@ -295,7 +308,7 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   const scoreSlotRule = extractRuleSlice(
     css,
-    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > .ad-ext-player-score {`
+    `#ad-ext-player-display .ad-ext-player > ${attrSelector(CRICKET_STACK_ATTRIBUTE)} > ${attrSelector(CRICKET_SLOT_ATTRIBUTE, "score")} {`
   );
   assert.match(scoreSlotRule, /grid-row:\s*2\s*\/\s*6\s*!important;/);
   assert.match(scoreSlotRule, /align-self:\s*center\s*!important;/);
