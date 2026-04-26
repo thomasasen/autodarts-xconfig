@@ -471,7 +471,7 @@ export function initializeTvBoardZoom(context = {}) {
     const hasActiveZoom = Boolean(zoomState.zoomedElement);
     if (forceReset || !hasActiveZoom) {
       clearTransientResetState();
-      resetZoom(speedConfig, zoomState);
+      resetZoom(speedConfig, zoomState, Boolean(options.immediate));
       emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
         status: "reset",
         reason,
@@ -522,13 +522,26 @@ export function initializeTvBoardZoom(context = {}) {
       windowRef,
       featureConfig,
     });
+    const lifecycleResetReason = String(zoomState.pendingLifecycleResetReason || "");
+    zoomState.pendingLifecycleResetReason = "";
 
     if (!intent) {
-      requestZoomReset("intent-missing");
+      requestZoomReset(lifecycleResetReason || "intent-missing", {
+        force: Boolean(lifecycleResetReason),
+        immediate: Boolean(lifecycleResetReason),
+      });
       return;
     }
 
     clearTransientResetState();
+    if (lifecycleResetReason) {
+      resetZoom(speedConfig, zoomState, true);
+      emitDebugEvent(debugState, "log", {
+        status: "reset",
+        reason: lifecycleResetReason,
+      });
+    }
+
     const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
     const zoomData = applyZoom(
       { targetNode, hostNode, boardSvg },

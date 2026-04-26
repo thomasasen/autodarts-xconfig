@@ -4,6 +4,7 @@ import {
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
+import { isX01VariantText } from "../../domain/variant-rules.js";
 import {
   resolveBoardZoomHostNode,
   resolveBoardZoomTargetNode,
@@ -30,6 +31,7 @@ const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
 const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
 const TRANSLATE_PREFIX = "translate(";
 const SCALE_PREFIX = "scale(";
+const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 
 function parseViewBox(svgNode) {
   if (!svgNode || typeof svgNode.getAttribute !== "function") {
@@ -423,6 +425,27 @@ function resolveGameBoundaryToken(gameState) {
   }
 
   return "";
+}
+
+function readDomVariantText(documentRef) {
+  if (!documentRef || typeof documentRef.getElementById !== "function") {
+    return "";
+  }
+
+  return String(documentRef.getElementById(VARIANT_ELEMENT_ID)?.textContent || "").trim();
+}
+
+function hasExplicitNonX01DomVariant(documentRef) {
+  const variantText = readDomVariantText(documentRef);
+  if (!variantText) {
+    return false;
+  }
+
+  return !isX01VariantText(variantText, {
+    allowMissing: false,
+    allowEmpty: false,
+    allowNumeric: true,
+  });
 }
 
 export function markManualZoomPause(state, throwCount = Number.NaN) {
@@ -1145,6 +1168,17 @@ function resetZoomIntentForBoundaryChange(state) {
   state.manualPauseThrowCount = -1;
   state.lastTurnId = "";
   state.lastThrowCount = -1;
+  state.pendingLifecycleResetReason = "game-boundary";
+}
+
+function resetZoomIntentForInactiveVariant(state) {
+  state.holdUntilTs = 0;
+  state.activeIntent = null;
+  state.stickyUntilTurnChange = false;
+  state.stickyUntilLegEnd = false;
+  state.manualPause = false;
+  state.manualPauseThrowCount = -1;
+  state.pendingLifecycleResetReason = "variant-inactive";
 }
 
 function syncBoundaryTokenState(state, boundaryToken) {
@@ -1449,14 +1483,18 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
+  if (hasExplicitNonX01DomVariant(documentRef)) {
+    resetZoomIntentForInactiveVariant(state);
+    return null;
+  }
+
   const active = gameState.isX01Variant({
     allowMissing: false,
     allowEmpty: false,
     allowNumeric: true,
   });
   if (!active) {
-    state.holdUntilTs = 0;
-    state.activeIntent = null;
+    resetZoomIntentForInactiveVariant(state);
     return null;
   }
 

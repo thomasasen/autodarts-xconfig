@@ -46,6 +46,7 @@ function createZoomState() {
     manualPause: false,
     manualPauseThrowCount: -1,
     matchBoundaryToken: "",
+    pendingLifecycleResetReason: "",
   };
 }
 
@@ -1511,6 +1512,71 @@ test("tv-board-zoom clears sticky checkout zoom when a new match snapshot arrive
   assert.equal(nextMatchIntent, null);
   assert.equal(state.stickyUntilLegEnd, false);
   assert.equal(state.activeIntent, null);
+});
+
+test("tv-board-zoom requests a lifecycle reset before reusing checkout zoom in a new X01 game", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+
+  const firstGameIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 10,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-a",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: {
+        topic: "match-a.state",
+        match: { currentGameId: "game-a", id: "match-a" },
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 11600,
+  });
+  const firstResetReason = state.pendingLifecycleResetReason;
+
+  const nextGameIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 10,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-b",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: {
+        topic: "match-b.state",
+        match: { currentGameId: "game-b", id: "match-b" },
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+    },
+    nowTs: 11700,
+  });
+
+  assert.deepEqual(firstGameIntent, { reason: "checkout", segment: "D5" });
+  assert.equal(firstResetReason, "");
+  assert.deepEqual(nextGameIntent, { reason: "checkout", segment: "D5" });
+  assert.equal(state.pendingLifecycleResetReason, "game-boundary");
+  assert.equal(state.stickyUntilLegEnd, false);
+  assert.equal(state.manualPause, false);
 });
 
 test("tv-board-zoom pauses auto zoom after manual correction until throw count progresses", () => {

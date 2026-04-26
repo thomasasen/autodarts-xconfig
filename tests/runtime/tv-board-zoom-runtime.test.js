@@ -21,6 +21,7 @@ function createMutableX01GameState(initial = {}) {
     activeScore: Number.isFinite(initial.activeScore) ? Number(initial.activeScore) : 40,
     throws: Array.isArray(initial.throws) ? initial.throws : [],
     outMode: String(initial.outMode || "Double Out"),
+    snapshot: initial.snapshot || null,
   };
   const subscribers = new Set();
 
@@ -45,6 +46,9 @@ function createMutableX01GameState(initial = {}) {
       },
       getActiveScore() {
         return state.activeScore;
+      },
+      getSnapshot() {
+        return state.snapshot;
       },
       subscribe(listener) {
         if (typeof listener !== "function") {
@@ -217,6 +221,135 @@ test("tv-board-zoom applies a direct finish zoom at runtime for D5 in finish-onl
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
     assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
     assert.match(String(targetNode.style.transform || ""), /translate\(.+scale\(/);
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom stays inactive on Bull-off even when a stale X01 snapshot remains", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Bull-off";
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({
+    activeScore: 10,
+    throws: [],
+  });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+    featureConfig: {
+      checkoutZoomTarget: "finish-only",
+    },
+  });
+
+  try {
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(String(targetNode.style.transform || ""), "");
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom clears an active zoom when the DOM variant switches away from X01", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({
+    activeScore: 10,
+    throws: [],
+  });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+    featureConfig: {
+      checkoutZoomTarget: "finish-only",
+    },
+  });
+
+  try {
+    timers.advance(25);
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+
+    documentRef.variantElement.textContent = "Bull-off";
+    gameState.notify();
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(String(targetNode.style.transform || ""), "");
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom hard-resets before applying zoom in a new X01 game", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const logs = [];
+  const gameState = createMutableX01GameState({
+    activeScore: 10,
+    throws: [],
+    snapshot: {
+      topic: "match-a.state",
+      match: { currentGameId: "game-a", id: "match-a" },
+    },
+  });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+    featureConfig: {
+      checkoutZoomTarget: "finish-only",
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        logs.push(args);
+      },
+    },
+  });
+
+  try {
+    timers.advance(25);
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+
+    gameState.state.snapshot = {
+      topic: "match-b.state",
+      match: { currentGameId: "game-b", id: "match-b" },
+    };
+    gameState.notify();
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+    assert.ok(logs.some((entry) => entry[1]?.status === "reset" && entry[1]?.reason === "game-boundary"));
+    assert.ok(logs.some((entry) => entry[1]?.status === "apply" && entry[1]?.segment === "D5"));
   } finally {
     cleanup();
     timers.restoreGlobals();
