@@ -1083,9 +1083,14 @@ export const xconfigFeatureCopy = deepFreeze({
       image("Turn Points Count Detail", "animation-turn-points-count-detail-readme.gif"),
     ],
     fields: {
+      countEffect: fieldCopy(
+        "Wählt den Zählstil, mit dem die Zahl sichtbar zum neuen Wert läuft.",
+        "Fließend nutzt CountUp mit outCubic-Easing, Odometer nutzt den Walzen-/Anzeigetafel-Effekt, Einzelschritte zeigt jede ganze Zahl möglichst exakt nacheinander.",
+        "Wählt den Zählstil der Turn-Punkte."
+      ),
       durationMs: fieldCopy(
         "Bestimmt, wie schnell die Turn-Punkte wie auf einer Anzeigetafel zum Endwert laufen.",
-        "Legt die Geschwindigkeit der Zählanimation fest. Schnell reagiert direkter, Standard zeigt den Zahlenlauf sauber lesbar, Ruhig wirkt wie eine langsamere Anzeigetafel.",
+        "Legt die Geschwindigkeit der Zählanimation fest. Schnell zählt 0 bis 60 in 1 Sekunde, Standard in 3 Sekunden, Ruhig in 5 Sekunden.",
         "Bestimmt die Geschwindigkeit des Hoch- oder Herunterzählens."
       ),
       flashOnChange: fieldCopy(
@@ -2151,20 +2156,38 @@ const LIVE_OR_1200_POLL_OPTION_COPY = deepFreeze({
 });
 
 const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
-  "950": optionCopy(
-    "Zählt 0 bis 60 in knapp 1 Sekunde.",
-    "Diese Stufe reagiert am direktesten und hält die einzelnen Zahlen trotzdem sichtbar genug auseinander.",
-    "Schnelle Zählgeschwindigkeit mit sichtbaren Einzelschritten."
+  "1000": optionCopy(
+    "Zählt 0 bis 60 in 1 Sekunde.",
+    "Diese Stufe reagiert am direktesten und eignet sich für schnelle Spielbilder.",
+    "Schnelle Zählgeschwindigkeit."
   ),
-  "1500": optionCopy(
+  "3000": optionCopy(
     "Nutzt die ausgewogene Standardgeschwindigkeit.",
-    "Ein T20-Treffer läuft von 0 bis 60 in etwa 1,5 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.",
-    "Ausgewogene Zählgeschwindigkeit mit sauber lesbaren Einzelschritten."
+    "Ein T20-Treffer läuft von 0 bis 60 in 3 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.",
+    "Ausgewogene Zählgeschwindigkeit."
   ),
-  "2250": optionCopy(
-    "Zählt 0 bis 60 in etwa 2,25 Sekunden.",
+  "5000": optionCopy(
+    "Zählt 0 bis 60 in 5 Sekunden.",
     "Die Animation nimmt sich mehr Zeit und zeigt große Punktwechsel besonders nachvollziehbar. Das wirkt wie eine ruhige Anzeigetafel.",
-    "Ruhige Zählgeschwindigkeit für sehr klar sichtbare Zwischenwerte."
+    "Ruhige Zählgeschwindigkeit."
+  ),
+});
+
+const TURN_POINTS_COUNT_EFFECT_OPTION_COPY = deepFreeze({
+  countup: optionCopy(
+    "Zählt weich mit CountUp.",
+    "Der Wert läuft mit outCubic-Easing flüssig zum Zielwert und bleibt ohne zusätzliche DOM-Struktur kompatibel mit Themes.",
+    "Fließender CountUp-Zählstil."
+  ),
+  odometer: optionCopy(
+    "Nutzt den Odometer-Walzenstil.",
+    "Die Ziffern wechseln in einem Anzeigetafel-/Walzeneffekt. Der Stil wird nur geladen, wenn er ausgewählt ist.",
+    "Odometer-Zählstil mit rollenden Ziffern."
+  ),
+  steps: optionCopy(
+    "Zeigt ganze Zahlen als Einzelschritte.",
+    "Diese Fallback-Variante priorisiert sichtbare Zwischenzahlen statt Easing und bleibt besonders deterministisch.",
+    "Deterministische Einzelschritte."
   ),
 });
 
@@ -2501,6 +2524,7 @@ const xconfigFieldOptionCopy = deepFreeze({
     pollIntervalMs: LIVE_OR_1200_POLL_OPTION_COPY,
   },
   "turn-points-count": {
+    countEffect: TURN_POINTS_COUNT_EFFECT_OPTION_COPY,
     durationMs: TURN_POINTS_DURATION_OPTION_COPY,
     flashMode: TURN_POINTS_FLASH_MODE_OPTION_COPY,
   },
@@ -2711,6 +2735,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         title: "Turn Points Count",
         featureKey: "turn-points-count",
         fields: [
+          { label: "Zählstil", key: "countEffect" },
           { label: "Zählgeschwindigkeit", key: "durationMs" },
           { label: "Aufblitz-Effekt", key: "flashOnChange" },
           { label: "Aufblitz-Modus", key: "flashMode" },

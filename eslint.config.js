@@ -7,6 +7,8 @@ const generatedOrVendorIgnores = [
   "src/legacy-backups/**",
   "src/vendors/anime.min.cjs",
   "src/vendors/canvas-confetti.browser.js",
+  "src/vendors/countUp.min.js",
+  "src/vendors/odometer.min.js",
 ];
 
 const unusedVariableRuleOptions = {

@@ -208,6 +208,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Sweep-Stil`: Standard
 
 **Turn Points Count**
+- `Zählstil`: Fließend
 - `Zählgeschwindigkeit`: Standard
 - `Aufblitz-Effekt`: Aus
 - `Aufblitz-Modus`: Nur bei Änderung
@@ -1217,9 +1218,13 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 **Einstellungen einfach erklärt**
 
-- `Zählgeschwindigkeit`: Legt die Geschwindigkeit der Zählanimation fest. Schnell reagiert direkter, Standard zeigt den Zahlenlauf sauber lesbar, Ruhig wirkt wie eine langsamere Anzeigetafel.
-  - `Schnell`: Diese Stufe reagiert am direktesten und hält die einzelnen Zahlen trotzdem sichtbar genug auseinander.
-  - `Standard`: Ein T20-Treffer läuft von 0 bis 60 in etwa 1,5 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.
+- `Zählstil`: Fließend nutzt CountUp mit outCubic-Easing, Odometer nutzt den Walzen-/Anzeigetafel-Effekt, Einzelschritte zeigt jede ganze Zahl möglichst exakt nacheinander.
+  - `Fließend`: Der Wert läuft mit outCubic-Easing flüssig zum Zielwert und bleibt ohne zusätzliche DOM-Struktur kompatibel mit Themes.
+  - `Odometer`: Die Ziffern wechseln in einem Anzeigetafel-/Walzeneffekt. Der Stil wird nur geladen, wenn er ausgewählt ist.
+  - `Einzelschritte`: Diese Fallback-Variante priorisiert sichtbare Zwischenzahlen statt Easing und bleibt besonders deterministisch.
+- `Zählgeschwindigkeit`: Legt die Geschwindigkeit der Zählanimation fest. Schnell zählt 0 bis 60 in 1 Sekunde, Standard in 3 Sekunden, Ruhig in 5 Sekunden.
+  - `Schnell`: Diese Stufe reagiert am direktesten und eignet sich für schnelle Spielbilder.
+  - `Standard`: Ein T20-Treffer läuft von 0 bis 60 in 3 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.
   - `Ruhig`: Die Animation nimmt sich mehr Zeit und zeigt große Punktwechsel besonders nachvollziehbar. Das wirkt wie eine ruhige Anzeigetafel.
 - `Aufblitz-Effekt`: Wenn aktiv, blitzt der Turn-Wert nur in dem Zeitraum auf, in dem die Zahl wirklich animiert wird. Bei deaktivierter Option bleibt ausschließlich die Zählbewegung ohne zusätzlichen Lichtimpuls.
 - `Aufblitz-Modus`: Legt fest, wie der elektrische Rahmen dargestellt wird: `Nur bei Änderung` zeigt den Effekt nur während laufender Zähländerungen, `Permanent` hält den Rahmen dauerhaft sichtbar, solange das Feature aktiv ist.

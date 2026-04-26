@@ -12,12 +12,12 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [2.3.4] - 2026-04-26
+## [2.3.5] - 2026-04-27
 
 ### Fixed
 
-- Nutzerwirkung: `Turn Points Count` zählt Turn-Punkte jetzt deutlich gleichmäßiger wie eine Anzeigetafel hoch oder herunter; ein T20-Treffer läuft nicht mehr nach wenigen Zwischenwerten direkt auf `60`, und die xConfig-Geschwindigkeiten sind auf die lesbaren Stufen `Schnell`, `Standard` und `Ruhig` abgestimmt.
-  Technik: Die sichtbare Zahlenbewegung wird per eigenem RAF-Schrittzähler geführt, frühe Anime-Complete-Callbacks dürfen die laufende Zählung nicht mehr vorzeitig finalisieren, die Dauer-Presets und Legacy-Mappings wurden auf `950`, `1500` und `2250` ms normalisiert, und Runtime-/Config-/Shell-Regressionen sichern Schrittfolge, Migration und xConfig-Persistenz ab.
+- Nutzerwirkung: `Turn Points Count` zählt Turn-Punkte jetzt deutlich gleichmäßiger wie eine Anzeigetafel hoch oder herunter; ein T20-Treffer kann per `Fließend`, `Odometer` oder `Einzelschritte` animiert werden, und die xConfig-Geschwindigkeiten laufen für `Schnell`, `Standard` und `Ruhig` über `1`, `3` und `5` Sekunden.
+  Technik: `CountUp.js` und das optionale `odometer_countup`-Plugin werden als vendored Browser-Skripte eingebunden, Odometer wird nur bei gewähltem Stil lazy geladen, die Legacy-Dauerwerte migrieren auf `1000`, `3000` und `5000` ms, und Runtime-/Config-/Shell-Regressionen sichern CountUp-Easing, Plugin-Verdrahtung, Fallback-Schrittzählung, Migration und xConfig-Persistenz ab.
 
 ## [2.3.3] - 2026-04-25
 
@@ -1494,7 +1494,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.4]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...HEAD
+[2.3.5]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...HEAD
 [2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...d44c45a
 [2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...b420891
 [2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...7b4351b

@@ -5,13 +5,42 @@ import {
   SCORE_FRAME_SEQUENCE_ATTRIBUTE,
   SCORE_SELECTOR,
 } from "./style.js";
+import { CountUp } from "../../vendors/countUp.min.js";
 
+const COUNT_EFFECT_COUNTUP = "countup";
+const COUNT_EFFECT_ODOMETER = "odometer";
+const COUNT_EFFECT_STEPS = "steps";
 const FLASH_MODE_ON_CHANGE = "on-change";
 const FLASH_MODE_PERMANENT = "permanent";
 const SCORE_CLASS_NAME = SCORE_SELECTOR.startsWith(".")
   ? SCORE_SELECTOR.slice(1)
   : SCORE_SELECTOR;
 const MIN_SCORE_STEP_INTERVAL_MS = 16;
+
+function normalizeCountEffect(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (normalized === COUNT_EFFECT_ODOMETER) {
+    return COUNT_EFFECT_ODOMETER;
+  }
+  if (normalized === COUNT_EFFECT_STEPS || normalized === "step" || normalized === "integer") {
+    return COUNT_EFFECT_STEPS;
+  }
+  return COUNT_EFFECT_COUNTUP;
+}
+
+function resolveCountEffectOption(options = {}) {
+  return Object.hasOwn(options, "countEffect")
+    ? normalizeCountEffect(options.countEffect)
+    : COUNT_EFFECT_STEPS;
+}
+
+function easeOutCubic(elapsedTime, startValue, valueChange, duration) {
+  const normalizedDuration = Math.max(1, Number(duration) || 1);
+  const progress = Math.max(0, Math.min(1, Number(elapsedTime) / normalizedDuration));
+  return startValue + valueChange * (1 - Math.pow(1 - progress, 3));
+}
 
 function parseScore(text) {
   const match = String(text || "").match(/-?\d+/);
@@ -163,6 +192,39 @@ function renderScoreValue(node, state, value) {
   return true;
 }
 
+function hasActiveScoreAnimation(node, state) {
+  if (!node || !state) {
+    return false;
+  }
+  return (
+    state.activeAnimeByNode?.has?.(node) === true ||
+    state.activeRafByNode?.has?.(node) === true ||
+    state.activeCountUpByNode?.has?.(node) === true
+  );
+}
+
+export function isNodeWithinActiveScoreAnimation(node, state) {
+  if (!node || !state) {
+    return false;
+  }
+
+  let currentNode = node?.nodeType === 3 ? node.parentNode || null : node;
+  while (currentNode) {
+    if (hasActiveScoreAnimation(currentNode, state)) {
+      return true;
+    }
+    currentNode = currentNode.parentElement || currentNode.parentNode || null;
+  }
+  return false;
+}
+
+function isOdometerRenderActive(node, state) {
+  return (
+    hasActiveScoreAnimation(node, state) &&
+    node?.firstElementChild?.classList?.contains?.("odometer-numbers") === true
+  );
+}
+
 function resolveScoreStepAnimationTiming(fromValue, toValue, durationMs) {
   const normalizedFromValue = Math.round(Number(fromValue));
   const normalizedToValue = Math.round(Number(toValue));
@@ -271,6 +333,71 @@ function startScoreRafAnimation(node, state, options = {}) {
   return timing.effectiveDurationMs;
 }
 
+function startCountUpAnimation(node, state, options = {}) {
+  const fromValue = Math.round(Number(options.fromValue));
+  const toValue = Math.round(Number(options.toValue));
+  const durationMs = Math.max(1, Number(options.durationMs) || 1000);
+  const flashEnabled = options.flashEnabled !== false;
+  const flashMode = normalizeFlashMode(options.flashMode);
+  const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
+  const windowRef = options.windowRef || null;
+  const CountUpRef = typeof options.countUpRef === "function" ? options.countUpRef : CountUp;
+  const countEffect = resolveCountEffectOption(options);
+  const OdometerRef =
+    countEffect === COUNT_EFFECT_ODOMETER && typeof options.odometerPluginRef === "function"
+      ? options.odometerPluginRef
+      : null;
+
+  if (!node || !state || !Number.isFinite(fromValue) || !Number.isFinite(toValue)) {
+    return false;
+  }
+
+  let plugin = null;
+  if (OdometerRef) {
+    plugin = new OdometerRef({
+      duration: durationMs / 1000,
+      lastDigitDelay: 0,
+    });
+  }
+
+  const countUpInstance = new CountUpRef(node, toValue, {
+    startVal: fromValue,
+    decimalPlaces: 0,
+    duration: durationMs / 1000,
+    useEasing: true,
+    useGrouping: false,
+    smartEasingThreshold: Number.MAX_SAFE_INTEGER,
+    smartEasingAmount: 0,
+    easingFn: easeOutCubic,
+    formattingFn(value) {
+      const roundedValue = Math.round(Number(value));
+      const normalizedValue = Number.isFinite(roundedValue) ? roundedValue : toValue;
+      state.renderedValueByNode.set(node, normalizedValue);
+      return String(normalizedValue);
+    },
+    ...(plugin ? { plugin } : {}),
+  });
+
+  if (countUpInstance?.error) {
+    return false;
+  }
+
+  state.activeCountUpByNode?.set?.(node, countUpInstance);
+  countUpInstance.start(() => {
+    if (state.activeCountUpByNode?.get?.(node) !== countUpInstance) {
+      return;
+    }
+    completeScoreAnimation(node, state, {
+      toValue,
+      flashEnabled,
+      flashMode,
+      flashAfterglowMs,
+      windowRef,
+    });
+  });
+  return true;
+}
+
 function triggerScoreFlash(node, state, windowRef = null, options = {}) {
   if (!node || !state) {
     return;
@@ -360,6 +487,22 @@ export function stopAnimation(node, state, windowRef = null, options = {}) {
     }
   }
   state.activeAnimeByNode.delete(node);
+  const countUpInstance = state.activeCountUpByNode?.get?.(node);
+  if (countUpInstance) {
+    try {
+      if (typeof countUpInstance.onDestroy === "function") {
+        countUpInstance.onDestroy();
+      } else if (
+        countUpInstance.paused === false &&
+        typeof countUpInstance.pauseResume === "function"
+      ) {
+        countUpInstance.pauseResume();
+      }
+    } catch (_) {
+      // fail-soft
+    }
+  }
+  state.activeCountUpByNode?.delete?.(node);
   state.targetValueByNode.delete(node);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const preserveFrame = options.preserveFrame === true;
@@ -377,6 +520,9 @@ export function animateScore(node, options = {}) {
   const flashMode = normalizeFlashMode(options.flashMode);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const animeRef = options.animeRef;
+  const countEffect = resolveCountEffectOption(options);
+  const countUpRef = options.countUpRef;
+  const odometerPluginRef = options.odometerPluginRef;
   const windowRef = options.windowRef || null;
 
   if (!node || !state || !Number.isFinite(fromValue) || !Number.isFinite(toValue)) {
@@ -388,6 +534,24 @@ export function animateScore(node, options = {}) {
   state.targetValueByNode.set(node, toValue);
   if (flashEnabled) {
     triggerScoreFlash(node, state, windowRef, { flashMode });
+  }
+
+  if (
+    countEffect !== COUNT_EFFECT_STEPS &&
+    startCountUpAnimation(node, state, {
+      fromValue,
+      toValue,
+      durationMs,
+      flashEnabled,
+      flashMode,
+      flashAfterglowMs,
+      countEffect,
+      countUpRef,
+      odometerPluginRef,
+      windowRef,
+    })
+  ) {
+    return;
   }
 
   const effectiveDurationMs = startScoreRafAnimation(node, state, {
@@ -425,7 +589,6 @@ export function animateScore(node, options = {}) {
       },
     });
     state.activeAnimeByNode.set(node, animeInstance);
-    return;
   }
 }
 
@@ -437,6 +600,9 @@ export function updateTurnPoints(options = {}) {
   const flashMode = normalizeFlashMode(options.flashMode);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
   const animeRef = options.animeRef;
+  const countEffect = resolveCountEffectOption(options);
+  const countUpRef = options.countUpRef;
+  const odometerPluginRef = options.odometerPluginRef;
   const windowRef = options.windowRef || null;
 
   if (!documentRef || !state) {
@@ -460,6 +626,10 @@ export function updateTurnPoints(options = {}) {
   }
 
   scoreNodes.forEach((node) => {
+    if (isOdometerRenderActive(node, state)) {
+      return;
+    }
+
     const parsedValue = parseScore(node.textContent);
     if (parsedValue === null) {
       stopAnimation(node, state, windowRef);
@@ -475,7 +645,7 @@ export function updateTurnPoints(options = {}) {
     const lastValue = Number(state.lastValueByNode.get(node));
     const renderedValue = Number(state.renderedValueByNode.get(node));
     const targetValue = Number(state.targetValueByNode.get(node));
-    const activeAnimation = state.activeAnimeByNode.has(node) || state.activeRafByNode.has(node);
+    const activeAnimation = hasActiveScoreAnimation(node, state);
 
     if (
       activeAnimation &&
@@ -498,6 +668,9 @@ export function updateTurnPoints(options = {}) {
       flashMode,
       flashAfterglowMs,
       animeRef,
+      countEffect,
+      countUpRef,
+      odometerPluginRef,
       windowRef,
     });
   });

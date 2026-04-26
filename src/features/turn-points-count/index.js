@@ -1,10 +1,16 @@
-import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
+import {
+  ensureAnimeLoaded,
+  ensureOdometerLoaded,
+  getAnime,
+  getOdometer,
+} from "../../vendors/index.js";
 import {
   releaseElectricFilterDefs,
   retainElectricFilterDefs,
 } from "../../shared/electric-border-engine.js";
 import {
   collectScoreNodes,
+  isNodeWithinActiveScoreAnimation,
   stopAnimation,
   updateTurnPoints,
 } from "./logic.js";
@@ -39,6 +45,7 @@ export function initializeTurnPointsCount(context = {}) {
       ? config.getFeatureConfig("turnPointsCount")
       : {
           durationMs: 416,
+          countEffect: "countup",
           flashOnChange: true,
           flashMode: "on-change",
         };
@@ -49,12 +56,14 @@ export function initializeTurnPointsCount(context = {}) {
     targetValueByNode: new Map(),
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
+    activeCountUpByNode: new Map(),
     flashFrameByScoreNode: new Map(),
     flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
     scoreNodeCache: [],
   };
   let animeRef = getAnime(windowRef);
+  let odometerPluginRef = getOdometer();
   let disposed = false;
   let electricDefsRetained = false;
 
@@ -73,6 +82,8 @@ export function initializeTurnPointsCount(context = {}) {
       flashMode: featureConfig.flashMode,
       flashAfterglowMs: featureConfig.flashOnChange !== false ? 750 : 0,
       animeRef,
+      countEffect: featureConfig.countEffect,
+      odometerPluginRef,
       windowRef,
     });
   }
@@ -108,11 +119,7 @@ export function initializeTurnPointsCount(context = {}) {
     return Boolean(node?.closest?.("#ad-ext-turn") || isWithinObserverRoot(node));
   };
   const isAnimatingScoreNode = (node) => {
-    const candidate = node?.nodeType === 3 ? node.parentNode || null : node;
-    return (
-      state.activeAnimeByNode.has(candidate) ||
-      state.activeRafByNode.has(candidate)
-    );
+    return isNodeWithinActiveScoreAnimation(node, state);
   };
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
@@ -188,6 +195,16 @@ export function initializeTurnPointsCount(context = {}) {
     scheduler.schedule();
   });
 
+  if (featureConfig.countEffect === "odometer") {
+    ensureOdometerLoaded(windowRef).then((loadedOdometer) => {
+      if (disposed || !loadedOdometer) {
+        return;
+      }
+      odometerPluginRef = loadedOdometer;
+      scheduler.schedule();
+    });
+  }
+
   scheduler.schedule();
   let cleanedUp = false;
 
@@ -220,6 +237,8 @@ export function initializeTurnPointsCount(context = {}) {
       flashMode: featureConfig.flashMode,
       flashAfterglowMs: 0,
       animeRef: null,
+      countEffect: featureConfig.countEffect,
+      odometerPluginRef,
       windowRef,
     });
     const scoreNodes = collectScoreNodes(documentRef);

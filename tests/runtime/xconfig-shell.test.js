@@ -1673,6 +1673,10 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     "[data-adxconfig-setting='true'][data-setting-key='durationMs']"
   );
   assert.ok(durationSetting);
+  const countEffectSetting = documentRef.querySelector(
+    "[data-adxconfig-setting='true'][data-setting-key='countEffect']"
+  );
+  assert.ok(countEffectSetting);
   const flashModeSetting = documentRef.querySelector(
     "[data-adxconfig-setting='true'][data-setting-key='flashMode']"
   );
@@ -1689,12 +1693,22 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     noteTexts.some((text) => /Anzeigetafel|Geschwindigkeit/.test(text)),
     "missing turn-points speed setting note"
   );
+  assert.ok(
+    noteTexts.some((text) => /CountUp|Odometer|Zählstil/.test(text)),
+    "missing turn-points count style setting note"
+  );
 
-  clickSelectSettingOption(documentRef, "turn-points-count", "durationMs", 2250);
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.durationMs === 2250);
+  clickSelectSettingOption(documentRef, "turn-points-count", "durationMs", 5000);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.durationMs === 5000);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.durationMs, 2250);
+  assert.equal(storedConfig.features.turnPointsCount.durationMs, 5000);
+
+  clickSelectSettingOption(documentRef, "turn-points-count", "countEffect", "odometer");
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.countEffect === "odometer");
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnPointsCount.countEffect, "odometer");
 
   clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", false);
   await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashOnChange === false);

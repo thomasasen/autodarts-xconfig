@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   collectScoreNodes,
+  isNodeWithinActiveScoreAnimation,
   stopAnimation,
   updateTurnPoints,
 } from "../../src/features/turn-points-count/logic.js";
@@ -25,6 +26,7 @@ function createState() {
     targetValueByNode: new Map(),
     activeRafByNode: new Map(),
     activeAnimeByNode: new Map(),
+    activeCountUpByNode: new Map(),
     flashFrameByScoreNode: new Map(),
     flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
@@ -70,6 +72,35 @@ function createAnimeStub() {
   anime.calls = calls;
   anime.instances = instances;
   return anime;
+}
+
+function createCountUpClassStub() {
+  const instances = [];
+
+  class CountUpStub {
+    constructor(target, endVal, options = {}) {
+      this.target = target;
+      this.endVal = endVal;
+      this.options = options;
+      this.error = "";
+      this.destroyed = false;
+      this.paused = true;
+      instances.push(this);
+    }
+
+    start(callback) {
+      this.paused = false;
+      this.callback = callback;
+    }
+
+    onDestroy() {
+      this.destroyed = true;
+      this.paused = true;
+    }
+  }
+
+  CountUpStub.instances = instances;
+  return CountUpStub;
 }
 
 function createObserverRegistryProbe() {
@@ -168,6 +199,7 @@ function createMountHarness(options = {}) {
       getFeatureConfig() {
         return {
           durationMs: 416,
+          countEffect: "steps",
           flashOnChange: true,
           flashMode: "on-change",
         };
@@ -521,6 +553,114 @@ test("turn-points-count rewinds the browser-updated score before counting to the
   assert.equal(scoreNode.textContent, "60");
   assert.equal(state.renderedValueByNode.get(scoreNode), 60);
   assert.equal(state.targetValueByNode.get(scoreNode), 120);
+});
+
+test("turn-points-count uses CountUp with outCubic timing when the smooth style is selected", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const CountUpStub = createCountUpClassStub();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  scoreNode.textContent = "0";
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 3000,
+    countEffect: "countup",
+    countUpRef: CountUpStub,
+    windowRef,
+  });
+
+  scoreNode.textContent = "60";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 3000,
+    countEffect: "countup",
+    countUpRef: CountUpStub,
+    windowRef,
+  });
+
+  const countUpInstance = CountUpStub.instances[0];
+  assert.ok(countUpInstance);
+  assert.equal(countUpInstance.target, scoreNode);
+  assert.equal(countUpInstance.endVal, 60);
+  assert.equal(countUpInstance.options.startVal, 0);
+  assert.equal(countUpInstance.options.duration, 3);
+  assert.equal(countUpInstance.options.useGrouping, false);
+  assert.equal(countUpInstance.options.useEasing, true);
+  assert.equal(countUpInstance.options.formattingFn(31.4), "31");
+  assert.equal(state.renderedValueByNode.get(scoreNode), 31);
+  assert.equal(Math.round(countUpInstance.options.easingFn(500, 0, 60, 1000)), 53);
+
+  countUpInstance.callback();
+  assert.equal(countUpInstance.destroyed, true);
+  assert.equal(scoreNode.textContent, "60");
+  assert.equal(state.lastValueByNode.get(scoreNode), 60);
+  assert.equal(state.activeCountUpByNode.has(scoreNode), false);
+});
+
+test("turn-points-count wires the odometer plugin only for the odometer count style", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const CountUpStub = createCountUpClassStub();
+  const odometerOptions = [];
+  class OdometerStub {
+    constructor(options = {}) {
+      this.options = options;
+      odometerOptions.push(options);
+    }
+  }
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  scoreNode.textContent = "0";
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 5000,
+    countEffect: "odometer",
+    countUpRef: CountUpStub,
+    odometerPluginRef: OdometerStub,
+    windowRef,
+  });
+
+  scoreNode.textContent = "60";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 5000,
+    countEffect: "odometer",
+    countUpRef: CountUpStub,
+    odometerPluginRef: OdometerStub,
+    windowRef,
+  });
+
+  assert.equal(odometerOptions.length, 1);
+  assert.deepEqual(odometerOptions[0], {
+    duration: 5,
+    lastDigitDelay: 0,
+  });
+  assert.ok(CountUpStub.instances[0].options.plugin instanceof OdometerStub);
+});
+
+test("turn-points-count detects self-generated nested odometer mutations as active score animation", () => {
+  const documentRef = new FakeDocument();
+  const state = createState();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  const odometerRoot = documentRef.createElement("div");
+  const digitColumn = documentRef.createElement("span");
+  const digitNode = documentRef.createElement("span");
+
+  odometerRoot.classList.add("odometer-numbers");
+  digitNode.textContent = "6";
+  scoreNode.appendChild(odometerRoot);
+  odometerRoot.appendChild(digitColumn);
+  digitColumn.appendChild(digitNode);
+  state.activeCountUpByNode.set(scoreNode, { onDestroy() {} });
+
+  assert.equal(isNodeWithinActiveScoreAnimation(digitNode, state), true);
 });
 
 test("turn-points-count skips duplicate DOM writes while the rounded score value is unchanged", () => {

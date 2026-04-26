@@ -44,7 +44,8 @@ const REMOVE_DARTS_NOTIFICATION_PULSE_SCALE = new Set([1.02, 1.04, 1.08]);
 const SINGLE_BULL_SOUND_VOLUME = new Set([0.5, 0.75, 0.9, 1]);
 const SINGLE_BULL_SOUND_COOLDOWN = new Set([400, 700, 1000]);
 const SINGLE_BULL_SOUND_POLL_INTERVAL = new Set([0, 1200]);
-const TURN_POINTS_COUNT_DURATIONS = new Set([950, 1500, 2250]);
+const TURN_POINTS_COUNT_DURATIONS = new Set([1000, 3000, 5000]);
+const TURN_POINTS_COUNT_EFFECTS = new Set(["countup", "odometer", "steps"]);
 const X01_SCORE_PROGRESS_COLOR_THEMES = new Set(["checkout-focus", "traffic-light", "danger-endgame", "gradient-by-progress", "autodarts", "signal-lime", "glass-mint", "ember-rush", "ice-circuit", "neon-violet", "sunset-amber", "monochrome-steel"]);
 const X01_SCORE_PROGRESS_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
 const WINNER_FIREWORKS_STYLES = new Set(["realistic", "fireworks", "cannon", "victorystorm", "stars", "sides"]);
@@ -125,16 +126,16 @@ function normalizeNumberChoice(value, fallbackValue, allowedSet) {
 
 function normalizeTurnPointsCountDuration(value) {
   const numeric = Number(value);
-  if (numeric === 260 || numeric === 416 || numeric === 650 || numeric === 1300) {
-    return 950;
+  if (numeric === 260 || numeric === 416 || numeric === 650 || numeric === 950 || numeric === 1300) {
+    return 1000;
   }
-  if (numeric === 1000 || numeric === 2000) {
-    return 1500;
+  if (numeric === 1500 || numeric === 2000) {
+    return 3000;
   }
-  if (numeric === 1400 || numeric === 3000) {
-    return 2250;
+  if (numeric === 1400 || numeric === 2250) {
+    return 5000;
   }
-  return normalizeNumberChoice(value, 1500, TURN_POINTS_COUNT_DURATIONS);
+  return normalizeNumberChoice(value, 3000, TURN_POINTS_COUNT_DURATIONS);
 }
 
 function normalizeBoolean(value, fallbackValue) {
@@ -265,7 +266,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   dartMarkerDarts: { enabled: false, design: "autodarts", animateDarts: true, sizePercent: 100, hideOriginalMarkers: false, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard", debug: false },
   removeDartsNotification: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
   singleBullSound: { enabled: false, volume: 0.9, cooldownMs: 700, pollIntervalMs: 0, debug: false },
-  turnPointsCount: { enabled: false, durationMs: 1500, flashOnChange: true, flashMode: "on-change", debug: false },
+  turnPointsCount: { enabled: false, durationMs: 3000, countEffect: "countup", flashOnChange: true, flashMode: "on-change", debug: false },
   winnerFireworks: { enabled: false, style: "realistic", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true, debug: false },
   x01ScoreProgress: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core", debug: false },
   "themes.globalTypography": {
@@ -317,7 +318,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   dartMarkerDarts: { design: "autodarts", animateDarts: true, sizePercent: 100, hideOriginalMarkers: true, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard" },
   removeDartsNotification: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
   singleBullSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
-  turnPointsCount: { durationMs: 1500, flashOnChange: false, flashMode: "on-change" },
+  turnPointsCount: { durationMs: 3000, countEffect: "countup", flashOnChange: false, flashMode: "on-change" },
   winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true },
   x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
   "themes.globalTypography": {
@@ -642,7 +643,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
         : "on-change";
     }
     const normalizedFlashMode = normalizeMappedStringChoice(rawConfig.flashMode, legacyFlashMode, { "": "on-change", "on-change": "on-change", onchange: "on-change", appear: "on-change", burst: "on-change", "nur-bei-Ã¤nderung": "on-change", "nur-bei-aenderung": "on-change", permanent: "permanent", always: "permanent", persistent: "permanent", dauerhaft: "permanent" });
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeTurnPointsCountDuration(rawConfig.durationMs), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeTurnPointsCountDuration(rawConfig.durationMs), countEffect: normalizeStringChoice(rawConfig.countEffect, "countup", TURN_POINTS_COUNT_EFFECTS), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
   },
   winnerFireworks(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "realistic", WINNER_FIREWORKS_STYLES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "autodarts", WINNER_FIREWORKS_COLOR_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "standard", WINNER_FIREWORKS_INTENSITIES), includeBullOut: normalizeBoolean(rawConfig.includeBullOut, true), pointerDismiss: normalizeBoolean(rawConfig.pointerDismiss, true), debug: normalizeBoolean(rawConfig.debug, false) };

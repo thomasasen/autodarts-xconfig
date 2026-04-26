@@ -17,6 +17,10 @@ const vendorLoadState = {
     promise: null,
     cached: null,
   },
+  odometer: {
+    promise: null,
+    cached: null,
+  },
 };
 
 function createSafeImporter(loader) {
@@ -31,6 +35,7 @@ function createSafeImporter(loader) {
 
 const importAnimeModule = createSafeImporter(() => import("./anime.min.cjs"));
 const importConfettiModule = createSafeImporter(() => import("./canvas-confetti.browser.js"));
+const importOdometerModule = createSafeImporter(() => import("./odometer.min.js"));
 
 export function getAnime(windowRef = null) {
   const resolvedWindow = getWindowRef(windowRef);
@@ -66,6 +71,12 @@ export function getConfetti(windowRef = null) {
   }
 
   return null;
+}
+
+export function getOdometer() {
+  return typeof vendorLoadState.odometer.cached === "function"
+    ? vendorLoadState.odometer.cached
+    : null;
 }
 
 export async function ensureAnimeLoaded(windowRef = null) {
@@ -148,4 +159,30 @@ export async function ensureConfettiLoaded(windowRef = null) {
   }
 
   return loadedConfetti;
+}
+
+export async function ensureOdometerLoaded(windowRef = null) {
+  const resolvedWindow = getWindowRef(windowRef);
+  if (!resolvedWindow) {
+    return null;
+  }
+
+  const existing = getOdometer();
+  if (existing) {
+    return existing;
+  }
+
+  if (!vendorLoadState.odometer.promise) {
+    vendorLoadState.odometer.promise = importOdometerModule();
+  }
+  const importedOdometerModule = await vendorLoadState.odometer.promise;
+  if (importedOdometerModule && typeof vendorLoadState.odometer.cached !== "function") {
+    const importedOdometerCandidate =
+      importedOdometerModule.Odometer || importedOdometerModule.default;
+    if (typeof importedOdometerCandidate === "function") {
+      vendorLoadState.odometer.cached = importedOdometerCandidate;
+    }
+  }
+
+  return getOdometer();
 }
