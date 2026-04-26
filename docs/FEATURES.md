@@ -54,7 +54,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Sweep-Stil`: Standard
 
 **Turn Points Count**
-- `Animationsdauer`: Standard
+- `Zählgeschwindigkeit`: Standard
 - `Aufblitz-Effekt`: Aus
 - `Aufblitz-Modus`: Nur bei Änderung
 
@@ -915,10 +915,10 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 - Gilt für: `alle Modi`
 - Kurz: Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
 - Grafisch: Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.
-- `Animationsdauer`: Bestimmt die Dauer des Hoch- oder Herunterzählens.
-  - `Kurz`: Diese Stufe verkürzt die Zählanimation deutlich. Punktänderungen bleiben nachvollziehbar, ohne lange als Bewegung auf der Anzeige stehen zu bleiben.
-  - `Standard`: Diese Einstellung hält die Balance zwischen schneller Aktualisierung und sichtbarer Zählbewegung. Der Punktewechsel bleibt klar nachvollziehbar und wirkt dennoch zügig.
-  - `Lang`: Diese Stufe verlängert die Hoch- oder Runterzählung merklich. Dadurch wird die Wertänderung sehr gut sichtbar, wirkt aber deutlich weniger sofortig als die kurzen Varianten.
+- `Zählgeschwindigkeit`: Bestimmt die Geschwindigkeit des Hoch- oder Herunterzählens.
+  - `Schnell`: Schnelle Zählgeschwindigkeit mit sichtbaren Einzelschritten.
+  - `Standard`: Ausgewogene Zählgeschwindigkeit mit sauber lesbaren Einzelschritten.
+  - `Ruhig`: Ruhige Zählgeschwindigkeit für sehr klar sichtbare Zwischenwerte.
 - `Aufblitz-Effekt`: Aktiviert oder deaktiviert den Aufblitz-Effekt während laufender Turn-Score-Änderungen.
 - `Aufblitz-Modus`: Wählt, ob der Rahmen nur bei Änderungen oder dauerhaft sichtbar ist.
   - `Nur bei Änderung`: Rahmen nur während laufender Zahlenänderungen.

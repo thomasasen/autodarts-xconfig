@@ -11,10 +11,7 @@ const FLASH_MODE_PERMANENT = "permanent";
 const SCORE_CLASS_NAME = SCORE_SELECTOR.startsWith(".")
   ? SCORE_SELECTOR.slice(1)
   : SCORE_SELECTOR;
-
-function easeOutCubic(value) {
-  return 1 - Math.pow(1 - value, 3);
-}
+const MIN_SCORE_STEP_INTERVAL_MS = 16;
 
 function parseScore(text) {
   const match = String(text || "").match(/-?\d+/);
@@ -166,6 +163,114 @@ function renderScoreValue(node, state, value) {
   return true;
 }
 
+function resolveScoreStepAnimationTiming(fromValue, toValue, durationMs) {
+  const normalizedFromValue = Math.round(Number(fromValue));
+  const normalizedToValue = Math.round(Number(toValue));
+  const requestedDurationMs = Math.max(1, Number(durationMs) || 1000);
+  const totalSteps = Math.abs(normalizedToValue - normalizedFromValue);
+  const effectiveDurationMs =
+    totalSteps > 0
+      ? Math.max(requestedDurationMs, totalSteps * MIN_SCORE_STEP_INTERVAL_MS)
+      : requestedDurationMs;
+  const stepIntervalMs =
+    totalSteps > 0 ? effectiveDurationMs / totalSteps : effectiveDurationMs;
+
+  return {
+    normalizedFromValue,
+    normalizedToValue,
+    requestedDurationMs,
+    effectiveDurationMs,
+    stepIntervalMs,
+    totalSteps,
+  };
+}
+
+function completeScoreAnimation(node, state, options = {}) {
+  const windowRef = options.windowRef || null;
+  const flashEnabled = options.flashEnabled !== false;
+  const flashMode = normalizeFlashMode(options.flashMode);
+  const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
+  const toValue = Number(options.toValue);
+
+  stopAnimation(node, state, windowRef, {
+    flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
+    preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
+  });
+  if (Number.isFinite(toValue)) {
+    state.lastValueByNode.set(node, toValue);
+    renderScoreValue(node, state, toValue);
+  }
+}
+
+function startScoreRafAnimation(node, state, options = {}) {
+  const fromValue = Number(options.fromValue);
+  const toValue = Number(options.toValue);
+  const durationMs = Math.max(1, Number(options.durationMs) || 1000);
+  const flashEnabled = options.flashEnabled !== false;
+  const flashMode = normalizeFlashMode(options.flashMode);
+  const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
+  const windowRef = options.windowRef || null;
+
+  if (!node || !state || !Number.isFinite(fromValue) || !Number.isFinite(toValue)) {
+    return durationMs;
+  }
+
+  const timing = resolveScoreStepAnimationTiming(fromValue, toValue, durationMs);
+
+  if (timing.totalSteps <= 0) {
+    completeScoreAnimation(node, state, {
+      toValue: timing.normalizedToValue,
+      flashEnabled,
+      flashMode,
+      flashAfterglowMs,
+      windowRef,
+    });
+    return timing.effectiveDurationMs;
+  }
+
+  const requestRaf =
+    (windowRef && typeof windowRef.requestAnimationFrame === "function"
+      ? windowRef.requestAnimationFrame.bind(windowRef)
+      : requestAnimationFrame);
+  const direction = timing.normalizedToValue > timing.normalizedFromValue ? 1 : -1;
+  let renderedStep = 0;
+  let startTs = null;
+  const animateFrame = (frameTimestamp) => {
+    const nowMs = Number.isFinite(frameTimestamp) ? frameTimestamp : Date.now();
+    if (startTs === null) {
+      startTs = nowMs - Math.min(MIN_SCORE_STEP_INTERVAL_MS, timing.stepIntervalMs);
+    }
+    const elapsed = nowMs - startTs;
+    const desiredStep = Math.max(
+      0,
+      Math.min(timing.totalSteps, Math.round(elapsed / timing.stepIntervalMs))
+    );
+
+    if (desiredStep > renderedStep) {
+      renderedStep += 1;
+      renderScoreValue(node, state, timing.normalizedFromValue + direction * renderedStep);
+    }
+
+    if (renderedStep >= timing.totalSteps) {
+      completeScoreAnimation(node, state, {
+        toValue: timing.normalizedToValue,
+        flashEnabled,
+        flashMode,
+        flashAfterglowMs,
+        windowRef,
+      });
+      return;
+    }
+
+    const nextHandle = requestRaf(animateFrame);
+    state.activeRafByNode.set(node, nextHandle);
+  };
+
+  const firstHandle = requestRaf(animateFrame);
+  state.activeRafByNode.set(node, firstHandle);
+  return timing.effectiveDurationMs;
+}
+
 function triggerScoreFlash(node, state, windowRef = null, options = {}) {
   if (!node || !state) {
     return;
@@ -267,7 +372,7 @@ export function animateScore(node, options = {}) {
   const state = options.state;
   const fromValue = Number(options.fromValue);
   const toValue = Number(options.toValue);
-  const durationMs = Number(options.durationMs) || 416;
+  const durationMs = Number(options.durationMs) || 1000;
   const flashEnabled = options.flashEnabled !== false;
   const flashMode = normalizeFlashMode(options.flashMode);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);
@@ -285,67 +390,49 @@ export function animateScore(node, options = {}) {
     triggerScoreFlash(node, state, windowRef, { flashMode });
   }
 
+  const effectiveDurationMs = startScoreRafAnimation(node, state, {
+    fromValue,
+    toValue,
+    durationMs,
+    flashEnabled,
+    flashMode,
+    flashAfterglowMs,
+    windowRef,
+  });
+
   if (typeof animeRef === "function") {
-    const valueHolder = { value: fromValue };
-    const animeInstance = animeRef({
-      targets: valueHolder,
+    let animeInstance = null;
+    animeInstance = animeRef({
+      targets: { value: fromValue },
       value: toValue,
-      round: 1,
-      duration: durationMs,
-      easing: "easeOutCubic",
-      update: () => {
-        const value = Math.round(Number(valueHolder.value));
-        if (Number.isFinite(value)) {
-          renderScoreValue(node, state, value);
-        }
-      },
+      duration: effectiveDurationMs,
+      easing: "linear",
       complete: () => {
-        stopAnimation(node, state, windowRef, {
-          flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
-          preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
+        if (state.activeAnimeByNode.get(node) !== animeInstance) {
+          return;
+        }
+        if (Number(state.renderedValueByNode.get(node)) !== Number(state.targetValueByNode.get(node))) {
+          state.activeAnimeByNode.delete(node);
+          return;
+        }
+        completeScoreAnimation(node, state, {
+          toValue,
+          flashEnabled,
+          flashMode,
+          flashAfterglowMs,
+          windowRef,
         });
-        state.lastValueByNode.set(node, toValue);
-        renderScoreValue(node, state, toValue);
       },
     });
     state.activeAnimeByNode.set(node, animeInstance);
     return;
   }
-
-  const requestRaf =
-    (windowRef && typeof windowRef.requestAnimationFrame === "function"
-      ? windowRef.requestAnimationFrame.bind(windowRef)
-      : requestAnimationFrame);
-  const startTs = Date.now();
-  const animateFrame = () => {
-    const elapsed = Date.now() - startTs;
-    const progress = Math.max(0, Math.min(1, elapsed / durationMs));
-    const eased = easeOutCubic(progress);
-    const value = Math.round(fromValue + (toValue - fromValue) * eased);
-    renderScoreValue(node, state, value);
-
-    if (progress >= 1) {
-      stopAnimation(node, state, windowRef, {
-        flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
-        preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
-      });
-      state.lastValueByNode.set(node, toValue);
-      renderScoreValue(node, state, toValue);
-      return;
-    }
-
-    const nextHandle = requestRaf(animateFrame);
-    state.activeRafByNode.set(node, nextHandle);
-  };
-
-  const firstHandle = requestRaf(animateFrame);
-  state.activeRafByNode.set(node, firstHandle);
 }
 
 export function updateTurnPoints(options = {}) {
   const documentRef = options.documentRef;
   const state = options.state;
-  const durationMs = Number(options.durationMs) || 416;
+  const durationMs = Number(options.durationMs) || 1000;
   const flashEnabled = options.flashEnabled !== false;
   const flashMode = normalizeFlashMode(options.flashMode);
   const flashAfterglowMs = Math.max(0, Number(options.flashAfterglowMs) || 0);

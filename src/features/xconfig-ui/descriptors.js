@@ -792,10 +792,10 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-turn-points-count",
     description: "Zählt Punkteänderungen sichtbar hoch oder runter.",
     fields: [
-      selectField("durationMs", "Animationsdauer", [
-        { value: 260, label: "Kurz" },
-        { value: 416, label: "Standard" },
-        { value: 650, label: "Lang" },
+      selectField("durationMs", "Zählgeschwindigkeit", [
+        { value: 950, label: "Schnell" },
+        { value: 1500, label: "Standard" },
+        { value: 2250, label: "Ruhig" },
       ]),
       checkboxField("flashOnChange", "Aufblitz-Effekt"),
       selectField("flashMode", "Aufblitz-Modus", [

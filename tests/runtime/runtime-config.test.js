@@ -74,6 +74,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
   assert.equal(config.features.x01ScoreProgress.barSize, "standard");
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
+  assert.equal(config.features.turnPointsCount.durationMs, 1500);
   assert.equal(config.features.turnPointsCount.flashOnChange, true);
   assert.equal(config.features.turnPointsCount.flashMode, "on-change");
   assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
@@ -182,6 +183,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.dartMarkerDarts.enableWobble, true);
   assert.equal(config.features.removeDartsNotification.imageSize, "large");
   assert.equal(config.features.singleBullSound.volume, 0.9);
+  assert.equal(config.features.turnPointsCount.durationMs, 1500);
   assert.equal(config.features.turnPointsCount.flashOnChange, false);
   assert.equal(config.features.winnerFireworks.style, "fireworks");
   assert.equal(config.features.winnerFireworks.intensity, "standard");
@@ -288,7 +290,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         pollIntervalMs: "1200",
       },
       turnPointsCount: {
-        durationMs: "650",
+        durationMs: "950",
         flashOnChange: "false",
         flashMode: "PERMANENT",
       },
@@ -414,7 +416,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").volume, 0.75);
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").cooldownMs, 1000);
   assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
-  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 650);
+  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 950);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashOnChange, false);
   assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashMode, "permanent");
   assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
@@ -481,6 +483,69 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").playerFieldTransparency, 5);
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").contrastPreset, "high");
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").backgroundDisplayMode, "fill");
+});
+
+test("createRuntimeConfig normalizes turn-points-count speed presets and legacy durations", () => {
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 260 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    950
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 416 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    950
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 650 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    950
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 1300 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    950
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 1000 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    1500
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 2000 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    1500
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 1400 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    2250
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 3000 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    2250
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 2250 } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    2250
+  );
+  assert.equal(
+    createRuntimeConfig({ features: { turnPointsCount: { durationMs: "nope" } } })
+      .getFeatureConfig("turnPointsCount")
+      .durationMs,
+    1500
+  );
 });
 
 test("createRuntimeConfig maps legacy checkout-board-targets effects to visual presets", () => {

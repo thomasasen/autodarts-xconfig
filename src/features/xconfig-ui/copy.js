@@ -1084,9 +1084,9 @@ export const xconfigFeatureCopy = deepFreeze({
     ],
     fields: {
       durationMs: fieldCopy(
-        "Bestimmt, wie lange das Hoch- oder Herunterzählen bis zum Endwert dauert.",
-        "Legt die Dauer der Zählanimation fest. Kurze Stufen springen schneller zum Zielwert, längere machen den Zwischenverlauf deutlicher sichtbar.",
-        "Bestimmt die Dauer des Hoch- oder Herunterzählens."
+        "Bestimmt, wie schnell die Turn-Punkte wie auf einer Anzeigetafel zum Endwert laufen.",
+        "Legt die Geschwindigkeit der Zählanimation fest. Schnell reagiert direkter, Standard zeigt den Zahlenlauf sauber lesbar, Ruhig wirkt wie eine langsamere Anzeigetafel.",
+        "Bestimmt die Geschwindigkeit des Hoch- oder Herunterzählens."
       ),
       flashOnChange: fieldCopy(
         "Schaltet den kurzen Aufblitz-Effekt während einer echten Zahlenänderung ein oder aus.",
@@ -2151,20 +2151,20 @@ const LIVE_OR_1200_POLL_OPTION_COPY = deepFreeze({
 });
 
 const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
-  "260": optionCopy(
-    "Zählt die Punkte recht schnell zum Endwert hoch oder herunter.",
-    "Der Zahlenlauf ist klar sichtbar, aber zügig vorbei. Das wirkt direkt und sportlich.",
-    "Diese Stufe verkürzt die Zählanimation deutlich. Punktänderungen bleiben nachvollziehbar, ohne lange als Bewegung auf der Anzeige stehen zu bleiben."
+  "950": optionCopy(
+    "Zählt 0 bis 60 in knapp 1 Sekunde.",
+    "Diese Stufe reagiert am direktesten und hält die einzelnen Zahlen trotzdem sichtbar genug auseinander.",
+    "Schnelle Zählgeschwindigkeit mit sichtbaren Einzelschritten."
   ),
-  "416": optionCopy(
-    "Nutzen die ausgewogene Standarddauer.",
-    "Die Wertänderung bleibt gut lesbar animiert, ohne träge zu werden. Das ist die neutrale Mittelstufe.",
-    "Diese Einstellung hält die Balance zwischen schneller Aktualisierung und sichtbarer Zählbewegung. Der Punktewechsel bleibt klar nachvollziehbar und wirkt dennoch zügig."
+  "1500": optionCopy(
+    "Nutzt die ausgewogene Standardgeschwindigkeit.",
+    "Ein T20-Treffer läuft von 0 bis 60 in etwa 1,5 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.",
+    "Ausgewogene Zählgeschwindigkeit mit sauber lesbaren Einzelschritten."
   ),
-  "650": optionCopy(
-    "Lässt den Zählvorgang deutlich länger sichtbar laufen.",
-    "Die Zahl bewegt sich ruhiger und länger bis zum Endwert. Das macht den Wechsel besonders nachvollziehbar, aber weniger direkt.",
-    "Diese Stufe verlängert die Hoch- oder Runterzählung merklich. Dadurch wird die Wertänderung sehr gut sichtbar, wirkt aber deutlich weniger sofortig als die kurzen Varianten."
+  "2250": optionCopy(
+    "Zählt 0 bis 60 in etwa 2,25 Sekunden.",
+    "Die Animation nimmt sich mehr Zeit und zeigt große Punktwechsel besonders nachvollziehbar. Das wirkt wie eine ruhige Anzeigetafel.",
+    "Ruhige Zählgeschwindigkeit für sehr klar sichtbare Zwischenwerte."
   ),
 });
 
@@ -2711,7 +2711,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         title: "Turn Points Count",
         featureKey: "turn-points-count",
         fields: [
-          { label: "Animationsdauer", key: "durationMs" },
+          { label: "Zählgeschwindigkeit", key: "durationMs" },
           { label: "Aufblitz-Effekt", key: "flashOnChange" },
           { label: "Aufblitz-Modus", key: "flashMode" },
         ],

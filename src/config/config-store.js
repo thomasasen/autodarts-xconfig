@@ -371,7 +371,7 @@ const LEGACY_IMPORTERS_BY_CONFIG_KEY = Object.freeze({
   turnPointsCount(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
     return buildFeatureImport("turnPointsCount", legacyFeatureState, {
-      durationMs: readLegacySetting(settings, "ANIMATIONSDAUER_MS", 416),
+      durationMs: readLegacySetting(settings, "ANIMATIONSDAUER_MS", 1500),
       flashOnChange: readLegacySetting(settings, "AUFBLITZEN_AKTIV", true),
       debug: readLegacySetting(settings, "DEBUG", false),
     });

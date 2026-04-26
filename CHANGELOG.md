@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.4] - 2026-04-26
+
+### Fixed
+
+- Nutzerwirkung: `Turn Points Count` zählt Turn-Punkte jetzt deutlich gleichmäßiger wie eine Anzeigetafel hoch oder herunter; ein T20-Treffer läuft nicht mehr nach wenigen Zwischenwerten direkt auf `60`, und die xConfig-Geschwindigkeiten sind auf die lesbaren Stufen `Schnell`, `Standard` und `Ruhig` abgestimmt.
+  Technik: Die sichtbare Zahlenbewegung wird per eigenem RAF-Schrittzähler geführt, frühe Anime-Complete-Callbacks dürfen die laufende Zählung nicht mehr vorzeitig finalisieren, die Dauer-Presets und Legacy-Mappings wurden auf `950`, `1500` und `2250` ms normalisiert, und Runtime-/Config-/Shell-Regressionen sichern Schrittfolge, Migration und xConfig-Persistenz ab.
+
 ## [2.3.3] - 2026-04-25
 
 ### Fixed
@@ -1487,7 +1494,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...HEAD
+[2.3.4]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...HEAD
+[2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...d44c45a
 [2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...b420891
 [2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...7b4351b
 [2.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/da0d5b1...d17c15d

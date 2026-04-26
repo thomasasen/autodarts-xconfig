@@ -1669,6 +1669,10 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     "[data-adxconfig-setting='true'][data-setting-key='flashOnChange']"
   );
   assert.ok(flashSetting);
+  const durationSetting = documentRef.querySelector(
+    "[data-adxconfig-setting='true'][data-setting-key='durationMs']"
+  );
+  assert.ok(durationSetting);
   const flashModeSetting = documentRef.querySelector(
     "[data-adxconfig-setting='true'][data-setting-key='flashMode']"
   );
@@ -1681,11 +1685,21 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     noteTexts.some((text) => /Aufblitz-Effekt/.test(text)),
     "missing turn-points flash setting note"
   );
+  assert.ok(
+    noteTexts.some((text) => /Anzeigetafel|Geschwindigkeit/.test(text)),
+    "missing turn-points speed setting note"
+  );
+
+  clickSelectSettingOption(documentRef, "turn-points-count", "durationMs", 2250);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.durationMs === 2250);
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnPointsCount.durationMs, 2250);
 
   clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", false);
   await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashOnChange === false);
 
-  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
 
   clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "permanent");

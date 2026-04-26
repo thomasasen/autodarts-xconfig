@@ -208,7 +208,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Sweep-Stil`: Standard
 
 **Turn Points Count**
-- `Animationsdauer`: Standard
+- `Zählgeschwindigkeit`: Standard
 - `Aufblitz-Effekt`: Aus
 - `Aufblitz-Modus`: Nur bei Änderung
 
@@ -1217,10 +1217,10 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 **Einstellungen einfach erklärt**
 
-- `Animationsdauer`: Legt die Dauer der Zählanimation fest. Kurze Stufen springen schneller zum Zielwert, längere machen den Zwischenverlauf deutlicher sichtbar.
-  - `Kurz`: Der Zahlenlauf ist klar sichtbar, aber zügig vorbei. Das wirkt direkt und sportlich.
-  - `Standard`: Die Wertänderung bleibt gut lesbar animiert, ohne träge zu werden. Das ist die neutrale Mittelstufe.
-  - `Lang`: Die Zahl bewegt sich ruhiger und länger bis zum Endwert. Das macht den Wechsel besonders nachvollziehbar, aber weniger direkt.
+- `Zählgeschwindigkeit`: Legt die Geschwindigkeit der Zählanimation fest. Schnell reagiert direkter, Standard zeigt den Zahlenlauf sauber lesbar, Ruhig wirkt wie eine langsamere Anzeigetafel.
+  - `Schnell`: Diese Stufe reagiert am direktesten und hält die einzelnen Zahlen trotzdem sichtbar genug auseinander.
+  - `Standard`: Ein T20-Treffer läuft von 0 bis 60 in etwa 1,5 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.
+  - `Ruhig`: Die Animation nimmt sich mehr Zeit und zeigt große Punktwechsel besonders nachvollziehbar. Das wirkt wie eine ruhige Anzeigetafel.
 - `Aufblitz-Effekt`: Wenn aktiv, blitzt der Turn-Wert nur in dem Zeitraum auf, in dem die Zahl wirklich animiert wird. Bei deaktivierter Option bleibt ausschließlich die Zählbewegung ohne zusätzlichen Lichtimpuls.
 - `Aufblitz-Modus`: Legt fest, wie der elektrische Rahmen dargestellt wird: `Nur bei Änderung` zeigt den Effekt nur während laufender Zähländerungen, `Permanent` hält den Rahmen dauerhaft sichtbar, solange das Feature aktiv ist.
   - `Nur bei Änderung`: Der elektrische Rahmen erscheint nur in dem Zeitraum, in dem die Zahl hoch- oder herunterzählt, und klingt danach aus.

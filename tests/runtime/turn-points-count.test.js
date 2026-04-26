@@ -234,7 +234,7 @@ test("turn-points-count keeps flash frame for a short afterglow after score anim
     assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
     assert.equal(state.targetValueByNode.get(scoreNode), 45);
 
-    animeRef.calls[0].complete();
+    timers.advance(432);
     assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
     assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
     assert.equal(state.activeAnimeByNode.has(scoreNode), false);
@@ -419,7 +419,7 @@ test("turn-points-count supports a permanent frame mode while keeping score flas
     assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
     assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-    animeRef.calls[0].complete();
+    timers.advance(432);
     assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
     assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
@@ -437,6 +437,8 @@ test("turn-points-count supports a permanent frame mode while keeping score flas
 test("turn-points-count restarts score flash through sequence attributes without layout reads", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
   const state = createState();
   const animeRef = createAnimeStub();
   const { scoreNode, frameNode } = createTurnPointsFrame(documentRef);
@@ -470,7 +472,7 @@ test("turn-points-count restarts score flash through sequence attributes without
   assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
   assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 
-  animeRef.calls[0].complete();
+  timers.advance(432);
   assert.equal(scoreNode.getAttribute(SCORE_FLASH_SEQUENCE_ATTRIBUTE), null);
   assert.equal(frameNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), null);
   scoreNode.textContent = "60";
@@ -514,6 +516,8 @@ test("turn-points-count rewinds the browser-updated score before counting to the
 
   assert.equal(animeRef.calls.length, 1);
   assert.equal(animeRef.calls[0].value, 120);
+  assert.equal(animeRef.calls[0].easing, "linear");
+  assert.equal("round" in animeRef.calls[0], false);
   assert.equal(scoreNode.textContent, "60");
   assert.equal(state.renderedValueByNode.get(scoreNode), 60);
   assert.equal(state.targetValueByNode.get(scoreNode), 120);
@@ -522,6 +526,8 @@ test("turn-points-count rewinds the browser-updated score before counting to the
 test("turn-points-count skips duplicate DOM writes while the rounded score value is unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
   const state = createState();
   const animeRef = createAnimeStub();
   const { scoreNode } = createTurnPointsFrame(documentRef);
@@ -542,17 +548,17 @@ test("turn-points-count skips duplicate DOM writes while the rounded score value
   updateTurnPoints({
     documentRef,
     state,
-    durationMs: 416,
+    durationMs: 1000,
     animeRef,
     windowRef,
   });
 
-  scoreNode.textContent = "120";
+  scoreNode.textContent = "61";
   writeCount = 0;
   updateTurnPoints({
     documentRef,
     state,
-    durationMs: 416,
+    durationMs: 1000,
     animeRef,
     windowRef,
   });
@@ -560,15 +566,166 @@ test("turn-points-count skips duplicate DOM writes while the rounded score value
   assert.equal(writeCount, 1);
   assert.equal(scoreNode.textContent, "60");
 
-  animeRef.calls[0].targets.value = 90.2;
-  animeRef.calls[0].update();
-  assert.equal(writeCount, 2);
-  assert.equal(scoreNode.textContent, "90");
+  timers.advance(480);
+  assert.equal(writeCount, 1);
+  assert.equal(scoreNode.textContent, "60");
 
-  animeRef.calls[0].targets.value = 90.4;
-  animeRef.calls[0].update();
+  timers.advance(64);
   assert.equal(writeCount, 2);
-  assert.equal(scoreNode.textContent, "90");
+  assert.equal(scoreNode.textContent, "61");
+});
+
+test("turn-points-count renders every score step for a T20-sized change", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  const state = createState();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  const writtenValues = [];
+  let scoreText = "0";
+
+  Object.defineProperty(scoreNode, "textContent", {
+    configurable: true,
+    get() {
+      return scoreText;
+    },
+    set(value) {
+      scoreText = String(value);
+      writtenValues.push(scoreText);
+    },
+  });
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 1000,
+    windowRef,
+  });
+
+  scoreNode.textContent = "60";
+  writtenValues.length = 0;
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 1000,
+    windowRef,
+  });
+  timers.advance(1100);
+
+  const uniqueValues = new Set(writtenValues);
+  assert.equal(scoreNode.textContent, "60");
+  assert.equal(state.lastValueByNode.get(scoreNode), 60);
+  assert.deepEqual(
+    writtenValues,
+    Array.from({ length: 61 }, (_value, index) => String(index))
+  );
+  assert.equal(uniqueValues.size, 61);
+  assert.ok(uniqueValues.has("30"), "expected the midpoint to be rendered");
+  assert.ok(uniqueValues.has("60"), "expected the final value to be rendered");
+});
+
+test("turn-points-count ignores early anime completion while the raf count is still running", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  const writtenValues = [];
+  let scoreText = "0";
+
+  Object.defineProperty(scoreNode, "textContent", {
+    configurable: true,
+    get() {
+      return scoreText;
+    },
+    set(value) {
+      scoreText = String(value);
+      writtenValues.push(scoreText);
+    },
+  });
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 1000,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "60";
+  writtenValues.length = 0;
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 1000,
+    animeRef,
+    windowRef,
+  });
+  timers.advance(160);
+
+  assert.equal(scoreNode.textContent, "10");
+  animeRef.calls[0].complete();
+  assert.equal(scoreNode.textContent, "10");
+  assert.equal(state.targetValueByNode.get(scoreNode), 60);
+  assert.equal(state.activeRafByNode.has(scoreNode), true);
+
+  timers.advance(1000);
+  assert.deepEqual(
+    writtenValues,
+    Array.from({ length: 61 }, (_value, index) => String(index))
+  );
+  assert.equal(state.lastValueByNode.get(scoreNode), 60);
+});
+
+test("turn-points-count stretches too-short requested durations when needed to keep every score step visible", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  const writtenValues = [];
+  let scoreText = "0";
+
+  Object.defineProperty(scoreNode, "textContent", {
+    configurable: true,
+    get() {
+      return scoreText;
+    },
+    set(value) {
+      scoreText = String(value);
+      writtenValues.push(scoreText);
+    },
+  });
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 650,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "60";
+  writtenValues.length = 0;
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 650,
+    animeRef,
+    windowRef,
+  });
+  timers.advance(960);
+
+  assert.equal(animeRef.calls[0].duration, 960);
+  assert.deepEqual(
+    writtenValues,
+    Array.from({ length: 61 }, (_value, index) => String(index))
+  );
 });
 
 test("turn-points-count scopes the electric frame to the score container instead of the text node", () => {
