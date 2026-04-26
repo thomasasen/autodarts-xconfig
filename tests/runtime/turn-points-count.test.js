@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  collectScoreNodes,
   stopAnimation,
   updateTurnPoints,
 } from "../../src/features/turn-points-count/logic.js";
@@ -27,6 +28,7 @@ function createState() {
     flashFrameByScoreNode: new Map(),
     flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
+    scoreNodeCache: [],
   };
 }
 
@@ -45,6 +47,7 @@ function createTurnPointsFrame(documentRef) {
   return {
     scoreNode,
     frameNode,
+    wrapperNode: frameNode,
   };
 }
 
@@ -485,7 +488,162 @@ test("turn-points-count restarts score flash through sequence attributes without
   assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), true);
 });
 
-test("turn-points-count observes the discovered turn surface when present", () => {
+test("turn-points-count rewinds the browser-updated score before counting to the new value", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "120";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  assert.equal(animeRef.calls.length, 1);
+  assert.equal(animeRef.calls[0].value, 120);
+  assert.equal(scoreNode.textContent, "60");
+  assert.equal(state.renderedValueByNode.get(scoreNode), 60);
+  assert.equal(state.targetValueByNode.get(scoreNode), 120);
+});
+
+test("turn-points-count skips duplicate DOM writes while the rounded score value is unchanged", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const { scoreNode } = createTurnPointsFrame(documentRef);
+  let scoreText = scoreNode.textContent;
+  let writeCount = 0;
+
+  Object.defineProperty(scoreNode, "textContent", {
+    configurable: true,
+    get() {
+      return scoreText;
+    },
+    set(value) {
+      writeCount += 1;
+      scoreText = String(value);
+    },
+  });
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "120";
+  writeCount = 0;
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  assert.equal(writeCount, 1);
+  assert.equal(scoreNode.textContent, "60");
+
+  animeRef.calls[0].targets.value = 90.2;
+  animeRef.calls[0].update();
+  assert.equal(writeCount, 2);
+  assert.equal(scoreNode.textContent, "90");
+
+  animeRef.calls[0].targets.value = 90.4;
+  animeRef.calls[0].update();
+  assert.equal(writeCount, 2);
+  assert.equal(scoreNode.textContent, "90");
+});
+
+test("turn-points-count scopes the electric frame to the score container instead of the text node", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createState();
+  const animeRef = createAnimeStub();
+  const { scoreNode, wrapperNode } = createTurnPointsFrame(documentRef);
+
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  scoreNode.textContent = "120";
+  updateTurnPoints({
+    documentRef,
+    state,
+    durationMs: 416,
+    animeRef,
+    windowRef,
+  });
+
+  assert.equal(scoreNode.classList.contains(SCORE_FRAME_CLASS), false);
+  assert.equal(wrapperNode.classList.contains(SCORE_FRAME_CLASS), true);
+  assert.equal(scoreNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), null);
+  assert.equal(wrapperNode.getAttribute(SCORE_FRAME_SEQUENCE_ATTRIBUTE), "1");
+});
+
+test("turn-points-count caches the discovered score node until it is detached", () => {
+  const documentRef = new FakeDocument();
+  const state = createState();
+  const { scoreNode, wrapperNode } = createTurnPointsFrame(documentRef);
+  const originalQuerySelectorAll = documentRef.querySelectorAll.bind(documentRef);
+  let scoreQueryCount = 0;
+
+  documentRef.querySelectorAll = (selector) => {
+    if (selector === SCORE_SELECTOR) {
+      scoreQueryCount += 1;
+    }
+    return originalQuerySelectorAll(selector);
+  };
+
+  assert.deepEqual(collectScoreNodes(documentRef, state), [scoreNode]);
+  assert.equal(scoreQueryCount, 1);
+  assert.deepEqual(collectScoreNodes(documentRef, state), [scoreNode]);
+  assert.equal(scoreQueryCount, 1);
+
+  const replacementNode = documentRef.createElement("p");
+  replacementNode.classList.add("ad-ext-turn-points");
+  replacementNode.textContent = "120";
+  scoreNode.remove();
+  wrapperNode.appendChild(replacementNode);
+
+  assert.deepEqual(collectScoreNodes(documentRef, state), [replacementNode]);
+  assert.equal(scoreQueryCount, 2);
+});
+
+test("turn-points-count observes the score container when it is present in the turn surface", () => {
+  const documentRef = new FakeDocument();
+  const { wrapperNode } = moveTurnPointsIntoTurnContainer(documentRef);
+  const harness = createMountHarness({ documentRef });
+
+  assert.equal(
+    harness.observerProbe.state.registration?.target,
+    wrapperNode
+  );
+
+  harness.cleanup();
+});
+
+test("turn-points-count observes the discovered turn surface when no score container is scoped", () => {
   const harness = createMountHarness();
 
   assert.equal(
@@ -533,7 +691,7 @@ test("turn-points-count does not schedule for unrelated document mutations when 
 
 test("turn-points-count schedules relevant turn text, child, and class mutations", () => {
   const documentRef = new FakeDocument();
-  const { scoreNode } = moveTurnPointsIntoTurnContainer(documentRef);
+  const { scoreNode, wrapperNode } = moveTurnPointsIntoTurnContainer(documentRef);
   const harness = createMountHarness({ documentRef });
   const callback = harness.observerProbe.state.registration?.callback;
   const textNode = {
@@ -555,7 +713,7 @@ test("turn-points-count schedules relevant turn text, child, and class mutations
   callback([
     {
       type: "childList",
-      target: documentRef.turnContainer,
+      target: wrapperNode,
       addedNodes: [addedNode],
       removedNodes: [],
     },
@@ -567,11 +725,31 @@ test("turn-points-count schedules relevant turn text, child, and class mutations
     {
       type: "attributes",
       attributeName: "class",
-      target: documentRef.throwRow,
+      target: wrapperNode,
     },
   ]);
   expectedScheduleCount += 1;
   assert.equal(harness.scheduleCounter.count, expectedScheduleCount);
+
+  harness.cleanup();
+});
+
+test("turn-points-count ignores throw-row mutations once scoped to the score container", () => {
+  const documentRef = new FakeDocument();
+  moveTurnPointsIntoTurnContainer(documentRef);
+  const harness = createMountHarness({ documentRef });
+  const callback = harness.observerProbe.state.registration?.callback;
+  const initialScheduleCount = harness.scheduleCounter.count;
+
+  callback([
+    {
+      type: "attributes",
+      attributeName: "class",
+      target: documentRef.throwRow,
+    },
+  ]);
+
+  assert.equal(harness.scheduleCounter.count, initialScheduleCount);
 
   harness.cleanup();
 });
@@ -667,6 +845,14 @@ test("turn-points-count style exports the scoped flash animation contract", () =
     )
   );
   assert.equal(css.includes(`.${SCORE_FRAME_CLASS}{`), true);
+  assert.equal(css.includes("z-index:0;"), true);
+  assert.equal(css.includes("z-index:-1;"), true);
+  assert.equal(css.includes("inset:-7px;"), true);
+  assert.equal(css.includes("inset:-12px;"), false);
+  assert.equal(css.includes("ad-ext-turn-points-count-flash-a 390ms cubic-bezier(.16,.92,.24,1) both"), true);
+  assert.equal(css.includes("ad-ext-turn-points-count-flash-b 390ms cubic-bezier(.16,.92,.24,1) both"), true);
+  assert.equal(css.includes("ad-ext-turn-points-count-frame-electric-a 840ms steps(4,end) infinite"), true);
+  assert.equal(css.includes("ad-ext-turn-points-count-frame-aura-b 840ms ease-out infinite"), true);
   assert.equal(css.includes("ad-ext-turn-points-electric-filter-strong"), true);
   assert.equal(css.includes(SCORE_FRAME_SEQUENCE_ATTRIBUTE), true);
   assert.equal(css.includes("@keyframes ad-ext-turn-points-count-flash-a"), true);

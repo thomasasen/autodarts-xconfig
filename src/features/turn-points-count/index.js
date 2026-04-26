@@ -52,6 +52,7 @@ export function initializeTurnPointsCount(context = {}) {
     flashFrameByScoreNode: new Map(),
     flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
+    scoreNodeCache: [],
   };
   let animeRef = getAnime(windowRef);
   let disposed = false;
@@ -70,18 +71,42 @@ export function initializeTurnPointsCount(context = {}) {
       durationMs: featureConfig.durationMs,
       flashEnabled: featureConfig.flashOnChange !== false,
       flashMode: featureConfig.flashMode,
-      flashAfterglowMs: featureConfig.flashOnChange !== false ? 500 : 0,
+      flashAfterglowMs: featureConfig.flashOnChange !== false ? 750 : 0,
       animeRef,
       windowRef,
     });
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
+  const initialScoreNode = collectScoreNodes(documentRef, state)[0] || null;
+  const scoreContainer = initialScoreNode?.closest?.("#ad-ext-turn")
+    ? initialScoreNode.parentElement || null
+    : null;
   const rootNode =
+    scoreContainer ||
     findTurnContainer(documentRef) ||
     documentRef.documentElement ||
     documentRef.body ||
     documentRef;
+  const observerUsesScoreContainer = Boolean(scoreContainer && rootNode === scoreContainer);
+  const isWithinObserverRoot = (node) => {
+    if (!node) {
+      return false;
+    }
+    if (node === rootNode) {
+      return true;
+    }
+    return typeof rootNode.contains === "function" && rootNode.contains(node);
+  };
+  const isRelevantObservedNode = (node) => {
+    if (!node) {
+      return false;
+    }
+    if (observerUsesScoreContainer) {
+      return isWithinObserverRoot(node);
+    }
+    return Boolean(node?.closest?.("#ad-ext-turn") || isWithinObserverRoot(node));
+  };
   const isAnimatingScoreNode = (node) => {
     const candidate = node?.nodeType === 3 ? node.parentNode || null : node;
     return (
@@ -101,7 +126,7 @@ export function initializeTurnPointsCount(context = {}) {
           mutations.some((mutation) => {
             if (mutation?.type === "characterData") {
               const targetNode = mutation?.target?.parentNode || null;
-              return Boolean(targetNode?.closest?.("#ad-ext-turn"));
+              return isRelevantObservedNode(targetNode);
             }
 
             if (mutation?.type === "attributes") {
@@ -113,14 +138,14 @@ export function initializeTurnPointsCount(context = {}) {
               ) {
                 return false;
               }
-              return Boolean(mutation?.target?.closest?.("#ad-ext-turn"));
+              return isRelevantObservedNode(mutation?.target || null);
             }
 
             return [
               mutation?.target || null,
               ...Array.from(mutation?.addedNodes || []),
               ...Array.from(mutation?.removedNodes || []),
-            ].some((node) => Boolean(node?.closest?.("#ad-ext-turn")));
+            ].some((node) => isRelevantObservedNode(node));
           });
         if (
           Array.isArray(mutations) &&

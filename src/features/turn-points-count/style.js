@@ -13,12 +13,12 @@ export const SCORE_FRAME_SEQUENCE_ATTRIBUTE = "data-ad-ext-turn-points-frame-seq
 export function buildStyleText() {
   return `
 ${SCORE_SELECTOR}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="0"]{
-  animation:ad-ext-turn-points-count-flash-a 220ms cubic-bezier(.16,.92,.24,1) infinite;
+  animation:ad-ext-turn-points-count-flash-a 390ms cubic-bezier(.16,.92,.24,1) both;
   will-change:transform,filter,text-shadow,opacity;
 }
 
 ${SCORE_SELECTOR}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
-  animation:ad-ext-turn-points-count-flash-b 220ms cubic-bezier(.16,.92,.24,1) infinite;
+  animation:ad-ext-turn-points-count-flash-b 390ms cubic-bezier(.16,.92,.24,1) both;
   will-change:transform,filter,text-shadow,opacity;
 }
 
@@ -27,6 +27,7 @@ ${SCORE_SELECTOR}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
   --ad-ext-turn-points-electric-filter-strong:url(#${ELECTRIC_FILTER_STRONG_ID});
   position:relative;
   isolation:isolate;
+  z-index:0;
 }
 
 .${SCORE_FRAME_CLASS}::before,
@@ -34,11 +35,12 @@ ${SCORE_SELECTOR}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
   content:"";
   position:absolute;
   pointer-events:none;
+  z-index:-1;
 }
 
 .${SCORE_FRAME_CLASS}[${SCORE_FRAME_SEQUENCE_ATTRIBUTE}="0"]::before{
-  inset:-7px;
-  border-radius:12px;
+  inset:-5px;
+  border-radius:10px;
   border:1px solid color-mix(in srgb,rgba(255,204,132,.92) 76%,white 24%);
   background:
     linear-gradient(110deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 34%,rgba(255,255,255,0) 66%,rgba(255,255,255,.14) 100%);
@@ -51,13 +53,13 @@ ${SCORE_SELECTOR}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
     0 0 38px rgba(255,152,72,.2);
   filter:var(--ad-ext-turn-points-electric-filter-strong);
   animation:
-    ad-ext-turn-points-count-frame-electric-a 560ms steps(4,end) infinite,
-    ad-ext-turn-points-count-frame-glow-a 560ms ease-in-out infinite;
+    ad-ext-turn-points-count-frame-electric-a 840ms steps(4,end) infinite,
+    ad-ext-turn-points-count-frame-glow-a 840ms ease-in-out infinite;
 }
 
 .${SCORE_FRAME_CLASS}[${SCORE_FRAME_SEQUENCE_ATTRIBUTE}="1"]::before{
-  inset:-7px;
-  border-radius:12px;
+  inset:-5px;
+  border-radius:10px;
   border:1px solid color-mix(in srgb,rgba(255,204,132,.92) 76%,white 24%);
   background:
     linear-gradient(110deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 34%,rgba(255,255,255,0) 66%,rgba(255,255,255,.14) 100%);
@@ -70,30 +72,30 @@ ${SCORE_SELECTOR}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
     0 0 38px rgba(255,152,72,.2);
   filter:var(--ad-ext-turn-points-electric-filter-strong);
   animation:
-    ad-ext-turn-points-count-frame-electric-b 560ms steps(4,end) infinite,
-    ad-ext-turn-points-count-frame-glow-b 560ms ease-in-out infinite;
+    ad-ext-turn-points-count-frame-electric-b 840ms steps(4,end) infinite,
+    ad-ext-turn-points-count-frame-glow-b 840ms ease-in-out infinite;
 }
 
 .${SCORE_FRAME_CLASS}[${SCORE_FRAME_SEQUENCE_ATTRIBUTE}="0"]::after{
-  inset:-12px;
-  border-radius:15px;
-  opacity:.72;
+  inset:-7px;
+  border-radius:12px;
+  opacity:.58;
   background:
     radial-gradient(65% 150% at 50% 0%,rgba(255,224,180,.34),rgba(255,224,180,0) 72%),
     radial-gradient(65% 150% at 50% 100%,rgba(255,180,109,.3),rgba(255,180,109,0) 72%);
   filter:var(--ad-ext-turn-points-electric-filter-soft) blur(4px);
-  animation:ad-ext-turn-points-count-frame-aura-a 560ms ease-out infinite;
+  animation:ad-ext-turn-points-count-frame-aura-a 840ms ease-out infinite;
 }
 
 .${SCORE_FRAME_CLASS}[${SCORE_FRAME_SEQUENCE_ATTRIBUTE}="1"]::after{
-  inset:-12px;
-  border-radius:15px;
-  opacity:.72;
+  inset:-7px;
+  border-radius:12px;
+  opacity:.58;
   background:
     radial-gradient(65% 150% at 50% 0%,rgba(255,224,180,.34),rgba(255,224,180,0) 72%),
     radial-gradient(65% 150% at 50% 100%,rgba(255,180,109,.3),rgba(255,180,109,0) 72%);
   filter:var(--ad-ext-turn-points-electric-filter-soft) blur(4px);
-  animation:ad-ext-turn-points-count-frame-aura-b 560ms ease-out infinite;
+  animation:ad-ext-turn-points-count-frame-aura-b 840ms ease-out infinite;
 }
 
 @keyframes ad-ext-turn-points-count-flash-a{

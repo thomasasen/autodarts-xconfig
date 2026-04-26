@@ -8,6 +8,9 @@ import {
 
 const FLASH_MODE_ON_CHANGE = "on-change";
 const FLASH_MODE_PERMANENT = "permanent";
+const SCORE_CLASS_NAME = SCORE_SELECTOR.startsWith(".")
+  ? SCORE_SELECTOR.slice(1)
+  : SCORE_SELECTOR;
 
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
@@ -22,11 +25,35 @@ function parseScore(text) {
   return Number.isFinite(value) ? value : null;
 }
 
-export function collectScoreNodes(documentRef) {
+function isValidCachedScoreNode(node) {
+  if (!node || node.isConnected === false) {
+    return false;
+  }
+  if (!SCORE_CLASS_NAME) {
+    return true;
+  }
+  return node.classList?.contains?.(SCORE_CLASS_NAME) === true;
+}
+
+export function collectScoreNodes(documentRef, state = null) {
+  const cachedNodes = Array.isArray(state?.scoreNodeCache)
+    ? state.scoreNodeCache
+    : [];
+  if (cachedNodes.length > 0 && cachedNodes.every(isValidCachedScoreNode)) {
+    return cachedNodes;
+  }
+
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
+    if (state) {
+      state.scoreNodeCache = [];
+    }
     return [];
   }
-  return Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
+  const scoreNodes = Array.from(documentRef.querySelectorAll(SCORE_SELECTOR));
+  if (state) {
+    state.scoreNodeCache = scoreNodes;
+  }
+  return scoreNodes;
 }
 
 function resolveFrameNode(scoreNode) {
@@ -120,6 +147,23 @@ function advanceSequence(node, attributeName) {
   const nextValue = currentValue === "1" ? "0" : "1";
   node.setAttribute?.(attributeName, nextValue);
   return nextValue;
+}
+
+function renderScoreValue(node, state, value) {
+  if (!node || !state || !Number.isFinite(value)) {
+    return false;
+  }
+  const normalizedValue = Number(value);
+  const textValue = String(normalizedValue);
+  if (
+    Number(state.renderedValueByNode.get(node)) === normalizedValue &&
+    node.textContent === textValue
+  ) {
+    return false;
+  }
+  node.textContent = textValue;
+  state.renderedValueByNode.set(node, normalizedValue);
+  return true;
 }
 
 function triggerScoreFlash(node, state, windowRef = null, options = {}) {
@@ -235,6 +279,7 @@ export function animateScore(node, options = {}) {
   }
 
   stopAnimation(node, state, windowRef);
+  renderScoreValue(node, state, fromValue);
   state.targetValueByNode.set(node, toValue);
   if (flashEnabled) {
     triggerScoreFlash(node, state, windowRef, { flashMode });
@@ -249,17 +294,18 @@ export function animateScore(node, options = {}) {
       duration: durationMs,
       easing: "easeOutCubic",
       update: () => {
-        node.textContent = String(Number(valueHolder.value));
-        state.renderedValueByNode.set(node, Number(valueHolder.value));
+        const value = Math.round(Number(valueHolder.value));
+        if (Number.isFinite(value)) {
+          renderScoreValue(node, state, value);
+        }
       },
       complete: () => {
         stopAnimation(node, state, windowRef, {
           flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
           preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
         });
-        node.textContent = String(toValue);
         state.lastValueByNode.set(node, toValue);
-        state.renderedValueByNode.set(node, toValue);
+        renderScoreValue(node, state, toValue);
       },
     });
     state.activeAnimeByNode.set(node, animeInstance);
@@ -276,17 +322,15 @@ export function animateScore(node, options = {}) {
     const progress = Math.max(0, Math.min(1, elapsed / durationMs));
     const eased = easeOutCubic(progress);
     const value = Math.round(fromValue + (toValue - fromValue) * eased);
-    node.textContent = String(value);
-    state.renderedValueByNode.set(node, value);
+    renderScoreValue(node, state, value);
 
     if (progress >= 1) {
       stopAnimation(node, state, windowRef, {
         flashAfterglowMs: flashEnabled ? flashAfterglowMs : 0,
         preserveFrame: flashEnabled && flashMode === FLASH_MODE_PERMANENT,
       });
-      node.textContent = String(toValue);
       state.lastValueByNode.set(node, toValue);
-      state.renderedValueByNode.set(node, toValue);
+      renderScoreValue(node, state, toValue);
       return;
     }
 
@@ -312,7 +356,7 @@ export function updateTurnPoints(options = {}) {
     return;
   }
 
-  const scoreNodes = collectScoreNodes(documentRef);
+  const scoreNodes = collectScoreNodes(documentRef, state);
   const nodeSet = new Set(scoreNodes);
 
   state.lastValueByNode.forEach((_value, node) => {
