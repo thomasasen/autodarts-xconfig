@@ -27,6 +27,10 @@ function appendSuggestion(documentRef, text, left, top) {
   return node;
 }
 
+function appendCheckoutMarkedSuggestion(documentRef, text, left, top) {
+  return appendSuggestion(documentRef, `CHECKOUT ${text}`, left, top);
+}
+
 function createHostCheckoutSuggestionCard(documentRef, scoreText, segmentText, left, top) {
   const node = documentRef.createElement("div");
   const imageNode = documentRef.createElement("img");
@@ -198,6 +202,24 @@ test("x01 checkout route normalizes single-bull setup steps ahead of the visible
   assert.deepEqual(mapRouteSegmentsToBoardTargets(route, x01Rules), [
     { ring: "SB" },
     { ring: "D", value: 18 },
+  ]);
+});
+
+test("x01 checkout route prefers checkout-marked suggestions and keeps DBULL semantics", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "39 T13";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+  appendCheckoutMarkedSuggestion(documentRef, "50 DBULL", 500, 10);
+  appendCheckoutMarkedSuggestion(documentRef, "32 D16", 700, 10);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const route = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(route, ["BULL", "D16"]);
+  assert.equal(getFirstCheckoutRouteSegment(route), "BULL");
+  assert.equal(getCheckoutFinishSegmentFromRoute(route, "Double Out", x01Rules), "D16");
+  assert.deepEqual(mapRouteSegmentsToBoardTargets(route, x01Rules), [
+    { ring: "DB" },
+    { ring: "D", value: 16 },
   ]);
 });
 

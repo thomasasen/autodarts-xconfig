@@ -13,9 +13,9 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
-const CHECKOUT_TOKEN_PATTERN = /DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
+const CHECKOUT_TOKEN_PATTERN = /DBULL|DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
 const EXPLICIT_SEGMENT_PATTERN =
-  /\b(?:DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g;
+  /\b(?:DBULL|DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g;
 
 const SCORING_SEGMENTS = Object.freeze([
   ...Array.from({ length: 20 }, (_value, index) => `S${index + 1}`),
@@ -757,7 +757,7 @@ export function parseExplicitCheckoutSegments(text) {
   const tokens = raw.match(EXPLICIT_SEGMENT_PATTERN) || [];
   return tokens
     .map((token) => {
-      if (token === "DB" || token === "BULLSEYE" || token === "BULL") {
+      if (token === "DBULL" || token === "DB" || token === "BULLSEYE" || token === "BULL") {
         return "BULL";
       }
       return normalizeSegmentName(token);
@@ -776,7 +776,7 @@ export function parseCheckoutTargetsFromSuggestion(text) {
   let hasExplicitTargets = false;
 
   tokens.forEach((token) => {
-    if (token === "DB" || token === "BULLSEYE") {
+    if (token === "DBULL" || token === "DB" || token === "BULLSEYE") {
       parsedTargets.push({
         ring: "DB",
         isSummary: false,

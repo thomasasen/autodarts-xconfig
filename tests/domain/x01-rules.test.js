@@ -194,6 +194,7 @@ test("single bull throw helper classifies throw entries without DOM parsing", ()
 test("explicit checkout segment parser extracts normalized explicit targets only", () => {
   assert.deepEqual(parseExplicitCheckoutSegments("D16"), ["D16"]);
   assert.deepEqual(parseExplicitCheckoutSegments("  bull "), ["BULL"]);
+  assert.deepEqual(parseExplicitCheckoutSegments("50 DBULL"), ["BULL"]);
   assert.deepEqual(parseExplicitCheckoutSegments("T20 D10"), ["T20", "D10"]);
   assert.deepEqual(parseExplicitCheckoutSegments("No Checkout"), []);
 });
@@ -215,6 +216,7 @@ test("checkout target parser keeps explicit-only default and maps bull semantics
     { ring: "S", value: 10 },
   ]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("BULL"), [{ ring: "DB" }]);
+  assert.deepEqual(parseCheckoutTargetsFromSuggestion("DBULL"), [{ ring: "DB" }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("Bullseye"), [{ ring: "DB" }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("Single Bull"), [{ ring: "SB" }]);
   assert.deepEqual(parseCheckoutTargetsFromSuggestion("Double 16"), [{ ring: "D", value: 16 }]);

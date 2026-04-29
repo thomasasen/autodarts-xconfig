@@ -1,4 +1,5 @@
 export const SUGGESTION_SELECTOR = ".suggestion";
+const CHECKOUT_MARKER_PATTERN = /\bCHECKOUT\b/i;
 
 function isElementStyleVisible(element, windowRef) {
   try {
@@ -36,11 +37,11 @@ function parseExplicitRouteSegments(text, x01Rules) {
 
   const normalizedText = String(text || "").toUpperCase();
   const tokens =
-    normalizedText.match(/\b(?:DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g) || [];
+    normalizedText.match(/\b(?:DBULL|DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g) || [];
 
   return tokens
     .map((token) => {
-      if (token === "DB" || token === "BULLSEYE" || token === "BULL") {
+      if (token === "DBULL" || token === "DB" || token === "BULLSEYE" || token === "BULL") {
         return "BULL";
       }
       if (token === "SB" || token === "OB") {
@@ -104,6 +105,16 @@ function resolveSuggestionRouteText(node, x01Rules) {
   };
 }
 
+function isCheckoutMarkedSuggestionNode(node) {
+  const candidateValues = [
+    normalizeRouteTextCandidate(node?.innerText),
+    normalizeRouteTextCandidate(node?.textContent),
+    ...getSuggestionLeafTextValues(node),
+  ];
+
+  return candidateValues.some((candidate) => CHECKOUT_MARKER_PATTERN.test(candidate));
+}
+
 function getStableNodeIndex(node, allNodes) {
   const index = Array.isArray(allNodes) ? allNodes.indexOf(node) : -1;
   return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
@@ -139,7 +150,14 @@ function toRouteEntry(node, allNodes, x01Rules) {
     rect: node.getBoundingClientRect?.() || null,
     domIndex: getStableNodeIndex(node, allNodes),
     segments,
+    isCheckoutMarked: isCheckoutMarkedSuggestionNode(node),
   };
+}
+
+function preferCheckoutMarkedEntries(entries) {
+  const normalizedEntries = Array.isArray(entries) ? entries : [];
+  const checkoutMarkedEntries = normalizedEntries.filter((entry) => entry?.isCheckoutMarked);
+  return checkoutMarkedEntries.length ? checkoutMarkedEntries : normalizedEntries;
 }
 
 export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules) {
@@ -155,7 +173,7 @@ export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Ru
     .sort(compareSuggestionNodes);
 
   if (visibleEntries.length) {
-    return visibleEntries;
+    return preferCheckoutMarkedEntries(visibleEntries);
   }
 
   const styleVisibleEntries = allSuggestionNodes
@@ -164,13 +182,13 @@ export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Ru
     .filter(Boolean)
     .sort(compareSuggestionNodes);
   if (styleVisibleEntries.length) {
-    return styleVisibleEntries;
+    return preferCheckoutMarkedEntries(styleVisibleEntries);
   }
 
-  return allSuggestionNodes
+  return preferCheckoutMarkedEntries(allSuggestionNodes
     .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
     .filter(Boolean)
-    .sort(compareSuggestionNodes);
+    .sort(compareSuggestionNodes));
 }
 
 export function collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules) {

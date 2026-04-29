@@ -103,6 +103,15 @@ function appendBoardFixture(documentRef) {
   return { svg, group };
 }
 
+function appendCheckoutMarkedSuggestion(documentRef, text, left, top) {
+  const node = documentRef.createElement("div");
+  node.classList.add("suggestion");
+  node.textContent = `CHECKOUT ${text}`;
+  node.__rect = { left, top, width: 180, height: 48 };
+  documentRef.main.appendChild(node);
+  return node;
+}
+
 test("checkout-board-targets ignores self-managed overlay mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -1467,6 +1476,96 @@ test("checkout-board-targets next mode keeps the visible route-first target when
     assert.deepEqual(logs[0][1]?.routeSegments, ["S25", "D18"]);
     assert.deepEqual(logs[0][1]?.selectedSegments, ["S25"]);
     assert.deepEqual(logs[0][1]?.targets, [{ ring: "SB", value: null }]);
+  } finally {
+    cleanup();
+  }
+});
+
+test("checkout-board-targets ignores prior throw suggestions and targets visible DBULL before D16", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "82";
+  documentRef.suggestionElement.textContent = "39 T13";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  appendCheckoutMarkedSuggestion(documentRef, "50 DBULL", 520, 16);
+  appendCheckoutMarkedSuggestion(documentRef, "32 D16", 720, 16);
+  appendBoardFixture(documentRef);
+
+  const logs = [];
+  const warnings = [];
+  const cleanup = initializeCheckoutBoardTargets({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 32,
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules: {
+        isX01VariantText: () => true,
+      },
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          effect: "pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "amber",
+          outlineIntensity: "standard",
+        };
+      },
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        warnings.push(args);
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  try {
+    assert.equal(warnings.length, 0);
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0][1]?.status, "render");
+    assert.equal(logs[0][1]?.activeScore, 82);
+    assert.equal(logs[0][1]?.scoreSource, "dom-preferred");
+    assert.equal(logs[0][1]?.selectionSource, "validated-visible-route");
+    assert.deepEqual(logs[0][1]?.routeSegments, ["BULL", "D16"]);
+    assert.deepEqual(logs[0][1]?.selectedSegments, ["BULL"]);
+    assert.deepEqual(logs[0][1]?.targets, [{ ring: "DB", value: null }]);
+
+    const overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    assert.ok(overlay);
+    const targetNode = Array.from(overlay.children).find((node) =>
+      node.classList?.contains?.(TARGET_CLASS)
+    );
+    assert.ok(targetNode);
+    assert.equal(targetNode.getAttribute("data-target-ring"), "DB");
   } finally {
     cleanup();
   }

@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.6] - 2026-04-29
+
+### Fixed
+
+- Nutzerwirkung: `Checkout Board Targets` hebt bei X01-Checkout-Routen mit `DBULL` wieder das nächste sichtbare Bullseye-Ziel hervor, statt nach einem bereits angezeigten Folgeschritt wie `D16` auf den falschen Restscore umzuschalten.
+  Technik: Die X01-Checkout-Parser erkennen `DBULL` jetzt als Bullseye-Segment, die gemeinsame Checkout-Route bevorzugt vorhandene `CHECKOUT`-markierte Vorschlagskarten gegenüber früheren Wurf-Suggestions, und neue Domain-/Runtime-Regressionen sichern `DBULL -> D16` inklusive nachlaufendem Game-State ab.
+
 ## [2.3.5] - 2026-04-27
 
 ### Fixed
@@ -1494,7 +1501,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.5]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...HEAD
+[2.3.6]: https://github.com/thomasasen/autodarts-xconfig/compare/9833a5f...HEAD
+[2.3.5]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...9833a5f
 [2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...d44c45a
 [2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...b420891
 [2.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/d17c15d...7b4351b
