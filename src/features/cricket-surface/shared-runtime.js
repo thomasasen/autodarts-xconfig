@@ -82,6 +82,7 @@ export const SHARED_CRICKET_SURFACE_ATTRIBUTE_FILTER = Object.freeze([
   "data-target-label",
   ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
 ]);
+const AUTODARTS_TOOLS_MENU_ID = "autodarts-tools-menu-item";
 
 function createRuntimeAliasObserver(runtime) {
   return {
@@ -237,6 +238,42 @@ function hasRelevantCricketMutation(mutations = []) {
     ];
     return touchedNodes.some((node) => isSurfaceMutationNode(node));
   });
+}
+
+function nodeOrAncestorHasId(node, id) {
+  if (!node || !id) {
+    return false;
+  }
+
+  let current = node.nodeType === 1 ? node : node.parentElement || node.parentNode || null;
+  while (current) {
+    if (String(current.id || "") === id) {
+      return true;
+    }
+    current = current.parentElement || current.parentNode || null;
+  }
+  return false;
+}
+
+function isKnownHostToolingMenuMutation(mutation) {
+  if (String(mutation?.type || "") !== "childList") {
+    return false;
+  }
+  if (!nodeOrAncestorHasId(mutation?.target || null, AUTODARTS_TOOLS_MENU_ID)) {
+    return false;
+  }
+
+  const touchedNodes = [
+    ...Array.from(mutation?.addedNodes || []),
+    ...Array.from(mutation?.removedNodes || []),
+  ];
+  return touchedNodes.every((node) => {
+    return !isSurfaceMutationNode(node) && !isBoardInputModeControl(node);
+  });
+}
+
+function isKnownIrrelevantCricketHostMutationBatch(mutations = []) {
+  return Array.isArray(mutations) && mutations.length > 0 && mutations.every(isKnownHostToolingMenuMutation);
 }
 
 function buildStatusSignature(renderState) {
@@ -696,12 +733,14 @@ function createSharedCricketRuntime(context = {}) {
         ? subscriber.shouldScheduleMutation(mutations)
         : false;
     });
-    if (
-      !interestedSubscriber &&
-      !hasRelevantCricketMutation(mutations) &&
-      !hasTrackedCricketSurfaceMutation(mutations, runtime.surfaceWatchState)
-    ) {
-      return;
+    const relevantCricketMutation = hasRelevantCricketMutation(mutations);
+    if (!interestedSubscriber && !relevantCricketMutation) {
+      if (isKnownIrrelevantCricketHostMutationBatch(mutations)) {
+        return;
+      }
+      if (!hasTrackedCricketSurfaceMutation(mutations, runtime.surfaceWatchState)) {
+        return;
+      }
     }
 
     invalidateRenderCache();

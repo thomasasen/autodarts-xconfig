@@ -125,6 +125,7 @@ export function hasTrackedCricketSurfaceMutation(mutations = [], watchState = nu
   if (!trackedNodes.length) {
     return false;
   }
+  const trackedNodeSet = new Set(trackedNodes);
 
   return mutations.some((mutation) => {
     const touchedNodes = collectMutationNodes(mutation);
@@ -132,16 +133,16 @@ export function hasTrackedCricketSurfaceMutation(mutations = [], watchState = nu
       return false;
     }
     const attributeOnly = isAttributeOnlyMutation(mutation);
-    return touchedNodes.some((candidateNode) =>
-      trackedNodes.some((watchNode) => {
-        if (!watchNodeTouchesCandidate(watchNode, candidateNode)) {
-          return false;
-        }
-        if (attributeOnly) {
+    return touchedNodes.some((candidateNode) => {
+      if (attributeOnly) {
+        return trackedNodes.some((watchNode) => {
           return candidateNode !== watchNode && containsNode(candidateNode, watchNode);
-        }
+        });
+      }
+      if (trackedNodeSet.has(candidateNode)) {
         return true;
-      })
-    );
+      }
+      return trackedNodes.some((watchNode) => watchNodeTouchesCandidate(watchNode, candidateNode));
+    });
   });
 }

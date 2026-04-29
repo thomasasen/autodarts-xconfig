@@ -103,6 +103,30 @@ function appendBoardFixture(documentRef) {
   return { svg, group };
 }
 
+function appendCricketGridFixture(documentRef) {
+  const table = documentRef.createElement("table");
+  table.id = "grid";
+  ["20", "19", "18", "17", "16", "15", "BULL"].forEach((label) => {
+    const row = documentRef.createElement("tr");
+    const labelCell = documentRef.createElement("td");
+    labelCell.classList.add("label-cell");
+    labelCell.textContent = label === "BULL" ? "Bull" : label;
+    row.appendChild(labelCell);
+
+    for (let index = 0; index < 2; index += 1) {
+      const cell = documentRef.createElement("td");
+      cell.classList.add("player-cell");
+      cell.dataset.playerIndex = String(index);
+      cell.dataset.marks = "0";
+      cell.textContent = "0";
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  });
+  documentRef.main.appendChild(table);
+  return table;
+}
+
 function appendCheckoutMarkedSuggestion(documentRef, text, left, top) {
   const node = documentRef.createElement("div");
   node.classList.add("suggestion");
@@ -3459,6 +3483,86 @@ test("cricket-highlighter reacts to attribute-only hydration updates for marks a
   assert.equal(scheduleCounter.count >= 2, true);
 
   cleanup();
+});
+
+test("cricket surface observer skips Autodarts tools menu churn before tracked-node scans", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  const board = appendBoardFixture(documentRef);
+  appendCricketGridFixture(documentRef);
+
+  const observers = createObserverRegistry();
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeCricketHighlighter({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      isCricketVariant: () => true,
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getCricketScoringMode: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getActiveThrows: () => [],
+      getSnapshot: () => ({ match: { players: [{ id: "a" }, { id: "b" }] } }),
+      subscribe: () => () => {},
+    },
+    domain: {
+      cricketRules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          showOpenTargets: true,
+          showDeadTargets: true,
+          colorTheme: "standard",
+          intensity: "normal",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  const originalContains = board.svg.contains;
+  try {
+    const observer = observers.get("cricket-highlighter:dom-observer");
+    assert.ok(observer);
+    const scheduleCountAfterInit = scheduleCounter.count;
+    board.svg.contains = () => {
+      throw new Error("tracked surface watch scan should not run");
+    };
+
+    const toolsMenu = documentRef.createElement("div");
+    toolsMenu.id = "autodarts-tools-menu-item";
+    const transientNode = documentRef.createElement("div");
+    transientNode.textContent = "Board status";
+    toolsMenu.appendChild(transientNode);
+    documentRef.main.appendChild(toolsMenu);
+
+    assert.doesNotThrow(() => {
+      observer.callback([
+        {
+          type: "childList",
+          target: toolsMenu,
+          addedNodes: [transientNode],
+          removedNodes: [],
+        },
+      ]);
+    });
+    assert.equal(scheduleCounter.count, scheduleCountAfterInit);
+  } finally {
+    board.svg.contains = originalContains;
+    cleanup();
+  }
 });
 
 test("cricket-highlighter emits missing-grid warning only once for unchanged status", () => {
