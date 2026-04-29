@@ -19,6 +19,9 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: `Checkout Board Targets` hebt bei X01-Checkout-Routen mit `DBULL` wieder das nächste sichtbare Bullseye-Ziel hervor, statt nach einem bereits angezeigten Folgeschritt wie `D16` auf den falschen Restscore umzuschalten.
   Technik: Die X01-Checkout-Parser erkennen `DBULL` jetzt als Bullseye-Segment, die gemeinsame Checkout-Route bevorzugt vorhandene `CHECKOUT`-markierte Vorschlagskarten gegenüber früheren Wurf-Suggestions, und neue Domain-/Runtime-Regressionen sichern `DBULL -> D16` inklusive nachlaufendem Game-State ab.
 
+- Nutzerwirkung: Keine sichtbare Änderung im Userscript; lokale Validierung nutzt SonarQube jetzt verlässlicher über den konfigurierten Server, statt den Server fälschlich als nicht verfügbar zu melden, wenn nur Shell-Variablen fehlen.
+  Technik: `npm run sonar` lädt `SONARQUBE_URL` und `SONARQUBE_TOKEN` aus der Umgebung oder aus `~/.codex/config.toml`, führt die bestehende Server-Konfiguration aus und startet die Analyse über `sonar-scanner`, Docker oder `npx sonarqube-scanner`; `npm test` hängt SonarQube jetzt an die lokalen Tests an, während `npm run test:local` nur für ausdrücklich Sonar-irrelevante lokale Checks bleibt.
+
 ## [2.3.5] - 2026-04-27
 
 ### Fixed

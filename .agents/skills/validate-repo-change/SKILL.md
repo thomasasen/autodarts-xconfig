@@ -43,7 +43,7 @@ Minimum validation:
 Minimum validation:
 - add or update targeted config/runtime tests when behavior can change
 - run `npm run check:syntax`
-- run `npm test`
+- run `npm test` when touched files are in the SonarQube scanned scope; otherwise `npm run test:local` is sufficient
 
 ## 3. Logic, runtime, DOM, or rendering behavior
 
@@ -58,7 +58,7 @@ Minimum validation:
 - add or update targeted regression coverage
 - review `tests/runtime/update-check.test.js`, `tests/runtime/xconfig-shell.test.js`, and `tests/runtime/userscript-build.test.js`
 - run `npm run check:syntax`
-- run `npm test`
+- run `npm test` when touched files are in the SonarQube scanned scope; otherwise `npm run test:local` is sufficient
 
 ## 5. Release or build workflow
 
@@ -76,15 +76,20 @@ Preferred release validation:
 
 - `npm run lint` is required when changes touch linted JS/MJS source, tests, loader code, scripts, or lint configuration
 - `npm run check:syntax` is appropriate for JS/MJS source, tests, loader code, scripts, generated-source inputs, and config that affects parsing
-- `npm test` is appropriate for behavior, runtime, config, DOM, startup, update, cache, and regression-sensitive changes
+- `npm run test:local` is appropriate only for local unit/runtime coverage when SonarQube is explicitly irrelevant
+- `npm test` is appropriate for behavior, runtime, config, DOM, startup, update, cache, and regression-sensitive changes and includes SonarQube
 - `npm run build` is appropriate for build workflow, packaging, generated userscript output, version parity, and release preparation
-- `npm run verify` is appropriate for explicit release/package validation or broad pre-ship validation
+- `npm run sonar` is available as a standalone SonarQube recheck after local tests
+- `npm run verify` is appropriate for explicit release/package validation or broad pre-ship validation because it runs `npm test` and therefore includes SonarQube
 - `npm run check:changelog` is appropriate when `CHANGELOG.md`, release notes, version parity, or compare links are in scope
 - do not escalate docs, guidance, or repo-instruction changes to runtime validation unless a referenced command or changed file format needs a real local check
 
 # SonarQube
 
-- use SonarQube validation when changes affect Sonar-scanned `src/**`, `loader/**`, `scripts/**`, `tests/**`, `sonar-project.properties`, or Sonar-specific repo guidance and server/auth access is available
+- use SonarQube validation when changes affect Sonar-scanned `src/**`, `loader/**`, `scripts/**`, `tests/**`, `sonar-project.properties`, or Sonar-specific repo guidance
+- use `npm run sonar`; it must use `SONARQUBE_URL`/`SONARQUBE_TOKEN` from the environment or fall back to `~/.codex/config.toml` `[mcp_servers.sonarqube].env`
+- never report SonarQube as unavailable before trying `npm run sonar`
+- never print, quote, commit, or otherwise expose the SonarQube token
 - prefer configured local SonarQube settings over hardcoded scanner parameters
 - report whether SonarQube ran, whether the server processed it, and whether touched-scope findings remain
 - if blocked, name the blocker: unavailable MCP, missing auth, unreachable server, scanner failure, or project visibility
