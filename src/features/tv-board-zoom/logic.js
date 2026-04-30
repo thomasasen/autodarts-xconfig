@@ -1168,6 +1168,7 @@ function resetZoomIntentForBoundaryChange(state) {
   state.manualPauseThrowCount = -1;
   state.lastTurnId = "";
   state.lastThrowCount = -1;
+  state.lastActiveScore = Number.NaN;
   state.pendingLifecycleResetReason = "game-boundary";
 }
 
@@ -1178,6 +1179,7 @@ function resetZoomIntentForInactiveVariant(state) {
   state.stickyUntilLegEnd = false;
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.lastActiveScore = Number.NaN;
   state.pendingLifecycleResetReason = "variant-inactive";
 }
 
@@ -1220,9 +1222,35 @@ function resetZoomIntentForTurnChange(state) {
   state.manualPauseThrowCount = -1;
 }
 
-function persistTurnProgress(state, turnId, throwCount) {
+function getPersistedActiveScore(state) {
+  const activeScore = Number(state?.lastActiveScore);
+  return Number.isFinite(activeScore) && activeScore >= 0 ? activeScore : Number.NaN;
+}
+
+function shouldTreatThrowCountDecreaseAsTurnReset(options = {}) {
+  const previousThrowCount = Number(options.previousThrowCount);
+  const throwCount = Number(options.throwCount);
+  if (!(previousThrowCount >= 3 && throwCount === 0)) {
+    return false;
+  }
+
+  const previousActiveScore = Number(options.previousActiveScore);
+  const activeScore = Number(options.activeScore);
+  if (!Number.isFinite(previousActiveScore) || !Number.isFinite(activeScore)) {
+    return true;
+  }
+
+  return activeScore <= previousActiveScore;
+}
+
+function persistTurnProgress(state, turnId, throwCount, activeScore) {
   state.lastTurnId = turnId;
   state.lastThrowCount = throwCount;
+  const numericActiveScore = Number(activeScore);
+  state.lastActiveScore =
+    Number.isFinite(numericActiveScore) && numericActiveScore >= 0
+      ? numericActiveScore
+      : Number.NaN;
 }
 
 function clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom) {
@@ -1505,19 +1533,11 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
-  const { throws, turnId, throwCount, previousThrowCount, turnChanged } = turnProgress;
+  const { throws, turnId, throwCount, previousThrowCount } = turnProgress;
+  let turnChanged = turnProgress.turnChanged;
   if (turnChanged) {
     resetZoomIntentForTurnChange(state);
   }
-
-  if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
-    markManualZoomPause(state, throwCount);
-    persistTurnProgress(state, turnId, throwCount);
-    return null;
-  }
-
-  persistTurnProgress(state, turnId, throwCount);
-  clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom);
 
   const checkoutContext = resolveIntentCheckoutContext({
     gameState,
@@ -1528,6 +1548,28 @@ export function computeZoomIntent(options = {}) {
     x01Rules,
     state,
   });
+
+  if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
+    if (
+      shouldTreatThrowCountDecreaseAsTurnReset({
+        previousThrowCount,
+        throwCount,
+        previousActiveScore: getPersistedActiveScore(state),
+        activeScore: checkoutContext.activeScore,
+      })
+    ) {
+      resetZoomIntentForTurnChange(state);
+      turnChanged = true;
+    } else {
+      markManualZoomPause(state, throwCount);
+      persistTurnProgress(state, turnId, throwCount, checkoutContext.activeScore);
+      return null;
+    }
+  }
+
+  persistTurnProgress(state, turnId, throwCount, checkoutContext.activeScore);
+  clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom);
+
   const canUseT20Setup = canUseThirdDartT20Setup(
     throws,
     throwCount,

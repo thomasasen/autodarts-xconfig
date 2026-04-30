@@ -41,6 +41,7 @@ function createZoomState() {
     activeIntent: null,
     lastTurnId: "",
     lastThrowCount: -1,
+    lastActiveScore: Number.NaN,
     stickyUntilTurnChange: false,
     stickyUntilLegEnd: false,
     manualPause: false,
@@ -1749,4 +1750,132 @@ test("tv-board-zoom zooms out on throw correction and stays paused until new thr
   assert.equal(correctionIntent, null);
   assert.equal(pausedAfterCorrectionIntent, null);
   assert.deepEqual(resumedAfterProgressIntent, { reason: "checkout", segment: "D10" });
+});
+
+test("tv-board-zoom resumes checkout focus after single-player miss visit resets throws", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  documentRef.activeScoreElement.textContent = "14";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+  const buildFallbackTurn = (throws) => ({
+    playerId: "player-1",
+    throws,
+  });
+  const buildMisses = (count) =>
+    Array.from({ length: count }, () => ({ segment: { name: "MISS" } }));
+
+  const initialIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 14,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: buildFallbackTurn([]),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 14000,
+  });
+
+  computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 14,
+      outMode: "Double Out",
+      activeThrows: buildMisses(1),
+      activeTurn: buildFallbackTurn(buildMisses(1)),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 14100,
+  });
+
+  computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 14,
+      outMode: "Double Out",
+      activeThrows: buildMisses(2),
+      activeTurn: buildFallbackTurn(buildMisses(2)),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 14200,
+  });
+
+  const thirdMissHoldIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 14,
+      outMode: "Double Out",
+      activeThrows: buildMisses(3),
+      activeTurn: buildFallbackTurn(buildMisses(3)),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 14300,
+  });
+
+  const holdElapsedIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 14,
+      outMode: "Double Out",
+      activeThrows: buildMisses(3),
+      activeTurn: buildFallbackTurn(buildMisses(3)),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 15650,
+  });
+
+  const nextVisitIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 14,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: buildFallbackTurn([]),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 15700,
+  });
+
+  assert.deepEqual(initialIntent, { reason: "checkout", segment: "D7" });
+  assert.deepEqual(thirdMissHoldIntent, { reason: "checkout", segment: "D7" });
+  assert.equal(holdElapsedIntent, null);
+  assert.deepEqual(nextVisitIntent, { reason: "checkout", segment: "D7" });
+  assert.equal(state.manualPause, false);
 });

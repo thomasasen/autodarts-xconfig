@@ -393,6 +393,7 @@ export function initializeTvBoardZoom(context = {}) {
     holdUntilTs: 0,
     lastTurnId: "",
     lastThrowCount: -1,
+    lastActiveScore: Number.NaN,
     lastAppliedSignature: "",
     lastAppliedIntentSignature: "",
     lastAppliedZoomTransform: null,

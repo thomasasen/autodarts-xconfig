@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.8] - 2026-04-30
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom` fokussiert bei Single-Player-X01 nach einem komplett verfehlten Checkout-Besuch wieder automatisch das gleiche Checkout-Doppel, statt nach dem kurzen Auszoomen dauerhaft ausgezoomt zu bleiben.
+  Technik: Die TV-Zoom-Intent-Logik speichert den zuletzt gesehenen aktiven X01-Score und unterscheidet einen Throwcount-Reset nach einem vollständigen Besuch von echten manuellen Wurfkorrekturen; eine neue Runtime-Regression sichert den `D7`-Miss-Fall mit instabiler Single-Player-Turn-ID ab.
+
 ## [2.3.7] - 2026-04-30
 
 ### Changed
@@ -1511,7 +1518,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.7]: https://github.com/thomasasen/autodarts-xconfig/compare/22ec8e9...HEAD
+[2.3.8]: https://github.com/thomasasen/autodarts-xconfig/compare/9254b25...HEAD
+[2.3.7]: https://github.com/thomasasen/autodarts-xconfig/compare/22ec8e9...9254b25
 [2.3.6]: https://github.com/thomasasen/autodarts-xconfig/compare/9833a5f...22ec8e9
 [2.3.5]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...9833a5f
 [2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...d44c45a
