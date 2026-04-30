@@ -1,0 +1,84 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "x01-2p-501-rest-427-no-checkout",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Uncaught (in promise)",
+    "Autodarts Tools: Next player on take out stuck",
+    "Autodarts Tools: Automatic Next Leg - TEST THIS WITH LIVE BOARD"
+  ],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "X01 501 SI-DO state with active player rest score clearly above 170.",
+    "The active visit contains only ordinary throw labels S20 and T18; no checkout route is visible.",
+    "Checkout-related menu labels may exist in the page chrome, but no suggestion nodes are present in the match surface."
+  ],
+  "expectedState": {
+    "variant": "X01",
+    "gameType": "501 SI-DO",
+    "roundText": "R1/50",
+    "playerCount": 2,
+    "activePlayerIndex": 0,
+    "scores": [
+      "427",
+      "501"
+    ],
+    "activePlayerRestScore": 427,
+    "activeVisitThrows": [
+      "S20",
+      "T18"
+    ],
+    "turnText": "7420S2054T18",
+    "turnPoints": "74",
+    "isCheckoutAvailable": false,
+    "suggestionNodes": [],
+    "hasVisibleCheckoutRoute": false,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true,
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "boardSvgFound": true,
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html"
+  }
+}

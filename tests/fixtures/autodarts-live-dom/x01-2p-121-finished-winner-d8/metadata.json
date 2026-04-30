@@ -1,0 +1,95 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "x01-2p-121-finished-winner-d8",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Uncaught (in promise)",
+    "Autodarts Tools: Next player on take out stuck",
+    "Autodarts Tools: Automatic Next Leg - TEST THIS WITH LIVE BOARD"
+  ],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "X01 121 SI-DO finish state after T19, T16, and D8.",
+    "The winning player has class ad-ext-player-winner and wrapper class winnerAnimation ad-ext_winner-animation.",
+    "No player is marked active after the finish.",
+    "The host shows Finish and Next Leg buttons instead of a plain Next button.",
+    "The winner message is UNBELIEVABLE! in this captured state."
+  ],
+  "expectedState": {
+    "variant": "X01",
+    "gameType": "121 SI-DO",
+    "roundText": "R1/50",
+    "playerCount": 2,
+    "winnerPlayerIndex": 0,
+    "activePlayerIndex": -1,
+    "scores": [
+      "0",
+      "121"
+    ],
+    "recordedVisitThrows": [
+      "T19",
+      "T16",
+      "D8"
+    ],
+    "turnText": "12157T1948T1616D8",
+    "turnPoints": "121",
+    "winnerMessage": "UNBELIEVABLE!",
+    "isFinished": true,
+    "hasWinnerAnimation": true,
+    "winnerPlayerClass": "ad-ext-player ad-ext-player-winner css-1en42kf",
+    "winnerWrapperClass": "winnerAnimation css-re1vv9 ad-ext_winner-animation",
+    "suggestionNodes": [],
+    "hasVisibleCheckoutRoute": false,
+    "finishButtonVisible": true,
+    "nextLegButtonVisible": true,
+    "nextButtonVisible": false,
+    "undoButtonVisible": true,
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "boardSvgFound": true,
+    "boardSvgTextCount": 20,
+    "finishButtonVisible": true,
+    "nextLegButtonVisible": true,
+    "nextButtonVisible": false,
+    "undoButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html"
+  }
+}

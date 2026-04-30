@@ -1,0 +1,114 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "x01-2p-after-next-player-2-active-checkout-suggestions",
+  "source": "active Autodarts browser tab after Codex clicked the exact Next button",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Uncaught (in promise)",
+    "Autodarts Tools: Next player on take out stuck",
+    "Autodarts Tools: Automatic Next Leg - TEST THIS WITH LIVE BOARD"
+  ],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "Codex clicked an exact Next button, not Finish or Next Leg.",
+    "Before the click, player 1 was active with score 16 and a completed turn.",
+    "After the click, player 2 is active and player 1 is inactive.",
+    "The player 2 turn surface shows checkout guide suggestion nodes T20, BULL, and D18 with turn points 0.",
+    "These are suggestion nodes, not recorded darts."
+  ],
+  "expectedState": {
+    "variant": "X01",
+    "gameType": "121 SI-DO",
+    "roundText": "R1/50",
+    "playerCount": 2,
+    "activePlayerIndex": 1,
+    "winnerPlayerIndex": -1,
+    "scores": [
+      "16",
+      "121"
+    ],
+    "turnText": "060T2025BULL36D18",
+    "turnPoints": "0",
+    "recordedVisitThrows": [],
+    "visibleCheckoutPath": [
+      {
+        "remainingAfterTarget": "60",
+        "target": "T20"
+      },
+      {
+        "remainingAfterTarget": "25",
+        "target": "BULL"
+      },
+      {
+        "remainingAfterTarget": "36",
+        "target": "D18"
+      }
+    ],
+    "suggestionNodes": [
+      {
+        "text": "60T20",
+        "className": "suggestion css-1dkgpmk"
+      },
+      {
+        "text": "25BULL",
+        "className": "suggestion css-1dkgpmk"
+      },
+      {
+        "text": "36D18",
+        "className": "suggestion css-1dkgpmk"
+      }
+    ],
+    "hasVisibleCheckoutRoute": true,
+    "finishButtonVisible": false,
+    "nextLegButtonVisible": false,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true,
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "boardSvgFound": true,
+    "boardSvgTextCount": 20,
+    "finishButtonVisible": false,
+    "nextLegButtonVisible": false,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "suggestions": "suggestions.html"
+  }
+}

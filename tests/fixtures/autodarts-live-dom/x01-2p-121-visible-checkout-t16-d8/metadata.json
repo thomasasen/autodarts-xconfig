@@ -1,0 +1,102 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "x01-2p-121-visible-checkout-t16-d8",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Uncaught (in promise)",
+    "Autodarts Tools: Next player on take out stuck",
+    "Autodarts Tools: Automatic Next Leg - TEST THIS WITH LIVE BOARD"
+  ],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "X01 121 SI-DO state with visible checkout path after T19.",
+    "Player 1 is at rest score 64 and the host turn surface shows suggestions T16 then D8.",
+    "The T16 and D8 nodes are suggestion nodes, not recorded throws."
+  ],
+  "expectedState": {
+    "variant": "X01",
+    "gameType": "121 SI-DO",
+    "roundText": "R1/50",
+    "playerCount": 2,
+    "activePlayerIndex": 0,
+    "scores": [
+      "64",
+      "121"
+    ],
+    "activePlayerRestScore": 64,
+    "recordedVisitThrows": [
+      "T19"
+    ],
+    "visibleCheckoutPath": [
+      {
+        "remainingAfterTarget": "48",
+        "target": "T16"
+      },
+      {
+        "remainingAfterTarget": "16",
+        "target": "D8"
+      }
+    ],
+    "turnText": "5757T1948T1616D8",
+    "turnPoints": "57",
+    "suggestionNodes": [
+      {
+        "text": "48T16",
+        "className": "suggestion css-1dkgpmk"
+      },
+      {
+        "text": "16D8",
+        "className": "suggestion css-1dkgpmk"
+      }
+    ],
+    "hasVisibleCheckoutRoute": true,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true,
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "boardSvgFound": true,
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "suggestions": "suggestions.html"
+  }
+}

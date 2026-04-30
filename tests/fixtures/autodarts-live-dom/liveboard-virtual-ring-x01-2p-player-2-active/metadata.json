@@ -1,0 +1,112 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "liveboard-virtual-ring-x01-2p-player-2-active",
+  "source": "active Autodarts browser tab with Tampermonkey/xConfig disabled for baseline host DOM",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_enhanced-scoring-display",
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [
+    "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Uncaught (in promise)",
+    "Failed to execute requestFullscreen on Element: API can only be initiated by a user gesture.",
+    "Error attempting to enable fullscreen mode: Permissions check failed",
+    "Autodarts Tools: Next player on take out stuck",
+    "Autodarts Tools: Automatic Next Leg - TEST THIS WITH LIVE BOARD"
+  ],
+  "notes": [
+    "This is the Live Board, not the Virtual Board.",
+    "The virtual number ring was visible at capture time.",
+    "The host toggle still exposes aria-label=\"Show virtual number ring\" while the ring is visible.",
+    "The first inspection found the ring hidden after a previous toggle; Codex clicked the exact virtual-number-ring button once to restore the visible ring before capture.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles."
+  ],
+  "expectedState": {
+    "variant": "X01",
+    "gameType": "121 SI-DO",
+    "roundText": "R1/50",
+    "playerCount": 2,
+    "activePlayerIndex": 1,
+    "winnerPlayerIndex": -1,
+    "scores": [
+      "16",
+      "121"
+    ],
+    "turnText": "060T2025BULL36D18",
+    "turnPoints": "0",
+    "recordedVisitThrows": [],
+    "visibleCheckoutPath": [
+      {
+        "remainingAfterTarget": "60",
+        "target": "T20"
+      },
+      {
+        "remainingAfterTarget": "25",
+        "target": "BULL"
+      },
+      {
+        "remainingAfterTarget": "36",
+        "target": "D18"
+      }
+    ],
+    "hasVisibleCheckoutRoute": true,
+    "finishButtonVisible": false,
+    "nextLegButtonVisible": false,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true,
+    "boardMode": "liveboard",
+    "virtualNumberRingVisible": true,
+    "virtualNumberRingButtonAriaLabel": "Show virtual number ring",
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "boardSvgFound": true,
+    "boardSvgViewBox": "0 0 1000 1000",
+    "boardSvgTextCount": 20,
+    "boardSvgCircleCount": 1,
+    "boardSvgGroupCount": 2,
+    "boardSvgPathCount": 0,
+    "boardSvgRect": {
+      "x": 689,
+      "y": 523,
+      "width": 159,
+      "height": 159
+    },
+    "virtualRingCircleFill": "url(#virtual-number-ring)",
+    "transparentHitRectFound": true,
+    "virtualRingButtonFound": true,
+    "detectedXconfigNodeCount": 10
+  },
+  "files": {
+    "boardSvg": "board-svg.html",
+    "virtualRingButton": "virtual-ring-button.html"
+  }
+}

@@ -1,0 +1,215 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "tactics-2p-start-no-throws",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "Two-player Tactics start state; player 1 is active and no darts are recorded.",
+    "The Tactics grid contains target rows 20 through 10 plus Bull in this state.",
+    "No Double or Triple target rows are present in the host DOM for this captured start state."
+  ],
+  "expectedState": {
+    "variant": "Tactics",
+    "playerCount": 2,
+    "activePlayerIndex": 0,
+    "scores": [
+      "0",
+      "0"
+    ],
+    "mpr": [
+      "0.0",
+      "0.0"
+    ],
+    "activeVisitThrows": [],
+    "turnText": "0",
+    "nextButtonVisible": true,
+    "gridClass": "css-31a7l4",
+    "gridChildCount": 24,
+    "cellsPerObjectiveRow": 2,
+    "targets": [
+      "20",
+      "19",
+      "18",
+      "17",
+      "16",
+      "15",
+      "14",
+      "13",
+      "12",
+      "11",
+      "10",
+      "Bull"
+    ],
+    "hasDoubleTargetRow": false,
+    "hasTripleTargetRow": false,
+    "observedGridMarks": {
+      "20": [
+        {
+          "text": "20",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "19": [
+        {
+          "text": "19",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "18": [
+        {
+          "text": "18",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "17": [
+        {
+          "text": "17",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "16": [
+        {
+          "text": "16",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "15": [
+        {
+          "text": "15",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "14": [
+        {
+          "text": "14",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "13": [
+        {
+          "text": "13",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "12": [
+        {
+          "text": "12",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "11": [
+        {
+          "text": "11",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "10": [
+        {
+          "text": "10",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "Bull": [
+        {
+          "text": "Bull",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ]
+    },
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "cricketGridFound": true,
+    "boardSvgFound": true,
+    "cricketGridClass": "css-31a7l4",
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "cricketGrid": "cricket-grid.html"
+  }
+}

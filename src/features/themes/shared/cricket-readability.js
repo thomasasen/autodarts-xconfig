@@ -27,6 +27,7 @@ const CRICKET_THEME_FEATURE_KEY = "theme-cricket";
 const readabilityMeasurements = createMeasurementCacheManager({
   customCacheKeys: ["scrollWidthByNode", "clientWidthByNode"],
 });
+const cricketPlayerCardMarkerSignatureByNode = new WeakMap();
 export function createCricketReadabilityState() {
   return {
     contentSlotNode: null,
@@ -891,11 +892,17 @@ function removeClass(node, className) {
   if (!node || !className || !node.classList || typeof node.classList.remove !== "function") {
     return;
   }
+  if (typeof node.classList.contains === "function" && !node.classList.contains(className)) {
+    return;
+  }
   node.classList.remove(className);
 }
 
 function addClass(node, className) {
   if (!node || !className || !node.classList || typeof node.classList.add !== "function") {
+    return;
+  }
+  if (typeof node.classList.contains === "function" && node.classList.contains(className)) {
     return;
   }
   node.classList.add(className);
@@ -905,7 +912,11 @@ function toggleClass(node, className, enabled) {
   if (!node || !className || !node.classList || typeof node.classList.toggle !== "function") {
     return;
   }
-  node.classList.toggle(className, Boolean(enabled));
+  const shouldEnable = Boolean(enabled);
+  if (typeof node.classList.contains === "function" && node.classList.contains(className) === shouldEnable) {
+    return;
+  }
+  node.classList.toggle(className, shouldEnable);
 }
 
 function clearBoardLayoutHooks(state) {
@@ -1082,11 +1093,53 @@ function clearCricketPlayerCardMarkers(playerNode) {
   }
 }
 
+function resolveCricketPlayerCardMarkerSignature(playerNode) {
+  if (!playerNode || typeof playerNode !== "object") {
+    return "";
+  }
+
+  const parts = [];
+  const stack = [[playerNode, 0]];
+  const seen = new Set();
+  while (stack.length) {
+    const [node, depth] = stack.shift();
+    if (!node || seen.has(node)) {
+      continue;
+    }
+    seen.add(node);
+    const children = getElementChildren(node);
+    parts.push(
+      `${depth}:${String(node.tagName || "").toLowerCase()}:${
+        typeof node.getAttribute === "function" ? node.getAttribute("class") || "" : ""
+      }:${children.length}`
+    );
+    children.forEach((child) => {
+      stack.push([child, depth + 1]);
+    });
+  }
+  return parts.join("|");
+}
+
 function setMarkerAttribute(node, attributeName, value = "true") {
   if (!node || !attributeName || typeof node.setAttribute !== "function") {
     return;
   }
-  node.setAttribute(attributeName, value);
+  const nextValue = String(value);
+  if (typeof node.getAttribute === "function" && node.getAttribute(attributeName) === nextValue) {
+    return;
+  }
+  node.setAttribute(attributeName, nextValue);
+}
+
+function setAttributeIfChanged(node, attributeName, value) {
+  if (!node || !attributeName || typeof node.setAttribute !== "function") {
+    return;
+  }
+  const nextValue = String(value);
+  if (typeof node.getAttribute === "function" && node.getAttribute(attributeName) === nextValue) {
+    return;
+  }
+  node.setAttribute(attributeName, nextValue);
 }
 
 function findOwningChild(containerNode, targetNode) {
@@ -1267,9 +1320,9 @@ function maybeRestoreCricketDisplayName(nameNode, avatarNode) {
   }
 
   nameTextNode.textContent = resolvedDisplayName;
-  nameNode.setAttribute("title", resolvedDisplayName);
+  setAttributeIfChanged(nameNode, "title", resolvedDisplayName);
   if (nameTextNode !== nameNode && typeof nameTextNode.setAttribute === "function") {
-    nameTextNode.setAttribute("title", resolvedDisplayName);
+    setAttributeIfChanged(nameTextNode, "title", resolvedDisplayName);
   }
 }
 
@@ -1349,10 +1402,15 @@ function normalizeCricketIdentitySlot(identitySlot) {
 }
 
 function normalizeCricketPlayerCard(playerNode) {
-  clearCricketPlayerCardMarkers(playerNode);
+  const markerSignature = resolveCricketPlayerCardMarkerSignature(playerNode);
+  const previousMarkerSignature = cricketPlayerCardMarkerSignatureByNode.get(playerNode);
+  if (previousMarkerSignature !== markerSignature) {
+    clearCricketPlayerCardMarkers(playerNode);
+  }
 
   const stackNode = resolveCricketPlayerStack(playerNode);
   if (!stackNode) {
+    cricketPlayerCardMarkerSignatureByNode.set(playerNode, markerSignature);
     return null;
   }
 
@@ -1417,6 +1475,7 @@ function normalizeCricketPlayerCard(playerNode) {
     setMarkerAttribute(child, CRICKET_SLOT_ATTRIBUTE, "decorative");
   });
 
+  cricketPlayerCardMarkerSignatureByNode.set(playerNode, markerSignature);
   return {
     stackNode,
     rowNode,
@@ -1480,7 +1539,8 @@ export function syncCricketActivePlayerState(documentRef, gameState) {
     if (!node || typeof node.setAttribute !== "function") {
       return;
     }
-    node.setAttribute(
+    setAttributeIfChanged(
+      node,
       CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
       index === activePlayerIndex ? "true" : "false"
     );
@@ -1516,7 +1576,8 @@ export function syncCricketActivePlayerStateFromRenderState(
     if (!node || typeof node.setAttribute !== "function") {
       return;
     }
-    node.setAttribute(
+    setAttributeIfChanged(
+      node,
       CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
       index === activePlayerIndex ? "true" : "false"
     );

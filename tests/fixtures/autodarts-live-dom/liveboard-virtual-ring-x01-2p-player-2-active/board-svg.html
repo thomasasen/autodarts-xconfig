@@ -1,0 +1,56 @@
+<svg viewBox="0 0 1000 1000" style="touch-action: none; user-select: none; pointer-events: none; position: absolute; top: 0px; left: 0px; overflow: scroll; z-index: 2;">
+  <defs>
+    <filter id="shadow-2dp" x="-50%" y="-100%" width="200%" height="300%">
+      <feOffset in="SourceAlpha" result="offA" dy="2"></feOffset>
+      <feOffset in="SourceAlpha" result="offB" dy="1"></feOffset>
+      <feOffset in="SourceAlpha" result="offC" dy="3"></feOffset>
+      <feMorphology in="offC" result="spreadC" operator="erode" radius="2"></feMorphology>
+      <feGaussianBlur in="offA" result="blurA" stdDeviation="1"></feGaussianBlur>
+      <feGaussianBlur in="offB" result="blurB" stdDeviation="2.5"></feGaussianBlur>
+      <feGaussianBlur in="spreadC" result="blurC" stdDeviation="0.5"></feGaussianBlur>
+      <feFlood flood-opacity="0.14" result="opA"></feFlood>
+      <feFlood flood-opacity="0.12" result="opB"></feFlood>
+      <feFlood flood-opacity="0.20" result="opC"></feFlood>
+      <feComposite in="opA" in2="blurA" result="shA" operator="in"></feComposite>
+      <feComposite in="opB" in2="blurB" result="shB" operator="in"></feComposite>
+      <feComposite in="opC" in2="blurC" result="shC" operator="in"></feComposite>
+      <feMerge>
+        <feMergeNode in="shA"></feMergeNode>
+        <feMergeNode in="shB"></feMergeNode>
+        <feMergeNode in="shC"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+    <radialGradient id="virtual-number-ring">
+      <stop offset="80%" stop-color="#00000000"></stop>
+      <stop offset="90%" stop-color="#000000"></stop>
+      <stop offset="100%" stop-color="#000000"></stop>
+    </radialGradient>
+  </defs>
+  <g transform="translate(500, 500)">
+    <circle r="500" fill="url(#virtual-number-ring)"></circle>
+    <text transform="translate(2.6806157714669846e-14, -437.7777777777778) rotate(0)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">20</text>
+    <text transform="translate(135.28077309303256, -416.35140824476724) rotate(18)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">1</text>
+    <text transform="translate(257.3193215591494, -354.1696619819215) rotate(36)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">18</text>
+    <text transform="translate(354.1696619819215, -257.3193215591494) rotate(54)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">4</text>
+    <text transform="translate(416.35140824476724, -135.28077309303254) rotate(72)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">13</text>
+    <text transform="translate(437.7777777777778, 0) rotate(90)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">6</text>
+    <text transform="translate(452.3556906473695, 146.97927359436983) rotate(288)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">10</text>
+    <text transform="translate(384.7967339118302, 279.57119182450725) rotate(306)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">15</text>
+    <text transform="translate(279.57119182450725, 384.7967339118302) rotate(324)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">2</text>
+    <text transform="translate(146.97927359436986, 452.3556906473695) rotate(342)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">17</text>
+    <text transform="translate(2.912423915591305e-14, 475.63492063492066) rotate(360)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">3</text>
+    <text transform="translate(-146.9792735943698, 452.35569064736956) rotate(378)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">19</text>
+    <text transform="translate(-279.5711918245071, 384.79673391183036) rotate(396)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">7</text>
+    <text transform="translate(-384.79673391183013, 279.5711918245073) rotate(414)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">16</text>
+    <text transform="translate(-452.3556906473695, 146.9792735943699) rotate(432)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">8</text>
+    <text transform="translate(-437.7777777777778, 5.361231542933969e-14) rotate(270)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">11</text>
+    <text transform="translate(-416.3514082447673, -135.28077309303248) rotate(288)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">14</text>
+    <text transform="translate(-354.16966198192154, -257.31932155914933) rotate(306)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">9</text>
+    <text transform="translate(-257.31932155914944, -354.1696619819214) rotate(324)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">12</text>
+    <text transform="translate(-135.28077309303262, -416.35140824476724) rotate(342)" style="font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 53px; fill: white; text-anchor: middle;">5</text>
+  </g>
+  <g transform="translate(500, 500)">
+    <rect opacity="0" x="-500" y="-500" width="1000" height="1000" style="pointer-events: auto; touch-action: none;"></rect>
+  </g>
+</svg>

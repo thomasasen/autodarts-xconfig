@@ -1,0 +1,87 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "x01-2p-121-bust-after-s20",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Uncaught (in promise)",
+    "Autodarts Tools: Next player on take out stuck",
+    "Autodarts Tools: Automatic Next Leg - TEST THIS WITH LIVE BOARD"
+  ],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "X01 121 SI-DO bust state after T19, T16, and S20.",
+    "The active player's score is reset to 121 and the turn points node shows BUST.",
+    "The active player wrapper has host class bustAnimation.",
+    "There are no checkout suggestion nodes after the bust."
+  ],
+  "expectedState": {
+    "variant": "X01",
+    "gameType": "121 SI-DO",
+    "roundText": "R1/50",
+    "playerCount": 2,
+    "activePlayerIndex": 0,
+    "scores": [
+      "121",
+      "121"
+    ],
+    "activePlayerRestScore": 121,
+    "recordedVisitThrows": [
+      "T19",
+      "T16",
+      "S20"
+    ],
+    "turnText": "BUST57T1948T1620S20",
+    "turnPoints": "BUST",
+    "isBust": true,
+    "hasBustAnimation": true,
+    "suggestionNodes": [],
+    "hasVisibleCheckoutRoute": false,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true,
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "boardSvgFound": true,
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true,
+    "undoButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html"
+  }
+}

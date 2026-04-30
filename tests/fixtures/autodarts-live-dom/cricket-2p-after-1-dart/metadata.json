@@ -1,0 +1,72 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "cricket-2p-after-1-dart",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "After a single S20, the 20 row stores the mark image in the label cell itself."
+  ],
+  "expectedState": {
+    "variant": "Cricket",
+    "round": "R1/50",
+    "playerCount": 2,
+    "activePlayerIndex": 0,
+    "scores": ["0", "0"],
+    "playerNames": ["PLAYER 1", "PLAYER 2"],
+    "mpr": ["3.0", "0.0"],
+    "turnText": "020S20",
+    "activeVisitThrows": ["S20"],
+    "cricketTargets": ["20", "19", "18", "17", "16", "15", "Bull"],
+    "observedGridMarks": {
+      "20": {
+        "labelCellImageAlts": ["1"],
+        "siblingCellImageAlts": []
+      }
+    },
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "cricketGridFound": true,
+    "boardSvgFound": true,
+    "cricketGridClass": "css-rfeml4",
+    "boardSvgTextCount": 20
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "cricketGrid": "cricket-grid.html"
+  }
+}

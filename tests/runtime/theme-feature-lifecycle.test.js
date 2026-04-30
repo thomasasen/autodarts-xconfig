@@ -15,6 +15,7 @@ import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
 import { mountThemeGotcha } from "../../src/features/themes/gotcha/index.js";
 import { mountThemeX01TwoPlayer } from "../../src/features/themes/x01-2player/index.js";
 import { mountThemeCricket } from "../../src/features/themes/cricket/index.js";
+import { syncCricketActivePlayerStateFromRenderState } from "../../src/features/themes/shared/cricket-readability.js";
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
   X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
@@ -1438,6 +1439,71 @@ test("theme-cricket canonicalizes the active player card when stale active class
   playerNodes.forEach((node) => {
     assert.equal(node.getAttribute(CRICKET_ACTIVE_PLAYER_ATTRIBUTE), null);
   });
+});
+
+test("theme-cricket player marker sync is idempotent for unchanged render state", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Tactics";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 3, {
+    variant: "reported",
+  });
+
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  const trackedAttributes = new Set([
+    CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
+    CRICKET_STACK_ATTRIBUTE,
+    CRICKET_ROW_ATTRIBUTE,
+    CRICKET_SLOT_ATTRIBUTE,
+    CRICKET_META_ATTRIBUTE,
+    CRICKET_IDENTITY_SHELL_ATTRIBUTE,
+    CRICKET_META_SHELL_ATTRIBUTE,
+  ]);
+  const originalSetAttributeByNode = new Map();
+  const setAttributeCalls = [];
+
+  const collectNodes = (node, nodes = []) => {
+    if (!node) {
+      return nodes;
+    }
+    nodes.push(node);
+    Array.from(node.children || []).forEach((child) => collectNodes(child, nodes));
+    return nodes;
+  };
+
+  collectNodes(playerDisplayNode).forEach((node) => {
+    if (!node || typeof node.setAttribute !== "function") {
+      return;
+    }
+    originalSetAttributeByNode.set(node, node.setAttribute);
+    node.setAttribute = function setAttributeWithCount(name, value) {
+      if (trackedAttributes.has(String(name))) {
+        setAttributeCalls.push({ node, name: String(name), value: String(value) });
+      }
+      return originalSetAttributeByNode.get(node).call(this, name, value);
+    };
+  });
+
+  try {
+    syncCricketActivePlayerStateFromRenderState(
+      documentRef,
+      { activePlayerIndex: 1 },
+      createCricketThemeGameState(1)
+    );
+    assert.equal(setAttributeCalls.length > 0, true);
+    setAttributeCalls.length = 0;
+
+    syncCricketActivePlayerStateFromRenderState(
+      documentRef,
+      { activePlayerIndex: 1 },
+      createCricketThemeGameState(1)
+    );
+    assert.deepEqual(setAttributeCalls, []);
+  } finally {
+    originalSetAttributeByNode.forEach((setAttribute, node) => {
+      node.setAttribute = setAttribute;
+    });
+  }
 });
 
 test("theme-cricket auto-hides board for readability and keeps player width when manually showing a narrow board", async () => {

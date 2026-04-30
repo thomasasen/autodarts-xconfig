@@ -1,0 +1,246 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "tactics-2p-10-14-visible-after-3-darts-before-next",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "consoleWarningsOrErrors": [],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "Two-player Tactics state with lower targets 10 through 14 visible in the grid.",
+    "The active visit contains S19, D19, and T16 throw labels before Next.",
+    "No standalone Double or Triple target rows are present in the host DOM for this captured state.",
+    "D19 and T16 are turn throw labels only and must not be treated as official Tactics grid targets."
+  ],
+  "expectedState": {
+    "variant": "Tactics",
+    "roundText": "R3/50",
+    "playerCount": 2,
+    "activePlayerIndex": 0,
+    "scores": [
+      "26",
+      "36"
+    ],
+    "mpr": [
+      "5.7",
+      "7.0"
+    ],
+    "activeVisitThrows": [
+      "S19",
+      "D19",
+      "T16"
+    ],
+    "turnText": "1619S1938D1948T16",
+    "turnPoints": "16",
+    "nextButtonVisible": true,
+    "gridClass": "css-31a7l4",
+    "gridChildCount": 24,
+    "cellsPerObjectiveRow": 2,
+    "targets": [
+      "20",
+      "19",
+      "18",
+      "17",
+      "16",
+      "15",
+      "14",
+      "13",
+      "12",
+      "11",
+      "10",
+      "Bull"
+    ],
+    "hasLowerTacticsTargets10To14": true,
+    "hasDoubleTargetRow": false,
+    "hasTripleTargetRow": false,
+    "doubleTripleStandaloneNodes": [],
+    "observedGridMarks": {
+      "20": [
+        {
+          "text": "20",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        }
+      ],
+      "19": [
+        {
+          "text": "19",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "18": [
+        {
+          "text": "18",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        }
+      ],
+      "17": [
+        {
+          "text": "17",
+          "imageAlts": [
+            "2"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "1"
+          ]
+        }
+      ],
+      "16": [
+        {
+          "text": "16",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "15": [
+        {
+          "text": "15",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        }
+      ],
+      "14": [
+        {
+          "text": "14",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "13": [
+        {
+          "text": "13",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "12": [
+        {
+          "text": "12",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "11": [
+        {
+          "text": "11",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "10": [
+        {
+          "text": "10",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "2"
+          ]
+        }
+      ],
+      "Bull": [
+        {
+          "text": "Bull",
+          "imageAlts": [
+            "1"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ]
+    },
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "cricketGridFound": true,
+    "boardSvgFound": true,
+    "cricketGridClass": "css-31a7l4",
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "cricketGrid": "cricket-grid.html"
+  }
+}

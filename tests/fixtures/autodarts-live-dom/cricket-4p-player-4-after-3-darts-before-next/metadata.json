@@ -1,0 +1,241 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "cricket-4p-player-4-after-3-darts-before-next",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 vs. PLAYER 3 vs. PLAYER 4 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "Four-player active visit state; player 4 is active with three darts before Next.",
+    "This fixture intentionally is not a start state because it exercises marks, scoring, active turn, and 4-player row layout together.",
+    "The cricket grid uses four cells per objective row in this 4-player layout."
+  ],
+  "expectedState": {
+    "variant": "Cricket",
+    "playerCount": 4,
+    "activePlayerIndex": 3,
+    "scores": [
+      "20",
+      "0",
+      "0",
+      "18"
+    ],
+    "mpr": [
+      "5.0",
+      "7.0",
+      "6.0",
+      "7.0"
+    ],
+    "activeVisitThrows": [
+      "T20",
+      "S18",
+      "T18"
+    ],
+    "turnText": "1860T2018S1854T18",
+    "nextButtonVisible": true,
+    "gridClass": "css-c04tlr",
+    "gridChildCount": 28,
+    "cellsPerObjectiveRow": 4,
+    "targets": [
+      "20",
+      "19",
+      "18",
+      "17",
+      "16",
+      "15",
+      "Bull"
+    ],
+    "observedGridMarks": {
+      "20": [
+        {
+          "text": "20",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        }
+      ],
+      "19": [
+        {
+          "text": "19",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "2"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "18": [
+        {
+          "text": "18",
+          "imageAlts": [
+            "1"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "3"
+          ]
+        }
+      ],
+      "17": [
+        {
+          "text": "17",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "1"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": [
+            "1"
+          ]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "16": [
+        {
+          "text": "16",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "15": [
+        {
+          "text": "15",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "Bull": [
+        {
+          "text": "Bull",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ]
+    },
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "cricketGridFound": true,
+    "boardSvgFound": true,
+    "cricketGridClass": "css-c04tlr",
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "cricketGrid": "cricket-grid.html"
+  }
+}

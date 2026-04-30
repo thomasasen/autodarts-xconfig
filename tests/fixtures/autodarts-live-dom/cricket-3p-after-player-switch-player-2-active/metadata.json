@@ -1,0 +1,115 @@
+{
+  "fixtureVersion": 1,
+  "scenario": "cricket-3p-after-player-switch-player-2-active",
+  "source": "active Autodarts browser tab, Tampermonkey/xConfig feature styles inactive",
+  "capturedAt": "2026-04-30",
+  "url": "https://play.autodarts.io/matches/<match-id>",
+  "title": "PLAYER 1 vs. PLAYER 2 vs. PLAYER 3 | Autodarts Play",
+  "featureStyleIds": [
+    "ad-ext_style_score-smaller",
+    "ad-ext_style_winner-animation",
+    "ad-ext_style_enhanced-scoring-display"
+  ],
+  "xconfigFeatureStyleIds": [],
+  "notes": [
+    "Host uses ad-ext-* classes and ids even without xConfig userscript feature styles.",
+    "Images and match/player identifiers are anonymized or stripped.",
+    "Player 2 is active after a player switch; the active turn is empty.",
+    "This is not a pure no-throw state: player 1 already has score 20 and MPR 5.0.",
+    "The cricket grid uses three cells per objective row in this 3-player layout.",
+    "Marks are stored in the first cell of the objective row."
+  ],
+  "expectedState": {
+    "variant": "Cricket",
+    "round": "R1/50",
+    "playerCount": 3,
+    "activePlayerIndex": 1,
+    "activeClasses": [
+      {
+        "active": false,
+        "inactive": true
+      },
+      {
+        "active": true,
+        "inactive": false
+      },
+      {
+        "active": false,
+        "inactive": true
+      }
+    ],
+    "scores": ["20", "0", "0"],
+    "playerNames": ["PLAYER 1", "PLAYER 2", "PLAYER 3"],
+    "mpr": ["5.0", "0.0", "0.0"],
+    "turnText": "0",
+    "activeVisitThrows": [],
+    "cricketTargets": ["20", "19", "18", "17", "16", "15", "Bull"],
+    "cellsPerObjectiveRow": 3,
+    "observedGridMarks": {
+      "20": [
+        {
+          "text": "20",
+          "imageAlts": ["3"]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ],
+      "18": [
+        {
+          "text": "18",
+          "imageAlts": ["1"]
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        },
+        {
+          "text": "",
+          "imageAlts": []
+        }
+      ]
+    },
+    "boardLabels": [
+      "20",
+      "1",
+      "18",
+      "4",
+      "13",
+      "6",
+      "10",
+      "15",
+      "2",
+      "17",
+      "3",
+      "19",
+      "7",
+      "16",
+      "8",
+      "11",
+      "14",
+      "9",
+      "12",
+      "5"
+    ]
+  },
+  "diagnostics": {
+    "playerDisplayFound": true,
+    "turnFound": true,
+    "cricketGridFound": true,
+    "boardSvgFound": true,
+    "cricketGridClass": "css-1f26ant",
+    "boardSvgTextCount": 20,
+    "nextButtonVisible": true
+  },
+  "files": {
+    "turn": "turn.html",
+    "playerDisplay": "player-display.html",
+    "cricketGrid": "cricket-grid.html"
+  }
+}
