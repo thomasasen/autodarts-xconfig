@@ -691,6 +691,117 @@ test("shared cricket runtime marks ready-to-missing-board gaps as boardGapDeferr
   }
 });
 
+test("shared cricket runtime keeps cached grid snapshot for player-state mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/preserve-grid-player-state",
+  });
+  documentRef.variantElement.textContent = "Cricket";
+
+  createHealthyMatchHostFixture(documentRef);
+  const observers = createObserverRegistry();
+  const listenerRegistry = createListenerRegistry();
+  const renderStates = [];
+  const sharedRuntime = acquireSharedCricketRuntime({
+    documentRef,
+    windowRef,
+    registries: { observers, listeners: listenerRegistry },
+    gameState: createGameState(),
+    domain: { cricketRules, variantRules },
+    helpers: createImmediateScheduler(),
+    degradedHostGraceMs: 300,
+  });
+
+  assert.ok(sharedRuntime);
+  const unsubscribe = sharedRuntime.subscribe({
+    featureKey: "test-preserve-grid-player-state",
+    onRenderState: ({ renderState }) => {
+      renderStates.push(renderState);
+    },
+  });
+
+  try {
+    const initialGridSnapshot = sharedRuntime.renderCache.grid;
+    assert.ok(initialGridSnapshot?.root);
+    assert.equal(renderStates.at(-1)?.activePlayerIndex, 0);
+
+    documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
+    documentRef.winnerNode.classList.add("ad-ext-player-active");
+
+    const observer = observers.get("cricket-surface:dom-observer");
+    assert.ok(observer);
+    observer.callback([
+      {
+        type: "attributes",
+        target: documentRef.winnerNode,
+        attributeName: "class",
+        addedNodes: [],
+        removedNodes: [],
+      },
+    ]);
+
+    assert.equal(sharedRuntime.renderCache.grid, initialGridSnapshot);
+    assert.equal(renderStates.at(-1)?.activePlayerIndex, 1);
+  } finally {
+    unsubscribe();
+  }
+});
+
+test("shared cricket runtime rediscovers grid snapshot for grid mark mutations", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/rediscover-grid-mark",
+  });
+  documentRef.variantElement.textContent = "Cricket";
+
+  const healthyFixture = createHealthyMatchHostFixture(documentRef);
+  const observers = createObserverRegistry();
+  const listenerRegistry = createListenerRegistry();
+  const sharedRuntime = acquireSharedCricketRuntime({
+    documentRef,
+    windowRef,
+    registries: { observers, listeners: listenerRegistry },
+    gameState: createGameState(),
+    domain: { cricketRules, variantRules },
+    helpers: createImmediateScheduler(),
+    degradedHostGraceMs: 300,
+  });
+
+  assert.ok(sharedRuntime);
+  const unsubscribe = sharedRuntime.subscribe({
+    featureKey: "test-rediscover-grid-mark",
+    onRenderState: () => {},
+  });
+
+  try {
+    const initialGridSnapshot = sharedRuntime.renderCache.grid;
+    assert.ok(initialGridSnapshot?.root);
+
+    const labelCell = healthyFixture.grid.querySelector(".label-cell");
+    const markIcon = documentRef.createElement("img");
+    markIcon.setAttribute("alt", "1");
+    labelCell.appendChild(markIcon);
+
+    const observer = observers.get("cricket-surface:dom-observer");
+    assert.ok(observer);
+    observer.callback([
+      {
+        type: "childList",
+        target: labelCell,
+        addedNodes: [markIcon],
+        removedNodes: [],
+      },
+    ]);
+
+    assert.notEqual(sharedRuntime.renderCache.grid, initialGridSnapshot);
+    assert.equal(sharedRuntime.renderCache.grid?.root, initialGridSnapshot.root);
+  } finally {
+    unsubscribe();
+  }
+});
+
 test("cricket highlighter and grid fx audit the surface after throw transitions even without host mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

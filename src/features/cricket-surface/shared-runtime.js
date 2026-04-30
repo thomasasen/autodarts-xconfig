@@ -66,6 +66,20 @@ const SURFACE_SCOPE_SELECTOR = [
   ".ad-ext-theme-board-svg",
 ].join(",");
 
+const GRID_CACHE_SURFACE_SELECTOR = [
+  "#grid",
+  ".ad-ext-cricket-grid",
+  ".ad-ext-crfx-root",
+  ".ad-ext-crfx-cell",
+  ".ad-ext-crfx-label-cell",
+  ".ad-ext-crfx-badge",
+  ".chakra-grid",
+  ".label-cell",
+  ".player-cell",
+  "[data-row-label]",
+  "[data-target-label]",
+].join(",");
+
 export const SHARED_CRICKET_SURFACE_ATTRIBUTE_FILTER = Object.freeze([
   "class",
   "alt",
@@ -255,6 +269,60 @@ function nodeOrAncestorHasId(node, id) {
   return false;
 }
 
+function nodeIsOrIsInsideSelector(node, selector) {
+  if (!node || !selector) {
+    return false;
+  }
+  const anchorNode =
+    typeof node.matches === "function"
+      ? node
+      : node.parentElement || node.parentNode || null;
+  if (typeof anchorNode?.matches === "function" && anchorNode.matches(selector)) {
+    return true;
+  }
+  return Boolean(typeof anchorNode?.closest === "function" && anchorNode.closest(selector));
+}
+
+function isGridCacheMutationNode(node, renderCache) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  const gridRoot = renderCache?.grid?.root || null;
+  if (gridRoot) {
+    if (node === gridRoot) {
+      return true;
+    }
+    if (typeof gridRoot.contains === "function" && gridRoot.contains(node)) {
+      return true;
+    }
+  }
+
+  return nodeIsOrIsInsideSelector(node, GRID_CACHE_SURFACE_SELECTOR);
+}
+
+function isVariantMutationNode(node) {
+  return nodeIsOrIsInsideSelector(node, "#ad-ext-game-variant");
+}
+
+function shouldPreserveGridSnapshotForMutationBatch(mutations = [], renderCache = null) {
+  if (!renderCache?.grid?.root || renderCache.grid.root.isConnected === false) {
+    return false;
+  }
+
+  return !mutations.some((mutation) => {
+    const touchedNodes = [
+      mutation?.target || null,
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].filter(Boolean);
+
+    return touchedNodes.some((node) => {
+      return isVariantMutationNode(node) || isGridCacheMutationNode(node, renderCache);
+    });
+  });
+}
+
 function isKnownHostToolingMenuMutation(mutation) {
   if (String(mutation?.type || "") !== "childList") {
     return false;
@@ -364,8 +432,10 @@ function createSharedCricketRuntime(context = {}) {
 
   ensureObserverAliasSupport(runtime.observerRegistry);
 
-  function invalidateRenderCache() {
-    runtime.renderCache.grid = null;
+  function invalidateRenderCache(options = {}) {
+    if (options.preserveGrid !== true) {
+      runtime.renderCache.grid = null;
+    }
     runtime.renderCache.board = null;
     runtime.subscribers.forEach((subscriber) => {
       try {
@@ -743,7 +813,9 @@ function createSharedCricketRuntime(context = {}) {
       }
     }
 
-    invalidateRenderCache();
+    invalidateRenderCache({
+      preserveGrid: shouldPreserveGridSnapshotForMutationBatch(mutations, runtime.renderCache),
+    });
     runtime.scheduler.schedule();
   };
 

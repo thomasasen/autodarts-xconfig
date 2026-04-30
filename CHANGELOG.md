@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.7] - 2026-04-30
+
+### Changed
+
+- Nutzerwirkung: Cricket- und Tactics-Overlays reagieren bei Spielerwechseln und Turn-Aktualisierungen unverändert, vermeiden dabei aber unnötige Grid-Neusuchen und sollten auf realen Autodarts-DOM-Zuständen ruhiger laufen.
+  Technik: Die gemeinsame Cricket-Surface-Runtime erhält den gecachten Grid-Snapshot bei nicht-gridbezogenen Player-/Turn-Mutationen, invalidiert ihn weiterhin bei Grid-, Ziel-, Mark- oder Variant-Änderungen, und neue Runtime-Regressionen sichern Cache-Reuse sowie Grid-Mark-Rediscovery ab.
+
 ## [2.3.6] - 2026-04-29
 
 ### Fixed
@@ -1504,7 +1511,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.6]: https://github.com/thomasasen/autodarts-xconfig/compare/9833a5f...HEAD
+[2.3.7]: https://github.com/thomasasen/autodarts-xconfig/compare/22ec8e9...HEAD
+[2.3.6]: https://github.com/thomasasen/autodarts-xconfig/compare/9833a5f...22ec8e9
 [2.3.5]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...9833a5f
 [2.3.3]: https://github.com/thomasasen/autodarts-xconfig/compare/b420891...d44c45a
 [2.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/7b4351b...b420891
