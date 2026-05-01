@@ -12,6 +12,23 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.10] - 2026-05-01
+
+### Added
+
+- Nutzerwirkung: Neue und geänderte Dart-Bilder können künftig reproduzierbar auf denselben Spitzenpunkt gebracht werden, statt die Treffpunkt-Ausrichtung per Hand prüfen zu müssen.
+  Technik: `npm run check:darts` und `npm run normalize:darts` prüfen und normalisieren `src/assets/darts/Dart_*.png` über den Alpha-Kanal, ein neuer Repo-Skill `dart-asset-normalization` beschreibt den Wartungsablauf, und `docs/DART-ASSET-NORMALIZATION.md` dokumentiert Hotspot-Vertrag, Script-Verhalten und Prüfschritte.
+
+### Changed
+
+- Nutzerwirkung: `Dart Marker Darts` zeigt alle Größenstufen um 20 Prozent größer an; `Klein`, `Standard` und `Groß` verwenden jetzt intern `108`, `120` und `138`, wodurch die Dart-Grafiken auf dem Board präsenter wirken.
+  Technik: Config-Spec, Runtime-Resolver und xConfig-Deskriptoren verwenden die neuen Presets, alte gespeicherte Werte `90`, `100` und `115` migrieren proportional auf `108`, `120` und `138`, und Runtime-/Config-/Shell-Regressionen sichern Defaults, Legacy-Import und UI-Optionen ab.
+
+### Fixed
+
+- Nutzerwirkung: Die Spitzen aller gebündelten Dart-Motive landen jetzt konsistent auf dem Markerzentrum, unabhängig davon, welches Dart-Design ausgewählt ist.
+  Technik: Alle Dart-PNGs wurden auf eine gemeinsame `789x331`-Canvas mit Hotspot `x=0`, `y=212` normalisiert, die Runtime-Geometrie nutzt diese Quelle als gemeinsamen Anker, und Asset-/Overlay-Tests sichern Bildmaße, Hotspot-Konstanten und Render-Mapping ab.
+
 ## [2.3.9] - 2026-05-01
 
 ### Added
@@ -1525,7 +1542,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.9]: https://github.com/thomasasen/autodarts-xconfig/compare/d2d1473...HEAD
+[2.3.10]: https://github.com/thomasasen/autodarts-xconfig/compare/f192692...HEAD
+[2.3.9]: https://github.com/thomasasen/autodarts-xconfig/compare/d2d1473...f192692
 [2.3.8]: https://github.com/thomasasen/autodarts-xconfig/compare/9254b25...d2d1473
 [2.3.7]: https://github.com/thomasasen/autodarts-xconfig/compare/22ec8e9...9254b25
 [2.3.6]: https://github.com/thomasasen/autodarts-xconfig/compare/9833a5f...22ec8e9
