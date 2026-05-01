@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -50,4 +51,13 @@ test("dart design images stay normalized for the runtime dart tip hotspot", () =
     assert.equal(png.readUInt32BE(20), DART_IMAGE_SOURCE_HEIGHT, fileName);
     assert.equal(sha256Hex(png), dartAssetHashes.get(fileName), fileName);
   });
+});
+
+test("dart asset normalizer check accepts bundled dart images", () => {
+  const result = spawnSync(process.execPath, ["scripts/normalize-dart-assets.mjs", "--check"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 });

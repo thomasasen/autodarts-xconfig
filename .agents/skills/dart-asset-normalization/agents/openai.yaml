@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dart Asset Normalization"
+  short_description: "Normalize and verify bundled Dart marker PNG hotspots."
+  default_prompt: "Normalize or verify Dart marker image assets using the repository script."
