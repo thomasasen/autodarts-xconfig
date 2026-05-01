@@ -342,7 +342,7 @@ const LEGACY_IMPORTERS_BY_CONFIG_KEY = Object.freeze({
         "autodarts"
       ),
       animateDarts: readLegacySetting(settings, "ANIMATE_DARTS", true),
-      sizePercent: readLegacySetting(settings, "DART_GROESSE", 100),
+      sizePercent: readLegacySetting(settings, "DART_GROESSE", 120),
       hideOriginalMarkers: readLegacySetting(settings, "ORIGINAL_MARKER_AUSBLENDEN", false),
       enableShadow: readLegacySetting(settings, "SCHATTEN_AKTIV", true),
       enableWobble: readLegacySetting(settings, "WOBBLE_AKTIV", true),

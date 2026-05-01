@@ -290,7 +290,7 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.dartMarkerDarts.enabled, true);
   assert.equal(importedConfig.features.dartMarkerDarts.design, "red");
   assert.equal(importedConfig.features.dartMarkerDarts.animateDarts, true);
-  assert.equal(importedConfig.features.dartMarkerDarts.sizePercent, 115);
+  assert.equal(importedConfig.features.dartMarkerDarts.sizePercent, 138);
   assert.equal(importedConfig.features.dartMarkerDarts.hideOriginalMarkers, true);
   assert.equal(importedConfig.features.dartMarkerDarts.enableShadow, false);
   assert.equal(importedConfig.features.dartMarkerDarts.enableWobble, false);

@@ -2085,17 +2085,17 @@ const DART_DESIGN_OPTION_COPY = deepFreeze({
 });
 
 const DART_IMAGE_SIZE_OPTION_COPY = deepFreeze({
-  "90": optionCopy(
+  "108": optionCopy(
     "Zeigt die Dart-Grafik etwas kleiner als den Standard.",
     "Der eingeblendete Dart bleibt kompakter und lässt mehr Segmentfläche frei. Das wirkt aufgeräumter und weniger dominant.",
     "Diese Stufe reduziert die Dart-Grafik leicht unter die Standardgröße. Das Segment bleibt besser sichtbar, während der Dart weiterhin klar als Ersatzmarker erkennbar bleibt."
   ),
-  "100": optionCopy(
+  "120": optionCopy(
     "Nutzen die ausgewogene Standardgröße.",
     "Der Dart entspricht der vorgesehenen Grundgröße des Moduls. Das ist der Mittelweg zwischen Präsenz und freier Segmentfläche.",
     "Diese Einstellung verwendet die reguläre Grundgröße für den Dart-Marker. Der Dart ist klar sichtbar, ohne den Trefferbereich unnötig stark zu füllen."
   ),
-  "115": optionCopy(
+  "138": optionCopy(
     "Zeigt die Dart-Grafik spürbar größer.",
     "Der Dart füllt mehr vom Segment aus und fällt stärker ins Auge. Das ist die plakativste Größenstufe.",
     "Diese Stufe vergrößert die Dart-Grafik sichtbar über die Standardgröße hinaus. Treffer wirken dadurch präsenter, nehmen aber auch mehr vom Segmentbild ein."

@@ -22,6 +22,7 @@ import {
   DART_ROTATE_CLASS,
   DART_SHADOW_CLASS,
   OVERLAY_ID,
+  resolveDartMarkerDartsConfig,
 } from "../../src/features/dart-marker-darts/style.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
@@ -48,6 +49,15 @@ const ANIMATED_VISUAL_CONFIG = Object.freeze({
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+test("dart-marker-darts resolves size settings twenty percent larger with legacy migration", () => {
+  assert.equal(resolveDartMarkerDartsConfig({ sizePercent: 108 }).sizeMultiplier, 1.08);
+  assert.equal(resolveDartMarkerDartsConfig({ sizePercent: 120 }).sizeMultiplier, 1.2);
+  assert.equal(resolveDartMarkerDartsConfig({ sizePercent: 138 }).sizeMultiplier, 1.38);
+  assert.equal(resolveDartMarkerDartsConfig({ sizePercent: 100 }).sizePercent, 120);
+  assert.equal(resolveDartMarkerDartsConfig({ sizePercent: 115 }).sizePercent, 138);
+  assert.equal(resolveDartMarkerDartsConfig({ sizePercent: 999 }).sizePercent, 120);
+});
 
 async function waitForCondition(predicate, options = {}) {
   const timeoutMs = Math.max(0, Number(options.timeoutMs) || 100);

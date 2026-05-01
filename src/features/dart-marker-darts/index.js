@@ -186,7 +186,7 @@ export function initializeDartMarkerDarts(context = {}) {
         : {
             design: "autodarts",
             animateDarts: true,
-            sizePercent: 100,
+            sizePercent: 120,
             hideOriginalMarkers: false,
             enableShadow: true,
             enableShadowBlur: true,

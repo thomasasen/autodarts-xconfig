@@ -736,9 +736,9 @@ export const xconfigDescriptors = Object.freeze([
       ]),
       checkboxField("animateDarts", "Dart-Fluganimation"),
       selectField("sizePercent", "Dart-Größe", [
-        { value: 90, label: "Klein" },
-        { value: 100, label: "Standard" },
-        { value: 115, label: "Groß" },
+        { value: 108, label: "Klein" },
+        { value: 120, label: "Standard" },
+        { value: 138, label: "Groß" },
       ]),
       checkboxField("hideOriginalMarkers", "Original-Marker ausblenden"),
       checkboxField("enableShadow", "Einschlag-Schatten"),

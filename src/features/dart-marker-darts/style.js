@@ -8,7 +8,12 @@ export const DART_ROTATE_CLASS = "ad-ext-dart-rotate-group";
 export const DART_SHADOW_CLASS = "ad-ext-dart-shadow";
 export const DART_CLASS = "ad-ext-dart-image";
 
-const SIZE_PERCENTAGES = new Set([90, 100, 115]);
+const SIZE_PERCENTAGES = new Set([108, 120, 138]);
+const LEGACY_SIZE_PERCENTAGES = Object.freeze({
+  90: 108,
+  100: 120,
+  115: 138,
+});
 const FLIGHT_SPEED_KEYS = new Set(["schnell", "standard", "cinematic"]);
 
 function normalizeBoolean(value, fallbackValue) {
@@ -25,12 +30,19 @@ function normalizeBoolean(value, fallbackValue) {
   return Boolean(fallbackValue);
 }
 
+function normalizeSizePercent(value) {
+  const numeric = Number(value);
+  if (Object.hasOwn(LEGACY_SIZE_PERCENTAGES, numeric)) {
+    return LEGACY_SIZE_PERCENTAGES[numeric];
+  }
+  return SIZE_PERCENTAGES.has(numeric) ? numeric : 120;
+}
+
 export function resolveDartMarkerDartsConfig(featureConfig = {}) {
   const design = String(featureConfig.design || "").trim().toLowerCase();
   const designKey = DART_DESIGN_KEYS.includes(design) ? design : "autodarts";
 
-  const sizePercentRaw = Number(featureConfig.sizePercent);
-  const sizePercent = SIZE_PERCENTAGES.has(sizePercentRaw) ? sizePercentRaw : 100;
+  const sizePercent = normalizeSizePercent(featureConfig.sizePercent);
 
   const flightSpeedRaw = String(featureConfig.flightSpeed || "").trim().toLowerCase();
   const flightSpeed = FLIGHT_SPEED_KEYS.has(flightSpeedRaw) ? flightSpeedRaw : "standard";

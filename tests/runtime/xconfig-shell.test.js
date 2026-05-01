@@ -1766,6 +1766,14 @@ test("xConfig dart design options render split layout with preview and active ba
     DART_DESIGN_KEYS
   );
 
+  const sizeOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='sizePercent']"
+  );
+  assert.deepEqual(
+    sizeOptions.map((optionNode) => optionNode.getAttribute("data-setting-value")),
+    ["108", "120", "138"]
+  );
+
   designOptions.forEach((optionNode) => {
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--dart-design"), true);
     const preview = optionNode.querySelector(".ad-xconfig-option-preview");

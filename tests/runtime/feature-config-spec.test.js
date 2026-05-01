@@ -112,6 +112,19 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     outline: "weiss",
     debug: false,
   });
+  assert.deepEqual(createRecommendedFeatureConfig("dartMarkerDarts"), {
+    enabled: true,
+    design: "autodarts",
+    animateDarts: true,
+    sizePercent: 120,
+    hideOriginalMarkers: true,
+    enableShadow: true,
+    enableShadowBlur: true,
+    enableWobble: true,
+    enableFlightBlur: true,
+    flightSpeed: "standard",
+    debug: false,
+  });
   assert.deepEqual(createRecommendedFeatureConfig("singleBullSound"), {
     enabled: true,
     volume: 0.9,

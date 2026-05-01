@@ -71,6 +71,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
   assert.equal(config.features.dartMarkerDarts.enableShadow, true);
   assert.equal(config.features.dartMarkerDarts.enableWobble, true);
+  assert.equal(config.features.dartMarkerDarts.sizePercent, 120);
   assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
   assert.equal(config.features.x01ScoreProgress.barSize, "standard");
   assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
@@ -182,6 +183,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.dartMarkerEmphasis.outline, "weiss");
   assert.equal(config.features.dartMarkerDarts.hideOriginalMarkers, true);
   assert.equal(config.features.dartMarkerDarts.enableWobble, true);
+  assert.equal(config.features.dartMarkerDarts.sizePercent, 120);
   assert.equal(config.features.removeDartsNotification.imageSize, "large");
   assert.equal(config.features.singleBullSound.volume, 0.9);
   assert.equal(config.features.turnPointsCount.durationMs, 3000);
@@ -408,7 +410,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerEmphasis").outline, "schwarz");
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").design, "yellow");
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").animateDarts, false);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").sizePercent, 115);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").sizePercent, 138);
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").hideOriginalMarkers, true);
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").enableShadow, false);
   assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").enableWobble, false);
