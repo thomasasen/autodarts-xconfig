@@ -100,6 +100,7 @@ ${stackSelector}{
   flex:1 1 auto !important;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) max-content !important;
+  grid-template-rows: max-content max-content !important;
   align-content: center !important;
   gap: 0px !important;
   min-height: 0 !important;

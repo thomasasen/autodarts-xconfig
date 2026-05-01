@@ -65,6 +65,23 @@ function readChunk(buffer, offset) {
   };
 }
 
+function decodeFilteredByte(filter, raw, left, up, upLeft, fileName) {
+  switch (filter) {
+    case 0:
+      return raw;
+    case 1:
+      return (raw + left) & 0xff;
+    case 2:
+      return (raw + up) & 0xff;
+    case 3:
+      return (raw + Math.floor((left + up) / 2)) & 0xff;
+    case 4:
+      return (raw + paethPredictor(left, up, upLeft)) & 0xff;
+    default:
+      throw new Error(`${fileName}: unsupported PNG filter ${filter}.`);
+  }
+}
+
 function parseRgbaPng(buffer, fileName) {
   if (!buffer.subarray(0, 8).equals(pngSignature)) {
     throw new Error(`${fileName}: not a PNG file.`);
@@ -114,19 +131,7 @@ function parseRgbaPng(buffer, fileName) {
       const up = y > 0 ? pixels[previousRowOffset + x] : 0;
       const upLeft = y > 0 && x >= 4 ? pixels[previousRowOffset + x - 4] : 0;
 
-      if (filter === 0) {
-        pixels[rowOffset + x] = raw;
-      } else if (filter === 1) {
-        pixels[rowOffset + x] = (raw + left) & 0xff;
-      } else if (filter === 2) {
-        pixels[rowOffset + x] = (raw + up) & 0xff;
-      } else if (filter === 3) {
-        pixels[rowOffset + x] = (raw + Math.floor((left + up) / 2)) & 0xff;
-      } else if (filter === 4) {
-        pixels[rowOffset + x] = (raw + paethPredictor(left, up, upLeft)) & 0xff;
-      } else {
-        throw new Error(`${fileName}: unsupported PNG filter ${filter}.`);
-      }
+      pixels[rowOffset + x] = decodeFilteredByte(filter, raw, left, up, upLeft, fileName);
     }
   }
 
@@ -207,7 +212,7 @@ function estimateTip(image, fileName) {
   }
 
   if (!Number.isFinite(minX)) {
-    throw new Error(`${fileName}: no visible dart pixels found.`);
+    throw new TypeError(`${fileName}: no visible dart pixels found.`);
   }
 
   const tipPixels = visiblePixels.filter((pixel) => pixel.x <= minX + tipBandWidth - 1);
@@ -244,7 +249,7 @@ function getVisibleBounds(image, fileName) {
   }
 
   if (!Number.isFinite(bounds.minX)) {
-    throw new Error(`${fileName}: no non-transparent pixels found.`);
+    throw new TypeError(`${fileName}: no non-transparent pixels found.`);
   }
 
   return bounds;

@@ -16,6 +16,7 @@ Choose the minimum sufficient validation for the actual change, run what the env
 - use SonarQube only when the touched scope makes it relevant and server/auth access is available
 - if SonarQube is relevant but blocked, report the concrete blocker
 - if SonarQube reports fixable findings in the touched scope, fix and recheck until clean or concretely blocked
+- treat a passing Quality Gate as necessary but not sufficient: when SonarQube is used, inspect/report open issues for the relevant scope, and do not imply "clean" from Quality Gate alone
 
 # Context budget
 
@@ -91,7 +92,9 @@ Preferred release validation:
 - never report SonarQube as unavailable before trying `npm run sonar`
 - never print, quote, commit, or otherwise expose the SonarQube token
 - prefer configured local SonarQube settings over hardcoded scanner parameters
-- report whether SonarQube ran, whether the server processed it, and whether touched-scope findings remain
+- after analysis, query or inspect SonarQube issues for the touched scope when access allows it; fix actionable open issues, then re-run SonarQube until no actionable touched-scope issues remain or a concrete blocker is reached
+- when the user explicitly asks for Sonar cleanup, resolve all actionable open project issues that are low-risk and in editable source/test scope, not only the findings that affect the Quality Gate
+- report whether SonarQube ran, whether the server processed it, Quality Gate status, and whether relevant open issues remain
 - if blocked, name the blocker: unavailable MCP, missing auth, unreachable server, scanner failure, or project visibility
 
 # Final Report Template

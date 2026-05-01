@@ -355,7 +355,7 @@ test("shanghai and bermuda stay under-throws and keep oldrepo preview behavior",
   );
   assert.match(
     shanghaiCss,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*gap:\s*0px\s*!important;[^}]*min-width:\s*0\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*display:\s*grid\s*!important;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*max-content\s*!important;[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*gap:\s*0px\s*!important;[^}]*min-width:\s*0\s*!important;/s
   );
   assert.match(
     shanghaiCss,
@@ -501,6 +501,10 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
   assert.match(
     sharedPlayerDisplayCss,
     /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-score-color\)\s*!important;/s
+  );
+  assert.match(
+    sharedPlayerDisplayCss,
+    /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*\{[^}]*grid-template-rows:\s*max-content max-content\s*!important;[^}]*align-content:\s*center\s*!important;/s
   );
   assert.match(
     sharedPlayerDisplayCss,

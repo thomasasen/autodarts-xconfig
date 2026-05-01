@@ -1151,6 +1151,18 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `White Trible`: Der helle Flight trägt ein graues, tribalartiges Muster und wirkt dadurch detailreicher als das schlichte weiße Design.
   - `Yellow`: Der Flight wirkt hell, warm und sehr sichtbar. Gelb sticht auf dunklen Boards besonders klar heraus.
   - `Yellow Scull`: Der Flight bleibt gelb, bekommt aber zusätzlich einen großen schwarzen Totenkopf als Hauptmotiv. Das ist die plakativste gelbe Variante.
+
+**Dart-Designs im Überblick**
+
+| | | | |
+|---|---|---|---|
+| <img src="src/assets/darts/Dart_aIreplicant.png" alt="AI Replicant" width="140"><br>AI Replicant | <img src="src/assets/darts/Dart_bullet.png" alt="Bullet" width="140"><br>Bullet | <img src="src/assets/darts/Dart_germangiant.png" alt="German Giant" width="140"><br>German Giant | <img src="src/assets/darts/Dart_mandalorian.png" alt="Mandalorian" width="140"><br>Mandalorian |
+| <img src="src/assets/darts/Dart_nuke.png" alt="Nuke" width="140"><br>Nuke | <img src="src/assets/darts/Dart_philtaylor.png" alt="Phil Taylor" width="140"><br>Phil Taylor | <img src="src/assets/darts/Dart_snakebite.png" alt="Snakebite" width="140"><br>Snakebite | <img src="src/assets/darts/Dart_standard.png" alt="Standard" width="140"><br>Standard |
+| <img src="src/assets/darts/Dart_stdyellow.png" alt="Standard Yellow" width="140"><br>Standard Yellow | <img src="src/assets/darts/Dart_stdyellow2.png" alt="Standard Yellow 2" width="140"><br>Standard Yellow 2 | <img src="src/assets/darts/Dart_ultramarine.png" alt="Ultramarine" width="140"><br>Ultramarine | <img src="src/assets/darts/Dart_autodarts.png" alt="Autodarts" width="140"><br>Autodarts |
+| <img src="src/assets/darts/Dart_blackblue.png" alt="Black Blue" width="140"><br>Black Blue | <img src="src/assets/darts/Dart_blackgreen.png" alt="Black Green" width="140"><br>Black Green | <img src="src/assets/darts/Dart_blackred.png" alt="Black Red" width="140"><br>Black Red | <img src="src/assets/darts/Dart_blue.png" alt="Blue" width="140"><br>Blue |
+| <img src="src/assets/darts/Dart_camoflage.png" alt="Camouflage" width="140"><br>Camouflage | <img src="src/assets/darts/Dart_green.png" alt="Green" width="140"><br>Green | <img src="src/assets/darts/Dart_pride.png" alt="Pride" width="140"><br>Pride | <img src="src/assets/darts/Dart_red.png" alt="Red" width="140"><br>Red |
+| <img src="src/assets/darts/Dart_white.png" alt="White" width="140"><br>White | <img src="src/assets/darts/Dart_whitetrible.png" alt="White Trible" width="140"><br>White Trible | <img src="src/assets/darts/Dart_yellow.png" alt="Yellow" width="140"><br>Yellow | <img src="src/assets/darts/Dart_yellowscull.png" alt="Yellow Scull" width="140"><br>Yellow Scull |
+
 - `Dart-Fluganimation`: Bestimmt, ob neu gesetzte Dart-Bilder mit einer kurzen Flugbewegung ins Segment einlaufen oder sofort an ihrer Endposition erscheinen. Die aktivierte Fluganimation erhöht je nach Szene die CPU- und GPU-Last und kann auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart-Größe`: Skaliert die eingeblendeten Dart-Bilder relativ zur Standardgröße. Große Stufen füllen das Segment stärker aus.
   - `Klein`: Der eingeblendete Dart bleibt kompakter und lässt mehr Segmentfläche frei. Das wirkt aufgeräumter und weniger dominant.

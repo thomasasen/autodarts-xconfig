@@ -1121,14 +1121,7 @@ function resolveCricketPlayerCardMarkerSignature(playerNode) {
 }
 
 function setMarkerAttribute(node, attributeName, value = "true") {
-  if (!node || !attributeName || typeof node.setAttribute !== "function") {
-    return;
-  }
-  const nextValue = String(value);
-  if (typeof node.getAttribute === "function" && node.getAttribute(attributeName) === nextValue) {
-    return;
-  }
-  node.setAttribute(attributeName, nextValue);
+  setAttributeIfChanged(node, attributeName, value);
 }
 
 function setAttributeIfChanged(node, attributeName, value) {
