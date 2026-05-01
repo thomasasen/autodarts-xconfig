@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.9] - 2026-05-01
+
+### Added
+
+- Nutzerwirkung: `Dart Marker Darts` bietet elf zusätzliche Dart-Designs und zeigt sie in der xConfig-Auswahl ganz oben an, darunter `AI Replicant`, `Bullet`, `German Giant`, `Mandalorian`, `Nuke`, `Phil Taylor`, `Snakebite`, `Standard`, `Standard Yellow`, `Standard Yellow 2` und `Ultramarine`.
+  Technik: Die neuen PNG-Assets sind im zentralen Dart-Manifest und Browser-Asset-Bundle registriert, die Config-Normalisierung verwendet die Manifest-Keys als gültige Designliste, und README-/Feature-Doku sowie Runtime-Regressionen decken Manifest-Vollständigkeit und UI-Reihenfolge ab.
+
 ## [2.3.8] - 2026-04-30
 
 ### Fixed
@@ -1518,7 +1525,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.8]: https://github.com/thomasasen/autodarts-xconfig/compare/9254b25...HEAD
+[2.3.9]: https://github.com/thomasasen/autodarts-xconfig/compare/d2d1473...HEAD
+[2.3.8]: https://github.com/thomasasen/autodarts-xconfig/compare/9254b25...d2d1473
 [2.3.7]: https://github.com/thomasasen/autodarts-xconfig/compare/22ec8e9...9254b25
 [2.3.6]: https://github.com/thomasasen/autodarts-xconfig/compare/9833a5f...22ec8e9
 [2.3.5]: https://github.com/thomasasen/autodarts-xconfig/compare/d44c45a...9833a5f

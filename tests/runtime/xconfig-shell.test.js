@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-template-presets.js";
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
@@ -1759,7 +1760,11 @@ test("xConfig dart design options render split layout with preview and active ba
   const designOptions = documentRef.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design']"
   );
-  assert.equal(designOptions.length, 13);
+  assert.equal(designOptions.length, DART_DESIGN_KEYS.length);
+  assert.deepEqual(
+    designOptions.map((optionNode) => optionNode.getAttribute("data-setting-value")),
+    DART_DESIGN_KEYS
+  );
 
   designOptions.forEach((optionNode) => {
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--dart-design"), true);

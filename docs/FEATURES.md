@@ -843,6 +843,17 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 - Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
 - Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart Design`: Wählt das Bilddesign der eingeblendeten Darts.
+  - `AI Replicant`: Dieses Motiv nutzt einen futuristischen Flight mit technisch anmutender Gestaltung. Der Dart wirkt dadurch moderner, kühler und stärker wie ein Sci-Fi-Design als die schlichten Farbvarianten.
+  - `Bullet`: Diese Variante setzt auf einen kompakten, metallischen Look mit Bullet-Anmutung. Dadurch wirkt der Dart besonders direkt, schwerer und weniger verspielt als die farbigen Flight-Designs.
+  - `German Giant`: Dieses Motiv ist an einen German-Giant-Stil angelehnt und wirkt wie ein konkretes Spielerdesign. Der Dart bleibt sportlich, präsent und stärker charakterbezogen als die neutralen Varianten.
+  - `Mandalorian`: Diese Variante nutzt ein Mandalorian-inspiriertes Motiv auf dem Flight. Dadurch bekommt der Dart einen klar thematischen Sci-Fi-Charakter und fällt stärker als Designobjekt auf.
+  - `Nuke`: Dieses Design setzt auf ein auffälliges Nuke-Motiv mit warnender, energiegeladener Wirkung. Der Dart wirkt dadurch besonders plakativ und deutlich aggressiver als neutrale Varianten.
+  - `Phil Taylor`: Diese Variante ist an einen Phil-Taylor-Stil angelehnt und wirkt wie ein traditionelleres Spielerdesign. Der Dart bleibt sportlich, klar und weniger verspielt als die auffälligeren Motiv-Flights.
+  - `Snakebite`: Dieses Motiv ist an einen Snakebite-Stil angelehnt und setzt auf eine markante, lebendige Flight-Gestaltung. Dadurch wirkt der Dart charakterstark und klar weniger neutral.
+  - `Standard`: Diese Variante nutzt einen klassischen Standard-Look ohne starkes Sondermotiv. Der Dart wirkt dadurch vertraut, ruhig und als neutraler Ersatzmarker gut lesbar.
+  - `Standard Yellow`: Diese Variante kombiniert den klassischen Standard-Dart mit einem gelben Flight. Dadurch bleibt das Motiv ruhig, hebt sich aber heller und wärmer vom Board ab.
+  - `Standard Yellow 2`: Diese zweite gelbe Standard-Variante bleibt nahe am klassischen Dart-Look, variiert aber die gelbe Flight-Gestaltung. Sie wirkt ähnlich ruhig wie `Standard Yellow`, aber etwas eigenständiger.
+  - `Ultramarine`: Diese Variante nutzt einen kräftigen Ultramarin-Ton und wirkt dadurch tiefer, kühler und markanter als die einfache blaue Variante. Der Dart bleibt klar lesbar und farblich fokussiert.
   - `Autodarts`: Dieses Motiv zeigt einen silbernen Dart mit einem weichen violett-blauen Verlaufsflight. Der Look wirkt modern, leicht futuristisch und hebt sich klar von den einfarbigen Varianten ab.
   - `Black Blue`: Dieses Motiv kombiniert einen dunklen Flight mit prägnanten blauen Linien. Dadurch wirkt der Dart besonders technisch, modern und kontrastreich.
   - `Black Green`: Dieses Motiv hält den Dart insgesamt dunkel und setzt grüne Linien oder Akzente auf dem Flight. Dadurch entsteht ein sportlicher, kontrastreicher Look mit klarem Grünfokus.

@@ -1962,6 +1962,61 @@ const DART_MARKER_OUTLINE_OPTION_COPY = deepFreeze({
 });
 
 const DART_DESIGN_OPTION_COPY = deepFreeze({
+  aireplicant: optionCopy(
+    "Zeigt einen futuristischen Dart mit technisch wirkendem Flight.",
+    "Der Flight wirkt kühl, hell und technisch und gibt dem Dart einen KI-nahen Sci-Fi-Look. Das Motiv ist detailreicher als die einfachen Farbvarianten.",
+    "Dieses Motiv nutzt einen futuristischen Flight mit technisch anmutender Gestaltung. Der Dart wirkt dadurch moderner, kühler und stärker wie ein Sci-Fi-Design als die schlichten Farbvarianten."
+  ),
+  bullet: optionCopy(
+    "Zeigt einen kompakten Dart mit Bullet-Anmutung.",
+    "Das Design wirkt gedrungener, metallischer und stärker auf Einschlag getrimmt. Es passt, wenn die Dart-Marker robuster und direkter aussehen sollen.",
+    "Diese Variante setzt auf einen kompakten, metallischen Look mit Bullet-Anmutung. Dadurch wirkt der Dart besonders direkt, schwerer und weniger verspielt als die farbigen Flight-Designs."
+  ),
+  germangiant: optionCopy(
+    "Zeigt ein German-Giant-inspiriertes Dart-Motiv.",
+    "Der Dart nutzt ein klares Profi-Motiv mit markanter Flight-Gestaltung. Das wirkt sportlich und weniger abstrakt als die Standardfarben.",
+    "Dieses Motiv ist an einen German-Giant-Stil angelehnt und wirkt wie ein konkretes Spielerdesign. Der Dart bleibt sportlich, präsent und stärker charakterbezogen als die neutralen Varianten."
+  ),
+  mandalorian: optionCopy(
+    "Zeigt einen Dart mit Mandalorian-inspiriertem Flight.",
+    "Der Flight trägt ein starkes Sci-Fi-Motiv und wirkt dadurch dekorativer und thematischer als die Uni-Farben.",
+    "Diese Variante nutzt ein Mandalorian-inspiriertes Motiv auf dem Flight. Dadurch bekommt der Dart einen klar thematischen Sci-Fi-Charakter und fällt stärker als Designobjekt auf."
+  ),
+  nuke: optionCopy(
+    "Zeigt einen Dart mit auffälligem Nuke-Motiv.",
+    "Das Motiv wirkt warnend, energisch und deutlich plakativ. Es eignet sich, wenn Treffer optisch sehr stark herausstechen sollen.",
+    "Dieses Design setzt auf ein auffälliges Nuke-Motiv mit warnender, energiegeladener Wirkung. Der Dart wirkt dadurch besonders plakativ und deutlich aggressiver als neutrale Varianten."
+  ),
+  philtaylor: optionCopy(
+    "Zeigt ein Phil-Taylor-inspiriertes Dart-Motiv.",
+    "Der Dart wirkt wie ein klassisches Spielerdesign und bleibt dabei sportlich und gut lesbar. Das Motiv ist ruhiger als die Comic- und Sci-Fi-Varianten.",
+    "Diese Variante ist an einen Phil-Taylor-Stil angelehnt und wirkt wie ein traditionelleres Spielerdesign. Der Dart bleibt sportlich, klar und weniger verspielt als die auffälligeren Motiv-Flights."
+  ),
+  snakebite: optionCopy(
+    "Zeigt ein Snakebite-inspiriertes Dart-Motiv.",
+    "Der Flight wirkt wild, kontrastreich und spielerbezogen. Das Design ist deutlich auffälliger als die schlichten Standardfarben.",
+    "Dieses Motiv ist an einen Snakebite-Stil angelehnt und setzt auf eine markante, lebendige Flight-Gestaltung. Dadurch wirkt der Dart charakterstark und klar weniger neutral."
+  ),
+  standard: optionCopy(
+    "Zeigt einen klassischen Standard-Dart.",
+    "Der Dart bleibt schlicht, ausgewogen und wenig dekorativ. Das ist die neutralste Alternative zu `Autodarts`.",
+    "Diese Variante nutzt einen klassischen Standard-Look ohne starkes Sondermotiv. Der Dart wirkt dadurch vertraut, ruhig und als neutraler Ersatzmarker gut lesbar."
+  ),
+  stdyellow: optionCopy(
+    "Zeigt einen klassischen Standard-Dart mit gelbem Flight.",
+    "Der Standard-Look bleibt schlicht, bekommt aber durch den gelben Flight mehr Sichtbarkeit und Wärme.",
+    "Diese Variante kombiniert den klassischen Standard-Dart mit einem gelben Flight. Dadurch bleibt das Motiv ruhig, hebt sich aber heller und wärmer vom Board ab."
+  ),
+  stdyellow2: optionCopy(
+    "Zeigt eine zweite gelbe Standard-Dart-Variante.",
+    "Das Motiv bleibt im Standard-Stil, setzt den gelben Flight aber etwas anders um. Es ist eine alternative gelbe Variante mit klassischer Wirkung.",
+    "Diese zweite gelbe Standard-Variante bleibt nahe am klassischen Dart-Look, variiert aber die gelbe Flight-Gestaltung. Sie wirkt ähnlich ruhig wie `Standard Yellow`, aber etwas eigenständiger."
+  ),
+  ultramarine: optionCopy(
+    "Zeigt einen Dart mit kräftigem Ultramarin-Blau.",
+    "Der Flight wirkt tiefblau, klar und sehr kühl. Das Design ist farbkräftiger als `Blue`, bleibt aber weiterhin sauber und ruhig.",
+    "Diese Variante nutzt einen kräftigen Ultramarin-Ton und wirkt dadurch tiefer, kühler und markanter als die einfache blaue Variante. Der Dart bleibt klar lesbar und farblich fokussiert."
+  ),
   autodarts: optionCopy(
     "Zeigt einen silbernen Dart mit violett-blauem Verlaufsflight.",
     "Der Dart nutzt ein metallisches Barrel und einen Flight mit violettem bis blauem Farbverlauf. Das wirkt modern und leicht neonartig.",

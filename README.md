@@ -1127,6 +1127,17 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 **Einstellungen einfach erklärt**
 
 - `Dart Design`: Legt fest, welches Dart-Motiv anstelle des Standardmarkers verwendet wird. Die Trefferposition bleibt gleich, nur die Grafik ändert sich.
+  - `AI Replicant`: Der Flight wirkt kühl, hell und technisch und gibt dem Dart einen KI-nahen Sci-Fi-Look. Das Motiv ist detailreicher als die einfachen Farbvarianten.
+  - `Bullet`: Das Design wirkt gedrungener, metallischer und stärker auf Einschlag getrimmt. Es passt, wenn die Dart-Marker robuster und direkter aussehen sollen.
+  - `German Giant`: Der Dart nutzt ein klares Profi-Motiv mit markanter Flight-Gestaltung. Das wirkt sportlich und weniger abstrakt als die Standardfarben.
+  - `Mandalorian`: Der Flight trägt ein starkes Sci-Fi-Motiv und wirkt dadurch dekorativer und thematischer als die Uni-Farben.
+  - `Nuke`: Das Motiv wirkt warnend, energisch und deutlich plakativ. Es eignet sich, wenn Treffer optisch sehr stark herausstechen sollen.
+  - `Phil Taylor`: Der Dart wirkt wie ein klassisches Spielerdesign und bleibt dabei sportlich und gut lesbar. Das Motiv ist ruhiger als die Comic- und Sci-Fi-Varianten.
+  - `Snakebite`: Der Flight wirkt wild, kontrastreich und spielerbezogen. Das Design ist deutlich auffälliger als die schlichten Standardfarben.
+  - `Standard`: Der Dart bleibt schlicht, ausgewogen und wenig dekorativ. Das ist die neutralste Alternative zu `Autodarts`.
+  - `Standard Yellow`: Der Standard-Look bleibt schlicht, bekommt aber durch den gelben Flight mehr Sichtbarkeit und Wärme.
+  - `Standard Yellow 2`: Das Motiv bleibt im Standard-Stil, setzt den gelben Flight aber etwas anders um. Es ist eine alternative gelbe Variante mit klassischer Wirkung.
+  - `Ultramarine`: Der Flight wirkt tiefblau, klar und sehr kühl. Das Design ist farbkräftiger als `Blue`, bleibt aber weiterhin sauber und ruhig.
   - `Autodarts`: Der Dart nutzt ein metallisches Barrel und einen Flight mit violettem bis blauem Farbverlauf. Das wirkt modern und leicht neonartig.
   - `Black Blue`: Der Flight wirkt fast schwarz und trägt klare blaue Linienakzente. Dadurch entsteht ein technischer, neonartiger Look.
   - `Black Green`: Der Flight bleibt dunkel und wird von kräftigen grünen Akzenten durchzogen. Das wirkt markant, aber weniger kühl als `Black Blue`.

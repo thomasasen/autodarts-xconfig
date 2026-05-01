@@ -709,6 +709,17 @@ export const xconfigDescriptors = Object.freeze([
     description: "Ersetzt Marker optional durch Dart-Bilder mit Fluganimation.",
     fields: [
       selectField("design", "Dart Design", [
+        { value: "aireplicant", label: "AI Replicant" },
+        { value: "bullet", label: "Bullet" },
+        { value: "germangiant", label: "German Giant" },
+        { value: "mandalorian", label: "Mandalorian" },
+        { value: "nuke", label: "Nuke" },
+        { value: "philtaylor", label: "Phil Taylor" },
+        { value: "snakebite", label: "Snakebite" },
+        { value: "standard", label: "Standard" },
+        { value: "stdyellow", label: "Standard Yellow" },
+        { value: "stdyellow2", label: "Standard Yellow 2" },
+        { value: "ultramarine", label: "Ultramarine" },
         { value: "autodarts", label: "Autodarts" },
         { value: "blackblue", label: "Black Blue" },
         { value: "blackgreen", label: "Black Green" },

@@ -9,6 +9,7 @@ import { THEME_PRESET_ASSET_KEYS } from "../shared/theme-preset-assets.manifest.
 import { normalizeThemeBackgroundHost } from "../shared/theme-background-host-utils.js";
 import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
+import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
 
 const CHECKOUT_EFFECTS = new Set(["pulse", "glow", "scale", "blink"]);
 const CHECKOUT_INTENSITIES = new Set(["dezent", "standard", "stark"]);
@@ -36,7 +37,7 @@ const DART_MARKER_EMPHASIS_COLORS = new Set(["rgb(49, 130, 206)", "rgb(34, 197, 
 const DART_MARKER_EMPHASIS_EFFECTS = new Set(["glow", "pulse", "none"]);
 const DART_MARKER_EMPHASIS_OPACITY = new Set([65, 85, 100]);
 const DART_MARKER_EMPHASIS_OUTLINE = new Set(["aus", "weiss", "schwarz"]);
-const DART_MARKER_DARTS_DESIGNS = new Set(["autodarts", "blackblue", "blackgreen", "blackred", "blue", "camoflage", "green", "pride", "red", "white", "whitetrible", "yellow", "yellowscull"]);
+const DART_MARKER_DARTS_DESIGNS = new Set(DART_DESIGN_KEYS);
 const DART_MARKER_DARTS_SIZE_PERCENT = new Set([90, 100, 115]);
 const DART_MARKER_DARTS_FLIGHT_SPEED = new Set(["schnell", "standard", "cinematic"]);
 const REMOVE_DARTS_NOTIFICATION_IMAGE_SIZE = new Set(["compact", "standard", "large"]);
