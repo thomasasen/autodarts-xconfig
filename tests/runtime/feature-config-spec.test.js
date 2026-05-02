@@ -20,6 +20,15 @@ function getDefaultFeatureConfig(configKey) {
   return defaultConfig.features?.[configKey] || null;
 }
 
+const DEFAULT_TURN_DART_CONFIG = Object.freeze({
+  turnDartStyle: "original",
+  turnDartTextTemplate: "",
+  turnDartColor: "#FFFFFF",
+  turnDartGradientColor: "#F97316",
+  turnDartSizePercent: 115,
+  turnDartImageDataUrl: "",
+});
+
 test("feature config spec regenerates the published default config exactly", () => {
   assert.deepEqual(createDefaultConfigFromFeatureSpecs(), defaultConfig);
 });
@@ -66,6 +75,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "",
+    ...DEFAULT_TURN_DART_CONFIG,
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
@@ -158,6 +168,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "",
+    ...DEFAULT_TURN_DART_CONFIG,
     debug: false,
   });
 
@@ -179,6 +190,12 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: "30",
       backgroundImageDataUrl: "data:image/png;base64,AAAA",
       backgroundAssetKey: "cyberpunk",
+      turnDartStyle: "gradient",
+      turnDartTextTemplate: "Wurf #",
+      turnDartColor: "#f97316",
+      turnDartGradientColor: "#abc",
+      turnDartSizePercent: "135",
+      turnDartImageDataUrl: "data:image/webp;base64,BBBB",
       debug: "true",
     }),
     {
@@ -195,6 +212,12 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: 30,
       backgroundImageDataUrl: "data:image/png;base64,AAAA",
       backgroundAssetKey: "cyberpunk",
+      turnDartStyle: "gradient",
+      turnDartTextTemplate: "Wurf #",
+      turnDartColor: "#F97316",
+      turnDartGradientColor: "#AABBCC",
+      turnDartSizePercent: 135,
+      turnDartImageDataUrl: "data:image/webp;base64,BBBB",
       debug: true,
     }
   );
@@ -214,6 +237,12 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: "45",
       backgroundImageDataUrl: "invalid",
       backgroundAssetKey: "ice",
+      turnDartStyle: "image",
+      turnDartTextTemplate: "Dart #",
+      turnDartColor: "#123456",
+      turnDartGradientColor: "#456",
+      turnDartSizePercent: "100",
+      turnDartImageDataUrl: "data:image/svg+xml;base64,CCCC",
       debug: "false",
     }),
     {
@@ -230,6 +259,12 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: 45,
       backgroundImageDataUrl: "",
       backgroundAssetKey: "ice",
+      turnDartStyle: "image",
+      turnDartTextTemplate: "Dart #",
+      turnDartColor: "#123456",
+      turnDartGradientColor: "#445566",
+      turnDartSizePercent: 100,
+      turnDartImageDataUrl: "data:image/svg+xml;base64,CCCC",
       debug: false,
     }
   );
@@ -249,6 +284,12 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: "88",
       backgroundImageDataUrl: "https://example.invalid/bg.png",
       backgroundAssetKey: "missing-preset",
+      turnDartStyle: "rainbow",
+      turnDartTextTemplate: ` ${"x".repeat(60)}\nignored`,
+      turnDartColor: "red",
+      turnDartGradientColor: "#12",
+      turnDartSizePercent: "99",
+      turnDartImageDataUrl: "https://example.invalid/dart.png",
       debug: "no",
     }),
     {
@@ -265,6 +306,8 @@ test("theme global typography defaults and normalization stay stable", () => {
       playerFieldTransparency: 10,
       backgroundImageDataUrl: "",
       backgroundAssetKey: "",
+      ...DEFAULT_TURN_DART_CONFIG,
+      turnDartTextTemplate: "x".repeat(48),
       debug: false,
     }
   );

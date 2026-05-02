@@ -71,6 +71,9 @@ const THEME_PRESET_ASSET_KEY_SET = new Set(THEME_PRESET_ASSET_KEYS);
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS.map((option) => option.value)
 );
+const THEME_GLOBAL_TURN_DART_STYLES = new Set(["original", "solid", "gradient", "image"]);
+const THEME_GLOBAL_TURN_DART_SIZE_PERCENT = new Set([100, 115, 135]);
+const THEME_GLOBAL_TURN_DART_TEXT_MAX_LENGTH = 48;
 const LEGACY_COLOR_THEME_ALIASES = Object.freeze({
   ["159,219,88"]: "159, 219, 88",
   ["56,189,248"]: "56, 189, 248",
@@ -128,6 +131,11 @@ function normalizeMappedStringChoice(value, fallbackValue, aliasMap) {
 function normalizeNumberChoice(value, fallbackValue, allowedSet) {
   const numeric = Number(value);
   return Number.isFinite(numeric) && allowedSet.has(numeric) ? numeric : fallbackValue;
+}
+
+function normalizeLimitedText(value, maxLength = 80) {
+  const normalized = String(value || "").replaceAll(/[\r\n\t]+/g, " ").trim();
+  return normalized.slice(0, Math.max(0, Number(maxLength) || 0));
 }
 
 function normalizeDartMarkerDartsSizePercent(value) {
@@ -266,6 +274,15 @@ function normalizeThemeBaseConfig(rawConfig = {}, defaults = {}) {
   };
 }
 
+const DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG = Object.freeze({
+  turnDartStyle: "original",
+  turnDartTextTemplate: "",
+  turnDartColor: "#FFFFFF",
+  turnDartGradientColor: "#F97316",
+  turnDartSizePercent: 115,
+  turnDartImageDataUrl: "",
+});
+
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutScorePulse: { enabled: true, effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutBoardTargets: { enabled: false, visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
@@ -297,6 +314,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "",
+    ...DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG,
     debug: false,
   },
   "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -347,6 +365,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     backgroundDisplayMode: "fill",
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
+    ...DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG,
   },
   "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.gotcha": {
@@ -711,6 +730,29 @@ const FEATURE_NORMALIZERS = Object.freeze({
           DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundAssetKey ||
           ""
       ),
+      turnDartStyle: normalizeStringChoice(
+        rawConfig.turnDartStyle,
+        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartStyle,
+        THEME_GLOBAL_TURN_DART_STYLES
+      ),
+      turnDartColor: normalizeHexColor(
+        rawConfig.turnDartColor,
+        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartColor
+      ),
+      turnDartTextTemplate: normalizeLimitedText(
+        rawConfig.turnDartTextTemplate,
+        THEME_GLOBAL_TURN_DART_TEXT_MAX_LENGTH
+      ),
+      turnDartGradientColor: normalizeHexColor(
+        rawConfig.turnDartGradientColor,
+        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartGradientColor
+      ),
+      turnDartSizePercent: normalizeNumberChoice(
+        rawConfig.turnDartSizePercent,
+        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartSizePercent,
+        THEME_GLOBAL_TURN_DART_SIZE_PERCENT
+      ),
+      turnDartImageDataUrl: normalizeThemeBackgroundImage(rawConfig.turnDartImageDataUrl),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },

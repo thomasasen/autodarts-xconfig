@@ -2,6 +2,12 @@ import {
   createThemeGlobalTemplatePresetPatch,
   getThemeGlobalTemplatePreset,
 } from "../../shared/theme-global-template-presets.js";
+import { setNestedValue, splitFeaturePath } from "./path-utils.js";
+import { uploadNormalizedThemeImage } from "./theme-background.js";
+
+const TURN_DART_IMAGE_MAX_WIDTH = 960;
+const TURN_DART_IMAGE_MAX_HEIGHT = 240;
+const TURN_DART_IMAGE_MAX_BYTES = 350 * 1024;
 
 function withRuntimeCall(controller, promiseLike, successMessage, errorMessage, successType = "success") {
   Promise.resolve(promiseLike)
@@ -359,6 +365,88 @@ function handleUploadThemeBackground(controller, feature) {
   });
 }
 
+function buildTurnDartImagePatch(configKey, dataUrl) {
+  return buildFeaturePatch(configKey, {
+    turnDartStyle: "image",
+    turnDartImageDataUrl: dataUrl,
+  });
+}
+
+function buildFeaturePatch(configKey, featurePatch) {
+  const patch = { features: {} };
+  setNestedValue(patch.features, splitFeaturePath(configKey), featurePatch);
+  return patch;
+}
+
+function handleUploadTurnDartImage(controller, feature) {
+  if (!feature || typeof controller.runtimeApi?.saveConfig !== "function") {
+    return;
+  }
+
+  const featureKey = String(feature.featureKey || "").trim();
+  const configKey = String(feature.configKey || "").trim();
+  uploadNormalizedThemeImage({
+    documentRef: controller.documentRef,
+    windowRef: controller.windowRef,
+    accept: "image/png,image/webp,image/svg+xml,image/jpeg,image/*",
+    maxWidth: TURN_DART_IMAGE_MAX_WIDTH,
+    maxHeight: TURN_DART_IMAGE_MAX_HEIGHT,
+    maxBytes: TURN_DART_IMAGE_MAX_BYTES,
+    trimTransparent: true,
+    onUnsupported: () => {
+      controller.setNotice?.("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+      controller.setThemeActionFeedback?.(
+        featureKey,
+        "error",
+        "Upload fehlgeschlagen: Diese Umgebung unterstützt keinen Bild-Upload."
+      );
+    },
+    onSuccess: (normalizedImage, file) =>
+      controller.runtimeApi
+        .saveConfig(buildTurnDartImagePatch(configKey, normalizedImage.dataUrl))
+        .then(() => {
+          const fileName = String(file.name || "").trim();
+          const successMessage = fileName
+            ? `Dart-Bild gespeichert: ${fileName}.`
+            : "Dart-Bild gespeichert.";
+          controller.setNotice?.("success", successMessage);
+          controller.setThemeActionFeedback?.(featureKey, "success", successMessage);
+          controller.syncTurnDartImageIndicators?.(featureKey);
+        }),
+    onError: (error) => {
+      const errorMessage = String(
+        error?.message || "Dart-Bild konnte nicht gespeichert werden."
+      ).trim();
+      controller.setNotice?.("error", errorMessage);
+      controller.setThemeActionFeedback?.(featureKey, "error", errorMessage);
+    },
+    onFinally: () => {
+      controller.queueSync?.();
+    },
+  });
+}
+
+function handleClearTurnDartImage(controller, feature) {
+  if (!feature || typeof controller.runtimeApi?.saveConfig !== "function") {
+    return;
+  }
+
+  const featureKey = String(feature.featureKey || "").trim();
+  const patch = buildFeaturePatch(feature.configKey, {
+    turnDartStyle: "original",
+    turnDartImageDataUrl: "",
+  });
+  Promise.resolve(controller.runtimeApi.saveConfig(patch))
+    .then(() => {
+      controller.setNotice("info", "Dart-Bild entfernt.");
+      controller.syncTurnDartImageIndicators?.(featureKey);
+    })
+    .catch(() => {
+      controller.setNotice("error", "Dart-Bild konnte nicht entfernt werden.");
+    })
+    .finally(() => controller.queueSync());
+}
+
 function buildCommandHandlers(controller) {
   return new Map([
     ["open", () => controller.navigateToConfigRoute()],
@@ -411,6 +499,18 @@ function buildCommandHandlers(controller) {
       }
       handleUploadThemeBackground(controller, feature);
     }],
+    ["uploadTurnDartImage", (_actionNode, feature) => {
+      if (!feature) {
+        return;
+      }
+      handleUploadTurnDartImage(controller, feature);
+    }],
+    ["clearTurnDartImage", (_actionNode, feature) => {
+      if (!feature) {
+        return;
+      }
+      handleClearTurnDartImage(controller, feature);
+    }],
   ]);
 }
 
@@ -455,6 +555,7 @@ function buildShellActionControllerContext(options = {}) {
     clearThemeBackgroundImage: resolveOptionalFunction(options.clearThemeBackgroundImage, () => {}),
     uploadThemeBackgroundImage: resolveOptionalFunction(options.uploadThemeBackgroundImage, () => {}),
     syncThemeBackgroundIndicators: resolveOptionalFunction(options.syncThemeBackgroundIndicators, () => {}),
+    syncTurnDartImageIndicators: resolveOptionalFunction(options.syncTurnDartImageIndicators, () => {}),
     setThemeActionFeedback: resolveOptionalFunction(options.setThemeActionFeedback, () => {}),
   };
 }

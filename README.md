@@ -314,7 +314,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden.
+- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf oder eigenes Bild darstellen.
 - Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
 
 **Einstellungen einfach erklärt**
@@ -393,6 +393,20 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `20 %`: Die aktive Karte wirkt klarer eingefärbt und übernimmt mehr von der Rahmenfarbe. Der Effekt bleibt noch kontrolliert, tritt aber sichtbar präsenter hervor als bei 15 %.
   - `25 %`: Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten deutlich und verändert den Kartencharakter spürbar. Diese Stufe ist markant, bleibt aber noch gut kontrollierbar.
   - `30 %`: Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten sehr deutlich. Diese Stufe ist die markanteste Variante und verändert den Kartencharakter am stärksten.
+- `Wurffeld-Darts`: Legt fest, ob die Darts im Wurffeld original bleiben, als einfarbige SVG, als Verlauf oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Wurffeld-Darts, nicht die Board-Marker.
+  - `Original`: Die drei Dart-Grafiken im Wurffeld bleiben im Originalzustand von Autodarts.
+  - `Farbe`: Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik in der gewählten Dart-Farbe ersetzt.
+  - `Verlauf`: Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik mit Verlauf aus Verlaufsfarbe, Dart-Farbe und heller Spitze ersetzt.
+  - `Eigenes Bild`: Die drei Dart-Grafiken im Wurffeld verwenden das in Templates Global gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.
+- `Dart-Text`: Schreibt einen Text in die drei Wurffeld-Dartfelder, solange kein eigenes Dart-Bild gespeichert ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.
+- `Dart-Farbe`: Bestimmt die Hauptfarbe der generierten Wurffeld-Darts. Im Verlaufsmodus bildet sie die Mitte des Verlaufs, im Farbmodus füllt sie den Dart vollständig.
+- `Verlaufsfarbe`: Bestimmt die zweite Farbe im Verlaufsmodus. Zusammen mit der Hauptfarbe entsteht eine horizontale Dart-Grafik mit leichter heller Spitze.
+- `Dart-Größe`: Regelt die dargestellte Größe der ersetzten Darts im Wurffeld. Die feste Höhe hält die Score-Leiste stabil, auch wenn ein eigenes Bild verwendet wird.
+  - `Kompakt`: Die ersetzten Wurffeld-Darts bleiben kompakt und verändern die Leiste nur minimal.
+  - `Standard`: Die Wurffeld-Darts werden etwas präsenter, bleiben aber innerhalb der üblichen Leistenhöhe.
+  - `Groß`: Die Wurffeld-Darts werden größer angezeigt. Das passt besonders für reduzierte oder transparente eigene Bilder.
+- `Dart-Bild hochladen`: Öffnet die Dateiauswahl und speichert ein eigenes Bild für die drei Darts im Wurffeld. Empfohlen sind transparente PNG-, WebP- oder SVG-Dateien, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.
+- `Dart-Bild entfernen`: Löscht das in Templates Global gespeicherte Wurffeld-Dart-Bild und stellt die Wurffeld-Darts wieder auf `Original`. Farben, Verläufe und andere Templates-Global-Werte bleiben erhalten.
 - `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
   - `Füllen`: Das Bild legt sich wie ein Vollflächen-Hintergrund über den gesamten Spielbereich. Leere Ränder entstehen nicht, dafür können Randbereiche abgeschnitten werden.
   - `Einpassen`: Das komplette Bild bleibt sichtbar und wird in die verfügbare Fläche eingepasst. Wenn das Seitenverhältnis nicht passt, bleiben am Rand freie Bereiche des Themes sichtbar.
@@ -420,6 +434,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](docs/screenshots/template-theme-global-typography-xConfig.png)
+![Templates Global Wurffeld-Darts mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
 
 <a id="template-autodarts-theme-bull-off"></a>
 
@@ -1151,18 +1166,6 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
   - `White Trible`: Der helle Flight trägt ein graues, tribalartiges Muster und wirkt dadurch detailreicher als das schlichte weiße Design.
   - `Yellow`: Der Flight wirkt hell, warm und sehr sichtbar. Gelb sticht auf dunklen Boards besonders klar heraus.
   - `Yellow Scull`: Der Flight bleibt gelb, bekommt aber zusätzlich einen großen schwarzen Totenkopf als Hauptmotiv. Das ist die plakativste gelbe Variante.
-
-**Dart-Designs im Überblick**
-
-| | | | |
-|---|---|---|---|
-| <img src="src/assets/darts/Dart_aIreplicant.png" alt="AI Replicant" width="140"><br>AI Replicant | <img src="src/assets/darts/Dart_bullet.png" alt="Bullet" width="140"><br>Bullet | <img src="src/assets/darts/Dart_germangiant.png" alt="German Giant" width="140"><br>German Giant | <img src="src/assets/darts/Dart_mandalorian.png" alt="Mandalorian" width="140"><br>Mandalorian |
-| <img src="src/assets/darts/Dart_nuke.png" alt="Nuke" width="140"><br>Nuke | <img src="src/assets/darts/Dart_philtaylor.png" alt="Phil Taylor" width="140"><br>Phil Taylor | <img src="src/assets/darts/Dart_snakebite.png" alt="Snakebite" width="140"><br>Snakebite | <img src="src/assets/darts/Dart_standard.png" alt="Standard" width="140"><br>Standard |
-| <img src="src/assets/darts/Dart_stdyellow.png" alt="Standard Yellow" width="140"><br>Standard Yellow | <img src="src/assets/darts/Dart_stdyellow2.png" alt="Standard Yellow 2" width="140"><br>Standard Yellow 2 | <img src="src/assets/darts/Dart_ultramarine.png" alt="Ultramarine" width="140"><br>Ultramarine | <img src="src/assets/darts/Dart_autodarts.png" alt="Autodarts" width="140"><br>Autodarts |
-| <img src="src/assets/darts/Dart_blackblue.png" alt="Black Blue" width="140"><br>Black Blue | <img src="src/assets/darts/Dart_blackgreen.png" alt="Black Green" width="140"><br>Black Green | <img src="src/assets/darts/Dart_blackred.png" alt="Black Red" width="140"><br>Black Red | <img src="src/assets/darts/Dart_blue.png" alt="Blue" width="140"><br>Blue |
-| <img src="src/assets/darts/Dart_camoflage.png" alt="Camouflage" width="140"><br>Camouflage | <img src="src/assets/darts/Dart_green.png" alt="Green" width="140"><br>Green | <img src="src/assets/darts/Dart_pride.png" alt="Pride" width="140"><br>Pride | <img src="src/assets/darts/Dart_red.png" alt="Red" width="140"><br>Red |
-| <img src="src/assets/darts/Dart_white.png" alt="White" width="140"><br>White | <img src="src/assets/darts/Dart_whitetrible.png" alt="White Trible" width="140"><br>White Trible | <img src="src/assets/darts/Dart_yellow.png" alt="Yellow" width="140"><br>Yellow | <img src="src/assets/darts/Dart_yellowscull.png" alt="Yellow Scull" width="140"><br>Yellow Scull |
-
 - `Dart-Fluganimation`: Bestimmt, ob neu gesetzte Dart-Bilder mit einer kurzen Flugbewegung ins Segment einlaufen oder sofort an ihrer Endposition erscheinen. Die aktivierte Fluganimation erhöht je nach Szene die CPU- und GPU-Last und kann auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart-Größe`: Skaliert die eingeblendeten Dart-Bilder relativ zur Standardgröße. Große Stufen füllen das Segment stärker aus.
   - `Klein`: Der eingeblendete Dart bleibt kompakter und lässt mehr Segmentfläche frei. Das wirkt aufgeräumter und weniger dominant.

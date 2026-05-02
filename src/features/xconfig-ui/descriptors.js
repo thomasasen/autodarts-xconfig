@@ -42,6 +42,17 @@ function colorField(key, label, fieldOptions = {}) {
   });
 }
 
+function textField(key, label, fieldOptions = {}) {
+  return Object.freeze({
+    key,
+    label,
+    control: "text",
+    section: String(fieldOptions.section || "").trim(),
+    placeholder: String(fieldOptions.placeholder || "").trim(),
+    maxLength: Math.max(0, Number(fieldOptions.maxLength) || 0),
+  });
+}
+
 function actionField(action, label, options = {}) {
   return Object.freeze({
     key: String(options.key || "").trim(),
@@ -151,6 +162,19 @@ const GOTCHA_DELTA_PLACEMENT_OPTIONS = Object.freeze([
   { value: "inline-divider", label: "Score-Zeile |" },
 ]);
 
+const TURN_DART_STYLE_OPTIONS = Object.freeze([
+  { value: "original", label: "Original" },
+  { value: "solid", label: "Farbe" },
+  { value: "gradient", label: "Verlauf" },
+  { value: "image", label: "Eigenes Bild" },
+]);
+
+const TURN_DART_SIZE_OPTIONS = Object.freeze([
+  { value: 100, label: "Kompakt" },
+  { value: 115, label: "Standard" },
+  { value: 135, label: "Groß" },
+]);
+
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
     featureKey: "theme-global-typography",
@@ -193,6 +217,33 @@ export const xconfigDescriptors = Object.freeze([
           section: "Farben",
         }
       ),
+      selectField("turnDartStyle", "Wurffeld-Darts", TURN_DART_STYLE_OPTIONS, {
+        section: "Wurffeld-Darts",
+      }),
+      textField("turnDartTextTemplate", "Dart-Text", {
+        section: "Wurffeld-Darts",
+        placeholder: "Wurf #",
+        maxLength: 48,
+      }),
+      colorField("turnDartColor", "Dart-Farbe", {
+        section: "Wurffeld-Darts",
+      }),
+      colorField("turnDartGradientColor", "Verlaufsfarbe", {
+        section: "Wurffeld-Darts",
+      }),
+      selectField("turnDartSizePercent", "Dart-Größe", TURN_DART_SIZE_OPTIONS, {
+        section: "Wurffeld-Darts",
+      }),
+      actionField("uploadTurnDartImage", "Dart-Bild hochladen", {
+        section: "Wurffeld-Darts",
+        description:
+          "Empfohlen: transparentes PNG, WebP oder SVG, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
+      }),
+      actionField("clearTurnDartImage", "Dart-Bild entfernen", {
+        section: "Wurffeld-Darts",
+        description: "Entfernt nur das in Templates Global gespeicherte Dart-Bild.",
+        successMessage: "Dart-Bild entfernt.",
+      }),
       selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS, {
         section: "Hintergrund",
       }),

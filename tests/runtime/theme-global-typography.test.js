@@ -147,6 +147,60 @@ test("theme global typography emits semantic color overrides only for configured
   );
 });
 
+test("theme global typography can replace Wurffeld dart images with colors, gradients or uploads", () => {
+  const gradientStyle = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    turnDartStyle: "gradient",
+    turnDartColor: "#22c55e",
+    turnDartGradientColor: "#ef4444",
+    turnDartSizePercent: 135,
+  });
+
+  assert.match(gradientStyle, /#ad-ext-turn img\[alt="Dart"\] \{/);
+  assert.match(gradientStyle, /content: url\("data:image\/svg\+xml,/);
+  assert.match(gradientStyle, /width: 203px !important;/);
+  assert.match(gradientStyle, /height: 44px !important;/);
+  assert.match(gradientStyle, /object-fit: contain !important;/);
+  assert.match(decodeURIComponent(gradientStyle), /stop-color="#EF4444"/);
+  assert.match(decodeURIComponent(gradientStyle), /stop-color="#22C55E"/);
+
+  const textStyle = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    turnDartStyle: "solid",
+    turnDartTextTemplate: "Wurf #",
+    turnDartColor: "#22c55e",
+    turnDartSizePercent: 115,
+  });
+  assert.match(textStyle, /counter-reset: ad-ext-turn-dart-text;/);
+  assert.match(textStyle, /content: "Wurf " counter\(ad-ext-turn-dart-text\);/);
+  assert.match(textStyle, /color: #22C55E;/);
+  assert.match(textStyle, /font-family: "Open Sans", "Segoe UI", Tahoma, sans-serif !important;/);
+
+  const imageStyle = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    turnDartStyle: "image",
+    turnDartTextTemplate: "Wurf #",
+    turnDartImageDataUrl: "data:image/png;base64,AAAA",
+  });
+  assert.match(imageStyle, /content: url\("data:image\/svg\+xml,/);
+  assert.match(imageStyle, /background-image: url\("data:image\/png;base64,AAAA"\) !important;/);
+  assert.match(imageStyle, /background-size: 100% auto !important;/);
+  assert.match(imageStyle, /object-fit: cover !important;/);
+  assert.doesNotMatch(imageStyle, /counter-reset: ad-ext-turn-dart-text;/);
+
+  const originalStyle = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    turnDartStyle: "original",
+    turnDartTextTemplate: "",
+    turnDartImageDataUrl: "",
+  });
+  assert.doesNotMatch(originalStyle, /img\[alt="Dart"\]/);
+});
+
 test("theme CSS can use Templates Global as the active background fallback visual config", () => {
   const themeCss = buildX01ThemeCss(
     {

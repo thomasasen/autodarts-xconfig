@@ -31,6 +31,7 @@ import { createShellRenderController } from "./render-controller.js";
 import { createShellRouteController } from "./route-controller.js";
 import {
   applyThemeBackgroundStatusNode,
+  applyTurnDartImageStatusNode,
   clearThemeBackgroundImage,
   formatThemeBackgroundSummary,
   resolveThemeBackgroundPreviewUrl,
@@ -294,6 +295,25 @@ function ensureXConfigShell(options = {}) {
     });
   }
 
+  function syncTurnDartImageIndicators(featureKey) {
+    const normalizedFeatureKey = String(featureKey || "").trim();
+    if (!normalizedFeatureKey) {
+      return;
+    }
+
+    const feature = getFeatures().find((entry) => entry?.featureKey === normalizedFeatureKey) || null;
+    if (!feature) {
+      return;
+    }
+
+    const modalStatusNodes = Array.from(documentRef.querySelectorAll(
+      `[data-adxconfig-turn-dart-image-status='true'][data-feature-key='${normalizedFeatureKey}']`
+    ));
+    modalStatusNodes.forEach((node) => {
+      applyTurnDartImageStatusNode(documentRef, node, feature);
+    });
+  }
+
   function restoreContent() {
     renderController?.restoreContent();
   }
@@ -410,6 +430,7 @@ function ensureXConfigShell(options = {}) {
     syncColorFieldControl,
     syncSelectOptionButtons,
     syncThemeBackgroundIndicators,
+    syncTurnDartImageIndicators,
     themeKeyFromConfigKey,
     uploadThemeBackgroundImage,
     windowRef,

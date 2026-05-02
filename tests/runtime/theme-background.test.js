@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  applyTurnDartImageStatusNode,
   applyThemeBackgroundStatusNode,
+  buildTurnDartImageStatus,
   buildThemeBackgroundStatus,
   normalizeThemeBackgroundUpload,
   uploadThemeBackgroundImage,
@@ -13,7 +15,7 @@ function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function installCanvasStub(documentRef, toDataUrlFn) {
+function installCanvasStub(documentRef, toDataUrlFn, contextOptions = {}) {
   const originalCreateElement = documentRef.createElement.bind(documentRef);
   const drawCalls = [];
   const canvasStates = [];
@@ -28,9 +30,30 @@ function installCanvasStub(documentRef, toDataUrlFn) {
       height: 0,
       getContext() {
         return {
-          drawImage(source, x, y, width, height) {
-            drawCalls.push({ source, x, y, width, height });
+          drawImage(source, ...args) {
+            const call = { source, args };
+            if (args.length === 4) {
+              const [x, y, width, height] = args;
+              Object.assign(call, { x, y, width, height });
+            } else if (args.length === 8) {
+              const [sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height] = args;
+              Object.assign(call, {
+                sourceX,
+                sourceY,
+                sourceWidth,
+                sourceHeight,
+                x,
+                y,
+                width,
+                height,
+              });
+            }
+            drawCalls.push(call);
           },
+          getImageData:
+            typeof contextOptions.getImageData === "function"
+              ? contextOptions.getImageData
+              : undefined,
         };
       },
       toDataURL(mimeType, quality) {
@@ -83,6 +106,16 @@ function installFileReaderFallback(windowRef, imageSize, file) {
       this.onload?.();
     }
   };
+}
+
+function createAlphaBoxImageData(width, height, box) {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = box.y; y < box.y + box.height; y += 1) {
+    for (let x = box.x; x < box.x + box.width; x += 1) {
+      data[(y * width + x) * 4 + 3] = 255;
+    }
+  }
+  return { data, width, height };
 }
 
 test("normalizeThemeBackgroundUpload prefers webp and rescales large images", async () => {
@@ -163,6 +196,59 @@ test("normalizeThemeBackgroundUpload falls back to image loading and preserves s
   assert.equal(canvas.drawCalls[0].height, 600);
   assert.equal(canvas.canvasStates[0].mimeType, "image/webp");
   assert.equal(canvas.canvasStates[1].mimeType, "image/png");
+
+  canvas.restore();
+});
+
+test("normalizeThemeBackgroundUpload can trim transparent margins for dart-style uploads", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const bitmap = {
+    width: 240,
+    height: 240,
+    close() {},
+  };
+  windowRef.createImageBitmap = async () => bitmap;
+
+  const canvas = installCanvasStub(
+    documentRef,
+    (mimeType) => `data:${mimeType};base64,${"d".repeat(40)}`,
+    {
+      getImageData: () =>
+        createAlphaBoxImageData(240, 240, {
+          x: 10,
+          y: 97,
+          width: 218,
+          height: 46,
+        }),
+    }
+  );
+
+  const result = await normalizeThemeBackgroundUpload({
+    windowRef,
+    documentRef,
+    file: {
+      type: "image/png",
+      name: "dart.png",
+    },
+    maxWidth: 960,
+    maxHeight: 240,
+    maxBytes: 350 * 1024,
+    trimTransparent: true,
+  });
+
+  assert.equal(result.resized, true);
+  assert.equal(canvas.drawCalls.length, 2);
+  assert.equal(canvas.drawCalls[0].width, 240);
+  assert.equal(canvas.drawCalls[0].height, 240);
+  assert.equal(canvas.drawCalls[1].sourceX, 10);
+  assert.equal(canvas.drawCalls[1].sourceY, 97);
+  assert.equal(canvas.drawCalls[1].sourceWidth, 218);
+  assert.equal(canvas.drawCalls[1].sourceHeight, 46);
+  assert.equal(canvas.drawCalls[1].width, 218);
+  assert.equal(canvas.drawCalls[1].height, 46);
+  assert.equal(canvas.canvasStates[0].width, 218);
+  assert.equal(canvas.canvasStates[0].height, 46);
 
   canvas.restore();
 });
@@ -342,4 +428,46 @@ test("theme background status nodes keep image metadata in dataset-backed attrib
   assert.equal(status.dataset.themeImageState, "empty");
   assert.equal(status.dataset.themeImageType, "");
   assert.equal(status.dataset.themeImageSize, "");
+});
+
+test("turn dart image status nodes show and remove uploaded dart previews", () => {
+  const documentRef = new FakeDocument();
+  const status = buildTurnDartImageStatus(documentRef, {
+    featureKey: "theme-global-typography",
+    title: "Templates Global",
+    config: {
+      turnDartImageDataUrl: `data:image/webp;base64,${"d".repeat(40)}`,
+    },
+  });
+
+  assert.equal(status.dataset.adxconfigTurnDartImageStatus, "true");
+  assert.equal(status.dataset.featureKey, "theme-global-typography");
+  assert.equal(status.dataset.turnDartImageState, "present");
+  assert.equal(status.dataset.turnDartImageType, "image/webp");
+  assert.equal(status.dataset.turnDartImageSize, "30");
+  assert.match(
+    String(status.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
+    /Aktuelles Dart-Bild: image\/webp, 30 B\./
+  );
+
+  const preview = status.querySelector(".ad-xconfig-turn-dart-image-preview");
+  assert.ok(preview);
+  assert.equal(preview.getAttribute("src"), `data:image/webp;base64,${"d".repeat(40)}`);
+
+  applyTurnDartImageStatusNode(documentRef, status, {
+    featureKey: "theme-global-typography",
+    title: "Templates Global",
+    config: {
+      turnDartImageDataUrl: "",
+    },
+  });
+
+  assert.equal(status.dataset.turnDartImageState, "empty");
+  assert.equal(status.dataset.turnDartImageType, "");
+  assert.equal(status.dataset.turnDartImageSize, "");
+  assert.equal(status.querySelector(".ad-xconfig-turn-dart-image-preview"), null);
+  assert.equal(
+    String(status.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
+    "Aktuelles Dart-Bild: keines."
+  );
 });

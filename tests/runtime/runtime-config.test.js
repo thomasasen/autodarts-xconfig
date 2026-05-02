@@ -327,6 +327,12 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
           playerFieldTransparency: "45",
           backgroundImageDataUrl: "data:image/png;base64,GGGG",
           backgroundAssetKey: "matrix",
+          turnDartStyle: "GRADIENT",
+          turnDartTextTemplate: "Wurf #",
+          turnDartColor: "#def",
+          turnDartGradientColor: "#123456",
+          turnDartSizePercent: "135",
+          turnDartImageDataUrl: "data:image/png;base64,DDDD",
         },
         x01: {
           showAvg: "false",
@@ -461,6 +467,21 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(
     runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundAssetKey,
     "matrix"
+  );
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartStyle, "gradient");
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartTextTemplate,
+    "Wurf #"
+  );
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartColor, "#DDEEFF");
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartGradientColor,
+    "#123456"
+  );
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartSizePercent, 135);
+  assert.equal(
+    runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartImageDataUrl,
+    "data:image/png;base64,DDDD"
   );
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");

@@ -163,6 +163,9 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-color-field[data-invalid="true"] .ad-xconfig-color-code{border-color:rgba(255,128,128,.72);box-shadow:0 0 0 1px rgba(255,128,128,.16) inset}
 #${PANEL_HOST_ID} .ad-xconfig-color-status{margin:.05rem 0 0}
 #${PANEL_HOST_ID} .ad-xconfig-color-status--error{color:rgba(255,198,198,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-text-field{display:grid;gap:.35rem}
+#${PANEL_HOST_ID} .ad-xconfig-text-input{width:100%;min-height:2.55rem;border:1px solid rgba(255,255,255,.26);border-radius:10px;padding:.5rem .7rem;background:rgba(7,14,30,.72);color:#fff;font:inherit;font-size:.86rem}
+#${PANEL_HOST_ID} .ad-xconfig-text-input:focus{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.24)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action{display:grid;gap:.45rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn{border:1px solid rgba(255,255,255,.3);border-radius:10px;min-height:2.65rem;padding:.55rem .8rem;background:rgba(22,38,82,.72);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary{border-color:rgba(126,216,255,.92);background:linear-gradient(145deg,rgba(58,148,255,.52),rgba(88,200,255,.34));box-shadow:0 0 0 1px rgba(126,216,255,.24),0 4px 14px rgba(58,148,255,.24)}
@@ -174,6 +177,7 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-theme-image-status--empty{border-color:rgba(255,255,255,.26);background:rgba(255,255,255,.06)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-image-status-summary{margin:0;font-size:.75rem;line-height:1.35;color:rgba(240,248,255,.95)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-image-preview{width:100%;max-height:8rem;object-fit:cover;border-radius:7px;border:1px solid rgba(255,255,255,.24);background:rgba(9,16,34,.8)}
+#${PANEL_HOST_ID} .ad-xconfig-turn-dart-image-preview{height:3.4rem;object-fit:cover;object-position:center center}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback{margin:.15rem 0 0;font-size:.75rem;line-height:1.35}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--success{color:rgba(152,244,195,.98)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--error{color:rgba(255,198,198,.98)}

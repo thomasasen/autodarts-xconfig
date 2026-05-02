@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.11] - 2026-05-03
+
+### Added
+
+- Nutzerwirkung: `Templates Global` kann die drei Darts im Wurffeld jetzt durch ein eigenes Bild, farbige oder verlaufende Dart-Grafiken oder nummerierten Text wie `Wurf 1`, `Wurf 2` und `Wurf 3` ersetzen. Hochgeladene Dart-Bilder werden in der Konfiguration als Vorschau angezeigt und verschwinden dort wieder, wenn sie entfernt werden.
+  Technik: Die globale Typography-Konfiguration erhält `turnDart*`-Felder für Stil, Texttemplate, Farben, Größe und Upload-Data-URL; die xConfig-UI rendert Upload-, Clear-, Status- und Textfeld-Steuerung, während Runtime-Styles die Priorität Bild vor Text vor Farbe/Verlauf per CSS-Content, Background-Rendering und Counter-Text abbilden.
+
+### Changed
+
+- Nutzerwirkung: Transparente oder quadratische Dart-Bilder wirken im Wurffeld deutlich größer und die Größenstufe `Groß` ist zusätzlich um 25 Prozent präsenter.
+  Technik: Dart-Uploads nutzen die gemeinsame Bildnormalisierung mit transparentem Trimming, hochgeladene Bilder werden als zentrierte Backgrounds dargestellt, und die große Wurffeld-Dart-Renderstufe skaliert den bisherigen `135`-Wert mit einem zusätzlichen `1.25`-Faktor.
+
 ## [2.3.10] - 2026-05-01
 
 ### Added
@@ -1542,7 +1554,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.10]: https://github.com/thomasasen/autodarts-xconfig/compare/f192692...HEAD
+[2.3.11]: https://github.com/thomasasen/autodarts-xconfig/compare/367c667...HEAD
+[2.3.10]: https://github.com/thomasasen/autodarts-xconfig/compare/f192692...367c667
 [2.3.9]: https://github.com/thomasasen/autodarts-xconfig/compare/d2d1473...f192692
 [2.3.8]: https://github.com/thomasasen/autodarts-xconfig/compare/9254b25...d2d1473
 [2.3.7]: https://github.com/thomasasen/autodarts-xconfig/compare/22ec8e9...9254b25

@@ -158,7 +158,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `alle Modi`
 - Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden.
+- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf oder eigenes Bild darstellen.
 - `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
 - `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
 - `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.
@@ -233,6 +233,20 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `20 %`: Die Kartenfläche übernimmt den Aktiv-Akzent bereits deutlich.
   - `25 %`: Die Aktivkarten-Tönung wird stark sichtbar und prägt den Kartenhintergrund klar.
   - `30 %`: Die Aktivkarten-Tönung wird maximal sichtbar und prägt den Kartenhintergrund stark.
+- `Wurffeld-Darts`: Ändert die Dart-Grafiken im Wurffeld.
+  - `Original`: Belässt die Wurffeld-Darts unverändert.
+  - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
+  - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
+  - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
+- `Dart-Text`: Zeigt Wurftext mit `#` als Nummernplatzhalter an.
+- `Dart-Farbe`: Setzt die Hauptfarbe der Wurffeld-Darts.
+- `Verlaufsfarbe`: Setzt die zweite Verlaufsfarbe.
+- `Dart-Größe`: Regelt die Größe der Wurffeld-Darts.
+  - `Kompakt`: Kompakte Wurffeld-Darts.
+  - `Standard`: Standardgröße für Wurffeld-Darts.
+  - `Groß`: Große Wurffeld-Darts.
+- `Dart-Bild hochladen`: Speichert ein eigenes Wurffeld-Dart-Bild bis 350 KB.
+- `Dart-Bild entfernen`: Entfernt das gespeicherte Wurffeld-Dart-Bild.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
   - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
@@ -260,6 +274,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)
+![Templates Global Wurffeld-Darts mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
 
 ### Theme Bull-off
 

@@ -189,6 +189,62 @@ function createThemeBackgroundCanvas(documentRef, width, height) {
   return { canvas, context };
 }
 
+function resolveTransparentTrimBox(documentRef, source, width, height, enabled) {
+  if (!enabled) {
+    return null;
+  }
+
+  const { context } = createThemeBackgroundCanvas(documentRef, width, height);
+  if (typeof context.getImageData !== "function") {
+    return null;
+  }
+
+  try {
+    context.drawImage(source, 0, 0, width, height);
+    const imageData = context.getImageData(0, 0, width, height);
+    const data = imageData?.data;
+    if (!data || typeof data.length !== "number") {
+      return null;
+    }
+
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (data[(y * width + x) * 4 + 3] <= 2) {
+          continue;
+        }
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+
+    if (maxX < minX || maxY < minY) {
+      return null;
+    }
+
+    const trimWidth = maxX - minX + 1;
+    const trimHeight = maxY - minY + 1;
+    if (trimWidth >= width && trimHeight >= height) {
+      return null;
+    }
+
+    return {
+      x: minX,
+      y: minY,
+      width: trimWidth,
+      height: trimHeight,
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
 function readCanvasDataUrl(canvas, mimeType, quality) {
   try {
     return String(canvas.toDataURL(mimeType, quality) || "").trim();
@@ -237,6 +293,7 @@ export async function normalizeThemeBackgroundUpload(options = {}) {
   const maxWidth = Math.max(1, Number(options.maxWidth) || THEME_BACKGROUND_MAX_WIDTH);
   const maxHeight = Math.max(1, Number(options.maxHeight) || THEME_BACKGROUND_MAX_HEIGHT);
   const maxBytes = Math.max(1, Number(options.maxBytes) || THEME_BACKGROUND_MAX_BYTES);
+  const trimTransparent = options.trimTransparent === true;
 
   if (!file || typeof file !== "object") {
     throw createThemeBackgroundError("Bitte eine Bilddatei auswählen.");
@@ -250,14 +307,36 @@ export async function normalizeThemeBackgroundUpload(options = {}) {
   const source = await loadThemeBackgroundSource(windowRef, file);
   const sourceWidth = Math.max(1, Number(source.width) || 0);
   const sourceHeight = Math.max(1, Number(source.height) || 0);
-  const resizeScale = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight, 1);
-  const targetWidth = Math.max(1, Math.round(sourceWidth * resizeScale));
-  const targetHeight = Math.max(1, Math.round(sourceHeight * resizeScale));
-  const resized = targetWidth !== sourceWidth || targetHeight !== sourceHeight;
+  const trimBox = resolveTransparentTrimBox(
+    documentRef,
+    source.source,
+    sourceWidth,
+    sourceHeight,
+    trimTransparent
+  );
+  const drawSource = trimBox || { x: 0, y: 0, width: sourceWidth, height: sourceHeight };
+  const resizeScale = Math.min(maxWidth / drawSource.width, maxHeight / drawSource.height, 1);
+  const targetWidth = Math.max(1, Math.round(drawSource.width * resizeScale));
+  const targetHeight = Math.max(1, Math.round(drawSource.height * resizeScale));
+  const resized = !!trimBox || targetWidth !== sourceWidth || targetHeight !== sourceHeight;
   const { canvas, context } = createThemeBackgroundCanvas(documentRef, targetWidth, targetHeight);
 
   try {
-    context.drawImage(source.source, 0, 0, targetWidth, targetHeight);
+    if (trimBox) {
+      context.drawImage(
+        source.source,
+        drawSource.x,
+        drawSource.y,
+        drawSource.width,
+        drawSource.height,
+        0,
+        0,
+        targetWidth,
+        targetHeight
+      );
+    } else {
+      context.drawImage(source.source, 0, 0, targetWidth, targetHeight);
+    }
 
     const outputCandidates = resolveThemeBackgroundOutputCandidates(fileType);
     let lastCandidate = null;
@@ -388,6 +467,24 @@ function buildThemeBackgroundStatusSummary(imageInfo) {
   return `Aktuelles Bild: ${imageInfo.mimeType}${sizeText}.`;
 }
 
+function readTurnDartImageInfo(feature) {
+  const info = parseDataUrlInfo(feature?.config?.turnDartImageDataUrl);
+  return {
+    ...info,
+    previewUrl: info.hasImage ? info.dataUrl : "",
+  };
+}
+
+function buildTurnDartImageStatusSummary(imageInfo) {
+  if (!imageInfo?.hasImage) {
+    return "Aktuelles Dart-Bild: keines.";
+  }
+
+  const sizeText =
+    imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : "";
+  return `Aktuelles Dart-Bild: ${imageInfo.mimeType}${sizeText}.`;
+}
+
 function buildThemeBackgroundUploadSuccessMessage(fileName, resized) {
   const normalizedFileName = String(fileName || "").trim();
   if (resized) {
@@ -451,6 +548,69 @@ export function applyThemeBackgroundStatusNode(documentRef, statusNode, feature)
   existingPreview?.remove?.();
 }
 
+export function applyTurnDartImageStatusNode(documentRef, statusNode, feature) {
+  if (!statusNode) {
+    return;
+  }
+
+  const imageInfo = readTurnDartImageInfo(feature);
+  statusNode.setAttribute(
+    "class",
+    imageInfo.hasImage
+      ? "ad-xconfig-theme-image-status ad-xconfig-turn-dart-image-status"
+      : "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty ad-xconfig-turn-dart-image-status"
+  );
+  statusNode.dataset.turnDartImageState = imageInfo.hasImage ? "present" : "empty";
+  statusNode.dataset.turnDartImageType = imageInfo.mimeType || "";
+  statusNode.dataset.turnDartImageSize = imageInfo.byteSize > 0 ? String(imageInfo.byteSize) : "";
+
+  let summaryNode = statusNode.querySelector?.(".ad-xconfig-theme-image-status-summary") || null;
+  if (!summaryNode && typeof documentRef?.createElement === "function") {
+    summaryNode = documentRef.createElement("p");
+    summaryNode.setAttribute("class", "ad-xconfig-theme-image-status-summary");
+    statusNode.appendChild(summaryNode);
+  }
+  if (summaryNode) {
+    summaryNode.textContent = buildTurnDartImageStatusSummary(imageInfo);
+  }
+
+  const existingPreview = statusNode.querySelector?.(".ad-xconfig-turn-dart-image-preview") || null;
+  if (imageInfo.hasImage) {
+    if (existingPreview) {
+      existingPreview.setAttribute("src", imageInfo.previewUrl);
+      existingPreview.setAttribute("alt", `${feature.title} Wurffeld-Dart-Bild`);
+      return;
+    }
+    if (typeof documentRef?.createElement === "function") {
+      const preview = documentRef.createElement("img");
+      preview.setAttribute(
+        "class",
+        "ad-xconfig-theme-image-preview ad-xconfig-turn-dart-image-preview"
+      );
+      preview.setAttribute("src", imageInfo.previewUrl);
+      preview.setAttribute("alt", `${feature.title} Wurffeld-Dart-Bild`);
+      preview.setAttribute("loading", "lazy");
+      preview.setAttribute("decoding", "async");
+      statusNode.appendChild(preview);
+    }
+    return;
+  }
+
+  existingPreview?.remove?.();
+}
+
+export function buildTurnDartImageStatus(documentRef, feature) {
+  const status = documentRef.createElement("div");
+  status.setAttribute(
+    "class",
+    "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty ad-xconfig-turn-dart-image-status"
+  );
+  status.dataset.adxconfigTurnDartImageStatus = "true";
+  status.dataset.featureKey = feature.featureKey;
+  applyTurnDartImageStatusNode(documentRef, status, feature);
+  return status;
+}
+
 export function buildThemeBackgroundStatus(documentRef, feature) {
   const status = documentRef.createElement("div");
   status.setAttribute("class", "ad-xconfig-theme-image-status ad-xconfig-theme-image-status--empty");
@@ -458,6 +618,81 @@ export function buildThemeBackgroundStatus(documentRef, feature) {
   status.dataset.featureKey = feature.featureKey;
   applyThemeBackgroundStatusNode(documentRef, status, feature);
   return status;
+}
+
+function createHiddenImageUploadInput(documentRef, accept) {
+  const input = documentRef.createElement("input");
+  input.type = "file";
+  input.accept = accept || "image/*";
+  input.tabIndex = -1;
+  if (typeof input.setAttribute === "function") {
+    input.setAttribute("aria-hidden", "true");
+  }
+  input.style.position = "fixed";
+  input.style.top = "0";
+  input.style.left = "-9999px";
+  input.style.width = "1px";
+  input.style.height = "1px";
+  input.style.opacity = "0";
+  input.style.pointerEvents = "none";
+  return input;
+}
+
+export function uploadNormalizedThemeImage(options = {}) {
+  const {
+    documentRef,
+    windowRef,
+    accept,
+    maxWidth,
+    maxHeight,
+    maxBytes,
+    trimTransparent,
+    onSuccess,
+    onError,
+    onUnsupported,
+    onFinally,
+  } = options;
+
+  if (typeof documentRef?.createElement !== "function") {
+    onUnsupported?.();
+    return;
+  }
+
+  const input = createHiddenImageUploadInput(documentRef, accept);
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (!file) {
+      input.onchange = null;
+      input.remove?.();
+      return;
+    }
+
+    const cleanup = () => {
+      input.onchange = null;
+      input.remove?.();
+    };
+
+    Promise.resolve(
+      normalizeThemeBackgroundUpload({
+        file,
+        windowRef,
+        documentRef,
+        maxWidth,
+        maxHeight,
+        maxBytes,
+        trimTransparent,
+      })
+    )
+      .then((normalizedImage) => onSuccess?.(normalizedImage, file))
+      .catch((error) => onError?.(error))
+      .finally(() => {
+        cleanup();
+        onFinally?.();
+      });
+  };
+
+  (documentRef.body || documentRef.documentElement).appendChild(input);
+  input.click?.();
 }
 
 export function uploadThemeBackgroundImage(options = {}) {
@@ -477,82 +712,45 @@ export function uploadThemeBackgroundImage(options = {}) {
   }
 
   const featureKey = String(feature?.featureKey || "").trim();
-  if (typeof documentRef?.createElement !== "function") {
-    setNotice?.("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
-    setThemeActionFeedback?.(
-      featureKey,
-      "error",
-      "Upload fehlgeschlagen: Diese Umgebung unterstützt keinen Bild-Upload."
-    );
-    return;
-  }
+  uploadNormalizedThemeImage({
+    documentRef,
+    windowRef,
+    maxWidth: options.maxWidth,
+    maxHeight: options.maxHeight,
+    maxBytes: options.maxBytes,
+    onUnsupported: () => {
+      setNotice?.("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
+      setThemeActionFeedback?.(
+        featureKey,
+        "error",
+        "Upload fehlgeschlagen: Diese Umgebung unterstützt keinen Bild-Upload."
+      );
+    },
+    onSuccess: (normalizedImage, file) => {
+      const fileName = String(file.name || "").trim();
+      const successMessage = buildThemeBackgroundUploadSuccessMessage(
+        fileName,
+        normalizedImage.resized
+      );
 
-  const input = documentRef.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.tabIndex = -1;
-  if (typeof input.setAttribute === "function") {
-    input.setAttribute("aria-hidden", "true");
-  }
-  input.style.position = "fixed";
-  input.style.top = "0";
-  input.style.left = "-9999px";
-  input.style.width = "1px";
-  input.style.height = "1px";
-  input.style.opacity = "0";
-  input.style.pointerEvents = "none";
-  input.onchange = () => {
-    const file = input.files?.[0];
-    if (!file) {
-      input.onchange = null;
-      input.remove?.();
-      return;
-    }
-
-    const cleanup = () => {
-      input.onchange = null;
-      input.remove?.();
-    };
-
-    Promise.resolve(
-      normalizeThemeBackgroundUpload({
-        file,
-        windowRef,
-        documentRef,
-        maxWidth: options.maxWidth,
-        maxHeight: options.maxHeight,
-        maxBytes: options.maxBytes,
-      })
-    )
-      .then((normalizedImage) => {
-        const fileName = String(file.name || "").trim();
-        const successMessage = buildThemeBackgroundUploadSuccessMessage(
-          fileName,
-          normalizedImage.resized
-        );
-
-        return Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, normalizedImage.dataUrl))
-          .then(() => {
-            setNotice?.("success", successMessage);
-            setThemeActionFeedback?.(featureKey, "success", successMessage);
-            syncThemeBackgroundIndicators?.(featureKey);
-          });
-      })
-      .catch((error) => {
-        const errorMessage = String(
-          error?.message || "Hintergrundbild konnte nicht gespeichert werden."
-        ).trim();
-        setNotice?.("error", errorMessage);
-        setThemeActionFeedback?.(featureKey, "error", errorMessage);
-      })
-      .finally(() => {
-        cleanup();
-        queueSync?.();
-      });
-  };
-
-  (documentRef.body || documentRef.documentElement).appendChild(input);
-  input.click?.();
+      return Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, normalizedImage.dataUrl))
+        .then(() => {
+          setNotice?.("success", successMessage);
+          setThemeActionFeedback?.(featureKey, "success", successMessage);
+          syncThemeBackgroundIndicators?.(featureKey);
+        });
+    },
+    onError: (error) => {
+      const errorMessage = String(
+        error?.message || "Hintergrundbild konnte nicht gespeichert werden."
+      ).trim();
+      setNotice?.("error", errorMessage);
+      setThemeActionFeedback?.(featureKey, "error", errorMessage);
+    },
+    onFinally: () => {
+      queueSync?.();
+    },
+  });
 }
 
 export function clearThemeBackgroundImage(options = {}) {

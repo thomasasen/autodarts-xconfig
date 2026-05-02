@@ -11,6 +11,14 @@ import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runti
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
 
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
+const DEFAULT_TURN_DART_CONFIG = Object.freeze({
+  turnDartStyle: "original",
+  turnDartTextTemplate: "",
+  turnDartColor: "#FFFFFF",
+  turnDartGradientColor: "#F97316",
+  turnDartSizePercent: 115,
+  turnDartImageDataUrl: "",
+});
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -1904,7 +1912,7 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   const sectionTitles = documentRef
     .querySelectorAll(".ad-xconfig-settings-section-title")
     .map((node) => String(node.textContent || "").trim());
-  assert.deepEqual(sectionTitles, ["Presets", "Schrift", "Farben", "Hintergrund"]);
+  assert.deepEqual(sectionTitles, ["Presets", "Schrift", "Farben", "Wurffeld-Darts", "Hintergrund"]);
 
   const presetButtons = documentRef.querySelectorAll(
     "[data-adxconfig-action='applyThemeGlobalPreset'][data-feature-key='theme-global-typography']"
@@ -2026,10 +2034,17 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   const colorFields = documentRef.querySelectorAll(
     "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography']"
   );
-  assert.equal(colorFields.length, 4);
+  assert.equal(colorFields.length, 6);
   assert.deepEqual(
     colorFields.map((node) => String(node.getAttribute("data-setting-key") || "").trim()),
-    ["accentColor", "scoreColor", "secondaryTextColor", "throwLabelColor"]
+    [
+      "accentColor",
+      "scoreColor",
+      "secondaryTextColor",
+      "throwLabelColor",
+      "turnDartColor",
+      "turnDartGradientColor",
+    ]
   );
   const backgroundSelectFields = documentRef.querySelectorAll(
     "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-control='select']"
@@ -2058,13 +2073,51 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     ),
     true
   );
+  assert.equal(
+    backgroundSelectFields.some(
+      (node) => node.getAttribute("data-setting-key") === "turnDartStyle"
+    ),
+    true
+  );
+  assert.equal(
+    backgroundSelectFields.some(
+      (node) => node.getAttribute("data-setting-key") === "turnDartSizePercent"
+    ),
+    true
+  );
   assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-uploadThemeBackground"));
   assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-clearThemeBackground"));
+  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-uploadTurnDartImage"));
+  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-clearTurnDartImage"));
+  const turnDartTextInput = documentRef.querySelector(
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='turnDartTextTemplate'][data-setting-control='text']"
+  );
+  assert.ok(turnDartTextInput);
+  assert.equal(turnDartTextInput.getAttribute("placeholder"), "Wurf #");
+  const turnDartImageStatus = documentRef.querySelector(
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(turnDartImageStatus);
+  assert.equal(turnDartImageStatus.getAttribute("data-turn-dart-image-state"), "empty");
+  assert.equal(
+    String(turnDartImageStatus.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
+    "Aktuelles Dart-Bild: keines."
+  );
 
   clickSelectSettingOption(documentRef, "theme-global-typography", "activePlayerTintIntensity", 20);
   await waitForStoredConfig(
     localStorage,
     (config) => config.features?.themes?.globalTypography?.activePlayerTintIntensity === 20
+  );
+
+  changeSettingInput(
+    documentRef,
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='turnDartTextTemplate']",
+    "Wurf #"
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.turnDartTextTemplate === "Wurf #"
   );
 
   changeSettingInput(
@@ -2218,6 +2271,7 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
     playerFieldTransparency: 30,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "cyberpunk",
+    ...DEFAULT_TURN_DART_CONFIG,
     debug: false,
   });
 
@@ -2642,6 +2696,65 @@ test("xConfig shell supports global background upload and clear actions for Temp
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "empty");
 
+  let turnDartStatus = documentRef.querySelector(
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(turnDartStatus);
+  assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-state"), "empty");
+
+  const uploadTurnDartButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-uploadTurnDartImage"
+  );
+  assert.ok(uploadTurnDartButton);
+  uploadTurnDartButton.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features.themes.globalTypography.turnDartStyle === "image" &&
+      config.features.themes.globalTypography.turnDartImageDataUrl ===
+        `data:image/webp;base64,${"g".repeat(40)}`
+  );
+
+  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.globalTypography.turnDartStyle, "image");
+  assert.equal(
+    storedConfig.features.themes.globalTypography.turnDartImageDataUrl,
+    `data:image/webp;base64,${"g".repeat(40)}`
+  );
+
+  turnDartStatus = documentRef.querySelector(
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(turnDartStatus);
+  assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-state"), "present");
+  assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-type"), "image/webp");
+  const turnDartPreview = turnDartStatus.querySelector(".ad-xconfig-turn-dart-image-preview");
+  assert.ok(turnDartPreview);
+  assert.equal(turnDartPreview.getAttribute("src"), `data:image/webp;base64,${"g".repeat(40)}`);
+
+  const clearTurnDartButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-clearTurnDartImage"
+  );
+  assert.ok(clearTurnDartButton);
+  clearTurnDartButton.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features.themes.globalTypography.turnDartStyle === "original" &&
+      config.features.themes.globalTypography.turnDartImageDataUrl === ""
+  );
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.themes.globalTypography.turnDartStyle, "original");
+  assert.equal(storedConfig.features.themes.globalTypography.turnDartImageDataUrl, "");
+
+  turnDartStatus = documentRef.querySelector(
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+  );
+  assert.ok(turnDartStatus);
+  assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-state"), "empty");
+  assert.equal(turnDartStatus.querySelector(".ad-xconfig-turn-dart-image-preview"), null);
+
   const uploadButton = documentRef.getElementById(
     "ad-xconfig-field-theme-global-typography-uploadThemeBackground"
   );
@@ -2654,7 +2767,7 @@ test("xConfig shell supports global background upload and clear actions for Temp
       `data:image/webp;base64,${"g".repeat(40)}`
   );
 
-  let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(
     storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
     `data:image/webp;base64,${"g".repeat(40)}`

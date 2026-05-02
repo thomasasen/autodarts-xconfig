@@ -170,6 +170,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
     clearThemeBackgroundImage: (options) => calls.push(["clear-theme", options.themeKey]),
     uploadThemeBackgroundImage: (options) => calls.push(["upload-theme", options.themeKey]),
     themeKeyFromConfigKey: (configKey) => (configKey === "themes.x01" ? "x01" : ""),
+    syncTurnDartImageIndicators: (featureKey) => calls.push(["sync-turn-dart", featureKey]),
   });
 
   controller.handleAction("check-update");
@@ -181,6 +182,10 @@ test("createShellActionController dispatches runtime, update and theme commands"
   });
   controller.handleAction("uploadThemeBackground", null, {
     configKey: "themes.x01",
+  });
+  controller.handleAction("clearTurnDartImage", null, {
+    featureKey: "theme-global-typography",
+    configKey: "themes.globalTypography",
   });
   controller.handleAction(
     "applyThemeGlobalPreset",
@@ -204,6 +209,19 @@ test("createShellActionController dispatches runtime, update and theme commands"
     "defaults",
     ["clear-theme", "x01"],
     ["upload-theme", "x01"],
+    [
+      "save-config",
+      {
+        features: {
+          themes: {
+            globalTypography: {
+              turnDartStyle: "original",
+              turnDartImageDataUrl: "",
+            },
+          },
+        },
+      },
+    ],
     [
       "confirm",
       'Preset "Cyberpunk" anwenden? Dadurch werden alle Einstellungen in Templates Global inklusive globalem Wallpaper überschrieben.',
@@ -236,6 +254,8 @@ test("createShellActionController dispatches runtime, update and theme commands"
         },
       },
     ],
+    ["sync-turn-dart", "theme-global-typography"],
+    "sync",
     "sync",
     "sync",
     "sync",
@@ -244,6 +264,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
     ["info", "Installations-Tab geöffnet. Bestätige das Update in Tampermonkey."],
     ["info", "Hard Reset ausgeführt."],
     ["info", "Empfohlene Standards angewendet."],
+    ["info", "Dart-Bild entfernt."],
     ["success", 'Preset "Cyberpunk" angewendet.'],
   ]);
 });

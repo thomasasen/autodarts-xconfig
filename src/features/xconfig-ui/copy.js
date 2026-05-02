@@ -151,6 +151,30 @@ const THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD = fieldCopy(
   "Regelt, wie stark der Aktiv-Akzent den Hintergrund aktiver Spielerfelder leicht einfärbt."
 );
 
+const THEME_GLOBAL_TURN_DART_STYLE_FIELD = fieldCopy(
+  "Ändert die Dart-Grafiken im Wurffeld oben im Spiel.",
+  "Legt fest, ob die Darts im Wurffeld original bleiben, als einfarbige SVG, als Verlauf oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Wurffeld-Darts, nicht die Board-Marker.",
+  "Ändert die Dart-Grafiken im Wurffeld."
+);
+
+const THEME_GLOBAL_TURN_DART_COLOR_FIELD = fieldCopy(
+  "Setzt die Hauptfarbe für einfarbige und verlaufende Wurffeld-Darts.",
+  "Bestimmt die Hauptfarbe der generierten Wurffeld-Darts. Im Verlaufsmodus bildet sie die Mitte des Verlaufs, im Farbmodus füllt sie den Dart vollständig.",
+  "Setzt die Hauptfarbe der Wurffeld-Darts."
+);
+
+const THEME_GLOBAL_TURN_DART_GRADIENT_FIELD = fieldCopy(
+  "Setzt die Startfarbe für den Verlauf der Wurffeld-Darts.",
+  "Bestimmt die zweite Farbe im Verlaufsmodus. Zusammen mit der Hauptfarbe entsteht eine horizontale Dart-Grafik mit leichter heller Spitze.",
+  "Setzt die zweite Verlaufsfarbe."
+);
+
+const THEME_GLOBAL_TURN_DART_SIZE_FIELD = fieldCopy(
+  "Vergrößert oder verkleinert die Wurffeld-Darts.",
+  "Regelt die dargestellte Größe der ersetzten Darts im Wurffeld. Die feste Höhe hält die Score-Leiste stabil, auch wenn ein eigenes Bild verwendet wird.",
+  "Regelt die Größe der Wurffeld-Darts."
+);
+
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY = deepFreeze({
   scores: optionCopy(
     "Greift bei stabilen Score- und Punkteanzeigen.",
@@ -213,13 +237,17 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.",
     visualDescription:
-      "Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden.",
+      "Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf oder eigenes Bild darstellen.",
     usefulWhen:
       "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
     images: [
       image(
         "Templates Global mit lila Aktiv-Akzent in AD xConfig",
         "template-theme-global-typography-xConfig.png"
+      ),
+      image(
+        "Templates Global Wurffeld-Darts mit Verlauf",
+        "template-global-turn-darts-gradient.png"
       ),
     ],
     fields: {
@@ -231,6 +259,25 @@ export const xconfigFeatureCopy = deepFreeze({
       secondaryTextColor: THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD,
       throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
       activePlayerTintIntensity: THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD,
+      turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_FIELD,
+      turnDartTextTemplate: fieldCopy(
+        "Zeigt statt der generierten Dart-Grafik einen Text pro Wurf an.",
+        "Schreibt einen Text in die drei Wurffeld-Dartfelder, solange kein eigenes Dart-Bild gespeichert ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.",
+        "Zeigt Wurftext mit `#` als Nummernplatzhalter an."
+      ),
+      turnDartColor: THEME_GLOBAL_TURN_DART_COLOR_FIELD,
+      turnDartGradientColor: THEME_GLOBAL_TURN_DART_GRADIENT_FIELD,
+      turnDartSizePercent: THEME_GLOBAL_TURN_DART_SIZE_FIELD,
+      uploadTurnDartImage: fieldCopy(
+        "Speichert ein eigenes Bild für die drei Wurffeld-Darts.",
+        "Öffnet die Dateiauswahl und speichert ein eigenes Bild für die drei Darts im Wurffeld. Empfohlen sind transparente PNG-, WebP- oder SVG-Dateien, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
+        "Speichert ein eigenes Wurffeld-Dart-Bild bis 350 KB."
+      ),
+      clearTurnDartImage: fieldCopy(
+        "Entfernt nur das gespeicherte Wurffeld-Dart-Bild.",
+        "Löscht das in Templates Global gespeicherte Wurffeld-Dart-Bild und stellt die Wurffeld-Darts wieder auf `Original`. Farben, Verläufe und andere Templates-Global-Werte bleiben erhalten.",
+        "Entfernt das gespeicherte Wurffeld-Dart-Bild."
+      ),
       backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
       backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
       playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
@@ -1288,6 +1335,47 @@ const THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY = deepFreeze({
     "Macht die Aktivkarten-Tönung am stärksten sichtbar.",
     "Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten sehr deutlich. Diese Stufe ist die markanteste Variante und verändert den Kartencharakter am stärksten.",
     "Die Aktivkarten-Tönung wird maximal sichtbar und prägt den Kartenhintergrund stark."
+  ),
+});
+
+const THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY = deepFreeze({
+  original: optionCopy(
+    "Belässt die Autodarts-Darts unverändert.",
+    "Die drei Dart-Grafiken im Wurffeld bleiben im Originalzustand von Autodarts.",
+    "Belässt die Wurffeld-Darts unverändert."
+  ),
+  solid: optionCopy(
+    "Ersetzt die Wurffeld-Darts durch eine einfarbige SVG-Grafik.",
+    "Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik in der gewählten Dart-Farbe ersetzt.",
+    "Nutzt eine einfarbige Dart-Grafik."
+  ),
+  gradient: optionCopy(
+    "Ersetzt die Wurffeld-Darts durch eine verlaufende SVG-Grafik.",
+    "Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik mit Verlauf aus Verlaufsfarbe, Dart-Farbe und heller Spitze ersetzt.",
+    "Nutzt eine Dart-Grafik mit Verlauf."
+  ),
+  image: optionCopy(
+    "Nutzt das hochgeladene Bild als Wurffeld-Dart.",
+    "Die drei Dart-Grafiken im Wurffeld verwenden das in Templates Global gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.",
+    "Nutzt ein eigenes gespeichertes Dart-Bild."
+  ),
+});
+
+const THEME_GLOBAL_TURN_DART_SIZE_OPTION_COPY = deepFreeze({
+  "100": optionCopy(
+    "Hält die Darts nah an der Autodarts-Größe.",
+    "Die ersetzten Wurffeld-Darts bleiben kompakt und verändern die Leiste nur minimal.",
+    "Kompakte Wurffeld-Darts."
+  ),
+  "115": optionCopy(
+    "Verwendet die empfohlene Standardgröße.",
+    "Die Wurffeld-Darts werden etwas präsenter, bleiben aber innerhalb der üblichen Leistenhöhe.",
+    "Standardgröße für Wurffeld-Darts."
+  ),
+  "135": optionCopy(
+    "Macht die Wurffeld-Darts deutlich präsenter.",
+    "Die Wurffeld-Darts werden größer angezeigt. Das passt besonders für reduzierte oder transparente eigene Bilder.",
+    "Große Wurffeld-Darts."
   ),
 });
 
@@ -2467,6 +2555,8 @@ const xconfigFieldOptionCopy = deepFreeze({
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
+    turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY,
+    turnDartSizePercent: THEME_GLOBAL_TURN_DART_SIZE_OPTION_COPY,
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,

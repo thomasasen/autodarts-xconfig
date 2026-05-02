@@ -7,6 +7,7 @@ import {
 } from "./path-utils.js";
 import {
   buildThemeBackgroundStatus,
+  buildTurnDartImageStatus,
   formatThemeBackgroundSummary,
   resolveThemeBackgroundPreviewUrl,
 } from "./theme-background.js";
@@ -725,6 +726,9 @@ function buildFeatureField(documentRef, feature, field) {
         },
       }));
     }
+    if (field.action === "uploadTurnDartImage") {
+      wrapper.appendChild(buildTurnDartImageStatus(documentRef, feature));
+    }
     return wrapper;
   }
 
@@ -855,6 +859,31 @@ function buildFeatureField(documentRef, feature, field) {
     syncColorFieldControl(wrapper, {
       value: colorValue,
     });
+    return wrapper;
+  }
+
+  if (field.control === "text") {
+    const wrapper = createElement(documentRef, "div", {
+      className: "ad-xconfig-text-field",
+    });
+    const input = createElement(documentRef, "input", {
+      id: fieldId,
+      type: "text",
+      className: "ad-xconfig-text-input",
+      attributes: {
+        "data-adxconfig-setting": "true",
+        "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey,
+        "data-setting-key": field.key,
+        "data-setting-control": field.control,
+        autocomplete: "off",
+        spellcheck: "false",
+        placeholder: field.placeholder || "",
+        maxlength: field.maxLength > 0 ? String(field.maxLength) : undefined,
+      },
+    });
+    input.value = String(feature.config?.[field.key] || "");
+    wrapper.appendChild(input);
     return wrapper;
   }
 
