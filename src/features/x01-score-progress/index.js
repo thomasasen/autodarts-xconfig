@@ -9,6 +9,10 @@ import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom
 
 const FEATURE_KEY = "x01-score-progress";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const X01_MUTATION_AREA_SELECTOR = "#ad-ext-player-display, #ad-ext-turn";
+const X01_RELEVANT_SUBTREE_SELECTOR =
+  "#ad-ext-player-display, .ad-ext-player, .ad-ext-player-score, #ad-ext-turn";
+const GENERIC_X01_MUTATION_TAG_NAMES = new Set(["button", "span", "p"]);
 
 function createDebugState(featureDebug) {
   return {
@@ -143,26 +147,73 @@ function shouldWarnDebugState(debugInfo = {}) {
   return false;
 }
 
-function isRelevantX01Node(node) {
+function normalizeElementNode(node) {
   if (!node || typeof node !== "object") {
+    return null;
+  }
+
+  if (node.nodeType === 1) {
+    return node;
+  }
+
+  if (node.parentElement?.nodeType === 1) {
+    return node.parentElement;
+  }
+
+  if (node.parentNode?.nodeType === 1) {
+    return node.parentNode;
+  }
+
+  return null;
+}
+
+function isInsideX01MutationArea(element) {
+  if (!element) {
     return false;
   }
 
-  if (String(node.id || "").trim() === "ad-ext-player-display") {
+  if (typeof element.closest === "function") {
+    return Boolean(element.closest(X01_MUTATION_AREA_SELECTOR));
+  }
+
+  for (let current = element; current; current = current.parentNode || null) {
+    const currentElement = normalizeElementNode(current);
+    if (!currentElement) {
+      continue;
+    }
+    if (
+      String(currentElement.id || "").trim() === "ad-ext-player-display" ||
+      String(currentElement.id || "").trim() === "ad-ext-turn"
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isRelevantX01Node(node) {
+  const element = normalizeElementNode(node);
+  if (!element) {
+    return false;
+  }
+
+  if (String(element.id || "").trim() === "ad-ext-player-display") {
     return true;
   }
 
-  const tagName = String(node.tagName || node.nodeName || "").trim().toLowerCase();
-  if (tagName === "button" || tagName === "span" || tagName === "p") {
+  if (element.classList?.contains?.("ad-ext-player") || element.classList?.contains?.("ad-ext-player-score")) {
     return true;
   }
 
-  if (node.classList?.contains?.("ad-ext-player") || node.classList?.contains?.("ad-ext-player-score")) {
+  const isInsideX01Area = isInsideX01MutationArea(element);
+  if (isInsideX01Area) {
     return true;
   }
 
-  if (typeof node.closest === "function") {
-    return Boolean(node.closest("#ad-ext-player-display, #ad-ext-turn"));
+  const tagName = String(element.tagName || element.nodeName || "").trim().toLowerCase();
+  if (GENERIC_X01_MUTATION_TAG_NAMES.has(tagName)) {
+    return false;
   }
 
   return false;
@@ -177,7 +228,7 @@ function nodeContainsRelevantX01Node(node) {
     return false;
   }
 
-  return Boolean(node.querySelector("#ad-ext-player-display, .ad-ext-player, .ad-ext-player-score, #ad-ext-turn"));
+  return Boolean(node.querySelector(X01_RELEVANT_SUBTREE_SELECTOR));
 }
 
 function hasRelevantX01Mutation(mutations = [], isManagedNode = null) {

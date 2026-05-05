@@ -582,6 +582,166 @@ test("mountX01ScoreProgress ignores self-managed bar churn but reacts to player-
   cleanup();
 });
 
+test("mountX01ScoreProgress scopes generic mutation targets to X01 areas", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+
+  const turn = documentRef.createElement("div");
+  turn.id = "ad-ext-turn";
+  const turnPoints = documentRef.createElement("p");
+  turnPoints.classList.add("ad-ext-turn-points");
+  turnPoints.textContent = "60";
+  turn.appendChild(turnPoints);
+  documentRef.main.appendChild(turn);
+
+  const outsideButton = documentRef.createElement("button");
+  const outsideSpan = documentRef.createElement("span");
+  const outsideParagraph = documentRef.createElement("p");
+  documentRef.main.appendChild(outsideButton);
+  documentRef.main.appendChild(outsideSpan);
+  documentRef.main.appendChild(outsideParagraph);
+
+  const observerState = { callback: null };
+  const scheduleCounter = { count: 0 };
+  const cleanup = mountX01ScoreProgress({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: {
+        registerMutationObserver(options) {
+          observerState.callback = options.callback;
+        },
+        disconnect() {},
+      },
+    },
+    gameState: {
+      getSnapshot: () => ({
+        match: {
+          id: "match-progress-observer-scope",
+          variant: "X01 501",
+        },
+      }),
+      subscribe: () => () => {},
+    },
+    config: {
+      getFeatureConfig: () => ({
+        colorTheme: "checkout-focus",
+        barSize: "standard",
+        effect: "pulse-core",
+      }),
+    },
+    helpers: {
+      createRafScheduler() {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(typeof observerState.callback, "function");
+  const initialCount = scheduleCounter.count;
+
+  observerState.callback([
+    {
+      type: "attributes",
+      target: outsideButton,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+    {
+      type: "attributes",
+      target: outsideSpan,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+    {
+      type: "attributes",
+      target: outsideParagraph,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount);
+
+  observerState.callback([
+    {
+      type: "attributes",
+      target: player.scoreNode,
+      attributeName: "class",
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount + 1);
+
+  observerState.callback([
+    {
+      type: "characterData",
+      target: {
+        nodeType: 3,
+        nodeName: "#text",
+        parentElement: player.scoreNode,
+        parentNode: player.scoreNode,
+      },
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount + 2);
+
+  observerState.callback([
+    {
+      type: "characterData",
+      target: {
+        nodeType: 3,
+        nodeName: "#text",
+        parentNode: turnPoints,
+      },
+      addedNodes: [],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount + 3);
+
+  const subtree = documentRef.createElement("section");
+  const nestedPlayerDisplay = documentRef.createElement("div");
+  nestedPlayerDisplay.id = "ad-ext-player-display";
+  subtree.appendChild(nestedPlayerDisplay);
+
+  observerState.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [subtree],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(scheduleCounter.count, initialCount + 4);
+
+  cleanup();
+});
+
 test("syncScoreProgress keeps inactive styling untouched by active-only settings", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

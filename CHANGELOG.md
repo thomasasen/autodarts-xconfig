@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.12] - 2026-05-05
+
+### Changed
+
+- Nutzerwirkung: `X01 Score Progress` reagiert weiterhin auf Score-, Player- und Turn-Änderungen, bleibt bei fremden Menü- oder UI-Änderungen außerhalb des X01-Matchbereichs aber ruhiger.
+  Technik: Die lokale Mutation-Relevanzprüfung normalisiert Textknoten auf ihren Element-Kontext und wertet generische `button`-, `span`- und `p`-Targets nur noch innerhalb von `#ad-ext-player-display` oder `#ad-ext-turn` als relevant; eine fokussierte Runtime-Regression deckt externe generische Targets, Score-/Turn-Textknoten und relevante Subtrees ab.
+
 ## [2.3.11] - 2026-05-03
 
 ### Added
@@ -1554,7 +1561,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.11]: https://github.com/thomasasen/autodarts-xconfig/compare/367c667...HEAD
+[2.3.12]: https://github.com/thomasasen/autodarts-xconfig/compare/4e53c2e...HEAD
+[2.3.11]: https://github.com/thomasasen/autodarts-xconfig/compare/367c667...4e53c2e
 [2.3.10]: https://github.com/thomasasen/autodarts-xconfig/compare/f192692...367c667
 [2.3.9]: https://github.com/thomasasen/autodarts-xconfig/compare/d2d1473...f192692
 [2.3.8]: https://github.com/thomasasen/autodarts-xconfig/compare/9254b25...d2d1473
