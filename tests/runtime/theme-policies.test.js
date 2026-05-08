@@ -9,6 +9,12 @@ import {
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
 } from "../../src/features/themes/x01-2player/layout-contract.js";
+import {
+  X01_TWO_PLAYER_CURRENT_REMAINING_ATTRIBUTE,
+  X01_TWO_PLAYER_STALE_REMAINING_ATTRIBUTE,
+  X01_TWO_PLAYER_STALE_REMAINING_CLASS,
+  deriveX01TwoPlayerScoreboardRowState,
+} from "../../src/features/themes/x01-2player/scoreboard-state.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -70,6 +76,34 @@ function createX01TwoPlayerCard(documentRef, score, name) {
     scoreNode,
     tableSlot,
   };
+}
+
+function replaceScoreboardRows(documentRef, player, rows) {
+  const tableNode = player.tableSlot.querySelector("table");
+  tableNode.replaceChildren();
+
+  rows.forEach(([scoreText, remainingText]) => {
+    const rowNode = documentRef.createElement("tr");
+    const scoreCell = documentRef.createElement("td");
+    const remainingCell = documentRef.createElement("td");
+    scoreCell.textContent = scoreText;
+    remainingCell.textContent = remainingText;
+    rowNode.appendChild(scoreCell);
+    rowNode.appendChild(remainingCell);
+    tableNode.appendChild(rowNode);
+  });
+
+  return tableNode;
+}
+
+function getScoreboardCells(tableNode) {
+  return Array.from(tableNode.querySelectorAll("tr")).map((rowNode) => {
+    const cells = Array.from(rowNode.children);
+    return {
+      scoreCell: cells[0],
+      remainingCell: cells[1],
+    };
+  });
 }
 
 test("resolveThemePolicy returns specialized policies for cricket and x01 2player only", () => {
@@ -151,6 +185,122 @@ test("theme-x01-2player policy marks active cards and semantic slots without res
   assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.tableSlot.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+});
+
+test("x01 2player scoreboard state marks only older remaining values stale", () => {
+  const initialRowStates = deriveX01TwoPlayerScoreboardRowState([
+    { scoreText: "", remainingText: "501" },
+  ]);
+  const rowStates = deriveX01TwoPlayerScoreboardRowState([
+    { scoreText: "", remainingText: "501" },
+    { scoreText: "60", remainingText: "441" },
+    { scoreText: "29", remainingText: "412" },
+  ]);
+
+  assert.deepEqual(
+    initialRowStates.map((rowState) => ({
+      current: rowState.isCurrentRemaining,
+      stale: rowState.isStaleRemaining,
+      strike: rowState.shouldStrikeRemaining,
+    })),
+    [{ current: true, stale: false, strike: false }]
+  );
+  assert.deepEqual(
+    rowStates.map((rowState) => ({
+      current: rowState.isCurrentRemaining,
+      stale: rowState.isStaleRemaining,
+      strike: rowState.shouldStrikeRemaining,
+    })),
+    [
+      { current: false, stale: true, strike: true },
+      { current: false, stale: true, strike: true },
+      { current: true, stale: false, strike: false },
+    ]
+  );
+});
+
+test("theme-x01-2player policy strikes stale remaining cells per player and recomputes after correction", () => {
+  const documentRef = new FakeDocument();
+  const playerDisplayNode = documentRef.createElement("div");
+  playerDisplayNode.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplayNode);
+
+  const firstPlayer = createX01TwoPlayerCard(documentRef, 412, "A");
+  const secondPlayer = createX01TwoPlayerCard(documentRef, 401, "B");
+  const firstTable = replaceScoreboardRows(documentRef, firstPlayer, [
+    ["", "501"],
+    ["60", "441"],
+    ["29", "412"],
+  ]);
+  const secondTable = replaceScoreboardRows(documentRef, secondPlayer, [
+    ["", "501"],
+    ["100", "401"],
+  ]);
+  playerDisplayNode.appendChild(firstPlayer.wrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.wrapperNode);
+
+  const policy = resolveThemePolicy({ featureKey: "theme-x01-2player" });
+  const themeState = policy.createState();
+  policy.onActivate({
+    documentRef,
+    gameState: {
+      getActivePlayerIndex() {
+        return 0;
+      },
+    },
+    themeState,
+  });
+
+  const firstCells = getScoreboardCells(firstTable);
+  assert.equal(firstCells[0].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), true);
+  assert.equal(firstCells[1].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), true);
+  assert.equal(firstCells[2].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), false);
+  assert.equal(firstCells[2].remainingCell.getAttribute(X01_TWO_PLAYER_CURRENT_REMAINING_ATTRIBUTE), "true");
+  assert.equal(firstCells[1].remainingCell.getAttribute(X01_TWO_PLAYER_STALE_REMAINING_ATTRIBUTE), "true");
+  assert.equal(firstCells[1].scoreCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), false);
+
+  const secondCells = getScoreboardCells(secondTable);
+  assert.equal(secondCells[0].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), true);
+  assert.equal(secondCells[1].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), false);
+  assert.equal(secondCells[1].remainingCell.getAttribute(X01_TWO_PLAYER_CURRENT_REMAINING_ATTRIBUTE), "true");
+
+  firstTable.removeChild(firstTable.children[2]);
+  policy.onActivate({
+    documentRef,
+    gameState: {
+      getActivePlayerIndex() {
+        return 0;
+      },
+    },
+    themeState,
+  });
+
+  const correctedCells = getScoreboardCells(firstTable);
+  assert.equal(correctedCells[0].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), true);
+  assert.equal(correctedCells[1].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), false);
+  assert.equal(correctedCells[1].remainingCell.getAttribute(X01_TWO_PLAYER_CURRENT_REMAINING_ATTRIBUTE), "true");
+
+  policy.onDeactivate({
+    documentRef,
+    themeState,
+  });
+
+  assert.equal(correctedCells[0].remainingCell.classList.contains(X01_TWO_PLAYER_STALE_REMAINING_CLASS), false);
+  assert.equal(correctedCells[0].remainingCell.getAttribute(X01_TWO_PLAYER_STALE_REMAINING_ATTRIBUTE), null);
+  assert.equal(correctedCells[1].remainingCell.getAttribute(X01_TWO_PLAYER_CURRENT_REMAINING_ATTRIBUTE), null);
+});
+
+test("x01 2player scoreboard state keeps a displayed bust remainder current", () => {
+  const rowStates = deriveX01TwoPlayerScoreboardRowState([
+    { scoreText: "", remainingText: "501" },
+    { scoreText: "60", remainingText: "441" },
+    { scoreText: "BUST", remainingText: "441" },
+  ]);
+
+  assert.equal(rowStates[0].shouldStrikeRemaining, true);
+  assert.equal(rowStates[1].shouldStrikeRemaining, true);
+  assert.equal(rowStates[2].isCurrentRemaining, true);
+  assert.equal(rowStates[2].shouldStrikeRemaining, false);
 });
 
 test("mountThemeFeature honors an injected policy without changing the theme lifecycle", async () => {

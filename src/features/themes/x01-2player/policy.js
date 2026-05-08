@@ -6,6 +6,11 @@ import {
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
 } from "./layout-contract.js";
+import {
+  clearX01TwoPlayerScoreboardState,
+  isX01TwoPlayerScoreboardStateMutation,
+  syncX01TwoPlayerScoreboardState,
+} from "./scoreboard-state.js";
 
 const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
 const PLAYER_CARD_SELECTOR = `${PLAYER_DISPLAY_SELECTOR} .ad-ext-player`;
@@ -727,15 +732,21 @@ export function syncX01TwoPlayerLayoutState(documentRef, gameState) {
     }
 
     markSlot(findTableSlot(cardNode, stackNode), X01_TWO_PLAYER_SLOTS.table);
+    syncX01TwoPlayerScoreboardState(cardNode);
   });
 }
 
 export function clearX01TwoPlayerLayoutState(documentRef) {
   clearPlayerMarkers(documentRef);
+  clearX01TwoPlayerScoreboardState(documentRef);
 }
 
 export function hasX01TwoPlayerPlayerStateMutation(mutations = []) {
   if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+
+  if (mutations.every((mutation) => isX01TwoPlayerScoreboardStateMutation(mutation))) {
     return false;
   }
 

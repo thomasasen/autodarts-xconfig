@@ -7,6 +7,7 @@ import {
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
 } from "./layout-contract.js";
+import { X01_TWO_PLAYER_STALE_REMAINING_CLASS } from "./scoreboard-state.js";
 
 export const STYLE_ID = "ad-ext-theme-x01-2player-style";
 
@@ -1260,6 +1261,13 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 
 #ad-ext-player-display .ad-ext-player table td{
   min-height:var(--ad-ext-x01-2player-table-cell-min-height) !important;
+}
+
+#ad-ext-player-display .ad-ext-player table td.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}{
+  text-decoration-line:line-through !important;
+  text-decoration-thickness:0.08em !important;
+  text-decoration-color:rgba(239, 247, 242, 0.72) !important;
+  opacity:0.74 !important;
 }
 
 .ad-ext-theme-board-panel{

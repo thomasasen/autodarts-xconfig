@@ -13,6 +13,7 @@ import {
   PREVIEW_PLACEMENT as PREVIEW_X01_TWO_PLAYER,
   buildX01TwoPlayerThemeCss,
 } from "../../src/features/themes/x01-2player/style.js";
+import { X01_TWO_PLAYER_STALE_REMAINING_CLASS } from "../../src/features/themes/x01-2player/scoreboard-state.js";
 import {
   PREVIEW_PLACEMENT as PREVIEW_SHANGHAI,
   buildShanghaiThemeCss,
@@ -318,6 +319,13 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(
     css,
     /#ad-ext-player-display\s+\.ad-ext-player\s+table\s+td,\s*#ad-ext-player-display\s+\.ad-ext-player\s+table\s+th\{[^}]*font-size:var\(--ad-ext-x01-2player-table-cell-font-size\)\s*!important;[^}]*text-align:center\s*!important;/s
+  );
+  assert.match(
+    css,
+    new RegExp(
+      `#ad-ext-player-display\\s+\\.ad-ext-player\\s+table\\s+td\\.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}\\{[^}]*text-decoration-line:line-through\\s*!important;[^}]*opacity:0\\.74\\s*!important;`,
+      "s"
+    )
   );
   assert.match(
     css,
