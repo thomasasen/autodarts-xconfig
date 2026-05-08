@@ -81,8 +81,19 @@ p.chakra-text.css-1j0bqop{
   --ad-ext-theme-meta-inactive-color:var(--ad-ext-theme-meta-color);
   --ad-ext-theme-turn-points-color:#f4f8f6;
   --ad-ext-theme-throw-label-color:rgba(244, 248, 246, 0.72);
-  --ad-ext-x01-2player-side-width:clamp(15.75rem, 18.5vw, 20.75rem);
   --ad-ext-x01-2player-column-gap:clamp(0.9rem, 1.6vw, 1.4rem);
+  --ad-ext-x01-2player-center-min-width:48rem;
+  --ad-ext-x01-2player-side-width:clamp(
+    17rem,
+    22vw,
+    min(
+      23.5rem,
+      calc(
+        (100vw - var(--ad-ext-x01-2player-center-min-width) - (2 * var(--ad-ext-x01-2player-column-gap)))
+        / 2
+      )
+    )
+  );
   --ad-ext-x01-2player-row-gap:clamp(0.6rem, 1.1vw, 0.95rem);
   --ad-ext-x01-2player-turn-height:clamp(4.1rem, 5.6vw, 4.9rem);
   --ad-ext-x01-2player-live-turn-height:var(--ad-ext-x01-2player-turn-height);
@@ -323,8 +334,8 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 }
 
 #ad-ext-player-display .ad-ext-player{
-  --ad-ext-x01-2player-score-size:clamp(7.056rem, min(27.8cqi, 18cqb, 15vh), 11.2rem);
-  --ad-ext-x01-2player-score-scale:1.2;
+  --ad-ext-x01-2player-score-size:clamp(5.6rem, min(43cqi, 17cqb, 14.2vh), 10.4rem);
+  --ad-ext-x01-2player-score-scale:1;
   --ad-ext-x01-2player-table-font-size:clamp(0.92rem, min(3.8cqi, 1.72cqb, 1.85vh), 1.08rem);
   --ad-ext-x01-2player-table-cell-font-size:clamp(2rem, min(8.4cqi, 5.2cqb, 5.4vh), 2.75rem);
   --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 4.1cqb, 4.6vh), 3.15rem);
@@ -333,7 +344,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-header-meta-pad-block-end:clamp(0.08rem, 0.22vh, 0.16rem);
   --ad-ext-x01-2player-identity-pad-block-end:clamp(0.08rem, 0.24vh, 0.18rem);
   --ad-ext-x01-2player-score-pad-block:clamp(0.16rem, 0.38vh, 0.3rem);
-  --ad-ext-x01-2player-score-min-block-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale) * 0.72);
+  --ad-ext-x01-2player-score-min-block-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale) * 0.76);
   --ad-ext-x01-2player-progress-pad-block-start:clamp(0.08rem, 0.24vh, 0.18rem);
   min-width:0 !important;
   min-height:clamp(18rem, 58vh, 34rem) !important;
@@ -1232,8 +1243,10 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 
 .ad-ext-theme-board-viewport{
   min-height:0 !important;
+  width:100% !important;
   height:100% !important;
   align-self:stretch !important;
+  justify-self:stretch !important;
   display:grid !important;
   place-items:center center !important;
   padding-bottom:0.15rem !important;

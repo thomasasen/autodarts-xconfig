@@ -152,12 +152,12 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(css, /ad-ext-turn-preview-space/);
   assert.match(
     css,
-    /--ad-ext-x01-2player-side-width:clamp\(15\.75rem,\s*18\.5vw,\s*20\.75rem\);[^}]*--ad-ext-x01-2player-live-turn-height:var\(--ad-ext-x01-2player-turn-height\);[^}]*--ad-ext-x01-2player-throw-points-size:clamp\(1\.2rem,\s*1\.8vw,\s*1\.65rem\);[^}]*--ad-ext-x01-2player-live-throw-points-size:var\(--ad-ext-x01-2player-throw-points-size\);[^}]*--ad-ext-x01-2player-turn-clearance:clamp\(0\.28rem,\s*0\.58vh,\s*0\.5rem\);[^}]*--ad-ext-x01-2player-controls-height:clamp\(1\.95rem,\s*3\.2vh,\s*2\.3rem\);[^}]*--ad-ext-x01-2player-board-gap:clamp\(0\.32rem,\s*0\.6vh,\s*0\.52rem\);[^}]*--ad-ext-x01-2player-board-top-pad:calc\(\s*var\(--ad-ext-x01-2player-live-turn-height\)\s*\+\s*var\(--ad-ext-x01-2player-turn-clearance\)\s*\+\s*var\(--ad-ext-x01-2player-controls-height\)\s*\+\s*var\(--ad-ext-x01-2player-board-gap\)\s*\);/s
+    /--ad-ext-x01-2player-column-gap:clamp\(0\.9rem,\s*1\.6vw,\s*1\.4rem\);[^}]*--ad-ext-x01-2player-center-min-width:48rem;[^}]*--ad-ext-x01-2player-side-width:clamp\(\s*17rem,\s*22vw,\s*min\(\s*23\.5rem,\s*calc\(\s*\(100vw - var\(--ad-ext-x01-2player-center-min-width\) - \(2 \* var\(--ad-ext-x01-2player-column-gap\)\)\)\s*\/ 2\s*\)\s*\)\s*\);[^}]*--ad-ext-x01-2player-live-turn-height:var\(--ad-ext-x01-2player-turn-height\);[^}]*--ad-ext-x01-2player-throw-points-size:clamp\(1\.2rem,\s*1\.8vw,\s*1\.65rem\);[^}]*--ad-ext-x01-2player-live-throw-points-size:var\(--ad-ext-x01-2player-throw-points-size\);[^}]*--ad-ext-x01-2player-turn-clearance:clamp\(0\.28rem,\s*0\.58vh,\s*0\.5rem\);[^}]*--ad-ext-x01-2player-controls-height:clamp\(1\.95rem,\s*3\.2vh,\s*2\.3rem\);[^}]*--ad-ext-x01-2player-board-gap:clamp\(0\.32rem,\s*0\.6vh,\s*0\.52rem\);[^}]*--ad-ext-x01-2player-board-top-pad:calc\(\s*var\(--ad-ext-x01-2player-live-turn-height\)\s*\+\s*var\(--ad-ext-x01-2player-turn-clearance\)\s*\+\s*var\(--ad-ext-x01-2player-controls-height\)\s*\+\s*var\(--ad-ext-x01-2player-board-gap\)\s*\);/s
   );
   assert.match(css, /--theme-player-badge-bg:transparent;[^}]*--theme-player-name-bg:transparent;[^}]*--theme-current-bg:transparent;/s);
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(7\.056rem,\s*min\(27\.8cqi,\s*18cqb,\s*15vh\),\s*11\.2rem\);[^}]*--ad-ext-x01-2player-score-scale:1\.2;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.72\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(5\.6rem,\s*min\(43cqi,\s*17cqb,\s*14\.2vh\),\s*10\.4rem\);[^}]*--ad-ext-x01-2player-score-scale:1;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.76\);/s
   );
   assert.match(
     css,
@@ -310,6 +310,10 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(
     css,
     /\.ad-ext-theme-board-controls\s*>\s*\*,\s*\.ad-ext-theme-board-controls\s+button\{[^}]*min-height:calc\(var\(--ad-ext-x01-2player-controls-height\) - 0\.24rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-viewport\{[^}]*width:100%\s*!important;[^}]*height:100%\s*!important;[^}]*justify-self:stretch\s*!important;/s
   );
   assert.match(
     css,
