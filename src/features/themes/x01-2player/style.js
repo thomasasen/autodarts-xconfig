@@ -1264,10 +1264,22 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 }
 
 #ad-ext-player-display .ad-ext-player table td.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}{
-  text-decoration-line:line-through !important;
-  text-decoration-thickness:0.08em !important;
-  text-decoration-color:rgba(239, 247, 242, 0.72) !important;
+  position:relative !important;
   opacity:0.74 !important;
+}
+
+#ad-ext-player-display .ad-ext-player table td.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0.14em 0.22em !important;
+  pointer-events:none !important;
+  background:linear-gradient(
+    to bottom right,
+    transparent calc(50% - 0.045em),
+    rgba(239, 247, 242, 0.78) calc(50% - 0.045em),
+    rgba(239, 247, 242, 0.78) calc(50% + 0.045em),
+    transparent calc(50% + 0.045em)
+  ) !important;
 }
 
 .ad-ext-theme-board-panel{

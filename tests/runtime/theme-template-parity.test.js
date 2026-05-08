@@ -323,7 +323,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(
     css,
     new RegExp(
-      `#ad-ext-player-display\\s+\\.ad-ext-player\\s+table\\s+td\\.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}\\{[^}]*text-decoration-line:line-through\\s*!important;[^}]*opacity:0\\.74\\s*!important;`,
+      `#ad-ext-player-display\\s+\\.ad-ext-player\\s+table\\s+td\\.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}\\{[^}]*position:relative\\s*!important;[^}]*opacity:0\\.74\\s*!important;[^}]*\\}\\s*#ad-ext-player-display\\s+\\.ad-ext-player\\s+table\\s+td\\.${X01_TWO_PLAYER_STALE_REMAINING_CLASS}::after\\{[^}]*background:linear-gradient\\(\\s*to bottom right,`,
       "s"
     )
   );
