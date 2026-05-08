@@ -181,7 +181,7 @@ div.chakra-stack.navigation.css-ege71s{
   grid-column:2 !important;
   grid-row:2 !important;
   display:grid !important;
-  grid-template-columns:minmax(5.4rem, 6.4rem) repeat(3, minmax(9.5rem, 1fr)) !important;
+  grid-template-columns:max-content repeat(3, minmax(9.5rem, 1fr)) !important;
   gap:0.8rem !important;
   align-items:stretch !important;
   width:100% !important;
@@ -194,6 +194,12 @@ div.chakra-stack.navigation.css-ege71s{
 #ad-ext-turn > *{
   min-width:0 !important;
   pointer-events:auto !important;
+}
+
+#ad-ext-turn > :first-child{
+  box-sizing:border-box !important;
+  padding-inline:0 !important;
+  overflow:visible !important;
 }
 
 #ad-ext-turn > .score,
@@ -227,7 +233,11 @@ div.chakra-stack.navigation.css-ege71s{
 
 #ad-ext-turn .ad-ext-turn-points{
   display:inline-block !important;
-  min-width:3.3ch !important;
+  box-sizing:border-box !important;
+  min-width:0 !important;
+  width:max-content !important;
+  max-width:none !important;
+  padding-inline:clamp(0.24rem, 0.48vw, 0.42rem) !important;
   text-align:center !important;
   font-size:var(--ad-ext-x01-2player-live-throw-points-size) !important;
   font-weight:800 !important;

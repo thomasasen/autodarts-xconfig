@@ -278,7 +278,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*min-width:3\.3ch\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;[^}]*font-weight:800\s*!important;[^}]*line-height:1\s*!important;/s
+    /#ad-ext-turn\s*\{[^}]*grid-template-columns:max-content repeat\(3,\s*minmax\(9\.5rem,\s*1fr\)\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s*>\s*:first-child\{[^}]*padding-inline:0\s*!important;[^}]*overflow:visible\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*min-width:0\s*!important;[^}]*width:max-content\s*!important;[^}]*max-width:none\s*!important;[^}]*padding-inline:clamp\(0\.24rem,\s*0\.48vw,\s*0\.42rem\)\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;[^}]*font-weight:800\s*!important;[^}]*line-height:1\s*!important;/s
   );
   assert.match(
     css,
