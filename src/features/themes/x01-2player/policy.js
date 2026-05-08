@@ -12,7 +12,13 @@ const PLAYER_CARD_SELECTOR = `${PLAYER_DISPLAY_SELECTOR} .ad-ext-player`;
 const TURN_CONTAINER_SELECTOR = "#ad-ext-turn";
 const LIVE_TURN_HEIGHT_VARIABLE = "--ad-ext-x01-2player-live-turn-height";
 const LIVE_THROW_POINTS_SIZE_VARIABLE = "--ad-ext-x01-2player-live-throw-points-size";
+const SHARED_PLAYER_NAME_SIZE_VARIABLE = "--ad-ext-x01-2player-shared-name-size";
 const SCORE_PROGRESS_HOST_SELECTOR = '[data-ad-ext-x01-score-progress="true"]';
+const PLAYER_NAME_SELECTOR = ".ad-ext-player-name";
+const PLAYER_NAME_MIN_SIZE_PX = 18;
+const PLAYER_NAME_MAX_SIZE_PX = 96;
+const PLAYER_NAME_WIDTH_CLEARANCE_PX = 4;
+const PLAYER_NAME_FALLBACK_WIDTH_FACTOR = 0.62;
 const TURN_THROW_FONT_SOURCE_SELECTORS = Object.freeze([
   ".ad-ext-turn-throw .ad-ext-hit-score",
   ".ad-ext-turn-throw p.chakra-text",
@@ -81,6 +87,150 @@ function clearLiveTurnHeight(documentRef, themeState = {}) {
   }
   themeState.lastMeasuredTurnHeightPx = 0;
   themeState.lastMeasuredThrowPointsFontSize = "";
+}
+
+function getPlayerDisplayNode(documentRef) {
+  if (!documentRef || typeof documentRef.querySelector !== "function") {
+    return null;
+  }
+
+  try {
+    return documentRef.querySelector(PLAYER_DISPLAY_SELECTOR) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearSharedPlayerNameSize(documentRef, themeState = {}) {
+  const playerDisplayNode = getPlayerDisplayNode(documentRef);
+  playerDisplayNode?.style?.removeProperty?.(SHARED_PLAYER_NAME_SIZE_VARIABLE);
+  themeState.lastMeasuredSharedPlayerNameSizePx = 0;
+}
+
+function getNodeText(node) {
+  return String(node?.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function resolveNameTextNode(nameNode) {
+  if (!nameNode || typeof nameNode.querySelector !== "function") {
+    return nameNode || null;
+  }
+
+  return nameNode.querySelector("p") || nameNode;
+}
+
+function getComputedFontValue(windowRef, node, propertyName, fallbackValue) {
+  if (!node || typeof windowRef?.getComputedStyle !== "function") {
+    return fallbackValue;
+  }
+
+  try {
+    return String(windowRef.getComputedStyle(node)?.[propertyName] || "").trim() || fallbackValue;
+  } catch (_) {
+    return fallbackValue;
+  }
+}
+
+function getNameMeasureContext(documentRef, themeState = {}) {
+  if (themeState.nameMeasureContext) {
+    return themeState.nameMeasureContext;
+  }
+
+  const canvas =
+    documentRef && typeof documentRef.createElement === "function"
+      ? documentRef.createElement("canvas")
+      : null;
+  const context =
+    canvas && typeof canvas.getContext === "function" ? canvas.getContext("2d") : null;
+  themeState.nameMeasureContext = context || null;
+  return themeState.nameMeasureContext;
+}
+
+function measurePlayerNameWidthPx(documentRef, themeState, windowRef, nameTextNode, fontSizePx) {
+  const text = getNodeText(nameTextNode);
+  if (!text) {
+    return 0;
+  }
+
+  const measureContext = getNameMeasureContext(documentRef, themeState);
+  if (measureContext && typeof measureContext.measureText === "function") {
+    const fontWeight = getComputedFontValue(windowRef, nameTextNode, "fontWeight", "800");
+    const fontFamily = getComputedFontValue(windowRef, nameTextNode, "fontFamily", "sans-serif");
+    measureContext.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+    const measuredWidth = Number(measureContext.measureText(text)?.width) || 0;
+    if (measuredWidth > 0) {
+      return measuredWidth;
+    }
+  }
+
+  return text.length * fontSizePx * PLAYER_NAME_FALLBACK_WIDTH_FACTOR;
+}
+
+function findPlayerNameFitSizePx(documentRef, themeState, windowRef, stackNode, nameTextNode) {
+  const stackRect = stackNode?.getBoundingClientRect?.() || {};
+  const availableWidthPx =
+    Math.max(0, Number(stackRect.width) || 0) - PLAYER_NAME_WIDTH_CLEARANCE_PX;
+  if (!(availableWidthPx > 0) || !nameTextNode) {
+    return PLAYER_NAME_MIN_SIZE_PX;
+  }
+
+  let minSize = PLAYER_NAME_MIN_SIZE_PX;
+  let maxSize = PLAYER_NAME_MAX_SIZE_PX;
+  for (let index = 0; index < 16; index += 1) {
+    const candidateSize = (minSize + maxSize) / 2;
+    const measuredWidth = measurePlayerNameWidthPx(
+      documentRef,
+      themeState,
+      windowRef,
+      nameTextNode,
+      candidateSize
+    );
+    if (measuredWidth <= availableWidthPx) {
+      minSize = candidateSize;
+    } else {
+      maxSize = candidateSize;
+    }
+  }
+
+  return minSize;
+}
+
+function syncSharedPlayerNameSize(documentRef, themeState = {}, windowRef = null) {
+  const playerDisplayNode = getPlayerDisplayNode(documentRef);
+  if (!playerDisplayNode?.style || typeof playerDisplayNode.style.setProperty !== "function") {
+    clearSharedPlayerNameSize(documentRef, themeState);
+    return false;
+  }
+
+  const playerCards = getPlayerCards(documentRef);
+  const fittedNameSizes = playerCards
+    .map((cardNode) => {
+      const stackNode = findDirectPlayerStack(cardNode);
+      const nameNode = stackNode?.querySelector?.(PLAYER_NAME_SELECTOR) || null;
+      const nameTextNode = resolveNameTextNode(nameNode);
+      if (!stackNode || !getNodeText(nameTextNode)) {
+        return null;
+      }
+
+      return findPlayerNameFitSizePx(documentRef, themeState, windowRef, stackNode, nameTextNode);
+    })
+    .filter((sizePx) => Number.isFinite(sizePx) && sizePx > 0);
+
+  if (!fittedNameSizes.length) {
+    clearSharedPlayerNameSize(documentRef, themeState);
+    return false;
+  }
+
+  const nextSharedSizePx = Math.max(
+    PLAYER_NAME_MIN_SIZE_PX,
+    Math.min(PLAYER_NAME_MAX_SIZE_PX, ...fittedNameSizes)
+  );
+  const nextValue = `${nextSharedSizePx.toFixed(2)}px`;
+  playerDisplayNode.style.setProperty(SHARED_PLAYER_NAME_SIZE_VARIABLE, nextValue);
+
+  const didChange = nextValue !== String(themeState.lastMeasuredSharedPlayerNameSizePx || "");
+  themeState.lastMeasuredSharedPlayerNameSizePx = nextValue;
+  return didChange;
 }
 
 function findDirectThrowTextNode(throwRowNode) {
@@ -441,6 +591,8 @@ export function createX01TwoPlayerThemePolicy() {
         turnResizeObservedNode: null,
         lastMeasuredTurnHeightPx: 0,
         lastMeasuredThrowPointsFontSize: "",
+        lastMeasuredSharedPlayerNameSizePx: "",
+        nameMeasureContext: null,
       };
     },
     getObservedAttributeFilter() {
@@ -451,6 +603,7 @@ export function createX01TwoPlayerThemePolicy() {
     },
     onActivate(context = {}) {
       syncX01TwoPlayerLayoutState(context.documentRef, context.gameState);
+      syncSharedPlayerNameSize(context.documentRef, context.themeState, context.windowRef);
       ensureTurnResizeObserver(context);
     },
     onDeactivate(context = {}) {
@@ -464,6 +617,7 @@ export function createX01TwoPlayerThemePolicy() {
         context.themeState.turnResizeObserver = null;
       }
       clearLiveTurnHeight(context.documentRef, context.themeState);
+      clearSharedPlayerNameSize(context.documentRef, context.themeState);
       clearX01TwoPlayerLayoutState(context.documentRef);
     },
   });

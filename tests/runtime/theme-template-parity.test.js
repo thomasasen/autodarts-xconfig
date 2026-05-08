@@ -181,27 +181,27 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-stack="true"\]\{[^}]*grid-template-columns:minmax\(0,\s*1fr\)\s*!important;[^}]*grid-template-rows:max-content max-content minmax\(var\(--ad-ext-x01-2player-score-min-block-size\),\s*max-content\) max-content\s*!important;[^}]*row-gap:var\(--ad-ext-x01-2player-stack-gap\)\s*!important;[^}]*isolation:isolate\s*!important;/s
+    /\[data-ad-ext-x01-2player-stack="true"\]\{[^}]*grid-template-columns:var\(--ad-ext-x01-2player-round-size\) minmax\(0,\s*1fr\)\s*!important;[^}]*grid-template-rows:minmax\(var\(--ad-ext-x01-2player-round-size\),\s*max-content\) max-content minmax\(var\(--ad-ext-x01-2player-score-min-block-size\),\s*max-content\) max-content\s*!important;[^}]*column-gap:clamp\(0\.5rem,\s*2\.4cqi,\s*0\.75rem\)\s*!important;[^}]*isolation:isolate\s*!important;/s
   );
   assert.match(
     css,
-    /Final slot-order guard:[\s\S]*?grid-template-rows:max-content max-content minmax\(var\(--ad-ext-x01-2player-score-min-block-size\),\s*max-content\) max-content\s*!important;[\s\S]*?grid-template-areas:\s*"meta"\s*"identity"\s*"score"\s*"progress"\s*!important;/s
+    /Final slot-order guard:[\s\S]*?grid-template-rows:minmax\(var\(--ad-ext-x01-2player-round-size\),\s*max-content\) max-content minmax\(var\(--ad-ext-x01-2player-score-min-block-size\),\s*max-content\) max-content\s*!important;[\s\S]*?grid-template-areas:\s*"rounds meta"\s*"identity identity"\s*"score score"\s*"progress progress"\s*!important;/s
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*grid-row:1\s*!important;[^}]*display:grid\s*!important;[^}]*padding-block-end:var\(--ad-ext-x01-2player-header-meta-pad-block-end\)\s*!important;[^}]*background:transparent\s*!important;/s
+    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1\s*!important;[^}]*display:flex\s*!important;[^}]*min-height:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*background:transparent\s*!important;/s
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="identity"\]\{[^}]*grid-row:2\s*!important;[^}]*display:grid\s*!important;[^}]*grid-template-columns:max-content minmax\(0,\s*1fr\)\s*!important;[^}]*padding-block-end:var\(--ad-ext-x01-2player-identity-pad-block-end\)\s*!important;[^}]*background:transparent\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="identity"\]\{[^}]*grid-column:1 \/ -1\s*!important;[^}]*grid-row:2\s*!important;[^}]*display:block\s*!important;[^}]*padding:0\s*!important;[^}]*overflow:visible\s*!important;[^}]*background:transparent\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\{[^}]*display:block\s*!important;[^}]*font-size:clamp\(1\.2rem,\s*min\(7\.9cqi,\s*3\.25cqb\),\s*1\.82rem\)\s*!important;[^}]*line-height:0\.96\s*!important;[^}]*font-weight:800\s*!important;[^}]*text-transform:none\s*!important;[^}]*text-align:left\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p\{[^}]*display:block\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-player-name-font-size\)\s*!important;[^}]*line-height:0\.95\s*!important;[^}]*font-weight:800\s*!important;[^}]*letter-spacing:0\s*!important;[^}]*text-align:center\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.chakra-text\.css-11cuipc\{[^}]*display:block\s*!important;[^}]*white-space:nowrap\s*!important;[^}]*overflow-wrap:normal\s*!important;[^}]*text-overflow:ellipsis\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-name\s*>\s*p,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.chakra-text\.css-11cuipc\{[^}]*display:inline-block\s*!important;[^}]*width:auto\s*!important;[^}]*white-space:nowrap\s*!important;[^}]*overflow:visible\s*!important;[^}]*text-overflow:clip\s*!important;/s
   );
   assert.match(
     css,
@@ -213,19 +213,23 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*span\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8\{[^}]*display:flex\s*!important;[^}]*justify-content:center\s*!important;[^}]*width:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*height:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*background:#8fe28d\s*!important;[^}]*background-image:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*visibility:visible\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*span\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8\{[^}]*display:flex\s*!important;[^}]*justify-content:center\s*!important;[^}]*width:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*height:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*background:#8fe28d\s*!important;[^}]*background-image:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*visibility:visible\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\{[^}]*display:inline-grid\s*!important;[^}]*inline-size:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*block-size:clamp\(1\.9rem,\s*9\.8cqi,\s*2\.55rem\)\s*!important;[^}]*aspect-ratio:1 \/ 1\s*!important;[^}]*background:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*background-color:#8fe28d\s*!important;[^}]*color:#142112\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\{[^}]*display:inline-grid\s*!important;[^}]*inline-size:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*block-size:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*aspect-ratio:1 \/ 1\s*!important;[^}]*background:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*background-color:#8fe28d\s*!important;[^}]*color:#142112\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\s*>\s*p\{[^}]*font-size:clamp\(1\.02rem,\s*min\(5\.1cqi,\s*2\.18cqb\),\s*1\.28rem\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\s*>\s*p\{[^}]*font-size:calc\(var\(--ad-ext-x01-2player-round-size\) \* 0\.54\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\{[^}]*grid-template-columns:minmax\(0,\s*1fr\)\s*!important;[^}]*grid-auto-rows:max-content\s*!important;[^}]*row-gap:clamp\(0\.08rem,\s*0\.2vh,\s*0\.16rem\)\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:first-child\{[^}]*display:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\{[^}]*display:block\s*!important;[^}]*width:100%\s*!important;[^}]*row-gap:0\s*!important;/s
   );
   assert.match(
     css,
@@ -233,7 +237,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.chakra-badge,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-n2903v,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-3fr5p8\{[^}]*grid-column:1\s*!important;[^}]*justify-self:start\s*!important;[^}]*font-size:clamp\(0\.86rem,\s*min\(4\.2cqi,\s*1\.7cqb\),\s*1\.02rem\)\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.chakra-badge,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-n2903v,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-3fr5p8\{[^}]*display:none\s*!important;/s
   );
   assert.match(
     css,
@@ -285,15 +289,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="score"\]\.css-1r7jzhg,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-1r7jzhg\{[^}]*grid-column-start:1\s*!important;[^}]*grid-row-start:3\s*!important;[^}]*grid-row-end:4\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="score"\]\.css-1r7jzhg,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-1r7jzhg\{[^}]*grid-column-start:1\s*!important;[^}]*grid-column-end:-1\s*!important;[^}]*grid-row-start:3\s*!important;[^}]*grid-row-end:4\s*!important;/s
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="identity"\]\.css-37hv00,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-37hv00\{[^}]*display:grid\s*!important;[^}]*grid-row-start:2\s*!important;[^}]*grid-row-end:3\s*!important;[^}]*padding-left:0\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="identity"\]\.css-37hv00,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-37hv00\{[^}]*display:block\s*!important;[^}]*grid-column-start:1\s*!important;[^}]*grid-column-end:-1\s*!important;[^}]*grid-row-start:2\s*!important;[^}]*grid-row-end:3\s*!important;[^}]*padding-left:0\s*!important;/s
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\),\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*display:grid\s*!important;[^}]*grid-row-start:1\s*!important;[^}]*grid-row-end:2\s*!important;[^}]*padding-left:0\s*!important;/s
+    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\),\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\.css-y3hfdd\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*display:flex\s*!important;[^}]*grid-column-start:2\s*!important;[^}]*grid-column-end:3\s*!important;[^}]*grid-row-start:1\s*!important;[^}]*grid-row-end:2\s*!important;[^}]*padding-left:0\s*!important;/s
   );
   assert.match(
     css,

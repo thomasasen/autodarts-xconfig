@@ -2171,6 +2171,75 @@ test("theme-x01-2player leaves header meta unmarked while separating it from the
   cleanup();
 });
 
+test("theme-x01-2player shares responsive player name size from the tightest name fit", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 501, "TORNADO TOM", {
+    stackClassNames: ["css-y3hfdd"],
+    scoreClassNames: ["chakra-text", "css-1r7jzhg"],
+    identityClassNames: ["css-37hv00"],
+    headerMetaClassNames: ["css-1igwmid"],
+    stackChildOrder: ["score", "meta", "identity"],
+  });
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 501, "TEST", {
+    stackClassNames: ["css-y3hfdd"],
+    scoreClassNames: ["chakra-text", "css-1r7jzhg"],
+    identityClassNames: ["css-37hv00"],
+    headerMetaClassNames: ["css-1igwmid"],
+    stackChildOrder: ["score", "meta", "identity"],
+  });
+  firstPlayer.stackNode.__rect = { width: 300, height: 220 };
+  secondPlayer.stackNode.__rect = { width: 300, height: 220 };
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-shared-name-size"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  const sharedNameSize = playerDisplayNode.style.getPropertyValue(
+    "--ad-ext-x01-2player-shared-name-size"
+  );
+  assert.match(sharedNameSize, /^\d+\.\d{2}px$/);
+  assert.equal(Number.parseFloat(sharedNameSize) < 44, true);
+  assert.equal(Number.parseFloat(sharedNameSize) > 43, true);
+
+  cleanup();
+
+  assert.equal(
+    playerDisplayNode.style.getPropertyValue("--ad-ext-x01-2player-shared-name-size"),
+    ""
+  );
+});
+
 test("theme-x01-2player recomputes board layout after late turn-surface resizes", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";

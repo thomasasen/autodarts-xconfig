@@ -341,6 +341,12 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 4.1cqb, 4.6vh), 3.15rem);
   --ad-ext-x01-2player-progress-gap:clamp(0.03rem, 0.12vh, 0.1rem);
   --ad-ext-x01-2player-stack-gap:clamp(0.22rem, 0.48vh, 0.4rem);
+  --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, 2.85rem);
+  --ad-ext-x01-2player-header-meta-font-size:clamp(1.47rem, min(7.2cqi, 3.075cqb), 1.8rem);
+  --ad-ext-x01-2player-player-name-font-size:var(
+    --ad-ext-x01-2player-shared-name-size,
+    clamp(1.55rem, min(12cqi, 4.6cqb), 3rem)
+  );
   --ad-ext-x01-2player-header-meta-pad-block-end:clamp(0.08rem, 0.22vh, 0.16rem);
   --ad-ext-x01-2player-identity-pad-block-end:clamp(0.08rem, 0.24vh, 0.18rem);
   --ad-ext-x01-2player-score-pad-block:clamp(0.16rem, 0.38vh, 0.3rem);
@@ -397,7 +403,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   width:100% !important;
   min-height:max-content !important;
   height:auto !important;
-  padding:0 0 clamp(0.12rem, 0.3vh, 0.26rem) !important;
+  padding:0 !important;
   border:0 !important;
   border-radius:0 !important;
   outline:0 !important;
@@ -414,7 +420,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   justify-items:stretch !important;
   min-height:max-content !important;
   height:auto !important;
-  padding:0 0 clamp(0.12rem, 0.3vh, 0.26rem) !important;
+  padding:0 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > .chakra-stack::before{
@@ -448,7 +454,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   align-content:start !important;
   align-items:start !important;
   justify-items:stretch !important;
-  padding:0 0 clamp(0.12rem, 0.3vh, 0.26rem) !important;
+  padding:0 !important;
   background:transparent !important;
   background-color:transparent !important;
   border:0 !important;
@@ -466,7 +472,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   justify-items:stretch !important;
   min-height:max-content !important;
   height:auto !important;
-  padding:0 0 clamp(0.12rem, 0.3vh, 0.26rem) !important;
+  padding:0 !important;
   background:transparent !important;
   background-color:transparent !important;
   border:0 !important;
@@ -661,24 +667,26 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELEC
   width:100% !important;
   max-width:100% !important;
   max-inline-size:100% !important;
-  font-size:clamp(1.2rem, min(7.9cqi, 3.25cqb), 1.82rem) !important;
-  line-height:0.96 !important;
+  font-size:var(--ad-ext-x01-2player-player-name-font-size) !important;
+  line-height:0.95 !important;
   font-weight:800 !important;
-  letter-spacing:0.012em !important;
+  letter-spacing:0 !important;
   color:var(--ad-ext-theme-name-color) !important;
   text-transform:none !important;
-  text-align:left !important;
+  text-align:center !important;
 }
 
 #ad-ext-player-display .ad-ext-player .ad-ext-player-name > p,
 #ad-ext-player-display .ad-ext-player .chakra-text.css-11cuipc{
-  display:block !important;
+  display:inline-block !important;
+  width:auto !important;
+  max-width:none !important;
   white-space:nowrap !important;
-  overflow:hidden !important;
+  overflow:visible !important;
   overflow-wrap:normal !important;
   word-break:normal !important;
   hyphens:none !important;
-  text-overflow:ellipsis !important;
+  text-overflow:clip !important;
 }
 
 ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name,
@@ -780,11 +788,16 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   color:var(--ad-ext-theme-meta-color) !important;
 }
 
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR} .css-1j0bqop{
+  font-size:var(--ad-ext-x01-2player-header-meta-font-size) !important;
+  line-height:1.05 !important;
+}
+
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z{
   display:grid !important;
   place-items:start center !important;
   align-self:start !important;
-  min-width:clamp(2rem, 10.5cqi, 2.7rem) !important;
+  min-width:var(--ad-ext-x01-2player-round-size) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z > span.css-3fr5p8,
@@ -792,12 +805,12 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
-  width:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  min-width:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  max-width:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  height:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  min-height:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  max-height:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
+  width:var(--ad-ext-x01-2player-round-size) !important;
+  min-width:var(--ad-ext-x01-2player-round-size) !important;
+  max-width:var(--ad-ext-x01-2player-round-size) !important;
+  height:var(--ad-ext-x01-2player-round-size) !important;
+  min-height:var(--ad-ext-x01-2player-round-size) !important;
+  max-height:var(--ad-ext-x01-2player-round-size) !important;
   padding:0 !important;
   flex:0 0 auto !important;
   border-radius:999px !important;
@@ -822,12 +835,12 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player .css-3fr5p8{
   display:inline-grid !important;
   place-items:center !important;
-  inline-size:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  block-size:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  width:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  height:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  min-width:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
-  min-height:clamp(1.9rem, 9.8cqi, 2.55rem) !important;
+  inline-size:var(--ad-ext-x01-2player-round-size) !important;
+  block-size:var(--ad-ext-x01-2player-round-size) !important;
+  width:var(--ad-ext-x01-2player-round-size) !important;
+  height:var(--ad-ext-x01-2player-round-size) !important;
+  min-width:var(--ad-ext-x01-2player-round-size) !important;
+  min-height:var(--ad-ext-x01-2player-round-size) !important;
   padding:0 !important;
   flex:0 0 auto !important;
   aspect-ratio:1 / 1 !important;
@@ -852,7 +865,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player .css-3fr5p8 > p{
-  font-size:clamp(1.02rem, min(5.1cqi, 2.18cqb), 1.28rem) !important;
+  font-size:calc(var(--ad-ext-x01-2player-round-size) * 0.54) !important;
   line-height:1 !important;
   font-weight:800 !important;
   color:inherit !important;
@@ -875,8 +888,9 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}{
-  grid-template-columns:minmax(0, 1fr) !important;
-  grid-template-rows:max-content max-content minmax(var(--ad-ext-x01-2player-score-min-block-size), max-content) max-content !important;
+  grid-template-columns:var(--ad-ext-x01-2player-round-size) minmax(0, 1fr) !important;
+  grid-template-rows:minmax(var(--ad-ext-x01-2player-round-size), max-content) max-content minmax(var(--ad-ext-x01-2player-score-min-block-size), max-content) max-content !important;
+  column-gap:clamp(0.5rem, 2.4cqi, 0.75rem) !important;
   row-gap:var(--ad-ext-x01-2player-stack-gap) !important;
   min-height:max-content !important;
   height:auto !important;
@@ -893,11 +907,13 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR}{
-  grid-column:1 !important;
+  grid-column:2 !important;
   grid-row:1 !important;
-  display:grid !important;
+  display:flex !important;
+  align-items:center !important;
   justify-items:start !important;
   align-content:start !important;
+  min-height:var(--ad-ext-x01-2player-round-size) !important;
   row-gap:clamp(0.08rem, 0.2vh, 0.16rem) !important;
   width:100% !important;
   min-width:0 !important;
@@ -911,21 +927,33 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}{
-  grid-column:1 !important;
+  grid-column:1 / -1 !important;
   grid-row:2 !important;
-  display:grid !important;
-  grid-template-columns:max-content minmax(0, 1fr) !important;
-  align-items:center !important;
-  column-gap:clamp(0.75rem, 4.4cqi, 1.25rem) !important;
+  display:block !important;
   width:100% !important;
   min-width:0 !important;
   max-width:100% !important;
   align-self:start !important;
-  padding-block-end:var(--ad-ext-x01-2player-identity-pad-block-end) !important;
-  overflow:hidden !important;
+  padding:0 !important;
+  overflow:visible !important;
   background:transparent !important;
   background-color:transparent !important;
   box-shadow:none !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :first-child{
+  position:absolute !important;
+  top:0 !important;
+  left:0 !important;
+  z-index:3 !important;
+  display:grid !important;
+  place-items:center !important;
+  width:var(--ad-ext-x01-2player-round-size) !important;
+  height:var(--ad-ext-x01-2player-round-size) !important;
+  min-width:var(--ad-ext-x01-2player-round-size) !important;
+  min-height:var(--ad-ext-x01-2player-round-size) !important;
+  margin:0 !important;
+  padding:0 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child{
@@ -934,21 +962,24 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span{
-  display:grid !important;
-  grid-template-columns:max-content minmax(0, 1fr) !important;
-  align-items:center !important;
-  column-gap:clamp(0.55rem, 3.4cqi, 0.95rem) !important;
+  display:block !important;
   min-width:0 !important;
+  width:100% !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :first-child{
+  display:none !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child{
   min-width:0 !important;
-  display:grid !important;
+  display:block !important;
+  width:100% !important;
   grid-template-columns:minmax(0, 1fr) !important;
   grid-auto-rows:max-content !important;
   align-items:start !important;
   align-content:center !important;
-  row-gap:clamp(0.08rem, 0.2vh, 0.16rem) !important;
+  row-gap:0 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .ad-ext-player-name,
@@ -960,11 +991,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .chakra-badge,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-n2903v,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-3fr5p8{
-  grid-column:1 !important;
-  justify-self:start !important;
-  align-self:start !important;
-  font-size:clamp(0.86rem, min(4.2cqi, 1.7cqb), 1.02rem) !important;
-  opacity:0.92 !important;
+  display:none !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
@@ -1013,16 +1040,16 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR}.css-1r7jzhg,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}.css-y3hfdd > .css-1r7jzhg{
   grid-column-start:1 !important;
-  grid-column-end:2 !important;
+  grid-column-end:-1 !important;
   grid-row-start:3 !important;
   grid-row-end:4 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}.css-37hv00,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}.css-y3hfdd > .css-37hv00{
-  display:grid !important;
+  display:block !important;
   grid-column-start:1 !important;
-  grid-column-end:2 !important;
+  grid-column-end:-1 !important;
   grid-row-start:2 !important;
   grid-row-end:3 !important;
   padding-left:0 !important;
@@ -1032,9 +1059,9 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR},
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}.css-y3hfdd > ${STACK_HEADER_META_SELECTOR}{
-  display:grid !important;
-  grid-column-start:1 !important;
-  grid-column-end:2 !important;
+  display:flex !important;
+  grid-column-start:2 !important;
+  grid-column-end:3 !important;
   grid-row-start:1 !important;
   grid-row-end:2 !important;
   padding-left:0 !important;
@@ -1121,25 +1148,28 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
    and shared score-progress stack defaults both match the same DOM. */
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}{
   display:grid !important;
-  grid-template-columns:minmax(0, 1fr) !important;
-  grid-template-rows:max-content max-content minmax(var(--ad-ext-x01-2player-score-min-block-size), max-content) max-content !important;
+  grid-template-columns:var(--ad-ext-x01-2player-round-size) minmax(0, 1fr) !important;
+  grid-template-rows:minmax(var(--ad-ext-x01-2player-round-size), max-content) max-content minmax(var(--ad-ext-x01-2player-score-min-block-size), max-content) max-content !important;
   grid-template-areas:
-    "meta"
-    "identity"
-    "score"
-    "progress" !important;
+    "rounds meta"
+    "identity identity"
+    "score score"
+    "progress progress" !important;
+  column-gap:clamp(0.5rem, 2.4cqi, 0.75rem) !important;
   row-gap:var(--ad-ext-x01-2player-stack-gap) !important;
+  padding:0 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR}{
   grid-area:meta !important;
-  grid-column:1 !important;
+  grid-column:2 !important;
   grid-row:1 !important;
   z-index:3 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}{
   grid-area:identity !important;
+  grid-column:1 / -1 !important;
   grid-row:2 !important;
 }
 
@@ -1149,7 +1179,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR}.ad-ext_winner-score-wrapper > p{
   grid-area:score !important;
-  grid-column:1 !important;
+  grid-column:1 / -1 !important;
   grid-row:3 !important;
   align-self:stretch !important;
   justify-self:stretch !important;
