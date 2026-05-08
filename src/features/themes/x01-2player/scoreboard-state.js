@@ -42,7 +42,7 @@ function getDirectTableCells(rowNode) {
 
 function getRemainingCell(rowNode) {
   const cells = getDirectTableCells(rowNode);
-  return cells.length >= 2 ? cells[cells.length - 1] : null;
+  return cells.length >= 2 ? cells.at(-1) : null;
 }
 
 function clearRemainingCellState(cellNode) {

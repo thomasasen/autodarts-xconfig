@@ -357,6 +357,18 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
+    /\.ad-ext-x01-2player-board-controls-portal\{[^}]*position:fixed\s*!important;[^}]*z-index:2147483000\s*!important;[^}]*pointer-events:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-x01-2player-board-controls-portal\s*>\s*\.ad-ext-theme-board-controls\{[^}]*position:relative\s*!important;[^}]*top:auto\s*!important;[^}]*right:auto\s*!important;[^}]*z-index:2147483000\s*!important;[^}]*pointer-events:auto\s*!important;/s
+  );
+  assert.doesNotMatch(
+    css,
+    /\.ad-ext-x01-2player-board-controls-portal\s+\.ad-ext-theme-board-controls\s+button\{[^}]*background/s
+  );
+  assert.match(
+    css,
     /\.ad-ext-theme-content-board\.ad-ext-theme-board-panel\s*>\s*\.ad-ext-theme-board-controls,[\s\S]*?\.css-1kejrvi\.ad-ext-theme-board-panel\s*>\s*\.ad-ext-theme-board-controls,[\s\S]*?\.css-14xtjvc\.ad-ext-theme-board-panel\s*>\s*\.ad-ext-theme-board-controls\{[^}]*top:calc\(var\(--ad-ext-x01-2player-live-turn-height\) \+ var\(--ad-ext-x01-2player-turn-clearance\)\)\s*!important;/s
   );
   assert.match(

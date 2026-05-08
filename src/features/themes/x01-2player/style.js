@@ -1352,6 +1352,26 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   min-height:calc(var(--ad-ext-x01-2player-controls-height) - 0.24rem) !important;
 }
 
+.ad-ext-x01-2player-board-controls-portal{
+  position:fixed !important;
+  z-index:2147483000 !important;
+  pointer-events:none !important;
+}
+
+.ad-ext-x01-2player-board-controls-portal > .ad-ext-theme-board-controls{
+  position:relative !important;
+  top:auto !important;
+  right:auto !important;
+  z-index:2147483000 !important;
+  isolation:isolate !important;
+  pointer-events:auto !important;
+}
+
+.ad-ext-x01-2player-board-controls-portal .ad-ext-theme-board-controls button{
+  position:relative !important;
+  z-index:1 !important;
+}
+
 .ad-ext-theme-content-board.ad-ext-theme-board-panel > .ad-ext-theme-board-controls,
 .css-1kejrvi.ad-ext-theme-board-panel > .ad-ext-theme-board-controls,
 .css-14xtjvc.ad-ext-theme-board-panel > .ad-ext-theme-board-controls{

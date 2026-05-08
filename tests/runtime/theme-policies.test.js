@@ -187,6 +187,91 @@ test("theme-x01-2player policy marks active cards and semantic slots without res
   assert.equal(firstPlayer.tableSlot.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
 });
 
+test("theme-x01-2player policy mirrors board controls above the dart overlay without moving originals", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.innerWidth = 1536;
+
+  const boardPanel = documentRef.createElement("div");
+  boardPanel.classList.add("ad-ext-theme-board-panel");
+  boardPanel.__rect = {
+    top: 193,
+    left: 376,
+    width: 783,
+    height: 521,
+  };
+
+  const boardControls = documentRef.createElement("div");
+  boardControls.classList.add("ad-ext-theme-board-controls");
+  boardControls.__rect = {
+    top: 211,
+    left: 902,
+    width: 249,
+    height: 52,
+  };
+
+  const undoButton = documentRef.createElement("button");
+  undoButton.textContent = "Undo";
+  const nextButton = documentRef.createElement("button");
+  nextButton.textContent = "Next";
+  let undoClickCount = 0;
+  undoButton.addEventListener("click", () => {
+    undoClickCount += 1;
+  });
+  boardControls.appendChild(undoButton);
+  boardControls.appendChild(nextButton);
+  boardPanel.appendChild(boardControls);
+  documentRef.main.appendChild(boardPanel);
+
+  const policy = resolveThemePolicy({ featureKey: "theme-x01-2player" });
+  const themeState = policy.createState();
+  policy.onActivate({
+    documentRef,
+    themeState,
+    windowRef,
+  });
+
+  const portalNode = documentRef.querySelector(
+    '[data-ad-ext-x01-2player-board-controls-portal="true"]'
+  );
+  const mirrorControls = portalNode?.querySelector(".ad-ext-theme-board-controls") || null;
+  const mirrorUndoButton = mirrorControls?.querySelector("button") || null;
+
+  assert.ok(portalNode);
+  assert.ok(mirrorControls);
+  assert.equal(portalNode.parentNode, documentRef.rootElement);
+  assert.equal(boardControls.parentNode, boardPanel);
+  assert.notEqual(mirrorControls, boardControls);
+  assert.equal(mirrorControls.getAttribute("aria-hidden"), "true");
+  assert.equal(portalNode.style.getPropertyValue("top"), "211.0px");
+  assert.equal(portalNode.style.getPropertyValue("right"), "385.0px");
+
+  mirrorUndoButton.click();
+  assert.equal(undoClickCount, 1);
+
+  policy.onActivate({
+    documentRef,
+    themeState,
+    windowRef,
+  });
+
+  assert.equal(
+    documentRef.querySelectorAll('[data-ad-ext-x01-2player-board-controls-portal="true"]').length,
+    1
+  );
+
+  policy.onDeactivate({
+    documentRef,
+    themeState,
+  });
+
+  assert.equal(
+    documentRef.querySelector('[data-ad-ext-x01-2player-board-controls-portal="true"]'),
+    null
+  );
+  assert.equal(boardControls.parentNode, boardPanel);
+});
+
 test("x01 2player scoreboard state marks only older remaining values stale", () => {
   const initialRowStates = deriveX01TwoPlayerScoreboardRowState([
     { scoreText: "", remainingText: "501" },

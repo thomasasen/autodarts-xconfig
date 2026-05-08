@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.13] - 2026-05-09
+
+### Fixed
+
+- Nutzerwirkung: `X01 2 Player` bleibt in engeren Layouts und bei wechselnden Spieler-/Turn-Flächen lesbarer: Spielernamen, Kopfzeilen, Tabellen, Turn-Punkte und veraltete Reststände passen sich stabiler an, und die Board-Steuerung bleibt oberhalb des Dart-Overlays sichtbar und klickbar.
+  Technik: Das Theme normalisiert gemeinsame Spielernamen- und Scoreboard-Zustände mit zusätzlichen CSS-Variablen, markiert alte Reststände semantisch, hält die Autodarts-Board-Fläche sichtbar und spiegelt die Board-Controls in ein positioniertes Portal; Runtime-, Template- und Build-Regressionen sichern Layout-, Portal- und Versionsverträge ab.
+
 ## [2.3.12] - 2026-05-05
 
 ### Changed
@@ -1561,7 +1568,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.12]: https://github.com/thomasasen/autodarts-xconfig/compare/4e53c2e...HEAD
+[2.3.13]: https://github.com/thomasasen/autodarts-xconfig/compare/9d54362...HEAD
+[2.3.12]: https://github.com/thomasasen/autodarts-xconfig/compare/4e53c2e...9d54362
 [2.3.11]: https://github.com/thomasasen/autodarts-xconfig/compare/367c667...4e53c2e
 [2.3.10]: https://github.com/thomasasen/autodarts-xconfig/compare/f192692...367c667
 [2.3.9]: https://github.com/thomasasen/autodarts-xconfig/compare/d2d1473...f192692
