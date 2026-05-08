@@ -259,9 +259,10 @@ div.chakra-stack.navigation.css-ege71s{
     var(--ad-ext-x01-2player-side-width)
     minmax(0, 1fr)
     var(--ad-ext-x01-2player-side-width) !important;
-  grid-template-rows:minmax(0, 1fr) !important;
+  grid-template-rows:max-content max-content minmax(0, 1fr) !important;
   min-height:clamp(30rem, 76vh, 52rem) !important;
   gap:var(--ad-ext-x01-2player-column-gap) !important;
+  align-content:stretch !important;
   align-items:stretch !important;
   overflow:visible !important;
 }
@@ -308,7 +309,7 @@ div.chakra-stack.navigation.css-ege71s{
 
 #ad-ext-player-display{
   grid-column:1 / -1 !important;
-  grid-row:2 / 4 !important;
+  grid-row:2 / -1 !important;
   display:grid !important;
   grid-template-columns:
     var(--ad-ext-x01-2player-side-width)
@@ -318,12 +319,16 @@ div.chakra-stack.navigation.css-ege71s{
   align-items:stretch !important;
   min-height:0 !important;
   height:100% !important;
+  max-height:none !important;
   overflow:visible !important;
   pointer-events:none !important;
 }
 
 ${DIRECT_PLAYER_WRAPPER_SELECTOR}{
   min-width:0 !important;
+  min-height:0 !important;
+  height:100% !important;
+  max-height:100% !important;
   display:flex !important;
   align-items:stretch !important;
   justify-content:stretch !important;
@@ -344,12 +349,17 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   width:100% !important;
 }
 
+${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
+  height:100% !important;
+  max-height:100% !important;
+}
+
 #ad-ext-player-display .ad-ext-player{
   --ad-ext-x01-2player-score-size:clamp(5.6rem, min(43cqi, 17cqb, 14.2vh), 10.4rem);
   --ad-ext-x01-2player-score-scale:1;
   --ad-ext-x01-2player-table-font-size:clamp(0.92rem, min(3.8cqi, 1.72cqb, 1.85vh), 1.08rem);
-  --ad-ext-x01-2player-table-cell-font-size:clamp(2rem, min(8.4cqi, 5.2cqb, 5.4vh), 2.75rem);
-  --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 4.1cqb, 4.6vh), 3.15rem);
+  --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), 2.35rem);
+  --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 7.8cqb, 4.8vh), 3.45rem);
   --ad-ext-x01-2player-progress-gap:clamp(0.03rem, 0.12vh, 0.1rem);
   --ad-ext-x01-2player-stack-gap:clamp(0.22rem, 0.48vh, 0.4rem);
   --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, 2.85rem);
@@ -374,7 +384,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   grid-template-rows:max-content minmax(0, 1fr) !important;
   justify-items:stretch !important;
   row-gap:clamp(0.28rem, 0.65vh, 0.48rem) !important;
-  align-content:start !important;
+  align-content:stretch !important;
   align-items:stretch !important;
   padding:var(--ad-ext-x01-2player-card-padding) !important;
   border:1px solid rgba(236, 247, 240, 0.16) !important;
@@ -1253,7 +1263,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   border-radius:1rem !important;
   overflow:hidden !important;
   font-size:var(--ad-ext-x01-2player-table-font-size) !important;
-  line-height:1.12 !important;
+  line-height:1 !important;
   font-variant-numeric:tabular-nums !important;
   background:
     linear-gradient(180deg, rgba(4, 7, 9, 0.34), rgba(255, 255, 255, 0.02)) !important;
@@ -1262,11 +1272,15 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 #ad-ext-player-display .ad-ext-player table td,
 #ad-ext-player-display .ad-ext-player table th{
   border:1px solid rgba(236, 247, 240, 0.12) !important;
-  padding:clamp(0.34rem, 0.85vh, 0.68rem) clamp(0.4rem, 0.9vw, 0.7rem) !important;
+  padding:clamp(0.2rem, 0.62cqb, 0.48rem) clamp(0.3rem, 1.15cqi, 0.58rem) !important;
   color:#eff7f2 !important;
   background:transparent !important;
   font-size:var(--ad-ext-x01-2player-table-cell-font-size) !important;
+  line-height:1 !important;
   text-align:center !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
 }
 
 #ad-ext-player-display .ad-ext-player table td{
@@ -1422,7 +1436,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
     --ad-ext-x01-2player-score-size:clamp(6.048rem, min(24vw, 14.4vh), 9.25rem);
     --ad-ext-x01-2player-score-scale:1.14;
     --ad-ext-x01-2player-table-font-size:clamp(0.88rem, min(3.2vw, 1.75vh), 1rem);
-    --ad-ext-x01-2player-table-cell-font-size:clamp(1.8rem, min(6.7vw, 4.5vh), 2.35rem);
+    --ad-ext-x01-2player-table-cell-font-size:clamp(1.6rem, min(7.4vw, 8cqb, 5vh), 2.15rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(2.1rem, min(5.8vw, 3.8vh), 2.85rem);
     min-height:clamp(17rem, 50vh, 29rem) !important;
   }
@@ -1463,7 +1477,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
     --ad-ext-x01-2player-score-size:clamp(5.616rem, min(22vw, 12vh), 8.3rem);
     --ad-ext-x01-2player-score-scale:1.08;
     --ad-ext-x01-2player-table-font-size:clamp(0.84rem, min(3.8vw, 1.7vh), 0.96rem);
-    --ad-ext-x01-2player-table-cell-font-size:clamp(1.6rem, min(5.8vw, 3.9vh), 2.05rem);
+    --ad-ext-x01-2player-table-cell-font-size:clamp(1.42rem, min(6.4vw, 7cqb, 4.3vh), 1.95rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(1.95rem, min(6.2vw, 3.5vh), 2.55rem);
     min-height:clamp(16rem, 44vh, 25rem) !important;
   }
@@ -1492,7 +1506,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
     --ad-ext-x01-2player-score-size:clamp(5.76rem, min(23.5cqi, 12.8vh), 8.8rem);
     --ad-ext-x01-2player-score-scale:1.06;
     --ad-ext-x01-2player-table-font-size:clamp(0.84rem, min(3.5cqi, 1.58vh), 0.98rem);
-    --ad-ext-x01-2player-table-cell-font-size:clamp(1.55rem, min(5.4cqi, 3.7vh), 2rem);
+    --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), 2.25rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(1.95rem, min(6.4cqi, 3.2vh), 2.6rem);
     min-height:clamp(16rem, 46vh, 27rem) !important;
   }

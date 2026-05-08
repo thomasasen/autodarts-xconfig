@@ -158,7 +158,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(css, /--theme-player-badge-bg:transparent;[^}]*--theme-player-name-bg:transparent;[^}]*--theme-current-bg:transparent;/s);
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(5\.6rem,\s*min\(43cqi,\s*17cqb,\s*14\.2vh\),\s*10\.4rem\);[^}]*--ad-ext-x01-2player-score-scale:1;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-round-font-size:min\(calc\(var\(--ad-ext-x01-2player-round-size\) \* 0\.72\),\s*1\.55rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.76\);[^}]*--ad-ext-x01-2player-progress-min-block-size:calc\(clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\) \+ var\(--ad-ext-x01-2player-progress-pad-block-start\)\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(5\.6rem,\s*min\(43cqi,\s*17cqb,\s*14\.2vh\),\s*10\.4rem\);[^}]*--ad-ext-x01-2player-score-scale:1;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.85rem,\s*min\(10\.8cqi,\s*8\.2cqb,\s*5\.4vh\),\s*2\.35rem\);[^}]*--ad-ext-x01-2player-table-cell-min-height:clamp\(2\.25rem,\s*min\(7\.2cqi,\s*7\.8cqb,\s*4\.8vh\),\s*3\.45rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-round-font-size:min\(calc\(var\(--ad-ext-x01-2player-round-size\) \* 0\.72\),\s*1\.55rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.76\);[^}]*--ad-ext-x01-2player-progress-min-block-size:calc\(clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\) \+ var\(--ad-ext-x01-2player-progress-pad-block-start\)\);/s
   );
   assert.match(
     css,
@@ -175,6 +175,18 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(
     css,
     /\.ad-ext-theme-content-board\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1 \/ -1\s*!important;[^}]*pointer-events:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-slot\{[^}]*grid-template-rows:max-content max-content minmax\(0,\s*1fr\)\s*!important;[^}]*align-content:stretch\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\{[^}]*grid-row:2 \/ -1\s*!important;[^}]*height:100%\s*!important;[^}]*max-height:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-player-display\s*>\s*\[data-ad-ext-x01-2player-player-wrapper="true"\]\{[^}]*min-height:0\s*!important;[^}]*height:100%\s*!important;[^}]*max-height:100%\s*!important;[^}]*display:flex\s*!important;/s
   );
   assert.match(
     css,
@@ -326,7 +338,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+table\s+td,\s*#ad-ext-player-display\s+\.ad-ext-player\s+table\s+th\{[^}]*font-size:var\(--ad-ext-x01-2player-table-cell-font-size\)\s*!important;[^}]*text-align:center\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+table\s+td,\s*#ad-ext-player-display\s+\.ad-ext-player\s+table\s+th\{[^}]*padding:clamp\(0\.2rem,\s*0\.62cqb,\s*0\.48rem\) clamp\(0\.3rem,\s*1\.15cqi,\s*0\.58rem\)\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-table-cell-font-size\)\s*!important;[^}]*line-height:1\s*!important;[^}]*text-align:center\s*!important;[^}]*white-space:nowrap\s*!important;[^}]*overflow:hidden\s*!important;[^}]*text-overflow:clip\s*!important;/s
   );
   assert.match(
     css,
@@ -357,15 +369,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /@media \(max-width: 1180px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(6\.048rem,\s*min\(24vw,\s*14\.4vh\),\s*9\.25rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.14;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.8rem,\s*min\(6\.7vw,\s*4\.5vh\),\s*2\.35rem\);/s
+    /@media \(max-width: 1180px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(6\.048rem,\s*min\(24vw,\s*14\.4vh\),\s*9\.25rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.14;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.6rem,\s*min\(7\.4vw,\s*8cqb,\s*5vh\),\s*2\.15rem\);/s
   );
   assert.match(
     css,
-    /@media \(max-width: 820px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(5\.616rem,\s*min\(22vw,\s*12vh\),\s*8\.3rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.08;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.6rem,\s*min\(5\.8vw,\s*3\.9vh\),\s*2\.05rem\);/s
+    /@media \(max-width: 820px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(5\.616rem,\s*min\(22vw,\s*12vh\),\s*8\.3rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.08;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.42rem,\s*min\(6\.4vw,\s*7cqb,\s*4\.3vh\),\s*1\.95rem\);/s
   );
   assert.match(
     css,
-    /@media \(max-height: 860px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(5\.76rem,\s*min\(23\.5cqi,\s*12\.8vh\),\s*8\.8rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.06;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.55rem,\s*min\(5\.4cqi,\s*3\.7vh\),\s*2rem\);/s
+    /@media \(max-height: 860px\)\{[\s\S]*?--ad-ext-x01-2player-score-size:clamp\(5\.76rem,\s*min\(23\.5cqi,\s*12\.8vh\),\s*8\.8rem\);[\s\S]*?--ad-ext-x01-2player-score-scale:1\.06;[\s\S]*?--ad-ext-x01-2player-table-cell-font-size:clamp\(1\.85rem,\s*min\(10\.8cqi,\s*8\.2cqb,\s*5\.4vh\),\s*2\.25rem\);/s
   );
   assert.doesNotMatch(css, /font-size:\s*2em\s*!important/);
   assert.doesNotMatch(css, /--ad-ext-theme-board-size:min\(/);
