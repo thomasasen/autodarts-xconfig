@@ -99,7 +99,7 @@ p.chakra-text.css-1j0bqop{
   --ad-ext-x01-2player-live-turn-height:var(--ad-ext-x01-2player-turn-height);
   --ad-ext-x01-2player-throw-points-size:clamp(1.2rem, 1.8vw, 1.65rem);
   --ad-ext-x01-2player-live-throw-points-size:var(--ad-ext-x01-2player-throw-points-size);
-  --ad-ext-x01-2player-turn-clearance:clamp(0.28rem, 0.58vh, 0.5rem);
+  --ad-ext-x01-2player-turn-clearance:clamp(0.85rem, 1.25vh, 1.15rem);
   --ad-ext-x01-2player-controls-height:clamp(1.95rem, 3.2vh, 2.3rem);
   --ad-ext-x01-2player-board-gap:clamp(0.32rem, 0.6vh, 0.52rem);
   --ad-ext-x01-2player-board-top-pad:calc(
@@ -1222,7 +1222,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 }
 
 .ad-ext-theme-board-controls{
-  top:calc(var(--ad-ext-x01-2player-turn-height) + var(--ad-ext-x01-2player-turn-clearance)) !important;
+  top:calc(var(--ad-ext-x01-2player-turn-clearance) + 0.25rem) !important;
   right:0.55rem !important;
   z-index:10 !important;
   min-height:var(--ad-ext-x01-2player-controls-height) !important;
@@ -1230,15 +1230,22 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   align-items:center !important;
   gap:0.28rem !important;
   padding:0.12rem !important;
-  border-radius:999px !important;
-  background:rgba(7, 11, 13, 0.76) !important;
-  box-shadow:0 12px 24px rgba(0, 0, 0, 0.24) !important;
-  backdrop-filter:blur(10px) !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  background-color:transparent !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
 }
 
 .ad-ext-theme-board-controls > *,
 .ad-ext-theme-board-controls button{
   min-height:calc(var(--ad-ext-x01-2player-controls-height) - 0.24rem) !important;
+}
+
+.ad-ext-theme-content-board.ad-ext-theme-board-panel > .ad-ext-theme-board-controls,
+.css-1kejrvi.ad-ext-theme-board-panel > .ad-ext-theme-board-controls,
+.css-14xtjvc.ad-ext-theme-board-panel > .ad-ext-theme-board-controls{
+  top:calc(var(--ad-ext-x01-2player-live-turn-height) + var(--ad-ext-x01-2player-turn-clearance)) !important;
 }
 
 .ad-ext-theme-board-viewport{

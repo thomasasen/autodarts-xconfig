@@ -152,7 +152,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(css, /ad-ext-turn-preview-space/);
   assert.match(
     css,
-    /--ad-ext-x01-2player-column-gap:clamp\(0\.9rem,\s*1\.6vw,\s*1\.4rem\);[^}]*--ad-ext-x01-2player-center-min-width:48rem;[^}]*--ad-ext-x01-2player-side-width:clamp\(\s*17rem,\s*22vw,\s*min\(\s*23\.5rem,\s*calc\(\s*\(100vw - var\(--ad-ext-x01-2player-center-min-width\) - \(2 \* var\(--ad-ext-x01-2player-column-gap\)\)\)\s*\/ 2\s*\)\s*\)\s*\);[^}]*--ad-ext-x01-2player-live-turn-height:var\(--ad-ext-x01-2player-turn-height\);[^}]*--ad-ext-x01-2player-throw-points-size:clamp\(1\.2rem,\s*1\.8vw,\s*1\.65rem\);[^}]*--ad-ext-x01-2player-live-throw-points-size:var\(--ad-ext-x01-2player-throw-points-size\);[^}]*--ad-ext-x01-2player-turn-clearance:clamp\(0\.28rem,\s*0\.58vh,\s*0\.5rem\);[^}]*--ad-ext-x01-2player-controls-height:clamp\(1\.95rem,\s*3\.2vh,\s*2\.3rem\);[^}]*--ad-ext-x01-2player-board-gap:clamp\(0\.32rem,\s*0\.6vh,\s*0\.52rem\);[^}]*--ad-ext-x01-2player-board-top-pad:calc\(\s*var\(--ad-ext-x01-2player-live-turn-height\)\s*\+\s*var\(--ad-ext-x01-2player-turn-clearance\)\s*\+\s*var\(--ad-ext-x01-2player-controls-height\)\s*\+\s*var\(--ad-ext-x01-2player-board-gap\)\s*\);/s
+    /--ad-ext-x01-2player-column-gap:clamp\(0\.9rem,\s*1\.6vw,\s*1\.4rem\);[^}]*--ad-ext-x01-2player-center-min-width:48rem;[^}]*--ad-ext-x01-2player-side-width:clamp\(\s*17rem,\s*22vw,\s*min\(\s*23\.5rem,\s*calc\(\s*\(100vw - var\(--ad-ext-x01-2player-center-min-width\) - \(2 \* var\(--ad-ext-x01-2player-column-gap\)\)\)\s*\/ 2\s*\)\s*\)\s*\);[^}]*--ad-ext-x01-2player-live-turn-height:var\(--ad-ext-x01-2player-turn-height\);[^}]*--ad-ext-x01-2player-throw-points-size:clamp\(1\.2rem,\s*1\.8vw,\s*1\.65rem\);[^}]*--ad-ext-x01-2player-live-throw-points-size:var\(--ad-ext-x01-2player-throw-points-size\);[^}]*--ad-ext-x01-2player-turn-clearance:clamp\(0\.85rem,\s*1\.25vh,\s*1\.15rem\);[^}]*--ad-ext-x01-2player-controls-height:clamp\(1\.95rem,\s*3\.2vh,\s*2\.3rem\);[^}]*--ad-ext-x01-2player-board-gap:clamp\(0\.32rem,\s*0\.6vh,\s*0\.52rem\);[^}]*--ad-ext-x01-2player-board-top-pad:calc\(\s*var\(--ad-ext-x01-2player-live-turn-height\)\s*\+\s*var\(--ad-ext-x01-2player-turn-clearance\)\s*\+\s*var\(--ad-ext-x01-2player-controls-height\)\s*\+\s*var\(--ad-ext-x01-2player-board-gap\)\s*\);/s
   );
   assert.match(css, /--theme-player-badge-bg:transparent;[^}]*--theme-player-name-bg:transparent;[^}]*--theme-current-bg:transparent;/s);
   assert.match(
@@ -305,11 +305,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\.ad-ext-theme-board-controls\s*\{[^}]*min-height:var\(--ad-ext-x01-2player-controls-height\)\s*!important;[^}]*gap:0\.28rem\s*!important;[^}]*padding:0\.12rem\s*!important;/s
+    /\.ad-ext-theme-board-controls\s*\{[^}]*top:calc\(var\(--ad-ext-x01-2player-turn-clearance\) \+ 0\.25rem\)\s*!important;[^}]*min-height:var\(--ad-ext-x01-2player-controls-height\)\s*!important;[^}]*gap:0\.28rem\s*!important;[^}]*padding:0\.12rem\s*!important;[^}]*border-radius:0\s*!important;[^}]*background:transparent\s*!important;[^}]*background-color:transparent\s*!important;[^}]*box-shadow:none\s*!important;[^}]*backdrop-filter:none\s*!important;/s
   );
   assert.match(
     css,
     /\.ad-ext-theme-board-controls\s*>\s*\*,\s*\.ad-ext-theme-board-controls\s+button\{[^}]*min-height:calc\(var\(--ad-ext-x01-2player-controls-height\) - 0\.24rem\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-content-board\.ad-ext-theme-board-panel\s*>\s*\.ad-ext-theme-board-controls,[\s\S]*?\.css-1kejrvi\.ad-ext-theme-board-panel\s*>\s*\.ad-ext-theme-board-controls,[\s\S]*?\.css-14xtjvc\.ad-ext-theme-board-panel\s*>\s*\.ad-ext-theme-board-controls\{[^}]*top:calc\(var\(--ad-ext-x01-2player-live-turn-height\) \+ var\(--ad-ext-x01-2player-turn-clearance\)\)\s*!important;/s
   );
   assert.match(
     css,
