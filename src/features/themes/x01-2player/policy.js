@@ -19,12 +19,40 @@ const PLAYER_NAME_MIN_SIZE_PX = 18;
 const PLAYER_NAME_MAX_SIZE_PX = 96;
 const PLAYER_NAME_WIDTH_CLEARANCE_PX = 4;
 const PLAYER_NAME_FALLBACK_WIDTH_FACTOR = 0.62;
+const BOARD_VISIBILITY_CONTROL_SELECTOR = [
+  "button",
+  "[role='button']",
+  "[role='menuitemcheckbox']",
+  "[role='switch']",
+  "[role='checkbox']",
+  "input[type='checkbox']",
+  "[aria-label]",
+  "[title]",
+].join(",");
+const BOARD_VISIBILITY_SHOW_LABELS = Object.freeze([
+  "tafel anzeigen",
+  "board anzeigen",
+  "show board",
+  "display board",
+]);
+const BOARD_VISIBILITY_HIDE_LABELS = Object.freeze([
+  "tafel ausblenden",
+  "board ausblenden",
+  "hide board",
+]);
 const TURN_THROW_FONT_SOURCE_SELECTORS = Object.freeze([
   ".ad-ext-turn-throw .ad-ext-hit-score",
   ".ad-ext-turn-throw p.chakra-text",
   ".ad-ext-turn-throw p",
   ".ad-ext-turn-throw",
 ]);
+
+function normalizeBoardVisibilityText(value) {
+  return String(value || "")
+    .replaceAll(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
 
 function queryAll(rootNode, selector) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
@@ -36,6 +64,156 @@ function queryAll(rootNode, selector) {
   } catch (_) {
     return [];
   }
+}
+
+function getBoardVisibilityLabelCandidates(node) {
+  if (!node || typeof node !== "object") {
+    return [];
+  }
+
+  const labelNode = node.closest?.("label") || null;
+  return [
+    node.getAttribute?.("aria-label"),
+    node.getAttribute?.("title"),
+    node.getAttribute?.("aria-description"),
+    node.dataset?.label,
+    node.dataset?.tooltip,
+    node.value,
+    node.textContent,
+    labelNode && labelNode !== node ? labelNode.textContent : "",
+  ].map((value) => normalizeBoardVisibilityText(value)).filter(Boolean);
+}
+
+function labelMatchesAny(candidate, labels) {
+  return labels.some((label) => candidate === label || candidate.includes(label));
+}
+
+function resolveBoardVisibilityControlIntent(node) {
+  const labelCandidates = getBoardVisibilityLabelCandidates(node);
+  if (!labelCandidates.length) {
+    return "";
+  }
+
+  if (labelCandidates.some((candidate) => labelMatchesAny(candidate, BOARD_VISIBILITY_HIDE_LABELS))) {
+    return "hide";
+  }
+
+  if (labelCandidates.some((candidate) => labelMatchesAny(candidate, BOARD_VISIBILITY_SHOW_LABELS))) {
+    return "show";
+  }
+
+  return "";
+}
+
+function getBooleanAttributeState(node, attributeName) {
+  const rawValue = node?.getAttribute?.(attributeName);
+  const value = normalizeBoardVisibilityText(rawValue);
+  if (value === "true" || value === "checked" || value === "selected" || value === "on") {
+    return true;
+  }
+  if (value === "false" || value === "unchecked" || value === "off") {
+    return false;
+  }
+  return rawValue === "" && attributeName === "data-active";
+}
+
+function isBoardVisibilityControlActive(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+
+  return (
+    node.checked === true ||
+    getBooleanAttributeState(node, "aria-checked") ||
+    getBooleanAttributeState(node, "aria-pressed") ||
+    getBooleanAttributeState(node, "data-checked") ||
+    getBooleanAttributeState(node, "data-selected") ||
+    getBooleanAttributeState(node, "data-active") ||
+    getBooleanAttributeState(node, "data-state")
+  );
+}
+
+function isBoardVisibilityControlDisabled(node) {
+  return (
+    node?.disabled === true ||
+    normalizeBoardVisibilityText(node?.getAttribute?.("aria-disabled")) === "true"
+  );
+}
+
+function resolveBoardVisibilityControlState(node) {
+  if (!node || isBoardVisibilityControlDisabled(node)) {
+    return null;
+  }
+
+  const intent = resolveBoardVisibilityControlIntent(node);
+  if (!intent) {
+    return null;
+  }
+
+  return {
+    node,
+    visible: intent === "hide" || isBoardVisibilityControlActive(node),
+  };
+}
+
+function findBoardVisibilityControlState(documentRef) {
+  return queryAll(documentRef, BOARD_VISIBILITY_CONTROL_SELECTOR)
+    .map((node) => resolveBoardVisibilityControlState(node))
+    .find(Boolean) || null;
+}
+
+function clickBoardVisibilityControl(node) {
+  if (!node || isBoardVisibilityControlDisabled(node)) {
+    return false;
+  }
+
+  if (typeof node.click === "function") {
+    node.click();
+    return true;
+  }
+
+  return false;
+}
+
+function ensureThemeBoardVisible(documentRef, themeState = {}) {
+  const controlState = findBoardVisibilityControlState(documentRef);
+  if (!controlState) {
+    return false;
+  }
+
+  if (controlState.visible) {
+    return false;
+  }
+
+  const didClick = clickBoardVisibilityControl(controlState.node);
+  if (didClick) {
+    themeState.boardVisibilityOverride = {
+      applied: true,
+    };
+  }
+  return didClick;
+}
+
+function restoreThemeBoardVisibility(documentRef, themeState = {}) {
+  if (themeState.boardVisibilityOverride?.applied !== true) {
+    themeState.boardVisibilityOverride = null;
+    return false;
+  }
+
+  const controlState = findBoardVisibilityControlState(documentRef);
+  if (!controlState) {
+    return false;
+  }
+  if (controlState.visible !== true) {
+    themeState.boardVisibilityOverride = null;
+    return false;
+  }
+
+  const didRestore = clickBoardVisibilityControl(controlState.node);
+  if (didRestore) {
+    themeState.boardVisibilityOverride = null;
+  }
+  return Boolean(didRestore);
 }
 
 function findDirectPlayerWrapper(cardNode) {
@@ -593,6 +771,7 @@ export function createX01TwoPlayerThemePolicy() {
         lastMeasuredThrowPointsFontSize: "",
         lastMeasuredSharedPlayerNameSizePx: "",
         nameMeasureContext: null,
+        boardVisibilityOverride: null,
       };
     },
     getObservedAttributeFilter() {
@@ -602,11 +781,13 @@ export function createX01TwoPlayerThemePolicy() {
       return hasX01TwoPlayerPlayerStateMutation(mutations);
     },
     onActivate(context = {}) {
+      ensureThemeBoardVisible(context.documentRef, context.themeState);
       syncX01TwoPlayerLayoutState(context.documentRef, context.gameState);
       syncSharedPlayerNameSize(context.documentRef, context.themeState, context.windowRef);
       ensureTurnResizeObserver(context);
     },
     onDeactivate(context = {}) {
+      restoreThemeBoardVisibility(context.documentRef, context.themeState);
       detachTurnResizeObserver(context.themeState);
       try {
         context.themeState?.turnResizeObserver?.disconnect?.();

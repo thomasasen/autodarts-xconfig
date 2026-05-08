@@ -95,6 +95,34 @@ function createBoardModeButtons(documentRef, activeMode = "segments") {
   return buttons;
 }
 
+function createBoardVisibilityMenuItem(documentRef, initiallyVisible = false) {
+  const button = documentRef.createElement("button");
+  let visible = Boolean(initiallyVisible);
+  let clickCount = 0;
+
+  function sync() {
+    button.setAttribute("aria-checked", visible ? "true" : "false");
+  }
+
+  button.type = "button";
+  button.setAttribute("role", "menuitemcheckbox");
+  button.textContent = "chalkboard | Tafel anzeigen";
+  button.addEventListener("click", () => {
+    clickCount += 1;
+    visible = !visible;
+    sync();
+  });
+  sync();
+
+  documentRef.main.appendChild(button);
+  return {
+    button,
+    get clickCount() {
+      return clickCount;
+    },
+  };
+}
+
 function createDartsZoomPreviewFixture(documentRef) {
   const zoomHost = documentRef.createElement("autodarts-tools-zoom");
   const shadowRoot = documentRef.createElement("div");
@@ -1993,6 +2021,100 @@ function createFakeResizeObserverController() {
     },
   };
 }
+
+test("theme-x01-2player temporarily enables the native Autodarts board visibility option", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardVisibility = createBoardVisibilityMenuItem(documentRef, false);
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+  playerDisplayNode.appendChild(createX01TwoPlayerTestCard(documentRef, 501, "A").playerWrapperNode);
+  playerDisplayNode.appendChild(createX01TwoPlayerTestCard(documentRef, 501, "B").playerWrapperNode);
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-board-visibility"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(boardVisibility.button.getAttribute("aria-checked"), "true");
+  assert.equal(boardVisibility.clickCount, 1);
+
+  cleanup();
+
+  assert.equal(boardVisibility.button.getAttribute("aria-checked"), "false");
+  assert.equal(boardVisibility.clickCount, 2);
+});
+
+test("theme-x01-2player keeps native board visibility enabled when the user already enabled it", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardVisibility = createBoardVisibilityMenuItem(documentRef, true);
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+  playerDisplayNode.appendChild(createX01TwoPlayerTestCard(documentRef, 501, "A").playerWrapperNode);
+  playerDisplayNode.appendChild(createX01TwoPlayerTestCard(documentRef, 501, "B").playerWrapperNode);
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-user-board-visibility"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(boardVisibility.button.getAttribute("aria-checked"), "true");
+  assert.equal(boardVisibility.clickCount, 0);
+
+  cleanup();
+
+  assert.equal(boardVisibility.button.getAttribute("aria-checked"), "true");
+  assert.equal(boardVisibility.clickCount, 0);
+});
 
 test("theme-x01-2player syncs semantic slot markers and active attributes from game state", async () => {
   const documentRef = new FakeDocument();
