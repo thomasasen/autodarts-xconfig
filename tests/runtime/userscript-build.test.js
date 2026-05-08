@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { DART_DESIGN_FILES } from "../../src/shared/feature-assets.manifest.js";
+import { THEME_PRESET_ASSET_FILES } from "../../src/shared/theme-preset-assets.manifest.js";
+import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
 
 const bundlePath = path.resolve(
   process.cwd(),
@@ -19,6 +22,41 @@ const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user
 
 function escapeRegExp(text) {
   return String(text || "").replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
+function collectBundledDataUrls(text) {
+  const rows = [];
+  let currentSource = "";
+
+  text.split(/\r?\n/).forEach((line) => {
+    const sourceMatch = line.match(/^\s*\/\/\s+(.+)$/);
+    if (sourceMatch) {
+      currentSource = sourceMatch[1];
+    }
+
+    Array.from(line.matchAll(/data:(?:image|audio)\/[^"']+/g)).forEach((match) => {
+      rows.push({
+        source: currentSource,
+        value: match[0],
+      });
+    });
+  });
+
+  return rows;
+}
+
+function buildAllowedBundledAssetSources() {
+  return new Set([
+    ...Object.values(DART_DESIGN_FILES).map((fileName) => `src/assets/darts/${fileName}`),
+    ...Object.values(THEME_PRESET_ASSET_FILES).map(
+      (fileName) => `src/assets/theme-presets/${fileName}`
+    ),
+    ...Object.values(XCONFIG_PREVIEW_SCREENSHOTS).map(
+      (fileName) => `docs/screenshots/${fileName}`
+    ),
+    "src/assets/TakeOut.png",
+    "src/assets/singlebull.mp3",
+  ]);
 }
 
 test("checked-in userscript bundle contains metadata header and runtime bootstrap entry", () => {
@@ -112,6 +150,28 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
     /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.meta\.js/
   );
   assert.doesNotMatch(text, /initializeTampermonkeyRuntime/);
+});
+
+test("checked-in userscript bundle embeds only approved runtime assets", () => {
+  const text = readFileSync(bundlePath, "utf8");
+  const allowedSources = buildAllowedBundledAssetSources();
+  const bundledAssetSources = collectBundledDataUrls(text)
+    .map((entry) => entry.source)
+    .filter((source) => /\.(?:png|jpe?g|gif|mp3)$/i.test(source));
+  const uniqueBundledAssetSources = [...new Set(bundledAssetSources)].sort();
+  const unexpectedAssetSources = uniqueBundledAssetSources.filter(
+    (source) => !allowedSources.has(source)
+  );
+  const missingAssetSources = [...allowedSources]
+    .filter((source) => !uniqueBundledAssetSources.includes(source))
+    .sort();
+  const readmeOnlyAssetSources = uniqueBundledAssetSources.filter((source) =>
+    /(?:^|[-_.])readme\.(?:png|jpe?g|gif)$/i.test(source)
+  );
+
+  assert.deepEqual(unexpectedAssetSources, []);
+  assert.deepEqual(missingAssetSources, []);
+  assert.deepEqual(readmeOnlyAssetSources, []);
 });
 
 test("bundle, runtime API version and package version stay in sync", () => {
