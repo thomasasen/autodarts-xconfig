@@ -157,7 +157,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.match(css, /--theme-player-badge-bg:transparent;[^}]*--theme-player-name-bg:transparent;[^}]*--theme-current-bg:transparent;/s);
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(5\.6rem,\s*min\(43cqi,\s*17cqb,\s*14\.2vh\),\s*10\.4rem\);[^}]*--ad-ext-x01-2player-score-scale:1;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.76\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-x01-2player-score-size:clamp\(5\.6rem,\s*min\(43cqi,\s*17cqb,\s*14\.2vh\),\s*10\.4rem\);[^}]*--ad-ext-x01-2player-score-scale:1;[^}]*--ad-ext-x01-2player-table-font-size:clamp\(0\.92rem,\s*min\(3\.8cqi,\s*1\.72cqb,\s*1\.85vh\),\s*1\.08rem\);[^}]*--ad-ext-x01-2player-table-cell-font-size:clamp\(2rem,\s*min\(8\.4cqi,\s*5\.2cqb,\s*5\.4vh\),\s*2\.75rem\);[^}]*--ad-ext-x01-2player-stack-gap:clamp\(0\.22rem,\s*0\.48vh,\s*0\.4rem\);[^}]*--ad-ext-x01-2player-round-font-size:min\(calc\(var\(--ad-ext-x01-2player-round-size\) \* 0\.72\),\s*1\.55rem\);[^}]*--ad-ext-x01-2player-header-meta-pad-block-end:clamp\(0\.08rem,\s*0\.22vh,\s*0\.16rem\);[^}]*--ad-ext-x01-2player-score-min-block-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\s*\*\s*0\.76\);[^}]*--ad-ext-x01-2player-progress-min-block-size:calc\(clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\) \+ var\(--ad-ext-x01-2player-progress-pad-block-start\)\);/s
   );
   assert.match(
     css,
@@ -189,7 +189,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1\s*!important;[^}]*display:flex\s*!important;[^}]*min-height:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*background:transparent\s*!important;/s
+    /\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\.css-1igwmid:not\(\[data-ad-ext-x01-2player-slot\]\)\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1\s*!important;[^}]*display:flex\s*!important;[^}]*justify-content:flex-end\s*!important;[^}]*text-align:right\s*!important;[^}]*min-height:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*background:transparent\s*!important;/s
   );
   assert.match(
     css,
@@ -221,7 +221,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\s*>\s*p\{[^}]*font-size:calc\(var\(--ad-ext-x01-2player-round-size\) \* 0\.54\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\s*>\s*p\{[^}]*font-size:var\(--ad-ext-x01-2player-round-font-size\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
   );
   assert.match(
     css,
@@ -245,7 +245,19 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="progress"\]\{[^}]*grid-row:4\s*!important;[^}]*min-block-size:clamp\(0\.95rem,\s*1\.65vh,\s*1\.3rem\)\s*!important;[^}]*padding-block-start:var\(--ad-ext-x01-2player-progress-pad-block-start\)\s*!important;[^}]*margin-top:var\(--ad-ext-x01-2player-progress-gap\)\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="progress"\]\{[^}]*grid-row:4\s*!important;[^}]*min-block-size:var\(--ad-ext-x01-2player-progress-min-block-size\)\s*!important;[^}]*padding-block-start:var\(--ad-ext-x01-2player-progress-pad-block-start\)\s*!important;[^}]*margin-top:var\(--ad-ext-x01-2player-progress-gap\)\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="progress"\]\[data-ad-ext-x01-score-progress-size="breit"\]\{[^}]*--ad-ext-x01-2player-progress-min-block-size:calc\(clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\) \+ var\(--ad-ext-x01-2player-progress-pad-block-start\)\);/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-player\.ad-ext-player-inactive\s*>\s*\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\],[^}]*\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s*>\s*\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\]\{[^}]*min-height:max-content\s*!important;[^}]*height:auto\s*!important;[^}]*padding:0\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-player\.ad-ext-player-inactive\s*>\s*\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\],[^}]*line-height:0\.74\s*!important;[^}]*align-self:stretch\s*!important;/s
   );
   assert.match(
     css,

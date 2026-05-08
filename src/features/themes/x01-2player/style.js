@@ -342,6 +342,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-progress-gap:clamp(0.03rem, 0.12vh, 0.1rem);
   --ad-ext-x01-2player-stack-gap:clamp(0.22rem, 0.48vh, 0.4rem);
   --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, 2.85rem);
+  --ad-ext-x01-2player-round-font-size:min(calc(var(--ad-ext-x01-2player-round-size) * 0.72), 1.55rem);
   --ad-ext-x01-2player-header-meta-font-size:clamp(1.47rem, min(7.2cqi, 3.075cqb), 1.8rem);
   --ad-ext-x01-2player-player-name-font-size:var(
     --ad-ext-x01-2player-shared-name-size,
@@ -352,6 +353,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-score-pad-block:clamp(0.16rem, 0.38vh, 0.3rem);
   --ad-ext-x01-2player-score-min-block-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale) * 0.76);
   --ad-ext-x01-2player-progress-pad-block-start:clamp(0.08rem, 0.24vh, 0.18rem);
+  --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.08rem, 1.9vw, 1.4rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
   min-width:0 !important;
   min-height:clamp(18rem, 58vh, 34rem) !important;
   height:auto !important;
@@ -791,6 +793,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR} .css-1j0bqop{
   font-size:var(--ad-ext-x01-2player-header-meta-font-size) !important;
   line-height:1.05 !important;
+  text-align:right !important;
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z{
@@ -865,7 +868,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player .css-3fr5p8 > p{
-  font-size:calc(var(--ad-ext-x01-2player-round-size) * 0.54) !important;
+  font-size:var(--ad-ext-x01-2player-round-font-size) !important;
   line-height:1 !important;
   font-weight:800 !important;
   color:inherit !important;
@@ -911,8 +914,10 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   grid-row:1 !important;
   display:flex !important;
   align-items:center !important;
+  justify-content:flex-end !important;
   justify-items:start !important;
   align-content:start !important;
+  text-align:right !important;
   min-height:var(--ad-ext-x01-2player-round-size) !important;
   row-gap:clamp(0.08rem, 0.2vh, 0.16rem) !important;
   width:100% !important;
@@ -1022,7 +1027,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   grid-column:1 / -1 !important;
   grid-row:4 !important;
   display:block !important;
-  min-block-size:clamp(0.95rem, 1.65vh, 1.3rem) !important;
+  min-block-size:var(--ad-ext-x01-2player-progress-min-block-size) !important;
   padding-block-start:var(--ad-ext-x01-2player-progress-pad-block-start) !important;
   margin-top:var(--ad-ext-x01-2player-progress-gap) !important;
   align-self:start !important;
@@ -1194,6 +1199,37 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   justify-self:stretch !important;
   margin-top:var(--ad-ext-x01-2player-progress-gap) !important;
   z-index:1 !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="schmal"]{
+  --ad-ext-x01-2player-progress-min-block-size:calc(clamp(.3rem, .62vw, .46rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="standard"]{
+  --ad-ext-x01-2player-progress-min-block-size:calc(clamp(.72rem, 1.35vw, 1.02rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="breit"]{
+  --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.08rem, 1.9vw, 1.4rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="extrabreit"]{
+  --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.48rem, 2.52vw, 1.92rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR},
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR}{
+  min-height:max-content !important;
+  height:auto !important;
+  padding:0 !important;
+}
+
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
+  line-height:0.74 !important;
+  align-self:stretch !important;
 }
 
 #ad-ext-player-display .ad-ext-player table{
