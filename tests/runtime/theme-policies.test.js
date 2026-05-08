@@ -272,6 +272,73 @@ test("theme-x01-2player policy mirrors board controls above the dart overlay wit
   assert.equal(boardControls.parentNode, boardPanel);
 });
 
+test("theme-x01-2player policy removes board-control portals from stale theme states", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.innerWidth = 1536;
+
+  const boardPanel = documentRef.createElement("div");
+  boardPanel.classList.add("ad-ext-theme-board-panel");
+
+  const boardControls = documentRef.createElement("div");
+  boardControls.classList.add("ad-ext-theme-board-controls");
+  boardControls.__rect = {
+    top: 211,
+    left: 902,
+    width: 249,
+    height: 52,
+  };
+
+  const undoButton = documentRef.createElement("button");
+  undoButton.textContent = "Undo";
+  const nextButton = documentRef.createElement("button");
+  nextButton.textContent = "Next";
+  boardControls.appendChild(undoButton);
+  boardControls.appendChild(nextButton);
+  boardPanel.appendChild(boardControls);
+  documentRef.main.appendChild(boardPanel);
+
+  const policy = resolveThemePolicy({ featureKey: "theme-x01-2player" });
+  const staleThemeState = policy.createState();
+  policy.onActivate({
+    documentRef,
+    themeState: staleThemeState,
+    windowRef,
+  });
+
+  const stalePortalNode = documentRef.querySelector(
+    '[data-ad-ext-x01-2player-board-controls-portal="true"]'
+  );
+  assert.ok(stalePortalNode);
+
+  const nextThemeState = policy.createState();
+  policy.onActivate({
+    documentRef,
+    themeState: nextThemeState,
+    windowRef,
+  });
+
+  const portalNodes = documentRef.querySelectorAll(
+    '[data-ad-ext-x01-2player-board-controls-portal="true"]'
+  );
+
+  assert.equal(portalNodes.length, 1);
+  assert.notEqual(portalNodes[0], stalePortalNode);
+  assert.equal(stalePortalNode.parentNode, null);
+  assert.equal(portalNodes[0].style.getPropertyValue("top"), "211.0px");
+  assert.equal(portalNodes[0].style.getPropertyValue("right"), "385.0px");
+
+  policy.onDeactivate({
+    documentRef,
+    themeState: nextThemeState,
+  });
+
+  assert.equal(
+    documentRef.querySelector('[data-ad-ext-x01-2player-board-controls-portal="true"]'),
+    null
+  );
+});
+
 test("x01 2player scoreboard state marks only older remaining values stale", () => {
   const initialRowStates = deriveX01TwoPlayerScoreboardRowState([
     { scoreText: "", remainingText: "501" },

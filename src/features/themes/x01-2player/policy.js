@@ -21,6 +21,7 @@ const BOARD_CONTROLS_CLASS = THEME_LAYOUT_HOOK_CLASSES.boardControls;
 const BOARD_CONTROLS_SELECTOR = `.${BOARD_CONTROLS_CLASS}`;
 const BOARD_CONTROLS_PORTAL_CLASS = "ad-ext-x01-2player-board-controls-portal";
 const BOARD_CONTROLS_PORTAL_ATTRIBUTE = "data-ad-ext-x01-2player-board-controls-portal";
+const BOARD_CONTROLS_PORTAL_SELECTOR = `[${BOARD_CONTROLS_PORTAL_ATTRIBUTE}="true"]`;
 const LIVE_TURN_HEIGHT_VARIABLE = "--ad-ext-x01-2player-live-turn-height";
 const LIVE_THROW_POINTS_SIZE_VARIABLE = "--ad-ext-x01-2player-live-throw-points-size";
 const SHARED_PLAYER_NAME_SIZE_VARIABLE = "--ad-ext-x01-2player-shared-name-size";
@@ -601,6 +602,14 @@ function createBoardControlsPortal(documentRef, rootNode) {
   return portalNode;
 }
 
+function removeStaleBoardControlsPortals(documentRef, retainedPortalNode = null) {
+  queryAll(documentRef, BOARD_CONTROLS_PORTAL_SELECTOR).forEach((node) => {
+    if (node && node !== retainedPortalNode) {
+      node.remove?.();
+    }
+  });
+}
+
 function syncBoardControlsPortalPosition(documentRef, themeState = {}, windowRef = null) {
   const portalState = getBoardControlsPortalState(themeState);
   const portalNode = portalState?.portalNode || null;
@@ -768,10 +777,16 @@ function syncBoardControlsPortal(context = {}) {
     existingPortalState?.portalNode?.isConnected !== false &&
     existingPortalState?.sourceControlsNode?.isConnected !== false
   ) {
+    removeStaleBoardControlsPortals(documentRef, existingPortalState.portalNode);
     syncBoardControlsMirror(themeState);
     ensureBoardControlsPortalPositionSync(context);
     return true;
   }
+
+  if (existingPortalState) {
+    restoreBoardControlsPortal(themeState);
+  }
+  removeStaleBoardControlsPortals(documentRef);
 
   const sourceControlsNode = findBoardControls(documentRef);
   const rootNode = getRootContainer(documentRef);
