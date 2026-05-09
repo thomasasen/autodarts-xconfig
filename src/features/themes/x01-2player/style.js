@@ -76,7 +76,7 @@ p.chakra-text.css-1j0bqop{
   --ad-ext-theme-card-active-outline-color:rgba(143, 226, 141, 0.24);
   --ad-ext-theme-card-inactive-border-color:rgba(236, 247, 240, 0.16);
   --ad-ext-theme-score-active-color:var(--ad-ext-theme-accent-color);
-  --ad-ext-theme-score-inactive-color:#f6fbf7;
+  --ad-ext-theme-score-inactive-color:var(--ad-ext-theme-meta-inactive-color);
   --ad-ext-theme-meta-color:rgba(219, 230, 223, 0.9);
   --ad-ext-theme-meta-active-color:var(--ad-ext-theme-meta-color);
   --ad-ext-theme-meta-inactive-color:var(--ad-ext-theme-meta-color);
@@ -378,8 +378,8 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   );
   --ad-ext-x01-2player-header-meta-pad-block-end:clamp(0.08rem, 0.22vh, 0.16rem);
   --ad-ext-x01-2player-identity-pad-block-end:clamp(0.08rem, 0.24vh, 0.18rem);
-  --ad-ext-x01-2player-score-pad-block:clamp(0.16rem, 0.38vh, 0.3rem);
-  --ad-ext-x01-2player-score-min-block-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale) * 0.76);
+  --ad-ext-x01-2player-score-pad-block:clamp(0.34rem, 0.72vh, 0.58rem);
+  --ad-ext-x01-2player-score-min-block-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale) * 0.94);
   --ad-ext-x01-2player-progress-pad-block-start:clamp(0.08rem, 0.24vh, 0.18rem);
   --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.08rem, 1.9vw, 1.4rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
   min-width:0 !important;
@@ -762,12 +762,13 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   max-inline-size:100% !important;
   padding:0 !important;
   font-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale)) !important;
-  line-height:0.78 !important;
+  line-height:0.9 !important;
   font-weight:800 !important;
-  color:var(--ad-ext-theme-score-inactive-color) !important;
+  color:var(--ad-ext-theme-meta-inactive-color) !important;
   text-shadow:0 0 26px rgba(255, 255, 255, 0.08) !important;
   text-align:center !important;
   margin:0 !important;
+  overflow:visible !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext-player-score,
@@ -784,7 +785,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext_winner-score-wrapper > p{
   align-self:start !important;
   justify-self:stretch !important;
-  line-height:0.78 !important;
+  line-height:0.9 !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active > ${LEGACY_PROGRESS_STACK_SELECTOR} > .ad-ext-player-score,
@@ -957,6 +958,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   background:transparent !important;
   background-color:transparent !important;
   box-shadow:none !important;
+  overflow:visible !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}{
@@ -972,6 +974,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   background:transparent !important;
   background-color:transparent !important;
   box-shadow:none !important;
+  overflow:visible !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :first-child{
@@ -1042,13 +1045,14 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   padding:0 !important;
   padding-block:var(--ad-ext-x01-2player-score-pad-block) !important;
   font-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale)) !important;
-  line-height:0.74 !important;
+  line-height:0.9 !important;
   font-weight:800 !important;
   text-align:center !important;
-  color:var(--ad-ext-theme-score-inactive-color) !important;
+  color:var(--ad-ext-theme-meta-inactive-color) !important;
   background:transparent !important;
   background-color:transparent !important;
   box-shadow:none !important;
+  overflow:visible !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}{
@@ -1134,7 +1138,7 @@ ${INACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
 ${INACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
-  color:var(--ad-ext-theme-score-inactive-color) !important;
+  color:var(--ad-ext-theme-meta-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${TABLE_SLOT_SELECTOR}{
@@ -1256,8 +1260,10 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
-  line-height:0.74 !important;
+  line-height:0.9 !important;
   align-self:stretch !important;
+  overflow:visible !important;
+  color:var(--ad-ext-theme-meta-inactive-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player table{
