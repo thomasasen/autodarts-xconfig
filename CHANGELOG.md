@@ -12,6 +12,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.14] - 2026-05-10
+
+### Changed
+
+- Nutzerwirkung: Die xConfig-Oberfläche bleibt bei Navigations- und Layoutwechseln zuverlässiger am richtigen Inhaltsbereich angedockt und synchronisiert ihren Menüeintrag stabiler mit Autodarts.
+  Technik: Die Shell bewertet Navigation, Content-Flächen und Shell-Mutationen über gemeinsame Layout-Utilities, ignoriert eigene Panel-Knoten bei der Relevanzprüfung und deckt die Routing-/Mutationserkennung mit Runtime-Regressionen ab.
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom` hält aktive Zoom-Transformationen stabiler, auch wenn Board- oder Zielknoten erneut ausgewertet werden; vorhandene wichtige Inline-Styles werden beim Ein- und Auszoomen sauberer erhalten.
+  Technik: Die Zoom-Logik erkennt bereits angewendete Transform-Signaturen, speichert Style-Werte inklusive Priorität und erweitert den Fake-DOM sowie Layout-Regressionen für Transform-/Priority-Verhalten.
+- Nutzerwirkung: Eigene `Templates Global`-Dart-Stile greifen nur noch auf echte Turn-Darts im Wurffeld und verfälschen keine Checkout-Vorschlagskarten mehr.
+  Technik: Die Global-Typography-Selektoren sind auf direkte `#ad-ext-turn > .suggestion`-Dartbilder begrenzt und Regressionen prüfen die Abgrenzung zu `Style Checkout Suggestions`.
+- Nutzerwirkung: `X01 2 Player` gibt Score-, Turn- und Header-Flächen etwas mehr Luft, sodass Werte in dichten Layouts weniger gedrängt wirken.
+  Technik: Theme-Policy und CSS erweitern die Breathing-Room-Regeln für Spielerflächen, initiale Turn-Summen und Throw-Werte; Template-/Policy-Regressionen sichern die neuen Größen- und Layoutverträge ab.
+
 ## [2.3.13] - 2026-05-09
 
 ### Fixed
@@ -1568,7 +1584,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.13]: https://github.com/thomasasen/autodarts-xconfig/compare/9d54362...HEAD
+[2.3.14]: https://github.com/thomasasen/autodarts-xconfig/compare/1ecafb3...HEAD
+[2.3.13]: https://github.com/thomasasen/autodarts-xconfig/compare/9d54362...1ecafb3
 [2.3.12]: https://github.com/thomasasen/autodarts-xconfig/compare/4e53c2e...9d54362
 [2.3.11]: https://github.com/thomasasen/autodarts-xconfig/compare/367c667...4e53c2e
 [2.3.10]: https://github.com/thomasasen/autodarts-xconfig/compare/f192692...367c667
