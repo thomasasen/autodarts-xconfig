@@ -157,11 +157,20 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
     turnDartSizePercent: 135,
   });
 
-  assert.match(gradientStyle, /#ad-ext-turn img\[alt="Dart"\] \{/);
+  assert.match(gradientStyle, /#ad-ext-turn > \.ad-ext-turn-throw img\[alt="Dart"\],/);
+  assert.match(gradientStyle, /#ad-ext-turn > \.score img\[alt="Dart"\] \{/);
   assert.match(gradientStyle, /content: url\("data:image\/svg\+xml,/);
   assert.match(gradientStyle, /width: 203px !important;/);
   assert.match(gradientStyle, /height: 44px !important;/);
   assert.match(gradientStyle, /object-fit: contain !important;/);
+  assert.doesNotMatch(
+    gradientStyle,
+    /#ad-ext-turn > \.suggestion img\[alt="Dart"\]\s*\{[^}]*content:/s
+  );
+  assert.match(
+    gradientStyle,
+    /#ad-ext-turn > \.suggestion img\[alt="Dart"\] \{\s*opacity: 0 !important;\s*pointer-events: none !important;\s*\}/
+  );
   assert.match(decodeURIComponent(gradientStyle), /stop-color="#EF4444"/);
   assert.match(decodeURIComponent(gradientStyle), /stop-color="#22C55E"/);
 
@@ -177,6 +186,7 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
   assert.match(textStyle, /content: "Wurf " counter\(ad-ext-turn-dart-text\);/);
   assert.match(textStyle, /color: #22C55E;/);
   assert.match(textStyle, /font-family: "Open Sans", "Segoe UI", Tahoma, sans-serif !important;/);
+  assert.match(textStyle, /#ad-ext-turn > \.suggestion img\[alt="Dart"\] \{/);
 
   const imageStyle = buildThemeGlobalTypographyStyleText({
     fontPreset: "system",
@@ -189,6 +199,10 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
   assert.match(imageStyle, /background-image: url\("data:image\/png;base64,AAAA"\) !important;/);
   assert.match(imageStyle, /background-size: 100% auto !important;/);
   assert.match(imageStyle, /object-fit: cover !important;/);
+  assert.doesNotMatch(
+    imageStyle,
+    /#ad-ext-turn > \.suggestion img\[alt="Dart"\]\s*\{[^}]*background-image:/s
+  );
   assert.doesNotMatch(imageStyle, /counter-reset: ad-ext-turn-dart-text;/);
 
   const originalStyle = buildThemeGlobalTypographyStyleText({

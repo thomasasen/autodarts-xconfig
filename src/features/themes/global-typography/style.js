@@ -14,6 +14,9 @@ export const TOOLS_SHADOW_STYLE_ID = "ad-ext-theme-global-typography-tools-style
 const TURN_DART_PLACEHOLDER_DATA_URL =
   "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20477%20102%22%3E%3C/svg%3E";
 const TURN_DART_LARGE_SIZE_BOOST = 1.25;
+const TURN_DART_IMAGE_SELECTOR = `#ad-ext-turn > .ad-ext-turn-throw img[alt="Dart"],
+#ad-ext-turn > .score img[alt="Dart"]`;
+const TURN_SUGGESTION_DART_SELECTOR = `#ad-ext-turn > .suggestion img[alt="Dart"]`;
 
 export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
   scores: Object.freeze([
@@ -206,6 +209,15 @@ function buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx
   text-align: center;
   text-shadow: 0 0 7px rgba(0, 0, 0, 0.72), 0 0 12px ${dartColor};
   pointer-events: none;
+}
+
+${buildTurnSuggestionDartGuardStyleBlock()}`;
+}
+
+function buildTurnSuggestionDartGuardStyleBlock() {
+  return `${TURN_SUGGESTION_DART_SELECTOR} {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }`;
 }
 
@@ -241,14 +253,16 @@ function buildTurnDartStyleBlock(featureConfig = {}) {
         ]
       : [`content: url(${cssString(imageUrl)}) !important;`];
 
-  return `#ad-ext-turn img[alt="Dart"] {
+  return `${TURN_DART_IMAGE_SELECTOR} {
   ${imageDeclarations.join("\n  ")}
   width: ${widthPx}px !important;
   height: ${heightPx}px !important;
   object-fit: ${objectFit} !important;
   opacity: 1 !important;
   filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.34));
-}`;
+}
+
+${buildTurnSuggestionDartGuardStyleBlock()}`;
 }
 
 export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
