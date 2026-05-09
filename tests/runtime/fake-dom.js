@@ -76,18 +76,139 @@ class FakeClassList {
 class FakeStyleDecl {
   constructor() {
     this._values = new Map();
+    this._priorities = new Map();
   }
 
-  setProperty(name, value) {
-    this._values.set(String(name), String(value));
+  _normalizeName(name) {
+    return String(name || "").replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+  }
+
+  _get(name) {
+    return this._values.get(this._normalizeName(name)) || "";
+  }
+
+  _set(name, value) {
+    this.setProperty(name, value);
+  }
+
+  setProperty(name, value, priority = "") {
+    const normalizedName = this._normalizeName(name);
+    this._values.set(normalizedName, String(value));
+    if (priority) {
+      this._priorities.set(normalizedName, String(priority));
+    } else {
+      this._priorities.delete(normalizedName);
+    }
   }
 
   removeProperty(name) {
-    this._values.delete(String(name));
+    const normalizedName = this._normalizeName(name);
+    this._values.delete(normalizedName);
+    this._priorities.delete(normalizedName);
   }
 
   getPropertyValue(name) {
-    return this._values.get(String(name)) || "";
+    return this._get(name);
+  }
+
+  getPropertyPriority(name) {
+    return this._priorities.get(this._normalizeName(name)) || "";
+  }
+
+  get transform() {
+    return this._get("transform");
+  }
+
+  set transform(value) {
+    this._set("transform", value);
+  }
+
+  get transition() {
+    return this._get("transition");
+  }
+
+  set transition(value) {
+    this._set("transition", value);
+  }
+
+  get transformOrigin() {
+    return this._get("transform-origin");
+  }
+
+  set transformOrigin(value) {
+    this._set("transform-origin", value);
+  }
+
+  get willChange() {
+    return this._get("will-change");
+  }
+
+  set willChange(value) {
+    this._set("will-change", value);
+  }
+
+  get overflow() {
+    return this._get("overflow");
+  }
+
+  set overflow(value) {
+    this._set("overflow", value);
+  }
+
+  get overflowX() {
+    return this._get("overflow-x");
+  }
+
+  set overflowX(value) {
+    this._set("overflow-x", value);
+  }
+
+  get overflowY() {
+    return this._get("overflow-y");
+  }
+
+  set overflowY(value) {
+    this._set("overflow-y", value);
+  }
+
+  get width() {
+    return this._get("width");
+  }
+
+  set width(value) {
+    this._set("width", value);
+  }
+
+  get height() {
+    return this._get("height");
+  }
+
+  set height(value) {
+    this._set("height", value);
+  }
+
+  get maxWidth() {
+    return this._get("max-width");
+  }
+
+  set maxWidth(value) {
+    this._set("max-width", value);
+  }
+
+  get maxHeight() {
+    return this._get("max-height");
+  }
+
+  set maxHeight(value) {
+    this._set("max-height", value);
+  }
+
+  get objectFit() {
+    return this._get("object-fit");
+  }
+
+  set objectFit(value) {
+    this._set("object-fit", value);
   }
 }
 

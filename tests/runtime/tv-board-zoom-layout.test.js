@@ -609,7 +609,8 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   hostNode.style.setProperty("overflow", "visible");
   hostNode.style.setProperty("overflow-x", "auto");
   hostNode.style.setProperty("overflow-y", "scroll");
-  targetNode.style.transform = "rotate(1deg)";
+  targetNode.style.setProperty("transform", "rotate(1deg)", "important");
+  targetNode.style.setProperty("transform-origin", "50% 50%", "important");
 
   applyZoom(
     { targetNode, hostNode, boardSvg },
@@ -626,6 +627,8 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   assert.equal(hostNode.style.getPropertyValue("overflow-x"), "hidden");
   assert.equal(hostNode.style.getPropertyValue("overflow-y"), "hidden");
   assert.ok(String(targetNode.style.transform).includes("translate("));
+  assert.equal(targetNode.style.getPropertyPriority("transform"), "important");
+  assert.equal(targetNode.style.getPropertyPriority("transform-origin"), "important");
 
   resetZoom(speedConfig, state, true);
 
@@ -635,6 +638,9 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   assert.equal(hostNode.style.getPropertyValue("overflow-x"), "auto");
   assert.equal(hostNode.style.getPropertyValue("overflow-y"), "scroll");
   assert.equal(targetNode.style.transform, "rotate(1deg)");
+  assert.equal(targetNode.style.getPropertyPriority("transform"), "important");
+  assert.equal(targetNode.style.transformOrigin, "50% 50%");
+  assert.equal(targetNode.style.getPropertyPriority("transform-origin"), "important");
 });
 
 test("tv-board-zoom scales only inner board layer and fits gif siblings proportionally", () => {

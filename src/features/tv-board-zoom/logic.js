@@ -628,10 +628,22 @@ function cacheTargetStyle(state, targetNode) {
 
   state.targetStyleSnapshot = {
     node: targetNode,
-    transform: hasAppliedZoomTransform ? stripAppliedZoomTransform(currentTransform) : currentTransform,
-    transition: hasAppliedZoomTransform ? "" : String(targetNode.style.transition || ""),
-    transformOrigin: hasAppliedZoomTransform ? "" : String(targetNode.style.transformOrigin || ""),
-    willChange: hasAppliedZoomTransform ? "" : String(targetNode.style.willChange || ""),
+    transform: {
+      value: hasAppliedZoomTransform ? stripAppliedZoomTransform(currentTransform) : currentTransform,
+      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "transform"),
+    },
+    transition: {
+      value: hasAppliedZoomTransform ? "" : String(targetNode.style.transition || ""),
+      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "transition"),
+    },
+    transformOrigin: {
+      value: hasAppliedZoomTransform ? "" : String(targetNode.style.transformOrigin || ""),
+      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "transform-origin"),
+    },
+    willChange: {
+      value: hasAppliedZoomTransform ? "" : String(targetNode.style.willChange || ""),
+      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "will-change"),
+    },
   };
 }
 
@@ -642,10 +654,10 @@ function restoreTargetStyle(state, targetNode) {
 
   const snapshot = state.targetStyleSnapshot;
   if (snapshot?.node === targetNode) {
-    targetNode.style.transform = snapshot.transform;
-    targetNode.style.transition = snapshot.transition;
-    targetNode.style.transformOrigin = snapshot.transformOrigin;
-    targetNode.style.willChange = snapshot.willChange;
+    restoreStyleWithPriority(targetNode.style, "transform", snapshot.transform);
+    restoreStyleWithPriority(targetNode.style, "transition", snapshot.transition);
+    restoreStyleWithPriority(targetNode.style, "transform-origin", snapshot.transformOrigin);
+    restoreStyleWithPriority(targetNode.style, "will-change", snapshot.willChange);
   } else {
     targetNode.style.removeProperty("transform");
     targetNode.style.removeProperty("transition");
@@ -1690,7 +1702,9 @@ function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, s
     windowRef: options?.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null),
     documentRef: options?.documentRef || (typeof document !== "undefined" ? document : null),
     baseTransform:
-      state.targetStyleSnapshot?.node === targetNode ? String(state.targetStyleSnapshot.transform || "") : "",
+      state.targetStyleSnapshot?.node === targetNode
+        ? String(state.targetStyleSnapshot.transform?.value || "")
+        : "",
     activeTargetZoomTransform:
       state.zoomedElement === targetNode && state.lastAppliedZoomTransform?.targetNode === targetNode
         ? {
@@ -1773,12 +1787,12 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   if (!targetNode.classList.contains(ZOOM_CLASS)) {
     targetNode.classList.add(ZOOM_CLASS);
   }
-  targetNode.style.transformOrigin = "0 0";
+  setStyleWithPriority(targetNode.style, "transform-origin", "0 0", "important");
   targetNode.style.willChange = "transform";
   targetNode.style.transition = isSameVisualIntent
     ? "none"
     : `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`;
-  targetNode.style.transform = composedTransform;
+  setStyleWithPriority(targetNode.style, "transform", composedTransform, "important");
 
   state.zoomedElement = targetNode;
   state.zoomHost = normalizedHostNode;
@@ -1806,7 +1820,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
   const hostNode = state.zoomHost;
   const targetSnapshot = state.targetStyleSnapshot;
   const snapshotTransform =
-    targetSnapshot?.node === targetNode ? targetSnapshot.transform : "";
+    targetSnapshot?.node === targetNode ? String(targetSnapshot.transform?.value || "") : "";
 
   if (!targetNode) {
     restoreGifOverlayStyles(state);
