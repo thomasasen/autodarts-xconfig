@@ -30,6 +30,84 @@ function normalizeSidebarRouteHints(values) {
   return new Set(Array.isArray(values) ? values : []);
 }
 
+function toElementNode(node) {
+  return node?.nodeType === 1 ? node : null;
+}
+
+function getTagName(node) {
+  return String(node?.tagName || node?.nodeName || "").trim().toLowerCase();
+}
+
+function isElementWithId(node, nodeId) {
+  return Boolean(nodeId) && String(node?.id || "") === String(nodeId || "");
+}
+
+function isManagedShellNode(node, options = {}) {
+  const element = toElementNode(node);
+  if (!element) {
+    return false;
+  }
+
+  const menuItemId = String(options.menuItemId || "").trim();
+  const panelHostId = String(options.panelHostId || "").trim();
+  if (isElementWithId(element, menuItemId) || isElementWithId(element, panelHostId)) {
+    return true;
+  }
+
+  return Boolean(
+    (menuItemId && element.closest?.(`#${menuItemId}`)) ||
+    (panelHostId && element.closest?.(`#${panelHostId}`))
+  );
+}
+
+function isNavigationRelatedNode(node) {
+  const element = toElementNode(node);
+  if (!element) {
+    return false;
+  }
+
+  return Boolean(
+    isNavigationElement(element) ||
+    element.closest?.(".navigation, nav, [role='navigation']")
+  );
+}
+
+function isDocumentShellTarget(node, options = {}) {
+  const element = toElementNode(node);
+  if (!element || isManagedShellNode(element, options)) {
+    return false;
+  }
+
+  if (isNavigationRelatedNode(element) || isElementWithId(element, options.rootId || "root")) {
+    return true;
+  }
+
+  const tagName = getTagName(element);
+  return tagName === "html" || tagName === "body";
+}
+
+function isInsertedOrRemovedShellNode(node, options = {}) {
+  const element = toElementNode(node);
+  if (!element || isManagedShellNode(element, options)) {
+    return false;
+  }
+
+  if (isDocumentShellTarget(element, options)) {
+    return true;
+  }
+
+  const tagName = getTagName(element);
+  return tagName === "main" || tagName === "aside";
+}
+
+function toNodeArray(value) {
+  if (!value || typeof value[Symbol.iterator] !== "function") {
+    return [];
+  }
+
+  return Array.from(value).filter(Boolean);
+}
+
 export function toRoutePathname(windowRef, hrefValue) {
   const href = String(hrefValue || "").trim();
   if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
@@ -134,6 +212,25 @@ export function isNavigationElement(node) {
   }
 
   return false;
+}
+
+export function hasShellNavigationOrLayoutMutation(mutations = [], options = {}) {
+  if (!Array.isArray(mutations) || !mutations.length) {
+    return false;
+  }
+
+  return mutations.some((mutation) => {
+    if (isDocumentShellTarget(mutation?.target || null, options)) {
+      return true;
+    }
+
+    const touchedNodes = [
+      ...toNodeArray(mutation?.addedNodes),
+      ...toNodeArray(mutation?.removedNodes),
+    ];
+
+    return touchedNodes.some((node) => isInsertedOrRemovedShellNode(node, options));
+  });
 }
 
 function isPanelHostElement(node, panelHostId) {

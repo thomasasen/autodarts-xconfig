@@ -16,6 +16,9 @@ function observeRootController(controller) {
       if (!controller.hasExternalDomMutation(mutations, controller.isManagedNode)) {
         return;
       }
+      if (!controller.shouldScheduleMutationSync(mutations)) {
+        return;
+      }
       controller.queueSync();
     },
     observeOptions: {
@@ -219,6 +222,7 @@ function buildShellLifecycleControllerContext(options = {}) {
     refreshUpdateStatus: resolveOptionalFunction(options.refreshUpdateStatus, () => Promise.resolve()),
     hasExternalDomMutation: resolveOptionalFunction(options.hasExternalDomMutation, () => true),
     isManagedNode: resolveOptionalFunction(options.isManagedNode, () => false),
+    shouldScheduleMutationSync: resolveOptionalFunction(options.shouldScheduleMutationSync, () => true),
   };
 }
 

@@ -514,6 +514,81 @@ test("xConfig observer ignores self-managed menu/panel mutations and only syncs 
   runtime.stop();
 });
 
+test("xConfig observer ignores closed-shell match content mutations without scanning sidebar", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+  await waitForRuntimeToSettle(runtime);
+
+  let sidebarRectReads = 0;
+  const readSidebarRect = documentRef.sidebar.getBoundingClientRect.bind(documentRef.sidebar);
+  documentRef.sidebar.getBoundingClientRect = () => {
+    sidebarRectReads += 1;
+    return readSidebarRect();
+  };
+
+  const turnDecoration = documentRef.createElement("span");
+  const scoreDecoration = documentRef.createElement("span");
+  const boardDecoration = documentRef.createElement("div");
+  boardDecoration.classList.add("ad-ext-theme-board-svg");
+  documentRef.turnContainer.appendChild(turnDecoration);
+  documentRef.activeScoreElement.appendChild(scoreDecoration);
+  documentRef.main.appendChild(boardDecoration);
+
+  documentRef.flushMutations([
+    { target: documentRef.turnContainer, addedNodes: [turnDecoration], removedNodes: [] },
+    { target: documentRef.activeScoreElement, addedNodes: [scoreDecoration], removedNodes: [] },
+    { target: documentRef.main, addedNodes: [boardDecoration], removedNodes: [] },
+  ]);
+
+  await wait(20);
+  assert.equal(sidebarRectReads, 0);
+
+  runtime.stop();
+});
+
+test("xConfig observer still syncs closed-shell sidebar mutations", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  let rafCount = 0;
+  const nativeRaf = windowRef.requestAnimationFrame.bind(windowRef);
+  windowRef.requestAnimationFrame = (callback) => {
+    rafCount += 1;
+    return nativeRaf(callback);
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+  await waitForRuntimeToSettle(runtime);
+
+  let sidebarRectReads = 0;
+  const readSidebarRect = documentRef.sidebar.getBoundingClientRect.bind(documentRef.sidebar);
+  documentRef.sidebar.getBoundingClientRect = () => {
+    sidebarRectReads += 1;
+    return readSidebarRect();
+  };
+
+  const baselineRafCount = rafCount;
+  const navLink = documentRef.createElement("a");
+  navLink.setAttribute("href", "/tournaments");
+  navLink.textContent = "Tournaments";
+  documentRef.sidebar.appendChild(navLink);
+
+  documentRef.flushMutations([
+    { target: documentRef.sidebar, addedNodes: [navLink], removedNodes: [] },
+  ]);
+
+  assert.ok(rafCount > baselineRafCount);
+  await waitFor(() => sidebarRectReads > 0);
+  assert.ok(sidebarRectReads > 0);
+
+  runtime.stop();
+});
+
 test("xConfig settings modal preserves node identity and scroll offsets during external sync", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

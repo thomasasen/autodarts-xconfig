@@ -9,6 +9,7 @@ import {
   currentRoute,
   getContentElement,
   getSidebarElement,
+  hasShellNavigationOrLayoutMutation,
   isConfigHash,
   isLegacyConfigPath,
   isNavigationElement,
@@ -384,6 +385,18 @@ function ensureXConfigShell(options = {}) {
     renderController?.syncVisibility();
   }
 
+  function shouldScheduleMutationSync(mutations = []) {
+    if (isConfigRoute()) {
+      return true;
+    }
+
+    return hasShellNavigationOrLayoutMutation(mutations, {
+      menuItemId: MENU_ITEM_ID,
+      panelHostId: PANEL_HOST_ID,
+      rootId: "root",
+    });
+  }
+
   renderController = createShellRenderController({
     buildMenuIconElement,
     buildShellContent,
@@ -460,6 +473,7 @@ function ensureXConfigShell(options = {}) {
     restoreContent,
     rootObserverKey: ROOT_OBSERVER_KEY,
     runtime,
+    shouldScheduleMutationSync,
     startAutoUpdateChecks,
     state,
     stopAutoUpdateChecks,
