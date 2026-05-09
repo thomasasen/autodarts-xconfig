@@ -99,7 +99,8 @@ p.chakra-text.css-1j0bqop{
   --ad-ext-x01-2player-turn-height:clamp(4.1rem, 5.6vw, 4.9rem);
   --ad-ext-x01-2player-live-turn-height:var(--ad-ext-x01-2player-turn-height);
   --ad-ext-x01-2player-throw-points-size:clamp(1.2rem, 1.8vw, 1.65rem);
-  --ad-ext-x01-2player-live-throw-points-size:var(--ad-ext-x01-2player-throw-points-size);
+  --ad-ext-x01-2player-throw-text-size:var(--chakra-fontSizes-2xl, 1.5rem);
+  --ad-ext-x01-2player-live-throw-points-size:calc(var(--ad-ext-x01-2player-throw-text-size) * 1.7);
   --ad-ext-x01-2player-turn-clearance:clamp(0.85rem, 1.25vh, 1.15rem);
   --ad-ext-x01-2player-controls-height:clamp(1.95rem, 3.2vh, 2.3rem);
   --ad-ext-x01-2player-board-gap:clamp(0.32rem, 0.6vh, 0.52rem);
@@ -110,6 +111,12 @@ p.chakra-text.css-1j0bqop{
     + var(--ad-ext-x01-2player-board-gap)
   );
   --ad-ext-x01-2player-card-padding:clamp(0.8rem, 1.25vw, 1rem);
+}
+
+@media screen and (min-width: 48em){
+  :root{
+    --ad-ext-x01-2player-throw-text-size:var(--chakra-fontSizes-5xl, 3rem);
+  }
 }
 
 div.css-gmuwbf,
