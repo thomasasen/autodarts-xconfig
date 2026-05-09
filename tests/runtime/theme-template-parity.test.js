@@ -298,6 +298,10 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
+    /#ad-ext-turn\s*>\s*\.score\{[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;/s
+  );
+  assert.match(
+    css,
     /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*min-width:0\s*!important;[^}]*width:max-content\s*!important;[^}]*max-width:none\s*!important;[^}]*padding-inline:clamp\(0\.24rem,\s*0\.48vw,\s*0\.42rem\)\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;[^}]*font-weight:800\s*!important;[^}]*line-height:1\s*!important;/s
   );
   assert.match(

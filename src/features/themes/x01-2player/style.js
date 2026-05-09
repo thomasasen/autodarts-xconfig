@@ -218,7 +218,7 @@ div.chakra-stack.navigation.css-ege71s{
 #ad-ext-turn > .score{
   display:grid !important;
   place-items:center !important;
-  font-size:clamp(2.7rem, 4.6vw, 3.7rem) !important;
+  font-size:var(--ad-ext-x01-2player-live-throw-points-size) !important;
   font-weight:800 !important;
   color:var(--ad-ext-theme-turn-points-color) !important;
 }
