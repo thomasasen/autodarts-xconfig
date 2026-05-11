@@ -2182,6 +2182,62 @@ test("theme-x01-2player syncs semantic slot markers and active attributes from g
   assert.equal(firstPlayer.tableSlotNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
 });
 
+test("theme-x01-2player marks the direct player-display child when player cards are nested", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 301, "A");
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 170, "B");
+  const firstOuterWrapper = documentRef.createElement("div");
+  const secondOuterWrapper = documentRef.createElement("div");
+  firstOuterWrapper.appendChild(firstPlayer.playerWrapperNode);
+  secondOuterWrapper.appendChild(secondPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(firstOuterWrapper);
+  playerDisplayNode.appendChild(secondOuterWrapper);
+
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-nested-direct-wrapper"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: createX01TwoPlayerLifecycleGameState(0),
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+
+  assert.equal(firstOuterWrapper.getAttribute(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE), "true");
+  assert.equal(firstOuterWrapper.getAttribute(X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE), "0");
+  assert.equal(secondOuterWrapper.getAttribute(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE), "true");
+  assert.equal(secondOuterWrapper.getAttribute(X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE), "1");
+  assert.equal(firstPlayer.playerWrapperNode.getAttribute(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE), null);
+  assert.equal(secondPlayer.playerWrapperNode.getAttribute(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE), null);
+  assert.equal(firstPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), "true");
+  assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.score);
+
+  cleanup();
+});
+
 test("theme-x01-2player keeps marker slots stable against shared score-progress chakra classes", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";

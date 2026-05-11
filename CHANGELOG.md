@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.15] - 2026-05-11
+
+### Fixed
+
+- Nutzerwirkung: `X01 2 Player` hält die beiden Spieler-Spalten stabil links und rechts vom Board, auch wenn Autodarts zusätzliche Wrapper um die Spieler-Karten rendert.
+  Technik: Die Theme-Policy markiert immer das direkte Kind von `#ad-ext-player-display` als Grid-Wrapper und eine Runtime-Regression bildet verschachtelte Player-Card-DOMs ab.
+
 ## [2.3.14] - 2026-05-10
 
 ### Changed
@@ -1584,7 +1591,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.14]: https://github.com/thomasasen/autodarts-xconfig/compare/1ecafb3...HEAD
+[2.3.15]: https://github.com/thomasasen/autodarts-xconfig/compare/aae1311...HEAD
+[2.3.14]: https://github.com/thomasasen/autodarts-xconfig/compare/1ecafb3...aae1311
 [2.3.13]: https://github.com/thomasasen/autodarts-xconfig/compare/9d54362...1ecafb3
 [2.3.12]: https://github.com/thomasasen/autodarts-xconfig/compare/4e53c2e...9d54362
 [2.3.11]: https://github.com/thomasasen/autodarts-xconfig/compare/367c667...4e53c2e
