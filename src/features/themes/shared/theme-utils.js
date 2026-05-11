@@ -99,17 +99,30 @@ export function isThemeGameContextActive(options = {}) {
   return GAME_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(routePath, prefix));
 }
 
+function getDocumentVariantName(documentRef) {
+  if (documentRef && typeof documentRef.getElementById === "function") {
+    const variantElement = documentRef.getElementById("ad-ext-game-variant");
+    return normalizeVariant(variantElement?.textContent || "");
+  }
+
+  return "";
+}
+
+function isX01VariantName(variantName) {
+  return variantName.includes("x01") || /\b\d+01\b/.test(variantName);
+}
+
 export function getVariantName(gameState, documentRef) {
+  const variantFromDocument = getDocumentVariantName(documentRef);
+  if (variantFromDocument) {
+    return variantFromDocument;
+  }
+
   if (gameState && typeof gameState.getVariant === "function") {
     const variantFromState = normalizeVariant(gameState.getVariant());
     if (variantFromState) {
       return variantFromState;
     }
-  }
-
-  if (documentRef && typeof documentRef.getElementById === "function") {
-    const variantElement = documentRef.getElementById("ad-ext-game-variant");
-    return normalizeVariant(variantElement?.textContent || "");
   }
 
   return "";
@@ -139,6 +152,10 @@ export function isThemeVariantActive(options = {}) {
   const currentVariant = getVariantName(gameState, options.documentRef);
 
   if (variantName === "x01") {
+    if (currentVariant && !isX01VariantName(currentVariant)) {
+      return false;
+    }
+
     if (gameState && typeof gameState.isX01Variant === "function") {
       return gameState.isX01Variant({
         allowMissing: false,
@@ -146,7 +163,7 @@ export function isThemeVariantActive(options = {}) {
         allowNumeric: true,
       });
     }
-    return currentVariant.includes("x01") || /\b\d+01\b/.test(currentVariant);
+    return isX01VariantName(currentVariant);
   }
 
   if (variantName === "cricket") {

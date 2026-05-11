@@ -95,6 +95,31 @@ function createBoardModeButtons(documentRef, activeMode = "segments") {
   return buttons;
 }
 
+function createThemesConfig(themeEntries = {}) {
+  const themes = {};
+  const featureToggles = {
+    checkoutScorePulse: false,
+  };
+
+  Object.entries(themeEntries).forEach(([themeName, themeFeatureConfig = {}]) => {
+    featureToggles[`themes.${themeName}`] = true;
+    themes[themeName] = {
+      enabled: true,
+      ...themeFeatureConfig,
+    };
+  });
+
+  return {
+    featureToggles,
+    features: {
+      checkoutScorePulse: {
+        enabled: false,
+      },
+      themes,
+    },
+  };
+}
+
 function createBoardVisibilityMenuItem(documentRef, initiallyVisible = false) {
   const button = documentRef.createElement("button");
   let visible = Boolean(initiallyVisible);
@@ -1858,6 +1883,48 @@ test("theme-x01-2player mounts only for exact 2-player x01 matches and cleans up
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), false);
+  assertThemeHookState(boardNodes, false);
+});
+
+test("theme-x01-2player stays inactive while the visible phase is bull-off", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Bull-off";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  addPlayerCards(documentRef, documentRef.getElementById("ad-ext-player-display"), 2);
+  const windowRef = createMatchWindow(documentRef, "theme-x01-2player-bull-off-phase");
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    config: createThemesConfig({
+      x01TwoPlayer: {
+        showAvg: true,
+      },
+      bullOff: {
+        contrastPreset: "high",
+      },
+    }),
+  });
+
+  runtime.start();
+  runtime.context.gameState.applyMatch({
+    variant: "501",
+    players: [{ name: "A" }, { name: "B" }],
+    turns: [],
+  });
+  await wait(5);
+
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-x01-2player-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-bull-off-style")), true);
+  assertThemeHookState(boardNodes, true);
+  assert.equal(
+    documentRef
+      .getElementById("ad-ext-player-display")
+      .querySelectorAll(`[${X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE}="true"]`).length,
+    0
+  );
+
+  runtime.stop();
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-theme-bull-off-style")), false);
   assertThemeHookState(boardNodes, false);
 });
 

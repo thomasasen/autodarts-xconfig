@@ -18,6 +18,8 @@ direkt zu einer versionierten Release-Sektion.
 
 - Nutzerwirkung: `X01 2 Player` hält die beiden Spieler-Spalten stabil links und rechts vom Board, auch wenn Autodarts zusätzliche Wrapper um die Spieler-Karten rendert.
   Technik: Die Theme-Policy markiert immer das direkte Kind von `#ad-ext-player-display` als Grid-Wrapper und eine Runtime-Regression bildet verschachtelte Player-Card-DOMs ab.
+- Nutzerwirkung: `X01 2 Player` greift nicht mehr während eines vorgeschalteten Bull-off ein; in dieser Phase bleibt das Bull-off-Layout zuständig.
+  Technik: Die gemeinsame Theme-Variantenerkennung priorisiert die sichtbare DOM-Phase vor dem Match-Snapshot und eine Runtime-Regression deckt `Bull-off` mit gleichzeitigem `501`-Snapshot ab.
 
 ## [2.3.14] - 2026-05-10
 
