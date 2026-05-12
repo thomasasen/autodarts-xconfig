@@ -140,14 +140,29 @@ test("validateChangelogDocument rejects compare links on older release sections 
   );
 });
 
-test("validateChangelogDocument rejects relevant changes without a changelog update", () => {
+test("validateChangelogDocument accepts source changes without a release changelog update", () => {
   const errors = validateChangelogDocument({
     text: buildSampleChangelog(),
     packageVersion: "2.0.23",
+    headPackageVersion: "2.0.23",
     changedFiles: ["src/features/xconfig-ui/index.js"],
   });
 
-  assert.match(errors.join("\n"), /CHANGELOG\.md wurde nicht mitgeändert/);
+  assert.deepEqual(errors, []);
+});
+
+test("validateChangelogDocument rejects version bumps without a changelog update", () => {
+  const errors = validateChangelogDocument({
+    text: buildSampleChangelog("2.0.24"),
+    packageVersion: "2.0.24",
+    headPackageVersion: "2.0.23",
+    changedFiles: ["package.json"],
+  });
+
+  assert.match(
+    errors.join("\n"),
+    /package\.json wurde von 2\.0\.23 auf 2\.0\.24 geändert, aber CHANGELOG\.md wurde nicht/
+  );
 });
 
 test("isChangelogRelevantFile matches shipped and release-relevant paths only", () => {

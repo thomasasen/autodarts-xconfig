@@ -302,13 +302,15 @@ export function validateChangelogDocument({
 
   errors.push(...validateRecentCompareLinks(sections, linkReferences));
 
-  const hasRelevantChanges = changedFiles.some((filePath) => isChangelogRelevantFile(filePath));
   const changelogWasChanged = changedFiles.some(
     (filePath) => String(filePath || "").replaceAll("\\", "/") === "CHANGELOG.md"
   );
-  if (hasRelevantChanges && !changelogWasChanged) {
+  const packageVersionWasChanged = Boolean(
+    headPackageVersion && headPackageVersion !== packageVersion
+  );
+  if (packageVersionWasChanged && !changelogWasChanged) {
     errors.push(
-      "Es gibt relevante lokale Änderungen in src/loader/scripts/package.json, aber CHANGELOG.md wurde nicht mitgeändert."
+      `package.json wurde von ${headPackageVersion} auf ${packageVersion} geändert, aber CHANGELOG.md wurde nicht mitgeändert.`
     );
   }
 
