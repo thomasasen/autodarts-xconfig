@@ -174,7 +174,7 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
     animeRef,
     featureConfig: {
       colorTheme: "champagne-night",
-      animationStyle: "charge-release",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
@@ -194,7 +194,7 @@ test("updateHitDecorations decorates rows, differentiates bulls, and assigns tex
   assert.equal(stats.rowCount, 5);
   assert.equal(stats.decoratedCount, 4);
   assert.equal(stats.burstCount, 4);
-  assert.equal(stats.idleLoopCount, 4);
+  assert.equal(stats.idleLoopCount, 0);
   assert.equal(stats.kindCounts.triple, 1);
   assert.equal(stats.kindCounts.double, 1);
   assert.equal(stats.kindCounts.bullOuter, 1);
@@ -219,7 +219,7 @@ test("updateHitDecorations still finds score and segment roles when row descenda
     roleStateByRow,
     featureConfig: {
       colorTheme: "champagne-night",
-      animationStyle: "charge-release",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
@@ -245,7 +245,7 @@ test("updateHitDecorations applies configured color theme and defaults invalid v
     roleStateByRow,
     featureConfig: {
       colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -261,7 +261,7 @@ test("updateHitDecorations applies configured color theme and defaults invalid v
     roleStateByRow,
     featureConfig: {
       colorTheme: "invalid-theme",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -296,7 +296,7 @@ test("updateHitDecorations bursts only the newly changed slot and keeps prior ro
     animeRef,
     featureConfig: {
       colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
@@ -317,7 +317,7 @@ test("updateHitDecorations bursts only the newly changed slot and keeps prior ro
     animeRef,
     featureConfig: {
       colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
@@ -341,7 +341,7 @@ test("updateHitDecorations bursts only the newly changed slot and keeps prior ro
     animeRef,
     featureConfig: {
       colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
@@ -374,7 +374,7 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
   assert.equal(first.burstCount, 0);
@@ -391,7 +391,7 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
   assert.equal(second.burstCount, 1);
@@ -408,7 +408,7 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
   assert.equal(third.burstCount, 1);
@@ -426,7 +426,7 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
   assert.equal(cleared.removedCount, 1);
@@ -444,7 +444,7 @@ test("same-slot changes re-burst only that slot and a cleared slot can burst aga
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
   assert.equal(fourth.burstCount, 1);
@@ -472,7 +472,7 @@ test("manual correction ignores unrelated CANCEL/OK controls outside the turn su
     roleStateByRow,
     featureConfig: {
       colorTheme: "volt-lime",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -506,7 +506,7 @@ test("manual correction keeps pending correction markers untouched inside the tu
     roleStateByRow,
     featureConfig: {
       colorTheme: "volt-lime",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -527,7 +527,7 @@ test("manual correction keeps pending correction markers untouched inside the tu
     roleStateByRow,
     featureConfig: {
       colorTheme: "volt-lime",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -563,7 +563,7 @@ test("same-slot manual correction reclassifies a stale highlighted row from trip
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
 
@@ -586,7 +586,7 @@ test("same-slot manual correction reclassifies a stale highlighted row from trip
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
 
@@ -608,7 +608,7 @@ test("same-slot manual correction reclassifies a stale highlighted row from trip
     animeRef,
     featureConfig: {
       colorTheme: "ice-circuit",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
 
@@ -643,7 +643,7 @@ test("completed correction to a non-special single removes stale correction mark
     animeRef,
     featureConfig: {
       colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -662,7 +662,7 @@ test("completed correction to a non-special single removes stale correction mark
     animeRef,
     featureConfig: {
       colorTheme: "ember-rush",
-      animationStyle: "impact-pop",
+      animationStyle: "emphasis",
     },
   });
 
@@ -673,7 +673,7 @@ test("completed correction to a non-special single removes stale correction mark
   assert.equal(burstKeyBySlot.has(0), false);
 });
 
-test("loop-capable presets keep idle loops on marked rows without re-bursting older rows", () => {
+test("one-shot presets keep prior rows stable without idle loops", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
@@ -696,14 +696,14 @@ test("loop-capable presets keep idle loops on marked rows without re-bursting ol
     animeRef,
     featureConfig: {
       colorTheme: "champagne-night",
-      animationStyle: "charge-release",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
 
   assert.equal(first.burstCount, 1);
-  assert.equal(first.idleLoopCount, 1);
-  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), true);
+  assert.equal(first.idleLoopCount, 0);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), false);
 
   row2.scoreNode.textContent = "22";
   row2.segmentNode.textContent = "D11";
@@ -717,20 +717,20 @@ test("loop-capable presets keep idle loops on marked rows without re-bursting ol
     animeRef,
     featureConfig: {
       colorTheme: "champagne-night",
-      animationStyle: "charge-release",
+      animationStyle: "emphasis",
     },
     debugRows: true,
   });
 
   assert.equal(second.burstCount, 1);
-  assert.equal(second.idleLoopCount, 2);
+  assert.equal(second.idleLoopCount, 0);
   assert.equal(second.rows[0].burst, false);
   assert.equal(second.rows[1].burst, true);
-  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), true);
-  assert.equal(row2.row.classList.contains(HIT_IDLE_LOOP_CLASS), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+  assert.equal(row2.row.classList.contains(HIT_IDLE_LOOP_CLASS), false);
 });
 
-test("flip-edge and card-slam timelines keep the promised 360 degree spins", () => {
+test("turn timeline and legacy flip alias keep the promised 360 degree spin", () => {
   const documentRef = new FakeDocument();
   const trackedRows = new Set();
   const signatureByRow = new Map();
@@ -776,14 +776,14 @@ test("flip-edge and card-slam timelines keep the promised 360 degree spins", () 
     animeRef,
     featureConfig: {
       colorTheme: "crimson-steel",
-      animationStyle: "card-slam",
+      animationStyle: "turn",
     },
   });
 
-  const cardPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
-  const cardRowStep = cardPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  const turnPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const turnRowStep = turnPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
   assert.equal(
-    cardRowStep?.step?.keyframes?.some((frame) => frame.rotateX === -360),
+    turnRowStep?.step?.keyframes?.some((frame) => frame.rotateY === 360),
     true
   );
 });
@@ -942,7 +942,7 @@ test("clearHitDecoration removes row classes, text roles, and active anime state
     animeRef,
     featureConfig: {
       colorTheme: "volt-lime",
-      animationStyle: "alternate-flick",
+      animationStyle: "shake",
     },
   });
 

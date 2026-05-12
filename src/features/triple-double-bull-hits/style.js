@@ -24,19 +24,13 @@ export const HIT_THEME_CLASS = Object.freeze({
   "champagne-night": "ad-ext-hit-theme--champagne-night",
 });
 export const HIT_ANIMATION_CLASS = Object.freeze({
-  "impact-pop": "ad-ext-hit-animation--impact-pop",
+  emphasis: "ad-ext-hit-animation--emphasis",
+  shake: "ad-ext-hit-animation--shake",
+  pulse: "ad-ext-hit-animation--pulse",
+  turn: "ad-ext-hit-animation--turn",
+  sheen: "ad-ext-hit-animation--sheen",
   shockwave: "ad-ext-hit-animation--shockwave",
-  "sweep-shine": "ad-ext-hit-animation--sweep-shine",
   "electric-arc": "ad-ext-hit-animation--electric-arc",
-  "neon-pulse": "ad-ext-hit-animation--neon-pulse",
-  "snap-bounce": "ad-ext-hit-animation--snap-bounce",
-  "card-slam": "ad-ext-hit-animation--card-slam",
-  "signal-blink": "ad-ext-hit-animation--signal-blink",
-  "stagger-wave": "ad-ext-hit-animation--stagger-wave",
-  "flip-edge": "ad-ext-hit-animation--flip-edge",
-  "outline-trace": "ad-ext-hit-animation--outline-trace",
-  "charge-release": "ad-ext-hit-animation--charge-release",
-  "alternate-flick": "ad-ext-hit-animation--alternate-flick",
 });
 export const HIT_ANIMATION_TRIGGER_CLASS = "ad-ext-hit-highlight--animate";
 
@@ -346,7 +340,7 @@ export function buildStyleText() {
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation: ad-ext-hit-row-impact-pop 780ms cubic-bezier(0.14, 0.92, 0.24, 1);
+  animation: ad-ext-hit-row-emphasis 780ms cubic-bezier(0.14, 0.92, 0.24, 1);
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
@@ -365,16 +359,32 @@ export function buildStyleText() {
   animation: ad-ext-hit-segment-burst 620ms ease-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["impact-pop"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-impact-pop;
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.emphasis}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  animation-name: ad-ext-hit-row-emphasis;
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.shake}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  animation-name: ad-ext-hit-row-shake;
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.pulse}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  animation-name: ad-ext-hit-row-pulse;
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.turn}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  animation-name: ad-ext-hit-row-turn;
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.sheen}.${HIT_ANIMATION_TRIGGER_CLASS} {
+  animation-name: ad-ext-hit-row-sheen;
+}
+
+.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.sheen}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
+  animation: ad-ext-hit-sheen-surface 780ms cubic-bezier(0.12, 0.9, 0.2, 1);
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS.shockwave}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-shockwave;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["sweep-shine"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-sweep-shine;
 }
 
 .ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-arc"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
@@ -428,83 +438,6 @@ export function buildStyleText() {
   animation: ad-ext-hit-segment-electric-arc 620ms linear;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-neon-pulse;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["snap-bounce"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-snap-bounce;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["card-slam"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-card-slam;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["signal-blink"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-signal-blink;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["signal-blink"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
-  animation: ad-ext-hit-score-burst 760ms cubic-bezier(0.14, 0.92, 0.24, 1), ad-ext-hit-score-glitch 760ms linear;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["stagger-wave"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-stagger-wave;
-  animation-delay: var(--ad-ext-hit-delay-ms);
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["flip-edge"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-flip-edge;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["outline-trace"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-outline-trace;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["charge-release"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-charge-release;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["alternate-flick"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
-  animation-name: ad-ext-hit-row-alternate-flick;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]} {
-  animation: ad-ext-hit-idle-row-neon 2100ms ease-in-out infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]}::before {
-  animation: ad-ext-hit-gradient-flow 7.4s linear infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["outline-trace"]} {
-  animation: ad-ext-hit-idle-row-outline 2500ms ease-in-out infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["outline-trace"]}::after {
-  animation: ad-ext-hit-border-sweep 2.8s linear infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["charge-release"]} {
-  animation: ad-ext-hit-idle-row-charge 2050ms cubic-bezier(0.32, 0.04, 0.18, 0.98) infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["charge-release"]} .${HIT_SCORE_CLASS} {
-  animation: ad-ext-hit-idle-score-charge 1850ms ease-in-out infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["alternate-flick"]} {
-  animation: ad-ext-hit-idle-row-beacon 1600ms steps(1, end) infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["alternate-flick"]}::before {
-  animation: ad-ext-hit-gradient-flow 11s linear infinite, ad-ext-hit-idle-surface-beacon 1600ms steps(1, end) infinite;
-}
-
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["alternate-flick"]} .${HIT_SEGMENT_CLASS} {
-  animation: ad-ext-hit-idle-segment-beacon 1300ms steps(1, end) infinite;
-}
-
 @keyframes ad-ext-hit-gradient-flow {
   0% { background-position: 14% 22%, 78% 74%, 0 0, 0% 50%, 0% 50%; }
   50% { background-position: 24% 28%, 74% 68%, 120px -38px, 100% 50%, 100% 50%; }
@@ -550,11 +483,57 @@ export function buildStyleText() {
   64% { transform: translateX(-2px) scale(1.02); }
 }
 
-@keyframes ad-ext-hit-row-impact-pop {
+@keyframes ad-ext-hit-row-emphasis {
   0% { transform: translateY(3px) scale(0.95) rotateZ(-0.6deg); }
   34% { transform: translateY(-9px) scale(1.11) rotateZ(0.9deg); }
   68% { transform: translateY(2px) scale(1.02) rotateZ(-0.2deg); }
   100% { transform: translateY(0) scale(1) rotateZ(0deg); }
+}
+
+@keyframes ad-ext-hit-row-shake {
+  0%, 100% { transform: translateX(0) translateY(0) scale(1) rotateZ(0deg); }
+  14% { transform: translateX(-7px) translateY(-1px) scale(1.035) rotateZ(-1.2deg); }
+  28% { transform: translateX(8px) translateY(1px) scale(1.055) rotateZ(1deg); }
+  44% { transform: translateX(-5px) translateY(0) scale(1.025) rotateZ(-0.6deg); }
+  62% { transform: translateX(3px) translateY(0) scale(1.01) rotateZ(0.35deg); }
+}
+
+@keyframes ad-ext-hit-row-pulse {
+  0% { transform: scale(0.97); filter: saturate(1) brightness(0.96); }
+  36% { transform: scale(1.1); filter: saturate(1.36) brightness(1.16); }
+  62% { transform: scale(1.025); filter: saturate(1.16) brightness(1.04); }
+  100% { transform: scale(1); filter: saturate(1.06) brightness(1); }
+}
+
+@keyframes ad-ext-hit-row-turn {
+  0% { transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1); }
+  38% { transform: perspective(1200px) rotateY(360deg) translateZ(8px) scale(1.07); }
+  70% { transform: perspective(1200px) rotateY(-28deg) translateZ(0) scale(0.985); }
+  100% { transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1); }
+}
+
+@keyframes ad-ext-hit-row-sheen {
+  0% { transform: translateX(-12px) skewX(-4deg) scale(1.01); }
+  44% { transform: translateX(10px) skewX(2deg) scale(1.045); }
+  100% { transform: translateX(0) skewX(0deg) scale(1); }
+}
+
+@keyframes ad-ext-hit-sheen-surface {
+  0% {
+    opacity: 0.58;
+    filter: saturate(1.02) brightness(0.86);
+    background-position: -70% 22%, 78% 74%, -160px 0, 0% 50%, 0% 50%;
+  }
+  42% {
+    opacity: 1;
+    filter: saturate(1.38) brightness(1.18);
+    background-position: 46% 22%, 78% 74%, 40px -22px, 64% 50%, 64% 50%;
+  }
+  100% {
+    opacity: var(--ad-ext-hit-gradient-opacity);
+    filter: saturate(1.18) brightness(0.94);
+    background-position: 14% 22%, 78% 74%, 120px -38px, 0% 50%, 0% 50%;
+  }
 }
 
 @keyframes ad-ext-hit-row-shockwave {
@@ -562,12 +541,6 @@ export function buildStyleText() {
   32% { transform: scale(1.12) rotateX(6deg); }
   58% { transform: scale(1.01) rotateX(-2deg); }
   100% { transform: scale(1) rotateX(0deg); }
-}
-
-@keyframes ad-ext-hit-row-sweep-shine {
-  0% { transform: translateX(-18px) skewX(-5deg) rotateY(-10deg); }
-  46% { transform: translateX(14px) skewX(3deg) rotateY(12deg); }
-  100% { transform: translateX(0) skewX(0deg) rotateY(0deg); }
 }
 
 @keyframes ad-ext-hit-row-electric-arc {
@@ -685,70 +658,6 @@ export function buildStyleText() {
     opacity: 0.84;
     transform: scale(1.02);
   }
-}
-
-@keyframes ad-ext-hit-row-neon-pulse {
-  0% { transform: scale(0.96) rotateZ(-0.3deg); }
-  40% { transform: scale(1.1) rotateZ(0.8deg); }
-  70% { transform: scale(1.02) rotateZ(-0.15deg); }
-  100% { transform: scale(1) rotateZ(0deg); }
-}
-
-@keyframes ad-ext-hit-row-snap-bounce {
-  0% { transform: translateY(0) scale(1) rotateZ(0deg); }
-  22% { transform: translateY(-16px) scale(1.09) rotateZ(-1.6deg); }
-  48% { transform: translateY(7px) scale(0.97) rotateZ(1deg); }
-  100% { transform: translateY(0) scale(1) rotateZ(0deg); }
-}
-
-@keyframes ad-ext-hit-row-card-slam {
-  0% { transform: perspective(1200px) rotateX(0deg) translateY(0) scale(1); }
-  35% { transform: perspective(1200px) rotateX(-360deg) translateY(-10px) scale(1.08); }
-  64% { transform: perspective(1200px) rotateX(-150deg) translateY(8px) scale(0.97); }
-  100% { transform: perspective(1200px) rotateX(0deg) translateY(0) scale(1); }
-}
-
-@keyframes ad-ext-hit-row-signal-blink {
-  0%, 100% { transform: translateX(0); opacity: 1; }
-  14% { transform: translateX(-6px); opacity: 0.74; }
-  26% { transform: translateX(7px); opacity: 1; }
-  48% { transform: translateX(-4px); opacity: 0.82; }
-  66% { transform: translateX(5px); opacity: 1; }
-}
-
-@keyframes ad-ext-hit-row-stagger-wave {
-  0% { transform: translateX(-15px) rotateZ(-1deg) scale(1.02); }
-  38% { transform: translateX(10px) rotateZ(0.8deg) scale(1.05); }
-  100% { transform: translateX(0) rotateZ(0deg) scale(1); }
-}
-
-@keyframes ad-ext-hit-row-flip-edge {
-  0% { transform: perspective(1200px) rotateY(0deg) translateZ(0); }
-  38% { transform: perspective(1200px) rotateY(360deg) translateZ(6px); }
-  70% { transform: perspective(1200px) rotateY(-30deg) translateZ(0); }
-  100% { transform: perspective(1200px) rotateY(0deg) translateZ(0); }
-}
-
-@keyframes ad-ext-hit-row-outline-trace {
-  0% { transform: scale(1) rotateZ(0deg); }
-  34% { transform: scale(1.06) rotateZ(-0.7deg); }
-  68% { transform: scale(0.99) rotateZ(0.4deg); }
-  100% { transform: scale(1) rotateZ(0deg); }
-}
-
-@keyframes ad-ext-hit-row-charge-release {
-  0% { transform: scale(0.93) translateY(12px); }
-  42% { transform: scale(1.12) translateY(-12px); }
-  70% { transform: scale(1.02) translateY(2px); }
-  100% { transform: scale(1) translateY(0); }
-}
-
-@keyframes ad-ext-hit-row-alternate-flick {
-  0%, 100% { transform: translateX(0) rotateZ(0deg); opacity: 1; }
-  18% { transform: translateX(-9px) rotateZ(-1.2deg); opacity: 0.72; }
-  36% { transform: translateX(11px) rotateZ(1deg); opacity: 1; }
-  60% { transform: translateX(-6px) rotateZ(-0.7deg); opacity: 0.86; }
-  78% { transform: translateX(4px) rotateZ(0.5deg); opacity: 1; }
 }
 
 @keyframes ad-ext-hit-idle-row-neon {

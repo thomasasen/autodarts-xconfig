@@ -160,7 +160,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
       ? config.getFeatureConfig("tripleDoubleBullHits")
       : {
           colorTheme: "champagne-night",
-          animationStyle: "charge-release",
+          animationStyle: "emphasis",
           debug: false,
         };
   const debugState = createDebugState(featureDebug);
@@ -174,6 +174,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
   const triggerResetTimersByRow = new Map();
   let animeRef = getAnime(windowRef);
   let disposed = false;
+  let electricFilterDefsRetained = false;
   const isManagedNode = createManagedNodeMatcher({
     ids: ["ad-ext-electric-filter-defs"],
     classNames: [],
@@ -185,8 +186,7 @@ export function initializeTripleDoubleBullHits(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
   if (usesElectricArc(featureConfig)) {
     retainElectricFilterDefs({ documentRef, domGuards });
-  } else {
-    releaseElectricFilterDefs({ documentRef });
+    electricFilterDefsRetained = true;
   }
 
   const scheduler = schedulerFactory(() => {
@@ -363,7 +363,10 @@ export function initializeTripleDoubleBullHits(context = {}) {
     triggerResetTimersByRow.clear();
 
     domGuards.removeNodeById(STYLE_ID);
-    releaseElectricFilterDefs({ documentRef });
+    if (electricFilterDefsRetained) {
+      releaseElectricFilterDefs({ documentRef });
+      electricFilterDefsRetained = false;
+    }
   };
 }
 

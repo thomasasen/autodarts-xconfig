@@ -65,7 +65,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
   assert.equal(config.features.tripleDoubleBullHits.colorTheme, "kind-signal");
-  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "charge-release");
+  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "emphasis");
   assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
   assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "smoke");
   assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
@@ -386,7 +386,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "ember-rush");
   assert.equal(
     runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
-    "charge-release"
+    "emphasis"
   );
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenObjectives, false);
   assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadObjectives, false);
@@ -621,7 +621,7 @@ test("triple-double-bull-hits falls back to defaults for invalid theme/style val
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "kind-signal");
   assert.equal(
     runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
-    "charge-release"
+    "emphasis"
   );
 });
 
@@ -635,6 +635,26 @@ test("triple-double-bull-hits keeps default kind-signal when only legacy hitColo
   });
 
   assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "kind-signal");
+});
+
+test("triple-double-bull-hits maps retired animation styles to one-shot replacements", () => {
+  const pulseConfig = createRuntimeConfig({
+    features: {
+      tripleDoubleBullHits: {
+        animationStyle: "neon-pulse",
+      },
+    },
+  });
+  const turnConfig = createRuntimeConfig({
+    features: {
+      tripleDoubleBullHits: {
+        animationStyle: "flip-edge",
+      },
+    },
+  });
+
+  assert.equal(pulseConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "pulse");
+  assert.equal(turnConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "turn");
 });
 
 test("cricket highlighter dim style supports enum values and legacy boolean mapping", () => {

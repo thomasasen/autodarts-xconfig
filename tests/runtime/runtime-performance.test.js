@@ -35,7 +35,11 @@ import {
 } from "../../src/features/cricket-grid-fx/style.js";
 import { initializeRemoveDartsNotification } from "../../src/features/remove-darts-notification/index.js";
 import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
-import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
+import {
+  ELECTRIC_FILTER_DEFS_NODE_ID,
+  releaseElectricFilterDefs,
+  retainElectricFilterDefs,
+} from "../../src/shared/electric-border-engine.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
@@ -3013,7 +3017,7 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
       getFeatureConfig() {
         return {
           colorTheme: "champagne-night",
-          animationStyle: "impact-pop",
+          animationStyle: "emphasis",
           debug: true,
         };
       },
@@ -3154,7 +3158,7 @@ test("triple-double-bull-hits only retains electric filter defs for explicit ele
       getFeatureConfig() {
         return {
           colorTheme: "champagne-night",
-          animationStyle: "impact-pop",
+          animationStyle: "emphasis",
         };
       },
     },
@@ -3178,6 +3182,46 @@ test("triple-double-bull-hits only retains electric filter defs for explicit ele
 
   assert.equal(Boolean(electricContext.documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), true);
   cleanupElectric();
+});
+
+test("triple-double-bull-hits non-electric runs do not release shared electric preview filters", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const domGuards = createDomGuards({ documentRef });
+
+  retainElectricFilterDefs({ documentRef, domGuards });
+
+  const cleanup = initializeTripleDoubleBullHits({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState: {
+      subscribe() {
+        return () => {};
+      },
+    },
+    helpers: {
+      createRafScheduler: createCountingSchedulerFactory({ count: 0 }),
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          colorTheme: "champagne-night",
+          animationStyle: "emphasis",
+        };
+      },
+    },
+  });
+
+  assert.equal(Boolean(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), true);
+  cleanup();
+  assert.equal(Boolean(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), true);
+  releaseElectricFilterDefs({ documentRef });
+  assert.equal(Boolean(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), false);
 });
 
 test("cricket-highlighter rerenders on throw updates even when board state stays the same", () => {

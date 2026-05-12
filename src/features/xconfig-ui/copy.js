@@ -738,7 +738,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.",
     visualDescription:
-      "Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets dürfen danach subtil weiterlaufen.",
+      "Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken einmaligen Burst.",
     usefulWhen:
       "Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.",
     images: [],
@@ -762,24 +762,9 @@ export const xconfigFeatureCopy = deepFreeze({
       ],
       animationStyle: [
         "",
-        "**Vorschau Animationsstile**",
+        "**Animationsstile**",
         "",
-        "Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.",
-        "",
-        "|  |  |",
-        "| --- | --- |",
-        "| `Slam Punch` | `Shock Ring` |",
-        "| ![Animationsstil Slam Punch](docs/screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](docs/screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |",
-        "| `Laser Sweep` | `Reactor Pulse` |",
-        "| ![Animationsstil Laser Sweep](docs/screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](docs/screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |",
-        "| `Turbo Bounce` | `Card Hammer` |",
-        "| ![Animationsstil Turbo Bounce](docs/screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](docs/screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |",
-        "| `Glitch Blink` | `Cascade Split` |",
-        "| ![Animationsstil Glitch Blink](docs/screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](docs/screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |",
-        "| `Rotor Flip` | `Edge Runner` |",
-        "| ![Animationsstil Rotor Flip](docs/screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](docs/screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |",
-        "| `Charge Burst` | `Beacon Flicker` |",
-        "| ![Animationsstil Charge Burst](docs/screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](docs/screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |",
+        "`Emphase`, `Shake`, `Pulse`, `Turn`, `Sheen`, `Shock Ring` und `Electric Arc` sind jeweils einmalige Bursts. Alte Presets mit ähnlicher Wirkung werden beim Laden auf diese reduzierten Stile gemappt.",
         "",
       ],
     },
@@ -803,24 +788,9 @@ export const xconfigFeatureCopy = deepFreeze({
       ],
       animationStyle: [
         "",
-        "**Vorschau Animationsstile**",
+        "**Animationsstile**",
         "",
-        "Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.",
-        "",
-        "|  |  |",
-        "| --- | --- |",
-        "| `Slam Punch` | `Shock Ring` |",
-        "| ![Animationsstil Slam Punch](screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |",
-        "| `Laser Sweep` | `Reactor Pulse` |",
-        "| ![Animationsstil Laser Sweep](screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |",
-        "| `Turbo Bounce` | `Card Hammer` |",
-        "| ![Animationsstil Turbo Bounce](screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |",
-        "| `Glitch Blink` | `Cascade Split` |",
-        "| ![Animationsstil Glitch Blink](screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |",
-        "| `Rotor Flip` | `Edge Runner` |",
-        "| ![Animationsstil Rotor Flip](screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |",
-        "| `Charge Burst` | `Beacon Flicker` |",
-        "| ![Animationsstil Charge Burst](screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |",
+        "`Emphase`, `Shake`, `Pulse`, `Turn`, `Sheen`, `Shock Ring` und `Electric Arc` sind jeweils einmalige Bursts. Alte Presets mit ähnlicher Wirkung werden beim Laden auf diese reduzierten Stile gemappt.",
         "",
       ],
     },
@@ -832,7 +802,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       animationStyle: fieldCopy(
         "Wählt den Burst-Stil für das frisch erkannte Trefferfeld.",
-        "Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Einige Presets bleiben reine One-Shot-Bursts, andere kombinieren den Burst mit einem subtilen Idle-Loop auf markierten Feldern.",
+        "Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Alle auswählbaren Presets sind einmalige Bursts ohne dauerhaften Idle-Loop auf markierten Feldern.",
         "Wählt den Burst-Stil für das frisch erkannte Trefferfeld."
       ),
       debug: DEBUG_FIELD,
@@ -1797,70 +1767,40 @@ const TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY = deepFreeze({
 });
 
 const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY = deepFreeze({
-  "impact-pop": optionCopy(
-    "Slam Punch spielt einen kurzen, druckvollen Front-Punch mit klarer Zahlenspitze.",
-    "Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist ein starker One-Shot-Burst ohne Dauerloop.",
-    "Slam Punch ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand."
+  emphasis: optionCopy(
+    "Emphase setzt einen kurzen, druckvollen Trefferakzent mit klarer Zahlenspitze.",
+    "Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist der direkte One-Shot-Impact ohne Dauerloop.",
+    "Emphase ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand."
+  ),
+  shake: optionCopy(
+    "Shake lässt das Trefferfeld einmal kurz seitlich einschlagen und sofort wieder einrasten.",
+    "Der Treffer bekommt ein schnelles horizontales Wackeln mit kleinem Zahlenkick. Das wirkt körperlicher als ein reiner Scale-Pop, bleibt aber kurz und lesbar.",
+    "Shake übersetzt den Treffer in einen kompakten Seitenschlag. Feld und Zahl zittern nur einmal kurz und fallen danach vollständig in den Ruhezustand zurück."
+  ),
+  pulse: optionCopy(
+    "Pulse lässt Fläche, Rand und Score einmal hell aufglühen.",
+    "Der Hit baut einen kompakten Glow-Peak auf und nimmt ihn sofort wieder zurück. Anders als frühere Loop-Varianten bleibt danach kein Idle-Loop aktiv.",
+    "Pulse ist ein einmaliges Aufleuchten für Spieler, die einen klaren Trefferpeak ohne Seitenbewegung oder Daueranimation wollen."
+  ),
+  turn: optionCopy(
+    "Turn dreht das Trefferfeld einmal räumlich ein und lässt es sauber zurückfallen.",
+    "Das Wurffeld bekommt einen kurzen Y-Achsen-Turn mit leichtem Textnachlauf. Die Bewegung ersetzt die alten Flip-Varianten und bleibt ein einzelner Burst.",
+    "Turn gibt dem Treffer einen kurzen räumlichen Drehimpuls. Das ersetzt die bisherigen Flip-Doppelungen mit einem klaren One-Shot-Effekt."
+  ),
+  sheen: optionCopy(
+    "Sheen zieht einen glänzenden Lichtlauf einmal über Feld, Rand und Text.",
+    "Der Effekt ersetzt die alten Sweep-/Outline-Doppelungen durch einen saubereren Glanz-Sweep. Er wirkt hochwertig, bleibt aber kürzer und ruhiger als ein technischer Loop.",
+    "Sheen legt einen einmaligen Lichtzug über das Trefferfeld und betont den Rand ohne dauerhafte Konturbewegung."
   ),
   shockwave: optionCopy(
     "Shock Ring schickt eine deutliche Druckwelle durch Rand, Feld und Zahl.",
     "Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.",
     "Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub."
   ),
-  "sweep-shine": optionCopy(
-    "Laser Sweep zieht einen harten Lichtzug quer über Feld, Rand und Text.",
-    "Der Burst fühlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug über Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.",
-    "Laser Sweep setzt auf einen schnellen Lichtlauf über Verlauf, Rand und Text. Dadurch wirkt der Treffer wie ein kurzer Live-Broadcast- oder HUD-Wipe."
-  ),
   "electric-arc": optionCopy(
     "Electric Arc schießt einen kurzen, zackigen Stromimpuls über Trefferfeld und Score.",
     "Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.",
     "Electric Arc kombiniert einen kompakten Stromstoß mit leichtem Seitenshake auf Feld, Score und Segment. Die Wirkung ist aggressiv und kurz, bleibt aber klar als einmaliger Burst."
-  ),
-  "neon-pulse": optionCopy(
-    "Reactor Pulse lässt den Treffer hell aufglühen und danach neonartig weiteratmen.",
-    "Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop mit klarer Cyberpunk-Anmutung.",
-    "Reactor Pulse kombiniert einen deutlichen Neon-Burst mit einem sanften Weiteratmen von Verlauf, Glow und Zahl. Das markierte Feld bleibt also auch nach dem Burst leicht lebendig."
-  ),
-  "snap-bounce": optionCopy(
-    "Turbo Bounce spielt einen knackigen Lift mit sichtbarem Rückfeder-Effekt.",
-    "Das Trefferfeld hebt sichtbar ab, federt präzise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.",
-    "Turbo Bounce kombiniert einen schnellen Lift mit kurzem Nachfedern. Dadurch wirkt der Treffer rhythmisch und sportlich, ohne im Leerlauf weiterzubewegen."
-  ),
-  "card-slam": optionCopy(
-    "Card Hammer setzt das Wurffeld wie einen harten Einschlag mit vertikalem 360-Flip in Szene.",
-    "Das Feld knallt nicht nur in die Fläche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzögert. Das bleibt ein One-Shot-Burst mit viel Impact.",
-    "Card Hammer behandelt das Trefferfeld wie eine kleine Broadcast-Karte, die kurz hart einschlägt und per vertikalem Flip wieder einrastet."
-  ),
-  "signal-blink": optionCopy(
-    "Glitch Blink setzt einen digitalen Signal-Blitz mit Zahlenzittern und kurzem HUD-Fehlerbild.",
-    "Der Treffer blinkt bewusst digital, die Zahl wackelt seitlich und das Feld bekommt kurze Signalstörungen. Das ist ein kompakter One-Shot-Burst für einen deutlich technoideren Look.",
-    "Glitch Blink nutzt kurze Blinkwechsel, seitliches Zahlenshake und digitales Jittern. Der Treffer wirkt damit wie ein Signalimpuls statt wie ein klassischer Pop."
-  ),
-  "stagger-wave": optionCopy(
-    "Cascade Split schickt eine gestaffelte Welle durch Feld, Zahl und Segment.",
-    "Der Burst läuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig, etwas größer und bleibt ein One-Shot-Burst.",
-    "Cascade Split gibt dem Treffer eine kurze, versetzte Wellenbewegung. Zahl und Segment reagieren leicht nacheinander und erzeugen so einen dynamischeren Burst."
-  ),
-  "flip-edge": optionCopy(
-    "Rotor Flip dreht das Trefferfeld sichtbar per horizontalem 360-Spin in den Raum.",
-    "Das Wurffeld dreht deutlich auf der Y-Achse, fängt sich wieder und verleiht dem Burst eine echte Raumwirkung. Das bleibt ein One-Shot-Burst mit klar erkennbarem Spin.",
-    "Rotor Flip ergänzt den Treffer um einen horizontalen 360-Spin und eine nachlaufende Textbewegung. Dadurch wirkt der Hit räumlicher und auffälliger als ein reiner Scale-Pop."
-  ),
-  "outline-trace": optionCopy(
-    "Edge Runner zeichnet die Kontur sichtbar nach und lässt sie danach technisch weiterlaufen.",
-    "Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop für einen grafischeren HUD-Look.",
-    "Edge Runner startet mit einer sichtbaren Konturverfolgung und behält danach ein leicht laufendes Randlicht auf markierten Feldern. So bleibt der Treffer technisch und präzise präsent."
-  ),
-  "charge-release": optionCopy(
-    "Charge Burst lädt das Feld sichtbar auf und entlädt den Treffer mit großem Zahlenkick.",
-    "Vor dem Peak baut das Trefferfeld Spannung auf, dann entlädt sich Verlauf, Rand und Score gemeinsam mit deutlich größerem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.",
-    "Charge Burst kombiniert einen deutlichen Auflade-Moment mit einer hellen Entladung und lässt markierte Felder anschließend leicht weiteratmen. Das ist der dramatischste Preset im Paket."
-  ),
-  "alternate-flick": optionCopy(
-    "Beacon Flicker kombiniert einen kurzen Seiten-Flick mit späterem Signal-Flackern.",
-    "Der Burst wirft das Feld kurz seitlich an und lässt danach ein diskretes Beacon-Flackern auf markierten Feldern zurück. Das ist Burst plus Idle-Loop mit mehr Richtungsgefühl.",
-    "Beacon Flicker mischt einen kurzen Richtungs-Flick im Burst mit einem dezenten Beacon-Effekt im Idle. Das Feld bleibt damit leicht lebendig, ohne permanent chaotisch zu werden."
   ),
 });
 

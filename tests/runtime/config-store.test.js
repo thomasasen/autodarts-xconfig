@@ -284,7 +284,7 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.featureToggles.tripleDoubleBullHits, true);
   assert.equal(importedConfig.features.tripleDoubleBullHits.enabled, true);
   assert.equal(importedConfig.features.tripleDoubleBullHits.colorTheme, "champagne-night");
-  assert.equal(importedConfig.features.tripleDoubleBullHits.animationStyle, "charge-release");
+  assert.equal(importedConfig.features.tripleDoubleBullHits.animationStyle, "emphasis");
   assert.equal(importedConfig.features.tripleDoubleBullHits.debug, true);
   assert.equal(importedConfig.featureToggles.dartMarkerDarts, true);
   assert.equal(importedConfig.features.dartMarkerDarts.enabled, true);

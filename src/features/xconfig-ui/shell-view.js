@@ -907,12 +907,14 @@ function buildFeatureField(documentRef, feature, field) {
     const isActive = selectedOptionValues.includes(optionValue);
     const isDartDesignField = isDartDesignSelectField(feature, field);
     const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
+    const previewEffect = String(option?.previewEffect || "").trim();
     const optionButton = createElement(documentRef, "button", {
       type: "button",
       className: [
         "ad-xconfig-option-item",
         isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
         isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
+        previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
       ].filter(Boolean).join(" "),
       attributes: {
         "data-adxconfig-action": "set-setting-select-option",
@@ -923,6 +925,7 @@ function buildFeatureField(documentRef, feature, field) {
         "data-setting-value": optionValue,
         "data-option-value": optionValue,
         "data-option-description": String(option?.description || "").trim(),
+        "data-preview-effect": previewEffect || undefined,
         "data-multiple": isMultiSelectField(field) ? "true" : "false",
         "data-active": isActive ? "true" : "false",
         "aria-pressed": isActive ? "true" : "false",

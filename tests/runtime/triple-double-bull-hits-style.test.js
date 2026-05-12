@@ -5,7 +5,6 @@ import {
   HIT_ANIMATION_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
   HIT_BASE_CLASS,
-  HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
   HIT_THEME_CLASS,
   buildStyleText,
@@ -46,9 +45,12 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
   assert.equal(css.includes("position: absolute !important;"), true);
   assert.equal(css.includes("display: flex !important;"), true);
 
-  assert.equal(css.includes("@keyframes ad-ext-hit-row-card-slam"), true);
-  assert.equal(css.includes("rotateX(-360deg)"), true);
-  assert.equal(css.includes("@keyframes ad-ext-hit-row-flip-edge"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-row-emphasis"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-row-shake"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-row-pulse"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-row-turn"), true);
+  assert.equal(css.includes("@keyframes ad-ext-hit-row-sheen"), true);
+  assert.equal(css.includes("ad-ext-hit-sheen-surface"), true);
   assert.equal(css.includes("rotateY(360deg)"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-row-electric-arc"), true);
   assert.equal(css.includes("@keyframes ad-ext-hit-score-electric-arc"), true);
@@ -65,14 +67,7 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
     true
   );
 
-  assert.equal(
-    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["neon-pulse"]}`),
-    true
-  );
-  assert.equal(
-    css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_IDLE_LOOP_CLASS}.${HIT_ANIMATION_CLASS["outline-trace"]}`),
-    true
-  );
+  assert.equal(css.includes(".ad-ext-hit-highlight--idle.ad-ext-hit-animation--"), false);
   assert.equal(css.includes("@keyframes ad-ext-hit-gradient-flow"), true);
   assert.equal(css.includes("--ad-ext-hit-surface-a:"), true);
   assert.equal(baseBeforeBlock.includes("animation:"), false);
@@ -118,14 +113,14 @@ test("triple-double-bull-hits style defines centered text contract and strong ro
 
 test("triple-double-bull-hits keeps displacement filter scoped to electric-arc selectors", () => {
   const css = buildStyleText();
-  const neonBlock =
+  const pulseBlock =
     css.match(
       new RegExp(
-        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.ad-ext-hit-animation--neon-pulse\.ad-ext-hit-highlight--animate\{[^}]+\}`,
+        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.ad-ext-hit-animation--pulse\.ad-ext-hit-highlight--animate\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";
 
   assert.equal(css.includes("url(#ad-ext-electric-displace-soft)"), true);
-  assert.equal(neonBlock.includes("filter: var(--ad-ext-hit-electric-filter"), false);
+  assert.equal(pulseBlock.includes("filter: var(--ad-ext-hit-electric-filter"), false);
 });

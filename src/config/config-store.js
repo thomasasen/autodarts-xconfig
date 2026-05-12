@@ -284,7 +284,7 @@ const LEGACY_IMPORTERS_BY_CONFIG_KEY = Object.freeze({
     const settings = getLegacyFeatureSettings(legacyFeatureState);
     return buildFeatureImport("tripleDoubleBullHits", legacyFeatureState, {
       colorTheme: "champagne-night",
-      animationStyle: "charge-release",
+      animationStyle: "emphasis",
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },

@@ -50,6 +50,11 @@ import {
   normalizeHexColor,
 } from "../../shared/hex-color-utils.js";
 import {
+  ELECTRIC_FILTER_DEFS_NODE_ID,
+  releaseElectricFilterDefs,
+  retainElectricFilterDefs,
+} from "../../shared/electric-border-engine.js";
+import {
   buildMenuIconElement,
   buildShellContent,
   createElement,
@@ -208,6 +213,7 @@ function ensureXConfigShell(options = {}) {
   let renderController = null;
   let actionController = null;
   let lifecycleController = null;
+  let electricPreviewFiltersRetained = false;
 
   function clearNoticeTimer() {
     if (state.noticeTimer && typeof windowRef.clearTimeout === "function") {
@@ -358,8 +364,26 @@ function ensureXConfigShell(options = {}) {
   });
 
   const isManagedNode = createManagedNodeMatcher({
-    ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID, PREVIEW_FONTS_STYLE_ID],
+    ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID, PREVIEW_FONTS_STYLE_ID, ELECTRIC_FILTER_DEFS_NODE_ID],
   });
+
+  function retainElectricPreviewFilters() {
+    if (electricPreviewFiltersRetained) {
+      return;
+    }
+
+    const retained = retainElectricFilterDefs({ documentRef, domGuards });
+    electricPreviewFiltersRetained = Boolean(retained.available);
+  }
+
+  function releaseElectricPreviewFilters() {
+    if (!electricPreviewFiltersRetained) {
+      return;
+    }
+
+    releaseElectricFilterDefs({ documentRef });
+    electricPreviewFiltersRetained = false;
+  }
 
   routeController = createShellRouteController({
     configHash: CONFIG_HASH,
@@ -465,6 +489,8 @@ function ensureXConfigShell(options = {}) {
     onDocumentChange,
     onDocumentClick,
     onDocumentKeydown,
+    onMounted: retainElectricPreviewFilters,
+    onTeardown: releaseElectricPreviewFilters,
     onVisibilityChange,
     panelHostId: PANEL_HOST_ID,
     queueSync,

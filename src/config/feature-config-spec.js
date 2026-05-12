@@ -28,7 +28,27 @@ const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
 const TURN_START_SWEEP_DURATIONS = new Set([300, 420, 620]);
 const TURN_START_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
 const TRIPLE_DOUBLE_BULL_COLOR_THEMES = new Set(["kind-signal", "ember-rush", "ice-circuit", "volt-lime", "crimson-steel", "arctic-mint", "champagne-night"]);
-const TRIPLE_DOUBLE_BULL_ANIMATION_STYLES = new Set(["impact-pop", "shockwave", "sweep-shine", "electric-arc", "neon-pulse", "snap-bounce", "card-slam", "signal-blink", "stagger-wave", "flip-edge", "outline-trace", "charge-release", "alternate-flick"]);
+const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_ALIASES = Object.freeze({
+  "": "emphasis",
+  "impact-pop": "emphasis",
+  "charge-release": "emphasis",
+  "snap-bounce": "shake",
+  "alternate-flick": "shake",
+  "neon-pulse": "pulse",
+  "sweep-shine": "sheen",
+  "outline-trace": "sheen",
+  "card-slam": "turn",
+  "flip-edge": "turn",
+  "signal-blink": "shake",
+  "stagger-wave": "emphasis",
+  emphasis: "emphasis",
+  shake: "shake",
+  pulse: "pulse",
+  turn: "turn",
+  sheen: "sheen",
+  shockwave: "shockwave",
+  "electric-arc": "electric-arc",
+});
 const CRICKET_HIGHLIGHT_THEMES = new Set(["standard", "high-contrast"]);
 const CRICKET_HIGHLIGHT_INTENSITIES = new Set(["subtle", "normal", "strong"]);
 const CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES = new Set(["off", "smoke", "hatch", "mask"]);
@@ -290,7 +310,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   styleCheckoutSuggestions: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
   averageTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   turnStartSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
-  tripleDoubleBullHits: { enabled: false, colorTheme: "kind-signal", animationStyle: "charge-release", debug: false },
+  tripleDoubleBullHits: { enabled: false, colorTheme: "kind-signal", animationStyle: "emphasis", debug: false },
   cricketHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
   cricketGridFx: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal", debug: false },
   dartMarkerEmphasis: { enabled: false, size: 6, color: "rgb(49, 130, 206)", effect: "glow", opacityPercent: 85, outline: "aus", debug: false },
@@ -454,7 +474,7 @@ const LEGACY_IMPORTERS = Object.freeze({
     const settings = getLegacyFeatureSettings(legacyFeatureState);
     return buildFeatureImport("tripleDoubleBullHits", legacyFeatureState, {
       colorTheme: "champagne-night",
-      animationStyle: "charge-release",
+      animationStyle: "emphasis",
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
@@ -632,7 +652,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
   tripleDoubleBullHits(rawConfig = {}) {
     const legacyHitColorMode = String(rawConfig.hitColorMode || "").trim().toLowerCase();
     const fallbackColorTheme = legacyHitColorMode === "theme-presets" ? "champagne-night" : "kind-signal";
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizeStringChoice(rawConfig.colorTheme, fallbackColorTheme, TRIPLE_DOUBLE_BULL_COLOR_THEMES), animationStyle: normalizeStringChoice(rawConfig.animationStyle, "charge-release", TRIPLE_DOUBLE_BULL_ANIMATION_STYLES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizeStringChoice(rawConfig.colorTheme, fallbackColorTheme, TRIPLE_DOUBLE_BULL_COLOR_THEMES), animationStyle: normalizeMappedStringChoice(rawConfig.animationStyle, "emphasis", TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_ALIASES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   cricketHighlighter(rawConfig = {}) {
     const showOpenValue = Object.hasOwn(rawConfig, "showOpenTargets") ? rawConfig.showOpenTargets : rawConfig.showOpenObjectives;

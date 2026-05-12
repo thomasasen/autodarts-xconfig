@@ -243,7 +243,7 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
     documentRef,
     config: createSingleFeatureConfig("tripleDoubleBullHits", {
       colorTheme: "volt-lime",
-      animationStyle: "neon-pulse",
+      animationStyle: "pulse",
     }),
   });
 

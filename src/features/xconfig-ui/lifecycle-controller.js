@@ -106,6 +106,7 @@ function mountShellLifecycle(controller) {
 
   controller.state.started = true;
   controller.domGuards.ensureStyle(controller.styleId, controller.styleText);
+  controller.onMounted();
   patchHistoryController(controller);
   controller.normalizeLegacyConfigPathIfNeeded();
   registerShellLifecycleListeners(controller);
@@ -129,6 +130,7 @@ function teardownShellLifecycle(controller) {
   controller.stopAutoUpdateChecks();
   controller.state.notice = { type: "", message: "" };
   controller.restoreContent();
+  controller.onTeardown();
 
   if (typeof controller.observerRegistry?.disconnect === "function") {
     controller.observerRegistry.disconnect(controller.rootObserverKey);
@@ -210,6 +212,8 @@ function buildShellLifecycleControllerContext(options = {}) {
     cancelQueuedSync: resolveOptionalFunction(options.cancelQueuedSync, () => {}),
     clearNoticeTimer: resolveOptionalFunction(options.clearNoticeTimer, () => {}),
     restoreContent: resolveOptionalFunction(options.restoreContent, () => {}),
+    onMounted: resolveOptionalFunction(options.onMounted, () => {}),
+    onTeardown: resolveOptionalFunction(options.onTeardown, () => {}),
     removeNodeById: resolveOptionalFunction(options.removeNodeById, () => {}),
     normalizeLegacyConfigPathIfNeeded:
       resolveOptionalFunction(options.normalizeLegacyConfigPathIfNeeded, () => false),

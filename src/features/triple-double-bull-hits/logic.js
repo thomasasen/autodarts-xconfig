@@ -16,12 +16,19 @@ import {
 const ROW_DEBUG_TEXT_LIMIT = 72;
 const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
 const SUPPORTED_ANIMATION_STYLE = new Set(Object.keys(HIT_ANIMATION_CLASS));
-const LOOPABLE_ANIMATION_STYLES = new Set([
-  "neon-pulse",
-  "outline-trace",
-  "charge-release",
-  "alternate-flick",
-]);
+const LEGACY_ANIMATION_STYLE_ALIASES = Object.freeze({
+  "impact-pop": "emphasis",
+  "charge-release": "emphasis",
+  "snap-bounce": "shake",
+  "alternate-flick": "shake",
+  "signal-blink": "shake",
+  "neon-pulse": "pulse",
+  "sweep-shine": "sheen",
+  "outline-trace": "sheen",
+  "card-slam": "turn",
+  "flip-edge": "turn",
+  "stagger-wave": "emphasis",
+});
 const KIND_CLASS_NAMES = Object.values(HIT_KIND_CLASS);
 const THEME_CLASS_NAMES = Object.values(HIT_THEME_CLASS);
 const ANIMATION_CLASS_NAMES = Object.values(HIT_ANIMATION_CLASS);
@@ -464,8 +471,8 @@ function prefersReducedMotion(windowRef = null) {
   }
 }
 
-function isLoopAnimationStyle(value) {
-  return LOOPABLE_ANIMATION_STYLES.has(String(value || "").trim().toLowerCase());
+function isLoopAnimationStyle() {
+  return false;
 }
 
 function resolveColorTheme(value) {
@@ -475,7 +482,8 @@ function resolveColorTheme(value) {
 
 function resolveAnimationStyle(value) {
   const normalized = String(value || "").trim().toLowerCase();
-  return SUPPORTED_ANIMATION_STYLE.has(normalized) ? normalized : "charge-release";
+  const resolved = LEGACY_ANIMATION_STYLE_ALIASES[normalized] || normalized;
+  return SUPPORTED_ANIMATION_STYLE.has(resolved) ? resolved : "emphasis";
 }
 
 export function classifyThrowText(rawText) {
@@ -819,10 +827,8 @@ function getBurstTimelineSteps(context = {}) {
   const reducedMotion = Boolean(context.reducedMotion);
   const baseDuration = reducedMotion ? 180 : 520;
   const spinY = reducedMotion ? 18 : 360;
-  const spinX = reducedMotion ? -22 : -360;
-  const heavyWobble = reducedMotion ? 3 : 11;
   const builders = {
-    "impact-pop": () => [
+    emphasis: () => [
       {
         offset: 0,
         step: {
@@ -903,7 +909,7 @@ function getBurstTimelineSteps(context = {}) {
         },
       },
     ],
-    "sweep-shine": () => [
+    sheen: () => [
       {
         offset: 0,
         step: {
@@ -1030,7 +1036,7 @@ function getBurstTimelineSteps(context = {}) {
         },
       },
     ],
-    "neon-pulse": () => [
+    pulse: () => [
       {
         offset: 0,
         step: {
@@ -1070,85 +1076,18 @@ function getBurstTimelineSteps(context = {}) {
         },
       },
     ],
-    "snap-bounce": () => [
+    shake: () => [
       {
         offset: 0,
         step: {
           targets: rowNode,
-          duration: reducedMotion ? 220 : 620,
-          easing: "easeOutElastic(1, .55)",
-          keyframes: [
-            { translateY: -14, scale: 1.1, rotateZ: -1.2 },
-            { translateY: 5, scale: 0.97, rotateZ: 0.7 },
-            { translateY: 0, scale: 1 },
-          ],
-        },
-      },
-      {
-        offset: 0,
-        step: {
-          targets: scoreTarget,
-          duration: reducedMotion ? 220 : 420,
-          easing: "easeOutBack(2.2)",
-          keyframes: [
-            { translateY: -9, scale: 1.2, rotateZ: -1 },
-            { translateY: 0, scale: 1, rotateZ: 0 },
-          ],
-        },
-      },
-    ],
-    "card-slam": () => [
-      {
-        offset: 0,
-        step: {
-          targets: rowNode,
-          duration: reducedMotion ? 260 : 760,
-          easing: "easeOutExpo",
-          keyframes: [
-            { rotateX: spinX, translateY: -18, scale: 1.08 },
-            { rotateX: reducedMotion ? -8 : -138, translateY: 8, scale: 0.96 },
-            { rotateX: 0, translateY: 0, scale: 1 },
-          ],
-        },
-      },
-      {
-        offset: 25,
-        step: {
-          targets: scoreTarget,
-          duration: reducedMotion ? 220 : 460,
-          easing: "easeOutBack(2.3)",
-          keyframes: [
-            { translateY: -14, scale: 1.24, rotateZ: -1.5 },
-            { translateY: 2, scale: 0.98, rotateZ: 0.5 },
-            { translateY: 0, scale: 1, rotateZ: 0 },
-          ],
-        },
-      },
-      {
-        offset: 85,
-        step: {
-          targets: segmentTarget,
-          duration: reducedMotion ? 180 : 340,
+          duration: reducedMotion ? 220 : 520,
           easing: "easeOutQuad",
           keyframes: [
-            { translateY: 8, opacity: 1, letterSpacing: "0.18em" },
-            { translateY: 0, opacity: 1, letterSpacing: "0.1em" },
-          ],
-        },
-      },
-    ],
-    "signal-blink": () => [
-      {
-        offset: 0,
-        step: {
-          targets: rowNode,
-          duration: reducedMotion ? 220 : 620,
-          easing: "linear",
-          keyframes: [
-            { opacity: 0.76, translateX: -5 },
-            { opacity: 1, translateX: 5 },
-            { opacity: 0.84, translateX: -3 },
-            { opacity: 1, translateX: 0 },
+            { translateX: reducedMotion ? -2 : -7, translateY: -1, scale: 1.035, rotateZ: -1.2 },
+            { translateX: reducedMotion ? 2 : 8, translateY: 1, scale: 1.055, rotateZ: 1 },
+            { translateX: reducedMotion ? -1 : -5, translateY: 0, scale: 1.025, rotateZ: -0.6 },
+            { translateX: 0, translateY: 0, scale: 1, rotateZ: 0 },
           ],
         },
       },
@@ -1156,70 +1095,17 @@ function getBurstTimelineSteps(context = {}) {
         offset: 0,
         step: {
           targets: scoreTarget,
-          duration: reducedMotion ? 200 : 520,
-          easing: "linear",
+          duration: reducedMotion ? 200 : 420,
+          easing: "easeOutQuad",
           keyframes: [
-            { scale: 1.18, translateX: heavyWobble, rotateZ: 1.5 },
-            { scale: 0.98, translateX: -heavyWobble, rotateZ: -1.8 },
-            { scale: 1.12, translateX: reducedMotion ? 2 : 7, rotateZ: 1.1 },
-            { scale: 1, translateX: 0, rotateZ: 0 },
-          ],
-        },
-      },
-      {
-        offset: 80,
-        step: {
-          targets: segmentTarget,
-          duration: reducedMotion ? 180 : 400,
-          easing: "linear",
-          keyframes: [
-            { translateX: reducedMotion ? -2 : -6, letterSpacing: "0.16em" },
-            { translateX: reducedMotion ? 2 : 6, letterSpacing: "0.08em" },
-            { translateX: 0, letterSpacing: "0.1em" },
+            { translateX: reducedMotion ? 2 : 9, scale: 1.16, rotateZ: 1.2 },
+            { translateX: reducedMotion ? -2 : -7, scale: 1.02, rotateZ: -0.8 },
+            { translateX: 0, scale: 1, rotateZ: 0 },
           ],
         },
       },
     ],
-    "stagger-wave": () => [
-      {
-        offset: 0,
-        step: {
-          targets: rowNode,
-          duration: reducedMotion ? 280 : 720,
-          easing: "easeOutQuart",
-          keyframes: [
-            { translateX: -14, rotateZ: -1.1, scale: 1.02 },
-            { translateX: 10, rotateZ: 0.8, scale: 1.05 },
-            { translateX: 0, rotateZ: 0 },
-          ],
-        },
-      },
-      {
-        offset: 0,
-        step: {
-          targets: scoreTarget,
-          duration: reducedMotion ? 220 : 420,
-          easing: "easeOutBack(1.8)",
-          keyframes: [
-            { translateY: -10, scale: 1.2, rotateZ: -1 },
-            { translateY: 0, scale: 1, rotateZ: 0 },
-          ],
-        },
-      },
-      {
-        offset: 120,
-        step: {
-          targets: segmentTarget,
-          duration: reducedMotion ? 220 : 400,
-          easing: "easeOutBack(1.5)",
-          keyframes: [
-            { translateY: 7, scale: 1.12, letterSpacing: "0.16em" },
-            { translateY: 0, scale: 1, letterSpacing: "0.1em" },
-          ],
-        },
-      },
-    ],
-    "flip-edge": () => [
+    turn: () => [
       {
         offset: 0,
         step: {
@@ -1258,122 +1144,6 @@ function getBurstTimelineSteps(context = {}) {
         },
       },
     ],
-    "outline-trace": () => [
-      {
-        offset: 0,
-        step: {
-          targets: rowNode,
-          duration: reducedMotion ? 220 : 640,
-          easing: "easeOutCubic",
-          keyframes: [{ scale: 1.04, translateY: -2 }, { scale: 1, translateY: 0 }],
-        },
-      },
-      {
-        offset: 0,
-        step: {
-          targets: scoreTarget,
-          duration: reducedMotion ? 220 : 420,
-          easing: "easeOutQuad",
-          keyframes: [
-            { letterSpacing: "0.14em", scale: 1.18, translateY: -4 },
-            { letterSpacing: "0em", scale: 1, translateY: 0 },
-          ],
-        },
-      },
-      {
-        offset: 90,
-        step: {
-          targets: segmentTarget,
-          duration: reducedMotion ? 180 : 340,
-          easing: "easeOutQuad",
-          keyframes: [
-            { letterSpacing: "0.18em", opacity: 1, translateX: 8 },
-            { letterSpacing: "0.04em", opacity: 1, translateX: 0 },
-          ],
-        },
-      },
-    ],
-    "charge-release": () => [
-      {
-        offset: 0,
-        step: {
-          targets: rowNode,
-          duration: reducedMotion ? 280 : 860,
-          easing: "easeOutExpo",
-          keyframes: [
-            { scale: 0.94, translateY: 10 },
-            { scale: 1.12, translateY: -10 },
-            { scale: 1.03, translateY: 2 },
-            { scale: 1, translateY: 0 },
-          ],
-        },
-      },
-      {
-        offset: 60,
-        step: {
-          targets: scoreTarget,
-          duration: reducedMotion ? 240 : 620,
-          easing: "easeOutBack(2)",
-          keyframes: [
-            { scale: 1.32, translateY: -12, letterSpacing: "0.08em" },
-            { scale: 0.98, translateY: 2, letterSpacing: "0.02em" },
-            { scale: 1, translateY: 0, letterSpacing: "0em" },
-          ],
-        },
-      },
-      {
-        offset: 130,
-        step: {
-          targets: segmentTarget,
-          duration: reducedMotion ? 220 : 460,
-          easing: "easeOutQuad",
-          keyframes: [
-            { scale: 1.16, translateY: -5, opacity: 1, letterSpacing: "0.18em" },
-            { scale: 1, translateY: 0, opacity: 1, letterSpacing: "0.1em" },
-          ],
-        },
-      },
-    ],
-    "alternate-flick": () => [
-      {
-        offset: 0,
-        step: {
-          targets: rowNode,
-          duration: reducedMotion ? 260 : 720,
-          easing: "easeOutQuart",
-          keyframes: [
-            { translateX: -13, rotateZ: -1.4, scale: 1.04 },
-            { translateX: 10, rotateZ: 0.9, scale: 1.07 },
-            { translateX: -5, rotateZ: -0.45, scale: 1.02 },
-            { translateX: 0, rotateZ: 0 },
-          ],
-        },
-      },
-      {
-        offset: 20,
-        step: {
-          targets: scoreTarget,
-          duration: reducedMotion ? 220 : 480,
-          easing: "easeOutBack(1.9)",
-          keyframes: [
-            { translateX: 8, scale: 1.2, rotateZ: 1.3 },
-            { translateX: 0, scale: 1, rotateZ: 0 },
-          ],
-        },
-      },
-      {
-        offset: 90,
-        step: {
-          targets: segmentTarget,
-          duration: reducedMotion ? 200 : 420,
-          easing: "easeOutBack(1.6)",
-          keyframes: [
-            { translateX: -10, opacity: 1, letterSpacing: "0.16em" },
-            { translateX: 0, opacity: 1, letterSpacing: "0.1em" },
-          ],
-        },
-      },
-    ],
     default: () => [
       {
         offset: 0,
@@ -1395,7 +1165,7 @@ function getBurstTimelineSteps(context = {}) {
       },
     ],
   };
-  const style = String(context.animationStyle || "").trim().toLowerCase();
+  const style = resolveAnimationStyle(context.animationStyle);
   const buildSteps = builders[style] || builders.default;
   return buildSteps();
 }
@@ -1548,7 +1318,7 @@ export function applyHitDecoration(rowNode, options = {}) {
   }
 
   const reducedMotion = prefersReducedMotion(windowRef);
-  const idleLoopActive = isLoopAnimationStyle(animationStyle) && !reducedMotion;
+  const idleLoopActive = isLoopAnimationStyle() && !reducedMotion;
   const signature = [hitMeta.kind, hitMeta.segment, colorTheme, animationStyle].join("|");
   const burstKey = getRowBurstKey(rowNode, rowIndex) || `${rowIndex}|${rowText}`;
   const lastBurstKey = burstKeyBySlot?.get?.(rowIndex) || "";

@@ -8,6 +8,7 @@ import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-tem
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
+import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
 
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
@@ -284,6 +285,7 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.ok(menuButton);
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   assert.equal(menuButton.getAttribute("data-adxconfig-action"), "open");
+  assert.ok(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID));
   const boardsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
     .find((link) => String(link.getAttribute("href") || "") === "/boards");
   assert.ok(boardsLink);
@@ -512,6 +514,10 @@ test("xConfig observer ignores self-managed menu/panel mutations and only syncs 
   assert.ok(rafCount > afterManagedMutations);
 
   runtime.stop();
+  assert.equal(
+    await waitFor(() => !documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)),
+    true
+  );
 });
 
 test("xConfig observer ignores closed-shell match content mutations without scanning sidebar", async () => {
@@ -1680,6 +1686,48 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     0,
     "actions should not render select option explanation lists"
   );
+
+  runtime.stop();
+});
+
+test("xConfig triple-double-bull animation buttons expose hover preview effects", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='triple-double-bull-hits']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const animationOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-option-note='true'][data-setting-key='animationStyle']"
+  );
+  const previewEffects = animationOptions.map((optionNode) =>
+    String(optionNode.getAttribute("data-preview-effect") || "")
+  );
+
+  assert.deepEqual(previewEffects, [
+    "emphasis",
+    "shake",
+    "pulse",
+    "turn",
+    "sheen",
+    "shockwave",
+    "electric-arc",
+  ]);
+  animationOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
+  });
 
   runtime.stop();
 });
