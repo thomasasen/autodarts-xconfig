@@ -28,6 +28,7 @@ function selectField(key, label, options = [], fieldOptions = {}) {
           label: option.label,
           previewFontFamily: String(option.previewFontFamily || "").trim(),
           previewEffect: String(option.previewEffect || "").trim(),
+          previewColorTheme: String(option.previewColorTheme || "").trim(),
         })
       )
     ),
@@ -638,13 +639,13 @@ export const xconfigDescriptors = Object.freeze([
     description: "Setzt Treffer-Highlights mit wählbarem Farbstil und starkem Burst-Animationsstil.",
     fields: [
       selectField("colorTheme", "Farbstil", [
-        { value: "kind-signal", label: "Rot/Blau/Grün" },
-        { value: "ember-rush", label: "Solar Flare" },
-        { value: "ice-circuit", label: "Ice Reactor" },
-        { value: "volt-lime", label: "Venom Lime" },
-        { value: "crimson-steel", label: "Crimson Velocity" },
-        { value: "arctic-mint", label: "Polar Mint" },
-        { value: "champagne-night", label: "Midnight Gold" },
+        { value: "kind-signal", label: "Rot/Blau/Grün", previewColorTheme: "kind-signal" },
+        { value: "ember-rush", label: "Solar Flare", previewColorTheme: "ember-rush" },
+        { value: "ice-circuit", label: "Ice Reactor", previewColorTheme: "ice-circuit" },
+        { value: "volt-lime", label: "Venom Lime", previewColorTheme: "volt-lime" },
+        { value: "crimson-steel", label: "Crimson Velocity", previewColorTheme: "crimson-steel" },
+        { value: "arctic-mint", label: "Polar Mint", previewColorTheme: "arctic-mint" },
+        { value: "champagne-night", label: "Midnight Gold", previewColorTheme: "champagne-night" },
       ]),
       selectField("animationStyle", "Animationsstil", [
         { value: "emphasis", label: "Emphase", previewEffect: "emphasis" },

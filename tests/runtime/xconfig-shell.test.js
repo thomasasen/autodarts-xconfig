@@ -1690,7 +1690,7 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   runtime.stop();
 });
 
-test("xConfig triple-double-bull animation buttons expose hover preview effects", async () => {
+test("xConfig triple-double-bull style buttons expose color and animation previews", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1708,6 +1708,26 @@ test("xConfig triple-double-bull animation buttons expose hover preview effects"
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
+
+  const colorOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-option-note='true'][data-setting-key='colorTheme']"
+  );
+  const previewColorThemes = colorOptions.map((optionNode) =>
+    String(optionNode.getAttribute("data-preview-color-theme") || "")
+  );
+
+  assert.deepEqual(previewColorThemes, [
+    "kind-signal",
+    "ember-rush",
+    "ice-circuit",
+    "volt-lime",
+    "crimson-steel",
+    "arctic-mint",
+    "champagne-night",
+  ]);
+  colorOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--color-preview"), true);
+  });
 
   const animationOptions = documentRef.querySelectorAll(
     "[data-adxconfig-option-note='true'][data-setting-key='animationStyle']"

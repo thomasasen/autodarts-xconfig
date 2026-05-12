@@ -10,6 +10,21 @@ import {
   ELECTRIC_FILTER_STRONG_ID,
 } from "../../src/shared/electric-border-engine.js";
 
+function extractCssRuleBody(cssText, selectorFragment) {
+  const selectorIndex = cssText.indexOf(selectorFragment);
+  if (selectorIndex < 0) {
+    return "";
+  }
+
+  const bodyStart = cssText.indexOf("{", selectorIndex);
+  const bodyEnd = cssText.indexOf("}", bodyStart);
+  if (bodyStart < 0 || bodyEnd < 0) {
+    return "";
+  }
+
+  return cssText.slice(bodyStart + 1, bodyEnd);
+}
+
 function readNestedValue(rootValue, pathParts = []) {
   return pathParts.reduce((current, part) => {
     if (!current || typeof current !== "object") {
@@ -49,9 +64,16 @@ test("theme global typography stays first in the themes descriptor order", () =>
   assert.equal(themeDescriptors[0]?.featureKey, "theme-global-typography");
 });
 
-test("triple-double-bull animation options expose hover preview effects", () => {
+test("triple-double-bull style options expose color and animation previews", () => {
   const descriptor = xconfigDescriptors.find(
     (entry) => entry.featureKey === "triple-double-bull-hits"
+  );
+  const colorField = descriptor?.fields?.find((field) => field.key === "colorTheme");
+  const optionColorThemes = new Map(
+    (colorField?.options || []).map((option) => [
+      String(option.value),
+      String(option.previewColorTheme || ""),
+    ])
   );
   const animationField = descriptor?.fields?.find((field) => field.key === "animationStyle");
   const optionEffects = new Map(
@@ -60,6 +82,72 @@ test("triple-double-bull animation options expose hover preview effects", () => 
       String(option.previewEffect || ""),
     ])
   );
+
+  assert.deepEqual(Array.from(optionColorThemes.keys()), [
+    "kind-signal",
+    "ember-rush",
+    "ice-circuit",
+    "volt-lime",
+    "crimson-steel",
+    "arctic-mint",
+    "champagne-night",
+  ]);
+  optionColorThemes.forEach((previewColorTheme, value) => {
+    assert.equal(previewColorTheme, value);
+    assert.equal(
+      xconfigShellStyleText.includes(`data-preview-color-theme="${previewColorTheme}"`),
+      true
+    );
+  });
+  assert.equal(
+    xconfigShellStyleText.includes("ad-xconfig-option-item--color-preview::before"),
+    true
+  );
+  const colorPreviewSurface = extractCssRuleBody(
+    xconfigShellStyleText,
+    ".ad-xconfig-option-item--color-preview::before"
+  );
+  assert.notEqual(colorPreviewSurface, "");
+  assert.equal(colorPreviewSurface.includes("repeating-linear-gradient"), false);
+
+  const kindSignalPreview = extractCssRuleBody(
+    xconfigShellStyleText,
+    'data-preview-color-theme="kind-signal"'
+  );
+  assert.equal(
+    kindSignalPreview.includes(
+      "linear-gradient(116deg,#3b0a11 0%,#7f1124 34%,#c62828 67%,#ff8a80 100%),linear-gradient(116deg,#0a1f45 0%,#0d4f9b 34%,#1976d2 67%,#7ec8ff 100%),linear-gradient(116deg,#0c2a14 0%,#1b7a34 34%,#2eaf50 67%,#9ef57e 100%)"
+    ),
+    true
+  );
+  assert.equal(
+    kindSignalPreview.includes(
+      "--ad-xconfig-hit-theme-gradient-size:33.333% 100%,33.334% 100%,33.333% 100%"
+    ),
+    true
+  );
+  assert.equal(
+    kindSignalPreview.includes(
+      "--ad-xconfig-hit-theme-gradient-position:left center,center center,right center"
+    ),
+    true
+  );
+  [
+    "#3b0a11",
+    "#7f1124",
+    "#c62828",
+    "#ff8a80",
+    "#0a1f45",
+    "#0d4f9b",
+    "#1976d2",
+    "#7ec8ff",
+    "#0c2a14",
+    "#1b7a34",
+    "#2eaf50",
+    "#9ef57e",
+  ].forEach((colorValue) => {
+    assert.equal(kindSignalPreview.includes(colorValue), true);
+  });
 
   assert.deepEqual(Array.from(optionEffects.keys()), [
     "emphasis",
