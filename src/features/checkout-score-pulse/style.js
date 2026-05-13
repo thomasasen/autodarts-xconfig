@@ -8,6 +8,18 @@ export const EFFECT_CLASSES = {
   blink: "ad-ext-checkout-possible--blink",
 };
 
+export const STYLE_VARIABLES = Object.freeze({
+  color: "--ad-ext-checkout-pulse-color",
+  pulseScale: "--ad-ext-checkout-pulse-scale",
+  pulseMidOpacity: "--ad-ext-checkout-pulse-mid-opacity",
+  pulseShadowMaxAlpha: "--ad-ext-checkout-pulse-shadow-max-alpha",
+  glowMinAlpha: "--ad-ext-checkout-glow-min-alpha",
+  glowMaxAlpha: "--ad-ext-checkout-glow-max-alpha",
+  glowMaxBlur: "--ad-ext-checkout-glow-max-blur",
+  scaleMax: "--ad-ext-checkout-scale-max",
+  blinkMinOpacity: "--ad-ext-checkout-blink-min-opacity",
+});
+
 const INTENSITY_PRESETS = {
   dezent: {
     pulseScale: 1.06,
@@ -53,59 +65,102 @@ function resolveIntensityPreset(intensity) {
   return INTENSITY_PRESETS[normalized] || INTENSITY_PRESETS.standard;
 }
 
-export function buildStyleText(options = {}) {
+function scopedClassSelector(selectorPrefix, className) {
+  const prefix = String(selectorPrefix || "").trim();
+  return `${prefix ? `${prefix} ` : ""}.${className}`;
+}
+
+export function resolveCheckoutScorePulseStyleVariables(options = {}) {
   const pulseColor = sanitizeColorTheme(options.colorTheme);
   const intensity = resolveIntensityPreset(options.intensity);
+
+  return {
+    [STYLE_VARIABLES.color]: pulseColor,
+    [STYLE_VARIABLES.pulseScale]: String(intensity.pulseScale),
+    [STYLE_VARIABLES.pulseMidOpacity]: String(intensity.pulseMidOpacity),
+    [STYLE_VARIABLES.pulseShadowMaxAlpha]: String(intensity.pulseShadowMaxAlpha),
+    [STYLE_VARIABLES.glowMinAlpha]: String(intensity.glowMinAlpha),
+    [STYLE_VARIABLES.glowMaxAlpha]: String(intensity.glowMaxAlpha),
+    [STYLE_VARIABLES.glowMaxBlur]: `${intensity.glowMaxBlurPx}px`,
+    [STYLE_VARIABLES.scaleMax]: String(intensity.scaleMax),
+    [STYLE_VARIABLES.blinkMinOpacity]: String(intensity.blinkMinOpacity),
+  };
+}
+
+export function applyCheckoutScorePulseStyleVariables(node, options = {}) {
+  if (!node?.style || typeof node.style.setProperty !== "function") {
+    return;
+  }
+
+  Object.entries(resolveCheckoutScorePulseStyleVariables(options)).forEach(
+    ([propertyName, value]) => {
+      node.style.setProperty(propertyName, value);
+    }
+  );
+}
+
+export function buildStyleText(options = {}) {
+  const variables = resolveCheckoutScorePulseStyleVariables(options);
+  const selectorPrefix = options.selectorPrefix || "";
 
   return `
 @keyframes ad-ext-checkout-pulse {
   0% {
     transform: scale(1);
     opacity: 1;
-    text-shadow: 0 0 2px rgba(${pulseColor}, 0.2);
+    text-shadow: 0 0 2px rgba(var(${STYLE_VARIABLES.color}), 0.2);
   }
   50% {
-    transform: scale(${intensity.pulseScale});
-    opacity: ${intensity.pulseMidOpacity};
-    text-shadow: 0 0 ${intensity.glowMaxBlurPx}px rgba(${pulseColor}, ${intensity.pulseShadowMaxAlpha});
+    transform: scale(var(${STYLE_VARIABLES.pulseScale}));
+    opacity: var(${STYLE_VARIABLES.pulseMidOpacity});
+    text-shadow: 0 0 var(${STYLE_VARIABLES.glowMaxBlur}) rgba(var(${STYLE_VARIABLES.color}), var(${STYLE_VARIABLES.pulseShadowMaxAlpha}));
   }
   100% {
     transform: scale(1);
     opacity: 1;
-    text-shadow: 0 0 2px rgba(${pulseColor}, 0.2);
+    text-shadow: 0 0 2px rgba(var(${STYLE_VARIABLES.color}), 0.2);
   }
 }
 
-.${HIGHLIGHT_CLASS} {
+${scopedClassSelector(selectorPrefix, HIGHLIGHT_CLASS)} {
+  ${STYLE_VARIABLES.color}: ${variables[STYLE_VARIABLES.color]};
+  ${STYLE_VARIABLES.pulseScale}: ${variables[STYLE_VARIABLES.pulseScale]};
+  ${STYLE_VARIABLES.pulseMidOpacity}: ${variables[STYLE_VARIABLES.pulseMidOpacity]};
+  ${STYLE_VARIABLES.pulseShadowMaxAlpha}: ${variables[STYLE_VARIABLES.pulseShadowMaxAlpha]};
+  ${STYLE_VARIABLES.glowMinAlpha}: ${variables[STYLE_VARIABLES.glowMinAlpha]};
+  ${STYLE_VARIABLES.glowMaxAlpha}: ${variables[STYLE_VARIABLES.glowMaxAlpha]};
+  ${STYLE_VARIABLES.glowMaxBlur}: ${variables[STYLE_VARIABLES.glowMaxBlur]};
+  ${STYLE_VARIABLES.scaleMax}: ${variables[STYLE_VARIABLES.scaleMax]};
+  ${STYLE_VARIABLES.blinkMinOpacity}: ${variables[STYLE_VARIABLES.blinkMinOpacity]};
   display: inline-block;
   transform-origin: center;
 }
 
-.${EFFECT_CLASSES.pulse} {
+${scopedClassSelector(selectorPrefix, EFFECT_CLASSES.pulse)} {
   animation: ad-ext-checkout-pulse 1.4s ease-in-out infinite;
 }
 
-.${EFFECT_CLASSES.glow} {
+${scopedClassSelector(selectorPrefix, EFFECT_CLASSES.glow)} {
   animation: ad-ext-checkout-glow 1.8s ease-in-out infinite;
 }
 
-.${EFFECT_CLASSES.scale} {
+${scopedClassSelector(selectorPrefix, EFFECT_CLASSES.scale)} {
   animation: ad-ext-checkout-scale 1.2s ease-in-out infinite;
 }
 
-.${EFFECT_CLASSES.blink} {
+${scopedClassSelector(selectorPrefix, EFFECT_CLASSES.blink)} {
   animation: ad-ext-checkout-blink 0.9s ease-in-out infinite;
 }
 
 @keyframes ad-ext-checkout-glow {
   0% {
-    text-shadow: 0 0 4px rgba(${pulseColor}, ${intensity.glowMinAlpha});
+    text-shadow: 0 0 4px rgba(var(${STYLE_VARIABLES.color}), var(${STYLE_VARIABLES.glowMinAlpha}));
   }
   50% {
-    text-shadow: 0 0 ${intensity.glowMaxBlurPx}px rgba(${pulseColor}, ${intensity.glowMaxAlpha});
+    text-shadow: 0 0 var(${STYLE_VARIABLES.glowMaxBlur}) rgba(var(${STYLE_VARIABLES.color}), var(${STYLE_VARIABLES.glowMaxAlpha}));
   }
   100% {
-    text-shadow: 0 0 4px rgba(${pulseColor}, ${intensity.glowMinAlpha});
+    text-shadow: 0 0 4px rgba(var(${STYLE_VARIABLES.color}), var(${STYLE_VARIABLES.glowMinAlpha}));
   }
 }
 
@@ -114,7 +169,7 @@ export function buildStyleText(options = {}) {
     transform: scale(1);
   }
   50% {
-    transform: scale(${intensity.scaleMax});
+    transform: scale(var(${STYLE_VARIABLES.scaleMax}));
   }
   100% {
     transform: scale(1);
@@ -126,7 +181,7 @@ export function buildStyleText(options = {}) {
     opacity: 1;
   }
   50% {
-    opacity: ${intensity.blinkMinOpacity};
+    opacity: var(${STYLE_VARIABLES.blinkMinOpacity});
   }
   100% {
     opacity: 1;

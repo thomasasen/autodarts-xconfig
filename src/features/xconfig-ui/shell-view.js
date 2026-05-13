@@ -37,6 +37,11 @@ import {
 } from "../average-trend-arrow/style.js";
 import { applyDartMarkerEmphasisToMarker } from "../dart-marker-emphasis/logic.js";
 import { resolveDartMarkerEmphasisConfig } from "../dart-marker-emphasis/style.js";
+import {
+  HIGHLIGHT_CLASS as CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS,
+  applyCheckoutScorePulseStyleVariables,
+  getEffectClass as getCheckoutScorePulseEffectClass,
+} from "../checkout-score-pulse/style.js";
 import { renderCheckoutTargets } from "../checkout-board-targets/logic.js";
 import { resolveBoardTargetVisualConfig } from "../checkout-board-targets/style.js";
 import {
@@ -71,6 +76,8 @@ const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const DART_MARKER_EMPHASIS_FEATURE_KEY = "dart-marker-emphasis";
+const CHECKOUT_SCORE_PULSE_FEATURE_KEY = "checkout-score-pulse";
+const CHECKOUT_SCORE_PULSE_PREVIEW_FIELD_KEYS = new Set(["effect", "colorTheme"]);
 const CHECKOUT_BOARD_TARGETS_FEATURE_KEY = "checkout-board-targets";
 const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
   "visualPreset",
@@ -617,6 +624,193 @@ function buildOptionActiveBadge(documentRef) {
     className: "ad-xconfig-option-active",
     text: "Aktuell",
   });
+}
+
+function isCheckoutScorePulseFeature(feature) {
+  return feature?.featureKey === CHECKOUT_SCORE_PULSE_FEATURE_KEY;
+}
+
+function isCheckoutScorePulsePreviewField(feature, field) {
+  return (
+    isCheckoutScorePulseFeature(feature) &&
+    field?.control === "select" &&
+    CHECKOUT_SCORE_PULSE_PREVIEW_FIELD_KEYS.has(String(field?.key || "").trim())
+  );
+}
+
+function resolveCheckoutScorePulsePreviewConfig(featureConfig = {}, overrides = {}) {
+  return {
+    effect: "scale",
+    colorTheme: "159, 219, 88",
+    intensity: "standard",
+    triggerSource: "suggestion-first",
+    ...featureConfig,
+    ...overrides,
+  };
+}
+
+function resolveCheckoutScorePulseTriggerLabel(triggerSource) {
+  const normalized = String(triggerSource || "").trim().toLowerCase();
+  if (normalized === "score-only") {
+    return "Score-Mathe";
+  }
+  if (normalized === "suggestion-only") {
+    return "Suggestion";
+  }
+  return "Suggestion + Score";
+}
+
+function buildCheckoutScorePulseScoreNode(documentRef, previewConfig = {}, options = {}) {
+  const scoreNode = createElement(documentRef, "span", {
+    className: [
+      "ad-xconfig-checkout-score-pulse-score",
+      options.mini ? "ad-xconfig-checkout-score-pulse-score--mini" : "",
+      CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS,
+      getCheckoutScorePulseEffectClass(previewConfig.effect),
+    ].filter(Boolean).join(" "),
+    text: "40",
+    attributes: {
+      "data-adxconfig-checkout-score-pulse-score": "true",
+      "data-checkout-score-pulse-effect": String(previewConfig.effect || "").trim(),
+    },
+  });
+  applyCheckoutScorePulseStyleVariables(scoreNode, previewConfig);
+  return scoreNode;
+}
+
+function buildCheckoutScorePulsePreviewCard(documentRef, featureConfig = {}, overrides = {}, options = {}) {
+  const previewConfig = resolveCheckoutScorePulsePreviewConfig(featureConfig, overrides);
+  const card = createElement(documentRef, "div", {
+    className: [
+      "ad-xconfig-checkout-score-pulse-preview-card",
+      options.mini ? "ad-xconfig-checkout-score-pulse-preview-card--mini" : "",
+    ].filter(Boolean).join(" "),
+  });
+
+  const playerRow = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-score-pulse-preview-player",
+  });
+  playerRow.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-score-pulse-preview-name",
+    text: "PLAYER 1",
+  }));
+  playerRow.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-score-pulse-preview-context",
+    text: resolveCheckoutScorePulseTriggerLabel(previewConfig.triggerSource),
+  }));
+  card.appendChild(playerRow);
+
+  const scoreRow = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-score-pulse-preview-score-row",
+  });
+  scoreRow.appendChild(buildCheckoutScorePulseScoreNode(documentRef, previewConfig, options));
+  scoreRow.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-score-pulse-preview-route",
+    text: "D20",
+  }));
+  card.appendChild(scoreRow);
+
+  return card;
+}
+
+function buildCheckoutScorePulsePreviewSection(documentRef, feature) {
+  const section = createElement(documentRef, "section", {
+    className: "ad-xconfig-settings-section",
+    attributes: {
+      "data-adxconfig-settings-section": "vorschau",
+      "data-adxconfig-checkout-score-pulse-preview": "true",
+    },
+  });
+  section.appendChild(createElement(documentRef, "h4", {
+    className: "ad-xconfig-settings-section-title",
+    text: "Vorschau",
+  }));
+
+  const body = createElement(documentRef, "div", {
+    className: "ad-xconfig-settings-section-body",
+  });
+  const row = createElement(documentRef, "div", {
+    className: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-score-pulse-preview",
+  });
+  const surface = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-score-pulse-preview-surface",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-score-pulse-preview-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-score-pulse-preview-title",
+    text: "Live-Vorschau",
+  }));
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-score-pulse-preview-hint",
+    text: "40 Rest",
+  }));
+  surface.appendChild(head);
+  surface.appendChild(buildCheckoutScorePulsePreviewCard(documentRef, feature?.config || {}));
+  row.appendChild(surface);
+  body.appendChild(row);
+  section.appendChild(body);
+  return section;
+}
+
+function buildCheckoutScorePulseOptionLayout(
+  documentRef,
+  feature,
+  field,
+  optionValue,
+  optionLabel,
+  optionDescription,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--checkout-score-pulse-preview",
+  });
+  const optionText = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-text",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+  optionText.appendChild(head);
+  if (optionDescription) {
+    optionText.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+  layout.appendChild(optionText);
+
+  const fieldKey = String(field?.key || "").trim();
+  const previewOverrides = fieldKey === "effect"
+    ? { effect: optionValue }
+    : { colorTheme: optionValue };
+  const preview = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-score-pulse-option-preview",
+  });
+  preview.appendChild(
+    buildCheckoutScorePulsePreviewCard(documentRef, feature?.config || {}, previewOverrides, {
+      mini: true,
+    })
+  );
+  layout.appendChild(preview);
+
+  const activeSlot = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+
+  return layout;
 }
 
 const CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER = Object.freeze([
@@ -2007,6 +2201,7 @@ function buildFeatureField(documentRef, feature, field) {
     const isActive = selectedOptionValues.includes(optionValue);
     const isDartDesignField = isDartDesignSelectField(feature, field);
     const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
+    const isCheckoutScorePulsePreviewSelectField = isCheckoutScorePulsePreviewField(feature, field);
     const isCheckoutBoardTargetsPreviewSelectField = isCheckoutBoardTargetsPreviewField(feature, field);
     const isX01ScoreProgressPreviewSelectField = isX01ScoreProgressPreviewField(feature, field);
     const isCheckoutSuggestionStyleField = isStyleCheckoutSuggestionsStyleField(feature, field);
@@ -2025,6 +2220,7 @@ function buildFeatureField(documentRef, feature, field) {
         "ad-xconfig-option-item",
         isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
         isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
+        isCheckoutScorePulsePreviewSelectField ? "ad-xconfig-option-item--checkout-score-pulse-preview" : "",
         isCheckoutBoardTargetsPreviewSelectField ? "ad-xconfig-option-item--checkout-board-preview" : "",
         isX01ScoreProgressPreviewSelectField ? "ad-xconfig-option-item--x01-score-progress-preview" : "",
         isCheckoutSuggestionStyleField ? "ad-xconfig-option-item--checkout-suggestion-style" : "",
@@ -2088,6 +2284,18 @@ function buildFeatureField(documentRef, feature, field) {
     } else if (hasDartMarkerEmphasisPreview) {
       optionButton.appendChild(
         buildDartMarkerEmphasisOptionLayout(
+          documentRef,
+          feature,
+          field,
+          optionValue,
+          option.label,
+          optionDescription,
+          isActive
+        )
+      );
+    } else if (isCheckoutScorePulsePreviewSelectField) {
+      optionButton.appendChild(
+        buildCheckoutScorePulseOptionLayout(
           documentRef,
           feature,
           field,
@@ -2480,6 +2688,9 @@ function buildSettingsModal(documentRef, state, features) {
       }));
     });
     body.appendChild(detailsRow);
+  }
+  if (isCheckoutScorePulseFeature(feature)) {
+    body.appendChild(buildCheckoutScorePulsePreviewSection(documentRef, feature));
   }
   if (isCheckoutBoardTargetsFeature(feature)) {
     body.appendChild(buildCheckoutBoardPreviewSection(documentRef, feature));

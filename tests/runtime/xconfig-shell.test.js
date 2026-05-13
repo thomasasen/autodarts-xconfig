@@ -15,6 +15,11 @@ import {
   BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
   EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
 } from "../../src/features/dart-marker-emphasis/style.js";
+import {
+  EFFECT_CLASSES as CHECKOUT_SCORE_PULSE_EFFECT_CLASSES,
+  HIGHLIGHT_CLASS as CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS,
+  STYLE_VARIABLES as CHECKOUT_SCORE_PULSE_STYLE_VARIABLES,
+} from "../../src/features/checkout-score-pulse/style.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
@@ -1429,6 +1434,126 @@ test("xConfig style checkout suggestions renders live preview and style option s
   assert.equal(
     refreshedPreview.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket"),
     true
+  );
+
+  runtime.stop();
+});
+
+test("xConfig checkout score pulse renders real effect and color previews", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const previewSection = documentRef.querySelector(
+    "[data-adxconfig-checkout-score-pulse-preview='true']"
+  );
+  assert.ok(previewSection);
+  const previewScore = previewSection.querySelector(
+    "[data-adxconfig-checkout-score-pulse-score='true']"
+  );
+  assert.ok(previewScore);
+  assert.equal(previewScore.textContent, "40");
+  assert.equal(previewScore.classList.contains(CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS), true);
+  assert.equal(
+    previewScore.classList.contains(CHECKOUT_SCORE_PULSE_EFFECT_CLASSES.scale),
+    true
+  );
+  assert.equal(
+    previewScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.color),
+    "159, 219, 88"
+  );
+  assert.equal(
+    previewScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.scaleMax),
+    "1.08"
+  );
+
+  const effectPreviews = documentRef.querySelectorAll(
+    "[data-feature-key='checkout-score-pulse'][data-setting-key='effect'] .ad-xconfig-checkout-score-pulse-option-preview"
+  );
+  assert.equal(effectPreviews.length, 4);
+  const glowOptionScore = documentRef.querySelector(
+    "[data-feature-key='checkout-score-pulse'][data-setting-key='effect'][data-setting-value='glow'] [data-adxconfig-checkout-score-pulse-score='true']"
+  );
+  assert.ok(glowOptionScore);
+  assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS), true);
+  assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_PULSE_EFFECT_CLASSES.glow), true);
+
+  const colorPreviews = documentRef.querySelectorAll(
+    "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme'] .ad-xconfig-checkout-score-pulse-option-preview"
+  );
+  assert.equal(colorPreviews.length, 4);
+  const cyanOption = documentRef
+    .querySelectorAll(
+      "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme']"
+    )
+    .find((node) => node.getAttribute("data-setting-value") === "56, 189, 248");
+  assert.ok(cyanOption);
+  const cyanOptionScore = cyanOption.querySelector(
+    "[data-adxconfig-checkout-score-pulse-score='true']"
+  );
+  assert.ok(cyanOptionScore);
+  assert.equal(
+    cyanOptionScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.color),
+    "56, 189, 248"
+  );
+
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-feature-key='checkout-score-pulse'][data-setting-key='intensity'] .ad-xconfig-checkout-score-pulse-option-preview"
+    ).length,
+    0
+  );
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-feature-key='checkout-score-pulse'][data-setting-key='triggerSource'] .ad-xconfig-checkout-score-pulse-option-preview"
+    ).length,
+    0
+  );
+
+  clickSelectSettingOption(documentRef, "checkout-score-pulse", "intensity", "stark");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutScorePulse.intensity === "stark"
+  );
+
+  const refreshedScore = documentRef.querySelector(
+    "[data-adxconfig-checkout-score-pulse-preview='true'] [data-adxconfig-checkout-score-pulse-score='true']"
+  );
+  assert.ok(refreshedScore);
+  assert.equal(
+    refreshedScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.scaleMax),
+    "1.12"
+  );
+  assert.equal(
+    refreshedScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.glowMaxBlur),
+    "22px"
+  );
+
+  clickSelectSettingOption(documentRef, "checkout-score-pulse", "triggerSource", "score-only");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutScorePulse.triggerSource === "score-only"
+  );
+
+  assert.equal(
+    documentRef.querySelector(
+      "[data-adxconfig-checkout-score-pulse-preview='true'] .ad-xconfig-checkout-score-pulse-preview-context"
+    )?.textContent,
+    "Score-Mathe"
   );
 
   runtime.stop();
