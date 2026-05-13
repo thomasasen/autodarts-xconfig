@@ -691,21 +691,25 @@ function buildFeatureField(documentRef, feature, field) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
   if (field.control === "action") {
+    const previewColorTheme = String(field?.previewColorTheme || "").trim();
     const wrapper = createElement(documentRef, "div", {
       className: "ad-xconfig-setting-action",
     });
     const button = createElement(documentRef, "button", {
       id: fieldId,
       type: "button",
-      className: field.prominent
-        ? "ad-xconfig-setting-action-btn ad-xconfig-setting-action-btn--primary"
-        : "ad-xconfig-setting-action-btn",
+      className: [
+        "ad-xconfig-setting-action-btn",
+        field.prominent ? "ad-xconfig-setting-action-btn--primary" : "",
+        previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
+      ].filter(Boolean).join(" "),
       text: field.buttonLabel || field.label,
       attributes: {
         "data-adxconfig-action": field.action,
         "data-feature-key": feature.featureKey,
         "data-config-key": feature.configKey,
         "data-feature-action-id": field.actionId || "",
+        "data-preview-color-theme": previewColorTheme || undefined,
       },
     });
     wrapper.appendChild(button);

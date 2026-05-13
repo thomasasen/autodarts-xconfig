@@ -1752,6 +1752,60 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
   runtime.stop();
 });
 
+test("xConfig turn-start-sweep setting buttons expose sweep previews", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='turn-start-sweep']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const durationOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-option-note='true'][data-setting-key='durationMs']"
+  );
+  const durationPreviewEffects = durationOptions.map((optionNode) =>
+    String(optionNode.getAttribute("data-preview-effect") || "")
+  );
+
+  assert.deepEqual(durationPreviewEffects, [
+    "turn-start-sweep-fast",
+    "turn-start-sweep-standard-speed",
+    "turn-start-sweep-slow",
+  ]);
+  durationOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
+  });
+
+  const styleOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-option-note='true'][data-setting-key='sweepStyle']"
+  );
+  const stylePreviewEffects = styleOptions.map((optionNode) =>
+    String(optionNode.getAttribute("data-preview-effect") || "")
+  );
+
+  assert.deepEqual(stylePreviewEffects, [
+    "turn-start-sweep-subtle",
+    "turn-start-sweep-standard-style",
+    "turn-start-sweep-strong",
+  ]);
+  styleOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
+  });
+
+  runtime.stop();
+});
+
 test("xConfig x01 score progress settings no longer expose a design selector", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

@@ -6,6 +6,74 @@ import {
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
 
+const COLOR_PREVIEW_PALETTES = Object.freeze([
+  ["template-classic", "#C7A96B", "#F7F8FA", "#D9E0EA", "#AAB5C5", "rgba(199,169,107,.94)", "rgba(247,248,250,.58)", "rgba(199,169,107,.25)"],
+  ["template-broadcast", "#00D9FF", "#FFFFFF", "#DCE9FF", "#8FA9C2", "rgba(0,217,255,.94)", "rgba(220,233,255,.58)", "rgba(0,217,255,.28)"],
+  ["template-british-flag", "#C8102E", "#F7F9FC", "#D6E1F2", "#012169", "rgba(247,249,252,.92)", "rgba(200,16,46,.6)", "rgba(1,33,105,.28)"],
+  ["template-cyberpunk", "#2EF2FF", "#E8FF5A", "#FFD0F5", "#FF5CD6", "rgba(46,242,255,.95)", "rgba(255,92,214,.62)", "rgba(232,255,90,.3)"],
+  ["template-matrix", "#7CFF00", "#C9FF8E", "#6FCF97", "#2F7A49", "rgba(124,255,0,.95)", "rgba(111,207,151,.58)", "rgba(124,255,0,.28)"],
+  ["template-fire", "#FF5A1F", "#FFE4BF", "#FFC16B", "#B71C1C", "rgba(255,90,31,.95)", "rgba(255,193,107,.64)", "rgba(255,90,31,.3)"],
+  ["template-ice", "#7FE7FF", "#F2FBFF", "#C6E8FF", "#6EAEE6", "rgba(127,231,255,.95)", "rgba(198,232,255,.62)", "rgba(110,174,230,.28)"],
+  ["checkout-score-autodarts-green", "#5b7d31", "#9fdb58", "#b9ef7b", "#d9ffad", "rgba(159,219,88,.94)", "rgba(159,219,88,.62)", "rgba(159,219,88,.28)"],
+  ["checkout-score-cyan", "#0f5f86", "#38bdf8", "#67e8f9", "#cffafe", "rgba(103,232,249,.94)", "rgba(56,189,248,.64)", "rgba(56,189,248,.28)"],
+  ["checkout-score-amber", "#7c3d05", "#f59e0b", "#fbbf24", "#fde68a", "rgba(251,191,36,.94)", "rgba(245,158,11,.64)", "rgba(245,158,11,.28)"],
+  ["checkout-score-red", "#7f1d1d", "#ef4444", "#f87171", "#fecaca", "rgba(248,113,113,.94)", "rgba(248,113,113,.62)", "rgba(248,113,113,.28)"],
+  ["x01-danger-endgame", "#334155", "#facc15", "#f97316", "#dc2626", "rgba(248,113,113,.94)", "rgba(249,115,22,.62)", "rgba(220,38,38,.28)"],
+  ["x01-gradient-by-progress", "#ef4444", "#f97316", "#facc15", "#22c55e", "rgba(250,204,21,.94)", "rgba(34,197,94,.58)", "rgba(239,68,68,.25)"],
+  ["x01-autodarts", "#1d4ed8", "#38bdf8", "#60a5fa", "#7dd3fc", "rgba(125,211,252,.94)", "rgba(96,165,250,.62)", "rgba(56,189,248,.28)"],
+  ["x01-signal-lime", "#3f6212", "#84cc16", "#a3e635", "#bef264", "rgba(190,242,100,.94)", "rgba(163,230,53,.62)", "rgba(132,204,22,.28)"],
+  ["x01-glass-mint", "#10b981", "#2dd4bf", "#6ee7b7", "#bbf7d0", "rgba(110,231,183,.94)", "rgba(45,212,191,.62)", "rgba(16,185,129,.28)"],
+  ["x01-ember-rush", "#9a3412", "#fb923c", "#f97316", "#ef4444", "rgba(251,146,60,.94)", "rgba(249,115,22,.64)", "rgba(239,68,68,.3)"],
+  ["x01-ice-circuit", "#0e7490", "#38bdf8", "#22d3ee", "#2dd4bf", "rgba(34,211,238,.94)", "rgba(56,189,248,.62)", "rgba(45,212,191,.28)"],
+  ["x01-neon-violet", "#5b21b6", "#a855f7", "#818cf8", "#38bdf8", "rgba(168,85,247,.94)", "rgba(129,140,248,.62)", "rgba(56,189,248,.28)"],
+  ["x01-sunset-amber", "#b45309", "#facc15", "#f97316", "#f43f5e", "rgba(250,204,21,.94)", "rgba(249,115,22,.64)", "rgba(244,63,94,.28)"],
+  ["x01-monochrome-steel", "#475569", "#e2e8f0", "#94a3b8", "#64748b", "rgba(226,232,240,.92)", "rgba(148,163,184,.58)", "rgba(100,116,139,.28)"],
+  ["checkout-board-violet", "#581c87", "#a855f7", "#c084fc", "#e9d5ff", "rgba(192,132,252,.96)", "rgba(168,85,247,.62)", "rgba(168,85,247,.28)"],
+  ["checkout-board-cyan", "#155e75", "#38bdf8", "#67e8f9", "#cffafe", "rgba(103,232,249,.96)", "rgba(56,189,248,.62)", "rgba(56,189,248,.28)"],
+  ["checkout-board-amber", "#78350f", "#f59e0b", "#fbbf24", "#fef3c7", "rgba(251,191,36,.98)", "rgba(245,158,11,.64)", "rgba(245,158,11,.28)"],
+  ["checkout-suggestion-amber", "#78350f", "#f59e0b", "#fcd34d", "#fff7c2", "rgba(252,211,77,.94)", "rgba(245,158,11,.62)", "rgba(245,158,11,.28)"],
+  ["checkout-suggestion-cyan", "#164e63", "#06b6d4", "#67e8f9", "#cffafe", "rgba(103,232,249,.94)", "rgba(6,182,212,.62)", "rgba(6,182,212,.28)"],
+  ["checkout-suggestion-rose", "#881337", "#f43f5e", "#fda4af", "#ffe4e6", "rgba(253,164,175,.94)", "rgba(244,63,94,.62)", "rgba(244,63,94,.28)"],
+  ["dart-marker-blue", "#1e3a8a", "#3182ce", "#60a5fa", "#bfdbfe", "rgba(96,165,250,.94)", "rgba(49,130,206,.62)", "rgba(49,130,206,.28)"],
+  ["dart-marker-green", "#14532d", "#22c55e", "#86efac", "#dcfce7", "rgba(134,239,172,.94)", "rgba(34,197,94,.62)", "rgba(34,197,94,.28)"],
+  ["dart-marker-red", "#7f1d1d", "#f87171", "#fca5a5", "#fee2e2", "rgba(252,165,165,.94)", "rgba(248,113,113,.62)", "rgba(248,113,113,.28)"],
+  ["dart-marker-yellow", "#713f12", "#facc15", "#fde047", "#fef9c3", "rgba(253,224,71,.94)", "rgba(250,204,21,.62)", "rgba(250,204,21,.28)"],
+  ["dart-marker-white", "#64748b", "#f8fafc", "#ffffff", "#cbd5e1", "rgba(255,255,255,.94)", "rgba(255,255,255,.58)", "rgba(203,213,225,.28)"],
+  ["dart-marker-outline-off", "#1f2937", "#334155", "#475569", "#64748b", "rgba(148,163,184,.52)", "rgba(100,116,139,.34)", "rgba(71,85,105,.18)"],
+  ["dart-marker-outline-white", "#475569", "#e2e8f0", "#ffffff", "#f8fafc", "rgba(255,255,255,.95)", "rgba(255,255,255,.58)", "rgba(226,232,240,.28)"],
+  ["dart-marker-outline-black", "#000000", "#111827", "#1f2937", "#4b5563", "rgba(0,0,0,.95)", "rgba(31,41,55,.5)", "rgba(0,0,0,.28)"],
+  ["winner-autodarts", "#0c5b9c", "#1267ad", "#1c6fb8", "#ffffff", "rgba(255,255,255,.94)", "rgba(28,111,184,.62)", "rgba(12,91,156,.28)"],
+  ["winner-redwhite", "#ffffff", "#fca5a5", "#ef4444", "#991b1b", "rgba(252,165,165,.94)", "rgba(239,68,68,.62)", "rgba(220,38,38,.28)"],
+  ["winner-ice", "#ffffff", "#bae6fd", "#38bdf8", "#1d4ed8", "rgba(186,230,253,.94)", "rgba(56,189,248,.62)", "rgba(29,78,216,.28)"],
+  ["winner-sunset", "#ffffff", "#fdba74", "#f97316", "#a855f7", "rgba(253,186,116,.94)", "rgba(244,63,94,.62)", "rgba(168,85,247,.28)"],
+  ["winner-neon", "#ffffff", "#bef264", "#22d3ee", "#f472b6", "rgba(190,242,100,.94)", "rgba(34,211,238,.62)", "rgba(244,114,182,.28)"],
+  ["winner-gold", "#ffffff", "#fde68a", "#fbbf24", "#b45309", "rgba(253,230,138,.94)", "rgba(251,191,36,.62)", "rgba(180,83,9,.28)"],
+]);
+
+const COLOR_PREVIEW_GRADIENTS = Object.freeze([
+  ["x01-checkout-focus", "linear-gradient(116deg,#1e40af 0%,#38bdf8 50%,#818cf8 100%),linear-gradient(116deg,#92400e 0%,#f59e0b 50%,#facc15 100%),linear-gradient(116deg,#166534 0%,#22c55e 50%,#4ade80 100%)", "33.333% 100%,33.334% 100%,33.333% 100%", "left center,center center,right center", "rgba(250,204,21,.94)", "rgba(34,197,94,.58)", "rgba(56,189,248,.26)"],
+  ["x01-traffic-light", "linear-gradient(116deg,#991b1b 0%,#ef4444 52%,#f87171 100%),linear-gradient(116deg,#92400e 0%,#f59e0b 52%,#facc15 100%),linear-gradient(116deg,#14532d 0%,#22c55e 52%,#84cc16 100%)", "33.333% 100%,33.334% 100%,33.333% 100%", "left center,center center,right center", "rgba(250,204,21,.94)", "rgba(239,68,68,.58)", "rgba(34,197,94,.26)"],
+  ["cricket-standard", "linear-gradient(116deg,#064e3b 0%,#00b287 48%,#5eead4 100%),linear-gradient(116deg,#7f1d1d 0%,#ef4444 48%,#fca5a5 100%)", "50% 100%,50% 100%", "left center,right center", "rgba(94,234,212,.94)", "rgba(0,178,135,.58)", "rgba(239,68,68,.25)"],
+  ["cricket-high-contrast", "linear-gradient(116deg,#14532d 0%,#22c55e 48%,#86efac 100%),linear-gradient(116deg,#7f1d1d 0%,#ef4444 48%,#fca5a5 100%)", "50% 100%,50% 100%", "left center,right center", "rgba(134,239,172,.94)", "rgba(34,197,94,.6)", "rgba(239,68,68,.25)"],
+]);
+
+function buildColorPreviewPaletteRule(definition) {
+  const [key, themeA, themeB, themeC, themeD, edge, glow, softGlow] = definition;
+  return `#${PANEL_HOST_ID} [data-preview-color-theme="${key}"]{--ad-xconfig-hit-theme-a:${themeA};--ad-xconfig-hit-theme-b:${themeB};--ad-xconfig-hit-theme-c:${themeC};--ad-xconfig-hit-theme-d:${themeD};--ad-xconfig-hit-edge:${edge};--ad-xconfig-hit-glow:${glow};--ad-xconfig-hit-soft-glow:${softGlow}}`;
+}
+
+function buildColorPreviewGradientRule(definition) {
+  const [key, gradient, size, position, edge, glow, softGlow] = definition;
+  return `#${PANEL_HOST_ID} [data-preview-color-theme="${key}"]{--ad-xconfig-hit-theme-gradient:${gradient};--ad-xconfig-hit-theme-gradient-size:${size};--ad-xconfig-hit-theme-gradient-position:${position};--ad-xconfig-hit-edge:${edge};--ad-xconfig-hit-glow:${glow};--ad-xconfig-hit-soft-glow:${softGlow}}`;
+}
+
+function buildColorPreviewRules() {
+  return [
+    ...COLOR_PREVIEW_PALETTES.map(buildColorPreviewPaletteRule),
+    ...COLOR_PREVIEW_GRADIENTS.map(buildColorPreviewGradientRule),
+  ].join("\n");
+}
+
 export const styleText = `
 #${MENU_ITEM_ID}{cursor:pointer;min-height:2.5rem}
 #${MENU_ITEM_ID}[data-active="true"]{background:rgba(32,111,185,.28)!important;border-color:rgba(255,255,255,.16)!important}
@@ -139,9 +207,20 @@ export const styleText = `
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-color-theme="crimson-steel"]{--ad-xconfig-hit-theme-a:#3d1028;--ad-xconfig-hit-theme-b:#661436;--ad-xconfig-hit-theme-c:#8e2a4f;--ad-xconfig-hit-theme-d:#7796bd;--ad-xconfig-hit-edge:rgba(255,126,166,.92);--ad-xconfig-hit-glow:rgba(244,90,145,.64);--ad-xconfig-hit-soft-glow:rgba(244,90,145,.3);--ad-xconfig-hit-surface-a:rgba(9,10,18,.98);--ad-xconfig-hit-surface-b:rgba(16,13,24,.96);--ad-xconfig-hit-surface-c:rgba(8,9,16,.99)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-color-theme="arctic-mint"]{--ad-xconfig-hit-theme-a:#103241;--ad-xconfig-hit-theme-b:#145266;--ad-xconfig-hit-theme-c:#1e9387;--ad-xconfig-hit-theme-d:#65f3d3;--ad-xconfig-hit-edge:rgba(143,252,235,.93);--ad-xconfig-hit-glow:rgba(102,246,218,.62);--ad-xconfig-hit-soft-glow:rgba(102,246,218,.26);--ad-xconfig-hit-surface-a:rgba(6,13,20,.98);--ad-xconfig-hit-surface-b:rgba(10,18,28,.96);--ad-xconfig-hit-surface-c:rgba(5,11,18,.99)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-color-theme="champagne-night"]{--ad-xconfig-hit-theme-a:#2e2512;--ad-xconfig-hit-theme-b:#5f4a1a;--ad-xconfig-hit-theme-c:#9a7a2e;--ad-xconfig-hit-theme-d:#f1d788;--ad-xconfig-hit-edge:rgba(255,212,130,.94);--ad-xconfig-hit-glow:rgba(255,196,99,.64);--ad-xconfig-hit-soft-glow:rgba(255,196,99,.28);--ad-xconfig-hit-surface-a:rgba(8,10,16,.98);--ad-xconfig-hit-surface-b:rgba(13,14,22,.96);--ad-xconfig-hit-surface-c:rgba(7,8,14,.99)}
+${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-option-item:hover{border-color:rgba(154,227,255,.56);background:rgba(74,178,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item:focus-visible{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.4)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview:hover,#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview:focus-visible{background:linear-gradient(165deg,var(--ad-xconfig-hit-surface-a) 0%,var(--ad-xconfig-hit-surface-b) 48%,var(--ad-xconfig-hit-surface-c) 100%);border-color:color-mix(in srgb,var(--ad-xconfig-hit-edge) 82%,white 18%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 -8px 18px rgba(0,0,0,.22),0 0 24px color-mix(in srgb,var(--ad-xconfig-hit-glow) 46%,transparent)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]{--ad-xconfig-turn-start-sweep-duration:420ms;--ad-xconfig-turn-start-sweep-width:45%;--ad-xconfig-turn-start-sweep-color:rgba(255,255,255,.35);overflow:hidden}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]::before{inset:0 auto 0 0;width:var(--ad-xconfig-turn-start-sweep-width);height:100%;border-radius:0;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,var(--ad-xconfig-turn-start-sweep-color) 50%,rgba(255,255,255,0) 100%);transform:translateX(-140%);opacity:0}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]::after{display:none}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="turn-start-sweep-fast"]{--ad-xconfig-turn-start-sweep-duration:300ms}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="turn-start-sweep-standard-speed"]{--ad-xconfig-turn-start-sweep-duration:420ms}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="turn-start-sweep-slow"]{--ad-xconfig-turn-start-sweep-duration:620ms}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="turn-start-sweep-subtle"]{--ad-xconfig-turn-start-sweep-width:36%;--ad-xconfig-turn-start-sweep-color:rgba(255,255,255,.24)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="turn-start-sweep-standard-style"]{--ad-xconfig-turn-start-sweep-width:45%;--ad-xconfig-turn-start-sweep-color:rgba(255,255,255,.35)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="turn-start-sweep-strong"]{--ad-xconfig-turn-start-sweep-width:58%;--ad-xconfig-turn-start-sweep-color:rgba(255,255,255,.48)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]:hover::before,#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]:focus-visible::before{opacity:1;animation:ad-xconfig-turn-start-sweep-preview var(--ad-xconfig-turn-start-sweep-duration) ease-out 1}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="emphasis"]:hover,#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="emphasis"]:focus-visible{animation:ad-xconfig-effect-preview-emphasis 680ms cubic-bezier(.14,.92,.24,1)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="shake"]:hover,#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="shake"]:focus-visible{animation:ad-xconfig-effect-preview-shake 520ms ease-out}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="pulse"]:hover,#${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect="pulse"]:focus-visible{animation:ad-xconfig-effect-preview-pulse 700ms ease-out}
@@ -227,6 +306,7 @@ export const styleText = `
 @keyframes ad-xconfig-effect-preview-sheen{0%{transform:translateX(-8px) skewX(-3deg) scale(1.005)}45%{transform:translateX(7px) skewX(2deg) scale(1.025)}100%{transform:translateX(0) skewX(0) scale(1)}}
 @keyframes ad-xconfig-effect-preview-sheen-light{0%{opacity:0;transform:translateX(-78%) skewX(-14deg)}40%{opacity:1;transform:translateX(0) skewX(-14deg)}100%{opacity:0;transform:translateX(78%) skewX(-14deg)}}
 @keyframes ad-xconfig-effect-preview-shockwave{0%{transform:scale(.98);box-shadow:0 0 0 0 rgba(126,216,255,.26)}34%{transform:scale(1.055);box-shadow:0 0 0 4px rgba(126,216,255,.22),0 0 20px rgba(126,216,255,.18)}62%{transform:scale(1.005);box-shadow:0 0 0 8px rgba(126,216,255,0)}100%{transform:scale(1);box-shadow:0 0 0 1px rgba(126,216,255,.16) inset}}
+@keyframes ad-xconfig-turn-start-sweep-preview{0%{transform:translateX(-140%);opacity:0}15%{opacity:1}100%{transform:translateX(240%);opacity:0}}
 @keyframes ad-xconfig-hit-row-electric-arc{0%{transform:translate(0,0) scale(.992);filter:saturate(1.04) brightness(.98)}36%{transform:translate(-1px,.6px) scale(1.012);filter:saturate(1.14) brightness(1.1)}68%{transform:translate(1px,-.7px) scale(1.006);filter:saturate(1.08) brightness(1.04)}100%{transform:translate(0,0) scale(1);filter:saturate(1.06) brightness(1.02)}}
 @keyframes ad-xconfig-hit-score-electric-arc{0%{transform:translateX(0) scale(1);letter-spacing:.01em;filter:brightness(1.02)}24%{transform:translateX(1.8px) scale(1.16);letter-spacing:.07em;filter:brightness(1.24) drop-shadow(0 0 7px rgba(221,249,255,.56))}48%{transform:translateX(-1.6px) scale(1.06);letter-spacing:.05em;filter:brightness(1.14) drop-shadow(0 0 5px rgba(180,250,255,.38))}70%{transform:translateX(1px) scale(1.03);letter-spacing:.04em;filter:brightness(1.14)}100%{transform:translateX(0) scale(1);letter-spacing:.01em;filter:brightness(1.03)}}
 @keyframes ad-xconfig-hit-segment-electric-arc{0%{transform:translateX(0) translateY(0);letter-spacing:.1em;opacity:1;filter:brightness(1.02)}42%{transform:translateX(-1.4px) translateY(-.4px);letter-spacing:.13em;filter:brightness(1.22)}68%{transform:translateX(1px) translateY(.4px);letter-spacing:.11em;filter:brightness(1.14)}100%{transform:translateX(0) translateY(0);letter-spacing:.1em;opacity:1;filter:brightness(1.02)}}

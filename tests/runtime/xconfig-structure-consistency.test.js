@@ -176,3 +176,155 @@ test("triple-double-bull style options expose color and animation previews", () 
     assert.equal(xconfigShellStyleText.includes(expectedSnippet), true);
   });
 });
+
+test("turn-start-sweep settings expose sweep previews", () => {
+  const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "turn-start-sweep");
+  const expectedPreviewEffects = new Map([
+    [
+      "durationMs",
+      [
+        "turn-start-sweep-fast",
+        "turn-start-sweep-standard-speed",
+        "turn-start-sweep-slow",
+      ],
+    ],
+    [
+      "sweepStyle",
+      [
+        "turn-start-sweep-subtle",
+        "turn-start-sweep-standard-style",
+        "turn-start-sweep-strong",
+      ],
+    ],
+  ]);
+
+  expectedPreviewEffects.forEach((expectedEffects, fieldKey) => {
+    const field = descriptor?.fields?.find((entry) => entry.key === fieldKey);
+    const previewEffects = (field?.options || []).map((option) =>
+      String(option.previewEffect || "")
+    );
+
+    assert.deepEqual(previewEffects, expectedEffects, `unexpected previews for ${fieldKey}`);
+    previewEffects.forEach((previewEffect) => {
+      assert.equal(
+        xconfigShellStyleText.includes(`data-preview-effect="${previewEffect}"`),
+        true,
+        `missing CSS preview for ${previewEffect}`
+      );
+    });
+  });
+  assert.equal(xconfigShellStyleText.includes("ad-xconfig-turn-start-sweep-preview"), true);
+});
+
+test("xConfig color preset settings expose matching preview themes", () => {
+  const expectedPreviewFields = new Map([
+    [
+      "checkout-score-pulse:colorTheme",
+      [
+        "checkout-score-autodarts-green",
+        "checkout-score-cyan",
+        "checkout-score-amber",
+        "checkout-score-red",
+      ],
+    ],
+    [
+      "x01-score-progress:colorTheme",
+      [
+        "x01-checkout-focus",
+        "x01-traffic-light",
+        "x01-danger-endgame",
+        "x01-gradient-by-progress",
+        "x01-autodarts",
+        "x01-signal-lime",
+        "x01-glass-mint",
+        "x01-ember-rush",
+        "x01-ice-circuit",
+        "x01-neon-violet",
+        "x01-sunset-amber",
+        "x01-monochrome-steel",
+      ],
+    ],
+    [
+      "checkout-board-targets:colorTheme",
+      ["checkout-board-violet", "checkout-board-cyan", "checkout-board-amber"],
+    ],
+    [
+      "style-checkout-suggestions:colorTheme",
+      ["checkout-suggestion-amber", "checkout-suggestion-cyan", "checkout-suggestion-rose"],
+    ],
+    ["cricket-highlighter:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
+    ["cricket-grid-fx:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
+    [
+      "dart-marker-emphasis:color",
+      [
+        "dart-marker-blue",
+        "dart-marker-green",
+        "dart-marker-red",
+        "dart-marker-yellow",
+        "dart-marker-white",
+      ],
+    ],
+    [
+      "dart-marker-emphasis:outline",
+      [
+        "dart-marker-outline-off",
+        "dart-marker-outline-white",
+        "dart-marker-outline-black",
+      ],
+    ],
+    [
+      "winner-fireworks:colorTheme",
+      [
+        "winner-autodarts",
+        "winner-redwhite",
+        "winner-ice",
+        "winner-sunset",
+        "winner-neon",
+        "winner-gold",
+      ],
+    ],
+  ]);
+
+  expectedPreviewFields.forEach((expectedPreviews, fieldId) => {
+    const [featureKey, fieldKey] = fieldId.split(":");
+    const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === featureKey);
+    const field = descriptor?.fields?.find((entry) => entry.key === fieldKey);
+    const previews = (field?.options || []).map((option) =>
+      String(option.previewColorTheme || "")
+    );
+
+    assert.deepEqual(previews, expectedPreviews, `unexpected previews for ${fieldId}`);
+    previews.forEach((previewColorTheme) => {
+      assert.equal(
+        xconfigShellStyleText.includes(`data-preview-color-theme="${previewColorTheme}"`),
+        true,
+        `missing CSS preview for ${previewColorTheme}`
+      );
+    });
+  });
+});
+
+test("theme global template preset actions expose color previews", () => {
+  const descriptor = xconfigDescriptors.find(
+    (entry) => entry.featureKey === "theme-global-typography"
+  );
+  const previewColorThemes = (descriptor?.fields || [])
+    .filter((field) => field.action === "applyThemeGlobalPreset")
+    .map((field) => String(field.previewColorTheme || ""));
+
+  assert.deepEqual(previewColorThemes, [
+    "template-classic",
+    "template-broadcast",
+    "template-british-flag",
+    "template-cyberpunk",
+    "template-matrix",
+    "template-fire",
+    "template-ice",
+  ]);
+  previewColorThemes.forEach((previewColorTheme) => {
+    assert.equal(
+      xconfigShellStyleText.includes(`data-preview-color-theme="${previewColorTheme}"`),
+      true
+    );
+  });
+});

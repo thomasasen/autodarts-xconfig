@@ -35,6 +35,10 @@ function selectField(key, label, options = [], fieldOptions = {}) {
   });
 }
 
+function colorPreviewOption(value, label, previewColorTheme = value) {
+  return { value, label, previewColorTheme };
+}
+
 function colorField(key, label, fieldOptions = {}) {
   return Object.freeze({
     key,
@@ -66,6 +70,7 @@ function actionField(action, label, options = {}) {
     description: String(options.description || "").trim(),
     successMessage: String(options.successMessage || "").trim(),
     errorMessage: String(options.errorMessage || "").trim(),
+    previewColorTheme: String(options.previewColorTheme || "").trim(),
     prominent: options.prominent === true,
     control: "action",
   });
@@ -114,6 +119,15 @@ function descriptorEntry(definition) {
         });
       })
     ),
+  });
+}
+
+function animationDescriptorEntry(definition) {
+  const fields = Array.isArray(definition.fields) ? definition.fields : [];
+  return descriptorEntry({
+    ...definition,
+    tab: "animations",
+    fields: [...fields, DEBUG_FIELD],
   });
 }
 
@@ -176,6 +190,28 @@ const TURN_DART_SIZE_OPTIONS = Object.freeze([
   { value: 115, label: "Standard" },
   { value: 135, label: "Groß" },
 ]);
+const DEBUG_FIELD = checkboxField("debug", "Debug");
+
+function backgroundThemeFields(prefixFields = []) {
+  return [
+    ...prefixFields,
+    selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
+    selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
+    selectField(
+      "playerFieldTransparency",
+      "Spielerfelder-Transparenz",
+      PLAYER_FIELD_TRANSPARENCY_OPTIONS
+    ),
+    DEBUG_FIELD,
+    actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+      description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
+    }),
+    actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+      description: "Entfernt nur das gespeicherte Bild dieses Themes.",
+      successMessage: "Hintergrundbild entfernt.",
+    }),
+  ];
+}
 
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
@@ -189,6 +225,7 @@ export const xconfigDescriptors = Object.freeze([
           key: `preset-${preset.key}`,
           actionId: preset.key,
           buttonLabel: preset.label,
+          previewColorTheme: `template-${preset.key}`,
           section: "Presets",
         })
       ),
@@ -270,7 +307,7 @@ export const xconfigDescriptors = Object.freeze([
         description: "Entfernt nur das globale Fallback-Hintergrundbild aus Templates Global.",
         successMessage: "Globales Hintergrundbild entfernt.",
       }),
-      checkboxField("debug", "Debug"),
+      DEBUG_FIELD,
     ],
   }),
   descriptorEntry({
@@ -278,78 +315,33 @@ export const xconfigDescriptors = Object.freeze([
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-bull-off",
     description: "Bull-off-Theme mit wählbarem Kontrast und Hintergrundbild.",
-    fields: [
+    fields: backgroundThemeFields([
       selectField("contrastPreset", "Kontrast-Preset", [
         { value: "soft", label: "Sanft" },
         { value: "standard", label: "Standard" },
         { value: "high", label: "Kräftig" },
       ]),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    ]),
   }),
   descriptorEntry({
     featureKey: "theme-x01",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-x01",
     description: "Klares X01-Layout mit optionalem AVG und eigenem Hintergrundbild.",
-    fields: [
+    fields: backgroundThemeFields([
       checkboxField("showAvg", "AVG anzeigen"),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    ]),
   }),
   descriptorEntry({
     featureKey: "theme-gotcha",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-gotcha",
     description: "X01-nahes Gotcha-Theme mit integrierter Delta-Anzeige und eigenem Hintergrundbild.",
-    fields: [
+    fields: backgroundThemeFields([
       selectField("deltaPlacement", "Delta-Position", GOTCHA_DELTA_PLACEMENT_OPTIONS),
       selectField("deltaAlignment", "Delta-Ausrichtung", GOTCHA_DELTA_ALIGNMENT_OPTIONS),
       checkboxField("deltaItalic", "Delta kursiv"),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    ]),
   }),
   descriptorEntry({
     featureKey: "theme-x01-2player",
@@ -357,99 +349,37 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "template-autodarts-theme-x01-2player",
     description:
       "Eigenständiges X01-Theme für genau zwei Spieler mit zentriertem Board und eigenem Hintergrundbild.",
-    fields: [
+    fields: backgroundThemeFields([
       checkboxField("showAvg", "AVG anzeigen"),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    ]),
   }),
   descriptorEntry({
     featureKey: "theme-cricket",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-cricket",
     description: "Gemeinsames Theme für Cricket und Tactics mit optionalem AVG.",
-    fields: [
+    fields: backgroundThemeFields([
       checkboxField("showAvg", "AVG anzeigen"),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    ]),
   }),
   descriptorEntry({
     featureKey: "theme-shanghai",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-shanghai",
     description: "Aufgeräumtes Shanghai-Theme mit optionalem AVG und Hintergrundbild.",
-    fields: [
+    fields: backgroundThemeFields([
       checkboxField("showAvg", "AVG anzeigen"),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    ]),
   }),
   descriptorEntry({
     featureKey: "theme-bermuda",
     tab: "themes",
     readmeAnchor: "template-autodarts-theme-bermuda",
     description: "Bermuda-Theme mit ruhigerem Layout und eigenem Hintergrundbild.",
-    fields: [
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS
-      ),
-      checkboxField("debug", "Debug"),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-        successMessage: "Hintergrundbild entfernt.",
-      }),
-    ],
+    fields: backgroundThemeFields(),
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "checkout-score-pulse",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-checkout-score-pulse",
     description: "Hebt finishfähige Restwerte in X01 sichtbar hervor.",
     fields: [
@@ -460,10 +390,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "blink", label: "Blink" },
       ]),
       selectField("colorTheme", "Farbthema", [
-        { value: "159, 219, 88", label: "Autodarts Grün" },
-        { value: "56, 189, 248", label: "Cyan" },
-        { value: "245, 158, 11", label: "Amber" },
-        { value: "248, 113, 113", label: "Rot" },
+        colorPreviewOption("159, 219, 88", "Autodarts Grün", "checkout-score-autodarts-green"),
+        colorPreviewOption("56, 189, 248", "Cyan", "checkout-score-cyan"),
+        colorPreviewOption("245, 158, 11", "Amber", "checkout-score-amber"),
+        colorPreviewOption("248, 113, 113", "Rot", "checkout-score-red"),
       ]),
       selectField("intensity", "Intensität", [
         { value: "dezent", label: "Dezent" },
@@ -475,28 +405,26 @@ export const xconfigDescriptors = Object.freeze([
         { value: "score-only", label: "Nur Score" },
         { value: "suggestion-only", label: "Nur Vorschlag" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "x01-score-progress",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-x01-score-progress",
     description: "Zeigt den verbleibenden X01-Score als abnehmenden Balken pro Spielerkarte.",
     fields: [
       selectField("colorTheme", "Farben", [
-        { value: "checkout-focus", label: "Checkout Focus" },
-        { value: "traffic-light", label: "Traffic Light" },
-        { value: "danger-endgame", label: "Danger Endgame" },
-        { value: "gradient-by-progress", label: "Gradient Progress" },
-        { value: "autodarts", label: "Autodarts" },
-        { value: "signal-lime", label: "Signal Lime" },
-        { value: "glass-mint", label: "Glass Mint" },
-        { value: "ember-rush", label: "Ember Rush" },
-        { value: "ice-circuit", label: "Ice Circuit" },
-        { value: "neon-violet", label: "Neon Violet" },
-        { value: "sunset-amber", label: "Sunset Amber" },
-        { value: "monochrome-steel", label: "Monochrome Steel" },
+        colorPreviewOption("checkout-focus", "Checkout Focus", "x01-checkout-focus"),
+        colorPreviewOption("traffic-light", "Traffic Light", "x01-traffic-light"),
+        colorPreviewOption("danger-endgame", "Danger Endgame", "x01-danger-endgame"),
+        colorPreviewOption("gradient-by-progress", "Gradient Progress", "x01-gradient-by-progress"),
+        colorPreviewOption("autodarts", "Autodarts", "x01-autodarts"),
+        colorPreviewOption("signal-lime", "Signal Lime", "x01-signal-lime"),
+        colorPreviewOption("glass-mint", "Glass Mint", "x01-glass-mint"),
+        colorPreviewOption("ember-rush", "Ember Rush", "x01-ember-rush"),
+        colorPreviewOption("ice-circuit", "Ice Circuit", "x01-ice-circuit"),
+        colorPreviewOption("neon-violet", "Neon Violet", "x01-neon-violet"),
+        colorPreviewOption("sunset-amber", "Sunset Amber", "x01-sunset-amber"),
+        colorPreviewOption("monochrome-steel", "Monochrome Steel", "x01-monochrome-steel"),
       ]),
       selectField("barSize", "Balkengröße", [
         { value: "schmal", label: "Schmal" },
@@ -512,12 +440,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "signal-sweep", label: "Signal Sweep" },
         { value: "off", label: "Aus" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "checkout-board-targets",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-checkout-board-targets",
     description: "Markiert sinnvolle Checkout-Ziele direkt am Board.",
     fields: [
@@ -536,16 +462,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "finish", label: "Nur Finish" },
       ]),
       selectField("colorTheme", "Farbthema", [
-        { value: "violet", label: "Violett" },
-        { value: "cyan", label: "Cyan" },
-        { value: "amber", label: "Amber" },
+        colorPreviewOption("violet", "Violett", "checkout-board-violet"),
+        colorPreviewOption("cyan", "Cyan", "checkout-board-cyan"),
+        colorPreviewOption("amber", "Amber", "checkout-board-amber"),
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "tv-board-zoom",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-tv-board-zoom",
     description: "Zoomt bei klaren Checkout- und Setup-Situationen TV-artig auf Zielbereiche.",
     fields: [
@@ -565,12 +489,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "route-first", label: "Erstes Routenfeld" },
       ]),
       checkboxField("t20SetupZoomEnabled", "T20-Setup-Zoom"),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "style-checkout-suggestions",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-style-checkout-suggestions",
     description: "Macht Checkout-Hinweise auffälliger und besser lesbar.",
     fields: [
@@ -587,16 +509,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "", label: "Kein Label" },
       ]),
       selectField("colorTheme", "Farbthema", [
-        { value: "amber", label: "Amber" },
-        { value: "cyan", label: "Cyan" },
-        { value: "rose", label: "Rose" },
+        colorPreviewOption("amber", "Amber", "checkout-suggestion-amber"),
+        colorPreviewOption("cyan", "Cyan", "checkout-suggestion-cyan"),
+        colorPreviewOption("rose", "Rose", "checkout-suggestion-rose"),
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "average-trend-arrow",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-average-trend-arrow",
     description: "Zeigt die Trendrichtung des AVG mit einem Pfeil an.",
     fields: [
@@ -610,31 +530,27 @@ export const xconfigDescriptors = Object.freeze([
         { value: "standard", label: "Standard" },
         { value: "gross", label: "Groß" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "turn-start-sweep",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-turn-start-sweep",
     description: "Markiert den Spielerwechsel mit einem Sweep über die aktive Karte.",
     fields: [
       selectField("durationMs", "Sweep-Geschwindigkeit", [
-        { value: 300, label: "Schnell" },
-        { value: 420, label: "Standard" },
-        { value: 620, label: "Langsam" },
+        { value: 300, label: "Schnell", previewEffect: "turn-start-sweep-fast" },
+        { value: 420, label: "Standard", previewEffect: "turn-start-sweep-standard-speed" },
+        { value: 620, label: "Langsam", previewEffect: "turn-start-sweep-slow" },
       ]),
       selectField("sweepStyle", "Sweep-Stil", [
-        { value: "subtle", label: "Dezent" },
-        { value: "standard", label: "Standard" },
-        { value: "strong", label: "Kräftig" },
+        { value: "subtle", label: "Dezent", previewEffect: "turn-start-sweep-subtle" },
+        { value: "standard", label: "Standard", previewEffect: "turn-start-sweep-standard-style" },
+        { value: "strong", label: "Kräftig", previewEffect: "turn-start-sweep-strong" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "triple-double-bull-hits",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-triple-double-bull-hits",
     description: "Setzt Treffer-Highlights mit wählbarem Farbstil und starkem Burst-Animationsstil.",
     fields: [
@@ -656,12 +572,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "shockwave", label: "Shock Ring", previewEffect: "shockwave" },
         { value: "electric-arc", label: "Electric Arc", previewEffect: "electric-arc" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "cricket-highlighter",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
     fields: [
@@ -674,20 +588,18 @@ export const xconfigDescriptors = Object.freeze([
         { value: "mask", label: "Mask" },
       ]),
       selectField("colorTheme", "Farbthema", [
-        { value: "standard", label: "Standard" },
-        { value: "high-contrast", label: "High Contrast" },
+        colorPreviewOption("standard", "Standard", "cricket-standard"),
+        colorPreviewOption("high-contrast", "High Contrast", "cricket-high-contrast"),
       ]),
       selectField("intensity", "Intensität", [
         { value: "subtle", label: "Dezent" },
         { value: "normal", label: "Standard" },
         { value: "strong", label: "Stark" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "cricket-grid-fx",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-cricket-grid-fx",
     description: "Ergänzt die Cricket-/Tactics-Matrix um zusätzliche Live-Effekte.",
     fields: [
@@ -702,20 +614,18 @@ export const xconfigDescriptors = Object.freeze([
       checkboxField("roundTransitionWipe", "Zugwechsel-Übergang"),
       checkboxField("pressureOverlay", "PRESSURE-Overlay"),
       selectField("colorTheme", "Farbthema", [
-        { value: "standard", label: "Standard" },
-        { value: "high-contrast", label: "High Contrast" },
+        colorPreviewOption("standard", "Standard", "cricket-standard"),
+        colorPreviewOption("high-contrast", "High Contrast", "cricket-high-contrast"),
       ]),
       selectField("intensity", "Intensität", [
         { value: "subtle", label: "Dezent" },
         { value: "normal", label: "Standard" },
         { value: "strong", label: "Stark" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "dart-marker-emphasis",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-dart-marker-emphasis",
     description: "Macht Marker auf dem virtuellen Dartboard deutlicher sichtbar.",
     fields: [
@@ -725,11 +635,11 @@ export const xconfigDescriptors = Object.freeze([
         { value: 9, label: "Groß" },
       ]),
       selectField("color", "Marker-Farbe", [
-        { value: "rgb(49, 130, 206)", label: "Blau" },
-        { value: "rgb(34, 197, 94)", label: "Grün" },
-        { value: "rgb(248, 113, 113)", label: "Rot" },
-        { value: "rgb(250, 204, 21)", label: "Gelb" },
-        { value: "rgb(255, 255, 255)", label: "Weiß" },
+        colorPreviewOption("rgb(49, 130, 206)", "Blau", "dart-marker-blue"),
+        colorPreviewOption("rgb(34, 197, 94)", "Grün", "dart-marker-green"),
+        colorPreviewOption("rgb(248, 113, 113)", "Rot", "dart-marker-red"),
+        colorPreviewOption("rgb(250, 204, 21)", "Gelb", "dart-marker-yellow"),
+        colorPreviewOption("rgb(255, 255, 255)", "Weiß", "dart-marker-white"),
       ]),
       selectField("effect", "Effekt", [
         { value: "glow", label: "Glow" },
@@ -742,16 +652,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: 100, label: "100 %" },
       ]),
       selectField("outline", "Outline-Farbe", [
-        { value: "aus", label: "Aus" },
-        { value: "weiss", label: "Weiß" },
-        { value: "schwarz", label: "Schwarz" },
+        colorPreviewOption("aus", "Aus", "dart-marker-outline-off"),
+        colorPreviewOption("weiss", "Weiß", "dart-marker-outline-white"),
+        colorPreviewOption("schwarz", "Schwarz", "dart-marker-outline-black"),
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "dart-marker-darts",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-dart-marker-darts",
     description: "Ersetzt Marker optional durch Dart-Bilder mit Fluganimation.",
     fields: [
@@ -797,12 +705,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "standard", label: "Standard" },
         { value: "cinematic", label: "Cinematic" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "remove-darts-notification",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-remove-darts-notification",
     description: "Macht den Hinweis zum Entfernen der Darts auffälliger.",
     fields: [
@@ -817,12 +723,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: 1.04, label: "Standard" },
         { value: 1.08, label: "Stark" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "single-bull-sound",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-single-bull-sound",
     description: "Spielt bei Single Bull einen kurzen Ton ab.",
     fields: [
@@ -841,12 +745,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: 0, label: "Nur live" },
         { value: 1200, label: "1200 ms" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "turn-points-count",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-turn-points-count",
     description: "Zählt Punkteänderungen sichtbar hoch oder runter.",
     fields: [
@@ -865,12 +767,10 @@ export const xconfigDescriptors = Object.freeze([
         { value: "on-change", label: "Nur bei Änderung" },
         { value: "permanent", label: "Permanent" },
       ]),
-      checkboxField("debug", "Debug"),
     ],
   }),
-  descriptorEntry({
+  animationDescriptorEntry({
     featureKey: "winner-fireworks",
-    tab: "animations",
     readmeAnchor: "animation-autodarts-animate-winner-fireworks",
     description: "Zeigt bei einem Sieg ein Feuerwerk in verschiedenen Stilen.",
     fields: [
@@ -883,12 +783,12 @@ export const xconfigDescriptors = Object.freeze([
         { value: "sides", label: "Sides" },
       ]),
       selectField("colorTheme", "Farbe", [
-        { value: "autodarts", label: "Autodarts" },
-        { value: "redwhite", label: "Rot/Weiß" },
-        { value: "ice", label: "Ice" },
-        { value: "sunset", label: "Sunset" },
-        { value: "neon", label: "Neon" },
-        { value: "gold", label: "Gold" },
+        colorPreviewOption("autodarts", "Autodarts", "winner-autodarts"),
+        colorPreviewOption("redwhite", "Rot/Weiß", "winner-redwhite"),
+        colorPreviewOption("ice", "Ice", "winner-ice"),
+        colorPreviewOption("sunset", "Sunset", "winner-sunset"),
+        colorPreviewOption("neon", "Neon", "winner-neon"),
+        colorPreviewOption("gold", "Gold", "winner-gold"),
       ]),
       selectField("intensity", "Intensität", [
         { value: "dezent", label: "Dezent" },
@@ -906,7 +806,6 @@ export const xconfigDescriptors = Object.freeze([
       }),
       checkboxField("includeBullOut", "Bei Bull-Out aktiv"),
       checkboxField("pointerDismiss", "Klick beendet Effekt"),
-      checkboxField("debug", "Debug"),
     ],
   }),
 ]);
