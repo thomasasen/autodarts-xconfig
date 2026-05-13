@@ -262,7 +262,7 @@ function resolveColorPalette(colorTheme, ratio, score) {
   );
 }
 
-function resolveActiveVisualVars(options = {}) {
+export function resolveActiveVisualVars(options = {}) {
   const ratio = clamp(Number(options.ratio) || 0, 0, 1);
   const score = clamp(Number(options.score) || 0, 0, Number.MAX_SAFE_INTEGER);
   const palette = resolveColorPalette(options.colorTheme, ratio, score);

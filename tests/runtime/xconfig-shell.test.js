@@ -1434,6 +1434,79 @@ test("xConfig style checkout suggestions renders live preview and style option s
   runtime.stop();
 });
 
+test("xConfig X01 score progress renders configured size effect and color previews", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const previewSection = documentRef.querySelector(
+    "[data-adxconfig-x01-score-progress-preview='true']"
+  );
+  assert.ok(previewSection);
+  const previewBar = previewSection.querySelector(
+    "[data-adxconfig-x01-score-progress-preview-bar='true']"
+  );
+  assert.ok(previewBar);
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress"), "true");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "checkout-focus");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-size"), "standard");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-effect"), "pulse-core");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "68%");
+  assert.ok(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"));
+  assert.ok(previewBar.querySelector(".ad-ext-x01-score-progress__track"));
+  assert.ok(previewBar.querySelector(".ad-ext-x01-score-progress__trail"));
+  assert.ok(
+    previewBar.querySelector(
+      ".ad-ext-x01-score-progress__fill.ad-ext-x01-score-progress__fill--effect-pulse-core"
+    )
+  );
+
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-feature-key='x01-score-progress'][data-setting-key='barSize'] .ad-xconfig-x01-score-progress-option-preview"
+    ).length,
+    4
+  );
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-feature-key='x01-score-progress'][data-setting-key='effect'] .ad-xconfig-x01-score-progress-option-preview"
+    ).length,
+    6
+  );
+
+  clickSelectSettingOption(documentRef, "x01-score-progress", "colorTheme", "traffic-light");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.x01ScoreProgress.colorTheme === "traffic-light"
+  );
+
+  const refreshedPreviewBar = documentRef.querySelector(
+    "[data-adxconfig-x01-score-progress-preview='true'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+  );
+  assert.ok(refreshedPreviewBar);
+  assert.equal(
+    refreshedPreviewBar.getAttribute("data-ad-ext-x01-score-progress-color-theme"),
+    "traffic-light"
+  );
+  assert.ok(refreshedPreviewBar.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"));
+
+  runtime.stop();
+});
+
 test("xConfig shell persists checkout board target and TV zoom select settings", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

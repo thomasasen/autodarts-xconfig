@@ -21,6 +21,7 @@ import {
   BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
   EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
 } from "../dart-marker-emphasis/style.js";
+import { buildStyleText as buildX01ScoreProgressStyleText } from "../x01-score-progress/style.js";
 import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "./turn-points-preview-contract.js";
 import { AVERAGE_TREND_PREVIEW_CLASS } from "./average-trend-preview-contract.js";
 import { DART_MARKER_EMPHASIS_PREVIEW_CLASS } from "./dart-marker-emphasis-preview-contract.js";
@@ -98,6 +99,7 @@ function buildColorPreviewRules() {
 
 export const styleText = `
 ${buildTurnPointsCountStyleText()}
+${buildX01ScoreProgressStyleText()}
 #${MENU_ITEM_ID}{cursor:pointer;min-height:2.5rem}
 #${MENU_ITEM_ID}[data-active="true"]{background:rgba(32,111,185,.28)!important;border-color:rgba(255,255,255,.16)!important}
 #${MENU_ITEM_ID}[data-update-available="true"]{position:relative}
@@ -336,6 +338,27 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini.ad-xconfig-checkout-suggestion-demo--ticket::after{left:8px;right:8px;border-top-width:1px}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']:empty{display:none}
+#${PANEL_HOST_ID} .ad-xconfig-setting-row--x01-score-progress-preview{padding:.72rem}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-surface{display:grid;gap:.72rem;min-height:7rem;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(7,14,30,.74),rgba(15,23,42,.58));padding:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-head{display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;color:rgba(255,255,255,.92)}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-score{font-size:1.55rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-route{font-size:.78rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host{margin-top:0!important;grid-column:auto!important;grid-row:auto!important;order:0!important;flex:0 0 auto!important}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host.ad-ext-x01-score-progress--active{--ad-ext-x01-score-progress-margin-top-active:0}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host--main{width:100%}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host--mini{width:8.6rem;max-width:100%;align-self:center}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host--mini.ad-ext-x01-score-progress--size-schmal{--ad-ext-x01-score-progress-height-active:5px}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host--mini.ad-ext-x01-score-progress--size-standard{--ad-ext-x01-score-progress-height-active:10px}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host--mini.ad-ext-x01-score-progress--size-breit{--ad-ext-x01-score-progress-height-active:16px}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-host--mini.ad-ext-x01-score-progress--size-extrabreit{--ad-ext-x01-score-progress-height-active:22px}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--x01-score-progress-preview{overflow:visible}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview{display:grid;grid-template-columns:minmax(0,1fr) minmax(7.2rem,8.8rem) auto;grid-template-rows:auto auto;align-items:center;column-gap:.62rem;row-gap:.14rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview .ad-xconfig-option-head{display:block}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview .ad-xconfig-option-copy{margin-top:.12rem}
+#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-option-preview{grid-column:2;grid-row:1/span 2;display:grid;align-items:center;min-height:3rem;padding:.32rem;border-radius:8px;background:rgba(7,14,30,.46)}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview [data-option-active-slot='true']:empty{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-empty{border-radius:10px;border:1px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.03);padding:1rem;color:rgba(255,255,255,.75);font-size:.88rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
@@ -405,7 +428,7 @@ ${buildColorPreviewRules()}
 @keyframes ad-ext-dart-marker-glow{0%{stroke-width:2;opacity:.9}50%{stroke-width:5;opacity:1}100%{stroke-width:2;opacity:.9}}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}#${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:auto}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style{grid-template-columns:minmax(0,1fr) auto}#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview{grid-column:1/span 2;grid-row:2}#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']{grid-column:2;grid-row:1}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style,#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview{grid-template-columns:minmax(0,1fr) auto}#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview,#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-option-preview{grid-column:1/span 2;grid-row:2}#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview [data-option-active-slot='true']{grid-column:2;grid-row:1}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
 @media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::before,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::after{animation:none!important;transform:none!important;transition:none!important}}
 `;
