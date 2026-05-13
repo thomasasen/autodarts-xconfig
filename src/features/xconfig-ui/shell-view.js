@@ -50,6 +50,32 @@ const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const DART_MARKER_EMPHASIS_FEATURE_KEY = "dart-marker-emphasis";
+const STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY = "style-checkout-suggestions";
+const STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY = "style";
+const STYLE_CHECKOUT_SUGGESTIONS_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
+const STYLE_CHECKOUT_SUGGESTIONS_THEMES = Object.freeze({
+  amber: Object.freeze({
+    accentColor: "#f59e0b",
+    accentSoftColor: "rgba(245, 158, 11, 0.16)",
+    accentStrongColor: "rgba(245, 158, 11, 0.6)",
+    labelBackground: "#fcd34d",
+    labelTextColor: "#1f1300",
+  }),
+  cyan: Object.freeze({
+    accentColor: "#06b6d4",
+    accentSoftColor: "rgba(6, 182, 212, 0.16)",
+    accentStrongColor: "rgba(6, 182, 212, 0.58)",
+    labelBackground: "#67e8f9",
+    labelTextColor: "#082f35",
+  }),
+  rose: Object.freeze({
+    accentColor: "#f43f5e",
+    accentSoftColor: "rgba(244, 63, 94, 0.15)",
+    accentStrongColor: "rgba(244, 63, 94, 0.58)",
+    labelBackground: "#fda4af",
+    labelTextColor: "#4a1020",
+  }),
+});
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 const XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
@@ -558,6 +584,159 @@ function buildOptionActiveBadge(documentRef) {
     className: "ad-xconfig-option-active",
     text: "Aktuell",
   });
+}
+
+function isStyleCheckoutSuggestionsFeature(feature) {
+  return feature?.featureKey === STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY;
+}
+
+function isStyleCheckoutSuggestionsStyleField(feature, field) {
+  return (
+    isStyleCheckoutSuggestionsFeature(feature) &&
+    field?.control === "select" &&
+    String(field?.key || "").trim() === STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY
+  );
+}
+
+function resolveCheckoutSuggestionPreviewStyle(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return STYLE_CHECKOUT_SUGGESTIONS_STYLES.has(normalized) ? normalized : "badge";
+}
+
+function resolveCheckoutSuggestionPreviewTheme(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return STYLE_CHECKOUT_SUGGESTIONS_THEMES[normalized] || STYLE_CHECKOUT_SUGGESTIONS_THEMES.amber;
+}
+
+function applyCheckoutSuggestionPreviewTheme(node, featureConfig = {}) {
+  if (!node?.style) {
+    return;
+  }
+
+  const theme = resolveCheckoutSuggestionPreviewTheme(featureConfig.colorTheme);
+  node.style.setProperty("--ad-ext-accent", theme.accentColor);
+  node.style.setProperty("--ad-ext-accent-soft", theme.accentSoftColor);
+  node.style.setProperty("--ad-ext-accent-strong", theme.accentStrongColor);
+  node.style.setProperty("--ad-ext-label-bg", theme.labelBackground);
+  node.style.setProperty("--ad-ext-label-color", theme.labelTextColor);
+}
+
+function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, overrides = {}, options = {}) {
+  const previewConfig = {
+    ...featureConfig,
+    ...overrides,
+  };
+  const styleName = resolveCheckoutSuggestionPreviewStyle(previewConfig.style);
+  const labelText = String(previewConfig.labelText || "").trim();
+  const card = createElement(documentRef, "div", {
+    className: [
+      "ad-xconfig-checkout-suggestion-demo",
+      `ad-xconfig-checkout-suggestion-demo--${styleName}`,
+      options.mini ? "ad-xconfig-checkout-suggestion-demo--mini" : "",
+    ].filter(Boolean).join(" "),
+  });
+  applyCheckoutSuggestionPreviewTheme(card, previewConfig);
+
+  if (labelText) {
+    card.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-checkout-suggestion-demo-label",
+      text: labelText,
+    }));
+  }
+  card.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-suggestion-demo-score",
+    text: "96",
+  }));
+  card.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-suggestion-demo-route",
+    text: "T20  D18",
+  }));
+  return card;
+}
+
+function buildCheckoutSuggestionPreviewSection(documentRef, feature) {
+  const section = createElement(documentRef, "section", {
+    className: "ad-xconfig-settings-section",
+    attributes: {
+      "data-adxconfig-settings-section": "vorschau",
+      "data-adxconfig-style-checkout-suggestions-preview": "true",
+    },
+  });
+  section.appendChild(createElement(documentRef, "h4", {
+    className: "ad-xconfig-settings-section-title",
+    text: "Vorschau",
+  }));
+
+  const body = createElement(documentRef, "div", {
+    className: "ad-xconfig-settings-section-body",
+  });
+  const row = createElement(documentRef, "div", {
+    className: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-suggestion-preview",
+  });
+  const surface = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-suggestion-preview-surface",
+  });
+  surface.appendChild(buildCheckoutSuggestionSample(documentRef, feature?.config || {}));
+  row.appendChild(surface);
+  body.appendChild(row);
+  section.appendChild(body);
+  return section;
+}
+
+function buildCheckoutSuggestionStyleOptionLayout(
+  documentRef,
+  feature,
+  optionValue,
+  optionLabel,
+  optionDescription,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--checkout-suggestion-style",
+  });
+  const optionText = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-text",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+  optionText.appendChild(head);
+  if (optionDescription) {
+    optionText.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+  layout.appendChild(optionText);
+
+  const preview = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-suggestion-option-preview",
+  });
+  preview.appendChild(
+    buildCheckoutSuggestionSample(documentRef, feature?.config || {}, {
+      style: optionValue,
+    }, {
+      mini: true,
+    })
+  );
+  layout.appendChild(preview);
+
+  const activeSlot = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+
+  return layout;
 }
 
 function getColorFieldValue(feature, field) {
@@ -1235,6 +1414,7 @@ function buildFeatureField(documentRef, feature, field) {
     const isActive = selectedOptionValues.includes(optionValue);
     const isDartDesignField = isDartDesignSelectField(feature, field);
     const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
+    const isCheckoutSuggestionStyleField = isStyleCheckoutSuggestionsStyleField(feature, field);
     const previewEffect =
       String(option?.previewEffect || "").trim() ||
       resolveTurnPointsCountPreviewEffect(feature, field, optionValue) ||
@@ -1250,6 +1430,7 @@ function buildFeatureField(documentRef, feature, field) {
         "ad-xconfig-option-item",
         isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
         isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
+        isCheckoutSuggestionStyleField ? "ad-xconfig-option-item--checkout-suggestion-style" : "",
         previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
         hasTurnPointsCountPreview ? "ad-xconfig-option-item--turn-points-count-preview" : "",
         hasAverageTrendArrowPreview ? "ad-xconfig-option-item--average-trend-arrow-preview" : "",
@@ -1313,6 +1494,17 @@ function buildFeatureField(documentRef, feature, field) {
           documentRef,
           feature,
           field,
+          optionValue,
+          option.label,
+          optionDescription,
+          isActive
+        )
+      );
+    } else if (isCheckoutSuggestionStyleField) {
+      optionButton.appendChild(
+        buildCheckoutSuggestionStyleOptionLayout(
+          documentRef,
+          feature,
           optionValue,
           option.label,
           optionDescription,
@@ -1667,6 +1859,9 @@ function buildSettingsModal(documentRef, state, features) {
       }));
     });
     body.appendChild(detailsRow);
+  }
+  if (isStyleCheckoutSuggestionsFeature(feature)) {
+    body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, feature));
   }
   const sectionBodies = new Map();
   fields.forEach((field) => {

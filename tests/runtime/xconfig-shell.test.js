@@ -1366,6 +1366,74 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   runtime.stop();
 });
 
+test("xConfig style checkout suggestions renders live preview and style option samples", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='style-checkout-suggestions']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const previewSection = documentRef.querySelector(
+    "[data-adxconfig-style-checkout-suggestions-preview='true']"
+  );
+  assert.ok(previewSection);
+  const previewSuggestion = previewSection.querySelector(".ad-xconfig-checkout-suggestion-demo");
+  assert.ok(previewSuggestion);
+  const activeStyleOption = documentRef.querySelector(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='style-checkout-suggestions'][data-setting-key='style'][data-active='true']"
+  );
+  assert.ok(activeStyleOption);
+  assert.equal(
+    previewSuggestion.classList.contains(
+      `ad-xconfig-checkout-suggestion-demo--${activeStyleOption.getAttribute("data-setting-value")}`
+    ),
+    true
+  );
+  assert.equal(
+    previewSuggestion.querySelector(".ad-xconfig-checkout-suggestion-demo-label")?.textContent,
+    "CHECKOUT"
+  );
+  assert.equal(previewSuggestion.style.getPropertyValue("--ad-ext-accent"), "#f59e0b");
+
+  const styleOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='style-checkout-suggestions'][data-setting-key='style']"
+  );
+  assert.equal(styleOptions.length, 5);
+  styleOptions.forEach((optionNode) => {
+    assert.ok(optionNode.querySelector(".ad-xconfig-checkout-suggestion-option-preview"));
+    assert.ok(optionNode.querySelector(".ad-xconfig-checkout-suggestion-demo"));
+  });
+
+  clickSelectSettingOption(documentRef, "style-checkout-suggestions", "style", "ticket");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.styleCheckoutSuggestions.style === "ticket"
+  );
+
+  const refreshedPreview = documentRef.querySelector(
+    "[data-adxconfig-style-checkout-suggestions-preview='true'] .ad-xconfig-checkout-suggestion-demo"
+  );
+  assert.ok(refreshedPreview);
+  assert.equal(
+    refreshedPreview.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket"),
+    true
+  );
+
+  runtime.stop();
+});
+
 test("xConfig shell persists checkout board target and TV zoom select settings", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

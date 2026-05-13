@@ -307,6 +307,35 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-option-preview{grid-column:2;grid-row:1/span 2;width:3.9rem;height:1.62rem;object-fit:contain;justify-self:center;align-self:center;opacity:.96;filter:drop-shadow(0 2px 3px rgba(4,10,26,.35))}
 #${PANEL_HOST_ID} .ad-xconfig-option-active-slot{grid-column:3;grid-row:1;display:flex;justify-content:flex-end;align-self:start;min-height:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-active{margin-left:.2rem;white-space:nowrap}
+#${PANEL_HOST_ID} .ad-xconfig-setting-row--checkout-suggestion-preview{padding:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-preview-surface{display:grid;place-items:center;min-height:7.2rem;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:radial-gradient(circle at 50% 0%,rgba(126,216,255,.14),rgba(7,14,30,.58) 58%,rgba(5,10,25,.72));padding:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo{position:relative;isolation:isolate;overflow:visible;border-radius:14px;width:min(100%,19rem);min-height:4.9rem;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:.7rem;padding:1.9rem 1rem .8rem;color:#fff;font-family:"Open Sans","Segoe UI",Tahoma,sans-serif;box-sizing:border-box}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo>*{position:relative;z-index:1}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-label{position:absolute;top:6px;left:8px;padding:5px 12px;border-radius:999px;background:var(--ad-ext-label-bg);color:var(--ad-ext-label-color);font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(15,12,5,.55);box-shadow:0 2px 10px rgba(0,0,0,.45),0 0 0 2px rgba(15,12,5,.6);text-shadow:0 1px 0 rgba(255,255,255,.35);pointer-events:none;z-index:2}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-score{font-size:1.45rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-route{min-width:0;font-size:.86rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.88)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--badge{outline:2px dashed var(--ad-ext-accent);outline-offset:-6px;background:var(--ad-ext-accent-soft);box-shadow:0 10px 20px rgba(0,0,0,.2)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--ribbon{background:linear-gradient(135deg,var(--ad-ext-accent-soft),rgba(255,255,255,0));box-shadow:0 0 0 2px var(--ad-ext-accent) inset,0 0 18px var(--ad-ext-accent-strong)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--ribbon .ad-xconfig-checkout-suggestion-demo-label{transform:rotate(-6deg);transform-origin:left center}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--ribbon::after{content:"";position:absolute;inset:-4px;border-radius:inherit;box-shadow:0 0 24px var(--ad-ext-accent-strong);opacity:.35;pointer-events:none;z-index:0}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--stripe{background:var(--ad-ext-accent-soft);box-shadow:0 0 0 2px var(--ad-ext-accent) inset,0 12px 22px rgba(0,0,0,.22)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--stripe::after{content:"";position:absolute;inset:2px;border-radius:inherit;background:repeating-linear-gradient(45deg,var(--ad-ext-accent-strong),var(--ad-ext-accent-strong) 6px,transparent 6px,transparent 12px);opacity:.35;pointer-events:none;z-index:0}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--ticket{background:linear-gradient(135deg,var(--ad-ext-accent-soft),rgba(255,255,255,.08));box-shadow:0 0 0 2px var(--ad-ext-accent) inset,0 14px 26px rgba(0,0,0,.24)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--ticket::after{content:"";position:absolute;left:14px;right:14px;top:50%;border-top:2px dashed rgba(255,255,255,.55);opacity:.65;pointer-events:none;z-index:0}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--outline{outline:3px solid var(--ad-ext-accent);outline-offset:-6px;background:rgba(10,18,40,.82);box-shadow:0 0 0 2px rgba(255,255,255,.25) inset,0 12px 24px rgba(0,0,0,.2)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--checkout-suggestion-style{overflow:visible}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style{display:grid;grid-template-columns:minmax(0,1fr) minmax(7.4rem,8.6rem) auto;grid-template-rows:auto auto;align-items:center;column-gap:.62rem;row-gap:.14rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style .ad-xconfig-option-head{display:block}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style .ad-xconfig-option-copy{margin-top:.12rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview{grid-column:2;grid-row:1/span 2;display:grid;place-items:center;min-height:3.4rem;padding:.28rem;border-radius:8px;background:rgba(7,14,30,.46)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini{width:100%;min-height:2.9rem;grid-template-columns:auto minmax(0,1fr);gap:.35rem;padding:1.16rem .52rem .42rem;border-radius:9px}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini .ad-xconfig-checkout-suggestion-demo-score{font-size:.92rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini .ad-xconfig-checkout-suggestion-demo-route{font-size:.58rem;letter-spacing:.08em}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini .ad-xconfig-checkout-suggestion-demo-label{top:3px;left:5px;padding:2px 6px;font-size:7px}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini.ad-xconfig-checkout-suggestion-demo--ticket::after{left:8px;right:8px;border-top-width:1px}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']:empty{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-empty{border-radius:10px;border:1px dashed rgba(255,255,255,.3);background:rgba(255,255,255,.03);padding:1rem;color:rgba(255,255,255,.75);font-size:.88rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-backdrop{position:fixed;inset:0;z-index:2147483000;background:rgba(5,11,29,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal{width:min(44rem,100%);max-height:calc(100vh - 2rem);overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(160deg,rgba(15,27,67,.97) 0%,rgba(25,32,71,.98) 75%);padding:1rem}
@@ -376,6 +405,7 @@ ${buildColorPreviewRules()}
 @keyframes ad-ext-dart-marker-glow{0%{stroke-width:2;opacity:.9}50%{stroke-width:5;opacity:1}100%{stroke-width:2;opacity:.9}}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}#${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:auto}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style{grid-template-columns:minmax(0,1fr) auto}#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview{grid-column:1/span 2;grid-row:2}#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']{grid-column:2;grid-row:1}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
 @media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::before,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::after{animation:none!important;transform:none!important;transition:none!important}}
 `;
