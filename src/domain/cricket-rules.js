@@ -198,7 +198,7 @@ function normalizeSegmentName(segment) {
     return "S25";
   }
 
-  const match = raw.match(/^([SDT])\s*(\d{1,2})$/);
+  const match = /^([SDT])\s*(\d{1,2})$/.exec(raw);
   if (match) {
     return `${match[1]}${Number(match[2])}`;
   }
@@ -347,7 +347,7 @@ export function parseCricketMarkValue(value) {
   }
 
   // Accept a single standalone mark digit wrapped by non-digits.
-  const digit = normalized.match(/^\D*([0-3])\D*$/);
+  const digit = /^\D*([0-3])\D*$/.exec(normalized);
   if (digit) {
     return clampMarks(Number.parseInt(digit[1], 10));
   }
@@ -400,9 +400,7 @@ export function normalizeCricketLabel(value) {
     return "TRIPLE";
   }
 
-  const numberMatch = text.match(
-    /(?:^|\D)(20|19|18|17|16|15|14|13|12|11|10)(?:\D|$)/
-  );
+  const numberMatch = /(?:^|\D)(20|19|18|17|16|15|14|13|12|11|10)(?:\D|$)/.exec(text);
 
   return numberMatch ? numberMatch[1] : "";
 }
@@ -489,7 +487,7 @@ export function parseCricketThrowSegment(throwEntry) {
     };
   }
 
-  const match = normalizedName.match(/^([SDT])(\d{1,2})$/);
+  const match = /^([SDT])(\d{1,2})$/.exec(normalizedName);
   if (!match) {
     return null;
   }

@@ -29,7 +29,7 @@ function clearNode(node) {
   }
 
   while (node.firstChild) {
-    node.removeChild(node.firstChild);
+    node.firstChild.remove();
   }
 }
 
@@ -204,11 +204,11 @@ function animatePreviewDart(entry, visualConfig, windowRef, session) {
 export function runDartMarkerDartsPreview(options = {}) {
   const documentRef =
     options.documentRef ||
-    (typeof globalThis.document !== "undefined" ? globalThis.document : null);
+    (globalThis.document !== undefined ? globalThis.document : null);
   const windowRef =
     options.windowRef ||
     documentRef?.defaultView ||
-    (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+    (globalThis.window !== undefined ? globalThis.window : null);
   if (!documentRef || !windowRef) {
     throw new Error("Dart Marker Darts preview requires a browser document.");
   }

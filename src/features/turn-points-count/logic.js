@@ -43,7 +43,7 @@ function easeOutCubic(elapsedTime, startValue, valueChange, duration) {
 }
 
 function parseScore(text) {
-  const match = String(text || "").match(/-?\d+/);
+  const match = /-?\d+/.exec(String(text || ""));
   if (!match) {
     return null;
   }

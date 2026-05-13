@@ -14,12 +14,12 @@ export function parseAverageValue(text) {
     return null;
   }
 
-  const pairedMatch = raw.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*[0-9]+(?:\.[0-9]+)?/);
+  const pairedMatch = /(\d+(?:\.\d+)?)\s*\/\s*\d+(?:\.\d+)?/.exec(raw);
   if (pairedMatch) {
     return Number(pairedMatch[1]);
   }
 
-  const fallbackMatch = raw.match(/([0-9]+(?:\.[0-9]+)?)/);
+  const fallbackMatch = /(\d+(?:\.\d+)?)/.exec(raw);
   if (!fallbackMatch) {
     return null;
   }

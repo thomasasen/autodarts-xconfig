@@ -159,7 +159,7 @@ export function resolveThemeGlobalTypographyActiveTheme(options = {}) {
 
 export function mountThemeGlobalTypography(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards || null;
   const config = context.config || null;
 

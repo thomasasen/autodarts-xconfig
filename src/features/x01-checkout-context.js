@@ -11,7 +11,7 @@ const ACTIVE_SCORE_SELECTORS = Object.freeze([
 const MATCH_ROUTE_PATTERN = /^\/matches\/([^/]+)$/i;
 
 export function parseScore(text) {
-  const match = String(text || "").match(/-?\d+/);
+  const match = /-?\d+/.exec(String(text || ""));
   if (!match) {
     return Number.NaN;
   }
@@ -21,7 +21,7 @@ export function parseScore(text) {
 }
 
 function normalizeScore(value) {
-  if (value === null || typeof value === "undefined") {
+  if (value === null || value === undefined) {
     return Number.NaN;
   }
 

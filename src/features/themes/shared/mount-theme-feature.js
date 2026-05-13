@@ -43,7 +43,7 @@ function readThemeConfigs(config, configKey) {
 function resolveThemeRuntimeContext(context = {}) {
   return {
     documentRef: context.documentRef || (typeof document !== "undefined" ? document : null),
-    windowRef: context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null),
+    windowRef: context.windowRef || (globalThis.window !== undefined ? globalThis.window : null),
     domGuards: context.domGuards,
     gameState: context.gameState,
     config: context.config,

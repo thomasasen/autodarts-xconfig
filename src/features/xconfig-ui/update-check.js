@@ -199,7 +199,7 @@ function compareVersions(leftVersion, rightVersion) {
 }
 
 function parseUserscriptVersion(text) {
-  const match = String(text || "").match(/@version\s+([^\s]+)/i);
+  const match = /@version\s+([^\s]+)/i.exec(String(text || ""));
   return normalizeVersion(match?.[1] || "");
 }
 

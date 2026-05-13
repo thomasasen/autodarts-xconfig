@@ -276,7 +276,7 @@ export function createRuntimeConfig(overrides = {}) {
 
       const rawToggleValue = getRawFeatureToggle(featureKey);
       normalizedFeatureToggles[featureKey] =
-        typeof rawToggleValue !== "undefined"
+        rawToggleValue !== undefined
           ? normalizeBoolean(rawToggleValue, normalizedFeatureConfig.enabled)
           : normalizeBoolean(normalizedFeatureConfig.enabled, false);
     });
@@ -293,7 +293,7 @@ export function createRuntimeConfig(overrides = {}) {
     const featureConfig = getFeatureConfig(normalizedKey);
     const toggleValue = getRawFeatureToggle(normalizedKey);
 
-    if (typeof toggleValue !== "undefined") {
+    if (toggleValue !== undefined) {
       return normalizeBoolean(toggleValue, featureConfig.enabled);
     }
 

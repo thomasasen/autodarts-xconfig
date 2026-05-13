@@ -941,7 +941,7 @@ export function ensureOverlayGroup(boardGroup, overlayId, svgNs = "http://www.w3
 }
 
 export function clearNodeChildren(node) {
-  if (typeof node?.firstChild === "undefined") {
+  if (node?.firstChild === undefined) {
     return;
   }
 

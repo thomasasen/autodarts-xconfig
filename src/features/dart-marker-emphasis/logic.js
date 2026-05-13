@@ -47,7 +47,7 @@ function isHiddenByDartOverlay(marker) {
   if (marker?.getAttribute?.(HIDDEN_MARKER_ATTRIBUTE) !== null) {
     return true;
   }
-  return Boolean(marker?.dataset && marker.dataset[HIDDEN_MARKER_DATASET_KEY] !== undefined);
+  return Boolean(marker?.dataset?.[HIDDEN_MARKER_DATASET_KEY] !== undefined);
 }
 
 export function applyDartMarkerEmphasisToMarker(marker, visualConfig) {

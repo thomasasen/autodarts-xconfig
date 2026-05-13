@@ -328,7 +328,7 @@ function deriveHitScore(hitMeta) {
   }
 
   const segment = String(hitMeta.segment || "").toUpperCase();
-  const match = segment.match(/^[TD](\d{1,2})$/);
+  const match = /^[TD](\d{1,2})$/.exec(segment);
   if (!match) {
     return "";
   }

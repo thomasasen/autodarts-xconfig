@@ -13,7 +13,7 @@ const LISTENER_KEYS = Object.freeze({
 
 export function initializeDartMarkerEmphasis(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;

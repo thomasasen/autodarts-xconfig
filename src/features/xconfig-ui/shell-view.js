@@ -225,7 +225,7 @@ export function createElement(documentRef, tagName, options = {}) {
   if (options.attributes && isObjectLike(options.attributes)) {
     Object.keys(options.attributes).forEach((key) => {
       const value = options.attributes[key];
-      if (typeof value !== "undefined" && value !== null) {
+      if (value !== undefined && value !== null) {
         element.setAttribute(key, value);
       }
     });
@@ -1018,7 +1018,7 @@ function resolveDartMarkerEmphasisPreviewEffect(feature, field, optionValue) {
 
 function resolveDartMarkerEmphasisPreviewConfig(feature, field, optionValue, options = {}) {
   const settingKey = String(field?.key || "").trim();
-  const nextConfig = { ...(feature?.config || {}) };
+  const nextConfig = { ...feature?.config };
   if (settingKey === "size" || settingKey === "opacityPercent") {
     nextConfig[settingKey] = Number(optionValue);
   } else if (settingKey === "effect") {
@@ -1180,63 +1180,67 @@ function resolveThemeActionNoteText(action) {
   return "";
 }
 
+function buildFeatureActionField(documentRef, feature, field, fieldId) {
+  const previewColorTheme = String(field?.previewColorTheme || "").trim();
+  const wrapper = createElement(documentRef, "div", {
+    className: "ad-xconfig-setting-action",
+  });
+  const button = createElement(documentRef, "button", {
+    id: fieldId,
+    type: "button",
+    className: [
+      "ad-xconfig-setting-action-btn",
+      field.prominent ? "ad-xconfig-setting-action-btn--primary" : "",
+      previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
+    ].filter(Boolean).join(" "),
+    text: field.buttonLabel || field.label,
+    attributes: {
+      "data-adxconfig-action": field.action,
+      "data-feature-key": feature.featureKey,
+      "data-config-key": feature.configKey,
+      "data-feature-action-id": field.actionId || "",
+      "data-preview-color-theme": previewColorTheme || undefined,
+    },
+  });
+  const previewTarget = String(field.previewTarget || "").trim();
+  if (previewTarget) {
+    wrapper.appendChild(createElement(documentRef, "div", {
+      className: "ad-xconfig-setting-action-preview",
+      attributes: {
+        "data-adxconfig-action-preview-target": previewTarget,
+        "data-feature-action-id": field.actionId || "",
+      },
+    }));
+  }
+  wrapper.appendChild(button);
+  const noteText = String(field.description || resolveThemeActionNoteText(field.action)).trim();
+  if (noteText) {
+    wrapper.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-note",
+      text: noteText,
+    }));
+  }
+  if (isBackgroundThemeFeature(feature) && field.action === "uploadThemeBackground") {
+    wrapper.appendChild(buildThemeBackgroundStatus(documentRef, feature));
+    wrapper.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-note ad-xconfig-theme-action-feedback",
+      attributes: {
+        "data-adxconfig-theme-action-feedback": "true",
+        "data-feature-key": feature.featureKey,
+      },
+    }));
+  }
+  if (field.action === "uploadTurnDartImage") {
+    wrapper.appendChild(buildTurnDartImageStatus(documentRef, feature));
+  }
+  return wrapper;
+}
+
 function buildFeatureField(documentRef, feature, field) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
   if (field.control === "action") {
-    const previewColorTheme = String(field?.previewColorTheme || "").trim();
-    const wrapper = createElement(documentRef, "div", {
-      className: "ad-xconfig-setting-action",
-    });
-    const button = createElement(documentRef, "button", {
-      id: fieldId,
-      type: "button",
-      className: [
-        "ad-xconfig-setting-action-btn",
-        field.prominent ? "ad-xconfig-setting-action-btn--primary" : "",
-        previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
-      ].filter(Boolean).join(" "),
-      text: field.buttonLabel || field.label,
-      attributes: {
-        "data-adxconfig-action": field.action,
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-feature-action-id": field.actionId || "",
-        "data-preview-color-theme": previewColorTheme || undefined,
-      },
-    });
-    const previewTarget = String(field.previewTarget || "").trim();
-    if (previewTarget) {
-      wrapper.appendChild(createElement(documentRef, "div", {
-        className: "ad-xconfig-setting-action-preview",
-        attributes: {
-          "data-adxconfig-action-preview-target": previewTarget,
-          "data-feature-action-id": field.actionId || "",
-        },
-      }));
-    }
-    wrapper.appendChild(button);
-    const noteText = String(field.description || resolveThemeActionNoteText(field.action)).trim();
-    if (noteText) {
-      wrapper.appendChild(createElement(documentRef, "p", {
-        className: "ad-xconfig-note",
-        text: noteText,
-      }));
-    }
-    if (isBackgroundThemeFeature(feature) && field.action === "uploadThemeBackground") {
-      wrapper.appendChild(buildThemeBackgroundStatus(documentRef, feature));
-      wrapper.appendChild(createElement(documentRef, "p", {
-        className: "ad-xconfig-note ad-xconfig-theme-action-feedback",
-        attributes: {
-          "data-adxconfig-theme-action-feedback": "true",
-          "data-feature-key": feature.featureKey,
-        },
-      }));
-    }
-    if (field.action === "uploadTurnDartImage") {
-      wrapper.appendChild(buildTurnDartImageStatus(documentRef, feature));
-    }
-    return wrapper;
+    return buildFeatureActionField(documentRef, feature, field, fieldId);
   }
 
   if (field.control === "checkbox") {

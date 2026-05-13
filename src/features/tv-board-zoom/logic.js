@@ -1011,7 +1011,7 @@ export function buildZoomTransform(options = {}) {
   const zoomLevel = Number(options.zoomLevel);
   const intent = options.intent || null;
   const x01Rules = options.x01Rules || null;
-  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const providedBaseTransform =
     typeof options.baseTransform === "string" ? options.baseTransform : null;
   const activeTargetZoomTransform = options.activeTargetZoomTransform || null;
@@ -1699,7 +1699,7 @@ function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, s
     zoomLevel,
     intent,
     x01Rules: options?.x01Rules || null,
-    windowRef: options?.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null),
+    windowRef: options?.windowRef || (globalThis.window !== undefined ? globalThis.window : null),
     documentRef: options?.documentRef || (typeof document !== "undefined" ? document : null),
     baseTransform:
       state.targetStyleSnapshot?.node === targetNode

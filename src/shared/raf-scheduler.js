@@ -1,5 +1,5 @@
 export function createRafScheduler(callback, options = {}) {
-  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const raf =
     (windowRef && typeof windowRef.requestAnimationFrame === "function"
       ? windowRef.requestAnimationFrame.bind(windowRef)

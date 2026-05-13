@@ -10,15 +10,12 @@ import {
 const PREVIEW_FIELD_KEYS = new Set(["size", "effect", "opacityPercent"]);
 
 function normalizeSettingValue(settingKey, settingValue) {
-  if (settingKey === "size" || settingKey === "opacityPercent") {
-    return Number(settingValue);
-  }
-  return String(settingValue ?? "");
+  return settingKey === "effect" ? String(settingValue ?? "") : Number(settingValue);
 }
 
 function resolvePreviewConfig(context = {}, options = {}) {
   const settingKey = String(context.settingKey || "").trim();
-  const baseConfig = { ...(context.feature?.config || {}) };
+  const baseConfig = { ...context.feature?.config };
   if (PREVIEW_FIELD_KEYS.has(settingKey)) {
     baseConfig[settingKey] = normalizeSettingValue(settingKey, context.settingValue);
   }
@@ -49,26 +46,25 @@ function applyPreviewMarker(marker, context, options = {}) {
   }
 }
 
-export function createDartMarkerEmphasisPreviewAdapter() {
-  function start(context = {}) {
-    const optionNode = context.optionNode || null;
-    const marker = optionNode?.querySelector?.(DART_MARKER_EMPHASIS_PREVIEW_MARKER_SELECTOR) || null;
+function startDartMarkerEmphasisPreview(context = {}) {
+  const optionNode = context.optionNode || null;
+  const marker = optionNode?.querySelector?.(DART_MARKER_EMPHASIS_PREVIEW_MARKER_SELECTOR) || null;
 
-    if (!marker) {
-      return () => {};
-    }
-
-    applyPreviewMarker(marker, context);
-
-    return () => {
-      applyPreviewMarker(marker, context, { idle: true });
-    };
+  if (!marker) {
+    return () => {};
   }
 
-  return {
-    prefix: "dart-marker-emphasis-",
-    matches: (previewEffect) => String(previewEffect || "").startsWith("dart-marker-emphasis-"),
-    start,
+  applyPreviewMarker(marker, context);
+
+  return () => {
+    applyPreviewMarker(marker, context, { idle: true });
   };
 }
 
+export function createDartMarkerEmphasisPreviewAdapter() {
+  return {
+    prefix: "dart-marker-emphasis-",
+    matches: (previewEffect) => String(previewEffect || "").startsWith("dart-marker-emphasis-"),
+    start: startDartMarkerEmphasisPreview,
+  };
+}

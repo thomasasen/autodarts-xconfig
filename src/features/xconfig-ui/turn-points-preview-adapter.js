@@ -243,6 +243,33 @@ function animateFlashSegment(
   });
 }
 
+function schedulePreviewFlashSegments({
+  windowRef,
+  timers,
+  isCancelled,
+  scoreNode,
+  state,
+  previewOptions,
+  animateScoreRef,
+}) {
+  let delayMs = 0;
+  FLASH_SEGMENTS.forEach((segment) => {
+    scheduleTimer(windowRef, timers, () => {
+      if (!isCancelled() && scoreNode.isConnected !== false) {
+        animateFlashSegment(
+          scoreNode,
+          state,
+          previewOptions,
+          windowRef,
+          segment,
+          animateScoreRef,
+        );
+      }
+    }, delayMs);
+    delayMs += FLASH_SEGMENT_DURATION_MS + FLASH_PAUSE_MS;
+  });
+}
+
 export function createTurnPointsCountPreviewAdapter(options = {}) {
   const windowRef = options.windowRef || (typeof window !== "undefined" ? window : null);
   const loadOdometer =
@@ -284,21 +311,14 @@ export function createTurnPointsCountPreviewAdapter(options = {}) {
       }
 
       if (previewOptions.flashEnabled) {
-        let delayMs = 0;
-        FLASH_SEGMENTS.forEach((segment) => {
-          scheduleTimer(windowRef, timers, () => {
-            if (!cancelled && scoreNode.isConnected !== false) {
-              animateFlashSegment(
-                scoreNode,
-                state,
-                previewOptions,
-                windowRef,
-                segment,
-                animateScoreRef,
-              );
-            }
-          }, delayMs);
-          delayMs += FLASH_SEGMENT_DURATION_MS + FLASH_PAUSE_MS;
+        schedulePreviewFlashSegments({
+          windowRef,
+          timers,
+          isCancelled: () => cancelled,
+          scoreNode,
+          state,
+          previewOptions,
+          animateScoreRef,
         });
         return;
       }

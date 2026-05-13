@@ -2,7 +2,7 @@ function getWindowRef(explicitWindowRef = null) {
   if (explicitWindowRef && typeof explicitWindowRef === "object") {
     return explicitWindowRef;
   }
-  if (typeof globalThis.window !== "undefined") {
+  if (globalThis.window !== undefined) {
     return globalThis.window;
   }
   return null;

@@ -10,7 +10,7 @@ const changelogPath = path.join(repoRoot, "CHANGELOG.md");
 const packageJsonPath = path.join(repoRoot, "package.json");
 const repoUrl = "https://github.com/thomasasen/autodarts-xconfig";
 const compareUrlPrefix = `${repoUrl}/compare/`;
-const versionHeadingPattern = /^## \[([0-9]+\.[0-9]+\.[0-9]+)\] - (\d{4}-\d{2}-\d{2})$/gm;
+const versionHeadingPattern = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$/gm;
 const linkReferencePattern =
   /^\[([^\]]+)\]:\s+(https:\/\/github\.com\/thomasasen\/autodarts-xconfig\/\S+)$/gm;
 const placeholderPattern = /^_Noch keine Änderungen erfasst\._$/m;

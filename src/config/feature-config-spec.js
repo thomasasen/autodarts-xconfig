@@ -139,7 +139,7 @@ function normalizeStringChoiceArray(value, fallbackValues, allowedSet, legacyNor
 }
 
 function normalizeMappedStringChoice(value, fallbackValue, aliasMap) {
-  if (typeof value === "undefined" || value === null) {
+  if (value === undefined || value === null) {
     return fallbackValue;
   }
   const normalized = String(value || "").trim().toLowerCase();
@@ -432,7 +432,7 @@ const LEGACY_IMPORTERS = Object.freeze({
       segmentStyle: "surface-outline",
       singleRing: "both",
       targetSelectionMode: readLegacySetting(settings, "ZIELAUSWAHL", "next"),
-      colorTheme: readLegacySetting(settings, "FARBTHEMA", "violet"),
+      colorTheme: readLegacySetting(settings, "FARBTHEMA", "amber"),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },

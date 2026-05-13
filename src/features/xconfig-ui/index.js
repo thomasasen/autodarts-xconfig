@@ -167,7 +167,7 @@ const animationFeatureOrder = new Map(
 const shellByWindow = new WeakMap();
 
 function ensureXConfigShell(options = {}) {
-  const windowRef = options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   if (!windowRef) {
     return null;
   }

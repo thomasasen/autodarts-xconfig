@@ -55,7 +55,7 @@ export function createEventBus() {
   }
 
   function clear(eventName) {
-    if (typeof eventName === "undefined") {
+    if (eventName === undefined) {
       listenersByEvent.clear();
       return;
     }
@@ -64,7 +64,7 @@ export function createEventBus() {
   }
 
   function listenerCount(eventName) {
-    if (typeof eventName === "undefined") {
+    if (eventName === undefined) {
       return Array.from(listenersByEvent.values()).reduce(
         (total, listeners) => total + listeners.size,
         0

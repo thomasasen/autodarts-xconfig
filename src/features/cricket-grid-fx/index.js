@@ -182,7 +182,7 @@ function handleGridSurfaceStatus(options = {}) {
 
 export function initializeCricketGridFx(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
   const cricketRules = context.domain?.cricketRules;
   const config = context.config;

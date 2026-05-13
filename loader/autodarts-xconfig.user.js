@@ -20,7 +20,7 @@ import { initializeTampermonkeyRuntime } from "../src/runtime/bootstrap-runtime.
 (async function bootstrapUserscript() {
   "use strict";
 
-  const windowRef = typeof globalThis.window !== "undefined" ? globalThis.window : null;
+  const windowRef = globalThis.window !== undefined ? globalThis.window : null;
   if (!windowRef) {
     return;
   }

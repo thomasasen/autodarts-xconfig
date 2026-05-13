@@ -28,27 +28,27 @@ function resetArrowNode(arrowNode, timeoutByArrow) {
   arrowNode.classList.add(VISIBLE_CLASS, UP_CLASS);
 }
 
-export function createAverageTrendArrowPreviewAdapter() {
-  function start(context = {}) {
-    const optionNode = context.optionNode || null;
-    const arrowNode = optionNode?.querySelector?.(AVERAGE_TREND_PREVIEW_SELECTOR) || null;
-    const timeoutByArrow = new Map();
-    const durationMs = resolvePreviewDuration(context);
+function startAverageTrendArrowPreview(context = {}) {
+  const optionNode = context.optionNode || null;
+  const arrowNode = optionNode?.querySelector?.(AVERAGE_TREND_PREVIEW_SELECTOR) || null;
+  const timeoutByArrow = new Map();
+  const durationMs = resolvePreviewDuration(context);
 
-    resetArrowNode(arrowNode, timeoutByArrow);
-    if (arrowNode?.style) {
-      arrowNode.style.setProperty("--ad-xconfig-average-trend-preview-duration", `${durationMs}ms`);
-    }
-    animateArrowNode(arrowNode, durationMs, timeoutByArrow);
-
-    return () => {
-      resetArrowNode(arrowNode, timeoutByArrow);
-    };
+  resetArrowNode(arrowNode, timeoutByArrow);
+  if (arrowNode?.style) {
+    arrowNode.style.setProperty("--ad-xconfig-average-trend-preview-duration", `${durationMs}ms`);
   }
+  animateArrowNode(arrowNode, durationMs, timeoutByArrow);
 
+  return () => {
+    resetArrowNode(arrowNode, timeoutByArrow);
+  };
+}
+
+export function createAverageTrendArrowPreviewAdapter() {
   return {
     prefix: "average-trend-arrow-",
     matches: (previewEffect) => String(previewEffect || "").startsWith("average-trend-arrow-"),
-    start,
+    start: startAverageTrendArrowPreview,
   };
 }

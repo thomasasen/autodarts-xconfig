@@ -62,7 +62,7 @@ function clearWinnerFireworksPreview(windowRef, session) {
 async function runWinnerFireworksPreview(actionContext = {}) {
   const context = actionContext.context || actionContext;
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards || null;
 
   if (!documentRef || !windowRef || !domGuards) {
@@ -145,7 +145,7 @@ async function runWinnerFireworksPreview(actionContext = {}) {
 
 export function initializeWinnerFireworks(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;

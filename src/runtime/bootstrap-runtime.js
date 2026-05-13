@@ -48,7 +48,7 @@ function getGlobalNamespace(windowRef) {
 
 export async function initializeTampermonkeyRuntime(options = {}) {
   const windowRef =
-    options.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+    options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const documentRef =
     options.documentRef ||
     (windowRef?.document || null);

@@ -170,7 +170,7 @@ function createAudio(windowRef, config) {
 export async function playSingleBullSoundPreview(options = {}) {
   const windowRef =
     options.windowRef ||
-    (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+    (globalThis.window !== undefined ? globalThis.window : null);
   const config = options.config;
   const audio = createAudio(windowRef, config);
 

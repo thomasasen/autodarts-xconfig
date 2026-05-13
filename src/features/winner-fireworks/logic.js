@@ -51,7 +51,7 @@ function scaledInterval(baseValue, intensityPreset) {
 }
 
 function parseWinnerIndex(value, playerCount) {
-  if (value === null || typeof value === "undefined" || typeof value === "boolean") {
+  if (value === null || value === undefined || typeof value === "boolean") {
     return null;
   }
 

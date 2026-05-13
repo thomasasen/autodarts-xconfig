@@ -23,7 +23,7 @@ export function getNestedValue(rootValue, pathParts = []) {
     current = current[part];
   }
 
-  return typeof current === "undefined" ? null : current;
+  return current === undefined ? null : current;
 }
 
 export function setNestedValue(rootValue, pathParts, value) {

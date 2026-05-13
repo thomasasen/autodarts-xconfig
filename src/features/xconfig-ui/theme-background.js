@@ -64,7 +64,7 @@ function parseDataUrlInfo(dataUrl) {
 
   const header = normalizedDataUrl.slice(0, separatorIndex);
   const payload = normalizedDataUrl.slice(separatorIndex + 1);
-  const mimeTypeMatch = header.match(/^data:([^;,]+)(?:;.*)?$/i);
+  const mimeTypeMatch = /^data:([^;,]+)(?:;.*)?$/i.exec(header);
   const mimeType = String(mimeTypeMatch?.[1] || "image/*").toLowerCase();
   const isBase64 = /;base64/i.test(header);
 

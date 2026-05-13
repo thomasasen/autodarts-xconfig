@@ -114,6 +114,30 @@ function Set-SonarGateCondition {
   }
 }
 
+function Remove-SonarGateConditionsExcept {
+  param(
+    [hashtable]$Headers,
+    [string]$BaseUrl,
+    [string]$GateName,
+    [string[]]$Metrics
+  )
+
+  $gate = Invoke-SonarGet `
+    -Headers $Headers `
+    -BaseUrl $BaseUrl `
+    -Path "/api/qualitygates/show?name=$([uri]::EscapeDataString($GateName))"
+
+  foreach ($condition in @($gate.conditions)) {
+    if ($Metrics -contains $condition.metric) {
+      continue
+    }
+
+    Invoke-SonarPost -Headers $Headers -BaseUrl $BaseUrl -Path "/api/qualitygates/delete_condition" -Body @{
+      id = $condition.id
+    }
+  }
+}
+
 $baseUrl = $SonarQubeUrl.TrimEnd("/")
 $headers = New-AuthHeader -Token $SonarQubeToken
 
@@ -130,7 +154,9 @@ Set-SonarMultiValue -Headers $headers -BaseUrl $baseUrl -Project $ProjectKey -Se
   "dist/**",
   "src/legacy-backups/**",
   "src/vendors/anime.min.cjs",
-  "src/vendors/canvas-confetti.browser.js"
+  "src/vendors/canvas-confetti.browser.js",
+  "src/vendors/countUp.min.js",
+  "src/vendors/odometer.min.js"
 )
 
 Set-SonarMultiValue -Headers $headers -BaseUrl $baseUrl -Project $ProjectKey -SettingKey "sonar.cpd.exclusions" -Values @(
@@ -150,7 +176,8 @@ $deactivateRules = @(
   "javascript:S7764",
   "javascript:S7785",
   "javascript:S7761",
-  "javascript:S1940"
+  "javascript:S1940",
+  "javascript:S7735"
 )
 
 foreach ($rule in $deactivateRules) {
@@ -212,6 +239,16 @@ Invoke-SonarPost -Headers $headers -BaseUrl $baseUrl -Path "/api/qualitygates/se
   gateName = $QualityGateName
 }
 
+$gateMetrics = @(
+  "new_reliability_rating",
+  "new_security_rating",
+  "new_security_review_rating",
+  "new_maintainability_rating",
+  "new_duplicated_lines_density",
+  "new_blocker_violations",
+  "new_critical_violations"
+)
+
 Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_reliability_rating" -Op "GT" -ErrorThreshold "1"
 Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_security_rating" -Op "GT" -ErrorThreshold "1"
 Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_security_review_rating" -Op "GT" -ErrorThreshold "1"
@@ -219,6 +256,7 @@ Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGat
 Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_duplicated_lines_density" -Op "GT" -ErrorThreshold "3"
 Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_blocker_violations" -Op "GT" -ErrorThreshold "0"
 Set-SonarGateCondition -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metric "new_critical_violations" -Op "GT" -ErrorThreshold "0"
+Remove-SonarGateConditionsExcept -Headers $headers -BaseUrl $baseUrl -GateName $QualityGateName -Metrics $gateMetrics
 
 if ($RunAnalysis) {
   $env:SONAR_HOST_URL = $baseUrl

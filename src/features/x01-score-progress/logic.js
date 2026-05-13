@@ -432,7 +432,7 @@ function toCompactText(value, maxLength = 90) {
 }
 
 export function parseDisplayedScore(text) {
-  const match = String(text || "").match(/\d+/);
+  const match = /\d+/.exec(String(text || ""));
   if (!match) {
     return null;
   }
@@ -443,7 +443,7 @@ export function parseDisplayedScore(text) {
 
 export function extractStartScore(value) {
   const normalized = String(value || "").replaceAll(/\s+/g, " ").trim();
-  const match = normalized.match(START_SCORE_PATTERN);
+  const match = START_SCORE_PATTERN.exec(normalized);
   if (!match) {
     return null;
   }
@@ -464,7 +464,7 @@ function extractStartScoreFromPatterns(value, patterns = []) {
   }
 
   for (const pattern of patterns) {
-    const match = normalized.match(pattern);
+    const match = pattern.exec(normalized);
     if (!match) {
       continue;
     }
@@ -1308,7 +1308,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   let renderedCards = 0;
   let removedCardsMissingScore = 0;
   const sampledCards = [];
-  const windowRef = context.windowRef || (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const activePlayerIndex = Number.isFinite(context.gameState?.getActivePlayerIndex?.())
     ? Number(context.gameState.getActivePlayerIndex())
     : Number.NaN;

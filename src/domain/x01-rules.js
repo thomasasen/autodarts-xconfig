@@ -39,7 +39,7 @@ export function normalizeSegmentName(value) {
     return "S25";
   }
 
-  const prefixedMatch = raw.match(/^([SDT])\s*(\d{1,2})$/);
+  const prefixedMatch = /^([SDT])\s*(\d{1,2})$/.exec(raw);
   if (prefixedMatch) {
     return `${prefixedMatch[1]}${Number(prefixedMatch[2])}`;
   }
@@ -90,7 +90,7 @@ export function parseSegment(normalizedSegmentName) {
     };
   }
 
-  const match = normalized.match(/^([SDT])(\d{1,2})$/);
+  const match = /^([SDT])(\d{1,2})$/.exec(normalized);
   if (!match) {
     return null;
   }
