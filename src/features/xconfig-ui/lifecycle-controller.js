@@ -90,6 +90,38 @@ function registerShellLifecycleListeners(controller) {
     type: "keydown",
     handler: controller.onDocumentKeydown,
   });
+  if (controller.listenerKeys.pointerover) {
+    controller.listenerRegistry.register({
+      key: controller.listenerKeys.pointerover,
+      target: controller.documentRef,
+      type: "pointerover",
+      handler: controller.onDocumentPointerover,
+    });
+  }
+  if (controller.listenerKeys.pointerout) {
+    controller.listenerRegistry.register({
+      key: controller.listenerKeys.pointerout,
+      target: controller.documentRef,
+      type: "pointerout",
+      handler: controller.onDocumentPointerout,
+    });
+  }
+  if (controller.listenerKeys.focusin) {
+    controller.listenerRegistry.register({
+      key: controller.listenerKeys.focusin,
+      target: controller.documentRef,
+      type: "focusin",
+      handler: controller.onDocumentFocusin,
+    });
+  }
+  if (controller.listenerKeys.focusout) {
+    controller.listenerRegistry.register({
+      key: controller.listenerKeys.focusout,
+      target: controller.documentRef,
+      type: "focusout",
+      handler: controller.onDocumentFocusout,
+    });
+  }
   controller.listenerRegistry.register({
     key: controller.listenerKeys.visibilitychange,
     target: controller.documentRef,
@@ -221,6 +253,10 @@ function buildShellLifecycleControllerContext(options = {}) {
     onDocumentClick: resolveOptionalFunction(options.onDocumentClick, () => {}),
     onDocumentChange: resolveOptionalFunction(options.onDocumentChange, () => {}),
     onDocumentKeydown: resolveOptionalFunction(options.onDocumentKeydown, () => {}),
+    onDocumentPointerover: resolveOptionalFunction(options.onDocumentPointerover, () => {}),
+    onDocumentPointerout: resolveOptionalFunction(options.onDocumentPointerout, () => {}),
+    onDocumentFocusin: resolveOptionalFunction(options.onDocumentFocusin, () => {}),
+    onDocumentFocusout: resolveOptionalFunction(options.onDocumentFocusout, () => {}),
     startAutoUpdateChecks: resolveOptionalFunction(options.startAutoUpdateChecks, () => {}),
     stopAutoUpdateChecks: resolveOptionalFunction(options.stopAutoUpdateChecks, () => {}),
     refreshUpdateStatus: resolveOptionalFunction(options.refreshUpdateStatus, () => Promise.resolve()),

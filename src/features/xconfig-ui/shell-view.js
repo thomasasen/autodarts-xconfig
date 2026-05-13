@@ -13,6 +13,10 @@ import {
 } from "./theme-background.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
+import {
+  TURN_POINTS_PREVIEW_SCORE_ATTRIBUTE,
+  TURN_POINTS_PREVIEW_SCORE_CLASS,
+} from "./turn-points-preview-contract.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -620,6 +624,93 @@ function buildThemeGlobalTypographyOptionLabel(documentRef, option) {
   return labelNode;
 }
 
+function isTurnPointsCountPreviewEffect(previewEffect) {
+  return String(previewEffect || "").startsWith("turn-points-count-");
+}
+
+function resolveTurnPointsCountPreviewEffect(feature, field, optionValue) {
+  if (feature?.featureKey !== "turn-points-count") {
+    return "";
+  }
+  const settingKey = String(field?.key || "").trim();
+  const normalizedValue = String(optionValue ?? "").trim();
+  if (settingKey === "countEffect") {
+    return `turn-points-count-${normalizedValue || "countup"}`;
+  }
+  if (settingKey === "durationMs") {
+    if (normalizedValue === "1000") {
+      return "turn-points-count-fast";
+    }
+    if (normalizedValue === "5000") {
+      return "turn-points-count-slow";
+    }
+    return "turn-points-count-standard-speed";
+  }
+  if (settingKey === "flashMode") {
+    return normalizedValue === "permanent"
+      ? "turn-points-count-flash-permanent"
+      : "turn-points-count-flash-change";
+  }
+  return "";
+}
+
+function buildTurnPointsCountOptionPreview(documentRef) {
+  const preview = createElement(documentRef, "span", {
+    className: "ad-xconfig-turn-points-option-preview",
+    attributes: {
+      "aria-hidden": "true",
+      "data-adxconfig-turn-points-preview": "true",
+    },
+  });
+
+  preview.appendChild(createElement(documentRef, "span", {
+    className: TURN_POINTS_PREVIEW_SCORE_CLASS,
+    text: "501",
+    attributes: {
+      [TURN_POINTS_PREVIEW_SCORE_ATTRIBUTE]: "true",
+    },
+  }));
+
+  return preview;
+}
+
+function buildTurnPointsCountOptionLayout(
+  documentRef,
+  optionLabel,
+  optionDescription,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--turn-points-count",
+  });
+  layout.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+
+  if (optionDescription) {
+    layout.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+
+  layout.appendChild(buildTurnPointsCountOptionPreview(documentRef));
+
+  const activeSlot = createElement(documentRef, "span", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+
+  return layout;
+}
+
 function buildDartDesignOptionLayout(
   documentRef,
   optionLabel,
@@ -911,8 +1002,11 @@ function buildFeatureField(documentRef, feature, field) {
     const isActive = selectedOptionValues.includes(optionValue);
     const isDartDesignField = isDartDesignSelectField(feature, field);
     const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
-    const previewEffect = String(option?.previewEffect || "").trim();
+    const previewEffect =
+      String(option?.previewEffect || "").trim() ||
+      resolveTurnPointsCountPreviewEffect(feature, field, optionValue);
     const previewColorTheme = String(option?.previewColorTheme || "").trim();
+    const hasTurnPointsCountPreview = isTurnPointsCountPreviewEffect(previewEffect);
     const optionButton = createElement(documentRef, "button", {
       type: "button",
       className: [
@@ -920,6 +1014,7 @@ function buildFeatureField(documentRef, feature, field) {
         isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
         isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
         previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
+        hasTurnPointsCountPreview ? "ad-xconfig-option-item--turn-points-count-preview" : "",
         previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
       ].filter(Boolean).join(" "),
       attributes: {
@@ -950,6 +1045,15 @@ function buildFeatureField(documentRef, feature, field) {
           option.label,
           optionDescription,
           optionPreviewUrl,
+          isActive
+        )
+      );
+    } else if (hasTurnPointsCountPreview) {
+      optionButton.appendChild(
+        buildTurnPointsCountOptionLayout(
+          documentRef,
+          option.label,
+          optionDescription,
           isActive
         )
       );

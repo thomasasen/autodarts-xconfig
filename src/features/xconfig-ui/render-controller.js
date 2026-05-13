@@ -271,6 +271,7 @@ function renderShell(controller) {
   const previousShellNode =
     controller.state.shellNode && controller.state.shellNode.parentNode === host ? controller.state.shellNode : null;
   const modalScrollState = captureModalScrollState(previousShellNode, host);
+  controller.onBeforeRender();
   const nextShellNode = controller.buildShellContent(controller.documentRef, controller.state, features);
 
   if (!previousShellNode) {
@@ -316,6 +317,7 @@ function syncShellVisibility(controller) {
     hideShellContent(controller, content, host);
     host.style.display = "block";
   } else {
+    controller.onBeforeRender();
     if (controller.state.contentHidden) {
       restoreShellContent(controller);
     }
@@ -353,6 +355,7 @@ function buildShellRenderControllerContext(options = {}) {
     buildShellRenderSignature: resolveOptionalFunction(options.buildShellRenderSignature, () => ""),
     toRoutePathname: resolveOptionalFunction(options.toRoutePathname, () => ""),
     getFeatures: resolveOptionalFunction(options.getFeatures, () => []),
+    onBeforeRender: resolveOptionalFunction(options.onBeforeRender, () => {}),
   };
 }
 

@@ -2,6 +2,12 @@ import {
   ELECTRIC_FILTER_SOFT_ID,
   ELECTRIC_FILTER_STRONG_ID,
 } from "../../shared/electric-border-engine.js";
+import {
+  SCORE_FLASH_CLASS,
+  SCORE_FLASH_SEQUENCE_ATTRIBUTE,
+  buildStyleText as buildTurnPointsCountStyleText,
+} from "../turn-points-count/style.js";
+import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "./turn-points-preview-contract.js";
 
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
@@ -75,6 +81,7 @@ function buildColorPreviewRules() {
 }
 
 export const styleText = `
+${buildTurnPointsCountStyleText()}
 #${MENU_ITEM_ID}{cursor:pointer;min-height:2.5rem}
 #${MENU_ITEM_ID}[data-active="true"]{background:rgba(32,111,185,.28)!important;border-color:rgba(255,255,255,.16)!important}
 #${MENU_ITEM_ID}[data-update-available="true"]{position:relative}
@@ -243,6 +250,16 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font .ad-xconfig-option-label{font-size:1.19rem;line-height:1.2;font-weight:600;letter-spacing:.01em}
 #${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
 #${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--turn-points-count-preview{overflow:hidden;isolation:isolate}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto auto;align-items:center;column-gap:.6rem;row-gap:.14rem;min-height:2.85rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count .ad-xconfig-option-label{grid-column:1;grid-row:1;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count .ad-xconfig-option-copy{grid-column:1;grid-row:2;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-turn-points-option-preview{grid-column:2;grid-row:1/span 2;position:relative;display:grid;place-items:center;align-self:stretch;min-width:4.55rem;min-height:2.65rem;padding:.18rem .42rem;border-radius:8px}
+#${PANEL_HOST_ID} .ad-xconfig-turn-points-option-preview .${TURN_POINTS_PREVIEW_SCORE_CLASS}{display:inline-block;color:rgba(255,246,220,.98);font-weight:900;font-size:1.62rem;line-height:.95;font-variant-numeric:tabular-nums;text-shadow:0 1px 0 rgba(0,0,0,.44),0 0 12px rgba(255,190,105,.24)}
+#${PANEL_HOST_ID} .${TURN_POINTS_PREVIEW_SCORE_CLASS}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="0"]{animation:ad-ext-turn-points-count-flash-a 390ms cubic-bezier(.16,.92,.24,1) both;will-change:transform,filter,text-shadow,opacity}
+#${PANEL_HOST_ID} .${TURN_POINTS_PREVIEW_SCORE_CLASS}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{animation:ad-ext-turn-points-count-flash-b 390ms cubic-bezier(.16,.92,.24,1) both;will-change:transform,filter,text-shadow,opacity}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count [data-option-active-slot='true']:empty{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design{display:grid;grid-template-columns:minmax(0,1fr) 4.2rem auto;grid-template-rows:auto auto;align-items:center;column-gap:.5rem;row-gap:.14rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-head{display:block}

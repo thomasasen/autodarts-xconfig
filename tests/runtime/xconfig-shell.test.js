@@ -1806,6 +1806,75 @@ test("xConfig turn-start-sweep setting buttons expose sweep previews", async () 
   runtime.stop();
 });
 
+test("xConfig turn-points-count settings expose real effect preview hosts", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='turn-points-count']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const countEffectPreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='countEffect']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(countEffectPreviewEffects, [
+    "turn-points-count-countup",
+    "turn-points-count-odometer",
+    "turn-points-count-steps",
+  ]);
+
+  const speedPreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='durationMs']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(speedPreviewEffects, [
+    "turn-points-count-fast",
+    "turn-points-count-standard-speed",
+    "turn-points-count-slow",
+  ]);
+
+  const flashPreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='flashMode']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(flashPreviewEffects, [
+    "turn-points-count-flash-change",
+    "turn-points-count-flash-permanent",
+  ]);
+
+  documentRef.querySelectorAll("[data-preview-effect^='turn-points-count-']").forEach((optionNode) => {
+    assert.equal(
+      optionNode.classList.contains("ad-xconfig-option-item--turn-points-count-preview"),
+      true
+    );
+    const previewNode = optionNode.querySelector("[data-adxconfig-turn-points-preview='true']");
+    const scoreNode = optionNode.querySelector("[data-adxconfig-turn-points-preview-score='true']");
+    assert.ok(previewNode);
+    assert.ok(scoreNode);
+    assert.equal(scoreNode.textContent, "501");
+    assert.equal(scoreNode.classList.contains("ad-ext-turn-points"), false);
+    assert.equal(scoreNode.classList.contains("ad-xconfig-turn-points-preview-score"), true);
+    assert.equal(
+      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--turn-points-count").children)
+        .indexOf(previewNode) <
+        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--turn-points-count").children)
+          .findIndex((node) => node.getAttribute?.("data-option-active-slot") === "true"),
+      true
+    );
+  });
+
+  runtime.stop();
+});
+
 test("xConfig x01 score progress settings no longer expose a design selector", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

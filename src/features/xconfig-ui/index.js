@@ -41,6 +41,8 @@ import {
 import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
+import { createXConfigEffectPreviewController } from "./effect-preview-controller.js";
+import { createTurnPointsCountPreviewAdapter } from "./turn-points-preview-adapter.js";
 import { styleText } from "./shell-style.js";
 import {
   buildThemeGlobalTypographyPreviewImports,
@@ -86,6 +88,10 @@ const LISTENER_KEYS = Object.freeze({
   click: "xconfig-shell:document-click",
   change: "xconfig-shell:document-change",
   keydown: "xconfig-shell:document-keydown",
+  pointerover: "xconfig-shell:document-pointerover",
+  pointerout: "xconfig-shell:document-pointerout",
+  focusin: "xconfig-shell:document-focusin",
+  focusout: "xconfig-shell:document-focusout",
   visibilitychange: "xconfig-shell:document-visibilitychange",
 });
 const TAB_DEFINITIONS = Object.freeze([
@@ -213,6 +219,7 @@ function ensureXConfigShell(options = {}) {
   let renderController = null;
   let actionController = null;
   let lifecycleController = null;
+  let effectPreviewController = null;
   let electricPreviewFiltersRetained = false;
 
   function clearNoticeTimer() {
@@ -421,6 +428,16 @@ function ensureXConfigShell(options = {}) {
     });
   }
 
+  effectPreviewController = createXConfigEffectPreviewController({
+    adapters: [
+      createTurnPointsCountPreviewAdapter({
+        windowRef,
+      }),
+    ],
+    getFeatures,
+    panelHostId: PANEL_HOST_ID,
+  });
+
   renderController = createShellRenderController({
     buildMenuIconElement,
     buildShellContent,
@@ -437,6 +454,7 @@ function ensureXConfigShell(options = {}) {
     menuItemId: MENU_ITEM_ID,
     menuLabel: MENU_LABEL,
     menuLabelCollapseWidth: MENU_LABEL_COLLAPSE_WIDTH,
+    onBeforeRender: () => effectPreviewController?.stopActivePreview(),
     panelHostId: PANEL_HOST_ID,
     parseShellRenderSignature,
     sidebarRouteHints: SIDEBAR_ROUTE_HINTS,
@@ -487,11 +505,21 @@ function ensureXConfigShell(options = {}) {
     normalizeLegacyConfigPathIfNeeded: () => routeController?.normalizeLegacyConfigPathIfNeeded(),
     observerRegistry,
     onDocumentChange,
+    onDocumentFocusin: (event) => effectPreviewController?.handlePreviewStartEvent(event),
+    onDocumentFocusout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
     onDocumentClick,
     onDocumentKeydown,
+    onDocumentPointerover: (event) => effectPreviewController?.handlePreviewStartEvent(event),
+    onDocumentPointerout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
     onMounted: retainElectricPreviewFilters,
-    onTeardown: releaseElectricPreviewFilters,
-    onVisibilityChange,
+    onTeardown: () => {
+      effectPreviewController?.stopActivePreview();
+      releaseElectricPreviewFilters();
+    },
+    onVisibilityChange: (event) => {
+      effectPreviewController?.stopActivePreview();
+      onVisibilityChange(event);
+    },
     panelHostId: PANEL_HOST_ID,
     queueSync,
     refreshUpdateStatus,
@@ -526,6 +554,7 @@ function ensureXConfigShell(options = {}) {
     if (!target || typeof target.closest !== "function") {
       return;
     }
+    effectPreviewController?.stopActivePreview();
 
     const tabNode = target.closest("[data-adxconfig-tab]");
     if (tabNode) {
@@ -643,6 +672,7 @@ function ensureXConfigShell(options = {}) {
 
   function onDocumentKeydown(event) {
     if (event?.key === "Escape" && state.activeSettingsFeatureKey) {
+      effectPreviewController?.stopActivePreview();
       state.activeSettingsFeatureKey = "";
       queueSync();
       return;
