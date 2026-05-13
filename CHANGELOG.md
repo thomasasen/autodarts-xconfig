@@ -12,6 +12,28 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.16] - 2026-05-13
+
+### Added
+
+- Nutzerwirkung: Die xConfig-Einstellungsdialoge zeigen deutlich aussagekräftigere Live-Vorschauen für Animations- und Darstellungsoptionen, darunter `Turn Points Count`, `Average Trend Arrow`, `Dart Marker Emphasis`, `Dart Marker Darts`, `Single Bull Sound`, `Style Checkout Suggestions` und `X01 Score Progress`.
+  Technik: Die Admin-Shell nutzt feature-spezifische Preview-Adapter, gemeinsame Preview-Verträge und Runtime-nahe DOM-Strukturen statt isolierter CSS-Dummies; neue Regressionen sichern Preview-Struktur, Lifecycle-Cleanup und Optionszuordnung ab.
+- Nutzerwirkung: `Turn Points Count` zeigt in der Konfiguration echte Zähleffekte inklusive Odometer-DOM, Einzelschritten, Geschwindigkeitsvorschau und sauber getrennten Flash-Modi.
+  Technik: Die Vorschau verwendet die reale CountUp-/Odometer-Adapter-Schicht, ersetzt mutierte Preview-Knoten kontrolliert und stoppt Timer, Instanzen und Flash-Klassen bei Hover-Ende, Fokuswechsel, Rerender oder Modal-Close.
+- Nutzerwirkung: `Dart Marker Darts` kann seine Dart-Designs direkt im xConfig-Dialog mit einem virtuellen Marker demonstrieren; der Demo-Dart fliegt passend zur gewählten Konfiguration von rechts in das Zielsegment.
+  Technik: Die Dart-Marker-Darts-Runtime stellt einen wiederverwendbaren Preview-Renderer bereit, registriert ihn in der Feature-Definition und nutzt die echten Dart-Asset- und Geometriepfade auch für die Admin-Demo.
+
+### Changed
+
+- Nutzerwirkung: `Average Trend Arrow` wirkt in den Größen `Standard` und `Groß` präsenter und die Konfigurationsoptionen zeigen den Pfeil jetzt direkt als Beispiel.
+  Technik: Die Größenauflösung wurde für Runtime und xConfig vereinheitlicht, und die Preview nutzt dieselben Pfeilvariablen, Klassen und Richtungszustände wie die echte Oberfläche.
+- Nutzerwirkung: `Style Checkout Suggestions` und `X01 Score Progress` zeigen im Dialog nicht nur Textoptionen, sondern auch Stil-, Effekt-, Größen- und Farbwirkung anhand sichtbarer Beispiele.
+  Technik: Die Shell rendert Checkout-Suggestion-Beispiele sowie X01-Score-Progress-Balken mit Runtime-Klassen, Effekt-Fill-Klassen und den echten Farbvariablen aus der Feature-Logik.
+- Nutzerwirkung: Die allgemeinen Farb- und Effektoptionen in xConfig sind leichter einschätzbar, weil Auswahlkarten mehr visuelles Feedback zu Paletten, Verläufen und Treffer-/Animationseffekten enthalten.
+  Technik: Descriptoren, Shell-Styles und Runtime-Preview-Tests wurden um Farbpaletten, Gradient-Previews und effektbezogene Datenattribute erweitert.
+- Nutzerwirkung: Keine direkte sichtbare Änderung im Userscript; die neuen Preview- und Konfigurationspfade sind wartbarer und weniger anfällig für statische Analyseprobleme.
+  Technik: SonarQube-Findings im berührten Source-/Test-Scope wurden bereinigt, gemeinsame Helper wurden konsistenter verwendet und Regressionen für die betroffenen xConfig-Pfade ergänzt.
+
 ## [2.3.15] - 2026-05-11
 
 ### Fixed
@@ -1593,7 +1615,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.15]: https://github.com/thomasasen/autodarts-xconfig/compare/aae1311...HEAD
+[2.3.16]: https://github.com/thomasasen/autodarts-xconfig/compare/53e5d17...HEAD
+[2.3.15]: https://github.com/thomasasen/autodarts-xconfig/compare/aae1311...53e5d17
 [2.3.14]: https://github.com/thomasasen/autodarts-xconfig/compare/1ecafb3...aae1311
 [2.3.13]: https://github.com/thomasasen/autodarts-xconfig/compare/9d54362...1ecafb3
 [2.3.12]: https://github.com/thomasasen/autodarts-xconfig/compare/4e53c2e...9d54362

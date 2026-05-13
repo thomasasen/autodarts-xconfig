@@ -39,12 +39,10 @@ import { applyDartMarkerEmphasisToMarker } from "../dart-marker-emphasis/logic.j
 import { resolveDartMarkerEmphasisConfig } from "../dart-marker-emphasis/style.js";
 import {
   ACTIVE_CLASS as X01_SCORE_PROGRESS_ACTIVE_CLASS,
-  EFFECT_ATTRIBUTE as X01_SCORE_PROGRESS_EFFECT_ATTRIBUTE,
   FILL_CLASS as X01_SCORE_PROGRESS_FILL_CLASS,
   getEffectFillClass as getX01ScoreProgressEffectFillClass,
   getSizeClass as getX01ScoreProgressSizeClass,
   HOST_ATTRIBUTE as X01_SCORE_PROGRESS_HOST_ATTRIBUTE,
-  SIZE_ATTRIBUTE as X01_SCORE_PROGRESS_SIZE_ATTRIBUTE,
   TRAIL_CLASS as X01_SCORE_PROGRESS_TRAIL_CLASS,
   TRACK_CLASS as X01_SCORE_PROGRESS_TRACK_CLASS,
   normalizeBarSize as normalizeX01ScoreProgressBarSize,
@@ -53,6 +51,8 @@ import {
 } from "../x01-score-progress/style.js";
 import {
   COLOR_THEME_ATTRIBUTE as X01_SCORE_PROGRESS_COLOR_THEME_ATTRIBUTE,
+  EFFECT_ATTRIBUTE as X01_SCORE_PROGRESS_EFFECT_ATTRIBUTE,
+  SIZE_ATTRIBUTE as X01_SCORE_PROGRESS_SIZE_ATTRIBUTE,
   WIDTH_PROPERTY as X01_SCORE_PROGRESS_WIDTH_PROPERTY,
   resolveActiveVisualVars as resolveX01ScoreProgressActiveVisualVars,
 } from "../x01-score-progress/logic.js";
