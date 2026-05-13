@@ -12,6 +12,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.17] - 2026-05-13
+
+### Added
+
+- Nutzerwirkung: `Checkout Board Targets` zeigt im xConfig-Dialog jetzt Board- und Segment-Vorschauen für Darstellung, Segmentstil, Zielauswahl und Farbthema, sodass Zielmarkierungen vor dem Spiel direkt vergleichbar sind.
+  Technik: Die Shell rendert Runtime-nahe Checkout-Target-SVGs mit echten Target-Styles, farbabhängigen Option-Samples und Regressionen für Board-Geometrie, Finish-Ziele und gespeicherte Select-Werte.
+- Nutzerwirkung: `Checkout Score Pulse` zeigt im Dialog eine Live-Vorschau für Effekt, Farbthema, Intensität und Trigger-Quelle; Score-Mathe und Vorschlagslogik sind dadurch ohne echten Checkout sichtbar.
+  Technik: Die xConfig-Preview nutzt dieselben Score-Pulse-Klassen, Style-Variablen und Effekt-Resolver wie die Runtime und deckt Effekt-, Farb- und Triggerwechsel mit Shell-Regressionen ab.
+
+### Fixed
+
+- Nutzerwirkung: Live-Vorschauen in geöffneten xConfig-Einstellungsdialogen aktualisieren sich nach Optionswechseln zuverlässiger, ohne den Dialog, Scrollpositionen oder Upload-Feedback zu verlieren.
+  Technik: Der Shell-Renderer hält Modal-Container stabil, aktualisiert aber gezielt die dynamischen Preview-Flächen; die betroffenen Async-Render-Tests warten nun auf den tatsächlichen DOM-Refresh.
+- Nutzerwirkung: README und Feature-Übersicht beschreiben die aktuellen xConfig-Optionen wieder vollständig, inklusive Demo-Aktionen für `Dart Marker Darts` und `Single Bull Sound`.
+  Technik: Fehlende Descriptor-Copy für Preview-Aktionen wurde ergänzt, die generierten README-/FEATURES-Abschnitte wurden synchronisiert und SonarQube-Findings sowie CPD-Duplizierung im berührten xConfig-Scope wurden bereinigt.
+
 ## [2.3.16] - 2026-05-13
 
 ### Added
@@ -1615,7 +1631,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.16]: https://github.com/thomasasen/autodarts-xconfig/compare/53e5d17...HEAD
+[2.3.17]: https://github.com/thomasasen/autodarts-xconfig/compare/3cbf7b3...HEAD
+[2.3.16]: https://github.com/thomasasen/autodarts-xconfig/compare/53e5d17...3cbf7b3
 [2.3.15]: https://github.com/thomasasen/autodarts-xconfig/compare/aae1311...53e5d17
 [2.3.14]: https://github.com/thomasasen/autodarts-xconfig/compare/1ecafb3...aae1311
 [2.3.13]: https://github.com/thomasasen/autodarts-xconfig/compare/9d54362...1ecafb3

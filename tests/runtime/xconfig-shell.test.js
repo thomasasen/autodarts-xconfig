@@ -1427,12 +1427,14 @@ test("xConfig style checkout suggestions renders live preview and style option s
     (config) => config.features.styleCheckoutSuggestions.style === "ticket"
   );
 
-  const refreshedPreview = documentRef.querySelector(
-    "[data-adxconfig-style-checkout-suggestions-preview='true'] .ad-xconfig-checkout-suggestion-demo"
-  );
-  assert.ok(refreshedPreview);
   assert.equal(
-    refreshedPreview.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket"),
+    await waitFor(() =>
+      documentRef
+        .querySelector(
+          "[data-adxconfig-style-checkout-suggestions-preview='true'] .ad-xconfig-checkout-suggestion-demo"
+        )
+        ?.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket") === true
+    ),
     true
   );
 
@@ -1530,17 +1532,17 @@ test("xConfig checkout score pulse renders real effect and color previews", asyn
     (config) => config.features.checkoutScorePulse.intensity === "stark"
   );
 
-  const refreshedScore = documentRef.querySelector(
-    "[data-adxconfig-checkout-score-pulse-preview='true'] [data-adxconfig-checkout-score-pulse-score='true']"
-  );
-  assert.ok(refreshedScore);
   assert.equal(
-    refreshedScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.scaleMax),
-    "1.12"
-  );
-  assert.equal(
-    refreshedScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.glowMaxBlur),
-    "22px"
+    await waitFor(() => {
+      const refreshedScore = documentRef.querySelector(
+        "[data-adxconfig-checkout-score-pulse-preview='true'] [data-adxconfig-checkout-score-pulse-score='true']"
+      );
+      return (
+        refreshedScore?.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.scaleMax) === "1.12" &&
+        refreshedScore?.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.glowMaxBlur) === "22px"
+      );
+    }),
+    true
   );
 
   clickSelectSettingOption(documentRef, "checkout-score-pulse", "triggerSource", "score-only");
@@ -1550,10 +1552,12 @@ test("xConfig checkout score pulse renders real effect and color previews", asyn
   );
 
   assert.equal(
-    documentRef.querySelector(
-      "[data-adxconfig-checkout-score-pulse-preview='true'] .ad-xconfig-checkout-score-pulse-preview-context"
-    )?.textContent,
-    "Score-Mathe"
+    await waitFor(() =>
+      documentRef.querySelector(
+        "[data-adxconfig-checkout-score-pulse-preview='true'] .ad-xconfig-checkout-score-pulse-preview-context"
+      )?.textContent === "Score-Mathe"
+    ),
+    true
   );
 
   runtime.stop();
@@ -1619,15 +1623,19 @@ test("xConfig X01 score progress renders configured size effect and color previe
     (config) => config.features.x01ScoreProgress.colorTheme === "traffic-light"
   );
 
-  const refreshedPreviewBar = documentRef.querySelector(
-    "[data-adxconfig-x01-score-progress-preview='true'] [data-adxconfig-x01-score-progress-preview-bar='true']"
-  );
-  assert.ok(refreshedPreviewBar);
   assert.equal(
-    refreshedPreviewBar.getAttribute("data-ad-ext-x01-score-progress-color-theme"),
-    "traffic-light"
+    await waitFor(() => {
+      const refreshedPreviewBar = documentRef.querySelector(
+        "[data-adxconfig-x01-score-progress-preview='true'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+      );
+      return (
+        refreshedPreviewBar?.getAttribute("data-ad-ext-x01-score-progress-color-theme") ===
+          "traffic-light" &&
+        Boolean(refreshedPreviewBar?.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"))
+      );
+    }),
+    true
   );
-  assert.ok(refreshedPreviewBar.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"));
 
   runtime.stop();
 });
@@ -1691,13 +1699,16 @@ test("xConfig checkout board targets renders board and segment previews", async 
     localStorage,
     (config) => config.features.checkoutBoardTargets.colorTheme === "cyan"
   );
-  const refreshedTarget = documentRef.querySelector(
-    "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
-  );
-  assert.ok(refreshedTarget);
-  assert.match(
-    refreshedTarget.style.getPropertyValue("--ad-ext-target-color"),
-    /56,\s*189,\s*248/
+  assert.equal(
+    await waitFor(() => {
+      const refreshedTarget = documentRef.querySelector(
+        "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+      );
+      return /56,\s*189,\s*248/.test(
+        String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
+      );
+    }),
+    true
   );
 
   runtime.stop();

@@ -963,7 +963,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
-- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken Burst; ausgewählte Presets dürfen danach subtil weiterlaufen.
+- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken einmaligen Burst.
 - Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.
 
 **Einstellungen einfach erklärt**
@@ -991,39 +991,18 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 | `Polar Mint` | `Midnight Gold` |
 | ![Farbstil Polar Mint](docs/screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](docs/screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |
 
-- `Animationsstil`: Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Einige Presets bleiben reine One-Shot-Bursts, andere kombinieren den Burst mit einem subtilen Idle-Loop auf markierten Feldern.
-  - `Slam Punch`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist ein starker One-Shot-Burst ohne Dauerloop.
+- `Animationsstil`: Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Alle auswählbaren Presets sind einmalige Bursts ohne dauerhaften Idle-Loop auf markierten Feldern.
+  - `Emphase`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist der direkte One-Shot-Impact ohne Dauerloop.
+  - `Shake`: Der Treffer bekommt ein schnelles horizontales Wackeln mit kleinem Zahlenkick. Das wirkt körperlicher als ein reiner Scale-Pop, bleibt aber kurz und lesbar.
+  - `Pulse`: Der Hit baut einen kompakten Glow-Peak auf und nimmt ihn sofort wieder zurück. Anders als frühere Loop-Varianten bleibt danach kein Idle-Loop aktiv.
+  - `Turn`: Das Wurffeld bekommt einen kurzen Y-Achsen-Turn mit leichtem Textnachlauf. Die Bewegung ersetzt die alten Flip-Varianten und bleibt ein einzelner Burst.
+  - `Sheen`: Der Effekt ersetzt die alten Sweep-/Outline-Doppelungen durch einen saubereren Glanz-Sweep. Er wirkt hochwertig, bleibt aber kürzer und ruhiger als ein technischer Loop.
   - `Shock Ring`: Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
-  - `Laser Sweep`: Der Burst fühlt sich wie ein schneller TV- oder Sci-Fi-Sweep an: Lichtzug über Verlauf und Text, klar sichtbar und mit deutlicherer Seitenbewegung. Das bleibt ein One-Shot-Burst.
   - `Electric Arc`: Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.
-  - `Reactor Pulse`: Der Hit-Burst ist hell und energisch, danach bleibt auf markierten Feldern ein ruhiger Glow-Loop aktiv. Das ist Burst plus subtiler Idle-Loop mit klarer Cyberpunk-Anmutung.
-  - `Turbo Bounce`: Das Trefferfeld hebt sichtbar ab, federt präzise zurück und gibt der Zahl einen sportlichen Kick. Das bleibt ein One-Shot-Burst mit mehr Vertical-Motion.
-  - `Card Hammer`: Das Feld knallt nicht nur in die Fläche, sondern kippt auf der X-Achse durch einen deutlichen Flip. Die Zahl schiebt nach, das Segment folgt verzögert. Das bleibt ein One-Shot-Burst mit viel Impact.
-  - `Glitch Blink`: Der Treffer blinkt bewusst digital, die Zahl wackelt seitlich und das Feld bekommt kurze Signalstörungen. Das ist ein kompakter One-Shot-Burst für einen deutlich technoideren Look.
-  - `Cascade Split`: Der Burst läuft nicht komplett gleichzeitig, sondern kippt gestaffelt durch die Inhalte. Das wirkt lebendig, etwas größer und bleibt ein One-Shot-Burst.
-  - `Rotor Flip`: Das Wurffeld dreht deutlich auf der Y-Achse, fängt sich wieder und verleiht dem Burst eine echte Raumwirkung. Das bleibt ein One-Shot-Burst mit klar erkennbarem Spin.
-  - `Edge Runner`: Der Burst betont die Kante sichtbar, danach bleibt ein ruhiger Rand-Loop aktiv. Das ist Burst plus subtiler Idle-Loop für einen grafischeren HUD-Look.
-  - `Charge Burst`: Vor dem Peak baut das Trefferfeld Spannung auf, dann entlädt sich Verlauf, Rand und Score gemeinsam mit deutlich größerem Punch. Danach bleibt ein subtiler Lade-Loop aktiv. Das ist Burst plus Idle-Loop.
-  - `Beacon Flicker`: Der Burst wirft das Feld kurz seitlich an und lässt danach ein diskretes Beacon-Flackern auf markierten Feldern zurück. Das ist Burst plus Idle-Loop mit mehr Richtungsgefühl.
 
-**Vorschau Animationsstile**
+**Animationsstile**
 
-Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert, damit die Unterschiede direkt nebeneinander erkennbar sind.
-
-|  |  |
-| --- | --- |
-| `Slam Punch` | `Shock Ring` |
-| ![Animationsstil Slam Punch](docs/screenshots/animation-triple-double-bull-hits-motion-slam-punch-readme.gif) | ![Animationsstil Shock Ring](docs/screenshots/animation-triple-double-bull-hits-motion-shock-ring-readme.gif) |
-| `Laser Sweep` | `Reactor Pulse` |
-| ![Animationsstil Laser Sweep](docs/screenshots/animation-triple-double-bull-hits-motion-laser-sweep-readme.gif) | ![Animationsstil Reactor Pulse](docs/screenshots/animation-triple-double-bull-hits-motion-reactor-pulse-readme.gif) |
-| `Turbo Bounce` | `Card Hammer` |
-| ![Animationsstil Turbo Bounce](docs/screenshots/animation-triple-double-bull-hits-motion-turbo-bounce-readme.gif) | ![Animationsstil Card Hammer](docs/screenshots/animation-triple-double-bull-hits-motion-card-hammer-readme.gif) |
-| `Glitch Blink` | `Cascade Split` |
-| ![Animationsstil Glitch Blink](docs/screenshots/animation-triple-double-bull-hits-motion-glitch-blink-readme.gif) | ![Animationsstil Cascade Split](docs/screenshots/animation-triple-double-bull-hits-motion-cascade-split-readme.gif) |
-| `Rotor Flip` | `Edge Runner` |
-| ![Animationsstil Rotor Flip](docs/screenshots/animation-triple-double-bull-hits-motion-rotor-flip-readme.gif) | ![Animationsstil Edge Runner](docs/screenshots/animation-triple-double-bull-hits-motion-edge-runner-readme.gif) |
-| `Charge Burst` | `Beacon Flicker` |
-| ![Animationsstil Charge Burst](docs/screenshots/animation-triple-double-bull-hits-motion-charge-burst-readme.gif) | ![Animationsstil Beacon Flicker](docs/screenshots/animation-triple-double-bull-hits-motion-beacon-flicker-readme.gif) |
+`Emphase`, `Shake`, `Pulse`, `Turn`, `Sheen`, `Shock Ring` und `Electric Arc` sind jeweils einmalige Bursts. Alte Presets mit ähnlicher Wirkung werden beim Laden auf diese reduzierten Stile gemappt.
 
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
@@ -1141,6 +1120,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 **Einstellungen einfach erklärt**
 
+- `Dart-Demo`: Startet eine direkte Vorschau mit dem aktuell gewählten Dart-Design, der Größe und den aktivierten Flug- beziehungsweise Einschlagseffekten. Das ändert keine gespeicherten Werte.
 - `Dart Design`: Legt fest, welches Dart-Motiv anstelle des Standardmarkers verwendet wird. Die Trefferposition bleibt gleich, nur die Grafik ändert sich.
   - `AI Replicant`: Der Flight wirkt kühl, hell und technisch und gibt dem Dart einen KI-nahen Sci-Fi-Look. Das Motiv ist detailreicher als die einfachen Farbvarianten.
   - `Bullet`: Das Design wirkt gedrungener, metallischer und stärker auf Einschlag getrimmt. Es passt, wenn die Dart-Marker robuster und direkter aussehen sollen.
@@ -1219,6 +1199,7 @@ Die Bewegungsstile bleiben animiert, sind für die Doku aber kompakter skaliert,
 
 **Einstellungen einfach erklärt**
 
+- `Sound-Test`: Startet einen direkten Sound-Test mit der gespeicherten Lautstärke, ohne auf einen echten Single-Bull-Treffer warten zu müssen. Der Testlauf ändert keine gespeicherten Werte.
 - `Lautstärke`: Bestimmt die Wiedergabelautstärke des Single-Bull-Sounds. An der Treffererkennung ändert sich dadurch nichts.
   - `Leise`: Die akustische Rückmeldung bleibt vorhanden, drängt sich aber deutlich weniger in den Vordergrund. Das eignet sich für ruhige Setups.
   - `Mittel`: Der Sound ist klar hörbar, wirkt aber noch nicht so präsent wie die höheren Stufen. Das ist eine gute Zwischenstufe.

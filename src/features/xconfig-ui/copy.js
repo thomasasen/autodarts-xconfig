@@ -982,6 +982,11 @@ export const xconfigFeatureCopy = deepFreeze({
     ],
     images: [image("Dart Marker Darts", "animation-dart-marker-darts.png")],
     fields: {
+      "run-feature-action": fieldCopy(
+        "Wirft das aktuell konfigurierte Dart-Design auf einen virtuellen Marker.",
+        "Startet eine direkte Vorschau mit dem aktuell gewählten Dart-Design, der Größe und den aktivierten Flug- beziehungsweise Einschlagseffekten. Das ändert keine gespeicherten Werte.",
+        "Startet eine direkte Vorschau mit dem aktuell konfigurierten Dart-Design."
+      ),
       design: fieldCopy(
         "Wählt das Bilddesign der eingeblendeten Darts.",
         "Legt fest, welches Dart-Motiv anstelle des Standardmarkers verwendet wird. Die Trefferposition bleibt gleich, nur die Grafik ändert sich.",
@@ -1069,6 +1074,11 @@ export const xconfigFeatureCopy = deepFreeze({
       "Wenn du Single Bull akustisch schneller bestätigen möchtest, ohne auf eine zusätzliche Animation zu achten.",
     images: [],
     fields: {
+      "run-feature-action": fieldCopy(
+        "Spielt den Single-Bull-Ton mit der aktuell gespeicherten Lautstärke.",
+        "Startet einen direkten Sound-Test mit der gespeicherten Lautstärke, ohne auf einen echten Single-Bull-Treffer warten zu müssen. Der Testlauf ändert keine gespeicherten Werte.",
+        "Startet einen direkten Sound-Test mit der gespeicherten Lautstärke."
+      ),
       volume: fieldCopy(
         "Regelt die Lautstärke des abgespielten Tons.",
         "Bestimmt die Wiedergabelautstärke des Single-Bull-Sounds. An der Treffererkennung ändert sich dadurch nichts.",

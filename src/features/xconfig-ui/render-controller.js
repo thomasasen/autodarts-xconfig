@@ -224,6 +224,13 @@ function shouldKeepModalStable(previousSignaturePayload, state, routeActive) {
     Boolean(routeActive);
 }
 
+const STABLE_MODAL_PREVIEW_REFRESH_SELECTORS = Object.freeze([
+  "[data-adxconfig-style-checkout-suggestions-preview='true']",
+  "[data-adxconfig-checkout-score-pulse-preview='true']",
+  "[data-adxconfig-x01-score-progress-preview='true']",
+  "[data-adxconfig-checkout-board-targets-preview='true']",
+]);
+
 function captureModalScrollState(previousShellNode, host) {
   const previousModal = previousShellNode?.querySelector?.(".ad-xconfig-modal") || null;
   const previousModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
@@ -243,6 +250,36 @@ function restoreModalScrollState(shellNode, modalScrollState) {
   if (nextModalBody) {
     nextModalBody.scrollTop = modalScrollState.previousModalBodyScrollTop;
   }
+}
+
+function replaceChildrenFromSource(targetNode, sourceNode) {
+  if (!targetNode || !sourceNode) {
+    return;
+  }
+
+  while (targetNode.firstChild) {
+    targetNode.firstChild.remove();
+  }
+  const sourceChildren = sourceNode.childNodes?.length
+    ? sourceNode.childNodes
+    : sourceNode.children || [];
+  Array.from(sourceChildren).forEach((child) => {
+    targetNode.appendChild(child);
+  });
+}
+
+function refreshStableModalContent(previousShellNode, nextShellNode) {
+  const previousModalBody = previousShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+  const nextModalBody = nextShellNode?.querySelector?.(".ad-xconfig-modal-body") || null;
+  if (!previousModalBody || !nextModalBody) {
+    return;
+  }
+
+  STABLE_MODAL_PREVIEW_REFRESH_SELECTORS.forEach((selector) => {
+    const previousPreview = previousModalBody.querySelector?.(selector) || null;
+    const nextPreview = nextModalBody.querySelector?.(selector) || null;
+    replaceChildrenFromSource(previousPreview, nextPreview);
+  });
 }
 
 function renderShell(controller) {
@@ -278,6 +315,7 @@ function renderShell(controller) {
     host.appendChild(nextShellNode);
     controller.state.shellNode = nextShellNode;
   } else if (keepModalStable) {
+    refreshStableModalContent(previousShellNode, nextShellNode);
     controller.state.renderSignature = nextSignature;
     host.scrollTop = modalScrollState.hostScrollTop;
     restoreModalScrollState(previousShellNode, modalScrollState);

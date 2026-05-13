@@ -67,7 +67,7 @@ function resolveIntensityPreset(intensity) {
 
 function scopedClassSelector(selectorPrefix, className) {
   const prefix = String(selectorPrefix || "").trim();
-  return `${prefix ? `${prefix} ` : ""}.${className}`;
+  return prefix ? `${prefix} .${className}` : `.${className}`;
 }
 
 export function resolveCheckoutScorePulseStyleVariables(options = {}) {
