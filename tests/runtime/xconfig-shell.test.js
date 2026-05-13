@@ -3389,6 +3389,99 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   runtime.stop();
 });
 
+test("xConfig single-bull-sound settings expose and run the configured sound preview", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const audioInstances = [];
+  windowRef.Audio = class FakeSingleBullAudio {
+    constructor(src) {
+      this.src = src;
+      this.volume = 0;
+      this.currentTime = -1;
+      this.playCalls = 0;
+      audioInstances.push(this);
+    }
+
+    play() {
+      this.playCalls += 1;
+      return Promise.resolve();
+    }
+
+    pause() {}
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='single-bull-sound']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const previewSection = documentRef.querySelector(
+    "[data-adxconfig-settings-section='sound-test']"
+  );
+  assert.ok(previewSection);
+  assert.equal(
+    previewSection.querySelector(".ad-xconfig-settings-section-title")?.textContent,
+    "Sound-Test"
+  );
+
+  const quietVolumeButton = documentRef
+    .querySelectorAll("[data-adxconfig-action='set-setting-select-option']")
+    .find((button) =>
+      button.getAttribute("data-feature-key") === "single-bull-sound" &&
+      button.getAttribute("data-setting-key") === "volume" &&
+      button.getAttribute("data-setting-value") === "0.5"
+    );
+  assert.ok(quietVolumeButton);
+  quietVolumeButton.click();
+  assert.equal(
+    await waitFor(() => quietVolumeButton.getAttribute("data-active") === "true"),
+    true
+  );
+  assert.equal(
+    await waitFor(() => {
+      const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || "{}");
+      return storedConfig?.features?.singleBullSound?.volume === 0.5;
+    }),
+    true
+  );
+
+  const previewButton = documentRef.getElementById(
+    "ad-xconfig-field-single-bull-sound-run-feature-action"
+  );
+  assert.ok(previewButton);
+  const previewClick = new FakeEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    target: previewButton,
+  });
+  previewButton.dispatchEvent(previewClick);
+  assert.equal(previewClick.defaultPrevented, true);
+  assert.equal(
+    await waitFor(() => audioInstances.some((audio) => audio.playCalls > 0)),
+    true
+  );
+
+  const previewAudio = audioInstances.findLast?.((audio) => audio.playCalls > 0) ||
+    audioInstances.filter((audio) => audio.playCalls > 0).at(-1);
+  assert.ok(previewAudio);
+  assert.match(previewAudio.src, /singlebull\.mp3$/);
+  assert.equal(previewAudio.volume, 0.5);
+  assert.equal(previewAudio.currentTime, 0);
+
+  runtime.stop();
+});
+
 test("xConfig shell restores persisted toggle, setting and background state after reload", async () => {
   const localStorage = new FakeStorage();
 

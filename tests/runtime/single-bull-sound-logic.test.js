@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { updateSingleBullSound } from "../../src/features/single-bull-sound/logic.js";
+import {
+  playSingleBullSoundPreview,
+  updateSingleBullSound,
+} from "../../src/features/single-bull-sound/logic.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import { FakeDocument } from "./fake-dom.js";
 
@@ -80,6 +83,41 @@ function appendExternalThrowPlaceholder(documentRef, parentId = "", text = "") {
     textNode,
   };
 }
+
+test("single-bull-sound preview plays the sound asset at the configured volume", async () => {
+  const audioInstances = [];
+  const windowRef = {
+    Audio: class FakePreviewAudio {
+      constructor(src) {
+        this.src = src;
+        this.volume = 0;
+        this.currentTime = -1;
+        this.playCalls = 0;
+        audioInstances.push(this);
+      }
+
+      play() {
+        this.playCalls += 1;
+        return Promise.resolve();
+      }
+    },
+  };
+
+  const result = await playSingleBullSoundPreview({
+    windowRef,
+    config: {
+      volume: 0.75,
+    },
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.volume, 0.75);
+  assert.equal(audioInstances.length, 1);
+  assert.match(audioInstances[0].src, /singlebull\.mp3$/);
+  assert.equal(audioInstances[0].volume, 0.75);
+  assert.equal(audioInstances[0].currentTime, 0);
+  assert.equal(audioInstances[0].playCalls, 1);
+});
 
 function appendSplitThrowRow(documentRef, scoreText = "", segmentText = "") {
   const row = documentRef.createElement("div");

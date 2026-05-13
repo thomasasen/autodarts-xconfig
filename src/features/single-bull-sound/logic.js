@@ -167,6 +167,39 @@ function createAudio(windowRef, config) {
   }
 }
 
+export async function playSingleBullSoundPreview(options = {}) {
+  const windowRef =
+    options.windowRef ||
+    (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const config = options.config;
+  const audio = createAudio(windowRef, config);
+
+  if (!audio) {
+    throw new Error("Single Bull Sound audio is not available.");
+  }
+
+  audio.volume = Number.isFinite(Number(config?.volume)) ? Number(config.volume) : 0.9;
+  try {
+    audio.currentTime = 0;
+  } catch (_) {
+    // fail-soft reset
+  }
+
+  try {
+    const playResult = audio.play();
+    if (playResult && typeof playResult.then === "function") {
+      await playResult;
+    }
+  } catch (error) {
+    throw new Error("Single Bull Sound preview playback failed.", { cause: error });
+  }
+
+  return {
+    ok: true,
+    volume: audio.volume,
+  };
+}
+
 function unlockAudio(state) {
   const audio = state.audio;
   if (!audio || state.audioUnlocked) {

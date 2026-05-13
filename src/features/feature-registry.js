@@ -10,7 +10,7 @@ import { mountCricketGridFx } from "./cricket-grid-fx/index.js";
 import { mountDartMarkerEmphasis } from "./dart-marker-emphasis/index.js";
 import { mountDartMarkerDarts } from "./dart-marker-darts/index.js";
 import { mountRemoveDartsNotification } from "./remove-darts-notification/index.js";
-import { mountSingleBullSound } from "./single-bull-sound/index.js";
+import { mountSingleBullSound, runSingleBullSoundAction } from "./single-bull-sound/index.js";
 import { mountTurnPointsCount } from "./turn-points-count/index.js";
 import { mountWinnerFireworks, runWinnerFireworksAction } from "./winner-fireworks/index.js";
 import { mountX01ScoreProgress } from "./x01-score-progress/index.js";
@@ -162,6 +162,7 @@ const featureInitializers = Object.freeze({
 });
 
 const featureActions = Object.freeze({
+  "single-bull-sound": runSingleBullSoundAction,
   "winner-fireworks": runWinnerFireworksAction,
 });
 

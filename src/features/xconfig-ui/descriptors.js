@@ -730,6 +730,16 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-single-bull-sound",
     description: "Spielt bei Single Bull einen kurzen Ton ab.",
     fields: [
+      actionField("run-feature-action", "Sound-Test", {
+        actionId: "preview",
+        buttonLabel: "Single Bull Sound abspielen",
+        section: "Sound-Test",
+        description:
+          "Spielt den Single-Bull-Ton mit der aktuell gespeicherten Lautstärke.",
+        successMessage: "Sound abgespielt.",
+        errorMessage: "Sound konnte nicht abgespielt werden.",
+        prominent: true,
+      }),
       selectField("volume", "Lautstärke", [
         { value: 0.5, label: "Leise" },
         { value: 0.75, label: "Mittel" },

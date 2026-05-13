@@ -2,6 +2,7 @@
   clearSingleBullSoundState,
   createSingleBullSoundState,
   installSingleBullSoundPolling,
+  playSingleBullSoundPreview,
   tryUnlockSingleBullAudio,
   updateSingleBullSound,
 } from "./logic.js";
@@ -103,6 +104,22 @@ export function initializeSingleBullSound(context = {}) {
 
   return harness.createCleanup(() => {
     clearSingleBullSoundState(state);
+  });
+}
+
+export async function runSingleBullSoundAction(actionContext = {}) {
+  const actionId = String(actionContext.actionId || "").trim().toLowerCase();
+  if (actionId !== "preview") {
+    throw new Error(`Unsupported Single Bull Sound action: ${actionId || "unknown"}`);
+  }
+
+  const windowRef =
+    actionContext.context?.windowRef ||
+    (typeof globalThis.window !== "undefined" ? globalThis.window : null);
+  const soundConfig = resolveSingleBullSoundConfig(actionContext.featureConfig || {});
+  return playSingleBullSoundPreview({
+    windowRef,
+    config: soundConfig,
   });
 }
 
