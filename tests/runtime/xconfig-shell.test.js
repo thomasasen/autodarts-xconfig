@@ -1507,6 +1507,77 @@ test("xConfig X01 score progress renders configured size effect and color previe
   runtime.stop();
 });
 
+test("xConfig checkout board targets renders board and segment previews", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-board-targets']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const previewSection = documentRef.querySelector(
+    "[data-adxconfig-checkout-board-targets-preview='true']"
+  );
+  assert.ok(previewSection);
+  const wholeBoards = documentRef.querySelectorAll(
+    ".ad-xconfig-checkout-board-preview-board"
+  );
+  assert.equal(wholeBoards.length, 4);
+  wholeBoards.forEach((boardNode) => {
+    assert.equal(boardNode.getAttribute("viewBox"), "-82.2 -82.2 164.4 164.4");
+    const rings = Array.from(boardNode.querySelectorAll(".ad-xconfig-checkout-board-preview-ring"));
+    assert.equal(rings.some((ringNode) => Number(ringNode.getAttribute("r")) > 76.3), false);
+  });
+
+  const sectorPreviews = documentRef.querySelectorAll(
+    ".ad-xconfig-checkout-board-preview-sector-svg"
+  );
+  assert.equal(sectorPreviews.length, 5);
+  sectorPreviews.forEach((sectorNode) => {
+    assert.equal(sectorNode.querySelectorAll(".ad-xconfig-checkout-board-preview-sector-part").length, 4);
+    const targetNodes = sectorNode.querySelectorAll(".ad-ext-checkout-target");
+    assert.equal(targetNodes.length, 1);
+    assert.equal(targetNodes[0].getAttribute("data-target-ring"), "S");
+    assert.equal(targetNodes[0].getAttribute("data-target-value"), "6");
+  });
+
+  const finishOption = documentRef.querySelector(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-board-targets'][data-setting-key='targetSelectionMode'][data-setting-value='finish']"
+  );
+  assert.ok(finishOption);
+  const finishTarget = finishOption.querySelector(".ad-ext-checkout-target");
+  assert.ok(finishTarget);
+  assert.equal(finishTarget.getAttribute("data-target-ring"), "D");
+  assert.equal(finishTarget.getAttribute("data-target-value"), "20");
+
+  clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "cyan");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutBoardTargets.colorTheme === "cyan"
+  );
+  const refreshedTarget = documentRef.querySelector(
+    "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+  );
+  assert.ok(refreshedTarget);
+  assert.match(
+    refreshedTarget.style.getPropertyValue("--ad-ext-target-color"),
+    /56,\s*189,\s*248/
+  );
+
+  runtime.stop();
+});
+
 test("xConfig shell persists checkout board target and TV zoom select settings", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

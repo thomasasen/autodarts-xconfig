@@ -37,6 +37,8 @@ import {
 } from "../average-trend-arrow/style.js";
 import { applyDartMarkerEmphasisToMarker } from "../dart-marker-emphasis/logic.js";
 import { resolveDartMarkerEmphasisConfig } from "../dart-marker-emphasis/style.js";
+import { renderCheckoutTargets } from "../checkout-board-targets/logic.js";
+import { resolveBoardTargetVisualConfig } from "../checkout-board-targets/style.js";
 import {
   ACTIVE_CLASS as X01_SCORE_PROGRESS_ACTIVE_CLASS,
   FILL_CLASS as X01_SCORE_PROGRESS_FILL_CLASS,
@@ -69,6 +71,12 @@ const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const DART_MARKER_EMPHASIS_FEATURE_KEY = "dart-marker-emphasis";
+const CHECKOUT_BOARD_TARGETS_FEATURE_KEY = "checkout-board-targets";
+const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
+  "visualPreset",
+  "segmentStyle",
+  "targetSelectionMode",
+]);
 const X01_SCORE_PROGRESS_FEATURE_KEY = "x01-score-progress";
 const X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY = "barSize";
 const X01_SCORE_PROGRESS_EFFECT_FIELD_KEY = "effect";
@@ -609,6 +617,381 @@ function buildOptionActiveBadge(documentRef) {
     className: "ad-xconfig-option-active",
     text: "Aktuell",
   });
+}
+
+const CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER = Object.freeze([
+  20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
+]);
+const CHECKOUT_BOARD_PREVIEW_RATIOS = Object.freeze({
+  outerBullInner: 0.031112,
+  outerBullOuter: 0.075556,
+  tripleInner: 0.431112,
+  tripleOuter: 0.475556,
+  doubleInner: 0.711112,
+  doubleOuter: 0.755556,
+});
+const CHECKOUT_BOARD_PREVIEW_RADIUS = 100;
+const CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS = 76.2;
+
+function isCheckoutBoardTargetsFeature(feature) {
+  return feature?.featureKey === CHECKOUT_BOARD_TARGETS_FEATURE_KEY;
+}
+
+function isCheckoutBoardTargetsPreviewField(feature, field) {
+  return (
+    isCheckoutBoardTargetsFeature(feature) &&
+    field?.control === "select" &&
+    CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS.has(String(field?.key || "").trim())
+  );
+}
+
+function resolveCheckoutBoardPreviewConfig(featureConfig = {}, overrides = {}) {
+  return {
+    ...featureConfig,
+    ...overrides,
+  };
+}
+
+function resolveCheckoutBoardPreviewVisualConfig(featureConfig = {}, overrides = {}) {
+  return {
+    ...resolveBoardTargetVisualConfig(featureConfig),
+    ...overrides,
+  };
+}
+
+function checkoutBoardPreviewPolar(radius, angleDeg) {
+  const radians = ((angleDeg - 90) * Math.PI) / 180;
+  return {
+    x: Number((radius * Math.cos(radians)).toFixed(4)),
+    y: Number((radius * Math.sin(radians)).toFixed(4)),
+  };
+}
+
+function checkoutBoardPreviewWedgePath(innerRadius, outerRadius, startDeg, endDeg) {
+  const p0 = checkoutBoardPreviewPolar(outerRadius, startDeg);
+  const p1 = checkoutBoardPreviewPolar(outerRadius, endDeg);
+  const p2 = checkoutBoardPreviewPolar(innerRadius, endDeg);
+  const p3 = checkoutBoardPreviewPolar(innerRadius, startDeg);
+  const largeArc = (endDeg - startDeg + 360) % 360 > 180 ? 1 : 0;
+  return [
+    `M ${p0.x} ${p0.y}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${p1.x} ${p1.y}`,
+    `L ${p2.x} ${p2.y}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${p3.x} ${p3.y}`,
+    "Z",
+  ].join(" ");
+}
+
+function resolveCheckoutBoardPreviewSegmentAngles(value) {
+  const index = CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER.indexOf(Number(value));
+  if (index < 0) {
+    return null;
+  }
+  const center = index * 18;
+  return {
+    start: center - 9,
+    end: center + 9,
+  };
+}
+
+function appendCheckoutBoardPreviewStaticBoard(documentRef, group, options = {}) {
+  const radius = CHECKOUT_BOARD_PREVIEW_RADIUS;
+  const maxOuterRatio =
+    options.kind === "sector"
+      ? CHECKOUT_BOARD_PREVIEW_RATIOS.doubleOuter
+      : CHECKOUT_BOARD_PREVIEW_RATIOS.doubleOuter;
+
+  CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER.forEach((value, index) => {
+    const angles = resolveCheckoutBoardPreviewSegmentAngles(value);
+    if (!angles) {
+      return;
+    }
+    group.appendChild(createSvgElement(documentRef, "path", {
+      class: "ad-xconfig-checkout-board-preview-sector",
+      d: checkoutBoardPreviewWedgePath(
+        radius * CHECKOUT_BOARD_PREVIEW_RATIOS.outerBullOuter,
+        radius * maxOuterRatio,
+        angles.start,
+        angles.end
+      ),
+    }));
+    group.appendChild(createSvgElement(documentRef, "path", {
+      class: index % 2
+        ? "ad-xconfig-checkout-board-preview-band ad-xconfig-checkout-board-preview-band--red"
+        : "ad-xconfig-checkout-board-preview-band ad-xconfig-checkout-board-preview-band--green",
+      d: checkoutBoardPreviewWedgePath(
+        radius * CHECKOUT_BOARD_PREVIEW_RATIOS.tripleInner,
+        radius * CHECKOUT_BOARD_PREVIEW_RATIOS.tripleOuter,
+        angles.start,
+        angles.end
+      ),
+    }));
+    group.appendChild(createSvgElement(documentRef, "path", {
+      class: index % 2
+        ? "ad-xconfig-checkout-board-preview-band ad-xconfig-checkout-board-preview-band--green"
+        : "ad-xconfig-checkout-board-preview-band ad-xconfig-checkout-board-preview-band--red",
+      d: checkoutBoardPreviewWedgePath(
+        radius * CHECKOUT_BOARD_PREVIEW_RATIOS.doubleInner,
+        radius * CHECKOUT_BOARD_PREVIEW_RATIOS.doubleOuter,
+        angles.start,
+        angles.end
+      ),
+    }));
+  });
+
+  [
+    CHECKOUT_BOARD_PREVIEW_RATIOS.outerBullOuter,
+    CHECKOUT_BOARD_PREVIEW_RATIOS.tripleInner,
+    CHECKOUT_BOARD_PREVIEW_RATIOS.tripleOuter,
+    CHECKOUT_BOARD_PREVIEW_RATIOS.doubleInner,
+    CHECKOUT_BOARD_PREVIEW_RATIOS.doubleOuter,
+  ].forEach((ratio) => {
+    group.appendChild(createSvgElement(documentRef, "circle", {
+      class: "ad-xconfig-checkout-board-preview-ring",
+      r: String(Number((radius * ratio).toFixed(4))),
+    }));
+  });
+  group.appendChild(createSvgElement(documentRef, "circle", {
+    class: "ad-xconfig-checkout-board-preview-bull ad-xconfig-checkout-board-preview-bull--outer",
+    r: String(Number((radius * CHECKOUT_BOARD_PREVIEW_RATIOS.outerBullOuter).toFixed(4))),
+  }));
+  group.appendChild(createSvgElement(documentRef, "circle", {
+    class: "ad-xconfig-checkout-board-preview-bull ad-xconfig-checkout-board-preview-bull--inner",
+    r: String(Number((radius * CHECKOUT_BOARD_PREVIEW_RATIOS.outerBullInner).toFixed(4))),
+  }));
+}
+
+function appendCheckoutBoardPreviewStaticSector(documentRef, group, value = 6) {
+  const radius = CHECKOUT_BOARD_PREVIEW_RADIUS;
+  const angles = resolveCheckoutBoardPreviewSegmentAngles(value);
+  if (!angles) {
+    return;
+  }
+  group.appendChild(createSvgElement(documentRef, "path", {
+    class: "ad-xconfig-checkout-board-preview-sector-part ad-xconfig-checkout-board-preview-sector-part--single",
+    d: checkoutBoardPreviewWedgePath(
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.outerBullOuter,
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.tripleInner,
+      angles.start,
+      angles.end
+    ),
+  }));
+  group.appendChild(createSvgElement(documentRef, "path", {
+    class: "ad-xconfig-checkout-board-preview-sector-part ad-xconfig-checkout-board-preview-sector-part--triple",
+    d: checkoutBoardPreviewWedgePath(
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.tripleInner,
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.tripleOuter,
+      angles.start,
+      angles.end
+    ),
+  }));
+  group.appendChild(createSvgElement(documentRef, "path", {
+    class: "ad-xconfig-checkout-board-preview-sector-part ad-xconfig-checkout-board-preview-sector-part--single",
+    d: checkoutBoardPreviewWedgePath(
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.tripleOuter,
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.doubleInner,
+      angles.start,
+      angles.end
+    ),
+  }));
+  group.appendChild(createSvgElement(documentRef, "path", {
+    class: "ad-xconfig-checkout-board-preview-sector-part ad-xconfig-checkout-board-preview-sector-part--double",
+    d: checkoutBoardPreviewWedgePath(
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.doubleInner,
+      radius * CHECKOUT_BOARD_PREVIEW_RATIOS.doubleOuter,
+      angles.start,
+      angles.end
+    ),
+  }));
+}
+
+function resolveCheckoutBoardPreviewTargets(targetSelectionMode) {
+  const normalizedMode = String(targetSelectionMode || "").trim().toLowerCase();
+  if (normalizedMode === "all") {
+    return [
+      { ring: "T", value: 20 },
+      { ring: "T", value: 17 },
+      { ring: "D", value: 18 },
+    ];
+  }
+  if (normalizedMode === "finish") {
+    return [{ ring: "D", value: 20 }];
+  }
+  return [{ ring: "S", value: 6 }];
+}
+
+function buildCheckoutBoardWholePreview(documentRef, featureConfig = {}, overrides = {}, options = {}) {
+  const previewConfig = resolveCheckoutBoardPreviewConfig(featureConfig, overrides);
+  const svg = createSvgElement(documentRef, "svg", {
+    class: [
+      "ad-xconfig-checkout-board-preview-board",
+      options.mini ? "ad-xconfig-checkout-board-preview-board--mini" : "",
+    ].filter(Boolean).join(" "),
+    viewBox: `-${CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS + 6} -${CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS + 6} ${(CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS + 6) * 2} ${(CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS + 6) * 2}`,
+    focusable: "false",
+    "aria-hidden": "true",
+    "data-adxconfig-checkout-board-preview-kind": "whole-board",
+  });
+  const boardGroup = createSvgElement(documentRef, "g", {
+    class: "ad-xconfig-checkout-board-preview-board-surface",
+  });
+  appendCheckoutBoardPreviewStaticBoard(documentRef, boardGroup, { kind: "whole-board" });
+  svg.appendChild(boardGroup);
+  renderCheckoutTargets({
+    board: {
+      group: boardGroup,
+      radius: CHECKOUT_BOARD_PREVIEW_RADIUS,
+    },
+    checkoutTargets: resolveCheckoutBoardPreviewTargets(previewConfig.targetSelectionMode),
+    visualConfig: resolveCheckoutBoardPreviewVisualConfig(previewConfig),
+  });
+  return svg;
+}
+
+function buildCheckoutBoardSectorPreview(documentRef, featureConfig = {}, overrides = {}) {
+  const previewConfig = resolveCheckoutBoardPreviewConfig(featureConfig, overrides);
+  const svg = createSvgElement(documentRef, "svg", {
+    class: "ad-xconfig-checkout-board-preview-sector-svg",
+    viewBox: "5 -25 100 50",
+    focusable: "false",
+    "aria-hidden": "true",
+    "data-adxconfig-checkout-board-preview-kind": "sector",
+  });
+  const boardGroup = createSvgElement(documentRef, "g", {
+    class: "ad-xconfig-checkout-board-preview-sector-surface",
+  });
+  appendCheckoutBoardPreviewStaticSector(documentRef, boardGroup, 6);
+  svg.appendChild(boardGroup);
+  renderCheckoutTargets({
+    board: {
+      group: boardGroup,
+      radius: CHECKOUT_BOARD_PREVIEW_RADIUS,
+    },
+    checkoutTargets: [{ ring: "S", value: 6 }],
+    visualConfig: resolveCheckoutBoardPreviewVisualConfig(previewConfig, { singleRing: "outer" }),
+  });
+  return svg;
+}
+
+function buildCheckoutBoardPreviewSection(documentRef, feature) {
+  const previewConfig = feature?.config || {};
+  const targetSelectionMode = String(previewConfig.targetSelectionMode || "next").trim();
+  const routeText = targetSelectionMode === "all"
+    ? "Demo: 167 Rest - T20 T17 D18"
+    : targetSelectionMode === "finish"
+      ? "Demo: 40 Rest - D20"
+      : "Demo: 167 Rest - nächstes Feld S6";
+  const section = createElement(documentRef, "section", {
+    className: "ad-xconfig-settings-section",
+    attributes: {
+      "data-adxconfig-settings-section": "vorschau",
+      "data-adxconfig-checkout-board-targets-preview": "true",
+    },
+  });
+  section.appendChild(createElement(documentRef, "h4", {
+    className: "ad-xconfig-settings-section-title",
+    text: "Vorschau",
+  }));
+
+  const body = createElement(documentRef, "div", {
+    className: "ad-xconfig-settings-section-body",
+  });
+  const row = createElement(documentRef, "div", {
+    className: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-board-preview",
+  });
+  const surface = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-board-preview-surface",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-board-preview-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-board-preview-title",
+    text: "Live-Vorschau",
+  }));
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-checkout-board-preview-route",
+    text: routeText,
+  }));
+  surface.appendChild(head);
+  const boardWrap = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-board-preview-board-wrap",
+  });
+  boardWrap.appendChild(buildCheckoutBoardWholePreview(documentRef, previewConfig));
+  surface.appendChild(boardWrap);
+  row.appendChild(surface);
+  body.appendChild(row);
+  section.appendChild(body);
+  return section;
+}
+
+function buildCheckoutBoardTargetsOptionLayout(
+  documentRef,
+  feature,
+  field,
+  optionValue,
+  optionLabel,
+  optionDescription,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--checkout-board-preview",
+  });
+  const optionText = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-text",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+  optionText.appendChild(head);
+  if (optionDescription) {
+    optionText.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+  layout.appendChild(optionText);
+
+  const fieldKey = String(field?.key || "").trim();
+  const preview = createElement(documentRef, "div", {
+    className: "ad-xconfig-checkout-board-option-preview",
+  });
+  if (fieldKey === "visualPreset") {
+    preview.appendChild(
+      buildCheckoutBoardSectorPreview(documentRef, feature?.config || {}, { visualPreset: optionValue })
+    );
+  } else if (fieldKey === "segmentStyle") {
+    preview.appendChild(
+      buildCheckoutBoardSectorPreview(documentRef, feature?.config || {}, { segmentStyle: optionValue })
+    );
+  } else {
+    preview.appendChild(
+      buildCheckoutBoardWholePreview(
+        documentRef,
+        feature?.config || {},
+        { targetSelectionMode: optionValue },
+        { mini: true }
+      )
+    );
+  }
+  layout.appendChild(preview);
+
+  const activeSlot = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+
+  return layout;
 }
 
 function isX01ScoreProgressFeature(feature) {
@@ -1624,6 +2007,7 @@ function buildFeatureField(documentRef, feature, field) {
     const isActive = selectedOptionValues.includes(optionValue);
     const isDartDesignField = isDartDesignSelectField(feature, field);
     const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
+    const isCheckoutBoardTargetsPreviewSelectField = isCheckoutBoardTargetsPreviewField(feature, field);
     const isX01ScoreProgressPreviewSelectField = isX01ScoreProgressPreviewField(feature, field);
     const isCheckoutSuggestionStyleField = isStyleCheckoutSuggestionsStyleField(feature, field);
     const previewEffect =
@@ -1641,6 +2025,7 @@ function buildFeatureField(documentRef, feature, field) {
         "ad-xconfig-option-item",
         isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
         isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
+        isCheckoutBoardTargetsPreviewSelectField ? "ad-xconfig-option-item--checkout-board-preview" : "",
         isX01ScoreProgressPreviewSelectField ? "ad-xconfig-option-item--x01-score-progress-preview" : "",
         isCheckoutSuggestionStyleField ? "ad-xconfig-option-item--checkout-suggestion-style" : "",
         previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
@@ -1703,6 +2088,18 @@ function buildFeatureField(documentRef, feature, field) {
     } else if (hasDartMarkerEmphasisPreview) {
       optionButton.appendChild(
         buildDartMarkerEmphasisOptionLayout(
+          documentRef,
+          feature,
+          field,
+          optionValue,
+          option.label,
+          optionDescription,
+          isActive
+        )
+      );
+    } else if (isCheckoutBoardTargetsPreviewSelectField) {
+      optionButton.appendChild(
+        buildCheckoutBoardTargetsOptionLayout(
           documentRef,
           feature,
           field,
@@ -2083,6 +2480,9 @@ function buildSettingsModal(documentRef, state, features) {
       }));
     });
     body.appendChild(detailsRow);
+  }
+  if (isCheckoutBoardTargetsFeature(feature)) {
+    body.appendChild(buildCheckoutBoardPreviewSection(documentRef, feature));
   }
   if (isStyleCheckoutSuggestionsFeature(feature)) {
     body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, feature));

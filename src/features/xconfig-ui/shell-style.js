@@ -21,6 +21,7 @@ import {
   BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
   EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
 } from "../dart-marker-emphasis/style.js";
+import { buildStyleText as buildCheckoutBoardTargetsStyleText } from "../checkout-board-targets/style.js";
 import { buildStyleText as buildX01ScoreProgressStyleText } from "../x01-score-progress/style.js";
 import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "./turn-points-preview-contract.js";
 import { AVERAGE_TREND_PREVIEW_CLASS } from "./average-trend-preview-contract.js";
@@ -99,6 +100,7 @@ function buildColorPreviewRules() {
 
 export const styleText = `
 ${buildTurnPointsCountStyleText()}
+${buildCheckoutBoardTargetsStyleText()}
 ${buildX01ScoreProgressStyleText()}
 #${MENU_ITEM_ID}{cursor:pointer;min-height:2.5rem}
 #${MENU_ITEM_ID}[data-active="true"]{background:rgba(32,111,185,.28)!important;border-color:rgba(255,255,255,.16)!important}
@@ -338,6 +340,34 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--mini.ad-xconfig-checkout-suggestion-demo--ticket::after{left:8px;right:8px;border-top-width:1px}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true']:empty{display:none}
+#${PANEL_HOST_ID} .ad-xconfig-setting-row--checkout-board-preview{padding:.72rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-surface{display:grid;gap:.72rem;min-height:12rem;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(7,14,30,.74),rgba(15,23,42,.58));padding:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-head{display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;color:rgba(255,255,255,.92)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-title{font-weight:900;font-size:.88rem;letter-spacing:.05em;text-transform:uppercase;color:rgba(196,230,255,.96)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-route{font-size:.78rem;font-weight:800;color:rgba(255,255,255,.66);white-space:nowrap}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-board-wrap{display:grid;place-items:center;min-height:12.4rem;border-radius:9px;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.08),rgba(2,6,23,.3) 42%,rgba(2,6,23,.64));overflow:hidden}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-board{width:min(100%,15.5rem);height:auto;display:block;overflow:visible}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-board--mini{width:7.2rem;max-height:7.2rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector-svg{width:7.7rem;height:auto;display:block;overflow:visible}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector{fill:rgba(15,23,42,.42)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector:nth-child(odd){fill:rgba(241,245,249,.14)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-band--red{fill:rgba(127,29,29,.52)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-band--green{fill:rgba(20,83,45,.56)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-ring{fill:none;stroke:rgba(226,232,240,.18);stroke-width:.6}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-bull--outer{fill:rgba(21,128,61,.72)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-bull--inner{fill:rgba(185,28,28,.72)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector-part{stroke:rgba(226,232,240,.12);stroke-width:.7}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector-part--single{fill:rgba(30,41,59,.72)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector-part--triple{fill:rgba(21,128,61,.58)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-preview-sector-part--double{fill:rgba(127,29,29,.58)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--checkout-board-preview{overflow:visible}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview{display:grid;grid-template-columns:minmax(0,1fr) minmax(7.7rem,8.3rem) auto;grid-template-rows:auto auto;align-items:center;column-gap:.62rem;row-gap:.14rem;width:100%}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview .ad-xconfig-option-head{display:block}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview .ad-xconfig-option-copy{margin-top:.12rem}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-board-option-preview{grid-column:2;grid-row:1/span 2;display:grid;place-items:center;min-width:7.7rem;min-height:4.2rem;padding:.26rem;border-radius:8px;background:rgba(7,14,30,.46);overflow:hidden}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview [data-option-active-slot='true']:empty{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-setting-row--x01-score-progress-preview{padding:.72rem}
 #${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-surface{display:grid;gap:.72rem;min-height:7rem;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(7,14,30,.74),rgba(15,23,42,.58));padding:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-preview-head{display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;color:rgba(255,255,255,.92)}
@@ -428,7 +458,7 @@ ${buildColorPreviewRules()}
 @keyframes ad-ext-dart-marker-glow{0%{stroke-width:2;opacity:.9}50%{stroke-width:5;opacity:1}100%{stroke-width:2;opacity:.9}}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}#${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:auto}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style,#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview{grid-template-columns:minmax(0,1fr) auto}#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview,#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-option-preview{grid-column:1/span 2;grid-row:2}#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview [data-option-active-slot='true']{grid-column:2;grid-row:1}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style,#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview,#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview{grid-template-columns:minmax(0,1fr) auto}#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview,#${PANEL_HOST_ID} .ad-xconfig-checkout-board-option-preview,#${PANEL_HOST_ID} .ad-xconfig-x01-score-progress-option-preview{grid-column:1/span 2;grid-row:2}#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-score-progress-preview [data-option-active-slot='true']{grid-column:2;grid-row:1}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
 @media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::before,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::after{animation:none!important;transform:none!important;transition:none!important}}
 `;
