@@ -423,7 +423,7 @@ export function createBootstrap(options = {}) {
     return config.isFeatureEnabled(configKey);
   }
 
-  function runFeatureAction(featureRef, actionId) {
+  function runFeatureAction(featureRef, actionId, options = {}) {
     const definition = resolveFeatureDefinitionByRef(featureDefinitionIndex, featureRef);
 
     if (!definition || typeof definition.runAction !== "function") {
@@ -437,6 +437,7 @@ export function createBootstrap(options = {}) {
           featureKey: definition.featureKey,
           configKey: definition.configKey,
           featureConfig: config.getFeatureConfig(definition.configKey),
+          actionTarget: options?.actionTarget || null,
           context,
         })
       );

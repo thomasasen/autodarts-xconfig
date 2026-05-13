@@ -257,7 +257,8 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       resetConfig,
       applyRecommendedDefaults,
       setFeatureEnabled: persistentSetFeatureEnabled,
-      runFeatureAction: (featureRef, actionId) => runtime.runFeatureAction(featureRef, actionId),
+      runFeatureAction: (featureRef, actionId, options) =>
+        runtime.runFeatureAction(featureRef, actionId, options),
       setThemeBackgroundImage,
       clearThemeBackgroundImage,
       listFeatures,
@@ -297,7 +298,8 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       resetConfig,
       applyRecommendedDefaults,
       setFeatureEnabled: persistentSetFeatureEnabled,
-      runFeatureAction: (featureRef, actionId) => runtime.runFeatureAction(featureRef, actionId),
+      runFeatureAction: (featureRef, actionId, options) =>
+        runtime.runFeatureAction(featureRef, actionId, options),
       setThemeBackgroundImage,
       clearThemeBackgroundImage,
       listFeatures,

@@ -8,7 +8,7 @@ import { mountTripleDoubleBullHits } from "./triple-double-bull-hits/index.js";
 import { mountCricketHighlighter } from "./cricket-highlighter/index.js";
 import { mountCricketGridFx } from "./cricket-grid-fx/index.js";
 import { mountDartMarkerEmphasis } from "./dart-marker-emphasis/index.js";
-import { mountDartMarkerDarts } from "./dart-marker-darts/index.js";
+import { mountDartMarkerDarts, runDartMarkerDartsAction } from "./dart-marker-darts/index.js";
 import { mountRemoveDartsNotification } from "./remove-darts-notification/index.js";
 import { mountSingleBullSound, runSingleBullSoundAction } from "./single-bull-sound/index.js";
 import { mountTurnPointsCount } from "./turn-points-count/index.js";
@@ -162,6 +162,7 @@ const featureInitializers = Object.freeze({
 });
 
 const featureActions = Object.freeze({
+  "dart-marker-darts": runDartMarkerDartsAction,
   "single-bull-sound": runSingleBullSoundAction,
   "winner-fireworks": runWinnerFireworksAction,
 });

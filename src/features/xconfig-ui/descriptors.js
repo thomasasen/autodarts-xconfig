@@ -71,6 +71,7 @@ function actionField(action, label, options = {}) {
     successMessage: String(options.successMessage || "").trim(),
     errorMessage: String(options.errorMessage || "").trim(),
     previewColorTheme: String(options.previewColorTheme || "").trim(),
+    previewTarget: String(options.previewTarget || "").trim(),
     prominent: options.prominent === true,
     control: "action",
   });
@@ -663,6 +664,17 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-dart-marker-darts",
     description: "Ersetzt Marker optional durch Dart-Bilder mit Fluganimation.",
     fields: [
+      actionField("run-feature-action", "Dart-Demo", {
+        actionId: "preview",
+        buttonLabel: "Virtuellen Marker werfen",
+        section: "Dart-Demo",
+        description:
+          "Wirft das aktuell konfigurierte Dart-Design auf einen virtuellen Marker.",
+        successMessage: "Dart-Demo gestartet.",
+        errorMessage: "Dart-Demo konnte nicht gestartet werden.",
+        prominent: true,
+        previewTarget: "dart-marker-darts",
+      }),
       selectField("design", "Dart Design", [
         { value: "aireplicant", label: "AI Replicant" },
         { value: "bullet", label: "Bullet" },

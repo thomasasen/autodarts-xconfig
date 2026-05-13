@@ -2218,6 +2218,15 @@ test("xConfig dart design options render split layout with preview and active ba
 
   const settingsModal = documentRef.querySelector(".ad-xconfig-modal");
   assert.ok(settingsModal);
+  const dartDemoSection = documentRef.querySelector(
+    "[data-adxconfig-settings-section='dart-demo']"
+  );
+  assert.ok(dartDemoSection);
+  assert.ok(
+    dartDemoSection.querySelector(
+      "[data-adxconfig-action-preview-target='dart-marker-darts']"
+    )
+  );
   const settingsSummaryNotes = Array.from(
     documentRef.querySelectorAll("[data-adxconfig-settings-summary='true'] .ad-xconfig-note")
   ).map((node) => String(node.textContent || "").trim());

@@ -1026,6 +1026,16 @@ function buildFeatureField(documentRef, feature, field) {
         "data-preview-color-theme": previewColorTheme || undefined,
       },
     });
+    const previewTarget = String(field.previewTarget || "").trim();
+    if (previewTarget) {
+      wrapper.appendChild(createElement(documentRef, "div", {
+        className: "ad-xconfig-setting-action-preview",
+        attributes: {
+          "data-adxconfig-action-preview-target": previewTarget,
+          "data-feature-action-id": field.actionId || "",
+        },
+      }));
+    }
     wrapper.appendChild(button);
     const noteText = String(field.description || resolveThemeActionNoteText(field.action)).trim();
     if (noteText) {

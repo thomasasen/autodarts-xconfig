@@ -306,8 +306,13 @@ test("createShellActionController dispatches feature and setting payload command
         calls.push(["save-config", patch]);
         return Promise.resolve("config-updated");
       },
-      runFeatureAction: (featureKey, actionId) => {
-        calls.push(["run-feature-action", featureKey, actionId]);
+      runFeatureAction: (featureKey, actionId, options = {}) => {
+        calls.push([
+          "run-feature-action",
+          featureKey,
+          actionId,
+          options.actionTarget || null,
+        ]);
         return Promise.resolve("action-run");
       },
     },
@@ -336,9 +341,22 @@ test("createShellActionController dispatches feature and setting payload command
     featureKey: "checkout-score-pulse",
     configKey: "checkoutScorePulse",
   });
+  const previewTarget = { marker: "preview-target" };
+  const actionWrapper = {
+    querySelector(selector) {
+      assert.equal(selector, "[data-adxconfig-action-preview-target]");
+      return previewTarget;
+    },
+  };
+  const actionButtonParent = {
+    closest(selector) {
+      assert.equal(selector, ".ad-xconfig-setting-action");
+      return actionWrapper;
+    },
+  };
   controller.handleAction("run-feature-action", createActionNode({
     "data-feature-action-id": "preview",
-  }), {
+  }, actionButtonParent), {
     featureKey: "winner-fireworks",
   });
 
@@ -349,7 +367,7 @@ test("createShellActionController dispatches feature and setting payload command
     ["save-config", { configKey: "checkoutScorePulse", settingKey: "enabled", value: true }],
     ["sync-select", selectButton, "glow"],
     ["save-config", { configKey: "checkoutScorePulse", settingKey: "effect", value: "parsed:glow" }],
-    ["run-feature-action", "winner-fireworks", "preview"],
+    ["run-feature-action", "winner-fireworks", "preview", previewTarget],
     "sync",
     "sync",
     "sync",

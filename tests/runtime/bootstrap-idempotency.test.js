@@ -190,7 +190,8 @@ test("bootstrap resolves feature references by config key for toggle and action 
         featureKey: "custom-feature",
         configKey: "custom.group.flag",
         mount: () => () => {},
-        runAction: ({ actionId }) => `handled:${String(actionId || "")}`,
+        runAction: ({ actionId, actionTarget }) =>
+          `handled:${String(actionId || "")}:${actionTarget?.id || ""}`,
       },
     ],
   });
@@ -201,8 +202,10 @@ test("bootstrap resolves feature references by config key for toggle and action 
   assert.equal(enabled, true);
   assert.equal(runtime.getSnapshot().features["custom-feature"].enabled, true);
 
-  const actionResult = await runtime.runFeatureAction("custom.group.flag", "ping");
-  assert.equal(actionResult, "handled:ping");
+  const actionResult = await runtime.runFeatureAction("custom.group.flag", "ping", {
+    actionTarget: { id: "inline-demo" },
+  });
+  assert.equal(actionResult, "handled:ping:inline-demo");
 
   runtime.stop();
 });

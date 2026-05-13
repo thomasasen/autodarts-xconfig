@@ -340,6 +340,7 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-text-input{width:100%;min-height:2.55rem;border:1px solid rgba(255,255,255,.26);border-radius:10px;padding:.5rem .7rem;background:rgba(7,14,30,.72);color:#fff;font:inherit;font-size:.86rem}
 #${PANEL_HOST_ID} .ad-xconfig-text-input:focus{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.24)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action{display:grid;gap:.45rem}
+#${PANEL_HOST_ID} .ad-xconfig-setting-action-preview{display:block;width:100%;min-height:8.5rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn{border:1px solid rgba(255,255,255,.3);border-radius:10px;min-height:2.65rem;padding:.55rem .8rem;background:rgba(22,38,82,.72);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary{border-color:rgba(126,216,255,.92);background:linear-gradient(145deg,rgba(58,148,255,.52),rgba(88,200,255,.34));box-shadow:0 0 0 1px rgba(126,216,255,.24),0 4px 14px rgba(58,148,255,.24)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary:hover{background:linear-gradient(145deg,rgba(72,170,255,.62),rgba(102,214,255,.4))}

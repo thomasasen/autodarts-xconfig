@@ -275,6 +275,18 @@ function handleClearSettingColor(controller, actionNode, feature) {
   );
 }
 
+function resolveFeatureActionPreviewTarget(actionNode) {
+  const actionWrapper =
+    actionNode?.closest?.(".ad-xconfig-setting-action") ||
+    actionNode?.parentElement?.closest?.(".ad-xconfig-setting-action") ||
+    null;
+  if (!actionWrapper || typeof actionWrapper.querySelector !== "function") {
+    return null;
+  }
+
+  return actionWrapper.querySelector("[data-adxconfig-action-preview-target]");
+}
+
 function handleRunFeatureAction(controller, actionNode, feature) {
   if (!feature || !controller.runtimeApi || typeof controller.runtimeApi.runFeatureAction !== "function") {
     return;
@@ -292,7 +304,9 @@ function handleRunFeatureAction(controller, actionNode, feature) {
 
   withRuntimeCall(
     controller,
-    controller.runtimeApi.runFeatureAction(feature.featureKey, actionId),
+    controller.runtimeApi.runFeatureAction(feature.featureKey, actionId, {
+      actionTarget: resolveFeatureActionPreviewTarget(actionNode),
+    }),
     actionField?.successMessage || "Aktion ausgeführt.",
     actionField?.errorMessage || "Aktion konnte nicht ausgeführt werden.",
     "info"

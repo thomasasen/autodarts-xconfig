@@ -10,6 +10,7 @@ import {
   buildStyleText,
   resolveDartMarkerDartsConfig,
 } from "./style.js";
+import { runDartMarkerDartsPreview } from "./preview.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "dart-marker-darts";
@@ -356,6 +357,20 @@ export function initializeDartMarkerDarts(context = {}) {
     });
     domGuards.removeNodeById(STYLE_ID);
   };
+}
+
+export async function runDartMarkerDartsAction(actionContext = {}) {
+  const actionId = String(actionContext.actionId || "").trim().toLowerCase();
+  if (actionId !== "preview") {
+    throw new Error(`Unsupported Dart Marker Darts action: ${actionId || "unknown"}`);
+  }
+
+  return runDartMarkerDartsPreview({
+    documentRef: actionContext.context?.documentRef || null,
+    windowRef: actionContext.context?.windowRef || null,
+    targetNode: actionContext.actionTarget || null,
+    featureConfig: actionContext.featureConfig || {},
+  });
 }
 
 export const mountDartMarkerDarts = initializeDartMarkerDarts;
