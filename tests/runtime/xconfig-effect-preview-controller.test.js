@@ -4,8 +4,14 @@ import assert from "node:assert/strict";
 import { createXConfigEffectPreviewController } from "../../src/features/xconfig-ui/effect-preview-controller.js";
 import { createTurnPointsCountPreviewAdapter } from "../../src/features/xconfig-ui/turn-points-preview-adapter.js";
 import { createAverageTrendArrowPreviewAdapter } from "../../src/features/xconfig-ui/average-trend-preview-adapter.js";
+import { createDartMarkerEmphasisPreviewAdapter } from "../../src/features/xconfig-ui/dart-marker-emphasis-preview-adapter.js";
 import { AVERAGE_TREND_PREVIEW_ATTRIBUTE } from "../../src/features/xconfig-ui/average-trend-preview-contract.js";
+import { DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE } from "../../src/features/xconfig-ui/dart-marker-emphasis-preview-contract.js";
 import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "../../src/features/xconfig-ui/turn-points-preview-contract.js";
+import {
+  BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
+  EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
+} from "../../src/features/dart-marker-emphasis/style.js";
 import { collectScoreNodes } from "../../src/features/turn-points-count/logic.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
 
@@ -48,6 +54,18 @@ function createAverageTrendPreviewOption(documentRef, attributes = {}) {
   previewNode.appendChild(arrowNode);
   optionNode.appendChild(previewNode);
   return { optionNode, arrowNode };
+}
+
+function createDartMarkerEmphasisPreviewOption(documentRef, attributes = {}) {
+  const optionNode = documentRef.createElement("button");
+  optionNode.className = "ad-xconfig-option-item ad-xconfig-option-item--effect-preview";
+  Object.entries(attributes).forEach(([name, value]) => {
+    optionNode.setAttribute(name, value);
+  });
+  const marker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  marker.setAttribute(DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE, "true");
+  optionNode.appendChild(marker);
+  return { optionNode, marker };
 }
 
 test("xConfig effect preview controller keeps only one adapter run active", () => {
@@ -331,4 +349,101 @@ test("average trend arrow preview adapter animates and resets the real arrow nod
   assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-visible"), true);
   assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-up"), true);
   assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-down"), false);
+});
+
+test("dart marker emphasis preview adapter applies and idles with the runtime marker contract", () => {
+  const documentRef = new FakeDocument();
+  const { optionNode, marker } = createDartMarkerEmphasisPreviewOption(documentRef, {
+    "data-preview-effect": "dart-marker-emphasis-effect-glow",
+    "data-feature-key": "dart-marker-emphasis",
+    "data-setting-key": "effect",
+    "data-setting-value": "glow",
+  });
+  documentRef.body.appendChild(optionNode);
+
+  const adapter = createDartMarkerEmphasisPreviewAdapter();
+  const cleanup = adapter.start({
+    optionNode,
+    feature: {
+      featureKey: "dart-marker-emphasis",
+      config: {
+        size: 9,
+        color: "rgb(34, 197, 94)",
+        effect: "pulse",
+        opacityPercent: 65,
+        outline: "schwarz",
+      },
+    },
+    settingKey: "effect",
+    settingValue: "glow",
+  });
+
+  assert.equal(marker.getAttribute("r"), "9");
+  assert.equal(marker.style.fill, "rgb(34, 197, 94)");
+  assert.equal(marker.style.opacity, "0.65");
+  assert.equal(marker.style.stroke, "rgb(0, 0, 0)");
+  assert.equal(marker.style.strokeWidth, "1.5");
+  assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_BASE_CLASS), true);
+  assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.glow), true);
+  assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), false);
+
+  cleanup();
+  assert.equal(marker.getAttribute("r"), "9");
+  assert.equal(marker.style.opacity, "0.65");
+  assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_BASE_CLASS), true);
+  assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.glow), false);
+  assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), false);
+});
+
+test("dart marker emphasis preview adapter maps size and visibility options", () => {
+  const documentRef = new FakeDocument();
+  const sizeOption = createDartMarkerEmphasisPreviewOption(documentRef, {
+    "data-preview-effect": "dart-marker-emphasis-size-4",
+    "data-setting-key": "size",
+    "data-setting-value": "4",
+  });
+  const opacityOption = createDartMarkerEmphasisPreviewOption(documentRef, {
+    "data-preview-effect": "dart-marker-emphasis-opacityPercent-100",
+    "data-setting-key": "opacityPercent",
+    "data-setting-value": "100",
+  });
+  documentRef.body.appendChild(sizeOption.optionNode);
+  documentRef.body.appendChild(opacityOption.optionNode);
+
+  const adapter = createDartMarkerEmphasisPreviewAdapter();
+  const feature = {
+    featureKey: "dart-marker-emphasis",
+    config: {
+      size: 6,
+      color: "rgb(49, 130, 206)",
+      effect: "pulse",
+      opacityPercent: 85,
+      outline: "weiss",
+    },
+  };
+  const cleanupSize = adapter.start({
+    optionNode: sizeOption.optionNode,
+    feature,
+    settingKey: "size",
+    settingValue: "4",
+  });
+  assert.equal(sizeOption.marker.getAttribute("r"), "4");
+  assert.equal(sizeOption.marker.style.opacity, "0.85");
+  assert.equal(sizeOption.marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), true);
+  cleanupSize();
+  assert.equal(sizeOption.marker.getAttribute("r"), "4");
+  assert.equal(sizeOption.marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), false);
+
+  const cleanupOpacity = adapter.start({
+    optionNode: opacityOption.optionNode,
+    feature,
+    settingKey: "opacityPercent",
+    settingValue: "100",
+  });
+  assert.equal(opacityOption.marker.getAttribute("r"), "6");
+  assert.equal(opacityOption.marker.style.opacity, "1");
+  assert.equal(opacityOption.marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), true);
+  cleanupOpacity();
+  assert.equal(opacityOption.marker.style.opacity, "1");
+  assert.equal(opacityOption.marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), false);
 });

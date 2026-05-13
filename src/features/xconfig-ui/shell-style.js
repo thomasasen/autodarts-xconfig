@@ -17,8 +17,13 @@ import {
   UP_CLASS as AVERAGE_TREND_UP_CLASS,
   VISIBLE_CLASS as AVERAGE_TREND_VISIBLE_CLASS,
 } from "../average-trend-arrow/style.js";
+import {
+  BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
+  EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
+} from "../dart-marker-emphasis/style.js";
 import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "./turn-points-preview-contract.js";
 import { AVERAGE_TREND_PREVIEW_CLASS } from "./average-trend-preview-contract.js";
+import { DART_MARKER_EMPHASIS_PREVIEW_CLASS } from "./dart-marker-emphasis-preview-contract.js";
 
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
@@ -283,6 +288,18 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .${AVERAGE_TREND_ANIMATE_CLASS}{animation:ad-ext-avg-bounce var(--ad-xconfig-average-trend-preview-duration,320ms) ease-out 1}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow [data-option-active-slot='true']:empty{display:none}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--dart-marker-emphasis-preview{overflow:hidden;isolation:isolate}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-marker-emphasis{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto auto;align-items:center;column-gap:.68rem;row-gap:.14rem;min-height:2.85rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-marker-emphasis .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0;display:grid;gap:.14rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-marker-emphasis .ad-xconfig-option-copy{margin-top:0}
+#${PANEL_HOST_ID} .${DART_MARKER_EMPHASIS_PREVIEW_CLASS}{grid-column:2;grid-row:1/span 2;display:grid;place-items:center;width:3.1rem;height:2.35rem}
+#${PANEL_HOST_ID} .${DART_MARKER_EMPHASIS_PREVIEW_CLASS} svg{display:block;width:2.35rem;height:2.35rem;overflow:visible}
+#${PANEL_HOST_ID} .ad-xconfig-dart-marker-emphasis-board-dot{fill:rgba(7,14,30,.66);stroke:rgba(255,255,255,.16);stroke-width:1}
+#${PANEL_HOST_ID} .${DART_MARKER_EMPHASIS_BASE_CLASS}{transform-box:fill-box;transform-origin:center}
+#${PANEL_HOST_ID} .${DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse}{animation:ad-ext-dart-marker-pulse 1600ms ease-in-out infinite}
+#${PANEL_HOST_ID} .${DART_MARKER_EMPHASIS_EFFECT_CLASSES.glow}{animation:ad-ext-dart-marker-glow 1800ms ease-in-out infinite}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-marker-emphasis [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-marker-emphasis [data-option-active-slot='true']:empty{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design{display:grid;grid-template-columns:minmax(0,1fr) 4.2rem auto;grid-template-rows:auto auto;align-items:center;column-gap:.5rem;row-gap:.14rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-head{display:block}
@@ -354,6 +371,8 @@ ${buildColorPreviewRules()}
 @keyframes ad-xconfig-hit-electric-arc-frame-electric{0%,100%{transform:translate(0,0);filter:var(--ad-ext-hit-electric-filter-strong)}38%{transform:translate(-1px,.5px);filter:var(--ad-ext-hit-electric-filter-strong) brightness(1.12) saturate(1.08)}72%{transform:translate(1.1px,-.8px);filter:var(--ad-ext-hit-electric-filter-strong) brightness(1.06) saturate(1.04)}}
 @keyframes ad-xconfig-hit-electric-arc-frame-glow{0%,100%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 0 12px color-mix(in srgb,var(--ad-ext-hit-edge) 24%,transparent),0 0 18px color-mix(in srgb,var(--ad-ext-hit-soft-glow) 58%,white 42%),0 0 34px color-mix(in srgb,var(--ad-ext-hit-glow) 46%,white 54%);opacity:.82}44%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 0 18px color-mix(in srgb,var(--ad-ext-hit-edge) 34%,transparent),0 0 24px color-mix(in srgb,var(--ad-ext-hit-soft-glow) 64%,white 36%),0 0 48px color-mix(in srgb,var(--ad-ext-hit-glow) 54%,white 46%);opacity:1}}
 @keyframes ad-xconfig-hit-electric-arc-frame-aura{0%,100%{opacity:.52;transform:scale(1)}46%{opacity:.84;transform:scale(1.02)}}
+@keyframes ad-ext-dart-marker-pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.85}100%{transform:scale(1);opacity:1}}
+@keyframes ad-ext-dart-marker-glow{0%{stroke-width:2;opacity:.9}50%{stroke-width:5;opacity:1}100%{stroke-width:2;opacity:.9}}
 @media(max-width:1180px){#${PANEL_HOST_ID} .ad-xconfig-grid{grid-template-columns:1fr}#${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:auto}}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}

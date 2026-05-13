@@ -2,6 +2,7 @@
 import { BASE_CLASS, EFFECT_CLASSES } from "./style.js";
 
 const HIDDEN_MARKER_DATASET_KEY = "adExtOriginalOpacity";
+const HIDDEN_MARKER_ATTRIBUTE = "data-ad-ext-original-opacity";
 
 function captureSnapshot(marker) {
   return {
@@ -43,13 +44,13 @@ function restoreSnapshot(marker, snapshot) {
 }
 
 function isHiddenByDartOverlay(marker) {
-  if (!marker?.dataset) {
-    return false;
+  if (marker?.getAttribute?.(HIDDEN_MARKER_ATTRIBUTE) !== null) {
+    return true;
   }
-  return Object.hasOwn(marker.dataset, HIDDEN_MARKER_DATASET_KEY);
+  return Boolean(marker?.dataset && marker.dataset[HIDDEN_MARKER_DATASET_KEY] !== undefined);
 }
 
-function applyMarker(marker, visualConfig) {
+export function applyDartMarkerEmphasisToMarker(marker, visualConfig) {
   marker.setAttribute("r", String(visualConfig.markerSize));
   marker.style.fill = visualConfig.markerColor;
 
@@ -124,6 +125,6 @@ export function updateDartMarkerEmphasis(options = {}) {
       state.snapshotsByMarker.set(marker, captureSnapshot(marker));
     }
     state.trackedMarkers.add(marker);
-    applyMarker(marker, visualConfig);
+    applyDartMarkerEmphasisToMarker(marker, visualConfig);
   });
 }

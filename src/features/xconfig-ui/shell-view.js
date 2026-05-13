@@ -22,6 +22,11 @@ import {
   AVERAGE_TREND_PREVIEW_CLASS,
 } from "./average-trend-preview-contract.js";
 import {
+  DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE,
+  DART_MARKER_EMPHASIS_PREVIEW_CLASS,
+  DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE,
+} from "./dart-marker-emphasis-preview-contract.js";
+import {
   ARROW_CLASS,
   ARROW_HALF_WIDTH_VAR,
   ARROW_HEIGHT_VAR,
@@ -30,6 +35,8 @@ import {
   resolveAverageTrendArrowDuration,
   resolveAverageTrendArrowSize,
 } from "../average-trend-arrow/style.js";
+import { applyDartMarkerEmphasisToMarker } from "../dart-marker-emphasis/logic.js";
+import { resolveDartMarkerEmphasisConfig } from "../dart-marker-emphasis/style.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -42,6 +49,7 @@ const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
+const DART_MARKER_EMPHASIS_FEATURE_KEY = "dart-marker-emphasis";
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 const XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
@@ -813,6 +821,119 @@ function buildAverageTrendArrowOptionLayout(
   return layout;
 }
 
+function isDartMarkerEmphasisPreviewEffect(previewEffect) {
+  return String(previewEffect || "").startsWith("dart-marker-emphasis-");
+}
+
+function resolveDartMarkerEmphasisPreviewEffect(feature, field, optionValue) {
+  if (feature?.featureKey !== DART_MARKER_EMPHASIS_FEATURE_KEY) {
+    return "";
+  }
+  const settingKey = String(field?.key || "").trim();
+  if (!["size", "effect", "opacityPercent"].includes(settingKey)) {
+    return "";
+  }
+  const normalizedValue = String(optionValue ?? "").trim();
+  return `dart-marker-emphasis-${settingKey}-${normalizedValue}`;
+}
+
+function resolveDartMarkerEmphasisPreviewConfig(feature, field, optionValue, options = {}) {
+  const settingKey = String(field?.key || "").trim();
+  const nextConfig = { ...(feature?.config || {}) };
+  if (settingKey === "size" || settingKey === "opacityPercent") {
+    nextConfig[settingKey] = Number(optionValue);
+  } else if (settingKey === "effect") {
+    nextConfig.effect = String(optionValue ?? "");
+  }
+  if (options.idle) {
+    nextConfig.effect = "none";
+  }
+  return resolveDartMarkerEmphasisConfig(nextConfig);
+}
+
+function createSvgElement(documentRef, tagName, attributes = {}) {
+  const element = documentRef.createElementNS("http://www.w3.org/2000/svg", tagName);
+  Object.entries(attributes).forEach(([name, value]) => {
+    element.setAttribute(name, String(value));
+  });
+  return element;
+}
+
+function buildDartMarkerEmphasisOptionPreview(documentRef, feature, field, optionValue) {
+  const preview = createElement(documentRef, "span", {
+    className: DART_MARKER_EMPHASIS_PREVIEW_CLASS,
+    attributes: {
+      "aria-hidden": "true",
+      [DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE]: "true",
+    },
+  });
+  const svg = createSvgElement(documentRef, "svg", {
+    viewBox: "0 0 42 42",
+    focusable: "false",
+  });
+  svg.appendChild(createSvgElement(documentRef, "circle", {
+    cx: "21",
+    cy: "21",
+    r: "16",
+    class: "ad-xconfig-dart-marker-emphasis-board-dot",
+  }));
+  const marker = createSvgElement(documentRef, "circle", {
+    cx: "21",
+    cy: "21",
+    [DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE]: "true",
+  });
+  applyDartMarkerEmphasisToMarker(
+    marker,
+    resolveDartMarkerEmphasisPreviewConfig(feature, field, optionValue, { idle: true })
+  );
+  svg.appendChild(marker);
+  preview.appendChild(svg);
+  return preview;
+}
+
+function buildDartMarkerEmphasisOptionLayout(
+  documentRef,
+  feature,
+  field,
+  optionValue,
+  optionLabel,
+  optionDescription,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--dart-marker-emphasis",
+  });
+  const textNode = createElement(documentRef, "span", {
+    className: "ad-xconfig-option-text",
+  });
+  textNode.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+  if (optionDescription) {
+    textNode.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+  layout.appendChild(textNode);
+  layout.appendChild(
+    buildDartMarkerEmphasisOptionPreview(documentRef, feature, field, optionValue)
+  );
+
+  const activeSlot = createElement(documentRef, "span", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+  return layout;
+}
+
 function buildDartDesignOptionLayout(
   documentRef,
   optionLabel,
@@ -1107,10 +1228,12 @@ function buildFeatureField(documentRef, feature, field) {
     const previewEffect =
       String(option?.previewEffect || "").trim() ||
       resolveTurnPointsCountPreviewEffect(feature, field, optionValue) ||
-      resolveAverageTrendArrowPreviewEffect(feature, field, optionValue);
+      resolveAverageTrendArrowPreviewEffect(feature, field, optionValue) ||
+      resolveDartMarkerEmphasisPreviewEffect(feature, field, optionValue);
     const previewColorTheme = String(option?.previewColorTheme || "").trim();
     const hasTurnPointsCountPreview = isTurnPointsCountPreviewEffect(previewEffect);
     const hasAverageTrendArrowPreview = isAverageTrendArrowPreviewEffect(previewEffect);
+    const hasDartMarkerEmphasisPreview = isDartMarkerEmphasisPreviewEffect(previewEffect);
     const optionButton = createElement(documentRef, "button", {
       type: "button",
       className: [
@@ -1120,6 +1243,7 @@ function buildFeatureField(documentRef, feature, field) {
         previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
         hasTurnPointsCountPreview ? "ad-xconfig-option-item--turn-points-count-preview" : "",
         hasAverageTrendArrowPreview ? "ad-xconfig-option-item--average-trend-arrow-preview" : "",
+        hasDartMarkerEmphasisPreview ? "ad-xconfig-option-item--dart-marker-emphasis-preview" : "",
         previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
       ].filter(Boolean).join(" "),
       attributes: {
@@ -1166,6 +1290,18 @@ function buildFeatureField(documentRef, feature, field) {
       optionButton.appendChild(
         buildAverageTrendArrowOptionLayout(
           documentRef,
+          field,
+          optionValue,
+          option.label,
+          optionDescription,
+          isActive
+        )
+      );
+    } else if (hasDartMarkerEmphasisPreview) {
+      optionButton.appendChild(
+        buildDartMarkerEmphasisOptionLayout(
+          documentRef,
+          feature,
           field,
           optionValue,
           option.label,

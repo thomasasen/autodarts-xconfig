@@ -7,6 +7,14 @@ import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-template-presets.js";
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
+import {
+  DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE,
+  DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE,
+} from "../../src/features/xconfig-ui/dart-marker-emphasis-preview-contract.js";
+import {
+  BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
+  EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
+} from "../../src/features/dart-marker-emphasis/style.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
@@ -1863,6 +1871,96 @@ test("xConfig average-trend-arrow settings expose real arrow preview hosts", asy
       true
     );
   });
+
+  runtime.stop();
+});
+
+test("xConfig dart-marker-emphasis settings expose real marker preview hosts", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-emphasis']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const sizePreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='size']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(sizePreviewEffects, [
+    "dart-marker-emphasis-size-4",
+    "dart-marker-emphasis-size-6",
+    "dart-marker-emphasis-size-9",
+  ]);
+
+  const effectPreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='effect']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(effectPreviewEffects, [
+    "dart-marker-emphasis-effect-glow",
+    "dart-marker-emphasis-effect-pulse",
+    "dart-marker-emphasis-effect-none",
+  ]);
+
+  const visibilityPreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='opacityPercent']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(visibilityPreviewEffects, [
+    "dart-marker-emphasis-opacityPercent-65",
+    "dart-marker-emphasis-opacityPercent-85",
+    "dart-marker-emphasis-opacityPercent-100",
+  ]);
+
+  const previewOptions = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true']")
+    .filter((optionNode) =>
+      String(optionNode.getAttribute("data-preview-effect") || "")
+        .startsWith("dart-marker-emphasis-")
+    );
+  assert.equal(previewOptions.length, 9);
+  previewOptions.forEach((optionNode) => {
+    assert.equal(
+      optionNode.classList.contains("ad-xconfig-option-item--dart-marker-emphasis-preview"),
+      true
+    );
+    const previewNode = optionNode.querySelector(
+      `[${DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE}='true']`
+    );
+    const marker = optionNode.querySelector(
+      `[${DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE}='true']`
+    );
+    assert.ok(previewNode);
+    assert.ok(marker);
+    assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_BASE_CLASS), true);
+    assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.glow), false);
+    assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), false);
+    assert.equal(
+      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--dart-marker-emphasis").children)
+        .indexOf(previewNode) <
+        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--dart-marker-emphasis").children)
+          .findIndex((node) => node.getAttribute?.("data-option-active-slot") === "true"),
+      true
+    );
+  });
+
+  const markerByEffect = (previewEffect) =>
+    documentRef
+      .querySelector(`[data-preview-effect='${previewEffect}']`)
+      ?.querySelector(`[${DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE}='true']`);
+  assert.equal(markerByEffect("dart-marker-emphasis-size-4")?.getAttribute("r"), "4");
+  assert.equal(markerByEffect("dart-marker-emphasis-size-9")?.getAttribute("r"), "9");
+  assert.equal(markerByEffect("dart-marker-emphasis-opacityPercent-65")?.style.opacity, "0.65");
+  assert.equal(markerByEffect("dart-marker-emphasis-opacityPercent-100")?.style.opacity, "1");
 
   runtime.stop();
 });
