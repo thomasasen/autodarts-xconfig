@@ -16,13 +16,13 @@ const SIZE_PRESETS = Object.freeze({
   },
   standard: {
     marginLeftPx: 6,
-    arrowHalfWidthPx: 5,
-    arrowHeightPx: 8,
+    arrowHalfWidthPx: 5.5,
+    arrowHeightPx: 8.8,
   },
   gross: {
     marginLeftPx: 8,
-    arrowHalfWidthPx: 6,
-    arrowHeightPx: 10,
+    arrowHalfWidthPx: 6.6,
+    arrowHeightPx: 11,
   },
 });
 
@@ -37,6 +37,14 @@ function resolveDuration(value) {
     return numeric;
   }
   return 320;
+}
+
+export function resolveAverageTrendArrowSize(size) {
+  return { ...resolveSize(size) };
+}
+
+export function resolveAverageTrendArrowDuration(value) {
+  return resolveDuration(value);
 }
 
 export function buildStyleText(options = {}) {

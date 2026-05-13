@@ -1806,6 +1806,67 @@ test("xConfig turn-start-sweep setting buttons expose sweep previews", async () 
   runtime.stop();
 });
 
+test("xConfig average-trend-arrow settings expose real arrow preview hosts", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='average-trend-arrow']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const durationPreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='durationMs']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(durationPreviewEffects, [
+    "average-trend-arrow-duration-220",
+    "average-trend-arrow-duration-320",
+    "average-trend-arrow-duration-500",
+  ]);
+
+  const sizePreviewEffects = documentRef
+    .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='size']")
+    .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
+  assert.deepEqual(sizePreviewEffects, [
+    "average-trend-arrow-size-klein",
+    "average-trend-arrow-size-standard",
+    "average-trend-arrow-size-gross",
+  ]);
+
+  documentRef.querySelectorAll("[data-preview-effect^='average-trend-arrow-']").forEach((optionNode) => {
+    assert.equal(
+      optionNode.classList.contains("ad-xconfig-option-item--average-trend-arrow-preview"),
+      true
+    );
+    const previewNode = optionNode.querySelector("[data-adxconfig-average-trend-preview-host='true']");
+    const arrowNode = optionNode.querySelector("[data-adxconfig-average-trend-preview='true']");
+    assert.ok(previewNode);
+    assert.ok(arrowNode);
+    assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-arrow"), true);
+    assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-visible"), true);
+    assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-up"), true);
+    assert.equal(
+      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--average-trend-arrow").children)
+        .indexOf(previewNode) <
+        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--average-trend-arrow").children)
+          .findIndex((node) => node.getAttribute?.("data-option-active-slot") === "true"),
+      true
+    );
+  });
+
+  runtime.stop();
+});
+
 test("xConfig turn-points-count settings expose real effect preview hosts", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

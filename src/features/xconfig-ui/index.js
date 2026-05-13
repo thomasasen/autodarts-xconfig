@@ -43,6 +43,7 @@ import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { createXConfigEffectPreviewController } from "./effect-preview-controller.js";
 import { createTurnPointsCountPreviewAdapter } from "./turn-points-preview-adapter.js";
+import { createAverageTrendArrowPreviewAdapter } from "./average-trend-preview-adapter.js";
 import { styleText } from "./shell-style.js";
 import {
   buildThemeGlobalTypographyPreviewImports,
@@ -430,6 +431,7 @@ function ensureXConfigShell(options = {}) {
 
   effectPreviewController = createXConfigEffectPreviewController({
     adapters: [
+      createAverageTrendArrowPreviewAdapter(),
       createTurnPointsCountPreviewAdapter({
         windowRef,
       }),

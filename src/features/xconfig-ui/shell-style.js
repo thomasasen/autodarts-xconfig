@@ -7,7 +7,18 @@ import {
   SCORE_FLASH_SEQUENCE_ATTRIBUTE,
   buildStyleText as buildTurnPointsCountStyleText,
 } from "../turn-points-count/style.js";
+import {
+  ANIMATE_CLASS as AVERAGE_TREND_ANIMATE_CLASS,
+  ARROW_CLASS as AVERAGE_TREND_ARROW_CLASS,
+  ARROW_HALF_WIDTH_VAR as AVERAGE_TREND_ARROW_HALF_WIDTH_VAR,
+  ARROW_HEIGHT_VAR as AVERAGE_TREND_ARROW_HEIGHT_VAR,
+  ARROW_MARGIN_LEFT_VAR as AVERAGE_TREND_ARROW_MARGIN_LEFT_VAR,
+  DOWN_CLASS as AVERAGE_TREND_DOWN_CLASS,
+  UP_CLASS as AVERAGE_TREND_UP_CLASS,
+  VISIBLE_CLASS as AVERAGE_TREND_VISIBLE_CLASS,
+} from "../average-trend-arrow/style.js";
 import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "./turn-points-preview-contract.js";
+import { AVERAGE_TREND_PREVIEW_CLASS } from "./average-trend-preview-contract.js";
 
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
@@ -260,6 +271,18 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .${TURN_POINTS_PREVIEW_SCORE_CLASS}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{animation:ad-ext-turn-points-count-flash-b 390ms cubic-bezier(.16,.92,.24,1) both;will-change:transform,filter,text-shadow,opacity}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--turn-points-count [data-option-active-slot='true']:empty{display:none}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--average-trend-arrow-preview{overflow:hidden;isolation:isolate}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto auto;align-items:center;column-gap:.68rem;row-gap:.14rem;min-height:2.85rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0;display:grid;gap:.14rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow .ad-xconfig-option-copy{margin-top:0}
+#${PANEL_HOST_ID} .${AVERAGE_TREND_PREVIEW_CLASS}{grid-column:2;grid-row:1/span 2;display:grid;place-items:center;min-width:3.6rem;min-height:2.4rem}
+#${PANEL_HOST_ID} .${AVERAGE_TREND_ARROW_CLASS}{${AVERAGE_TREND_ARROW_MARGIN_LEFT_VAR}:0px;${AVERAGE_TREND_ARROW_HALF_WIDTH_VAR}:5px;${AVERAGE_TREND_ARROW_HEIGHT_VAR}:8px;display:inline-block;width:0;height:0;margin-left:var(${AVERAGE_TREND_ARROW_MARGIN_LEFT_VAR});vertical-align:middle;opacity:0;transition:opacity 120ms ease-out}
+#${PANEL_HOST_ID} .${AVERAGE_TREND_VISIBLE_CLASS}{opacity:1}
+#${PANEL_HOST_ID} .${AVERAGE_TREND_UP_CLASS}{border-left:var(${AVERAGE_TREND_ARROW_HALF_WIDTH_VAR}) solid transparent;border-right:var(${AVERAGE_TREND_ARROW_HALF_WIDTH_VAR}) solid transparent;border-bottom:var(${AVERAGE_TREND_ARROW_HEIGHT_VAR}) solid #9fdb58}
+#${PANEL_HOST_ID} .${AVERAGE_TREND_DOWN_CLASS}{border-left:var(${AVERAGE_TREND_ARROW_HALF_WIDTH_VAR}) solid transparent;border-right:var(${AVERAGE_TREND_ARROW_HALF_WIDTH_VAR}) solid transparent;border-top:var(${AVERAGE_TREND_ARROW_HEIGHT_VAR}) solid #f87171}
+#${PANEL_HOST_ID} .${AVERAGE_TREND_ANIMATE_CLASS}{animation:ad-ext-avg-bounce var(--ad-xconfig-average-trend-preview-duration,320ms) ease-out 1}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow [data-option-active-slot='true']{grid-column:3;grid-row:1;display:flex;align-self:start;justify-content:flex-end;min-width:0;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-layout--average-trend-arrow [data-option-active-slot='true']:empty{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design{display:grid;grid-template-columns:minmax(0,1fr) 4.2rem auto;grid-template-rows:auto auto;align-items:center;column-gap:.5rem;row-gap:.14rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-head{display:block}
@@ -323,6 +346,7 @@ ${buildColorPreviewRules()}
 @keyframes ad-xconfig-effect-preview-sheen{0%{transform:translateX(-8px) skewX(-3deg) scale(1.005)}45%{transform:translateX(7px) skewX(2deg) scale(1.025)}100%{transform:translateX(0) skewX(0) scale(1)}}
 @keyframes ad-xconfig-effect-preview-sheen-light{0%{opacity:0;transform:translateX(-78%) skewX(-14deg)}40%{opacity:1;transform:translateX(0) skewX(-14deg)}100%{opacity:0;transform:translateX(78%) skewX(-14deg)}}
 @keyframes ad-xconfig-effect-preview-shockwave{0%{transform:scale(.98);box-shadow:0 0 0 0 rgba(126,216,255,.26)}34%{transform:scale(1.055);box-shadow:0 0 0 4px rgba(126,216,255,.22),0 0 20px rgba(126,216,255,.18)}62%{transform:scale(1.005);box-shadow:0 0 0 8px rgba(126,216,255,0)}100%{transform:scale(1);box-shadow:0 0 0 1px rgba(126,216,255,.16) inset}}
+@keyframes ad-ext-avg-bounce{0%{transform:scale(.9);opacity:.5}60%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:.95}}
 @keyframes ad-xconfig-turn-start-sweep-preview{0%{transform:translateX(-140%);opacity:0}15%{opacity:1}100%{transform:translateX(240%);opacity:0}}
 @keyframes ad-xconfig-hit-row-electric-arc{0%{transform:translate(0,0) scale(.992);filter:saturate(1.04) brightness(.98)}36%{transform:translate(-1px,.6px) scale(1.012);filter:saturate(1.14) brightness(1.1)}68%{transform:translate(1px,-.7px) scale(1.006);filter:saturate(1.08) brightness(1.04)}100%{transform:translate(0,0) scale(1);filter:saturate(1.06) brightness(1.02)}}
 @keyframes ad-xconfig-hit-score-electric-arc{0%{transform:translateX(0) scale(1);letter-spacing:.01em;filter:brightness(1.02)}24%{transform:translateX(1.8px) scale(1.16);letter-spacing:.07em;filter:brightness(1.24) drop-shadow(0 0 7px rgba(221,249,255,.56))}48%{transform:translateX(-1.6px) scale(1.06);letter-spacing:.05em;filter:brightness(1.14) drop-shadow(0 0 5px rgba(180,250,255,.38))}70%{transform:translateX(1px) scale(1.03);letter-spacing:.04em;filter:brightness(1.14)}100%{transform:translateX(0) scale(1);letter-spacing:.01em;filter:brightness(1.03)}}

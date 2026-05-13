@@ -10,17 +10,25 @@ import {
 import { buildSharedPlayerDisplayCss } from "../../src/features/themes/shared/player-card-layout.js";
 
 test("average trend arrow size presets define CSS variables for theme scaling", () => {
-  const css = buildStyleText({
+  const smallCss = buildStyleText({
     durationMs: 320,
     size: "klein",
   });
 
-  assert.match(css, new RegExp(`${ARROW_MARGIN_LEFT_VAR}: 4px;`));
-  assert.match(css, new RegExp(`${ARROW_HALF_WIDTH_VAR}: 4px;`));
-  assert.match(css, new RegExp(`${ARROW_HEIGHT_VAR}: 6px;`));
-  assert.match(css, new RegExp(`margin-left: var\\(${ARROW_MARGIN_LEFT_VAR}\\);`));
-  assert.match(css, new RegExp(`border-left: var\\(${ARROW_HALF_WIDTH_VAR}\\) solid transparent;`));
-  assert.match(css, new RegExp(`border-bottom: var\\(${ARROW_HEIGHT_VAR}\\) solid #9fdb58;`));
+  assert.match(smallCss, new RegExp(`${ARROW_MARGIN_LEFT_VAR}: 4px;`));
+  assert.match(smallCss, new RegExp(`${ARROW_HALF_WIDTH_VAR}: 4px;`));
+  assert.match(smallCss, new RegExp(`${ARROW_HEIGHT_VAR}: 6px;`));
+  assert.match(smallCss, new RegExp(`margin-left: var\\(${ARROW_MARGIN_LEFT_VAR}\\);`));
+  assert.match(smallCss, new RegExp(`border-left: var\\(${ARROW_HALF_WIDTH_VAR}\\) solid transparent;`));
+  assert.match(smallCss, new RegExp(`border-bottom: var\\(${ARROW_HEIGHT_VAR}\\) solid #9fdb58;`));
+
+  const standardCss = buildStyleText({ durationMs: 320, size: "standard" });
+  assert.match(standardCss, new RegExp(`${ARROW_HALF_WIDTH_VAR}: 5\\.5px;`));
+  assert.match(standardCss, new RegExp(`${ARROW_HEIGHT_VAR}: 8\\.8px;`));
+
+  const largeCss = buildStyleText({ durationMs: 320, size: "gross" });
+  assert.match(largeCss, new RegExp(`${ARROW_HALF_WIDTH_VAR}: 6\\.6px;`));
+  assert.match(largeCss, new RegExp(`${ARROW_HEIGHT_VAR}: 11px;`));
 });
 
 test("shared player card layout scales average trend arrow from feature-defined base variables", () => {

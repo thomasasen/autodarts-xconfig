@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import { createXConfigEffectPreviewController } from "../../src/features/xconfig-ui/effect-preview-controller.js";
 import { createTurnPointsCountPreviewAdapter } from "../../src/features/xconfig-ui/turn-points-preview-adapter.js";
+import { createAverageTrendArrowPreviewAdapter } from "../../src/features/xconfig-ui/average-trend-preview-adapter.js";
+import { AVERAGE_TREND_PREVIEW_ATTRIBUTE } from "../../src/features/xconfig-ui/average-trend-preview-contract.js";
 import { TURN_POINTS_PREVIEW_SCORE_CLASS } from "../../src/features/xconfig-ui/turn-points-preview-contract.js";
 import { collectScoreNodes } from "../../src/features/turn-points-count/logic.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
@@ -30,6 +32,22 @@ function createControllerHarness() {
   panelHost.id = "ad-xconfig-panel-host";
   documentRef.body.appendChild(panelHost);
   return { documentRef, panelHost };
+}
+
+function createAverageTrendPreviewOption(documentRef, attributes = {}) {
+  const optionNode = documentRef.createElement("button");
+  optionNode.className = "ad-xconfig-option-item ad-xconfig-option-item--effect-preview";
+  Object.entries(attributes).forEach(([name, value]) => {
+    optionNode.setAttribute(name, value);
+  });
+  const previewNode = documentRef.createElement("span");
+  previewNode.setAttribute("data-adxconfig-average-trend-preview-host", "true");
+  const arrowNode = documentRef.createElement("span");
+  arrowNode.className = "ad-ext-avg-trend-arrow ad-ext-avg-trend-visible ad-ext-avg-trend-up";
+  arrowNode.setAttribute(AVERAGE_TREND_PREVIEW_ATTRIBUTE, "true");
+  previewNode.appendChild(arrowNode);
+  optionNode.appendChild(previewNode);
+  return { optionNode, arrowNode };
 }
 
 test("xConfig effect preview controller keeps only one adapter run active", () => {
@@ -282,4 +300,35 @@ test("turn points preview adapter separates count previews from flash previews",
   timers[0].callback();
   assert.equal(animateCalls.at(-1).flashEnabled, true);
   assert.equal(animateCalls.at(-1).flashMode, "permanent");
+});
+
+test("average trend arrow preview adapter animates and resets the real arrow node", () => {
+  const documentRef = new FakeDocument();
+  const { optionNode, arrowNode } = createAverageTrendPreviewOption(documentRef, {
+    "data-preview-effect": "average-trend-arrow-duration-500",
+    "data-feature-key": "average-trend-arrow",
+    "data-setting-key": "durationMs",
+    "data-setting-value": "500",
+  });
+  documentRef.body.appendChild(optionNode);
+
+  const adapter = createAverageTrendArrowPreviewAdapter();
+  const cleanup = adapter.start({
+    optionNode,
+    feature: { featureKey: "average-trend-arrow", config: { durationMs: 320 } },
+    settingKey: "durationMs",
+    settingValue: "500",
+  });
+
+  assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-animate"), true);
+  assert.equal(
+    arrowNode.style.getPropertyValue("--ad-xconfig-average-trend-preview-duration"),
+    "500ms"
+  );
+
+  cleanup();
+  assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-animate"), false);
+  assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-visible"), true);
+  assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-up"), true);
+  assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-down"), false);
 });

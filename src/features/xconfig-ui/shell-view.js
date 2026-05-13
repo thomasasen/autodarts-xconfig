@@ -17,6 +17,19 @@ import {
   TURN_POINTS_PREVIEW_SCORE_ATTRIBUTE,
   TURN_POINTS_PREVIEW_SCORE_CLASS,
 } from "./turn-points-preview-contract.js";
+import {
+  AVERAGE_TREND_PREVIEW_ATTRIBUTE,
+  AVERAGE_TREND_PREVIEW_CLASS,
+} from "./average-trend-preview-contract.js";
+import {
+  ARROW_CLASS,
+  ARROW_HALF_WIDTH_VAR,
+  ARROW_HEIGHT_VAR,
+  UP_CLASS,
+  VISIBLE_CLASS,
+  resolveAverageTrendArrowDuration,
+  resolveAverageTrendArrowSize,
+} from "../average-trend-arrow/style.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -711,6 +724,95 @@ function buildTurnPointsCountOptionLayout(
   return layout;
 }
 
+function isAverageTrendArrowPreviewEffect(previewEffect) {
+  return String(previewEffect || "").startsWith("average-trend-arrow-");
+}
+
+function resolveAverageTrendArrowPreviewEffect(feature, field, optionValue) {
+  if (feature?.featureKey !== "average-trend-arrow") {
+    return "";
+  }
+  const settingKey = String(field?.key || "").trim();
+  const normalizedValue = String(optionValue ?? "").trim();
+  if (settingKey === "durationMs") {
+    return `average-trend-arrow-duration-${normalizedValue || "320"}`;
+  }
+  if (settingKey === "size") {
+    return `average-trend-arrow-size-${normalizedValue || "standard"}`;
+  }
+  return "";
+}
+
+function buildAverageTrendArrowOptionPreview(documentRef, field, optionValue) {
+  const preview = createElement(documentRef, "span", {
+    className: AVERAGE_TREND_PREVIEW_CLASS,
+    attributes: {
+      "aria-hidden": "true",
+      "data-adxconfig-average-trend-preview-host": "true",
+    },
+  });
+  const settingKey = String(field?.key || "").trim();
+  const size = resolveAverageTrendArrowSize(settingKey === "size" ? optionValue : "standard");
+  const durationMs = resolveAverageTrendArrowDuration(
+    settingKey === "durationMs" ? optionValue : 320
+  );
+  const arrow = createElement(documentRef, "span", {
+    className: [
+      ARROW_CLASS,
+      VISIBLE_CLASS,
+      UP_CLASS,
+    ].join(" "),
+    attributes: {
+      [AVERAGE_TREND_PREVIEW_ATTRIBUTE]: "true",
+    },
+  });
+  arrow.style.setProperty(ARROW_HALF_WIDTH_VAR, `${size.arrowHalfWidthPx}px`);
+  arrow.style.setProperty(ARROW_HEIGHT_VAR, `${size.arrowHeightPx}px`);
+  arrow.style.setProperty("--ad-xconfig-average-trend-preview-duration", `${durationMs}ms`);
+  preview.appendChild(arrow);
+  return preview;
+}
+
+function buildAverageTrendArrowOptionLayout(
+  documentRef,
+  field,
+  optionValue,
+  optionLabel,
+  optionDescription,
+  isActive
+) {
+  const layout = createElement(documentRef, "div", {
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--average-trend-arrow",
+  });
+  const textNode = createElement(documentRef, "span", {
+    className: "ad-xconfig-option-text",
+  });
+  textNode.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-option-label",
+    text: optionLabel,
+  }));
+  if (optionDescription) {
+    textNode.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-option-copy",
+      text: optionDescription,
+    }));
+  }
+  layout.appendChild(textNode);
+  layout.appendChild(buildAverageTrendArrowOptionPreview(documentRef, field, optionValue));
+
+  const activeSlot = createElement(documentRef, "span", {
+    className: "ad-xconfig-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildOptionActiveBadge(documentRef));
+  }
+  layout.appendChild(activeSlot);
+  return layout;
+}
+
 function buildDartDesignOptionLayout(
   documentRef,
   optionLabel,
@@ -1004,9 +1106,11 @@ function buildFeatureField(documentRef, feature, field) {
     const isTypographyFontField = isThemeGlobalTypographyFontField(feature, field);
     const previewEffect =
       String(option?.previewEffect || "").trim() ||
-      resolveTurnPointsCountPreviewEffect(feature, field, optionValue);
+      resolveTurnPointsCountPreviewEffect(feature, field, optionValue) ||
+      resolveAverageTrendArrowPreviewEffect(feature, field, optionValue);
     const previewColorTheme = String(option?.previewColorTheme || "").trim();
     const hasTurnPointsCountPreview = isTurnPointsCountPreviewEffect(previewEffect);
+    const hasAverageTrendArrowPreview = isAverageTrendArrowPreviewEffect(previewEffect);
     const optionButton = createElement(documentRef, "button", {
       type: "button",
       className: [
@@ -1015,6 +1119,7 @@ function buildFeatureField(documentRef, feature, field) {
         isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
         previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
         hasTurnPointsCountPreview ? "ad-xconfig-option-item--turn-points-count-preview" : "",
+        hasAverageTrendArrowPreview ? "ad-xconfig-option-item--average-trend-arrow-preview" : "",
         previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
       ].filter(Boolean).join(" "),
       attributes: {
@@ -1052,6 +1157,17 @@ function buildFeatureField(documentRef, feature, field) {
       optionButton.appendChild(
         buildTurnPointsCountOptionLayout(
           documentRef,
+          option.label,
+          optionDescription,
+          isActive
+        )
+      );
+    } else if (hasAverageTrendArrowPreview) {
+      optionButton.appendChild(
+        buildAverageTrendArrowOptionLayout(
+          documentRef,
+          field,
+          optionValue,
           option.label,
           optionDescription,
           isActive
