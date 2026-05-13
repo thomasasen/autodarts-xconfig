@@ -1,0 +1,4 @@
+interface:
+  display_name: "xConfig Effect Preview Contract"
+  short_description: "Keep admin previews faithful and isolated."
+  default_prompt: "Use $xconfig-effect-preview-contract to add or fix an xConfig effect preview without leaking DOM or animation state."
