@@ -77,7 +77,7 @@ const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const DART_MARKER_EMPHASIS_FEATURE_KEY = "dart-marker-emphasis";
 const CHECKOUT_SCORE_PULSE_FEATURE_KEY = "checkout-score-pulse";
-const CHECKOUT_SCORE_PULSE_PREVIEW_FIELD_KEYS = new Set(["effect", "colorTheme"]);
+const CHECKOUT_SCORE_PULSE_PREVIEW_FIELD_KEYS = new Set(["effect"]);
 const CHECKOUT_BOARD_TARGETS_FEATURE_KEY = "checkout-board-targets";
 const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
   "visualPreset",

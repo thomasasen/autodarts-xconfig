@@ -1441,7 +1441,7 @@ test("xConfig style checkout suggestions renders live preview and style option s
   runtime.stop();
 });
 
-test("xConfig checkout score pulse renders real effect and color previews", async () => {
+test("xConfig checkout score pulse renders real effect previews and color buttons", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1494,23 +1494,27 @@ test("xConfig checkout score pulse renders real effect and color previews", asyn
   assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS), true);
   assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_PULSE_EFFECT_CLASSES.glow), true);
 
-  const colorPreviews = documentRef.querySelectorAll(
+  const colorButtons = documentRef.querySelectorAll(
+    "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme'].ad-xconfig-option-item--color-preview"
+  );
+  assert.equal(colorButtons.length, 4);
+  const colorPreviewCards = documentRef.querySelectorAll(
     "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme'] .ad-xconfig-checkout-score-pulse-option-preview"
   );
-  assert.equal(colorPreviews.length, 4);
+  assert.equal(colorPreviewCards.length, 0);
   const cyanOption = documentRef
     .querySelectorAll(
       "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme']"
     )
     .find((node) => node.getAttribute("data-setting-value") === "56, 189, 248");
   assert.ok(cyanOption);
-  const cyanOptionScore = cyanOption.querySelector(
-    "[data-adxconfig-checkout-score-pulse-score='true']"
-  );
-  assert.ok(cyanOptionScore);
   assert.equal(
-    cyanOptionScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.color),
-    "56, 189, 248"
+    cyanOption.classList.contains("ad-xconfig-option-item--color-preview"),
+    true
+  );
+  assert.equal(
+    cyanOption.getAttribute("data-preview-color-theme"),
+    "checkout-score-cyan"
   );
 
   assert.equal(
