@@ -1666,12 +1666,13 @@ test("xConfig checkout board targets renders board and segment previews", async 
   const wholeBoards = documentRef.querySelectorAll(
     ".ad-xconfig-checkout-board-preview-board"
   );
-  assert.equal(wholeBoards.length, 4);
+  assert.equal(wholeBoards.length, 7);
   wholeBoards.forEach((boardNode) => {
     assert.equal(boardNode.getAttribute("viewBox"), "-82.2 -82.2 164.4 164.4");
     const rings = Array.from(boardNode.querySelectorAll(".ad-xconfig-checkout-board-preview-ring"));
     assert.equal(rings.some((ringNode) => Number(ringNode.getAttribute("r")) > 76.3), false);
   });
+  assert.ok(previewSection.querySelector(".ad-ext-checkout-target"));
 
   const sectorPreviews = documentRef.querySelectorAll(
     ".ad-xconfig-checkout-board-preview-sector-svg"
@@ -1705,6 +1706,22 @@ test("xConfig checkout board targets renders board and segment previews", async 
         "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
       );
       return /56,\s*189,\s*248/.test(
+        String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
+      );
+    }),
+    true
+  );
+  clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "violet");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutBoardTargets.colorTheme === "violet"
+  );
+  assert.equal(
+    await waitFor(() => {
+      const refreshedTarget = documentRef.querySelector(
+        "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+      );
+      return /168,\s*85,\s*247/.test(
         String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
       );
     }),

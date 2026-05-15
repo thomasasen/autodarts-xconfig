@@ -83,6 +83,7 @@ const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
   "visualPreset",
   "segmentStyle",
   "targetSelectionMode",
+  "colorTheme",
 ]);
 const X01_SCORE_PROGRESS_FEATURE_KEY = "x01-score-progress";
 const X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY = "barSize";
@@ -1149,6 +1150,15 @@ function buildCheckoutBoardTargetsOptionLayout(
   } else if (fieldKey === "segmentStyle") {
     preview.appendChild(
       buildCheckoutBoardSectorPreview(documentRef, feature?.config || {}, { segmentStyle: optionValue })
+    );
+  } else if (fieldKey === "colorTheme") {
+    preview.appendChild(
+      buildCheckoutBoardWholePreview(
+        documentRef,
+        feature?.config || {},
+        { colorTheme: optionValue },
+        { mini: true }
+      )
     );
   } else {
     preview.appendChild(
