@@ -29,6 +29,10 @@ import {
 import { commonLayoutCss, commonThemeCss } from "../../src/features/themes/shared/common-css.js";
 import { buildSharedPlayerDisplayCss } from "../../src/features/themes/shared/player-card-layout.js";
 import {
+  PLAYER_CARD_PART_ATTRIBUTE,
+  PLAYER_CARD_PARTS,
+} from "../../src/features/shared/player-card-parts.js";
+import {
   buildThemeVisualSettingsCss,
   resolveThemeVisualSettingsConfig,
 } from "../../src/features/themes/shared/theme-visuals.js";
@@ -234,19 +238,33 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*span\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8\{[^}]*display:flex\s*!important;[^}]*justify-content:center\s*!important;[^}]*width:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*height:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*background:#8fe28d\s*!important;[^}]*background-image:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*visibility:visible\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*span\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8,[^{]*\[data-ad-ext-player-card-part="round-badge"\]\{[^}]*display:flex\s*!important;[^}]*justify-content:center\s*!important;[^}]*width:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*height:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*background:#8fe28d\s*!important;[^}]*background-image:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*visibility:visible\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\{[^}]*display:inline-grid\s*!important;[^}]*inline-size:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*block-size:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*aspect-ratio:1 \/ 1\s*!important;[^}]*background:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*background-color:#8fe28d\s*!important;[^}]*color:#142112\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1cmgsw8\s*>\s*\.css-3fr5p8,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\[data-ad-ext-player-card-part="round-badge"\]\{[^}]*display:inline-grid\s*!important;[^}]*inline-size:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*block-size:var\(--ad-ext-x01-2player-round-size\)\s*!important;[^}]*aspect-ratio:1 \/ 1\s*!important;[^}]*background:linear-gradient\(180deg,\s*#a8ef7d 0%,\s*#87dc62 100%\)\s*!important;[^}]*background-color:#8fe28d\s*!important;[^}]*color:#142112\s*!important;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-3fr5p8\s*>\s*p\{[^}]*font-size:var\(--ad-ext-x01-2player-round-font-size\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1k3nd6z\s*>\s*\.css-3fr5p8\s*>\s*p,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\.css-1cmgsw8\s*>\s*\.css-3fr5p8\s*>\s*p,\s*#ad-ext-player-display\s+\.ad-ext-player\s+\[data-ad-ext-player-card-part="round-badge"\]\s*>\s*p\{[^}]*font-size:var\(--ad-ext-x01-2player-round-font-size\)\s*!important;[^}]*line-height:1\s*!important;[^}]*font-weight:800\s*!important;[^}]*color:inherit\s*!important;/s
   );
   assert.match(
     css,
     /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:first-child\{[^}]*display:none\s*!important;/s
+  );
+  assert.match(
+    css,
+    new RegExp(
+      `\\[data-ad-ext-x01-2player-slot="identity"\\]\\s*>\\s*:last-child\\s*>\\s*span\\s*>\\s*\\[data-ad-ext-player-card-part="${PLAYER_CARD_PARTS.identityMedia}"\\]\\{[^}]*display:inline-flex\\s*!important;[^}]*width:max-content\\s*!important;[^}]*overflow:visible\\s*!important;`,
+      "s"
+    )
+  );
+  assert.match(
+    css,
+    new RegExp(
+      `#ad-ext-player-display\\s+\\.ad-ext-player\\s+\\[data-ad-ext-player-card-part="${PLAYER_CARD_PARTS.flag}"\\],\\s*#ad-ext-player-display\\s+\\.ad-ext-player\\s+\\.chakra-image\\.css-6t0bzd\\{[^}]*display:block\\s*!important;[^}]*width:clamp\\(0\\.8rem,\\s*4cqi,\\s*1\\.05rem\\)\\s*!important;`,
+      "s"
+    )
   );
   assert.match(
     css,
@@ -258,11 +276,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.chakra-badge,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-n2903v,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-3fr5p8\{[^}]*display:none\s*!important;/s
+    /\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.chakra-badge,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\.css-n2903v,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="identity"\]\s*>\s*:last-child\s*>\s*span\s*>\s*:last-child\s*>\s*\[data-ad-ext-player-card-part="profile-badge"\]\{[^}]*display:inline-grid\s*!important;[^}]*width:max-content\s*!important;/s
   );
   assert.match(
     css,
     /\[data-ad-ext-x01-2player-slot="score"\],\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\]\s*>\s*p\{[^}]*grid-row:3\s*!important;[^}]*display:grid\s*!important;[^}]*min-block-size:var\(--ad-ext-x01-2player-score-min-block-size\)\s*!important;[^}]*padding-block:var\(--ad-ext-x01-2player-score-pad-block\)\s*!important;[^}]*font-size:calc\(var\(--ad-ext-x01-2player-score-size\)\s*\*\s*var\(--ad-ext-x01-2player-score-scale\)\)\s*!important;[^}]*line-height:0\.9\s*!important;[^}]*text-align:center\s*!important;[^}]*color:var\(--ad-ext-theme-meta-inactive-color\)\s*!important;[^}]*overflow:visible\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\[data-ad-ext-x01-2player-slot="score"\]\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\]\s*>\s*\.ad-ext-player-score,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\]\s*>\s*p\{[^}]*width:max-content\s*!important;[^}]*min-width:max-content\s*!important;[^}]*max-width:none\s*!important;[^}]*white-space:nowrap\s*!important;[^}]*overflow:visible\s*!important;/s
   );
   assert.match(
     css,
@@ -514,6 +536,22 @@ test("shared common layout keeps oldrepo baseline grid contract", () => {
     commonThemeCss,
     /--ad-ext-theme-score-active-color:\s*var\(--ad-ext-theme-score-color\);[^}]*--ad-ext-theme-score-inactive-color:\s*var\(--ad-ext-theme-text-primary-color\);[^}]*--ad-ext-theme-name-color:\s*var\(--ad-ext-theme-text-secondary-color\);[^}]*--ad-ext-theme-meta-color:\s*var\(--ad-ext-theme-text-secondary-color\);[^}]*--ad-ext-theme-active-card-tint-top:\s*transparent;[^}]*--ad-ext-theme-card-tint-top-current:\s*transparent;/s
   );
+  assert.match(
+    commonThemeCss,
+    new RegExp(
+      `#ad-ext-player-display \\[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"\\][^}]*background-color:\\s*#9fdb58`,
+      "s"
+    )
+  );
+  assert.match(
+    commonThemeCss,
+    new RegExp(
+      `#ad-ext-player-display \\[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.profileBadge}"\\][^}]*background-color:\\s*var\\(--ad-ext-theme-profile-badge-bg`,
+      "s"
+    )
+  );
+  assert.doesNotMatch(commonThemeCss, /^span\.css-3fr5p8\s*\{/m);
+  assert.doesNotMatch(commonLayoutCss, /^\.css-3fr5p8\s*\{/m);
   assert.match(
     commonLayoutCss,
     /grid-template-areas:\s*"header header"\s*"footer footer"\s*"players board"/

@@ -142,6 +142,25 @@ test("x01 player surface adapter reads two players with names and scores", () =>
   );
 });
 
+test("x01 player surface adapter ignores online profile badge text when reading names", () => {
+  const documentRef = new FakeDocument();
+  const root = appendPlayerDisplayRoot(documentRef);
+  const card = appendPlayerCard(documentRef, root, {
+    id: "ad-ext-player-0",
+    nameText: "ONLINE PLAYER",
+    scoreText: "501",
+  });
+  const profileBadge = documentRef.createElement("span");
+  profileBadge.classList.add("chakra-badge", "css-n2903v");
+  profileBadge.textContent = "35+";
+  card.appendChild(profileBadge);
+
+  const snapshot = getX01PlayerSurfaceSnapshot(documentRef);
+
+  assert.equal(snapshot.players[0].nameText, "ONLINE PLAYER");
+  assert.equal(snapshot.players[0].scoreText, "501");
+});
+
 test("x01 player surface adapter handles missing score and name nodes defensively", () => {
   const documentRef = new FakeDocument();
   const root = appendPlayerDisplayRoot(documentRef);

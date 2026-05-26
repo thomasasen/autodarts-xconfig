@@ -16,6 +16,7 @@ import {
   TRAIL_CLASS,
   TRACK_CLASS,
 } from "./style.js";
+import { markPlayerCardParts } from "../shared/player-card-parts.js";
 
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 export const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
@@ -803,6 +804,27 @@ function getPlayerScoreNode(cardNode) {
   return cardNode.querySelector(PLAYER_SCORE_SELECTOR);
 }
 
+function getPlayerScoreContainer(cardNode, scoreNode = getPlayerScoreNode(cardNode)) {
+  if (!cardNode || !scoreNode) {
+    return null;
+  }
+
+  const stackNode = getPlayerStack(cardNode) || cardNode;
+  if (scoreNode.parentNode === stackNode) {
+    return scoreNode;
+  }
+
+  let current = scoreNode.parentNode || null;
+  while (current?.nodeType === 1 && current !== cardNode) {
+    if (current.parentNode === stackNode) {
+      return current;
+    }
+    current = current.parentNode || null;
+  }
+
+  return scoreNode;
+}
+
 function resolveCardIdentity(cardNode, scoreNode, cardIndex) {
   const candidateAttributes = [
     "data-player-id",
@@ -824,11 +846,7 @@ function resolveCardIdentity(cardNode, scoreNode, cardIndex) {
     cardNode?.querySelector?.(".chakra-avatar + p") ||
     null;
   const nameText = String(nameNode?.textContent || "").replaceAll(/\s+/g, " ").trim();
-  if (nameText) {
-    return `name:${nameText}`;
-  }
-
-  return `slot:${cardIndex}`;
+  return nameText ? `name-slot:${cardIndex}:${nameText}` : `slot:${cardIndex}`;
 }
 
 function isPlayerCardActive(cardNode, scoreNode, documentRef, activePlayerIndex, cardIndex) {
@@ -898,14 +916,23 @@ export function ensureProgressHost(cardNode, documentRef) {
   const stackNode = getPlayerStack(cardNode) || cardNode;
   stackNode?.setAttribute?.(STACK_ATTRIBUTE, "true");
   const scoreNode = getPlayerScoreNode(cardNode);
+  const scoreContainerNode = getPlayerScoreContainer(cardNode, scoreNode);
   if (hostNode.parentNode !== stackNode) {
-    if (scoreNode && scoreNode.parentNode === stackNode && typeof scoreNode.after === "function") {
-      scoreNode.after(hostNode);
+    if (
+      scoreContainerNode &&
+      scoreContainerNode.parentNode === stackNode &&
+      typeof scoreContainerNode.after === "function"
+    ) {
+      scoreContainerNode.after(hostNode);
     } else {
       stackNode.appendChild(hostNode);
     }
-  } else if (scoreNode && hostNode.previousElementSibling !== scoreNode && scoreNode.parentNode === stackNode) {
-    scoreNode.after?.(hostNode);
+  } else if (
+    scoreContainerNode &&
+    hostNode.previousElementSibling !== scoreContainerNode &&
+    scoreContainerNode.parentNode === stackNode
+  ) {
+    scoreContainerNode.after?.(hostNode);
   }
 
   ensureProgressChildren(hostNode, documentRef);
@@ -1317,8 +1344,10 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     : null;
 
   cards.forEach((cardNode, cardIndex) => {
+    markPlayerCardParts(cardNode);
     const stackNode = getPlayerStack(cardNode) || cardNode;
     const scoreNode = getPlayerScoreNode(cardNode);
+    const scoreContainerNode = getPlayerScoreContainer(cardNode, scoreNode);
     const scoreValue = parseDisplayedScore(scoreNode?.textContent || "");
     if (!isFiniteNumber(scoreValue)) {
       cardNode.querySelector?.(HOST_SELECTOR)?.remove?.();
@@ -1328,6 +1357,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
           index: cardIndex,
           card: summarizeNode(cardNode),
           stack: summarizeNode(stackNode),
+          scoreContainer: summarizeNode(scoreContainerNode),
           scoreNodeFound: Boolean(scoreNode),
           scoreText: toCompactText(scoreNode?.textContent || ""),
           parsedScore: null,
@@ -1344,6 +1374,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
           index: cardIndex,
           card: summarizeNode(cardNode),
           stack: summarizeNode(stackNode),
+          scoreContainer: summarizeNode(scoreContainerNode),
           scoreNodeFound: Boolean(scoreNode),
           scoreText: toCompactText(scoreNode?.textContent || ""),
           parsedScore: scoreValue,
@@ -1393,6 +1424,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
         index: cardIndex,
         card: summarizeNode(cardNode),
         stack: summarizeNode(stackNode),
+        scoreContainer: summarizeNode(scoreContainerNode),
         scoreNodeFound: Boolean(scoreNode),
         scoreText: toCompactText(scoreNode?.textContent || ""),
         parsedScore: scoreValue,

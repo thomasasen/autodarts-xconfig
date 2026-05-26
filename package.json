@@ -1,6 +1,6 @@
 {
   "name": "autodarts-xconfig",
-  "version": "2.3.17",
+  "version": "2.3.18",
   "description": "Clean successor architecture for autodarts xConfig userscript modules",
   "type": "module",
   "imports": {

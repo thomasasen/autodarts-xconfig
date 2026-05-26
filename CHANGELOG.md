@@ -12,6 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.18] - 2026-05-26
+
+### Fixed
+
+- Nutzerwirkung: `Theme X01 2Player (Beta)` zeigt Online-Spieler wieder vollständig an: Avatar, Länderflagge und Profil-/Average-Badge bleiben sichtbar, und Scores sowie `X01 Score Progress` werden bei verschachteltem Online-Markup stabil gerendert.
+  Technik: Eine gemeinsame Player-Card-Part-Erkennung markiert Score-Wrapper, Identity-Media, Profil- und Round-Badges semantisch; X01-2Player-Policy, Theme-CSS und Score-Progress-Host-Insertion nutzen diese Marker statt fragile Chakra-Hash-Annahmen.
+- Nutzerwirkung: Online-Profil-Badges wie `35+` bleiben in den Themes lesbar und kollidieren nicht mehr mit grünen Round-/Wins-Badges.
+  Technik: Globale Badge-Overrides wurden auf echte Player-Display-Rollen begrenzt, X01/Cricket/Bull-Off-Regeln trennen Profil- und Round-Badges, und anonymisierte Live-DOM-Fixtures sichern Online-Spieler-Markup ab.
+
 ## [2.3.17] - 2026-05-13
 
 ### Added
@@ -1631,7 +1640,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.17]: https://github.com/thomasasen/autodarts-xconfig/compare/3cbf7b3...HEAD
+[2.3.18]: https://github.com/thomasasen/autodarts-xconfig/compare/0c88218...HEAD
+[2.3.17]: https://github.com/thomasasen/autodarts-xconfig/compare/3cbf7b3...0c88218
 [2.3.16]: https://github.com/thomasasen/autodarts-xconfig/compare/53e5d17...3cbf7b3
 [2.3.15]: https://github.com/thomasasen/autodarts-xconfig/compare/aae1311...53e5d17
 [2.3.14]: https://github.com/thomasasen/autodarts-xconfig/compare/1ecafb3...aae1311

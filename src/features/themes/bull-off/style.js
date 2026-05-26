@@ -164,7 +164,8 @@ div.css-nfhdnc {
   text-shadow: 0 0 18px rgba(0, 0, 0, var(--bull-score-shadow-alpha));
 }
 
-span.css-3fr5p8{
+#ad-ext-player-display .css-1k3nd6z > span.css-3fr5p8,
+#ad-ext-player-display .css-1cmgsw8 > span.css-3fr5p8{
   background: linear-gradient(90deg, var(--bull-green), var(--bull-red));
   color: #101215;
 }

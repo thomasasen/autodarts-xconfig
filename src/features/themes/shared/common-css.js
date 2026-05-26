@@ -1,3 +1,8 @@
+import {
+  PLAYER_CARD_PART_ATTRIBUTE,
+  PLAYER_CARD_PARTS,
+} from "../../shared/player-card-parts.js";
+
 export const commonThemeCss = `
 :root{
   --theme-bg: #000000;
@@ -142,7 +147,21 @@ span.chakra-badge.css-n2903v {
 }
 
 p.chakra-text.ad-ext-player-score.css-18w03sn { color: var(--ad-ext-theme-score-active-color); }
-span.css-3fr5p8 { background-color: #9fdb58; color: #222; }
+#ad-ext-player-display [${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"],
+#ad-ext-player-display .css-1k3nd6z > span.css-3fr5p8,
+#ad-ext-player-display .css-1k3nd6z > .css-3fr5p8,
+#ad-ext-player-display .css-1cmgsw8 > span.css-3fr5p8,
+#ad-ext-player-display .css-1cmgsw8 > .css-3fr5p8 {
+  background-color: #9fdb58;
+  color: #222;
+}
+#ad-ext-player-display [${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.profileBadge}"],
+#ad-ext-player-display .ad-ext-player-name + .chakra-badge,
+#ad-ext-player-display .ad-ext-player-name ~ .chakra-badge {
+  color: var(--ad-ext-theme-profile-badge-color, #f8fafc) !important;
+  background-color: var(--ad-ext-theme-profile-badge-bg, rgba(226, 232, 240, 0.18)) !important;
+  box-shadow: inset 0 0 0 1px var(--ad-ext-theme-profile-badge-border, rgba(248, 250, 252, 0.22)) !important;
+}
 p.chakra-text.ad-ext-player-score.css-1r7jzhg { color: var(--ad-ext-theme-score-active-color); }
 div.suggestion.css-1dkgpmk { font-size: 6px; background-color: #222; border-color: #434343; }
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
@@ -241,8 +260,14 @@ export const commonLayoutCss = `
 .css-1k3nd6z{ align-self: stretch; font-size: 36px; }
 .css-g0ywsj{ min-width: auto; }
 .css-1k3nd6z > span{ justify-content: center; height: 100%; }
-.css-3fr5p8 { background-color: var(--theme-player-badge-bg); }
-.css-3fr5p8 > p{ font-size: var(--ad-ext-player-badge-size, 1.4375rem) !important; }
+#ad-ext-player-display [${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"],
+#ad-ext-player-display .css-1k3nd6z > .css-3fr5p8,
+#ad-ext-player-display .css-1cmgsw8 > .css-3fr5p8 {
+  background-color: var(--theme-player-badge-bg);
+}
+#ad-ext-player-display [${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"] > p,
+#ad-ext-player-display .css-1k3nd6z > .css-3fr5p8 > p,
+#ad-ext-player-display .css-1cmgsw8 > .css-3fr5p8 > p{ font-size: var(--ad-ext-player-badge-size, 1.4375rem) !important; }
 
 .css-1j0bqop {
   font-size: var(--ad-ext-player-meta-size, 1.1875rem) !important;

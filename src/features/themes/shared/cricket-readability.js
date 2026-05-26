@@ -10,6 +10,10 @@ import {
 } from "./theme-layout-contract.js";
 import { CRICKET_READABILITY_POLICY } from "./cricket-readability-shared.js";
 import { createMeasurementCacheManager } from "./measurement-cache.js";
+import {
+  clearPlayerCardPartMarkers,
+  markPlayerCardParts,
+} from "../../shared/player-card-parts.js";
 const BOARD_SIZE_CSS_VARIABLE = "--ad-ext-theme-board-size";
 const CRICKET_BOARD_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-board-width";
 const CRICKET_PLAYER_COLUMN_WIDTH_CSS_VARIABLE = "--ad-ext-theme-cricket-player-column-width";
@@ -240,6 +244,7 @@ function clearCricketPlayerCardMarkers(playerNode) {
   }
 
   removeMarkerAttributes(playerNode);
+  clearPlayerCardPartMarkers(playerNode);
   if (typeof playerNode.querySelectorAll !== "function") {
     return;
   }
@@ -555,6 +560,7 @@ function normalizeCricketIdentitySlot(identitySlot) {
 }
 
 function normalizeCricketPlayerCard(playerNode) {
+  markPlayerCardParts(playerNode);
   const markerSignature = resolveCricketPlayerCardMarkerSignature(playerNode);
   const previousMarkerSignature = cricketPlayerCardMarkerSignatureByNode.get(playerNode);
   if (previousMarkerSignature !== markerSignature) {

@@ -12,6 +12,10 @@ import {
   syncX01TwoPlayerScoreboardState,
 } from "./scoreboard-state.js";
 import { THEME_LAYOUT_HOOK_CLASSES } from "../shared/theme-layout-contract.js";
+import {
+  clearPlayerCardPartMarkers,
+  markPlayerCardParts,
+} from "../../shared/player-card-parts.js";
 
 const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
 const PLAYER_CARD_SELECTOR = `${PLAYER_DISPLAY_SELECTOR} .ad-ext-player`;
@@ -882,6 +886,7 @@ function clearPlayerMarkers(documentRef) {
   queryAll(documentRef, `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]`).forEach((node) => {
     node.removeAttribute?.(X01_TWO_PLAYER_SLOT_ATTRIBUTE);
   });
+  clearPlayerCardPartMarkers(documentRef);
 }
 
 function findDirectPlayerStack(cardNode) {
@@ -950,7 +955,7 @@ function findScoreSlot(stackNode) {
         return Boolean(node.querySelector?.(".ad-ext-player-score, p"));
       }
 
-      return false;
+      return Boolean(node.querySelector?.(".ad-ext-player-score"));
     }) || null
   );
 }
@@ -1018,6 +1023,7 @@ export function syncX01TwoPlayerLayoutState(documentRef, gameState) {
 
   const activePlayerIndex = resolveActivePlayerIndex(playerCards, gameState);
   playerCards.forEach((cardNode, cardIndex) => {
+    markPlayerCardParts(cardNode);
     const wrapperNode = findDirectPlayerWrapper(cardNode);
     wrapperNode?.setAttribute?.(X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE, "true");
     wrapperNode?.setAttribute?.(X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE, String(cardIndex));

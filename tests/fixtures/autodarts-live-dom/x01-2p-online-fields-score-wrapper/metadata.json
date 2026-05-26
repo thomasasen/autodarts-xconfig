@@ -1,0 +1,9 @@
+{
+  "scenario": "x01-2player-online-fields-score-wrapper",
+  "source": "anonymized live match DOM from active Autodarts tab",
+  "capturedAt": "2026-05-26",
+  "notes": [
+    "Online player has avatar, country flag, profile badge, stats, nested score wrapper, progress host, and table.",
+    "Local player has no avatar/profile badge but uses the same nested score wrapper shape."
+  ]
+}

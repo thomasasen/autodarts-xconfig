@@ -1,6 +1,10 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
 import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
 import {
+  PLAYER_CARD_PART_ATTRIBUTE,
+  PLAYER_CARD_PARTS,
+} from "../../shared/player-card-parts.js";
+import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
   X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
   X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE,
@@ -33,6 +37,10 @@ const SCORE_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="score"]`;
 const TABLE_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="table"]`;
 const STACK_HEADER_META_SELECTOR = `.css-1igwmid:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}])`;
 const LEGACY_PROGRESS_STACK_SELECTOR = `.chakra-stack[data-ad-ext-x01-score-progress-stack="true"]:not(${STACK_SELECTOR})`;
+const IDENTITY_MEDIA_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.identityMedia}"]`;
+const FLAG_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.flag}"]`;
+const ROUND_BADGE_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"]`;
+const PROFILE_BADGE_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.profileBadge}"]`;
 
 function resolveThemeX01TwoPlayerConfig(rawConfig = {}) {
   return {
@@ -508,7 +516,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   border:0 !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type{
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]){
   grid-column:1 !important;
   grid-row:1 !important;
   display:grid !important;
@@ -529,16 +537,16 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   overflow:hidden !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type > :first-child{
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]) > :first-child{
   flex:0 0 auto !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type > :last-child{
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]) > :last-child{
   min-width:0 !important;
   width:100% !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type > :last-child > span{
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]) > :last-child > span{
   display:grid !important;
   grid-template-columns:max-content minmax(0, 1fr) !important;
   align-items:center !important;
@@ -605,14 +613,14 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELEC
   gap:clamp(0.45rem, 2.8cqi, 0.9rem) !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type > :last-child > span > :first-child{
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]) > :last-child > span > :first-child{
   display:flex !important;
   align-items:center !important;
   gap:clamp(0.4rem, 2.35cqi, 0.72rem) !important;
   flex:0 0 auto !important;
 }
 
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type > :last-child > span > :last-child{
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]) > :last-child > span > :last-child{
   min-width:0 !important;
   display:grid !important;
   grid-template-columns:minmax(0, 1fr) max-content !important;
@@ -642,7 +650,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELEC
 #ad-ext-player-display .ad-ext-player > .chakra-stack,
 #ad-ext-player-display .ad-ext-player > .chakra-stack::before,
 #ad-ext-player-display .ad-ext-player > .chakra-stack::after,
-#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type,
+#ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:first-of-type:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}]),
 #ad-ext-player-display .ad-ext-player > .chakra-stack > .chakra-stack:last-of-type{
   border-color:transparent !important;
 }
@@ -833,7 +841,10 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z > span.css-3fr5p8,
-#ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8{
+#ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8,
+#ad-ext-player-display .ad-ext-player .css-1cmgsw8 > span.css-3fr5p8,
+#ad-ext-player-display .ad-ext-player .css-1cmgsw8 > .css-3fr5p8,
+#ad-ext-player-display .ad-ext-player ${ROUND_BADGE_SELECTOR}{
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
@@ -864,7 +875,17 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   height:clamp(2.6rem, 16cqi, 3.5rem) !important;
 }
 
-#ad-ext-player-display .ad-ext-player .css-3fr5p8{
+#ad-ext-player-display .ad-ext-player ${FLAG_SELECTOR},
+#ad-ext-player-display .ad-ext-player .chakra-image.css-6t0bzd{
+  display:block !important;
+  width:clamp(0.8rem, 4cqi, 1.05rem) !important;
+  height:auto !important;
+  min-width:clamp(0.8rem, 4cqi, 1.05rem) !important;
+}
+
+#ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8,
+#ad-ext-player-display .ad-ext-player .css-1cmgsw8 > .css-3fr5p8,
+#ad-ext-player-display .ad-ext-player ${ROUND_BADGE_SELECTOR}{
   display:inline-grid !important;
   place-items:center !important;
   inline-size:var(--ad-ext-x01-2player-round-size) !important;
@@ -885,18 +906,22 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
     0 0.22rem 0.5rem rgba(97, 170, 75, 0.18) !important;
 }
 
-#ad-ext-player-display .ad-ext-player .chakra-badge{
-  background:transparent !important;
-  color:#d7e6db !important;
+#ad-ext-player-display .ad-ext-player .chakra-badge,
+#ad-ext-player-display .ad-ext-player ${PROFILE_BADGE_SELECTOR}{
+  background:rgba(215, 230, 219, 0.16) !important;
+  color:#f6fff8 !important;
   border-radius:999px !important;
-  box-shadow:none !important;
+  box-shadow:inset 0 0 0 1px rgba(246, 255, 248, 0.22) !important;
 }
 
-#ad-ext-player-display .ad-ext-player .chakra-badge{
+#ad-ext-player-display .ad-ext-player .chakra-badge,
+#ad-ext-player-display .ad-ext-player ${PROFILE_BADGE_SELECTOR}{
   font-size:clamp(0.94rem, min(4.6cqi, 1.92cqb), 1.16rem) !important;
 }
 
-#ad-ext-player-display .ad-ext-player .css-3fr5p8 > p{
+#ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8 > p,
+#ad-ext-player-display .ad-ext-player .css-1cmgsw8 > .css-3fr5p8 > p,
+#ad-ext-player-display .ad-ext-player ${ROUND_BADGE_SELECTOR} > p{
   font-size:var(--ad-ext-x01-2player-round-font-size) !important;
   line-height:1 !important;
   font-weight:800 !important;
@@ -1007,6 +1032,18 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   display:none !important;
 }
 
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > ${IDENTITY_MEDIA_SELECTOR}{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:clamp(0.18rem, 0.75cqi, 0.32rem) !important;
+  width:max-content !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  margin:0 auto clamp(0.12rem, 0.3cqi, 0.22rem) !important;
+  overflow:visible !important;
+}
+
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child{
   min-width:0 !important;
   display:block !important;
@@ -1026,7 +1063,17 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .chakra-badge,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-n2903v,
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-3fr5p8{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${PROFILE_BADGE_SELECTOR}{
+  display:inline-grid !important;
+  justify-self:center !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin-inline:auto !important;
+  margin-top:clamp(0.16rem, 0.42cqi, 0.28rem) !important;
+  padding-inline:clamp(0.34rem, 1.4cqi, 0.52rem) !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${ROUND_BADGE_SELECTOR}{
   display:none !important;
 }
 
@@ -1221,6 +1268,22 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   align-self:stretch !important;
   justify-self:stretch !important;
   z-index:2 !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR}{
+  overflow:visible !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR}.ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
+  width:max-content !important;
+  min-width:max-content !important;
+  max-width:none !important;
+  max-inline-size:none !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  justify-self:center !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}{

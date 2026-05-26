@@ -15,6 +15,10 @@ import {
   X01_TWO_PLAYER_STALE_REMAINING_CLASS,
   deriveX01TwoPlayerScoreboardRowState,
 } from "../../src/features/themes/x01-2player/scoreboard-state.js";
+import {
+  PLAYER_CARD_PART_ATTRIBUTE,
+  PLAYER_CARD_PARTS,
+} from "../../src/features/shared/player-card-parts.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -185,6 +189,139 @@ test("theme-x01-2player policy marks active cards and semantic slots without res
   assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.tableSlot.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+});
+
+test("theme-x01-2player policy separates round and profile badges in online player markup", () => {
+  const documentRef = new FakeDocument();
+  const playerDisplayNode = documentRef.createElement("div");
+  playerDisplayNode.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplayNode);
+
+  const player = createX01TwoPlayerCard(documentRef, 301, "ONLINE PLAYER");
+  const identityRow = player.identityNode;
+  const roundHost = documentRef.createElement("div");
+  roundHost.classList.add("css-1k3nd6z");
+  const roundBadge = documentRef.createElement("span");
+  roundBadge.classList.add("css-3fr5p8");
+  roundBadge.textContent = "0";
+  roundHost.appendChild(roundBadge);
+  identityRow.appendChild(roundHost);
+
+  const nameNode = identityRow.querySelector(".ad-ext-player-name");
+  const profileBadge = documentRef.createElement("span");
+  profileBadge.classList.add("chakra-badge", "css-n2903v");
+  profileBadge.textContent = "35+";
+  nameNode.parentNode.appendChild(profileBadge);
+  playerDisplayNode.appendChild(player.wrapperNode);
+
+  const policy = resolveThemePolicy({ featureKey: "theme-x01-2player" });
+  policy.onActivate({
+    documentRef,
+    gameState: {
+      getActivePlayerIndex() {
+        return 0;
+      },
+    },
+    themeState: policy.createState(),
+  });
+
+  assert.equal(
+    roundBadge.getAttribute(PLAYER_CARD_PART_ATTRIBUTE),
+    PLAYER_CARD_PARTS.roundBadge
+  );
+  assert.equal(
+    profileBadge.getAttribute(PLAYER_CARD_PART_ATTRIBUTE),
+    PLAYER_CARD_PARTS.profileBadge
+  );
+});
+
+test("theme-x01-2player policy marks nested online score and media fields", () => {
+  const documentRef = new FakeDocument();
+  const playerDisplayNode = documentRef.createElement("div");
+  playerDisplayNode.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplayNode);
+
+  const wrapperNode = documentRef.createElement("div");
+  const cardNode = documentRef.createElement("div");
+  cardNode.classList.add("ad-ext-player", "ad-ext-player-active");
+  const stackNode = documentRef.createElement("div");
+  stackNode.classList.add("chakra-stack", "css-y3hfdd");
+
+  const scoreWrapper = documentRef.createElement("div");
+  scoreWrapper.classList.add("chakra-stack", "css-xsngok");
+  const scoreNode = documentRef.createElement("p");
+  scoreNode.classList.add("chakra-text", "ad-ext-player-score", "css-1r7jzhg");
+  scoreNode.textContent = "301";
+  scoreWrapper.appendChild(scoreNode);
+
+  const identityNode = documentRef.createElement("div");
+  identityNode.classList.add("chakra-stack", "css-37hv00");
+  const roundHost = documentRef.createElement("div");
+  roundHost.classList.add("css-1k3nd6z");
+  const roundBadge = documentRef.createElement("span");
+  roundBadge.classList.add("css-3fr5p8");
+  roundBadge.textContent = "0";
+  roundHost.appendChild(roundBadge);
+
+  const identityHost = documentRef.createElement("div");
+  identityHost.classList.add("css-4rrvd0");
+  const identityLink = documentRef.createElement("span");
+  const mediaNode = documentRef.createElement("div");
+  mediaNode.classList.add("chakra-stack", "css-1psdi5l");
+  const avatarNode = documentRef.createElement("span");
+  avatarNode.classList.add("chakra-avatar", "css-18xwq3i");
+  const flagNode = documentRef.createElement("img");
+  flagNode.classList.add("chakra-image", "css-6t0bzd");
+  mediaNode.appendChild(avatarNode);
+  mediaNode.appendChild(flagNode);
+  const nameStack = documentRef.createElement("div");
+  nameStack.classList.add("chakra-stack", "css-1igwmid");
+  const nameNode = documentRef.createElement("span");
+  nameNode.classList.add("ad-ext-player-name", "css-g0ywsj");
+  nameNode.textContent = "ONLINE PLAYER";
+  const profileBadge = documentRef.createElement("span");
+  profileBadge.classList.add("chakra-badge", "css-n2903v");
+  profileBadge.textContent = "35+";
+  nameStack.appendChild(nameNode);
+  nameStack.appendChild(profileBadge);
+  identityLink.appendChild(mediaNode);
+  identityLink.appendChild(nameStack);
+  identityHost.appendChild(identityLink);
+  identityNode.appendChild(roundHost);
+  identityNode.appendChild(identityHost);
+
+  const statsNode = documentRef.createElement("div");
+  statsNode.classList.add("chakra-stack", "css-1igwmid");
+  const statsText = documentRef.createElement("p");
+  statsText.classList.add("chakra-text", "css-1j0bqop");
+  statsText.textContent = "#0 | ∅ 0.0 / 0.0";
+  statsNode.appendChild(statsText);
+
+  stackNode.appendChild(scoreWrapper);
+  stackNode.appendChild(identityNode);
+  stackNode.appendChild(statsNode);
+  cardNode.appendChild(stackNode);
+  wrapperNode.appendChild(cardNode);
+  playerDisplayNode.appendChild(wrapperNode);
+
+  const policy = resolveThemePolicy({ featureKey: "theme-x01-2player" });
+  policy.onActivate({
+    documentRef,
+    gameState: {
+      getActivePlayerIndex() {
+        return 0;
+      },
+    },
+    themeState: policy.createState(),
+  });
+
+  assert.equal(scoreWrapper.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), "score");
+  assert.equal(scoreWrapper.getAttribute(PLAYER_CARD_PART_ATTRIBUTE), PLAYER_CARD_PARTS.score);
+  assert.equal(scoreNode.getAttribute(PLAYER_CARD_PART_ATTRIBUTE), PLAYER_CARD_PARTS.score);
+  assert.equal(mediaNode.getAttribute(PLAYER_CARD_PART_ATTRIBUTE), PLAYER_CARD_PARTS.identityMedia);
+  assert.equal(avatarNode.getAttribute(PLAYER_CARD_PART_ATTRIBUTE), PLAYER_CARD_PARTS.avatar);
+  assert.equal(flagNode.getAttribute(PLAYER_CARD_PART_ATTRIBUTE), PLAYER_CARD_PARTS.flag);
+  assert.equal(profileBadge.getAttribute(PLAYER_CARD_PART_ATTRIBUTE), PLAYER_CARD_PARTS.profileBadge);
 });
 
 test("theme-x01-2player policy mirrors board controls above the dart overlay without moving originals", () => {

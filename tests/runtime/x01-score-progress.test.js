@@ -50,6 +50,20 @@ function createPlayerCard(documentRef, score, { active = false } = {}) {
   };
 }
 
+function createNestedScorePlayerCard(documentRef, score, { active = false } = {}) {
+  const player = createPlayerCard(documentRef, score, { active });
+  const scoreWrapper = documentRef.createElement("div");
+  scoreWrapper.classList.add("chakra-stack", "css-xsngok");
+  player.stackNode.removeChild(player.scoreNode);
+  scoreWrapper.appendChild(player.scoreNode);
+  player.stackNode.appendChild(scoreWrapper);
+
+  return {
+    ...player,
+    scoreWrapper,
+  };
+}
+
 test("resolveStartScore falls back to selected DOM controls on match routes", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
@@ -793,6 +807,114 @@ test("syncScoreProgress keeps inactive styling untouched by active-only settings
     inactiveFill.classList.contains("ad-ext-x01-score-progress__fill--effect-signal-sweep"),
     false
   );
+});
+
+test("syncScoreProgress keeps same-name online players in separate score identities", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const firstPlayer = createPlayerCard(documentRef, 501);
+  const secondPlayer = createPlayerCard(documentRef, 301);
+  [firstPlayer, secondPlayer].forEach((player) => {
+    const nameNode = documentRef.createElement("span");
+    nameNode.classList.add("ad-ext-player-name");
+    nameNode.textContent = "ONLINE PLAYER";
+    const profileBadge = documentRef.createElement("span");
+    profileBadge.classList.add("chakra-badge", "css-n2903v");
+    profileBadge.textContent = "35+";
+    player.stackNode.appendChild(nameNode);
+    player.stackNode.appendChild(profileBadge);
+    playerDisplay.appendChild(player.cardNode);
+  });
+
+  const result = syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        debug: true,
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "same-name-online",
+          match: {
+            id: "same-name-online",
+            variant: "501",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  assert.deepEqual(
+    result.debug.sampledCards.map((card) => card.cardIdentity),
+    ["name-slot:0:ONLINE PLAYER", "name-slot:1:ONLINE PLAYER"]
+  );
+});
+
+test("syncScoreProgress inserts host after nested online score wrapper", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "301";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createNestedScorePlayerCard(documentRef, 301, { active: true });
+  const identityNode = documentRef.createElement("div");
+  identityNode.classList.add("chakra-stack", "css-37hv00");
+  const nameNode = documentRef.createElement("span");
+  nameNode.classList.add("ad-ext-player-name");
+  nameNode.textContent = "ONLINE PLAYER";
+  const profileBadge = documentRef.createElement("span");
+  profileBadge.classList.add("chakra-badge", "css-n2903v");
+  profileBadge.textContent = "35+";
+  identityNode.appendChild(nameNode);
+  identityNode.appendChild(profileBadge);
+  player.stackNode.appendChild(identityNode);
+  playerDisplay.appendChild(player.cardNode);
+
+  const result = syncScoreProgress(
+    {
+      documentRef,
+      windowRef,
+      featureConfig: {
+        debug: true,
+      },
+      gameState: {
+        getSnapshot: () => ({
+          topic: "nested-online-score",
+          match: {
+            id: "nested-online-score",
+            variant: "301",
+          },
+        }),
+      },
+    },
+    createScoreProgressState()
+  );
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  assert.equal(hostNode.parentNode, player.stackNode);
+  assert.equal(hostNode.previousElementSibling, player.scoreWrapper);
+  assert.equal(player.stackNode.getAttribute(STACK_ATTRIBUTE), "true");
+  assert.equal(result.renderedCards, 1);
+  assert.equal(result.debug.sampledCards[0].scoreContainer, "div.chakra-stack.css-xsngok");
+  assert.equal(result.debug.sampledCards[0].hostPrevious, "div.chakra-stack.css-xsngok");
 });
 
 test("syncScoreProgress removes active-only size and effects when a card becomes inactive", () => {

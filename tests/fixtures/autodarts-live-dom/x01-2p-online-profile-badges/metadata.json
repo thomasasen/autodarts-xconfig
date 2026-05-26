@@ -1,0 +1,11 @@
+{
+  "scenario": "x01-2p-online-profile-badges",
+  "description": "Synthetic anonymized X01 player display with online-style profile badges on both players.",
+  "source": "Synthetic fixture based on observed Autodarts player-card structure; live online tab was unavailable during implementation.",
+  "notes": [
+    "Names, match identifiers, avatars, and player identifiers are anonymized or stripped.",
+    "The fixture preserves the relevant score, round badge, profile badge, avatar, flag, and stats markup."
+  ],
+  "variant": "501",
+  "activePlayerIndex": 0
+}

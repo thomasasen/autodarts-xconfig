@@ -588,7 +588,7 @@ div.css-rrf7rv {
   border-color: var(--theme-border-color);
 }
 
-.css-3fr5p8 {
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${ROW_SELECTOR} > ${SLOT_MARKS_SELECTOR} .css-3fr5p8 {
   background-color: var(--theme-player-badge-bg);
   color: #222222;
 }
