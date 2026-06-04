@@ -302,6 +302,7 @@ async function fetchRemoteVersionFromSource(fetchFn, sourceUrl, options = {}) {
   const response = await fetchFn(requestUrl, {
     method: "GET",
     cache: "no-store",
+    ...(options.signal ? { signal: options.signal } : {}),
     ...(Object.keys(headers).length ? { headers } : {}),
   });
 
@@ -379,6 +380,7 @@ async function fetchRemoteVersion(fetchFn, options = {}) {
       const remoteInfo = await fetchRemoteVersionFromSource(fetchFn, sourceUrl, {
         now,
         validators: nextValidators,
+        signal: options.signal,
       });
       nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, remoteInfo.validatorEntry);
       resolvedCandidates.push({
@@ -455,6 +457,7 @@ export async function resolveLatestUpdateStatus(options = {}) {
     const remoteInfo = await fetchRemoteVersion(fetchFn, {
       now,
       validators: cachedStatus.validators,
+      signal: options.signal,
     });
     const nextStatus = createResolvedUpdateStatus({
       capable: true,
@@ -467,6 +470,10 @@ export async function resolveLatestUpdateStatus(options = {}) {
     writeStoredPayload(storageRef, nextStatus);
     return nextStatus;
   } catch (error) {
+    if (error?.name === "AbortError") {
+      return cachedStatus;
+    }
+
     const message = String(error?.message || "Update-Prüfung fehlgeschlagen.").trim();
     if (cachedStatus.checkedAt > 0 && cachedStatus.remoteVersion) {
       const staleStatus = {

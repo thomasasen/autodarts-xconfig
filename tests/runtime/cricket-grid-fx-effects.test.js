@@ -301,7 +301,7 @@ function createMergedNonSemanticGrid(documentRef, labels, marksByLabel, options 
     const ownerCell = documentRef.createElement("div");
     ownerCell.classList.add(rowClassName);
 
-    let labelText = null;
+    let labelText;
     if (nestedLabelWrappers) {
       const labelShell = documentRef.createElement("div");
       labelShell.classList.add("css-label-shell");

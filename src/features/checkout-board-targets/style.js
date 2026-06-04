@@ -378,5 +378,14 @@ export function buildStyleText() {
     stroke-width: calc(var(--ad-ext-target-outline-width) + var(--ad-ext-target-outline-width-up-px));
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .${TARGET_CLASS},
+  .${OUTLINE_CLASS} {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
 `;
 }

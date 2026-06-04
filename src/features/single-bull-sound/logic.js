@@ -125,7 +125,7 @@ function safePlayAudio(state, config, options = {}) {
       ? options.onPlaybackFailure
       : () => {};
 
-  let playResult = null;
+  let playResult;
   try {
     playResult = audio.play();
   } catch (_) {

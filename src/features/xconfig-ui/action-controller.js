@@ -9,19 +9,33 @@ const TURN_DART_IMAGE_MAX_WIDTH = 960;
 const TURN_DART_IMAGE_MAX_HEIGHT = 240;
 const TURN_DART_IMAGE_MAX_BYTES = 350 * 1024;
 
+function isControllerActive(controller) {
+  return controller?.state?.started !== false;
+}
+
 function withRuntimeCall(controller, promiseLike, successMessage, errorMessage, successType = "success") {
   Promise.resolve(promiseLike)
     .then(() => {
+      if (!isControllerActive(controller)) {
+        return;
+      }
       if (successMessage) {
         controller.setNotice(successType, successMessage);
       }
     })
     .catch(() => {
+      if (!isControllerActive(controller)) {
+        return;
+      }
       if (errorMessage) {
         controller.setNotice("error", errorMessage);
       }
     })
-    .finally(() => controller.queueSync());
+    .finally(() => {
+      if (isControllerActive(controller)) {
+        controller.queueSync();
+      }
+    });
 }
 
 function confirmAction(windowRef, message) {
@@ -357,6 +371,7 @@ function handleClearThemeBackground(controller, feature) {
     setThemeActionFeedback: controller.setThemeActionFeedback,
     syncThemeBackgroundIndicators: controller.syncThemeBackgroundIndicators,
     queueSync: controller.queueSync,
+    isActive: () => isControllerActive(controller),
   });
 }
 
@@ -407,6 +422,7 @@ function handleUploadTurnDartImage(controller, feature) {
     maxHeight: TURN_DART_IMAGE_MAX_HEIGHT,
     maxBytes: TURN_DART_IMAGE_MAX_BYTES,
     trimTransparent: true,
+    isActive: () => isControllerActive(controller),
     onUnsupported: () => {
       controller.setNotice?.("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
       controller.setThemeActionFeedback?.(
@@ -415,10 +431,16 @@ function handleUploadTurnDartImage(controller, feature) {
         "Upload fehlgeschlagen: Diese Umgebung unterstützt keinen Bild-Upload."
       );
     },
-    onSuccess: (normalizedImage, file) =>
-      controller.runtimeApi
+    onSuccess: (normalizedImage, file) => {
+      if (!isControllerActive(controller)) {
+        return undefined;
+      }
+      return controller.runtimeApi
         .saveConfig(buildTurnDartImagePatch(configKey, normalizedImage.dataUrl))
         .then(() => {
+          if (!isControllerActive(controller)) {
+            return;
+          }
           const fileName = String(file.name || "").trim();
           const successMessage = fileName
             ? `Dart-Bild gespeichert: ${fileName}.`
@@ -426,7 +448,8 @@ function handleUploadTurnDartImage(controller, feature) {
           controller.setNotice?.("success", successMessage);
           controller.setThemeActionFeedback?.(featureKey, "success", successMessage);
           controller.syncTurnDartImageIndicators?.(featureKey);
-        }),
+        });
+    },
     onError: (error) => {
       const errorMessage = String(
         error?.message || "Dart-Bild konnte nicht gespeichert werden."

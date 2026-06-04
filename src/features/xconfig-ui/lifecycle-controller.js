@@ -1,3 +1,5 @@
+import { shouldHandleExternalDomMutation } from "../../core/dom-mutation-filter.js";
+
 function observeRootController(controller) {
   const target =
     controller.documentRef.getElementById?.("root") ||
@@ -13,10 +15,12 @@ function observeRootController(controller) {
     key: controller.rootObserverKey,
     target,
     callback: (mutations = []) => {
-      if (!controller.hasExternalDomMutation(mutations, controller.isManagedNode)) {
-        return;
-      }
-      if (!controller.shouldScheduleMutationSync(mutations)) {
+      if (
+        !shouldHandleExternalDomMutation(mutations, {
+          isManagedNode: controller.isManagedNode,
+          shouldHandle: controller.shouldScheduleMutationSync,
+        })
+      ) {
         return;
       }
       controller.queueSync();
@@ -160,6 +164,7 @@ function teardownShellLifecycle(controller) {
   controller.cancelQueuedSync();
   controller.clearNoticeTimer();
   controller.stopAutoUpdateChecks();
+  controller.cancelUpdateCheck();
   controller.state.notice = { type: "", message: "" };
   controller.restoreContent();
   controller.onTeardown();
@@ -260,9 +265,9 @@ function buildShellLifecycleControllerContext(options = {}) {
     startAutoUpdateChecks: resolveOptionalFunction(options.startAutoUpdateChecks, () => {}),
     stopAutoUpdateChecks: resolveOptionalFunction(options.stopAutoUpdateChecks, () => {}),
     refreshUpdateStatus: resolveOptionalFunction(options.refreshUpdateStatus, () => Promise.resolve()),
-    hasExternalDomMutation: resolveOptionalFunction(options.hasExternalDomMutation, () => true),
     isManagedNode: resolveOptionalFunction(options.isManagedNode, () => false),
     shouldScheduleMutationSync: resolveOptionalFunction(options.shouldScheduleMutationSync, () => true),
+    cancelUpdateCheck: resolveOptionalFunction(options.cancelUpdateCheck, () => {}),
   };
 }
 

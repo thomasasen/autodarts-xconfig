@@ -364,7 +364,7 @@ export function createGameStateStore(options = {}) {
       return;
     }
 
-    let parsed = null;
+    let parsed;
     try {
       parsed = JSON.parse(rawData);
     } catch (_) {

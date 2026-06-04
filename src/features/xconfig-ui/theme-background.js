@@ -652,9 +652,12 @@ export function uploadNormalizedThemeImage(options = {}) {
     onUnsupported,
     onFinally,
   } = options;
+  const isActive = typeof options.isActive === "function" ? options.isActive : () => true;
 
   if (typeof documentRef?.createElement !== "function") {
-    onUnsupported?.();
+    if (isActive()) {
+      onUnsupported?.();
+    }
     return;
   }
 
@@ -683,11 +686,17 @@ export function uploadNormalizedThemeImage(options = {}) {
         trimTransparent,
       })
     )
-      .then((normalizedImage) => onSuccess?.(normalizedImage, file))
-      .catch((error) => onError?.(error))
+      .then((normalizedImage) => (isActive() ? onSuccess?.(normalizedImage, file) : undefined))
+      .catch((error) => {
+        if (isActive()) {
+          onError?.(error);
+        }
+      })
       .finally(() => {
         cleanup();
-        onFinally?.();
+        if (isActive()) {
+          onFinally?.();
+        }
       });
   };
 
@@ -707,6 +716,7 @@ export function uploadThemeBackgroundImage(options = {}) {
     syncThemeBackgroundIndicators,
     queueSync,
   } = options;
+  const isActive = typeof options.isActive === "function" ? options.isActive : () => true;
   if (!themeKey || typeof runtimeApi?.setThemeBackgroundImage !== "function") {
     return;
   }
@@ -718,6 +728,7 @@ export function uploadThemeBackgroundImage(options = {}) {
     maxWidth: options.maxWidth,
     maxHeight: options.maxHeight,
     maxBytes: options.maxBytes,
+    isActive,
     onUnsupported: () => {
       setNotice?.("error", "Bild-Upload wird in dieser Umgebung nicht unterstützt.");
       setThemeActionFeedback?.(
@@ -727,6 +738,9 @@ export function uploadThemeBackgroundImage(options = {}) {
       );
     },
     onSuccess: (normalizedImage, file) => {
+      if (!isActive()) {
+        return undefined;
+      }
       const fileName = String(file.name || "").trim();
       const successMessage = buildThemeBackgroundUploadSuccessMessage(
         fileName,
@@ -735,6 +749,9 @@ export function uploadThemeBackgroundImage(options = {}) {
 
       return Promise.resolve(runtimeApi.setThemeBackgroundImage(themeKey, normalizedImage.dataUrl))
         .then(() => {
+          if (!isActive()) {
+            return;
+          }
           setNotice?.("success", successMessage);
           setThemeActionFeedback?.(featureKey, "success", successMessage);
           syncThemeBackgroundIndicators?.(featureKey);

@@ -187,6 +187,14 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES.blink)} {
     opacity: 1;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  ${scopedClassSelector(selectorPrefix, HIGHLIGHT_CLASS)} {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
 `;
 }
 

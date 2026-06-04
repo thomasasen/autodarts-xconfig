@@ -41,7 +41,7 @@ export function createMeasurementCacheManager(options = {}) {
       return rectCache.get(node);
     }
 
-    let rect = null;
+    let rect;
     try {
       rect = node.getBoundingClientRect();
     } catch (_) {

@@ -4,7 +4,7 @@ import {
   openUserscriptInstall,
   readStoredUpdateStatus,
 } from "./update-check.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { createManagedNodeMatcher } from "../../core/dom-mutation-filter.js";
 import {
   currentRoute,
   getContentElement,
@@ -215,6 +215,8 @@ function ensureXConfigShell(options = {}) {
     updateCheckPromise: null,
     pendingManualUpdateCheck: null,
     updateCheckIntervalHandle: null,
+    updateAbortController: null,
+    updateCheckGeneration: 0,
   };
 
   let routeController = null;
@@ -361,6 +363,7 @@ function ensureXConfigShell(options = {}) {
     refreshUpdateStatus,
     startAutoUpdateChecks,
     stopAutoUpdateChecks,
+    cancelUpdateCheck,
     onVisibilityChange,
   } = createUpdateStatusController({
     windowRef,
@@ -497,11 +500,11 @@ function ensureXConfigShell(options = {}) {
 
   lifecycleController = createShellLifecycleController({
     cancelQueuedSync,
+    cancelUpdateCheck,
     clearNoticeTimer,
     documentRef,
     domGuards,
     eventBus,
-    hasExternalDomMutation,
     isManagedNode,
     listenerKeys: LISTENER_KEYS,
     listenerRegistry,

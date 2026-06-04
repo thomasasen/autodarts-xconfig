@@ -113,3 +113,13 @@ export function hasExternalDomMutation(mutations = [], isManagedNode = null) {
     return touchedNodes.some((node) => !isManagedNode(node));
   });
 }
+
+export function shouldHandleExternalDomMutation(mutations = [], options = {}) {
+  if (!hasExternalDomMutation(mutations, options.isManagedNode)) {
+    return false;
+  }
+
+  return typeof options.shouldHandle === "function"
+    ? Boolean(options.shouldHandle(mutations))
+    : true;
+}

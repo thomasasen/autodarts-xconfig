@@ -370,5 +370,14 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
   0%{transform:translateX(-155%)}
   100%{transform:translateX(155%)}
 }
+
+@media (prefers-reduced-motion: reduce) {
+  ${HOST_SELECTOR} .${FILL_CLASS},
+  ${HOST_SELECTOR} .${FILL_CLASS}::after,
+  ${HOST_SELECTOR} .${TRAIL_CLASS} {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 `;
 }

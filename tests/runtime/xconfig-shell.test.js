@@ -1017,6 +1017,38 @@ test("xConfig shell forces one remote update check on startup even with fresh ca
   runtime.stop();
 });
 
+test("xConfig shell aborts inflight update checks on teardown without stale UI updates", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  let fetchCount = 0;
+  let aborted = false;
+
+  windowRef.fetch = (_url, options = {}) => {
+    fetchCount += 1;
+    return new Promise((_resolve, reject) => {
+      const signal = options.signal;
+      assert.ok(signal);
+      signal.addEventListener("abort", () => {
+        aborted = true;
+        const error = new Error("aborted");
+        error.name = "AbortError";
+        reject(error);
+      });
+    });
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitFor(() => fetchCount >= 1, { timeoutMs: 220, intervalMs: 5 });
+  runtime.stop();
+  await waitFor(() => aborted, { timeoutMs: 220, intervalMs: 5 });
+  await wait(5);
+
+  assert.equal(aborted, true);
+  assert.equal(documentRef.getElementById("ad-xconfig-menu-item"), null);
+  assert.equal(documentRef.querySelector(".ad-xconfig-notice"), null);
+});
+
 test("xConfig shell replays a manual update check after an inflight check finishes", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

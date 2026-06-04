@@ -12,6 +12,20 @@ export function createUpdateStatusController(options = {}) {
   const queueSync = typeof options.queueSync === "function" ? options.queueSync : () => {};
   const updateIntervalMs = Number(options.updateIntervalMs) || 0;
 
+  function isActiveGeneration(generation) {
+    return state?.started !== false && Number(state.updateCheckGeneration || 0) === generation;
+  }
+
+  function createUpdateAbortController() {
+    const AbortControllerRef =
+      typeof windowRef?.AbortController === "function"
+        ? windowRef.AbortController
+        : globalThis.AbortController;
+    return typeof AbortControllerRef === "function"
+      ? new AbortControllerRef()
+      : null;
+  }
+
   function setUpdateStatus(nextStatus = {}) {
     state.updateStatus = {
       ...state.updateStatus,
@@ -47,12 +61,20 @@ export function createUpdateStatusController(options = {}) {
       stale: Boolean(state.updateStatus.stale && state.updateStatus.checkedAt > 0),
     });
 
+    const generation = Number(state.updateCheckGeneration || 0);
+    const abortController = createUpdateAbortController();
+    state.updateAbortController = abortController;
+
     const updatePromise = resolveLatestUpdateStatus({
       windowRef,
       installedVersion,
       force,
+      signal: abortController?.signal,
     })
       .then((nextStatus) => {
+        if (!isActiveGeneration(generation)) {
+          return nextStatus;
+        }
         setUpdateStatus(nextStatus);
         if (announce) {
           if (nextStatus.status === "available") {
@@ -69,6 +91,12 @@ export function createUpdateStatusController(options = {}) {
         return nextStatus;
       })
       .finally(() => {
+        if (!isActiveGeneration(generation)) {
+          return;
+        }
+        if (state.updateAbortController === abortController) {
+          state.updateAbortController = null;
+        }
         state.updateCheckPromise = null;
         const pendingManualUpdateCheck = state.pendingManualUpdateCheck;
         state.pendingManualUpdateCheck = null;
@@ -79,6 +107,17 @@ export function createUpdateStatusController(options = {}) {
 
     state.updateCheckPromise = updatePromise;
     return updatePromise;
+  }
+
+  function cancelUpdateCheck() {
+    state.updateCheckGeneration = Number(state.updateCheckGeneration || 0) + 1;
+    const abortController = state.updateAbortController;
+    state.updateAbortController = null;
+    state.updateCheckPromise = null;
+    state.pendingManualUpdateCheck = null;
+    if (typeof abortController?.abort === "function") {
+      abortController.abort();
+    }
   }
 
   function stopAutoUpdateChecks() {
@@ -118,6 +157,7 @@ export function createUpdateStatusController(options = {}) {
     refreshUpdateStatus,
     startAutoUpdateChecks,
     stopAutoUpdateChecks,
+    cancelUpdateCheck,
     onVisibilityChange,
   };
 }

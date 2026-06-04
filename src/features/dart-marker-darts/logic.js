@@ -433,7 +433,6 @@ function ensureOverlaySvg(state, documentRef) {
     if (String(overlay.tagName || "").toLowerCase() === "svg") {
       return overlay;
     }
-    overlay = null;
   }
 
   overlay = documentRef.getElementById(OVERLAY_ID);

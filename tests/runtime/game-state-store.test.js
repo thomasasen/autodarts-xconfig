@@ -90,3 +90,50 @@ test("game state store derives a match snapshot from websocket state messages", 
 
   store.stop();
 });
+
+test("game state store clones match snapshots and suppresses duplicate subscriber work", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const eventBus = createEventBus();
+  const store = createGameStateStore({ eventBus, windowRef, documentRef });
+  const payload = {
+    variant: "X01",
+    player: 0,
+    players: Array.from({ length: 24 }, (_entry, index) => ({
+      id: `player-${index + 1}`,
+      name: `Player ${index + 1}`,
+    })),
+    gameScores: Array.from({ length: 24 }, (_entry, index) => 501 - index),
+    settings: {
+      outMode: "Double Out",
+    },
+    turns: Array.from({ length: 80 }, (_entry, index) => ({
+      round: Math.floor(index / 2) + 1,
+      turn: index + 1,
+      playerId: `player-${(index % 24) + 1}`,
+      score: 501 - index,
+      throws: [{ segment: "T20", score: 60 }],
+    })),
+  };
+  const rawPayload = JSON.stringify({
+    channel: "autodarts.matches",
+    topic: "match-123.state",
+    data: payload,
+  });
+  let subscriberCalls = 0;
+
+  store.subscribe(() => {
+    subscriberCalls += 1;
+  });
+  store.start();
+
+  void new FakeMessageEvent(rawPayload, new FakeWebSocket()).data;
+  const snapshot = store.getSnapshot();
+  snapshot.match.players[0].name = "mutated";
+  void new FakeMessageEvent(rawPayload, new FakeWebSocket()).data;
+
+  assert.equal(subscriberCalls, 1);
+  assert.equal(store.getSnapshot().match.players[0].name, "Player 1");
+
+  store.stop();
+});

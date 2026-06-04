@@ -96,5 +96,15 @@ export function buildStyleText() {
   transform-box: fill-box;
   will-change: transform, opacity;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .${DART_CONTAINER_CLASS},
+  .${DART_ROTATE_CLASS},
+  .${DART_SHADOW_CLASS},
+  .${DART_CLASS} {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 `;
 }

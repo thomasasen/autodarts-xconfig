@@ -401,6 +401,102 @@ test("uploadThemeBackgroundImage normalizes and persists successful uploads, but
   documentRef.createElement = originalCreateElement;
 });
 
+test("uploadThemeBackgroundImage skips stale callbacks after lifecycle deactivation", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const file = {
+    type: "image/png",
+    name: "late.png",
+  };
+  const bitmap = {
+    width: 800,
+    height: 600,
+    close() {},
+  };
+  let resolveBitmap = () => {};
+  windowRef.createImageBitmap = () =>
+    new Promise((resolve) => {
+      resolveBitmap = () => resolve(bitmap);
+    });
+
+  const canvas = installCanvasStub(
+    documentRef,
+    (mimeType) => `data:${mimeType};base64,${"a".repeat(40)}`
+  );
+  const originalCreateElement = documentRef.createElement.bind(documentRef);
+  const createdInputs = [];
+  documentRef.createElement = (tagName) => {
+    if (String(tagName || "").toLowerCase() !== "input") {
+      return originalCreateElement(tagName);
+    }
+
+    const input = {
+      type: "",
+      accept: "",
+      style: {},
+      tabIndex: 0,
+      files: [file],
+      onchange: null,
+      removed: false,
+      setAttribute() {},
+      click() {
+        this.onchange?.();
+      },
+      remove() {
+        this.removed = true;
+      },
+    };
+    createdInputs.push(input);
+    return input;
+  };
+
+  let active = true;
+  const calls = [];
+  const notices = [];
+  let queueCount = 0;
+
+  uploadThemeBackgroundImage({
+    feature: {
+      featureKey: "theme-x01",
+      title: "Theme X01",
+    },
+    themeKey: "x01",
+    documentRef,
+    windowRef,
+    runtimeApi: {
+      async setThemeBackgroundImage(themeKey, dataUrl) {
+        calls.push({ themeKey, dataUrl });
+      },
+    },
+    isActive: () => active,
+    setNotice(type, message) {
+      notices.push({ type, message });
+    },
+    setThemeActionFeedback(featureKey, type, message) {
+      notices.push({ featureKey, type, message });
+    },
+    syncThemeBackgroundIndicators(featureKey) {
+      notices.push({ featureKey });
+    },
+    queueSync() {
+      queueCount += 1;
+    },
+  });
+
+  assert.equal(createdInputs.length, 1);
+  active = false;
+  resolveBitmap();
+  await wait(5);
+
+  assert.equal(createdInputs[0].removed, true);
+  assert.deepEqual(calls, []);
+  assert.deepEqual(notices, []);
+  assert.equal(queueCount, 0);
+
+  canvas.restore();
+  documentRef.createElement = originalCreateElement;
+});
+
 test("theme background status nodes keep image metadata in dataset-backed attributes", () => {
   const documentRef = new FakeDocument();
   const status = buildThemeBackgroundStatus(documentRef, {

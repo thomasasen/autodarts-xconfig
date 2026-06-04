@@ -275,6 +275,35 @@ test("resolveLatestUpdateStatus throttles repeated failed checks within ttl wind
   assert.equal(secondStatus.checkedAt, firstNow);
 });
 
+test("resolveLatestUpdateStatus treats aborted remote checks as stale-neutral", async () => {
+  const localStorage = new FakeStorage({
+    "autodarts-xconfig:update-status:v1": JSON.stringify({
+      remoteVersion: "2.0.3",
+      checkedAt: 1_770_301_000_000,
+      sourceUrl: USERSCRIPT_UPDATE_URL,
+    }),
+  });
+  const windowRef = createFakeWindow({ localStorage });
+  windowRef.fetch = async () => {
+    const error = new Error("aborted");
+    error.name = "AbortError";
+    throw error;
+  };
+
+  const status = await resolveLatestUpdateStatus({
+    windowRef,
+    installedVersion: "2.0.2",
+    force: true,
+    now: 1_770_302_000_000,
+  });
+  const stored = JSON.parse(localStorage.getItem("autodarts-xconfig:update-status:v1"));
+
+  assert.equal(status.remoteVersion, "2.0.3");
+  assert.equal(status.checkedAt, 1_770_301_000_000);
+  assert.equal(status.error, "");
+  assert.equal(stored.checkedAt, 1_770_301_000_000);
+});
+
 test("shouldRefreshUpdateStatus respects ttl boundary", () => {
   const now = 1_770_300_000_000;
   const ttlMs = 60 * 60 * 1000;

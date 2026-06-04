@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createShellActionController } from "../../src/features/xconfig-ui/action-controller.js";
+import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function datasetKeyFromAttribute(name) {
   return String(name || "")
@@ -15,6 +16,10 @@ function datasetAttributeFromKey(key) {
 
 function flushMicrotasks() {
   return new Promise((resolve) => setImmediate(resolve));
+}
+
+function wait(ms = 0) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function createActionNode(attributes = {}, parentElement = null) {
@@ -382,4 +387,96 @@ test("createShellActionController dispatches feature and setting payload command
     ["info", "Aktion erledigt."],
     ["success", "Einstellung gespeichert."],
   ]);
+});
+
+test("createShellActionController suppresses stale turn dart upload callbacks after teardown", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const originalCreateElement = documentRef.createElement.bind(documentRef);
+  const file = {
+    type: "image/png",
+    name: "turn-dart.png",
+  };
+  const bitmap = {
+    width: 240,
+    height: 80,
+    close() {},
+  };
+  let resolveBitmap = () => {};
+  windowRef.createImageBitmap = () =>
+    new Promise((resolve) => {
+      resolveBitmap = () => resolve(bitmap);
+    });
+
+  documentRef.createElement = (tagName) => {
+    const normalizedTagName = String(tagName || "").toLowerCase();
+    if (normalizedTagName === "canvas") {
+      return {
+        width: 0,
+        height: 0,
+        getContext() {
+          return {
+            drawImage() {},
+            getImageData() {
+              return {
+                data: new Uint8ClampedArray(240 * 80 * 4).fill(255),
+                width: 240,
+                height: 80,
+              };
+            },
+          };
+        },
+        toDataURL(mimeType) {
+          return `data:${mimeType};base64,${"a".repeat(40)}`;
+        },
+      };
+    }
+    if (normalizedTagName !== "input") {
+      return originalCreateElement(tagName);
+    }
+    return {
+      type: "",
+      accept: "",
+      style: {},
+      tabIndex: 0,
+      files: [file],
+      onchange: null,
+      setAttribute() {},
+      click() {
+        this.onchange?.();
+      },
+      remove() {},
+    };
+  };
+
+  const calls = [];
+  const state = { started: true };
+  const controller = createShellActionController({
+    documentRef,
+    windowRef,
+    state,
+    queueSync: () => calls.push("sync"),
+    setNotice: (type, message) => calls.push(["notice", type, message]),
+    setThemeActionFeedback: (featureKey, type, message) =>
+      calls.push(["feedback", featureKey, type, message]),
+    syncTurnDartImageIndicators: (featureKey) => calls.push(["indicator", featureKey]),
+    runtimeApi: {
+      saveConfig: (patch) => {
+        calls.push(["save", patch]);
+        return Promise.resolve();
+      },
+    },
+  });
+
+  controller.handleAction("uploadTurnDartImage", null, {
+    featureKey: "dart-marker-darts",
+    configKey: "dartMarkerDarts",
+  });
+
+  state.started = false;
+  resolveBitmap();
+  await wait(5);
+
+  assert.deepEqual(calls, []);
+  documentRef.createElement = originalCreateElement;
 });
