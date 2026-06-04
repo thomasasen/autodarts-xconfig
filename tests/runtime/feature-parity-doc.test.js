@@ -3,23 +3,24 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-const matrixPath = path.resolve(process.cwd(), "docs", "LEGACY-PARITY-MATRIX.md");
+const migrationArchivePath = path.resolve(process.cwd(), "docs", "archive", "migration-v1");
+
+const matrixPath = path.resolve(migrationArchivePath, "LEGACY-PARITY-MATRIX.md");
 const matrixText = readFileSync(matrixPath, "utf8");
 
 const discrepancyMatrixPath = path.resolve(
-  process.cwd(),
-  "docs",
+  migrationArchivePath,
   "LEGACY-DISCREPANCY-MATRIX.md"
 );
 const discrepancyMatrixText = readFileSync(discrepancyMatrixPath, "utf8");
 
-const oldRepoInventoryPath = path.resolve(process.cwd(), "docs", "OLDREPO-INVENTORY.md");
+const oldRepoInventoryPath = path.resolve(migrationArchivePath, "OLDREPO-INVENTORY.md");
 const oldRepoInventoryText = readFileSync(oldRepoInventoryPath, "utf8");
 
-const newSystemInventoryPath = path.resolve(process.cwd(), "docs", "NEW-SYSTEM-INVENTORY.md");
+const newSystemInventoryPath = path.resolve(migrationArchivePath, "NEW-SYSTEM-INVENTORY.md");
 const newSystemInventoryText = readFileSync(newSystemInventoryPath, "utf8");
 
-const featureParityPath = path.resolve(process.cwd(), "docs", "FEATURE-PARITY.md");
+const featureParityPath = path.resolve(migrationArchivePath, "FEATURE-PARITY.md");
 const featureParityText = readFileSync(featureParityPath, "utf8");
 
 function escapeRegExp(text) {

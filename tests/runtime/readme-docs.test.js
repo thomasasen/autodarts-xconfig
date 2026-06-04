@@ -20,8 +20,20 @@ const dartRuleModulesDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-MO
 const dartRulesReferenceDocPath = path.resolve(process.cwd(), "docs", "DART-RULES-REFERENCE.md");
 const dartRuleAuditDocPath = path.resolve(process.cwd(), "docs", "DART-RULE-AUDIT.md");
 const architectureDocPath = path.resolve(process.cwd(), "docs", "TECHNICAL-ARCHITECTURE.md");
-const migrationStatusDocPath = path.resolve(process.cwd(), "docs", "MIGRATION-STATUS.md");
-const releaseQaDocPath = path.resolve(process.cwd(), "docs", "RELEASE-QA-REPORT.md");
+const migrationStatusDocPath = path.resolve(
+  process.cwd(),
+  "docs",
+  "archive",
+  "migration-v1",
+  "MIGRATION-STATUS.md"
+);
+const releaseQaDocPath = path.resolve(
+  process.cwd(),
+  "docs",
+  "archive",
+  "migration-v1",
+  "RELEASE-QA-REPORT.md"
+);
 const runtimeEntrypointsDocPath = path.resolve(process.cwd(), "docs", "RUNTIME-ENTRYPOINTS.md");
 const performanceAuditDocPath = path.resolve(process.cwd(), "docs", "PERFORMANCE-AUDIT.md");
 const deprecatedOverviewScreenshotPattern = /ad-xconfig\.png/;

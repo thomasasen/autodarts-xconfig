@@ -1301,17 +1301,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - [Technische Architektur](docs/TECHNICAL-ARCHITECTURE.md)
 - [Runtime-Entrypoints](docs/RUNTIME-ENTRYPOINTS.md)
 - [Performance-Audit](docs/PERFORMANCE-AUDIT.md)
-- [Feature-Parität](docs/FEATURE-PARITY.md)
-- [Migrationsstatus](docs/MIGRATION-STATUS.md)
-- [Release-QA-Report](docs/RELEASE-QA-REPORT.md)
 - [Dart-Rule-Module](docs/DART-RULE-MODULES.md)
 - [Dart-Rules-Referenz](docs/DART-RULES-REFERENCE.md)
 - [Dart-Rule-Audit](docs/DART-RULE-AUDIT.md)
-- [Legacy-Paritätsmatrix](docs/LEGACY-PARITY-MATRIX.md)
-- [Legacy-Diskrepanzmatrix](docs/LEGACY-DISCREPANCY-MATRIX.md)
-- [Legacy-Inventur](docs/OLDREPO-INVENTORY.md)
-- [Neue System-Inventur](docs/NEW-SYSTEM-INVENTORY.md)
+- [Legacy-Konfigurationspfade](docs/LEGACY-CONFIG-DEPRECATION.md)
 - [UI-/UX-Finalisierung](docs/UI-UX-FINALIZATION.md)
+- [Archivierte Migrationsdokumente](docs/archive/README.md)
 
 ## Für Entwickler
 
