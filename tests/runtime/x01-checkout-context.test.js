@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import {
+  readDomActiveScore,
   resolveX01ActiveScoreState,
   resolveX01CheckoutContext,
 } from "../../src/features/x01-checkout-context.js";
@@ -183,6 +184,34 @@ test("x01 checkout context reports matching DOM and game-state scores as a share
     scoreSource: "game-state+dom",
     scoreAgreement: "match",
   });
+});
+
+test("x01 checkout context reads duplicate active-score candidates once per priority winner", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "40";
+
+  const originalGetBoundingClientRect =
+    documentRef.activeScoreElement.getBoundingClientRect.bind(documentRef.activeScoreElement);
+  let rectReadCount = 0;
+  let styleReadCount = 0;
+
+  documentRef.activeScoreElement.getBoundingClientRect = () => {
+    rectReadCount += 1;
+    return originalGetBoundingClientRect();
+  };
+
+  const windowRef = createFakeWindow({ documentRef });
+  const originalGetComputedStyle = windowRef.getComputedStyle.bind(windowRef);
+  windowRef.getComputedStyle = (node) => {
+    if (node === documentRef.activeScoreElement) {
+      styleReadCount += 1;
+    }
+    return originalGetComputedStyle(node);
+  };
+
+  assert.equal(readDomActiveScore(documentRef, windowRef), 40);
+  assert.equal(rectReadCount, 1);
+  assert.equal(styleReadCount, 1);
 });
 
 test("x01 checkout context ignores stale game-state from another match route", () => {

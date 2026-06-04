@@ -149,50 +149,54 @@ function isGameStateStaleForCurrentMatchRoute(gameState, windowRef, documentRef)
   return !snapshotMatchIds.includes(routeMatchId);
 }
 
-function isElementStyleVisible(element, windowRef) {
+function analyzeScoreCandidateNode(node, windowRef) {
+  if (!node) {
+    return {
+      visible: false,
+      styleVisible: false,
+      weight: 0,
+    };
+  }
+
+  let styleVisible = true;
+  let fontSize = 0;
   try {
-    const style = windowRef?.getComputedStyle?.(element);
-    if (!style) {
-      return true;
+    const style = windowRef?.getComputedStyle?.(node);
+    if (style) {
+      styleVisible = !(
+        style.display === "none" ||
+        style.visibility === "hidden" ||
+        style.opacity === "0"
+      );
+      fontSize = Number.parseFloat(style.fontSize) || 0;
     }
-    return !(
-      style.display === "none" ||
-      style.visibility === "hidden" ||
-      style.opacity === "0"
-    );
   } catch (_) {
-    return true;
-  }
-}
-
-function isElementVisible(element, windowRef) {
-  if (!element || typeof element.getBoundingClientRect !== "function") {
-    return false;
+    styleVisible = true;
   }
 
-  const rect = element.getBoundingClientRect();
-  if (!(rect.width > 0 && rect.height > 0)) {
-    return false;
-  }
-
-  return isElementStyleVisible(element, windowRef);
-}
-
-function getNodeVisualWeight(node, windowRef) {
-  if (!node || typeof node.getBoundingClientRect !== "function") {
-    return 0;
+  if (typeof node.getBoundingClientRect !== "function") {
+    return {
+      visible: false,
+      styleVisible,
+      weight: 0,
+    };
   }
 
   try {
     const rect = node.getBoundingClientRect();
-    const fontSize = Number.parseFloat(windowRef?.getComputedStyle?.(node)?.fontSize) || 0;
-    const area =
-      Number.isFinite(rect?.width) && Number.isFinite(rect?.height)
-        ? rect.width * rect.height
-        : 0;
-    return fontSize * 10000 + area;
+    const width = Number.isFinite(rect?.width) ? rect.width : 0;
+    const height = Number.isFinite(rect?.height) ? rect.height : 0;
+    return {
+      visible: width > 0 && height > 0 && styleVisible,
+      styleVisible,
+      weight: fontSize * 10000 + width * height,
+    };
   } catch (_) {
-    return 0;
+    return {
+      visible: false,
+      styleVisible,
+      weight: 0,
+    };
   }
 }
 
@@ -226,13 +230,18 @@ function collectScoreCandidates(documentRef, windowRef) {
       }
 
       const existing = candidateMap.get(node);
+      if (existing && existing.selectorRank <= selectorRank) {
+        return;
+      }
+
+      const candidateAnalysis = analyzeScoreCandidateNode(node, windowRef);
       const nextCandidate = {
         node,
         value,
         selectorRank,
-        weight: getNodeVisualWeight(node, windowRef),
-        visible: isElementVisible(node, windowRef),
-        styleVisible: isElementStyleVisible(node, windowRef),
+        weight: candidateAnalysis.weight,
+        visible: candidateAnalysis.visible,
+        styleVisible: candidateAnalysis.styleVisible,
       };
 
       if (!existing || compareScoreCandidates(nextCandidate, existing) < 0) {

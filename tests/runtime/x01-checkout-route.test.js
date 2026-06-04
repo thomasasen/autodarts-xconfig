@@ -5,6 +5,7 @@ import * as x01Rules from "../../src/domain/x01-rules.js";
 import {
   canUseCheckoutFinishSegmentNow,
   collectVisibleCheckoutRoute,
+  collectVisibleCheckoutRouteEntries,
   getCheckoutFinishSegmentFromRoute,
   getFirstCheckoutRouteSegment,
   getSingleSuggestionSegmentFromRoute,
@@ -221,6 +222,62 @@ test("x01 checkout route prefers checkout-marked suggestions and keeps DBULL sem
     { ring: "DB" },
     { ring: "D", value: 16 },
   ]);
+});
+
+test("x01 checkout route derives CHECKOUT priority and segments from one suggestion analysis", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "39T13";
+  documentRef.suggestionElement.__rect = { left: 300, top: 10, width: 180, height: 48 };
+
+  const markedSuggestion = documentRef.createElement("div");
+  markedSuggestion.classList.add("suggestion");
+  markedSuggestion.textContent = "50DBULLCHECKOUT";
+  markedSuggestion.__rect = { left: 500, top: 10, width: 180, height: 48 };
+
+  const scoreNode = documentRef.createElement("div");
+  scoreNode.textContent = "50";
+  const segmentNode = documentRef.createElement("div");
+  segmentNode.textContent = "DBULL";
+  const markerNode = documentRef.createElement("div");
+  markerNode.textContent = "CHECKOUT";
+  markedSuggestion.appendChild(scoreNode);
+  markedSuggestion.appendChild(segmentNode);
+  markedSuggestion.appendChild(markerNode);
+  documentRef.main.appendChild(markedSuggestion);
+
+  const originalQuerySelectorAll = markedSuggestion.querySelectorAll.bind(markedSuggestion);
+  const originalGetBoundingClientRect = markedSuggestion.getBoundingClientRect.bind(markedSuggestion);
+  let leafScanCount = 0;
+  let rectReadCount = 0;
+  let styleReadCount = 0;
+
+  markedSuggestion.querySelectorAll = (selector) => {
+    if (selector === "*") {
+      leafScanCount += 1;
+    }
+    return originalQuerySelectorAll(selector);
+  };
+  markedSuggestion.getBoundingClientRect = () => {
+    rectReadCount += 1;
+    return originalGetBoundingClientRect();
+  };
+
+  const windowRef = createFakeWindow({ documentRef });
+  const originalGetComputedStyle = windowRef.getComputedStyle.bind(windowRef);
+  windowRef.getComputedStyle = (node) => {
+    if (node === markedSuggestion) {
+      styleReadCount += 1;
+    }
+    return originalGetComputedStyle(node);
+  };
+
+  const entries = collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules);
+
+  assert.deepEqual(entries.map((entry) => entry.segments).flat(), ["BULL"]);
+  assert.equal(entries[0]?.isCheckoutMarked, true);
+  assert.equal(leafScanCount, 1);
+  assert.equal(rectReadCount, 1);
+  assert.equal(styleReadCount, 1);
 });
 
 test("x01 checkout route falls back to non-zero text suggestions when rect-based visibility collapses", () => {

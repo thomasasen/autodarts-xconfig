@@ -17,17 +17,12 @@ function isElementStyleVisible(element, windowRef) {
   }
 }
 
-function isElementVisible(element, windowRef) {
-  if (!element || typeof element.getBoundingClientRect !== "function") {
+function isElementVisibleFromRectAndStyle(rect, styleVisible) {
+  if (!(rect?.width > 0 && rect?.height > 0)) {
     return false;
   }
 
-  const rect = element.getBoundingClientRect();
-  if (!(rect.width > 0 && rect.height > 0)) {
-    return false;
-  }
-
-  return isElementStyleVisible(element, windowRef);
+  return styleVisible;
 }
 
 function parseExplicitRouteSegments(text, x01Rules) {
@@ -74,14 +69,9 @@ function getSuggestionLeafTextValues(node) {
     .filter(Boolean);
 }
 
-function resolveSuggestionRouteText(node, x01Rules) {
-  const candidateValues = [
-    normalizeRouteTextCandidate(node?.innerText),
-    normalizeRouteTextCandidate(node?.textContent),
-    ...getSuggestionLeafTextValues(node),
-  ];
+function resolveSuggestionRouteTextFromCandidates(candidateValues, x01Rules) {
   const seenCandidates = new Set();
-  const uniqueCandidates = candidateValues.filter((candidate) => {
+  const uniqueCandidates = (Array.isArray(candidateValues) ? candidateValues : []).filter((candidate) => {
     if (!candidate || seenCandidates.has(candidate)) {
       return false;
     }
@@ -105,13 +95,7 @@ function resolveSuggestionRouteText(node, x01Rules) {
   };
 }
 
-function isCheckoutMarkedSuggestionNode(node) {
-  const candidateValues = [
-    normalizeRouteTextCandidate(node?.innerText),
-    normalizeRouteTextCandidate(node?.textContent),
-    ...getSuggestionLeafTextValues(node),
-  ];
-
+function isCheckoutMarkedSuggestionCandidateValues(candidateValues) {
   return candidateValues.some((candidate) => CHECKOUT_MARKER_PATTERN.test(candidate));
 }
 
@@ -138,8 +122,8 @@ function compareSuggestionNodes(left, right) {
   return Number(left?.domIndex || 0) - Number(right?.domIndex || 0);
 }
 
-function toRouteEntry(node, allNodes, x01Rules) {
-  const { text, segments } = resolveSuggestionRouteText(node, x01Rules);
+function toRouteEntry(analysis) {
+  const { node, text, segments, rect, domIndex, isCheckoutMarked } = analysis || {};
   if (!segments.length) {
     return null;
   }
@@ -147,11 +131,41 @@ function toRouteEntry(node, allNodes, x01Rules) {
   return {
     node,
     text,
-    rect: node.getBoundingClientRect?.() || null,
-    domIndex: getStableNodeIndex(node, allNodes),
+    rect,
+    domIndex,
     segments,
-    isCheckoutMarked: isCheckoutMarkedSuggestionNode(node),
+    isCheckoutMarked,
   };
+}
+
+function analyzeSuggestionNode(node, allNodes, windowRef, x01Rules) {
+  const candidateValues = [
+    normalizeRouteTextCandidate(node?.innerText),
+    normalizeRouteTextCandidate(node?.textContent),
+    ...getSuggestionLeafTextValues(node),
+  ];
+  const { text, segments } = resolveSuggestionRouteTextFromCandidates(candidateValues, x01Rules);
+  const rect = node?.getBoundingClientRect?.() || null;
+  const styleVisible = isElementStyleVisible(node, windowRef);
+
+  return {
+    node,
+    text,
+    segments,
+    rect,
+    domIndex: getStableNodeIndex(node, allNodes),
+    visible: isElementVisibleFromRectAndStyle(rect, styleVisible),
+    styleVisible,
+    isCheckoutMarked: isCheckoutMarkedSuggestionCandidateValues(candidateValues),
+  };
+}
+
+function collectRouteEntriesForTier(suggestionAnalyses, predicate) {
+  return suggestionAnalyses
+    .filter(predicate)
+    .map(toRouteEntry)
+    .filter(Boolean)
+    .sort(compareSuggestionNodes);
 }
 
 function preferCheckoutMarkedEntries(entries) {
@@ -166,29 +180,27 @@ export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Ru
   }
 
   const allSuggestionNodes = Array.from(documentRef.querySelectorAll(SUGGESTION_SELECTOR));
-  const visibleEntries = allSuggestionNodes
-    .filter((node) => isElementVisible(node, windowRef))
-    .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
-    .filter(Boolean)
-    .sort(compareSuggestionNodes);
+  const suggestionAnalyses = allSuggestionNodes.map((node) =>
+    analyzeSuggestionNode(node, allSuggestionNodes, windowRef, x01Rules)
+  );
+  const visibleEntries = collectRouteEntriesForTier(
+    suggestionAnalyses,
+    (analysis) => analysis.visible
+  );
 
   if (visibleEntries.length) {
     return preferCheckoutMarkedEntries(visibleEntries);
   }
 
-  const styleVisibleEntries = allSuggestionNodes
-    .filter((node) => isElementStyleVisible(node, windowRef))
-    .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
-    .filter(Boolean)
-    .sort(compareSuggestionNodes);
+  const styleVisibleEntries = collectRouteEntriesForTier(
+    suggestionAnalyses,
+    (analysis) => analysis.styleVisible
+  );
   if (styleVisibleEntries.length) {
     return preferCheckoutMarkedEntries(styleVisibleEntries);
   }
 
-  return preferCheckoutMarkedEntries(allSuggestionNodes
-    .map((node) => toRouteEntry(node, allSuggestionNodes, x01Rules))
-    .filter(Boolean)
-    .sort(compareSuggestionNodes));
+  return preferCheckoutMarkedEntries(collectRouteEntriesForTier(suggestionAnalyses, () => true));
 }
 
 export function collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules) {
