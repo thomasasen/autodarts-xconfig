@@ -309,7 +309,9 @@ function clearActiveVisualVars(node) {
     return;
   }
   ACTIVE_STYLE_PROPERTIES.forEach((propertyName) => {
-    node.style.removeProperty(propertyName);
+    if (node.style.getPropertyValue?.(propertyName)) {
+      node.style.removeProperty(propertyName);
+    }
   });
 }
 
@@ -320,10 +322,14 @@ function applyActiveVisualVars(node, variables = {}) {
   ACTIVE_STYLE_PROPERTIES.forEach((propertyName) => {
     const value = String(variables[propertyName] || "").trim();
     if (value) {
-      node.style.setProperty(propertyName, value);
+      if (node.style.getPropertyValue?.(propertyName) !== value) {
+        node.style.setProperty(propertyName, value);
+      }
       return;
     }
-    node.style.removeProperty(propertyName);
+    if (node.style.getPropertyValue?.(propertyName)) {
+      node.style.removeProperty(propertyName);
+    }
   });
 }
 
@@ -961,10 +967,14 @@ function clearFillEffectClasses(fillNode) {
     return;
   }
   EFFECT_FILL_CLASS_LIST.forEach((className) => {
-    fillNode.classList.remove(className);
+    if (fillNode.classList.contains(className)) {
+      fillNode.classList.remove(className);
+    }
   });
   LEGACY_EFFECT_FILL_CLASS_LIST.forEach((className) => {
-    fillNode.classList.remove(className);
+    if (fillNode.classList.contains(className)) {
+      fillNode.classList.remove(className);
+    }
   });
 }
 
@@ -1031,8 +1041,12 @@ function clearTrailState(trailNode) {
     trailNode[TRAIL_ANIMATION_SLOT] = null;
   }
 
-  trailNode.style?.setProperty?.(TRAIL_WIDTH_PROPERTY, "0%");
-  trailNode.style?.setProperty?.("opacity", "0");
+  if (trailNode.style?.getPropertyValue?.(TRAIL_WIDTH_PROPERTY) !== "0%") {
+    trailNode.style?.setProperty?.(TRAIL_WIDTH_PROPERTY, "0%");
+  }
+  if (trailNode.style?.getPropertyValue?.("opacity") !== "0") {
+    trailNode.style?.setProperty?.("opacity", "0");
+  }
 }
 
 function createEffectAnimationDefinition(effect) {
@@ -1170,6 +1184,51 @@ function triggerScoreChangeEffect(
   fillNode.setAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE, String(token));
 }
 
+function setAttributeIfChanged(node, attributeName, value) {
+  const normalizedValue = String(value);
+  if (node?.getAttribute?.(attributeName) !== normalizedValue) {
+    node?.setAttribute?.(attributeName, normalizedValue);
+  }
+}
+
+function setDatasetValueIfChanged(node, key, value) {
+  if (!node?.dataset) {
+    return;
+  }
+
+  const normalizedValue = String(value);
+  if (node.dataset[key] !== normalizedValue) {
+    node.dataset[key] = normalizedValue;
+  }
+}
+
+function setStylePropertyIfChanged(node, propertyName, value) {
+  const normalizedValue = String(value);
+  if (node?.style?.getPropertyValue?.(propertyName) !== normalizedValue) {
+    node?.style?.setProperty?.(propertyName, normalizedValue);
+  }
+}
+
+function syncProgressHostClasses(hostNode, active, sizeClass) {
+  const stateClass = active ? ACTIVE_CLASS : INACTIVE_CLASS;
+  const staleStateClass = active ? INACTIVE_CLASS : ACTIVE_CLASS;
+  if (hostNode.classList.contains(staleStateClass)) {
+    hostNode.classList.remove(staleStateClass);
+  }
+  if (!hostNode.classList.contains(stateClass)) {
+    hostNode.classList.add(stateClass);
+  }
+
+  SIZE_CLASS_LIST.forEach((className) => {
+    if ((!active || className !== sizeClass) && hostNode.classList.contains(className)) {
+      hostNode.classList.remove(className);
+    }
+  });
+  if (active && !hostNode.classList.contains(sizeClass)) {
+    hostNode.classList.add(sizeClass);
+  }
+}
+
 export function updateProgressHost(hostNode, options = {}) {
   if (!hostNode?.classList || !hostNode.style) {
     return;
@@ -1183,20 +1242,16 @@ export function updateProgressHost(hostNode, options = {}) {
   const fillNode = getFillNode(hostNode);
   const trailNode = getTrailNode(hostNode);
 
-  hostNode.classList.remove(
-    `${ACTIVE_CLASS}`,
-    `${INACTIVE_CLASS}`,
-    ...SIZE_CLASS_LIST
+  syncProgressHostClasses(hostNode, active, sizeClass);
+  setDatasetValueIfChanged(
+    hostNode,
+    "adExtX01ScoreProgressState",
+    active ? "active" : "inactive"
   );
-  hostNode.classList.add(active ? ACTIVE_CLASS : INACTIVE_CLASS);
-  if (active) {
-    hostNode.classList.add(sizeClass);
-  }
-  hostNode.dataset.adExtX01ScoreProgressState = active ? "active" : "inactive";
-  hostNode.setAttribute(COLOR_THEME_ATTRIBUTE, colorTheme);
-  hostNode.setAttribute(SIZE_ATTRIBUTE, normalizeBarSize(options.barSize));
-  hostNode.setAttribute(EFFECT_ATTRIBUTE, effect);
-  hostNode.style.setProperty(WIDTH_PROPERTY, formatProgressWidth(ratio));
+  setAttributeIfChanged(hostNode, COLOR_THEME_ATTRIBUTE, colorTheme);
+  setAttributeIfChanged(hostNode, SIZE_ATTRIBUTE, normalizeBarSize(options.barSize));
+  setAttributeIfChanged(hostNode, EFFECT_ATTRIBUTE, effect);
+  setStylePropertyIfChanged(hostNode, WIDTH_PROPERTY, formatProgressWidth(ratio));
 
   if (active) {
     applyActiveVisualVars(
@@ -1222,7 +1277,9 @@ export function updateProgressHost(hostNode, options = {}) {
   clearFillEffectClasses(fillNode);
   cancelEffectAnimation(fillNode);
   clearTrailState(trailNode);
-  fillNode?.removeAttribute?.(EFFECT_CHANGE_TOKEN_ATTRIBUTE);
+  if (fillNode?.getAttribute?.(EFFECT_CHANGE_TOKEN_ATTRIBUTE) !== null) {
+    fillNode.removeAttribute(EFFECT_CHANGE_TOKEN_ATTRIBUTE);
+  }
 }
 
 function shouldRenderFeature(context = {}) {
@@ -1296,7 +1353,9 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   if (!shouldRender) {
     clearAllScoreProgress(documentRef);
     debugPayload.reason = "render-disabled";
-    debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    if (debugEnabled) {
+      debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    }
     return withDebug({ startScore: null, renderedCards: 0 });
   }
 
@@ -1318,7 +1377,9 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   if (!isFiniteNumber(startScore) || startScore <= 0) {
     clearAllScoreProgress(documentRef);
     debugPayload.reason = "missing-start-score";
-    debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    if (debugEnabled) {
+      debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    }
     return withDebug({ startScore: null, renderedCards: 0 });
   }
 
@@ -1327,7 +1388,9 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   if (!cards.length) {
     clearAllScoreProgress(documentRef);
     debugPayload.reason = "missing-player-cards";
-    debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    if (debugEnabled) {
+      debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+    }
     return withDebug({ startScore, renderedCards: 0 });
   }
 
@@ -1460,16 +1523,18 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   debugPayload.staleHostsRemoved = staleHostsRemoved;
   debugPayload.sampledCards = sampledCards;
 
-  const hostsAfter = queryAll(documentRef, HOST_SELECTOR);
-  debugPayload.hostCountAfterCleanup = hostsAfter.length;
-  debugPayload.hiddenHostCount = hostsAfter.filter((hostNode) => {
-    const display = readComputedDisplay(windowRef, hostNode).toLowerCase();
-    return display === "none";
-  }).length;
-  debugPayload.zeroHeightHostCount = hostsAfter.filter((hostNode) => {
-    const rect = readRect(hostNode);
-    return rect ? rect.height <= 0 : false;
-  }).length;
+  if (debugEnabled) {
+    const hostsAfter = queryAll(documentRef, HOST_SELECTOR);
+    debugPayload.hostCountAfterCleanup = hostsAfter.length;
+    debugPayload.hiddenHostCount = hostsAfter.filter((hostNode) => {
+      const display = readComputedDisplay(windowRef, hostNode).toLowerCase();
+      return display === "none";
+    }).length;
+    debugPayload.zeroHeightHostCount = hostsAfter.filter((hostNode) => {
+      const rect = readRect(hostNode);
+      return rect ? rect.height <= 0 : false;
+    }).length;
+  }
 
   return withDebug({
     startScore,

@@ -452,6 +452,230 @@ test("syncScoreProgress includes sampled card diagnostics in debug mode", () => 
   assert.equal(result.debug.sampledCards[1].hostWidth, "50.10%");
 });
 
+test("syncScoreProgress skips debug-only layout measurements when debug is disabled", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 170, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+  const context = {
+    documentRef,
+    windowRef,
+    featureConfig: {
+      colorTheme: "checkout-focus",
+      barSize: "standard",
+      effect: "pulse-core",
+      debug: false,
+    },
+    gameState: {
+      getSnapshot: () => ({
+        topic: "match-501-debug-disabled",
+        match: {
+          id: "match-501-debug-disabled",
+          variant: "X01 501",
+        },
+      }),
+    },
+  };
+
+  syncScoreProgress(context, state);
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+
+  let computedStyleReads = 0;
+  let rectReads = 0;
+  windowRef.getComputedStyle = () => {
+    computedStyleReads += 1;
+    return {
+      display: "",
+    };
+  };
+  hostNode.getBoundingClientRect = () => {
+    rectReads += 1;
+    return {
+      width: 240,
+      height: 48,
+    };
+  };
+
+  const result = syncScoreProgress(context, state);
+
+  assert.equal(result.debug, undefined);
+  assert.equal(result.renderedCards, 1);
+  assert.equal(computedStyleReads, 0);
+  assert.equal(rectReads, 0);
+  assert.equal(hostNode.style.getPropertyValue(WIDTH_PROPERTY), "33.93%");
+});
+
+test("syncScoreProgress keeps debug host measurement payloads when debug is enabled", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 170, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+  const context = {
+    documentRef,
+    windowRef,
+    featureConfig: {
+      colorTheme: "checkout-focus",
+      barSize: "standard",
+      effect: "pulse-core",
+      debug: false,
+    },
+    gameState: {
+      getSnapshot: () => ({
+        topic: "match-501-debug-enabled",
+        match: {
+          id: "match-501-debug-enabled",
+          variant: "X01 501",
+        },
+      }),
+    },
+  };
+
+  syncScoreProgress(context, state);
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+
+  let computedStyleReads = 0;
+  let rectReads = 0;
+  windowRef.getComputedStyle = () => {
+    computedStyleReads += 1;
+    return {
+      display: "block",
+    };
+  };
+  hostNode.getBoundingClientRect = () => {
+    rectReads += 1;
+    return {
+      width: 240,
+      height: 48,
+    };
+  };
+
+  const result = syncScoreProgress(
+    {
+      ...context,
+      featureConfig: {
+        ...context.featureConfig,
+        debug: true,
+      },
+    },
+    state
+  );
+
+  assert.equal(result.debug.reason, "rendered");
+  assert.equal(result.debug.hostCountAfterCleanup, 1);
+  assert.equal(result.debug.hiddenHostCount, 0);
+  assert.equal(result.debug.zeroHeightHostCount, 0);
+  assert.ok(computedStyleReads > 0);
+  assert.ok(rectReads > 0);
+});
+
+test("syncScoreProgress avoids unchanged host style writes but updates changed values", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+  const context = {
+    documentRef,
+    windowRef,
+    featureConfig: {
+      colorTheme: "checkout-focus",
+      barSize: "standard",
+      effect: "pulse-core",
+    },
+    gameState: {
+      getSnapshot: () => ({
+        topic: "match-501-style-writes",
+        match: {
+          id: "match-501-style-writes",
+          variant: "X01 501",
+        },
+      }),
+    },
+  };
+  const activeFillProperty = "--ad-ext-x01-score-progress-fill-bg-active";
+
+  syncScoreProgress(context, state);
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const originalSetProperty = hostNode.style.setProperty.bind(hostNode.style);
+  const originalRemoveProperty = hostNode.style.removeProperty.bind(hostNode.style);
+  const propertyWrites = new Map();
+  const propertyRemovals = new Map();
+  hostNode.style.setProperty = (name, value, priority) => {
+    propertyWrites.set(name, (propertyWrites.get(name) || 0) + 1);
+    originalSetProperty(name, value, priority);
+  };
+  hostNode.style.removeProperty = (name) => {
+    propertyRemovals.set(name, (propertyRemovals.get(name) || 0) + 1);
+    originalRemoveProperty(name);
+  };
+
+  syncScoreProgress(context, state);
+
+  assert.equal(propertyWrites.get(WIDTH_PROPERTY) || 0, 0);
+  assert.equal(propertyWrites.get(activeFillProperty) || 0, 0);
+  assert.equal(propertyRemovals.get(activeFillProperty) || 0, 0);
+  assert.equal(hostNode.style.getPropertyValue(WIDTH_PROPERTY), "60.08%");
+  assert.equal(hostNode.classList.contains(ACTIVE_CLASS), true);
+  assert.equal(hostNode.classList.contains(INACTIVE_CLASS), false);
+
+  player.scoreNode.textContent = "251";
+  syncScoreProgress(context, state);
+
+  assert.equal(propertyWrites.get(WIDTH_PROPERTY) || 0, 1);
+  assert.equal(hostNode.style.getPropertyValue(WIDTH_PROPERTY), "50.10%");
+
+  const writesAfterScoreChange = propertyWrites.get(activeFillProperty) || 0;
+  syncScoreProgress(
+    {
+      ...context,
+      featureConfig: {
+        ...context.featureConfig,
+        colorTheme: "traffic-light",
+      },
+    },
+    state
+  );
+
+  assert.ok((propertyWrites.get(activeFillProperty) || 0) > writesAfterScoreChange);
+  assert.equal(propertyWrites.get(WIDTH_PROPERTY) || 0, 1);
+  assert.equal(hostNode.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "traffic-light");
+});
+
 test("mountX01ScoreProgress emits detailed debug warning payloads", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
