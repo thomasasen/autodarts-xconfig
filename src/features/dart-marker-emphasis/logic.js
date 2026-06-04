@@ -50,38 +50,98 @@ function isHiddenByDartOverlay(marker) {
   return Boolean(marker?.dataset?.[HIDDEN_MARKER_DATASET_KEY] !== undefined);
 }
 
-export function applyDartMarkerEmphasisToMarker(marker, visualConfig) {
-  marker.setAttribute("r", String(visualConfig.markerSize));
-  marker.style.fill = visualConfig.markerColor;
-
-  if (isHiddenByDartOverlay(marker)) {
-    marker.style.opacity = "0";
-    marker.style.stroke = "none";
-    marker.style.strokeWidth = "0";
-    marker.classList.remove(EFFECT_CLASSES.pulse, EFFECT_CLASSES.glow);
-  } else {
-    marker.style.opacity = String(visualConfig.opacity);
-    if (visualConfig.outlineColor) {
-      marker.style.stroke = visualConfig.outlineColor;
-      marker.style.strokeWidth = "1.5";
-    } else {
-      marker.style.stroke = "none";
-      marker.style.strokeWidth = "0";
-    }
-
-    marker.classList.remove(EFFECT_CLASSES.pulse, EFFECT_CLASSES.glow);
-    if (visualConfig.effect !== "none" && EFFECT_CLASSES[visualConfig.effect]) {
-      marker.classList.add(EFFECT_CLASSES[visualConfig.effect]);
-    }
+function setAttributeIfChanged(node, name, value) {
+  const nextValue = String(value ?? "");
+  if (String(node.getAttribute?.(name) || "") === nextValue) {
+    return false;
   }
 
-  marker.classList.add(BASE_CLASS);
+  node.setAttribute(name, nextValue);
+  return true;
+}
+
+function setStyleIfChanged(styleRef, propertyName, value) {
+  const nextValue = String(value ?? "");
+  if (String(styleRef?.[propertyName] || "") === nextValue) {
+    return false;
+  }
+
+  styleRef[propertyName] = nextValue;
+  return true;
+}
+
+function addClassIfMissing(classList, className) {
+  if (!className || classList?.contains?.(className)) {
+    return false;
+  }
+
+  classList.add(className);
+  return true;
+}
+
+function removeClassIfPresent(classList, className) {
+  if (!className || !classList?.contains?.(className)) {
+    return false;
+  }
+
+  classList.remove(className);
+  return true;
+}
+
+function setEffectClass(marker, effectClass = "") {
+  Object.values(EFFECT_CLASSES).forEach((className) => {
+    if (className === effectClass) {
+      addClassIfMissing(marker.classList, className);
+    } else {
+      removeClassIfPresent(marker.classList, className);
+    }
+  });
+}
+
+function buildAppliedSignature(marker, visualConfig) {
+  return [
+    visualConfig.markerSize,
+    visualConfig.markerColor,
+    visualConfig.effect,
+    visualConfig.opacity,
+    visualConfig.outlineColor || "",
+    isHiddenByDartOverlay(marker) ? "hidden" : "visible",
+  ].join("|");
+}
+
+export function applyDartMarkerEmphasisToMarker(marker, visualConfig) {
+  setAttributeIfChanged(marker, "r", String(visualConfig.markerSize));
+  setStyleIfChanged(marker.style, "fill", visualConfig.markerColor);
+
+  if (isHiddenByDartOverlay(marker)) {
+    setStyleIfChanged(marker.style, "opacity", "0");
+    setStyleIfChanged(marker.style, "stroke", "none");
+    setStyleIfChanged(marker.style, "strokeWidth", "0");
+    setEffectClass(marker);
+  } else {
+    setStyleIfChanged(marker.style, "opacity", String(visualConfig.opacity));
+    if (visualConfig.outlineColor) {
+      setStyleIfChanged(marker.style, "stroke", visualConfig.outlineColor);
+      setStyleIfChanged(marker.style, "strokeWidth", "1.5");
+    } else {
+      setStyleIfChanged(marker.style, "stroke", "none");
+      setStyleIfChanged(marker.style, "strokeWidth", "0");
+    }
+
+    setEffectClass(
+      marker,
+      visualConfig.effect !== "none" ? EFFECT_CLASSES[visualConfig.effect] : ""
+    );
+  }
+
+  addClassIfMissing(marker.classList, BASE_CLASS);
 }
 
 export function createDartMarkerEmphasisState() {
   return {
     trackedMarkers: new Set(),
     snapshotsByMarker: new Map(),
+    appliedSignaturesByMarker: new Map(),
   };
 }
 
@@ -96,6 +156,7 @@ export function clearDartMarkerEmphasis(state) {
 
   state.trackedMarkers.clear();
   state.snapshotsByMarker.clear();
+  state.appliedSignaturesByMarker?.clear();
 }
 
 export function updateDartMarkerEmphasis(options = {}) {
@@ -118,6 +179,7 @@ export function updateDartMarkerEmphasis(options = {}) {
     restoreSnapshot(marker, state.snapshotsByMarker.get(marker));
     state.trackedMarkers.delete(marker);
     state.snapshotsByMarker.delete(marker);
+    state.appliedSignaturesByMarker?.delete(marker);
   });
 
   markers.forEach((marker) => {
@@ -125,6 +187,11 @@ export function updateDartMarkerEmphasis(options = {}) {
       state.snapshotsByMarker.set(marker, captureSnapshot(marker));
     }
     state.trackedMarkers.add(marker);
+    const nextSignature = buildAppliedSignature(marker, visualConfig);
+    if (state.appliedSignaturesByMarker?.get(marker) === nextSignature) {
+      return;
+    }
     applyDartMarkerEmphasisToMarker(marker, visualConfig);
+    state.appliedSignaturesByMarker?.set(marker, nextSignature);
   });
 }

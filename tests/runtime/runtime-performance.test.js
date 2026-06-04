@@ -13,6 +13,12 @@ import {
 import { renderCheckoutTargets } from "../../src/features/checkout-board-targets/logic.js";
 import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
 import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
+import { initializeDartMarkerEmphasis } from "../../src/features/dart-marker-emphasis/index.js";
+import {
+  clearDartMarkerEmphasis,
+  createDartMarkerEmphasisState,
+  updateDartMarkerEmphasis,
+} from "../../src/features/dart-marker-emphasis/logic.js";
 import { initializeTripleDoubleBullHits } from "../../src/features/triple-double-bull-hits/index.js";
 import {
   buildStyleText,
@@ -4300,6 +4306,119 @@ test("turn-points-count ignores late anime loader resolution after cleanup", asy
   await wait(5);
 
   assert.equal(scheduleCounter.count, 1);
+});
+
+test("dart-marker-emphasis ignores unrelated childList mutations outside the board", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const domGuards = createDomGuards({ documentRef });
+  const observers = createObserverRegistry();
+  const scheduleCounter = { count: 0 };
+  const board = appendBoardFixture(documentRef);
+  const marker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  marker.setAttribute("r", "4");
+  marker.setAttribute("filter", "url(#shadow-2dp)");
+  board.group.appendChild(marker);
+
+  const cleanup = initializeDartMarkerEmphasis({
+    documentRef,
+    windowRef,
+    domGuards,
+    registries: {
+      observers,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          size: 6,
+          color: "rgb(49, 130, 206)",
+          effect: "glow",
+          opacityPercent: 85,
+          outline: "aus",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  const observer = observers.get("dart-marker-emphasis:dom-observer");
+  assert.equal(scheduleCounter.count, 1);
+  assert.equal(marker.getAttribute("r"), "6");
+
+  const unrelatedNode = documentRef.createElement("section");
+  documentRef.main.appendChild(unrelatedNode);
+  observer.callback([
+    {
+      type: "childList",
+      target: documentRef.main,
+      addedNodes: [unrelatedNode],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count, 1);
+
+  const nextMarker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  nextMarker.setAttribute("r", "4");
+  nextMarker.setAttribute("filter", "url(#shadow-2dp)");
+  board.group.appendChild(nextMarker);
+  observer.callback([
+    {
+      type: "childList",
+      target: board.group,
+      addedNodes: [nextMarker],
+      removedNodes: [],
+    },
+  ]);
+
+  assert.equal(scheduleCounter.count, 2);
+  assert.equal(nextMarker.getAttribute("r"), "6");
+
+  cleanup();
+});
+
+test("dart-marker-emphasis skips marker writes when visual and hidden state are unchanged", () => {
+  const documentRef = new FakeDocument();
+  const board = appendBoardFixture(documentRef);
+  const marker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  marker.setAttribute("r", "4");
+  marker.setAttribute("filter", "url(#shadow-2dp)");
+  board.group.appendChild(marker);
+
+  const state = createDartMarkerEmphasisState();
+  const visualConfig = {
+    markerSize: 6,
+    markerColor: "rgb(49, 130, 206)",
+    effect: "glow",
+    opacity: 0.85,
+    outlineColor: "",
+  };
+
+  updateDartMarkerEmphasis({ documentRef, state, visualConfig });
+
+  let writeCount = 0;
+  const originalSetAttribute = marker.setAttribute.bind(marker);
+  const originalClassAdd = marker.classList.add.bind(marker.classList);
+  const originalClassRemove = marker.classList.remove.bind(marker.classList);
+  marker.setAttribute = (...args) => {
+    writeCount += 1;
+    return originalSetAttribute(...args);
+  };
+  marker.classList.add = (...args) => {
+    writeCount += 1;
+    return originalClassAdd(...args);
+  };
+  marker.classList.remove = (...args) => {
+    writeCount += 1;
+    return originalClassRemove(...args);
+  };
+
+  updateDartMarkerEmphasis({ documentRef, state, visualConfig });
+
+  assert.equal(writeCount, 0);
+  clearDartMarkerEmphasis(state);
 });
 
 test("game state store suppresses identical consecutive websocket state payloads", () => {

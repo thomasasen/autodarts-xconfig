@@ -3,6 +3,7 @@
   createDartMarkerEmphasisState,
   updateDartMarkerEmphasis,
 } from "./logic.js";
+import { isLikelyBoardMarker } from "../../shared/dartboard-markers.js";
 import { STYLE_ID, buildStyleText, resolveDartMarkerEmphasisConfig } from "./style.js";
 
 const FEATURE_KEY = "dart-marker-emphasis";
@@ -10,6 +11,81 @@ const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
+const BOARD_SURFACE_SELECTOR = "svg, g, circle, .showAnimations, .ad-ext-theme-board-canvas";
+
+function isElementNode(node) {
+  return Boolean(node?.nodeType === 1);
+}
+
+function containsKnownMarkerSurface(node, state) {
+  if (!isElementNode(node) || !state?.trackedMarkers?.size) {
+    return false;
+  }
+
+  const tagName = String(node.tagName || "").toLowerCase();
+  const canContainMarkerSurface =
+    tagName === "svg" ||
+    tagName === "g" ||
+    Boolean(node.matches?.(".showAnimations, .ad-ext-theme-board-canvas"));
+
+  return Array.from(state.trackedMarkers).some((marker) => {
+    if (!isElementNode(marker)) {
+      return false;
+    }
+    if (node === marker) {
+      return true;
+    }
+    return (
+      (canContainMarkerSurface && typeof node.contains === "function" && node.contains(marker)) ||
+      (typeof marker.contains === "function" && marker.contains(node))
+    );
+  });
+}
+
+function isPotentialBoardSurfaceNode(node) {
+  if (!isElementNode(node)) {
+    return false;
+  }
+
+  if (isLikelyBoardMarker(node)) {
+    return true;
+  }
+
+  const tagName = String(node.tagName || "").toLowerCase();
+  if (tagName === "svg") {
+    const viewBox = String(node.getAttribute?.("viewBox") || "").trim();
+    return viewBox.length > 0 || Boolean(node.querySelector?.("circle"));
+  }
+  if (tagName === "g") {
+    return Boolean(node.querySelector?.("circle"));
+  }
+
+  return Boolean(node.matches?.(BOARD_SURFACE_SELECTOR) && node.querySelector?.("svg, circle"));
+}
+
+function mutationContainsRelevantNode(mutation, state) {
+  const nodes = [
+    mutation?.target,
+    ...Array.from(mutation?.addedNodes || []),
+    ...Array.from(mutation?.removedNodes || []),
+  ];
+
+  return nodes.some((node) => {
+    if (!isElementNode(node)) {
+      return false;
+    }
+    return containsKnownMarkerSurface(node, state) || isPotentialBoardSurfaceNode(node);
+  });
+}
+
+export function hasRelevantDartMarkerEmphasisMutation(mutations = [], state = null) {
+  return Array.from(mutations || []).some((mutation) => {
+    if (mutation?.type !== "childList") {
+      return false;
+    }
+    return mutationContainsRelevantNode(mutation, state);
+  });
+}
 
 export function initializeDartMarkerEmphasis(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -56,7 +132,11 @@ export function initializeDartMarkerEmphasis(context = {}) {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
+      callback: (mutations) => {
+        if (hasRelevantDartMarkerEmphasisMutation(mutations, state)) {
+          scheduler.schedule();
+        }
+      },
       observeOptions: {
         childList: true,
         subtree: true,
