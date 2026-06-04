@@ -12,6 +12,27 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.19] - 2026-06-05
+
+### Added
+
+- Nutzerwirkung: `Winner Fireworks` kann die Dauer des Siegereffekts und die Partikelanzahl jetzt getrennt konfigurieren, sodass der Effekt kürzer, sparsamer oder voller laufen kann.
+  Technik: Feature-Konfiguration, Runtime-Resolver, xConfig-Copy, Descriptoren und Regressionen wurden um `durationSeconds` und `particleAmount` erweitert; README und Feature-Doku beschreiben die neuen Optionen.
+
+### Changed
+
+- Nutzerwirkung: Checkout-Vorschläge, `X01 Score Progress`, `Dart Marker Emphasis`, Dart-Marker-Effekte und xConfig-Dialoge reagieren bei wiederholten Updates ruhiger und verursachen weniger unnötige Layout- und DOM-Arbeit.
+  Technik: Checkout-Kontext und Routing verwenden wiederverwendete Snapshots, X01-Progress und Dart-Marker-Module cachen relevante DOM-/Messwerte stärker, und Mutation-/Theme-/Action-Controller filtern eigene oder irrelevante Änderungen gezielter.
+- Nutzerwirkung: Bewegungsreduzierte Systeme bekommen konsistentere, weniger belastende Darstellungen für mehrere visuelle Effekte.
+  Technik: Reduced-Motion-Styles wurden für Checkout-Targets, Checkout-Score-Pulse, Dart-Marker-Darts und X01-Score-Progress ergänzt und mit Regressionen abgesichert.
+
+### Fixed
+
+- Nutzerwirkung: Dart-Marker-Darts bleiben nach Storage-Syncs und Turn-Wechseln stabiler der richtigen Dart-Position zugeordnet.
+  Technik: Runtime-Bootstrap und Dart-Marker-Darts-Synchronisierung wurden aufgeräumt und durch zusätzliche Turn-/Storage-Regressionen abgesichert.
+- Nutzerwirkung: Update-Hinweise und xConfig-Dialogzustände bleiben bei Shell-Aktionen, Theme-Hintergründen und Update-Prüfungen zuverlässiger erhalten.
+  Technik: Update-Check, Update-Controller, Action-Controller, Lifecycle-Controller und Theme-Background-Erkennung erhielten robustere Zustands- und Mutationstests.
+
 ## [2.3.18] - 2026-05-26
 
 ### Fixed
@@ -1640,7 +1661,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.18]: https://github.com/thomasasen/autodarts-xconfig/compare/0c88218...HEAD
+[2.3.19]: https://github.com/thomasasen/autodarts-xconfig/compare/d48730f...HEAD
+[2.3.18]: https://github.com/thomasasen/autodarts-xconfig/compare/0c88218...d48730f
 [2.3.17]: https://github.com/thomasasen/autodarts-xconfig/compare/3cbf7b3...0c88218
 [2.3.16]: https://github.com/thomasasen/autodarts-xconfig/compare/53e5d17...3cbf7b3
 [2.3.15]: https://github.com/thomasasen/autodarts-xconfig/compare/aae1311...53e5d17
