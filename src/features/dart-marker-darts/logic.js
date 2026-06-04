@@ -7,6 +7,13 @@ import {
 import { isLiveBoardInputModeActive } from "../../shared/board-input-mode.js";
 import { resolveDartDesignAsset } from "#feature-assets";
 import {
+  DART_IMPACT_SHADOW_OPACITY_BOOST,
+  createDartImpactShadowKeyframes,
+  createDartImpactShadowOptions,
+  createDartImpactWobbleKeyframes,
+  createDartImpactWobbleOptions,
+} from "./impact.js";
+import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
   DART_ROTATE_CLASS,
@@ -40,11 +47,6 @@ const SHADOW_OPACITY = 0.28;
 const SHADOW_BLUR_PX = 2;
 const SHADOW_OFFSET_X_RATIO = 0.06;
 const SHADOW_OFFSET_Y_RATIO = 0.08;
-const SHADOW_IMPACT_OPACITY_BOOST = 0.12;
-const SHADOW_IMPACT_DURATION_MS = 160;
-const WOBBLE_DURATION_MS = 280;
-const WOBBLE_ANGLE_DEG = 4;
-const IMPACT_EASING = "cubic-bezier(0.2, 0.6, 0.2, 1)";
 const RENDER_CHECK_HEARTBEAT_TICKS = 15;
 
 function getTimerFns(windowRef) {
@@ -651,6 +653,7 @@ function createDartEntry(ownerDocument) {
     flightStartedAt: 0,
     settleUntil: 0,
     lastTargetCenter: null,
+    lastScreenPointSource: "",
     lastRenderCheckSignature: "",
     lastRenderedSignature: "",
     lastGeometrySignature: "",
@@ -734,6 +737,7 @@ function getMarkerScreenPoint(marker) {
       return {
         x: rect.left + rect.width / 2,
         y: rect.top + rect.height / 2,
+        source: "rect",
       };
     }
   }
@@ -774,6 +778,7 @@ function getMarkerScreenPoint(marker) {
   return {
     x: Number(screenPoint.x),
     y: Number(screenPoint.y),
+    source: "matrix",
   };
 }
 
@@ -1093,6 +1098,61 @@ function buildDartGeometrySignature({
   ].join("|");
 }
 
+function buildMarkerSnapshotSignature(markers = []) {
+  return markers
+    .map((marker, index) => `${index}:${buildMarkerKey(marker)}`)
+    .join("|");
+}
+
+function buildVisualSignature(visualConfig, sourceUrl) {
+  return [
+    String(sourceUrl || ""),
+    Number(visualConfig?.sizeMultiplier || 0).toFixed(4),
+    visualConfig?.animateDarts ? "animate-on" : "animate-off",
+    visualConfig?.hideOriginalMarkers ? "hide-on" : "hide-off",
+    visualConfig?.enableShadow ? "shadow-on" : "shadow-off",
+    visualConfig?.enableShadowBlur ? "shadow-blur-on" : "shadow-blur-off",
+    visualConfig?.enableWobble ? "wobble-on" : "wobble-off",
+    visualConfig?.enableFlightBlur ? "flight-blur-on" : "flight-blur-off",
+    String(visualConfig?.flightSpeed || ""),
+    Number(visualConfig?.flightDurationMs || 0).toFixed(0),
+  ].join("|");
+}
+
+function canSkipUnchangedReposition({
+  state,
+  markers,
+  layoutSignature,
+  markerSnapshotSignature,
+  visualSignature,
+}) {
+  if (!state || state.retryTimer || !state.lastLayoutSignature) {
+    return false;
+  }
+
+  if (
+    state.lastLayoutSignature !== layoutSignature ||
+    state.lastMarkerSnapshotSignature !== markerSnapshotSignature ||
+    state.lastVisualSignature !== visualSignature
+  ) {
+    return false;
+  }
+
+  if (state.entriesByMarker.size !== markers.length) {
+    return false;
+  }
+
+  return markers.every((marker) => {
+    const entry = state.entriesByMarker.get(marker);
+    return (
+      entry &&
+      marker?.isConnected !== false &&
+      entry.lastTargetCenter &&
+      entry.lastScreenPointSource === "rect"
+    );
+  });
+}
+
 function applyDartGeometryIfNeeded(entry, options = {}) {
   if (!entry) {
     return false;
@@ -1192,15 +1252,11 @@ function triggerFlightAnimation(entry, state, visualConfig, boardCenter, feature
     typeof entry.shadowNode.animate === "function"
   ) {
     const baseOpacity = Number.parseFloat(entry.shadowNode.style.opacity || "0");
-    if (baseOpacity > 0 && SHADOW_IMPACT_DURATION_MS > 0 && SHADOW_IMPACT_OPACITY_BOOST > 0) {
-      const maxOpacity = Math.min(1, baseOpacity + SHADOW_IMPACT_OPACITY_BOOST);
+    if (baseOpacity > 0 && DART_IMPACT_SHADOW_OPACITY_BOOST > 0) {
+      const maxOpacity = Math.min(1, baseOpacity + DART_IMPACT_SHADOW_OPACITY_BOOST);
       const shadowAnimation = entry.shadowNode.animate(
-        [{ opacity: baseOpacity }, { opacity: maxOpacity }, { opacity: baseOpacity }],
-        {
-          duration: SHADOW_IMPACT_DURATION_MS,
-          delay: duration,
-          easing: IMPACT_EASING,
-        }
+        createDartImpactShadowKeyframes(baseOpacity, maxOpacity),
+        createDartImpactShadowOptions(duration)
       );
       entry.shadowImpactAnimation = shadowAnimation;
       const cleanupShadowImpact = () => {
@@ -1216,24 +1272,11 @@ function triggerFlightAnimation(entry, state, visualConfig, boardCenter, feature
   if (
     visualConfig.enableWobble &&
     entry.imageNode &&
-    typeof entry.imageNode.animate === "function" &&
-    WOBBLE_DURATION_MS > 0 &&
-    WOBBLE_ANGLE_DEG > 0
+    typeof entry.imageNode.animate === "function"
   ) {
     const wobbleAnimation = entry.imageNode.animate(
-      [
-        { transform: "rotate(0deg)" },
-        { transform: `rotate(${-WOBBLE_ANGLE_DEG}deg)` },
-        { transform: `rotate(${WOBBLE_ANGLE_DEG * 0.6}deg)` },
-        { transform: `rotate(${-WOBBLE_ANGLE_DEG * 0.35}deg)` },
-        { transform: "rotate(0deg)" },
-      ],
-      {
-        duration: WOBBLE_DURATION_MS,
-        delay: duration,
-        easing: IMPACT_EASING,
-        fill: "both",
-      }
+      createDartImpactWobbleKeyframes(),
+      createDartImpactWobbleOptions(duration)
     );
     entry.wobbleAnimation = wobbleAnimation;
     const cleanupWobble = () => {
@@ -1506,6 +1549,8 @@ export function createDartMarkerDartsState(windowRef = null) {
     lastBoardSignature: "",
     lastOverlaySignature: "",
     lastLayoutSignature: "",
+    lastMarkerSnapshotSignature: "",
+    lastVisualSignature: "",
     lastDepthOrderSignature: "",
     debugSignatures: new Map(),
     debugWarningSignatures: new Map(),
@@ -1534,6 +1579,8 @@ export function clearDartMarkerDartsState(state, options = {}) {
   state.lastBoardSignature = "";
   state.lastOverlaySignature = "";
   state.lastLayoutSignature = "";
+  state.lastMarkerSnapshotSignature = "";
+  state.lastVisualSignature = "";
   state.lastDepthOrderSignature = "";
 
   emitDebug(state, options.featureDebug || null, "cleanup", {
@@ -1661,7 +1708,40 @@ export function updateDartMarkerDarts(options = {}) {
     Number(dartLength || 0).toFixed(2),
     Number(dartHeight || 0).toFixed(2),
   ].join("|");
-  state.lastLayoutSignature = layoutSignature;
+  const markerSnapshotSignature = buildMarkerSnapshotSignature(markers);
+  const visualSignature = buildVisualSignature(visualConfig, dartImageSource);
+
+  if (
+    !requiresBoardRescan &&
+    !requiresMarkerRescan &&
+    canSkipUnchangedReposition({
+      state,
+      markers,
+      layoutSignature,
+      markerSnapshotSignature,
+      visualSignature,
+    })
+  ) {
+    emitDebug(
+      state,
+      featureDebug,
+      "marker-scan",
+      {
+        markerCount: markers.length,
+        dartCount: state.entriesByMarker.size,
+        added: 0,
+        updated: 0,
+        removed: 0,
+        unresolved: 0,
+        hiddenMarkerCount: visualConfig.hideOriginalMarkers ? markers.length : 0,
+        retryScheduled: false,
+        maxRenderErrorPx: 0,
+        skipped: true,
+      },
+      { heartbeat: true }
+    );
+    return;
+  }
 
   const markerSet = new Set(markers);
   let removed = 0;
@@ -1733,6 +1813,7 @@ export function updateDartMarkerDarts(options = {}) {
       x: Number(screenPoint.x),
       y: Number(screenPoint.y),
     };
+    entry.lastScreenPointSource = String(screenPoint.source || "");
 
     const geometryPayload = buildGeometryPayload({
       marker,
@@ -1793,6 +1874,10 @@ export function updateDartMarkerDarts(options = {}) {
   } else {
     clearRetryTimer(state);
   }
+
+  state.lastLayoutSignature = layoutSignature;
+  state.lastMarkerSnapshotSignature = markerSnapshotSignature;
+  state.lastVisualSignature = visualSignature;
 
   emitDebug(
     state,

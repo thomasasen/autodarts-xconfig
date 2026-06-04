@@ -12,6 +12,13 @@ import {
   DART_IMAGE_SOURCE_WIDTH,
   DART_IMAGE_TIP_Y,
 } from "./logic.js";
+import {
+  DART_IMPACT_SHADOW_OPACITY_BOOST,
+  createDartImpactShadowKeyframes,
+  createDartImpactShadowOptions,
+  createDartImpactWobbleKeyframes,
+  createDartImpactWobbleOptions,
+} from "./impact.js";
 
 const PREVIEW_ID = "ad-ext-dart-marker-darts-preview";
 const PREVIEW_STYLE_ID = "ad-ext-dart-marker-darts-preview-style";
@@ -164,13 +171,11 @@ function animatePreviewDart(entry, visualConfig, windowRef, session) {
     entry.shadowNode &&
     typeof entry.shadowNode.animate === "function"
   ) {
+    const baseOpacity = 0.26;
+    const maxOpacity = Math.min(1, baseOpacity + DART_IMPACT_SHADOW_OPACITY_BOOST);
     const shadowAnimation = entry.shadowNode.animate(
-      [{ opacity: 0.26 }, { opacity: 0.4 }, { opacity: 0.26 }],
-      {
-        delay: durationMs,
-        duration: 170,
-        easing: "cubic-bezier(0.2,0.6,0.2,1)",
-      }
+      createDartImpactShadowKeyframes(baseOpacity, maxOpacity),
+      createDartImpactShadowOptions(durationMs)
     );
     session.animations.add(shadowAnimation);
   }
@@ -181,19 +186,8 @@ function animatePreviewDart(entry, visualConfig, windowRef, session) {
     typeof entry.imageNode.animate === "function"
   ) {
     const wobbleAnimation = entry.imageNode.animate(
-      [
-        { transform: "rotate(0deg)" },
-        { transform: "rotate(-4deg)" },
-        { transform: "rotate(2.4deg)" },
-        { transform: "rotate(-1.4deg)" },
-        { transform: "rotate(0deg)" },
-      ],
-      {
-        delay: durationMs,
-        duration: 280,
-        easing: "cubic-bezier(0.2,0.6,0.2,1)",
-        fill: "both",
-      }
+      createDartImpactWobbleKeyframes(),
+      createDartImpactWobbleOptions(durationMs)
     );
     session.animations.add(wobbleAnimation);
   }

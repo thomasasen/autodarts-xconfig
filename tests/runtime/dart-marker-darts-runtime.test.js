@@ -16,6 +16,7 @@ import {
   updateDartMarkerDarts,
 } from "../../src/features/dart-marker-darts/logic.js";
 import { initializeDartMarkerDarts } from "../../src/features/dart-marker-darts/index.js";
+import { runDartMarkerDartsPreview } from "../../src/features/dart-marker-darts/preview.js";
 import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
@@ -24,6 +25,11 @@ import {
   OVERLAY_ID,
   resolveDartMarkerDartsConfig,
 } from "../../src/features/dart-marker-darts/style.js";
+import {
+  DART_IMPACT_SHADOW_DURATION_MS,
+  DART_IMPACT_WOBBLE_DURATION_MS,
+  createDartImpactWobbleKeyframes,
+} from "../../src/features/dart-marker-darts/impact.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -48,6 +54,22 @@ const ANIMATED_VISUAL_CONFIG = Object.freeze({
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function installAppendSupport(documentRef) {
+  const attachAppend = (node) => {
+    if (node && typeof node.append !== "function") {
+      node.append = function append(...children) {
+        children.forEach((child) => this.appendChild(child));
+      };
+    }
+    return node;
+  };
+  const originalCreateElement = documentRef.createElement.bind(documentRef);
+  const originalCreateElementNS = documentRef.createElementNS.bind(documentRef);
+  documentRef.createElement = (...args) => attachAppend(originalCreateElement(...args));
+  documentRef.createElementNS = (...args) => attachAppend(originalCreateElementNS(...args));
+  attachAppend(documentRef.body);
 }
 
 test("dart-marker-darts resolves size settings twenty percent larger with legacy migration", () => {
@@ -381,6 +403,58 @@ test("dart-marker-darts supports configurable shadow, shadow blur, wobble, and f
   clearDartMarkerDartsState(state);
 });
 
+test("dart-marker-darts uses shared stronger impact wobble and shadow timing in runtime and preview", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 10,
+      cy: 20,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 360, f: 280 }),
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: ANIMATED_VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  const runtimeWobble = entry.imageNode.__animations[0];
+  const runtimeShadow = entry.shadowNode.__animations[0];
+  assert.deepEqual(runtimeWobble.keyframes, createDartImpactWobbleKeyframes());
+  assert.equal(runtimeWobble.options.duration, DART_IMPACT_WOBBLE_DURATION_MS);
+  assert.equal(runtimeWobble.options.delay, ANIMATED_VISUAL_CONFIG.flightDurationMs);
+  assert.match(runtimeWobble.keyframes[1].transform, /rotate\(-7\.5deg\)/);
+  assert.match(runtimeWobble.keyframes[1].transform, /scaleX\(0\.982\)/);
+  assert.match(runtimeWobble.keyframes[1].transform, /translateX\(-0\.8px\)/);
+  assert.equal(runtimeShadow.options.duration, DART_IMPACT_SHADOW_DURATION_MS);
+  assert.equal(runtimeShadow.keyframes.length, 4);
+  assert.ok(runtimeShadow.keyframes[1].opacity > runtimeShadow.keyframes[0].opacity);
+
+  clearDartMarkerDartsState(state);
+
+  installAppendSupport(documentRef);
+  const targetNode = documentRef.createElement("div");
+  documentRef.body.appendChild(targetNode);
+  runDartMarkerDartsPreview({
+    documentRef,
+    windowRef,
+    targetNode,
+    featureConfig: ANIMATED_VISUAL_CONFIG,
+  });
+
+  const previewWobble = targetNode.querySelector(`image.${DART_CLASS}`)?.__animations[0];
+  const previewShadow = targetNode.querySelector(`image.${DART_SHADOW_CLASS}`)?.__animations[0];
+  assert.deepEqual(previewWobble.keyframes, createDartImpactWobbleKeyframes());
+  assert.equal(previewWobble.options.duration, DART_IMPACT_WOBBLE_DURATION_MS);
+  assert.equal(previewWobble.options.delay, ANIMATED_VISUAL_CONFIG.flightDurationMs);
+  assert.equal(previewShadow.options.duration, DART_IMPACT_SHADOW_DURATION_MS);
+});
+
 test("dart-marker-darts reuses entry geometry when board and marker layout are unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -432,6 +506,99 @@ test("dart-marker-darts reuses entry geometry when board and marker layout are u
   });
 
   assert.deepEqual(mutationCounter, { image: 0, shadow: 0, rotate: 0 });
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts skips marker geometry on unchanged rect-based reposition updates", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 10,
+      cy: 20,
+      r: 5,
+      rectLeft: 358,
+      rectTop: 278,
+      rectWidth: 4,
+      rectHeight: 4,
+      getMatrix: () => {
+        throw new Error("rect-based marker should not need matrix fallback");
+      },
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+  assert.equal(entry.lastScreenPointSource, "rect");
+
+  let markerRectReads = 0;
+  const originalMarkerRect = markers[0].getBoundingClientRect.bind(markers[0]);
+  markers[0].getBoundingClientRect = () => {
+    markerRectReads += 1;
+    return originalMarkerRect();
+  };
+
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+    updateMode: {
+      requiresBoardRescan: false,
+      requiresMarkerRescan: false,
+    },
+  });
+
+  assert.equal(markerRectReads, 0);
+  assert.equal(state.entriesByMarker.size, 1);
+
+  clearDartMarkerDartsState(state);
+});
+
+test("dart-marker-darts does not skip reposition updates for matrix-resolved markers", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const dynamicMatrix = { a: 1, b: 0, c: 0, d: 1, e: 360, f: 280 };
+  const { markers } = installBoardFixture(documentRef, [
+    {
+      cx: 10,
+      cy: 20,
+      r: 5,
+      getMatrix: () => dynamicMatrix,
+    },
+  ]);
+
+  const state = createDartMarkerDartsState(windowRef);
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+  assert.equal(entry.lastScreenPointSource, "matrix");
+  const initialX = entry.center.x;
+
+  dynamicMatrix.e += 24;
+  updateDartMarkerDarts({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+    updateMode: {
+      requiresBoardRescan: false,
+      requiresMarkerRescan: false,
+    },
+  });
+
+  assert.notEqual(state.entriesByMarker.get(markers[0]).center.x, initialX);
 
   clearDartMarkerDartsState(state);
 });
