@@ -253,6 +253,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Style`: Fireworks
 - `Farbe`: Autodarts
 - `Intensität`: Standard
+- `Dauer`: 5 s
+- `Partikelanzahl`: Optimiert
 - `Bei Bull-Out aktiv`: An
 - `Klick beendet Effekt`: An
 
@@ -1248,7 +1250,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
-- Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Dichte und Geschwindigkeit folgen dem gewählten Stil und der Intensität.
+- Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.
 - Wann sinnvoll? Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.
 
 **Einstellungen einfach erklärt**
@@ -1267,10 +1269,18 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Sunset`: Die Farbpalette erinnert an einen Sonnenuntergang mit warmen und violett auslaufenden Tönen. Das wirkt farbig und lebendig.
   - `Neon`: Die Partikel leuchten in hellen, künstlich wirkenden Neonfarben. Das ist die bunteste und auffälligste Farbpalette.
   - `Gold`: Die Partikel wirken wie goldenes Feuerwerk oder Goldregen. Das ist die klassisch festliche Premium-Variante.
-- `Intensität`: Steuert über Voreinstellungen, wie viele Partikel entstehen, wie häufig Schüsse ausgelöst werden und wie energisch sich der Effekt bewegt. `Stark` wirkt dichter und lebhafter, `Dezent` ruhiger.
+- `Intensität`: Steuert über Voreinstellungen, wie häufig Schüsse ausgelöst werden und wie energisch sich der Effekt bewegt. `Stark` wirkt lebhafter, `Dezent` ruhiger.
   - `Dezent`: Es entstehen weniger Partikel, die etwas gemächlicher und mit längeren Abständen ausgelöst werden. Der Effekt bleibt sichtbar, ohne den Bildschirm zu fluten.
   - `Standard`: Partikelmenge, Auslösefrequenz und Bewegungsenergie bleiben in Balance. Das ist die neutrale Mittelstufe des Effekts.
   - `Stark`: Mehr Partikel werden schneller und lebhafter ausgelöst. Dadurch wirkt das Feuerwerk voller, dichter und energischer.
+- `Dauer`: Stoppt das Winner-Feuerwerk nach der gewählten Dauer automatisch. Die Vorschau nutzt dieselbe Dauer wie der echte Effekt.
+  - `1 s`: Der Siegereffekt läuft nur kurz an und wird dann automatisch beendet. Das ist die geringste Laufzeit und reduziert sichtbare Last am stärksten.
+  - `2 s`: Der Siegereffekt bleibt klar sichtbar, endet aber schnell genug, um längere Lastspitzen zu vermeiden.
+  - `5 s`: Der Siegereffekt läuft länger und wirkt feierlicher, beendet sich aber trotzdem automatisch.
+- `Partikelanzahl`: Senkt oder erhöht die Partikelmenge pro Auslösung. `Optimiert` reduziert die Last gegenüber der vollen Menge, ohne den Effekt leer wirken zu lassen.
+  - `Sparsam`: Pro Auslösung entstehen bewusst wenige Partikel. Das ist die leichteste Einstellung für schwächere Geräte.
+  - `Optimiert`: Die Partikelanzahl liegt unter der vollen Menge, bleibt aber sichtbar genug für einen klaren Siegereffekt.
+  - `Voll`: Jede Auslösung verwendet die ursprüngliche volle Partikeldichte. Das wirkt am dichtesten, kann aber spürbar mehr Leistung brauchen.
 - `Test-Button`: Löst den aktuell konfigurierten Winner-Fireworks-Effekt direkt als Vorschau aus, ohne auf einen echten Sieg warten zu müssen. Das ist nur ein Testlauf und ändert keine gespeicherten Werte.
 - `Bei Bull-Out aktiv`: Bestimmt, ob der Siegereffekt auch dann startet, wenn der erkannte Spielmodus eine Bull-Out-Variante ist. Ist die Option aus, bleiben diese Varianten stumm.
 - `Klick beendet Effekt`: Bestimmt, ob ein linker Mausklick den aktuell laufenden Winner-Fireworks-Effekt vorzeitig schließen darf.

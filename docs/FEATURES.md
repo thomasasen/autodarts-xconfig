@@ -99,6 +99,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Style`: Fireworks
 - `Farbe`: Autodarts
 - `Intensität`: Standard
+- `Dauer`: 5 s
+- `Partikelanzahl`: Optimiert
 - `Bei Bull-Out aktiv`: An
 - `Klick beendet Effekt`: An
 
@@ -944,7 +946,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 - Gilt für: `alle Modi`
 - Kurz: Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
-- Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Dichte und Geschwindigkeit folgen dem gewählten Stil und der Intensität.
+- Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.
 - `Style`: Wählt das Bewegungsmuster des Siegereffekts.
   - `Realistic`: Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feuerwerkswirkung des Moduls.
   - `Fireworks`: Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel.
@@ -959,10 +961,18 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Sunset`: Diese Farbpalette mischt Weiß mit warmem Orange, Pink und Violett. Dadurch bekommt der Effekt eine deutlich stimmungsvollere, buntere Sunset-Wirkung.
   - `Neon`: Diese Palette kombiniert mehrere sehr helle Neonfarben und erzeugt damit den grellsten, modernsten Look. Der Effekt wirkt stark künstlich, bunt und maximal aufmerksamkeitsstark.
   - `Gold`: Diese Variante färbt den Effekt in Weiß, Gold und warme Bernsteintöne. Dadurch entsteht eine klassische Feierwirkung, die besonders edel und festlich wirkt.
-- `Intensität`: Regelt Dichte und Energie des Siegereffekts.
+- `Intensität`: Regelt Taktung und Energie des Siegereffekts.
   - `Dezent`: Diese Stufe reduziert Partikelzahl, Geschwindigkeit und Auslösefrequenz. Das Feuerwerk wirkt dadurch ruhiger, luftiger und weniger bildfüllend.
   - `Standard`: Diese Einstellung liefert den vorgesehenen Mittelwert für Partikelzahl, Auslöseintervall und Bewegungsenergie. Der Effekt bleibt klar festlich, ohne zu übersteuern.
   - `Stark`: Diese Stufe steigert Partikelzahl, Auslösefrequenz und Bewegungsenergie spürbar. Der Effekt füllt den Bildschirm stärker und wirkt deutlich druckvoller als die anderen Varianten.
+- `Dauer`: Begrenzt die Laufzeit des Siegereffekts.
+  - `1 s`: Kürzeste Laufzeit; ideal, wenn der Effekt nur kurz aufblitzen soll.
+  - `2 s`: Kurze, gut sichtbare Laufzeit mit moderater Last.
+  - `5 s`: Längste Laufzeit; feierlich, aber nicht dauerhaft aktiv.
+- `Partikelanzahl`: Regelt die Partikelmenge pro Auslösung.
+  - `Sparsam`: Niedrigste Partikelmenge und geringste Last.
+  - `Optimiert`: Empfohlene Balance aus Wirkung und Performance.
+  - `Voll`: Maximale Dichte mit der höchsten Last.
 - `Test-Button`: Startet die aktuelle Konfiguration sofort als Vorschau.
 - `Bei Bull-Out aktiv`: Legt fest, ob der Effekt auch bei Bull-Out aktiv ist.
 - `Klick beendet Effekt`: Erlaubt das Beenden des Effekts per Klick.

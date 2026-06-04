@@ -77,6 +77,8 @@ const X01_SCORE_PROGRESS_BAR_SIZES = new Set(["schmal", "standard", "breit", "ex
 const WINNER_FIREWORKS_STYLES = new Set(["realistic", "fireworks", "cannon", "victorystorm", "stars", "sides"]);
 const WINNER_FIREWORKS_COLOR_THEMES = new Set(["autodarts", "redwhite", "ice", "sunset", "neon", "gold"]);
 const WINNER_FIREWORKS_INTENSITIES = new Set(["dezent", "standard", "stark"]);
+const WINNER_FIREWORKS_DURATION_SECONDS = new Set([1, 2, 5]);
+const WINNER_FIREWORKS_PARTICLE_AMOUNTS = new Set(["sparsam", "optimiert", "voll"]);
 const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "center", "tile"]);
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 25, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
@@ -318,7 +320,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   removeDartsNotification: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
   singleBullSound: { enabled: false, volume: 0.9, cooldownMs: 700, pollIntervalMs: 0, debug: false },
   turnPointsCount: { enabled: false, durationMs: 3000, countEffect: "countup", flashOnChange: true, flashMode: "on-change", debug: false },
-  winnerFireworks: { enabled: false, style: "realistic", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true, debug: false },
+  winnerFireworks: { enabled: false, style: "realistic", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true, debug: false },
   x01ScoreProgress: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core", debug: false },
   "themes.globalTypography": {
     enabled: false,
@@ -371,7 +373,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   removeDartsNotification: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
   singleBullSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
   turnPointsCount: { durationMs: 3000, countEffect: "countup", flashOnChange: false, flashMode: "on-change" },
-  winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", includeBullOut: true, pointerDismiss: true },
+  winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true },
   x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
   "themes.globalTypography": {
     enabled: false,
@@ -574,6 +576,8 @@ const LEGACY_IMPORTERS = Object.freeze({
       style: readLegacySetting(settings, "STYLE", "realistic"),
       colorTheme: readLegacySetting(settings, "FARBE", "autodarts"),
       intensity: readLegacySetting(settings, "INTENSITAET", "standard"),
+      durationSeconds: readLegacySetting(settings, "DAUER_SEKUNDEN", 5),
+      particleAmount: readLegacySetting(settings, "PARTIKELANZAHL", "optimiert"),
       includeBullOut: readLegacySetting(settings, "BULLOUT_AKTIV", true),
       pointerDismiss: readLegacySetting(settings, "KLICK_ZUM_STOPPEN", true),
       debug: readLegacySetting(settings, "DEBUG", false),
@@ -699,7 +703,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeTurnPointsCountDuration(rawConfig.durationMs), countEffect: normalizeStringChoice(rawConfig.countEffect, "countup", TURN_POINTS_COUNT_EFFECTS), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
   },
   winnerFireworks(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "realistic", WINNER_FIREWORKS_STYLES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "autodarts", WINNER_FIREWORKS_COLOR_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "standard", WINNER_FIREWORKS_INTENSITIES), includeBullOut: normalizeBoolean(rawConfig.includeBullOut, true), pointerDismiss: normalizeBoolean(rawConfig.pointerDismiss, true), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "realistic", WINNER_FIREWORKS_STYLES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "autodarts", WINNER_FIREWORKS_COLOR_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "standard", WINNER_FIREWORKS_INTENSITIES), durationSeconds: normalizeNumberChoice(rawConfig.durationSeconds, 5, WINNER_FIREWORKS_DURATION_SECONDS), particleAmount: normalizeStringChoice(rawConfig.particleAmount, "optimiert", WINNER_FIREWORKS_PARTICLE_AMOUNTS), includeBullOut: normalizeBoolean(rawConfig.includeBullOut, true), pointerDismiss: normalizeBoolean(rawConfig.pointerDismiss, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   x01ScoreProgress(rawConfig = {}) {
     const legacyThresholdColorMode = normalizeStringChoice(rawConfig.thresholdColorMode, "", X01_SCORE_PROGRESS_COLOR_THEMES);

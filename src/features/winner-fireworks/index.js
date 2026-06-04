@@ -13,7 +13,6 @@ const FEATURE_KEY = "winner-fireworks";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const PREVIEW_STYLE_ID = `${STYLE_ID}-preview`;
 const PREVIEW_OVERLAY_ID = "ad-ext-winner-fireworks-preview";
-const PREVIEW_BASE_DURATION_MS = 2900;
 const LISTENER_KEYS = Object.freeze({
   resize: `${FEATURE_KEY}:window-resize`,
   visibility: `${FEATURE_KEY}:document-visibility`,
@@ -22,10 +21,8 @@ const LISTENER_KEYS = Object.freeze({
 const previewSessionByWindow = new WeakMap();
 
 function getPreviewDurationMs(visualConfig) {
-  return Math.max(
-    900,
-    Math.round(PREVIEW_BASE_DURATION_MS * Number(visualConfig?.intensityPreset?.intervalScale || 1))
-  );
+  const durationSeconds = Number(visualConfig?.durationSeconds);
+  return Math.max(900, [1, 2, 5].includes(durationSeconds) ? durationSeconds * 1000 : 5000);
 }
 
 function clearWinnerFireworksPreview(windowRef, session) {
@@ -164,6 +161,8 @@ export function initializeWinnerFireworks(context = {}) {
           style: "realistic",
           colorTheme: "autodarts",
           intensity: "standard",
+          durationSeconds: 5,
+          particleAmount: "optimiert",
           includeBullOut: true,
           pointerDismiss: true,
         };

@@ -51,10 +51,24 @@ export const INTENSITY_PRESETS = Object.freeze({
   },
 });
 
+export const PARTICLE_AMOUNT_PRESETS = Object.freeze({
+  sparsam: {
+    particleScale: 0.35,
+  },
+  optimiert: {
+    particleScale: 0.6,
+  },
+  voll: {
+    particleScale: 1,
+  },
+});
+
 export function resolveWinnerVisualConfig(featureConfig = {}) {
   const colorTheme = String(featureConfig.colorTheme || "").trim().toLowerCase();
   const intensity = String(featureConfig.intensity || "").trim().toLowerCase();
+  const particleAmount = String(featureConfig.particleAmount || "").trim().toLowerCase();
   const style = String(featureConfig.style || "").trim().toLowerCase();
+  const durationSeconds = Number(featureConfig.durationSeconds);
 
   return {
     style: ["realistic", "fireworks", "cannon", "victorystorm", "stars", "sides"].includes(style)
@@ -64,6 +78,9 @@ export function resolveWinnerVisualConfig(featureConfig = {}) {
     colors: COLOR_THEMES[colorTheme] || COLOR_THEMES.autodarts,
     intensity: INTENSITY_PRESETS[intensity] ? intensity : "standard",
     intensityPreset: INTENSITY_PRESETS[intensity] || INTENSITY_PRESETS.standard,
+    durationSeconds: [1, 2, 5].includes(durationSeconds) ? durationSeconds : 5,
+    particleAmount: PARTICLE_AMOUNT_PRESETS[particleAmount] ? particleAmount : "optimiert",
+    particleAmountPreset: PARTICLE_AMOUNT_PRESETS[particleAmount] || PARTICLE_AMOUNT_PRESETS.optimiert,
     includeBullOut: featureConfig.includeBullOut !== false,
     pointerDismiss: featureConfig.pointerDismiss !== false,
   };

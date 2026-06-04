@@ -176,6 +176,8 @@ test("config store imports migrated legacy feature and theme settings once witho
             STYLE: "cannon",
             FARBE: "gold",
             INTENSITAET: "stark",
+            DAUER_SEKUNDEN: 2,
+            PARTIKELANZAHL: "voll",
             BULLOUT_AKTIV: false,
             KLICK_ZUM_STOPPEN: false,
             DEBUG: true,
@@ -261,6 +263,8 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.winnerFireworks.style, "cannon");
   assert.equal(importedConfig.features.winnerFireworks.colorTheme, "gold");
   assert.equal(importedConfig.features.winnerFireworks.intensity, "stark");
+  assert.equal(importedConfig.features.winnerFireworks.durationSeconds, 2);
+  assert.equal(importedConfig.features.winnerFireworks.particleAmount, "voll");
   assert.equal(importedConfig.features.winnerFireworks.includeBullOut, false);
   assert.equal(importedConfig.features.winnerFireworks.pointerDismiss, false);
   assert.equal(importedConfig.features.winnerFireworks.debug, true);

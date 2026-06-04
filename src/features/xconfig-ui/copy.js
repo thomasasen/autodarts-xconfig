@@ -1138,7 +1138,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.",
     visualDescription:
-      "Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Dichte und Geschwindigkeit folgen dem gewählten Stil und der Intensität.",
+      "Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.",
     usefulWhen:
       "Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.",
     images: [
@@ -1157,9 +1157,19 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wählt die Farbpalette des Siegereffekts."
       ),
       intensity: fieldCopy(
-        "Regelt Partikelmenge, Intervall und Energie des Effekts.",
-        "Steuert über Voreinstellungen, wie viele Partikel entstehen, wie häufig Schüsse ausgelöst werden und wie energisch sich der Effekt bewegt. `Stark` wirkt dichter und lebhafter, `Dezent` ruhiger.",
-        "Regelt Dichte und Energie des Siegereffekts."
+        "Regelt Intervall und Energie des Effekts.",
+        "Steuert über Voreinstellungen, wie häufig Schüsse ausgelöst werden und wie energisch sich der Effekt bewegt. `Stark` wirkt lebhafter, `Dezent` ruhiger.",
+        "Regelt Taktung und Energie des Siegereffekts."
+      ),
+      durationSeconds: fieldCopy(
+        "Begrenzt, wie lange der Effekt nach einem Sieg läuft.",
+        "Stoppt das Winner-Feuerwerk nach der gewählten Dauer automatisch. Die Vorschau nutzt dieselbe Dauer wie der echte Effekt.",
+        "Begrenzt die Laufzeit des Siegereffekts."
+      ),
+      particleAmount: fieldCopy(
+        "Regelt die Partikelanzahl unabhängig von der Intensität.",
+        "Senkt oder erhöht die Partikelmenge pro Auslösung. `Optimiert` reduziert die Last gegenüber der vollen Menge, ohne den Effekt leer wirken zu lassen.",
+        "Regelt die Partikelmenge pro Auslösung."
       ),
       "run-feature-action": fieldCopy(
         "Startet die aktuelle Konfiguration sofort als Vorschau im geöffneten xConfig-Fenster.",
@@ -2500,6 +2510,42 @@ const WINNER_INTENSITY_OPTION_COPY = deepFreeze({
   ),
 });
 
+const WINNER_DURATION_OPTION_COPY = deepFreeze({
+  1: optionCopy(
+    "Stoppt den Effekt nach 1 Sekunde.",
+    "Der Siegereffekt läuft nur kurz an und wird dann automatisch beendet. Das ist die geringste Laufzeit und reduziert sichtbare Last am stärksten.",
+    "Kürzeste Laufzeit; ideal, wenn der Effekt nur kurz aufblitzen soll."
+  ),
+  2: optionCopy(
+    "Stoppt den Effekt nach 2 Sekunden.",
+    "Der Siegereffekt bleibt klar sichtbar, endet aber schnell genug, um längere Lastspitzen zu vermeiden.",
+    "Kurze, gut sichtbare Laufzeit mit moderater Last."
+  ),
+  5: optionCopy(
+    "Stoppt den Effekt nach 5 Sekunden.",
+    "Der Siegereffekt läuft länger und wirkt feierlicher, beendet sich aber trotzdem automatisch.",
+    "Längste Laufzeit; feierlich, aber nicht dauerhaft aktiv."
+  ),
+});
+
+const WINNER_PARTICLE_AMOUNT_OPTION_COPY = deepFreeze({
+  sparsam: optionCopy(
+    "Reduziert die Partikelmenge deutlich.",
+    "Pro Auslösung entstehen bewusst wenige Partikel. Das ist die leichteste Einstellung für schwächere Geräte.",
+    "Niedrigste Partikelmenge und geringste Last."
+  ),
+  optimiert: optionCopy(
+    "Nutzt eine reduzierte, ausgewogene Partikelmenge.",
+    "Die Partikelanzahl liegt unter der vollen Menge, bleibt aber sichtbar genug für einen klaren Siegereffekt.",
+    "Empfohlene Balance aus Wirkung und Performance."
+  ),
+  voll: optionCopy(
+    "Nutzt die volle Partikelmenge.",
+    "Jede Auslösung verwendet die ursprüngliche volle Partikeldichte. Das wirkt am dichtesten, kann aber spürbar mehr Leistung brauchen.",
+    "Maximale Dichte mit der höchsten Last."
+  ),
+});
+
 const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
@@ -2627,6 +2673,8 @@ const xconfigFieldOptionCopy = deepFreeze({
     style: WINNER_STYLE_OPTION_COPY,
     colorTheme: WINNER_COLOR_OPTION_COPY,
     intensity: WINNER_INTENSITY_OPTION_COPY,
+    durationSeconds: WINNER_DURATION_OPTION_COPY,
+    particleAmount: WINNER_PARTICLE_AMOUNT_OPTION_COPY,
   },
 });
 
@@ -2903,6 +2951,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           { label: "Style", key: "style" },
           { label: "Farbe", key: "colorTheme" },
           { label: "Intensität", key: "intensity" },
+          { label: "Dauer", key: "durationSeconds" },
+          { label: "Partikelanzahl", key: "particleAmount" },
           { label: "Bei Bull-Out aktiv", key: "includeBullOut" },
           { label: "Klick beendet Effekt", key: "pointerDismiss" },
         ],

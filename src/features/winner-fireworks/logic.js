@@ -38,8 +38,10 @@ function isBullOutVariant(variantText) {
   );
 }
 
-function scaledCount(baseValue, intensityPreset) {
-  return Math.max(1, Math.round(Number(baseValue || 0) * Number(intensityPreset?.particleScale || 1)));
+function scaledCount(baseValue, visualConfig) {
+  const intensityScale = Number(visualConfig?.intensityPreset?.particleScale || 1);
+  const amountScale = Number(visualConfig?.particleAmountPreset?.particleScale || 1);
+  return Math.max(1, Math.round(Number(baseValue || 0) * intensityScale * amountScale));
 }
 
 function scaledVelocity(baseValue, intensityPreset) {
@@ -48,6 +50,11 @@ function scaledVelocity(baseValue, intensityPreset) {
 
 function scaledInterval(baseValue, intensityPreset) {
   return Math.max(16, Math.round(Number(baseValue || 16) * Number(intensityPreset?.intervalScale || 1)));
+}
+
+function getEffectDurationMs(visualConfig) {
+  const durationSeconds = Number(visualConfig?.durationSeconds);
+  return [1, 2, 5].includes(durationSeconds) ? durationSeconds * 1000 : 5000;
 }
 
 function parseWinnerIndex(value, playerCount) {
@@ -183,7 +190,7 @@ function emit(confettiRunner, visualConfig, payload = {}) {
     zIndex: 2147483646,
     colors: visualConfig.colors,
     ...payload,
-    particleCount: scaledCount(payload.particleCount, visualConfig.intensityPreset),
+    particleCount: scaledCount(payload.particleCount, visualConfig),
     startVelocity: scaledVelocity(payload.startVelocity, visualConfig.intensityPreset),
   });
 }
@@ -382,7 +389,7 @@ function ensureOverlay(state) {
     if (typeof state.confettiFactory.create === "function") {
       state.confettiRunner = state.confettiFactory.create(state.canvasNode, {
         resize: true,
-        useWorker: false,
+        useWorker: true,
       });
     } else {
       state.confettiRunner = state.confettiFactory;
@@ -426,6 +433,10 @@ export function startWinnerFireworks(state) {
     (state.windowRef && typeof state.windowRef.setInterval === "function"
       ? state.windowRef.setInterval.bind(state.windowRef)
       : setInterval);
+  const setTimeoutRef =
+    (state.windowRef && typeof state.windowRef.setTimeout === "function"
+      ? state.windowRef.setTimeout.bind(state.windowRef)
+      : setTimeout);
 
   state.running = true;
   runStyleBurst(state);
@@ -439,6 +450,16 @@ export function startWinnerFireworks(state) {
     }
     runStyleBurst(state);
   }, intervalMs);
+
+  const timeoutHandle = setTimeoutRef(() => {
+    state.timeoutHandles.delete(timeoutHandle);
+    if (!state.running) {
+      return;
+    }
+    state.dismissedForCurrentWin = true;
+    stopWinnerFireworks(state);
+  }, getEffectDurationMs(state.visualConfig));
+  state.timeoutHandles.add(timeoutHandle);
 }
 
 export function syncWinnerFireworks(state, winnerSignal) {

@@ -1952,6 +1952,8 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
         config.features.singleBullSound.volume === 0.9 &&
         config.features.winnerFireworks.style === "fireworks" &&
         config.features.winnerFireworks.intensity === "standard" &&
+        config.features.winnerFireworks.durationSeconds === 5 &&
+        config.features.winnerFireworks.particleAmount === "optimiert" &&
         config.features.x01ScoreProgress.barSize === "breit" &&
         config.features.x01ScoreProgress.effect === "off" &&
         config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="

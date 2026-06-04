@@ -191,6 +191,8 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.turnPointsCount.flashOnChange, false);
   assert.equal(config.features.winnerFireworks.style, "fireworks");
   assert.equal(config.features.winnerFireworks.intensity, "standard");
+  assert.equal(config.features.winnerFireworks.durationSeconds, 5);
+  assert.equal(config.features.winnerFireworks.particleAmount, "optimiert");
   assert.equal(config.features.x01ScoreProgress.barSize, "breit");
   assert.equal(config.features.x01ScoreProgress.effect, "off");
   assert.equal(config.features.themes.x01.enabled, true);
@@ -309,6 +311,8 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         style: "FIREWORKS",
         colorTheme: "ICE",
         intensity: "STARK",
+        durationSeconds: "2",
+        particleAmount: "VOLL",
         includeBullOut: "false",
         pointerDismiss: "false",
       },
@@ -486,6 +490,8 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").intensity, "stark");
+  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").durationSeconds, 2);
+  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").particleAmount, "voll");
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").includeBullOut, false);
   assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").pointerDismiss, false);
   assert.equal(runtimeConfig.getFeatureConfig("themes.x01").showAvg, false);

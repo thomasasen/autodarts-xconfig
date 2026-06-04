@@ -147,6 +147,8 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     style: "fireworks",
     colorTheme: "autodarts",
     intensity: "standard",
+    durationSeconds: 5,
+    particleAmount: "optimiert",
     includeBullOut: true,
     pointerDismiss: true,
     debug: false,

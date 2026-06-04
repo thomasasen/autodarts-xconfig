@@ -817,6 +817,16 @@ export const xconfigDescriptors = Object.freeze([
         { value: "standard", label: "Standard" },
         { value: "stark", label: "Stark" },
       ]),
+      selectField("durationSeconds", "Dauer", [
+        { value: 1, label: "1 s" },
+        { value: 2, label: "2 s" },
+        { value: 5, label: "5 s" },
+      ]),
+      selectField("particleAmount", "Partikelanzahl", [
+        { value: "sparsam", label: "Sparsam" },
+        { value: "optimiert", label: "Optimiert" },
+        { value: "voll", label: "Voll" },
+      ]),
       actionField("run-feature-action", "Test-Button", {
         actionId: "preview",
         buttonLabel: "Effekt jetzt testen",

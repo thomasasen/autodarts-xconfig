@@ -351,6 +351,8 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
   assert.equal(storedConfig.features.winnerFireworks.style, "fireworks");
   assert.equal(storedConfig.features.winnerFireworks.intensity, "standard");
+  assert.equal(storedConfig.features.winnerFireworks.durationSeconds, 5);
+  assert.equal(storedConfig.features.winnerFireworks.particleAmount, "optimiert");
   assert.equal(storedConfig.features.x01ScoreProgress.barSize, "breit");
   assert.equal(storedConfig.features.x01ScoreProgress.effect, "off");
   assert.equal(
