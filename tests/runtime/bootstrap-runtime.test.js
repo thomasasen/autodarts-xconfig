@@ -30,6 +30,12 @@ function getStoredFeatureConfig(storedConfig, configKey) {
   return storedConfig.features?.[configKey] || null;
 }
 
+function countWindowListeners(windowRef, type) {
+  return Array.isArray(windowRef?.__eventTarget?._listeners)
+    ? windowRef.__eventTarget._listeners.filter((record) => record.type === type).length
+    : 0;
+}
+
 test("initializeTampermonkeyRuntime is idempotent and reuses the namespace", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -60,6 +66,21 @@ test("parallel runtime initialization shares one startup promise and one namespa
   assert.equal(windowRef.__adXConfig.inspect().observerCount >= 1, true);
 
   first.stop();
+});
+
+test("runtime removes storage sync listener when stopped", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+
+  const initialStorageListeners = countWindowListeners(windowRef, "storage");
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  assert.equal(countWindowListeners(windowRef, "storage"), initialStorageListeners + 1);
+
+  runtime.stop();
+
+  assert.equal(countWindowListeners(windowRef, "storage"), initialStorageListeners);
 });
 
 test("runtime public config API persists updates and survives feature toggles", async () => {
@@ -265,8 +286,37 @@ test("runtime syncs persisted config changes from another window via storage eve
     true
   );
 
-  firstRuntime.stop();
   secondRuntime.stop();
+  assert.equal(countWindowListeners(secondWindow, "storage"), 0);
+
+  await firstRuntime.saveConfig({
+    featureToggles: {
+      checkoutBoardTargets: true,
+    },
+    features: {
+      checkoutBoardTargets: {
+        enabled: true,
+        segmentStyle: "surface-outline",
+        singleRing: "both",
+        targetSelectionMode: "finish",
+        colorTheme: "amber",
+      },
+    },
+  });
+
+  const stoppedStorageEvent = new FakeEvent("storage", { bubbles: false, cancelable: false });
+  stoppedStorageEvent.key = CONFIG_STORAGE_KEY;
+  stoppedStorageEvent.newValue = localStorage.getItem(CONFIG_STORAGE_KEY);
+  stoppedStorageEvent.storageArea = localStorage;
+  secondWindow.dispatchEvent(stoppedStorageEvent);
+  await wait(10);
+
+  assert.equal(
+    secondRuntime.getSnapshot().features["checkout-board-targets"]?.config?.targetSelectionMode,
+    "all"
+  );
+
+  firstRuntime.stop();
 });
 
 test("runtime listFeatures exposes the full migrated feature catalog", async () => {

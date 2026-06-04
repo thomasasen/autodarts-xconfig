@@ -1123,6 +1123,126 @@ test("dart-marker-darts ignores unchanged game-state snapshots for scheduling", 
   cleanup();
 });
 
+test("dart-marker-darts tracks the newest active turn when turns are not ordered newest-first", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  installBoardFixture(documentRef, [
+    {
+      cx: 0,
+      cy: 0,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 }),
+    },
+  ]);
+
+  let gameStateListener = () => {};
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeDartMarkerDarts({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          design: "autodarts",
+          animateDarts: false,
+          sizePercent: 100,
+          hideOriginalMarkers: false,
+          enableShadowBlur: true,
+          enableFlightBlur: true,
+          flightSpeed: "standard",
+          debug: false,
+        };
+      },
+    },
+    gameState: {
+      subscribe(listener) {
+        gameStateListener = listener;
+        return () => {};
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            scheduleCounter.count += 1;
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  const baseCount = scheduleCounter.count;
+  const olderTurn = {
+    playerId: "player-1",
+    round: 1,
+    turn: 1,
+    createdAt: "2026-01-01T10:00:00.000Z",
+    throws: [],
+  };
+  const newestTurn = {
+    playerId: "player-1",
+    round: 2,
+    turn: 1,
+    createdAt: "2026-01-01T10:01:00.000Z",
+    throws: [],
+  };
+  const snapshot = {
+    variantNormalized: "x01",
+    outMode: "double",
+    activePlayerIndex: 0,
+    activeScore: 301,
+    match: {
+      players: [{ id: "player-1" }],
+      turns: [olderTurn, newestTurn],
+    },
+  };
+
+  gameStateListener(snapshot);
+  assert.equal(scheduleCounter.count, baseCount + 1);
+
+  gameStateListener({
+    ...snapshot,
+    match: {
+      ...snapshot.match,
+      turns: [
+        olderTurn,
+        {
+          ...newestTurn,
+          throws: [{ round: 2, turn: 1, points: 20, segment: "S20" }],
+        },
+      ],
+    },
+  });
+  assert.equal(scheduleCounter.count, baseCount + 2);
+
+  gameStateListener({
+    ...snapshot,
+    match: {
+      ...snapshot.match,
+      turns: [
+        olderTurn,
+        {
+          ...newestTurn,
+          throws: [{ round: 2, turn: 1, points: 20, segment: "S20" }],
+        },
+      ],
+    },
+  });
+  assert.equal(scheduleCounter.count, baseCount + 2);
+
+  cleanup();
+});
+
 test("dart-marker-darts runtime remount keeps a single overlay instance", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

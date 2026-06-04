@@ -140,10 +140,77 @@ function consumeUpdateMode(state) {
   };
 }
 
+function parseTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function selectNewestTurn(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) {
+    return null;
+  }
+
+  return candidates.reduce((best, candidate) => {
+    if (!best) {
+      return candidate;
+    }
+
+    const candidateRound = Number.isFinite(candidate?.round) ? candidate.round : -1;
+    const bestRound = Number.isFinite(best?.round) ? best.round : -1;
+    if (candidateRound !== bestRound) {
+      return candidateRound > bestRound ? candidate : best;
+    }
+
+    const candidateTurn = Number.isFinite(candidate?.turn) ? candidate.turn : -1;
+    const bestTurn = Number.isFinite(best?.turn) ? best.turn : -1;
+    if (candidateTurn !== bestTurn) {
+      return candidateTurn > bestTurn ? candidate : best;
+    }
+
+    const candidateTs = parseTimestamp(candidate?.createdAt);
+    const bestTs = parseTimestamp(best?.createdAt);
+    return candidateTs >= bestTs ? candidate : best;
+  }, null);
+}
+
+function resolveActiveTurnFromSnapshot(snapshot = null) {
+  const turns = snapshot?.match?.turns;
+  if (!Array.isArray(turns) || !turns.length) {
+    return null;
+  }
+
+  const activePlayerIndex = snapshot?.activePlayerIndex;
+  const players = snapshot?.match?.players;
+  const activePlayerId =
+    Array.isArray(players) && Number.isFinite(activePlayerIndex)
+      ? String(players[activePlayerIndex]?.id || "")
+      : "";
+  const unfinishedTurns = turns.filter((turn) => {
+    return turn && typeof turn === "object" && !String(turn.finishedAt || "").trim();
+  });
+  const unfinishedForActivePlayer = activePlayerId
+    ? unfinishedTurns.filter((turn) => String(turn.playerId || "") === activePlayerId)
+    : [];
+  const unfinishedPick =
+    selectNewestTurn(unfinishedForActivePlayer) || selectNewestTurn(unfinishedTurns);
+
+  if (unfinishedPick) {
+    return unfinishedPick;
+  }
+
+  const activeTurns = activePlayerId
+    ? turns.filter((turn) => String(turn?.playerId || "") === activePlayerId)
+    : [];
+
+  return selectNewestTurn(activeTurns) || selectNewestTurn(turns) || turns[0] || null;
+}
+
 function buildGameStateSignature(snapshot = null) {
-  const activeTurn = snapshot?.match?.turns?.find?.(
-    (turn) => String(turn?.playerId || "") === String(snapshot?.match?.players?.[snapshot?.activePlayerIndex]?.id || "")
-  );
+  const activeTurn = resolveActiveTurnFromSnapshot(snapshot);
   const activeThrows = Array.isArray(activeTurn?.throws) ? activeTurn.throws : [];
 
   return [

@@ -112,6 +112,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       localStorageRef && typeof localStorageRef.getItem === "function"
         ? localStorageRef.getItem(CONFIG_STORAGE_KEY)
         : null;
+    let storageSyncAttached = false;
 
     function rememberStoredConfigSnapshot() {
       if (!localStorageRef || typeof localStorageRef.getItem !== "function") {
@@ -155,6 +156,50 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         // Fail-soft on cross-tab sync; the next manual interaction will still reload config.
       });
     }
+
+    function attachStorageSync() {
+      if (
+        storageSyncAttached ||
+        !windowRef ||
+        typeof windowRef.addEventListener !== "function"
+      ) {
+        return;
+      }
+
+      windowRef.addEventListener("storage", onStorageSync);
+      storageSyncAttached = true;
+    }
+
+    function detachStorageSync() {
+      if (
+        !storageSyncAttached ||
+        !windowRef ||
+        typeof windowRef.removeEventListener !== "function"
+      ) {
+        storageSyncAttached = false;
+        return;
+      }
+
+      windowRef.removeEventListener("storage", onStorageSync);
+      storageSyncAttached = false;
+    }
+
+    const runtimeStart = runtime.start.bind(runtime);
+    const runtimeStop = runtime.stop.bind(runtime);
+
+    function startRuntimeWithStorageSync() {
+      const result = runtimeStart();
+      attachStorageSync();
+      return result;
+    }
+
+    function stopRuntimeWithStorageSync() {
+      detachStorageSync();
+      return runtimeStop();
+    }
+
+    runtime.start = startRuntimeWithStorageSync;
+    runtime.stop = stopRuntimeWithStorageSync;
 
     async function getConfig() {
       return configStore.load();
@@ -252,6 +297,8 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     }
 
     runtime.attachPublicApi({
+      start: startRuntimeWithStorageSync,
+      stop: stopRuntimeWithStorageSync,
       getConfig,
       saveConfig,
       resetConfig,
@@ -265,9 +312,6 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     });
 
     runtime.start();
-    if (windowRef && typeof windowRef.addEventListener === "function") {
-      windowRef.addEventListener("storage", onStorageSync);
-    }
 
     const namespace = getGlobalNamespace(windowRef);
     ensureXConfigUi({
@@ -293,6 +337,8 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     }
 
     return Object.assign(runtime, {
+      start: startRuntimeWithStorageSync,
+      stop: stopRuntimeWithStorageSync,
       getConfig,
       saveConfig,
       resetConfig,
