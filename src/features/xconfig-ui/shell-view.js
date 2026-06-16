@@ -88,8 +88,9 @@ const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
 const X01_SCORE_PROGRESS_FEATURE_KEY = "x01-score-progress";
 const X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY = "barSize";
 const X01_SCORE_PROGRESS_EFFECT_FIELD_KEY = "effect";
-const X01_SCORE_PROGRESS_PREVIEW_SCORE = 140;
 const X01_SCORE_PROGRESS_PREVIEW_START_SCORE = 501;
+const X01_SCORE_PROGRESS_STATIC_PREVIEW_SCORE = 140;
+const X01_SCORE_PROGRESS_EFFECT_PREVIEW_SCORE = X01_SCORE_PROGRESS_PREVIEW_START_SCORE * 0.8;
 const X01_SCORE_PROGRESS_TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-score-progress-trail-width";
 const STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY = "style-checkout-suggestions";
 const STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY = "style";
@@ -1204,22 +1205,28 @@ function resolveX01ScoreProgressPreviewConfig(featureConfig = {}, overrides = {}
   };
 }
 
-function applyX01ScoreProgressPreviewVariables(node, previewConfig = {}) {
+function applyX01ScoreProgressPreviewVariables(node, previewConfig = {}, options = {}) {
   if (!node?.style) {
     return;
   }
 
-  const ratio = X01_SCORE_PROGRESS_PREVIEW_SCORE / X01_SCORE_PROGRESS_PREVIEW_START_SCORE;
+  const score = Number.isFinite(options.score)
+    ? Number(options.score)
+    : X01_SCORE_PROGRESS_STATIC_PREVIEW_SCORE;
+  const ratio = score / X01_SCORE_PROGRESS_PREVIEW_START_SCORE;
   const visualVars = resolveX01ScoreProgressActiveVisualVars({
     colorTheme: previewConfig.colorTheme,
     ratio,
-    score: X01_SCORE_PROGRESS_PREVIEW_SCORE,
+    score,
   });
   Object.entries(visualVars).forEach(([propertyName, value]) => {
     node.style.setProperty(propertyName, value);
   });
-  node.style.setProperty(X01_SCORE_PROGRESS_WIDTH_PROPERTY, "68%");
-  node.style.setProperty(X01_SCORE_PROGRESS_TRAIL_WIDTH_PROPERTY, "82%");
+  node.style.setProperty(X01_SCORE_PROGRESS_WIDTH_PROPERTY, `${Math.round(ratio * 10000) / 100}%`);
+  node.style.setProperty(
+    X01_SCORE_PROGRESS_TRAIL_WIDTH_PROPERTY,
+    options.trailWidth || "82%"
+  );
 }
 
 function buildX01ScoreProgressPreviewBar(documentRef, featureConfig = {}, overrides = {}, options = {}) {
@@ -1239,9 +1246,15 @@ function buildX01ScoreProgressPreviewBar(documentRef, featureConfig = {}, overri
       [X01_SCORE_PROGRESS_SIZE_ATTRIBUTE]: previewConfig.barSize,
       [X01_SCORE_PROGRESS_EFFECT_ATTRIBUTE]: previewConfig.effect,
       "data-adxconfig-x01-score-progress-preview-bar": "true",
+      "data-adxconfig-x01-score-progress-preview-cycle": options.cycle ? "true" : undefined,
+      "data-adxconfig-x01-score-progress-preview-loop":
+        options.loop || (options.cycle ? "main" : undefined),
     },
   });
-  applyX01ScoreProgressPreviewVariables(host, previewConfig);
+  applyX01ScoreProgressPreviewVariables(host, previewConfig, {
+    score: options.score,
+    trailWidth: options.cycle ? "0%" : undefined,
+  });
 
   const track = createElement(documentRef, "div", {
     className: X01_SCORE_PROGRESS_TRACK_CLASS,
@@ -1270,14 +1283,25 @@ function buildX01ScoreProgressPreviewSection(documentRef, feature) {
       });
       head.appendChild(createElement(documentRef, "span", {
         className: "ad-xconfig-x01-score-progress-preview-score",
-        text: String(X01_SCORE_PROGRESS_PREVIEW_SCORE),
+        text: "100%",
+        attributes: {
+          "data-adxconfig-x01-score-progress-preview-score": "true",
+        },
       }));
       head.appendChild(createElement(documentRef, "span", {
         className: "ad-xconfig-x01-score-progress-preview-route",
-        text: "T20  T20  D10",
+        text: "100%  75%  45%  20%",
+        attributes: {
+          "data-adxconfig-x01-score-progress-preview-route": "true",
+        },
       }));
       surface.appendChild(head);
-      surface.appendChild(buildX01ScoreProgressPreviewBar(documentRef, feature?.config || {}));
+      surface.appendChild(
+        buildX01ScoreProgressPreviewBar(documentRef, feature?.config || {}, {}, {
+          cycle: true,
+          score: X01_SCORE_PROGRESS_PREVIEW_START_SCORE,
+        })
+      );
     },
   });
 }
@@ -1296,12 +1320,16 @@ function buildX01ScoreProgressOptionLayout(
     fieldKey === X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY
       ? { barSize: optionValue }
       : { effect: optionValue };
+  const isEffectPreview = fieldKey === X01_SCORE_PROGRESS_EFFECT_FIELD_KEY;
+  const previewEffect = normalizeX01ScoreProgressEffect(previewOverrides.effect);
   const preview = createElement(documentRef, "div", {
     className: "ad-xconfig-x01-score-progress-option-preview",
   });
   preview.appendChild(
     buildX01ScoreProgressPreviewBar(documentRef, feature?.config || {}, previewOverrides, {
       mini: true,
+      score: isEffectPreview ? X01_SCORE_PROGRESS_EFFECT_PREVIEW_SCORE : undefined,
+      loop: isEffectPreview && previewEffect === "ghost-trail" ? "ghost-trail-drop" : undefined,
     })
   );
   return buildPreviewOptionLayout(documentRef, {

@@ -319,6 +319,7 @@ function renderShell(controller) {
     controller.state.renderSignature = nextSignature;
     host.scrollTop = modalScrollState.hostScrollTop;
     restoreModalScrollState(previousShellNode, modalScrollState);
+    controller.onAfterRender();
     return;
   } else {
     while (previousShellNode.firstChild) {
@@ -333,6 +334,7 @@ function renderShell(controller) {
   controller.state.renderSignature = nextSignature;
   host.scrollTop = modalScrollState.hostScrollTop;
   restoreModalScrollState(controller.state.shellNode, modalScrollState);
+  controller.onAfterRender();
 }
 
 function syncShellVisibility(controller) {
@@ -394,6 +396,7 @@ function buildShellRenderControllerContext(options = {}) {
     toRoutePathname: resolveOptionalFunction(options.toRoutePathname, () => ""),
     getFeatures: resolveOptionalFunction(options.getFeatures, () => []),
     onBeforeRender: resolveOptionalFunction(options.onBeforeRender, () => {}),
+    onAfterRender: resolveOptionalFunction(options.onAfterRender, () => {}),
   };
 }
 

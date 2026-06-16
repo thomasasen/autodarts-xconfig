@@ -1603,6 +1603,23 @@ test("xConfig X01 score progress renders configured size effect and color previe
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
+  const originalSetInterval = windowRef.setInterval.bind(windowRef);
+  const originalClearInterval = windowRef.clearInterval.bind(windowRef);
+  let x01PreviewIntervalCallback = null;
+  windowRef.setInterval = (callback, ms, ...args) => {
+    if (Number(ms) === 2000) {
+      x01PreviewIntervalCallback = () => callback(...args);
+      return 20_001;
+    }
+    return originalSetInterval(callback, ms, ...args);
+  };
+  windowRef.clearInterval = (handle) => {
+    if (Number(handle) === 20_001) {
+      x01PreviewIntervalCallback = null;
+      return;
+    }
+    originalClearInterval(handle);
+  };
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   await waitForMenuButton(documentRef);
 
@@ -1625,12 +1642,23 @@ test("xConfig X01 score progress renders configured size effect and color previe
   const previewBar = previewSection.querySelector(
     "[data-adxconfig-x01-score-progress-preview-bar='true']"
   );
+  const previewScore = previewSection.querySelector(
+    "[data-adxconfig-x01-score-progress-preview-score='true']"
+  );
+  const previewRoute = previewSection.querySelector(
+    "[data-adxconfig-x01-score-progress-preview-route='true']"
+  );
   assert.ok(previewBar);
+  assert.ok(previewScore);
+  assert.ok(previewRoute);
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress"), "true");
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "checkout-focus");
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-size"), "standard");
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-effect"), "pulse-core");
-  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "68%");
+  assert.equal(previewBar.getAttribute("data-adxconfig-x01-score-progress-preview-cycle"), "true");
+  assert.equal(previewScore.textContent, "100%");
+  assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "100%");
   assert.ok(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"));
   assert.ok(previewBar.querySelector(".ad-ext-x01-score-progress__track"));
   assert.ok(previewBar.querySelector(".ad-ext-x01-score-progress__trail"));
@@ -1639,6 +1667,52 @@ test("xConfig X01 score progress renders configured size effect and color previe
       ".ad-ext-x01-score-progress__fill.ad-ext-x01-score-progress__fill--effect-pulse-core"
     )
   );
+  assert.equal(typeof x01PreviewIntervalCallback, "function");
+
+  const effectPreviewBars = documentRef.querySelectorAll(
+    "[data-feature-key='x01-score-progress'][data-setting-key='effect'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+  );
+  assert.equal(effectPreviewBars.length, 6);
+  effectPreviewBars.forEach((effectPreviewBar) => {
+    assert.equal(
+      effectPreviewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"),
+      "80%"
+    );
+  });
+
+  const ghostTrailPreviewBar = documentRef.querySelector(
+    "[data-feature-key='x01-score-progress'][data-setting-key='effect'][data-setting-value='ghost-trail'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+  );
+  assert.ok(ghostTrailPreviewBar);
+  assert.equal(
+    ghostTrailPreviewBar.getAttribute("data-adxconfig-x01-score-progress-preview-loop"),
+    "ghost-trail-drop"
+  );
+
+  x01PreviewIntervalCallback();
+  assert.equal(previewScore.textContent, "75%");
+  assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "75%");
+  assert.equal(
+    ghostTrailPreviewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"),
+    "15%"
+  );
+  assert.ok(ghostTrailPreviewBar.querySelector(".ad-ext-x01-score-progress__trail")?.__lastAnimation);
+
+  x01PreviewIntervalCallback();
+  assert.equal(previewScore.textContent, "45%");
+  assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "45%");
+
+  x01PreviewIntervalCallback();
+  assert.equal(previewScore.textContent, "20%");
+  assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "20%");
+
+  x01PreviewIntervalCallback();
+  assert.equal(previewScore.textContent, "100%");
+  assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "100%");
 
   assert.equal(
     documentRef.querySelectorAll(

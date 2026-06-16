@@ -1023,14 +1023,20 @@ function cancelEffectAnimation(fillNode) {
   }
 }
 
-function clearTrailState(trailNode) {
+function clearTrailState(trailNode, expectedAnimation = null) {
   if (!trailNode) {
     return;
   }
 
   const runningAnimation = trailNode[TRAIL_ANIMATION_SLOT];
-  if (runningAnimation && typeof runningAnimation.cancel === "function") {
+  if (expectedAnimation && runningAnimation !== expectedAnimation) {
+    return;
+  }
+
+  if (!expectedAnimation && runningAnimation && typeof runningAnimation.cancel === "function") {
     try {
+      runningAnimation.onfinish = null;
+      runningAnimation.oncancel = null;
       runningAnimation.cancel();
     } catch (_) {
       // Ignore stale animation handles.
@@ -1058,22 +1064,23 @@ function createEffectAnimationDefinition(effect) {
   if (normalizedEffect === "pulse-core") {
     return {
       keyframes: [
-        { transform: "scaleY(1)", filter: "brightness(1.06) saturate(1.02)" },
-        { transform: "scaleY(1.24)", filter: "brightness(1.28) saturate(1.18)" },
-        { transform: "scaleY(1)", filter: "brightness(1.02) saturate(1.02)" },
+        { transform: "scaleY(1)", filter: "brightness(1.08) saturate(1.06)" },
+        { transform: "scaleY(1.38)", filter: "brightness(1.46) saturate(1.3)" },
+        { transform: "scaleY(1)", filter: "brightness(1.04) saturate(1.04)" },
       ],
-      options: { duration: 360, easing: "ease-out" },
+      options: { duration: 440, easing: "cubic-bezier(0.16, 0.9, 0.2, 1)" },
     };
   }
 
   if (normalizedEffect === "glass-charge") {
     return {
       keyframes: [
-        { filter: "brightness(1.04) saturate(1.04)", opacity: 0.94 },
-        { filter: "brightness(1.26) saturate(1.16)", opacity: 1 },
-        { filter: "brightness(1.02) saturate(1.02)", opacity: 0.96 },
+        { filter: "brightness(1.03) saturate(1.06)", opacity: 0.94, transform: "scaleY(1)" },
+        { filter: "brightness(1.18) saturate(1.16)", opacity: 0.98, transform: "scaleY(1.04)" },
+        { filter: "brightness(1.38) saturate(1.28)", opacity: 1, transform: "scaleY(1.1)" },
+        { filter: "brightness(1.05) saturate(1.08)", opacity: 0.96, transform: "scaleY(1)" },
       ],
-      options: { duration: 420, easing: "ease-in-out" },
+      options: { duration: 560, easing: "cubic-bezier(0.18, 0.82, 0.18, 1)" },
     };
   }
 
@@ -1111,15 +1118,31 @@ function triggerGhostTrail(trailNode, shouldTrigger, previousRatio, currentRatio
   const fromWidth = formatProgressWidth(isFiniteNumber(previousRatio) ? previousRatio : currentRatio);
   const toWidth = formatProgressWidth(currentRatio);
   trailNode.style?.setProperty?.(TRAIL_WIDTH_PROPERTY, fromWidth);
-  trailNode.style?.setProperty?.("opacity", "0.76");
+  trailNode.style?.setProperty?.("opacity", "0.92");
 
   const animation = trailNode.animate(
     [
-      { width: fromWidth, opacity: 0.76, filter: "blur(8px) brightness(1.28)" },
-      { width: toWidth, opacity: 0, filter: "blur(2px) brightness(1.02)" },
+      {
+        width: fromWidth,
+        opacity: 0.92,
+        filter: "blur(7px) brightness(1.38) saturate(1.18)",
+        offset: 0,
+      },
+      {
+        width: fromWidth,
+        opacity: 0.78,
+        filter: "blur(6px) brightness(1.32) saturate(1.14)",
+        offset: 0.32,
+      },
+      {
+        width: toWidth,
+        opacity: 0,
+        filter: "blur(2px) brightness(1.04) saturate(1.04)",
+        offset: 1,
+      },
     ],
     {
-      duration: 620,
+      duration: 1860,
       easing: "cubic-bezier(0.22, 1, 0.36, 1)",
       fill: "none",
       iterations: 1,
@@ -1127,7 +1150,7 @@ function triggerGhostTrail(trailNode, shouldTrigger, previousRatio, currentRatio
   );
 
   trailNode[TRAIL_ANIMATION_SLOT] = animation;
-  const finish = () => clearTrailState(trailNode);
+  const finish = () => clearTrailState(trailNode, animation);
   animation.onfinish = finish;
   animation.oncancel = finish;
 }

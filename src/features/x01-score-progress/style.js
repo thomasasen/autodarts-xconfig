@@ -240,9 +240,14 @@ ${HOST_SELECTOR} .${TRAIL_CLASS}{
   width:var(--ad-ext-x01-score-progress-trail-width);
   opacity:0;
   border-radius:inherit;
-  background:var(--ad-ext-x01-score-progress-fill-bg);
-  filter:blur(7px) brightness(1.18);
-  box-shadow:var(--ad-ext-x01-score-progress-fill-shadow);
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.38) 0%,rgba(255,255,255,.18) 42%,rgba(255,255,255,0) 100%),
+    var(--ad-ext-x01-score-progress-fill-bg);
+  filter:blur(7px) brightness(1.24) saturate(1.12);
+  box-shadow:
+    var(--ad-ext-x01-score-progress-fill-shadow),
+    0 0 16px var(--ad-ext-x01-score-progress-fill-outline-active),
+    0 0 26px var(--ad-ext-x01-score-progress-fill-ambient-active);
   pointer-events:none;
 }
 
@@ -299,18 +304,25 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}.ad-ext-x01-score-progress--size-extrabreit{
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-pulse-core{
-  animation:ad-ext-x01-score-progress-pulse-core 1.32s ease-in-out infinite;
+  transform-origin:center;
+  animation:ad-ext-x01-score-progress-pulse-core 1.22s cubic-bezier(.16,.9,.2,1) infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-glass-charge{
-  animation:ad-ext-x01-score-progress-glass-charge-core 1.74s ease-in-out infinite;
+  animation:ad-ext-x01-score-progress-glass-charge-core 2.2s cubic-bezier(.18,.82,.18,1) infinite;
+  box-shadow:
+    var(--ad-ext-x01-score-progress-fill-shadow),
+    inset 0 1px 2px rgba(255,255,255,.34),
+    inset 0 -1px 4px rgba(255,255,255,.12);
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-glass-charge::after{
   opacity:1;
-  background:linear-gradient(115deg,rgba(255,255,255,0) 18%,rgba(255,255,255,.12) 36%,rgba(255,255,255,.66) 50%,rgba(255,255,255,.12) 64%,rgba(255,255,255,0) 82%);
-  transform:translateX(-150%);
-  animation:ad-ext-x01-score-progress-glass-charge-sweep 1.74s cubic-bezier(.22,.9,.18,1) infinite;
+  background:
+    linear-gradient(115deg,rgba(255,255,255,0) 8%,rgba(255,255,255,.16) 27%,rgba(255,255,255,.76) 48%,rgba(255,255,255,.2) 68%,rgba(255,255,255,0) 92%),
+    linear-gradient(180deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,0) 46%);
+  transform:translateX(-175%);
+  animation:ad-ext-x01-score-progress-glass-charge-sweep 2.2s cubic-bezier(.18,.82,.18,1) infinite;
 }
 
 ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill--effect-segment-drain{
@@ -342,18 +354,20 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-score-progress__fill-
 }
 
 @keyframes ad-ext-x01-score-progress-pulse-core{
-  0%,100%{transform:scaleY(1);filter:brightness(1) saturate(1.02)}
-  50%{transform:scaleY(1.18);filter:brightness(1.2) saturate(1.18)}
+  0%,100%{transform:scaleY(1);filter:brightness(1.02) saturate(1.05);box-shadow:var(--ad-ext-x01-score-progress-fill-shadow)}
+  48%{transform:scaleY(1.34);filter:brightness(1.36) saturate(1.28);box-shadow:var(--ad-ext-x01-score-progress-fill-shadow),0 0 16px var(--ad-ext-x01-score-progress-fill-outline-active),0 0 26px var(--ad-ext-x01-score-progress-fill-ambient-active)}
 }
 
 @keyframes ad-ext-x01-score-progress-glass-charge-core{
-  0%,100%{filter:brightness(1.02) saturate(1.03)}
-  45%{filter:brightness(1.18) saturate(1.12)}
+  0%,100%{filter:brightness(1.02) saturate(1.05);box-shadow:var(--ad-ext-x01-score-progress-fill-shadow),inset 0 1px 2px rgba(255,255,255,.26),inset 0 -1px 3px rgba(255,255,255,.1)}
+  42%{filter:brightness(1.16) saturate(1.14);box-shadow:var(--ad-ext-x01-score-progress-fill-shadow),0 0 10px var(--ad-ext-x01-score-progress-fill-outline-active),inset 0 1px 4px rgba(255,255,255,.34),inset 0 -1px 5px rgba(255,255,255,.14)}
+  62%{filter:brightness(1.34) saturate(1.26);box-shadow:var(--ad-ext-x01-score-progress-fill-shadow),0 0 18px var(--ad-ext-x01-score-progress-fill-outline-active),0 0 30px var(--ad-ext-x01-score-progress-fill-ambient-active),inset 0 1px 6px rgba(255,255,255,.46),inset 0 -1px 8px rgba(255,255,255,.18)}
 }
 
 @keyframes ad-ext-x01-score-progress-glass-charge-sweep{
-  0%{transform:translateX(-150%)}
-  68%,100%{transform:translateX(155%)}
+  0%,16%{transform:translateX(-175%);opacity:.18}
+  56%{transform:translateX(-8%);opacity:1}
+  78%,100%{transform:translateX(175%);opacity:.16}
 }
 
 @keyframes ad-ext-x01-score-progress-segment-drain{

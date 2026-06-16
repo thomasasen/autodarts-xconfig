@@ -1303,7 +1303,7 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
         featureConfig: {
           colorTheme: "checkout-focus",
           barSize: "standard",
-          effect: "pulse-core",
+          effect: "glass-charge",
         },
         gameState: {
           getSnapshot: () => ({
@@ -1326,13 +1326,83 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
   assert.ok(hostNode);
   const fillNode = hostNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
-  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "pulse-core");
+  assert.equal(fillNode.getAttribute(EFFECT_ATTRIBUTE), "glass-charge");
   assert.equal(
-    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-pulse-core"),
+    fillNode.classList.contains("ad-ext-x01-score-progress__fill--effect-glass-charge"),
     true
   );
   assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
   assert.ok(fillNode.__lastAnimation);
+  assert.deepEqual(fillNode.__lastAnimation.keyframes, [
+    { filter: "brightness(1.03) saturate(1.06)", opacity: 0.94, transform: "scaleY(1)" },
+    { filter: "brightness(1.18) saturate(1.16)", opacity: 0.98, transform: "scaleY(1.04)" },
+    { filter: "brightness(1.38) saturate(1.28)", opacity: 1, transform: "scaleY(1.1)" },
+    { filter: "brightness(1.05) saturate(1.08)", opacity: 0.96, transform: "scaleY(1)" },
+  ]);
+  assert.deepEqual(fillNode.__lastAnimation.options, {
+    fill: "none",
+    iterations: 1,
+    duration: 560,
+    easing: "cubic-bezier(0.18, 0.82, 0.18, 1)",
+  });
+});
+
+test("syncScoreProgress uses a stronger pulse-core score-change animation", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "pulse-core",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-pulse-core-effect-trigger",
+            match: {
+              id: "match-pulse-core-effect-trigger",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "251";
+  runSync();
+
+  const fillNode = player.cardNode.querySelector(`.${FILL_CLASS}`);
+  assert.ok(fillNode);
+  assert.deepEqual(fillNode.__lastAnimation?.keyframes, [
+    { transform: "scaleY(1)", filter: "brightness(1.08) saturate(1.06)" },
+    { transform: "scaleY(1.38)", filter: "brightness(1.46) saturate(1.3)" },
+    { transform: "scaleY(1)", filter: "brightness(1.04) saturate(1.04)" },
+  ]);
+  assert.deepEqual(fillNode.__lastAnimation?.options, {
+    fill: "none",
+    iterations: 1,
+    duration: 440,
+    easing: "cubic-bezier(0.16, 0.9, 0.2, 1)",
+  });
 });
 
 test("syncScoreProgress maps retired electric-surge effect values to signal-sweep", () => {
@@ -1450,8 +1520,29 @@ test("syncScoreProgress animates the ghost trail on active score changes only", 
   );
   assert.equal(String(fillNode.getAttribute("data-ad-ext-x01-score-progress-effect-token") || ""), "1");
   assert.equal(trailNode.style.getPropertyValue("--ad-ext-x01-score-progress-trail-width"), "60.08%");
-  assert.equal(trailNode.style.getPropertyValue("opacity"), "0.76");
+  assert.equal(trailNode.style.getPropertyValue("opacity"), "0.92");
   assert.ok(trailNode.__lastAnimation);
+  assert.deepEqual(trailNode.__lastAnimation.keyframes, [
+    {
+      width: "60.08%",
+      opacity: 0.92,
+      filter: "blur(7px) brightness(1.38) saturate(1.18)",
+      offset: 0,
+    },
+    {
+      width: "60.08%",
+      opacity: 0.78,
+      filter: "blur(6px) brightness(1.32) saturate(1.14)",
+      offset: 0.32,
+    },
+    {
+      width: "40.12%",
+      opacity: 0,
+      filter: "blur(2px) brightness(1.04) saturate(1.04)",
+      offset: 1,
+    },
+  ]);
+  assert.equal(trailNode.__lastAnimation.options.duration, 1860);
 });
 
 test("syncScoreProgress keeps running ghost-trail animation on passive re-sync", () => {
@@ -1509,6 +1600,77 @@ test("syncScoreProgress keeps running ghost-trail animation on passive re-sync",
 
   assert.equal(trailNode.__lastAnimation, runningAnimation);
   assert.equal(runningAnimation.playState, "running");
+});
+
+test("syncScoreProgress ignores stale ghost-trail cancel callbacks after a new score change", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/demo",
+  });
+  documentRef.variantElement.textContent = "501";
+
+  const playerDisplay = documentRef.createElement("div");
+  playerDisplay.id = "ad-ext-player-display";
+  documentRef.main.appendChild(playerDisplay);
+
+  const player = createPlayerCard(documentRef, 301, { active: true });
+  playerDisplay.appendChild(player.cardNode);
+  const state = createScoreProgressState();
+
+  const runSync = () =>
+    syncScoreProgress(
+      {
+        documentRef,
+        windowRef,
+        featureConfig: {
+          colorTheme: "checkout-focus",
+          barSize: "standard",
+          effect: "ghost-trail",
+        },
+        gameState: {
+          getSnapshot: () => ({
+            topic: "match-ghost-trail-stale-cancel",
+            match: {
+              id: "match-ghost-trail-stale-cancel",
+              variant: "501",
+            },
+          }),
+        },
+      },
+      state
+    );
+
+  runSync();
+  player.scoreNode.textContent = "201";
+  runSync();
+
+  const hostNode = player.cardNode.querySelector(HOST_SELECTOR);
+  assert.ok(hostNode);
+  const trailNode = hostNode.querySelector(`.${TRAIL_CLASS}`);
+  assert.ok(trailNode);
+  const staleAnimation = trailNode.__lastAnimation;
+  const staleCancelCallback = staleAnimation?.oncancel;
+  assert.ok(staleAnimation);
+  assert.equal(typeof staleCancelCallback, "function");
+
+  staleAnimation.cancel = () => {
+    staleAnimation.playState = "idle";
+  };
+
+  player.scoreNode.textContent = "101";
+  runSync();
+
+  const currentAnimation = trailNode.__lastAnimation;
+  assert.ok(currentAnimation);
+  assert.notEqual(currentAnimation, staleAnimation);
+  assert.equal(currentAnimation.playState, "running");
+
+  staleCancelCallback();
+
+  assert.equal(currentAnimation.playState, "running");
+  assert.equal(trailNode.__lastAnimation, currentAnimation);
+  assert.equal(trailNode.style.getPropertyValue("opacity"), "0.92");
 });
 
 test("syncScoreProgress keeps intact progress nodes stable on passive re-sync and rebuilds only after structure damage", () => {
@@ -1623,6 +1785,53 @@ test("score-progress style enforces stack layout that keeps the bar below score 
   assert.match(
     css,
     /#ad-ext-player-display \.ad-ext-player\.ad-ext-player-inactive > \.chakra-stack\[data-ad-ext-x01-score-progress-stack='true'\] > \[data-ad-ext-x01-score-progress='true'\]\{[^}]*margin-top:1px/s
+  );
+});
+
+test("score-progress style gives ghost trail a brighter layered wake", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\.ad-ext-x01-score-progress__trail\{[^}]*background:\s*linear-gradient\(90deg,rgba\(255,255,255,\.38\)[^}]*var\(--ad-ext-x01-score-progress-fill-bg\);/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-x01-score-progress__trail\{[^}]*0 0 16px var\(--ad-ext-x01-score-progress-fill-outline-active\)[^}]*0 0 26px var\(--ad-ext-x01-score-progress-fill-ambient-active\);/s
+  );
+});
+
+test("score-progress style gives glass charge a slower layered charge effect", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\.ad-ext-x01-score-progress__fill--effect-glass-charge\{[^}]*animation:ad-ext-x01-score-progress-glass-charge-core 2\.2s cubic-bezier\(\.18,\.82,\.18,1\) infinite;[^}]*inset 0 1px 2px rgba\(255,255,255,\.34\)/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-x01-score-progress__fill--effect-glass-charge::after\{[^}]*linear-gradient\(115deg,rgba\(255,255,255,0\) 8%,rgba\(255,255,255,\.16\) 27%,rgba\(255,255,255,\.76\) 48%[^}]*linear-gradient\(180deg,rgba\(255,255,255,\.28\) 0%/s
+  );
+  assert.match(
+    css,
+    /@keyframes ad-ext-x01-score-progress-glass-charge-core\{[\s\S]*62%\{filter:brightness\(1\.34\) saturate\(1\.26\);box-shadow:[^}]*0 0 30px var\(--ad-ext-x01-score-progress-fill-ambient-active\)/s
+  );
+  assert.match(
+    css,
+    /@keyframes ad-ext-x01-score-progress-glass-charge-sweep\{[\s\S]*0%,16%\{transform:translateX\(-175%\);opacity:\.18\}[\s\S]*56%\{transform:translateX\(-8%\);opacity:1\}[\s\S]*78%,100%\{transform:translateX\(175%\);opacity:\.16\}/s
+  );
+});
+
+test("score-progress style gives pulse core a stronger visible pulse", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\.ad-ext-x01-score-progress__fill--effect-pulse-core\{[^}]*transform-origin:center;[^}]*animation:ad-ext-x01-score-progress-pulse-core 1\.22s cubic-bezier\(\.16,\.9,\.2,1\) infinite;/s
+  );
+  assert.match(
+    css,
+    /@keyframes ad-ext-x01-score-progress-pulse-core\{[\s\S]*48%\{transform:scaleY\(1\.34\);filter:brightness\(1\.36\) saturate\(1\.28\);box-shadow:[^}]*0 0 26px var\(--ad-ext-x01-score-progress-fill-ambient-active\)/s
   );
 });
 

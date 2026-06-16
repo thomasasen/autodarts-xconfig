@@ -12,6 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.20] - 2026-06-16
+
+### Changed
+
+- Nutzerwirkung: `X01 Score Progress`-Effekte sind in der Konfiguration leichter vergleichbar: Die Effekt-Buttons zeigen längere Balken, `Ghost Trail` demonstriert eine echte Abnahme von `80 %` auf `15 %`, und die Hauptvorschau läuft als Prozentsequenz.
+  Technik: Die xConfig-Shell nutzt einen eigenen X01-Score-Progress-Preview-Controller mit loopbaren Runtime-Hosts, hält Render-Hooks stabil und deckt Button- sowie Hauptvorschau mit Shell-Regressionen ab.
+- Nutzerwirkung: `Pulse Core`, `Glass Charge` und `Ghost Trail` wirken klarer und stärker unterscheidbar; besonders Trails, Ladeglanz und Pulse-Peak sind besser wahrnehmbar.
+  Technik: Runtime-Keyframes, CSS-Animationen, Glow-/Sweep-Layer und Effekt-Dauern wurden gezielt nachgeschärft; Runtime-Regressionen sichern die neuen Effektverträge und den stabilen Ghost-Trail-Cleanup ab.
+
 ## [2.3.19] - 2026-06-05
 
 ### Added
@@ -1661,7 +1670,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.19]: https://github.com/thomasasen/autodarts-xconfig/compare/d48730f...HEAD
+[2.3.20]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...HEAD
+[2.3.19]: https://github.com/thomasasen/autodarts-xconfig/compare/d48730f...09ae6b2
 [2.3.18]: https://github.com/thomasasen/autodarts-xconfig/compare/0c88218...d48730f
 [2.3.17]: https://github.com/thomasasen/autodarts-xconfig/compare/3cbf7b3...0c88218
 [2.3.16]: https://github.com/thomasasen/autodarts-xconfig/compare/53e5d17...3cbf7b3

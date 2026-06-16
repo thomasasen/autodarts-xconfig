@@ -45,6 +45,7 @@ import { createXConfigEffectPreviewController } from "./effect-preview-controlle
 import { createTurnPointsCountPreviewAdapter } from "./turn-points-preview-adapter.js";
 import { createAverageTrendArrowPreviewAdapter } from "./average-trend-preview-adapter.js";
 import { createDartMarkerEmphasisPreviewAdapter } from "./dart-marker-emphasis-preview-adapter.js";
+import { createX01ScoreProgressPreviewController } from "./x01-score-progress-preview-controller.js";
 import { styleText } from "./shell-style.js";
 import {
   buildThemeGlobalTypographyPreviewImports,
@@ -224,6 +225,7 @@ function ensureXConfigShell(options = {}) {
   let actionController = null;
   let lifecycleController = null;
   let effectPreviewController = null;
+  let x01ScoreProgressPreviewController = null;
   let electricPreviewFiltersRetained = false;
 
   function clearNoticeTimer() {
@@ -444,6 +446,10 @@ function ensureXConfigShell(options = {}) {
     getFeatures,
     panelHostId: PANEL_HOST_ID,
   });
+  x01ScoreProgressPreviewController = createX01ScoreProgressPreviewController({
+    documentRef,
+    windowRef,
+  });
 
   renderController = createShellRenderController({
     buildMenuIconElement,
@@ -461,7 +467,11 @@ function ensureXConfigShell(options = {}) {
     menuItemId: MENU_ITEM_ID,
     menuLabel: MENU_LABEL,
     menuLabelCollapseWidth: MENU_LABEL_COLLAPSE_WIDTH,
-    onBeforeRender: () => effectPreviewController?.stopActivePreview(),
+    onBeforeRender: () => {
+      effectPreviewController?.stopActivePreview();
+      x01ScoreProgressPreviewController?.stop();
+    },
+    onAfterRender: () => x01ScoreProgressPreviewController?.start(),
     panelHostId: PANEL_HOST_ID,
     parseShellRenderSignature,
     sidebarRouteHints: SIDEBAR_ROUTE_HINTS,
@@ -521,10 +531,12 @@ function ensureXConfigShell(options = {}) {
     onMounted: retainElectricPreviewFilters,
     onTeardown: () => {
       effectPreviewController?.stopActivePreview();
+      x01ScoreProgressPreviewController?.stop();
       releaseElectricPreviewFilters();
     },
     onVisibilityChange: (event) => {
       effectPreviewController?.stopActivePreview();
+      x01ScoreProgressPreviewController?.stop();
       onVisibilityChange(event);
     },
     panelHostId: PANEL_HOST_ID,
