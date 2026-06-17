@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createBootstrap, initializeRuntime } from "../../src/core/bootstrap.js";
-import { HIGHLIGHT_CLASS, STYLE_ID } from "../../src/features/checkout-score-pulse/style.js";
+import { HIGHLIGHT_CLASS, STYLE_ID } from "../../src/features/checkout-score-highlight/style.js";
 import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
 
 function wait(ms = 0) {
@@ -28,9 +28,9 @@ test("bootstrap start/stop are idempotent and keep a single runtime namespace", 
     windowRef,
     documentRef,
     config: {
-      featureToggles: { checkoutScorePulse: false },
+      featureToggles: { checkoutScoreHighlight: false },
       features: {
-        checkoutScorePulse: {
+        checkoutScoreHighlight: {
           enabled: false,
         },
       },
@@ -42,7 +42,7 @@ test("bootstrap start/stop are idempotent and keep a single runtime namespace", 
 
   let snapshot = runtime.getSnapshot();
   assert.equal(snapshot.started, true);
-  assert.equal(snapshot.features["checkout-score-pulse"].mounted, false);
+  assert.equal(snapshot.features["checkout-score-highlight"].mounted, false);
 
   runtime.stop();
   runtime.stop();
@@ -68,9 +68,9 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
     windowRef,
     documentRef,
     config: {
-      featureToggles: { checkoutScorePulse: true },
+      featureToggles: { checkoutScoreHighlight: true },
       features: {
-        checkoutScorePulse: {
+        checkoutScoreHighlight: {
           enabled: true,
           effect: "scale",
           triggerSource: "score-only",
@@ -92,7 +92,7 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.deepEqual(
     runtime.context.registries.observers
-      .get("checkout-score-pulse:dom-observer")
+      .get("checkout-score-highlight:dom-observer")
       .observeCalls[0].options.attributeFilter,
     ["class"]
   );
@@ -117,9 +117,9 @@ test("config updates remount affected mounted features without duplicating obser
     windowRef,
     documentRef,
     config: {
-      featureToggles: { checkoutScorePulse: true },
+      featureToggles: { checkoutScoreHighlight: true },
       features: {
-        checkoutScorePulse: {
+        checkoutScoreHighlight: {
           enabled: true,
           effect: "scale",
           triggerSource: "score-only",
@@ -132,27 +132,27 @@ test("config updates remount affected mounted features without duplicating obser
 
   runtime.start();
   assert.equal(
-    await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--scale")),
+    await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--grow-only")),
     true
   );
 
-  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--scale"), true);
+  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--grow-only"), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
 
   runtime.updateConfig({
     features: {
-      checkoutScorePulse: {
+      checkoutScoreHighlight: {
         effect: "blink",
       },
     },
   });
   assert.equal(
-    await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--blink")),
+    await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--fade-blink")),
     true
   );
 
-  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--scale"), false);
-  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--blink"), true);
+  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--grow-only"), false);
+  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--fade-blink"), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(windowRef.__adXConfig.inspect().observerCount, 1);
 

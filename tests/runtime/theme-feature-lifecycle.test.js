@@ -7,10 +7,10 @@ import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
-import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
-import { ROOT_CLASS } from "../../src/features/cricket-grid-fx/style.js";
-import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
-import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
+import { initializeCricketGridStatusEffects } from "../../src/features/cricket-grid-status-effects/index.js";
+import { ROOT_CLASS } from "../../src/features/cricket-grid-status-effects/style.js";
+import { initializeCricketTargetHighlighter } from "../../src/features/cricket-target-highlighter/index.js";
+import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-target-highlighter/style.js";
 import { mountThemeX01 } from "../../src/features/themes/x01/index.js";
 import { mountThemeGotcha } from "../../src/features/themes/gotcha/index.js";
 import { mountThemeX01TwoPlayer } from "../../src/features/themes/x01-2player/index.js";
@@ -57,11 +57,11 @@ function createThemeConfig(themeConfigKey, themeFeatureConfig = {}) {
   const themeName = String(themeConfigKey || "").trim();
   return {
     featureToggles: {
-      checkoutScorePulse: false,
+      checkoutScoreHighlight: false,
       [`themes.${themeName}`]: true,
     },
     features: {
-      checkoutScorePulse: {
+      checkoutScoreHighlight: {
         enabled: false,
       },
       themes: {
@@ -98,7 +98,7 @@ function createBoardModeButtons(documentRef, activeMode = "segments") {
 function createThemesConfig(themeEntries = {}) {
   const themes = {};
   const featureToggles = {
-    checkoutScorePulse: false,
+    checkoutScoreHighlight: false,
   };
 
   Object.entries(themeEntries).forEach(([themeName, themeFeatureConfig = {}]) => {
@@ -112,7 +112,7 @@ function createThemesConfig(themeEntries = {}) {
   return {
     featureToggles,
     features: {
-      checkoutScorePulse: {
+      checkoutScoreHighlight: {
         enabled: false,
       },
       themes,
@@ -1972,7 +1972,7 @@ function createX01TwoPlayerTestCard(documentRef, score, name, options = {}) {
 
   const progressNode = documentRef.createElement("div");
   progressClassNames.forEach((className) => progressNode.classList.add(className));
-  progressNode.setAttribute("data-ad-ext-x01-score-progress", "true");
+  progressNode.setAttribute("data-ad-ext-x01-remaining-score-bar", "true");
 
   const headerMetaNode = documentRef.createElement("div");
   headerMetaNode.classList.add("chakra-stack");
@@ -3080,7 +3080,7 @@ test("theme-cricket keeps theme hooks and cricket surface overlays during a shor
       if (featureKey === "themes.cricket") {
         return { showAvg: true };
       }
-      if (featureKey === "cricketHighlighter") {
+      if (featureKey === "cricketTargetHighlighter") {
         return {
           showOpenObjectives: false,
           showDeadObjectives: true,
@@ -3114,7 +3114,7 @@ test("theme-cricket keeps theme hooks and cricket surface overlays during a shor
     config,
     helpers: schedulerHelpers,
   });
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     windowRef,
     documentRef,
     domGuards,
@@ -3125,7 +3125,7 @@ test("theme-cricket keeps theme hooks and cricket surface overlays during a shor
     helpers: schedulerHelpers,
     degradedHostGraceMs: 300,
   });
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     windowRef,
     documentRef,
     domGuards,

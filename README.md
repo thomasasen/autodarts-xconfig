@@ -52,7 +52,7 @@ Wichtige Tampermonkey-Einstellung im Browser: Öffne unter den Browsererweiterun
 
 ![Tampermonkey Erweiterungseinstellungen](docs/screenshots/Erweiterung_Einstellung_Tempermonkey.png)
 
-Wichtiger Hinweis nach der Installation: Alle Themes sind zuerst ausgeschaltet. Die meisten Animationen und Komfortfunktionen sind ebenfalls aus. `Checkout Score Pulse` ist standardmäßig bereits eingeschaltet. Am einfachsten ist es, wenn du Themes und Animationen einzeln ausprobierst und Autodarts Schritt für Schritt an deine Wünsche anpasst.
+Wichtiger Hinweis nach der Installation: Alle Themes sind zuerst ausgeschaltet. Die meisten Animationen und Komfortfunktionen sind ebenfalls aus. `Checkout Score Highlight` ist standardmäßig bereits eingeschaltet. Am einfachsten ist es, wenn du Themes und Animationen einzeln ausprobierst und Autodarts Schritt für Schritt an deine Wünsche anpasst.
 
 ![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](docs/screenshots/ad-xconfig-animationen.png)
@@ -156,22 +156,22 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 
 ### Animationen und Komfort
 
-- [Checkout Score Pulse](#animation-autodarts-animate-checkout-score-pulse)
-- [X01 Score Progress](#animation-autodarts-x01-score-progress)
-- [Checkout Board Targets](#animation-autodarts-animate-checkout-board-targets)
+- [Checkout Score Highlight](#animation-autodarts-animate-checkout-score-highlight)
+- [X01 Remaining Score Bar](#animation-autodarts-x01-remaining-score-bar)
+- [Checkout Target Highlights](#animation-autodarts-animate-checkout-target-highlights)
 - [TV Board Zoom](#animation-autodarts-animate-tv-board-zoom)
-- [Style Checkout Suggestions](#animation-autodarts-style-checkout-suggestions)
-- [Average Trend Arrow](#animation-autodarts-animate-average-trend-arrow)
-- [Turn Start Sweep](#animation-autodarts-animate-turn-start-sweep)
-- [Triple/Double/Bull Hits](#animation-autodarts-animate-triple-double-bull-hits)
-- [Cricket Highlighter](#animation-autodarts-animate-cricket-target-highlighter)
-- [Cricket Grid FX](#animation-autodarts-animate-cricket-grid-fx)
-- [Dart Marker Emphasis](#animation-autodarts-animate-dart-marker-emphasis)
-- [Dart Marker Darts](#animation-autodarts-animate-dart-marker-darts)
-- [Remove Darts Notification](#animation-autodarts-animate-remove-darts-notification)
-- [Single Bull Sound](#animation-autodarts-animate-single-bull-sound)
-- [Turn Points Count](#animation-autodarts-animate-turn-points-count)
-- [Winner Fireworks](#animation-autodarts-animate-winner-fireworks)
+- [Checkout Suggestion Styles](#animation-autodarts-checkout-suggestion-styles)
+- [AVG Trend Arrow](#animation-autodarts-animate-avg-trend-arrow)
+- [Active Player Sweep](#animation-autodarts-animate-active-player-sweep)
+- [Special Hit Highlights](#animation-autodarts-animate-special-hit-highlights)
+- [Cricket Target Highlighter](#animation-autodarts-animate-cricket-target-highlighter)
+- [Cricket Grid Status Effects](#animation-autodarts-animate-cricket-grid-status-effects)
+- [Dartboard Marker Highlight](#animation-autodarts-animate-dartboard-marker-highlight)
+- [Dart Marker Replacer](#animation-autodarts-animate-dart-marker-replacer)
+- [Take Out Darts Alert](#animation-autodarts-animate-take-out-darts-alert)
+- [Single Bull Hit Sound](#animation-autodarts-animate-single-bull-hit-sound)
+- [Turn Score Counter](#animation-autodarts-animate-turn-score-counter)
+- [Winner Celebration Effect](#animation-autodarts-animate-winner-celebration-effect)
 
 ## Empfohlene Standards
 
@@ -203,25 +203,25 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Alle aktiviert`: An
 - `Debug`: Aus
 
-**Turn Start Sweep**
+**Active Player Sweep**
 - `Sweep-Geschwindigkeit`: Standard
 - `Sweep-Stil`: Standard
 
-**Turn Points Count**
-- `Zählstil`: Fließend
+**Turn Score Counter**
+- `Zählstil`: Smooth Count
 - `Zählgeschwindigkeit`: Standard
 - `Aufblitz-Effekt`: Aus
 - `Aufblitz-Modus`: Nur bei Änderung
 
-**Average Trend Arrow**
+**AVG Trend Arrow**
 - `Animationsdauer`: Standard
 - `Pfeil-Größe`: Standard
 
-**Triple/Double/Bull Hits**
+**Special Hit Highlights**
 - `Farbstil`: Rot/Blau/Grün
-- `Animationsstil`: Electric Arc
+- `Animationsstil`: Electric Jolt
 
-**Dart Marker Darts**
+**Dart Marker Replacer**
 - `Dart Design`: Autodarts
 - `Dart-Fluganimation`: An
 - `Dart-Größe`: Standard
@@ -232,25 +232,25 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Flug-Blur`: An
 - `Fluggeschwindigkeit`: Standard
 
-**Dart Marker Emphasis**
+**Dartboard Marker Highlight**
 - `Marker-Größe`: Standard
 - `Marker-Farbe`: Blau
-- `Effekt`: Pulse
+- `Effekt`: Size Pulse
 - `Marker-Sichtbarkeit`: 100 %
 - `Outline-Farbe`: Weiß
 
-**Remove Darts Notification**
+**Take Out Darts Alert**
 - `Bildgröße`: Groß
 - `Pulse-Animation`: An
 - `Pulse-Stärke`: Standard
 
-**Single Bull Sound**
+**Single Bull Hit Sound**
 - `Lautstärke`: Standard
 - `Wiederholsperre`: 700 ms
 - `Fallback-Scan`: Nur live
 
-**Winner Fireworks**
-- `Style`: Fireworks
+**Winner Celebration Effect**
+- `Style`: Top Fireworks
 - `Farbe`: Autodarts
 - `Intensität`: Standard
 - `Dauer`: 5 s
@@ -258,24 +258,24 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Bei Bull-Out aktiv`: An
 - `Klick beendet Effekt`: An
 
-**Style Checkout Suggestions**
+**Checkout Suggestion Styles**
 - `Stil`: Stripe
 - `Labeltext`: CHECKOUT
 - `Farbthema`: Amber
 
-**Checkout Score Pulse**
-- `Effekt`: Scale
+**Checkout Score Highlight**
+- `Effekt`: Grow Only
 - `Farbthema`: Autodarts Grün
 - `Intensität`: Standard
 - `Trigger-Quelle`: Vorschlag zuerst
 
-**X01 Score Progress**
+**X01 Remaining Score Bar**
 - `Farben`: Checkout Focus
 - `Balkengröße`: Breit
 - `Effekt`: Aus
 
-**Checkout Board Targets**
-- `Darstellung`: Signal
+**Checkout Target Highlights**
+- `Darstellung`: Fast Blink
 - `Segmentstil`: Nur Fläche
 - `Zielauswahl`: Nächstes Feld
 - `Farbthema`: Cyan
@@ -287,14 +287,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Checkout-Ziel`: Nur Finish-Feld
 - `T20-Setup-Zoom`: An
 
-**Cricket Highlighter**
+**Cricket Target Highlighter**
 - `OPEN-Ziele anzeigen`: Aus
 - `DEAD-Ziele anzeigen`: An
 - `Irrelevante Felder abdunkeln`: Hatch+
 - `Farbthema`: Standard
 - `Intensität`: Standard
 
-**Cricket Grid FX**
+**Cricket Grid Status Effects**
 - `Zeilen-Sweep`: An
 - `Ziel-Badge-Hinweis`: An
 - `Mark-Fortschritt`: An
@@ -739,9 +739,10 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Animationen und Komfort
 
+<a id="animation-autodarts-animate-checkout-score-highlight"></a>
 <a id="animation-autodarts-animate-checkout-score-pulse"></a>
 
-### Checkout Score Pulse
+### Checkout Score Highlight
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
@@ -751,10 +752,10 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 **Einstellungen einfach erklärt**
 
 - `Effekt`: Legt fest, wie die aktive Restpunktzahl hervorgehoben wird, sobald das Modul einen direkten Finish-Dart erkennt. Grafisch ändert sich nur die Animationsart des Score-Elements.
-  - `Pulse`: Die Zahl wächst und leuchtet rhythmisch leicht an und fällt wieder auf ihre Ausgangsform zurück. Das wirkt wie ein ruhiger Herzschlag direkt auf dem Score.
-  - `Glow`: Die Zahl bleibt weitgehend ruhig an Ort und Größe, bekommt aber einen sichtbar stärker werdenden Leuchtkranz. Das eignet sich für Nutzer, die eher Licht als Bewegung wollen.
-  - `Scale`: Die Zahl springt nicht hart, sondern wächst kurz auf und fällt wieder zurück. Im Gegensatz zu `Glow` steht hier die Größenänderung stärker im Vordergrund als der Lichtschein.
-  - `Blink`: Die Zahl bleibt an derselben Stelle, verliert aber im Takt sichtbar an Deckkraft und wird wieder voll sichtbar. Das ist die auffälligste und härteste Variante.
+  - `Grow + Glow`: Die Zahl wächst und leuchtet rhythmisch leicht an und fällt wieder auf ihre Ausgangsform zurück. Das wirkt wie ein ruhiger Herzschlag direkt auf dem Score.
+  - `Glow Only`: Die Zahl bleibt weitgehend ruhig an Ort und Größe, bekommt aber einen sichtbar stärker werdenden Leuchtkranz. Das eignet sich für Nutzer, die eher Licht als Bewegung wollen.
+  - `Grow Only`: Die Zahl springt nicht hart, sondern wächst kurz auf und fällt wieder zurück. Im Gegensatz zu `Glow` steht hier die Größenänderung stärker im Vordergrund als der Lichtschein.
+  - `Fade Blink`: Die Zahl bleibt an derselben Stelle, verliert aber im Takt sichtbar an Deckkraft und wird wieder voll sichtbar. Das ist die auffälligste und härteste Variante.
 - `Farbthema`: Bestimmt die Farbe, mit der die aktive Restpunktzahl hervorgehoben wird. Die gewählte Farbe steuert Glanz, Schatten und das visuelle Gewicht des Effekts.
   - `Autodarts Grün`: Der Effekt erscheint in einem frischen Grün und wirkt wie ein positives Finish-Signal. Das passt besonders gut zum Autodarts-Grundlook.
   - `Cyan`: Der Score bekommt einen kühlen, technischer wirkenden Cyan-Schimmer. Das hebt sich sichtbar vom Standardgrün ab, ohne aggressiv zu wirken.
@@ -770,11 +771,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Nur Vorschlag`: Der Effekt erscheint nur dann, wenn der sichtbare Suggestion-Hinweis genau den aktuell fälligen Finish-Dart trägt. Ein direkt finishbarer Score ohne passenden Vorschlag bleibt ohne Effekt.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Checkout Score Pulse](docs/screenshots/animation-checkout-score-pulse.gif)
+![Checkout Score Highlight](docs/screenshots/animation-checkout-score-pulse.gif)
 
+<a id="animation-autodarts-x01-remaining-score-bar"></a>
 <a id="animation-autodarts-x01-score-progress"></a>
 
-### X01 Score Progress
+### X01 Remaining Score Bar
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
@@ -802,19 +804,20 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Breit`: Der aktive Balken wird deutlicher und aus größerer Distanz schneller wahrgenommen.
   - `Extrabreit`: Stellt den aktiven Balken sehr dominant dar und priorisiert maximale Sichtbarkeit.
 - `Effekt`: Bestimmt, ob und wie stark der aktive Balken zusätzlich animiert wird. Inaktive Spieler bleiben vom gewählten Effekt unberührt und behalten ihre ruhige Standarddarstellung.
-  - `Pulse Core`: Der Balken pulsiert mit einer klar sichtbaren inneren Kernbewegung und bleibt dadurch dauerhaft präsent.
-  - `Glass Charge`: Eine helle, glatte Spiegelung läuft durch den aktiven Balken und erzeugt eine sichtbar aufgeladene Glasschicht.
-  - `Segment Drain`: Der aktive Balken wirkt sichtbar segmentiert und verliert seine Energie in klaren, technischen Abschnitten statt als glatte Fläche.
-  - `Ghost Trail`: Bei Scoreänderungen bleibt kurz eine halbtransparente Spur der vorherigen Länge sichtbar und läuft dann in den neuen Stand aus.
-  - `Signal Sweep`: Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.
+  - `Bar Pulse`: Der Balken pulsiert mit einer klar sichtbaren inneren Kernbewegung und bleibt dadurch dauerhaft präsent.
+  - `Glass Light Sweep`: Eine helle, glatte Spiegelung läuft durch den aktiven Balken und erzeugt eine sichtbar aufgeladene Glasschicht.
+  - `Moving Segments`: Der aktive Balken wirkt sichtbar segmentiert und verliert seine Energie in klaren, technischen Abschnitten statt als glatte Fläche.
+  - `Previous Score Trail`: Bei Scoreänderungen bleibt kurz eine halbtransparente Spur der vorherigen Länge sichtbar und läuft dann in den neuen Stand aus.
+  - `Fast Signal Sweep`: Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.
   - `Aus`: Der Balken zeigt nur den aktuellen Stand ohne zusätzlichen Effekt. Größe, Farben und Inaktiv-Darstellung bleiben bestehen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![X01 Score Progress](docs/screenshots/animation-x01-score-progress.png)
+![X01 Remaining Score Bar](docs/screenshots/animation-x01-score-progress.png)
 
+<a id="animation-autodarts-animate-checkout-target-highlights"></a>
 <a id="animation-autodarts-animate-checkout-board-targets"></a>
 
-### Checkout Board Targets
+### Checkout Target Highlights
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
@@ -824,9 +827,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 **Einstellungen einfach erklärt**
 
 - `Darstellung`: Legt fest, wie die markierten Board-Segmente visuell wirken. Die Segmentauswahl bleibt gleich; nur Signalcharakter, Leuchtverhalten und Bewegungsruhe ändern sich.
-  - `Focus`: Das Segment bleibt ruhig und klar markiert, atmet aber leicht über Opazität, Kontur, Halo und eine kleine Skalierung. Dadurch wirkt die Darstellung lebendiger, ohne unruhig zu werden.
-  - `Signal`: Die Markierung folgt einem sauberen Blinkpuls ähnlich zum nativen Board-Hinweis und kombiniert den Helligkeitswechsel mit leichter Skalierung und Glow. Das wirkt direkter als `Focus`, bleibt aber kontrollierter als ein schwerer Pulse-Look.
-  - `Steady`: Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit, Halo und eine sehr kleine Skalierung. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.
+  - `Soft Pulse`: Das Segment bleibt ruhig und klar markiert, atmet aber leicht über Opazität, Kontur, Halo und eine kleine Skalierung. Dadurch wirkt die Darstellung lebendiger, ohne unruhig zu werden.
+  - `Fast Blink`: Die Markierung folgt einem sauberen Blinkpuls ähnlich zum nativen Board-Hinweis und kombiniert den Helligkeitswechsel mit leichter Skalierung und Glow. Das wirkt direkter als `Focus`, bleibt aber kontrollierter als ein schwerer Pulse-Look.
+  - `Slow Glow`: Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit, Halo und eine sehr kleine Skalierung. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.
 - `Segmentstil`: Bestimmt, ob die Checkout-Markierung zusätzlich eine farbige Segmentkontur und die weiße Zielkontur verwendet oder ob nur die farbige Fläche selbst sichtbar bleibt. Farben, Presets, Glow und Bewegungsverhalten laufen in beiden Modi weiter auf der Fläche.
   - `Fläche + Rahmen`: Die Checkout-Ziele behalten die farbige Füllung, ihre farbige Segmentkontur und die weiße pulsierende Zielkontur. Das ist die bisherige, klar gerahmte Darstellung.
   - `Nur Fläche`: Die Markierung färbt nur die Ziel-Fläche selbst ein und blendet sowohl die farbige Segmentkontur als auch die weiße Zielkontur aus. Farben, Glow, Opazität und Bewegungsverhalten des gewählten Presets bleiben trotzdem auf der Fläche aktiv.
@@ -843,7 +846,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Weiß`: Die Markierung bleibt neutral und sehr hell. Die weiße Kontur sorgt vor allem auf dunklen Board-Bereichen für starke Lesbarkeit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Checkout Board Targets](docs/screenshots/animation-checkout-board-targets.gif)
+![Checkout Target Highlights](docs/screenshots/animation-checkout-board-targets.gif)
 
 <a id="animation-autodarts-animate-tv-board-zoom"></a>
 
@@ -873,9 +876,10 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![TV Board Zoom](docs/screenshots/animation-tv-board-zoom.gif)
 
+<a id="animation-autodarts-checkout-suggestion-styles"></a>
 <a id="animation-autodarts-style-checkout-suggestions"></a>
 
-### Style Checkout Suggestions
+### Checkout Suggestion Styles
 
 - Gilt für: `X01`
 - Was macht es sichtbar? Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.
@@ -900,15 +904,16 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Rose`: Der Vorschlagsblock bekommt eine auffällige, leicht dramatische Rosé-Färbung. Das ist die emotionalste und kräftigste Variante unter den drei Themes.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Style Checkout Suggestions](docs/screenshots/animation-style-checkout-suggestions.png)
+![Checkout Suggestion Styles](docs/screenshots/animation-style-checkout-suggestions.png)
 ![Format Badge](docs/screenshots/animation-style-checkout-suggestions-format-badge-readme.png)
 ![Format Stripe](docs/screenshots/animation-style-checkout-suggestions-format-stripe-readme.png)
 ![Format Ticket](docs/screenshots/animation-style-checkout-suggestions-format-ticket-readme.png)
 ![Format Outline](docs/screenshots/animation-style-checkout-suggestions-format-outline-readme.png)
 
+<a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
 
-### Average Trend Arrow
+### AVG Trend Arrow
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.
@@ -937,11 +942,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Groß`: Der Pfeil bekommt mehr Breite, Höhe und Abstand. Dadurch bleibt die Richtung aus mehr Entfernung leichter sichtbar.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Average Trend Arrow](docs/screenshots/animation-average-trend-arrow.png)
+![AVG Trend Arrow](docs/screenshots/animation-average-trend-arrow.png)
 
+<a id="animation-autodarts-animate-active-player-sweep"></a>
 <a id="animation-autodarts-animate-turn-start-sweep"></a>
 
-### Turn Start Sweep
+### Active Player Sweep
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.
@@ -960,11 +966,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Kräftig`: Der Sweep zieht breiter und sichtbarer über die aktive Karte. Dadurch springt der Spielerwechsel am stärksten ins Auge.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Turn Start Sweep](docs/screenshots/animation-turn-start-sweep.gif)
+![Active Player Sweep](docs/screenshots/animation-turn-start-sweep.gif)
 
+<a id="animation-autodarts-animate-special-hit-highlights"></a>
 <a id="animation-autodarts-animate-triple-double-bull-hits"></a>
 
-### Triple/Double/Bull Hits
+### Special Hit Highlights
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
@@ -997,13 +1004,13 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 | ![Farbstil Polar Mint](docs/screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](docs/screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |
 
 - `Animationsstil`: Bestimmt, wie sich das frisch erkannte Trefferfeld und sein Text bewegen. Alle auswählbaren Presets sind einmalige Bursts ohne dauerhaften Idle-Loop auf markierten Feldern.
-  - `Emphase`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist der direkte One-Shot-Impact ohne Dauerloop.
-  - `Shake`: Der Treffer bekommt ein schnelles horizontales Wackeln mit kleinem Zahlenkick. Das wirkt körperlicher als ein reiner Scale-Pop, bleibt aber kurz und lesbar.
-  - `Pulse`: Der Hit baut einen kompakten Glow-Peak auf und nimmt ihn sofort wieder zurück. Anders als frühere Loop-Varianten bleibt danach kein Idle-Loop aktiv.
-  - `Turn`: Das Wurffeld bekommt einen kurzen Y-Achsen-Turn mit leichtem Textnachlauf. Die Bewegung ersetzt die alten Flip-Varianten und bleibt ein einzelner Burst.
-  - `Sheen`: Der Effekt ersetzt die alten Sweep-/Outline-Doppelungen durch einen saubereren Glanz-Sweep. Er wirkt hochwertig, bleibt aber kürzer und ruhiger als ein technischer Loop.
-  - `Shock Ring`: Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
-  - `Electric Arc`: Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.
+  - `Pop Hit`: Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist der direkte One-Shot-Impact ohne Dauerloop.
+  - `Side Shake`: Der Treffer bekommt ein schnelles horizontales Wackeln mit kleinem Zahlenkick. Das wirkt körperlicher als ein reiner Scale-Pop, bleibt aber kurz und lesbar.
+  - `Glow Pop`: Der Hit baut einen kompakten Glow-Peak auf und nimmt ihn sofort wieder zurück. Anders als frühere Loop-Varianten bleibt danach kein Idle-Loop aktiv.
+  - `Flip Spin`: Das Wurffeld bekommt einen kurzen Y-Achsen-Turn mit leichtem Textnachlauf. Die Bewegung ersetzt die alten Flip-Varianten und bleibt ein einzelner Burst.
+  - `Light Sweep`: Der Effekt ersetzt die alten Sweep-/Outline-Doppelungen durch einen saubereren Glanz-Sweep. Er wirkt hochwertig, bleibt aber kürzer und ruhiger als ein technischer Loop.
+  - `Shockwave Ring`: Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.
+  - `Electric Jolt`: Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.
 
 **Animationsstile**
 
@@ -1012,8 +1019,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="animation-autodarts-animate-cricket-target-highlighter"></a>
+<a id="animation-autodarts-animate-cricket-highlighter"></a>
 
-### Cricket Highlighter
+### Cricket Target Highlighter
 
 - Gilt für: `Cricket`, `Tactics`
 - Was macht es sichtbar? Zielzustände und Drucksituationen werden direkt am Board sichtbar.
@@ -1040,9 +1048,10 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 ![Cricket Target Highlighter](docs/screenshots/animation-cricket-target-highlighter.png)
 
+<a id="animation-autodarts-animate-cricket-grid-status-effects"></a>
 <a id="animation-autodarts-animate-cricket-grid-fx"></a>
 
-### Cricket Grid FX
+### Cricket Grid Status Effects
 
 - Gilt für: `Cricket`, `Tactics`
 - Was macht es sichtbar? Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
@@ -1070,11 +1079,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Stark`: Grüne und rote Zustände wirken heller, breiter und schneller lesbar. Das springt besonders bei schnellen Wechseln stärker ins Auge.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Cricket Grid FX](docs/screenshots/animation-cricket-grid-fx.png)
+![Cricket Grid Status Effects](docs/screenshots/animation-cricket-grid-fx.png)
 
+<a id="animation-autodarts-animate-dartboard-marker-highlight"></a>
 <a id="animation-autodarts-animate-dart-marker-emphasis"></a>
 
-### Dart Marker Emphasis
+### Dartboard Marker Highlight
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
@@ -1094,8 +1104,8 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Gelb`: Die Treffer bekommen einen warmen, sehr leuchtenden Akzent. Auf dunklen Boards sticht Gelb besonders klar hervor.
   - `Weiß`: Die Hervorhebung bleibt farbneutral, wirkt aber sehr klar und kontrastreich. Das eignet sich gut, wenn die Marker nicht an eine bestimmte Farbe gebunden sein sollen.
 - `Effekt`: Legt fest, ob die Marker weich glühen, leicht pulsieren oder ohne Zusatzanimation ruhig sichtbar bleiben.
-  - `Glow`: Die Marker bekommen einen Lichtschein, der Breite und Helligkeit sichtbar an- und abschwellen lässt. Das wirkt ruhiger als `Pulse`.
-  - `Pulse`: Die Marker skalieren sichtbar auf und ab. Das wirkt lebendiger und bewegter als der reine Glow-Effekt.
+  - `Soft Glow`: Die Marker bekommen einen Lichtschein, der Breite und Helligkeit sichtbar an- und abschwellen lässt. Das wirkt ruhiger als `Pulse`.
+  - `Size Pulse`: Die Marker skalieren sichtbar auf und ab. Das wirkt lebendiger und bewegter als der reine Glow-Effekt.
   - `Kein Effekt`: Farbe, Größe und Outline bleiben aktiv, aber der Marker bewegt sich nicht. Das ist die ruhigste Darstellung.
 - `Marker-Sichtbarkeit`: Bestimmt, wie kräftig die Marker gezeichnet werden. Höhere Werte machen die Treffer präsenter, niedrigere wirken unaufdringlicher.
   - `65 %`: Die Treffer bleiben betont, wirken aber leichter und weniger massiv. Das ist die zurückhaltendste Sichtbarkeitsstufe.
@@ -1107,11 +1117,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Schwarz`: Die Marker gewinnen besonders auf helleren Bereichen mehr Kontur. Das wirkt etwas härter als die weiße Outline.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Dart Marker Emphasis](docs/screenshots/animation-dart-marker-emphasis.gif)
+![Dartboard Marker Highlight](docs/screenshots/animation-dart-marker-emphasis.gif)
 
+<a id="animation-autodarts-animate-dart-marker-replacer"></a>
 <a id="animation-autodarts-animate-dart-marker-darts"></a>
 
-### Dart Marker Darts
+### Dart Marker Replacer
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
@@ -1120,7 +1131,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 **Wichtiger Hinweis**
 
-- Auf dem virtuellen Board bleibt `Dart Marker Darts` aktiv und ersetzt sichtbare Treffer-Marker durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
+- Auf dem virtuellen Board bleibt `Dart Marker Replacer` aktiv und ersetzt sichtbare Treffer-Marker durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
 - Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern, verzögerter Darstellung oder weniger flüssigen Animationen führen.
 
 **Einstellungen einfach erklärt**
@@ -1156,7 +1167,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Klein`: Der eingeblendete Dart bleibt kompakter und lässt mehr Segmentfläche frei. Das wirkt aufgeräumter und weniger dominant.
   - `Standard`: Der Dart entspricht der vorgesehenen Grundgröße des Moduls. Das ist der Mittelweg zwischen Präsenz und freier Segmentfläche.
   - `Groß`: Der Dart füllt mehr vom Segment aus und fällt stärker ins Auge. Das ist die plakativste Größenstufe.
-- `Original-Marker ausblenden`: Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Darts` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.
+- `Original-Marker ausblenden`: Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Replacer` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.
 - `Einschlag-Schatten`: Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt, erhöht aber je nach Szene auch die Grafiklast.
 - `Schatten-Weichzeichnung`: Bestimmt, ob der Einschlag-Schatten weichgezeichnet dargestellt wird oder als klarere, schärfere Schattenform erscheint. Die Weichzeichnung erzeugt den realistischeren Eindruck, benötigt aber mehr GPU-Leistung.
 - `Einschlag-Wobble`: Aktiviert eine kurze Wackelbewegung des Dart-Bildes direkt nach der Landung. Das verstärkt den Einschlag-Effekt visuell und erhöht je nach Szene die Animationslast leicht.
@@ -1167,11 +1178,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Cinematic`: Die Flugphase wird gestreckt und wirkt dadurch filmischer. Der Dart baut sich deutlich spürbarer in das Segment hinein auf.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Dart Marker Darts](docs/screenshots/animation-dart-marker-darts.png)
+![Dart Marker Replacer](docs/screenshots/animation-dart-marker-darts.png)
 
+<a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
 
-### Remove Darts Notification
+### Take Out Darts Alert
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Der Hinweis zum Entfernen der Darts wird als große Grafik deutlich präsenter dargestellt.
@@ -1191,11 +1203,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Stark`: Die Hinweisgrafik wirkt lebhafter und springt stärker ins Auge. Das ist die auffälligste Pulsstufe.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Remove Darts Notification](docs/screenshots/animation-remove-darts-notification.png)
+![Take Out Darts Alert](docs/screenshots/animation-remove-darts-notification.png)
 
+<a id="animation-autodarts-animate-single-bull-hit-sound"></a>
 <a id="animation-autodarts-animate-single-bull-sound"></a>
 
-### Single Bull Sound
+### Single Bull Hit Sound
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Bei Single Bull hörst du einen kurzen Ton; grafisch bleibt das Spiel unverändert.
@@ -1219,9 +1232,10 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `1200 ms`: Zusätzlich zu Live-Triggern prüft das Modul regelmäßig nach. Das macht die Treffererkennung robuster, wenn Live-Änderungen einmal ausbleiben.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
+<a id="animation-autodarts-animate-turn-score-counter"></a>
 <a id="animation-autodarts-animate-turn-points-count"></a>
 
-### Turn Points Count
+### Turn Score Counter
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
@@ -1231,9 +1245,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 **Einstellungen einfach erklärt**
 
 - `Zählstil`: Fließend nutzt CountUp mit outCubic-Easing, Odometer nutzt den Walzen-/Anzeigetafel-Effekt, Einzelschritte zeigt jede ganze Zahl möglichst exakt nacheinander.
-  - `Fließend`: Der Wert läuft mit outCubic-Easing flüssig zum Zielwert und bleibt ohne zusätzliche DOM-Struktur kompatibel mit Themes.
-  - `Odometer`: Die Ziffern wechseln in einem Anzeigetafel-/Walzeneffekt. Der Stil wird nur geladen, wenn er ausgewählt ist.
-  - `Einzelschritte`: Diese Fallback-Variante priorisiert sichtbare Zwischenzahlen statt Easing und bleibt besonders deterministisch.
+  - `Smooth Count`: Der Wert läuft mit outCubic-Easing flüssig zum Zielwert und bleibt ohne zusätzliche DOM-Struktur kompatibel mit Themes.
+  - `Rolling Digits`: Die Ziffern wechseln in einem Anzeigetafel-/Walzeneffekt. Der Stil wird nur geladen, wenn er ausgewählt ist.
+  - `Step Count`: Diese Fallback-Variante priorisiert sichtbare Zwischenzahlen statt Easing und bleibt besonders deterministisch.
 - `Zählgeschwindigkeit`: Legt die Geschwindigkeit der Zählanimation fest. Schnell zählt 0 bis 60 in 1 Sekunde, Standard in 3 Sekunden, Ruhig in 5 Sekunden.
   - `Schnell`: Diese Stufe reagiert am direktesten und eignet sich für schnelle Spielbilder.
   - `Standard`: Ein T20-Treffer läuft von 0 bis 60 in 3 Sekunden hoch. Das ist die ruhig lesbare Standardstufe.
@@ -1244,12 +1258,13 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Permanent`: Der elektrische Rahmen bleibt permanent aktiv, auch wenn sich der Wert gerade nicht ändert. Die Zählanimation selbst läuft weiterhin nur bei echten Wertänderungen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Turn Points Count](docs/screenshots/animation-turn-points-count.gif)
-![Turn Points Count Detail](docs/screenshots/animation-turn-points-count-detail-readme.gif)
+![Turn Score Counter](docs/screenshots/animation-turn-points-count.gif)
+![Turn Score Counter Detail](docs/screenshots/animation-turn-points-count-detail-readme.gif)
 
+<a id="animation-autodarts-animate-winner-celebration-effect"></a>
 <a id="animation-autodarts-animate-winner-fireworks"></a>
 
-### Winner Fireworks
+### Winner Celebration Effect
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
@@ -1259,12 +1274,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 **Einstellungen einfach erklärt**
 
 - `Style`: Legt fest, ob der Siegereffekt eher wie klassisches Feuerwerk, Kanonenschuss, Sternenregen, Seitenbeschuss oder eine andere Variante wirkt. Die Farbpalette bleibt davon unabhängig.
-  - `Realistic`: Der Effekt kombiniert einen kräftigen Hauptstoß aus der Mitte mit kleineren Seitenbursts. Das wirkt am ehesten wie ein klassisches Feier-Feuerwerk.
-  - `Fireworks`: Die Partikel starten an wechselnden Positionen im oberen Bildschirmbereich und streuen breit auseinander. Das wirkt am ehesten wie echte Himmelsfeuerwerke.
-  - `Cannon`: Die Partikel kommen gebündelt und kraftvoll aus dem unteren Zentrum. Das wirkt wie ein konzentrierter Konfetti- oder Feuerwerksstoß nach vorn.
-  - `Victory Storm`: Mehrere Bursts aus Mitte, links und rechts bauen ein großes, raumgreifendes Effektbild auf. Das wirkt besonders festlich und voll.
-  - `Stars`: Statt normaler Konfetti-Partikel werden Sterne verwendet, die ruhiger und dekorativer durch das Bild laufen. Das wirkt verspielter als die anderen Stile.
-  - `Sides`: Die Partikel kommen seitlich herein und rahmen den Bildschirm eher ein, statt ihn von der Mitte aus zu füllen. Das wirkt schnell und randbetont.
+  - `Center Side Burst`: Der Effekt kombiniert einen kräftigen Hauptstoß aus der Mitte mit kleineren Seitenbursts. Das wirkt am ehesten wie ein klassisches Feier-Feuerwerk.
+  - `Top Fireworks`: Die Partikel starten an wechselnden Positionen im oberen Bildschirmbereich und streuen breit auseinander. Das wirkt am ehesten wie echte Himmelsfeuerwerke.
+  - `Center Cannon`: Die Partikel kommen gebündelt und kraftvoll aus dem unteren Zentrum. Das wirkt wie ein konzentrierter Konfetti- oder Feuerwerksstoß nach vorn.
+  - `Triple Burst`: Mehrere Bursts aus Mitte, links und rechts bauen ein großes, raumgreifendes Effektbild auf. Das wirkt besonders festlich und voll.
+  - `Star Burst`: Statt normaler Konfetti-Partikel werden Sterne verwendet, die ruhiger und dekorativer durch das Bild laufen. Das wirkt verspielter als die anderen Stile.
+  - `Side Cannons`: Die Partikel kommen seitlich herein und rahmen den Bildschirm eher ein, statt ihn von der Mitte aus zu füllen. Das wirkt schnell und randbetont.
 - `Farbe`: Bestimmt, aus welchen Farben der Effekt zusammengesetzt ist. Die Partikelmuster bleiben gleich, nur die Palette wird gewechselt.
   - `Autodarts`: Der Effekt arbeitet mit mehreren Blauabstufungen und Weiß. Das wirkt kühl, sauber und markennah.
   - `Rot/Weiß`: Die Partikel wechseln zwischen Weiß, hellem Rot und dunkleren Rotabstufungen. Das wirkt klassisch, festlich und deutlich wärmer als `Autodarts`.
@@ -1289,7 +1304,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - `Klick beendet Effekt`: Bestimmt, ob ein linker Mausklick den aktuell laufenden Winner-Fireworks-Effekt vorzeitig schließen darf.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-![Winner Fireworks](docs/screenshots/animation-winner-fireworks.gif)
+![Winner Celebration Effect](docs/screenshots/animation-winner-fireworks.gif)
 ![xConfig Test-Button](docs/screenshots/xConfig-testbutton.png)
 <!-- xconfig-generated:end -->
 ## Weitere Dokumentation

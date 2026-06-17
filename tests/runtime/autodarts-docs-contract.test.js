@@ -12,7 +12,7 @@ import {
   AUTODARTS_TAKEOUT_NOTICE_TEXTS,
   AUTODARTS_X01_OUT_MODE_TERMS,
 } from "../../src/shared/autodarts-doc-terms.js";
-import { classifyRemoveDartsNoticeText } from "../../src/features/remove-darts-notification/logic.js";
+import { classifyRemoveDartsNoticeText } from "../../src/features/take-out-darts-alert/logic.js";
 import {
   classifyCricketGameMode,
   classifyCricketScoringMode,

@@ -1284,10 +1284,10 @@ class FakeDocument extends FakeEventTarget {
     this.turnContainer.id = "ad-ext-turn";
     this.turnContainer.appendChild(this.throwRow);
 
-    this.turnPointsElement = new FakeElement("p");
-    this.turnPointsElement.ownerDocument = this;
-    this.turnPointsElement.classList.add("ad-ext-turn-points");
-    this.turnPointsElement.textContent = "60";
+    this.turnScoreElement = new FakeElement("p");
+    this.turnScoreElement.ownerDocument = this;
+    this.turnScoreElement.classList.add("ad-ext-turn-points");
+    this.turnScoreElement.textContent = "60";
 
     this.winnerNode = new FakeElement("div");
     this.winnerNode.ownerDocument = this;
@@ -1297,7 +1297,7 @@ class FakeDocument extends FakeEventTarget {
     this.main.appendChild(this.suggestionElement);
     this.main.appendChild(this.activePlayerRow);
     this.main.appendChild(this.turnContainer);
-    this.main.appendChild(this.turnPointsElement);
+    this.main.appendChild(this.turnScoreElement);
     this.main.appendChild(this.winnerNode);
   }
 

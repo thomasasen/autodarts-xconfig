@@ -9,7 +9,11 @@ import {
   listFeatureConfigSpecs,
 } from "../../src/config/feature-config-spec.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
-import { featureCatalog } from "../../src/shared/feature-catalog.js";
+import {
+  featureCatalog,
+  getFeatureCatalogEntryByConfigKey,
+  getFeatureCatalogEntryByFeatureKey,
+} from "../../src/shared/feature-catalog.js";
 
 function getDefaultFeatureConfig(configKey) {
   if (String(configKey || "").startsWith("themes.")) {
@@ -28,6 +32,24 @@ const DEFAULT_TURN_DART_CONFIG = Object.freeze({
   turnDartSizePercent: 115,
   turnDartImageDataUrl: "",
 });
+
+const RENAMED_FEATURES = Object.freeze([
+  ["checkout-score-highlight", "checkoutScoreHighlight", "checkout-score-pulse", "checkoutScorePulse"],
+  ["x01-remaining-score-bar", "x01RemainingScoreBar", "x01-score-progress", "x01ScoreProgress"],
+  ["checkout-target-highlights", "checkoutTargetHighlights", "checkout-board-targets", "checkoutBoardTargets"],
+  ["checkout-suggestion-styles", "checkoutSuggestionStyles", "style-checkout-suggestions", "styleCheckoutSuggestions"],
+  ["avg-trend-arrow", "avgTrendArrow", "average-trend-arrow", "averageTrendArrow"],
+  ["active-player-sweep", "activePlayerSweep", "turn-start-sweep", "turnStartSweep"],
+  ["special-hit-highlights", "specialHitHighlights", "triple-double-bull-hits", "tripleDoubleBullHits"],
+  ["cricket-target-highlighter", "cricketTargetHighlighter", "cricket-highlighter", "cricketHighlighter"],
+  ["cricket-grid-status-effects", "cricketGridStatusEffects", "cricket-grid-fx", "cricketGridFx"],
+  ["dartboard-marker-highlight", "dartboardMarkerHighlight", "dart-marker-emphasis", "dartMarkerEmphasis"],
+  ["dart-marker-replacer", "dartMarkerReplacer", "dart-marker-darts", "dartMarkerDarts"],
+  ["take-out-darts-alert", "takeOutDartsAlert", "remove-darts-notification", "removeDartsNotification"],
+  ["single-bull-hit-sound", "singleBullHitSound", "single-bull-sound", "singleBullSound"],
+  ["turn-score-counter", "turnScoreCounter", "turn-points-count", "turnPointsCount"],
+  ["winner-celebration-effect", "winnerCelebrationEffect", "winner-fireworks", "winnerFireworks"],
+]);
 
 test("feature config spec regenerates the published default config exactly", () => {
   assert.deepEqual(createDefaultConfigFromFeatureSpecs(), defaultConfig);
@@ -55,9 +77,29 @@ test("feature config spec stays aligned with catalog and registry order", () => 
   });
 });
 
+test("renamed feature catalog entries expose one canonical key with legacy aliases", () => {
+  RENAMED_FEATURES.forEach(([featureKey, configKey, legacyFeatureKey, legacyConfigKey]) => {
+    const canonicalEntry = getFeatureCatalogEntryByFeatureKey(featureKey);
+    assert.ok(canonicalEntry, featureKey);
+    assert.equal(canonicalEntry.featureKey, featureKey);
+    assert.equal(canonicalEntry.configKey, configKey);
+    assert.equal(getFeatureCatalogEntryByFeatureKey(legacyFeatureKey), canonicalEntry);
+    assert.equal(getFeatureCatalogEntryByConfigKey(legacyConfigKey), canonicalEntry);
+    assert.equal(getFeatureConfigSpec(legacyConfigKey), getFeatureConfigSpec(configKey));
+  });
+
+  RENAMED_FEATURES.forEach(([, , legacyFeatureKey]) => {
+    assert.equal(
+      featureCatalog.some((entry) => entry.featureKey === legacyFeatureKey),
+      false,
+      legacyFeatureKey
+    );
+  });
+});
+
 test("feature config spec carries remove-key rules for retired config fields", () => {
-  assert.deepEqual(getFeatureConfigSpec("x01ScoreProgress")?.removeKeys, ["designPreset"]);
-  assert.deepEqual(getFeatureConfigSpec("checkoutScorePulse")?.removeKeys, []);
+  assert.deepEqual(getFeatureConfigSpec("x01RemainingScoreBar")?.removeKeys, ["designPreset"]);
+  assert.deepEqual(getFeatureConfigSpec("checkoutScoreHighlight")?.removeKeys, []);
 });
 
 test("createRecommendedFeatureConfig returns the documented recommended defaults", () => {
@@ -98,31 +140,31 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     backgroundImageDataUrl: "",
     debug: false,
   });
-  assert.deepEqual(createRecommendedFeatureConfig("checkoutBoardTargets"), {
+  assert.deepEqual(createRecommendedFeatureConfig("checkoutTargetHighlights"), {
     enabled: true,
-    visualPreset: "signal",
+    visualPreset: "fast-blink",
     segmentStyle: "surface-only",
     singleRing: "both",
     targetSelectionMode: "next",
     colorTheme: "cyan",
     debug: false,
   });
-  assert.deepEqual(createRecommendedFeatureConfig("tripleDoubleBullHits"), {
+  assert.deepEqual(createRecommendedFeatureConfig("specialHitHighlights"), {
     enabled: true,
     colorTheme: "kind-signal",
-    animationStyle: "electric-arc",
+    animationStyle: "electric-jolt",
     debug: false,
   });
-  assert.deepEqual(createRecommendedFeatureConfig("dartMarkerEmphasis"), {
+  assert.deepEqual(createRecommendedFeatureConfig("dartboardMarkerHighlight"), {
     enabled: true,
     size: 6,
     color: "rgb(49, 130, 206)",
-    effect: "pulse",
+    effect: "size-pulse",
     opacityPercent: 100,
     outline: "weiss",
     debug: false,
   });
-  assert.deepEqual(createRecommendedFeatureConfig("dartMarkerDarts"), {
+  assert.deepEqual(createRecommendedFeatureConfig("dartMarkerReplacer"), {
     enabled: true,
     design: "autodarts",
     animateDarts: true,
@@ -135,16 +177,16 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     flightSpeed: "standard",
     debug: false,
   });
-  assert.deepEqual(createRecommendedFeatureConfig("singleBullSound"), {
+  assert.deepEqual(createRecommendedFeatureConfig("singleBullHitSound"), {
     enabled: true,
     volume: 0.9,
     cooldownMs: 700,
     pollIntervalMs: 0,
     debug: false,
   });
-  assert.deepEqual(createRecommendedFeatureConfig("winnerFireworks"), {
+  assert.deepEqual(createRecommendedFeatureConfig("winnerCelebrationEffect"), {
     enabled: true,
-    style: "fireworks",
+    style: "top-fireworks",
     colorTheme: "autodarts",
     intensity: "standard",
     durationSeconds: 5,

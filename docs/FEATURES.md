@@ -49,25 +49,25 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Alle aktiviert`: An
 - `Debug`: Aus
 
-**Turn Start Sweep**
+**Active Player Sweep**
 - `Sweep-Geschwindigkeit`: Standard
 - `Sweep-Stil`: Standard
 
-**Turn Points Count**
-- `Zählstil`: Fließend
+**Turn Score Counter**
+- `Zählstil`: Smooth Count
 - `Zählgeschwindigkeit`: Standard
 - `Aufblitz-Effekt`: Aus
 - `Aufblitz-Modus`: Nur bei Änderung
 
-**Average Trend Arrow**
+**AVG Trend Arrow**
 - `Animationsdauer`: Standard
 - `Pfeil-Größe`: Standard
 
-**Triple/Double/Bull Hits**
+**Special Hit Highlights**
 - `Farbstil`: Rot/Blau/Grün
-- `Animationsstil`: Electric Arc
+- `Animationsstil`: Electric Jolt
 
-**Dart Marker Darts**
+**Dart Marker Replacer**
 - `Dart Design`: Autodarts
 - `Dart-Fluganimation`: An
 - `Dart-Größe`: Standard
@@ -78,25 +78,25 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Flug-Blur`: An
 - `Fluggeschwindigkeit`: Standard
 
-**Dart Marker Emphasis**
+**Dartboard Marker Highlight**
 - `Marker-Größe`: Standard
 - `Marker-Farbe`: Blau
-- `Effekt`: Pulse
+- `Effekt`: Size Pulse
 - `Marker-Sichtbarkeit`: 100 %
 - `Outline-Farbe`: Weiß
 
-**Remove Darts Notification**
+**Take Out Darts Alert**
 - `Bildgröße`: Groß
 - `Pulse-Animation`: An
 - `Pulse-Stärke`: Standard
 
-**Single Bull Sound**
+**Single Bull Hit Sound**
 - `Lautstärke`: Standard
 - `Wiederholsperre`: 700 ms
 - `Fallback-Scan`: Nur live
 
-**Winner Fireworks**
-- `Style`: Fireworks
+**Winner Celebration Effect**
+- `Style`: Top Fireworks
 - `Farbe`: Autodarts
 - `Intensität`: Standard
 - `Dauer`: 5 s
@@ -104,24 +104,24 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Bei Bull-Out aktiv`: An
 - `Klick beendet Effekt`: An
 
-**Style Checkout Suggestions**
+**Checkout Suggestion Styles**
 - `Stil`: Stripe
 - `Labeltext`: CHECKOUT
 - `Farbthema`: Amber
 
-**Checkout Score Pulse**
-- `Effekt`: Scale
+**Checkout Score Highlight**
+- `Effekt`: Grow Only
 - `Farbthema`: Autodarts Grün
 - `Intensität`: Standard
 - `Trigger-Quelle`: Vorschlag zuerst
 
-**X01 Score Progress**
+**X01 Remaining Score Bar**
 - `Farben`: Checkout Focus
 - `Balkengröße`: Breit
 - `Effekt`: Aus
 
-**Checkout Board Targets**
-- `Darstellung`: Signal
+**Checkout Target Highlights**
+- `Darstellung`: Fast Blink
 - `Segmentstil`: Nur Fläche
 - `Zielauswahl`: Nächstes Feld
 - `Farbthema`: Cyan
@@ -133,14 +133,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Checkout-Ziel`: Nur Finish-Feld
 - `T20-Setup-Zoom`: An
 
-**Cricket Highlighter**
+**Cricket Target Highlighter**
 - `OPEN-Ziele anzeigen`: Aus
 - `DEAD-Ziele anzeigen`: An
 - `Irrelevante Felder abdunkeln`: Hatch+
 - `Farbthema`: Standard
 - `Intensität`: Standard
 
-**Cricket Grid FX**
+**Cricket Grid Status Effects**
 - `Zeilen-Sweep`: An
 - `Ziel-Badge-Hinweis`: An
 - `Mark-Fortschritt`: An
@@ -531,16 +531,16 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Animationen für X01
 
-### Checkout Score Pulse
+### Checkout Score Highlight
 
 - Gilt für: `X01`
 - Kurz: Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
 - Grafisch: Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.
 - `Effekt`: Wählt die Animationsart der hervorgehobenen Restpunktzahl.
-  - `Pulse`: Die Restpunktzahl bekommt einen weichen Puls aus Größenänderung, Helligkeit und Schattierung. Der Effekt wirkt organisch und wiederkehrend, ohne die Zahl hart springen zu lassen.
-  - `Glow`: Der Fokus liegt auf einem an- und abschwellenden Glühen um die Zahl herum. Die Score-Anzeige selbst bleibt relativ stabil, während der Lichtschein die Aufmerksamkeit auf das Finish lenkt.
-  - `Scale`: Die Finish-Zahl wird zyklisch vergrößert und wieder auf Normalgröße zurückgeführt. Der Effekt wirkt direkter und körperlicher als `Glow`, ohne das harte Ausblenden von `Blink` zu nutzen.
-  - `Blink`: Die Score-Anzeige blinkt über deutliche Helligkeitssprünge zwischen klar sichtbar und stark gedimmt. Dadurch wirkt der Effekt am alarmierendsten und fällt sofort ins Auge.
+  - `Grow + Glow`: Die Restpunktzahl bekommt einen weichen Puls aus Größenänderung, Helligkeit und Schattierung. Der Effekt wirkt organisch und wiederkehrend, ohne die Zahl hart springen zu lassen.
+  - `Glow Only`: Der Fokus liegt auf einem an- und abschwellenden Glühen um die Zahl herum. Die Score-Anzeige selbst bleibt relativ stabil, während der Lichtschein die Aufmerksamkeit auf das Finish lenkt.
+  - `Grow Only`: Die Finish-Zahl wird zyklisch vergrößert und wieder auf Normalgröße zurückgeführt. Der Effekt wirkt direkter und körperlicher als `Glow`, ohne das harte Ausblenden von `Blink` zu nutzen.
+  - `Fade Blink`: Die Score-Anzeige blinkt über deutliche Helligkeitssprünge zwischen klar sichtbar und stark gedimmt. Dadurch wirkt der Effekt am alarmierendsten und fällt sofort ins Auge.
 - `Farbthema`: Legt die Highlight-Farbe der Restpunktzahl fest.
   - `Autodarts Grün`: Der Score-Effekt nutzt ein helles, freundliches Grün und wirkt dadurch wie eine klare Freigabe oder Bestätigung. Diese Palette fügt sich am natürlichsten in den bestehenden Autodarts-Look ein.
   - `Cyan`: Diese Variante färbt die Hervorhebung in ein kühles Cyan. Dadurch wirkt der Checkout-Effekt moderner und technischer, bleibt aber ruhiger als warme Warnfarben.
@@ -556,9 +556,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Nur Vorschlag`: Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch direkt finishbarer Wert erzeugt keinen Effekt, solange kein passender Finish-Vorschlag erkannt wird.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Checkout Score Pulse](screenshots/animation-checkout-score-pulse.gif)
+![Checkout Score Highlight](screenshots/animation-checkout-score-pulse.gif)
 
-### X01 Score Progress
+### X01 Remaining Score Bar
 
 - Gilt für: `X01`
 - Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
@@ -582,25 +582,25 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Breit`: Breitere Balkenhöhe mit stärkerer Präsenz.
   - `Extrabreit`: Maximal breite Balkenhöhe für höchste Sichtbarkeit.
 - `Effekt`: Wählt den Effekt des aktiven Balkens; inaktive Spieler bleiben unverändert.
-  - `Pulse Core`: Deutlicher Kern-Puls auf dem aktiven Balken.
-  - `Glass Charge`: Gläserner Ladeeffekt mit breiter Lichtkante.
-  - `Segment Drain`: Segmentierte Drain-Optik mit klaren Abschnitten.
-  - `Ghost Trail`: Nachziehender Ghost-Trail beim Scorewechsel.
-  - `Signal Sweep`: Schneller Signal-Sweep mit hoher Aufmerksamkeit.
+  - `Bar Pulse`: Deutlicher Kern-Puls auf dem aktiven Balken.
+  - `Glass Light Sweep`: Gläserner Ladeeffekt mit breiter Lichtkante.
+  - `Moving Segments`: Segmentierte Drain-Optik mit klaren Abschnitten.
+  - `Previous Score Trail`: Nachziehender Ghost-Trail beim Scorewechsel.
+  - `Fast Signal Sweep`: Schneller Signal-Sweep mit hoher Aufmerksamkeit.
   - `Aus`: Keine Zusatzanimation; nur der statische Balken bleibt sichtbar.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![X01 Score Progress](screenshots/animation-x01-score-progress.png)
+![X01 Remaining Score Bar](screenshots/animation-x01-score-progress.png)
 
-### Checkout Board Targets
+### Checkout Target Highlights
 
 - Gilt für: `X01`
 - Kurz: Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
 - Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont. Single-Ziele markieren standardmäßig immer beide Single-Ringe des Segments.
 - `Darstellung`: Wählt die visuelle Darstellung der markierten Segmente.
-  - `Focus`: Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig und klar im Fokus und ergänzt Helligkeit, Halo und Kontur um eine kleine, kontrollierte Skalierung.
-  - `Signal`: Diese Darstellung orientiert sich am nativen Blinkgefühl und setzt das Ziel mit klaren Helligkeitswechseln, leichtem Wachstum und sauberem Halo in Szene.
-  - `Steady`: Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis mit nur minimaler Bewegung sichtbar sein soll.
+  - `Soft Pulse`: Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig und klar im Fokus und ergänzt Helligkeit, Halo und Kontur um eine kleine, kontrollierte Skalierung.
+  - `Fast Blink`: Diese Darstellung orientiert sich am nativen Blinkgefühl und setzt das Ziel mit klaren Helligkeitswechseln, leichtem Wachstum und sauberem Halo in Szene.
+  - `Slow Glow`: Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis mit nur minimaler Bewegung sichtbar sein soll.
 - `Segmentstil`: Legt fest, ob die Ziele mit Rahmen oder nur über die farbige Fläche markiert werden.
   - `Fläche + Rahmen`: Diese Variante kombiniert die farbige Fläche mit Segmentrahmen und zusätzlicher Zielkontur und entspricht dem bisherigen Standard-Look.
   - `Nur Fläche`: Diese Variante markiert das Ziel ausschließlich über die eingefärbte Fläche und lässt den Rahmen komplett weg, während Preset und Farblogik auf der Fläche erhalten bleiben.
@@ -617,7 +617,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Weiß`: Diese Palette nutzt ein kühles Signalweiß für Füllung und Kontur. Sie ist die neutralste Variante und bleibt trotzdem sehr präsent, ohne eine zusätzliche Farbstimmung vorzugeben.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Checkout Board Targets](screenshots/animation-checkout-board-targets.gif)
+![Checkout Target Highlights](screenshots/animation-checkout-board-targets.gif)
 
 ### TV Board Zoom
 
@@ -641,7 +641,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![TV Board Zoom](screenshots/animation-tv-board-zoom.gif)
 
-### Style Checkout Suggestions
+### Checkout Suggestion Styles
 
 - Gilt für: `X01`
 - Kurz: Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.
@@ -662,7 +662,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Rose`: Diese Palette färbt den Suggestion-Block in rosé- bis rotlastige Akzente. Dadurch wirkt der Hinweis markanter, emotionaler und stärker wie ein bewusst gesetzter Signalblock.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Style Checkout Suggestions](screenshots/animation-style-checkout-suggestions.png)
+![Checkout Suggestion Styles](screenshots/animation-style-checkout-suggestions.png)
 ![Format Badge](screenshots/animation-style-checkout-suggestions-format-badge-readme.png)
 ![Format Stripe](screenshots/animation-style-checkout-suggestions-format-stripe-readme.png)
 ![Format Ticket](screenshots/animation-style-checkout-suggestions-format-ticket-readme.png)
@@ -670,7 +670,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Animationen für Cricket und Tactics
 
-### Cricket Highlighter
+### Cricket Target Highlighter
 
 - Gilt für: `Cricket`, `Tactics`
 - Kurz: Zielzustände und Drucksituationen werden direkt am Board sichtbar.
@@ -693,7 +693,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Cricket Target Highlighter](screenshots/animation-cricket-target-highlighter.png)
 
-### Cricket Grid FX
+### Cricket Grid Status Effects
 
 - Gilt für: `Cricket`, `Tactics`
 - Kurz: Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
@@ -717,11 +717,11 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Stark`: Diese Stufe erhöht die sichtbare Stärke von Glow, Füllung und Kanten im gesamten Grid-FX-Paket. Offensiv- und Druckzustände wirken dadurch markanter und dominieren die Matrix stärker.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Cricket Grid FX](screenshots/animation-cricket-grid-fx.png)
+![Cricket Grid Status Effects](screenshots/animation-cricket-grid-fx.png)
 
 ## Animationen für alle Modi
 
-### Average Trend Arrow
+### AVG Trend Arrow
 
 - Gilt für: `alle Modi`
 - Kurz: Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.
@@ -741,9 +741,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Groß`: Diese Stufe macht den Trendpfeil deutlich größer und gibt ihm etwas mehr Abstand zur AVG-Zahl. Das verbessert die Erkennbarkeit besonders auf größeren Displays oder aus größerer Distanz.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Average Trend Arrow](screenshots/animation-average-trend-arrow.png)
+![AVG Trend Arrow](screenshots/animation-average-trend-arrow.png)
 
-### Turn Start Sweep
+### Active Player Sweep
 
 - Gilt für: `alle Modi`
 - Kurz: Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.
@@ -758,9 +758,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Kräftig`: Diese Variante verbreitert und verstärkt den Lichtlauf deutlich. Der aktive Kartenwechsel wird dadurch sehr plakativ markiert und ist auch in schnellen Matches kaum zu übersehen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Turn Start Sweep](screenshots/animation-turn-start-sweep.gif)
+![Active Player Sweep](screenshots/animation-turn-start-sweep.gif)
 
-### Triple/Double/Bull Hits
+### Special Hit Highlights
 
 - Gilt für: `alle Modi`
 - Kurz: Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
@@ -789,13 +789,13 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 | ![Farbstil Polar Mint](screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |
 
 - `Animationsstil`: Wählt den Burst-Stil für das frisch erkannte Trefferfeld.
-  - `Emphase`: Emphase ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand.
-  - `Shake`: Shake übersetzt den Treffer in einen kompakten Seitenschlag. Feld und Zahl zittern nur einmal kurz und fallen danach vollständig in den Ruhezustand zurück.
-  - `Pulse`: Pulse ist ein einmaliges Aufleuchten für Spieler, die einen klaren Trefferpeak ohne Seitenbewegung oder Daueranimation wollen.
-  - `Turn`: Turn gibt dem Treffer einen kurzen räumlichen Drehimpuls. Das ersetzt die bisherigen Flip-Doppelungen mit einem klaren One-Shot-Effekt.
-  - `Sheen`: Sheen legt einen einmaligen Lichtzug über das Trefferfeld und betont den Rand ohne dauerhafte Konturbewegung.
-  - `Shock Ring`: Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
-  - `Electric Arc`: Electric Arc kombiniert einen kompakten Stromstoß mit leichtem Seitenshake auf Feld, Score und Segment. Die Wirkung ist aggressiv und kurz, bleibt aber klar als einmaliger Burst.
+  - `Pop Hit`: Pop Hit ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand.
+  - `Side Shake`: Side Shake übersetzt den Treffer in einen kompakten Seitenschlag. Feld und Zahl zittern nur einmal kurz und fallen danach vollständig in den Ruhezustand zurück.
+  - `Glow Pop`: Glow Pop ist ein einmaliges Aufleuchten für Spieler, die einen klaren Trefferpeak ohne Seitenbewegung oder Daueranimation wollen.
+  - `Flip Spin`: Flip Spin gibt dem Treffer einen kurzen räumlichen Drehimpuls. Das ersetzt die bisherigen Flip-Doppelungen mit einem klaren One-Shot-Effekt.
+  - `Light Sweep`: Light Sweep legt einen einmaligen Lichtzug über das Trefferfeld und betont den Rand ohne dauerhafte Konturbewegung.
+  - `Shockwave Ring`: Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
+  - `Electric Jolt`: Electric Arc kombiniert einen kompakten Stromstoß mit leichtem Seitenshake auf Feld, Score und Segment. Die Wirkung ist aggressiv und kurz, bleibt aber klar als einmaliger Burst.
 
 **Animationsstile**
 
@@ -803,7 +803,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-### Dart Marker Emphasis
+### Dartboard Marker Highlight
 
 - Gilt für: `alle Modi`
 - Kurz: Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
@@ -819,8 +819,8 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Gelb`: Diese Variante färbt die Marker in ein kräftiges Gelb. Dadurch wirken Treffer sehr hell und aufmerksamkeitsstark, fast wie kleine Signalpunkte auf dem Board.
   - `Weiß`: Diese Palette setzt auf ein neutrales Weiß für die Markerbetonung. Der Effekt wirkt dadurch sehr klar und universell, ohne die Farbwirkung des restlichen Setups zu beeinflussen.
 - `Effekt`: Schaltet zwischen Glow, Pulse oder keiner Zusatzanimation um.
-  - `Glow`: Diese Variante verstärkt die Marker primär über einen an- und abschwellenden Glow. Der Trefferpunkt bleibt stabil, wirkt aber über den Lichtschein dauerhaft präsenter.
-  - `Pulse`: Diese Variante lässt die Marker zyklisch wachsen und wieder zurückfallen. Dadurch bekommen Treffer eine deutlichere Bewegungswirkung als beim reinen Leuchten.
+  - `Soft Glow`: Diese Variante verstärkt die Marker primär über einen an- und abschwellenden Glow. Der Trefferpunkt bleibt stabil, wirkt aber über den Lichtschein dauerhaft präsenter.
+  - `Size Pulse`: Diese Variante lässt die Marker zyklisch wachsen und wieder zurückfallen. Dadurch bekommen Treffer eine deutlichere Bewegungswirkung als beim reinen Leuchten.
   - `Kein Effekt`: Mit dieser Einstellung bleibt nur die statische Hervorhebung aus Farbe, Größe und optionaler Outline erhalten. Der Treffer wirkt klarer, aber ohne jede Zusatzbewegung.
 - `Marker-Sichtbarkeit`: Regelt die Deckkraft der Marker.
   - `65 %`: Diese Stufe reduziert die Deckkraft der betonten Marker spürbar. Treffer bleiben sichtbar hervorgehoben, wirken aber weniger flächig und dominierend.
@@ -832,9 +832,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Schwarz`: Diese Option ergänzt eine schwarze Kontur und verbessert die Trennung auf helleren oder stark leuchtenden Segmentflächen. Der Marker bekommt dadurch einen härteren, grafischeren Rand.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Dart Marker Emphasis](screenshots/animation-dart-marker-emphasis.gif)
+![Dartboard Marker Highlight](screenshots/animation-dart-marker-emphasis.gif)
 
-### Dart Marker Darts
+### Dart Marker Replacer
 
 - Gilt für: `alle Modi`
 - Kurz: Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
@@ -883,9 +883,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Cinematic`: Diese Stufe verlängert die Fluganimation merklich und macht den Anflug des Darts selbst zum kleinen Effektmoment. Dadurch wirkt das Setzen des Markers cineastischer, aber weniger direkt.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Dart Marker Darts](screenshots/animation-dart-marker-darts.png)
+![Dart Marker Replacer](screenshots/animation-dart-marker-darts.png)
 
-### Remove Darts Notification
+### Take Out Darts Alert
 
 - Gilt für: `alle Modi`
 - Kurz: Der Hinweis zum Entfernen der Darts wird als große Grafik deutlich präsenter dargestellt.
@@ -901,9 +901,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Stark`: Diese Stufe vergrößert die Grafik in der Mitte der Pulsbewegung deutlich stärker. Der `Take Out`-Hinweis bekommt dadurch einen merklich energischeren Bewegungscharakter.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Remove Darts Notification](screenshots/animation-remove-darts-notification.png)
+![Take Out Darts Alert](screenshots/animation-remove-darts-notification.png)
 
-### Single Bull Sound
+### Single Bull Hit Sound
 
 - Gilt für: `alle Modi`
 - Kurz: Bei Single Bull hörst du einen kurzen Ton; grafisch bleibt das Spiel unverändert.
@@ -923,15 +923,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `1200 ms`: Diese Option ergänzt die normale Live-Reaktion um einen 1200-ms-Fallback-Scan. Dadurch können Single-Bull-Treffer auch in schwierigeren DOM-Situationen zuverlässiger erkannt und nachträglich hörbar gemacht werden.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-### Turn Points Count
+### Turn Score Counter
 
 - Gilt für: `alle Modi`
 - Kurz: Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
 - Grafisch: Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.
 - `Zählstil`: Wählt den Zählstil der Turn-Punkte.
-  - `Fließend`: Fließender CountUp-Zählstil.
-  - `Odometer`: Odometer-Zählstil mit rollenden Ziffern.
-  - `Einzelschritte`: Deterministische Einzelschritte.
+  - `Smooth Count`: Smooth-Count-Zählstil.
+  - `Rolling Digits`: Rolling-Digits-Zählstil mit rollenden Ziffern.
+  - `Step Count`: Deterministischer Step-Count-Zählstil.
 - `Zählgeschwindigkeit`: Bestimmt die Geschwindigkeit des Hoch- oder Herunterzählens.
   - `Schnell`: Schnelle Zählgeschwindigkeit.
   - `Standard`: Ausgewogene Zählgeschwindigkeit.
@@ -942,21 +942,21 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Permanent`: Rahmen dauerhaft sichtbar, unabhängig von laufender Änderung.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Turn Points Count](screenshots/animation-turn-points-count.gif)
-![Turn Points Count Detail](screenshots/animation-turn-points-count-detail-readme.gif)
+![Turn Score Counter](screenshots/animation-turn-points-count.gif)
+![Turn Score Counter Detail](screenshots/animation-turn-points-count-detail-readme.gif)
 
-### Winner Fireworks
+### Winner Celebration Effect
 
 - Gilt für: `alle Modi`
 - Kurz: Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
 - Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.
 - `Style`: Wählt das Bewegungsmuster des Siegereffekts.
-  - `Realistic`: Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feuerwerkswirkung des Moduls.
-  - `Fireworks`: Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel.
-  - `Cannon`: Diese Einstellung bündelt den Effekt in einer dichten Kanonen-Salve aus der unteren Bildmitte. Der Ausbruch wirkt kompakt, kräftig und sehr direkt.
-  - `Victory Storm`: Diese Variante verbindet zentrale und seitliche Ausbrüche zu einem breiten Effektteppich. Dadurch entsteht der vollste und raumgreifendste Feiermoment unter den Mehrfachmustern.
-  - `Stars`: Diese Einstellung ersetzt die Standardpartikel durch Sternformen und lässt sie mit ruhigerer Bewegung durchs Bild laufen. Der Effekt wirkt dadurch dekorativer und weniger wie klassisches Konfetti.
-  - `Sides`: Diese Variante setzt auf kurze Seitenschüsse von links und rechts. Der Effekt rahmt das Bild stärker ein und wirkt dynamischer, aber weniger flächig als zentrale Bursts.
+  - `Center Side Burst`: Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feierwirkung des Moduls.
+  - `Top Fireworks`: Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel.
+  - `Center Cannon`: Diese Einstellung bündelt den Effekt in einer dichten Kanonen-Salve aus der unteren Bildmitte. Der Ausbruch wirkt kompakt, kräftig und sehr direkt.
+  - `Triple Burst`: Diese Variante verbindet zentrale und seitliche Ausbrüche zu einem breiten Effektteppich. Dadurch entsteht der vollste und raumgreifendste Feiermoment unter den Mehrfachmustern.
+  - `Star Burst`: Diese Einstellung ersetzt die Standardpartikel durch Sternformen und lässt sie mit ruhigerer Bewegung durchs Bild laufen. Der Effekt wirkt dadurch dekorativer und weniger wie klassisches Konfetti.
+  - `Side Cannons`: Diese Variante setzt auf kurze Seitenschüsse von links und rechts. Der Effekt rahmt das Bild stärker ein und wirkt dynamischer, aber weniger flächig als zentrale Bursts.
 - `Farbe`: Wählt die Farbpalette des Siegereffekts.
   - `Autodarts`: Diese Palette nutzt Blau- und Weißtöne und bleibt damit am nächsten am bestehenden Autodarts-Charakter. Der Effekt wirkt kühl, klar und relativ technisch.
   - `Rot/Weiß`: Diese Palette kombiniert Weiß mit mehreren roten Tönen. Dadurch entsteht ein klassischer, festlicher Look, der deutlich wärmer und emotionaler wirkt als die blauen Standardfarben.
@@ -981,7 +981,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - `Klick beendet Effekt`: Erlaubt das Beenden des Effekts per Klick.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Winner Fireworks](screenshots/animation-winner-fireworks.gif)
+![Winner Celebration Effect](screenshots/animation-winner-fireworks.gif)
 ![xConfig Test-Button](screenshots/xConfig-testbutton.png)
 <!-- xconfig-generated:end -->
 ## Weitere Hinweise zur Konfiguration
@@ -989,4 +989,4 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - Alle Einstellungen werden lokal gespeichert.
 - Theme-Hintergründe werden pro Theme als Data-URL abgelegt.
 - Aktivierungen, Theme-Bilder und Feineinstellungen bleiben nach Reload erhalten.
-- `Winner Fireworks` besitzt wieder einen integrierten Test-Button in AD xConfig.
+- `Winner Celebration Effect` besitzt wieder einen integrierten Test-Button in AD xConfig.

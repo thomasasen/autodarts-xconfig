@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import * as variantRules from "../../src/domain/variant-rules.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
-import { computeShouldHighlight } from "../../src/features/checkout-score-pulse/logic.js";
+import { computeShouldHighlight } from "../../src/features/checkout-score-highlight/logic.js";
 import { resolveAuthoritativeCheckoutRoute } from "../../src/features/x01-checkout-route.js";
 import { computeZoomIntent, markManualZoomPause } from "../../src/features/tv-board-zoom/logic.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
@@ -121,7 +121,7 @@ test("resolveAuthoritativeCheckoutRoute keeps the first visible setup segment wh
   assert.equal(resolved.visibleSegmentsUsed, 1);
 });
 
-test("checkout-score-pulse score logic waits for a direct finish and respects the active out mode", () => {
+test("checkout-score-highlight score logic waits for a direct finish and respects the active out mode", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "";
@@ -153,7 +153,7 @@ test("checkout-score-pulse score logic waits for a direct finish and respects th
   assert.equal(masterShouldHighlight, true);
 });
 
-test("checkout-score-pulse interprets explicit suggestion finishes per out mode", () => {
+test("checkout-score-highlight interprets explicit suggestion finishes per out mode", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "T20";
@@ -184,7 +184,7 @@ test("checkout-score-pulse interprets explicit suggestion finishes per out mode"
   assert.equal(masterSuggestion, true);
 });
 
-test("checkout-score-pulse suggestion-first falls back to out-mode-aware score math", () => {
+test("checkout-score-highlight suggestion-first falls back to out-mode-aware score math", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "";
@@ -204,7 +204,7 @@ test("checkout-score-pulse suggestion-first falls back to out-mode-aware score m
   assert.equal(shouldHighlight, true);
 });
 
-test("checkout-score-pulse waits for the finish dart instead of pulsing on a multi-step route", () => {
+test("checkout-score-highlight waits for the finish dart instead of pulsing on a multi-step route", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "T20";
@@ -228,7 +228,7 @@ test("checkout-score-pulse waits for the finish dart instead of pulsing on a mul
   assert.equal(shouldHighlight, false);
 });
 
-test("checkout-score-pulse ignores stale explicit suggestions that do not fit the active score", () => {
+test("checkout-score-highlight ignores stale explicit suggestions that do not fit the active score", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "T20 D20";
@@ -248,7 +248,7 @@ test("checkout-score-pulse ignores stale explicit suggestions that do not fit th
   assert.equal(shouldHighlight, false);
 });
 
-test("checkout-score-pulse suggestion-first falls back to score when a stale route hides an immediate finish", () => {
+test("checkout-score-highlight suggestion-first falls back to score when a stale route hides an immediate finish", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "T20";
@@ -285,7 +285,7 @@ test("checkout-score-pulse suggestion-first falls back to score when a stale rou
   assert.equal(suggestionFirst, true);
 });
 
-test("checkout-score-pulse uses reliable remaining darts when validating an immediate finish suggestion", () => {
+test("checkout-score-highlight uses reliable remaining darts when validating an immediate finish suggestion", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "X01";
   documentRef.suggestionElement.textContent = "D10";
@@ -323,7 +323,7 @@ test("checkout-score-pulse uses reliable remaining darts when validating an imme
   assert.equal(allowedWithTwoDarts, true);
 });
 
-test("checkout-score-pulse does not trigger when the variant context is unknown", () => {
+test("checkout-score-highlight does not trigger when the variant context is unknown", () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "";
   documentRef.suggestionElement.textContent = "";

@@ -6,11 +6,11 @@ import * as variantRules from "../../src/domain/variant-rules.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
-import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
-import { ROOT_CLASS } from "../../src/features/cricket-grid-fx/style.js";
-import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
-import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
-import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-highlighter/style.js";
+import { initializeCricketGridStatusEffects } from "../../src/features/cricket-grid-status-effects/index.js";
+import { ROOT_CLASS } from "../../src/features/cricket-grid-status-effects/style.js";
+import { initializeCricketTargetHighlighter } from "../../src/features/cricket-target-highlighter/index.js";
+import { buildCricketRenderState } from "../../src/features/cricket-target-highlighter/logic.js";
+import { OVERLAY_ID as CRICKET_OVERLAY_ID } from "../../src/features/cricket-target-highlighter/style.js";
 import { acquireSharedCricketRuntime } from "../../src/features/cricket-surface/shared-runtime.js";
 import {
   canDelayMissingMatchBoardGap,
@@ -218,7 +218,7 @@ function createImmediateScheduler() {
 function createFeatureConfig() {
   return {
     getFeatureConfig(featureKey) {
-      if (featureKey === "cricketHighlighter") {
+      if (featureKey === "cricketTargetHighlighter") {
         return {
           showOpenTargets: true,
           showDeadTargets: true,
@@ -438,7 +438,7 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
   const helperScheduler = createImmediateScheduler();
   const config = createFeatureConfig();
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards,
@@ -450,7 +450,7 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
     degradedHostGraceMs: 0,
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards,
@@ -476,8 +476,8 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
       },
     ];
 
-    const highlighterObserver = observers.get("cricket-highlighter:dom-observer");
-    const gridFxObserver = observers.get("cricket-grid-fx:dom-observer");
+    const highlighterObserver = observers.get("cricket-target-highlighter:dom-observer");
+    const gridFxObserver = observers.get("cricket-grid-status-effects:dom-observer");
     assert.ok(highlighterObserver);
     assert.ok(gridFxObserver);
 
@@ -513,7 +513,7 @@ test("cricket highlighter and grid fx recheck pending degraded hosts after grace
   const helperScheduler = createImmediateScheduler();
   const config = createFeatureConfig();
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards,
@@ -525,7 +525,7 @@ test("cricket highlighter and grid fx recheck pending degraded hosts after grace
     degradedHostGraceMs: 300,
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards,
@@ -578,7 +578,7 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
   const helperScheduler = createImmediateScheduler();
   const config = createFeatureConfig();
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards,
@@ -590,7 +590,7 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
     degradedHostGraceMs: 300,
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards,
@@ -619,8 +619,8 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
       },
     ];
 
-    observers.get("cricket-highlighter:dom-observer")?.callback(mutation);
-    observers.get("cricket-grid-fx:dom-observer")?.callback(mutation);
+    observers.get("cricket-target-highlighter:dom-observer")?.callback(mutation);
+    observers.get("cricket-grid-status-effects:dom-observer")?.callback(mutation);
 
     assert.equal(countRecoveryNavigations(windowRef), 0);
 
@@ -843,7 +843,7 @@ test("cricket highlighter and grid fx audit the surface after throw transitions 
   const helperScheduler = createImmediateScheduler();
   const config = createFeatureConfig();
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards,
@@ -855,7 +855,7 @@ test("cricket highlighter and grid fx audit the surface after throw transitions 
     degradedHostGraceMs: 300,
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards,
@@ -914,7 +914,7 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
   const helperScheduler = createImmediateScheduler();
   const config = createFeatureConfig();
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards,
@@ -927,7 +927,7 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
     degradedHostRecoveryRearmMs: 1_000,
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards,
@@ -957,8 +957,8 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
         removedNodes: [degradedFixture.host],
       },
     ];
-    observers.get("cricket-highlighter:dom-observer")?.callback(lifecycleMutation);
-    observers.get("cricket-grid-fx:dom-observer")?.callback(lifecycleMutation);
+    observers.get("cricket-target-highlighter:dom-observer")?.callback(lifecycleMutation);
+    observers.get("cricket-grid-status-effects:dom-observer")?.callback(lifecycleMutation);
 
     timerHarness.advance(999);
     assert.notEqual(
@@ -982,8 +982,8 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
         removedNodes: [healthyFixture.host],
       },
     ];
-    observers.get("cricket-highlighter:dom-observer")?.callback(degradeAgainMutation);
-    observers.get("cricket-grid-fx:dom-observer")?.callback(degradeAgainMutation);
+    observers.get("cricket-target-highlighter:dom-observer")?.callback(degradeAgainMutation);
+    observers.get("cricket-grid-status-effects:dom-observer")?.callback(degradeAgainMutation);
 
     assert.equal(countRecoveryNavigations(windowRef), 2);
   } finally {

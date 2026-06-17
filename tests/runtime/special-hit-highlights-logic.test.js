@@ -1,0 +1,976 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  classifyThrowText,
+  collectThrowRows,
+  clearHitDecoration,
+  updateHitDecorations,
+} from "../../src/features/special-hit-highlights/logic.js";
+import {
+  HIT_BASE_CLASS,
+  HIT_ANIMATION_TRIGGER_CLASS,
+  HIT_IDLE_LOOP_CLASS,
+  HIT_KIND_CLASS,
+  HIT_SCORE_CLASS,
+  HIT_SEGMENT_CLASS,
+  HIT_THEME_CLASS,
+} from "../../src/features/special-hit-highlights/style.js";
+import { FakeDocument, createFakeWindow, useHtmlCollectionChildren } from "./fake-dom.js";
+
+function createAnimeStub() {
+  const calls = [];
+  const removes = [];
+
+  function anime(params = {}) {
+    calls.push({ type: "single", params });
+    return {
+      pause() {
+        calls.push({ type: "single-pause", params });
+      },
+    };
+  }
+
+  anime.remove = (targets) => {
+    removes.push([].concat(targets || []).filter(Boolean));
+  };
+
+  anime.timeline = (options = {}) => {
+    const steps = [];
+    const instance = {
+      add(step, offset = 0) {
+        steps.push({ step, offset });
+        return instance;
+      },
+      play() {
+        calls.push({ type: "timeline-play", options, steps: steps.slice() });
+        return instance;
+      },
+      pause() {
+        calls.push({ type: "timeline-pause", options, steps: steps.slice() });
+      },
+    };
+    calls.push({ type: "timeline-create", options });
+    return instance;
+  };
+
+  anime._calls = calls;
+  anime._removes = removes;
+  return anime;
+}
+
+function appendThrowRow(documentRef, scoreText, segmentText) {
+  const row = documentRef.createElement("div");
+  row.classList.add("ad-ext-turn-throw");
+
+  const textNode = documentRef.createElement("p");
+  textNode.classList.add("chakra-text");
+  const wrapper = documentRef.createElement("div");
+  const scoreNode = documentRef.createElement("div");
+  const segmentNode = documentRef.createElement("div");
+
+  scoreNode.textContent = String(scoreText || "");
+  segmentNode.textContent = String(segmentText || "");
+  wrapper.appendChild(scoreNode);
+  wrapper.appendChild(segmentNode);
+  textNode.appendChild(wrapper);
+  row.appendChild(textNode);
+  documentRef.turnContainer.appendChild(row);
+
+  return {
+    row,
+    textNode,
+    scoreNode,
+    segmentNode,
+  };
+}
+
+function appendManualCorrectionButtons(documentRef, options = {}) {
+  const controls = documentRef.createElement("div");
+  const cancelButton = documentRef.createElement("button");
+  const okButton = documentRef.createElement("button");
+  const parentNode = options.parentNode || documentRef.main;
+
+  cancelButton.textContent = "Cancel";
+  okButton.textContent = "Ok";
+  cancelButton.disabled = options.disabled === true;
+  okButton.disabled = options.disabled === true;
+
+  controls.appendChild(cancelButton);
+  controls.appendChild(okButton);
+  parentNode.appendChild(controls);
+
+  return {
+    controls,
+    cancelButton,
+    okButton,
+  };
+}
+
+function wait(ms = 0) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+test("classifyThrowText resolves mixed throw text by containment priority", () => {
+  const triple = classifyThrowText("60 T20");
+  assert.equal(triple?.kind, "triple");
+  assert.equal(triple?.segment, "T20");
+
+  const double = classifyThrowText("36 D18");
+  assert.equal(double?.kind, "double");
+  assert.equal(double?.segment, "D18");
+
+  const outerBull = classifyThrowText("25 S25");
+  assert.equal(outerBull?.kind, "bullOuter");
+  assert.equal(outerBull?.segment, "S25");
+
+  const innerBull = classifyThrowText("50 BULL");
+  assert.equal(innerBull?.kind, "bullInner");
+  assert.equal(innerBull?.segment, "BULL");
+
+  assert.equal(classifyThrowText("alpha beta gamma"), null);
+});
+
+test("collectThrowRows scopes to #ad-ext-turn and prefers direct throw rows", () => {
+  const documentRef = new FakeDocument();
+  const directRow = documentRef.throwRow;
+
+  const nestedWrapper = documentRef.createElement("div");
+  const nestedRow = documentRef.createElement("div");
+  nestedRow.classList.add("ad-ext-turn-throw");
+  nestedRow.textContent = "T20";
+  nestedWrapper.appendChild(nestedRow);
+  documentRef.turnContainer.appendChild(nestedWrapper);
+
+  const externalRow = documentRef.createElement("div");
+  externalRow.classList.add("ad-ext-turn-throw");
+  externalRow.textContent = "D20";
+  documentRef.main.appendChild(externalRow);
+
+  const rows = collectThrowRows(documentRef);
+  assert.deepEqual(rows, [directRow]);
+});
+
+test("updateHitDecorations decorates rows, differentiates bulls, and assigns text roles", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+
+  const triple = appendThrowRow(documentRef, "60", "T20");
+  const double = appendThrowRow(documentRef, "36", "D18");
+  const outerBull = appendThrowRow(documentRef, "25", "S25");
+  const innerBull = appendThrowRow(documentRef, "50", "BULL");
+
+  const stats = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(triple.row.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(double.row.classList.contains(HIT_KIND_CLASS.double), true);
+  assert.equal(outerBull.row.classList.contains(HIT_KIND_CLASS.bullOuter), true);
+  assert.equal(innerBull.row.classList.contains(HIT_KIND_CLASS.bullInner), true);
+  assert.equal(triple.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(double.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(outerBull.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(innerBull.row.classList.contains(HIT_THEME_CLASS["champagne-night"]), true);
+  assert.equal(triple.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(triple.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
+  assert.equal(innerBull.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(innerBull.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
+  assert.equal(stats.rowCount, 5);
+  assert.equal(stats.decoratedCount, 4);
+  assert.equal(stats.burstCount, 4);
+  assert.equal(stats.idleLoopCount, 0);
+  assert.equal(stats.kindCounts.triple, 1);
+  assert.equal(stats.kindCounts.double, 1);
+  assert.equal(stats.kindCounts.bullOuter, 1);
+  assert.equal(stats.kindCounts.bullInner, 1);
+  assert.equal(Array.isArray(stats.rows), true);
+  assert.equal(stats.rows.some((entry) => entry.scoreRole && entry.segmentRole), true);
+});
+
+test("updateHitDecorations still finds score and segment roles when row descendants expose HTMLCollection-style children", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const roleStateByRow = new Map();
+
+  const wrapped = appendThrowRow(documentRef, "60", "T20");
+  useHtmlCollectionChildren(wrapped.row, { deep: true });
+
+  const stats = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(stats.decoratedCount >= 1, true);
+  assert.equal(wrapped.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(wrapped.segmentNode.classList.contains(HIT_SEGMENT_CLASS), true);
+});
+
+test("updateHitDecorations applies configured color theme and defaults invalid values to kind-signal", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const roleStateByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "emphasis",
+    },
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["ember-rush"]), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["kind-signal"]), false);
+  assert.equal(documentRef.throwRow.dataset.adExtHitTheme, "ember-rush");
+  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-theme"), "ember-rush");
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "invalid-theme",
+      animationStyle: "emphasis",
+    },
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["kind-signal"]), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_THEME_CLASS["ember-rush"]), false);
+  assert.equal(documentRef.throwRow.dataset.adExtHitTheme, "kind-signal");
+  assert.equal(documentRef.throwRow.getAttribute("data-ad-ext-hit-theme"), "kind-signal");
+});
+
+test("updateHitDecorations bursts only the newly changed slot and keeps prior rows stable", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  const row2 = appendThrowRow(documentRef, "", "");
+  const row3 = appendThrowRow(documentRef, "", "");
+
+  const first = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(first.burstCount, 1);
+  assert.equal(animeRef._calls.filter((entry) => entry.type === "timeline-play").length, 1);
+
+  row2.scoreNode.textContent = "22";
+  row2.segmentNode.textContent = "D11";
+
+  const second = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(second.burstCount, 1);
+  assert.equal(second.rows[0].burst, false);
+  assert.equal(second.rows[1].burst, true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(row2.row.classList.contains(HIT_KIND_CLASS.double), true);
+  assert.equal(animeRef._calls.filter((entry) => entry.type === "timeline-play").length, 2);
+
+  row3.scoreNode.textContent = "18";
+  row3.segmentNode.textContent = "S18";
+  const third = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(third.burstCount, 0);
+  assert.equal(third.rows[0].burst, false);
+  assert.equal(third.rows[1].burst, false);
+  assert.equal(animeRef._calls.filter((entry) => entry.type === "timeline-play").length, 2);
+});
+
+test("same-slot changes re-burst only that slot and a cleared slot can burst again", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+
+  const first = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+  assert.equal(first.burstCount, 0);
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  const second = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+  assert.equal(second.burstCount, 1);
+
+  documentRef.throwTextElement.textContent = "40 D20";
+  documentRef.throwRow.textContent = "40 D20";
+  const third = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+  assert.equal(third.burstCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.double), true);
+
+  documentRef.throwTextElement.textContent = "18 S18";
+  documentRef.throwRow.textContent = "18 S18";
+  const cleared = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+  assert.equal(cleared.removedCount, 1);
+  assert.equal(burstKeyBySlot.has(0), false);
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  const fourth = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+  assert.equal(fourth.burstCount, 1);
+});
+
+test("manual correction ignores unrelated CANCEL/OK controls outside the turn surface", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const roleStateByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  documentRef.throwRow.classList.add("correction-bg");
+  appendManualCorrectionButtons(documentRef);
+
+  const pending = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "emphasis",
+    },
+  });
+
+  assert.equal(pending.staleCorrectionClearedCount, 1);
+  assert.equal(pending.transientCorrectionCount, 0);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+});
+
+test("manual correction keeps pending correction markers untouched inside the turn surface", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const roleStateByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  documentRef.throwRow.classList.add("correction-bg");
+  const correctionButtons = appendManualCorrectionButtons(documentRef, {
+    parentNode: documentRef.turnContainer,
+  });
+
+  const pending = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "emphasis",
+    },
+  });
+
+  assert.equal(pending.transientCorrectionCount, 1);
+  assert.equal(pending.staleCorrectionClearedCount, 0);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
+
+  correctionButtons.cancelButton.disabled = true;
+  correctionButtons.okButton.disabled = true;
+
+  const reconciled = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    roleStateByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "emphasis",
+    },
+  });
+
+  assert.equal(reconciled.staleCorrectionClearedCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+});
+
+test("same-slot manual correction reclassifies a stale highlighted row from triple to double after confirmation", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+  const correctionButtons = appendManualCorrectionButtons(documentRef, {
+    disabled: true,
+    parentNode: documentRef.turnContainer,
+  });
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+
+  correctionButtons.cancelButton.disabled = false;
+  correctionButtons.okButton.disabled = false;
+  documentRef.throwTextElement.textContent = "40 D20";
+  documentRef.throwRow.textContent = "40 D20";
+  documentRef.throwRow.classList.add("correction-bg");
+
+  const pending = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+
+  assert.equal(pending.transientCorrectionCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.double), false);
+
+  correctionButtons.cancelButton.disabled = true;
+  correctionButtons.okButton.disabled = true;
+
+  const reconciled = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ice-circuit",
+      animationStyle: "turn",
+    },
+  });
+
+  assert.equal(reconciled.staleCorrectionClearedCount, 1);
+  assert.equal(reconciled.burstCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.double), true);
+});
+
+test("completed correction to a non-special single removes stale correction markers and prior hit decoration", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const slotStateByIndex = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+  appendManualCorrectionButtons(documentRef, { disabled: true });
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "emphasis",
+    },
+  });
+
+  documentRef.throwTextElement.textContent = "20 S20";
+  documentRef.throwRow.textContent = "20 S20";
+  documentRef.throwRow.classList.add("correction-bg");
+
+  const reconciled = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    slotStateByIndex,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "ember-rush",
+      animationStyle: "emphasis",
+    },
+  });
+
+  assert.equal(reconciled.staleCorrectionClearedCount, 1);
+  assert.equal(documentRef.throwRow.classList.contains("correction-bg"), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_KIND_CLASS.triple), false);
+  assert.equal(burstKeyBySlot.has(0), false);
+});
+
+test("one-shot presets keep prior rows stable without idle loops", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+  const row2 = appendThrowRow(documentRef, "", "");
+
+  const first = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(first.burstCount, 1);
+  assert.equal(first.idleLoopCount, 0);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+
+  row2.scoreNode.textContent = "22";
+  row2.segmentNode.textContent = "D11";
+  const second = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "champagne-night",
+      animationStyle: "emphasis",
+    },
+    debugRows: true,
+  });
+
+  assert.equal(second.burstCount, 1);
+  assert.equal(second.idleLoopCount, 0);
+  assert.equal(second.rows[0].burst, false);
+  assert.equal(second.rows[1].burst, true);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+  assert.equal(row2.row.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+});
+
+test("turn timeline and legacy flip alias keep the promised 360 degree spin", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "flip-edge",
+    },
+  });
+
+  const flipPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const flipRowStep = flipPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  assert.equal(
+    flipRowStep?.step?.keyframes?.some((frame) => frame.rotateY === 360),
+    true
+  );
+
+  documentRef.throwTextElement.textContent = "40 D20";
+  documentRef.throwRow.textContent = "40 D20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "crimson-steel",
+      animationStyle: "turn",
+    },
+  });
+
+  const turnPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const turnRowStep = turnPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  assert.equal(
+    turnRowStep?.step?.keyframes?.some((frame) => frame.rotateY === 360),
+    true
+  );
+});
+
+test("electric-jolt timeline keeps subtle frame jitter and moderated score spacing", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-jolt",
+    },
+  });
+
+  const electricPlay = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const electricRowStep = electricPlay?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+  assert.equal(
+    electricRowStep?.step?.keyframes?.some((frame) => Math.abs(Number(frame.translateX) || 0) >= 1),
+    true
+  );
+  assert.equal(
+    electricRowStep?.step?.keyframes?.some((frame) =>
+      Object.hasOwn(frame, "skewX")
+    ),
+    false
+  );
+
+  const scoreStep = electricPlay?.steps.find(
+    (entry) => Array.isArray(entry.step?.keyframes) && entry.step?.keyframes.some((frame) => frame.letterSpacing)
+  );
+  assert.equal(
+    scoreStep?.step?.keyframes?.some((frame) => frame.letterSpacing === "0.07em"),
+    true
+  );
+});
+
+test("burst trigger class is removed automatically after the replay window", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const nativeSetTimeout = setTimeout;
+  windowRef.setTimeout = (callback, _ms, ...args) => nativeSetTimeout(callback, 0, ...args);
+  windowRef.clearTimeout = (handle) => clearTimeout(handle);
+
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const triggerResetTimersByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    triggerResetTimersByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-jolt",
+    },
+    windowRef,
+  });
+
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
+  await wait(0);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), true);
+  await wait(10);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
+  assert.equal(triggerResetTimersByRow.has(documentRef.throwRow), false);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_BASE_CLASS), true);
+});
+
+test("clearHitDecoration cancels a pending burst replay before the trigger class is restored", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const replayTimersByRow = new Map();
+  const triggerResetTimersByRow = new Map();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    replayTimersByRow,
+    triggerResetTimersByRow,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-jolt",
+    },
+    windowRef,
+  });
+
+  assert.equal(replayTimersByRow.has(documentRef.throwRow), true);
+
+  clearHitDecoration(documentRef.throwRow, signatureByRow, {
+    activeAnimeByRow,
+    roleStateByRow,
+    replayTimersByRow,
+    triggerResetTimersByRow,
+    windowRef,
+  });
+
+  await wait(0);
+  assert.equal(documentRef.throwRow.classList.contains(HIT_ANIMATION_TRIGGER_CLASS), false);
+  assert.equal(replayTimersByRow.has(documentRef.throwRow), false);
+});
+
+test("clearHitDecoration removes row classes, text roles, and active anime state", () => {
+  const documentRef = new FakeDocument();
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  const decorated = appendThrowRow(documentRef, "50", "BULL");
+  const stats = updateHitDecorations({
+    documentRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "shake",
+    },
+  });
+
+  assert.equal(stats.burstCount >= 1, true);
+  assert.equal(decorated.row.classList.contains(HIT_BASE_CLASS), true);
+  assert.equal(decorated.scoreNode.classList.contains(HIT_SCORE_CLASS), true);
+  assert.equal(activeAnimeByRow.has(decorated.row), true);
+  assert.equal(Boolean(decorated.row.dataset.adExtHitSignature), true);
+  assert.equal(Boolean(decorated.row.dataset.adExtHitBurstKey), true);
+
+  const wasCleared = clearHitDecoration(decorated.row, signatureByRow, {
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+  });
+
+  assert.equal(wasCleared, true);
+  assert.equal(decorated.row.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(decorated.row.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+  assert.equal(decorated.scoreNode.classList.contains(HIT_SCORE_CLASS), false);
+  assert.equal(decorated.segmentNode.classList.contains(HIT_SEGMENT_CLASS), false);
+  assert.equal(activeAnimeByRow.has(decorated.row), false);
+  assert.equal(roleStateByRow.has(decorated.row), false);
+  assert.equal(signatureByRow.has(decorated.row), false);
+  assert.equal(decorated.row.dataset.adExtHitSignature, undefined);
+  assert.equal(decorated.row.dataset.adExtHitBurstKey, undefined);
+  assert.equal(decorated.row.getAttribute("data-ad-ext-hit-signature"), null);
+  assert.equal(decorated.row.getAttribute("data-ad-ext-hit-burst-key"), null);
+  assert.equal(animeRef._calls.some((entry) => entry.type === "timeline-pause"), true);
+  assert.equal(animeRef._removes.length >= 1, true);
+});

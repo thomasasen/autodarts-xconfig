@@ -7,7 +7,7 @@ import {
   createTurnSurfaceObserveOptions,
   findTurnContainer,
   getTurnSurfaceSnapshot,
-  readTurnPointsToken,
+  readTurnScoreToken,
 } from "../../src/features/shared/turn-surface-adapter.js";
 import { FakeDocument } from "./fake-dom.js";
 
@@ -74,9 +74,9 @@ test("collectTurnThrowRows prefers direct rows inside #ad-ext-turn", () => {
   assert.deepEqual(collectTurnThrowRows(documentRef), [directRow]);
 });
 
-test("readTurnPointsToken and collectTurnThrowTextNodes use scoped turn-surface fallbacks safely", () => {
+test("readTurnScoreToken and collectTurnThrowTextNodes use scoped turn-surface fallbacks safely", () => {
   const documentRef = new FakeDocument();
-  documentRef.turnPointsElement.textContent = "  140  ";
+  documentRef.turnScoreElement.textContent = "  140  ";
 
   const extraRow = appendThrowRow(documentRef, "S25");
   documentRef.turnContainer.appendChild(extraRow.row);
@@ -87,7 +87,7 @@ test("readTurnPointsToken and collectTurnThrowTextNodes use scoped turn-surface 
     ".ad-ext-turn-throw",
   ]);
 
-  assert.equal(readTurnPointsToken(documentRef), "140");
+  assert.equal(readTurnScoreToken(documentRef), "140");
   assert.ok(nodes.includes(documentRef.throwTextElement));
   assert.ok(nodes.includes(extraRow.textNode));
   assert.equal(nodes.filter((node) => node === documentRef.throwTextElement).length, 1);
@@ -95,23 +95,23 @@ test("readTurnPointsToken and collectTurnThrowTextNodes use scoped turn-surface 
 
 test("getTurnSurfaceSnapshot keeps row source, rows and turn points token aligned", () => {
   const documentRef = new FakeDocument();
-  documentRef.turnPointsElement.textContent = "  140  ";
+  documentRef.turnScoreElement.textContent = "  140  ";
 
   const snapshotWithContainer = getTurnSurfaceSnapshot(documentRef);
   assert.equal(snapshotWithContainer.turnContainer, documentRef.turnContainer);
   assert.deepEqual(snapshotWithContainer.throwRows, [documentRef.throwRow]);
-  assert.equal(snapshotWithContainer.turnPointsToken, "140");
+  assert.equal(snapshotWithContainer.turnScoreToken, "140");
   assert.equal(snapshotWithContainer.rowSource, "turn-container");
 
   documentRef.turnContainer.remove();
   const fallbackRow = appendThrowRow(documentRef, "T20");
   documentRef.main.appendChild(fallbackRow.row);
-  documentRef.turnPointsElement.textContent = "  100  ";
+  documentRef.turnScoreElement.textContent = "  100  ";
 
   const fallbackSnapshot = getTurnSurfaceSnapshot(documentRef);
   assert.equal(fallbackSnapshot.turnContainer, null);
   assert.deepEqual(fallbackSnapshot.throwRows, [fallbackRow.row]);
-  assert.equal(fallbackSnapshot.turnPointsToken, "100");
+  assert.equal(fallbackSnapshot.turnScoreToken, "100");
   assert.equal(fallbackSnapshot.rowSource, "document-fallback");
 });
 
@@ -120,8 +120,8 @@ test("getTurnSurfaceSnapshot keeps the X01 base surface stable before any throw 
   documentRef.turnContainer.replaceChildren();
 
   const pointsFrame = documentRef.createElement("div");
-  documentRef.turnPointsElement.textContent = "  0  ";
-  pointsFrame.appendChild(documentRef.turnPointsElement);
+  documentRef.turnScoreElement.textContent = "  0  ";
+  pointsFrame.appendChild(documentRef.turnScoreElement);
   documentRef.turnContainer.appendChild(pointsFrame);
   documentRef.turnContainer.appendChild(appendTurnScoreCard(documentRef));
   documentRef.turnContainer.appendChild(appendTurnScoreCard(documentRef));
@@ -131,10 +131,10 @@ test("getTurnSurfaceSnapshot keeps the X01 base surface stable before any throw 
 
   assert.equal(findTurnContainer(documentRef), documentRef.turnContainer);
   assert.deepEqual(collectTurnThrowRows(documentRef), []);
-  assert.equal(readTurnPointsToken(documentRef), "0");
+  assert.equal(readTurnScoreToken(documentRef), "0");
   assert.equal(snapshot.turnContainer, documentRef.turnContainer);
   assert.deepEqual(snapshot.throwRows, []);
-  assert.equal(snapshot.turnPointsToken, "0");
+  assert.equal(snapshot.turnScoreToken, "0");
   assert.equal(snapshot.rowSource, "turn-container");
 });
 
@@ -143,8 +143,8 @@ test("getTurnSurfaceSnapshot keeps a live X01 partial turn aligned with direct t
   documentRef.turnContainer.replaceChildren();
 
   const pointsFrame = documentRef.createElement("div");
-  documentRef.turnPointsElement.textContent = "  79  ";
-  pointsFrame.appendChild(documentRef.turnPointsElement);
+  documentRef.turnScoreElement.textContent = "  79  ";
+  pointsFrame.appendChild(documentRef.turnScoreElement);
 
   const firstThrow = appendStructuredThrowRow(documentRef, "19", "S19");
   const secondThrow = appendStructuredThrowRow(documentRef, "60", "T20");
@@ -163,9 +163,9 @@ test("getTurnSurfaceSnapshot keeps a live X01 partial turn aligned with direct t
   ]);
 
   assert.deepEqual(collectTurnThrowRows(documentRef), [firstThrow.row, secondThrow.row]);
-  assert.equal(readTurnPointsToken(documentRef), "79");
+  assert.equal(readTurnScoreToken(documentRef), "79");
   assert.deepEqual(snapshot.throwRows, [firstThrow.row, secondThrow.row]);
-  assert.equal(snapshot.turnPointsToken, "79");
+  assert.equal(snapshot.turnScoreToken, "79");
   assert.equal(snapshot.rowSource, "turn-container");
   assert.ok(nodes.includes(firstThrow.textNode));
   assert.ok(nodes.includes(secondThrow.textNode));
@@ -177,8 +177,8 @@ test("getTurnSurfaceSnapshot keeps scoreless darts-zoom rows aligned when enhanc
   documentRef.turnContainer.replaceChildren();
 
   const pointsFrame = documentRef.createElement("div");
-  documentRef.turnPointsElement.textContent = "  36  ";
-  pointsFrame.appendChild(documentRef.turnPointsElement);
+  documentRef.turnScoreElement.textContent = "  36  ";
+  pointsFrame.appendChild(documentRef.turnScoreElement);
 
   const firstThrow = appendStructuredThrowRow(documentRef, "", "S16");
   const secondThrow = appendStructuredThrowRow(documentRef, "", "S20");
@@ -195,9 +195,9 @@ test("getTurnSurfaceSnapshot keeps scoreless darts-zoom rows aligned when enhanc
   ]);
 
   assert.deepEqual(collectTurnThrowRows(documentRef), [firstThrow.row, secondThrow.row]);
-  assert.equal(readTurnPointsToken(documentRef), "36");
+  assert.equal(readTurnScoreToken(documentRef), "36");
   assert.deepEqual(snapshot.throwRows, [firstThrow.row, secondThrow.row]);
-  assert.equal(snapshot.turnPointsToken, "36");
+  assert.equal(snapshot.turnScoreToken, "36");
   assert.equal(snapshot.rowSource, "turn-container");
   assert.ok(nodes.includes(firstThrow.textNode));
   assert.ok(nodes.includes(secondThrow.textNode));
@@ -208,8 +208,8 @@ test("getTurnSurfaceSnapshot keeps bottom-left darts-zoom rows aligned with thre
   documentRef.turnContainer.replaceChildren();
 
   const pointsFrame = documentRef.createElement("div");
-  documentRef.turnPointsElement.textContent = "  26  ";
-  pointsFrame.appendChild(documentRef.turnPointsElement);
+  documentRef.turnScoreElement.textContent = "  26  ";
+  pointsFrame.appendChild(documentRef.turnScoreElement);
 
   const firstThrow = appendStructuredThrowRow(documentRef, "", "S5");
   const secondThrow = appendStructuredThrowRow(documentRef, "", "S19");
@@ -232,9 +232,9 @@ test("getTurnSurfaceSnapshot keeps bottom-left darts-zoom rows aligned with thre
     secondThrow.row,
     thirdThrow.row,
   ]);
-  assert.equal(readTurnPointsToken(documentRef), "26");
+  assert.equal(readTurnScoreToken(documentRef), "26");
   assert.deepEqual(snapshot.throwRows, [firstThrow.row, secondThrow.row, thirdThrow.row]);
-  assert.equal(snapshot.turnPointsToken, "26");
+  assert.equal(snapshot.turnScoreToken, "26");
   assert.equal(snapshot.rowSource, "turn-container");
   assert.ok(nodes.includes(firstThrow.textNode));
   assert.ok(nodes.includes(secondThrow.textNode));

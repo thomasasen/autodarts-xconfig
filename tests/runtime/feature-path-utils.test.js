@@ -9,7 +9,7 @@ import {
 
 test("feature path utils preserve nested-path trimming and lookup semantics", () => {
   assert.deepEqual(splitFeaturePath(" themes.x01 "), ["themes", "x01"]);
-  assert.deepEqual(splitFeaturePath(" checkoutScorePulse "), ["checkoutScorePulse"]);
+  assert.deepEqual(splitFeaturePath(" checkoutScoreHighlight "), ["checkoutScoreHighlight"]);
   assert.deepEqual(splitFeaturePath(" . themes . x01 . "), ["themes", "x01"]);
 
   const config = {

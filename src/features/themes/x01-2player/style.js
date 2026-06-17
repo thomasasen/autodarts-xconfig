@@ -36,7 +36,7 @@ const PROGRESS_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="progress"]`;
 const SCORE_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="score"]`;
 const TABLE_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="table"]`;
 const STACK_HEADER_META_SELECTOR = `.css-1igwmid:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}])`;
-const LEGACY_PROGRESS_STACK_SELECTOR = `.chakra-stack[data-ad-ext-x01-score-progress-stack="true"]:not(${STACK_SELECTOR})`;
+const LEGACY_PROGRESS_STACK_SELECTOR = `.chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]:not(${STACK_SELECTOR})`;
 const IDENTITY_MEDIA_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.identityMedia}"]`;
 const FLAG_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.flag}"]`;
 const ROUND_BADGE_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"]`;
@@ -805,9 +805,9 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   color:var(--ad-ext-theme-score-active-color) !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > [data-ad-ext-x01-score-progress="true"]{
-  --ad-ext-x01-score-progress-margin-top-active:var(--ad-ext-x01-2player-progress-gap) !important;
-  --ad-ext-x01-score-progress-margin-top-inactive:var(--ad-ext-x01-2player-progress-gap) !important;
+#ad-ext-player-display .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELECTOR} > [data-ad-ext-x01-remaining-score-bar="true"]{
+  --ad-ext-x01-remaining-score-bar-margin-top-active:var(--ad-ext-x01-2player-progress-gap) !important;
+  --ad-ext-x01-remaining-score-bar-margin-top-inactive:var(--ad-ext-x01-2player-progress-gap) !important;
   grid-column:1 / -1 !important;
   grid-row:4 !important;
   margin-top:var(--ad-ext-x01-2player-progress-gap) !important;
@@ -1296,33 +1296,33 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   z-index:1 !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="schmal"]{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-remaining-score-bar-size="schmal"]{
   --ad-ext-x01-2player-progress-min-block-size:calc(clamp(.3rem, .62vw, .46rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="standard"]{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-remaining-score-bar-size="standard"]{
   --ad-ext-x01-2player-progress-min-block-size:calc(clamp(.72rem, 1.35vw, 1.02rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="breit"]{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-remaining-score-bar-size="breit"]{
   --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.08rem, 1.9vw, 1.4rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-score-progress-size="extrabreit"]{
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}[data-ad-ext-x01-remaining-score-bar-size="extrabreit"]{
   --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.48rem, 2.52vw, 1.92rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR},
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR}{
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]${STACK_SELECTOR},
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]${STACK_SELECTOR}{
   min-height:max-content !important;
   height:auto !important;
   padding:0 !important;
 }
 
-#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
-#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
-#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-score-progress-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
+#ad-ext-player-display .ad-ext-player.ad-ext-player-inactive > .chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
+#ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner) > .chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
   line-height:0.9 !important;
   align-self:stretch !important;
   overflow:visible !important;

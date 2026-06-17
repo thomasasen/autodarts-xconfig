@@ -1,6 +1,6 @@
 # Dart Asset Normalization
 
-`dart-marker-darts` places each Dart PNG by its internal tip hotspot. All bundled Dart images must therefore share one transparent canvas and one tip position.
+`dart-marker-replacer` places each Dart PNG by its internal tip hotspot. All bundled Dart images must therefore share one transparent canvas and one tip position.
 
 ## Commands
 
@@ -15,7 +15,7 @@ npm run normalize:darts
 
 ## Hotspot Contract
 
-The target geometry lives in `src/features/dart-marker-darts/logic.js`:
+The target geometry lives in `src/features/dart-marker-replacer/logic.js`:
 
 - `DART_IMAGE_SOURCE_WIDTH`
 - `DART_IMAGE_SOURCE_HEIGHT`
@@ -42,7 +42,7 @@ If moving the image would clip visible pixels, the script fails instead of produ
 
 ```bash
 node --test tests/runtime/feature-assets.test.js
-node --test tests/runtime/dart-marker-darts-runtime.test.js
+node --test tests/runtime/dart-marker-replacer-runtime.test.js
 ```
 
 If a new Dart is meant to become selectable, also update `src/shared/feature-assets.manifest.js` and the related UI copy/config surfaces.

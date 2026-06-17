@@ -7,19 +7,19 @@ import { createGameStateStore } from "../../src/core/game-state-store.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import {
-  initializeCheckoutBoardTargets,
+  initializeCheckoutTargetHighlights,
   resolveCheckoutBoardMutationReaction,
-} from "../../src/features/checkout-board-targets/index.js";
-import { renderCheckoutTargets } from "../../src/features/checkout-board-targets/logic.js";
-import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
-import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
-import { initializeDartMarkerEmphasis } from "../../src/features/dart-marker-emphasis/index.js";
+} from "../../src/features/checkout-target-highlights/index.js";
+import { renderCheckoutTargets } from "../../src/features/checkout-target-highlights/logic.js";
+import { initializeCricketTargetHighlighter } from "../../src/features/cricket-target-highlighter/index.js";
+import { initializeCricketGridStatusEffects } from "../../src/features/cricket-grid-status-effects/index.js";
+import { initializeDartboardMarkerHighlight } from "../../src/features/dartboard-marker-highlight/index.js";
 import {
-  clearDartMarkerEmphasis,
-  createDartMarkerEmphasisState,
-  updateDartMarkerEmphasis,
-} from "../../src/features/dart-marker-emphasis/logic.js";
-import { initializeTripleDoubleBullHits } from "../../src/features/triple-double-bull-hits/index.js";
+  clearDartboardMarkerHighlight,
+  createDartboardMarkerHighlightState,
+  updateDartboardMarkerHighlight,
+} from "../../src/features/dartboard-marker-highlight/logic.js";
+import { initializeSpecialHitHighlights } from "../../src/features/special-hit-highlights/index.js";
 import {
   buildStyleText,
   EFFECT_CLASSES,
@@ -28,19 +28,19 @@ import {
   TARGET_CLASS,
   TARGET_FAMILY_ATTRIBUTE,
   resolveBoardTargetVisualConfig,
-} from "../../src/features/checkout-board-targets/style.js";
+} from "../../src/features/checkout-target-highlights/style.js";
 import {
   OVERLAY_ID as CRICKET_OVERLAY_ID,
   PRESENTATION_PATTERN_IDS,
   STYLE_ID as CRICKET_STYLE_ID,
-} from "../../src/features/cricket-highlighter/style.js";
+} from "../../src/features/cricket-target-highlighter/style.js";
 import {
   PRESSURE_CLASS,
   SCORE_CLASS,
   THREAT_CLASS,
-} from "../../src/features/cricket-grid-fx/style.js";
-import { initializeRemoveDartsNotification } from "../../src/features/remove-darts-notification/index.js";
-import { initializeTurnPointsCount } from "../../src/features/turn-points-count/index.js";
+} from "../../src/features/cricket-grid-status-effects/style.js";
+import { initializeTakeOutDartsAlert } from "../../src/features/take-out-darts-alert/index.js";
+import { initializeTurnScoreCounter } from "../../src/features/turn-score-counter/index.js";
 import {
   ELECTRIC_FILTER_DEFS_NODE_ID,
   releaseElectricFilterDefs,
@@ -146,14 +146,14 @@ function appendCheckoutMarkedSuggestion(documentRef, text, left, top) {
   return node;
 }
 
-test("checkout-board-targets ignores self-managed overlay mutations", () => {
+test("checkout-target-highlights ignores self-managed overlay mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const domGuards = createDomGuards({ documentRef });
   const observerRegistry = createObserverRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards,
@@ -191,7 +191,7 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
 
   assert.equal(scheduleCounter.count, 1);
 
-  const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+  const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
   assert.ok(observer);
 
   const managedOverlay = documentRef.createElement("div");
@@ -220,12 +220,12 @@ test("checkout-board-targets ignores self-managed overlay mutations", () => {
   cleanup();
 });
 
-test("checkout-board-targets classifies semantic and board mutations without promoting unrelated UI churn", () => {
+test("checkout-target-highlights classifies semantic and board mutations without promoting unrelated UI churn", () => {
   const documentRef = new FakeDocument();
   const board = appendBoardFixture(documentRef);
 
   const unrelatedNode = documentRef.createElement("div");
-  unrelatedNode.classList.add("ad-ext-x01-score-progress__fill");
+  unrelatedNode.classList.add("ad-ext-x01-remaining-score-bar__fill");
   documentRef.main.appendChild(unrelatedNode);
 
   assert.deepEqual(
@@ -286,7 +286,7 @@ test("checkout-board-targets classifies semantic and board mutations without pro
   );
 });
 
-test("checkout-board-targets ignores unrelated score-progress class churn", () => {
+test("checkout-target-highlights ignores unrelated score-progress class churn", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const domGuards = createDomGuards({ documentRef });
@@ -297,10 +297,10 @@ test("checkout-board-targets ignores unrelated score-progress class churn", () =
   appendBoardFixture(documentRef);
 
   const noisyProgressNode = documentRef.createElement("div");
-  noisyProgressNode.classList.add("ad-ext-x01-score-progress__fill");
+  noisyProgressNode.classList.add("ad-ext-x01-remaining-score-bar__fill");
   documentRef.main.appendChild(noisyProgressNode);
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards,
@@ -335,11 +335,11 @@ test("checkout-board-targets ignores unrelated score-progress class churn", () =
   });
 
   try {
-    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
     assert.ok(observer);
     assert.equal(scheduleCounter.count, 1);
 
-    noisyProgressNode.classList.add("ad-ext-x01-score-progress__fill--effect-off");
+    noisyProgressNode.classList.add("ad-ext-x01-remaining-score-bar__fill--effect-off");
     observer.callback([
       {
         type: "attributes",
@@ -356,7 +356,7 @@ test("checkout-board-targets ignores unrelated score-progress class churn", () =
   }
 });
 
-test("checkout-board-targets render helper draws every provided target once", () => {
+test("checkout-target-highlights render helper draws every provided target once", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -390,7 +390,7 @@ test("checkout-board-targets render helper draws every provided target once", ()
   assert.equal(overlay.children.length, 4);
 });
 
-test("checkout-board-targets reuses identical overlay nodes across rerenders so the pulse can continue", () => {
+test("checkout-target-highlights reuses identical overlay nodes across rerenders so the pulse can continue", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -441,13 +441,13 @@ test("checkout-board-targets reuses identical overlay nodes across rerenders so 
   assert.equal(overlay.children.length, 2);
   assert.equal(overlay.children[0], firstShapeNode);
   assert.equal(overlay.children[1], firstOutlineNode);
-  assert.equal(firstShapeNode.classList.contains("ad-ext-checkout-target--signal"), true);
+  assert.equal(firstShapeNode.classList.contains("ad-ext-checkout-target--fast-blink"), true);
   assert.match(firstShapeNode.style.getPropertyValue("--ad-ext-target-color"), /245, 158, 11/);
   assert.equal(firstShapeNode.dataset.targetRing, "T");
   assert.equal(firstShapeNode.dataset.targetValue, "20");
 });
 
-test("checkout-board-targets surface-only mode keeps the S20 fill animated but removes stroke and outline", () => {
+test("checkout-target-highlights surface-only mode keeps the S20 fill animated but removes stroke and outline", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -499,7 +499,7 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
   assert.equal(overlay.children.length, 2);
   assert.equal(overlay.children[0], firstShapeNode);
   assert.equal(overlay.querySelector(`.${OUTLINE_CLASS}`), null);
-  assert.equal(firstShapeNode.classList.contains(EFFECT_CLASSES.signal), true);
+  assert.equal(firstShapeNode.classList.contains(EFFECT_CLASSES["fast-blink"]), true);
   assert.equal(firstShapeNode.style.getPropertyValue("stroke"), "none");
   assert.equal(firstShapeNode.style.getPropertyValue("stroke-width"), "0");
   assert.match(firstShapeNode.style.getPropertyValue("--ad-ext-target-color"), /245, 158, 11/);
@@ -507,7 +507,7 @@ test("checkout-board-targets surface-only mode keeps the S20 fill animated but r
   assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
 });
 
-test("checkout-board-targets always uses both single rings while Segmentstil still controls outlines", () => {
+test("checkout-target-highlights always uses both single rings while Segmentstil still controls outlines", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -604,7 +604,7 @@ test("checkout-board-targets always uses both single rings while Segmentstil sti
   );
 });
 
-test("checkout-board-targets keeps focus targets readable across single, outer and bull families", () => {
+test("checkout-target-highlights keeps focus targets readable across single, outer and bull families", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -770,7 +770,7 @@ test("checkout-board-targets keeps focus targets readable across single, outer a
   );
 });
 
-test("checkout-board-targets keeps outline clones isolated from target effect classes", () => {
+test("checkout-target-highlights keeps outline clones isolated from target effect classes", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -806,17 +806,17 @@ test("checkout-board-targets keeps outline clones isolated from target effect cl
   assert.ok(bullShape);
   assert.ok(bullOutline);
   assert.equal(bullShape.classList.contains(TARGET_CLASS), true);
-  assert.equal(bullShape.classList.contains(EFFECT_CLASSES.focus), true);
+  assert.equal(bullShape.classList.contains(EFFECT_CLASSES["soft-pulse"]), true);
   assert.equal(bullOutline.classList.contains(OUTLINE_CLASS), true);
   assert.equal(bullOutline.classList.contains(TARGET_CLASS), false);
-  assert.equal(bullOutline.classList.contains(EFFECT_CLASSES.focus), false);
+  assert.equal(bullOutline.classList.contains(EFFECT_CLASSES["soft-pulse"]), false);
   assertApprox(
     Number.parseFloat(bullOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
     6.7
   );
 });
 
-test("checkout-board-targets softens and staggers follow-up targets in multi-target routes", () => {
+test("checkout-target-highlights softens and staggers follow-up targets in multi-target routes", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -886,7 +886,7 @@ test("checkout-board-targets softens and staggers follow-up targets in multi-tar
   );
 });
 
-test("checkout-board-targets applies dedicated steady and signal profiles outside focus mode", () => {
+test("checkout-target-highlights applies dedicated slow-glow and fast-blink profiles outside soft-pulse mode", () => {
   const documentRef = new FakeDocument();
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -926,7 +926,7 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
 
   assert.ok(bullShape);
   assert.ok(bullOutline);
-  assert.equal(bullShape.classList.contains(EFFECT_CLASSES.steady), true);
+  assert.equal(bullShape.classList.contains(EFFECT_CLASSES["slow-glow"]), true);
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "4.85px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.6799999999999999");
@@ -954,7 +954,7 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
 
   assert.ok(singleShape);
   assert.ok(singleOutline);
-  assert.equal(singleShape.classList.contains(EFFECT_CLASSES.signal), true);
+  assert.equal(singleShape.classList.contains(EFFECT_CLASSES["fast-blink"]), true);
   assertApprox(
     Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.15
@@ -994,7 +994,7 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
 
   assert.ok(outerShape);
   assert.ok(outerOutline);
-  assert.equal(outerShape.classList.contains(EFFECT_CLASSES.signal), true);
+  assert.equal(outerShape.classList.contains(EFFECT_CLASSES["fast-blink"]), true);
   assertApprox(
     Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.65
@@ -1034,7 +1034,7 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
 
   assert.ok(bullShape);
   assert.ok(bullOutline);
-  assert.equal(bullShape.classList.contains(EFFECT_CLASSES.signal), true);
+  assert.equal(bullShape.classList.contains(EFFECT_CLASSES["fast-blink"]), true);
   assertApprox(
     Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width")),
     3.85
@@ -1061,13 +1061,13 @@ test("checkout-board-targets applies dedicated steady and signal profiles outsid
   );
 });
 
-test("checkout-board-targets style text animates scale and keeps signal close to the native board blink", () => {
+test("checkout-target-highlights style text animates scale and keeps fast-blink close to the native board blink", () => {
   const css = buildStyleText();
 
   assert.match(
     css,
     new RegExp(
-      String.raw`\.${EFFECT_CLASSES.signal}\s*\{[^}]*animation:\s*ad-ext-checkout-signal\s+var\(--ad-ext-target-duration\)\s+ease-in-out\s+infinite;`,
+      String.raw`\.${EFFECT_CLASSES["fast-blink"]}\s*\{[^}]*animation:\s*ad-ext-checkout-signal\s+var\(--ad-ext-target-duration\)\s+ease-in-out\s+infinite;`,
       "s"
     )
   );
@@ -1089,7 +1089,7 @@ test("checkout-board-targets style text animates scale and keeps signal close to
   );
 });
 
-test("checkout-board-targets selects next, finish or all segments from the authoritative route", () => {
+test("checkout-target-highlights selects next, finish or all segments from the authoritative route", () => {
   function createBoardDocument() {
     const documentRef = new FakeDocument();
     documentRef.activeScoreElement.textContent = "96";
@@ -1107,7 +1107,7 @@ test("checkout-board-targets selects next, finish or all segments from the autho
   function mountWithMode(targetSelectionMode) {
     const { documentRef } = createBoardDocument();
     const windowRef = createFakeWindow({ documentRef });
-    const cleanup = initializeCheckoutBoardTargets({
+    const cleanup = initializeCheckoutTargetHighlights({
       documentRef,
       windowRef,
       domGuards: createDomGuards({ documentRef }),
@@ -1183,7 +1183,7 @@ test("checkout-board-targets selects next, finish or all segments from the autho
   }
 });
 
-test("checkout-board-targets finish mode falls back to the current one-dart checkout when a visible multi-step route is stale", () => {
+test("checkout-target-highlights finish mode falls back to the current one-dart checkout when a visible multi-step route is stale", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "36";
   documentRef.suggestionElement.textContent = "T20";
@@ -1200,7 +1200,7 @@ test("checkout-board-targets finish mode falls back to the current one-dart chec
   documentRef.main.appendChild(thirdSuggestion);
   appendBoardFixture(documentRef);
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1258,7 +1258,7 @@ test("checkout-board-targets finish mode falls back to the current one-dart chec
   }
 });
 
-test("checkout-board-targets next mode overrides an implausible route-first step with the direct checkout", () => {
+test("checkout-target-highlights next mode overrides an implausible route-first step with the direct checkout", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "50";
   documentRef.suggestionElement.textContent = "T20";
@@ -1272,7 +1272,7 @@ test("checkout-board-targets next mode overrides an implausible route-first step
 
   const logs = [];
   const warnings = [];
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1344,7 +1344,7 @@ test("checkout-board-targets next mode overrides an implausible route-first step
   }
 });
 
-test("checkout-board-targets finish mode stays empty for a valid visible S10,D20 route at 50", () => {
+test("checkout-target-highlights finish mode stays empty for a valid visible S10,D20 route at 50", () => {
   const documentRef = new FakeDocument();
   const events = [];
   documentRef.activeScoreElement.textContent = "50";
@@ -1357,7 +1357,7 @@ test("checkout-board-targets finish mode stays empty for a valid visible S10,D20
   documentRef.main.appendChild(secondSuggestion);
   appendBoardFixture(documentRef);
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1427,7 +1427,7 @@ test("checkout-board-targets finish mode stays empty for a valid visible S10,D20
   }
 });
 
-test("checkout-board-targets next mode keeps the visible route-first target when the game state score lags behind the DOM", () => {
+test("checkout-target-highlights next mode keeps the visible route-first target when the game state score lags behind the DOM", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "61";
   documentRef.suggestionElement.textContent = "25";
@@ -1441,7 +1441,7 @@ test("checkout-board-targets next mode keeps the visible route-first target when
 
   const logs = [];
   const warnings = [];
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1515,7 +1515,7 @@ test("checkout-board-targets next mode keeps the visible route-first target when
   }
 });
 
-test("checkout-board-targets ignores prior throw suggestions and targets visible DBULL before D16", () => {
+test("checkout-target-highlights ignores prior throw suggestions and targets visible DBULL before D16", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "82";
   documentRef.suggestionElement.textContent = "39 T13";
@@ -1526,7 +1526,7 @@ test("checkout-board-targets ignores prior throw suggestions and targets visible
 
   const logs = [];
   const warnings = [];
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1605,14 +1605,14 @@ test("checkout-board-targets ignores prior throw suggestions and targets visible
   }
 });
 
-test("checkout-board-targets ignores a direct finish from a stale previous match snapshot", () => {
+test("checkout-target-highlights ignores a direct finish from a stale previous match snapshot", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "121";
   documentRef.suggestionElement.textContent = "T20";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
   appendBoardFixture(documentRef);
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({
       documentRef,
@@ -1672,7 +1672,7 @@ test("checkout-board-targets ignores a direct finish from a stale previous match
   }
 });
 
-test("checkout-board-targets next mode keeps the visible setup target when no finish route remains", () => {
+test("checkout-target-highlights next mode keeps the visible setup target when no finish route remains", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "102";
   documentRef.suggestionElement.textContent = "T20";
@@ -1686,7 +1686,7 @@ test("checkout-board-targets next mode keeps the visible setup target when no fi
 
   const logs = [];
   const warnings = [];
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1755,7 +1755,7 @@ test("checkout-board-targets next mode keeps the visible setup target when no fi
   }
 });
 
-test("checkout-board-targets next mode falls back to the active score checkout when route suggestions disappear", () => {
+test("checkout-target-highlights next mode falls back to the active score checkout when route suggestions disappear", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "50";
   documentRef.suggestionElement.textContent = "";
@@ -1763,7 +1763,7 @@ test("checkout-board-targets next mode falls back to the active score checkout w
 
   const logs = [];
   const warnings = [];
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     domGuards: createDomGuards({ documentRef }),
@@ -1835,7 +1835,7 @@ test("checkout-board-targets next mode falls back to the active score checkout w
   }
 });
 
-test("checkout-board-targets next mode renders direct double finishes when no suggestion route is visible", () => {
+test("checkout-target-highlights next mode renders direct double finishes when no suggestion route is visible", () => {
   const cases = [
     { activeScore: 10, segment: "D", value: "5" },
     { activeScore: 22, segment: "D", value: "11" },
@@ -1847,7 +1847,7 @@ test("checkout-board-targets next mode renders direct double finishes when no su
     documentRef.suggestionElement.textContent = "";
     appendBoardFixture(documentRef);
 
-    const cleanup = initializeCheckoutBoardTargets({
+    const cleanup = initializeCheckoutTargetHighlights({
       documentRef,
       windowRef: createFakeWindow({ documentRef }),
       domGuards: createDomGuards({ documentRef }),
@@ -1913,7 +1913,7 @@ test("checkout-board-targets next mode renders direct double finishes when no su
   });
 });
 
-test("checkout-board-targets keeps the last drawable target during a transient no-route gap", async () => {
+test("checkout-target-highlights keeps the last drawable target during a transient no-route gap", async () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "181";
   documentRef.suggestionElement.textContent = "T20";
@@ -1929,7 +1929,7 @@ test("checkout-board-targets keeps the last drawable target during a transient n
   const logs = [];
   const warnings = [];
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -1986,7 +1986,7 @@ test("checkout-board-targets keeps the last drawable target during a transient n
   });
 
   try {
-    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
     assert.ok(observer);
 
     let overlay = documentRef.getElementById(CHECKOUT_OVERLAY_ID);
@@ -2030,7 +2030,7 @@ test("checkout-board-targets keeps the last drawable target during a transient n
   }
 });
 
-test("checkout-board-targets reapplies retained targets onto a replaced board during a transient no-route gap", () => {
+test("checkout-target-highlights reapplies retained targets onto a replaced board during a transient no-route gap", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "96";
   documentRef.suggestionElement.textContent = "T20";
@@ -2044,7 +2044,7 @@ test("checkout-board-targets reapplies retained targets onto a replaced board du
   const observerRegistry = createObserverRegistry();
   const firstBoard = appendBoardFixture(documentRef);
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2092,7 +2092,7 @@ test("checkout-board-targets reapplies retained targets onto a replaced board du
   });
 
   try {
-    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
     assert.ok(observer);
     assert.ok(firstBoard.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`));
 
@@ -2117,7 +2117,7 @@ test("checkout-board-targets reapplies retained targets onto a replaced board du
   }
 });
 
-test("checkout-board-targets emits debug snapshots for render and no-route states", () => {
+test("checkout-target-highlights emits debug snapshots for render and no-route states", () => {
   const renderDocument = new FakeDocument();
   renderDocument.activeScoreElement.textContent = "40";
   renderDocument.suggestionElement.textContent = "D20";
@@ -2125,7 +2125,7 @@ test("checkout-board-targets emits debug snapshots for render and no-route state
   const renderLogs = [];
   const renderWarnings = [];
 
-  const renderCleanup = initializeCheckoutBoardTargets({
+  const renderCleanup = initializeCheckoutTargetHighlights({
     documentRef: renderDocument,
     windowRef: createFakeWindow({ documentRef: renderDocument }),
     domGuards: createDomGuards({ documentRef: renderDocument }),
@@ -2198,7 +2198,7 @@ test("checkout-board-targets emits debug snapshots for render and no-route state
   const noRouteLogs = [];
   const noRouteWarnings = [];
 
-  const noRouteCleanup = initializeCheckoutBoardTargets({
+  const noRouteCleanup = initializeCheckoutTargetHighlights({
     documentRef: noRouteDocument,
     windowRef: createFakeWindow({ documentRef: noRouteDocument }),
     domGuards: createDomGuards({ documentRef: noRouteDocument }),
@@ -2264,14 +2264,14 @@ test("checkout-board-targets emits debug snapshots for render and no-route state
   assert.deepEqual(noRouteWarnings[0][1]?.targets, []);
 });
 
-test("checkout-board-targets still renders when the suggestion node text exists but its rect collapses", () => {
+test("checkout-target-highlights still renders when the suggestion node text exists but its rect collapses", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "D20";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 0, height: 0 };
   appendBoardFixture(documentRef);
   const windowRef = createFakeWindow({ documentRef });
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2324,7 +2324,7 @@ test("checkout-board-targets still renders when the suggestion node text exists 
   }
 });
 
-test("checkout-board-targets rerenders after board replacement even when suggestion text stays unchanged", () => {
+test("checkout-target-highlights rerenders after board replacement even when suggestion text stays unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const domGuards = createDomGuards({ documentRef });
@@ -2351,7 +2351,7 @@ test("checkout-board-targets rerenders after board replacement even when suggest
   documentRef.main.appendChild(firstBoard.svg);
   documentRef.suggestionElement.textContent = "D20";
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards,
@@ -2401,7 +2401,7 @@ test("checkout-board-targets rerenders after board replacement even when suggest
   firstBoard.svg.remove();
   documentRef.main.appendChild(secondBoard.svg);
 
-  const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+  const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -2419,7 +2419,7 @@ test("checkout-board-targets rerenders after board replacement even when suggest
   cleanup();
 });
 
-test("checkout-board-targets rerenders onto a replaced board when suggestion and variant stay unchanged", () => {
+test("checkout-target-highlights rerenders onto a replaced board when suggestion and variant stay unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.suggestionElement.textContent = "D20";
@@ -2427,7 +2427,7 @@ test("checkout-board-targets rerenders onto a replaced board when suggestion and
   const scheduleCounter = { count: 0 };
   const observerRegistry = createObserverRegistry();
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2467,7 +2467,7 @@ test("checkout-board-targets rerenders onto a replaced board when suggestion and
 
     firstBoard.svg.remove();
     const secondBoard = appendBoardFixture(documentRef);
-    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
     assert.ok(observer);
 
     observer.callback([
@@ -2486,7 +2486,7 @@ test("checkout-board-targets rerenders onto a replaced board when suggestion and
   }
 });
 
-test("checkout-board-targets reacts to throw-surface attribute mutations", () => {
+test("checkout-target-highlights reacts to throw-surface attribute mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.suggestionElement.textContent = "D20";
@@ -2494,7 +2494,7 @@ test("checkout-board-targets reacts to throw-surface attribute mutations", () =>
   const scheduleCounter = { count: 0 };
   const observerRegistry = createObserverRegistry();
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2529,7 +2529,7 @@ test("checkout-board-targets reacts to throw-surface attribute mutations", () =>
   });
 
   try {
-    const observer = observerRegistry.get("checkout-board-targets:dom-observer");
+    const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
     assert.ok(observer);
 
     const observeOptions = observer.observeCalls[0]?.options || {};
@@ -2555,7 +2555,7 @@ test("checkout-board-targets reacts to throw-surface attribute mutations", () =>
   }
 });
 
-test("checkout-board-targets skips X01 context resolution while a cricket variant is active", () => {
+test("checkout-target-highlights skips X01 context resolution while a cricket variant is active", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -2566,12 +2566,12 @@ test("checkout-board-targets skips X01 context resolution while a cricket varian
   documentRef.querySelectorAll = (selector) => {
     const normalizedSelector = String(selector || "");
     if (normalizedSelector.includes("ad-ext-player-score")) {
-      throw new Error("inactive checkout-board-targets should not resolve X01 score nodes");
+      throw new Error("inactive checkout-target-highlights should not resolve X01 score nodes");
     }
     return originalQuerySelectorAll(selector);
   };
 
-  const cleanup = initializeCheckoutBoardTargets({
+  const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2609,7 +2609,7 @@ test("checkout-board-targets skips X01 context resolution while a cricket varian
   }
 });
 
-test("cricket-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {
+test("cricket-target-highlighter rebuilds overlay after external overlay removal with unchanged state", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -2658,7 +2658,7 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2712,7 +2712,7 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
 
   initialOverlay.remove();
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -2731,7 +2731,7 @@ test("cricket-highlighter rebuilds overlay after external overlay removal with u
   cleanup();
 });
 
-test("cricket-highlighter ignores self-managed SVG pattern mutations", () => {
+test("cricket-target-highlighter ignores self-managed SVG pattern mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -2762,7 +2762,7 @@ test("cricket-highlighter ignores self-managed SVG pattern mutations", () => {
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2811,7 +2811,7 @@ test("cricket-highlighter ignores self-managed SVG pattern mutations", () => {
     },
   });
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   const scoringPattern = documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring);
   assert.ok(observer);
   assert.ok(scoringPattern);
@@ -2842,7 +2842,7 @@ test("cricket-highlighter ignores self-managed SVG pattern mutations", () => {
   cleanup();
 });
 
-test("cricket-highlighter repairs stale style contract at mount and logs once", () => {
+test("cricket-target-highlighter repairs stale style contract at mount and logs once", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -2906,7 +2906,7 @@ test("cricket-highlighter repairs stale style contract at mount and logs once", 
   };
 
   const warnings = [];
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards,
@@ -2974,7 +2974,7 @@ test("cricket-highlighter repairs stale style contract at mount and logs once", 
   cleanup();
 });
 
-test("triple-double-bull-hits emits deduplicated debug state with row diagnostics", () => {
+test("special-hit-highlights emits deduplicated debug state with row diagnostics", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   windowRef.__adXConfig = { apiVersion: "test-runtime" };
@@ -2999,14 +2999,14 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
   );
   documentRef.throwTextElement.textContent = "36 D18";
   documentRef.throwRow.textContent = "36 D18";
-  documentRef.turnPointsElement.textContent = "36";
+  documentRef.turnScoreElement.textContent = "36";
 
   const logs = [];
   const warnings = [];
   const scheduleCounter = { count: 0 };
   const observers = createObserverRegistry();
 
-  const cleanup = initializeTripleDoubleBullHits({
+  const cleanup = initializeSpecialHitHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3053,7 +3053,7 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
     },
   });
 
-  const observer = observers.get("triple-double-bull-hits:dom-observer");
+  const observer = observers.get("special-hit-highlights:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -3083,13 +3083,13 @@ test("triple-double-bull-hits emits deduplicated debug state with row diagnostic
   cleanup();
 });
 
-test("triple-double-bull-hits reacts to throw-surface attribute mutations", () => {
+test("special-hit-highlights reacts to throw-surface attribute mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const scheduleCounter = { count: 0 };
   const observers = createObserverRegistry();
 
-  const cleanup = initializeTripleDoubleBullHits({
+  const cleanup = initializeSpecialHitHighlights({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3108,7 +3108,7 @@ test("triple-double-bull-hits reacts to throw-surface attribute mutations", () =
   });
 
   try {
-    const observer = observers.get("triple-double-bull-hits:dom-observer");
+    const observer = observers.get("special-hit-highlights:dom-observer");
     assert.ok(observer);
 
     const observeOptions = observer.observeCalls[0]?.options || {};
@@ -3134,7 +3134,7 @@ test("triple-double-bull-hits reacts to throw-surface attribute mutations", () =
   }
 });
 
-test("triple-double-bull-hits only retains electric filter defs for explicit electric-arc runs", () => {
+test("special-hit-highlights only retains electric filter defs for explicit electric-jolt runs", () => {
   const baseContext = () => {
     const documentRef = new FakeDocument();
     const windowRef = createFakeWindow({ documentRef });
@@ -3158,7 +3158,7 @@ test("triple-double-bull-hits only retains electric filter defs for explicit ele
   };
 
   const impactContext = baseContext();
-  const cleanupImpact = initializeTripleDoubleBullHits({
+  const cleanupImpact = initializeSpecialHitHighlights({
     ...impactContext,
     config: {
       getFeatureConfig() {
@@ -3174,13 +3174,13 @@ test("triple-double-bull-hits only retains electric filter defs for explicit ele
   cleanupImpact();
 
   const electricContext = baseContext();
-  const cleanupElectric = initializeTripleDoubleBullHits({
+  const cleanupElectric = initializeSpecialHitHighlights({
     ...electricContext,
     config: {
       getFeatureConfig() {
         return {
           colorTheme: "champagne-night",
-          animationStyle: "electric-arc",
+          animationStyle: "electric-jolt",
         };
       },
     },
@@ -3190,14 +3190,14 @@ test("triple-double-bull-hits only retains electric filter defs for explicit ele
   cleanupElectric();
 });
 
-test("triple-double-bull-hits non-electric runs do not release shared electric preview filters", () => {
+test("special-hit-highlights non-electric runs do not release shared electric preview filters", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const domGuards = createDomGuards({ documentRef });
 
   retainElectricFilterDefs({ documentRef, domGuards });
 
-  const cleanup = initializeTripleDoubleBullHits({
+  const cleanup = initializeSpecialHitHighlights({
     documentRef,
     windowRef,
     domGuards,
@@ -3230,7 +3230,7 @@ test("triple-double-bull-hits non-electric runs do not release shared electric p
   assert.equal(Boolean(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID)), false);
 });
 
-test("cricket-highlighter rerenders on throw updates even when board state stays the same", () => {
+test("cricket-target-highlighter rerenders on throw updates even when board state stays the same", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -3292,7 +3292,7 @@ test("cricket-highlighter rerenders on throw updates even when board state stays
     }
   };
 
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3380,7 +3380,7 @@ test("cricket-highlighter rerenders on throw updates even when board state stays
   cleanup();
 });
 
-test("cricket-highlighter reacts to attribute-only hydration updates for marks and active-player class", () => {
+test("cricket-target-highlighter reacts to attribute-only hydration updates for marks and active-player class", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -3447,7 +3447,7 @@ test("cricket-highlighter reacts to attribute-only hydration updates for marks a
   const scheduleCounter = { count: 0 };
   documentRef.activePlayerRow.classList.remove("ad-ext-player-active");
   documentRef.winnerNode.classList.add("ad-ext-player-active");
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3497,7 +3497,7 @@ test("cricket-highlighter reacts to attribute-only hydration updates for marks a
     },
   });
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   assert.ok(observer);
   const observeOptions = observer.observeCalls?.[0]?.options || {};
   assert.equal(observeOptions.attributes, true);
@@ -3544,7 +3544,7 @@ test("cricket surface observer skips Autodarts tools menu churn before tracked-n
 
   const observers = createObserverRegistry();
   const scheduleCounter = { count: 0 };
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3584,7 +3584,7 @@ test("cricket surface observer skips Autodarts tools menu churn before tracked-n
 
   const originalContains = board.svg.contains;
   try {
-    const observer = observers.get("cricket-highlighter:dom-observer");
+    const observer = observers.get("cricket-target-highlighter:dom-observer");
     assert.ok(observer);
     const scheduleCountAfterInit = scheduleCounter.count;
     board.svg.contains = () => {
@@ -3615,7 +3615,7 @@ test("cricket surface observer skips Autodarts tools menu churn before tracked-n
   }
 });
 
-test("cricket-highlighter emits missing-grid warning only once for unchanged status", () => {
+test("cricket-target-highlighter emits missing-grid warning only once for unchanged status", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -3624,7 +3624,7 @@ test("cricket-highlighter emits missing-grid warning only once for unchanged sta
   const warnings = [];
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3679,7 +3679,7 @@ test("cricket-highlighter emits missing-grid warning only once for unchanged sta
     },
   });
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -3704,7 +3704,7 @@ test("cricket-highlighter emits missing-grid warning only once for unchanged sta
   cleanup();
 });
 
-test("cricket-grid-fx rerenders after grid DOM replacement even when transition signature is unchanged", () => {
+test("cricket-grid-status-effects rerenders after grid DOM replacement even when transition signature is unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -3756,7 +3756,7 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeCricketGridFx({
+  const cleanup = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3820,7 +3820,7 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
   initialGrid.remove();
   documentRef.main.appendChild(replacementGrid);
 
-  const observer = observers.get("cricket-grid-fx:dom-observer");
+  const observer = observers.get("cricket-grid-status-effects:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -3838,7 +3838,7 @@ test("cricket-grid-fx rerenders after grid DOM replacement even when transition 
   cleanup();
 });
 
-test("cricket-grid-fx reacts to attribute-only mark updates and ignores self class churn", () => {
+test("cricket-grid-status-effects reacts to attribute-only mark updates and ignores self class churn", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -3888,7 +3888,7 @@ test("cricket-grid-fx reacts to attribute-only mark updates and ignores self cla
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeCricketGridFx({
+  const cleanup = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -3945,7 +3945,7 @@ test("cricket-grid-fx reacts to attribute-only mark updates and ignores self cla
     },
   });
 
-  const observer = observers.get("cricket-grid-fx:dom-observer");
+  const observer = observers.get("cricket-grid-status-effects:dom-observer");
   assert.ok(observer);
   const observeOptions = observer.observeCalls?.[0]?.options || {};
   assert.equal(observeOptions.attributes, true);
@@ -3985,7 +3985,7 @@ test("cricket-grid-fx reacts to attribute-only mark updates and ignores self cla
   cleanup();
 });
 
-test("cricket-grid-fx schedules for alt-attribute mutations on mark icons inside the grid", () => {
+test("cricket-grid-status-effects schedules for alt-attribute mutations on mark icons inside the grid", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -4015,7 +4015,7 @@ test("cricket-grid-fx schedules for alt-attribute mutations on mark icons inside
   const observers = createObserverRegistry();
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
-  const cleanup = initializeCricketGridFx({
+  const cleanup = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -4072,7 +4072,7 @@ test("cricket-grid-fx schedules for alt-attribute mutations on mark icons inside
     },
   });
 
-  const observer = observers.get("cricket-grid-fx:dom-observer");
+  const observer = observers.get("cricket-grid-status-effects:dom-observer");
   assert.ok(observer);
 
   const row18Icon = Array.from(table.querySelectorAll("tr")).find((row) => {
@@ -4096,7 +4096,7 @@ test("cricket-grid-fx schedules for alt-attribute mutations on mark icons inside
   cleanup();
 });
 
-test("cricket-highlighter schedules for alt-attribute mutations on mark icons inside the grid", () => {
+test("cricket-target-highlighter schedules for alt-attribute mutations on mark icons inside the grid", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   documentRef.variantElement.textContent = "Cricket";
@@ -4148,7 +4148,7 @@ test("cricket-highlighter schedules for alt-attribute mutations on mark icons in
   const observers = createObserverRegistry();
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
-  const cleanup = initializeCricketHighlighter({
+  const cleanup = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -4197,7 +4197,7 @@ test("cricket-highlighter schedules for alt-attribute mutations on mark icons in
     },
   });
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   assert.ok(observer);
   assert.equal(readPresentation("18"), "dead");
 
@@ -4223,7 +4223,7 @@ test("cricket-highlighter schedules for alt-attribute mutations on mark icons in
   cleanup();
 });
 
-test("remove-darts-notification uses only the direct game-state subscription", () => {
+test("take-out-darts-alert uses only the direct game-state subscription", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const domGuards = createDomGuards({ documentRef });
@@ -4231,7 +4231,7 @@ test("remove-darts-notification uses only the direct game-state subscription", (
   let eventBusRegistrations = 0;
   let gameStateListener = () => {};
 
-  const cleanup = initializeRemoveDartsNotification({
+  const cleanup = initializeTakeOutDartsAlert({
     documentRef,
     windowRef,
     domGuards,
@@ -4273,14 +4273,14 @@ test("remove-darts-notification uses only the direct game-state subscription", (
   cleanup();
 });
 
-test("turn-points-count ignores late anime loader resolution after cleanup", async () => {
+test("turn-score-counter ignores late anime loader resolution after cleanup", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   windowRef.anime = () => ({ pause() {} });
 
   const scheduleCounter = { count: 0 };
 
-  const cleanup = initializeTurnPointsCount({
+  const cleanup = initializeTurnScoreCounter({
     documentRef,
     windowRef,
     gameState: {
@@ -4308,7 +4308,7 @@ test("turn-points-count ignores late anime loader resolution after cleanup", asy
   assert.equal(scheduleCounter.count, 1);
 });
 
-test("dart-marker-emphasis ignores unrelated childList mutations outside the board", () => {
+test("dartboard-marker-highlight ignores unrelated childList mutations outside the board", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const domGuards = createDomGuards({ documentRef });
@@ -4320,7 +4320,7 @@ test("dart-marker-emphasis ignores unrelated childList mutations outside the boa
   marker.setAttribute("filter", "url(#shadow-2dp)");
   board.group.appendChild(marker);
 
-  const cleanup = initializeDartMarkerEmphasis({
+  const cleanup = initializeDartboardMarkerHighlight({
     documentRef,
     windowRef,
     domGuards,
@@ -4343,7 +4343,7 @@ test("dart-marker-emphasis ignores unrelated childList mutations outside the boa
     },
   });
 
-  const observer = observers.get("dart-marker-emphasis:dom-observer");
+  const observer = observers.get("dartboard-marker-highlight:dom-observer");
   assert.equal(scheduleCounter.count, 1);
   assert.equal(marker.getAttribute("r"), "6");
 
@@ -4379,7 +4379,7 @@ test("dart-marker-emphasis ignores unrelated childList mutations outside the boa
   cleanup();
 });
 
-test("dart-marker-emphasis skips marker writes when visual and hidden state are unchanged", () => {
+test("dartboard-marker-highlight skips marker writes when visual and hidden state are unchanged", () => {
   const documentRef = new FakeDocument();
   const board = appendBoardFixture(documentRef);
   const marker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -4387,7 +4387,7 @@ test("dart-marker-emphasis skips marker writes when visual and hidden state are 
   marker.setAttribute("filter", "url(#shadow-2dp)");
   board.group.appendChild(marker);
 
-  const state = createDartMarkerEmphasisState();
+  const state = createDartboardMarkerHighlightState();
   const visualConfig = {
     markerSize: 6,
     markerColor: "rgb(49, 130, 206)",
@@ -4396,7 +4396,7 @@ test("dart-marker-emphasis skips marker writes when visual and hidden state are 
     outlineColor: "",
   };
 
-  updateDartMarkerEmphasis({ documentRef, state, visualConfig });
+  updateDartboardMarkerHighlight({ documentRef, state, visualConfig });
 
   let writeCount = 0;
   const originalSetAttribute = marker.setAttribute.bind(marker);
@@ -4415,10 +4415,10 @@ test("dart-marker-emphasis skips marker writes when visual and hidden state are 
     return originalClassRemove(...args);
   };
 
-  updateDartMarkerEmphasis({ documentRef, state, visualConfig });
+  updateDartboardMarkerHighlight({ documentRef, state, visualConfig });
 
   assert.equal(writeCount, 0);
-  clearDartMarkerEmphasis(state);
+  clearDartboardMarkerHighlight(state);
 });
 
 test("game state store suppresses identical consecutive websocket state payloads", () => {

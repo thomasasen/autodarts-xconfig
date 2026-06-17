@@ -6,9 +6,9 @@ const STACK_SELECTOR = "#ad-ext-player-display .ad-ext-player > .chakra-stack";
 const IDENTITY_SELECTOR = `${STACK_SELECTOR} > .css-37hv00`;
 const META_SELECTOR = `${STACK_SELECTOR} > .css-1igwmid`;
 const SCORE_PROGRESS_SELECTOR = [
-  `${STACK_SELECTOR} > [data-ad-ext-x01-score-progress='true']`,
-  `${STACK_SELECTOR} > .ad-ext-x01-score-progress--active`,
-  `${STACK_SELECTOR} > .ad-ext-x01-score-progress--inactive`,
+  `${STACK_SELECTOR} > [data-ad-ext-x01-remaining-score-bar='true']`,
+  `${STACK_SELECTOR} > .ad-ext-x01-remaining-score-bar--active`,
+  `${STACK_SELECTOR} > .ad-ext-x01-remaining-score-bar--inactive`,
 ].join(",\n");
 const INLINE_FLEX_CSS = `
   align-items:center !important;

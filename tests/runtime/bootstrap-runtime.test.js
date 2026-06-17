@@ -100,11 +100,11 @@ test("runtime public config API persists updates and survives feature toggles", 
   await wait(5);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.checkoutScorePulse.effect, "scale");
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "grow-only");
 
   await runtime.saveConfig({
     features: {
-      checkoutScorePulse: {
+      checkoutScoreHighlight: {
         effect: "blink",
       },
     },
@@ -112,55 +112,55 @@ test("runtime public config API persists updates and survives feature toggles", 
   await wait(5);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.checkoutScorePulse.effect, "blink");
-  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--blink"), true);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
+  assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--fade-blink"), true);
 
-  await runtime.setFeatureEnabled("checkout-score-pulse", false);
+  await runtime.setFeatureEnabled("checkout-score-highlight", false);
   await wait(5);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.checkoutScorePulse, false);
-  assert.equal(runtime.getSnapshot().features["checkout-score-pulse"].mounted, false);
+  assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
+  assert.equal(runtime.getSnapshot().features["checkout-score-highlight"].mounted, false);
 
-  await runtime.setFeatureEnabled("turn-start-sweep", true);
+  await runtime.setFeatureEnabled("active-player-sweep", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
-  assert.equal(runtime.getSnapshot().features["turn-start-sweep"].mounted, true);
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(runtime.getSnapshot().features["active-player-sweep"].mounted, true);
 
-  await runtime.setFeatureEnabled("triple-double-bull-hits", true);
+  await runtime.setFeatureEnabled("special-hit-highlights", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.tripleDoubleBullHits, true);
-  assert.equal(runtime.getSnapshot().features["triple-double-bull-hits"].mounted, true);
+  assert.equal(storedConfig.featureToggles.specialHitHighlights, true);
+  assert.equal(runtime.getSnapshot().features["special-hit-highlights"].mounted, true);
 
-  await runtime.setFeatureEnabled("turn-points-count", true);
+  await runtime.setFeatureEnabled("turn-score-counter", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.turnPointsCount, true);
-  assert.equal(runtime.getSnapshot().features["turn-points-count"].mounted, true);
+  assert.equal(storedConfig.featureToggles.turnScoreCounter, true);
+  assert.equal(runtime.getSnapshot().features["turn-score-counter"].mounted, true);
 
-  await runtime.setFeatureEnabled("x01-score-progress", true);
+  await runtime.setFeatureEnabled("x01-remaining-score-bar", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.x01ScoreProgress, true);
-  assert.equal(runtime.getSnapshot().features["x01-score-progress"].mounted, true);
+  assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
+  assert.equal(runtime.getSnapshot().features["x01-remaining-score-bar"].mounted, true);
 
-  await runtime.setFeatureEnabled("winner-fireworks", true);
+  await runtime.setFeatureEnabled("winner-celebration-effect", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.winnerFireworks, true);
-  assert.equal(runtime.getSnapshot().features["winner-fireworks"].mounted, true);
+  assert.equal(storedConfig.featureToggles.winnerCelebrationEffect, true);
+  assert.equal(runtime.getSnapshot().features["winner-celebration-effect"].mounted, true);
 
-  const previewResult = await runtime.runFeatureAction("winner-fireworks", "preview");
+  const previewResult = await runtime.runFeatureAction("winner-celebration-effect", "preview");
   assert.equal(previewResult.ok, true);
   assert.equal(
-    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview"))),
+    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview"))),
     true
   );
   assert.equal(
     await waitFor(
-      () => documentRef.getElementById("ad-ext-winner-fireworks-preview") === null,
+      () => documentRef.getElementById("ad-ext-winner-celebration-effect-preview") === null,
       { timeoutMs: 220, intervalMs: 5 }
     ),
     true
@@ -252,10 +252,10 @@ test("runtime syncs persisted config changes from another window via storage eve
 
   await firstRuntime.saveConfig({
     featureToggles: {
-      checkoutBoardTargets: true,
+      checkoutTargetHighlights: true,
     },
     features: {
-      checkoutBoardTargets: {
+      checkoutTargetHighlights: {
         enabled: true,
         segmentStyle: "surface-only",
         singleRing: "both",
@@ -274,7 +274,7 @@ test("runtime syncs persisted config changes from another window via storage eve
   assert.equal(
     await waitFor(() => {
       const snapshot = secondRuntime.getSnapshot();
-      const feature = snapshot.features["checkout-board-targets"];
+      const feature = snapshot.features["checkout-target-highlights"];
       return (
         feature?.enabled === true &&
         feature?.config?.segmentStyle === "surface-only" &&
@@ -291,10 +291,10 @@ test("runtime syncs persisted config changes from another window via storage eve
 
   await firstRuntime.saveConfig({
     featureToggles: {
-      checkoutBoardTargets: true,
+      checkoutTargetHighlights: true,
     },
     features: {
-      checkoutBoardTargets: {
+      checkoutTargetHighlights: {
         enabled: true,
         segmentStyle: "surface-outline",
         singleRing: "both",
@@ -312,7 +312,7 @@ test("runtime syncs persisted config changes from another window via storage eve
   await wait(10);
 
   assert.equal(
-    secondRuntime.getSnapshot().features["checkout-board-targets"]?.config?.targetSelectionMode,
+    secondRuntime.getSnapshot().features["checkout-target-highlights"]?.config?.targetSelectionMode,
     "all"
   );
 
@@ -327,21 +327,21 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   const listed = runtime.listFeatures();
 
-  assert.equal(listed.some((entry) => entry.featureKey === "checkout-board-targets"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "checkout-target-highlights"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "tv-board-zoom"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "style-checkout-suggestions"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "average-trend-arrow"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "turn-start-sweep"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "triple-double-bull-hits"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "cricket-highlighter"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "cricket-grid-fx"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "dart-marker-emphasis"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "dart-marker-darts"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "remove-darts-notification"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "single-bull-sound"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "turn-points-count"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "x01-score-progress"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "winner-fireworks"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "checkout-suggestion-styles"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "avg-trend-arrow"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "active-player-sweep"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "special-hit-highlights"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "cricket-target-highlighter"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "cricket-grid-status-effects"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "dartboard-marker-highlight"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "dart-marker-replacer"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "take-out-darts-alert"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "single-bull-hit-sound"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "turn-score-counter"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "x01-remaining-score-bar"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "winner-celebration-effect"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-gotcha"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01-2player"), true);
@@ -357,7 +357,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   const localStorage = new FakeStorage({
     [CONFIG_STORAGE_KEY]: JSON.stringify({
       featureToggles: {
-        checkoutScorePulse: false,
+        checkoutScoreHighlight: false,
       },
       features: {
         themes: {
@@ -381,30 +381,30 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   const snapshot = await runtime.applyRecommendedDefaults();
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
 
-  assert.equal(snapshot.features["checkout-score-pulse"].enabled, true);
-  assert.equal(storedConfig.features.checkoutScorePulse.enabled, true);
-  assert.equal(storedConfig.features.checkoutBoardTargets.visualPreset, "signal");
-  assert.equal(storedConfig.features.checkoutBoardTargets.colorTheme, "cyan");
-  assert.equal(storedConfig.features.styleCheckoutSuggestions.style, "stripe");
-  assert.equal(storedConfig.features.turnStartSweep.durationMs, 420);
-  assert.equal(storedConfig.features.turnStartSweep.sweepStyle, "standard");
-  assert.equal(storedConfig.features.tripleDoubleBullHits.animationStyle, "electric-arc");
-  assert.equal(storedConfig.features.cricketHighlighter.irrelevantBoardDimStyle, "hatch");
-  assert.equal(storedConfig.features.cricketGridFx.intensity, "normal");
-  assert.equal(storedConfig.features.cricketGridFx.pressureOverlay, true);
-  assert.equal(storedConfig.features.dartMarkerEmphasis.effect, "pulse");
-  assert.equal(storedConfig.features.dartMarkerEmphasis.opacityPercent, 100);
-  assert.equal(storedConfig.features.dartMarkerDarts.hideOriginalMarkers, true);
-  assert.equal(storedConfig.features.dartMarkerDarts.enableWobble, true);
-  assert.equal(storedConfig.features.removeDartsNotification.imageSize, "large");
-  assert.equal(storedConfig.features.singleBullSound.volume, 0.9);
-  assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
-  assert.equal(storedConfig.features.winnerFireworks.style, "fireworks");
-  assert.equal(storedConfig.features.winnerFireworks.intensity, "standard");
-  assert.equal(storedConfig.features.winnerFireworks.durationSeconds, 5);
-  assert.equal(storedConfig.features.winnerFireworks.particleAmount, "optimiert");
-  assert.equal(storedConfig.features.x01ScoreProgress.barSize, "breit");
-  assert.equal(storedConfig.features.x01ScoreProgress.effect, "off");
+  assert.equal(snapshot.features["checkout-score-highlight"].enabled, true);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.enabled, true);
+  assert.equal(storedConfig.features.checkoutTargetHighlights.visualPreset, "fast-blink");
+  assert.equal(storedConfig.features.checkoutTargetHighlights.colorTheme, "cyan");
+  assert.equal(storedConfig.features.checkoutSuggestionStyles.style, "stripe");
+  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 420);
+  assert.equal(storedConfig.features.activePlayerSweep.sweepStyle, "standard");
+  assert.equal(storedConfig.features.specialHitHighlights.animationStyle, "electric-jolt");
+  assert.equal(storedConfig.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.intensity, "normal");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.pressureOverlay, true);
+  assert.equal(storedConfig.features.dartboardMarkerHighlight.effect, "size-pulse");
+  assert.equal(storedConfig.features.dartboardMarkerHighlight.opacityPercent, 100);
+  assert.equal(storedConfig.features.dartMarkerReplacer.hideOriginalMarkers, true);
+  assert.equal(storedConfig.features.dartMarkerReplacer.enableWobble, true);
+  assert.equal(storedConfig.features.takeOutDartsAlert.imageSize, "large");
+  assert.equal(storedConfig.features.singleBullHitSound.volume, 0.9);
+  assert.equal(storedConfig.features.turnScoreCounter.flashOnChange, false);
+  assert.equal(storedConfig.features.winnerCelebrationEffect.style, "top-fireworks");
+  assert.equal(storedConfig.features.winnerCelebrationEffect.intensity, "standard");
+  assert.equal(storedConfig.features.winnerCelebrationEffect.durationSeconds, 5);
+  assert.equal(storedConfig.features.winnerCelebrationEffect.particleAmount, "optimiert");
+  assert.equal(storedConfig.features.x01RemainingScoreBar.barSize, "breit");
+  assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "off");
   assert.equal(
     storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
@@ -435,10 +435,10 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
   const localStorage = new FakeStorage({
     [CONFIG_STORAGE_KEY]: JSON.stringify({
       featureToggles: {
-        checkoutScorePulse: true,
+        checkoutScoreHighlight: true,
       },
       features: {
-        checkoutScorePulse: {
+        checkoutScoreHighlight: {
           enabled: true,
           effect: "blink",
         },
@@ -462,10 +462,10 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
   const snapshot = await runtime.resetConfig();
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
 
-  assert.equal(snapshot.features["checkout-score-pulse"].enabled, false);
-  assert.equal(storedConfig.featureToggles.checkoutScorePulse, false);
-  assert.equal(storedConfig.features.checkoutScorePulse.enabled, false);
-  assert.equal(storedConfig.features.checkoutScorePulse.effect, "scale");
+  assert.equal(snapshot.features["checkout-score-highlight"].enabled, false);
+  assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.enabled, false);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "grow-only");
   assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
   assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
   assert.equal(storedConfig.features.themes.x01.enabled, false);

@@ -1,7 +1,7 @@
 ﻿import { findBoardSvgGroup } from "./dartboard-svg.js";
 
 const EXCLUDED_OVERLAY_SELECTOR =
-  "#ad-ext-checkout-targets, #ad-ext-cricket-targets, #ad-ext-dart-image-overlay, #ad-ext-winner-fireworks";
+  "#ad-ext-checkout-targets, #ad-ext-cricket-targets, #ad-ext-dart-image-overlay, #ad-ext-winner-celebration-effect";
 
 function getClassName(node) {
   if (!node?.className) {

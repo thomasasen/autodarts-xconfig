@@ -14,55 +14,55 @@ import {
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 import {
-  TURN_POINTS_PREVIEW_SCORE_ATTRIBUTE,
-  TURN_POINTS_PREVIEW_SCORE_CLASS,
-} from "./turn-points-preview-contract.js";
+  TURN_SCORE_PREVIEW_SCORE_ATTRIBUTE,
+  TURN_SCORE_PREVIEW_SCORE_CLASS,
+} from "./turn-score-preview-contract.js";
 import {
-  AVERAGE_TREND_PREVIEW_ATTRIBUTE,
-  AVERAGE_TREND_PREVIEW_CLASS,
-} from "./average-trend-preview-contract.js";
+  AVG_TREND_PREVIEW_ATTRIBUTE,
+  AVG_TREND_PREVIEW_CLASS,
+} from "./avg-trend-preview-contract.js";
 import {
-  DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE,
-  DART_MARKER_EMPHASIS_PREVIEW_CLASS,
-  DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE,
-} from "./dart-marker-emphasis-preview-contract.js";
+  DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE,
+  DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_CLASS,
+  DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE,
+} from "./dartboard-marker-highlight-preview-contract.js";
 import {
   ARROW_CLASS,
   ARROW_HALF_WIDTH_VAR,
   ARROW_HEIGHT_VAR,
   UP_CLASS,
   VISIBLE_CLASS,
-  resolveAverageTrendArrowDuration,
-  resolveAverageTrendArrowSize,
-} from "../average-trend-arrow/style.js";
-import { applyDartMarkerEmphasisToMarker } from "../dart-marker-emphasis/logic.js";
-import { resolveDartMarkerEmphasisConfig } from "../dart-marker-emphasis/style.js";
+  resolveAvgTrendArrowDuration,
+  resolveAvgTrendArrowSize,
+} from "../avg-trend-arrow/style.js";
+import { applyDartboardMarkerHighlightToMarker } from "../dartboard-marker-highlight/logic.js";
+import { resolveDartboardMarkerHighlightConfig } from "../dartboard-marker-highlight/style.js";
 import {
-  HIGHLIGHT_CLASS as CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS,
-  applyCheckoutScorePulseStyleVariables,
-  getEffectClass as getCheckoutScorePulseEffectClass,
-} from "../checkout-score-pulse/style.js";
-import { renderCheckoutTargets } from "../checkout-board-targets/logic.js";
-import { resolveBoardTargetVisualConfig } from "../checkout-board-targets/style.js";
+  HIGHLIGHT_CLASS as CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS,
+  applyCheckoutScoreHighlightStyleVariables,
+  getEffectClass as getCheckoutScoreHighlightEffectClass,
+} from "../checkout-score-highlight/style.js";
+import { renderCheckoutTargets } from "../checkout-target-highlights/logic.js";
+import { resolveBoardTargetVisualConfig } from "../checkout-target-highlights/style.js";
 import {
-  ACTIVE_CLASS as X01_SCORE_PROGRESS_ACTIVE_CLASS,
-  FILL_CLASS as X01_SCORE_PROGRESS_FILL_CLASS,
-  getEffectFillClass as getX01ScoreProgressEffectFillClass,
-  getSizeClass as getX01ScoreProgressSizeClass,
-  HOST_ATTRIBUTE as X01_SCORE_PROGRESS_HOST_ATTRIBUTE,
-  TRAIL_CLASS as X01_SCORE_PROGRESS_TRAIL_CLASS,
-  TRACK_CLASS as X01_SCORE_PROGRESS_TRACK_CLASS,
-  normalizeBarSize as normalizeX01ScoreProgressBarSize,
-  normalizeColorTheme as normalizeX01ScoreProgressColorTheme,
-  normalizeEffect as normalizeX01ScoreProgressEffect,
-} from "../x01-score-progress/style.js";
+  ACTIVE_CLASS as X01_REMAINING_SCORE_BAR_ACTIVE_CLASS,
+  FILL_CLASS as X01_REMAINING_SCORE_BAR_FILL_CLASS,
+  getEffectFillClass as getX01RemainingScoreBarEffectFillClass,
+  getSizeClass as getX01RemainingScoreBarSizeClass,
+  HOST_ATTRIBUTE as X01_REMAINING_SCORE_BAR_HOST_ATTRIBUTE,
+  TRAIL_CLASS as X01_REMAINING_SCORE_BAR_TRAIL_CLASS,
+  TRACK_CLASS as X01_REMAINING_SCORE_BAR_TRACK_CLASS,
+  normalizeBarSize as normalizeX01RemainingScoreBarBarSize,
+  normalizeColorTheme as normalizeX01RemainingScoreBarColorTheme,
+  normalizeEffect as normalizeX01RemainingScoreBarEffect,
+} from "../x01-remaining-score-bar/style.js";
 import {
-  COLOR_THEME_ATTRIBUTE as X01_SCORE_PROGRESS_COLOR_THEME_ATTRIBUTE,
-  EFFECT_ATTRIBUTE as X01_SCORE_PROGRESS_EFFECT_ATTRIBUTE,
-  SIZE_ATTRIBUTE as X01_SCORE_PROGRESS_SIZE_ATTRIBUTE,
-  WIDTH_PROPERTY as X01_SCORE_PROGRESS_WIDTH_PROPERTY,
-  resolveActiveVisualVars as resolveX01ScoreProgressActiveVisualVars,
-} from "../x01-score-progress/logic.js";
+  COLOR_THEME_ATTRIBUTE as X01_REMAINING_SCORE_BAR_COLOR_THEME_ATTRIBUTE,
+  EFFECT_ATTRIBUTE as X01_REMAINING_SCORE_BAR_EFFECT_ATTRIBUTE,
+  SIZE_ATTRIBUTE as X01_REMAINING_SCORE_BAR_SIZE_ATTRIBUTE,
+  WIDTH_PROPERTY as X01_REMAINING_SCORE_BAR_WIDTH_PROPERTY,
+  resolveActiveVisualVars as resolveX01RemainingScoreBarActiveVisualVars,
+} from "../x01-remaining-score-bar/logic.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -73,12 +73,12 @@ const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
-const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
+const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-replacer";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
-const DART_MARKER_EMPHASIS_FEATURE_KEY = "dart-marker-emphasis";
-const CHECKOUT_SCORE_PULSE_FEATURE_KEY = "checkout-score-pulse";
-const CHECKOUT_SCORE_PULSE_PREVIEW_FIELD_KEYS = new Set(["effect"]);
-const CHECKOUT_BOARD_TARGETS_FEATURE_KEY = "checkout-board-targets";
+const DARTBOARD_MARKER_HIGHLIGHT_FEATURE_KEY = "dartboard-marker-highlight";
+const CHECKOUT_SCORE_HIGHLIGHT_FEATURE_KEY = "checkout-score-highlight";
+const CHECKOUT_SCORE_HIGHLIGHT_PREVIEW_FIELD_KEYS = new Set(["effect"]);
+const CHECKOUT_BOARD_TARGETS_FEATURE_KEY = "checkout-target-highlights";
 const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
   "visualPreset",
   "segmentStyle",
@@ -90,14 +90,14 @@ const CHECKOUT_BOARD_TARGETS_LIVE_PREVIEW_FIELD_KEYS = new Set([
   "targetSelectionMode",
   "colorTheme",
 ]);
-const X01_SCORE_PROGRESS_FEATURE_KEY = "x01-score-progress";
-const X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY = "barSize";
-const X01_SCORE_PROGRESS_EFFECT_FIELD_KEY = "effect";
-const X01_SCORE_PROGRESS_PREVIEW_START_SCORE = 501;
-const X01_SCORE_PROGRESS_STATIC_PREVIEW_SCORE = 140;
-const X01_SCORE_PROGRESS_EFFECT_PREVIEW_SCORE = X01_SCORE_PROGRESS_PREVIEW_START_SCORE * 0.8;
-const X01_SCORE_PROGRESS_TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-score-progress-trail-width";
-const STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY = "style-checkout-suggestions";
+const X01_REMAINING_SCORE_BAR_FEATURE_KEY = "x01-remaining-score-bar";
+const X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY = "barSize";
+const X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY = "effect";
+const X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE = 501;
+const X01_REMAINING_SCORE_BAR_STATIC_PREVIEW_SCORE = 140;
+const X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE = X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE * 0.8;
+const X01_REMAINING_SCORE_BAR_TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-remaining-score-bar-trail-width";
+const STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY = "checkout-suggestion-styles";
 const STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY = "style";
 const STYLE_CHECKOUT_SUGGESTIONS_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const STYLE_CHECKOUT_SUGGESTIONS_THEMES = Object.freeze({
@@ -162,25 +162,25 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     id: "all-modes",
     title: "Gilt für: Alle Modi",
     featureKeys: Object.freeze([
-      "turn-start-sweep",
-      "turn-points-count",
-      "average-trend-arrow",
-      "triple-double-bull-hits",
-      "dart-marker-darts",
-      "dart-marker-emphasis",
-      "remove-darts-notification",
-      "single-bull-sound",
-      "winner-fireworks",
+      "active-player-sweep",
+      "turn-score-counter",
+      "avg-trend-arrow",
+      "special-hit-highlights",
+      "dart-marker-replacer",
+      "dartboard-marker-highlight",
+      "take-out-darts-alert",
+      "single-bull-hit-sound",
+      "winner-celebration-effect",
     ]),
   }),
   Object.freeze({
     id: "x01",
     title: "Gilt für: X01",
     featureKeys: Object.freeze([
-      "style-checkout-suggestions",
-      "checkout-score-pulse",
-      "x01-score-progress",
-      "checkout-board-targets",
+      "checkout-suggestion-styles",
+      "checkout-score-highlight",
+      "x01-remaining-score-bar",
+      "checkout-target-highlights",
       "tv-board-zoom",
     ]),
   }),
@@ -188,8 +188,8 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     id: "cricket-tactics",
     title: "Gilt für: Cricket / Tactics",
     featureKeys: Object.freeze([
-      "cricket-highlighter",
-      "cricket-grid-fx",
+      "cricket-target-highlighter",
+      "cricket-grid-status-effects",
     ]),
   }),
 ]);
@@ -633,21 +633,21 @@ function buildOptionActiveBadge(documentRef) {
   });
 }
 
-function isCheckoutScorePulseFeature(feature) {
-  return feature?.featureKey === CHECKOUT_SCORE_PULSE_FEATURE_KEY;
+function isCheckoutScoreHighlightFeature(feature) {
+  return feature?.featureKey === CHECKOUT_SCORE_HIGHLIGHT_FEATURE_KEY;
 }
 
-function isCheckoutScorePulsePreviewField(feature, field) {
+function isCheckoutScoreHighlightPreviewField(feature, field) {
   return (
-    isCheckoutScorePulseFeature(feature) &&
+    isCheckoutScoreHighlightFeature(feature) &&
     field?.control === "select" &&
-    CHECKOUT_SCORE_PULSE_PREVIEW_FIELD_KEYS.has(String(field?.key || "").trim())
+    CHECKOUT_SCORE_HIGHLIGHT_PREVIEW_FIELD_KEYS.has(String(field?.key || "").trim())
   );
 }
 
-function resolveCheckoutScorePulsePreviewConfig(featureConfig = {}, overrides = {}) {
+function resolveCheckoutScoreHighlightPreviewConfig(featureConfig = {}, overrides = {}) {
   return {
-    effect: "scale",
+    effect: "grow-only",
     colorTheme: "159, 219, 88",
     intensity: "standard",
     triggerSource: "suggestion-first",
@@ -656,7 +656,7 @@ function resolveCheckoutScorePulsePreviewConfig(featureConfig = {}, overrides = 
   };
 }
 
-function resolveCheckoutScorePulseTriggerLabel(triggerSource) {
+function resolveCheckoutScoreHighlightTriggerLabel(triggerSource) {
   const normalized = String(triggerSource || "").trim().toLowerCase();
   if (normalized === "score-only") {
     return "Score-Mathe";
@@ -667,52 +667,52 @@ function resolveCheckoutScorePulseTriggerLabel(triggerSource) {
   return "Suggestion + Score";
 }
 
-function buildCheckoutScorePulseScoreNode(documentRef, previewConfig = {}, options = {}) {
+function buildCheckoutScoreHighlightScoreNode(documentRef, previewConfig = {}, options = {}) {
   const scoreNode = createElement(documentRef, "span", {
     className: [
-      "ad-xconfig-checkout-score-pulse-score",
-      options.mini ? "ad-xconfig-checkout-score-pulse-score--mini" : "",
-      CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS,
-      getCheckoutScorePulseEffectClass(previewConfig.effect),
+      "ad-xconfig-checkout-score-highlight-score",
+      options.mini ? "ad-xconfig-checkout-score-highlight-score--mini" : "",
+      CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS,
+      getCheckoutScoreHighlightEffectClass(previewConfig.effect),
     ].filter(Boolean).join(" "),
     text: "40",
     attributes: {
-      "data-adxconfig-checkout-score-pulse-score": "true",
-      "data-checkout-score-pulse-effect": String(previewConfig.effect || "").trim(),
+      "data-adxconfig-checkout-score-highlight-score": "true",
+      "data-checkout-score-highlight-effect": String(previewConfig.effect || "").trim(),
     },
   });
-  applyCheckoutScorePulseStyleVariables(scoreNode, previewConfig);
+  applyCheckoutScoreHighlightStyleVariables(scoreNode, previewConfig);
   return scoreNode;
 }
 
-function buildCheckoutScorePulsePreviewCard(documentRef, featureConfig = {}, overrides = {}, options = {}) {
-  const previewConfig = resolveCheckoutScorePulsePreviewConfig(featureConfig, overrides);
+function buildCheckoutScoreHighlightPreviewCard(documentRef, featureConfig = {}, overrides = {}, options = {}) {
+  const previewConfig = resolveCheckoutScoreHighlightPreviewConfig(featureConfig, overrides);
   const card = createElement(documentRef, "div", {
     className: [
-      "ad-xconfig-checkout-score-pulse-preview-card",
-      options.mini ? "ad-xconfig-checkout-score-pulse-preview-card--mini" : "",
+      "ad-xconfig-checkout-score-highlight-preview-card",
+      options.mini ? "ad-xconfig-checkout-score-highlight-preview-card--mini" : "",
     ].filter(Boolean).join(" "),
   });
 
   const playerRow = createElement(documentRef, "div", {
-    className: "ad-xconfig-checkout-score-pulse-preview-player",
+    className: "ad-xconfig-checkout-score-highlight-preview-player",
   });
   playerRow.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-checkout-score-pulse-preview-name",
+    className: "ad-xconfig-checkout-score-highlight-preview-name",
     text: "PLAYER 1",
   }));
   playerRow.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-checkout-score-pulse-preview-context",
-    text: resolveCheckoutScorePulseTriggerLabel(previewConfig.triggerSource),
+    className: "ad-xconfig-checkout-score-highlight-preview-context",
+    text: resolveCheckoutScoreHighlightTriggerLabel(previewConfig.triggerSource),
   }));
   card.appendChild(playerRow);
 
   const scoreRow = createElement(documentRef, "div", {
-    className: "ad-xconfig-checkout-score-pulse-preview-score-row",
+    className: "ad-xconfig-checkout-score-highlight-preview-score-row",
   });
-  scoreRow.appendChild(buildCheckoutScorePulseScoreNode(documentRef, previewConfig, options));
+  scoreRow.appendChild(buildCheckoutScoreHighlightScoreNode(documentRef, previewConfig, options));
   scoreRow.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-checkout-score-pulse-preview-route",
+    className: "ad-xconfig-checkout-score-highlight-preview-route",
     text: "D20",
   }));
   card.appendChild(scoreRow);
@@ -792,30 +792,30 @@ function buildPreviewOptionLayout(documentRef, options = {}) {
   return layout;
 }
 
-function buildCheckoutScorePulsePreviewSection(documentRef, feature) {
+function buildCheckoutScoreHighlightPreviewSection(documentRef, feature) {
   return buildSettingsPreviewSection(documentRef, {
-    previewAttribute: "data-adxconfig-checkout-score-pulse-preview",
-    rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-score-pulse-preview",
-    surfaceClassName: "ad-xconfig-checkout-score-pulse-preview-surface",
+    previewAttribute: "data-adxconfig-checkout-score-highlight-preview",
+    rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-score-highlight-preview",
+    surfaceClassName: "ad-xconfig-checkout-score-highlight-preview-surface",
     fillSurface: (surface) => {
       const head = createElement(documentRef, "div", {
-        className: "ad-xconfig-checkout-score-pulse-preview-head",
+        className: "ad-xconfig-checkout-score-highlight-preview-head",
       });
       head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-checkout-score-pulse-preview-title",
+        className: "ad-xconfig-checkout-score-highlight-preview-title",
         text: "Live-Vorschau",
       }));
       head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-checkout-score-pulse-preview-hint",
+        className: "ad-xconfig-checkout-score-highlight-preview-hint",
         text: "40 Rest",
       }));
       surface.appendChild(head);
-      surface.appendChild(buildCheckoutScorePulsePreviewCard(documentRef, feature?.config || {}));
+      surface.appendChild(buildCheckoutScoreHighlightPreviewCard(documentRef, feature?.config || {}));
     },
   });
 }
 
-function buildCheckoutScorePulseOptionLayout(
+function buildCheckoutScoreHighlightOptionLayout(
   documentRef,
   feature,
   field,
@@ -829,15 +829,15 @@ function buildCheckoutScorePulseOptionLayout(
     ? { effect: optionValue }
     : { colorTheme: optionValue };
   const preview = createElement(documentRef, "div", {
-    className: "ad-xconfig-checkout-score-pulse-option-preview",
+    className: "ad-xconfig-checkout-score-highlight-option-preview",
   });
   preview.appendChild(
-    buildCheckoutScorePulsePreviewCard(documentRef, feature?.config || {}, previewOverrides, {
+    buildCheckoutScoreHighlightPreviewCard(documentRef, feature?.config || {}, previewOverrides, {
       mini: true,
     })
   );
   return buildPreviewOptionLayout(documentRef, {
-    layoutClassName: "ad-xconfig-option-layout ad-xconfig-option-layout--checkout-score-pulse-preview",
+    layoutClassName: "ad-xconfig-option-layout ad-xconfig-option-layout--checkout-score-highlight-preview",
     optionLabel,
     optionDescription,
     previewNode: preview,
@@ -859,13 +859,13 @@ const CHECKOUT_BOARD_PREVIEW_RATIOS = Object.freeze({
 const CHECKOUT_BOARD_PREVIEW_RADIUS = 100;
 const CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS = 76.2;
 
-function isCheckoutBoardTargetsFeature(feature) {
+function isCheckoutTargetHighlightsFeature(feature) {
   return feature?.featureKey === CHECKOUT_BOARD_TARGETS_FEATURE_KEY;
 }
 
-function isCheckoutBoardTargetsPreviewField(feature, field) {
+function isCheckoutTargetHighlightsPreviewField(feature, field) {
   return (
-    isCheckoutBoardTargetsFeature(feature) &&
+    isCheckoutTargetHighlightsFeature(feature) &&
     field?.control === "select" &&
     CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS.has(String(field?.key || "").trim())
   );
@@ -1111,7 +1111,7 @@ function buildCheckoutBoardPreviewSection(documentRef, feature) {
   const targetSelectionMode = String(previewConfig.targetSelectionMode || "next").trim();
   const routeText = resolveCheckoutBoardPreviewRouteText(targetSelectionMode);
   return buildSettingsPreviewSection(documentRef, {
-    previewAttribute: "data-adxconfig-checkout-board-targets-preview",
+    previewAttribute: "data-adxconfig-checkout-target-highlights-preview",
     rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-board-preview",
     surfaceClassName: "ad-xconfig-checkout-board-preview-surface",
     fillSurface: (surface) => {
@@ -1142,16 +1142,16 @@ function replaceElementFromSource(targetNode, sourceNode) {
   }
 
   const parentNode = targetNode.parentNode || null;
-  if (!parentNode || typeof parentNode.insertBefore !== "function") {
+  if (!parentNode || typeof targetNode.before !== "function") {
     return false;
   }
 
-  parentNode.insertBefore(sourceNode, targetNode);
+  targetNode.before(sourceNode);
   targetNode.remove?.();
   return true;
 }
 
-export function syncSettingsPreview(documentRef, features = [], featureKey, settingKey, settingValue) {
+export function syncSettingsPreview(documentRef, features, featureKey, settingKey, settingValue) {
   const normalizedFeatureKey = String(featureKey || "").trim();
   const normalizedSettingKey = String(settingKey || "").trim();
   if (
@@ -1162,7 +1162,7 @@ export function syncSettingsPreview(documentRef, features = [], featureKey, sett
   }
 
   const previousPreview = documentRef.querySelector?.(
-    "[data-adxconfig-checkout-board-targets-preview='true']"
+    "[data-adxconfig-checkout-target-highlights-preview='true']"
   ) || null;
   const feature = Array.isArray(features)
     ? features.find((entry) => entry?.featureKey === normalizedFeatureKey) || null
@@ -1171,12 +1171,15 @@ export function syncSettingsPreview(documentRef, features = [], featureKey, sett
     return false;
   }
 
+  const previewConfig = {};
+  if (feature.config && typeof feature.config === "object") {
+    Object.assign(previewConfig, feature.config);
+  }
+  previewConfig[normalizedSettingKey] = settingValue;
+
   const previewFeature = {
     ...feature,
-    config: {
-      ...(feature.config || {}),
-      [normalizedSettingKey]: settingValue,
-    },
+    config: previewConfig,
   };
   return replaceElementFromSource(
     previousPreview,
@@ -1184,7 +1187,7 @@ export function syncSettingsPreview(documentRef, features = [], featureKey, sett
   );
 }
 
-function buildCheckoutBoardTargetsOptionLayout(
+function buildCheckoutTargetHighlightsOptionLayout(
   documentRef,
   feature,
   field,
@@ -1233,41 +1236,41 @@ function buildCheckoutBoardTargetsOptionLayout(
   });
 }
 
-function isX01ScoreProgressFeature(feature) {
-  return feature?.featureKey === X01_SCORE_PROGRESS_FEATURE_KEY;
+function isX01RemainingScoreBarFeature(feature) {
+  return feature?.featureKey === X01_REMAINING_SCORE_BAR_FEATURE_KEY;
 }
 
-function isX01ScoreProgressPreviewField(feature, field) {
-  if (!isX01ScoreProgressFeature(feature) || field?.control !== "select") {
+function isX01RemainingScoreBarPreviewField(feature, field) {
+  if (!isX01RemainingScoreBarFeature(feature) || field?.control !== "select") {
     return false;
   }
   const fieldKey = String(field?.key || "").trim();
-  return fieldKey === X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY ||
-    fieldKey === X01_SCORE_PROGRESS_EFFECT_FIELD_KEY;
+  return fieldKey === X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY ||
+    fieldKey === X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY;
 }
 
-function resolveX01ScoreProgressPreviewConfig(featureConfig = {}, overrides = {}) {
+function resolveX01RemainingScoreBarPreviewConfig(featureConfig = {}, overrides = {}) {
   const previewConfig = {
     ...featureConfig,
     ...overrides,
   };
   return {
-    colorTheme: normalizeX01ScoreProgressColorTheme(previewConfig.colorTheme),
-    barSize: normalizeX01ScoreProgressBarSize(previewConfig.barSize),
-    effect: normalizeX01ScoreProgressEffect(previewConfig.effect),
+    colorTheme: normalizeX01RemainingScoreBarColorTheme(previewConfig.colorTheme),
+    barSize: normalizeX01RemainingScoreBarBarSize(previewConfig.barSize),
+    effect: normalizeX01RemainingScoreBarEffect(previewConfig.effect),
   };
 }
 
-function applyX01ScoreProgressPreviewVariables(node, previewConfig = {}, options = {}) {
+function applyX01RemainingScoreBarPreviewVariables(node, previewConfig = {}, options = {}) {
   if (!node?.style) {
     return;
   }
 
   const score = Number.isFinite(options.score)
     ? Number(options.score)
-    : X01_SCORE_PROGRESS_STATIC_PREVIEW_SCORE;
-  const ratio = score / X01_SCORE_PROGRESS_PREVIEW_START_SCORE;
-  const visualVars = resolveX01ScoreProgressActiveVisualVars({
+    : X01_REMAINING_SCORE_BAR_STATIC_PREVIEW_SCORE;
+  const ratio = score / X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE;
+  const visualVars = resolveX01RemainingScoreBarActiveVisualVars({
     colorTheme: previewConfig.colorTheme,
     ratio,
     score,
@@ -1275,91 +1278,91 @@ function applyX01ScoreProgressPreviewVariables(node, previewConfig = {}, options
   Object.entries(visualVars).forEach(([propertyName, value]) => {
     node.style.setProperty(propertyName, value);
   });
-  node.style.setProperty(X01_SCORE_PROGRESS_WIDTH_PROPERTY, `${Math.round(ratio * 10000) / 100}%`);
+  node.style.setProperty(X01_REMAINING_SCORE_BAR_WIDTH_PROPERTY, `${Math.round(ratio * 10000) / 100}%`);
   node.style.setProperty(
-    X01_SCORE_PROGRESS_TRAIL_WIDTH_PROPERTY,
+    X01_REMAINING_SCORE_BAR_TRAIL_WIDTH_PROPERTY,
     options.trailWidth || "82%"
   );
 }
 
-function buildX01ScoreProgressPreviewBar(documentRef, featureConfig = {}, overrides = {}, options = {}) {
-  const previewConfig = resolveX01ScoreProgressPreviewConfig(featureConfig, overrides);
+function buildX01RemainingScoreBarPreviewBar(documentRef, featureConfig = {}, overrides = {}, options = {}) {
+  const previewConfig = resolveX01RemainingScoreBarPreviewConfig(featureConfig, overrides);
   const host = createElement(documentRef, "div", {
     className: [
-      "ad-xconfig-x01-score-progress-preview-host",
+      "ad-xconfig-x01-remaining-score-bar-preview-host",
       options.mini
-        ? "ad-xconfig-x01-score-progress-preview-host--mini"
-        : "ad-xconfig-x01-score-progress-preview-host--main",
-      X01_SCORE_PROGRESS_ACTIVE_CLASS,
-      getX01ScoreProgressSizeClass(previewConfig.barSize),
+        ? "ad-xconfig-x01-remaining-score-bar-preview-host--mini"
+        : "ad-xconfig-x01-remaining-score-bar-preview-host--main",
+      X01_REMAINING_SCORE_BAR_ACTIVE_CLASS,
+      getX01RemainingScoreBarSizeClass(previewConfig.barSize),
     ].filter(Boolean).join(" "),
     attributes: {
-      [X01_SCORE_PROGRESS_HOST_ATTRIBUTE]: "true",
-      [X01_SCORE_PROGRESS_COLOR_THEME_ATTRIBUTE]: previewConfig.colorTheme,
-      [X01_SCORE_PROGRESS_SIZE_ATTRIBUTE]: previewConfig.barSize,
-      [X01_SCORE_PROGRESS_EFFECT_ATTRIBUTE]: previewConfig.effect,
-      "data-adxconfig-x01-score-progress-preview-bar": "true",
-      "data-adxconfig-x01-score-progress-preview-cycle": options.cycle ? "true" : undefined,
-      "data-adxconfig-x01-score-progress-preview-loop":
+      [X01_REMAINING_SCORE_BAR_HOST_ATTRIBUTE]: "true",
+      [X01_REMAINING_SCORE_BAR_COLOR_THEME_ATTRIBUTE]: previewConfig.colorTheme,
+      [X01_REMAINING_SCORE_BAR_SIZE_ATTRIBUTE]: previewConfig.barSize,
+      [X01_REMAINING_SCORE_BAR_EFFECT_ATTRIBUTE]: previewConfig.effect,
+      "data-adxconfig-x01-remaining-score-bar-preview-bar": "true",
+      "data-adxconfig-x01-remaining-score-bar-preview-cycle": options.cycle ? "true" : undefined,
+      "data-adxconfig-x01-remaining-score-bar-preview-loop":
         options.loop || (options.cycle ? "main" : undefined),
     },
   });
-  applyX01ScoreProgressPreviewVariables(host, previewConfig, {
+  applyX01RemainingScoreBarPreviewVariables(host, previewConfig, {
     score: options.score,
     trailWidth: options.cycle ? "0%" : undefined,
   });
 
   const track = createElement(documentRef, "div", {
-    className: X01_SCORE_PROGRESS_TRACK_CLASS,
+    className: X01_REMAINING_SCORE_BAR_TRACK_CLASS,
   });
   track.appendChild(createElement(documentRef, "div", {
-    className: X01_SCORE_PROGRESS_TRAIL_CLASS,
+    className: X01_REMAINING_SCORE_BAR_TRAIL_CLASS,
   }));
   track.appendChild(createElement(documentRef, "div", {
     className: [
-      X01_SCORE_PROGRESS_FILL_CLASS,
-      getX01ScoreProgressEffectFillClass(previewConfig.effect),
+      X01_REMAINING_SCORE_BAR_FILL_CLASS,
+      getX01RemainingScoreBarEffectFillClass(previewConfig.effect),
     ].join(" "),
   }));
   host.appendChild(track);
   return host;
 }
 
-function buildX01ScoreProgressPreviewSection(documentRef, feature) {
+function buildX01RemainingScoreBarPreviewSection(documentRef, feature) {
   return buildSettingsPreviewSection(documentRef, {
-    previewAttribute: "data-adxconfig-x01-score-progress-preview",
-    rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--x01-score-progress-preview",
-    surfaceClassName: "ad-xconfig-x01-score-progress-preview-surface",
+    previewAttribute: "data-adxconfig-x01-remaining-score-bar-preview",
+    rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--x01-remaining-score-bar-preview",
+    surfaceClassName: "ad-xconfig-x01-remaining-score-bar-preview-surface",
     fillSurface: (surface) => {
       const head = createElement(documentRef, "div", {
-        className: "ad-xconfig-x01-score-progress-preview-head",
+        className: "ad-xconfig-x01-remaining-score-bar-preview-head",
       });
       head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-x01-score-progress-preview-score",
+        className: "ad-xconfig-x01-remaining-score-bar-preview-score",
         text: "100%",
         attributes: {
-          "data-adxconfig-x01-score-progress-preview-score": "true",
+          "data-adxconfig-x01-remaining-score-bar-preview-score": "true",
         },
       }));
       head.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-x01-score-progress-preview-route",
+        className: "ad-xconfig-x01-remaining-score-bar-preview-route",
         text: "100%  75%  45%  20%",
         attributes: {
-          "data-adxconfig-x01-score-progress-preview-route": "true",
+          "data-adxconfig-x01-remaining-score-bar-preview-route": "true",
         },
       }));
       surface.appendChild(head);
       surface.appendChild(
-        buildX01ScoreProgressPreviewBar(documentRef, feature?.config || {}, {}, {
+        buildX01RemainingScoreBarPreviewBar(documentRef, feature?.config || {}, {}, {
           cycle: true,
-          score: X01_SCORE_PROGRESS_PREVIEW_START_SCORE,
+          score: X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE,
         })
       );
     },
   });
 }
 
-function buildX01ScoreProgressOptionLayout(
+function buildX01RemainingScoreBarOptionLayout(
   documentRef,
   feature,
   field,
@@ -1370,23 +1373,23 @@ function buildX01ScoreProgressOptionLayout(
 ) {
   const fieldKey = String(field?.key || "").trim();
   const previewOverrides =
-    fieldKey === X01_SCORE_PROGRESS_BAR_SIZE_FIELD_KEY
+    fieldKey === X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY
       ? { barSize: optionValue }
       : { effect: optionValue };
-  const isEffectPreview = fieldKey === X01_SCORE_PROGRESS_EFFECT_FIELD_KEY;
-  const previewEffect = normalizeX01ScoreProgressEffect(previewOverrides.effect);
+  const isEffectPreview = fieldKey === X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY;
+  const previewEffect = normalizeX01RemainingScoreBarEffect(previewOverrides.effect);
   const preview = createElement(documentRef, "div", {
-    className: "ad-xconfig-x01-score-progress-option-preview",
+    className: "ad-xconfig-x01-remaining-score-bar-option-preview",
   });
   preview.appendChild(
-    buildX01ScoreProgressPreviewBar(documentRef, feature?.config || {}, previewOverrides, {
+    buildX01RemainingScoreBarPreviewBar(documentRef, feature?.config || {}, previewOverrides, {
       mini: true,
-      score: isEffectPreview ? X01_SCORE_PROGRESS_EFFECT_PREVIEW_SCORE : undefined,
-      loop: isEffectPreview && previewEffect === "ghost-trail" ? "ghost-trail-drop" : undefined,
+      score: isEffectPreview ? X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE : undefined,
+      loop: isEffectPreview && previewEffect === "previous-score-trail" ? "previous-score-trail-drop" : undefined,
     })
   );
   return buildPreviewOptionLayout(documentRef, {
-    layoutClassName: "ad-xconfig-option-layout ad-xconfig-option-layout--x01-score-progress-preview",
+    layoutClassName: "ad-xconfig-option-layout ad-xconfig-option-layout--x01-remaining-score-bar-preview",
     optionLabel,
     optionDescription,
     previewNode: preview,
@@ -1394,13 +1397,13 @@ function buildX01ScoreProgressOptionLayout(
   });
 }
 
-function isStyleCheckoutSuggestionsFeature(feature) {
+function isCheckoutSuggestionStylesFeature(feature) {
   return feature?.featureKey === STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY;
 }
 
-function isStyleCheckoutSuggestionsStyleField(feature, field) {
+function isCheckoutSuggestionStylesStyleField(feature, field) {
   return (
-    isStyleCheckoutSuggestionsFeature(feature) &&
+    isCheckoutSuggestionStylesFeature(feature) &&
     field?.control === "select" &&
     String(field?.key || "").trim() === STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY
   );
@@ -1464,7 +1467,7 @@ function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, override
 
 function buildCheckoutSuggestionPreviewSection(documentRef, feature) {
   return buildSettingsPreviewSection(documentRef, {
-    previewAttribute: "data-adxconfig-style-checkout-suggestions-preview",
+    previewAttribute: "data-adxconfig-checkout-suggestion-styles-preview",
     rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--checkout-suggestion-preview",
     surfaceClassName: "ad-xconfig-checkout-suggestion-preview-surface",
     fillSurface: (surface) => {
@@ -1585,64 +1588,64 @@ function buildThemeGlobalTypographyOptionLabel(documentRef, option) {
   return labelNode;
 }
 
-function isTurnPointsCountPreviewEffect(previewEffect) {
-  return String(previewEffect || "").startsWith("turn-points-count-");
+function isTurnScoreCounterPreviewEffect(previewEffect) {
+  return String(previewEffect || "").startsWith("turn-score-counter-");
 }
 
-function resolveTurnPointsCountPreviewEffect(feature, field, optionValue) {
-  if (feature?.featureKey !== "turn-points-count") {
+function resolveTurnScoreCounterPreviewEffect(feature, field, optionValue) {
+  if (feature?.featureKey !== "turn-score-counter") {
     return "";
   }
   const settingKey = String(field?.key || "").trim();
   const normalizedValue = String(optionValue ?? "").trim();
   if (settingKey === "countEffect") {
-    return `turn-points-count-${normalizedValue || "countup"}`;
+    return `turn-score-counter-${normalizedValue || "countup"}`;
   }
   if (settingKey === "durationMs") {
     if (normalizedValue === "1000") {
-      return "turn-points-count-fast";
+      return "turn-score-counter-fast";
     }
     if (normalizedValue === "5000") {
-      return "turn-points-count-slow";
+      return "turn-score-counter-slow";
     }
-    return "turn-points-count-standard-speed";
+    return "turn-score-counter-standard-speed";
   }
   if (settingKey === "flashMode") {
     return normalizedValue === "permanent"
-      ? "turn-points-count-flash-permanent"
-      : "turn-points-count-flash-change";
+      ? "turn-score-counter-flash-permanent"
+      : "turn-score-counter-flash-change";
   }
   return "";
 }
 
-function buildTurnPointsCountOptionPreview(documentRef) {
+function buildTurnScoreCounterOptionPreview(documentRef) {
   const preview = createElement(documentRef, "span", {
-    className: "ad-xconfig-turn-points-option-preview",
+    className: "ad-xconfig-turn-score-option-preview",
     attributes: {
       "aria-hidden": "true",
-      "data-adxconfig-turn-points-preview": "true",
+      "data-adxconfig-turn-score-preview": "true",
     },
   });
 
   preview.appendChild(createElement(documentRef, "span", {
-    className: TURN_POINTS_PREVIEW_SCORE_CLASS,
+    className: TURN_SCORE_PREVIEW_SCORE_CLASS,
     text: "501",
     attributes: {
-      [TURN_POINTS_PREVIEW_SCORE_ATTRIBUTE]: "true",
+      [TURN_SCORE_PREVIEW_SCORE_ATTRIBUTE]: "true",
     },
   }));
 
   return preview;
 }
 
-function buildTurnPointsCountOptionLayout(
+function buildTurnScoreCounterOptionLayout(
   documentRef,
   optionLabel,
   optionDescription,
   isActive
 ) {
   const layout = createElement(documentRef, "div", {
-    className: "ad-xconfig-option-layout ad-xconfig-option-layout--turn-points-count",
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--turn-score-counter",
   });
   layout.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-option-label",
@@ -1656,7 +1659,7 @@ function buildTurnPointsCountOptionLayout(
     }));
   }
 
-  layout.appendChild(buildTurnPointsCountOptionPreview(documentRef));
+  layout.appendChild(buildTurnScoreCounterOptionPreview(documentRef));
 
   const activeSlot = createElement(documentRef, "span", {
     className: "ad-xconfig-option-active-slot",
@@ -1672,36 +1675,36 @@ function buildTurnPointsCountOptionLayout(
   return layout;
 }
 
-function isAverageTrendArrowPreviewEffect(previewEffect) {
-  return String(previewEffect || "").startsWith("average-trend-arrow-");
+function isAvgTrendArrowPreviewEffect(previewEffect) {
+  return String(previewEffect || "").startsWith("avg-trend-arrow-");
 }
 
-function resolveAverageTrendArrowPreviewEffect(feature, field, optionValue) {
-  if (feature?.featureKey !== "average-trend-arrow") {
+function resolveAvgTrendArrowPreviewEffect(feature, field, optionValue) {
+  if (feature?.featureKey !== "avg-trend-arrow") {
     return "";
   }
   const settingKey = String(field?.key || "").trim();
   const normalizedValue = String(optionValue ?? "").trim();
   if (settingKey === "durationMs") {
-    return `average-trend-arrow-duration-${normalizedValue || "320"}`;
+    return `avg-trend-arrow-duration-${normalizedValue || "320"}`;
   }
   if (settingKey === "size") {
-    return `average-trend-arrow-size-${normalizedValue || "standard"}`;
+    return `avg-trend-arrow-size-${normalizedValue || "standard"}`;
   }
   return "";
 }
 
-function buildAverageTrendArrowOptionPreview(documentRef, field, optionValue) {
+function buildAvgTrendArrowOptionPreview(documentRef, field, optionValue) {
   const preview = createElement(documentRef, "span", {
-    className: AVERAGE_TREND_PREVIEW_CLASS,
+    className: AVG_TREND_PREVIEW_CLASS,
     attributes: {
       "aria-hidden": "true",
-      "data-adxconfig-average-trend-preview-host": "true",
+      "data-adxconfig-avg-trend-preview-host": "true",
     },
   });
   const settingKey = String(field?.key || "").trim();
-  const size = resolveAverageTrendArrowSize(settingKey === "size" ? optionValue : "standard");
-  const durationMs = resolveAverageTrendArrowDuration(
+  const size = resolveAvgTrendArrowSize(settingKey === "size" ? optionValue : "standard");
+  const durationMs = resolveAvgTrendArrowDuration(
     settingKey === "durationMs" ? optionValue : 320
   );
   const arrow = createElement(documentRef, "span", {
@@ -1711,17 +1714,17 @@ function buildAverageTrendArrowOptionPreview(documentRef, field, optionValue) {
       UP_CLASS,
     ].join(" "),
     attributes: {
-      [AVERAGE_TREND_PREVIEW_ATTRIBUTE]: "true",
+      [AVG_TREND_PREVIEW_ATTRIBUTE]: "true",
     },
   });
   arrow.style.setProperty(ARROW_HALF_WIDTH_VAR, `${size.arrowHalfWidthPx}px`);
   arrow.style.setProperty(ARROW_HEIGHT_VAR, `${size.arrowHeightPx}px`);
-  arrow.style.setProperty("--ad-xconfig-average-trend-preview-duration", `${durationMs}ms`);
+  arrow.style.setProperty("--ad-xconfig-avg-trend-preview-duration", `${durationMs}ms`);
   preview.appendChild(arrow);
   return preview;
 }
 
-function buildAverageTrendArrowOptionLayout(
+function buildAvgTrendArrowOptionLayout(
   documentRef,
   field,
   optionValue,
@@ -1730,7 +1733,7 @@ function buildAverageTrendArrowOptionLayout(
   isActive
 ) {
   const layout = createElement(documentRef, "div", {
-    className: "ad-xconfig-option-layout ad-xconfig-option-layout--average-trend-arrow",
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--avg-trend-arrow",
   });
   const textNode = createElement(documentRef, "span", {
     className: "ad-xconfig-option-text",
@@ -1746,7 +1749,7 @@ function buildAverageTrendArrowOptionLayout(
     }));
   }
   layout.appendChild(textNode);
-  layout.appendChild(buildAverageTrendArrowOptionPreview(documentRef, field, optionValue));
+  layout.appendChild(buildAvgTrendArrowOptionPreview(documentRef, field, optionValue));
 
   const activeSlot = createElement(documentRef, "span", {
     className: "ad-xconfig-option-active-slot",
@@ -1761,12 +1764,12 @@ function buildAverageTrendArrowOptionLayout(
   return layout;
 }
 
-function isDartMarkerEmphasisPreviewEffect(previewEffect) {
-  return String(previewEffect || "").startsWith("dart-marker-emphasis-");
+function isDartboardMarkerHighlightPreviewEffect(previewEffect) {
+  return String(previewEffect || "").startsWith("dartboard-marker-highlight-");
 }
 
-function resolveDartMarkerEmphasisPreviewEffect(feature, field, optionValue) {
-  if (feature?.featureKey !== DART_MARKER_EMPHASIS_FEATURE_KEY) {
+function resolveDartboardMarkerHighlightPreviewEffect(feature, field, optionValue) {
+  if (feature?.featureKey !== DARTBOARD_MARKER_HIGHLIGHT_FEATURE_KEY) {
     return "";
   }
   const settingKey = String(field?.key || "").trim();
@@ -1774,10 +1777,10 @@ function resolveDartMarkerEmphasisPreviewEffect(feature, field, optionValue) {
     return "";
   }
   const normalizedValue = String(optionValue ?? "").trim();
-  return `dart-marker-emphasis-${settingKey}-${normalizedValue}`;
+  return `dartboard-marker-highlight-${settingKey}-${normalizedValue}`;
 }
 
-function resolveDartMarkerEmphasisPreviewConfig(feature, field, optionValue, options = {}) {
+function resolveDartboardMarkerHighlightPreviewConfig(feature, field, optionValue, options = {}) {
   const settingKey = String(field?.key || "").trim();
   const nextConfig = { ...feature?.config };
   if (settingKey === "size" || settingKey === "opacityPercent") {
@@ -1788,7 +1791,7 @@ function resolveDartMarkerEmphasisPreviewConfig(feature, field, optionValue, opt
   if (options.idle) {
     nextConfig.effect = "none";
   }
-  return resolveDartMarkerEmphasisConfig(nextConfig);
+  return resolveDartboardMarkerHighlightConfig(nextConfig);
 }
 
 function createSvgElement(documentRef, tagName, attributes = {}) {
@@ -1799,12 +1802,12 @@ function createSvgElement(documentRef, tagName, attributes = {}) {
   return element;
 }
 
-function buildDartMarkerEmphasisOptionPreview(documentRef, feature, field, optionValue) {
+function buildDartboardMarkerHighlightOptionPreview(documentRef, feature, field, optionValue) {
   const preview = createElement(documentRef, "span", {
-    className: DART_MARKER_EMPHASIS_PREVIEW_CLASS,
+    className: DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_CLASS,
     attributes: {
       "aria-hidden": "true",
-      [DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE]: "true",
+      [DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE]: "true",
     },
   });
   const svg = createSvgElement(documentRef, "svg", {
@@ -1815,23 +1818,23 @@ function buildDartMarkerEmphasisOptionPreview(documentRef, feature, field, optio
     cx: "21",
     cy: "21",
     r: "16",
-    class: "ad-xconfig-dart-marker-emphasis-board-dot",
+    class: "ad-xconfig-dartboard-marker-highlight-board-dot",
   }));
   const marker = createSvgElement(documentRef, "circle", {
     cx: "21",
     cy: "21",
-    [DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE]: "true",
+    [DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE]: "true",
   });
-  applyDartMarkerEmphasisToMarker(
+  applyDartboardMarkerHighlightToMarker(
     marker,
-    resolveDartMarkerEmphasisPreviewConfig(feature, field, optionValue, { idle: true })
+    resolveDartboardMarkerHighlightPreviewConfig(feature, field, optionValue, { idle: true })
   );
   svg.appendChild(marker);
   preview.appendChild(svg);
   return preview;
 }
 
-function buildDartMarkerEmphasisOptionLayout(
+function buildDartboardMarkerHighlightOptionLayout(
   documentRef,
   feature,
   field,
@@ -1841,7 +1844,7 @@ function buildDartMarkerEmphasisOptionLayout(
   isActive
 ) {
   const layout = createElement(documentRef, "div", {
-    className: "ad-xconfig-option-layout ad-xconfig-option-layout--dart-marker-emphasis",
+    className: "ad-xconfig-option-layout ad-xconfig-option-layout--dartboard-marker-highlight",
   });
   const textNode = createElement(documentRef, "span", {
     className: "ad-xconfig-option-text",
@@ -1858,7 +1861,7 @@ function buildDartMarkerEmphasisOptionLayout(
   }
   layout.appendChild(textNode);
   layout.appendChild(
-    buildDartMarkerEmphasisOptionPreview(documentRef, feature, field, optionValue)
+    buildDartboardMarkerHighlightOptionPreview(documentRef, feature, field, optionValue)
   );
 
   const activeSlot = createElement(documentRef, "span", {
@@ -2001,21 +2004,21 @@ function resolveSelectOptionPreviewState(feature, field, option) {
   const optionValue = String(option?.value ?? "");
   const previewEffect =
     String(option?.previewEffect || "").trim() ||
-    resolveTurnPointsCountPreviewEffect(feature, field, optionValue) ||
-    resolveAverageTrendArrowPreviewEffect(feature, field, optionValue) ||
-    resolveDartMarkerEmphasisPreviewEffect(feature, field, optionValue);
+    resolveTurnScoreCounterPreviewEffect(feature, field, optionValue) ||
+    resolveAvgTrendArrowPreviewEffect(feature, field, optionValue) ||
+    resolveDartboardMarkerHighlightPreviewEffect(feature, field, optionValue);
 
   return {
     isDartDesignField: isDartDesignSelectField(feature, field),
     isTypographyFontField: isThemeGlobalTypographyFontField(feature, field),
-    isCheckoutScorePulsePreviewSelectField: isCheckoutScorePulsePreviewField(feature, field),
-    isCheckoutBoardTargetsPreviewSelectField: isCheckoutBoardTargetsPreviewField(feature, field),
-    isX01ScoreProgressPreviewSelectField: isX01ScoreProgressPreviewField(feature, field),
-    isCheckoutSuggestionStyleField: isStyleCheckoutSuggestionsStyleField(feature, field),
+    isCheckoutScoreHighlightPreviewSelectField: isCheckoutScoreHighlightPreviewField(feature, field),
+    isCheckoutTargetHighlightsPreviewSelectField: isCheckoutTargetHighlightsPreviewField(feature, field),
+    isX01RemainingScoreBarPreviewSelectField: isX01RemainingScoreBarPreviewField(feature, field),
+    isCheckoutSuggestionStyleField: isCheckoutSuggestionStylesStyleField(feature, field),
     previewEffect,
-    hasTurnPointsCountPreview: isTurnPointsCountPreviewEffect(previewEffect),
-    hasAverageTrendArrowPreview: isAverageTrendArrowPreviewEffect(previewEffect),
-    hasDartMarkerEmphasisPreview: isDartMarkerEmphasisPreviewEffect(previewEffect),
+    hasTurnScoreCounterPreview: isTurnScoreCounterPreviewEffect(previewEffect),
+    hasAvgTrendArrowPreview: isAvgTrendArrowPreviewEffect(previewEffect),
+    hasDartboardMarkerHighlightPreview: isDartboardMarkerHighlightPreviewEffect(previewEffect),
   };
 }
 
@@ -2024,14 +2027,14 @@ function buildSelectOptionClassName(state, previewColorTheme) {
     "ad-xconfig-option-item",
     state.isDartDesignField ? "ad-xconfig-option-item--dart-design" : "",
     state.isTypographyFontField ? "ad-xconfig-option-item--typography-font" : "",
-    state.isCheckoutScorePulsePreviewSelectField ? "ad-xconfig-option-item--checkout-score-pulse-preview" : "",
-    state.isCheckoutBoardTargetsPreviewSelectField ? "ad-xconfig-option-item--checkout-board-preview" : "",
-    state.isX01ScoreProgressPreviewSelectField ? "ad-xconfig-option-item--x01-score-progress-preview" : "",
+    state.isCheckoutScoreHighlightPreviewSelectField ? "ad-xconfig-option-item--checkout-score-highlight-preview" : "",
+    state.isCheckoutTargetHighlightsPreviewSelectField ? "ad-xconfig-option-item--checkout-board-preview" : "",
+    state.isX01RemainingScoreBarPreviewSelectField ? "ad-xconfig-option-item--x01-remaining-score-bar-preview" : "",
     state.isCheckoutSuggestionStyleField ? "ad-xconfig-option-item--checkout-suggestion-style" : "",
     state.previewEffect ? "ad-xconfig-option-item--effect-preview" : "",
-    state.hasTurnPointsCountPreview ? "ad-xconfig-option-item--turn-points-count-preview" : "",
-    state.hasAverageTrendArrowPreview ? "ad-xconfig-option-item--average-trend-arrow-preview" : "",
-    state.hasDartMarkerEmphasisPreview ? "ad-xconfig-option-item--dart-marker-emphasis-preview" : "",
+    state.hasTurnScoreCounterPreview ? "ad-xconfig-option-item--turn-score-counter-preview" : "",
+    state.hasAvgTrendArrowPreview ? "ad-xconfig-option-item--avg-trend-arrow-preview" : "",
+    state.hasDartboardMarkerHighlightPreview ? "ad-xconfig-option-item--dartboard-marker-highlight-preview" : "",
     previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
   ].filter(Boolean).join(" ");
 }
@@ -2074,39 +2077,39 @@ function appendSelectOptionLayout(documentRef, optionButton, feature, field, opt
     );
     return;
   }
-  if (state.hasTurnPointsCountPreview) {
+  if (state.hasTurnScoreCounterPreview) {
     optionButton.appendChild(
-      buildTurnPointsCountOptionLayout(documentRef, option.label, optionDescription, isActive)
+      buildTurnScoreCounterOptionLayout(documentRef, option.label, optionDescription, isActive)
     );
     return;
   }
-  if (state.hasAverageTrendArrowPreview) {
+  if (state.hasAvgTrendArrowPreview) {
     optionButton.appendChild(
-      buildAverageTrendArrowOptionLayout(documentRef, field, optionValue, option.label, optionDescription, isActive)
+      buildAvgTrendArrowOptionLayout(documentRef, field, optionValue, option.label, optionDescription, isActive)
     );
     return;
   }
-  if (state.hasDartMarkerEmphasisPreview) {
+  if (state.hasDartboardMarkerHighlightPreview) {
     optionButton.appendChild(
-      buildDartMarkerEmphasisOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
+      buildDartboardMarkerHighlightOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
     );
     return;
   }
-  if (state.isCheckoutScorePulsePreviewSelectField) {
+  if (state.isCheckoutScoreHighlightPreviewSelectField) {
     optionButton.appendChild(
-      buildCheckoutScorePulseOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
+      buildCheckoutScoreHighlightOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
     );
     return;
   }
-  if (state.isCheckoutBoardTargetsPreviewSelectField) {
+  if (state.isCheckoutTargetHighlightsPreviewSelectField) {
     optionButton.appendChild(
-      buildCheckoutBoardTargetsOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
+      buildCheckoutTargetHighlightsOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
     );
     return;
   }
-  if (state.isX01ScoreProgressPreviewSelectField) {
+  if (state.isX01RemainingScoreBarPreviewSelectField) {
     optionButton.appendChild(
-      buildX01ScoreProgressOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
+      buildX01RemainingScoreBarOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
     );
     return;
   }
@@ -2649,17 +2652,17 @@ function buildSettingsModal(documentRef, state, features) {
     });
     body.appendChild(detailsRow);
   }
-  if (isCheckoutScorePulseFeature(feature)) {
-    body.appendChild(buildCheckoutScorePulsePreviewSection(documentRef, feature));
+  if (isCheckoutScoreHighlightFeature(feature)) {
+    body.appendChild(buildCheckoutScoreHighlightPreviewSection(documentRef, feature));
   }
-  if (isCheckoutBoardTargetsFeature(feature)) {
+  if (isCheckoutTargetHighlightsFeature(feature)) {
     body.appendChild(buildCheckoutBoardPreviewSection(documentRef, feature));
   }
-  if (isStyleCheckoutSuggestionsFeature(feature)) {
+  if (isCheckoutSuggestionStylesFeature(feature)) {
     body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, feature));
   }
-  if (isX01ScoreProgressFeature(feature)) {
-    body.appendChild(buildX01ScoreProgressPreviewSection(documentRef, feature));
+  if (isX01RemainingScoreBarFeature(feature)) {
+    body.appendChild(buildX01RemainingScoreBarPreviewSection(documentRef, feature));
   }
   const sectionBodies = new Map();
   fields.forEach((field) => {

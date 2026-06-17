@@ -20,7 +20,7 @@ Post-release runtime audit for the userscript with a behavior-parity constraint:
    Board and cricket-grid discovery scanned the full document on every scheduled update, even when only game state changed.
 
 4. A small set of async paths could outlive feature teardown.
-   Lazy vendor loading for `winner-fireworks` and `turn-points-count` could schedule late work after cleanup if not explicitly guarded.
+   Lazy vendor loading for `winner-celebration-effect` and `turn-score-counter` could schedule late work after cleanup if not explicitly guarded.
 
 5. Optional polling paths could still wake hidden tabs.
    This was low-frequency, but it was still unnecessary long-session work.
@@ -44,21 +44,21 @@ Post-release runtime audit for the userscript with a behavior-parity constraint:
 
 - Added board/grid cache invalidation paths for:
   - `tv-board-zoom`
-  - `checkout-board-targets`
-  - `cricket-highlighter`
-  - `cricket-grid-fx`
+  - `checkout-target-highlights`
+  - `cricket-target-highlighter`
+  - `cricket-grid-status-effects`
 - Limited cache resets to external DOM mutations, resize/orientation, visibility transitions, or node disconnection.
-- Removed an unnecessary overlay creation on the inactive clear path in `checkout-board-targets`.
+- Removed an unnecessary overlay creation on the inactive clear path in `checkout-target-highlights`.
 
 ### Timers and Async Cleanup
 
 - Guarded late lazy-loader callbacks after cleanup in:
-  - `winner-fireworks`
-  - `turn-points-count`
+  - `winner-celebration-effect`
+  - `turn-score-counter`
 - Kept timeout, interval, and RAF cleanup explicit in feature teardown.
 - Gated optional polling work for hidden documents in:
-  - `single-bull-sound`
-  - `triple-double-bull-hits`
+  - `single-bull-hit-sound`
+  - `special-hit-highlights`
 
 ## Notable Behavior Preserved
 
@@ -70,14 +70,14 @@ Post-release runtime audit for the userscript with a behavior-parity constraint:
 
 - The runtime still uses one observer per feature by design. This audit reduced unnecessary observer wakeups without introducing a shared observer multiplexer.
 - Some decorative features still observe broad DOM regions because Autodarts markup is not stable enough to pin them to a narrow host selector safely.
-- `checkout-score-pulse` keeps class-based observation because score focus can move through DOM class changes; it was left behavior-stable rather than aggressively coalesced.
+- `checkout-score-highlight` keeps class-based observation because score focus can move through DOM class changes; it was left behavior-stable rather than aggressively coalesced.
 
 ## Tests Added
 
 - duplicate websocket payload suppression
-- representative managed-mutation ignore path for `checkout-board-targets`
-- direct game-state-only scheduling path for `remove-darts-notification`
-- late async cleanup guard for `turn-points-count`
+- representative managed-mutation ignore path for `checkout-target-highlights`
+- direct game-state-only scheduling path for `take-out-darts-alert`
+- late async cleanup guard for `turn-score-counter`
 - documentation coverage for the new runtime audit docs
 
 ## Verification

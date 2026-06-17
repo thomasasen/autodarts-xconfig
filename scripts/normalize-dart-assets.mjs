@@ -7,7 +7,7 @@ import {
   DART_IMAGE_SOURCE_HEIGHT,
   DART_IMAGE_SOURCE_WIDTH,
   DART_IMAGE_TIP_Y,
-} from "../src/features/dart-marker-darts/logic.js";
+} from "../src/features/dart-marker-replacer/logic.js";
 
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const targetDirectory = path.resolve(process.cwd(), "src", "assets", "darts");

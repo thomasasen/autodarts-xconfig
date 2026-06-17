@@ -141,7 +141,7 @@ test("gotcha theme keeps x01 preview contracts and styles the live delta host se
   assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\{[^}]*grid-template-columns:minmax\(0,\s*1fr\)\s*max-content\s*max-content\s*!important;[^}]*grid-template-rows:max-content max-content max-content\s*!important;[^}]*align-items:start\s*!important;[^}]*align-content:center\s*!important;[^}]*column-gap:clamp\(0\.36rem,0\.8vw,0\.6rem\)\s*!important;[^}]*row-gap:clamp\(0\.08rem,0\.18vh,0\.16rem\)\s*!important;/s);
   assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.css-37hv00\{[^}]*grid-column:1 \/ 2\s*!important;[^}]*grid-row:1 \/ 2\s*!important;[^}]*align-self:end\s*!important;[^}]*min-width:0\s*!important;/s);
   assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.css-1igwmid\{[^}]*grid-column:1 \/ 2\s*!important;[^}]*grid-row:2 \/ 3\s*!important;[^}]*align-self:start\s*!important;[^}]*min-width:0\s*!important;[^}]*padding-left:0\s*!important;[^}]*margin-top:0\s*!important;/s);
-  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\[data-ad-ext-x01-score-progress='true'\],\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-x01-score-progress--active,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-x01-score-progress--inactive\{[^}]*grid-column:1 \/ -1\s*!important;[^}]*grid-row:3 \/ 4\s*!important;[^}]*align-self:start\s*!important;/s);
+  assert.match(inlineCss, /#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\[data-ad-ext-x01-remaining-score-bar='true'\],\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-x01-remaining-score-bar--active,\s*#ad-ext-player-display\s+\.ad-ext-player\s*>\s*\.chakra-stack\s*>\s*\.ad-ext-x01-remaining-score-bar--inactive\{[^}]*grid-column:1 \/ -1\s*!important;[^}]*grid-row:3 \/ 4\s*!important;[^}]*align-self:start\s*!important;/s);
   assert.match(inlineCss, /autodarts-tools-gotcha::before\{[^}]*content:"\|"\s*!important;[^}]*opacity:0\.56\s*!important;/s);
   assert.match(inlineLeftCss, /autodarts-tools-gotcha\{[^}]*grid-column:2\s*!important;[^}]*grid-row:1\s*!important;[^}]*text-align:right\s*!important;/s);
   assert.match(inlineLeftCss, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\{[^}]*grid-column:3\s*!important;[^}]*grid-row:1 \/ 2\s*!important;/s);
@@ -292,15 +292,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\[data-ad-ext-x01-2player-slot="progress"\]\[data-ad-ext-x01-score-progress-size="breit"\]\{[^}]*--ad-ext-x01-2player-progress-min-block-size:calc\(clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\) \+ var\(--ad-ext-x01-2player-progress-pad-block-start\)\);/s
+    /\[data-ad-ext-x01-2player-slot="progress"\]\[data-ad-ext-x01-remaining-score-bar-size="breit"\]\{[^}]*--ad-ext-x01-2player-progress-min-block-size:calc\(clamp\(1\.08rem,\s*1\.9vw,\s*1\.4rem\) \+ var\(--ad-ext-x01-2player-progress-pad-block-start\)\);/s
   );
   assert.match(
     css,
-    /\.ad-ext-player\.ad-ext-player-inactive\s*>\s*\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\],[^}]*\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s*>\s*\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\]\{[^}]*min-height:max-content\s*!important;[^}]*height:auto\s*!important;[^}]*padding:0\s*!important;/s
+    /\.ad-ext-player\.ad-ext-player-inactive\s*>\s*\.chakra-stack\[data-ad-ext-x01-remaining-score-bar-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\],[^}]*\.ad-ext-player:not\(\.ad-ext-player-active\):not\(\.ad-ext-player-winner\)\s*>\s*\.chakra-stack\[data-ad-ext-x01-remaining-score-bar-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\]\{[^}]*min-height:max-content\s*!important;[^}]*height:auto\s*!important;[^}]*padding:0\s*!important;/s
   );
   assert.match(
     css,
-    /\.ad-ext-player\.ad-ext-player-inactive\s*>\s*\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\],[^}]*line-height:0\.9\s*!important;[^}]*align-self:stretch\s*!important;[^}]*overflow:visible\s*!important;[^}]*color:var\(--ad-ext-theme-meta-inactive-color\)\s*!important;/s
+    /\.ad-ext-player\.ad-ext-player-inactive\s*>\s*\.chakra-stack\[data-ad-ext-x01-remaining-score-bar-stack="true"\]\[data-ad-ext-x01-2player-stack="true"\]\s*>\s*\[data-ad-ext-x01-2player-slot="score"\],[^}]*line-height:0\.9\s*!important;[^}]*align-self:stretch\s*!important;[^}]*overflow:visible\s*!important;[^}]*color:var\(--ad-ext-theme-meta-inactive-color\)\s*!important;/s
   );
   assert.match(
     css,
@@ -348,7 +348,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\.chakra-stack\[data-ad-ext-x01-score-progress-stack="true"\]:not\(\[data-ad-ext-x01-2player-stack="true"\]\)/s
+    /\.chakra-stack\[data-ad-ext-x01-remaining-score-bar-stack="true"\]:not\(\[data-ad-ext-x01-2player-stack="true"\]\)/s
   );
   assert.match(
     css,

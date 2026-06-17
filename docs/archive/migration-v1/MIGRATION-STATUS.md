@@ -7,7 +7,7 @@
 - Alle 15 relevanten Legacy-Animationen und Komfortfunktionen sind im Bundle enthalten.
 - Alle 5 Legacy-Themes sind als modulare Theme-Features enthalten.
 - Die zentrale Oberfläche `AD xConfig` ist Teil der Runtime und steuert alle ausgelieferten Module.
-- Der Legacy-Testbutton für `Winner Fireworks` ist als saubere Bundle-UX wieder vorhanden.
+- Der Legacy-Testbutton für `Winner Celebration Effect` ist als saubere Bundle-UX wieder vorhanden.
 
 ### Regelstand
 

@@ -28,21 +28,21 @@ Diese Inventur beschreibt den aktuellen Aufbau der neuen Architektur in `src/cor
 | --- | --- | --- |
 | `src/features/feature-registry.js` | Feature | registriert Feature-Metadaten, Mount-Funktionen und optionale Actions |
 | `src/features/xconfig-ui/*` | Feature | AD-xConfig-Menü, Route, Settings-Modal, README-Links und Feature-Aktionen |
-| `src/features/checkout-score-pulse/*` | Feature | Checkout-Hervorhebung für X01 |
-| `src/features/checkout-board-targets/*` | Feature | Board-Targets für Checkout-Wege |
+| `src/features/checkout-score-highlight/*` | Feature | Checkout-Hervorhebung für X01 |
+| `src/features/checkout-target-highlights/*` | Feature | Board-Targets für Checkout-Wege |
 | `src/features/tv-board-zoom/*` | Feature | Checkout-/Setup-Zoom mit Sticky-Hold für Finish-Momente und Korrektur-Auszoom |
-| `src/features/style-checkout-suggestions/*` | Feature | visuelle Formatierung der Checkout-Empfehlungen |
-| `src/features/average-trend-arrow/*` | Feature | AVG-Trendanzeige |
-| `src/features/turn-start-sweep/*` | Feature | Spielerwechsel-Hervorhebung |
-| `src/features/triple-double-bull-hits/*` | Feature | Treffer-Hervorhebung für Triple/Double/Bull |
-| `src/features/cricket-highlighter/*` | Feature | Board-Overlay für Cricket-/Tactics-Zielzustände |
-| `src/features/cricket-grid-fx/*` | Feature | Matrix-Effekte für Cricket/Tactics |
-| `src/features/dart-marker-emphasis/*` | Feature | Marker-Hervorhebung auf dem virtuellen Board |
-| `src/features/dart-marker-darts/*` | Feature | Dart-Bilder und Fluganimationen statt Standard-Marker |
-| `src/features/remove-darts-notification/*` | Feature | auffälligerer Remove-Darts-Hinweis |
-| `src/features/single-bull-sound/*` | Feature | Audio-Feedback bei Single Bull |
-| `src/features/turn-points-count/*` | Feature | sichtbares Hoch-/Runterzählen von Punkten |
-| `src/features/winner-fireworks/*` | Feature | Sieger-Effekt, Preview-Aktion und Cleanup |
+| `src/features/checkout-suggestion-styles/*` | Feature | visuelle Formatierung der Checkout-Empfehlungen |
+| `src/features/avg-trend-arrow/*` | Feature | AVG-Trendanzeige |
+| `src/features/active-player-sweep/*` | Feature | Spielerwechsel-Hervorhebung |
+| `src/features/special-hit-highlights/*` | Feature | Treffer-Hervorhebung für Triple/Double/Bull |
+| `src/features/cricket-target-highlighter/*` | Feature | Board-Overlay für Cricket-/Tactics-Zielzustände |
+| `src/features/cricket-grid-status-effects/*` | Feature | Matrix-Effekte für Cricket/Tactics |
+| `src/features/dartboard-marker-highlight/*` | Feature | Marker-Hervorhebung auf dem virtuellen Board |
+| `src/features/dart-marker-replacer/*` | Feature | Dart-Bilder und Fluganimationen statt Standard-Marker |
+| `src/features/take-out-darts-alert/*` | Feature | auffälligerer Remove-Darts-Hinweis |
+| `src/features/single-bull-hit-sound/*` | Feature | Audio-Feedback bei Single Bull |
+| `src/features/turn-score-counter/*` | Feature | sichtbares Hoch-/Runterzählen von Punkten |
+| `src/features/winner-celebration-effect/*` | Feature | Sieger-Effekt, Preview-Aktion und Cleanup |
 | `src/features/themes/x01/*` | Feature | X01-Theme |
 | `src/features/themes/shanghai/*` | Feature | Shanghai-Theme |
 | `src/features/themes/bermuda/*` | Feature | Bermuda-Theme |

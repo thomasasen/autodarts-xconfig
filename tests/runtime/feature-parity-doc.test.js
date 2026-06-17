@@ -28,21 +28,21 @@ function escapeRegExp(text) {
 }
 
 const LEGACY_USER_SCRIPTS = Object.freeze([
-  "Animation/Autodarts Animate Average Trend Arrow.user.js",
-  "Animation/Autodarts Animate Checkout Board Targets.user.js",
-  "Animation/Autodarts Animate Checkout Score Pulse.user.js",
-  "Animation/Autodarts Animate Cricket Grid FX.user.js",
+  "Animation/Autodarts Animate AVG Trend Arrow.user.js",
+  "Animation/Autodarts Animate Checkout Target Highlights.user.js",
+  "Animation/Autodarts Animate Checkout Score Highlight.user.js",
+  "Animation/Autodarts Animate Cricket Grid Status Effects.user.js",
   "Animation/Autodarts Animate Cricket Target Highlighter.user.js",
-  "Animation/Autodarts Animate Dart Marker Darts.user.js",
-  "Animation/Autodarts Animate Dart Marker Emphasis.user.js",
-  "Animation/Autodarts Animate Remove Darts Notification.user.js",
-  "Animation/Autodarts Animate Single Bull Sound.user.js",
-  "Animation/Autodarts Animate Triple Double Bull Hits.user.js",
-  "Animation/Autodarts Animate Turn Points Count.user.js",
-  "Animation/Autodarts Animate Turn Start Sweep.user.js",
+  "Animation/Autodarts Animate Dart Marker Replacer.user.js",
+  "Animation/Autodarts Animate Dartboard Marker Highlight.user.js",
+  "Animation/Autodarts Animate Take Out Darts Alert.user.js",
+  "Animation/Autodarts Animate Single Bull Hit Sound.user.js",
+  "Animation/Autodarts Animate Special Hit Highlights.user.js",
+  "Animation/Autodarts Animate Turn Score Counter.user.js",
+  "Animation/Autodarts Animate Active Player Sweep.user.js",
   "Animation/Autodarts Animate TV Board Zoom.user.js",
-  "Animation/Autodarts Animate Winner Fireworks.user.js",
-  "Animation/Autodarts Style Checkout Suggestions.user.js",
+  "Animation/Autodarts Animate Winner Celebration Effect.user.js",
+  "Animation/Autodarts Checkout Suggestion Styles.user.js",
   "Template/Autodarts Theme Bermuda.user.js",
   "Template/Autodarts Theme Bull-off.user.js",
   "Template/Autodarts Theme Cricket.user.js",
@@ -91,7 +91,7 @@ test("LEGACY-DISCREPANCY-MATRIX uses the required release columns", () => {
 
 test("inventory documents exist and cover both legacy and new architecture", () => {
   assert.match(oldRepoInventoryText, /OLDREPO-Inventur/);
-  assert.match(oldRepoInventoryText, /Animation\/Autodarts Animate Checkout Score Pulse\.user\.js/);
+  assert.match(oldRepoInventoryText, /Animation\/Autodarts Animate Checkout Score Highlight\.user\.js/);
   assert.match(oldRepoInventoryText, /Config\/AD xConfig Auto Loader\.user\.js/);
 
   assert.match(newSystemInventoryText, /New-System-Inventur/);

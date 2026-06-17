@@ -13,7 +13,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-const API_VERSION = "2.3.21";
+const API_VERSION = "2.4.0";
 const STARTUP_DEFER_INTERVAL_MS = 16;
 
 function getWindowTimerApi(windowRef) {
@@ -67,6 +67,12 @@ function normalizeFeatureDefinitions(definitions) {
       ...definition,
       featureKey,
       configKey,
+      legacyFeatureKeys: Array.isArray(definition.legacyFeatureKeys)
+        ? definition.legacyFeatureKeys.map((key) => String(key || "").trim()).filter(Boolean)
+        : [],
+      legacyConfigKeys: Array.isArray(definition.legacyConfigKeys)
+        ? definition.legacyConfigKeys.map((key) => String(key || "").trim()).filter(Boolean)
+        : [],
       startupTiming: normalizeFeatureStartupTiming(definition.startupTiming),
       mount: initialize,
       initialize,
@@ -89,6 +95,16 @@ function createFeatureDefinitionIndex(featureDefinitions) {
     if (!byConfigKey.has(definition.configKey)) {
       byConfigKey.set(definition.configKey, definition);
     }
+    (definition.legacyFeatureKeys || []).forEach((legacyFeatureKey) => {
+      if (legacyFeatureKey && !byFeatureKey.has(legacyFeatureKey)) {
+        byFeatureKey.set(legacyFeatureKey, definition);
+      }
+    });
+    (definition.legacyConfigKeys || []).forEach((legacyConfigKey) => {
+      if (legacyConfigKey && !byConfigKey.has(legacyConfigKey)) {
+        byConfigKey.set(legacyConfigKey, definition);
+      }
+    });
   });
 
   return {

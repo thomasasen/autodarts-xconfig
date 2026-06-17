@@ -14,8 +14,8 @@ import {
   CRICKET_SLOT_ATTRIBUTE,
   CRICKET_STACK_ATTRIBUTE,
 } from "../../src/features/themes/shared/theme-layout-contract.js";
-import { buildStyleText as buildCricketHighlighterStyleText } from "../../src/features/cricket-highlighter/style.js";
-import { buildStyleText as buildCricketGridFxStyleText } from "../../src/features/cricket-grid-fx/style.js";
+import { buildStyleText as buildCricketTargetHighlighterStyleText } from "../../src/features/cricket-target-highlighter/style.js";
+import { buildStyleText as buildCricketGridStatusEffectsStyleText } from "../../src/features/cricket-grid-status-effects/style.js";
 
 function attrSelector(attributeName, value = "true") {
   return `[${attributeName}="${value}"]`;
@@ -375,7 +375,7 @@ test("cricket theme removes event-shell padding so the board fills its slot", ()
 });
 
 test("cricket highlighter style exposes full presentation contract", () => {
-  const css = buildCricketHighlighterStyleText();
+  const css = buildCricketTargetHighlighterStyleText();
 
   assert.match(css, /\.ad-ext-cricket-target\s*\{[^}]*fill:\s*var\(--ad-ext-cricket-fill,\s*transparent\);/s);
   assert.match(css, /\.ad-ext-cricket-target\.is-open\s*\{[^}]*--ad-ext-cricket-fill:\s*var\(--ad-ext-cricket-open-fill\);/s);
@@ -387,7 +387,7 @@ test("cricket highlighter style exposes full presentation contract", () => {
 });
 
 test("cricket grid fx style exposes badge and state hierarchy", () => {
-  const css = buildCricketGridFxStyleText();
+  const css = buildCricketGridStatusEffectsStyleText();
 
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-label-cell,\s*\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{/s);
   assert.match(css, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-badge\s*\{[^}]*position:\s*absolute\s*!important;[^}]*left:\s*8px\s*!important;/s);
@@ -420,7 +420,7 @@ test("cricket grid fx style exposes badge and state hierarchy", () => {
 });
 
 test("cricket grid fx player-cell states override theme row backgrounds", () => {
-  const css = buildCricketGridFxStyleText();
+  const css = buildCricketGridStatusEffectsStyleText();
 
   assert.match(
     css,

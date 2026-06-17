@@ -21,21 +21,21 @@ function getStoredFeatureConfig(storedConfig, configKey) {
 test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   const config = normalizeRuntimeConfig();
 
-  assert.equal(typeof config.features.checkoutBoardTargets, "object");
+  assert.equal(typeof config.features.checkoutTargetHighlights, "object");
   assert.equal(typeof config.features.tvBoardZoom, "object");
-  assert.equal(typeof config.features.styleCheckoutSuggestions, "object");
-  assert.equal(typeof config.features.averageTrendArrow, "object");
-  assert.equal(typeof config.features.turnStartSweep, "object");
-  assert.equal(typeof config.features.tripleDoubleBullHits, "object");
-  assert.equal(typeof config.features.cricketHighlighter, "object");
-  assert.equal(typeof config.features.cricketGridFx, "object");
-  assert.equal(typeof config.features.dartMarkerEmphasis, "object");
-  assert.equal(typeof config.features.dartMarkerDarts, "object");
-  assert.equal(typeof config.features.removeDartsNotification, "object");
-  assert.equal(typeof config.features.singleBullSound, "object");
-  assert.equal(typeof config.features.turnPointsCount, "object");
-  assert.equal(typeof config.features.x01ScoreProgress, "object");
-  assert.equal(typeof config.features.winnerFireworks, "object");
+  assert.equal(typeof config.features.checkoutSuggestionStyles, "object");
+  assert.equal(typeof config.features.avgTrendArrow, "object");
+  assert.equal(typeof config.features.activePlayerSweep, "object");
+  assert.equal(typeof config.features.specialHitHighlights, "object");
+  assert.equal(typeof config.features.cricketTargetHighlighter, "object");
+  assert.equal(typeof config.features.cricketGridStatusEffects, "object");
+  assert.equal(typeof config.features.dartboardMarkerHighlight, "object");
+  assert.equal(typeof config.features.dartMarkerReplacer, "object");
+  assert.equal(typeof config.features.takeOutDartsAlert, "object");
+  assert.equal(typeof config.features.singleBullHitSound, "object");
+  assert.equal(typeof config.features.turnScoreCounter, "object");
+  assert.equal(typeof config.features.x01RemainingScoreBar, "object");
+  assert.equal(typeof config.features.winnerCelebrationEffect, "object");
   assert.equal(typeof config.features.themes, "object");
   assert.equal(typeof config.features.themes.x01, "object");
   assert.equal(typeof config.features.themes.gotcha, "object");
@@ -44,19 +44,19 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.themes.bermuda, "object");
   assert.equal(typeof config.features.themes.cricket, "object");
   assert.equal(typeof config.features.themes.bullOff, "object");
-  assert.equal(config.featureToggles.checkoutBoardTargets, false);
+  assert.equal(config.featureToggles.checkoutTargetHighlights, false);
   assert.equal(config.featureToggles.tvBoardZoom, false);
-  assert.equal(config.featureToggles.turnStartSweep, false);
-  assert.equal(config.featureToggles.tripleDoubleBullHits, false);
-  assert.equal(config.featureToggles.cricketHighlighter, false);
-  assert.equal(config.featureToggles.cricketGridFx, false);
-  assert.equal(config.featureToggles.dartMarkerEmphasis, false);
-  assert.equal(config.featureToggles.dartMarkerDarts, false);
-  assert.equal(config.featureToggles.removeDartsNotification, false);
-  assert.equal(config.featureToggles.singleBullSound, false);
-  assert.equal(config.featureToggles.turnPointsCount, false);
-  assert.equal(config.featureToggles.x01ScoreProgress, false);
-  assert.equal(config.featureToggles.winnerFireworks, false);
+  assert.equal(config.featureToggles.activePlayerSweep, false);
+  assert.equal(config.featureToggles.specialHitHighlights, false);
+  assert.equal(config.featureToggles.cricketTargetHighlighter, false);
+  assert.equal(config.featureToggles.cricketGridStatusEffects, false);
+  assert.equal(config.featureToggles.dartboardMarkerHighlight, false);
+  assert.equal(config.featureToggles.dartMarkerReplacer, false);
+  assert.equal(config.featureToggles.takeOutDartsAlert, false);
+  assert.equal(config.featureToggles.singleBullHitSound, false);
+  assert.equal(config.featureToggles.turnScoreCounter, false);
+  assert.equal(config.featureToggles.x01RemainingScoreBar, false);
+  assert.equal(config.featureToggles.winnerCelebrationEffect, false);
   assert.equal(config.featureToggles["themes.x01"], false);
   assert.equal(config.featureToggles["themes.gotcha"], false);
   assert.equal(config.featureToggles["themes.x01TwoPlayer"], false);
@@ -64,26 +64,26 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles["themes.bermuda"], false);
   assert.equal(config.featureToggles["themes.cricket"], false);
   assert.equal(config.featureToggles["themes.bullOff"], false);
-  assert.equal(config.features.tripleDoubleBullHits.colorTheme, "kind-signal");
-  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "emphasis");
-  assert.equal(config.features.cricketHighlighter.showOpenObjectives, false);
-  assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "smoke");
-  assert.equal(config.features.cricketHighlighter.dimIrrelevantBoardTargets, true);
-  assert.equal(config.features.dartMarkerDarts.enableShadow, true);
-  assert.equal(config.features.dartMarkerDarts.enableWobble, true);
-  assert.equal(config.features.dartMarkerDarts.sizePercent, 120);
-  assert.equal(config.features.x01ScoreProgress.colorTheme, "checkout-focus");
-  assert.equal(config.features.x01ScoreProgress.barSize, "standard");
-  assert.equal(config.features.x01ScoreProgress.effect, "pulse-core");
-  assert.equal(config.features.turnPointsCount.durationMs, 3000);
-  assert.equal(config.features.turnPointsCount.countEffect, "countup");
-  assert.equal(config.features.turnPointsCount.flashOnChange, true);
-  assert.equal(config.features.turnPointsCount.flashMode, "on-change");
-  assert.equal(config.features.checkoutBoardTargets.visualPreset, "focus");
-  assert.equal(config.features.checkoutBoardTargets.segmentStyle, "surface-outline");
-  assert.equal(config.features.checkoutBoardTargets.singleRing, "both");
-  assert.equal(config.features.checkoutBoardTargets.colorTheme, "amber");
-  assert.equal(config.features.checkoutBoardTargets.targetSelectionMode, "next");
+  assert.equal(config.features.specialHitHighlights.colorTheme, "kind-signal");
+  assert.equal(config.features.specialHitHighlights.animationStyle, "pop-hit");
+  assert.equal(config.features.cricketTargetHighlighter.showOpenObjectives, false);
+  assert.equal(config.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "smoke");
+  assert.equal(config.features.cricketTargetHighlighter.dimIrrelevantBoardTargets, true);
+  assert.equal(config.features.dartMarkerReplacer.enableShadow, true);
+  assert.equal(config.features.dartMarkerReplacer.enableWobble, true);
+  assert.equal(config.features.dartMarkerReplacer.sizePercent, 120);
+  assert.equal(config.features.x01RemainingScoreBar.colorTheme, "checkout-focus");
+  assert.equal(config.features.x01RemainingScoreBar.barSize, "standard");
+  assert.equal(config.features.x01RemainingScoreBar.effect, "bar-pulse");
+  assert.equal(config.features.turnScoreCounter.durationMs, 3000);
+  assert.equal(config.features.turnScoreCounter.countEffect, "smooth-count");
+  assert.equal(config.features.turnScoreCounter.flashOnChange, true);
+  assert.equal(config.features.turnScoreCounter.flashMode, "on-change");
+  assert.equal(config.features.checkoutTargetHighlights.visualPreset, "soft-pulse");
+  assert.equal(config.features.checkoutTargetHighlights.segmentStyle, "surface-outline");
+  assert.equal(config.features.checkoutTargetHighlights.singleRing, "both");
+  assert.equal(config.features.checkoutTargetHighlights.colorTheme, "amber");
+  assert.equal(config.features.checkoutTargetHighlights.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
   assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
 });
@@ -108,12 +108,12 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
     assert.equal(getStoredFeatureConfig(config, definition.configKey).enabled, false, definition.configKey);
   });
 
-  assert.equal(config.features.checkoutScorePulse.enabled, false);
-  assert.equal(config.features.checkoutScorePulse.effect, "scale");
-  assert.equal(config.features.checkoutBoardTargets.enabled, false);
+  assert.equal(config.features.checkoutScoreHighlight.enabled, false);
+  assert.equal(config.features.checkoutScoreHighlight.effect, "grow-only");
+  assert.equal(config.features.checkoutTargetHighlights.enabled, false);
   assert.equal(config.features.tvBoardZoom.enabled, false);
-  assert.equal(config.features.tripleDoubleBullHits.enabled, false);
-  assert.equal(config.features.cricketGridFx.enabled, false);
+  assert.equal(config.features.specialHitHighlights.enabled, false);
+  assert.equal(config.features.cricketGridStatusEffects.enabled, false);
   assert.equal(config.features.themes.globalTypography.enabled, false);
   assert.equal(config.features.themes.globalTypography.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.globalTypography.backgroundAssetKey, "");
@@ -161,40 +161,40 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
     );
   });
 
-  assert.equal(config.features.checkoutScorePulse.enabled, true);
-  assert.equal(config.features.checkoutScorePulse.effect, "scale");
-  assert.equal(config.features.checkoutBoardTargets.visualPreset, "signal");
-  assert.equal(config.features.checkoutBoardTargets.colorTheme, "cyan");
-  assert.equal(config.features.checkoutBoardTargets.segmentStyle, "surface-only");
+  assert.equal(config.features.checkoutScoreHighlight.enabled, true);
+  assert.equal(config.features.checkoutScoreHighlight.effect, "grow-only");
+  assert.equal(config.features.checkoutTargetHighlights.visualPreset, "fast-blink");
+  assert.equal(config.features.checkoutTargetHighlights.colorTheme, "cyan");
+  assert.equal(config.features.checkoutTargetHighlights.segmentStyle, "surface-only");
   assert.equal(config.features.tvBoardZoom.checkoutZoomEnabled, true);
   assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
-  assert.equal(config.features.styleCheckoutSuggestions.style, "stripe");
-  assert.equal(config.features.styleCheckoutSuggestions.labelText, "CHECKOUT");
-  assert.equal(config.features.styleCheckoutSuggestions.colorTheme, "amber");
-  assert.equal(config.features.turnStartSweep.sweepStyle, "standard");
-  assert.equal(config.features.turnStartSweep.durationMs, 420);
-  assert.equal(config.features.tripleDoubleBullHits.colorTheme, "kind-signal");
-  assert.equal(config.features.tripleDoubleBullHits.animationStyle, "electric-arc");
-  assert.equal(config.features.cricketHighlighter.irrelevantBoardDimStyle, "hatch");
-  assert.equal(config.features.cricketGridFx.intensity, "normal");
-  assert.equal(config.features.cricketGridFx.pressureOverlay, true);
-  assert.equal(config.features.dartMarkerEmphasis.effect, "pulse");
-  assert.equal(config.features.dartMarkerEmphasis.opacityPercent, 100);
-  assert.equal(config.features.dartMarkerEmphasis.outline, "weiss");
-  assert.equal(config.features.dartMarkerDarts.hideOriginalMarkers, true);
-  assert.equal(config.features.dartMarkerDarts.enableWobble, true);
-  assert.equal(config.features.dartMarkerDarts.sizePercent, 120);
-  assert.equal(config.features.removeDartsNotification.imageSize, "large");
-  assert.equal(config.features.singleBullSound.volume, 0.9);
-  assert.equal(config.features.turnPointsCount.durationMs, 3000);
-  assert.equal(config.features.turnPointsCount.countEffect, "countup");
-  assert.equal(config.features.turnPointsCount.flashOnChange, false);
-  assert.equal(config.features.winnerFireworks.style, "fireworks");
-  assert.equal(config.features.winnerFireworks.intensity, "standard");
-  assert.equal(config.features.winnerFireworks.durationSeconds, 5);
-  assert.equal(config.features.winnerFireworks.particleAmount, "optimiert");
-  assert.equal(config.features.x01ScoreProgress.barSize, "breit");
-  assert.equal(config.features.x01ScoreProgress.effect, "off");
+  assert.equal(config.features.checkoutSuggestionStyles.style, "stripe");
+  assert.equal(config.features.checkoutSuggestionStyles.labelText, "CHECKOUT");
+  assert.equal(config.features.checkoutSuggestionStyles.colorTheme, "amber");
+  assert.equal(config.features.activePlayerSweep.sweepStyle, "standard");
+  assert.equal(config.features.activePlayerSweep.durationMs, 420);
+  assert.equal(config.features.specialHitHighlights.colorTheme, "kind-signal");
+  assert.equal(config.features.specialHitHighlights.animationStyle, "electric-jolt");
+  assert.equal(config.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
+  assert.equal(config.features.cricketGridStatusEffects.intensity, "normal");
+  assert.equal(config.features.cricketGridStatusEffects.pressureOverlay, true);
+  assert.equal(config.features.dartboardMarkerHighlight.effect, "size-pulse");
+  assert.equal(config.features.dartboardMarkerHighlight.opacityPercent, 100);
+  assert.equal(config.features.dartboardMarkerHighlight.outline, "weiss");
+  assert.equal(config.features.dartMarkerReplacer.hideOriginalMarkers, true);
+  assert.equal(config.features.dartMarkerReplacer.enableWobble, true);
+  assert.equal(config.features.dartMarkerReplacer.sizePercent, 120);
+  assert.equal(config.features.takeOutDartsAlert.imageSize, "large");
+  assert.equal(config.features.singleBullHitSound.volume, 0.9);
+  assert.equal(config.features.turnScoreCounter.durationMs, 3000);
+  assert.equal(config.features.turnScoreCounter.countEffect, "smooth-count");
+  assert.equal(config.features.turnScoreCounter.flashOnChange, false);
+  assert.equal(config.features.winnerCelebrationEffect.style, "top-fireworks");
+  assert.equal(config.features.winnerCelebrationEffect.intensity, "standard");
+  assert.equal(config.features.winnerCelebrationEffect.durationSeconds, 5);
+  assert.equal(config.features.winnerCelebrationEffect.particleAmount, "optimiert");
+  assert.equal(config.features.x01RemainingScoreBar.barSize, "breit");
+  assert.equal(config.features.x01RemainingScoreBar.effect, "off");
   assert.equal(config.features.themes.x01.enabled, true);
   assert.equal(config.features.themes.gotcha.enabled, true);
   assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
@@ -218,7 +218,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      checkoutBoardTargets: {
+      checkoutTargetHighlights: {
         visualPreset: "SIGNAL",
         segmentStyle: "SURFACE-ONLY",
         effect: "GLOW",
@@ -231,23 +231,23 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         checkoutZoomTarget: "ROUTE-FIRST",
         t20SetupZoomEnabled: "false",
       },
-      styleCheckoutSuggestions: {
+      checkoutSuggestionStyles: {
         style: "STRIPE",
         labelText: "finish",
       },
-      averageTrendArrow: {
+      avgTrendArrow: {
         durationMs: "500",
         size: "gro" + "\u00df",
       },
-      turnStartSweep: {
+      activePlayerSweep: {
         durationMs: "620",
         sweepStyle: "STRONG",
       },
-      tripleDoubleBullHits: {
+      specialHitHighlights: {
         colorTheme: "EMBER-RUSH",
         animationStyle: "CHARGE-RELEASE",
       },
-      cricketHighlighter: {
+      cricketTargetHighlighter: {
         showOpenTargets: "false",
         showDeadTargets: "false",
         irrelevantBoardDimStyle: "MASK",
@@ -255,7 +255,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         colorTheme: "HIGH-CONTRAST",
         intensity: "STRONG",
       },
-      cricketGridFx: {
+      cricketGridStatusEffects: {
         rowWave: "false",
         badgeBeacon: "true",
         markProgress: "false",
@@ -269,14 +269,14 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         colorTheme: "HIGH-CONTRAST",
         intensity: "STRONG",
       },
-      dartMarkerEmphasis: {
+      dartboardMarkerHighlight: {
         size: "9",
         color: "rgb(248, 113, 113)",
         effect: "PULSE",
         opacityPercent: "65",
         outline: "SCHWARZ",
       },
-      dartMarkerDarts: {
+      dartMarkerReplacer: {
         design: "YELLOW",
         animateDarts: "false",
         sizePercent: "115",
@@ -285,29 +285,29 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         enableWobble: "false",
         flightSpeed: "CINEMATIC",
       },
-      removeDartsNotification: {
+      takeOutDartsAlert: {
         imageSize: "LARGE",
         pulseAnimation: "false",
         pulseScale: "1.08",
       },
-      singleBullSound: {
+      singleBullHitSound: {
         volume: "0.75",
         cooldownMs: "1000",
         pollIntervalMs: "1200",
       },
-      turnPointsCount: {
+      turnScoreCounter: {
         durationMs: "1000",
         countEffect: "ODOMETER",
         flashOnChange: "false",
         flashMode: "PERMANENT",
       },
-      x01ScoreProgress: {
+      x01RemainingScoreBar: {
         colorTheme: "ICE-CIRCUIT",
         thresholdColorMode: "TRAFFIC-LIGHT",
         barSize: "EXTRABREIT",
         effect: "GLASS-CHARGE",
       },
-      winnerFireworks: {
+      winnerCelebrationEffect: {
         style: "FIREWORKS",
         colorTheme: "ICE",
         intensity: "STARK",
@@ -373,71 +373,71 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "signal");
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").segmentStyle, "surface-only");
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").singleRing, "both");
-  assert.equal(runtimeConfig.getFeatureConfig("checkoutBoardTargets").targetSelectionMode, "all");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").visualPreset, "fast-blink");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").segmentStyle, "surface-only");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").singleRing, "both");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").targetSelectionMode, "all");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomSpeed, "schnell");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").checkoutZoomTarget, "route-first");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").t20SetupZoomEnabled, false);
-  assert.equal(runtimeConfig.getFeatureConfig("styleCheckoutSuggestions").style, "stripe");
-  assert.equal(runtimeConfig.getFeatureConfig("styleCheckoutSuggestions").labelText, "FINISH");
-  assert.equal(runtimeConfig.getFeatureConfig("averageTrendArrow").durationMs, 500);
-  assert.equal(runtimeConfig.getFeatureConfig("averageTrendArrow").size, "gross");
-  assert.equal(runtimeConfig.getFeatureConfig("turnStartSweep").durationMs, 620);
-  assert.equal(runtimeConfig.getFeatureConfig("turnStartSweep").sweepStyle, "strong");
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "ember-rush");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutSuggestionStyles").style, "stripe");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutSuggestionStyles").labelText, "FINISH");
+  assert.equal(runtimeConfig.getFeatureConfig("avgTrendArrow").durationMs, 500);
+  assert.equal(runtimeConfig.getFeatureConfig("avgTrendArrow").size, "gross");
+  assert.equal(runtimeConfig.getFeatureConfig("activePlayerSweep").durationMs, 620);
+  assert.equal(runtimeConfig.getFeatureConfig("activePlayerSweep").sweepStyle, "strong");
+  assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").colorTheme, "ember-rush");
   assert.equal(
-    runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
-    "emphasis"
+    runtimeConfig.getFeatureConfig("specialHitHighlights").animationStyle,
+    "pop-hit"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showOpenObjectives, false);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").showDeadObjectives, false);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "mask");
+  assert.equal(runtimeConfig.getFeatureConfig("cricketTargetHighlighter").showOpenObjectives, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketTargetHighlighter").showDeadObjectives, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketTargetHighlighter").irrelevantBoardDimStyle, "mask");
   assert.equal(
-    runtimeConfig.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets,
+    runtimeConfig.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets,
     true
   );
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").colorTheme, "high-contrast");
-  assert.equal(runtimeConfig.getFeatureConfig("cricketHighlighter").intensity, "strong");
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").rowWave, false);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").badgeBeacon, true);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").markProgress, false);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").pressureEdge, true);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").scoringStripe, false);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").deadRowMuted, true);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").pressureOverlay, true);
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").colorTheme, "high-contrast");
-  assert.equal(runtimeConfig.getFeatureConfig("cricketGridFx").intensity, "strong");
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerEmphasis").size, 9);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketTargetHighlighter").colorTheme, "high-contrast");
+  assert.equal(runtimeConfig.getFeatureConfig("cricketTargetHighlighter").intensity, "strong");
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").rowWave, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").badgeBeacon, true);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").markProgress, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").pressureEdge, true);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").scoringStripe, false);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").deadRowMuted, true);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").pressureOverlay, true);
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").colorTheme, "high-contrast");
+  assert.equal(runtimeConfig.getFeatureConfig("cricketGridStatusEffects").intensity, "strong");
+  assert.equal(runtimeConfig.getFeatureConfig("dartboardMarkerHighlight").size, 9);
   assert.equal(
-    runtimeConfig.getFeatureConfig("dartMarkerEmphasis").color,
+    runtimeConfig.getFeatureConfig("dartboardMarkerHighlight").color,
     "rgb(248, 113, 113)"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerEmphasis").effect, "pulse");
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerEmphasis").opacityPercent, 65);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerEmphasis").outline, "schwarz");
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").design, "yellow");
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").animateDarts, false);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").sizePercent, 138);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").hideOriginalMarkers, true);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").enableShadow, false);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").enableWobble, false);
-  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerDarts").flightSpeed, "cinematic");
-  assert.equal(runtimeConfig.getFeatureConfig("removeDartsNotification").imageSize, "large");
-  assert.equal(runtimeConfig.getFeatureConfig("removeDartsNotification").pulseAnimation, false);
-  assert.equal(runtimeConfig.getFeatureConfig("removeDartsNotification").pulseScale, 1.08);
-  assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").volume, 0.75);
-  assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").cooldownMs, 1000);
-  assert.equal(runtimeConfig.getFeatureConfig("singleBullSound").pollIntervalMs, 1200);
-  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").durationMs, 1000);
-  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").countEffect, "odometer");
-  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashOnChange, false);
-  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashMode, "permanent");
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "ice-circuit");
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").barSize, "extrabreit");
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "glass-charge");
+  assert.equal(runtimeConfig.getFeatureConfig("dartboardMarkerHighlight").effect, "size-pulse");
+  assert.equal(runtimeConfig.getFeatureConfig("dartboardMarkerHighlight").opacityPercent, 65);
+  assert.equal(runtimeConfig.getFeatureConfig("dartboardMarkerHighlight").outline, "schwarz");
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").design, "yellow");
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").animateDarts, false);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").sizePercent, 138);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").hideOriginalMarkers, true);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").enableShadow, false);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").enableWobble, false);
+  assert.equal(runtimeConfig.getFeatureConfig("dartMarkerReplacer").flightSpeed, "cinematic");
+  assert.equal(runtimeConfig.getFeatureConfig("takeOutDartsAlert").imageSize, "large");
+  assert.equal(runtimeConfig.getFeatureConfig("takeOutDartsAlert").pulseAnimation, false);
+  assert.equal(runtimeConfig.getFeatureConfig("takeOutDartsAlert").pulseScale, 1.08);
+  assert.equal(runtimeConfig.getFeatureConfig("singleBullHitSound").volume, 0.75);
+  assert.equal(runtimeConfig.getFeatureConfig("singleBullHitSound").cooldownMs, 1000);
+  assert.equal(runtimeConfig.getFeatureConfig("singleBullHitSound").pollIntervalMs, 1200);
+  assert.equal(runtimeConfig.getFeatureConfig("turnScoreCounter").durationMs, 1000);
+  assert.equal(runtimeConfig.getFeatureConfig("turnScoreCounter").countEffect, "rolling-digits");
+  assert.equal(runtimeConfig.getFeatureConfig("turnScoreCounter").flashOnChange, false);
+  assert.equal(runtimeConfig.getFeatureConfig("turnScoreCounter").flashMode, "permanent");
+  assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").colorTheme, "ice-circuit");
+  assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").barSize, "extrabreit");
+  assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").effect, "glass-light-sweep");
   assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").enabled, true);
   assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").fontPreset, "fragment-mono");
   assert.deepEqual(runtimeConfig.getFeatureConfig("themes.globalTypography").applyTo, ["scores", "names"]);
@@ -487,13 +487,13 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartImageDataUrl,
     "data:image/png;base64,DDDD"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").style, "fireworks");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").colorTheme, "ice");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").intensity, "stark");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").durationSeconds, 2);
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").particleAmount, "voll");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").includeBullOut, false);
-  assert.equal(runtimeConfig.getFeatureConfig("winnerFireworks").pointerDismiss, false);
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").style, "top-fireworks");
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").colorTheme, "ice");
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").intensity, "stark");
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").durationSeconds, 2);
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").particleAmount, "voll");
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").includeBullOut, false);
+  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").pointerDismiss, false);
   assert.equal(runtimeConfig.getFeatureConfig("themes.x01").showAvg, false);
   assert.equal(runtimeConfig.getFeatureConfig("themes.x01").backgroundDisplayMode, "fit");
   assert.equal(runtimeConfig.getFeatureConfig("themes.x01").backgroundOpacity, 40);
@@ -518,87 +518,87 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").backgroundDisplayMode, "fill");
 });
 
-test("createRuntimeConfig normalizes turn-points-count speed presets and legacy durations", () => {
+test("createRuntimeConfig normalizes turn-score-counter speed presets and legacy durations", () => {
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 260 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 260 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     1000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 416 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 416 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     1000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 650 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 650 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     1000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 1300 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 1300 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     1000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 1000 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 1000 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     1000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 2000 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 2000 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     3000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 1400 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 1400 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     5000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 3000 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 3000 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     3000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: 2250 } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: 2250 } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     5000
   );
   assert.equal(
-    createRuntimeConfig({ features: { turnPointsCount: { durationMs: "nope" } } })
-      .getFeatureConfig("turnPointsCount")
+    createRuntimeConfig({ features: { turnScoreCounter: { durationMs: "nope" } } })
+      .getFeatureConfig("turnScoreCounter")
       .durationMs,
     3000
   );
 });
 
-test("createRuntimeConfig maps legacy checkout-board-targets effects to visual presets", () => {
+test("createRuntimeConfig maps legacy checkout-target-highlights effects to visual presets", () => {
   const steadyConfig = createRuntimeConfig({
     features: {
-      checkoutBoardTargets: {
+      checkoutTargetHighlights: {
         effect: "GLOW",
       },
     },
   });
   const signalConfig = createRuntimeConfig({
     features: {
-      checkoutBoardTargets: {
+      checkoutTargetHighlights: {
         effect: "blink",
       },
     },
   });
 
-  assert.equal(steadyConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "steady");
-  assert.equal(signalConfig.getFeatureConfig("checkoutBoardTargets").visualPreset, "signal");
+  assert.equal(steadyConfig.getFeatureConfig("checkoutTargetHighlights").visualPreset, "slow-glow");
+  assert.equal(signalConfig.getFeatureConfig("checkoutTargetHighlights").visualPreset, "fast-blink");
 });
 
 test("normalized feature configs expose a boolean debug flag for every registered script", () => {
@@ -614,99 +614,141 @@ test("normalized feature configs expose a boolean debug flag for every registere
   });
 });
 
-test("triple-double-bull-hits falls back to defaults for invalid theme/style values", () => {
+test("special-hit-highlights falls back to defaults for invalid theme/style values", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      tripleDoubleBullHits: {
+      specialHitHighlights: {
         colorTheme: "invalid-theme",
         animationStyle: "invalid-animation",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "kind-signal");
+  assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").colorTheme, "kind-signal");
   assert.equal(
-    runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle,
-    "emphasis"
+    runtimeConfig.getFeatureConfig("specialHitHighlights").animationStyle,
+    "pop-hit"
   );
 });
 
-test("triple-double-bull-hits keeps default kind-signal when only legacy hitColorMode is provided", () => {
+test("special-hit-highlights keeps default kind-signal when only legacy hitColorMode is provided", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      tripleDoubleBullHits: {
+      specialHitHighlights: {
         hitColorMode: "theme-presets",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").colorTheme, "kind-signal");
+  assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").colorTheme, "kind-signal");
 });
 
-test("triple-double-bull-hits maps retired animation styles to one-shot replacements", () => {
+test("createRuntimeConfig migrates legacy feature config keys without overwriting canonical values", () => {
+  const runtimeConfig = createRuntimeConfig({
+    featureToggles: {
+      checkoutScorePulse: true,
+      checkoutScoreHighlight: false,
+      winnerFireworks: true,
+    },
+    features: {
+      checkoutScorePulse: {
+        enabled: true,
+        effect: "blink",
+        colorTheme: "56,189,248",
+      },
+      checkoutScoreHighlight: {
+        effect: "glow-only",
+      },
+      turnPointsCount: {
+        enabled: true,
+        countEffect: "odometer",
+      },
+      winnerFireworks: {
+        style: "cannon",
+      },
+    },
+  });
+  const normalized = runtimeConfig.getNormalized();
+
+  assert.equal(runtimeConfig.isFeatureEnabled("checkoutScorePulse"), false);
+  assert.equal(runtimeConfig.isFeatureEnabled("winnerFireworks"), true);
+  assert.equal(normalized.features.checkoutScorePulse, undefined);
+  assert.equal(normalized.features.turnPointsCount, undefined);
+  assert.equal(normalized.features.winnerFireworks, undefined);
+  assert.equal(normalized.featureToggles.checkoutScorePulse, undefined);
+  assert.equal(normalized.featureToggles.winnerFireworks, undefined);
+  assert.equal(normalized.features.checkoutScoreHighlight.enabled, true);
+  assert.equal(normalized.features.checkoutScoreHighlight.effect, "glow-only");
+  assert.equal(normalized.features.checkoutScoreHighlight.colorTheme, "56, 189, 248");
+  assert.equal(normalized.features.turnScoreCounter.enabled, true);
+  assert.equal(normalized.features.turnScoreCounter.countEffect, "rolling-digits");
+  assert.equal(normalized.features.winnerCelebrationEffect.style, "center-cannon");
+});
+
+test("special-hit-highlights maps retired animation styles to one-shot replacements", () => {
   const pulseConfig = createRuntimeConfig({
     features: {
-      tripleDoubleBullHits: {
+      specialHitHighlights: {
         animationStyle: "neon-pulse",
       },
     },
   });
   const turnConfig = createRuntimeConfig({
     features: {
-      tripleDoubleBullHits: {
+      specialHitHighlights: {
         animationStyle: "flip-edge",
       },
     },
   });
 
-  assert.equal(pulseConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "pulse");
-  assert.equal(turnConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "turn");
+  assert.equal(pulseConfig.getFeatureConfig("specialHitHighlights").animationStyle, "glow-pop");
+  assert.equal(turnConfig.getFeatureConfig("specialHitHighlights").animationStyle, "flip-spin");
 });
 
 test("cricket highlighter dim style supports enum values and legacy boolean mapping", () => {
   const defaults = createRuntimeConfig();
-  assert.equal(defaults.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
-  assert.equal(defaults.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
+  assert.equal(defaults.getFeatureConfig("cricketTargetHighlighter").irrelevantBoardDimStyle, "smoke");
+  assert.equal(defaults.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets, true);
 
   const explicitOff = createRuntimeConfig({
     features: {
-      cricketHighlighter: {
+      cricketTargetHighlighter: {
         irrelevantBoardDimStyle: "off",
       },
     },
   });
-  assert.equal(explicitOff.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "off");
-  assert.equal(explicitOff.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, false);
+  assert.equal(explicitOff.getFeatureConfig("cricketTargetHighlighter").irrelevantBoardDimStyle, "off");
+  assert.equal(explicitOff.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets, false);
 
   const invalidStyle = createRuntimeConfig({
     features: {
-      cricketHighlighter: {
+      cricketTargetHighlighter: {
         irrelevantBoardDimStyle: "unknown-style",
       },
     },
   });
-  assert.equal(invalidStyle.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
-  assert.equal(invalidStyle.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
+  assert.equal(invalidStyle.getFeatureConfig("cricketTargetHighlighter").irrelevantBoardDimStyle, "smoke");
+  assert.equal(invalidStyle.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets, true);
 
   const legacyDisabled = createRuntimeConfig({
     features: {
-      cricketHighlighter: {
+      cricketTargetHighlighter: {
         dimIrrelevantBoardTargets: false,
       },
     },
   });
-  assert.equal(legacyDisabled.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "off");
-  assert.equal(legacyDisabled.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, false);
+  assert.equal(legacyDisabled.getFeatureConfig("cricketTargetHighlighter").irrelevantBoardDimStyle, "off");
+  assert.equal(legacyDisabled.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets, false);
 
   const legacyEnabled = createRuntimeConfig({
     features: {
-      cricketHighlighter: {
+      cricketTargetHighlighter: {
         dimIrrelevantBoardTargets: true,
       },
     },
   });
-  assert.equal(legacyEnabled.getFeatureConfig("cricketHighlighter").irrelevantBoardDimStyle, "smoke");
-  assert.equal(legacyEnabled.getFeatureConfig("cricketHighlighter").dimIrrelevantBoardTargets, true);
+  assert.equal(legacyEnabled.getFeatureConfig("cricketTargetHighlighter").irrelevantBoardDimStyle, "smoke");
+  assert.equal(legacyEnabled.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets, true);
 });
 
 test("runtime config keeps unknown feature fields for forward-compatible setting removal", () => {
@@ -729,91 +771,91 @@ test("runtime config keeps unknown feature fields for forward-compatible setting
   assert.equal(normalized.features.themes.x01.retiredBackgroundFlag, "legacy-value");
 });
 
-test("x01-score-progress falls back to thresholdColorMode when colorTheme is missing", () => {
+test("x01-remaining-score-bar falls back to thresholdColorMode when colorTheme is missing", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      x01ScoreProgress: {
+      x01RemainingScoreBar: {
         colorTheme: "",
         thresholdColorMode: "danger-endgame",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").colorTheme, "danger-endgame");
+  assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").colorTheme, "danger-endgame");
 });
 
-test("x01-score-progress maps legacy effect keys to the reduced effect set", () => {
+test("x01-remaining-score-bar maps legacy effect keys to the reduced effect set", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      x01ScoreProgress: {
+      x01RemainingScoreBar: {
         effect: "spark-trail",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "ghost-trail");
+  assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").effect, "previous-score-trail");
 });
 
-test("x01-score-progress maps retired electric aliases to signal-sweep", () => {
+test("x01-remaining-score-bar maps retired electric aliases to fast-signal-sweep", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      x01ScoreProgress: {
+      x01RemainingScoreBar: {
         effect: "ELECTRIC-SURGE",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("x01ScoreProgress").effect, "signal-sweep");
+  assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").effect, "fast-signal-sweep");
   const arcBurstConfig = createRuntimeConfig({
     features: {
-      x01ScoreProgress: {
+      x01RemainingScoreBar: {
         effect: "arc-burst",
       },
     },
   });
-  assert.equal(arcBurstConfig.getFeatureConfig("x01ScoreProgress").effect, "signal-sweep");
+  assert.equal(arcBurstConfig.getFeatureConfig("x01RemainingScoreBar").effect, "fast-signal-sweep");
 });
 
-test("triple-double-bull-hits accepts electric-arc as animation style option", () => {
+test("special-hit-highlights accepts electric-jolt as animation style option", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      tripleDoubleBullHits: {
+      specialHitHighlights: {
         animationStyle: "ELECTRIC-ARC",
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("tripleDoubleBullHits").animationStyle, "electric-arc");
+  assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").animationStyle, "electric-jolt");
 });
 
-test("turn-points-count maps legacy flashPermanent flag to permanent flash mode", () => {
+test("turn-score-counter maps legacy flashPermanent flag to permanent flash mode", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      turnPointsCount: {
+      turnScoreCounter: {
         flashPermanent: true,
       },
     },
   });
 
-  assert.equal(runtimeConfig.getFeatureConfig("turnPointsCount").flashMode, "permanent");
+  assert.equal(runtimeConfig.getFeatureConfig("turnScoreCounter").flashMode, "permanent");
 });
 
-test("x01-score-progress drops retired design preset fields from normalized config", () => {
+test("x01-remaining-score-bar drops retired design preset fields from normalized config", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
-      x01ScoreProgress: {
+      x01RemainingScoreBar: {
         designPreset: "liquid-glass",
         colorTheme: "checkout-focus",
       },
     },
   });
 
-  const featureConfig = runtimeConfig.getFeatureConfig("x01ScoreProgress");
+  const featureConfig = runtimeConfig.getFeatureConfig("x01RemainingScoreBar");
   assert.equal(Object.hasOwn(featureConfig, "designPreset"), false);
 
   const normalized = runtimeConfig.getNormalized();
   assert.equal(
-    Object.hasOwn(normalized.features.x01ScoreProgress, "designPreset"),
+    Object.hasOwn(normalized.features.x01RemainingScoreBar, "designPreset"),
     false
   );
 });

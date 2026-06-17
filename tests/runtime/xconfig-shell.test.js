@@ -8,18 +8,18 @@ import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-tem
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import {
-  DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE,
-  DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE,
-} from "../../src/features/xconfig-ui/dart-marker-emphasis-preview-contract.js";
+  DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE,
+  DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE,
+} from "../../src/features/xconfig-ui/dartboard-marker-highlight-preview-contract.js";
 import {
-  BASE_CLASS as DART_MARKER_EMPHASIS_BASE_CLASS,
-  EFFECT_CLASSES as DART_MARKER_EMPHASIS_EFFECT_CLASSES,
-} from "../../src/features/dart-marker-emphasis/style.js";
+  BASE_CLASS as DARTBOARD_MARKER_HIGHLIGHT_BASE_CLASS,
+  EFFECT_CLASSES as DARTBOARD_MARKER_HIGHLIGHT_EFFECT_CLASSES,
+} from "../../src/features/dartboard-marker-highlight/style.js";
 import {
-  EFFECT_CLASSES as CHECKOUT_SCORE_PULSE_EFFECT_CLASSES,
-  HIGHLIGHT_CLASS as CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS,
-  STYLE_VARIABLES as CHECKOUT_SCORE_PULSE_STYLE_VARIABLES,
-} from "../../src/features/checkout-score-pulse/style.js";
+  EFFECT_CLASSES as CHECKOUT_SCORE_HIGHLIGHT_EFFECT_CLASSES,
+  HIGHLIGHT_CLASS as CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS,
+  STYLE_VARIABLES as CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES,
+} from "../../src/features/checkout-score-highlight/style.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
@@ -621,7 +621,7 @@ test("xConfig settings modal preserves node identity and scroll offsets during e
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-fx']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -678,7 +678,7 @@ test("xConfig settings modal keeps container identity while applying setting upd
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-fx']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -695,8 +695,8 @@ test("xConfig settings modal keeps container identity while applying setting upd
   modal.scrollTop = 96;
   modalBody.scrollTop = 192;
 
-  clickSettingToggle(documentRef, "cricket-grid-fx", "rowWave", false);
-  await waitFor(() => JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.cricketGridFx.rowWave === false);
+  clickSettingToggle(documentRef, "cricket-grid-status-effects", "rowWave", false);
+  await waitFor(() => JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.cricketGridStatusEffects.rowWave === false);
 
   const panelHostAfter = documentRef.getElementById("ad-xconfig-panel-host");
   const modalAfter = panelHostAfter?.querySelector?.(".ad-xconfig-modal") || null;
@@ -1203,23 +1203,23 @@ test("xConfig shell persists rapid back-to-back UI actions without losing earlie
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
 
-  clickFeatureToggle(documentRef, "turn-start-sweep", true);
-  clickFeatureToggle(documentRef, "winner-fireworks", true);
+  clickFeatureToggle(documentRef, "active-player-sweep", true);
+  clickFeatureToggle(documentRef, "winner-celebration-effect", true);
 
   assert.equal(await waitFor(() => {
     const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
     return (
       Boolean(storedConfig) &&
-      storedConfig.featureToggles.turnStartSweep === true &&
-      storedConfig.featureToggles.winnerFireworks === true
+      storedConfig.featureToggles.activePlayerSweep === true &&
+      storedConfig.featureToggles.winnerCelebrationEffect === true
     );
   }, { timeoutMs: 500, intervalMs: 5 }), true);
 
   const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
-  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
-  assert.equal(storedConfig.featureToggles.winnerFireworks, true);
-  assert.equal(runtime.getSnapshot().features["turn-start-sweep"].mounted, true);
-  assert.equal(runtime.getSnapshot().features["winner-fireworks"].mounted, true);
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(storedConfig.featureToggles.winnerCelebrationEffect, true);
+  assert.equal(runtime.getSnapshot().features["active-player-sweep"].mounted, true);
+  assert.equal(runtime.getSnapshot().features["winner-celebration-effect"].mounted, true);
 
   runtime.stop();
 });
@@ -1270,41 +1270,41 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
     documentRef.querySelector(".ad-xconfig-content")?.getAttribute("aria-labelledby"),
     "ad-xconfig-tab-animations"
   );
-  clickFeatureToggle(documentRef, "turn-start-sweep", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnStartSweep === true);
+  clickFeatureToggle(documentRef, "active-player-sweep", true);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.activePlayerSweep === true);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
-  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
 
   const openCheckoutSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
   );
   assert.ok(openCheckoutSettings);
   openCheckoutSettings.click();
   await waitForSettingsModal(documentRef);
 
   const effectOptionsBefore = documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-highlight'][data-setting-key='effect']"
   );
   assert.equal(
     effectOptionsBefore.filter((node) => node.getAttribute("data-active") === "true").length,
     1
   );
 
-  clickSelectSettingOption(documentRef, "checkout-score-pulse", "effect", "blink");
-  await waitForStoredConfig(localStorage, (config) => config.features.checkoutScorePulse.effect === "blink");
+  clickSelectSettingOption(documentRef, "checkout-score-highlight", "effect", "fade-blink");
+  await waitForStoredConfig(localStorage, (config) => config.features.checkoutScoreHighlight.effect === "fade-blink");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.checkoutScorePulse.effect, "blink");
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
   const effectOptionsAfter = documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-highlight'][data-setting-key='effect']"
   );
   const activeEffectOptions = effectOptionsAfter.filter(
     (node) => node.getAttribute("data-active") === "true"
   );
   assert.equal(activeEffectOptions.length, 1);
-  assert.equal(activeEffectOptions[0].getAttribute("data-setting-value"), "blink");
+  assert.equal(activeEffectOptions[0].getAttribute("data-setting-value"), "fade-blink");
 
   const closeSettings = documentRef.querySelector("[data-adxconfig-action='close-settings']");
   assert.ok(closeSettings);
@@ -1378,26 +1378,26 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   };
 
   assert.deepEqual(readGroupCards("all-modes"), [
-    "turn-start-sweep",
-    "turn-points-count",
-    "average-trend-arrow",
-    "triple-double-bull-hits",
-    "dart-marker-darts",
-    "dart-marker-emphasis",
-    "remove-darts-notification",
-    "single-bull-sound",
-    "winner-fireworks",
+    "active-player-sweep",
+    "turn-score-counter",
+    "avg-trend-arrow",
+    "special-hit-highlights",
+    "dart-marker-replacer",
+    "dartboard-marker-highlight",
+    "take-out-darts-alert",
+    "single-bull-hit-sound",
+    "winner-celebration-effect",
   ]);
   assert.deepEqual(readGroupCards("x01"), [
-    "style-checkout-suggestions",
-    "checkout-score-pulse",
-    "x01-score-progress",
-    "checkout-board-targets",
+    "checkout-suggestion-styles",
+    "checkout-score-highlight",
+    "x01-remaining-score-bar",
+    "checkout-target-highlights",
     "tv-board-zoom",
   ]);
   assert.deepEqual(readGroupCards("cricket-tactics"), [
-    "cricket-highlighter",
-    "cricket-grid-fx",
+    "cricket-target-highlighter",
+    "cricket-grid-status-effects",
   ]);
 
   runtime.stop();
@@ -1416,20 +1416,20 @@ test("xConfig style checkout suggestions renders live preview and style option s
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='style-checkout-suggestions']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-suggestion-styles']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const previewSection = documentRef.querySelector(
-    "[data-adxconfig-style-checkout-suggestions-preview='true']"
+    "[data-adxconfig-checkout-suggestion-styles-preview='true']"
   );
   assert.ok(previewSection);
   const previewSuggestion = previewSection.querySelector(".ad-xconfig-checkout-suggestion-demo");
   assert.ok(previewSuggestion);
   const activeStyleOption = documentRef.querySelector(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='style-checkout-suggestions'][data-setting-key='style'][data-active='true']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-suggestion-styles'][data-setting-key='style'][data-active='true']"
   );
   assert.ok(activeStyleOption);
   assert.equal(
@@ -1445,7 +1445,7 @@ test("xConfig style checkout suggestions renders live preview and style option s
   assert.equal(previewSuggestion.style.getPropertyValue("--ad-ext-accent"), "#f59e0b");
 
   const styleOptions = documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='style-checkout-suggestions'][data-setting-key='style']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-suggestion-styles'][data-setting-key='style']"
   );
   assert.equal(styleOptions.length, 5);
   styleOptions.forEach((optionNode) => {
@@ -1453,17 +1453,17 @@ test("xConfig style checkout suggestions renders live preview and style option s
     assert.ok(optionNode.querySelector(".ad-xconfig-checkout-suggestion-demo"));
   });
 
-  clickSelectSettingOption(documentRef, "style-checkout-suggestions", "style", "ticket");
+  clickSelectSettingOption(documentRef, "checkout-suggestion-styles", "style", "ticket");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.styleCheckoutSuggestions.style === "ticket"
+    (config) => config.features.checkoutSuggestionStyles.style === "ticket"
   );
 
   assert.equal(
     await waitFor(() =>
       documentRef
         .querySelector(
-          "[data-adxconfig-style-checkout-suggestions-preview='true'] .ad-xconfig-checkout-suggestion-demo"
+          "[data-adxconfig-checkout-suggestion-styles-preview='true'] .ad-xconfig-checkout-suggestion-demo"
         )
         ?.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket") === true
     ),
@@ -1486,57 +1486,57 @@ test("xConfig checkout score pulse renders real effect previews and color button
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const previewSection = documentRef.querySelector(
-    "[data-adxconfig-checkout-score-pulse-preview='true']"
+    "[data-adxconfig-checkout-score-highlight-preview='true']"
   );
   assert.ok(previewSection);
   const previewScore = previewSection.querySelector(
-    "[data-adxconfig-checkout-score-pulse-score='true']"
+    "[data-adxconfig-checkout-score-highlight-score='true']"
   );
   assert.ok(previewScore);
   assert.equal(previewScore.textContent, "40");
-  assert.equal(previewScore.classList.contains(CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS), true);
+  assert.equal(previewScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS), true);
   assert.equal(
-    previewScore.classList.contains(CHECKOUT_SCORE_PULSE_EFFECT_CLASSES.scale),
+    previewScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_EFFECT_CLASSES["grow-only"]),
     true
   );
   assert.equal(
-    previewScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.color),
+    previewScore.style.getPropertyValue(CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES.color),
     "159, 219, 88"
   );
   assert.equal(
-    previewScore.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.scaleMax),
+    previewScore.style.getPropertyValue(CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES.scaleMax),
     "1.08"
   );
 
   const effectPreviews = documentRef.querySelectorAll(
-    "[data-feature-key='checkout-score-pulse'][data-setting-key='effect'] .ad-xconfig-checkout-score-pulse-option-preview"
+    "[data-feature-key='checkout-score-highlight'][data-setting-key='effect'] .ad-xconfig-checkout-score-highlight-option-preview"
   );
   assert.equal(effectPreviews.length, 4);
   const glowOptionScore = documentRef.querySelector(
-    "[data-feature-key='checkout-score-pulse'][data-setting-key='effect'][data-setting-value='glow'] [data-adxconfig-checkout-score-pulse-score='true']"
+    "[data-feature-key='checkout-score-highlight'][data-setting-key='effect'][data-setting-value='glow-only'] [data-adxconfig-checkout-score-highlight-score='true']"
   );
   assert.ok(glowOptionScore);
-  assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_PULSE_HIGHLIGHT_CLASS), true);
-  assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_PULSE_EFFECT_CLASSES.glow), true);
+  assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS), true);
+  assert.equal(glowOptionScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_EFFECT_CLASSES["glow-only"]), true);
 
   const colorButtons = documentRef.querySelectorAll(
-    "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme'].ad-xconfig-option-item--color-preview"
+    "[data-feature-key='checkout-score-highlight'][data-setting-key='colorTheme'].ad-xconfig-option-item--color-preview"
   );
   assert.equal(colorButtons.length, 4);
   const colorPreviewCards = documentRef.querySelectorAll(
-    "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme'] .ad-xconfig-checkout-score-pulse-option-preview"
+    "[data-feature-key='checkout-score-highlight'][data-setting-key='colorTheme'] .ad-xconfig-checkout-score-highlight-option-preview"
   );
   assert.equal(colorPreviewCards.length, 0);
   const cyanOption = documentRef
     .querySelectorAll(
-      "[data-feature-key='checkout-score-pulse'][data-setting-key='colorTheme']"
+      "[data-feature-key='checkout-score-highlight'][data-setting-key='colorTheme']"
     )
     .find((node) => node.getAttribute("data-setting-value") === "56, 189, 248");
   assert.ok(cyanOption);
@@ -1551,46 +1551,46 @@ test("xConfig checkout score pulse renders real effect previews and color button
 
   assert.equal(
     documentRef.querySelectorAll(
-      "[data-feature-key='checkout-score-pulse'][data-setting-key='intensity'] .ad-xconfig-checkout-score-pulse-option-preview"
+      "[data-feature-key='checkout-score-highlight'][data-setting-key='intensity'] .ad-xconfig-checkout-score-highlight-option-preview"
     ).length,
     0
   );
   assert.equal(
     documentRef.querySelectorAll(
-      "[data-feature-key='checkout-score-pulse'][data-setting-key='triggerSource'] .ad-xconfig-checkout-score-pulse-option-preview"
+      "[data-feature-key='checkout-score-highlight'][data-setting-key='triggerSource'] .ad-xconfig-checkout-score-highlight-option-preview"
     ).length,
     0
   );
 
-  clickSelectSettingOption(documentRef, "checkout-score-pulse", "intensity", "stark");
+  clickSelectSettingOption(documentRef, "checkout-score-highlight", "intensity", "stark");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutScorePulse.intensity === "stark"
+    (config) => config.features.checkoutScoreHighlight.intensity === "stark"
   );
 
   assert.equal(
     await waitFor(() => {
       const refreshedScore = documentRef.querySelector(
-        "[data-adxconfig-checkout-score-pulse-preview='true'] [data-adxconfig-checkout-score-pulse-score='true']"
+        "[data-adxconfig-checkout-score-highlight-preview='true'] [data-adxconfig-checkout-score-highlight-score='true']"
       );
       return (
-        refreshedScore?.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.scaleMax) === "1.12" &&
-        refreshedScore?.style.getPropertyValue(CHECKOUT_SCORE_PULSE_STYLE_VARIABLES.glowMaxBlur) === "22px"
+        refreshedScore?.style.getPropertyValue(CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES.scaleMax) === "1.12" &&
+        refreshedScore?.style.getPropertyValue(CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES.glowMaxBlur) === "22px"
       );
     }),
     true
   );
 
-  clickSelectSettingOption(documentRef, "checkout-score-pulse", "triggerSource", "score-only");
+  clickSelectSettingOption(documentRef, "checkout-score-highlight", "triggerSource", "score-only");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutScorePulse.triggerSource === "score-only"
+    (config) => config.features.checkoutScoreHighlight.triggerSource === "score-only"
   );
 
   assert.equal(
     await waitFor(() =>
       documentRef.querySelector(
-        "[data-adxconfig-checkout-score-pulse-preview='true'] .ad-xconfig-checkout-score-pulse-preview-context"
+        "[data-adxconfig-checkout-score-highlight-preview='true'] .ad-xconfig-checkout-score-highlight-preview-context"
       )?.textContent === "Score-Mathe"
     ),
     true
@@ -1629,119 +1629,119 @@ test("xConfig X01 score progress renders configured size effect and color previe
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-remaining-score-bar']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const previewSection = documentRef.querySelector(
-    "[data-adxconfig-x01-score-progress-preview='true']"
+    "[data-adxconfig-x01-remaining-score-bar-preview='true']"
   );
   assert.ok(previewSection);
   const previewBar = previewSection.querySelector(
-    "[data-adxconfig-x01-score-progress-preview-bar='true']"
+    "[data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
   );
   const previewScore = previewSection.querySelector(
-    "[data-adxconfig-x01-score-progress-preview-score='true']"
+    "[data-adxconfig-x01-remaining-score-bar-preview-score='true']"
   );
   const previewRoute = previewSection.querySelector(
-    "[data-adxconfig-x01-score-progress-preview-route='true']"
+    "[data-adxconfig-x01-remaining-score-bar-preview-route='true']"
   );
   assert.ok(previewBar);
   assert.ok(previewScore);
   assert.ok(previewRoute);
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress"), "true");
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-color-theme"), "checkout-focus");
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-size"), "standard");
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-score-progress-effect"), "pulse-core");
-  assert.equal(previewBar.getAttribute("data-adxconfig-x01-score-progress-preview-cycle"), "true");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar"), "true");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme"), "checkout-focus");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-size"), "standard");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-effect"), "bar-pulse");
+  assert.equal(previewBar.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-cycle"), "true");
   assert.equal(previewScore.textContent, "100%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
-  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "100%");
-  assert.ok(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"));
-  assert.ok(previewBar.querySelector(".ad-ext-x01-score-progress__track"));
-  assert.ok(previewBar.querySelector(".ad-ext-x01-score-progress__trail"));
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "100%");
+  assert.ok(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-bg-active"));
+  assert.ok(previewBar.querySelector(".ad-ext-x01-remaining-score-bar__track"));
+  assert.ok(previewBar.querySelector(".ad-ext-x01-remaining-score-bar__trail"));
   assert.ok(
     previewBar.querySelector(
-      ".ad-ext-x01-score-progress__fill.ad-ext-x01-score-progress__fill--effect-pulse-core"
+      ".ad-ext-x01-remaining-score-bar__fill.ad-ext-x01-remaining-score-bar__fill--effect-bar-pulse"
     )
   );
   assert.equal(typeof x01PreviewIntervalCallback, "function");
 
   const effectPreviewBars = documentRef.querySelectorAll(
-    "[data-feature-key='x01-score-progress'][data-setting-key='effect'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+    "[data-feature-key='x01-remaining-score-bar'][data-setting-key='effect'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
   );
   assert.equal(effectPreviewBars.length, 6);
   effectPreviewBars.forEach((effectPreviewBar) => {
     assert.equal(
-      effectPreviewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"),
+      effectPreviewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"),
       "80%"
     );
   });
 
   const ghostTrailPreviewBar = documentRef.querySelector(
-    "[data-feature-key='x01-score-progress'][data-setting-key='effect'][data-setting-value='ghost-trail'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+    "[data-feature-key='x01-remaining-score-bar'][data-setting-key='effect'][data-setting-value='previous-score-trail'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
   );
   assert.ok(ghostTrailPreviewBar);
   assert.equal(
-    ghostTrailPreviewBar.getAttribute("data-adxconfig-x01-score-progress-preview-loop"),
-    "ghost-trail-drop"
+    ghostTrailPreviewBar.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-loop"),
+    "previous-score-trail-drop"
   );
 
   x01PreviewIntervalCallback();
   assert.equal(previewScore.textContent, "75%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
-  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "75%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "75%");
   assert.equal(
-    ghostTrailPreviewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"),
+    ghostTrailPreviewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"),
     "15%"
   );
-  assert.ok(ghostTrailPreviewBar.querySelector(".ad-ext-x01-score-progress__trail")?.__lastAnimation);
+  assert.ok(ghostTrailPreviewBar.querySelector(".ad-ext-x01-remaining-score-bar__trail")?.__lastAnimation);
 
   x01PreviewIntervalCallback();
   assert.equal(previewScore.textContent, "45%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
-  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "45%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "45%");
 
   x01PreviewIntervalCallback();
   assert.equal(previewScore.textContent, "20%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
-  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "20%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "20%");
 
   x01PreviewIntervalCallback();
   assert.equal(previewScore.textContent, "100%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
-  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-score-progress-width"), "100%");
+  assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "100%");
 
   assert.equal(
     documentRef.querySelectorAll(
-      "[data-feature-key='x01-score-progress'][data-setting-key='barSize'] .ad-xconfig-x01-score-progress-option-preview"
+      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='barSize'] .ad-xconfig-x01-remaining-score-bar-option-preview"
     ).length,
     4
   );
   assert.equal(
     documentRef.querySelectorAll(
-      "[data-feature-key='x01-score-progress'][data-setting-key='effect'] .ad-xconfig-x01-score-progress-option-preview"
+      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='effect'] .ad-xconfig-x01-remaining-score-bar-option-preview"
     ).length,
     6
   );
 
-  clickSelectSettingOption(documentRef, "x01-score-progress", "colorTheme", "traffic-light");
+  clickSelectSettingOption(documentRef, "x01-remaining-score-bar", "colorTheme", "traffic-light");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.x01ScoreProgress.colorTheme === "traffic-light"
+    (config) => config.features.x01RemainingScoreBar.colorTheme === "traffic-light"
   );
 
   assert.equal(
     await waitFor(() => {
       const refreshedPreviewBar = documentRef.querySelector(
-        "[data-adxconfig-x01-score-progress-preview='true'] [data-adxconfig-x01-score-progress-preview-bar='true']"
+        "[data-adxconfig-x01-remaining-score-bar-preview='true'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
       );
       return (
-        refreshedPreviewBar?.getAttribute("data-ad-ext-x01-score-progress-color-theme") ===
+        refreshedPreviewBar?.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme") ===
           "traffic-light" &&
-        Boolean(refreshedPreviewBar?.style.getPropertyValue("--ad-ext-x01-score-progress-fill-bg-active"))
+        Boolean(refreshedPreviewBar?.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-bg-active"))
       );
     }),
     true
@@ -1763,14 +1763,14 @@ test("xConfig checkout board targets renders board and segment previews", async 
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-board-targets']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-target-highlights']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const previewSection = documentRef.querySelector(
-    "[data-adxconfig-checkout-board-targets-preview='true']"
+    "[data-adxconfig-checkout-target-highlights-preview='true']"
   );
   assert.ok(previewSection);
   const modalBody = documentRef.querySelector(".ad-xconfig-modal-body");
@@ -1799,7 +1799,7 @@ test("xConfig checkout board targets renders board and segment previews", async 
   });
 
   const finishOption = documentRef.querySelector(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-board-targets'][data-setting-key='targetSelectionMode'][data-setting-value='finish']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-target-highlights'][data-setting-key='targetSelectionMode'][data-setting-value='finish']"
   );
   assert.ok(finishOption);
   const finishTarget = finishOption.querySelector(".ad-ext-checkout-target");
@@ -1808,7 +1808,7 @@ test("xConfig checkout board targets renders board and segment previews", async 
   assert.equal(finishTarget.getAttribute("data-target-value"), "20");
 
   const colorOptions = Array.from(documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-board-targets'][data-setting-key='colorTheme']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-target-highlights'][data-setting-key='colorTheme']"
   ));
   assert.deepEqual(
     colorOptions.map((optionNode) => String(optionNode.getAttribute("data-preview-color-theme") || "")),
@@ -1844,9 +1844,9 @@ test("xConfig checkout board targets renders board and segment previews", async 
     /Färbt Ziele in hellem Signalweiß\./
   );
 
-  clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "cyan");
+  clickSelectSettingOption(documentRef, "checkout-target-highlights", "colorTheme", "cyan");
   const cyanPreviewSection = documentRef.querySelector(
-    "[data-adxconfig-checkout-board-targets-preview='true']"
+    "[data-adxconfig-checkout-target-highlights-preview='true']"
   );
   assert.notEqual(cyanPreviewSection, previewSection);
   assert.equal(documentRef.querySelector(".ad-xconfig-modal-body"), modalBody);
@@ -1860,12 +1860,12 @@ test("xConfig checkout board targets renders board and segment previews", async 
   );
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutBoardTargets.colorTheme === "cyan"
+    (config) => config.features.checkoutTargetHighlights.colorTheme === "cyan"
   );
   assert.equal(
     await waitFor(() => {
       const refreshedTarget = documentRef.querySelector(
-        "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+        "[data-adxconfig-checkout-target-highlights-preview='true'] .ad-ext-checkout-target"
       );
       return /56,\s*189,\s*248/.test(
         String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
@@ -1874,9 +1874,9 @@ test("xConfig checkout board targets renders board and segment previews", async 
     true
   );
 
-  clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "lime");
+  clickSelectSettingOption(documentRef, "checkout-target-highlights", "colorTheme", "lime");
   const limePreviewSection = documentRef.querySelector(
-    "[data-adxconfig-checkout-board-targets-preview='true']"
+    "[data-adxconfig-checkout-target-highlights-preview='true']"
   );
   assert.notEqual(limePreviewSection, cyanPreviewSection);
   assert.equal(documentRef.querySelector(".ad-xconfig-modal-body"), modalBody);
@@ -1890,12 +1890,12 @@ test("xConfig checkout board targets renders board and segment previews", async 
   );
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutBoardTargets.colorTheme === "lime"
+    (config) => config.features.checkoutTargetHighlights.colorTheme === "lime"
   );
   assert.equal(
     await waitFor(() => {
       const refreshedTarget = documentRef.querySelector(
-        "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+        "[data-adxconfig-checkout-target-highlights-preview='true'] .ad-ext-checkout-target"
       );
       return /132,\s*204,\s*22/.test(
         String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
@@ -1904,15 +1904,15 @@ test("xConfig checkout board targets renders board and segment previews", async 
     true
   );
 
-  clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "violet");
+  clickSelectSettingOption(documentRef, "checkout-target-highlights", "colorTheme", "violet");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutBoardTargets.colorTheme === "violet"
+    (config) => config.features.checkoutTargetHighlights.colorTheme === "violet"
   );
   assert.equal(
     await waitFor(() => {
       const refreshedTarget = documentRef.querySelector(
-        "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+        "[data-adxconfig-checkout-target-highlights-preview='true'] .ad-ext-checkout-target"
       );
       return /168,\s*85,\s*247/.test(
         String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
@@ -1937,39 +1937,39 @@ test("xConfig shell persists checkout board target and TV zoom select settings",
   await waitForActiveTab(documentRef, "animations");
 
   const openBoardTargetSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-board-targets']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-target-highlights']"
   );
   assert.ok(openBoardTargetSettings);
   openBoardTargetSettings.click();
   await waitForSettingsModal(documentRef);
 
-  clickSelectSettingOption(documentRef, "checkout-board-targets", "visualPreset", "signal");
+  clickSelectSettingOption(documentRef, "checkout-target-highlights", "visualPreset", "fast-blink");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.checkoutBoardTargets.visualPreset === "signal"
+    (config) => config.features.checkoutTargetHighlights.visualPreset === "fast-blink"
   );
 
-  clickSelectSettingOption(documentRef, "checkout-board-targets", "segmentStyle", "surface-only");
+  clickSelectSettingOption(documentRef, "checkout-target-highlights", "segmentStyle", "surface-only");
   await waitForStoredConfig(
     localStorage,
     (config) =>
-      config.features.checkoutBoardTargets.visualPreset === "signal" &&
-      config.features.checkoutBoardTargets.segmentStyle === "surface-only"
+      config.features.checkoutTargetHighlights.visualPreset === "fast-blink" &&
+      config.features.checkoutTargetHighlights.segmentStyle === "surface-only"
   );
 
-  clickSelectSettingOption(documentRef, "checkout-board-targets", "targetSelectionMode", "all");
+  clickSelectSettingOption(documentRef, "checkout-target-highlights", "targetSelectionMode", "all");
   await waitForStoredConfig(
     localStorage,
     (config) =>
-      config.features.checkoutBoardTargets.visualPreset === "signal" &&
-      config.features.checkoutBoardTargets.segmentStyle === "surface-only" &&
-      config.features.checkoutBoardTargets.targetSelectionMode === "all"
+      config.features.checkoutTargetHighlights.visualPreset === "fast-blink" &&
+      config.features.checkoutTargetHighlights.segmentStyle === "surface-only" &&
+      config.features.checkoutTargetHighlights.targetSelectionMode === "all"
   );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.checkoutBoardTargets.visualPreset, "signal");
-  assert.equal(storedConfig.features.checkoutBoardTargets.segmentStyle, "surface-only");
-  assert.equal(storedConfig.features.checkoutBoardTargets.targetSelectionMode, "all");
+  assert.equal(storedConfig.features.checkoutTargetHighlights.visualPreset, "fast-blink");
+  assert.equal(storedConfig.features.checkoutTargetHighlights.segmentStyle, "surface-only");
+  assert.equal(storedConfig.features.checkoutTargetHighlights.targetSelectionMode, "all");
 
   const openZoomSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='tv-board-zoom']"
@@ -2048,10 +2048,10 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
     await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,ZmFrZS1oZWFkZXI=");
     await runtime.saveConfig({
       features: {
-        checkoutScorePulse: {
-          effect: "blink",
+        checkoutScoreHighlight: {
+          effect: "fade-blink",
         },
-        styleCheckoutSuggestions: {
+        checkoutSuggestionStyles: {
           style: "badge",
         },
       },
@@ -2076,7 +2076,7 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
 
       return (
         allDisabled &&
-        config.features.checkoutScorePulse.effect === "scale" &&
+        config.features.checkoutScoreHighlight.effect === "grow-only" &&
         config.features.themes.x01.backgroundImageDataUrl === ""
       );
     }, { timeoutMs: 2000, intervalMs: 8 });
@@ -2089,10 +2089,10 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
     await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,cmVwbGF5LWhlYWRlcg==");
     await runtime.saveConfig({
       features: {
-        checkoutScorePulse: {
-          effect: "blink",
+        checkoutScoreHighlight: {
+          effect: "fade-blink",
         },
-        styleCheckoutSuggestions: {
+        checkoutSuggestionStyles: {
           style: "badge",
         },
       },
@@ -2123,28 +2123,28 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
 
       return (
         expectedRecommendedState &&
-        config.features.checkoutBoardTargets.visualPreset === "signal" &&
-        config.features.checkoutBoardTargets.colorTheme === "cyan" &&
-        config.features.styleCheckoutSuggestions.style === "stripe" &&
-        config.features.styleCheckoutSuggestions.labelText === "CHECKOUT" &&
-        config.features.turnStartSweep.sweepStyle === "standard" &&
-        config.features.tripleDoubleBullHits.animationStyle === "electric-arc" &&
-        config.features.cricketHighlighter.irrelevantBoardDimStyle === "hatch" &&
-        config.features.cricketGridFx.intensity === "normal" &&
-        config.features.cricketGridFx.pressureOverlay === true &&
-        config.features.dartMarkerEmphasis.effect === "pulse" &&
-        config.features.dartMarkerDarts.hideOriginalMarkers === true &&
-        config.features.dartMarkerDarts.enableShadowBlur === true &&
-        config.features.dartMarkerDarts.enableWobble === true &&
-        config.features.dartMarkerDarts.enableFlightBlur === true &&
-        config.features.removeDartsNotification.imageSize === "large" &&
-        config.features.singleBullSound.volume === 0.9 &&
-        config.features.winnerFireworks.style === "fireworks" &&
-        config.features.winnerFireworks.intensity === "standard" &&
-        config.features.winnerFireworks.durationSeconds === 5 &&
-        config.features.winnerFireworks.particleAmount === "optimiert" &&
-        config.features.x01ScoreProgress.barSize === "breit" &&
-        config.features.x01ScoreProgress.effect === "off" &&
+        config.features.checkoutTargetHighlights.visualPreset === "fast-blink" &&
+        config.features.checkoutTargetHighlights.colorTheme === "cyan" &&
+        config.features.checkoutSuggestionStyles.style === "stripe" &&
+        config.features.checkoutSuggestionStyles.labelText === "CHECKOUT" &&
+        config.features.activePlayerSweep.sweepStyle === "standard" &&
+        config.features.specialHitHighlights.animationStyle === "electric-jolt" &&
+        config.features.cricketTargetHighlighter.irrelevantBoardDimStyle === "hatch" &&
+        config.features.cricketGridStatusEffects.intensity === "normal" &&
+        config.features.cricketGridStatusEffects.pressureOverlay === true &&
+        config.features.dartboardMarkerHighlight.effect === "size-pulse" &&
+        config.features.dartMarkerReplacer.hideOriginalMarkers === true &&
+        config.features.dartMarkerReplacer.enableShadowBlur === true &&
+        config.features.dartMarkerReplacer.enableWobble === true &&
+        config.features.dartMarkerReplacer.enableFlightBlur === true &&
+        config.features.takeOutDartsAlert.imageSize === "large" &&
+        config.features.singleBullHitSound.volume === 0.9 &&
+        config.features.winnerCelebrationEffect.style === "top-fireworks" &&
+        config.features.winnerCelebrationEffect.intensity === "standard" &&
+        config.features.winnerCelebrationEffect.durationSeconds === 5 &&
+        config.features.winnerCelebrationEffect.particleAmount === "optimiert" &&
+        config.features.x01RemainingScoreBar.barSize === "breit" &&
+        config.features.x01RemainingScoreBar.effect === "off" &&
         config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
       );
     }, { timeoutMs: 2000, intervalMs: 8 });
@@ -2271,7 +2271,7 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='triple-double-bull-hits']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='special-hit-highlights']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2305,13 +2305,13 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
   );
 
   assert.deepEqual(previewEffects, [
-    "emphasis",
-    "shake",
-    "pulse",
-    "turn",
-    "sheen",
-    "shockwave",
-    "electric-arc",
+    "pop-hit",
+    "side-shake",
+    "glow-pop",
+    "flip-spin",
+    "light-sweep",
+    "shockwave-ring",
+    "electric-jolt",
   ]);
   animationOptions.forEach((optionNode) => {
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
@@ -2320,7 +2320,7 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
   runtime.stop();
 });
 
-test("xConfig turn-start-sweep setting buttons expose sweep previews", async () => {
+test("xConfig active-player-sweep setting buttons expose sweep previews", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -2333,7 +2333,7 @@ test("xConfig turn-start-sweep setting buttons expose sweep previews", async () 
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='turn-start-sweep']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='active-player-sweep']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2347,9 +2347,9 @@ test("xConfig turn-start-sweep setting buttons expose sweep previews", async () 
   );
 
   assert.deepEqual(durationPreviewEffects, [
-    "turn-start-sweep-fast",
-    "turn-start-sweep-standard-speed",
-    "turn-start-sweep-slow",
+    "active-player-sweep-fast",
+    "active-player-sweep-standard-speed",
+    "active-player-sweep-slow",
   ]);
   durationOptions.forEach((optionNode) => {
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
@@ -2363,9 +2363,9 @@ test("xConfig turn-start-sweep setting buttons expose sweep previews", async () 
   );
 
   assert.deepEqual(stylePreviewEffects, [
-    "turn-start-sweep-subtle",
-    "turn-start-sweep-standard-style",
-    "turn-start-sweep-strong",
+    "active-player-sweep-subtle",
+    "active-player-sweep-standard-style",
+    "active-player-sweep-strong",
   ]);
   styleOptions.forEach((optionNode) => {
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
@@ -2374,7 +2374,7 @@ test("xConfig turn-start-sweep setting buttons expose sweep previews", async () 
   runtime.stop();
 });
 
-test("xConfig average-trend-arrow settings expose real arrow preview hosts", async () => {
+test("xConfig avg-trend-arrow settings expose real arrow preview hosts", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -2387,7 +2387,7 @@ test("xConfig average-trend-arrow settings expose real arrow preview hosts", asy
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='average-trend-arrow']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='avg-trend-arrow']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2397,36 +2397,36 @@ test("xConfig average-trend-arrow settings expose real arrow preview hosts", asy
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='durationMs']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(durationPreviewEffects, [
-    "average-trend-arrow-duration-220",
-    "average-trend-arrow-duration-320",
-    "average-trend-arrow-duration-500",
+    "avg-trend-arrow-duration-220",
+    "avg-trend-arrow-duration-320",
+    "avg-trend-arrow-duration-500",
   ]);
 
   const sizePreviewEffects = documentRef
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='size']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(sizePreviewEffects, [
-    "average-trend-arrow-size-klein",
-    "average-trend-arrow-size-standard",
-    "average-trend-arrow-size-gross",
+    "avg-trend-arrow-size-klein",
+    "avg-trend-arrow-size-standard",
+    "avg-trend-arrow-size-gross",
   ]);
 
-  documentRef.querySelectorAll("[data-preview-effect^='average-trend-arrow-']").forEach((optionNode) => {
+  documentRef.querySelectorAll("[data-preview-effect^='avg-trend-arrow-']").forEach((optionNode) => {
     assert.equal(
-      optionNode.classList.contains("ad-xconfig-option-item--average-trend-arrow-preview"),
+      optionNode.classList.contains("ad-xconfig-option-item--avg-trend-arrow-preview"),
       true
     );
-    const previewNode = optionNode.querySelector("[data-adxconfig-average-trend-preview-host='true']");
-    const arrowNode = optionNode.querySelector("[data-adxconfig-average-trend-preview='true']");
+    const previewNode = optionNode.querySelector("[data-adxconfig-avg-trend-preview-host='true']");
+    const arrowNode = optionNode.querySelector("[data-adxconfig-avg-trend-preview='true']");
     assert.ok(previewNode);
     assert.ok(arrowNode);
     assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-arrow"), true);
     assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-visible"), true);
     assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-up"), true);
     assert.equal(
-      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--average-trend-arrow").children)
+      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--avg-trend-arrow").children)
         .indexOf(previewNode) <
-        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--average-trend-arrow").children)
+        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--avg-trend-arrow").children)
           .findIndex((node) => node.getAttribute?.("data-option-active-slot") === "true"),
       true
     );
@@ -2435,7 +2435,7 @@ test("xConfig average-trend-arrow settings expose real arrow preview hosts", asy
   runtime.stop();
 });
 
-test("xConfig dart-marker-emphasis settings expose real marker preview hosts", async () => {
+test("xConfig dartboard-marker-highlight settings expose real marker preview hosts", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -2448,7 +2448,7 @@ test("xConfig dart-marker-emphasis settings expose real marker preview hosts", a
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-emphasis']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='dartboard-marker-highlight']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2458,56 +2458,56 @@ test("xConfig dart-marker-emphasis settings expose real marker preview hosts", a
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='size']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(sizePreviewEffects, [
-    "dart-marker-emphasis-size-4",
-    "dart-marker-emphasis-size-6",
-    "dart-marker-emphasis-size-9",
+    "dartboard-marker-highlight-size-4",
+    "dartboard-marker-highlight-size-6",
+    "dartboard-marker-highlight-size-9",
   ]);
 
   const effectPreviewEffects = documentRef
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='effect']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(effectPreviewEffects, [
-    "dart-marker-emphasis-effect-glow",
-    "dart-marker-emphasis-effect-pulse",
-    "dart-marker-emphasis-effect-none",
+    "dartboard-marker-highlight-effect-soft-glow",
+    "dartboard-marker-highlight-effect-size-pulse",
+    "dartboard-marker-highlight-effect-none",
   ]);
 
   const visibilityPreviewEffects = documentRef
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='opacityPercent']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(visibilityPreviewEffects, [
-    "dart-marker-emphasis-opacityPercent-65",
-    "dart-marker-emphasis-opacityPercent-85",
-    "dart-marker-emphasis-opacityPercent-100",
+    "dartboard-marker-highlight-opacityPercent-65",
+    "dartboard-marker-highlight-opacityPercent-85",
+    "dartboard-marker-highlight-opacityPercent-100",
   ]);
 
   const previewOptions = documentRef
     .querySelectorAll("[data-adxconfig-option-note='true']")
     .filter((optionNode) =>
       String(optionNode.getAttribute("data-preview-effect") || "")
-        .startsWith("dart-marker-emphasis-")
+        .startsWith("dartboard-marker-highlight-")
     );
   assert.equal(previewOptions.length, 9);
   previewOptions.forEach((optionNode) => {
     assert.equal(
-      optionNode.classList.contains("ad-xconfig-option-item--dart-marker-emphasis-preview"),
+      optionNode.classList.contains("ad-xconfig-option-item--dartboard-marker-highlight-preview"),
       true
     );
     const previewNode = optionNode.querySelector(
-      `[${DART_MARKER_EMPHASIS_PREVIEW_ATTRIBUTE}='true']`
+      `[${DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE}='true']`
     );
     const marker = optionNode.querySelector(
-      `[${DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE}='true']`
+      `[${DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE}='true']`
     );
     assert.ok(previewNode);
     assert.ok(marker);
-    assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_BASE_CLASS), true);
-    assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.glow), false);
-    assert.equal(marker.classList.contains(DART_MARKER_EMPHASIS_EFFECT_CLASSES.pulse), false);
+    assert.equal(marker.classList.contains(DARTBOARD_MARKER_HIGHLIGHT_BASE_CLASS), true);
+    assert.equal(marker.classList.contains(DARTBOARD_MARKER_HIGHLIGHT_EFFECT_CLASSES["soft-glow"]), false);
+    assert.equal(marker.classList.contains(DARTBOARD_MARKER_HIGHLIGHT_EFFECT_CLASSES["size-pulse"]), false);
     assert.equal(
-      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--dart-marker-emphasis").children)
+      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--dartboard-marker-highlight").children)
         .indexOf(previewNode) <
-        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--dart-marker-emphasis").children)
+        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--dartboard-marker-highlight").children)
           .findIndex((node) => node.getAttribute?.("data-option-active-slot") === "true"),
       true
     );
@@ -2516,16 +2516,16 @@ test("xConfig dart-marker-emphasis settings expose real marker preview hosts", a
   const markerByEffect = (previewEffect) =>
     documentRef
       .querySelector(`[data-preview-effect='${previewEffect}']`)
-      ?.querySelector(`[${DART_MARKER_EMPHASIS_PREVIEW_MARKER_ATTRIBUTE}='true']`);
-  assert.equal(markerByEffect("dart-marker-emphasis-size-4")?.getAttribute("r"), "4");
-  assert.equal(markerByEffect("dart-marker-emphasis-size-9")?.getAttribute("r"), "9");
-  assert.equal(markerByEffect("dart-marker-emphasis-opacityPercent-65")?.style.opacity, "0.65");
-  assert.equal(markerByEffect("dart-marker-emphasis-opacityPercent-100")?.style.opacity, "1");
+      ?.querySelector(`[${DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE}='true']`);
+  assert.equal(markerByEffect("dartboard-marker-highlight-size-4")?.getAttribute("r"), "4");
+  assert.equal(markerByEffect("dartboard-marker-highlight-size-9")?.getAttribute("r"), "9");
+  assert.equal(markerByEffect("dartboard-marker-highlight-opacityPercent-65")?.style.opacity, "0.65");
+  assert.equal(markerByEffect("dartboard-marker-highlight-opacityPercent-100")?.style.opacity, "1");
 
   runtime.stop();
 });
 
-test("xConfig turn-points-count settings expose real effect preview hosts", async () => {
+test("xConfig turn-score-counter settings expose real effect preview hosts", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -2538,7 +2538,7 @@ test("xConfig turn-points-count settings expose real effect preview hosts", asyn
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='turn-points-count']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='turn-score-counter']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2548,44 +2548,44 @@ test("xConfig turn-points-count settings expose real effect preview hosts", asyn
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='countEffect']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(countEffectPreviewEffects, [
-    "turn-points-count-countup",
-    "turn-points-count-odometer",
-    "turn-points-count-steps",
+    "turn-score-counter-smooth-count",
+    "turn-score-counter-rolling-digits",
+    "turn-score-counter-step-count",
   ]);
 
   const speedPreviewEffects = documentRef
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='durationMs']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(speedPreviewEffects, [
-    "turn-points-count-fast",
-    "turn-points-count-standard-speed",
-    "turn-points-count-slow",
+    "turn-score-counter-fast",
+    "turn-score-counter-standard-speed",
+    "turn-score-counter-slow",
   ]);
 
   const flashPreviewEffects = documentRef
     .querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='flashMode']")
     .map((optionNode) => String(optionNode.getAttribute("data-preview-effect") || ""));
   assert.deepEqual(flashPreviewEffects, [
-    "turn-points-count-flash-change",
-    "turn-points-count-flash-permanent",
+    "turn-score-counter-flash-change",
+    "turn-score-counter-flash-permanent",
   ]);
 
-  documentRef.querySelectorAll("[data-preview-effect^='turn-points-count-']").forEach((optionNode) => {
+  documentRef.querySelectorAll("[data-preview-effect^='turn-score-counter-']").forEach((optionNode) => {
     assert.equal(
-      optionNode.classList.contains("ad-xconfig-option-item--turn-points-count-preview"),
+      optionNode.classList.contains("ad-xconfig-option-item--turn-score-counter-preview"),
       true
     );
-    const previewNode = optionNode.querySelector("[data-adxconfig-turn-points-preview='true']");
-    const scoreNode = optionNode.querySelector("[data-adxconfig-turn-points-preview-score='true']");
+    const previewNode = optionNode.querySelector("[data-adxconfig-turn-score-preview='true']");
+    const scoreNode = optionNode.querySelector("[data-adxconfig-turn-score-preview-score='true']");
     assert.ok(previewNode);
     assert.ok(scoreNode);
     assert.equal(scoreNode.textContent, "501");
     assert.equal(scoreNode.classList.contains("ad-ext-turn-points"), false);
-    assert.equal(scoreNode.classList.contains("ad-xconfig-turn-points-preview-score"), true);
+    assert.equal(scoreNode.classList.contains("ad-xconfig-turn-score-preview-score"), true);
     assert.equal(
-      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--turn-points-count").children)
+      Array.from(optionNode.querySelector(".ad-xconfig-option-layout--turn-score-counter").children)
         .indexOf(previewNode) <
-        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--turn-points-count").children)
+        Array.from(optionNode.querySelector(".ad-xconfig-option-layout--turn-score-counter").children)
           .findIndex((node) => node.getAttribute?.("data-option-active-slot") === "true"),
       true
     );
@@ -2607,7 +2607,7 @@ test("xConfig x01 score progress settings no longer expose a design selector", a
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-remaining-score-bar']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2653,7 +2653,7 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='turn-points-count']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='turn-score-counter']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -2692,41 +2692,41 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     "missing turn-points count style setting note"
   );
 
-  clickSelectSettingOption(documentRef, "turn-points-count", "durationMs", 5000);
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.durationMs === 5000);
+  clickSelectSettingOption(documentRef, "turn-score-counter", "durationMs", 5000);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnScoreCounter.durationMs === 5000);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.durationMs, 5000);
+  assert.equal(storedConfig.features.turnScoreCounter.durationMs, 5000);
 
-  clickSelectSettingOption(documentRef, "turn-points-count", "countEffect", "odometer");
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.countEffect === "odometer");
-
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.countEffect, "odometer");
-
-  clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashOnChange === false);
+  clickSelectSettingOption(documentRef, "turn-score-counter", "countEffect", "rolling-digits");
+  await waitForStoredConfig(localStorage, (config) => config.features.turnScoreCounter.countEffect === "rolling-digits");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.flashOnChange, false);
+  assert.equal(storedConfig.features.turnScoreCounter.countEffect, "rolling-digits");
 
-  clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "permanent");
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashMode === "permanent");
-
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.flashMode, "permanent");
-
-  clickSettingToggle(documentRef, "turn-points-count", "flashOnChange", true);
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashOnChange === true);
+  clickSettingToggle(documentRef, "turn-score-counter", "flashOnChange", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnScoreCounter.flashOnChange === false);
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.flashOnChange, true);
+  assert.equal(storedConfig.features.turnScoreCounter.flashOnChange, false);
 
-  clickSelectSettingOption(documentRef, "turn-points-count", "flashMode", "on-change");
-  await waitForStoredConfig(localStorage, (config) => config.features.turnPointsCount.flashMode === "on-change");
+  clickSelectSettingOption(documentRef, "turn-score-counter", "flashMode", "permanent");
+  await waitForStoredConfig(localStorage, (config) => config.features.turnScoreCounter.flashMode === "permanent");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.turnPointsCount.flashMode, "on-change");
+  assert.equal(storedConfig.features.turnScoreCounter.flashMode, "permanent");
+
+  clickSettingToggle(documentRef, "turn-score-counter", "flashOnChange", true);
+  await waitForStoredConfig(localStorage, (config) => config.features.turnScoreCounter.flashOnChange === true);
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnScoreCounter.flashOnChange, true);
+
+  clickSelectSettingOption(documentRef, "turn-score-counter", "flashMode", "on-change");
+  await waitForStoredConfig(localStorage, (config) => config.features.turnScoreCounter.flashMode === "on-change");
+
+  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(storedConfig.features.turnScoreCounter.flashMode, "on-change");
 
   runtime.stop();
 });
@@ -2744,14 +2744,14 @@ test("xConfig dart design options render split layout with preview and active ba
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-darts']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-replacer']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const designOptions = documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-replacer'][data-setting-key='design']"
   );
   assert.equal(designOptions.length, DART_DESIGN_KEYS.length);
   assert.deepEqual(
@@ -2760,7 +2760,7 @@ test("xConfig dart design options render split layout with preview and active ba
   );
 
   const sizeOptions = documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='sizePercent']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-replacer'][data-setting-key='sizePercent']"
   );
   assert.deepEqual(
     sizeOptions.map((optionNode) => optionNode.getAttribute("data-setting-value")),
@@ -2784,7 +2784,7 @@ test("xConfig dart design options render split layout with preview and active ba
   assert.ok(dartDemoSection);
   assert.ok(
     dartDemoSection.querySelector(
-      "[data-adxconfig-action-preview-target='dart-marker-darts']"
+      "[data-adxconfig-action-preview-target='dart-marker-replacer']"
     )
   );
   const settingsSummaryNotes = Array.from(
@@ -2803,23 +2803,23 @@ test("xConfig dart design options render split layout with preview and active ba
   assert.ok(activeBeforeSlot);
   assert.ok(activeBeforeSlot.querySelector(".ad-xconfig-option-active"));
 
-  clickSelectSettingOption(documentRef, "dart-marker-darts", "design", "red");
-  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.design === "red");
-  clickSettingToggle(documentRef, "dart-marker-darts", "enableShadow", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableShadow === false);
-  clickSettingToggle(documentRef, "dart-marker-darts", "enableShadowBlur", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableShadowBlur === false);
-  clickSettingToggle(documentRef, "dart-marker-darts", "enableWobble", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableWobble === false);
-  clickSettingToggle(documentRef, "dart-marker-darts", "enableFlightBlur", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerDarts.enableFlightBlur === false);
+  clickSelectSettingOption(documentRef, "dart-marker-replacer", "design", "red");
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.design === "red");
+  clickSettingToggle(documentRef, "dart-marker-replacer", "enableShadow", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.enableShadow === false);
+  clickSettingToggle(documentRef, "dart-marker-replacer", "enableShadowBlur", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.enableShadowBlur === false);
+  clickSettingToggle(documentRef, "dart-marker-replacer", "enableWobble", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.enableWobble === false);
+  clickSettingToggle(documentRef, "dart-marker-replacer", "enableFlightBlur", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.enableFlightBlur === false);
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.dartMarkerDarts.design, "red");
-  assert.equal(storedConfig.features.dartMarkerDarts.enableShadow, false);
-  assert.equal(storedConfig.features.dartMarkerDarts.enableShadowBlur, false);
-  assert.equal(storedConfig.features.dartMarkerDarts.enableWobble, false);
-  assert.equal(storedConfig.features.dartMarkerDarts.enableFlightBlur, false);
+  assert.equal(storedConfig.features.dartMarkerReplacer.design, "red");
+  assert.equal(storedConfig.features.dartMarkerReplacer.enableShadow, false);
+  assert.equal(storedConfig.features.dartMarkerReplacer.enableShadowBlur, false);
+  assert.equal(storedConfig.features.dartMarkerReplacer.enableWobble, false);
+  assert.equal(storedConfig.features.dartMarkerReplacer.enableFlightBlur, false);
 
   const activeAfter = designOptions.filter(
     (node) => node.getAttribute("data-active") === "true"
@@ -2828,13 +2828,13 @@ test("xConfig dart design options render split layout with preview and active ba
   assert.equal(activeAfter[0].getAttribute("data-setting-value"), "red");
 
   const redOption = documentRef.querySelector(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design'][data-setting-value='red']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-replacer'][data-setting-key='design'][data-setting-value='red']"
   );
   assert.ok(redOption);
   assert.ok(redOption.querySelector("[data-option-active-slot='true'] .ad-xconfig-option-active"));
 
   const autodartsOption = documentRef.querySelector(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-darts'][data-setting-key='design'][data-setting-value='autodarts']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-replacer'][data-setting-key='design'][data-setting-value='autodarts']"
   );
   assert.ok(autodartsOption);
   assert.equal(
@@ -3445,11 +3445,11 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   await waitForActiveTab(documentRef, "animations");
 
   [
-    "checkout-score-pulse",
-    "x01-score-progress",
-    "checkout-board-targets",
+    "checkout-score-highlight",
+    "x01-remaining-score-bar",
+    "checkout-target-highlights",
     "tv-board-zoom",
-    "turn-start-sweep",
+    "active-player-sweep",
   ].forEach((featureKey) => {
     const card = documentRef.querySelector(`.ad-xconfig-card[data-feature-key='${featureKey}']`);
     assert.ok(card, `missing card for ${featureKey}`);
@@ -3909,14 +3909,14 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='winner-fireworks']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='winner-celebration-effect']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const firstPreviewButton = documentRef.getElementById(
-    "ad-xconfig-field-winner-fireworks-run-feature-action"
+    "ad-xconfig-field-winner-celebration-effect-run-feature-action"
   );
   assert.ok(firstPreviewButton);
   const firstPreviewClick = new FakeEvent("click", {
@@ -3927,18 +3927,18 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   firstPreviewButton.dispatchEvent(firstPreviewClick);
   assert.equal(firstPreviewClick.defaultPrevented, true);
   assert.equal(
-    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview"))),
+    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview"))),
     true
   );
 
   windowRef.dispatchEvent(new FakeEvent("pointerdown", { bubbles: true }));
-  await waitFor(() => !documentRef.getElementById("ad-ext-winner-fireworks-preview"));
+  await waitFor(() => !documentRef.getElementById("ad-ext-winner-celebration-effect-preview"));
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-style-preview")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-style-preview")), false);
 
   const secondPreviewButton = documentRef.getElementById(
-    "ad-xconfig-field-winner-fireworks-run-feature-action"
+    "ad-xconfig-field-winner-celebration-effect-run-feature-action"
   );
   assert.ok(secondPreviewButton);
   const secondPreviewClick = new FakeEvent("click", {
@@ -3949,16 +3949,16 @@ test("xConfig shell runs feature preview actions for winner fireworks", async ()
   secondPreviewButton.dispatchEvent(secondPreviewClick);
   assert.equal(secondPreviewClick.defaultPrevented, true);
   assert.equal(
-    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview"))),
+    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview"))),
     true
   );
   await wait(90);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-preview")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview")), false);
 
   runtime.stop();
 });
 
-test("xConfig single-bull-sound settings expose and run the configured sound preview", async () => {
+test("xConfig single-bull-hit-sound settings expose and run the configured sound preview", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -3989,7 +3989,7 @@ test("xConfig single-bull-sound settings expose and run the configured sound pre
   await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='single-bull-sound']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='single-bull-hit-sound']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -4007,7 +4007,7 @@ test("xConfig single-bull-sound settings expose and run the configured sound pre
   const quietVolumeButton = documentRef
     .querySelectorAll("[data-adxconfig-action='set-setting-select-option']")
     .find((button) =>
-      button.getAttribute("data-feature-key") === "single-bull-sound" &&
+      button.getAttribute("data-feature-key") === "single-bull-hit-sound" &&
       button.getAttribute("data-setting-key") === "volume" &&
       button.getAttribute("data-setting-value") === "0.5"
     );
@@ -4020,13 +4020,13 @@ test("xConfig single-bull-sound settings expose and run the configured sound pre
   assert.equal(
     await waitFor(() => {
       const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || "{}");
-      return storedConfig?.features?.singleBullSound?.volume === 0.5;
+      return storedConfig?.features?.singleBullHitSound?.volume === 0.5;
     }),
     true
   );
 
   const previewButton = documentRef.getElementById(
-    "ad-xconfig-field-single-bull-sound-run-feature-action"
+    "ad-xconfig-field-single-bull-hit-sound-run-feature-action"
   );
   assert.ok(previewButton);
   const previewClick = new FakeEvent("click", {
@@ -4069,44 +4069,44 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.x01"] === true);
   firstDocument.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(firstDocument, "animations");
-  clickFeatureToggle(firstDocument, "turn-start-sweep", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnStartSweep === true);
-  clickFeatureToggle(firstDocument, "x01-score-progress", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles.x01ScoreProgress === true);
+  clickFeatureToggle(firstDocument, "active-player-sweep", true);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.activePlayerSweep === true);
+  clickFeatureToggle(firstDocument, "x01-remaining-score-bar", true);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.x01RemainingScoreBar === true);
 
   const openSettings = firstDocument.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(firstDocument);
 
-  clickSelectSettingOption(firstDocument, "checkout-score-pulse", "effect", "glow");
-  await waitForStoredConfig(localStorage, (config) => config.features.checkoutScorePulse.effect === "glow");
+  clickSelectSettingOption(firstDocument, "checkout-score-highlight", "effect", "glow-only");
+  await waitForStoredConfig(localStorage, (config) => config.features.checkoutScoreHighlight.effect === "glow-only");
 
   const openX01ProgressSettings = firstDocument.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-remaining-score-bar']"
   );
   assert.ok(openX01ProgressSettings);
   openX01ProgressSettings.click();
   await waitFor(() => Boolean(
     firstDocument.querySelector(
-      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-remaining-score-bar'][data-setting-key='effect']"
     )
   ));
 
-  clickSelectSettingOption(firstDocument, "x01-score-progress", "effect", "ghost-trail");
-  await waitForStoredConfig(localStorage, (config) => config.features.x01ScoreProgress.effect === "ghost-trail");
+  clickSelectSettingOption(firstDocument, "x01-remaining-score-bar", "effect", "previous-score-trail");
+  await waitForStoredConfig(localStorage, (config) => config.features.x01RemainingScoreBar.effect === "previous-score-trail");
 
   await firstWindow.__adXConfig.setThemeBackgroundImage("x01", "data:image/png;base64,cGVyc2lzdGVk");
   await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cGVyc2lzdGVk");
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
-  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
-  assert.equal(storedConfig.featureToggles.x01ScoreProgress, true);
-  assert.equal(storedConfig.features.checkoutScorePulse.effect, "glow");
-  assert.equal(storedConfig.features.x01ScoreProgress.effect, "ghost-trail");
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "glow-only");
+  assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "previous-score-trail");
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,cGVyc2lzdGVk");
 
   firstRuntime.stop();
@@ -4122,12 +4122,12 @@ test("xConfig shell restores persisted toggle, setting and background state afte
 
   const secondSnapshot = secondRuntime.getSnapshot();
   assert.equal(secondSnapshot.features["theme-x01"].enabled, true);
-  assert.equal(secondSnapshot.features["turn-start-sweep"].enabled, true);
-  assert.equal(secondSnapshot.features["x01-score-progress"].enabled, true);
-  assert.equal(secondSnapshot.features["turn-start-sweep"].mounted, true);
+  assert.equal(secondSnapshot.features["active-player-sweep"].enabled, true);
+  assert.equal(secondSnapshot.features["x01-remaining-score-bar"].enabled, true);
+  assert.equal(secondSnapshot.features["active-player-sweep"].mounted, true);
   assert.equal(secondSnapshot.features["theme-x01"].mounted, true);
-  assert.equal(secondSnapshot.features["x01-score-progress"].mounted, true);
-  assert.equal(secondSnapshot.features["x01-score-progress"].config.effect, "ghost-trail");
+  assert.equal(secondSnapshot.features["x01-remaining-score-bar"].mounted, true);
+  assert.equal(secondSnapshot.features["x01-remaining-score-bar"].config.effect, "previous-score-trail");
   assert.equal(
     secondSnapshot.features["theme-x01"].config.backgroundImageDataUrl,
     "data:image/png;base64,cGVyc2lzdGVk"
@@ -4145,38 +4145,38 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   secondDocument.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(secondDocument, "animations");
   const restoredX01ProgressToggle = secondDocument.querySelector(
-    "[data-adxconfig-action='set-feature'][data-feature-key='x01-score-progress'][data-feature-enabled='true']"
+    "[data-adxconfig-action='set-feature'][data-feature-key='x01-remaining-score-bar'][data-feature-enabled='true']"
   );
   assert.ok(restoredX01ProgressToggle);
   assert.equal(restoredX01ProgressToggle.getAttribute("data-active"), "true");
   const openSecondSettings = secondDocument.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-pulse']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
   );
   openSecondSettings.click();
   await waitForSettingsModal(secondDocument);
 
   const restoredEffectOptions = secondDocument.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-pulse'][data-setting-key='effect']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-score-highlight'][data-setting-key='effect']"
   );
   const restoredActiveEffects = restoredEffectOptions.filter(
     (node) => node.getAttribute("data-active") === "true"
   );
   assert.equal(restoredActiveEffects.length, 1);
-  assert.equal(restoredActiveEffects[0].getAttribute("data-setting-value"), "glow");
+  assert.equal(restoredActiveEffects[0].getAttribute("data-setting-value"), "glow-only");
 
   const openRestoredX01Settings = secondDocument.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='x01-score-progress']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-remaining-score-bar']"
   );
   assert.ok(openRestoredX01Settings);
   openRestoredX01Settings.click();
   await waitFor(() => {
     return secondDocument.querySelectorAll(
-      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-remaining-score-bar'][data-setting-key='effect']"
     ).length > 0;
   });
 
   const restoredX01EffectOptions = secondDocument.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-score-progress'][data-setting-key='effect']"
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='x01-remaining-score-bar'][data-setting-key='effect']"
   );
   await waitFor(() => restoredX01EffectOptions.some(
     (node) => node.getAttribute("data-active") === "true"
@@ -4185,12 +4185,12 @@ test("xConfig shell restores persisted toggle, setting and background state afte
     (node) => node.getAttribute("data-active") === "true"
   );
   assert.equal(restoredActiveX01Effects.length, 1);
-  assert.equal(restoredActiveX01Effects[0].getAttribute("data-setting-value"), "ghost-trail");
+  assert.equal(restoredActiveX01Effects[0].getAttribute("data-setting-value"), "previous-score-trail");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.x01"], true);
-  assert.equal(storedConfig.featureToggles.turnStartSweep, true);
-  assert.equal(storedConfig.featureToggles.x01ScoreProgress, true);
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
 
   secondRuntime.stop();
 });

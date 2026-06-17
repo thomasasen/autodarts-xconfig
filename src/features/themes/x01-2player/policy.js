@@ -29,7 +29,7 @@ const BOARD_CONTROLS_PORTAL_SELECTOR = `[${BOARD_CONTROLS_PORTAL_ATTRIBUTE}="tru
 const LIVE_TURN_HEIGHT_VARIABLE = "--ad-ext-x01-2player-live-turn-height";
 const LIVE_THROW_POINTS_SIZE_VARIABLE = "--ad-ext-x01-2player-live-throw-points-size";
 const SHARED_PLAYER_NAME_SIZE_VARIABLE = "--ad-ext-x01-2player-shared-name-size";
-const SCORE_PROGRESS_HOST_SELECTOR = '[data-ad-ext-x01-score-progress="true"]';
+const SCORE_PROGRESS_HOST_SELECTOR = '[data-ad-ext-x01-remaining-score-bar="true"]';
 const PLAYER_NAME_SELECTOR = ".ad-ext-player-name";
 const PLAYER_NAME_MIN_SIZE_PX = 18;
 const PLAYER_NAME_MAX_SIZE_PX = 96;

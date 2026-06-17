@@ -8,7 +8,7 @@ import path from "node:path";
 import {
   DART_IMAGE_SOURCE_HEIGHT,
   DART_IMAGE_SOURCE_WIDTH,
-} from "../../src/features/dart-marker-darts/logic.js";
+} from "../../src/features/dart-marker-replacer/logic.js";
 import { DART_DESIGN_FILES } from "../../src/shared/feature-assets.manifest.js";
 
 const takeOutAssetPath = path.resolve(process.cwd(), "src", "assets", "TakeOut.png");

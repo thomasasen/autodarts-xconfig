@@ -66,7 +66,7 @@ test("theme global typography stays first in the themes descriptor order", () =>
 
 test("triple-double-bull style options expose color and animation previews", () => {
   const descriptor = xconfigDescriptors.find(
-    (entry) => entry.featureKey === "triple-double-bull-hits"
+    (entry) => entry.featureKey === "special-hit-highlights"
   );
   const colorField = descriptor?.fields?.find((field) => field.key === "colorTheme");
   const optionColorThemes = new Map(
@@ -150,50 +150,50 @@ test("triple-double-bull style options expose color and animation previews", () 
   });
 
   assert.deepEqual(Array.from(optionEffects.keys()), [
-    "emphasis",
-    "shake",
-    "pulse",
-    "turn",
-    "sheen",
-    "shockwave",
-    "electric-arc",
+    "pop-hit",
+    "side-shake",
+    "glow-pop",
+    "flip-spin",
+    "light-sweep",
+    "shockwave-ring",
+    "electric-jolt",
   ]);
   optionEffects.forEach((previewEffect, value) => {
     assert.equal(previewEffect, value);
     assert.equal(xconfigShellStyleText.includes(`data-preview-effect="${previewEffect}"`), true);
   });
   [
-    "ad-xconfig-hit-row-electric-arc",
-    "ad-xconfig-hit-score-electric-arc",
-    "ad-xconfig-hit-segment-electric-arc",
-    "ad-xconfig-hit-electric-arc-frame-electric",
-    "ad-xconfig-hit-electric-arc-frame-glow",
-    "ad-xconfig-hit-electric-arc-frame-aura",
+    "ad-xconfig-hit-row-electric-jolt",
+    "ad-xconfig-hit-score-electric-jolt",
+    "ad-xconfig-hit-segment-electric-jolt",
+    "ad-xconfig-hit-electric-jolt-frame-electric",
+    "ad-xconfig-hit-electric-jolt-frame-glow",
+    "ad-xconfig-hit-electric-jolt-frame-aura",
     `url(#${ELECTRIC_FILTER_SOFT_ID})`,
     `url(#${ELECTRIC_FILTER_STRONG_ID})`,
-    'data-preview-effect="electric-arc"]:hover::after',
+    'data-preview-effect="electric-jolt"]:hover::after',
   ].forEach((expectedSnippet) => {
     assert.equal(xconfigShellStyleText.includes(expectedSnippet), true);
   });
 });
 
-test("turn-start-sweep settings expose sweep previews", () => {
-  const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "turn-start-sweep");
+test("active-player-sweep settings expose sweep previews", () => {
+  const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "active-player-sweep");
   const expectedPreviewEffects = new Map([
     [
       "durationMs",
       [
-        "turn-start-sweep-fast",
-        "turn-start-sweep-standard-speed",
-        "turn-start-sweep-slow",
+        "active-player-sweep-fast",
+        "active-player-sweep-standard-speed",
+        "active-player-sweep-slow",
       ],
     ],
     [
       "sweepStyle",
       [
-        "turn-start-sweep-subtle",
-        "turn-start-sweep-standard-style",
-        "turn-start-sweep-strong",
+        "active-player-sweep-subtle",
+        "active-player-sweep-standard-style",
+        "active-player-sweep-strong",
       ],
     ],
   ]);
@@ -213,13 +213,13 @@ test("turn-start-sweep settings expose sweep previews", () => {
       );
     });
   });
-  assert.equal(xconfigShellStyleText.includes("ad-xconfig-turn-start-sweep-preview"), true);
+  assert.equal(xconfigShellStyleText.includes("ad-xconfig-active-player-sweep-preview"), true);
 });
 
 test("xConfig color preset settings expose matching preview themes", () => {
   const expectedPreviewFields = new Map([
     [
-      "checkout-score-pulse:colorTheme",
+      "checkout-score-highlight:colorTheme",
       [
         "checkout-score-autodarts-green",
         "checkout-score-cyan",
@@ -228,7 +228,7 @@ test("xConfig color preset settings expose matching preview themes", () => {
       ],
     ],
     [
-      "x01-score-progress:colorTheme",
+      "x01-remaining-score-bar:colorTheme",
       [
         "x01-checkout-focus",
         "x01-traffic-light",
@@ -245,7 +245,7 @@ test("xConfig color preset settings expose matching preview themes", () => {
       ],
     ],
     [
-      "checkout-board-targets:colorTheme",
+      "checkout-target-highlights:colorTheme",
       [
         "checkout-board-violet",
         "checkout-board-cyan",
@@ -256,13 +256,13 @@ test("xConfig color preset settings expose matching preview themes", () => {
       ],
     ],
     [
-      "style-checkout-suggestions:colorTheme",
+      "checkout-suggestion-styles:colorTheme",
       ["checkout-suggestion-amber", "checkout-suggestion-cyan", "checkout-suggestion-rose"],
     ],
-    ["cricket-highlighter:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
-    ["cricket-grid-fx:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
+    ["cricket-target-highlighter:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
+    ["cricket-grid-status-effects:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
     [
-      "dart-marker-emphasis:color",
+      "dartboard-marker-highlight:color",
       [
         "dart-marker-blue",
         "dart-marker-green",
@@ -272,7 +272,7 @@ test("xConfig color preset settings expose matching preview themes", () => {
       ],
     ],
     [
-      "dart-marker-emphasis:outline",
+      "dartboard-marker-highlight:outline",
       [
         "dart-marker-outline-off",
         "dart-marker-outline-white",
@@ -280,7 +280,7 @@ test("xConfig color preset settings expose matching preview themes", () => {
       ],
     ],
     [
-      "winner-fireworks:colorTheme",
+      "winner-celebration-effect:colorTheme",
       [
         "winner-autodarts",
         "winner-redwhite",
@@ -311,7 +311,7 @@ test("xConfig color preset settings expose matching preview themes", () => {
   });
   assert.equal(
     xconfigShellStyleText.includes(
-      '[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]'
+      '[data-feature-key="checkout-target-highlights"][data-setting-key="colorTheme"]'
     ),
     true,
     "missing scoped checkout-board color button CSS"

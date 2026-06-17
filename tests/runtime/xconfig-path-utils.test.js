@@ -13,13 +13,13 @@ test("xconfig path utils split nested config keys and resolve theme keys", () =>
   assert.deepEqual(splitFeaturePath(" themes.x01 "), ["themes", "x01"]);
   assert.equal(themeKeyFromConfigKey("themes.x01"), "x01");
   assert.equal(themeKeyFromConfigKey("themes.globalTypography"), "globalTypography");
-  assert.equal(themeKeyFromConfigKey("checkoutScorePulse"), "");
+  assert.equal(themeKeyFromConfigKey("checkoutScoreHighlight"), "");
 });
 
 test("xconfig path utils build nested feature setting patches without changing public shape", () => {
-  assert.deepEqual(buildFeatureSettingPatch("checkoutScorePulse", "effect", "scale"), {
+  assert.deepEqual(buildFeatureSettingPatch("checkoutScoreHighlight", "effect", "scale"), {
     features: {
-      checkoutScorePulse: {
+      checkoutScoreHighlight: {
         effect: "scale",
       },
     },

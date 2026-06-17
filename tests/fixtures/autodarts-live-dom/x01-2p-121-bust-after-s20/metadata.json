@@ -42,7 +42,7 @@
       "S20"
     ],
     "turnText": "BUST57T1948T1620S20",
-    "turnPoints": "BUST",
+    "turnScore": "BUST",
     "isBust": true,
     "hasBustAnimation": true,
     "suggestionNodes": [],

@@ -11,11 +11,28 @@ import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
 
-const CHECKOUT_EFFECTS = new Set(["pulse", "glow", "scale", "blink"]);
+const CHECKOUT_EFFECT_ALIASES = Object.freeze({
+  "": "grow-only",
+  pulse: "grow-glow",
+  "grow-glow": "grow-glow",
+  glow: "glow-only",
+  "glow-only": "glow-only",
+  scale: "grow-only",
+  "grow-only": "grow-only",
+  blink: "fade-blink",
+  "fade-blink": "fade-blink",
+});
 const CHECKOUT_INTENSITIES = new Set(["dezent", "standard", "stark"]);
 const CHECKOUT_TRIGGER_SOURCES = new Set(["suggestion-first", "score-only", "suggestion-only"]);
-const CHECKOUT_COLORS = new Set(["159, 219, 88", "56, 189, 248", "245, 158, 11", "248, 113, 113"]);
-const BOARD_TARGET_VISUAL_PRESETS = new Set(["focus", "signal", "steady"]);
+const BOARD_TARGET_VISUAL_PRESET_ALIASES = Object.freeze({
+  "": "soft-pulse",
+  focus: "soft-pulse",
+  "soft-pulse": "soft-pulse",
+  signal: "fast-blink",
+  "fast-blink": "fast-blink",
+  steady: "slow-glow",
+  "slow-glow": "slow-glow",
+});
 const BOARD_TARGET_SEGMENT_STYLES = new Set(["surface-outline", "surface-only"]);
 const BOARD_TARGET_SELECTION_MODES = new Set(["next", "all", "finish"]);
 const BOARD_TARGET_THEMES = new Set(["violet", "cyan", "amber", "lime", "rose", "white"]);
@@ -25,38 +42,52 @@ const TV_ZOOM_TARGETS = new Set(["finish-only", "route-first"]);
 const SUGGESTION_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
 const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
-const TURN_START_SWEEP_DURATIONS = new Set([300, 420, 620]);
-const TURN_START_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
-const TRIPLE_DOUBLE_BULL_COLOR_THEMES = new Set(["kind-signal", "ember-rush", "ice-circuit", "volt-lime", "crimson-steel", "arctic-mint", "champagne-night"]);
-const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_ALIASES = Object.freeze({
-  "": "emphasis",
-  "impact-pop": "emphasis",
-  "charge-release": "emphasis",
-  "snap-bounce": "shake",
-  "alternate-flick": "shake",
-  "neon-pulse": "pulse",
-  "sweep-shine": "sheen",
-  "outline-trace": "sheen",
-  "card-slam": "turn",
-  "flip-edge": "turn",
-  "signal-blink": "shake",
-  "stagger-wave": "emphasis",
-  emphasis: "emphasis",
-  shake: "shake",
-  pulse: "pulse",
-  turn: "turn",
-  sheen: "sheen",
-  shockwave: "shockwave",
-  "electric-arc": "electric-arc",
+const ACTIVE_PLAYER_SWEEP_DURATIONS = new Set([300, 420, 620]);
+const ACTIVE_PLAYER_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
+const SPECIAL_HIT_COLOR_THEMES = new Set(["kind-signal", "ember-rush", "ice-circuit", "volt-lime", "crimson-steel", "arctic-mint", "champagne-night"]);
+const SPECIAL_HIT_ANIMATION_STYLE_ALIASES = Object.freeze({
+  "": "pop-hit",
+  "impact-pop": "pop-hit",
+  "charge-release": "pop-hit",
+  "snap-bounce": "side-shake",
+  "alternate-flick": "side-shake",
+  "neon-pulse": "glow-pop",
+  "sweep-shine": "light-sweep",
+  "outline-trace": "light-sweep",
+  "card-slam": "flip-spin",
+  "flip-edge": "flip-spin",
+  "signal-blink": "side-shake",
+  "stagger-wave": "pop-hit",
+  emphasis: "pop-hit",
+  "pop-hit": "pop-hit",
+  shake: "side-shake",
+  "side-shake": "side-shake",
+  pulse: "glow-pop",
+  "glow-pop": "glow-pop",
+  turn: "flip-spin",
+  "flip-spin": "flip-spin",
+  sheen: "light-sweep",
+  "light-sweep": "light-sweep",
+  "shockwave-ring": "shockwave-ring",
+  shockwave: "shockwave-ring",
+  "electric-jolt": "electric-jolt",
+  "electric-arc": "electric-jolt",
 });
 const CRICKET_HIGHLIGHT_THEMES = new Set(["standard", "high-contrast"]);
 const CRICKET_HIGHLIGHT_INTENSITIES = new Set(["subtle", "normal", "strong"]);
 const CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES = new Set(["off", "smoke", "hatch", "mask"]);
-const DART_MARKER_EMPHASIS_SIZES = new Set([4, 6, 9]);
-const DART_MARKER_EMPHASIS_COLORS = new Set(["rgb(49, 130, 206)", "rgb(34, 197, 94)", "rgb(248, 113, 113)", "rgb(250, 204, 21)", "rgb(255, 255, 255)"]);
-const DART_MARKER_EMPHASIS_EFFECTS = new Set(["glow", "pulse", "none"]);
-const DART_MARKER_EMPHASIS_OPACITY = new Set([65, 85, 100]);
-const DART_MARKER_EMPHASIS_OUTLINE = new Set(["aus", "weiss", "schwarz"]);
+const DARTBOARD_MARKER_HIGHLIGHT_SIZES = new Set([4, 6, 9]);
+const DARTBOARD_MARKER_HIGHLIGHT_COLORS = new Set(["rgb(49, 130, 206)", "rgb(34, 197, 94)", "rgb(248, 113, 113)", "rgb(250, 204, 21)", "rgb(255, 255, 255)"]);
+const DARTBOARD_MARKER_HIGHLIGHT_EFFECT_ALIASES = Object.freeze({
+  "": "soft-glow",
+  glow: "soft-glow",
+  "soft-glow": "soft-glow",
+  pulse: "size-pulse",
+  "size-pulse": "size-pulse",
+  none: "none",
+});
+const DARTBOARD_MARKER_HIGHLIGHT_OPACITY = new Set([65, 85, 100]);
+const DARTBOARD_MARKER_HIGHLIGHT_OUTLINE = new Set(["aus", "weiss", "schwarz"]);
 const DART_MARKER_DARTS_DESIGNS = new Set(DART_DESIGN_KEYS);
 const DART_MARKER_DARTS_SIZE_PERCENT = new Set([108, 120, 138]);
 const DART_MARKER_DARTS_LEGACY_SIZE_PERCENT = Object.freeze({
@@ -70,11 +101,33 @@ const REMOVE_DARTS_NOTIFICATION_PULSE_SCALE = new Set([1.02, 1.04, 1.08]);
 const SINGLE_BULL_SOUND_VOLUME = new Set([0.5, 0.75, 0.9, 1]);
 const SINGLE_BULL_SOUND_COOLDOWN = new Set([400, 700, 1000]);
 const SINGLE_BULL_SOUND_POLL_INTERVAL = new Set([0, 1200]);
-const TURN_POINTS_COUNT_DURATIONS = new Set([1000, 3000, 5000]);
-const TURN_POINTS_COUNT_EFFECTS = new Set(["countup", "odometer", "steps"]);
-const X01_SCORE_PROGRESS_COLOR_THEMES = new Set(["checkout-focus", "traffic-light", "danger-endgame", "gradient-by-progress", "autodarts", "signal-lime", "glass-mint", "ember-rush", "ice-circuit", "neon-violet", "sunset-amber", "monochrome-steel"]);
-const X01_SCORE_PROGRESS_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
-const WINNER_FIREWORKS_STYLES = new Set(["realistic", "fireworks", "cannon", "victorystorm", "stars", "sides"]);
+const TURN_SCORE_COUNT_DURATIONS = new Set([1000, 3000, 5000]);
+const TURN_SCORE_COUNT_EFFECT_ALIASES = Object.freeze({
+  "": "smooth-count",
+  countup: "smooth-count",
+  "smooth-count": "smooth-count",
+  odometer: "rolling-digits",
+  "rolling-digits": "rolling-digits",
+  steps: "step-count",
+  "step-count": "step-count",
+});
+const X01_REMAINING_SCORE_BAR_COLOR_THEMES = new Set(["checkout-focus", "traffic-light", "danger-endgame", "gradient-by-progress", "autodarts", "signal-lime", "glass-mint", "ember-rush", "ice-circuit", "neon-violet", "sunset-amber", "monochrome-steel"]);
+const X01_REMAINING_SCORE_BAR_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
+const WINNER_CELEBRATION_STYLE_ALIASES = Object.freeze({
+  "": "center-side-burst",
+  realistic: "center-side-burst",
+  "center-side-burst": "center-side-burst",
+  fireworks: "top-fireworks",
+  "top-fireworks": "top-fireworks",
+  cannon: "center-cannon",
+  "center-cannon": "center-cannon",
+  victorystorm: "triple-burst",
+  "triple-burst": "triple-burst",
+  stars: "star-burst",
+  "star-burst": "star-burst",
+  sides: "side-cannons",
+  "side-cannons": "side-cannons",
+});
 const WINNER_FIREWORKS_COLOR_THEMES = new Set(["autodarts", "redwhite", "ice", "sunset", "neon", "gold"]);
 const WINNER_FIREWORKS_INTENSITIES = new Set(["dezent", "standard", "stark"]);
 const WINNER_FIREWORKS_DURATION_SECONDS = new Set([1, 2, 5]);
@@ -160,7 +213,7 @@ function normalizeLimitedText(value, maxLength = 80) {
   return normalized.slice(0, Math.max(0, Number(maxLength) || 0));
 }
 
-function normalizeDartMarkerDartsSizePercent(value) {
+function normalizeDartMarkerReplacerSizePercent(value) {
   const numeric = Number(value);
   if (Object.hasOwn(DART_MARKER_DARTS_LEGACY_SIZE_PERCENT, numeric)) {
     return DART_MARKER_DARTS_LEGACY_SIZE_PERCENT[numeric];
@@ -168,7 +221,7 @@ function normalizeDartMarkerDartsSizePercent(value) {
   return normalizeNumberChoice(value, 120, DART_MARKER_DARTS_SIZE_PERCENT);
 }
 
-function normalizeTurnPointsCountDuration(value) {
+function normalizeTurnScoreCounterDuration(value) {
   const numeric = Number(value);
   if (numeric === 260 || numeric === 416 || numeric === 650 || numeric === 950 || numeric === 1300) {
     return 1000;
@@ -179,7 +232,7 @@ function normalizeTurnPointsCountDuration(value) {
   if (numeric === 1400 || numeric === 2250) {
     return 5000;
   }
-  return normalizeNumberChoice(value, 3000, TURN_POINTS_COUNT_DURATIONS);
+  return normalizeNumberChoice(value, 3000, TURN_SCORE_COUNT_DURATIONS);
 }
 
 function normalizeBoolean(value, fallbackValue) {
@@ -234,22 +287,25 @@ function normalizeLegacyDartDesign(value, fallbackValue = "autodarts") {
 function resolveLegacyBoardTargetVisualPreset(rawConfig = {}) {
   const explicitPreset = String(rawConfig.visualPreset || "").trim().toLowerCase();
   const legacyEffect = String(rawConfig.effect || "").trim().toLowerCase();
-  if (BOARD_TARGET_VISUAL_PRESETS.has(explicitPreset)) {
-    if (
-      explicitPreset !== "focus" ||
-      (legacyEffect !== "blink" && legacyEffect !== "glow")
-    ) {
-      return explicitPreset;
+  if (
+    explicitPreset === "soft-pulse" &&
+    (legacyEffect === "blink" || legacyEffect === "glow")
+  ) {
+    return legacyEffect === "blink" ? "fast-blink" : "slow-glow";
+  }
+  if (explicitPreset && Object.hasOwn(BOARD_TARGET_VISUAL_PRESET_ALIASES, explicitPreset)) {
+    if (explicitPreset !== "focus" || (legacyEffect !== "blink" && legacyEffect !== "glow")) {
+      return BOARD_TARGET_VISUAL_PRESET_ALIASES[explicitPreset];
     }
   }
 
   if (legacyEffect === "blink") {
-    return "signal";
+    return "fast-blink";
   }
   if (legacyEffect === "glow") {
-    return "steady";
+    return "slow-glow";
   }
-  return "focus";
+  return "soft-pulse";
 }
 
 function getLegacyFeatureSettings(legacyFeatureState) {
@@ -306,22 +362,22 @@ const DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG = Object.freeze({
 });
 
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
-  checkoutScorePulse: { enabled: true, effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
-  checkoutBoardTargets: { enabled: false, visualPreset: "focus", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
+  checkoutScoreHighlight: { enabled: true, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
+  checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
-  styleCheckoutSuggestions: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
-  averageTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
-  turnStartSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
-  tripleDoubleBullHits: { enabled: false, colorTheme: "kind-signal", animationStyle: "emphasis", debug: false },
-  cricketHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
-  cricketGridFx: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal", debug: false },
-  dartMarkerEmphasis: { enabled: false, size: 6, color: "rgb(49, 130, 206)", effect: "glow", opacityPercent: 85, outline: "aus", debug: false },
-  dartMarkerDarts: { enabled: false, design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: false, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard", debug: false },
-  removeDartsNotification: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
-  singleBullSound: { enabled: false, volume: 0.9, cooldownMs: 700, pollIntervalMs: 0, debug: false },
-  turnPointsCount: { enabled: false, durationMs: 3000, countEffect: "countup", flashOnChange: true, flashMode: "on-change", debug: false },
-  winnerFireworks: { enabled: false, style: "realistic", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true, debug: false },
-  x01ScoreProgress: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "pulse-core", debug: false },
+  checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
+  avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
+  activePlayerSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
+  specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
+  cricketTargetHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
+  cricketGridStatusEffects: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal", debug: false },
+  dartboardMarkerHighlight: { enabled: false, size: 6, color: "rgb(49, 130, 206)", effect: "soft-glow", opacityPercent: 85, outline: "aus", debug: false },
+  dartMarkerReplacer: { enabled: false, design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: false, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard", debug: false },
+  takeOutDartsAlert: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
+  singleBullHitSound: { enabled: false, volume: 0.9, cooldownMs: 700, pollIntervalMs: 0, debug: false },
+  turnScoreCounter: { enabled: false, durationMs: 3000, countEffect: "smooth-count", flashOnChange: true, flashMode: "on-change", debug: false },
+  winnerCelebrationEffect: { enabled: false, style: "center-side-burst", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true, debug: false },
+  x01RemainingScoreBar: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "bar-pulse", debug: false },
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "system",
@@ -359,22 +415,22 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
 });
 
 const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
-  checkoutScorePulse: { effect: "scale", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first" },
-  checkoutBoardTargets: { visualPreset: "signal", segmentStyle: "surface-only", singleRing: "both", targetSelectionMode: "next", colorTheme: "cyan" },
+  checkoutScoreHighlight: { effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first" },
+  checkoutTargetHighlights: { visualPreset: "fast-blink", segmentStyle: "surface-only", singleRing: "both", targetSelectionMode: "next", colorTheme: "cyan" },
   tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
-  styleCheckoutSuggestions: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
-  averageTrendArrow: { durationMs: 320, size: "standard" },
-  turnStartSweep: { durationMs: 420, sweepStyle: "standard" },
-  tripleDoubleBullHits: { colorTheme: "kind-signal", animationStyle: "electric-arc" },
-  cricketHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
-  cricketGridFx: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal" },
-  dartMarkerEmphasis: { size: 6, color: "rgb(49, 130, 206)", effect: "pulse", opacityPercent: 100, outline: "weiss" },
-  dartMarkerDarts: { design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: true, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard" },
-  removeDartsNotification: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
-  singleBullSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
-  turnPointsCount: { durationMs: 3000, countEffect: "countup", flashOnChange: false, flashMode: "on-change" },
-  winnerFireworks: { style: "fireworks", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true },
-  x01ScoreProgress: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
+  checkoutSuggestionStyles: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
+  avgTrendArrow: { durationMs: 320, size: "standard" },
+  activePlayerSweep: { durationMs: 420, sweepStyle: "standard" },
+  specialHitHighlights: { colorTheme: "kind-signal", animationStyle: "electric-jolt" },
+  cricketTargetHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
+  cricketGridStatusEffects: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal" },
+  dartboardMarkerHighlight: { size: 6, color: "rgb(49, 130, 206)", effect: "size-pulse", opacityPercent: 100, outline: "weiss" },
+  dartMarkerReplacer: { design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: true, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard" },
+  takeOutDartsAlert: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
+  singleBullHitSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
+  turnScoreCounter: { durationMs: 3000, countEffect: "smooth-count", flashOnChange: false, flashMode: "on-change" },
+  winnerCelebrationEffect: { style: "top-fireworks", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true },
+  x01RemainingScoreBar: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "system",
@@ -406,13 +462,13 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
 });
 
 const FEATURE_REMOVE_KEYS = Object.freeze({
-  x01ScoreProgress: Object.freeze(["designPreset"]),
+  x01RemainingScoreBar: Object.freeze(["designPreset"]),
 });
 
 const LEGACY_IMPORTERS = Object.freeze({
-  checkoutScorePulse(legacyFeatureState) {
+  checkoutScoreHighlight(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("checkoutScorePulse", legacyFeatureState, {
+    return buildFeatureImport("checkoutScoreHighlight", legacyFeatureState, {
       effect: readLegacySetting(settings, "EFFEKT", "scale"),
       colorTheme: normalizeLegacyColorTheme(
         readLegacySetting(settings, "FARBTHEMA", "159, 219, 88"),
@@ -423,9 +479,9 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  checkoutBoardTargets(legacyFeatureState) {
+  checkoutTargetHighlights(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("checkoutBoardTargets", legacyFeatureState, {
+    return buildFeatureImport("checkoutTargetHighlights", legacyFeatureState, {
       visualPreset: resolveLegacyBoardTargetVisualPreset({
         visualPreset: readLegacySetting(settings, "VISUAL_PRESET", ""),
         effect: readLegacySetting(settings, "EFFEKT", "pulse"),
@@ -447,47 +503,47 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  styleCheckoutSuggestions(legacyFeatureState) {
+  checkoutSuggestionStyles(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("styleCheckoutSuggestions", legacyFeatureState, {
+    return buildFeatureImport("checkoutSuggestionStyles", legacyFeatureState, {
       style: readLegacySetting(settings, "STIL", "ribbon"),
       labelText: readLegacySetting(settings, "LABELTEXT", "CHECKOUT"),
       colorTheme: readLegacySetting(settings, "FARBTHEMA", "amber"),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  averageTrendArrow(legacyFeatureState) {
+  avgTrendArrow(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("averageTrendArrow", legacyFeatureState, {
+    return buildFeatureImport("avgTrendArrow", legacyFeatureState, {
       durationMs: readLegacySetting(settings, "ANIMATIONSDAUER_MS", 320),
       size: readLegacySetting(settings, "PFEIL_GROESSE", "standard"),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  turnStartSweep(legacyFeatureState) {
+  activePlayerSweep(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("turnStartSweep", legacyFeatureState, {
+    return buildFeatureImport("activePlayerSweep", legacyFeatureState, {
       durationMs: readLegacySetting(settings, "SWEEP_GESCHWINDIGKEIT_MS", 420),
       sweepStyle: readLegacySetting(settings, "SWEEP_STIL", "standard"),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  tripleDoubleBullHits(legacyFeatureState) {
+  specialHitHighlights(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("tripleDoubleBullHits", legacyFeatureState, {
+    return buildFeatureImport("specialHitHighlights", legacyFeatureState, {
       colorTheme: "champagne-night",
       animationStyle: "emphasis",
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  cricketHighlighter(legacyFeatureState) {
+  cricketTargetHighlighter(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
     const legacyDimIrrelevantBoardTargets = readLegacySetting(
       settings,
       "IRRELEVANTE_FELDER_ABDUNKELN",
       true
     );
-    return buildFeatureImport("cricketHighlighter", legacyFeatureState, {
+    return buildFeatureImport("cricketTargetHighlighter", legacyFeatureState, {
       showOpenObjectives: readLegacySetting(settings, "OPEN_ZIELE_ANZEIGEN", false),
       showDeadObjectives: readLegacySetting(settings, "DEAD_ZIELE_ANZEIGEN", true),
       irrelevantBoardDimStyle: legacyDimIrrelevantBoardTargets === false ? "off" : "smoke",
@@ -497,9 +553,9 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  cricketGridFx(legacyFeatureState) {
+  cricketGridStatusEffects(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("cricketGridFx", legacyFeatureState, {
+    return buildFeatureImport("cricketGridStatusEffects", legacyFeatureState, {
       rowWave: readLegacySetting(settings, "ROW_RAIL_PULSE", true),
       badgeBeacon: readLegacySetting(settings, "BADGE_BEACON", true),
       markProgress: readLegacySetting(settings, "MARK_PROGRESS_ANIMATOR", true),
@@ -515,9 +571,9 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  dartMarkerEmphasis(legacyFeatureState) {
+  dartboardMarkerHighlight(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("dartMarkerEmphasis", legacyFeatureState, {
+    return buildFeatureImport("dartboardMarkerHighlight", legacyFeatureState, {
       size: readLegacySetting(settings, "MARKER_GROESSE", 6),
       color: readLegacySetting(settings, "MARKER_FARBE", "rgb(49, 130, 206)"),
       effect: readLegacySetting(settings, "EFFEKT", "glow"),
@@ -526,9 +582,9 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  dartMarkerDarts(legacyFeatureState) {
+  dartMarkerReplacer(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("dartMarkerDarts", legacyFeatureState, {
+    return buildFeatureImport("dartMarkerReplacer", legacyFeatureState, {
       design: normalizeLegacyDartDesign(
         readLegacySetting(settings, "DART_DESIGN", "Dart_autodarts.png"),
         "autodarts"
@@ -544,35 +600,35 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  removeDartsNotification(legacyFeatureState) {
+  takeOutDartsAlert(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("removeDartsNotification", legacyFeatureState, {
+    return buildFeatureImport("takeOutDartsAlert", legacyFeatureState, {
       imageSize: readLegacySetting(settings, "BILDGROESSE", "standard"),
       pulseAnimation: readLegacySetting(settings, "PULSE_ANIMATION", true),
       pulseScale: readLegacySetting(settings, "PULSE_STAERKE", 1.04),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  singleBullSound(legacyFeatureState) {
+  singleBullHitSound(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("singleBullSound", legacyFeatureState, {
+    return buildFeatureImport("singleBullHitSound", legacyFeatureState, {
       volume: readLegacySetting(settings, "LAUTSTAERKE", 0.9),
       cooldownMs: readLegacySetting(settings, "WIEDERHOLSPERRE_MS", 700),
       pollIntervalMs: readLegacySetting(settings, "FALLBACK_SCAN_MS", 0),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  turnPointsCount(legacyFeatureState) {
+  turnScoreCounter(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("turnPointsCount", legacyFeatureState, {
+    return buildFeatureImport("turnScoreCounter", legacyFeatureState, {
       durationMs: readLegacySetting(settings, "ANIMATIONSDAUER_MS", 1500),
       flashOnChange: readLegacySetting(settings, "AUFBLITZEN_AKTIV", true),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  winnerFireworks(legacyFeatureState) {
+  winnerCelebrationEffect(legacyFeatureState) {
     const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("winnerFireworks", legacyFeatureState, {
+    return buildFeatureImport("winnerCelebrationEffect", legacyFeatureState, {
       style: readLegacySetting(settings, "STYLE", "realistic"),
       colorTheme: readLegacySetting(settings, "FARBE", "autodarts"),
       intensity: readLegacySetting(settings, "INTENSITAET", "standard"),
@@ -635,30 +691,30 @@ const LEGACY_IMPORTERS = Object.freeze({
 });
 
 const FEATURE_NORMALIZERS = Object.freeze({
-  checkoutScorePulse(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, true), effect: normalizeStringChoice(rawConfig.effect, "scale", CHECKOUT_EFFECTS), colorTheme: CHECKOUT_COLORS.has(String(rawConfig.colorTheme || "").trim()) ? String(rawConfig.colorTheme).trim() : "159, 219, 88", intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
+  checkoutScoreHighlight(rawConfig = {}) {
+    return { enabled: normalizeBoolean(rawConfig.enabled, true), effect: normalizeMappedStringChoice(rawConfig.effect, "grow-only", CHECKOUT_EFFECT_ALIASES), colorTheme: normalizeLegacyColorTheme(rawConfig.colorTheme, "159, 219, 88"), intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  checkoutBoardTargets(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: resolveLegacyBoardTargetVisualPreset(rawConfig), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: "both", targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
+  checkoutTargetHighlights(rawConfig = {}) {
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: normalizeMappedStringChoice(resolveLegacyBoardTargetVisualPreset(rawConfig), "soft-pulse", BOARD_TARGET_VISUAL_PRESET_ALIASES), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: "both", targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   tvBoardZoom(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  styleCheckoutSuggestions(rawConfig = {}) {
+  checkoutSuggestionStyles(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  averageTrendArrow(rawConfig = {}) {
+  avgTrendArrow(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 320, AVG_TREND_DURATIONS), size: normalizeMappedStringChoice(rawConfig.size, "standard", { klein: "klein", small: "klein", standard: "standard", gross: "gross", ["gro" + "\u00df"]: "gross", big: "gross", large: "gross" }), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  turnStartSweep(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 420, TURN_START_SWEEP_DURATIONS), sweepStyle: normalizeStringChoice(rawConfig.sweepStyle, "standard", TURN_START_SWEEP_STYLES), debug: normalizeBoolean(rawConfig.debug, false) };
+  activePlayerSweep(rawConfig = {}) {
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 420, ACTIVE_PLAYER_SWEEP_DURATIONS), sweepStyle: normalizeStringChoice(rawConfig.sweepStyle, "standard", ACTIVE_PLAYER_SWEEP_STYLES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  tripleDoubleBullHits(rawConfig = {}) {
+  specialHitHighlights(rawConfig = {}) {
     const legacyHitColorMode = String(rawConfig.hitColorMode || "").trim().toLowerCase();
     const fallbackColorTheme = legacyHitColorMode === "theme-presets" ? "champagne-night" : "kind-signal";
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizeStringChoice(rawConfig.colorTheme, fallbackColorTheme, TRIPLE_DOUBLE_BULL_COLOR_THEMES), animationStyle: normalizeMappedStringChoice(rawConfig.animationStyle, "emphasis", TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_ALIASES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizeStringChoice(rawConfig.colorTheme, fallbackColorTheme, SPECIAL_HIT_COLOR_THEMES), animationStyle: normalizeMappedStringChoice(rawConfig.animationStyle, "pop-hit", SPECIAL_HIT_ANIMATION_STYLE_ALIASES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  cricketHighlighter(rawConfig = {}) {
+  cricketTargetHighlighter(rawConfig = {}) {
     const showOpenValue = Object.hasOwn(rawConfig, "showOpenTargets") ? rawConfig.showOpenTargets : rawConfig.showOpenObjectives;
     const showDeadValue = Object.hasOwn(rawConfig, "showDeadTargets") ? rawConfig.showDeadTargets : rawConfig.showDeadObjectives;
     const normalizedDimStyle = normalizeStringChoice(rawConfig.irrelevantBoardDimStyle, "smoke", CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES);
@@ -671,27 +727,27 @@ const FEATURE_NORMALIZERS = Object.freeze({
     }
     return { enabled: normalizeBoolean(rawConfig.enabled, false), showOpenObjectives: normalizeBoolean(showOpenValue, false), showDeadObjectives: normalizeBoolean(showDeadValue, true), irrelevantBoardDimStyle, dimIrrelevantBoardTargets: irrelevantBoardDimStyle !== "off", colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  cricketGridFx(rawConfig = {}) {
+  cricketGridStatusEffects(rawConfig = {}) {
     const pressureEdgeValue = Object.hasOwn(rawConfig, "threatEdge") ? rawConfig.threatEdge : rawConfig.pressureEdge;
     const scoringStripeValue = Object.hasOwn(rawConfig, "scoringLane") ? rawConfig.scoringLane : rawConfig.scoringStripe;
     const deadRowMutedValue = Object.hasOwn(rawConfig, "deadRowCollapse") ? rawConfig.deadRowCollapse : rawConfig.deadRowMuted;
     const pressureOverlayValue = Object.hasOwn(rawConfig, "opponentPressureOverlay") ? rawConfig.opponentPressureOverlay : rawConfig.pressureOverlay;
     return { enabled: normalizeBoolean(rawConfig.enabled, false), rowWave: normalizeBoolean(rawConfig.rowWave, true), badgeBeacon: normalizeBoolean(rawConfig.badgeBeacon, true), markProgress: normalizeBoolean(rawConfig.markProgress, true), pressureEdge: normalizeBoolean(pressureEdgeValue, true), scoringStripe: normalizeBoolean(scoringStripeValue, true), deadRowMuted: normalizeBoolean(deadRowMutedValue, true), deltaChips: normalizeBoolean(rawConfig.deltaChips, true), hitSpark: normalizeBoolean(rawConfig.hitSpark, true), roundTransitionWipe: normalizeBoolean(rawConfig.roundTransitionWipe, true), pressureOverlay: normalizeBoolean(pressureOverlayValue, true), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  dartMarkerEmphasis(rawConfig = {}) {
+  dartboardMarkerHighlight(rawConfig = {}) {
     const colorThemeRaw = String(rawConfig.color || "").trim();
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), size: normalizeNumberChoice(rawConfig.size, 6, DART_MARKER_EMPHASIS_SIZES), color: DART_MARKER_EMPHASIS_COLORS.has(colorThemeRaw) ? colorThemeRaw : "rgb(49, 130, 206)", effect: normalizeStringChoice(rawConfig.effect, "glow", DART_MARKER_EMPHASIS_EFFECTS), opacityPercent: normalizeNumberChoice(rawConfig.opacityPercent, 85, DART_MARKER_EMPHASIS_OPACITY), outline: normalizeStringChoice(rawConfig.outline, "aus", DART_MARKER_EMPHASIS_OUTLINE), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), size: normalizeNumberChoice(rawConfig.size, 6, DARTBOARD_MARKER_HIGHLIGHT_SIZES), color: DARTBOARD_MARKER_HIGHLIGHT_COLORS.has(colorThemeRaw) ? colorThemeRaw : "rgb(49, 130, 206)", effect: normalizeMappedStringChoice(rawConfig.effect, "soft-glow", DARTBOARD_MARKER_HIGHLIGHT_EFFECT_ALIASES), opacityPercent: normalizeNumberChoice(rawConfig.opacityPercent, 85, DARTBOARD_MARKER_HIGHLIGHT_OPACITY), outline: normalizeStringChoice(rawConfig.outline, "aus", DARTBOARD_MARKER_HIGHLIGHT_OUTLINE), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  dartMarkerDarts(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), design: normalizeStringChoice(rawConfig.design, "autodarts", DART_MARKER_DARTS_DESIGNS), animateDarts: normalizeBoolean(rawConfig.animateDarts, true), sizePercent: normalizeDartMarkerDartsSizePercent(rawConfig.sizePercent), hideOriginalMarkers: normalizeBoolean(rawConfig.hideOriginalMarkers, false), enableShadow: normalizeBoolean(rawConfig.enableShadow, true), enableShadowBlur: normalizeBoolean(rawConfig.enableShadowBlur, true), enableWobble: normalizeBoolean(rawConfig.enableWobble, true), enableFlightBlur: normalizeBoolean(rawConfig.enableFlightBlur, true), flightSpeed: normalizeStringChoice(rawConfig.flightSpeed, "standard", DART_MARKER_DARTS_FLIGHT_SPEED), debug: normalizeBoolean(rawConfig.debug, false) };
+  dartMarkerReplacer(rawConfig = {}) {
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), design: normalizeStringChoice(rawConfig.design, "autodarts", DART_MARKER_DARTS_DESIGNS), animateDarts: normalizeBoolean(rawConfig.animateDarts, true), sizePercent: normalizeDartMarkerReplacerSizePercent(rawConfig.sizePercent), hideOriginalMarkers: normalizeBoolean(rawConfig.hideOriginalMarkers, false), enableShadow: normalizeBoolean(rawConfig.enableShadow, true), enableShadowBlur: normalizeBoolean(rawConfig.enableShadowBlur, true), enableWobble: normalizeBoolean(rawConfig.enableWobble, true), enableFlightBlur: normalizeBoolean(rawConfig.enableFlightBlur, true), flightSpeed: normalizeStringChoice(rawConfig.flightSpeed, "standard", DART_MARKER_DARTS_FLIGHT_SPEED), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  removeDartsNotification(rawConfig = {}) {
+  takeOutDartsAlert(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), imageSize: normalizeStringChoice(rawConfig.imageSize, "standard", REMOVE_DARTS_NOTIFICATION_IMAGE_SIZE), pulseAnimation: normalizeBoolean(rawConfig.pulseAnimation, true), pulseScale: normalizeNumberChoice(rawConfig.pulseScale, 1.04, REMOVE_DARTS_NOTIFICATION_PULSE_SCALE), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  singleBullSound(rawConfig = {}) {
+  singleBullHitSound(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), volume: normalizeNumberChoice(rawConfig.volume, 0.9, SINGLE_BULL_SOUND_VOLUME), cooldownMs: normalizeNumberChoice(rawConfig.cooldownMs, 700, SINGLE_BULL_SOUND_COOLDOWN), pollIntervalMs: normalizeNumberChoice(rawConfig.pollIntervalMs, 0, SINGLE_BULL_SOUND_POLL_INTERVAL), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  turnPointsCount(rawConfig = {}) {
+  turnScoreCounter(rawConfig = {}) {
     const hasLegacyFlashPermanent = Object.hasOwn(rawConfig, "flashPermanent");
     let legacyFlashMode = "on-change";
     if (hasLegacyFlashPermanent) {
@@ -700,15 +756,15 @@ const FEATURE_NORMALIZERS = Object.freeze({
         : "on-change";
     }
     const normalizedFlashMode = normalizeMappedStringChoice(rawConfig.flashMode, legacyFlashMode, { "": "on-change", "on-change": "on-change", onchange: "on-change", appear: "on-change", burst: "on-change", "nur-bei-Ã¤nderung": "on-change", "nur-bei-aenderung": "on-change", permanent: "permanent", always: "permanent", persistent: "permanent", dauerhaft: "permanent" });
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeTurnPointsCountDuration(rawConfig.durationMs), countEffect: normalizeStringChoice(rawConfig.countEffect, "countup", TURN_POINTS_COUNT_EFFECTS), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeTurnScoreCounterDuration(rawConfig.durationMs), countEffect: normalizeMappedStringChoice(rawConfig.countEffect, "smooth-count", TURN_SCORE_COUNT_EFFECT_ALIASES), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  winnerFireworks(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "realistic", WINNER_FIREWORKS_STYLES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "autodarts", WINNER_FIREWORKS_COLOR_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "standard", WINNER_FIREWORKS_INTENSITIES), durationSeconds: normalizeNumberChoice(rawConfig.durationSeconds, 5, WINNER_FIREWORKS_DURATION_SECONDS), particleAmount: normalizeStringChoice(rawConfig.particleAmount, "optimiert", WINNER_FIREWORKS_PARTICLE_AMOUNTS), includeBullOut: normalizeBoolean(rawConfig.includeBullOut, true), pointerDismiss: normalizeBoolean(rawConfig.pointerDismiss, true), debug: normalizeBoolean(rawConfig.debug, false) };
+  winnerCelebrationEffect(rawConfig = {}) {
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeMappedStringChoice(rawConfig.style, "center-side-burst", WINNER_CELEBRATION_STYLE_ALIASES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "autodarts", WINNER_FIREWORKS_COLOR_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "standard", WINNER_FIREWORKS_INTENSITIES), durationSeconds: normalizeNumberChoice(rawConfig.durationSeconds, 5, WINNER_FIREWORKS_DURATION_SECONDS), particleAmount: normalizeStringChoice(rawConfig.particleAmount, "optimiert", WINNER_FIREWORKS_PARTICLE_AMOUNTS), includeBullOut: normalizeBoolean(rawConfig.includeBullOut, true), pointerDismiss: normalizeBoolean(rawConfig.pointerDismiss, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
-  x01ScoreProgress(rawConfig = {}) {
-    const legacyThresholdColorMode = normalizeStringChoice(rawConfig.thresholdColorMode, "", X01_SCORE_PROGRESS_COLOR_THEMES);
-    const normalizedColorTheme = normalizeStringChoice(rawConfig.colorTheme, legacyThresholdColorMode || "checkout-focus", X01_SCORE_PROGRESS_COLOR_THEMES);
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizedColorTheme, barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_SCORE_PROGRESS_BAR_SIZES), effect: normalizeMappedStringChoice(rawConfig.effect, "pulse-core", { "": "pulse-core", off: "off", "pulse-core": "pulse-core", "glass-charge": "glass-charge", "segment-drain": "segment-drain", "ghost-trail": "ghost-trail", "signal-sweep": "signal-sweep", "electric-surge": "signal-sweep", "pulse-on-change": "pulse-core", "charge-release": "pulse-core", "sheen-sweep": "glass-charge", "checkout-glow": "glass-charge", "burn-down": "segment-drain", "segment-pop": "segment-drain", "spark-trail": "ghost-trail", "heat-edge": "signal-sweep", "danger-flicker": "signal-sweep", "electric-border": "signal-sweep", "arc-burst": "signal-sweep" }), debug: normalizeBoolean(rawConfig.debug, false) };
+  x01RemainingScoreBar(rawConfig = {}) {
+    const legacyThresholdColorMode = normalizeStringChoice(rawConfig.thresholdColorMode, "", X01_REMAINING_SCORE_BAR_COLOR_THEMES);
+    const normalizedColorTheme = normalizeStringChoice(rawConfig.colorTheme, legacyThresholdColorMode || "checkout-focus", X01_REMAINING_SCORE_BAR_COLOR_THEMES);
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizedColorTheme, barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_REMAINING_SCORE_BAR_BAR_SIZES), effect: normalizeMappedStringChoice(rawConfig.effect, "bar-pulse", { "": "bar-pulse", off: "off", "bar-pulse": "bar-pulse", "glass-light-sweep": "glass-light-sweep", "glass-charge": "glass-light-sweep", "moving-segments": "moving-segments", "previous-score-trail": "previous-score-trail", "fast-signal-sweep": "fast-signal-sweep", "electric-surge": "fast-signal-sweep", "pulse-on-change": "bar-pulse", "charge-release": "bar-pulse", "sheen-sweep": "glass-light-sweep", "checkout-glow": "glass-light-sweep", "burn-down": "moving-segments", "segment-pop": "moving-segments", "spark-trail": "previous-score-trail", "heat-edge": "fast-signal-sweep", "danger-flicker": "fast-signal-sweep", "electric-border": "fast-signal-sweep", "arc-burst": "fast-signal-sweep" }), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   "themes.globalTypography"(rawConfig = {}) {
     return {
@@ -847,7 +903,11 @@ export const featureConfigSpecs = Object.freeze(
 
 export function getFeatureConfigSpec(configKey) {
   const normalizedKey = String(configKey || "").trim();
-  return featureConfigSpecs[normalizedKey] || null;
+  const canonicalKey =
+    featureCatalog.find(
+      (entry) => entry.configKey === normalizedKey || entry.legacyConfigKeys?.includes?.(normalizedKey)
+    )?.configKey || normalizedKey;
+  return featureConfigSpecs[canonicalKey] || null;
 }
 
 export function listFeatureConfigSpecs() {
@@ -873,12 +933,20 @@ export function getThemeBackgroundHostKeys() {
 }
 
 export function createDefaultFeatureConfig(configKey) {
-  const normalizedKey = String(configKey || "").trim();
+  const normalizedKey =
+    featureCatalog.find(
+      (entry) => entry.configKey === String(configKey || "").trim() ||
+        entry.legacyConfigKeys?.includes?.(String(configKey || "").trim())
+    )?.configKey || String(configKey || "").trim();
   return deepClone(DEFAULT_FEATURE_CONFIGS[normalizedKey] || {});
 }
 
 export function createRecommendedFeatureConfig(configKey) {
-  const normalizedKey = String(configKey || "").trim();
+  const normalizedKey =
+    featureCatalog.find(
+      (entry) => entry.configKey === String(configKey || "").trim() ||
+        entry.legacyConfigKeys?.includes?.(String(configKey || "").trim())
+    )?.configKey || String(configKey || "").trim();
   const defaultConfig = createDefaultFeatureConfig(normalizedKey);
   if (!normalizedKey) {
     return defaultConfig;

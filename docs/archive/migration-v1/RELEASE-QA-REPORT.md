@@ -14,7 +14,7 @@
 - 15 Legacy-Animationen und Komfortfunktionen sind im Bundle enthalten.
 - 5 Legacy-Themes sind im Bundle enthalten.
 - `AD xConfig` ist funktional wieder vorhanden.
-- Der frühere `Winner Fireworks`-Testbutton wurde als Feature-Action über `runFeatureAction(featureKey, actionId)` wiederhergestellt.
+- Der frühere `Winner Celebration Effect`-Testbutton wurde als Feature-Action über `runFeatureAction(featureKey, actionId)` wiederhergestellt.
 - Bundle-only bleibt bewusst: Loader-, Remote-Cache- und Admin-Flows wurden nicht zurückgebracht.
 
 ## Regelvalidierung

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
-import { buildCricketRenderState } from "../../src/features/cricket-highlighter/logic.js";
+import { buildCricketRenderState } from "../../src/features/cricket-target-highlighter/logic.js";
 import { extractMatchRouteId } from "../../src/features/cricket-surface/pipeline.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 

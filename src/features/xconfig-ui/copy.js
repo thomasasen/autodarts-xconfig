@@ -486,7 +486,7 @@ export const xconfigFeatureCopy = deepFreeze({
       clearThemeBackground: THEME_CLEAR_FIELD,
     },
   }),
-  "checkout-score-pulse": featureCopy({
+  "checkout-score-highlight": featureCopy({
     cardDescription:
       "Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor.",
     visibleDescription:
@@ -494,7 +494,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visualDescription:
       "Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.",
     usefulWhen: "Wenn du Checkout-Momente schneller am Score erkennen möchtest.",
-    images: [image("Checkout Score Pulse", "animation-checkout-score-pulse.gif")],
+    images: [image("Checkout Score Highlight", "animation-checkout-score-pulse.gif")],
     fields: {
       effect: fieldCopy(
         "Wählt, ob die Restpunktzahl pulsiert, glüht, skaliert oder blinkt.",
@@ -519,7 +519,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "x01-score-progress": featureCopy({
+  "x01-remaining-score-bar": featureCopy({
     cardDescription:
       "Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl.",
     visibleDescription:
@@ -528,7 +528,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.",
     usefulWhen:
       "Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.",
-    images: [image("X01 Score Progress", "animation-x01-score-progress.png")],
+    images: [image("X01 Remaining Score Bar", "animation-x01-score-progress.png")],
     fields: {
       colorTheme: fieldCopy(
         "Steuert Farblogik und Farbpalette in einer gemeinsamen Auswahl.",
@@ -548,7 +548,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "checkout-board-targets": featureCopy({
+  "checkout-target-highlights": featureCopy({
     cardDescription:
       "Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen.",
     visibleDescription:
@@ -557,7 +557,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont. Single-Ziele markieren standardmäßig immer beide Single-Ringe des Segments.",
     usefulWhen:
       "Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.",
-    images: [image("Checkout Board Targets", "animation-checkout-board-targets.gif")],
+    images: [image("Checkout Target Highlights", "animation-checkout-board-targets.gif")],
     fields: {
       visualPreset: fieldCopy(
         "Wählt zwischen fokussierter Standarddarstellung, klarem Blinksignal und ruhigem Dauer-Glow.",
@@ -621,7 +621,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "style-checkout-suggestions": featureCopy({
+  "checkout-suggestion-styles": featureCopy({
     cardDescription:
       "Gibt Checkout-Hinweisen eine markantere Hülle und bessere Lesbarkeit.",
     visibleDescription:
@@ -631,7 +631,7 @@ export const xconfigFeatureCopy = deepFreeze({
     usefulWhen:
       "Wenn du Suggestionen schneller scannen möchtest oder der Standard-Look zu unauffällig ist.",
     images: [
-      image("Style Checkout Suggestions", "animation-style-checkout-suggestions.png"),
+      image("Checkout Suggestion Styles", "animation-style-checkout-suggestions.png"),
       image(
         "Format Badge",
         "animation-style-checkout-suggestions-format-badge-readme.png"
@@ -668,7 +668,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "average-trend-arrow": featureCopy({
+  "avg-trend-arrow": featureCopy({
     cardDescription:
       "Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige.",
     visibleDescription: "Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.",
@@ -693,7 +693,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Beispiel: `ø 52.50 / 51.80` -> `ø 53.10 / 52.00` ergibt `+0.60`, also Pfeil nach oben.",
       "Einordnung: X01 nutzt den 3-Dart-Average `((Punkte / Darts) * 3)`, Cricket nutzt `MPR = Marks / Runden`.",
     ],
-    images: [image("Average Trend Arrow", "animation-average-trend-arrow.png")],
+    images: [image("AVG Trend Arrow", "animation-average-trend-arrow.png")],
     fields: {
       durationMs: fieldCopy(
         "Legt fest, wie lange der Pfeil sichtbar animiert bleibt.",
@@ -708,7 +708,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "turn-start-sweep": featureCopy({
+  "active-player-sweep": featureCopy({
     cardDescription:
       "Markiert den Spielerwechsel mit einem Lichtlauf über die aktive Karte.",
     visibleDescription:
@@ -717,7 +717,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Eine helle, halbtransparente Bahn zieht einmal quer über die aktive Karte. So springt der neue Zugwechsel schneller ins Auge.",
     usefulWhen:
       "Wenn du in schnellen Matches einen klareren Wechsel zwischen den Spielern sehen willst.",
-    images: [image("Turn Start Sweep", "animation-turn-start-sweep.gif")],
+    images: [image("Active Player Sweep", "animation-turn-start-sweep.gif")],
     fields: {
       durationMs: fieldCopy(
         "Bestimmt, wie schnell der Sweep über die Karte läuft.",
@@ -732,7 +732,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "triple-double-bull-hits": featureCopy({
+  "special-hit-highlights": featureCopy({
     cardDescription:
       "Setzt Triple-, Double- und Bull-Treffer mit auffälligen Stripe-/Glow-Looks, Text-Effekten und slot-genauen Burst-Bewegungen in Szene.",
     visibleDescription:
@@ -808,7 +808,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "cricket-highlighter": featureCopy({
+  "cricket-target-highlighter": featureCopy({
     cardDescription:
       "Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix.",
     visibleDescription:
@@ -849,7 +849,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "cricket-grid-fx": featureCopy({
+  "cricket-grid-status-effects": featureCopy({
     cardDescription:
       "Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel.",
     visibleDescription:
@@ -858,7 +858,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Zellen, Zeilen, Labels und Badges reagieren mit grünen und roten Zuständen, kurzen Chips, Kanten und Übergängen. So werden Fortschritt, Gegnerdruck und Zugwechsel in der Matrix selbst sichtbarer.",
     usefulWhen:
       "Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.",
-    images: [image("Cricket Grid FX", "animation-cricket-grid-fx.png")],
+    images: [image("Cricket Grid Status Effects", "animation-cricket-grid-fx.png")],
     fields: {
       rowWave: fieldCopy(
         "Lässt bei Änderungen einen kurzen Lichtlauf über die betroffene Zeile laufen.",
@@ -923,7 +923,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "dart-marker-emphasis": featureCopy({
+  "dartboard-marker-highlight": featureCopy({
     cardDescription:
       "Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger.",
     visibleDescription:
@@ -932,7 +932,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Die bestehenden Marker werden größer, farbiger und auf Wunsch mit Pulse, Glow oder Outline versehen. Das Modul ersetzt die Marker nicht, sondern betont sie.",
     usefulWhen:
       "Wenn die Standardmarker zu klein oder zu unauffällig sind.",
-    images: [image("Dart Marker Emphasis", "animation-dart-marker-emphasis.gif")],
+    images: [image("Dartboard Marker Highlight", "animation-dart-marker-emphasis.gif")],
     fields: {
       size: fieldCopy(
         "Vergrößert oder verkleinert die vorhandenen Marker.",
@@ -962,7 +962,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "dart-marker-darts": featureCopy({
+  "dart-marker-replacer": featureCopy({
     cardDescription:
       "Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation und pausiert im Live-Modus automatisch.",
     visibleDescription:
@@ -973,14 +973,14 @@ export const xconfigFeatureCopy = deepFreeze({
       "Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.",
     readmeDetailHeading: "Wichtiger Hinweis",
     readmeDetails: [
-      "Auf dem virtuellen Board bleibt `Dart Marker Darts` aktiv und ersetzt sichtbare Treffer-Marker durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
+      "Auf dem virtuellen Board bleibt `Dart Marker Replacer` aktiv und ersetzt sichtbare Treffer-Marker durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
       "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern, verzögerter Darstellung oder weniger flüssigen Animationen führen.",
     ],
     featuresDetails: [
       "Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
       "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
     ],
-    images: [image("Dart Marker Darts", "animation-dart-marker-darts.png")],
+    images: [image("Dart Marker Replacer", "animation-dart-marker-darts.png")],
     fields: {
       "run-feature-action": fieldCopy(
         "Wirft das aktuell konfigurierte Dart-Design auf einen virtuellen Marker.",
@@ -1004,7 +1004,7 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       hideOriginalMarkers: fieldCopy(
         "Blendet die ursprünglichen Marker aus, damit auf dem virtuellen Board nur die Dart-Grafiken sichtbar bleiben. Im Live-Modus pausiert das Modul trotzdem automatisch.",
-        "Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Darts` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.",
+        "Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Replacer` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.",
         "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch."
       ),
       enableShadow: fieldCopy(
@@ -1035,7 +1035,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "remove-darts-notification": featureCopy({
+  "take-out-darts-alert": featureCopy({
     cardDescription:
       "Macht den Hinweis zum Entfernen der Darts mit einer großen Grafik auffälliger.",
     visibleDescription:
@@ -1043,7 +1043,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visualDescription:
       "Der normale Hinweis wird durch eine zentrierte Bildkarte ersetzt. Optional pulsiert die Grafik leicht, damit sie im Spielablauf nicht übersehen wird.",
     usefulWhen: "Wenn der Standardhinweis zu leicht übersehen wird.",
-    images: [image("Remove Darts Notification", "animation-remove-darts-notification.png")],
+    images: [image("Take Out Darts Alert", "animation-remove-darts-notification.png")],
     fields: {
       imageSize: fieldCopy(
         "Bestimmt die maximale Größe der eingeblendeten Grafik.",
@@ -1063,7 +1063,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "single-bull-sound": featureCopy({
+  "single-bull-hit-sound": featureCopy({
     cardDescription:
       "Spielt bei Single Bull einen kurzen Ton zur akustischen Rückmeldung ab.",
     visibleDescription:
@@ -1097,7 +1097,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "turn-points-count": featureCopy({
+  "turn-score-counter": featureCopy({
     cardDescription:
       "Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter.",
     visibleDescription:
@@ -1106,8 +1106,8 @@ export const xconfigFeatureCopy = deepFreeze({
       "Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.",
     usefulWhen: "Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.",
     images: [
-      image("Turn Points Count", "animation-turn-points-count.gif"),
-      image("Turn Points Count Detail", "animation-turn-points-count-detail-readme.gif"),
+      image("Turn Score Counter", "animation-turn-points-count.gif"),
+      image("Turn Score Counter Detail", "animation-turn-points-count-detail-readme.gif"),
     ],
     fields: {
       countEffect: fieldCopy(
@@ -1133,7 +1133,7 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "winner-fireworks": featureCopy({
+  "winner-celebration-effect": featureCopy({
     cardDescription: "Zeigt bei einem Sieg ein konfigurierbares Vollbild-Feuerwerk.",
     visibleDescription:
       "Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.",
@@ -1142,7 +1142,7 @@ export const xconfigFeatureCopy = deepFreeze({
     usefulWhen:
       "Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.",
     images: [
-      image("Winner Fireworks", "animation-winner-fireworks.gif"),
+      image("Winner Celebration Effect", "animation-winner-fireworks.gif"),
       image("xConfig Test-Button", "xConfig-testbutton.png"),
     ],
     fields: {
@@ -1388,22 +1388,22 @@ const BULL_OFF_CONTRAST_PRESET_OPTION_COPY = deepFreeze({
 });
 
 const CHECKOUT_SCORE_EFFECT_OPTION_COPY = deepFreeze({
-  pulse: optionCopy(
+  "grow-glow": optionCopy(
     "Lässt die Punktzahl weich ein- und ausatmen.",
     "Die Zahl wächst und leuchtet rhythmisch leicht an und fällt wieder auf ihre Ausgangsform zurück. Das wirkt wie ein ruhiger Herzschlag direkt auf dem Score.",
     "Die Restpunktzahl bekommt einen weichen Puls aus Größenänderung, Helligkeit und Schattierung. Der Effekt wirkt organisch und wiederkehrend, ohne die Zahl hart springen zu lassen."
   ),
-  glow: optionCopy(
+  "glow-only": optionCopy(
     "Lässt die Punktzahl vor allem über einen Lichtschein auffallen.",
     "Die Zahl bleibt weitgehend ruhig an Ort und Größe, bekommt aber einen sichtbar stärker werdenden Leuchtkranz. Das eignet sich für Nutzer, die eher Licht als Bewegung wollen.",
     "Der Fokus liegt auf einem an- und abschwellenden Glühen um die Zahl herum. Die Score-Anzeige selbst bleibt relativ stabil, während der Lichtschein die Aufmerksamkeit auf das Finish lenkt."
   ),
-  scale: optionCopy(
+  "grow-only": optionCopy(
     "Lässt die Punktzahl sichtbar größer und kleiner werden.",
     "Die Zahl springt nicht hart, sondern wächst kurz auf und fällt wieder zurück. Im Gegensatz zu `Glow` steht hier die Größenänderung stärker im Vordergrund als der Lichtschein.",
     "Die Finish-Zahl wird zyklisch vergrößert und wieder auf Normalgröße zurückgeführt. Der Effekt wirkt direkter und körperlicher als `Glow`, ohne das harte Ausblenden von `Blink` zu nutzen."
   ),
-  blink: optionCopy(
+  "fade-blink": optionCopy(
     "Lässt die Punktzahl rhythmisch heller und dunkler blinken.",
     "Die Zahl bleibt an derselben Stelle, verliert aber im Takt sichtbar an Deckkraft und wird wieder voll sichtbar. Das ist die auffälligste und härteste Variante.",
     "Die Score-Anzeige blinkt über deutliche Helligkeitssprünge zwischen klar sichtbar und stark gedimmt. Dadurch wirkt der Effekt am alarmierendsten und fällt sofort ins Auge."
@@ -1496,17 +1496,17 @@ const GOTCHA_DELTA_PLACEMENT_OPTION_COPY = deepFreeze({
 });
 
 const BOARD_TARGET_VISUAL_PRESET_OPTION_COPY = deepFreeze({
-  focus: optionCopy(
+  "soft-pulse": optionCopy(
     "Betont das Ziel ruhig und fokussiert mit Kontur, Opazität und sanftem Halo.",
     "Das Segment bleibt ruhig und klar markiert, atmet aber leicht über Opazität, Kontur, Halo und eine kleine Skalierung. Dadurch wirkt die Darstellung lebendiger, ohne unruhig zu werden.",
     "Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig und klar im Fokus und ergänzt Helligkeit, Halo und Kontur um eine kleine, kontrollierte Skalierung."
   ),
-  signal: optionCopy(
+  "fast-blink": optionCopy(
     "Arbeitet mit einem klaren, sauberen Blinksignal ähnlich zum nativen Board-Hinweis.",
     "Die Markierung folgt einem sauberen Blinkpuls ähnlich zum nativen Board-Hinweis und kombiniert den Helligkeitswechsel mit leichter Skalierung und Glow. Das wirkt direkter als `Focus`, bleibt aber kontrollierter als ein schwerer Pulse-Look.",
     "Diese Darstellung orientiert sich am nativen Blinkgefühl und setzt das Ziel mit klaren Helligkeitswechseln, leichtem Wachstum und sauberem Halo in Szene."
   ),
-  steady: optionCopy(
+  "slow-glow": optionCopy(
     "Hält das Ziel fast konstant sichtbar und verändert nur Glow und Kontur leicht.",
     "Die Markierung bleibt dauerhaft präsent und bewegt sich nur minimal über Helligkeit, Halo und eine sehr kleine Skalierung. Das ist die ruhigste Variante für feste Orientierung ohne starkes Signalverhalten.",
     "Diese Darstellung eignet sich, wenn das Checkout-Ziel eher als konstanter Board-Hinweis mit nur minimaler Bewegung sichtbar sein soll."
@@ -1763,7 +1763,7 @@ const TURN_START_STYLE_OPTION_COPY = deepFreeze({
   ),
 });
 
-const TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY = deepFreeze({
+const SPECIAL_HIT_COLOR_THEME_OPTION_COPY = deepFreeze({
   "kind-signal": optionCopy(
     "Erzwingt eine feste, sofort erkennbare Trefferfarblogik: Triple rot, Double blau, Bull grün.",
     "Jede Trefferart bekommt immer dieselbe Signalfarbe. Das verbessert die schnelle Unterscheidung unabhängig vom gewählten Theme und sorgt für konsistente Farben in allen Legs.",
@@ -1801,38 +1801,38 @@ const TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY = deepFreeze({
   ),
 });
 
-const TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY = deepFreeze({
-  emphasis: optionCopy(
-    "Emphase setzt einen kurzen, druckvollen Trefferakzent mit klarer Zahlenspitze.",
+const SPECIAL_HIT_ANIMATION_STYLE_OPTION_COPY = deepFreeze({
+  "pop-hit": optionCopy(
+    "Pop Hit setzt einen kurzen, druckvollen Trefferakzent mit klarer Zahlenspitze.",
     "Das frisch erkannte Trefferfeld drückt sichtbar nach vorn, die Zahl overshootet kurz und alles fällt sauber zurück. Das ist der direkte One-Shot-Impact ohne Dauerloop.",
-    "Emphase ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand."
+    "Pop Hit ist der direkte Standard-Impact: kurzer Vorwärtsschub, klarer Zahlen-Burst und sofortige Rückkehr in den Ruhezustand."
   ),
-  shake: optionCopy(
-    "Shake lässt das Trefferfeld einmal kurz seitlich einschlagen und sofort wieder einrasten.",
+  "side-shake": optionCopy(
+    "Side Shake lässt das Trefferfeld einmal kurz seitlich einschlagen und sofort wieder einrasten.",
     "Der Treffer bekommt ein schnelles horizontales Wackeln mit kleinem Zahlenkick. Das wirkt körperlicher als ein reiner Scale-Pop, bleibt aber kurz und lesbar.",
-    "Shake übersetzt den Treffer in einen kompakten Seitenschlag. Feld und Zahl zittern nur einmal kurz und fallen danach vollständig in den Ruhezustand zurück."
+    "Side Shake übersetzt den Treffer in einen kompakten Seitenschlag. Feld und Zahl zittern nur einmal kurz und fallen danach vollständig in den Ruhezustand zurück."
   ),
-  pulse: optionCopy(
-    "Pulse lässt Fläche, Rand und Score einmal hell aufglühen.",
+  "glow-pop": optionCopy(
+    "Glow Pop lässt Fläche, Rand und Score einmal hell aufglühen.",
     "Der Hit baut einen kompakten Glow-Peak auf und nimmt ihn sofort wieder zurück. Anders als frühere Loop-Varianten bleibt danach kein Idle-Loop aktiv.",
-    "Pulse ist ein einmaliges Aufleuchten für Spieler, die einen klaren Trefferpeak ohne Seitenbewegung oder Daueranimation wollen."
+    "Glow Pop ist ein einmaliges Aufleuchten für Spieler, die einen klaren Trefferpeak ohne Seitenbewegung oder Daueranimation wollen."
   ),
-  turn: optionCopy(
-    "Turn dreht das Trefferfeld einmal räumlich ein und lässt es sauber zurückfallen.",
+  "flip-spin": optionCopy(
+    "Flip Spin dreht das Trefferfeld einmal räumlich ein und lässt es sauber zurückfallen.",
     "Das Wurffeld bekommt einen kurzen Y-Achsen-Turn mit leichtem Textnachlauf. Die Bewegung ersetzt die alten Flip-Varianten und bleibt ein einzelner Burst.",
-    "Turn gibt dem Treffer einen kurzen räumlichen Drehimpuls. Das ersetzt die bisherigen Flip-Doppelungen mit einem klaren One-Shot-Effekt."
+    "Flip Spin gibt dem Treffer einen kurzen räumlichen Drehimpuls. Das ersetzt die bisherigen Flip-Doppelungen mit einem klaren One-Shot-Effekt."
   ),
-  sheen: optionCopy(
-    "Sheen zieht einen glänzenden Lichtlauf einmal über Feld, Rand und Text.",
+  "light-sweep": optionCopy(
+    "Light Sweep zieht einen glänzenden Lichtlauf einmal über Feld, Rand und Text.",
     "Der Effekt ersetzt die alten Sweep-/Outline-Doppelungen durch einen saubereren Glanz-Sweep. Er wirkt hochwertig, bleibt aber kürzer und ruhiger als ein technischer Loop.",
-    "Sheen legt einen einmaligen Lichtzug über das Trefferfeld und betont den Rand ohne dauerhafte Konturbewegung."
+    "Light Sweep legt einen einmaligen Lichtzug über das Trefferfeld und betont den Rand ohne dauerhafte Konturbewegung."
   ),
-  shockwave: optionCopy(
+  "shockwave-ring": optionCopy(
     "Shock Ring schickt eine deutliche Druckwelle durch Rand, Feld und Zahl.",
     "Der Rand expandiert sichtbar, der Score öffnet sich stärker und das Feld wirkt wie von einer Ringwelle getroffen. Das bleibt ein plakativ lesbarer One-Shot-Burst.",
     "Shock Ring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub."
   ),
-  "electric-arc": optionCopy(
+  "electric-jolt": optionCopy(
     "Electric Arc schießt einen kurzen, zackigen Stromimpuls über Trefferfeld und Score.",
     "Der Treffer springt in kurzen Seitenzucken mit hellem Spannungspeak an, bevor er sauber zurückfällt. Das wirkt wie ein elektrischer Burst ohne dauerhaften Idle-Loop.",
     "Electric Arc kombiniert einen kompakten Stromstoß mit leichtem Seitenshake auf Feld, Score und Segment. Die Wirkung ist aggressiv und kurz, bleibt aber klar als einmaliger Burst."
@@ -1971,12 +1971,12 @@ const DART_MARKER_COLOR_OPTION_COPY = deepFreeze({
 });
 
 const DART_MARKER_EFFECT_OPTION_COPY = deepFreeze({
-  glow: optionCopy(
+  "soft-glow": optionCopy(
     "Lässt Marker weich glühen.",
     "Die Marker bekommen einen Lichtschein, der Breite und Helligkeit sichtbar an- und abschwellen lässt. Das wirkt ruhiger als `Pulse`.",
     "Diese Variante verstärkt die Marker primär über einen an- und abschwellenden Glow. Der Trefferpunkt bleibt stabil, wirkt aber über den Lichtschein dauerhaft präsenter."
   ),
-  pulse: optionCopy(
+  "size-pulse": optionCopy(
     "Lässt Marker rhythmisch größer und kleiner werden.",
     "Die Marker skalieren sichtbar auf und ab. Das wirkt lebendiger und bewegter als der reine Glow-Effekt.",
     "Diese Variante lässt die Marker zyklisch wachsen und wieder zurückfallen. Dadurch bekommen Treffer eine deutlichere Bewegungswirkung als beim reinen Leuchten."
@@ -2273,7 +2273,7 @@ const LIVE_OR_1200_POLL_OPTION_COPY = deepFreeze({
   ),
 });
 
-const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
+const TURN_SCORE_DURATION_OPTION_COPY = deepFreeze({
   "1000": optionCopy(
     "Zählt 0 bis 60 in 1 Sekunde.",
     "Diese Stufe reagiert am direktesten und eignet sich für schnelle Spielbilder.",
@@ -2291,25 +2291,25 @@ const TURN_POINTS_DURATION_OPTION_COPY = deepFreeze({
   ),
 });
 
-const TURN_POINTS_COUNT_EFFECT_OPTION_COPY = deepFreeze({
-  countup: optionCopy(
+const TURN_SCORE_COUNT_EFFECT_OPTION_COPY = deepFreeze({
+  "smooth-count": optionCopy(
     "Zählt weich mit CountUp.",
     "Der Wert läuft mit outCubic-Easing flüssig zum Zielwert und bleibt ohne zusätzliche DOM-Struktur kompatibel mit Themes.",
-    "Fließender CountUp-Zählstil."
+    "Smooth-Count-Zählstil."
   ),
-  odometer: optionCopy(
+  "rolling-digits": optionCopy(
     "Nutzt den Odometer-Walzenstil.",
     "Die Ziffern wechseln in einem Anzeigetafel-/Walzeneffekt. Der Stil wird nur geladen, wenn er ausgewählt ist.",
-    "Odometer-Zählstil mit rollenden Ziffern."
+    "Rolling-Digits-Zählstil mit rollenden Ziffern."
   ),
-  steps: optionCopy(
+  "step-count": optionCopy(
     "Zeigt ganze Zahlen als Einzelschritte.",
     "Diese Fallback-Variante priorisiert sichtbare Zwischenzahlen statt Easing und bleibt besonders deterministisch.",
-    "Deterministische Einzelschritte."
+    "Deterministischer Step-Count-Zählstil."
   ),
 });
 
-const TURN_POINTS_FLASH_MODE_OPTION_COPY = deepFreeze({
+const TURN_SCORE_FLASH_MODE_OPTION_COPY = deepFreeze({
   "on-change": optionCopy(
     "Zeigt den Rahmen nur während echter Wertänderungen.",
     "Der elektrische Rahmen erscheint nur in dem Zeitraum, in dem die Zahl hoch- oder herunterzählt, und klingt danach aus.",
@@ -2322,7 +2322,7 @@ const TURN_POINTS_FLASH_MODE_OPTION_COPY = deepFreeze({
   ),
 });
 
-const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
+const X01_REMAINING_SCORE_BAR_COLOR_OPTION_COPY = deepFreeze({
   "checkout-focus": optionCopy(
     "Standardmodus mit Fokus auf Checkout-Relevanz.",
     "Färbt den Balken abhängig vom Restscore mit Fokus auf den Bereich bis `170` und steigert die visuelle Dringlichkeit in Checkout-Nähe.",
@@ -2385,7 +2385,7 @@ const X01_SCORE_PROGRESS_COLOR_OPTION_COPY = deepFreeze({
   ),
 });
 
-const X01_SCORE_PROGRESS_SIZE_OPTION_COPY = deepFreeze({
+const X01_REMAINING_SCORE_BAR_SIZE_OPTION_COPY = deepFreeze({
   schmal: optionCopy(
     "Zeigt den Balken in einer schlanken Höhe.",
     "Nimmt weniger vertikalen Raum ein und wirkt am zurückhaltendsten.",
@@ -2408,28 +2408,28 @@ const X01_SCORE_PROGRESS_SIZE_OPTION_COPY = deepFreeze({
   ),
 });
 
-const X01_SCORE_PROGRESS_EFFECT_OPTION_COPY = deepFreeze({
-  "pulse-core": optionCopy(
+const X01_REMAINING_SCORE_BAR_EFFECT_OPTION_COPY = deepFreeze({
+  "bar-pulse": optionCopy(
     "Lässt den aktiven Balkenkern kräftig atmen.",
     "Der Balken pulsiert mit einer klar sichtbaren inneren Kernbewegung und bleibt dadurch dauerhaft präsent.",
     "Deutlicher Kern-Puls auf dem aktiven Balken."
   ),
-  "glass-charge": optionCopy(
+  "glass-light-sweep": optionCopy(
     "Schickt eine breite, gläserne Ladung durch den Balken.",
     "Eine helle, glatte Spiegelung läuft durch den aktiven Balken und erzeugt eine sichtbar aufgeladene Glasschicht.",
     "Gläserner Ladeeffekt mit breiter Lichtkante."
   ),
-  "segment-drain": optionCopy(
+  "moving-segments": optionCopy(
     "Unterteilt den Balken in markante Segmente.",
     "Der aktive Balken wirkt sichtbar segmentiert und verliert seine Energie in klaren, technischen Abschnitten statt als glatte Fläche.",
     "Segmentierte Drain-Optik mit klaren Abschnitten."
   ),
-  "ghost-trail": optionCopy(
+  "previous-score-trail": optionCopy(
     "Lässt die alte Balkenlänge als Nachbild stehen.",
     "Bei Scoreänderungen bleibt kurz eine halbtransparente Spur der vorherigen Länge sichtbar und läuft dann in den neuen Stand aus.",
     "Nachziehender Ghost-Trail beim Scorewechsel."
   ),
-  "signal-sweep": optionCopy(
+  "fast-signal-sweep": optionCopy(
     "Jagt eine scharfe Signallinie über den Balken.",
     "Ein enger, heller Sweep schneidet regelmäßig über den aktiven Balken und sorgt für maximale Signalwirkung.",
     "Schneller Signal-Sweep mit hoher Aufmerksamkeit."
@@ -2442,32 +2442,32 @@ const X01_SCORE_PROGRESS_EFFECT_OPTION_COPY = deepFreeze({
 });
 
 const WINNER_STYLE_OPTION_COPY = deepFreeze({
-  realistic: optionCopy(
+  "center-side-burst": optionCopy(
     "Startet einen ausgewogenen Mix aus zentralen und seitlichen Feuerwerksstößen.",
     "Der Effekt kombiniert einen kräftigen Hauptstoß aus der Mitte mit kleineren Seitenbursts. Das wirkt am ehesten wie ein klassisches Feier-Feuerwerk.",
-    "Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feuerwerkswirkung des Moduls."
+    "Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feierwirkung des Moduls."
   ),
-  fireworks: optionCopy(
+  "top-fireworks": optionCopy(
     "Erzeugt wiederholte Explosionen weiter oben im Bild.",
     "Die Partikel starten an wechselnden Positionen im oberen Bildschirmbereich und streuen breit auseinander. Das wirkt am ehesten wie echte Himmelsfeuerwerke.",
     "Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel."
   ),
-  cannon: optionCopy(
+  "center-cannon": optionCopy(
     "Schießt eine dichte Partikelkanone aus der unteren Mitte.",
     "Die Partikel kommen gebündelt und kraftvoll aus dem unteren Zentrum. Das wirkt wie ein konzentrierter Konfetti- oder Feuerwerksstoß nach vorn.",
     "Diese Einstellung bündelt den Effekt in einer dichten Kanonen-Salve aus der unteren Bildmitte. Der Ausbruch wirkt kompakt, kräftig und sehr direkt."
   ),
-  victorystorm: optionCopy(
+  "triple-burst": optionCopy(
     "Kombiniert Mitte und Seiten zu einem breiteren Siegessturm.",
     "Mehrere Bursts aus Mitte, links und rechts bauen ein großes, raumgreifendes Effektbild auf. Das wirkt besonders festlich und voll.",
     "Diese Variante verbindet zentrale und seitliche Ausbrüche zu einem breiten Effektteppich. Dadurch entsteht der vollste und raumgreifendste Feiermoment unter den Mehrfachmustern."
   ),
-  stars: optionCopy(
+  "star-burst": optionCopy(
     "Erzeugt sternförmige Partikel mit ruhigerem Fall.",
     "Statt normaler Konfetti-Partikel werden Sterne verwendet, die ruhiger und dekorativer durch das Bild laufen. Das wirkt verspielter als die anderen Stile.",
     "Diese Einstellung ersetzt die Standardpartikel durch Sternformen und lässt sie mit ruhigerer Bewegung durchs Bild laufen. Der Effekt wirkt dadurch dekorativer und weniger wie klassisches Konfetti."
   ),
-  sides: optionCopy(
+  "side-cannons": optionCopy(
     "Schießt kleine Bursts abwechselnd von links und rechts ins Bild.",
     "Die Partikel kommen seitlich herein und rahmen den Bildschirm eher ein, statt ihn von der Mitte aus zu füllen. Das wirkt schnell und randbetont.",
     "Diese Variante setzt auf kurze Seitenschüsse von links und rechts. Der Effekt rahmt das Bild stärker ein und wirkt dynamischer, aber weniger flächig als zentrale Bursts."
@@ -2610,18 +2610,18 @@ const xconfigFieldOptionCopy = deepFreeze({
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
   },
-  "checkout-score-pulse": {
+  "checkout-score-highlight": {
     effect: CHECKOUT_SCORE_EFFECT_OPTION_COPY,
     colorTheme: CHECKOUT_SCORE_COLOR_OPTION_COPY,
     intensity: CHECKOUT_SCORE_INTENSITY_OPTION_COPY,
     triggerSource: CHECKOUT_SCORE_TRIGGER_OPTION_COPY,
   },
-  "x01-score-progress": {
-    colorTheme: X01_SCORE_PROGRESS_COLOR_OPTION_COPY,
-    barSize: X01_SCORE_PROGRESS_SIZE_OPTION_COPY,
-    effect: X01_SCORE_PROGRESS_EFFECT_OPTION_COPY,
+  "x01-remaining-score-bar": {
+    colorTheme: X01_REMAINING_SCORE_BAR_COLOR_OPTION_COPY,
+    barSize: X01_REMAINING_SCORE_BAR_SIZE_OPTION_COPY,
+    effect: X01_REMAINING_SCORE_BAR_EFFECT_OPTION_COPY,
   },
-  "checkout-board-targets": {
+  "checkout-target-highlights": {
     visualPreset: BOARD_TARGET_VISUAL_PRESET_OPTION_COPY,
     segmentStyle: BOARD_TARGET_SEGMENT_STYLE_OPTION_COPY,
     targetSelectionMode: BOARD_TARGET_SELECTION_MODE_OPTION_COPY,
@@ -2632,59 +2632,59 @@ const xconfigFieldOptionCopy = deepFreeze({
     zoomSpeed: TV_BOARD_ZOOM_SPEED_OPTION_COPY,
     checkoutZoomTarget: TV_BOARD_ZOOM_TARGET_OPTION_COPY,
   },
-  "style-checkout-suggestions": {
+  "checkout-suggestion-styles": {
     style: CHECKOUT_SUGGESTION_STYLE_OPTION_COPY,
     labelText: CHECKOUT_SUGGESTION_LABEL_OPTION_COPY,
     colorTheme: CHECKOUT_SUGGESTION_COLOR_OPTION_COPY,
   },
-  "average-trend-arrow": {
+  "avg-trend-arrow": {
     durationMs: AVG_TREND_DURATION_OPTION_COPY,
     size: AVG_TREND_SIZE_OPTION_COPY,
   },
-  "turn-start-sweep": {
+  "active-player-sweep": {
     durationMs: TURN_START_DURATION_OPTION_COPY,
     sweepStyle: TURN_START_STYLE_OPTION_COPY,
   },
-  "triple-double-bull-hits": {
-    colorTheme: TRIPLE_DOUBLE_BULL_COLOR_THEME_OPTION_COPY,
-    animationStyle: TRIPLE_DOUBLE_BULL_ANIMATION_STYLE_OPTION_COPY,
+  "special-hit-highlights": {
+    colorTheme: SPECIAL_HIT_COLOR_THEME_OPTION_COPY,
+    animationStyle: SPECIAL_HIT_ANIMATION_STYLE_OPTION_COPY,
   },
-  "cricket-highlighter": {
+  "cricket-target-highlighter": {
     irrelevantBoardDimStyle: CRICKET_DIM_STYLE_OPTION_COPY,
     colorTheme: CRICKET_BOARD_COLOR_OPTION_COPY,
     intensity: CRICKET_BOARD_INTENSITY_OPTION_COPY,
   },
-  "cricket-grid-fx": {
+  "cricket-grid-status-effects": {
     colorTheme: CRICKET_GRID_COLOR_OPTION_COPY,
     intensity: CRICKET_GRID_INTENSITY_OPTION_COPY,
   },
-  "dart-marker-emphasis": {
+  "dartboard-marker-highlight": {
     size: DART_MARKER_SIZE_OPTION_COPY,
     color: DART_MARKER_COLOR_OPTION_COPY,
     effect: DART_MARKER_EFFECT_OPTION_COPY,
     opacityPercent: DART_MARKER_OPACITY_OPTION_COPY,
     outline: DART_MARKER_OUTLINE_OPTION_COPY,
   },
-  "dart-marker-darts": {
+  "dart-marker-replacer": {
     design: DART_DESIGN_OPTION_COPY,
     sizePercent: DART_IMAGE_SIZE_OPTION_COPY,
     flightSpeed: DART_FLIGHT_SPEED_OPTION_COPY,
   },
-  "remove-darts-notification": {
+  "take-out-darts-alert": {
     imageSize: REMOVE_DARTS_IMAGE_SIZE_OPTION_COPY,
     pulseScale: REMOVE_DARTS_PULSE_OPTION_COPY,
   },
-  "single-bull-sound": {
+  "single-bull-hit-sound": {
     volume: SINGLE_BULL_VOLUME_OPTION_COPY,
     cooldownMs: SINGLE_BULL_COOLDOWN_OPTION_COPY,
     pollIntervalMs: LIVE_OR_1200_POLL_OPTION_COPY,
   },
-  "turn-points-count": {
-    countEffect: TURN_POINTS_COUNT_EFFECT_OPTION_COPY,
-    durationMs: TURN_POINTS_DURATION_OPTION_COPY,
-    flashMode: TURN_POINTS_FLASH_MODE_OPTION_COPY,
+  "turn-score-counter": {
+    countEffect: TURN_SCORE_COUNT_EFFECT_OPTION_COPY,
+    durationMs: TURN_SCORE_DURATION_OPTION_COPY,
+    flashMode: TURN_SCORE_FLASH_MODE_OPTION_COPY,
   },
-  "winner-fireworks": {
+  "winner-celebration-effect": {
     style: WINNER_STYLE_OPTION_COPY,
     colorTheme: WINNER_COLOR_OPTION_COPY,
     intensity: WINNER_INTENSITY_OPTION_COPY,
@@ -2838,60 +2838,60 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Alle aktiviert",
             featureKeys: [
-              "turn-start-sweep",
-              "turn-points-count",
-              "average-trend-arrow",
-              "triple-double-bull-hits",
-              "dart-marker-darts",
-              "dart-marker-emphasis",
-              "remove-darts-notification",
-              "single-bull-sound",
-              "winner-fireworks",
-              "style-checkout-suggestions",
-              "checkout-score-pulse",
-              "x01-score-progress",
-              "checkout-board-targets",
+              "active-player-sweep",
+              "turn-score-counter",
+              "avg-trend-arrow",
+              "special-hit-highlights",
+              "dart-marker-replacer",
+              "dartboard-marker-highlight",
+              "take-out-darts-alert",
+              "single-bull-hit-sound",
+              "winner-celebration-effect",
+              "checkout-suggestion-styles",
+              "checkout-score-highlight",
+              "x01-remaining-score-bar",
+              "checkout-target-highlights",
               "tv-board-zoom",
-              "cricket-highlighter",
-              "cricket-grid-fx",
+              "cricket-target-highlighter",
+              "cricket-grid-status-effects",
             ],
             key: "enabled",
           },
           {
             label: "Debug",
             featureKeys: [
-              "turn-start-sweep",
-              "turn-points-count",
-              "average-trend-arrow",
-              "triple-double-bull-hits",
-              "dart-marker-darts",
-              "dart-marker-emphasis",
-              "remove-darts-notification",
-              "single-bull-sound",
-              "winner-fireworks",
-              "style-checkout-suggestions",
-              "checkout-score-pulse",
-              "x01-score-progress",
-              "checkout-board-targets",
+              "active-player-sweep",
+              "turn-score-counter",
+              "avg-trend-arrow",
+              "special-hit-highlights",
+              "dart-marker-replacer",
+              "dartboard-marker-highlight",
+              "take-out-darts-alert",
+              "single-bull-hit-sound",
+              "winner-celebration-effect",
+              "checkout-suggestion-styles",
+              "checkout-score-highlight",
+              "x01-remaining-score-bar",
+              "checkout-target-highlights",
               "tv-board-zoom",
-              "cricket-highlighter",
-              "cricket-grid-fx",
+              "cricket-target-highlighter",
+              "cricket-grid-status-effects",
             ],
             key: "debug",
           },
         ],
       },
       {
-        title: "Turn Start Sweep",
-        featureKey: "turn-start-sweep",
+        title: "Active Player Sweep",
+        featureKey: "active-player-sweep",
         fields: [
           { label: "Sweep-Geschwindigkeit", key: "durationMs" },
           { label: "Sweep-Stil", key: "sweepStyle" },
         ],
       },
       {
-        title: "Turn Points Count",
-        featureKey: "turn-points-count",
+        title: "Turn Score Counter",
+        featureKey: "turn-score-counter",
         fields: [
           { label: "Zählstil", key: "countEffect" },
           { label: "Zählgeschwindigkeit", key: "durationMs" },
@@ -2900,24 +2900,24 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Average Trend Arrow",
-        featureKey: "average-trend-arrow",
+        title: "AVG Trend Arrow",
+        featureKey: "avg-trend-arrow",
         fields: [
           { label: "Animationsdauer", key: "durationMs" },
           { label: "Pfeil-Größe", key: "size" },
         ],
       },
       {
-        title: "Triple/Double/Bull Hits",
-        featureKey: "triple-double-bull-hits",
+        title: "Special Hit Highlights",
+        featureKey: "special-hit-highlights",
         fields: [
           { label: "Farbstil", key: "colorTheme" },
           { label: "Animationsstil", key: "animationStyle" },
         ],
       },
       {
-        title: "Dart Marker Darts",
-        featureKey: "dart-marker-darts",
+        title: "Dart Marker Replacer",
+        featureKey: "dart-marker-replacer",
         fields: [
           { label: "Dart Design", key: "design" },
           { label: "Dart-Fluganimation", key: "animateDarts" },
@@ -2931,8 +2931,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Dart Marker Emphasis",
-        featureKey: "dart-marker-emphasis",
+        title: "Dartboard Marker Highlight",
+        featureKey: "dartboard-marker-highlight",
         fields: [
           { label: "Marker-Größe", key: "size" },
           { label: "Marker-Farbe", key: "color" },
@@ -2942,8 +2942,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Remove Darts Notification",
-        featureKey: "remove-darts-notification",
+        title: "Take Out Darts Alert",
+        featureKey: "take-out-darts-alert",
         fields: [
           { label: "Bildgröße", key: "imageSize" },
           { label: "Pulse-Animation", key: "pulseAnimation" },
@@ -2951,8 +2951,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Single Bull Sound",
-        featureKey: "single-bull-sound",
+        title: "Single Bull Hit Sound",
+        featureKey: "single-bull-hit-sound",
         fields: [
           { label: "Lautstärke", key: "volume" },
           { label: "Wiederholsperre", key: "cooldownMs" },
@@ -2960,8 +2960,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Winner Fireworks",
-        featureKey: "winner-fireworks",
+        title: "Winner Celebration Effect",
+        featureKey: "winner-celebration-effect",
         fields: [
           { label: "Style", key: "style" },
           { label: "Farbe", key: "colorTheme" },
@@ -2973,8 +2973,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Style Checkout Suggestions",
-        featureKey: "style-checkout-suggestions",
+        title: "Checkout Suggestion Styles",
+        featureKey: "checkout-suggestion-styles",
         fields: [
           { label: "Stil", key: "style" },
           { label: "Labeltext", key: "labelText" },
@@ -2982,8 +2982,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Checkout Score Pulse",
-        featureKey: "checkout-score-pulse",
+        title: "Checkout Score Highlight",
+        featureKey: "checkout-score-highlight",
         fields: [
           { label: "Effekt", key: "effect" },
           { label: "Farbthema", key: "colorTheme" },
@@ -2992,8 +2992,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "X01 Score Progress",
-        featureKey: "x01-score-progress",
+        title: "X01 Remaining Score Bar",
+        featureKey: "x01-remaining-score-bar",
         fields: [
           { label: "Farben", key: "colorTheme" },
           { label: "Balkengröße", key: "barSize" },
@@ -3001,8 +3001,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Checkout Board Targets",
-        featureKey: "checkout-board-targets",
+        title: "Checkout Target Highlights",
+        featureKey: "checkout-target-highlights",
         fields: [
           { label: "Darstellung", key: "visualPreset" },
           { label: "Segmentstil", key: "segmentStyle" },
@@ -3022,8 +3022,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Cricket Highlighter",
-        featureKey: "cricket-highlighter",
+        title: "Cricket Target Highlighter",
+        featureKey: "cricket-target-highlighter",
         fields: [
           { label: "OPEN-Ziele anzeigen", key: "showOpenObjectives" },
           { label: "DEAD-Ziele anzeigen", key: "showDeadObjectives" },
@@ -3033,8 +3033,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ],
       },
       {
-        title: "Cricket Grid FX",
-        featureKey: "cricket-grid-fx",
+        title: "Cricket Grid Status Effects",
+        featureKey: "cricket-grid-status-effects",
         fields: [
           { label: "Zeilen-Sweep", key: "rowWave" },
           { label: "Ziel-Badge-Hinweis", key: "badgeBeacon" },
@@ -3228,9 +3228,13 @@ export function buildReadmeFeatureSection(descriptor, definition) {
   if (!descriptor || !definition || !copy) {
     return "";
   }
+  const anchorIds = [
+    String(descriptor.readmeAnchor || "").trim(),
+    ...(Array.isArray(descriptor.readmeAnchorAliases) ? descriptor.readmeAnchorAliases : []),
+  ].filter(Boolean);
 
   const lines = [
-    `<a id="${descriptor.readmeAnchor}"></a>`,
+    ...anchorIds.map((anchorId) => `<a id="${anchorId}"></a>`),
     "",
     `### ${definition.title}`,
     "",

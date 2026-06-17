@@ -48,7 +48,7 @@ const unusedVariableRule = buildUnusedVariableRule();
 // newly introduced unused bindings in the same files are reported again.
 const legacyUnusedVarAllowances = [
   {
-    files: ["src/features/cricket-grid-fx/logic.js"],
+    files: ["src/features/cricket-grid-status-effects/logic.js"],
     varsIgnorePattern: buildExactNamePattern([
       "sharedCollectTargetLabelsInNode",
       "TURN_PREVIEW_ROOT_SELECTOR",

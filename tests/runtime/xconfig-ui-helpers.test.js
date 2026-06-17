@@ -13,10 +13,10 @@ import { createShellSyncScheduler } from "../../src/features/xconfig-ui/sync-sch
 
 test("xconfig path utils build nested feature setting patches and theme keys", () => {
   assert.deepEqual(
-    buildFeatureSettingPatch("checkoutScorePulse", "effect", "glow"),
+    buildFeatureSettingPatch("checkoutScoreHighlight", "effect", "glow"),
     {
       features: {
-        checkoutScorePulse: {
+        checkoutScoreHighlight: {
           effect: "glow",
         },
       },
@@ -37,7 +37,7 @@ test("xconfig path utils build nested feature setting patches and theme keys", (
   );
 
   assert.equal(themeKeyFromConfigKey("themes.cricket"), "cricket");
-  assert.equal(themeKeyFromConfigKey("checkoutScorePulse"), "");
+  assert.equal(themeKeyFromConfigKey("checkoutScoreHighlight"), "");
 });
 
 test("xconfig render signature helpers round-trip the shell snapshot", () => {

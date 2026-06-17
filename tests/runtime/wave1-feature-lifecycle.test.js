@@ -5,22 +5,22 @@ import { createBootstrap } from "../../src/core/bootstrap.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 const FEATURE_CONFIG_KEYS = Object.freeze([
-  "checkoutScorePulse",
-  "checkoutBoardTargets",
+  "checkoutScoreHighlight",
+  "checkoutTargetHighlights",
   "tvBoardZoom",
-  "styleCheckoutSuggestions",
-  "averageTrendArrow",
-  "turnStartSweep",
-  "tripleDoubleBullHits",
-  "cricketHighlighter",
-  "cricketGridFx",
-  "dartMarkerEmphasis",
-  "dartMarkerDarts",
-  "removeDartsNotification",
-  "singleBullSound",
-  "turnPointsCount",
-  "x01ScoreProgress",
-  "winnerFireworks",
+  "checkoutSuggestionStyles",
+  "avgTrendArrow",
+  "activePlayerSweep",
+  "specialHitHighlights",
+  "cricketTargetHighlighter",
+  "cricketGridStatusEffects",
+  "dartboardMarkerHighlight",
+  "dartMarkerReplacer",
+  "takeOutDartsAlert",
+  "singleBullHitSound",
+  "turnScoreCounter",
+  "x01RemainingScoreBar",
+  "winnerCelebrationEffect",
 ]);
 
 function wait(ms = 0) {
@@ -107,13 +107,13 @@ function runtimeBootstrapAudio(windowRef) {
   };
 }
 
-test("checkout-board-targets mounts idempotently and cleans up style/observer state", async () => {
+test("checkout-target-highlights mounts idempotently and cleans up style/observer state", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("checkoutBoardTargets"),
+    config: createSingleFeatureConfig("checkoutTargetHighlights"),
   });
 
   runtime.start();
@@ -129,14 +129,14 @@ test("checkout-board-targets mounts idempotently and cleans up style/observer st
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("style-checkout-suggestions mounts idempotently and removes classes on cleanup", async () => {
+test("checkout-suggestion-styles mounts idempotently and removes classes on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "D16";
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("styleCheckoutSuggestions", {
+    config: createSingleFeatureConfig("checkoutSuggestionStyles", {
       style: "badge",
       labelText: "CHECKOUT",
       colorTheme: "amber",
@@ -188,13 +188,13 @@ test("tv-board-zoom registers managed listeners and releases them on cleanup", a
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("average-trend-arrow mounts idempotently and removes owned style", async () => {
+test("avg-trend-arrow mounts idempotently and removes owned style", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("averageTrendArrow"),
+    config: createSingleFeatureConfig("avgTrendArrow"),
   });
 
   runtime.start();
@@ -209,13 +209,13 @@ test("average-trend-arrow mounts idempotently and removes owned style", async ()
   assert.equal(runtime.context.registries.observers.size(), 0);
 });
 
-test("turn-start-sweep mounts idempotently and cleans style plus observer state", async () => {
+test("active-player-sweep mounts idempotently and cleans style plus observer state", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("turnStartSweep", {
+    config: createSingleFeatureConfig("activePlayerSweep", {
       durationMs: 420,
       sweepStyle: "standard",
     }),
@@ -225,23 +225,23 @@ test("turn-start-sweep mounts idempotently and cleans style plus observer state"
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-start-sweep-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-active-player-sweep-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-start-sweep-style")), false);
-  assert.equal(documentRef.activePlayerRow.classList.contains("ad-ext-turn-start-sweep"), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-active-player-sweep-style")), false);
+  assert.equal(documentRef.activePlayerRow.classList.contains("ad-ext-active-player-sweep"), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
 });
 
-test("triple-double-bull-hits mounts idempotently and removes decorations on cleanup", async () => {
+test("special-hit-highlights mounts idempotently and removes decorations on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.throwTextElement.textContent = "T20";
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("tripleDoubleBullHits", {
+    config: createSingleFeatureConfig("specialHitHighlights", {
       colorTheme: "volt-lime",
       animationStyle: "pulse",
     }),
@@ -252,7 +252,7 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
   await wait(25);
   await waitFor(() => documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"));
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-triple-double-bull-hits-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-special-hit-highlights-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(
     documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"),
@@ -260,7 +260,7 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
   );
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-triple-double-bull-hits-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-special-hit-highlights-style")), false);
   assert.equal(
     documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"),
     false
@@ -268,14 +268,14 @@ test("triple-double-bull-hits mounts idempotently and removes decorations on cle
   assert.equal(runtime.context.registries.observers.size(), 0);
 });
 
-test("cricket-highlighter mounts idempotently and releases observers/listeners", async () => {
+test("cricket-target-highlighter mounts idempotently and releases observers/listeners", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("cricketHighlighter", {
+    config: createSingleFeatureConfig("cricketTargetHighlighter", {
       showDeadTargets: true,
       colorTheme: "standard",
       intensity: "normal",
@@ -286,24 +286,24 @@ test("cricket-highlighter mounts idempotently and releases observers/listeners",
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-highlighter-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-target-highlighter-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 3);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-highlighter-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-target-highlighter-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("cricket-grid-fx mounts idempotently and releases observers/listeners", async () => {
+test("cricket-grid-status-effects mounts idempotently and releases observers/listeners", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("cricketGridFx", {
+    config: createSingleFeatureConfig("cricketGridStatusEffects", {
       rowWave: true,
       colorTheme: "standard",
       intensity: "normal",
@@ -314,17 +314,17 @@ test("cricket-grid-fx mounts idempotently and releases observers/listeners", asy
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 3);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("cricket-highlighter and cricket-grid-fx share one runtime observer/listener stack", async () => {
+test("cricket-target-highlighter and cricket-grid-status-effects share one runtime observer/listener stack", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
   const windowRef = createFakeWindow({ documentRef });
@@ -332,12 +332,12 @@ test("cricket-highlighter and cricket-grid-fx share one runtime observer/listene
     windowRef,
     documentRef,
     config: createFeatureConfig({
-      cricketHighlighter: {
+      cricketTargetHighlighter: {
         showDeadTargets: true,
         colorTheme: "standard",
         intensity: "normal",
       },
-      cricketGridFx: {
+      cricketGridStatusEffects: {
         rowWave: true,
         colorTheme: "standard",
         intensity: "normal",
@@ -347,27 +347,27 @@ test("cricket-highlighter and cricket-grid-fx share one runtime observer/listene
 
   runtime.start();
   await wait(25);
-  await waitFor(() => Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")));
+  await waitFor(() => Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")));
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-highlighter-style")), true);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-fx-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-target-highlighter-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 3);
-  assert.ok(runtime.context.registries.observers.get("cricket-highlighter:dom-observer"));
-  assert.ok(runtime.context.registries.observers.get("cricket-grid-fx:dom-observer"));
+  assert.ok(runtime.context.registries.observers.get("cricket-target-highlighter:dom-observer"));
+  assert.ok(runtime.context.registries.observers.get("cricket-grid-status-effects:dom-observer"));
 
   runtime.stop();
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("dart-marker-emphasis mounts idempotently and removes style on cleanup", async () => {
+test("dartboard-marker-highlight mounts idempotently and removes style on cleanup", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("dartMarkerEmphasis", {
+    config: createSingleFeatureConfig("dartboardMarkerHighlight", {
       size: 6,
       color: "rgb(49, 130, 206)",
       effect: "glow",
@@ -380,23 +380,23 @@ test("dart-marker-emphasis mounts idempotently and removes style on cleanup", as
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-emphasis-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-dartboard-marker-highlight-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 1);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-emphasis-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-dartboard-marker-highlight-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("dart-marker-darts mounts idempotently and removes style on cleanup", async () => {
+test("dart-marker-replacer mounts idempotently and removes style on cleanup", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("dartMarkerDarts", {
+    config: createSingleFeatureConfig("dartMarkerReplacer", {
       design: "autodarts",
       animateDarts: true,
       sizePercent: 100,
@@ -409,23 +409,23 @@ test("dart-marker-darts mounts idempotently and removes style on cleanup", async
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-darts-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-replacer-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 5);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-darts-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-replacer-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("remove-darts-notification mounts idempotently and removes style on cleanup", async () => {
+test("take-out-darts-alert mounts idempotently and removes style on cleanup", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("removeDartsNotification", {
+    config: createSingleFeatureConfig("takeOutDartsAlert", {
       imageSize: "standard",
       pulseAnimation: true,
       pulseScale: 1.04,
@@ -436,16 +436,16 @@ test("remove-darts-notification mounts idempotently and removes style on cleanup
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-remove-darts-notification-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-take-out-darts-alert-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-remove-darts-notification-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-take-out-darts-alert-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("single-bull-sound mounts idempotently and releases observers/listeners", async () => {
+test("single-bull-hit-sound mounts idempotently and releases observers/listeners", async () => {
   const documentRef = new FakeDocument();
   documentRef.throwTextElement.textContent = "S25";
   const windowRef = createFakeWindow({ documentRef });
@@ -453,7 +453,7 @@ test("single-bull-sound mounts idempotently and releases observers/listeners", a
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("singleBullSound", {
+    config: createSingleFeatureConfig("singleBullHitSound", {
       volume: 0.9,
       cooldownMs: 700,
       pollIntervalMs: 0,
@@ -472,13 +472,13 @@ test("single-bull-sound mounts idempotently and releases observers/listeners", a
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("turn-points-count mounts idempotently and keeps managed observer state", async () => {
+test("turn-score-counter mounts idempotently and keeps managed observer state", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("turnPointsCount", {
+    config: createSingleFeatureConfig("turnScoreCounter", {
       durationMs: 416,
     }),
   });
@@ -487,48 +487,48 @@ test("turn-points-count mounts idempotently and keeps managed observer state", a
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-points-count-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-score-counter-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 1);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-points-count-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-score-counter-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("x01-score-progress mounts idempotently and removes style on cleanup", async () => {
+test("x01-remaining-score-bar mounts idempotently and removes style on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
   const windowRef = createFakeWindow({ documentRef, href: "https://play.autodarts.io/matches/test" });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("x01ScoreProgress"),
+    config: createSingleFeatureConfig("x01RemainingScoreBar"),
   });
 
   runtime.start();
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-score-progress-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-remaining-score-bar-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-score-progress-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-remaining-score-bar-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
 
-test("winner-fireworks mounts idempotently and removes overlay/style on cleanup", async () => {
+test("winner-celebration-effect mounts idempotently and removes overlay/style on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.winnerNode.classList.add("ad-ext-player-winner");
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
     windowRef,
     documentRef,
-    config: createSingleFeatureConfig("winnerFireworks", {
+    config: createSingleFeatureConfig("winnerCelebrationEffect", {
       style: "realistic",
       colorTheme: "autodarts",
       intensity: "standard",
@@ -541,13 +541,13 @@ test("winner-fireworks mounts idempotently and removes overlay/style on cleanup"
   runtime.start();
   await wait(5);
 
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-style")), true);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
   assert.equal(runtime.context.registries.listeners.size(), 3);
 
   runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks-style")), false);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-fireworks")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-style")), false);
+  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });

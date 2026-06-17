@@ -225,10 +225,10 @@ function shouldKeepModalStable(previousSignaturePayload, state, routeActive) {
 }
 
 const STABLE_MODAL_PREVIEW_REFRESH_SELECTORS = Object.freeze([
-  "[data-adxconfig-style-checkout-suggestions-preview='true']",
-  "[data-adxconfig-checkout-score-pulse-preview='true']",
-  "[data-adxconfig-x01-score-progress-preview='true']",
-  "[data-adxconfig-checkout-board-targets-preview='true']",
+  "[data-adxconfig-checkout-suggestion-styles-preview='true']",
+  "[data-adxconfig-checkout-score-highlight-preview='true']",
+  "[data-adxconfig-x01-remaining-score-bar-preview='true']",
+  "[data-adxconfig-checkout-target-highlights-preview='true']",
 ]);
 
 function captureModalScrollState(previousShellNode, host) {
@@ -258,7 +258,7 @@ function replaceNodeFromSource(targetNode, sourceNode) {
   }
 
   const parentNode = targetNode.parentNode || null;
-  if (!parentNode || typeof parentNode.insertBefore !== "function") {
+  if (!parentNode || typeof targetNode.before !== "function") {
     while (targetNode.firstChild) {
       targetNode.firstChild.remove();
     }
@@ -271,7 +271,7 @@ function replaceNodeFromSource(targetNode, sourceNode) {
     return;
   }
 
-  parentNode.insertBefore(sourceNode, targetNode);
+  targetNode.before(sourceNode);
   targetNode.remove?.();
 }
 

@@ -13,13 +13,13 @@ Diese Übersicht benennt alle Module, die Dart-Regeln implementieren, ableiten o
 | Variantenregeln | `src/domain/variant-rules.js` | Klassifikation von X01-, Cricket- und Tactics-Modi | Varianten |
 | Dart-Regel-Aggregator | `src/domain/dart-rules.js` | Zentrale Re-Exports der Domain-Regeln | Domain-Schnittstelle |
 | Game-State-Store | `src/core/game-state-store.js` | Liest Match-State aus WebSocket-Nachrichten und trennt Variant, Out-Mode und Cricket-Modi | Runtime-State-Bridge |
-| Checkout Score Pulse Logic | `src/features/checkout-score-pulse/logic.js` | Konsumiert X01-Regeln für score- und out-mode-validierte Checkout-Hervorhebung | UI-Verbraucher |
+| Checkout Score Highlight Logic | `src/features/checkout-score-highlight/logic.js` | Konsumiert X01-Regeln für score- und out-mode-validierte Checkout-Hervorhebung | UI-Verbraucher |
 | TV Board Zoom Logic | `src/features/tv-board-zoom/logic.js` | Konsumiert X01-Regeln für Checkout- und Setup-Ziele | UI-Verbraucher |
-| Checkout Board Targets Logic | `src/features/checkout-board-targets/logic.js` | Rendert Segment- und Bull-Overlays ohne eigene Regelwahrheit | UI-Rendering |
-| Cricket Highlighter Logic | `src/features/cricket-highlighter/logic.js` | Übersetzt DOM-Zustand in Eingaben für `cricket-rules` | UI-Verbraucher |
-| Cricket Grid FX Logic | `src/features/cricket-grid-fx/logic.js` | Verwendet `cricket-rules` für Grid-Zustände und Übergänge | UI-Verbraucher |
-| Triple/Double/Bull Hits Logic | `src/features/triple-double-bull-hits/logic.js` | Nutzt zentrale Segmentklassifikation | Treffer-Interpretation |
-| Single Bull Sound Logic | `src/features/single-bull-sound/logic.js` | Nutzt zentrale Bull-Helfer statt eigener Speziallogik | Bull-Interpretation |
+| Checkout Target Highlights Logic | `src/features/checkout-target-highlights/logic.js` | Rendert Segment- und Bull-Overlays ohne eigene Regelwahrheit | UI-Rendering |
+| Cricket Target Highlighter Logic | `src/features/cricket-target-highlighter/logic.js` | Übersetzt DOM-Zustand in Eingaben für `cricket-rules` | UI-Verbraucher |
+| Cricket Grid Status Effects Logic | `src/features/cricket-grid-status-effects/logic.js` | Verwendet `cricket-rules` für Grid-Zustände und Übergänge | UI-Verbraucher |
+| Special Hit Highlights Logic | `src/features/special-hit-highlights/logic.js` | Nutzt zentrale Segmentklassifikation | Treffer-Interpretation |
+| Single Bull Hit Sound Logic | `src/features/single-bull-hit-sound/logic.js` | Nutzt zentrale Bull-Helfer statt eigener Speziallogik | Bull-Interpretation |
 
 ## Leitplanken
 

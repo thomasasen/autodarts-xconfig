@@ -23,21 +23,21 @@ The runtime keeps the current per-feature observer model. Each mounted feature o
 
 | Feature | Observer Scope | Trigger Source |
 | --- | --- | --- |
-| `checkout-score-pulse` | root subtree, `childList`, `characterData`, class attributes | score and suggestion DOM changes |
-| `checkout-board-targets` | root subtree, `childList`, `characterData` | suggestion text and board replacement |
+| `checkout-score-highlight` | root subtree, `childList`, `characterData`, class attributes | score and suggestion DOM changes |
+| `checkout-target-highlights` | root subtree, `childList`, `characterData` | suggestion text and board replacement |
 | `tv-board-zoom` | root subtree, `childList`, `characterData`, `class/style` | board DOM changes and zoom-target layout changes |
-| `style-checkout-suggestions` | root subtree, `childList`, `characterData` | suggestion text and replacement |
-| `average-trend-arrow` | root subtree, `childList`, `characterData` | average text changes |
-| `turn-start-sweep` | root subtree, `childList`, class attributes | active-player row changes |
-| `triple-double-bull-hits` | root subtree, `childList`, `characterData` | throw row text changes |
-| `cricket-highlighter` | root subtree, `childList`, `characterData` | cricket grid text and board replacement |
-| `cricket-grid-fx` | root subtree, `childList`, `characterData` | cricket grid text and row replacement |
-| `dart-marker-emphasis` | root subtree, `childList` | marker insertion/removal |
-| `dart-marker-darts` | root subtree, `childList`, geometry attributes | marker insertion and board geometry changes |
-| `remove-darts-notification` | root subtree, `childList`, `characterData` | remove-darts notice appearance and fallback text |
-| `single-bull-sound` | root subtree, `childList`, `characterData` | throw text changes |
-| `turn-points-count` | root subtree, `childList`, `characterData` | turn-points text changes |
-| `winner-fireworks` | root subtree, `childList`, `class/style` | winner banner visibility changes |
+| `checkout-suggestion-styles` | root subtree, `childList`, `characterData` | suggestion text and replacement |
+| `avg-trend-arrow` | root subtree, `childList`, `characterData` | average text changes |
+| `active-player-sweep` | root subtree, `childList`, class attributes | active-player row changes |
+| `special-hit-highlights` | root subtree, `childList`, `characterData` | throw row text changes |
+| `cricket-target-highlighter` | root subtree, `childList`, `characterData` | cricket grid text and board replacement |
+| `cricket-grid-status-effects` | root subtree, `childList`, `characterData` | cricket grid text and row replacement |
+| `dartboard-marker-highlight` | root subtree, `childList` | marker insertion/removal |
+| `dart-marker-replacer` | root subtree, `childList`, geometry attributes | marker insertion and board geometry changes |
+| `take-out-darts-alert` | root subtree, `childList`, `characterData` | remove-darts notice appearance and fallback text |
+| `single-bull-hit-sound` | root subtree, `childList`, `characterData` | throw text changes |
+| `turn-score-counter` | root subtree, `childList`, `characterData` | turn-points text changes |
+| `winner-celebration-effect` | root subtree, `childList`, `class/style` | winner banner visibility changes |
 | `theme-*` via `mount-theme-feature` | root subtree, `childList`, `characterData` | theme target layout/content changes |
 | `xconfig-ui` | app root subtree, `childList` | navigation/content tree changes outside shell-managed DOM |
 
@@ -47,21 +47,21 @@ Each mounted feature that reacts to match progress subscribes directly to `gameS
 
 Features with direct game-state subscriptions:
 
-- `checkout-score-pulse`
-- `checkout-board-targets`
+- `checkout-score-highlight`
+- `checkout-target-highlights`
 - `tv-board-zoom`
-- `style-checkout-suggestions`
-- `average-trend-arrow`
-- `turn-start-sweep`
-- `triple-double-bull-hits`
-- `cricket-highlighter`
-- `cricket-grid-fx`
-- `dart-marker-emphasis`
-- `dart-marker-darts`
-- `remove-darts-notification`
-- `single-bull-sound`
-- `turn-points-count`
-- `winner-fireworks`
+- `checkout-suggestion-styles`
+- `avg-trend-arrow`
+- `active-player-sweep`
+- `special-hit-highlights`
+- `cricket-target-highlighter`
+- `cricket-grid-status-effects`
+- `dartboard-marker-highlight`
+- `dart-marker-replacer`
+- `take-out-darts-alert`
+- `single-bull-hit-sound`
+- `turn-score-counter`
+- `winner-celebration-effect`
 - `theme-*` via `mount-theme-feature`
 
 ## DOM and Window Listeners
@@ -69,24 +69,24 @@ Features with direct game-state subscriptions:
 Registry-managed listeners are concentrated in the shell, themes, and layout-sensitive features:
 
 - `tv-board-zoom`: `resize`, `orientationchange`, `pointerdown` (Klick auf Wurfanzeigenleiste für Korrektur-Auszoom), `visibilitychange`, `beforeunload`
-- `winner-fireworks`: `resize`, `visibilitychange`, `pointerdown`
-- `cricket-highlighter`: `resize`, `orientationchange`, `visibilitychange`
-- `cricket-grid-fx`: `resize`, `orientationchange`, `visibilitychange`
-- `dart-marker-darts`: `resize`, `visibilitychange`
-- `dart-marker-emphasis`: `visibilitychange`
-- `single-bull-sound`: `pointerdown`, `keydown`, `visibilitychange`
-- `turn-points-count`: `visibilitychange`
-- `triple-double-bull-hits`: `visibilitychange`
+- `winner-celebration-effect`: `resize`, `visibilitychange`, `pointerdown`
+- `cricket-target-highlighter`: `resize`, `orientationchange`, `visibilitychange`
+- `cricket-grid-status-effects`: `resize`, `orientationchange`, `visibilitychange`
+- `dart-marker-replacer`: `resize`, `visibilitychange`
+- `dartboard-marker-highlight`: `visibilitychange`
+- `single-bull-hit-sound`: `pointerdown`, `keydown`, `visibilitychange`
+- `turn-score-counter`: `visibilitychange`
+- `special-hit-highlights`: `visibilitychange`
 - `theme-*`: `resize`, `scroll`
 - `xconfig-ui`: `popstate`, delegated `click`, delegated `change`, delegated `keydown`
 
 ## Timers, RAF, and Polling
 
 - `shared/raf-scheduler.js` is the standard feature-side scheduler used to coalesce repeated DOM and game-state triggers into one RAF callback.
-- `turn-points-count` animates scoreboard text and tracks per-node RAF/anime handles.
-- `average-trend-arrow`, `turn-start-sweep`, `dart-marker-darts`, `cricket-grid-fx`, and `winner-fireworks` use timeout-based cleanup for transient UI state.
-- `winner-fireworks` also uses an interval while the effect is active.
-- `single-bull-sound` and `triple-double-bull-hits` support optional polling intervals and now skip hidden-tab polling work.
+- `turn-score-counter` animates scoreboard text and tracks per-node RAF/anime handles.
+- `avg-trend-arrow`, `active-player-sweep`, `dart-marker-replacer`, `cricket-grid-status-effects`, and `winner-celebration-effect` use timeout-based cleanup for transient UI state.
+- `winner-celebration-effect` also uses an interval while the effect is active.
+- `single-bull-hit-sound` and `special-hit-highlights` support optional polling intervals and now skip hidden-tab polling work.
 
 ## Cleanup Boundaries
 

@@ -14,7 +14,7 @@ import {
   TOOLS_SHADOW_STYLE_ID,
   buildThemeGlobalTypographyStyleText,
 } from "../../src/features/themes/global-typography/style.js";
-import { buildStyleText as buildCricketGridFxStyleText } from "../../src/features/cricket-grid-fx/style.js";
+import { buildStyleText as buildCricketGridStatusEffectsStyleText } from "../../src/features/cricket-grid-status-effects/style.js";
 import { buildCricketThemeCss } from "../../src/features/themes/cricket/style.js";
 import { buildX01ThemeCss } from "../../src/features/themes/x01/style.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
@@ -267,7 +267,7 @@ test("theme CSS can use Templates Global preset wallpaper assets as fallback vis
 
 test("cricket theme CSS can use Templates Global semantic colors without typography bleeding into grid-fx cells", () => {
   const themeCss = buildCricketThemeCss({ showAvg: true });
-  const gridFxCss = buildCricketGridFxStyleText();
+  const gridFxCss = buildCricketGridStatusEffectsStyleText();
   const typographyCss = buildThemeGlobalTypographyStyleText({
     fontPreset: "archivo-black",
     applyTo: ["scores", "names", "throws"],

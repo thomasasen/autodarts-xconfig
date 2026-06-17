@@ -6,22 +6,22 @@ import themeShanghaiPng from "../../docs/screenshots/template-theme-shanghai-xCo
 import themeBermudaPng from "../../docs/screenshots/template-theme-bermuda-xConfig.png";
 import themeCricketPng from "../../docs/screenshots/template-theme-cricket-xConfig.png";
 import themeBullOffPng from "../../docs/screenshots/template-theme-bull-off-xConfig.png";
-import checkoutScorePulseGif from "../../docs/screenshots/animation-checkout-score-pulse.gif";
-import x01ScoreProgressPng from "../../docs/screenshots/animation-x01-score-progress.png";
-import checkoutBoardTargetsGif from "../../docs/screenshots/animation-checkout-board-targets.gif";
+import checkoutScoreHighlightGif from "../../docs/screenshots/animation-checkout-score-pulse.gif";
+import x01RemainingScoreBarPng from "../../docs/screenshots/animation-x01-score-progress.png";
+import checkoutTargetHighlightsGif from "../../docs/screenshots/animation-checkout-board-targets.gif";
 import tvBoardZoomGif from "../../docs/screenshots/animation-tv-board-zoom.gif";
-import styleCheckoutSuggestionsPng from "../../docs/screenshots/animation-style-checkout-suggestions.png";
-import cricketHighlighterPng from "../../docs/screenshots/animation-cricket-target-highlighter.png";
-import cricketGridFxPng from "../../docs/screenshots/animation-cricket-grid-fx.png";
-import averageTrendArrowPng from "../../docs/screenshots/animation-average-trend-arrow.png";
-import turnStartSweepGif from "../../docs/screenshots/animation-turn-start-sweep.gif";
-import tripleDoubleBullHitsGif from "../../docs/screenshots/animation-triple-double-bull-hits.gif";
-import dartMarkerEmphasisGif from "../../docs/screenshots/animation-dart-marker-emphasis.gif";
-import dartMarkerDartsPng from "../../docs/screenshots/animation-dart-marker-darts.png";
-import removeDartsNotificationPng from "../../docs/screenshots/animation-remove-darts-notification.png";
-import singleBullSoundGif from "../../docs/screenshots/animation-single-bull-sound.gif";
-import turnPointsCountGif from "../../docs/screenshots/animation-turn-points-count.gif";
-import winnerFireworksGif from "../../docs/screenshots/animation-winner-fireworks.gif";
+import checkoutSuggestionStylesPng from "../../docs/screenshots/animation-style-checkout-suggestions.png";
+import cricketTargetHighlighterPng from "../../docs/screenshots/animation-cricket-target-highlighter.png";
+import cricketGridStatusEffectsPng from "../../docs/screenshots/animation-cricket-grid-fx.png";
+import avgTrendArrowPng from "../../docs/screenshots/animation-average-trend-arrow.png";
+import activePlayerSweepGif from "../../docs/screenshots/animation-turn-start-sweep.gif";
+import specialHitHighlightsGif from "../../docs/screenshots/animation-triple-double-bull-hits.gif";
+import dartboardMarkerHighlightGif from "../../docs/screenshots/animation-dart-marker-emphasis.gif";
+import dartMarkerReplacerPng from "../../docs/screenshots/animation-dart-marker-darts.png";
+import takeOutDartsAlertPng from "../../docs/screenshots/animation-remove-darts-notification.png";
+import singleBullHitSoundGif from "../../docs/screenshots/animation-single-bull-sound.gif";
+import turnScoreCounterGif from "../../docs/screenshots/animation-turn-points-count.gif";
+import winnerCelebrationEffectGif from "../../docs/screenshots/animation-winner-fireworks.gif";
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-global-typography": themeGlobalTypographyPng,
@@ -32,22 +32,22 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-bermuda": themeBermudaPng,
   "theme-cricket": themeCricketPng,
   "theme-bull-off": themeBullOffPng,
-  "checkout-score-pulse": checkoutScorePulseGif,
-  "x01-score-progress": x01ScoreProgressPng,
-  "checkout-board-targets": checkoutBoardTargetsGif,
+  "checkout-score-highlight": checkoutScoreHighlightGif,
+  "x01-remaining-score-bar": x01RemainingScoreBarPng,
+  "checkout-target-highlights": checkoutTargetHighlightsGif,
   "tv-board-zoom": tvBoardZoomGif,
-  "style-checkout-suggestions": styleCheckoutSuggestionsPng,
-  "cricket-highlighter": cricketHighlighterPng,
-  "cricket-grid-fx": cricketGridFxPng,
-  "average-trend-arrow": averageTrendArrowPng,
-  "turn-start-sweep": turnStartSweepGif,
-  "triple-double-bull-hits": tripleDoubleBullHitsGif,
-  "dart-marker-emphasis": dartMarkerEmphasisGif,
-  "dart-marker-darts": dartMarkerDartsPng,
-  "remove-darts-notification": removeDartsNotificationPng,
-  "single-bull-sound": singleBullSoundGif,
-  "turn-points-count": turnPointsCountGif,
-  "winner-fireworks": winnerFireworksGif,
+  "checkout-suggestion-styles": checkoutSuggestionStylesPng,
+  "cricket-target-highlighter": cricketTargetHighlighterPng,
+  "cricket-grid-status-effects": cricketGridStatusEffectsPng,
+  "avg-trend-arrow": avgTrendArrowPng,
+  "active-player-sweep": activePlayerSweepGif,
+  "special-hit-highlights": specialHitHighlightsGif,
+  "dartboard-marker-highlight": dartboardMarkerHighlightGif,
+  "dart-marker-replacer": dartMarkerReplacerPng,
+  "take-out-darts-alert": takeOutDartsAlertPng,
+  "single-bull-hit-sound": singleBullHitSoundGif,
+  "turn-score-counter": turnScoreCounterGif,
+  "winner-celebration-effect": winnerCelebrationEffectGif,
 });
 
 export function resolveXConfigPreviewAsset(featureKey) {

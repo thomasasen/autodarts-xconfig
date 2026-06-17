@@ -42,10 +42,10 @@ import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { createXConfigEffectPreviewController } from "./effect-preview-controller.js";
-import { createTurnPointsCountPreviewAdapter } from "./turn-points-preview-adapter.js";
-import { createAverageTrendArrowPreviewAdapter } from "./average-trend-preview-adapter.js";
-import { createDartMarkerEmphasisPreviewAdapter } from "./dart-marker-emphasis-preview-adapter.js";
-import { createX01ScoreProgressPreviewController } from "./x01-score-progress-preview-controller.js";
+import { createTurnScoreCounterPreviewAdapter } from "./turn-score-preview-adapter.js";
+import { createAvgTrendArrowPreviewAdapter } from "./avg-trend-preview-adapter.js";
+import { createDartboardMarkerHighlightPreviewAdapter } from "./dartboard-marker-highlight-preview-adapter.js";
+import { createX01RemainingScoreBarPreviewController } from "./x01-remaining-score-bar-preview-controller.js";
 import { styleText } from "./shell-style.js";
 import {
   buildThemeGlobalTypographyPreviewImports,
@@ -84,7 +84,7 @@ const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
-const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-darts";
+const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-replacer";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const LISTENER_KEYS = Object.freeze({
@@ -127,25 +127,25 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     id: "all-modes",
     title: "Gilt für: Alle Modi",
     featureKeys: Object.freeze([
-      "turn-start-sweep",
-      "turn-points-count",
-      "average-trend-arrow",
-      "triple-double-bull-hits",
-      "dart-marker-darts",
-      "dart-marker-emphasis",
-      "remove-darts-notification",
-      "single-bull-sound",
-      "winner-fireworks",
+      "active-player-sweep",
+      "turn-score-counter",
+      "avg-trend-arrow",
+      "special-hit-highlights",
+      "dart-marker-replacer",
+      "dartboard-marker-highlight",
+      "take-out-darts-alert",
+      "single-bull-hit-sound",
+      "winner-celebration-effect",
     ]),
   }),
   Object.freeze({
     id: "x01",
     title: "Gilt für: X01",
     featureKeys: Object.freeze([
-      "style-checkout-suggestions",
-      "checkout-score-pulse",
-      "x01-score-progress",
-      "checkout-board-targets",
+      "checkout-suggestion-styles",
+      "checkout-score-highlight",
+      "x01-remaining-score-bar",
+      "checkout-target-highlights",
       "tv-board-zoom",
     ]),
   }),
@@ -153,8 +153,8 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     id: "cricket-tactics",
     title: "Gilt für: Cricket / Tactics",
     featureKeys: Object.freeze([
-      "cricket-highlighter",
-      "cricket-grid-fx",
+      "cricket-target-highlighter",
+      "cricket-grid-status-effects",
     ]),
   }),
 ]);
@@ -226,7 +226,7 @@ function ensureXConfigShell(options = {}) {
   let actionController = null;
   let lifecycleController = null;
   let effectPreviewController = null;
-  let x01ScoreProgressPreviewController = null;
+  let x01RemainingScoreBarPreviewController = null;
   let electricPreviewFiltersRetained = false;
 
   function clearNoticeTimer() {
@@ -438,16 +438,16 @@ function ensureXConfigShell(options = {}) {
 
   effectPreviewController = createXConfigEffectPreviewController({
     adapters: [
-      createAverageTrendArrowPreviewAdapter(),
-      createDartMarkerEmphasisPreviewAdapter(),
-      createTurnPointsCountPreviewAdapter({
+      createAvgTrendArrowPreviewAdapter(),
+      createDartboardMarkerHighlightPreviewAdapter(),
+      createTurnScoreCounterPreviewAdapter({
         windowRef,
       }),
     ],
     getFeatures,
     panelHostId: PANEL_HOST_ID,
   });
-  x01ScoreProgressPreviewController = createX01ScoreProgressPreviewController({
+  x01RemainingScoreBarPreviewController = createX01RemainingScoreBarPreviewController({
     documentRef,
     windowRef,
   });
@@ -470,9 +470,9 @@ function ensureXConfigShell(options = {}) {
     menuLabelCollapseWidth: MENU_LABEL_COLLAPSE_WIDTH,
     onBeforeRender: () => {
       effectPreviewController?.stopActivePreview();
-      x01ScoreProgressPreviewController?.stop();
+      x01RemainingScoreBarPreviewController?.stop();
     },
-    onAfterRender: () => x01ScoreProgressPreviewController?.start(),
+    onAfterRender: () => x01RemainingScoreBarPreviewController?.start(),
     panelHostId: PANEL_HOST_ID,
     parseShellRenderSignature,
     sidebarRouteHints: SIDEBAR_ROUTE_HINTS,
@@ -534,12 +534,12 @@ function ensureXConfigShell(options = {}) {
     onMounted: retainElectricPreviewFilters,
     onTeardown: () => {
       effectPreviewController?.stopActivePreview();
-      x01ScoreProgressPreviewController?.stop();
+      x01RemainingScoreBarPreviewController?.stop();
       releaseElectricPreviewFilters();
     },
     onVisibilityChange: (event) => {
       effectPreviewController?.stopActivePreview();
-      x01ScoreProgressPreviewController?.stop();
+      x01RemainingScoreBarPreviewController?.stop();
       onVisibilityChange(event);
     },
     panelHostId: PANEL_HOST_ID,

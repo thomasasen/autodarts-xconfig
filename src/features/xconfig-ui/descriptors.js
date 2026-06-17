@@ -77,11 +77,35 @@ function actionField(action, label, options = {}) {
   });
 }
 
+const README_ANCHOR_ALIASES = Object.freeze({
+  "checkout-score-highlight": ["animation-autodarts-animate-checkout-score-pulse"],
+  "x01-remaining-score-bar": ["animation-autodarts-x01-score-progress"],
+  "checkout-target-highlights": ["animation-autodarts-animate-checkout-board-targets"],
+  "checkout-suggestion-styles": ["animation-autodarts-style-checkout-suggestions"],
+  "avg-trend-arrow": ["animation-autodarts-animate-average-trend-arrow"],
+  "active-player-sweep": ["animation-autodarts-animate-turn-start-sweep"],
+  "special-hit-highlights": ["animation-autodarts-animate-triple-double-bull-hits"],
+  "cricket-target-highlighter": ["animation-autodarts-animate-cricket-highlighter"],
+  "cricket-grid-status-effects": ["animation-autodarts-animate-cricket-grid-fx"],
+  "dartboard-marker-highlight": ["animation-autodarts-animate-dart-marker-emphasis"],
+  "dart-marker-replacer": ["animation-autodarts-animate-dart-marker-darts"],
+  "take-out-darts-alert": ["animation-autodarts-animate-remove-darts-notification"],
+  "single-bull-hit-sound": ["animation-autodarts-animate-single-bull-sound"],
+  "turn-score-counter": ["animation-autodarts-animate-turn-points-count"],
+  "winner-celebration-effect": ["animation-autodarts-animate-winner-fireworks"],
+});
+
 function descriptorEntry(definition) {
   const featureKey = normalizeFeatureKey(definition.featureKey);
   const featureCopy = getXConfigFeatureCopy(featureKey);
   return Object.freeze({
     ...definition,
+    readmeAnchorAliases: Object.freeze([
+      ...(Array.isArray(definition.readmeAnchorAliases)
+        ? definition.readmeAnchorAliases.map((entry) => String(entry || "").trim()).filter(Boolean)
+        : []),
+      ...(README_ANCHOR_ALIASES[featureKey] || []),
+    ]),
     description: featureCopy?.cardDescription || definition.description,
     visibleDescription: featureCopy?.visibleDescription || "",
     visualDescription: featureCopy?.visualDescription || "",
@@ -380,15 +404,15 @@ export const xconfigDescriptors = Object.freeze([
     fields: backgroundThemeFields(),
   }),
   animationDescriptorEntry({
-    featureKey: "checkout-score-pulse",
-    readmeAnchor: "animation-autodarts-animate-checkout-score-pulse",
+    featureKey: "checkout-score-highlight",
+    readmeAnchor: "animation-autodarts-animate-checkout-score-highlight",
     description: "Hebt finishfähige Restwerte in X01 sichtbar hervor.",
     fields: [
       selectField("effect", "Effekt", [
-        { value: "pulse", label: "Pulse" },
-        { value: "glow", label: "Glow" },
-        { value: "scale", label: "Scale" },
-        { value: "blink", label: "Blink" },
+        { value: "grow-glow", label: "Grow + Glow" },
+        { value: "glow-only", label: "Glow Only" },
+        { value: "grow-only", label: "Grow Only" },
+        { value: "fade-blink", label: "Fade Blink" },
       ]),
       selectField("colorTheme", "Farbthema", [
         colorPreviewOption("159, 219, 88", "Autodarts Grün", "checkout-score-autodarts-green"),
@@ -409,8 +433,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "x01-score-progress",
-    readmeAnchor: "animation-autodarts-x01-score-progress",
+    featureKey: "x01-remaining-score-bar",
+    readmeAnchor: "animation-autodarts-x01-remaining-score-bar",
     description: "Zeigt den verbleibenden X01-Score als abnehmenden Balken pro Spielerkarte.",
     fields: [
       selectField("colorTheme", "Farben", [
@@ -434,24 +458,24 @@ export const xconfigDescriptors = Object.freeze([
         { value: "extrabreit", label: "Extrabreit" },
       ]),
       selectField("effect", "Effekt", [
-        { value: "pulse-core", label: "Pulse Core" },
-        { value: "glass-charge", label: "Glass Charge" },
-        { value: "segment-drain", label: "Segment Drain" },
-        { value: "ghost-trail", label: "Ghost Trail" },
-        { value: "signal-sweep", label: "Signal Sweep" },
+        { value: "bar-pulse", label: "Bar Pulse" },
+        { value: "glass-light-sweep", label: "Glass Light Sweep" },
+        { value: "moving-segments", label: "Moving Segments" },
+        { value: "previous-score-trail", label: "Previous Score Trail" },
+        { value: "fast-signal-sweep", label: "Fast Signal Sweep" },
         { value: "off", label: "Aus" },
       ]),
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "checkout-board-targets",
-    readmeAnchor: "animation-autodarts-animate-checkout-board-targets",
+    featureKey: "checkout-target-highlights",
+    readmeAnchor: "animation-autodarts-animate-checkout-target-highlights",
     description: "Markiert sinnvolle Checkout-Ziele direkt am Board.",
     fields: [
       selectField("visualPreset", "Darstellung", [
-        { value: "focus", label: "Focus" },
-        { value: "signal", label: "Signal" },
-        { value: "steady", label: "Steady" },
+        { value: "soft-pulse", label: "Soft Pulse" },
+        { value: "fast-blink", label: "Fast Blink" },
+        { value: "slow-glow", label: "Slow Glow" },
       ]),
       selectField("segmentStyle", "Segmentstil", [
         { value: "surface-outline", label: "Fläche + Rahmen" },
@@ -496,8 +520,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "style-checkout-suggestions",
-    readmeAnchor: "animation-autodarts-style-checkout-suggestions",
+    featureKey: "checkout-suggestion-styles",
+    readmeAnchor: "animation-autodarts-checkout-suggestion-styles",
     description: "Macht Checkout-Hinweise auffälliger und besser lesbar.",
     fields: [
       selectField("style", "Stil", [
@@ -520,8 +544,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "average-trend-arrow",
-    readmeAnchor: "animation-autodarts-animate-average-trend-arrow",
+    featureKey: "avg-trend-arrow",
+    readmeAnchor: "animation-autodarts-animate-avg-trend-arrow",
     description: "Zeigt die Trendrichtung des AVG mit einem Pfeil an.",
     fields: [
       selectField("durationMs", "Animationsdauer", [
@@ -537,25 +561,25 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "turn-start-sweep",
-    readmeAnchor: "animation-autodarts-animate-turn-start-sweep",
+    featureKey: "active-player-sweep",
+    readmeAnchor: "animation-autodarts-animate-active-player-sweep",
     description: "Markiert den Spielerwechsel mit einem Sweep über die aktive Karte.",
     fields: [
       selectField("durationMs", "Sweep-Geschwindigkeit", [
-        { value: 300, label: "Schnell", previewEffect: "turn-start-sweep-fast" },
-        { value: 420, label: "Standard", previewEffect: "turn-start-sweep-standard-speed" },
-        { value: 620, label: "Langsam", previewEffect: "turn-start-sweep-slow" },
+        { value: 300, label: "Schnell", previewEffect: "active-player-sweep-fast" },
+        { value: 420, label: "Standard", previewEffect: "active-player-sweep-standard-speed" },
+        { value: 620, label: "Langsam", previewEffect: "active-player-sweep-slow" },
       ]),
       selectField("sweepStyle", "Sweep-Stil", [
-        { value: "subtle", label: "Dezent", previewEffect: "turn-start-sweep-subtle" },
-        { value: "standard", label: "Standard", previewEffect: "turn-start-sweep-standard-style" },
-        { value: "strong", label: "Kräftig", previewEffect: "turn-start-sweep-strong" },
+        { value: "subtle", label: "Dezent", previewEffect: "active-player-sweep-subtle" },
+        { value: "standard", label: "Standard", previewEffect: "active-player-sweep-standard-style" },
+        { value: "strong", label: "Kräftig", previewEffect: "active-player-sweep-strong" },
       ]),
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "triple-double-bull-hits",
-    readmeAnchor: "animation-autodarts-animate-triple-double-bull-hits",
+    featureKey: "special-hit-highlights",
+    readmeAnchor: "animation-autodarts-animate-special-hit-highlights",
     description: "Setzt Treffer-Highlights mit wählbarem Farbstil und starkem Burst-Animationsstil.",
     fields: [
       selectField("colorTheme", "Farbstil", [
@@ -568,18 +592,18 @@ export const xconfigDescriptors = Object.freeze([
         { value: "champagne-night", label: "Midnight Gold", previewColorTheme: "champagne-night" },
       ]),
       selectField("animationStyle", "Animationsstil", [
-        { value: "emphasis", label: "Emphase", previewEffect: "emphasis" },
-        { value: "shake", label: "Shake", previewEffect: "shake" },
-        { value: "pulse", label: "Pulse", previewEffect: "pulse" },
-        { value: "turn", label: "Turn", previewEffect: "turn" },
-        { value: "sheen", label: "Sheen", previewEffect: "sheen" },
-        { value: "shockwave", label: "Shock Ring", previewEffect: "shockwave" },
-        { value: "electric-arc", label: "Electric Arc", previewEffect: "electric-arc" },
+        { value: "pop-hit", label: "Pop Hit", previewEffect: "pop-hit" },
+        { value: "side-shake", label: "Side Shake", previewEffect: "side-shake" },
+        { value: "glow-pop", label: "Glow Pop", previewEffect: "glow-pop" },
+        { value: "flip-spin", label: "Flip Spin", previewEffect: "flip-spin" },
+        { value: "light-sweep", label: "Light Sweep", previewEffect: "light-sweep" },
+        { value: "shockwave-ring", label: "Shockwave Ring", previewEffect: "shockwave-ring" },
+        { value: "electric-jolt", label: "Electric Jolt", previewEffect: "electric-jolt" },
       ]),
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "cricket-highlighter",
+    featureKey: "cricket-target-highlighter",
     readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
     fields: [
@@ -603,8 +627,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "cricket-grid-fx",
-    readmeAnchor: "animation-autodarts-animate-cricket-grid-fx",
+    featureKey: "cricket-grid-status-effects",
+    readmeAnchor: "animation-autodarts-animate-cricket-grid-status-effects",
     description: "Ergänzt die Cricket-/Tactics-Matrix um zusätzliche Live-Effekte.",
     fields: [
       checkboxField("rowWave", "Zeilen-Sweep"),
@@ -629,8 +653,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "dart-marker-emphasis",
-    readmeAnchor: "animation-autodarts-animate-dart-marker-emphasis",
+    featureKey: "dartboard-marker-highlight",
+    readmeAnchor: "animation-autodarts-animate-dartboard-marker-highlight",
     description: "Macht Marker auf dem virtuellen Dartboard deutlicher sichtbar.",
     fields: [
       selectField("size", "Marker-Größe", [
@@ -646,8 +670,8 @@ export const xconfigDescriptors = Object.freeze([
         colorPreviewOption("rgb(255, 255, 255)", "Weiß", "dart-marker-white"),
       ]),
       selectField("effect", "Effekt", [
-        { value: "glow", label: "Glow" },
-        { value: "pulse", label: "Pulse" },
+        { value: "soft-glow", label: "Soft Glow" },
+        { value: "size-pulse", label: "Size Pulse" },
         { value: "none", label: "Kein Effekt" },
       ]),
       selectField("opacityPercent", "Marker-Sichtbarkeit", [
@@ -663,8 +687,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "dart-marker-darts",
-    readmeAnchor: "animation-autodarts-animate-dart-marker-darts",
+    featureKey: "dart-marker-replacer",
+    readmeAnchor: "animation-autodarts-animate-dart-marker-replacer",
     description: "Ersetzt Marker optional durch Dart-Bilder mit Fluganimation.",
     fields: [
       actionField("run-feature-action", "Dart-Demo", {
@@ -676,7 +700,7 @@ export const xconfigDescriptors = Object.freeze([
         successMessage: "Dart-Demo gestartet.",
         errorMessage: "Dart-Demo konnte nicht gestartet werden.",
         prominent: true,
-        previewTarget: "dart-marker-darts",
+        previewTarget: "dart-marker-replacer",
       }),
       selectField("design", "Dart Design", [
         { value: "aireplicant", label: "AI Replicant" },
@@ -723,8 +747,8 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "remove-darts-notification",
-    readmeAnchor: "animation-autodarts-animate-remove-darts-notification",
+    featureKey: "take-out-darts-alert",
+    readmeAnchor: "animation-autodarts-animate-take-out-darts-alert",
     description: "Macht den Hinweis zum Entfernen der Darts auffälliger.",
     fields: [
       selectField("imageSize", "Bildgröße", [
@@ -741,13 +765,13 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "single-bull-sound",
-    readmeAnchor: "animation-autodarts-animate-single-bull-sound",
+    featureKey: "single-bull-hit-sound",
+    readmeAnchor: "animation-autodarts-animate-single-bull-hit-sound",
     description: "Spielt bei Single Bull einen kurzen Ton ab.",
     fields: [
       actionField("run-feature-action", "Sound-Test", {
         actionId: "preview",
-        buttonLabel: "Single Bull Sound abspielen",
+        buttonLabel: "Single Bull Hit Sound abspielen",
         section: "Sound-Test",
         description:
           "Spielt den Single-Bull-Ton mit der aktuell gespeicherten Lautstärke.",
@@ -773,14 +797,14 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "turn-points-count",
-    readmeAnchor: "animation-autodarts-animate-turn-points-count",
+    featureKey: "turn-score-counter",
+    readmeAnchor: "animation-autodarts-animate-turn-score-counter",
     description: "Zählt Punkteänderungen sichtbar hoch oder runter.",
     fields: [
       selectField("countEffect", "Zählstil", [
-        { value: "countup", label: "Fließend" },
-        { value: "odometer", label: "Odometer" },
-        { value: "steps", label: "Einzelschritte" },
+        { value: "smooth-count", label: "Smooth Count" },
+        { value: "rolling-digits", label: "Rolling Digits" },
+        { value: "step-count", label: "Step Count" },
       ]),
       selectField("durationMs", "Zählgeschwindigkeit", [
         { value: 1000, label: "Schnell" },
@@ -795,17 +819,17 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
-    featureKey: "winner-fireworks",
-    readmeAnchor: "animation-autodarts-animate-winner-fireworks",
+    featureKey: "winner-celebration-effect",
+    readmeAnchor: "animation-autodarts-animate-winner-celebration-effect",
     description: "Zeigt bei einem Sieg ein Feuerwerk in verschiedenen Stilen.",
     fields: [
       selectField("style", "Style", [
-        { value: "realistic", label: "Realistic" },
-        { value: "fireworks", label: "Fireworks" },
-        { value: "cannon", label: "Cannon" },
-        { value: "victorystorm", label: "Victory Storm" },
-        { value: "stars", label: "Stars" },
-        { value: "sides", label: "Sides" },
+        { value: "center-side-burst", label: "Center Side Burst" },
+        { value: "top-fireworks", label: "Top Fireworks" },
+        { value: "center-cannon", label: "Center Cannon" },
+        { value: "triple-burst", label: "Triple Burst" },
+        { value: "star-burst", label: "Star Burst" },
+        { value: "side-cannons", label: "Side Cannons" },
       ]),
       selectField("colorTheme", "Farbe", [
         colorPreviewOption("autodarts", "Autodarts", "winner-autodarts"),

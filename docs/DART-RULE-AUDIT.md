@@ -9,7 +9,7 @@ Die Domain-Regeln sind für `v1.1.0` regelkonform dokumentiert, szenariobasiert 
 ### 1. X01-Out-Modi werden konsequent berücksichtigt
 
 - `src/domain/x01-rules.js` bewertet Checkout-Machbarkeit, One-Dart-Finishes und Busts out-mode-aware.
-- `checkout-score-pulse` validiert explizite Suggestions zusätzlich gegen echten Score, Out-Modus und vorhandene verlässliche Darts-im-Visit-Informationen.
+- `checkout-score-highlight` validiert explizite Suggestions zusätzlich gegen echten Score, Out-Modus und vorhandene verlässliche Darts-im-Visit-Informationen.
 - `tv-board-zoom` konsumiert dieselben X01-Regeln statt eigener Annahmen.
 
 ### 2. Bull-Semantik bleibt konsistent

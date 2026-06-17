@@ -1,4 +1,5 @@
 import { defaultConfig } from "./default-config.js";
+import { featureCatalog, getFeatureCatalogEntryByConfigKey } from "../shared/feature-catalog.js";
 import {
   createDefaultConfigFromFeatureSpecs,
   getFeatureConfigKeys,
@@ -42,6 +43,73 @@ function deepMerge(baseValue, nextValue) {
     merged[key] = deepMerge(base[key], nextValue[key]);
   });
   return merged;
+}
+
+function deleteNestedValue(rootValue, pathParts = []) {
+  if (!rootValue || typeof rootValue !== "object" || !Array.isArray(pathParts) || !pathParts.length) {
+    return;
+  }
+
+  let current = rootValue;
+  for (let index = 0; index < pathParts.length - 1; index += 1) {
+    current = current?.[pathParts[index]];
+    if (!current || typeof current !== "object") {
+      return;
+    }
+  }
+
+  delete current[pathParts.at(-1)];
+}
+
+function canonicalConfigKey(configKey) {
+  const normalizedKey = String(configKey || "").trim();
+  return getFeatureCatalogEntryByConfigKey(normalizedKey)?.configKey || normalizedKey;
+}
+
+function migrateLegacyFeatureConfigKeys(configValue = {}) {
+  if (!configValue || typeof configValue !== "object") {
+    return configValue;
+  }
+
+  featureCatalog.forEach((entry) => {
+    const canonicalKey = entry.configKey;
+    const legacyConfigKeys = Array.isArray(entry.legacyConfigKeys) ? entry.legacyConfigKeys : [];
+    legacyConfigKeys.forEach((legacyConfigKey) => {
+      if (!legacyConfigKey || legacyConfigKey === canonicalKey) {
+        return;
+      }
+
+      if (
+        configValue.featureToggles &&
+        typeof configValue.featureToggles === "object" &&
+        Object.hasOwn(configValue.featureToggles, legacyConfigKey)
+      ) {
+        if (!Object.hasOwn(configValue.featureToggles, canonicalKey)) {
+          configValue.featureToggles[canonicalKey] = configValue.featureToggles[legacyConfigKey];
+        }
+        delete configValue.featureToggles[legacyConfigKey];
+      }
+
+      const legacyPath = splitFeaturePath(legacyConfigKey);
+      const canonicalPath = splitFeaturePath(canonicalKey);
+      const legacyFeatureConfig = getNestedValue(configValue.features || {}, legacyPath);
+      if (!legacyFeatureConfig || typeof legacyFeatureConfig !== "object" || Array.isArray(legacyFeatureConfig)) {
+        deleteNestedValue(configValue.features || {}, legacyPath);
+        return;
+      }
+
+      const canonicalFeatureConfig = getNestedValue(configValue.features || {}, canonicalPath);
+      setNestedValue(configValue.features || {}, canonicalPath, {
+        ...legacyFeatureConfig,
+        ...(canonicalFeatureConfig && typeof canonicalFeatureConfig === "object"
+          ? canonicalFeatureConfig
+          : {}),
+      });
+      deleteNestedValue(configValue.features || {}, legacyPath);
+    });
+  });
+
+  return configValue;
 }
 
 function normalizeBoolean(value, fallbackValue) {
@@ -209,14 +277,16 @@ function buildRecommendedRuntimeConfig(sourceConfig = {}) {
 }
 
 export function createRuntimeConfig(overrides = {}) {
-  let rawConfig = deepMerge(createDefaultConfigFromFeatureSpecs(), overrides);
+  let rawConfig = migrateLegacyFeatureConfigKeys(
+    deepMerge(createDefaultConfigFromFeatureSpecs(), migrateLegacyFeatureConfigKeys(deepClone(overrides)))
+  );
 
   function getRaw() {
     return deepClone(rawConfig);
   }
 
   function getRawFeatureConfig(featureKey) {
-    const pathParts = splitFeaturePath(featureKey);
+    const pathParts = splitFeaturePath(canonicalConfigKey(featureKey));
     if (!pathParts.length) {
       return {};
     }
@@ -226,7 +296,7 @@ export function createRuntimeConfig(overrides = {}) {
   }
 
   function getRawFeatureToggle(featureKey) {
-    const normalizedKey = String(featureKey || "").trim();
+    const normalizedKey = canonicalConfigKey(featureKey);
     if (!normalizedKey) {
       return undefined;
     }
@@ -239,7 +309,7 @@ export function createRuntimeConfig(overrides = {}) {
   }
 
   function getFeatureConfig(featureKey) {
-    const normalizedKey = String(featureKey || "").trim();
+    const normalizedKey = canonicalConfigKey(featureKey);
     const configSpec = getFeatureConfigSpec(normalizedKey);
     const rawFeatureConfig = getRawFeatureConfig(normalizedKey);
 
@@ -271,11 +341,12 @@ export function createRuntimeConfig(overrides = {}) {
     const normalizedFeatures = deepClone(rawConfig?.features || {});
 
     featureKeys.forEach((featureKey) => {
-      const normalizedFeatureConfig = getFeatureConfig(featureKey);
-      setNestedValue(normalizedFeatures, splitFeaturePath(featureKey), normalizedFeatureConfig);
+      const canonicalKey = canonicalConfigKey(featureKey);
+      const normalizedFeatureConfig = getFeatureConfig(canonicalKey);
+      setNestedValue(normalizedFeatures, splitFeaturePath(canonicalKey), normalizedFeatureConfig);
 
-      const rawToggleValue = getRawFeatureToggle(featureKey);
-      normalizedFeatureToggles[featureKey] =
+      const rawToggleValue = getRawFeatureToggle(canonicalKey);
+      normalizedFeatureToggles[canonicalKey] =
         rawToggleValue !== undefined
           ? normalizeBoolean(rawToggleValue, normalizedFeatureConfig.enabled)
           : normalizeBoolean(normalizedFeatureConfig.enabled, false);
@@ -289,7 +360,7 @@ export function createRuntimeConfig(overrides = {}) {
   }
 
   function isFeatureEnabled(featureKey) {
-    const normalizedKey = String(featureKey || "").trim();
+    const normalizedKey = canonicalConfigKey(featureKey);
     const featureConfig = getFeatureConfig(normalizedKey);
     const toggleValue = getRawFeatureToggle(normalizedKey);
 
@@ -301,7 +372,7 @@ export function createRuntimeConfig(overrides = {}) {
   }
 
   function setFeatureEnabled(featureKey, enabled) {
-    const normalizedKey = String(featureKey || "").trim();
+    const normalizedKey = canonicalConfigKey(featureKey);
     if (!normalizedKey) {
       return;
     }
@@ -328,7 +399,9 @@ export function createRuntimeConfig(overrides = {}) {
   }
 
   function update(partialConfig = {}) {
-    rawConfig = deepMerge(rawConfig, partialConfig);
+    rawConfig = migrateLegacyFeatureConfigKeys(
+      deepMerge(rawConfig, migrateLegacyFeatureConfigKeys(deepClone(partialConfig)))
+    );
     return getRaw();
   }
 

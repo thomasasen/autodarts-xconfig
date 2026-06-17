@@ -1,6 +1,6 @@
 export const TURN_SURFACE_SELECTOR = "#ad-ext-turn";
 export const TURN_THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
-export const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
+export const TURN_SCORE_SELECTOR = ".ad-ext-turn-points";
 export const TURN_SURFACE_MUTATION_ATTRIBUTE_FILTER = Object.freeze([
   "class",
   "style",
@@ -92,7 +92,7 @@ function resolveRowSource(turnContainer, throwRows) {
 export function getTurnSurfaceSnapshot(documentRef, options = {}) {
   const turnContainer = findTurnContainer(documentRef);
   const throwRows = collectTurnThrowRows(documentRef);
-  const turnPointsToken = readTurnPointsToken(documentRef, {
+  const turnScoreToken = readTurnScoreToken(documentRef, {
     turnContainer,
     normalizeText: options.normalizeText,
   });
@@ -100,17 +100,17 @@ export function getTurnSurfaceSnapshot(documentRef, options = {}) {
   return {
     turnContainer,
     throwRows,
-    turnPointsToken,
+    turnScoreToken,
     rowSource: resolveRowSource(turnContainer, throwRows),
   };
 }
 
-export function readTurnPointsToken(documentRef, options = {}) {
+export function readTurnScoreToken(documentRef, options = {}) {
   const normalize = typeof options.normalizeText === "function" ? options.normalizeText : normalizeText;
   const turnContainer = options.turnContainer || findTurnContainer(documentRef);
   const scopedPointsNode =
     turnContainer && typeof turnContainer.querySelector === "function"
-      ? turnContainer.querySelector(TURN_POINTS_SELECTOR)
+      ? turnContainer.querySelector(TURN_SCORE_SELECTOR)
       : null;
 
   if (scopedPointsNode) {
@@ -122,7 +122,7 @@ export function readTurnPointsToken(documentRef, options = {}) {
   }
 
   try {
-    const fallbackPointsNode = documentRef.querySelector(TURN_POINTS_SELECTOR);
+    const fallbackPointsNode = documentRef.querySelector(TURN_SCORE_SELECTOR);
     return normalize(fallbackPointsNode?.textContent || "");
   } catch (_) {
     return "";

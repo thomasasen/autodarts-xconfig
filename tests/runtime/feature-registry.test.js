@@ -11,8 +11,8 @@ test("feature registry ignores duplicate feature keys deterministically", () => 
     definitions: [
       ...defaultFeatureDefinitions,
       {
-        featureKey: "checkout-score-pulse",
-        configKey: "checkoutScorePulse",
+        featureKey: "checkout-score-highlight",
+        configKey: "checkoutScoreHighlight",
         title: "Duplicate",
         initialize: () => () => {},
       },
@@ -22,19 +22,19 @@ test("feature registry ignores duplicate feature keys deterministically", () => 
   const features = registry.getDefinitions();
 
   assert.equal(features.length, defaultFeatureDefinitions.length);
-  assert.equal(features[0].title, "Checkout Score Pulse");
+  assert.equal(features[0].title, "Checkout Score Highlight");
 });
 
 test("feature registry lists runtime metadata against snapshots", () => {
   const registry = createFeatureRegistry();
   const listed = registry.listFeatures({
     features: {
-      "checkout-score-pulse": {
+      "checkout-score-highlight": {
         enabled: true,
         mounted: true,
         config: { effect: "scale" },
       },
-      "checkout-board-targets": {
+      "checkout-target-highlights": {
         enabled: false,
         mounted: false,
         config: { effect: "pulse" },
@@ -43,23 +43,23 @@ test("feature registry lists runtime metadata against snapshots", () => {
   });
 
   assert.equal(listed.length, defaultFeatureDefinitions.length);
-  assert.equal(listed[0].featureKey, "checkout-score-pulse");
+  assert.equal(listed[0].featureKey, "checkout-score-highlight");
   assert.equal(listed[0].enabled, true);
   assert.equal(listed[0].mounted, true);
   assert.deepEqual(listed[0].variants, ["x01"]);
   assert.equal(typeof listed[0].startupTiming, "string");
   assert.equal(listed.some((feature) => feature.featureKey === "tv-board-zoom"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "turn-start-sweep"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "triple-double-bull-hits"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "cricket-highlighter"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "cricket-grid-fx"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "dart-marker-emphasis"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "dart-marker-darts"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "remove-darts-notification"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "single-bull-sound"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "turn-points-count"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "x01-score-progress"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "winner-fireworks"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "active-player-sweep"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "special-hit-highlights"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "cricket-target-highlighter"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "cricket-grid-status-effects"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "dartboard-marker-highlight"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "dart-marker-replacer"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "take-out-darts-alert"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "single-bull-hit-sound"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "turn-score-counter"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "x01-remaining-score-bar"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "winner-celebration-effect"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-x01"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-gotcha"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-x01-2player"), true);
@@ -68,7 +68,7 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.equal(listed.some((feature) => feature.featureKey === "theme-cricket"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-bull-off"), true);
   assert.equal(
-    listed.find((feature) => feature.featureKey === "checkout-board-targets")?.enabled,
+    listed.find((feature) => feature.featureKey === "checkout-target-highlights")?.enabled,
     false
   );
 });

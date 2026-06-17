@@ -120,7 +120,7 @@ test("createShellActionController dispatches navigation and shell-state commands
   controller.handleAction("open-settings", null, { featureKey: "theme-x01" });
   controller.handleAction("close-settings");
   controller.handleAction("close-settings-backdrop");
-  controller.handleAction("open-readme", null, { featureKey: "winner-fireworks" });
+  controller.handleAction("open-readme", null, { featureKey: "winner-celebration-effect" });
   controller.handleAction("open-changelog");
   controller.handleAction("unknown-action");
 
@@ -130,7 +130,7 @@ test("createShellActionController dispatches navigation and shell-state commands
     "sync",
     "sync",
     "sync",
-    ["readme", "winner-fireworks"],
+    ["readme", "winner-celebration-effect"],
     "changelog",
   ]);
   assert.equal(state.activeSettingsFeatureKey, "");
@@ -293,7 +293,7 @@ test("createShellActionController dispatches feature and setting payload command
     ],
   };
   const selectButton = createActionNode({
-    "data-config-key": "checkoutScorePulse",
+    "data-config-key": "checkoutScoreHighlight",
     "data-setting-key": "effect",
     "data-setting-value": "glow",
   });
@@ -336,15 +336,15 @@ test("createShellActionController dispatches feature and setting payload command
   controller.handleAction("set-feature", createActionNode({
     "data-feature-enabled": "true",
   }), {
-    featureKey: "checkout-score-pulse",
-    title: "Checkout Score Pulse",
+    featureKey: "checkout-score-highlight",
+    title: "Checkout Score Highlight",
   });
   controller.handleAction("set-setting-toggle", toggleGroup.selectedButton, {
-    configKey: "checkoutScorePulse",
+    configKey: "checkoutScoreHighlight",
   });
   controller.handleAction("set-setting-select-option", selectButton, {
-    featureKey: "checkout-score-pulse",
-    configKey: "checkoutScorePulse",
+    featureKey: "checkout-score-highlight",
+    configKey: "checkoutScoreHighlight",
   });
   const previewTarget = { marker: "preview-target" };
   const actionWrapper = {
@@ -362,17 +362,17 @@ test("createShellActionController dispatches feature and setting payload command
   controller.handleAction("run-feature-action", createActionNode({
     "data-feature-action-id": "preview",
   }, actionButtonParent), {
-    featureKey: "winner-fireworks",
+    featureKey: "winner-celebration-effect",
   });
 
   await flushMicrotasks();
 
   assert.deepEqual(calls, [
-    ["set-feature", "checkout-score-pulse", true],
-    ["save-config", { configKey: "checkoutScorePulse", settingKey: "enabled", value: true }],
+    ["set-feature", "checkout-score-highlight", true],
+    ["save-config", { configKey: "checkoutScoreHighlight", settingKey: "enabled", value: true }],
     ["sync-select", selectButton, "glow"],
-    ["save-config", { configKey: "checkoutScorePulse", settingKey: "effect", value: "parsed:glow" }],
-    ["run-feature-action", "winner-fireworks", "preview", previewTarget],
+    ["save-config", { configKey: "checkoutScoreHighlight", settingKey: "effect", value: "parsed:glow" }],
+    ["run-feature-action", "winner-celebration-effect", "preview", previewTarget],
     "sync",
     "sync",
     "sync",
@@ -382,7 +382,7 @@ test("createShellActionController dispatches feature and setting payload command
   assert.equal(toggleGroup.selectedButton.getAttribute("data-active"), "true");
   assert.equal(toggleGroup.otherButton.getAttribute("data-active"), "false");
   assert.deepEqual(notices, [
-    ["success", "Checkout Score Pulse: An"],
+    ["success", "Checkout Score Highlight: An"],
     ["success", "Einstellung gespeichert."],
     ["info", "Aktion erledigt."],
     ["success", "Einstellung gespeichert."],
@@ -469,8 +469,8 @@ test("createShellActionController suppresses stale turn dart upload callbacks af
   });
 
   controller.handleAction("uploadTurnDartImage", null, {
-    featureKey: "dart-marker-darts",
-    configKey: "dartMarkerDarts",
+    featureKey: "dart-marker-replacer",
+    configKey: "dartMarkerReplacer",
   });
 
   state.started = false;

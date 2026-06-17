@@ -112,7 +112,7 @@ function createHostThrowRow(documentRef, scoreText, segmentText, left, top) {
 
 function installHostCheckoutTurnSurface(documentRef, route = [], options = {}) {
   documentRef.suggestionElement.remove();
-  documentRef.turnPointsElement.remove();
+  documentRef.turnScoreElement.remove();
   documentRef.turnContainer.replaceChildren();
 
   const pointsFrame = documentRef.createElement("div");

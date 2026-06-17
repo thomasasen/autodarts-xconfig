@@ -12,6 +12,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.0] - 2026-06-17
+
+### Changed
+
+- Nutzerwirkung: Die Animationsmodule heißen jetzt eindeutiger nach ihrer sichtbaren Wirkung, zum Beispiel `Checkout Score Highlight`, `Checkout Target Highlights`, `Special Hit Highlights`, `Dart Marker Replacer`, `Take Out Darts Alert` und `Winner Celebration Effect`; AD xConfig, README, Feature-Übersicht und die alten README-Anker bleiben dabei konsistent erreichbar.
+  Technik: Feature-Ordner, Registry, Katalog, xConfig-Descriptoren, Preview-Adapter, Screenshot-Manifeste, Tests und generierte Doku wurden auf kanonische Feature- und Config-Keys migriert; alte Feature-Keys, Config-Keys, Action-Refs und README-Anker werden über explizite Alias- und Kompatibilitätsschichten weiter aufgelöst.
+- Nutzerwirkung: Effekt-Auswahlen verwenden klarere englische Werte wie `grow-glow`, `fast-blink`, `electric-jolt`, `size-pulse`, `rolling-digits` und `top-fireworks`, ohne vorhandene gespeicherte Einstellungen zu verlieren.
+  Technik: Defaults, Recommended Defaults, Config-Store-Migration, Runtime-Normalizer, CSS-Klassen, Preview-Datenattribute und Regressionen wurden auf die neuen Optionswerte umgestellt; Legacy-Werte werden normalisiert und bei Konflikten gewinnt der kanonische neue Wert.
+
+### Fixed
+
+- Nutzerwirkung: Die xConfig-Vorschauen, Reset-/Recommended-Defaults-Aktionen und Runtime-Toggles bleiben nach der großen Umbenennung funktionsfähig und akzeptieren weiterhin alte öffentliche Referenzen.
+  Technik: Runtime-Bootstrap, Feature-Registry, Config-Snapshots, xConfig-Shell-Tests, Katalogtests, Migrationsregressionen und Sonar-relevante Strukturduplizierung wurden bereinigt; `npm run verify` deckt Build, lokale Tests, SonarQube Quality Gate und Changelog-Konsistenz ab.
+
 ## [2.3.21] - 2026-06-17
 
 ### Added
@@ -1682,7 +1696,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.21]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...HEAD
+[2.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/55a936b...HEAD
+[2.3.21]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...55a936b
 [2.3.20]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...d86349d
 [2.3.19]: https://github.com/thomasasen/autodarts-xconfig/compare/d48730f...09ae6b2
 [2.3.18]: https://github.com/thomasasen/autodarts-xconfig/compare/0c88218...d48730f

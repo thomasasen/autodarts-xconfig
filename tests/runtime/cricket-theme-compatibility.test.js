@@ -7,22 +7,22 @@ import {
   buildCricketRenderState,
   clearCricketHighlights,
   renderCricketHighlights,
-} from "../../src/features/cricket-highlighter/logic.js";
-import { initializeCricketHighlighter } from "../../src/features/cricket-highlighter/index.js";
-import { initializeCricketGridFx } from "../../src/features/cricket-grid-fx/index.js";
+} from "../../src/features/cricket-target-highlighter/logic.js";
+import { initializeCricketTargetHighlighter } from "../../src/features/cricket-target-highlighter/index.js";
+import { initializeCricketGridStatusEffects } from "../../src/features/cricket-grid-status-effects/index.js";
 import {
   OVERLAY_ID as CRICKET_OVERLAY_ID,
   STYLE_ID as CRICKET_STYLE_ID,
   resolveCricketVisualConfig,
-} from "../../src/features/cricket-highlighter/style.js";
+} from "../../src/features/cricket-target-highlighter/style.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import {
-  clearCricketGridFxState,
-  createCricketGridFxState,
-  updateCricketGridFx,
-} from "../../src/features/cricket-grid-fx/logic.js";
+  clearCricketGridStatusEffectsState,
+  createCricketGridStatusEffectsState,
+  updateCricketGridStatusEffects,
+} from "../../src/features/cricket-grid-status-effects/logic.js";
 import {
   ACTIVE_COLUMN_CLASS,
   CELL_CLASS,
@@ -40,8 +40,8 @@ import {
   SCORE_CLASS,
   SPARK_CLASS,
   THREAT_CLASS,
-  resolveCricketGridFxConfig,
-} from "../../src/features/cricket-grid-fx/style.js";
+  resolveCricketGridStatusEffectsConfig,
+} from "../../src/features/cricket-grid-status-effects/style.js";
 import { THEME_LAYOUT_HOOK_CLASSES } from "../../src/features/themes/shared/mount-theme-feature.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
@@ -544,7 +544,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: true,
     badgeBeacon: true,
     markProgress: true,
@@ -559,7 +559,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
     intensity: "normal",
   });
   const renderCache = { grid: null, board: null };
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const gameState = createGameState({
     scoringModeNormalized: "unknown",
     scoringMode: "",
@@ -626,7 +626,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(overlay?.children?.length || 0, 82);
 
   const initialGridFxStats = {};
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState: initialRenderState,
@@ -687,7 +687,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   );
 
   const markedGridFxStats = {};
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState: markedRenderState,
@@ -710,7 +710,7 @@ test("theme-like cricket layout keeps highlighter and grid-fx stable with numeri
   assert.equal(Boolean(playerCell20?.querySelector?.(`.${SPARK_CLASS}`)), true);
   assert.equal(playerIcon20?.classList?.contains(MARK_PROGRESS_CLASS), true);
 
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
 
   assert.equal(playerCell20?.classList?.contains(SCORE_CLASS), false);
@@ -752,7 +752,7 @@ test("theme-like cricket grid-fx does not decorate player-card scores when the a
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: true,
     badgeBeacon: true,
     markProgress: true,
@@ -766,7 +766,7 @@ test("theme-like cricket grid-fx does not decorate player-card scores when the a
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
 
   const renderState = buildCricketRenderState({
     documentRef,
@@ -778,7 +778,7 @@ test("theme-like cricket grid-fx does not decorate player-card scores when the a
   });
   const debugStats = {};
 
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
@@ -823,7 +823,7 @@ test("live-like sibling theme objective strip keeps board overlay and grid-fx al
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: true,
     badgeBeacon: true,
     markProgress: true,
@@ -837,7 +837,7 @@ test("live-like sibling theme objective strip keeps board overlay and grid-fx al
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const renderState = buildCricketRenderState({
     documentRef,
     gameState: createGameState({
@@ -878,7 +878,7 @@ test("live-like sibling theme objective strip keeps board overlay and grid-fx al
   );
 
   const gridFxStats = {};
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
@@ -1023,7 +1023,7 @@ test("theme-like cricket layout does not turn reflected two-hit rows into scorin
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: true,
     badgeBeacon: true,
     markProgress: true,
@@ -1038,7 +1038,7 @@ test("theme-like cricket layout does not turn reflected two-hit rows into scorin
     intensity: "normal",
   });
   const renderCache = { grid: null, board: null };
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const gameState = {
     getCricketGameModeNormalized: () => "cricket",
     getCricketGameMode: () => "Cricket",
@@ -1088,7 +1088,7 @@ test("theme-like cricket layout does not turn reflected two-hit rows into scorin
   assert.equal(highlightStats.shapeCountByPresentation?.scoring || 0, 0);
 
   const gridFxStats = {};
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
@@ -1099,7 +1099,7 @@ test("theme-like cricket layout does not turn reflected two-hit rows into scorin
   });
   assert.equal(gridFxStats.offenseRowCount || 0, 0);
 
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
 });
 
@@ -1225,7 +1225,7 @@ test("theme-like cricket highlighter restores overlay after external removal and
     scoringMode: "",
   });
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -1273,7 +1273,7 @@ test("theme-like cricket highlighter restores overlay after external removal and
 
   initialOverlay.remove();
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -1315,7 +1315,7 @@ test("cricket highlighter schedules rerender on board-input mode aria-toggle mut
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -1360,7 +1360,7 @@ test("cricket highlighter schedules rerender on board-input mode aria-toggle mut
     },
   });
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   const modeButton = documentRef.querySelector("button[aria-label='Live-Modus']");
   assert.ok(observer);
   assert.ok(modeButton);
@@ -1414,7 +1414,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: true,
     badgeBeacon: true,
     markProgress: true,
@@ -1429,7 +1429,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
     intensity: "normal",
   });
   const renderCache = { grid: null, board: null };
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const gameState = createGameState({
     scoringModeNormalized: "unknown",
     scoringMode: "",
@@ -1494,7 +1494,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(has20Shape, true);
 
   const gridFxStats = {};
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
@@ -1562,7 +1562,7 @@ test("merged label+mark theme layout keeps scoring highlights and grid-fx mappin
   assert.equal(opponentCellBull?.classList?.contains(PRESSURE_CLASS), false);
   assert.equal(opponentCellBull?.classList?.contains(DEAD_CLASS), false);
 
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
   assert.equal(labelText20?.classList?.contains(BADGE_CLASS), false);
   assert.equal(labelCell20?.classList?.contains(LABEL_CLASS), false);
@@ -1592,7 +1592,7 @@ test("theme-like combined cricket surface keeps 19 and 18 neutral while only 20 
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: false,
     badgeBeacon: true,
     markProgress: false,
@@ -1607,7 +1607,7 @@ test("theme-like combined cricket surface keeps 19 and 18 neutral while only 20 
     intensity: "normal",
   });
   const renderCache = { grid: null, board: null };
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const gameState = createGameState({
     scoringModeNormalized: "standard",
     scoringMode: "standard",
@@ -1645,7 +1645,7 @@ test("theme-like combined cricket surface keeps 19 and 18 neutral while only 20 
     cache: renderCache,
   });
 
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
@@ -1689,7 +1689,7 @@ test("theme-like combined cricket surface keeps 19 and 18 neutral while only 20 
   assert.equal(opponent18?.classList?.contains(PRESSURE_CLASS), false);
   assert.equal(opponent18?.classList?.contains(SCORE_CLASS), false);
 
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
 });
 
@@ -1717,7 +1717,7 @@ test("theme-like combined cricket surface stays stable across invalidated partia
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: false,
     badgeBeacon: true,
     markProgress: false,
@@ -1732,7 +1732,7 @@ test("theme-like combined cricket surface stays stable across invalidated partia
     intensity: "normal",
   });
   const renderCache = { grid: null, board: null };
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const gameState = createGameState({
     scoringModeNormalized: "standard",
     scoringMode: "standard",
@@ -1774,7 +1774,7 @@ test("theme-like combined cricket surface stays stable across invalidated partia
     });
 
     const debugStats = {};
-    updateCricketGridFx({
+    updateCricketGridStatusEffects({
       documentRef,
       cricketRules,
       renderState,
@@ -1824,7 +1824,7 @@ test("theme-like combined cricket surface stays stable across invalidated partia
   });
 
   restoreDiscovery();
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
 });
 
@@ -1849,7 +1849,7 @@ test("theme-like merged grid keeps 18 owner pressure-red while active opponent s
     colorTheme: "standard",
     intensity: "normal",
   });
-  const gridFxVisualConfig = resolveCricketGridFxConfig({
+  const gridFxVisualConfig = resolveCricketGridStatusEffectsConfig({
     rowWave: false,
     badgeBeacon: true,
     markProgress: false,
@@ -1864,7 +1864,7 @@ test("theme-like merged grid keeps 18 owner pressure-red while active opponent s
     intensity: "normal",
   });
   const renderCache = { grid: null, board: null };
-  const gridFxState = createCricketGridFxState();
+  const gridFxState = createCricketGridStatusEffectsState();
   const gameState = createGameState({
     scoringModeNormalized: "standard",
     scoringMode: "standard",
@@ -1892,7 +1892,7 @@ test("theme-like merged grid keeps 18 owner pressure-red while active opponent s
     renderState?.stateMap.get("18")?.cellStates?.[activePlayerIndex]?.presentation || "open";
   assert.equal(renderState?.stateMap.get("18")?.boardPresentation, expectedBoardPresentation);
 
-  updateCricketGridFx({
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
@@ -1918,7 +1918,7 @@ test("theme-like merged grid keeps 18 owner pressure-red while active opponent s
   assert.equal(owner17?.classList?.contains(ACTIVE_COLUMN_CLASS), activePlayerIndex === 0);
   assert.equal(opponent17?.classList?.contains(ACTIVE_COLUMN_CLASS), activePlayerIndex === 1);
 
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
 });
 
@@ -1940,7 +1940,7 @@ test("theme-like nested board layer keeps cricket highlighter and grid-fx stable
 
   const observers = createObserverRegistry();
   const listeners = createListenerRegistry();
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -1989,13 +1989,13 @@ test("theme-like nested board layer keeps cricket highlighter and grid-fx stable
     variantRules,
     cache: { grid: null, board: null },
   });
-  const gridFxState = createCricketGridFxState();
-  updateCricketGridFx({
+  const gridFxState = createCricketGridStatusEffectsState();
+  updateCricketGridStatusEffects({
     documentRef,
     cricketRules,
     renderState,
     state: gridFxState,
-    visualConfig: resolveCricketGridFxConfig({
+    visualConfig: resolveCricketGridStatusEffectsConfig({
       rowWave: false,
       badgeBeacon: true,
       markProgress: false,
@@ -2029,7 +2029,7 @@ test("theme-like nested board layer keeps cricket highlighter and grid-fx stable
   assert.equal(row20?.labelCell?.classList?.contains(LABEL_STATE_CLASS.scoring), true);
 
   cleanupHighlighter();
-  clearCricketGridFxState(gridFxState);
+  clearCricketGridStatusEffectsState(gridFxState);
   clearCricketHighlights(documentRef);
 });
 
@@ -2062,7 +2062,7 @@ test("cricket grid fx waits for a valid board before decorating cricket/tactics 
     },
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2124,7 +2124,7 @@ test("cricket grid fx waits for a valid board before decorating cricket/tactics 
   );
 
   createThemeLikeBoardFixture(documentRef);
-  const observer = observers.get("cricket-grid-fx:dom-observer");
+  const observer = observers.get("cricket-grid-status-effects:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -2170,7 +2170,7 @@ test("cricket grid fx schedules rerender on board-input mode aria-toggle mutatio
   const listeners = createListenerRegistry();
   const scheduleCounter = { count: 0 };
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2224,7 +2224,7 @@ test("cricket grid fx schedules rerender on board-input mode aria-toggle mutatio
     },
   });
 
-  const observer = observers.get("cricket-grid-fx:dom-observer");
+  const observer = observers.get("cricket-grid-status-effects:dom-observer");
   const modeButton = documentRef.querySelector("button[aria-label='Koordinatenmodus']");
   assert.ok(observer);
   assert.ok(modeButton);
@@ -2277,7 +2277,7 @@ test("cricket highlighter rerenders the board when merged crfx grid rows update"
 
   const observers = createObserverRegistry();
   const listeners = createListenerRegistry();
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2337,7 +2337,7 @@ test("cricket highlighter rerenders the board when merged crfx grid rows update"
   nextIcon18.setAttribute("alt", "2");
   row18?.labelCell?.appendChild?.(nextIcon18);
 
-  const observer = observers.get("cricket-highlighter:dom-observer");
+  const observer = observers.get("cricket-target-highlighter:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -2415,7 +2415,7 @@ test("cricket highlighter and grid fx pause on hash-based xConfig route and resu
     },
   };
 
-  const cleanupHighlighter = initializeCricketHighlighter({
+  const cleanupHighlighter = initializeCricketTargetHighlighter({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2438,7 +2438,7 @@ test("cricket highlighter and grid fx pause on hash-based xConfig route and resu
     helpers: helperScheduler,
   });
 
-  const cleanupGridFx = initializeCricketGridFx({
+  const cleanupGridFx = initializeCricketGridStatusEffects({
     documentRef,
     windowRef,
     domGuards: createDomGuards({ documentRef }),
@@ -2484,8 +2484,8 @@ test("cricket highlighter and grid fx pause on hash-based xConfig route and resu
     },
   ];
 
-  const highlighterObserver = observers.get("cricket-highlighter:dom-observer");
-  const gridFxObserver = observers.get("cricket-grid-fx:dom-observer");
+  const highlighterObserver = observers.get("cricket-target-highlighter:dom-observer");
+  const gridFxObserver = observers.get("cricket-grid-status-effects:dom-observer");
   assert.ok(highlighterObserver);
   assert.ok(gridFxObserver);
   highlighterObserver.callback(mutation);

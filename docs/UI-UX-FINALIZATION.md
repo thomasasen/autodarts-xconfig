@@ -13,7 +13,7 @@ Abschluss der UI-/UX-Parität für die bestehende Bundle-Architektur ohne Rückk
 - Kartenlayout, Tabs und Toggles orientieren sich an der Legacy-UX, bleiben aber Bundle-only.
 - Karten besitzen Preview-Hintergründe, README-Links und klar erkennbare `An`-/`Aus`-Schalter.
 - Settings-Modal unterstützt Checkboxen, Selects, Theme-Bild-Upload/Clear und Feature-Aktionen.
-- `Winner Fireworks` besitzt wieder einen gut sichtbaren Test-Button im Settings-Modal.
+- `Winner Celebration Effect` besitzt wieder einen gut sichtbaren Test-Button im Settings-Modal.
 - Notice-Meldungen und Auto-Save bleiben erhalten.
 
 ## Referenznutzung

@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { animateArrowNode } from "../../src/features/average-trend-arrow/logic.js";
-import { ANIMATE_CLASS } from "../../src/features/average-trend-arrow/style.js";
-import { runTurnStartSweep } from "../../src/features/turn-start-sweep/logic.js";
-import { SWEEP_CLASS } from "../../src/features/turn-start-sweep/style.js";
+import { animateArrowNode } from "../../src/features/avg-trend-arrow/logic.js";
+import { ANIMATE_CLASS } from "../../src/features/avg-trend-arrow/style.js";
+import { runActivePlayerSweep } from "../../src/features/active-player-sweep/logic.js";
+import { SWEEP_CLASS } from "../../src/features/active-player-sweep/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function wait(ms = 0) {
@@ -31,7 +31,7 @@ test("animateArrowNode retriggers the animation class on fake-dom nodes without 
   clearTimeout(timeoutByArrow.get(arrowNode));
 });
 
-test("runTurnStartSweep retriggers and clears the sweep class on fake-dom nodes without offsetWidth", async () => {
+test("runActivePlayerSweep retriggers and clears the sweep class on fake-dom nodes without offsetWidth", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createImmediateWindow(documentRef);
   const node = documentRef.createElement("div");
@@ -40,7 +40,7 @@ test("runTurnStartSweep retriggers and clears the sweep class on fake-dom nodes 
     timeoutsByNode: new Map(),
   };
 
-  runTurnStartSweep(node, state, { durationMs: 420, sweepDelayMs: 0 }, windowRef);
+  runActivePlayerSweep(node, state, { durationMs: 420, sweepDelayMs: 0 }, windowRef);
 
   assert.equal(node.classList.contains(SWEEP_CLASS), true);
   assert.equal(state.nodes.has(node), true);

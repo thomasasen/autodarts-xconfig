@@ -328,21 +328,21 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
     "theme-bermuda",
     "theme-cricket",
     "theme-bull-off",
-    "checkout-score-pulse",
-    "checkout-board-targets",
+    "checkout-score-highlight",
+    "checkout-target-highlights",
     "tv-board-zoom",
-    "style-checkout-suggestions",
-    "average-trend-arrow",
-    "turn-start-sweep",
-    "triple-double-bull-hits",
-    "cricket-highlighter",
-    "cricket-grid-fx",
-    "dart-marker-emphasis",
-    "dart-marker-darts",
-    "remove-darts-notification",
-    "single-bull-sound",
-    "turn-points-count",
-    "winner-fireworks",
+    "checkout-suggestion-styles",
+    "avg-trend-arrow",
+    "active-player-sweep",
+    "special-hit-highlights",
+    "cricket-target-highlighter",
+    "cricket-grid-status-effects",
+    "dartboard-marker-highlight",
+    "dart-marker-replacer",
+    "take-out-darts-alert",
+    "single-bull-hit-sound",
+    "turn-score-counter",
+    "winner-celebration-effect",
   ];
 
   requiredPreviewFeatureKeys.forEach((featureKey) => {
@@ -369,7 +369,7 @@ test("dart rule docs mention the audited core modules and rule topics", () => {
   assert.match(modulesDoc, /src\/domain\/cricket-rules\.js/);
   assert.match(referenceDoc, /Double-Out|Double Out/);
   assert.match(referenceDoc, /Cut-Throat|Cut Throat/);
-  assert.match(auditDoc, /checkout-score-pulse/);
+  assert.match(auditDoc, /checkout-score-highlight/);
   assert.match(auditDoc, /tv-board-zoom/);
 });
 
@@ -382,7 +382,7 @@ test("release architecture and QA docs mention public action API and release sta
   assert.match(architectureDoc, /applyRecommendedDefaults\(\)/);
   assert.match(architectureDoc, /v1\.1\.0/);
   assert.match(migrationDoc, /v1\.1\.0/);
-  assert.match(releaseQaDoc, /Winner Fireworks/);
+  assert.match(releaseQaDoc, /Winner Celebration Effect/);
   assert.match(releaseQaDoc, /Release-QA-Report/);
 });
 
@@ -397,7 +397,7 @@ test("runtime audit docs exist and cover entry points plus findings", () => {
   assert.match(runtimeEntrypointsDoc, /Bootstrap/i);
   assert.match(runtimeEntrypointsDoc, /Mutation Observer/i);
   assert.match(runtimeEntrypointsDoc, /Game State/i);
-  assert.match(runtimeEntrypointsDoc, /winner-fireworks/);
+  assert.match(runtimeEntrypointsDoc, /winner-celebration-effect/);
 
   assert.match(performanceAuditDoc, /Findings/i);
   assert.match(performanceAuditDoc, /Changes Applied/i);
