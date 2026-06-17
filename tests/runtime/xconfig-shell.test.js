@@ -1773,10 +1773,12 @@ test("xConfig checkout board targets renders board and segment previews", async 
     "[data-adxconfig-checkout-board-targets-preview='true']"
   );
   assert.ok(previewSection);
+  const modalBody = documentRef.querySelector(".ad-xconfig-modal-body");
+  assert.ok(modalBody);
   const wholeBoards = documentRef.querySelectorAll(
     ".ad-xconfig-checkout-board-preview-board"
   );
-  assert.equal(wholeBoards.length, 7);
+  assert.equal(wholeBoards.length, 4);
   wholeBoards.forEach((boardNode) => {
     assert.equal(boardNode.getAttribute("viewBox"), "-82.2 -82.2 164.4 164.4");
     const rings = Array.from(boardNode.querySelectorAll(".ad-xconfig-checkout-board-preview-ring"));
@@ -1805,7 +1807,57 @@ test("xConfig checkout board targets renders board and segment previews", async 
   assert.equal(finishTarget.getAttribute("data-target-ring"), "D");
   assert.equal(finishTarget.getAttribute("data-target-value"), "20");
 
+  const colorOptions = Array.from(documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-board-targets'][data-setting-key='colorTheme']"
+  ));
+  assert.deepEqual(
+    colorOptions.map((optionNode) => String(optionNode.getAttribute("data-preview-color-theme") || "")),
+    [
+      "checkout-board-violet",
+      "checkout-board-cyan",
+      "checkout-board-amber",
+      "checkout-board-lime",
+      "checkout-board-rose",
+      "checkout-board-white",
+    ]
+  );
+  colorOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--color-preview"), true);
+    assert.equal(optionNode.querySelector(".ad-xconfig-checkout-board-preview-board"), null);
+  });
+  const colorOptionCopy = (value) => String(
+    colorOptions
+      .find((optionNode) => optionNode.getAttribute("data-setting-value") === value)
+      ?.querySelector(".ad-xconfig-option-copy")
+      ?.textContent || ""
+  );
+  assert.match(
+    colorOptionCopy("lime"),
+    /Färbt Ziele in klarem Signal-Lime\./
+  );
+  assert.match(
+    colorOptionCopy("rose"),
+    /Färbt Ziele in kräftigem Rose\./
+  );
+  assert.match(
+    colorOptionCopy("white"),
+    /Färbt Ziele in hellem Signalweiß\./
+  );
+
   clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "cyan");
+  const cyanPreviewSection = documentRef.querySelector(
+    "[data-adxconfig-checkout-board-targets-preview='true']"
+  );
+  assert.notEqual(cyanPreviewSection, previewSection);
+  assert.equal(documentRef.querySelector(".ad-xconfig-modal-body"), modalBody);
+  assert.match(
+    String(
+      cyanPreviewSection
+        ?.querySelector(".ad-ext-checkout-target")
+        ?.style.getPropertyValue("--ad-ext-target-color") || ""
+    ),
+    /56,\s*189,\s*248/
+  );
   await waitForStoredConfig(
     localStorage,
     (config) => config.features.checkoutBoardTargets.colorTheme === "cyan"
@@ -1821,6 +1873,37 @@ test("xConfig checkout board targets renders board and segment previews", async 
     }),
     true
   );
+
+  clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "lime");
+  const limePreviewSection = documentRef.querySelector(
+    "[data-adxconfig-checkout-board-targets-preview='true']"
+  );
+  assert.notEqual(limePreviewSection, cyanPreviewSection);
+  assert.equal(documentRef.querySelector(".ad-xconfig-modal-body"), modalBody);
+  assert.match(
+    String(
+      limePreviewSection
+        ?.querySelector(".ad-ext-checkout-target")
+        ?.style.getPropertyValue("--ad-ext-target-color") || ""
+    ),
+    /132,\s*204,\s*22/
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.checkoutBoardTargets.colorTheme === "lime"
+  );
+  assert.equal(
+    await waitFor(() => {
+      const refreshedTarget = documentRef.querySelector(
+        "[data-adxconfig-checkout-board-targets-preview='true'] .ad-ext-checkout-target"
+      );
+      return /132,\s*204,\s*22/.test(
+        String(refreshedTarget?.style.getPropertyValue("--ad-ext-target-color") || "")
+      );
+    }),
+    true
+  );
+
   clickSelectSettingOption(documentRef, "checkout-board-targets", "colorTheme", "violet");
   await waitForStoredConfig(
     localStorage,

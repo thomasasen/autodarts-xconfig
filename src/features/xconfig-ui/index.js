@@ -66,6 +66,7 @@ import {
   openChangelog,
   openReadme,
   parseFieldValue,
+  syncSettingsPreview,
   syncColorFieldControl,
   syncSelectOptionButtons,
 } from "./shell-view.js";
@@ -501,6 +502,8 @@ function ensureXConfigShell(options = {}) {
     state,
     syncColorFieldControl,
     syncSelectOptionButtons,
+    syncSettingsPreview: (featureKey, settingKey, settingValue) =>
+      syncSettingsPreview(documentRef, getFeatures(), featureKey, settingKey, settingValue),
     syncThemeBackgroundIndicators,
     syncTurnDartImageIndicators,
     themeKeyFromConfigKey,

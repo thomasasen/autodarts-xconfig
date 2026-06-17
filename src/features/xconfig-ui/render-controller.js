@@ -252,20 +252,27 @@ function restoreModalScrollState(shellNode, modalScrollState) {
   }
 }
 
-function replaceChildrenFromSource(targetNode, sourceNode) {
+function replaceNodeFromSource(targetNode, sourceNode) {
   if (!targetNode || !sourceNode) {
     return;
   }
 
-  while (targetNode.firstChild) {
-    targetNode.firstChild.remove();
+  const parentNode = targetNode.parentNode || null;
+  if (!parentNode || typeof parentNode.insertBefore !== "function") {
+    while (targetNode.firstChild) {
+      targetNode.firstChild.remove();
+    }
+    const sourceChildren = sourceNode.childNodes?.length
+      ? sourceNode.childNodes
+      : sourceNode.children || [];
+    Array.from(sourceChildren).forEach((child) => {
+      targetNode.appendChild(child);
+    });
+    return;
   }
-  const sourceChildren = sourceNode.childNodes?.length
-    ? sourceNode.childNodes
-    : sourceNode.children || [];
-  Array.from(sourceChildren).forEach((child) => {
-    targetNode.appendChild(child);
-  });
+
+  parentNode.insertBefore(sourceNode, targetNode);
+  targetNode.remove?.();
 }
 
 function refreshStableModalContent(previousShellNode, nextShellNode) {
@@ -278,7 +285,7 @@ function refreshStableModalContent(previousShellNode, nextShellNode) {
   STABLE_MODAL_PREVIEW_REFRESH_SELECTORS.forEach((selector) => {
     const previousPreview = previousModalBody.querySelector?.(selector) || null;
     const nextPreview = nextModalBody.querySelector?.(selector) || null;
-    replaceChildrenFromSource(previousPreview, nextPreview);
+    replaceNodeFromSource(previousPreview, nextPreview);
   });
 }
 

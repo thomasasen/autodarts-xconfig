@@ -56,6 +56,9 @@ const COLOR_PREVIEW_PALETTES = Object.freeze([
   ["checkout-board-violet", "#581c87", "#a855f7", "#c084fc", "#e9d5ff", "rgba(192,132,252,.96)", "rgba(168,85,247,.62)", "rgba(168,85,247,.28)"],
   ["checkout-board-cyan", "#155e75", "#38bdf8", "#67e8f9", "#cffafe", "rgba(103,232,249,.96)", "rgba(56,189,248,.62)", "rgba(56,189,248,.28)"],
   ["checkout-board-amber", "#78350f", "#f59e0b", "#fbbf24", "#fef3c7", "rgba(251,191,36,.98)", "rgba(245,158,11,.64)", "rgba(245,158,11,.28)"],
+  ["checkout-board-lime", "#365314", "#84cc16", "#bef264", "#ecfccb", "rgba(190,242,100,.98)", "rgba(132,204,22,.64)", "rgba(132,204,22,.28)"],
+  ["checkout-board-rose", "#881337", "#f43f5e", "#fb7185", "#ffe4e6", "rgba(251,113,133,.98)", "rgba(244,63,94,.64)", "rgba(244,63,94,.28)"],
+  ["checkout-board-white", "#64748b", "#e2e8f0", "#ffffff", "#f8fafc", "rgba(255,255,255,.98)", "rgba(248,250,252,.6)", "rgba(226,232,240,.26)"],
   ["checkout-suggestion-amber", "#78350f", "#f59e0b", "#fcd34d", "#fff7c2", "rgba(252,211,77,.94)", "rgba(245,158,11,.62)", "rgba(245,158,11,.28)"],
   ["checkout-suggestion-cyan", "#164e63", "#06b6d4", "#67e8f9", "#cffafe", "rgba(103,232,249,.94)", "rgba(6,182,212,.62)", "rgba(6,182,212,.28)"],
   ["checkout-suggestion-rose", "#881337", "#f43f5e", "#fda4af", "#ffe4e6", "rgba(253,164,175,.94)", "rgba(244,63,94,.62)", "rgba(244,63,94,.28)"],
@@ -240,6 +243,10 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-option-item:hover{border-color:rgba(154,227,255,.56);background:rgba(74,178,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item:focus-visible{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.4)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview:hover,#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview:focus-visible{background:linear-gradient(165deg,var(--ad-xconfig-hit-surface-a) 0%,var(--ad-xconfig-hit-surface-b) 48%,var(--ad-xconfig-hit-surface-c) 100%);border-color:color-mix(in srgb,var(--ad-xconfig-hit-edge) 82%,white 18%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 -8px 18px rgba(0,0,0,.22),0 0 24px color-mix(in srgb,var(--ad-xconfig-hit-glow) 46%,transparent)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]{overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 -8px 18px rgba(0,0,0,.22)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]::before{inset:1px;border-radius:6px;transform:none}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]::after{inset:1px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 0 18px color-mix(in srgb,var(--ad-xconfig-hit-soft-glow) 58%,transparent)}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]:hover,#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]:focus-visible{border-color:color-mix(in srgb,var(--ad-xconfig-hit-edge) 82%,white 18%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 -8px 18px rgba(0,0,0,.22),inset 0 0 18px color-mix(in srgb,var(--ad-xconfig-hit-glow) 34%,transparent)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]{--ad-xconfig-turn-start-sweep-duration:420ms;--ad-xconfig-turn-start-sweep-width:45%;--ad-xconfig-turn-start-sweep-color:rgba(255,255,255,.35);overflow:hidden}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]::before{inset:0 auto 0 0;width:var(--ad-xconfig-turn-start-sweep-width);height:100%;border-radius:0;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,var(--ad-xconfig-turn-start-sweep-color) 50%,rgba(255,255,255,0) 100%);transform:translateX(-140%);opacity:0}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-preview-effect^="turn-start-sweep-"]::after{display:none}

@@ -6,6 +6,7 @@ import {
   findBoardSvgRoot,
   findBoardSvgGroup,
   isReusableBoardSnapshot,
+  resolveBoardRenderSurface,
 } from "../../src/shared/dartboard-svg.js";
 import { getActiveBoardInputMode } from "../../src/shared/board-input-mode.js";
 import { resolveBoardSnapshot } from "../../src/features/cricket-surface/snapshot-cache.js";
@@ -188,6 +189,38 @@ function createBoardFixture(documentRef, options = {}) {
   };
 }
 
+function createXConfigCheckoutBoardPreviewFixture(documentRef) {
+  const panelHost = documentRef.createElement("div");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  panelHost.id = "ad-xconfig-panel-host";
+  panelHost.__rect = { width: 720, height: 720 };
+  svg.__rect = { width: 720, height: 720 };
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  svg.setAttribute("data-adxconfig-checkout-board-preview-kind", "whole-board");
+
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  group.appendChild(outerRing);
+  for (let value = 1; value <= 20; value += 1) {
+    const labelNode = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    labelNode.textContent = String(value);
+    group.appendChild(labelNode);
+  }
+  appendBoardLikeGeometry(documentRef, group, 500);
+
+  svg.appendChild(group);
+  panelHost.appendChild(svg);
+  documentRef.main.appendChild(panelHost);
+
+  return {
+    panelHost,
+    svg,
+    group,
+  };
+}
+
 test("getActiveBoardInputMode ignores hidden stale controls and picks the visible active mode", () => {
   const documentRef = new FakeDocument();
   createBoardModeButtons(documentRef, "segments", { hidden: true });
@@ -257,6 +290,24 @@ test("findBoardSvgRoot keeps the shared svg-root selector aligned for stale and 
   const liveBoard = createBoardFixture(documentRef, { boardRadius: 500 });
 
   assert.equal(findBoardSvgRoot(documentRef), liveBoard.svg);
+});
+
+test("board lookup ignores xConfig checkout board previews as runtime board candidates", () => {
+  const documentRef = new FakeDocument();
+  const previewBoard = createXConfigCheckoutBoardPreviewFixture(documentRef);
+
+  assert.equal(findBoardSvgRoot(documentRef), null);
+  assert.equal(findBoardSvgGroup(documentRef), null);
+  assert.equal(findCheckoutCompatibleBoardSnapshot(documentRef), null);
+  assert.equal(resolveBoardRenderSurface(documentRef), null);
+
+  const realBoard = createBoardFixture(documentRef, { boardRadius: 500, withPanelControls: true });
+
+  assert.equal(findBoardSvgRoot(documentRef), realBoard.svg);
+  assert.equal(findBoardSvgGroup(documentRef)?.svg, realBoard.svg);
+  assert.equal(findCheckoutCompatibleBoardSnapshot(documentRef)?.svg, realBoard.svg);
+  assert.equal(resolveBoardRenderSurface(documentRef)?.svg, realBoard.svg);
+  assert.notEqual(findBoardSvgRoot(documentRef), previewBoard.svg);
 });
 
 test("findCheckoutCompatibleBoardSnapshot returns the canonical snapshot when legacy and canonical board truth match", () => {

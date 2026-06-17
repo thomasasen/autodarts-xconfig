@@ -249,6 +249,7 @@ function handleSetSettingSelectOption(controller, actionNode, feature) {
     actionNode,
     field.multiple === true ? nextSelection : nextSelection[0] || ""
   );
+  controller.syncSettingsPreview(feature.featureKey, settingKey, nextValue);
   withRuntimeCall(
     controller,
     Promise.resolve(
@@ -587,6 +588,7 @@ function buildShellActionControllerContext(options = {}) {
     buildFeatureSettingPatch: resolveOptionalFunction(options.buildFeatureSettingPatch, () => ({ features: {} })),
     parseFieldValue: resolveOptionalFunction(options.parseFieldValue, (_field, value) => value),
     syncSelectOptionButtons: resolveOptionalFunction(options.syncSelectOptionButtons, () => {}),
+    syncSettingsPreview: resolveOptionalFunction(options.syncSettingsPreview, () => {}),
     syncColorFieldControl: resolveOptionalFunction(options.syncColorFieldControl, () => {}),
     themeKeyFromConfigKey: resolveOptionalFunction(options.themeKeyFromConfigKey, () => ""),
     clearThemeBackgroundImage: resolveOptionalFunction(options.clearThemeBackgroundImage, () => {}),

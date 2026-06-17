@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.3.21] - 2026-06-17
+
+### Added
+
+- Nutzerwirkung: `Checkout Board Targets` bietet mit `Lime`, `Rose` und `Weiß` drei zusätzliche, deutlich unterscheidbare Signal-Farben; die Farbbuttons zeigen nur noch die Farbe im Button und keine Board-Miniatur mehr.
+  Technik: Config-Normalisierung, Runtime-Farbpresets, xConfig-Descriptoren, Button-CSS und Struktur-Regressionen wurden um die neuen Checkout-Board-Farbthemes erweitert.
+
+### Fixed
+
+- Nutzerwirkung: Die Live-Vorschau von `Checkout Board Targets` bleibt nach einem Farbwechsel im geöffneten Einstellungsdialog sichtbar und muss nicht mehr durch Schließen und erneutes Öffnen des Dialogs aktualisiert werden.
+  Technik: Die Shell synchronisiert Checkout-Board-Preview-Änderungen direkt nach Select-Aktionen, ersetzt dynamische Preview-Flächen stabil und schließt xConfig-Preview-SVGs aus der globalen Runtime-Board-Erkennung aus.
+
 ## [2.3.20] - 2026-06-16
 
 ### Changed
@@ -1670,7 +1682,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.3.20]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...HEAD
+[2.3.21]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...HEAD
+[2.3.20]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...d86349d
 [2.3.19]: https://github.com/thomasasen/autodarts-xconfig/compare/d48730f...09ae6b2
 [2.3.18]: https://github.com/thomasasen/autodarts-xconfig/compare/0c88218...d48730f
 [2.3.17]: https://github.com/thomasasen/autodarts-xconfig/compare/3cbf7b3...0c88218

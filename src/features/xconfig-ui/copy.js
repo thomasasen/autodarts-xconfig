@@ -1543,6 +1543,21 @@ const BOARD_TARGET_COLOR_OPTION_COPY = deepFreeze({
     "Die Markierung erinnert eher an warmes Warn- oder Bühnenlicht. Das fällt deutlich auf und wirkt energischer als Cyan.",
     "Die Checkout-Ziele werden in eine warme Amber- bis Goldwirkung getaucht. Dadurch wirkt das Overlay energetischer, wärmer und stärker wie ein Warn- oder Fokusakzent."
   ),
+  lime: optionCopy(
+    "Färbt Ziele in klarem Signal-Lime.",
+    "Die Markierung nutzt ein helles Lime-Grün mit hoher Signalwirkung. Gerade auf dunklen Board-Flächen bleibt das Ziel sehr schnell erfassbar.",
+    "Diese Palette setzt auf ein klares Lime-Grün für maximale Sichtbarkeit. Sie ist bewusst stark von Violett, Cyan und Amber getrennt und wirkt wie ein präziser Signalmarker am Board."
+  ),
+  rose: optionCopy(
+    "Färbt Ziele in kräftigem Rose.",
+    "Die Markierung nutzt einen klaren Rot-Pink-Akzent. Das hebt sich deutlich von Cyan, Lime und Amber ab und wirkt besonders auffällig.",
+    "Diese Palette färbt Checkout-Ziele in ein kräftiges Rose bis Pink. Dadurch entsteht ein warmer, sehr sichtbarer Gegenpol zu den kühleren und grünen Signalvarianten."
+  ),
+  white: optionCopy(
+    "Färbt Ziele in hellem Signalweiß.",
+    "Die Markierung bleibt neutral und sehr hell. Die weiße Kontur sorgt vor allem auf dunklen Board-Bereichen für starke Lesbarkeit.",
+    "Diese Palette nutzt ein kühles Signalweiß für Füllung und Kontur. Sie ist die neutralste Variante und bleibt trotzdem sehr präsent, ohne eine zusätzliche Farbstimmung vorzugeben."
+  ),
 });
 
 const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({

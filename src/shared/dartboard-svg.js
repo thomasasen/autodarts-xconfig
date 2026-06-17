@@ -17,6 +17,10 @@ const PREFERRED_BOARD_SVG_SELECTORS = Object.freeze([
   ".css-aiihgx svg",
   ".css-79elbk svg",
 ]);
+const IGNORED_BOARD_SVG_ANCESTOR_SELECTOR = [
+  "#ad-xconfig-panel-host",
+  "[data-adxconfig-checkout-board-preview-kind]",
+].join(",");
 const BOARD_SNAPSHOT_CACHE = new WeakMap();
 
 function getBoardRadius(rootNode) {
@@ -139,6 +143,14 @@ function elementContains(rootNode, targetNode) {
     current = current.parentElement || current.parentNode || null;
   }
   return false;
+}
+
+function isIgnoredBoardSvgCandidate(svgNode) {
+  if (!svgNode || typeof svgNode.closest !== "function") {
+    return false;
+  }
+
+  return Boolean(svgNode.closest(IGNORED_BOARD_SVG_ANCESTOR_SELECTOR));
 }
 
 function isInteractiveControlNode(node) {
@@ -604,7 +616,7 @@ function queryCandidateSvgNodes(documentRef) {
 
   PREFERRED_BOARD_SVG_SELECTORS.forEach((selector) => {
     Array.from(documentRef.querySelectorAll(selector)).forEach((node) => {
-      if (!node || seen.has(node)) {
+      if (!node || seen.has(node) || isIgnoredBoardSvgCandidate(node)) {
         return;
       }
       seen.add(node);
@@ -613,7 +625,7 @@ function queryCandidateSvgNodes(documentRef) {
   });
 
   Array.from(documentRef.querySelectorAll("svg")).forEach((node) => {
-    if (!node || seen.has(node)) {
+    if (!node || seen.has(node) || isIgnoredBoardSvgCandidate(node)) {
       return;
     }
     seen.add(node);
@@ -626,6 +638,11 @@ function queryCandidateSvgNodes(documentRef) {
 function getCachedBoardSnapshot(documentRef) {
   const snapshot = BOARD_SNAPSHOT_CACHE.get(documentRef) || null;
   if (!snapshot) {
+    return null;
+  }
+
+  if (isIgnoredBoardSvgCandidate(snapshot.svg)) {
+    BOARD_SNAPSHOT_CACHE.delete(documentRef);
     return null;
   }
 

@@ -83,6 +83,11 @@ const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
   "visualPreset",
   "segmentStyle",
   "targetSelectionMode",
+]);
+const CHECKOUT_BOARD_TARGETS_LIVE_PREVIEW_FIELD_KEYS = new Set([
+  "visualPreset",
+  "segmentStyle",
+  "targetSelectionMode",
   "colorTheme",
 ]);
 const X01_SCORE_PROGRESS_FEATURE_KEY = "x01-score-progress";
@@ -1129,6 +1134,54 @@ function buildCheckoutBoardPreviewSection(documentRef, feature) {
       surface.appendChild(boardWrap);
     },
   });
+}
+
+function replaceElementFromSource(targetNode, sourceNode) {
+  if (!targetNode || !sourceNode) {
+    return false;
+  }
+
+  const parentNode = targetNode.parentNode || null;
+  if (!parentNode || typeof parentNode.insertBefore !== "function") {
+    return false;
+  }
+
+  parentNode.insertBefore(sourceNode, targetNode);
+  targetNode.remove?.();
+  return true;
+}
+
+export function syncSettingsPreview(documentRef, features = [], featureKey, settingKey, settingValue) {
+  const normalizedFeatureKey = String(featureKey || "").trim();
+  const normalizedSettingKey = String(settingKey || "").trim();
+  if (
+    normalizedFeatureKey !== CHECKOUT_BOARD_TARGETS_FEATURE_KEY ||
+    !CHECKOUT_BOARD_TARGETS_LIVE_PREVIEW_FIELD_KEYS.has(normalizedSettingKey)
+  ) {
+    return false;
+  }
+
+  const previousPreview = documentRef.querySelector?.(
+    "[data-adxconfig-checkout-board-targets-preview='true']"
+  ) || null;
+  const feature = Array.isArray(features)
+    ? features.find((entry) => entry?.featureKey === normalizedFeatureKey) || null
+    : null;
+  if (!previousPreview || !feature) {
+    return false;
+  }
+
+  const previewFeature = {
+    ...feature,
+    config: {
+      ...(feature.config || {}),
+      [normalizedSettingKey]: settingValue,
+    },
+  };
+  return replaceElementFromSource(
+    previousPreview,
+    buildCheckoutBoardPreviewSection(documentRef, previewFeature)
+  );
 }
 
 function buildCheckoutBoardTargetsOptionLayout(

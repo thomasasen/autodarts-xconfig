@@ -838,6 +838,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Violett`: Die Segmentfüllung und Kontur laufen in eine violette Palette. Das wirkt am stärksten wie ein klassischer Neon-Overlay-Look.
   - `Cyan`: Die Board-Markierung wirkt technisch und frisch, ohne so warm wie Amber zu erscheinen. Gerade auf dunklen Flächen wirkt Cyan sehr klar.
   - `Amber`: Die Markierung erinnert eher an warmes Warn- oder Bühnenlicht. Das fällt deutlich auf und wirkt energischer als Cyan.
+  - `Lime`: Die Markierung nutzt ein helles Lime-Grün mit hoher Signalwirkung. Gerade auf dunklen Board-Flächen bleibt das Ziel sehr schnell erfassbar.
+  - `Rose`: Die Markierung nutzt einen klaren Rot-Pink-Akzent. Das hebt sich deutlich von Cyan, Lime und Amber ab und wirkt besonders auffällig.
+  - `Weiß`: Die Markierung bleibt neutral und sehr hell. Die weiße Kontur sorgt vor allem auf dunklen Board-Bereichen für starke Lesbarkeit.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![Checkout Board Targets](docs/screenshots/animation-checkout-board-targets.gif)

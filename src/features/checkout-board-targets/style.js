@@ -23,6 +23,18 @@ const BOARD_THEME_PRESETS = Object.freeze({
     color: "rgba(245, 158, 11, 0.34)",
     strokeColor: "rgba(251, 191, 36, 0.98)",
   },
+  lime: {
+    color: "rgba(132, 204, 22, 0.34)",
+    strokeColor: "rgba(190, 242, 100, 0.98)",
+  },
+  rose: {
+    color: "rgba(244, 63, 94, 0.34)",
+    strokeColor: "rgba(251, 113, 133, 0.98)",
+  },
+  white: {
+    color: "rgba(248, 250, 252, 0.32)",
+    strokeColor: "rgba(255, 255, 255, 0.98)",
+  },
 });
 
 function buildDropShadowFilter(strokeBlurPx, colorBlurPx) {

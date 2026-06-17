@@ -246,7 +246,14 @@ test("xConfig color preset settings expose matching preview themes", () => {
     ],
     [
       "checkout-board-targets:colorTheme",
-      ["checkout-board-violet", "checkout-board-cyan", "checkout-board-amber"],
+      [
+        "checkout-board-violet",
+        "checkout-board-cyan",
+        "checkout-board-amber",
+        "checkout-board-lime",
+        "checkout-board-rose",
+        "checkout-board-white",
+      ],
     ],
     [
       "style-checkout-suggestions:colorTheme",
@@ -302,6 +309,13 @@ test("xConfig color preset settings expose matching preview themes", () => {
       );
     });
   });
+  assert.equal(
+    xconfigShellStyleText.includes(
+      '[data-feature-key="checkout-board-targets"][data-setting-key="colorTheme"]'
+    ),
+    true,
+    "missing scoped checkout-board color button CSS"
+  );
 });
 
 test("theme global template preset actions expose color previews", () => {
