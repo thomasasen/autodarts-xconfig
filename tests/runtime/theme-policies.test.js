@@ -18,6 +18,7 @@ import {
 import {
   PLAYER_CARD_PART_ATTRIBUTE,
   PLAYER_CARD_PARTS,
+  markPlayerCardParts,
 } from "../../src/features/shared/player-card-parts.js";
 
 function wait(ms = 0) {
@@ -79,6 +80,34 @@ function createX01TwoPlayerCard(documentRef, score, name) {
     identityNode,
     scoreNode,
     tableSlot,
+  };
+}
+
+function createSharedPlayerCardWithAvatarName(documentRef, options = {}) {
+  const cardNode = documentRef.createElement("div");
+  cardNode.classList.add("ad-ext-player");
+
+  const avatarNode = documentRef.createElement("div");
+  avatarNode.classList.add("chakra-avatar");
+  const avatarImageNode = documentRef.createElement("img");
+  avatarImageNode.classList.add("chakra-avatar__img");
+  avatarImageNode.setAttribute("alt", options.avatarAlt || "");
+  avatarNode.appendChild(avatarImageNode);
+
+  const nameNode = documentRef.createElement("span");
+  nameNode.classList.add("ad-ext-player-name");
+  const nameTextNode = documentRef.createElement("p");
+  nameTextNode.textContent = options.visibleName || "";
+  nameNode.appendChild(nameTextNode);
+
+  cardNode.appendChild(avatarNode);
+  cardNode.appendChild(nameNode);
+
+  return {
+    avatarImageNode,
+    cardNode,
+    nameNode,
+    nameTextNode,
   };
 }
 
@@ -145,6 +174,33 @@ test("resolveThemePolicy returns specialized policies for cricket and x01 2playe
   );
   assert.deepEqual(cricketPolicy.getObservedAttributeFilter(), ["class"]);
   assert.equal(resolveThemePolicy({ featureKey: "theme-x01" }), null);
+});
+
+test("markPlayerCardParts restores truncated player names from avatar metadata", () => {
+  const documentRef = new FakeDocument();
+  const { cardNode, nameNode, nameTextNode } = createSharedPlayerCardWithAvatarName(documentRef, {
+    visibleName: "TORNADO TO..",
+    avatarAlt: "tornado tom",
+  });
+
+  markPlayerCardParts(cardNode);
+
+  assert.equal(nameTextNode.textContent, "TORNADO TOM");
+  assert.equal(nameNode.getAttribute("title"), "TORNADO TOM");
+  assert.equal(nameTextNode.getAttribute("title"), "TORNADO TOM");
+});
+
+test("markPlayerCardParts keeps non-truncated player names unchanged", () => {
+  const documentRef = new FakeDocument();
+  const { cardNode, nameNode, nameTextNode } = createSharedPlayerCardWithAvatarName(documentRef, {
+    visibleName: "TORNADO TOM",
+    avatarAlt: "different player",
+  });
+
+  markPlayerCardParts(cardNode);
+
+  assert.equal(nameTextNode.textContent, "TORNADO TOM");
+  assert.equal(nameNode.getAttribute("title"), null);
 });
 
 test("theme-x01-2player policy marks active cards and semantic slots without restructuring DOM", () => {

@@ -1,4 +1,5 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
+import { buildSharedPlayerDisplayCss } from "../shared/player-card-layout.js";
 import { buildPreviewPlacementCss } from "../shared/theme-utils.js";
 
 export const STYLE_ID = "ad-ext-theme-bermuda-style";
@@ -13,7 +14,8 @@ const PREVIEW_PLACEMENT = Object.freeze({
 export function buildBermudaThemeCss(featureConfig = {}, options = {}) {
   const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
-  return buildThemeCssBundle(featureConfig, previewCss, visualConfig);
+  const playerDisplayCss = buildSharedPlayerDisplayCss();
+  return buildThemeCssBundle(featureConfig, `${previewCss}${playerDisplayCss}`, visualConfig);
 }
 
 export { PREVIEW_PLACEMENT };

@@ -370,19 +370,22 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 }
 
 #ad-ext-player-display .ad-ext-player{
-  --ad-ext-x01-2player-score-size:clamp(5.6rem, min(43cqi, 17cqb, 14.2vh), 10.4rem);
-  --ad-ext-x01-2player-score-scale:1;
-  --ad-ext-x01-2player-table-font-size:clamp(0.92rem, min(3.8cqi, 1.72cqb, 1.85vh), 1.08rem);
-  --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), 2.35rem);
-  --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 7.8cqb, 4.8vh), 3.45rem);
+  --ad-ext-x01-2player-state-scale:0.9;
+  --ad-ext-x01-2player-score-size:clamp(5.6rem, min(43cqi, 17cqb, 14.2vh), 11.6rem);
+  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
+  --ad-ext-x01-2player-table-font-size:clamp(0.92rem, min(3.8cqi, 1.72cqb, 1.85vh), calc(1.16rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), calc(2.52rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 7.8cqb, 4.8vh), calc(3.68rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-progress-gap:clamp(0.03rem, 0.12vh, 0.1rem);
   --ad-ext-x01-2player-stack-gap:clamp(0.22rem, 0.48vh, 0.4rem);
-  --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, 2.85rem);
+  --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, calc(3.12rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-round-font-size:min(calc(var(--ad-ext-x01-2player-round-size) * 0.72), 1.55rem);
-  --ad-ext-x01-2player-header-meta-font-size:clamp(1.47rem, min(7.2cqi, 3.075cqb), 1.8rem);
+  --ad-ext-x01-2player-header-meta-font-size:clamp(1.47rem, min(7.2cqi, 3.075cqb), calc(1.95rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-avatar-size:clamp(2.6rem, 16cqi, calc(3.75rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-flag-size:clamp(0.8rem, 4cqi, calc(1.16rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-player-name-font-size:var(
     --ad-ext-x01-2player-shared-name-size,
-    clamp(1.55rem, min(12cqi, 4.6cqb), 3rem)
+    clamp(1.55rem, min(12cqi, 4.6cqb), calc(3.2rem * var(--ad-ext-x01-2player-state-scale)))
   );
   --ad-ext-x01-2player-header-meta-pad-block-end:clamp(0.08rem, 0.22vh, 0.16rem);
   --ad-ext-x01-2player-identity-pad-block-end:clamp(0.08rem, 0.24vh, 0.18rem);
@@ -467,6 +470,8 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
+  --ad-ext-x01-2player-state-scale:1.06;
+  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
   --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
   --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
   border:1px solid rgba(236, 247, 240, 0.16) !important;
@@ -481,6 +486,8 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner){
+  --ad-ext-x01-2player-state-scale:0.9;
+  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
   border:1px solid rgba(236, 247, 240, 0.16) !important;
   opacity:1 !important;
 }
@@ -871,16 +878,16 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player .chakra-avatar,
 #ad-ext-player-display .ad-ext-player .chakra-avatar__img,
 #ad-ext-player-display .ad-ext-player .chakra-avatar__initials{
-  width:clamp(2.6rem, 16cqi, 3.5rem) !important;
-  height:clamp(2.6rem, 16cqi, 3.5rem) !important;
+  width:var(--ad-ext-x01-2player-avatar-size) !important;
+  height:var(--ad-ext-x01-2player-avatar-size) !important;
 }
 
 #ad-ext-player-display .ad-ext-player ${FLAG_SELECTOR},
 #ad-ext-player-display .ad-ext-player .chakra-image.css-6t0bzd{
   display:block !important;
-  width:clamp(0.8rem, 4cqi, 1.05rem) !important;
+  width:var(--ad-ext-x01-2player-flag-size) !important;
   height:auto !important;
-  min-width:clamp(0.8rem, 4cqi, 1.05rem) !important;
+  min-width:var(--ad-ext-x01-2player-flag-size) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8,
@@ -908,15 +915,17 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 
 #ad-ext-player-display .ad-ext-player .chakra-badge,
 #ad-ext-player-display .ad-ext-player ${PROFILE_BADGE_SELECTOR}{
-  background:rgba(215, 230, 219, 0.16) !important;
-  color:#f6fff8 !important;
-  border-radius:999px !important;
-  box-shadow:inset 0 0 0 1px rgba(246, 255, 248, 0.22) !important;
+  background:var(--ad-ext-theme-profile-badge-bg, rgba(226, 232, 240, 0.18)) !important;
+  color:var(--ad-ext-theme-profile-badge-color, #f8fafc) !important;
+  border-radius:2px !important;
+  box-shadow:inset 0 0 0 1px var(--ad-ext-theme-profile-badge-border, rgba(248, 250, 252, 0.22)) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .chakra-badge,
 #ad-ext-player-display .ad-ext-player ${PROFILE_BADGE_SELECTOR}{
-  font-size:clamp(0.94rem, min(4.6cqi, 1.92cqb), 1.16rem) !important;
+  font-size:30px !important;
+  font-weight:700 !important;
+  line-height:1.2 !important;
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8 > p,
@@ -1064,13 +1073,14 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .chakra-badge,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-n2903v,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${PROFILE_BADGE_SELECTOR}{
-  display:inline-grid !important;
+  display:block !important;
   justify-self:center !important;
-  width:max-content !important;
+  width:auto !important;
+  min-width:0 !important;
   max-width:100% !important;
   margin-inline:auto !important;
   margin-top:clamp(0.16rem, 0.42cqi, 0.28rem) !important;
-  padding-inline:clamp(0.34rem, 1.4cqi, 0.52rem) !important;
+  padding:0 4px !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${ROUND_BADGE_SELECTOR}{
@@ -1529,8 +1539,8 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   }
 
   #ad-ext-player-display .ad-ext-player{
-    --ad-ext-x01-2player-score-size:clamp(6.048rem, min(24vw, 14.4vh), 9.25rem);
-    --ad-ext-x01-2player-score-scale:1.14;
+    --ad-ext-x01-2player-score-size:clamp(6.048rem, min(24vw, 14.4vh), 9.7rem);
+    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
     --ad-ext-x01-2player-table-font-size:clamp(0.88rem, min(3.2vw, 1.75vh), 1rem);
     --ad-ext-x01-2player-table-cell-font-size:clamp(1.6rem, min(7.4vw, 8cqb, 5vh), 2.15rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(2.1rem, min(5.8vw, 3.8vh), 2.85rem);
@@ -1570,8 +1580,8 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   }
 
   #ad-ext-player-display .ad-ext-player{
-    --ad-ext-x01-2player-score-size:clamp(5.616rem, min(22vw, 12vh), 8.3rem);
-    --ad-ext-x01-2player-score-scale:1.08;
+    --ad-ext-x01-2player-score-size:clamp(5.616rem, min(22vw, 12vh), 8.75rem);
+    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
     --ad-ext-x01-2player-table-font-size:clamp(0.84rem, min(3.8vw, 1.7vh), 0.96rem);
     --ad-ext-x01-2player-table-cell-font-size:clamp(1.42rem, min(6.4vw, 7cqb, 4.3vh), 1.95rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(1.95rem, min(6.2vw, 3.5vh), 2.55rem);
@@ -1599,8 +1609,8 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 
 @media (max-height: 860px){
   #ad-ext-player-display .ad-ext-player{
-    --ad-ext-x01-2player-score-size:clamp(5.76rem, min(23.5cqi, 12.8vh), 8.8rem);
-    --ad-ext-x01-2player-score-scale:1.06;
+    --ad-ext-x01-2player-score-size:clamp(5.76rem, min(23.5cqi, 12.8vh), 9.25rem);
+    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
     --ad-ext-x01-2player-table-font-size:clamp(0.84rem, min(3.5cqi, 1.58vh), 0.98rem);
     --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), 2.25rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(1.95rem, min(6.4cqi, 3.2vh), 2.6rem);

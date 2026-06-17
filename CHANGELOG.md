@@ -12,6 +12,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.1] - 2026-06-17
+
+### Changed
+
+- Nutzerwirkung: X01-artige Themes, Bermuda, Gotcha, Cricket/Tactics und X01 2Player nutzen große Bildschirme besser aus; aktive Spieler bleiben sichtbar größer, während inaktive Spieler kompakter bleiben.
+  Technik: Die Theme-CSS-Verträge verwenden gemeinsame responsive Player-Größenvariablen, Cricket- und X01-2Player-spezifische Skalen sowie aktualisierte Template-Regressionen.
+- Nutzerwirkung: Profil-Badges wie `40+` wirken in den Spieleranzeigen konsistenter und entsprechen auch in Cricket/Tactics und X01 2Player stärker der X01-Darstellung.
+  Technik: Gemeinsame Badge-Styles, Cricket-Wins-Badges und X01-2Player-Profil-Badges wurden vereinheitlicht und über CSS-Vertragstests abgesichert.
+
+### Fixed
+
+- Nutzerwirkung: Spieler-Namen nutzen im Mehrspielermodus den vorhandenen Platz besser aus und werden nicht schon von Autodarts vorzeitig als `..`-Text übernommen, wenn vollständige Avatar-Metadaten verfügbar sind.
+  Technik: Die gemeinsame Player-Card-Part-Erkennung stellt gekürzte Namen aus `title`, `aria-label` oder Avatar-`alt` wieder her, bevor CSS-Ellipsis angewendet wird.
+- Nutzerwirkung: Die Punkteanzeige ist bündig zur Namens-/Badge-Zeile ausgerichtet und wird unten nicht mehr abgeschnitten.
+  Technik: Der Score-Wrapper wird im Shared-Player-Grid semantisch positioniert; Line-Height, Overflow und Alignment-Anker wurden für aktive und inaktive Karten getrennt stabilisiert.
+
 ## [2.4.0] - 2026-06-17
 
 ### Changed
@@ -1696,7 +1712,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/55a936b...HEAD
+[2.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/3803021...HEAD
+[2.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/55a936b...3803021
 [2.3.21]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...55a936b
 [2.3.20]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...d86349d
 [2.3.19]: https://github.com/thomasasen/autodarts-xconfig/compare/d48730f...09ae6b2

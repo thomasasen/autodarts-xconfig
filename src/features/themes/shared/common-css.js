@@ -39,6 +39,19 @@ export const commonThemeCss = `
   --ad-ext-theme-active-card-tint-bottom: transparent;
   --ad-ext-theme-card-tint-top-current: transparent;
   --ad-ext-theme-card-tint-bottom-current: transparent;
+  --ad-ext-player-responsive-active-ratio: 1.333333;
+  --ad-ext-player-responsive-score-max: 6rem;
+  --ad-ext-player-responsive-score-active-max: 8rem;
+  --ad-ext-player-responsive-name-max: 1.95rem;
+  --ad-ext-player-responsive-name-active-max: 2.6rem;
+  --ad-ext-player-responsive-meta-max: 1.38rem;
+  --ad-ext-player-responsive-meta-active-max: 1.84rem;
+  --ad-ext-player-responsive-badge-max: 1.7rem;
+  --ad-ext-player-responsive-badge-active-max: 2.27rem;
+  --ad-ext-player-responsive-avatar-max: 3rem;
+  --ad-ext-player-responsive-avatar-active-max: 4rem;
+  --ad-ext-player-responsive-flag-max: 1.05rem;
+  --ad-ext-player-responsive-flag-active-max: 1.4rem;
 }
 
 /* Hide native scrollbars across active theme surfaces without clipping overflow content. */
@@ -158,6 +171,16 @@ p.chakra-text.ad-ext-player-score.css-18w03sn { color: var(--ad-ext-theme-score-
 #ad-ext-player-display [${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.profileBadge}"],
 #ad-ext-player-display .ad-ext-player-name + .chakra-badge,
 #ad-ext-player-display .ad-ext-player-name ~ .chakra-badge {
+  display: block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 4px !important;
+  border-radius: 2px !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
   color: var(--ad-ext-theme-profile-badge-color, #f8fafc) !important;
   background-color: var(--ad-ext-theme-profile-badge-bg, rgba(226, 232, 240, 0.18)) !important;
   box-shadow: inset 0 0 0 1px var(--ad-ext-theme-profile-badge-border, rgba(248, 250, 252, 0.22)) !important;

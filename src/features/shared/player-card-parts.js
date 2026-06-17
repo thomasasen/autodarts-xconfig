@@ -42,6 +42,139 @@ function hasAnyClass(node, classNames) {
   return classNames.some((className) => node.classList.contains(className));
 }
 
+function getTrimmedText(node) {
+  if (!node || typeof node !== "object") {
+    return "";
+  }
+
+  return String(node.textContent || "").trim();
+}
+
+function getAttributeText(node, attributeName) {
+  if (!node || typeof node.getAttribute !== "function" || !attributeName) {
+    return "";
+  }
+
+  return String(node.getAttribute(attributeName) || "").trim();
+}
+
+function normalizePlayerNameText(value) {
+  return String(value || "")
+    .trim()
+    .replaceAll(/\s+/g, " ");
+}
+
+function normalizeComparablePlayerName(value) {
+  return normalizePlayerNameText(value)
+    .toLowerCase()
+    .replaceAll(/[\s.]+/g, "");
+}
+
+function isLikelyTruncatedPlayerName(value) {
+  const normalized = normalizePlayerNameText(value);
+  return normalized.endsWith("..") || normalized.includes("\u2026");
+}
+
+function findClosestDescendant(rootNode, selector) {
+  if (!rootNode || typeof rootNode.querySelector !== "function") {
+    return null;
+  }
+
+  try {
+    return rootNode.querySelector(selector);
+  } catch (_) {
+    return null;
+  }
+}
+
+function getElementChildren(node) {
+  return Array.from(node?.children || []).filter((child) => child?.nodeType === 1);
+}
+
+function hasMeaningfulText(node) {
+  return getTrimmedText(node).length > 0;
+}
+
+function resolvePlayerNameTextNode(nameNode) {
+  if (!nameNode) {
+    return null;
+  }
+
+  return (
+    getElementChildren(nameNode).find((child) => hasMeaningfulText(child)) ||
+    findClosestDescendant(nameNode, "p") ||
+    nameNode
+  );
+}
+
+function resolvePlayerAvatarAltText(avatarNode) {
+  if (!avatarNode) {
+    return "";
+  }
+
+  const avatarImage =
+    (avatarNode.matches?.("img") ? avatarNode : null) ||
+    findClosestDescendant(avatarNode, "img");
+  return normalizePlayerNameText(getAttributeText(avatarImage, "alt"));
+}
+
+function formatResolvedPlayerDisplayName(value) {
+  const normalized = normalizePlayerNameText(value);
+  return normalized ? normalized.toLocaleUpperCase() : "";
+}
+
+function setAttributeIfChanged(node, attributeName, value) {
+  if (!node || typeof node.setAttribute !== "function" || !attributeName) {
+    return;
+  }
+
+  if (node.getAttribute?.(attributeName) !== value) {
+    node.setAttribute(attributeName, value);
+  }
+}
+
+function maybeRestorePlayerDisplayName(nameNode, avatarNode) {
+  if (!nameNode) {
+    return;
+  }
+
+  const nameTextNode = resolvePlayerNameTextNode(nameNode);
+  const visibleName = normalizePlayerNameText(getTrimmedText(nameTextNode));
+  if (!visibleName || !isLikelyTruncatedPlayerName(visibleName)) {
+    return;
+  }
+
+  const sourceCandidates = [
+    getAttributeText(nameNode, "title"),
+    getAttributeText(nameNode, "aria-label"),
+    getAttributeText(nameTextNode, "title"),
+    getAttributeText(nameTextNode, "aria-label"),
+    resolvePlayerAvatarAltText(avatarNode),
+  ]
+    .map((value) => normalizePlayerNameText(value))
+    .filter(Boolean);
+
+  const visibleComparable = normalizeComparablePlayerName(visibleName);
+  const resolvedSource = sourceCandidates.find((candidate) => {
+    const comparableCandidate = normalizeComparablePlayerName(candidate);
+    return comparableCandidate.length > visibleComparable.length;
+  });
+  if (!resolvedSource) {
+    return;
+  }
+
+  const resolvedDisplayName = formatResolvedPlayerDisplayName(resolvedSource);
+  if (!resolvedDisplayName) {
+    return;
+  }
+
+  nameTextNode.textContent = resolvedDisplayName;
+  setAttributeIfChanged(nameNode, "title", resolvedDisplayName);
+  if (nameTextNode !== nameNode) {
+    setAttributeIfChanged(nameTextNode, "title", resolvedDisplayName);
+  }
+}
+
 function isRoundBadgeNode(node) {
   if (!node?.classList?.contains?.("css-3fr5p8")) {
     return false;
@@ -131,6 +264,7 @@ export function markPlayerCardParts(cardNode) {
     cardNode.querySelector(".chakra-avatar") || cardNode.querySelector(".chakra-avatar__img"),
     PLAYER_CARD_PARTS.avatar
   );
+  maybeRestorePlayerDisplayName(nameNode, avatarNode);
   const flagNode = setPart(cardNode.querySelector(".chakra-image"), PLAYER_CARD_PARTS.flag);
   const identityMediaNode = setPart(
     findIdentityMediaNode(cardNode, avatarNode, flagNode),
