@@ -1,12 +1,11 @@
-Repo-wide constitution only. Use the matching skill for task-specific workflow.
+Repo-wide constitution only. Keep this file short; put task-specific workflow in
+the matching skill.
 
 ## Priorities
 
-Priority: truthfulness, correctness, minimal diffs, and proportional validation.
-
 - prefer minimal diffs and existing conventions
 - preserve architecture boundaries unless the task explicitly requires changing them
-- keep Codex context small and open the smallest relevant file set
+- keep Codex context small: search narrowly, open the smallest relevant files
 - work in source, not `dist/`
 - never hand-edit generated files
 
@@ -20,14 +19,24 @@ Priority: truthfulness, correctness, minimal diffs, and proportional validation.
 - do not run `git commit`, push, create pull requests, or create releases
   without an explicit user request
 
-## Validation policy
+## Token economy
 
-Validation must be proportional to the actual risk and scope of the change.
+For small, localized requests:
+
+- prefer direct file paths and one narrow `rg` search over broad exploration
+- read only the smallest relevant source slices
+- avoid opening task skills unless their domain workflow is needed
+- skip progress updates unless work takes about 30s or more
+- keep final reports concise while still covering the required facts below
+
+## Validation policy
 
 Do not run `npm test`, the full test suite, SonarQube, a full build, browser
 validation, packaging, or release validation by default.
 
-Choose exactly one validation tier unless a failure requires escalation.
+Choose exactly one validation tier unless a failure requires escalation. Use
+`$validate-repo-change` after meaningful source changes to select and report the
+smallest tier allowed here; the skill must not override this file.
 
 ### Tier 0: No automated validation
 
@@ -96,14 +105,8 @@ conditions applies:
 
 Do not run full validation merely because source code changed.
 
-After the smallest sufficient validation passes, stop. Do not add broader
-validation solely for additional confidence.
-
 ## Workflow skills
 
-- use `$validate-repo-change` after meaningful source changes to select and
-  report the smallest validation tier allowed by this file
-- `$validate-repo-change` must not override the validation tiers defined here
 - do not invoke `$validate-repo-change` for Tier 0 changes unless it is needed
   only to document that validation was skipped
 - use `$package-userscript-release` only when the user explicitly asks for
@@ -114,27 +117,10 @@ validation solely for additional confidence.
 
 ## SonarQube
 
-SonarQube is part of Tier 3 validation only.
-
-When Tier 3 validation is required for a new build, run `npm test`; it includes
-`npm run sonar`, which must use `SONARQUBE_URL` and `SONARQUBE_TOKEN` from the
-environment or fall back to `~/.codex/config.toml`
-`[mcp_servers.sonarqube].env`.
-
-Never print or commit the SonarQube token.
-
-Do not claim that SonarQube is unavailable before checking `npm run sonar`,
-but only perform that check when Tier 3 validation is required.
+SonarQube is Tier 3 only. When Tier 3 requires it, follow
+`$validate-repo-change`; never print or commit the SonarQube token.
 
 ## Completion and reporting
-
-Done means:
-
-- the change is implemented in the correct layer
-- the smallest sufficient validation tier was used
-- skipped validation is reported truthfully
-- release, changelog, browser, packaging, and SonarQube checks were not run
-  unless required by the selected tier or explicitly requested
 
 The final response must state:
 
