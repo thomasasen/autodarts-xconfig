@@ -9,7 +9,10 @@ import {
 } from "../../src/features/x01-bust-active-player-highlight/logic.js";
 import {
   BUST_ACTIVE_CLASS,
+  BUST_CRACK_CLASS,
+  BUST_CRACK_OVERLAY_CLASS,
   BUST_SHAKE_CLASS,
+  DEMO_CRACK_SETTINGS,
   buildStyleText,
 } from "../../src/features/x01-bust-active-player-highlight/style.js";
 import { FakeDocument } from "./fake-dom.js";
@@ -151,6 +154,77 @@ test("x01 bust highlight styles and shakes only the active player on bust entry"
   assert.equal(activeCard.style.getPropertyPriority("box-shadow"), "important");
 });
 
+test("x01 bust highlight immediately renders configured cracks at random card positions", () => {
+  const { documentRef, activeCard } = setupBustDocument();
+  activeCard.__rect = { width: 640, height: 180 };
+  const state = createBustActivePlayerHighlightState();
+  const { windowRef } = createManualTimerWindow(documentRef);
+  let randomState = 17;
+  const random = () => {
+    randomState = (randomState * 73 + 41) % 997;
+    return randomState / 997;
+  };
+
+  syncBustActivePlayerHighlight(
+    { documentRef, windowRef, crackCount: 2, random },
+    state
+  );
+
+  const overlay = activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`);
+  const cracks = overlay?.querySelectorAll?.(`.${BUST_CRACK_CLASS}`) || [];
+  assert.ok(overlay);
+  assert.equal(overlay.getAttribute("viewBox"), "0 0 640 180");
+  assert.equal(cracks.length, 2);
+  assert.notEqual(cracks[0].getAttribute("data-crack-x"), cracks[1].getAttribute("data-crack-x"));
+  assert.equal(cracks[0].querySelectorAll("path").length, 6);
+  assert.ok(
+    cracks[0].querySelector(".ad-ext-x01-bust-crack-main").getAttribute("d").split("M ").length >
+      100
+  );
+  assert.ok(cracks[0].querySelector(".ad-ext-x01-bust-crack-splinters").getAttribute("d"));
+  assert.ok(cracks[0].querySelector(".ad-ext-x01-bust-crack-web").getAttribute("d"));
+  assert.ok(cracks[0].querySelector(".ad-ext-x01-bust-crack-noise").getAttribute("d"));
+  assert.ok(cracks[0].querySelector(".ad-ext-x01-bust-crack-shards").getAttribute("d"));
+  assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_OVERLAY_CLASS}`).length, 1);
+});
+
+test("x01 bust cracks retain the demo geometry and rendering settings", () => {
+  assert.deepEqual(DEMO_CRACK_SETTINGS, {
+    rays: 20,
+    initialRadius: 5,
+    radiusStart: 15,
+    densityPercent: 50,
+    curvaturePercent: 30,
+    ringConnectionPercent: 60,
+    diagonalConnectionPercent: 30,
+    refractWidth: 3,
+    refractShift: 6,
+    reflectAlpha: 0.3,
+    fractureSize: 33,
+    fractureAlpha: 0.4,
+    mainlineOffset: 0.03,
+    mainlineStrength: 0.14,
+    mainlineHighlight: 0.2,
+    mainlineAlpha: 65,
+    noiseFrequency: 0.4,
+    noiseAlpha: 1,
+  });
+});
+
+test("x01 bust highlight disables cracks when configured with zero", () => {
+  const { documentRef, activeCard } = setupBustDocument();
+  const state = createBustActivePlayerHighlightState();
+  const timerWindow = createManualTimerWindow(documentRef);
+
+  syncBustActivePlayerHighlight(
+    { documentRef, windowRef: timerWindow.windowRef, crackCount: 0 },
+    state
+  );
+
+  assert.equal(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
+});
+
 test("x01 bust highlight CSS overrides active card visuals and shakes quickly for three seconds", () => {
   const css = buildStyleText();
 
@@ -258,10 +332,15 @@ test("x01 bust highlight cleanup removes classes and pending timers", () => {
   const state = createBustActivePlayerHighlightState();
   const timerWindow = createManualTimerWindow(documentRef);
 
-  syncBustActivePlayerHighlight({ documentRef, windowRef: timerWindow.windowRef }, state);
+  syncBustActivePlayerHighlight(
+    { documentRef, windowRef: timerWindow.windowRef, crackCount: 2 },
+    state
+  );
+  assert.ok(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`));
   clearBustActivePlayerHighlightState(state, timerWindow.windowRef);
 
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
   assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
+  assert.equal(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
   assert.equal(timerWindow.timers[0].cleared, true);
 });

@@ -64,7 +64,7 @@ test("theme global typography stays first in the themes descriptor order", () =>
   assert.equal(themeDescriptors[0]?.featureKey, "theme-global-typography");
 });
 
-test("x01 bust active player highlight descriptor exposes a toggle-only animation feature", () => {
+test("x01 bust active player highlight descriptor exposes the configurable crack count", () => {
   const descriptor = xconfigDescriptors.find(
     (entry) => entry.featureKey === "x01-bust-active-player-highlight"
   );
@@ -74,7 +74,12 @@ test("x01 bust active player highlight descriptor exposes a toggle-only animatio
   assert.equal(descriptor.readmeAnchor, "animation-autodarts-x01-bust-active-player-highlight");
   assert.deepEqual(
     descriptor.fields.map((field) => field.key),
-    ["debug"]
+    ["crackCount", "debug"]
+  );
+  const crackCountField = descriptor.fields.find((field) => field.key === "crackCount");
+  assert.deepEqual(
+    crackCountField.options.map((option) => option.value),
+    [0, 1, 2, 3]
   );
 });
 

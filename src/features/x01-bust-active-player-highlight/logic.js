@@ -6,6 +6,7 @@ import {
 } from "./style.js";
 import { getX01PlayerSurfaceSnapshot } from "../shared/x01-player-surface-adapter.js";
 import { isX01VariantText } from "../../domain/variant-rules.js";
+import { removeBustCracks, renderBustCracks } from "./cracks.js";
 
 export const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
 export const TURN_THROW_SELECTOR = "#ad-ext-turn .ad-ext-turn-throw, .ad-ext-turn-throw";
@@ -262,8 +263,8 @@ function clearNodeState(node) {
   if (!node?.classList) {
     return;
   }
-  node.classList.remove(BUST_SHAKE_CLASS);
-  node.classList.remove(BUST_ACTIVE_CLASS);
+  node.classList.remove(BUST_SHAKE_CLASS, BUST_ACTIVE_CLASS);
+  removeBustCracks(node);
   clearBustCardVisuals(node);
 }
 
@@ -357,6 +358,10 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
 
   if (enteredBust) {
     triggerBustShake(activeNode, state, windowRef);
+    renderBustCracks(activeNode, context.crackCount, {
+      documentRef,
+      random: context.random,
+    });
   }
 
   return {

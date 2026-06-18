@@ -674,7 +674,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `X01`
 - Kurz: Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.
-- Grafisch: Beim Eintritt in BUST wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Danach bleibt die rote Wurfkachel-Färbung auf der aktiven Karte stehen, bis `BUST` verschwindet.
+- Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen und die aktive Karte wackelt drei Sekunden im schnellen Earthquake-Stil. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
+- `Anzahl Glasrisse`: Bestimmt die Anzahl zufällig platzierter Glasrisse.
+  - `Aus`: Keine Glasrisse; Rotmarkierung und Wackeln bleiben aktiv.
+  - `1`: Zeigt ein zufällig platziertes Einschlagzentrum.
+  - `2`: Zeigt zwei zufällig und unabhängig platzierte Einschlagzentren.
+  - `3`: Zeigt drei Einschlagzentren und damit die dichteste Darstellung.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![X01 Bust Active Player Highlight](screenshots/animation-x01-bust-active-player-highlight.gif)

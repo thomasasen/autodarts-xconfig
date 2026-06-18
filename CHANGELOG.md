@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.3] - 2026-06-19
+
+### Added
+
+- Nutzerwirkung: `X01 Bust Active Player Highlight` kann beim Überwurf sofort bis zu drei zufällig platzierte Glasrisse auf der aktiven Spielerkarte anzeigen; die Anzahl ist in xConfig von `Aus` bis `3` wählbar.
+  Technik: Der Bust-Flankenwechsel erzeugt ein größenabhängiges SVG-Overlay mit den Geometrie-, Reflexions-, Fraktur-, Mainline- und Noise-Parametern der Glass-Crack-Canvas-Demo, begrenzt die Konfiguration auf `0–3` und räumt alle Effektknoten beim Bust-Ende oder Unmount auf.
+
 ## [2.4.2] - 2026-06-18
 
 ### Added
@@ -1724,7 +1731,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/24f6686...HEAD
+[2.4.3]: https://github.com/thomasasen/autodarts-xconfig/compare/73900ce...HEAD
+[2.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/24f6686...73900ce
 [2.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/3803021...24f6686
 [2.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/55a936b...3803021
 [2.3.21]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...55a936b

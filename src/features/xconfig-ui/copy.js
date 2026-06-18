@@ -550,17 +550,22 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "x01-bust-active-player-highlight": featureCopy({
     cardDescription:
-      "Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik.",
+      "Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen.",
     visibleDescription:
       "Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.",
     visualDescription:
-      "Beim Eintritt in BUST wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Danach bleibt die rote Wurfkachel-Färbung auf der aktiven Karte stehen, bis `BUST` verschwindet.",
+      "Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen und die aktive Karte wackelt drei Sekunden im schnellen Earthquake-Stil. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.",
     usefulWhen:
       "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
     images: [
       image("X01 Bust Active Player Highlight", "animation-x01-bust-active-player-highlight.gif"),
     ],
     fields: {
+      crackCount: fieldCopy(
+        "Legt fest, wie viele Glasrisse beim BUST erscheinen; `Aus` deaktiviert nur die Glasrisse.",
+        "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt Markierung und Wackeln aktiv.",
+        "Bestimmt die Anzahl zufällig platzierter Glasrisse."
+      ),
       debug: DEBUG_FIELD,
     },
   }),
@@ -2577,6 +2582,29 @@ const WINNER_PARTICLE_AMOUNT_OPTION_COPY = deepFreeze({
   ),
 });
 
+const X01_BUST_CRACK_COUNT_OPTION_COPY = deepFreeze({
+  "0": optionCopy(
+    "Blendet die Glasrisse aus; Rotmarkierung und Wackeln bleiben aktiv.",
+    "Deaktiviert nur die Glasriss-Overlays. Die rote BUST-Markierung und der Earthquake-Effekt der aktiven Spielerkarte bleiben unverändert aktiv.",
+    "Keine Glasrisse; Rotmarkierung und Wackeln bleiben aktiv."
+  ),
+  "1": optionCopy(
+    "Zeigt einen zufällig platzierten Glasriss.",
+    "Erzeugt beim Eintritt in BUST ein einzelnes zufällig platziertes Einschlagzentrum mit Glasrissstruktur auf der aktiven Spielerkarte.",
+    "Zeigt ein zufällig platziertes Einschlagzentrum."
+  ),
+  "2": optionCopy(
+    "Zeigt zwei unabhängig platzierte Glasrisse.",
+    "Erzeugt beim Eintritt in BUST zwei voneinander unabhängige Einschlagzentren und verteilt sie zufällig auf der aktiven Spielerkarte.",
+    "Zeigt zwei zufällig und unabhängig platzierte Einschlagzentren."
+  ),
+  "3": optionCopy(
+    "Zeigt drei Glasrisse für die dichteste Darstellung.",
+    "Erzeugt beim Eintritt in BUST drei zufällig verteilte Einschlagzentren. Diese Stufe füllt die aktive Spielerkarte am stärksten mit Glasrissstrukturen.",
+    "Zeigt drei Einschlagzentren und damit die dichteste Darstellung."
+  ),
+});
+
 const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
@@ -2631,6 +2659,9 @@ const xconfigFieldOptionCopy = deepFreeze({
     colorTheme: CHECKOUT_SCORE_COLOR_OPTION_COPY,
     intensity: CHECKOUT_SCORE_INTENSITY_OPTION_COPY,
     triggerSource: CHECKOUT_SCORE_TRIGGER_OPTION_COPY,
+  },
+  "x01-bust-active-player-highlight": {
+    crackCount: X01_BUST_CRACK_COUNT_OPTION_COPY,
   },
   "x01-remaining-score-bar": {
     colorTheme: X01_REMAINING_SCORE_BAR_COLOR_OPTION_COPY,

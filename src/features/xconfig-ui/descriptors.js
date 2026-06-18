@@ -547,7 +547,16 @@ export const xconfigDescriptors = Object.freeze([
     featureKey: "x01-bust-active-player-highlight",
     readmeAnchor: "animation-autodarts-x01-bust-active-player-highlight",
     description: "Färbt die aktive X01-Spielerkarte bei BUST rot und schüttelt sie kurz.",
-    fields: [],
+    fields: [
+      selectField(
+        "crackCount",
+        "Anzahl Glasrisse",
+        Array.from({ length: 4 }, (_, crackCount) => ({
+          value: crackCount,
+          label: crackCount === 0 ? "Aus" : String(crackCount),
+        }))
+      ),
+    ],
   }),
   animationDescriptorEntry({
     featureKey: "avg-trend-arrow",

@@ -13,6 +13,10 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
+  const featureConfig =
+    context.config && typeof context.config.getFeatureConfig === "function"
+      ? context.config.getFeatureConfig("x01BustActivePlayerHighlight")
+      : { crackCount: 3 };
 
   if (!documentRef || !domGuards) {
     return () => {};
@@ -27,6 +31,7 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
         ...context,
         documentRef,
         windowRef,
+        crackCount: featureConfig.crackCount,
       },
       state
     );
