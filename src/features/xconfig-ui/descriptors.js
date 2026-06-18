@@ -544,6 +544,12 @@ export const xconfigDescriptors = Object.freeze([
     ],
   }),
   animationDescriptorEntry({
+    featureKey: "x01-bust-active-player-highlight",
+    readmeAnchor: "animation-autodarts-x01-bust-active-player-highlight",
+    description: "Färbt die aktive X01-Spielerkarte bei BUST rot und schüttelt sie kurz.",
+    fields: [],
+  }),
+  animationDescriptorEntry({
     featureKey: "avg-trend-arrow",
     readmeAnchor: "animation-autodarts-animate-avg-trend-arrow",
     description: "Zeigt die Trendrichtung des AVG mit einem Pfeil an.",

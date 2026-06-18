@@ -28,6 +28,7 @@ const rawFeatureCatalog = [
   catalogEntry("checkout-target-highlights", "checkoutTargetHighlights", "Checkout Target Highlights", ["x01"], "Animation/Autodarts Animate Checkout Target Highlights.user.js", "a-checkout-board"),
   catalogEntry("tv-board-zoom", "tvBoardZoom", "TV Board Zoom", ["x01"], "Animation/Autodarts Animate TV Board Zoom.user.js", "a-tv-board-zoom"),
   catalogEntry("checkout-suggestion-styles", "checkoutSuggestionStyles", "Checkout Suggestion Styles", ["x01"], "Animation/Autodarts Checkout Suggestion Styles.user.js", "a-checkout-style", immediate),
+  catalogEntry("x01-bust-active-player-highlight", "x01BustActivePlayerHighlight", "X01 Bust Active Player Highlight", ["x01"], "", "", immediate),
   catalogEntry("avg-trend-arrow", "avgTrendArrow", "AVG Trend Arrow", ["all"], "Animation/Autodarts Animate AVG Trend Arrow.user.js", "a-average-arrow"),
   catalogEntry("active-player-sweep", "activePlayerSweep", "Active Player Sweep", ["all"], "Animation/Autodarts Animate Active Player Sweep.user.js", "a-turn-sweep"),
   catalogEntry("special-hit-highlights", "specialHitHighlights", "Special Hit Highlights", ["all"], "Animation/Autodarts Animate Special Hit Highlights.user.js", "a-triple-double-bull"),

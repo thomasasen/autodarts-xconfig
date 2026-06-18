@@ -102,6 +102,40 @@ test("feature config spec carries remove-key rules for retired config fields", (
   assert.deepEqual(getFeatureConfigSpec("checkoutScoreHighlight")?.removeKeys, []);
 });
 
+test("x01 bust active player highlight defaults and normalization stay stable", () => {
+  const spec = getFeatureConfigSpec("x01BustActivePlayerHighlight");
+
+  assert.ok(spec);
+  assert.deepEqual(spec.createDefaultConfig(), {
+    enabled: true,
+    debug: false,
+  });
+  assert.deepEqual(createRecommendedFeatureConfig("x01BustActivePlayerHighlight"), {
+    enabled: true,
+    debug: false,
+  });
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "aktiv",
+      debug: "true",
+    }),
+    {
+      enabled: true,
+      debug: true,
+    }
+  );
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "inaktiv",
+      debug: "no",
+    }),
+    {
+      enabled: false,
+      debug: false,
+    }
+  );
+});
+
 test("createRecommendedFeatureConfig returns the documented recommended defaults", () => {
   assert.deepEqual(createRecommendedFeatureConfig("themes.globalTypography"), {
     enabled: false,

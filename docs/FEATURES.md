@@ -1,16 +1,16 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `24` Module in einem Userscript:
+`autodarts-xconfig` bündelt `25` Module in einem Userscript:
 
-- `16` Animationen und Komfortfunktionen
+- `17` Animationen und Komfortfunktionen
 - `8` Themes
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `24` Module: `16` Animationen und Komfortfunktionen sowie `8` Themes.
+- Insgesamt `25` Module: `17` Animationen und Komfortfunktionen sowie `8` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
@@ -119,6 +119,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Farben`: Checkout Focus
 - `Balkengröße`: Breit
 - `Effekt`: Aus
+
+**X01 Bust Active Player Highlight**
 
 **Checkout Target Highlights**
 - `Darstellung`: Fast Blink
@@ -667,6 +669,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Format Stripe](screenshots/animation-style-checkout-suggestions-format-stripe-readme.png)
 ![Format Ticket](screenshots/animation-style-checkout-suggestions-format-ticket-readme.png)
 ![Format Outline](screenshots/animation-style-checkout-suggestions-format-outline-readme.png)
+
+### X01 Bust Active Player Highlight
+
+- Gilt für: `X01`
+- Kurz: Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.
+- Grafisch: Beim Eintritt in BUST wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Danach bleibt die rote Wurfkachel-Färbung auf der aktiven Karte stehen, bis `BUST` verschwindet.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![X01 Bust Active Player Highlight](screenshots/animation-x01-bust-active-player-highlight.gif)
 
 ## Animationen für Cricket und Tactics
 

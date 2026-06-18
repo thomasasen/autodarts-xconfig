@@ -8,6 +8,7 @@ import themeCricketPng from "../../docs/screenshots/template-theme-cricket-xConf
 import themeBullOffPng from "../../docs/screenshots/template-theme-bull-off-xConfig.png";
 import checkoutScoreHighlightGif from "../../docs/screenshots/animation-checkout-score-pulse.gif";
 import x01RemainingScoreBarPng from "../../docs/screenshots/animation-x01-score-progress.png";
+import x01BustActivePlayerHighlightGif from "../../docs/screenshots/animation-x01-bust-active-player-highlight.gif";
 import checkoutTargetHighlightsGif from "../../docs/screenshots/animation-checkout-board-targets.gif";
 import tvBoardZoomGif from "../../docs/screenshots/animation-tv-board-zoom.gif";
 import checkoutSuggestionStylesPng from "../../docs/screenshots/animation-style-checkout-suggestions.png";
@@ -34,6 +35,7 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-bull-off": themeBullOffPng,
   "checkout-score-highlight": checkoutScoreHighlightGif,
   "x01-remaining-score-bar": x01RemainingScoreBarPng,
+  "x01-bust-active-player-highlight": x01BustActivePlayerHighlightGif,
   "checkout-target-highlights": checkoutTargetHighlightsGif,
   "tv-board-zoom": tvBoardZoomGif,
   "checkout-suggestion-styles": checkoutSuggestionStylesPng,

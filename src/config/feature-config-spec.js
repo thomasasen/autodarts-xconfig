@@ -366,6 +366,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
   checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
+  x01BustActivePlayerHighlight: { enabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   activePlayerSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
   specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
@@ -419,6 +420,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutTargetHighlights: { visualPreset: "fast-blink", segmentStyle: "surface-only", singleRing: "both", targetSelectionMode: "next", colorTheme: "cyan" },
   tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
   checkoutSuggestionStyles: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
+  x01BustActivePlayerHighlight: {},
   avgTrendArrow: { durationMs: 320, size: "standard" },
   activePlayerSweep: { durationMs: 420, sweepStyle: "standard" },
   specialHitHighlights: { colorTheme: "kind-signal", animationStyle: "electric-jolt" },
@@ -702,6 +704,9 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   checkoutSuggestionStyles(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
+  },
+  x01BustActivePlayerHighlight(rawConfig = {}) {
+    return { enabled: normalizeBoolean(rawConfig.enabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   avgTrendArrow(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 320, AVG_TREND_DURATIONS), size: normalizeMappedStringChoice(rawConfig.size, "standard", { klein: "klein", small: "klein", standard: "standard", gross: "gross", ["gro" + "\u00df"]: "gross", big: "gross", large: "gross" }), debug: normalizeBoolean(rawConfig.debug, false) };

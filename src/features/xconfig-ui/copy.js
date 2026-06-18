@@ -548,6 +548,22 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
+  "x01-bust-active-player-highlight": featureCopy({
+    cardDescription:
+      "Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik.",
+    visibleDescription:
+      "Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.",
+    visualDescription:
+      "Beim Eintritt in BUST wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Danach bleibt die rote Wurfkachel-Färbung auf der aktiven Karte stehen, bis `BUST` verschwindet.",
+    usefulWhen:
+      "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
+    images: [
+      image("X01 Bust Active Player Highlight", "animation-x01-bust-active-player-highlight.gif"),
+    ],
+    fields: {
+      debug: DEBUG_FIELD,
+    },
+  }),
   "checkout-target-highlights": featureCopy({
     cardDescription:
       "Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen.",
@@ -2850,6 +2866,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
               "checkout-suggestion-styles",
               "checkout-score-highlight",
               "x01-remaining-score-bar",
+              "x01-bust-active-player-highlight",
               "checkout-target-highlights",
               "tv-board-zoom",
               "cricket-target-highlighter",
@@ -2872,6 +2889,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
               "checkout-suggestion-styles",
               "checkout-score-highlight",
               "x01-remaining-score-bar",
+              "x01-bust-active-player-highlight",
               "checkout-target-highlights",
               "tv-board-zoom",
               "cricket-target-highlighter",
@@ -2999,6 +3017,11 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           { label: "Balkengröße", key: "barSize" },
           { label: "Effekt", key: "effect" },
         ],
+      },
+      {
+        title: "X01 Bust Active Player Highlight",
+        featureKey: "x01-bust-active-player-highlight",
+        fields: [],
       },
       {
         title: "Checkout Target Highlights",

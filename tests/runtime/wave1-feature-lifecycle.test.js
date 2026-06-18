@@ -6,6 +6,7 @@ import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 const FEATURE_CONFIG_KEYS = Object.freeze([
   "checkoutScoreHighlight",
+  "x01BustActivePlayerHighlight",
   "checkoutTargetHighlights",
   "tvBoardZoom",
   "checkoutSuggestionStyles",

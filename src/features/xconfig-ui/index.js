@@ -145,6 +145,7 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
       "checkout-suggestion-styles",
       "checkout-score-highlight",
       "x01-remaining-score-bar",
+      "x01-bust-active-player-highlight",
       "checkout-target-highlights",
       "tv-board-zoom",
     ]),

@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.2] - 2026-06-18
+
+### Added
+
+- Nutzerwirkung: X01-Überwürfe fallen direkt auf der aktiven Spielerkarte auf: Bei sichtbarem `BUST` übernimmt die Karte die rote Wurfkachel-Optik, wackelt kurz im Earthquake-Stil und bleibt rot markiert, bis `BUST` verschwindet.
+  Technik: Das neue X01-Modul erkennt den sichtbaren Turn-Score, übernimmt die Throw-Tile-Farbwerte zur Laufzeit, kapselt den Shake-Effekt und ist in Registry, xConfig, Preview-Asset-Manifest, README, Feature-Doku und Regressionen verdrahtet.
+
+### Changed
+
+- Nutzerwirkung: `X01 Bust Active Player Highlight` ist bei neuen Installationen standardmäßig eingeschaltet.
+  Technik: Default-Konfiguration und Normalizer-Fallback aktivieren das Feature ohne gespeicherten Override, während Debug ausgeschaltet bleibt.
+
 ## [2.4.1] - 2026-06-17
 
 ### Changed
@@ -1712,7 +1724,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/3803021...HEAD
+[2.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/24f6686...HEAD
+[2.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/3803021...24f6686
 [2.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/55a936b...3803021
 [2.3.21]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...55a936b
 [2.3.20]: https://github.com/thomasasen/autodarts-xconfig/compare/09ae6b2...d86349d

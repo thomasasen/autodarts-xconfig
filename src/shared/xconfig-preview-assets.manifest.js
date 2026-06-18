@@ -9,6 +9,7 @@ export const XCONFIG_PREVIEW_SCREENSHOTS = Object.freeze({
   "theme-bull-off": "template-theme-bull-off-xConfig.png",
   "checkout-score-highlight": "animation-checkout-score-pulse.gif",
   "x01-remaining-score-bar": "animation-x01-score-progress.png",
+  "x01-bust-active-player-highlight": "animation-x01-bust-active-player-highlight.gif",
   "checkout-target-highlights": "animation-checkout-board-targets.gif",
   "tv-board-zoom": "animation-tv-board-zoom.gif",
   "checkout-suggestion-styles": "animation-style-checkout-suggestions.png",

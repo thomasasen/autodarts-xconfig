@@ -20,7 +20,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Im Überblick
 
-- Insgesamt `24` Module: `16` Animationen und Komfortfunktionen sowie `8` Themes.
+- Insgesamt `25` Module: `17` Animationen und Komfortfunktionen sowie `8` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
@@ -52,7 +52,7 @@ Wichtige Tampermonkey-Einstellung im Browser: Öffne unter den Browsererweiterun
 
 ![Tampermonkey Erweiterungseinstellungen](docs/screenshots/Erweiterung_Einstellung_Tempermonkey.png)
 
-Wichtiger Hinweis nach der Installation: Alle Themes sind zuerst ausgeschaltet. Die meisten Animationen und Komfortfunktionen sind ebenfalls aus. `Checkout Score Highlight` ist standardmäßig bereits eingeschaltet. Am einfachsten ist es, wenn du Themes und Animationen einzeln ausprobierst und Autodarts Schritt für Schritt an deine Wünsche anpasst.
+Wichtiger Hinweis nach der Installation: Alle Themes sind zuerst ausgeschaltet. Die meisten Animationen und Komfortfunktionen sind ebenfalls aus. `Checkout Score Highlight` und `X01 Bust Active Player Highlight` sind standardmäßig bereits eingeschaltet. Am einfachsten ist es, wenn du Themes und Animationen einzeln ausprobierst und Autodarts Schritt für Schritt an deine Wünsche anpasst.
 
 ![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](docs/screenshots/ad-xconfig-animationen.png)
@@ -161,6 +161,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 - [Checkout Target Highlights](#animation-autodarts-animate-checkout-target-highlights)
 - [TV Board Zoom](#animation-autodarts-animate-tv-board-zoom)
 - [Checkout Suggestion Styles](#animation-autodarts-checkout-suggestion-styles)
+- [X01 Bust Active Player Highlight](#animation-autodarts-x01-bust-active-player-highlight)
 - [AVG Trend Arrow](#animation-autodarts-animate-avg-trend-arrow)
 - [Active Player Sweep](#animation-autodarts-animate-active-player-sweep)
 - [Special Hit Highlights](#animation-autodarts-animate-special-hit-highlights)
@@ -273,6 +274,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Farben`: Checkout Focus
 - `Balkengröße`: Breit
 - `Effekt`: Aus
+
+**X01 Bust Active Player Highlight**
 
 **Checkout Target Highlights**
 - `Darstellung`: Fast Blink
@@ -909,6 +912,21 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Format Stripe](docs/screenshots/animation-style-checkout-suggestions-format-stripe-readme.png)
 ![Format Ticket](docs/screenshots/animation-style-checkout-suggestions-format-ticket-readme.png)
 ![Format Outline](docs/screenshots/animation-style-checkout-suggestions-format-outline-readme.png)
+
+<a id="animation-autodarts-x01-bust-active-player-highlight"></a>
+
+### X01 Bust Active Player Highlight
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.
+- Grafisch: Beim Eintritt in BUST wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Danach bleibt die rote Wurfkachel-Färbung auf der aktiven Karte stehen, bis `BUST` verschwindet.
+- Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
+
+**Einstellungen einfach erklärt**
+
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
+
+![X01 Bust Active Player Highlight](docs/screenshots/animation-x01-bust-active-player-highlight.gif)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>

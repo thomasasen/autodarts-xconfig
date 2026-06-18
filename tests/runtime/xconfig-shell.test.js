@@ -489,7 +489,19 @@ test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => 
 });
 
 test("xConfig observer ignores self-managed menu/panel mutations and only syncs for external changes", async () => {
-  const localStorage = new FakeStorage();
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      featureToggles: {
+        x01BustActivePlayerHighlight: false,
+      },
+      features: {
+        x01BustActivePlayerHighlight: {
+          enabled: false,
+          debug: false,
+        },
+      },
+    }),
+  });
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   let rafCount = 0;
@@ -1392,6 +1404,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "checkout-suggestion-styles",
     "checkout-score-highlight",
     "x01-remaining-score-bar",
+    "x01-bust-active-player-highlight",
     "checkout-target-highlights",
     "tv-board-zoom",
   ]);
@@ -3447,6 +3460,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   [
     "checkout-score-highlight",
     "x01-remaining-score-bar",
+    "x01-bust-active-player-highlight",
     "checkout-target-highlights",
     "tv-board-zoom",
     "active-player-sweep",

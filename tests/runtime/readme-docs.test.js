@@ -120,8 +120,8 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 24);
-  assert.equal(overviewCounts.animationModules, 16);
+  assert.equal(overviewCounts.totalModules, 25);
+  assert.equal(overviewCounts.animationModules, 17);
   assert.equal(overviewCounts.themeModules, 8);
 });
 
@@ -329,6 +329,7 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
     "theme-cricket",
     "theme-bull-off",
     "checkout-score-highlight",
+    "x01-bust-active-player-highlight",
     "checkout-target-highlights",
     "tv-board-zoom",
     "checkout-suggestion-styles",

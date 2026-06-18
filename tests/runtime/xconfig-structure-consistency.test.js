@@ -64,6 +64,20 @@ test("theme global typography stays first in the themes descriptor order", () =>
   assert.equal(themeDescriptors[0]?.featureKey, "theme-global-typography");
 });
 
+test("x01 bust active player highlight descriptor exposes a toggle-only animation feature", () => {
+  const descriptor = xconfigDescriptors.find(
+    (entry) => entry.featureKey === "x01-bust-active-player-highlight"
+  );
+
+  assert.ok(descriptor);
+  assert.equal(descriptor.tab, "animations");
+  assert.equal(descriptor.readmeAnchor, "animation-autodarts-x01-bust-active-player-highlight");
+  assert.deepEqual(
+    descriptor.fields.map((field) => field.key),
+    ["debug"]
+  );
+});
+
 test("triple-double-bull style options expose color and animation previews", () => {
   const descriptor = xconfigDescriptors.find(
     (entry) => entry.featureKey === "special-hit-highlights"

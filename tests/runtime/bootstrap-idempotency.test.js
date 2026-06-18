@@ -68,7 +68,7 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
     windowRef,
     documentRef,
     config: {
-      featureToggles: { checkoutScoreHighlight: true },
+      featureToggles: { checkoutScoreHighlight: true, x01BustActivePlayerHighlight: false },
       features: {
         checkoutScoreHighlight: {
           enabled: true,
@@ -117,7 +117,7 @@ test("config updates remount affected mounted features without duplicating obser
     windowRef,
     documentRef,
     config: {
-      featureToggles: { checkoutScoreHighlight: true },
+      featureToggles: { checkoutScoreHighlight: true, x01BustActivePlayerHighlight: false },
       features: {
         checkoutScoreHighlight: {
           enabled: true,
