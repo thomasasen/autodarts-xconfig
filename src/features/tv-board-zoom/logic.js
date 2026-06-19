@@ -862,12 +862,10 @@ function shouldNormalizeRectForActiveZoom(rect, zoomTransform, expectedNode = nu
   const normalizedRect = normalizeRect(rect);
   const scale = Number(zoomTransform?.scale);
   const layoutSize = getNodeLayoutSize(expectedNode);
-  const baseWidth = Number.isFinite(zoomTransform?.baseWidth)
-    ? Number(zoomTransform.baseWidth)
-    : layoutSize.width;
-  const baseHeight = Number.isFinite(zoomTransform?.baseHeight)
-    ? Number(zoomTransform.baseHeight)
-    : layoutSize.height;
+  const storedBaseWidth = Number(zoomTransform?.baseWidth);
+  const storedBaseHeight = Number(zoomTransform?.baseHeight);
+  const baseWidth = layoutSize.width > 0 ? layoutSize.width : storedBaseWidth;
+  const baseHeight = layoutSize.height > 0 ? layoutSize.height : storedBaseHeight;
   if (
     !normalizedRect ||
     !(Number.isFinite(scale) && scale > 1) ||
@@ -1224,6 +1222,41 @@ function resolveTurnProgressState(state, gameState) {
   };
 }
 
+function resolveHydrationCheckoutIntent({
+  gameState,
+  x01Rules,
+  state,
+  documentRef,
+  windowRef,
+  config,
+}) {
+  if (!config?.checkoutZoomEnabled) {
+    return null;
+  }
+
+  const checkoutContext = resolveX01CheckoutContext({
+    gameState,
+    documentRef,
+    windowRef,
+    dartsRemaining: 1,
+    x01Rules,
+  });
+  const checkoutSurface = checkoutContext.checkoutSurface;
+  const visibleSegments = checkoutSurface.visibleRouteSegments;
+  const finishSegment = checkoutSurface.authoritativeFinishSegment;
+
+  if (
+    checkoutSurface.selectionSource !== "validated-visible-route" ||
+    visibleSegments.length !== 1 ||
+    visibleSegments[0] !== finishSegment ||
+    !checkoutSurface.canUseAuthoritativeFinishNow
+  ) {
+    return null;
+  }
+
+  return buildAndStoreIntent(state, "checkout", finishSegment);
+}
+
 function resetZoomIntentForTurnChange(state) {
   state.holdUntilTs = 0;
   if (!state.stickyUntilLegEnd) {
@@ -1542,7 +1575,14 @@ export function computeZoomIntent(options = {}) {
 
   const turnProgress = resolveTurnProgressState(state, gameState);
   if (!turnProgress) {
-    return null;
+    return resolveHydrationCheckoutIntent({
+      gameState,
+      x01Rules,
+      state,
+      documentRef,
+      windowRef,
+      config,
+    });
   }
 
   const { throws, turnId, throwCount, previousThrowCount } = turnProgress;

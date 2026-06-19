@@ -227,6 +227,54 @@ test("tv-board-zoom applies a direct finish zoom at runtime for D5 in finish-onl
   }
 });
 
+test("tv-board-zoom applies a visible checkout after reload before game-state hydration", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "4";
+  documentRef.suggestionElement.textContent = "D2";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+  const gameState = {
+    isX01Variant() {
+      return true;
+    },
+    getOutMode() {
+      return "";
+    },
+    getActiveTurn() {
+      return null;
+    },
+    getActiveThrows() {
+      return [];
+    },
+    getActiveScore() {
+      return null;
+    },
+    getSnapshot() {
+      return null;
+    },
+    subscribe() {
+      return () => {};
+    },
+  };
+
+  const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState });
+
+  try {
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+    assert.match(String(targetNode.style.transform || ""), /scale\(/);
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
 test("tv-board-zoom stays inactive on Bull-off even when a stale X01 snapshot remains", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Bull-off";

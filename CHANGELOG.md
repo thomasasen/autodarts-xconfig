@@ -12,6 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.4] - 2026-06-19
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom` stellt einen sichtbaren direkten Checkout nach einem Seiten-Reload wieder her, auch wenn der interne Match-Turn noch nicht vollständig geladen ist.
+  Technik: Ein eng begrenzter Hydration-Fallback akzeptiert ausschließlich eine sichtbare, gegen den aktiven Score validierte Ein-Dart-Finish-Suggestion und übergibt danach wieder an den regulären Game-State-Pfad.
+- Nutzerwirkung: Der Board-Zoom flackert bei responsiven Größenänderungen nicht mehr, besonders bei Checkout-Zielen im unteren Board-Bereich.
+  Technik: Die Transform-Normalisierung priorisiert aktuelle untransformierte Layoutmaße, konvergiert nach Board-Resizes auf einen stabilen Transform und ist gegen wiederholte Reapply-Aufrufe abgesichert.
+
 ## [2.4.3] - 2026-06-19
 
 ### Added
@@ -1731,7 +1740,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.3]: https://github.com/thomasasen/autodarts-xconfig/compare/73900ce...HEAD
+[2.4.4]: https://github.com/thomasasen/autodarts-xconfig/compare/e93e11d...HEAD
+[2.4.3]: https://github.com/thomasasen/autodarts-xconfig/compare/73900ce...e93e11d
 [2.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/24f6686...73900ce
 [2.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/3803021...24f6686
 [2.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/55a936b...3803021

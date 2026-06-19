@@ -14,11 +14,13 @@ function createX01GameState(overrides = {}) {
   const activeThrows = Array.isArray(overrides.activeThrows) ? overrides.activeThrows : [];
   const hasSnapshot = Object.hasOwn(overrides, "snapshot");
   const snapshot = hasSnapshot ? overrides.snapshot : null;
-  const activeTurn = overrides.activeTurn || {
-    id: "turn-1",
-    playerId: "player-1",
-    throws: activeThrows,
-  };
+  const activeTurn = Object.hasOwn(overrides, "activeTurn")
+    ? overrides.activeTurn
+    : {
+        id: "turn-1",
+        playerId: "player-1",
+        throws: activeThrows,
+      };
 
   const gameState = {
     isX01Variant: () => true,
@@ -416,6 +418,80 @@ test("tv-board-zoom resolves direct checkout zoom intents for low double finishe
       segment,
     });
   });
+});
+
+test("tv-board-zoom recovers a visible direct checkout while the active turn hydrates", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "4";
+  documentRef.suggestionElement.textContent = "D2";
+  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
+  const windowRef = createFakeWindow({ documentRef });
+
+  const intent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: null,
+      outMode: "",
+      activeTurn: null,
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 1100,
+  });
+
+  assert.deepEqual(intent, { reason: "checkout", segment: "D2" });
+});
+
+test("tv-board-zoom hydration fallback requires a matching visible direct checkout", () => {
+  const missingSuggestionDocument = new FakeDocument();
+  missingSuggestionDocument.activeScoreElement.textContent = "4";
+  const missingSuggestionWindow = createFakeWindow({ documentRef: missingSuggestionDocument });
+  const conflictingSuggestionDocument = new FakeDocument();
+  conflictingSuggestionDocument.activeScoreElement.textContent = "4";
+  conflictingSuggestionDocument.suggestionElement.textContent = "D3";
+  conflictingSuggestionDocument.suggestionElement.__rect = {
+    left: 320,
+    top: 16,
+    width: 180,
+    height: 48,
+  };
+  const conflictingSuggestionWindow = createFakeWindow({
+    documentRef: conflictingSuggestionDocument,
+  });
+  const gameState = createX01GameState({
+    activeScore: null,
+    outMode: "",
+    activeTurn: null,
+    activeThrows: [],
+  });
+
+  const missingSuggestionIntent = computeZoomIntent({
+    gameState,
+    x01Rules,
+    state: createZoomState(),
+    documentRef: missingSuggestionDocument,
+    windowRef: missingSuggestionWindow,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 1120,
+  });
+  const conflictingSuggestionIntent = computeZoomIntent({
+    gameState,
+    x01Rules,
+    state: createZoomState(),
+    documentRef: conflictingSuggestionDocument,
+    windowRef: conflictingSuggestionWindow,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 1120,
+  });
+
+  assert.equal(missingSuggestionIntent, null);
+  assert.equal(conflictingSuggestionIntent, null);
 });
 
 test("tv-board-zoom keeps the third-dart T20 guard aligned with bust rules", () => {

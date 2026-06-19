@@ -927,6 +927,68 @@ test("tv-board-zoom keeps the active translated zoom when layout reads reflect t
   assert.equal(String(targetNode.style.transform || ""), firstTransform);
 });
 
+test("tv-board-zoom converges after an active lower-board zoom changes layout size", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+  const intent = { reason: "checkout", segment: "D17" };
+  let baseRect = { left: 918, top: 225.3, width: 440, height: 440 };
+  const readTransformedRect = () =>
+    applyCurrentStyleTransformToRect(targetNode, {
+      ...baseRect,
+      right: baseRect.left + baseRect.width,
+      bottom: baseRect.top + baseRect.height,
+    });
+
+  targetNode.offsetWidth = baseRect.width;
+  targetNode.offsetHeight = baseRect.height;
+  targetNode.clientWidth = baseRect.width;
+  targetNode.clientHeight = baseRect.height;
+  boardSvg.clientWidth = baseRect.width;
+  boardSvg.clientHeight = baseRect.height;
+  targetNode.getBoundingClientRect = readTransformedRect;
+  boardSvg.getBoundingClientRect = readTransformedRect;
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    intent,
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  const initialTransform = String(targetNode.style.transform || "");
+
+  baseRect = { ...baseRect, width: 456, height: 456 };
+  targetNode.offsetWidth = baseRect.width;
+  targetNode.offsetHeight = baseRect.height;
+  targetNode.clientWidth = baseRect.width;
+  targetNode.clientHeight = baseRect.height;
+  boardSvg.clientWidth = baseRect.width;
+  boardSvg.clientHeight = baseRect.height;
+
+  const transformsAfterResize = Array.from({ length: 3 }, () => {
+    applyZoom(
+      { targetNode, hostNode, boardSvg },
+      2.75,
+      speedConfig,
+      intent,
+      state,
+      { x01Rules, windowRef, documentRef }
+    );
+    return String(targetNode.style.transform || "");
+  });
+
+  assert.notEqual(transformsAfterResize[0], initialTransform);
+  assert.equal(new Set(transformsAfterResize).size, 1);
+  assert.equal(targetNode.style.transition, "none");
+});
+
 test("tv-board-zoom converges when a second zoom state reads an already-transformed board", () => {
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
   const firstState = createZoomState();
