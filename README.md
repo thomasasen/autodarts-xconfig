@@ -931,13 +931,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `3`: Erzeugt beim Eintritt in BUST drei zufällig verteilte Einschlagzentren. Diese Stufe füllt die aktive Spielerkarte am stärksten mit Glasrissstrukturen.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
-**BUST-Hervorhebung der aktiven Spielerkarte**
-
 ![X01 Bust Active Player Highlight](docs/screenshots/animation-x01-bust-active-player-highlight.gif)
-
-**BUST-Hervorhebung mit Glasrissen**
-
-![X01 Bust Active Player Highlight mit Glasrissen](docs/screenshots/animation-x01-bust-active-player-highlight-cracks.gif)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>

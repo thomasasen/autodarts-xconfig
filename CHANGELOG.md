@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.5] - 2026-06-24
+
+### Fixed
+
+- Nutzerwirkung: Kleine `Special Hit Highlights`-GIFs werden im Boardbereich proportional vergrößert und bleiben vollständig sichtbar, statt klein oder abgeschnitten über der Dartscheibe zu erscheinen.
+  Technik: Theme-Mounts synchronisieren Autodarts-Tools-Animations-GIFs in Shadow-Roots auf den erkannten Board-Viewport und verwenden `object-fit: contain`; der TV-Board-Zoom-Fallback behandelt dieselbe GIF-Struktur ohne die Medienebene mitzuzoomen.
+
 ## [2.4.4] - 2026-06-19
 
 ### Fixed
@@ -1740,7 +1747,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.4]: https://github.com/thomasasen/autodarts-xconfig/compare/e93e11d...HEAD
+[2.4.5]: https://github.com/thomasasen/autodarts-xconfig/compare/106b63c...HEAD
+[2.4.4]: https://github.com/thomasasen/autodarts-xconfig/compare/e93e11d...106b63c
 [2.4.3]: https://github.com/thomasasen/autodarts-xconfig/compare/73900ce...e93e11d
 [2.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/24f6686...73900ce
 [2.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/3803021...24f6686

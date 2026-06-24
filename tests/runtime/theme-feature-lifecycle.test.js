@@ -167,6 +167,38 @@ function createDartsZoomPreviewFixture(documentRef) {
   };
 }
 
+function createToolsAnimationGifFixture(documentRef) {
+  const host = documentRef.createElement("autodarts-tools-animations");
+  const shadowRoot = documentRef.createElement("div");
+  const fixedWrapper = documentRef.createElement("div");
+  const innerFrame = documentRef.createElement("div");
+  const gifNode = documentRef.createElement("img");
+
+  fixedWrapper.classList.add("fixed", "z-[180]");
+  fixedWrapper.style.top = "193.3px";
+  fixedWrapper.style.left = "886px";
+  fixedWrapper.style.width = "520px";
+  fixedWrapper.style.height = "520px";
+  innerFrame.classList.add("absolute", "inset-0");
+  gifNode.id = "gif-animation";
+  gifNode.classList.add("size-full", "object-contain");
+  gifNode.setAttribute("src", "https://example.test/small.gif");
+
+  innerFrame.appendChild(gifNode);
+  fixedWrapper.appendChild(innerFrame);
+  shadowRoot.appendChild(fixedWrapper);
+  host.shadowRoot = shadowRoot;
+  documentRef.body.appendChild(host);
+
+  return {
+    host,
+    shadowRoot,
+    fixedWrapper,
+    innerFrame,
+    gifNode,
+  };
+}
+
 function createBoardFixture(documentRef, options = {}) {
   const withContentSlot = options.withContentSlot === true;
   const boardPanel = documentRef.createElement("div");
@@ -946,6 +978,93 @@ test("theme re-resolves the visible board when board-input mode toggles only via
   assert.equal(visibleBoard.boardSvg.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardSvg), false);
 
   cleanup();
+});
+
+test("theme scales autodarts tools animation gifs fully inside the board viewport", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  boardNodes.boardViewport.__rect = {
+    left: 772,
+    top: 193,
+    width: 748,
+    height: 520.6,
+  };
+  const animationNodes = createToolsAnimationGifFixture(documentRef);
+  const windowRef = createMatchWindow(documentRef, "theme-x01-tools-animation-gif");
+  const observers = createObserverRegistry();
+  const listeners = createListenerRegistry();
+  const cleanup = mountThemeX01({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers,
+      listeners,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          contrastPreset: "high",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+          isScheduled() {
+            return false;
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(
+    animationNodes.fixedWrapper.style.getPropertyValue("top"),
+    `${boardNodes.boardViewport.__rect.top.toFixed(2)}px`
+  );
+  assert.equal(
+    animationNodes.fixedWrapper.style.getPropertyValue("left"),
+    `${boardNodes.boardViewport.__rect.left.toFixed(2)}px`
+  );
+  assert.equal(
+    animationNodes.fixedWrapper.style.getPropertyValue("width"),
+    `${boardNodes.boardViewport.__rect.width.toFixed(2)}px`
+  );
+  assert.equal(
+    animationNodes.fixedWrapper.style.getPropertyValue("height"),
+    `${boardNodes.boardViewport.__rect.height.toFixed(2)}px`
+  );
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyValue("overflow"), "hidden");
+  assert.equal(animationNodes.innerFrame.style.getPropertyValue("position"), "absolute");
+  assert.equal(animationNodes.innerFrame.style.getPropertyValue("inset"), "0");
+  assert.equal(animationNodes.gifNode.style.getPropertyValue("width"), "100%");
+  assert.equal(animationNodes.gifNode.style.getPropertyValue("height"), "100%");
+  assert.equal(animationNodes.gifNode.style.getPropertyValue("max-width"), "none");
+  assert.equal(animationNodes.gifNode.style.getPropertyValue("object-fit"), "contain");
+  assert.equal(animationNodes.gifNode.style.getPropertyPriority("object-fit"), "important");
+  assert.ok(
+    documentRef.__mutationObservers.some((observer) =>
+      observer.observeCalls.some((call) => call.target === animationNodes.shadowRoot)
+    )
+  );
+
+  cleanup();
+
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyValue("top"), "193.3px");
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyValue("left"), "886px");
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyValue("width"), "520px");
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyValue("height"), "520px");
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyPriority("width"), "");
+  assert.equal(animationNodes.fixedWrapper.style.getPropertyValue("overflow"), "");
+  assert.equal(animationNodes.innerFrame.style.getPropertyValue("position"), "");
+  assert.equal(animationNodes.innerFrame.style.getPropertyValue("inset"), "");
+  assert.equal(animationNodes.gifNode.style.getPropertyValue("object-fit"), "");
 });
 
 test("theme accepts panel-as-viewport board layouts without invalidating layout hooks", async () => {

@@ -9,6 +9,11 @@ import {
   resolveBoardZoomHostNode,
   resolveBoardZoomTargetNode,
 } from "../../shared/dartboard-svg.js";
+import {
+  applyToolsAnimationGifContainmentStyles,
+  restoreToolsAnimationGifNodeStyle,
+  snapshotToolsAnimationGifNodeStyle,
+} from "../themes/shared/tools-animation-gif-containment.js";
 
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -688,19 +693,39 @@ function isLikelyGifOverlayNode(node) {
   );
 }
 
-function collectGifOverlayNodes(targetNode, hostNode) {
+function resolveGifOverlayContainer(node) {
+  return node?.closest?.(".fixed") || node || null;
+}
+
+function collectGifOverlayEntries(targetNode, hostNode) {
   const roots = [];
   const showAnimationsRoot = targetNode?.closest?.(".showAnimations") || null;
+  const ownerDocument = targetNode?.ownerDocument || hostNode?.ownerDocument || null;
   if (showAnimationsRoot) {
     roots.push(showAnimationsRoot);
   }
   if (hostNode && !roots.includes(hostNode)) {
     roots.push(hostNode);
   }
+  if (ownerDocument && !roots.includes(ownerDocument)) {
+    roots.push(ownerDocument);
+  }
 
   const seen = new Set();
   const overlays = [];
-  roots.forEach((rootNode) => {
+  const pushCandidate = (node) => {
+    if (!node || seen.has(node) || !isLikelyGifOverlayNode(node)) {
+      return;
+    }
+    seen.add(node);
+    const containerNode = resolveGifOverlayContainer(node);
+    overlays.push({
+      mediaNode: node,
+      frameNode: containerNode && containerNode !== node ? node.parentElement || null : null,
+      containerNode,
+    });
+  };
+  const scanRoot = (rootNode) => {
     if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
       return;
     }
@@ -714,32 +739,23 @@ function collectGifOverlayNodes(targetNode, hostNode) {
       candidates.push(rootNode);
     }
 
-    candidates.forEach((node) => {
-      if (!node || seen.has(node) || !isLikelyGifOverlayNode(node)) {
-        return;
+    candidates.forEach(pushCandidate);
+
+    Array.from(rootNode.querySelectorAll("autodarts-tools-animations")).forEach((host) => {
+      if (host?.shadowRoot) {
+        scanRoot(host.shadowRoot);
       }
-      seen.add(node);
-      overlays.push(node);
     });
-  });
+  };
+
+  roots.forEach(scanRoot);
 
   return overlays;
 }
 
 function restoreGifOverlayStyles(state) {
   const snapshots = Array.isArray(state?.gifStyleSnapshots) ? state.gifStyleSnapshots : [];
-  snapshots.forEach((snapshot) => {
-    const node = snapshot?.node;
-    if (!node?.style) {
-      return;
-    }
-
-    node.style.width = String(snapshot.width || "");
-    node.style.height = String(snapshot.height || "");
-    node.style.maxWidth = String(snapshot.maxWidth || "");
-    node.style.maxHeight = String(snapshot.maxHeight || "");
-    node.style.objectFit = String(snapshot.objectFit || "");
-  });
+  snapshots.forEach(restoreToolsAnimationGifNodeStyle);
 
   if (state) {
     state.gifStyleSnapshots = [];
@@ -764,34 +780,43 @@ function applyGifOverlayContainment(state, targetNode, hostNode) {
     return;
   }
 
-  const overlays = collectGifOverlayNodes(targetNode, hostNode);
+  const overlays = collectGifOverlayEntries(targetNode, hostNode);
   if (!overlays.length) {
     return;
   }
 
-  const maxWidthPx = `${hostWidth.toFixed(2)}px`;
-  const maxHeightPx = `${hostHeight.toFixed(2)}px`;
+  const viewportRect = {
+    left: Number(hostRect?.left) || 0,
+    top: Number(hostRect?.top) || 0,
+    width: hostWidth,
+    height: hostHeight,
+  };
   const snapshots = [];
+  const snapshottedNodes = new Set();
 
-  overlays.forEach((node) => {
-    if (!node?.style) {
+  const addSnapshot = (node) => {
+    if (!node?.style || snapshottedNodes.has(node)) {
       return;
     }
 
-    snapshots.push({
-      node,
-      width: String(node.style.width || ""),
-      height: String(node.style.height || ""),
-      maxWidth: String(node.style.maxWidth || ""),
-      maxHeight: String(node.style.maxHeight || ""),
-      objectFit: String(node.style.objectFit || ""),
-    });
+    const snapshot = snapshotToolsAnimationGifNodeStyle(node);
+    if (!snapshot) {
+      return;
+    }
 
-    node.style.width = "auto";
-    node.style.height = "auto";
-    node.style.maxWidth = maxWidthPx;
-    node.style.maxHeight = maxHeightPx;
-    node.style.objectFit = "contain";
+    snapshottedNodes.add(node);
+    snapshots.push(snapshot);
+  };
+
+  overlays.forEach(({ mediaNode, frameNode, containerNode }) => {
+    applyToolsAnimationGifContainmentStyles({
+      state,
+      mediaNode,
+      frameNode,
+      containerNode,
+      viewportRect,
+      rememberSnapshot: (_styleState, node) => addSnapshot(node),
+    });
   });
 
   state.gifStyleSnapshots = snapshots;

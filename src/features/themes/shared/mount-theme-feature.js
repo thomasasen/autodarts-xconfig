@@ -16,6 +16,10 @@ import {
 import { THEME_LAYOUT_HOOK_CLASSES } from "./theme-layout-contract.js";
 import { resolveThemePolicy } from "./theme-policies.js";
 import { resolveThemeVisualSettingsConfig } from "./theme-visuals.js";
+import {
+  cleanupToolsAnimationGifContainment,
+  syncToolsAnimationGifContainment,
+} from "./tools-animation-gif-containment.js";
 
 export {
   CRICKET_ACTIVE_PLAYER_ATTRIBUTE,
@@ -217,6 +221,7 @@ function deactivateThemeFeature(options = {}) {
   options.domGuards?.removeNodeById?.(options.styleId);
   togglePreviewSpace(options.documentRef, options.resolvedPreviewPlacement, false);
   clearBoardLayoutHooks(options.themeState);
+  cleanupToolsAnimationGifContainment(options.themeState);
 
   if (options.themePolicy && typeof options.themePolicy.onDeactivate === "function") {
     options.themePolicy.onDeactivate({
@@ -293,6 +298,13 @@ function createThemeStateEvaluator(options = {}) {
         scheduler: options.schedulerRef.current,
       });
     }
+
+    syncToolsAnimationGifContainment({
+      documentRef: options.documentRef,
+      scheduler: options.schedulerRef.current,
+      themeState: options.themeState,
+      windowRef: options.windowRef,
+    });
   };
 }
 

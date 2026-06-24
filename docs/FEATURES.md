@@ -682,13 +682,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `3`: Zeigt drei Einschlagzentren und damit die dichteste Darstellung.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-**BUST-Hervorhebung der aktiven Spielerkarte**
-
 ![X01 Bust Active Player Highlight](screenshots/animation-x01-bust-active-player-highlight.gif)
-
-**BUST-Hervorhebung mit Glasrissen**
-
-![X01 Bust Active Player Highlight mit Glasrissen](screenshots/animation-x01-bust-active-player-highlight-cracks.gif)
 
 ## Animationen für Cricket und Tactics
 

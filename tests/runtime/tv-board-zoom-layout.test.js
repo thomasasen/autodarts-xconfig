@@ -643,7 +643,7 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   assert.equal(targetNode.style.getPropertyPriority("transform-origin"), "important");
 });
 
-test("tv-board-zoom scales only inner board layer and fits gif siblings proportionally", () => {
+test("tv-board-zoom scales only inner board layer and contains gif siblings proportionally", () => {
   const {
     documentRef,
     windowRef,
@@ -682,15 +682,95 @@ test("tv-board-zoom scales only inner board layer and fits gif siblings proporti
   assert.equal(String(outerBoardCanvas.style.transform || ""), "");
   assert.equal(String(gifOverlay.style.transform || ""), "");
   assert.equal(gifOverlay.classList.contains(ZOOM_CLASS), false);
-  assert.equal(gifOverlay.style.width, "auto");
-  assert.equal(gifOverlay.style.height, "auto");
+  assert.equal(gifOverlay.style.width, "100%");
+  assert.equal(gifOverlay.style.height, "100%");
   assert.equal(gifOverlay.style.objectFit, "contain");
-  assert.ok(Math.abs(Number.parseFloat(gifOverlay.style.maxWidth) - hostNode.__rect.width) < 0.01);
-  assert.ok(Math.abs(Number.parseFloat(gifOverlay.style.maxHeight) - hostNode.__rect.height) < 0.01);
+  assert.equal(gifOverlay.style.maxWidth, "none");
+  assert.equal(gifOverlay.style.maxHeight, "none");
 
   resetZoom(speedConfig, state, true);
   assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
   assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+});
+
+test("tv-board-zoom contains gifs inside autodarts tools animation shadow roots", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomIsolationFixture();
+  const animationHost = documentRef.createElement("autodarts-tools-animations");
+  const fixedWrapper = documentRef.createElement("div");
+  const innerFrame = documentRef.createElement("div");
+  const shadowGif = documentRef.createElement("img");
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  fixedWrapper.classList.add("fixed");
+  fixedWrapper.style.top = "193px";
+  fixedWrapper.style.left = "886px";
+  fixedWrapper.style.width = "520px";
+  fixedWrapper.style.height = "520px";
+  innerFrame.classList.add("absolute", "inset-0");
+  shadowGif.id = "gif-animation";
+  shadowGif.classList.add("size-full", "object-contain");
+  shadowGif.setAttribute("src", "https://example.test/t20.gif");
+  innerFrame.appendChild(shadowGif);
+  fixedWrapper.appendChild(innerFrame);
+  animationHost.shadowRoot = {
+    querySelectorAll(selector) {
+      return String(selector || "").includes("gif-animation") ||
+        String(selector || "").includes("img")
+        ? [shadowGif]
+        : [];
+    },
+  };
+  documentRef.main.appendChild(animationHost);
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    { reason: "smart-setup", segment: "T20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.equal(fixedWrapper.style.getPropertyValue("position"), "fixed");
+  assert.equal(fixedWrapper.style.getPropertyValue("top"), `${hostNode.__rect.top.toFixed(2)}px`);
+  assert.equal(fixedWrapper.style.getPropertyValue("left"), `${hostNode.__rect.left.toFixed(2)}px`);
+  assert.equal(fixedWrapper.style.getPropertyValue("width"), `${hostNode.__rect.width.toFixed(2)}px`);
+  assert.equal(fixedWrapper.style.getPropertyValue("height"), `${hostNode.__rect.height.toFixed(2)}px`);
+  assert.equal(fixedWrapper.style.getPropertyValue("overflow"), "hidden");
+  assert.equal(fixedWrapper.style.getPropertyPriority("width"), "important");
+  assert.equal(innerFrame.style.getPropertyValue("position"), "absolute");
+  assert.equal(innerFrame.style.getPropertyValue("inset"), "0");
+  assert.equal(innerFrame.style.getPropertyValue("width"), "100%");
+  assert.equal(innerFrame.style.getPropertyValue("height"), "100%");
+  assert.equal(shadowGif.style.width, "100%");
+  assert.equal(shadowGif.style.height, "100%");
+  assert.equal(shadowGif.style.objectFit, "contain");
+  assert.equal(shadowGif.style.maxWidth, "none");
+  assert.equal(shadowGif.style.maxHeight, "none");
+  assert.equal(shadowGif.style.getPropertyPriority("object-fit"), "important");
+
+  resetZoom(speedConfig, state, true);
+  assert.equal(fixedWrapper.style.getPropertyValue("position"), "");
+  assert.equal(fixedWrapper.style.getPropertyValue("overflow"), "");
+  assert.equal(innerFrame.style.getPropertyValue("position"), "");
+  assert.equal(innerFrame.style.getPropertyValue("inset"), "");
+  assert.equal(fixedWrapper.style.top, "193px");
+  assert.equal(fixedWrapper.style.left, "886px");
+  assert.equal(fixedWrapper.style.width, "520px");
+  assert.equal(fixedWrapper.style.height, "520px");
+  assert.equal(innerFrame.style.width, "");
+  assert.equal(innerFrame.style.height, "");
+  assert.equal(shadowGif.style.width, "");
+  assert.equal(shadowGif.style.height, "");
+  assert.equal(shadowGif.style.maxWidth, "");
+  assert.equal(shadowGif.style.maxHeight, "");
+  assert.equal(shadowGif.style.objectFit, "");
 });
 
 test("tv-board-zoom restores gif overlay styles on cleanup", () => {
@@ -718,8 +798,8 @@ test("tv-board-zoom restores gif overlay styles on cleanup", () => {
     { x01Rules, windowRef, documentRef }
   );
 
-  assert.equal(gifOverlay.style.width, "auto");
-  assert.equal(gifOverlay.style.height, "auto");
+  assert.equal(gifOverlay.style.width, "100%");
+  assert.equal(gifOverlay.style.height, "100%");
   assert.equal(gifOverlay.style.objectFit, "contain");
 
   resetZoom(speedConfig, state, true);
@@ -759,11 +839,11 @@ test("tv-board-zoom applies gif containment even when overlay size is unresolved
     { x01Rules, windowRef, documentRef }
   );
 
-  assert.equal(gifOverlay.style.width, "auto");
-  assert.equal(gifOverlay.style.height, "auto");
+  assert.equal(gifOverlay.style.width, "100%");
+  assert.equal(gifOverlay.style.height, "100%");
   assert.equal(gifOverlay.style.objectFit, "contain");
-  assert.ok(Math.abs(Number.parseFloat(gifOverlay.style.maxWidth) - hostNode.__rect.width) < 0.01);
-  assert.ok(Math.abs(Number.parseFloat(gifOverlay.style.maxHeight) - hostNode.__rect.height) < 0.01);
+  assert.equal(gifOverlay.style.maxWidth, "none");
+  assert.equal(gifOverlay.style.maxHeight, "none");
 
   resetZoom(speedConfig, state, true);
   assert.equal(gifOverlay.style.width, "");
