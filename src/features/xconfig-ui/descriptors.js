@@ -548,6 +548,18 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-x01-bust-active-player-highlight",
     description: "Färbt die aktive X01-Spielerkarte bei BUST rot und schüttelt sie kurz.",
     fields: [
+      actionField("run-feature-action", "Vorschau", {
+        key: "preview",
+        actionId: "preview",
+        buttonLabel: "BUST auslösen",
+        section: "Vorschau",
+        description:
+          "Zeigt die rote aktive Spielerkarte mit der aktuell gewählten Anzahl Glasrisse.",
+        successMessage: "",
+        errorMessage: "Vorschau konnte nicht gestartet werden.",
+        prominent: true,
+        previewTarget: "x01-bust-active-player-highlight",
+      }),
       selectField(
         "crackCount",
         "Anzahl Glasrisse",
@@ -556,6 +568,8 @@ export const xconfigDescriptors = Object.freeze([
           label: crackCount === 0 ? "Aus" : String(crackCount),
         }))
       ),
+      checkboxField("shakeEnabled", "Wackeleffekt"),
+      checkboxField("soundEnabled", "Glasbruch-Sound"),
     ],
   }),
   animationDescriptorEntry({

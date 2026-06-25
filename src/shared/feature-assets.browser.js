@@ -25,6 +25,7 @@ import dartYellowSkullPng from "../assets/darts/Dart_yellowscull.png";
 export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
 export { default as TAKEOUT_IMAGE_ASSET } from "../assets/TakeOut.png";
 export { default as SINGLE_BULL_SOUND_ASSET } from "../assets/singlebull.mp3";
+export { default as X01_BUST_GLASS_CRACK_SOUND_ASSET } from "../assets/glasscrack.mp3";
 
 export const DART_DESIGNS = Object.freeze({
   aireplicant: dartAIReplicantPng,

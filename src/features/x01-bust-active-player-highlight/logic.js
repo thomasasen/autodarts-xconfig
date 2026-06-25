@@ -4,6 +4,7 @@ import {
   BUST_SHAKE_CLASS,
   FALLBACK_BUST_CARD_VISUALS,
 } from "./style.js";
+import { X01_BUST_GLASS_CRACK_SOUND_ASSET } from "#feature-assets";
 import { getX01PlayerSurfaceSnapshot } from "../shared/x01-player-surface-adapter.js";
 import { isX01VariantText } from "../../domain/variant-rules.js";
 import { removeBustCracks, renderBustCracks } from "./cracks.js";
@@ -13,6 +14,9 @@ export const TURN_THROW_SELECTOR = "#ad-ext-turn .ad-ext-turn-throw, .ad-ext-tur
 export const ACTIVE_PLAYER_SELECTOR =
   "#ad-ext-player-display .ad-ext-player.ad-ext-player-active, #ad-ext-player-display .ad-ext-player-active, .ad-ext-player.ad-ext-player-active, .ad-ext-player-active";
 export const SHAKE_DURATION_MS = 3000;
+const BUST_SOUND_VOLUME = 0.9;
+const BUST_AUDIO_FALLBACK_SOURCE = "html-audio";
+const BUST_AUDIO_WEB_SOURCE = "web-audio";
 const BUST_INLINE_STYLE_PROPERTIES = Object.freeze([
   "background",
   "background-color",
@@ -250,6 +254,243 @@ function getTimerApi(windowRef = null) {
   };
 }
 
+function createBustSoundAudio(windowRef = null) {
+  if (!windowRef || typeof windowRef.Audio !== "function") {
+    return null;
+  }
+
+  try {
+    const audio = new windowRef.Audio(X01_BUST_GLASS_CRACK_SOUND_ASSET);
+    audio.preload = "auto";
+    audio.volume = BUST_SOUND_VOLUME;
+    return audio;
+  } catch (_) {
+    return null;
+  }
+}
+
+function resolveAudioContextConstructor(windowRef = null) {
+  return windowRef?.AudioContext || windowRef?.webkitAudioContext || null;
+}
+
+function createBustAudioState(windowRef = null) {
+  const AudioContextRef = resolveAudioContextConstructor(windowRef);
+  if (typeof AudioContextRef === "function") {
+    try {
+      const context = new AudioContextRef();
+      return {
+        sourceType: BUST_AUDIO_WEB_SOURCE,
+        context,
+        buffer: null,
+        loadPromise: null,
+        fetchRef:
+          typeof windowRef.fetch === "function"
+            ? windowRef.fetch.bind(windowRef)
+            : typeof fetch === "function"
+              ? fetch
+              : null,
+      };
+    } catch (_) {
+      // fall back to HTMLAudio
+    }
+  }
+
+  const audio = createBustSoundAudio(windowRef);
+  return audio
+    ? {
+        sourceType: BUST_AUDIO_FALLBACK_SOURCE,
+        audio,
+      }
+    : null;
+}
+
+function loadBustAudioBuffer(audioState) {
+  if (!audioState || audioState.sourceType !== BUST_AUDIO_WEB_SOURCE) {
+    return Promise.resolve(null);
+  }
+  if (audioState.buffer) {
+    return Promise.resolve(audioState.buffer);
+  }
+  if (audioState.loadPromise) {
+    return audioState.loadPromise;
+  }
+  if (typeof audioState.fetchRef !== "function") {
+    return Promise.resolve(null);
+  }
+
+  audioState.loadPromise = Promise.resolve()
+    .then(() => audioState.fetchRef(X01_BUST_GLASS_CRACK_SOUND_ASSET))
+    .then((response) => {
+      if (!response?.ok) {
+        throw new Error("X01 bust glass crack sound asset could not be loaded.");
+      }
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => audioState.context.decodeAudioData(arrayBuffer))
+    .then((buffer) => {
+      audioState.buffer = buffer;
+      return buffer;
+    })
+    .catch(() => null);
+
+  return audioState.loadPromise;
+}
+
+function resumeBustAudioContext(audioState) {
+  const context = audioState?.context || null;
+  if (!context || typeof context.resume !== "function" || context.state === "running") {
+    return Promise.resolve();
+  }
+  return Promise.resolve(context.resume()).catch(() => {});
+}
+
+function playBustAudioBuffer(audioState) {
+  const context = audioState?.context || null;
+  const buffer = audioState?.buffer || null;
+  if (!context || !buffer) {
+    return false;
+  }
+
+  try {
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = buffer;
+    gain.gain.value = BUST_SOUND_VOLUME;
+    source.connect(gain);
+    gain.connect(context.destination);
+    source.start(0);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+export function ensureBustGlassCrackAudio(state, windowRef = null) {
+  if (!state || state.audioState) {
+    return state?.audioState || null;
+  }
+
+  state.audioState = createBustAudioState(windowRef);
+  loadBustAudioBuffer(state.audioState);
+  return state.audioState;
+}
+
+export function tryUnlockBustGlassCrackAudio(state) {
+  const audioState = state?.audioState || null;
+  if (!audioState || state.audioUnlocked) {
+    return;
+  }
+
+  if (audioState.sourceType === BUST_AUDIO_WEB_SOURCE) {
+    resumeBustAudioContext(audioState).then(() => {
+      if (audioState.context?.state === "running") {
+        state.audioUnlocked = true;
+      }
+    });
+    loadBustAudioBuffer(audioState);
+    return;
+  }
+
+  const audio = audioState.audio || null;
+  if (!audio) {
+    return;
+  }
+
+  try {
+    audio.volume = 0.01;
+    const playResult = audio.play();
+    const markUnlocked = () => {
+      audio.pause?.();
+      try {
+        audio.currentTime = 0;
+      } catch (_) {
+        // fail-soft reset
+      }
+      audio.volume = BUST_SOUND_VOLUME;
+      state.audioUnlocked = true;
+    };
+
+    if (playResult && typeof playResult.then === "function") {
+      playResult.then(markUnlocked).catch(() => {
+        audio.volume = BUST_SOUND_VOLUME;
+      });
+      return;
+    }
+    markUnlocked();
+  } catch (_) {
+    try {
+      audio.volume = BUST_SOUND_VOLUME;
+    } catch (_) {
+      // fail-soft reset
+    }
+  }
+}
+
+export function playBustGlassCrackSound(options = {}) {
+  if (options.soundEnabled !== true) {
+    return {
+      played: false,
+      reason: "disabled",
+    };
+  }
+
+  const windowRef = options.windowRef || null;
+  const audioState =
+    options.audioState ||
+    ensureBustGlassCrackAudio(options.state || null, windowRef) ||
+    createBustAudioState(windowRef);
+  if (!audioState) {
+    return {
+      played: false,
+      reason: "no-audio",
+    };
+  }
+
+  if (audioState.sourceType === BUST_AUDIO_WEB_SOURCE) {
+    resumeBustAudioContext(audioState)
+      .then(() => loadBustAudioBuffer(audioState))
+      .then(() => playBustAudioBuffer(audioState));
+    return {
+      played: true,
+      reason: "scheduled",
+      audioState,
+    };
+  }
+
+  const audio = audioState.audio || null;
+  if (!audio) {
+    return {
+      played: false,
+      reason: "no-audio",
+    };
+  }
+
+  audio.volume = BUST_SOUND_VOLUME;
+  try {
+    audio.currentTime = 0;
+  } catch (_) {
+    // fail-soft reset
+  }
+
+  try {
+    const playResult = audio.play();
+    if (playResult && typeof playResult.catch === "function") {
+      playResult.catch(() => {});
+    }
+  } catch (_) {
+    return {
+      played: false,
+      reason: "play-error",
+    };
+  }
+
+  return {
+    played: true,
+    reason: "played",
+    audioState,
+  };
+}
+
 function clearShakeTimeout(state, windowRef = null) {
   if (!state?.shakeTimeoutHandle) {
     return;
@@ -274,6 +515,8 @@ export function createBustActivePlayerHighlightState() {
     activeNode: null,
     shakeNode: null,
     shakeTimeoutHandle: null,
+    audioState: null,
+    audioUnlocked: false,
   };
 }
 
@@ -319,6 +562,38 @@ export function clearBustActivePlayerHighlightState(state, windowRef = null) {
   state.shakeNode = null;
 }
 
+export function runBustActivePlayerHighlightPreview(options = {}) {
+  const targetNode = options.targetNode || null;
+  if (!targetNode?.classList) {
+    return null;
+  }
+
+  const documentRef = options.documentRef || targetNode.ownerDocument || null;
+  const windowRef = options.windowRef || null;
+  const state = createBustActivePlayerHighlightState();
+
+  clearNodeState(targetNode);
+  targetNode.classList.add(BUST_ACTIVE_CLASS);
+  applyBustCardVisuals(targetNode, FALLBACK_BUST_CARD_VISUALS);
+  state.activeNode = targetNode;
+  state.wasBust = true;
+  if (options.shakeEnabled !== false) {
+    triggerBustShake(targetNode, state, windowRef);
+  }
+  renderBustCracks(targetNode, options.crackCount, {
+    documentRef,
+    random: options.random,
+  });
+  const soundResult = playBustGlassCrackSound({
+    windowRef,
+    soundEnabled: options.soundEnabled === true,
+    state,
+  });
+  state.audioState = soundResult.audioState || null;
+
+  return () => clearBustActivePlayerHighlightState(state, windowRef);
+}
+
 export function syncBustActivePlayerHighlight(context = {}, state = createBustActivePlayerHighlightState()) {
   const documentRef = context.documentRef;
   const windowRef = context.windowRef || null;
@@ -357,11 +632,20 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
   state.wasBust = true;
 
   if (enteredBust) {
-    triggerBustShake(activeNode, state, windowRef);
+    if (context.shakeEnabled !== false) {
+      triggerBustShake(activeNode, state, windowRef);
+    }
     renderBustCracks(activeNode, context.crackCount, {
       documentRef,
       random: context.random,
     });
+    const soundResult = playBustGlassCrackSound({
+      windowRef,
+      soundEnabled: context.soundEnabled === true,
+      audioState: state.audioState,
+      state,
+    });
+    state.audioState = soundResult.audioState || state.audioState;
   }
 
   return {

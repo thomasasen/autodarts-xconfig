@@ -20,3 +20,4 @@ export function resolveDartDesignAsset(designKey) {
 
 export const TAKEOUT_IMAGE_ASSET = toAssetUrl("../assets/TakeOut.png");
 export const SINGLE_BULL_SOUND_ASSET = toAssetUrl("../assets/singlebull.mp3");
+export const X01_BUST_GLASS_CRACK_SOUND_ASSET = toAssetUrl("../assets/glasscrack.mp3");

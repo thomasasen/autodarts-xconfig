@@ -1945,6 +1945,47 @@ function resolveThemeActionNoteText(action) {
   return "";
 }
 
+function buildX01BustActivePlayerHighlightPreview(documentRef) {
+  const preview = createElement(documentRef, "div", {
+    className: "ad-xconfig-x01-bust-preview",
+  });
+  const card = createElement(documentRef, "div", {
+    className: "ad-ext-player ad-ext-player-active ad-xconfig-x01-bust-preview-card",
+    attributes: {
+      "data-adxconfig-x01-bust-active-player-preview-card": "true",
+    },
+  });
+  const stack = createElement(documentRef, "div", {
+    className: "chakra-stack ad-xconfig-x01-bust-preview-stack",
+  });
+  const head = createElement(documentRef, "div", {
+    className: "ad-xconfig-x01-bust-preview-head",
+  });
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-x01-bust-preview-leg",
+    text: "0",
+  }));
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-x01-bust-preview-name",
+    text: "TORNADO T...",
+  }));
+  head.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-x01-bust-preview-score",
+    text: "121",
+  }));
+  stack.appendChild(head);
+  stack.appendChild(createElement(documentRef, "div", {
+    className: "ad-xconfig-x01-bust-preview-meta",
+    text: "#2 | Ø 0.0 / 0.0",
+  }));
+  stack.appendChild(createElement(documentRef, "div", {
+    className: "ad-xconfig-x01-bust-preview-bar",
+  }));
+  card.appendChild(stack);
+  preview.appendChild(card);
+  return preview;
+}
+
 function buildFeatureActionField(documentRef, feature, field, fieldId) {
   const previewColorTheme = String(field?.previewColorTheme || "").trim();
   const wrapper = createElement(documentRef, "div", {
@@ -1969,13 +2010,17 @@ function buildFeatureActionField(documentRef, feature, field, fieldId) {
   });
   const previewTarget = String(field.previewTarget || "").trim();
   if (previewTarget) {
-    wrapper.appendChild(createElement(documentRef, "div", {
+    const previewNode = createElement(documentRef, "div", {
       className: "ad-xconfig-setting-action-preview",
       attributes: {
         "data-adxconfig-action-preview-target": previewTarget,
         "data-feature-action-id": field.actionId || "",
       },
-    }));
+    });
+    if (previewTarget === "x01-bust-active-player-highlight") {
+      previewNode.appendChild(buildX01BustActivePlayerHighlightPreview(documentRef));
+    }
+    wrapper.appendChild(previewNode);
   }
   wrapper.appendChild(button);
   const noteText = String(field.description || resolveThemeActionNoteText(field.action)).trim();

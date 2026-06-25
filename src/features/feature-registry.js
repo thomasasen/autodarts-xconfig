@@ -2,7 +2,10 @@ import { mountCheckoutScoreHighlight } from "./checkout-score-highlight/index.js
 import { mountCheckoutTargetHighlights } from "./checkout-target-highlights/index.js";
 import { mountTvBoardZoom } from "./tv-board-zoom/index.js";
 import { mountCheckoutSuggestionStyles } from "./checkout-suggestion-styles/index.js";
-import { mountX01BustActivePlayerHighlight } from "./x01-bust-active-player-highlight/index.js";
+import {
+  mountX01BustActivePlayerHighlight,
+  runX01BustActivePlayerHighlightAction,
+} from "./x01-bust-active-player-highlight/index.js";
 import { mountAvgTrendArrow } from "./avg-trend-arrow/index.js";
 import { mountActivePlayerSweep } from "./active-player-sweep/index.js";
 import { mountSpecialHitHighlights } from "./special-hit-highlights/index.js";
@@ -170,6 +173,7 @@ const featureInitializers = Object.freeze({
 });
 
 const featureActions = Object.freeze({
+  "x01-bust-active-player-highlight": runX01BustActivePlayerHighlightAction,
   "dart-marker-replacer": runDartMarkerReplacerAction,
   "single-bull-hit-sound": runSingleBullHitSoundAction,
   "winner-celebration-effect": runWinnerCelebrationEffectAction,

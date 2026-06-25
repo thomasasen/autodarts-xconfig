@@ -56,6 +56,7 @@ function buildAllowedBundledAssetSources() {
     ),
     "src/assets/TakeOut.png",
     "src/assets/singlebull.mp3",
+    "src/assets/glasscrack.mp3",
   ]);
 }
 

@@ -5,7 +5,11 @@ import {
   SHAKE_DURATION_MS,
   clearBustActivePlayerHighlightState,
   createBustActivePlayerHighlightState,
+  ensureBustGlassCrackAudio,
+  playBustGlassCrackSound,
+  runBustActivePlayerHighlightPreview,
   syncBustActivePlayerHighlight,
+  tryUnlockBustGlassCrackAudio,
 } from "../../src/features/x01-bust-active-player-highlight/logic.js";
 import {
   BUST_ACTIVE_CLASS,
@@ -15,13 +19,35 @@ import {
   DEMO_CRACK_SETTINGS,
   buildStyleText,
 } from "../../src/features/x01-bust-active-player-highlight/style.js";
+import { mountX01BustActivePlayerHighlight } from "../../src/features/x01-bust-active-player-highlight/index.js";
 import { FakeDocument } from "./fake-dom.js";
 
 function createManualTimerWindow(documentRef, computedStyle = {}) {
   const timers = [];
+  const audioInstances = [];
   let nextHandle = 1;
+  class FakeAudio {
+    constructor(src) {
+      this.src = src;
+      this.preload = "";
+      this.volume = 1;
+      this.currentTime = 0;
+      this.playCount = 0;
+      audioInstances.push(this);
+    }
+
+    play() {
+      this.playCount += 1;
+      return Promise.resolve();
+    }
+
+    pause() {
+      this.paused = true;
+    }
+  }
   const windowRef = {
     document: documentRef,
+    Audio: FakeAudio,
     getComputedStyle: (node) => node.__computedStyle || computedStyle,
     setTimeout(callback, ms) {
       const handle = nextHandle;
@@ -45,6 +71,7 @@ function createManualTimerWindow(documentRef, computedStyle = {}) {
   return {
     windowRef,
     timers,
+    audioInstances,
     runTimer(index = 0) {
       const timer = timers[index];
       if (timer && !timer.cleared) {
@@ -152,6 +179,212 @@ test("x01 bust highlight styles and shakes only the active player on bust entry"
   assert.equal(activeCard.style.getPropertyPriority("border-style"), "important");
   assert.equal(activeCard.style.getPropertyValue("box-shadow"), "none");
   assert.equal(activeCard.style.getPropertyPriority("box-shadow"), "important");
+});
+
+test("x01 bust highlight plays the glass crack sound only on bust entry when enabled", () => {
+  const { documentRef } = setupBustDocument();
+  const state = createBustActivePlayerHighlightState();
+  const { windowRef, audioInstances } = createManualTimerWindow(documentRef);
+
+  syncBustActivePlayerHighlight({ documentRef, windowRef, soundEnabled: false }, state);
+  assert.equal(audioInstances.length, 0);
+
+  setTurnScore(documentRef, "60");
+  syncBustActivePlayerHighlight({ documentRef, windowRef, soundEnabled: true }, state);
+  setTurnScore(documentRef, "BUST");
+  syncBustActivePlayerHighlight({ documentRef, windowRef, soundEnabled: true }, state);
+  syncBustActivePlayerHighlight({ documentRef, windowRef, soundEnabled: true }, state);
+
+  assert.equal(audioInstances.length, 1);
+  assert.match(audioInstances[0].src, /glasscrack\.mp3$/);
+  assert.equal(audioInstances[0].volume, 0.9);
+  assert.equal(audioInstances[0].currentTime, 0);
+  assert.equal(audioInstances[0].playCount, 1);
+});
+
+test("x01 bust highlight can disable shake while keeping persistent bust styling", () => {
+  const { documentRef, activeCard } = setupBustDocument();
+  const state = createBustActivePlayerHighlightState();
+  const timerWindow = createManualTimerWindow(documentRef);
+
+  const result = syncBustActivePlayerHighlight(
+    { documentRef, windowRef: timerWindow.windowRef, crackCount: 1, shakeEnabled: false },
+    state
+  );
+
+  assert.equal(result.isBust, true);
+  assert.equal(result.shook, true);
+  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
+  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
+  assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+  assert.equal(timerWindow.timers.length, 0);
+});
+
+test("x01 bust sound can be unlocked before a later bust entry", async () => {
+  const { documentRef } = setupBustDocument({ turnScoreText: "60" });
+  const state = createBustActivePlayerHighlightState();
+  const { windowRef, audioInstances } = createManualTimerWindow(documentRef);
+
+  ensureBustGlassCrackAudio(state, windowRef);
+  assert.equal(audioInstances.length, 1);
+  tryUnlockBustGlassCrackAudio(state);
+  await Promise.resolve();
+
+  assert.equal(state.audioUnlocked, true);
+  assert.equal(audioInstances[0].playCount, 1);
+  assert.equal(audioInstances[0].volume, 0.9);
+
+  syncBustActivePlayerHighlight({ documentRef, windowRef, soundEnabled: true }, state);
+  setTurnScore(documentRef, "BUST");
+  syncBustActivePlayerHighlight({ documentRef, windowRef, soundEnabled: true }, state);
+
+  assert.equal(audioInstances.length, 1);
+  assert.equal(audioInstances[0].playCount, 2);
+});
+
+test("x01 bust sound unlock ignores xConfig panel clicks so preview playback keeps user activation", async () => {
+  const { documentRef } = setupBustDocument({ turnScoreText: "60" });
+  const { windowRef, audioInstances } = createManualTimerWindow(documentRef);
+  const listenerEntries = [];
+  const panel = documentRef.createElement("div");
+  panel.id = "ad-xconfig-panel-host";
+  const panelButton = documentRef.createElement("button");
+  panel.appendChild(panelButton);
+  documentRef.main.appendChild(panel);
+
+  const cleanup = mountX01BustActivePlayerHighlight({
+    documentRef,
+    windowRef,
+    config: {
+      getFeatureConfig: () => ({ crackCount: 1, soundEnabled: true }),
+    },
+    domGuards: {
+      ensureStyle: () => {},
+      removeNodeById: () => {},
+    },
+    helpers: {
+      createRafScheduler: (callback) => ({
+        schedule: callback,
+        cancel: () => {},
+      }),
+    },
+    registries: {
+      listeners: {
+        register: (entry) => listenerEntries.push(entry),
+        remove: () => {},
+      },
+    },
+  });
+  await Promise.resolve();
+
+  const pointerEntry = listenerEntries.find((entry) => entry.type === "pointerdown");
+  assert.ok(pointerEntry);
+  assert.equal(audioInstances.length, 1);
+  const initialPlayCount = audioInstances[0].playCount;
+
+  pointerEntry.handler({ target: panelButton });
+  await Promise.resolve();
+  assert.equal(audioInstances[0].playCount, initialPlayCount);
+
+  cleanup();
+});
+
+test("x01 bust preview applies visuals, cracks, shake and optional sound", () => {
+  const { documentRef, activeCard } = setupBustDocument();
+  const { windowRef, audioInstances } = createManualTimerWindow(documentRef);
+
+  const cleanup = runBustActivePlayerHighlightPreview({
+    documentRef,
+    windowRef,
+    targetNode: activeCard,
+    crackCount: 1,
+    soundEnabled: true,
+  });
+
+  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
+  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), true);
+  assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+  assert.equal(audioInstances.length, 1);
+  assert.match(audioInstances[0].src, /glasscrack\.mp3$/);
+
+  cleanup();
+  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
+  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
+  assert.equal(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+});
+
+test("x01 bust preview can disable shake while keeping visuals and cracks", () => {
+  const { documentRef, activeCard } = setupBustDocument();
+  const { windowRef } = createManualTimerWindow(documentRef);
+
+  const cleanup = runBustActivePlayerHighlightPreview({
+    documentRef,
+    windowRef,
+    targetNode: activeCard,
+    crackCount: 1,
+    shakeEnabled: false,
+  });
+
+  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
+  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
+  assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+
+  cleanup();
+  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
+});
+
+test("x01 bust sound uses Web Audio buffer playback when AudioContext is available", async () => {
+  const { documentRef } = setupBustDocument();
+  const startedSources = [];
+  class FakeAudioContext {
+    constructor() {
+      this.state = "suspended";
+      this.destination = {};
+    }
+
+    resume() {
+      this.state = "running";
+      return Promise.resolve();
+    }
+
+    decodeAudioData(arrayBuffer) {
+      assert.equal(arrayBuffer.byteLength, 4);
+      return Promise.resolve({ duration: 1.2 });
+    }
+
+    createBufferSource() {
+      return {
+        buffer: null,
+        connect: () => {},
+        start: (time) => startedSources.push(time),
+      };
+    }
+
+    createGain() {
+      return {
+        gain: { value: 0 },
+        connect: () => {},
+      };
+    }
+  }
+  const windowRef = {
+    document: documentRef,
+    AudioContext: FakeAudioContext,
+    fetch: () =>
+      Promise.resolve({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new Uint8Array([1, 2, 3, 4]).buffer),
+      }),
+  };
+  const state = createBustActivePlayerHighlightState();
+
+  const result = playBustGlassCrackSound({ windowRef, state, soundEnabled: true });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.equal(result.played, true);
+  assert.equal(result.reason, "scheduled");
+  assert.equal(state.audioState.sourceType, "web-audio");
+  assert.deepEqual(startedSources, [0]);
 });
 
 test("x01 bust highlight immediately renders configured cracks at random card positions", () => {

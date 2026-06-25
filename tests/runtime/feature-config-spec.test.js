@@ -108,23 +108,31 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
   assert.ok(spec);
   assert.deepEqual(spec.createDefaultConfig(), {
     enabled: true,
-    crackCount: 3,
+    crackCount: 2,
+    shakeEnabled: false,
+    soundEnabled: true,
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("x01BustActivePlayerHighlight"), {
     enabled: true,
-    crackCount: 3,
+    crackCount: 2,
+    shakeEnabled: false,
+    soundEnabled: true,
     debug: false,
   });
   assert.deepEqual(
     spec.normalizeConfig({
       enabled: "aktiv",
       crackCount: 2,
+      shakeEnabled: "false",
+      soundEnabled: "true",
       debug: "true",
     }),
     {
       enabled: true,
       crackCount: 2,
+      shakeEnabled: false,
+      soundEnabled: true,
       debug: true,
     }
   );
@@ -135,7 +143,9 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
     }),
     {
       enabled: false,
-      crackCount: 3,
+      crackCount: 2,
+      shakeEnabled: false,
+      soundEnabled: true,
       debug: false,
     }
   );

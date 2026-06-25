@@ -455,6 +455,15 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-text-input:focus{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.24)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action{display:grid;gap:.45rem}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-preview{display:block;width:100%;min-height:8.5rem}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview{display:grid;place-items:center;min-height:8.5rem;padding:.45rem;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(8,13,26,.82),rgba(30,18,25,.62))}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-card{position:relative;width:min(100%,28rem);min-height:7rem;border:1px solid rgba(132,169,190,.38);border-radius:8px;overflow:hidden;background:rgba(16,24,38,.92);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-stack{display:grid;grid-template-rows:auto 1fr auto;gap:.72rem;min-height:7rem;padding:.78rem .92rem;background:linear-gradient(135deg,rgba(18,27,42,.94),rgba(12,20,34,.9));color:#fff}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.65rem}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-leg{display:grid;place-items:center;width:2.3rem;height:2.3rem;border-radius:7px;background:#9fdb58;color:#0b1020;font-size:1.55rem;font-weight:800;line-height:1}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.25rem;font-weight:900;line-height:1;letter-spacing:0;color:rgba(246,249,255,.96)}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-score{font-size:2.9rem;font-weight:900;line-height:.9;font-variant-numeric:tabular-nums;color:#22d3ee;text-shadow:0 0 14px rgba(34,211,238,.32)}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-meta{align-self:center;color:rgba(235,243,255,.92);font-size:1rem;font-weight:600}
+#${PANEL_HOST_ID} .ad-xconfig-x01-bust-preview-bar{height:.55rem;border-radius:999px;background:linear-gradient(90deg,#f97316,#fb923c,#f97316);box-shadow:0 0 12px rgba(249,115,22,.3)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn{border:1px solid rgba(255,255,255,.3);border-radius:10px;min-height:2.65rem;padding:.55rem .8rem;background:rgba(22,38,82,.72);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary{border-color:rgba(126,216,255,.92);background:linear-gradient(145deg,rgba(58,148,255,.52),rgba(88,200,255,.34));box-shadow:0 0 0 1px rgba(126,216,255,.24),0 4px 14px rgba(58,148,255,.24)}
 #${PANEL_HOST_ID} .ad-xconfig-setting-action-btn--primary:hover{background:linear-gradient(145deg,rgba(72,170,255,.62),rgba(102,214,255,.4))}

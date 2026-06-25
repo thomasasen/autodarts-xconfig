@@ -552,9 +552,9 @@ export const xconfigFeatureCopy = deepFreeze({
     cardDescription:
       "Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen.",
     visibleDescription:
-      "Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.",
+      "Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.",
     visualDescription:
-      "Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen und die aktive Karte wackelt drei Sekunden im schnellen Earthquake-Stil. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.",
+      "Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen. Wenn der Wackeleffekt aktiv ist, wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Wenn der Glasbruch-Sound aktiviert ist, wird er gleichzeitig gestartet. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.",
     usefulWhen:
       "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
     images: [
@@ -565,6 +565,16 @@ export const xconfigFeatureCopy = deepFreeze({
         "Legt fest, wie viele Glasrisse beim BUST erscheinen; `Aus` deaktiviert nur die Glasrisse.",
         "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt Markierung und Wackeln aktiv.",
         "Bestimmt die Anzahl zufällig platzierter Glasrisse."
+      ),
+      shakeEnabled: fieldCopy(
+        "Schaltet das dreisekündige Wackeln beim Eintritt in BUST ein oder aus.",
+        "Steuert nur die kurze Earthquake-Bewegung der aktiven Spielerkarte. Rote Markierung, Glasrisse und optionaler Sound bleiben von dieser Einstellung unberührt.",
+        "Schaltet den Wackeleffekt für Effekt und Vorschau ein."
+      ),
+      soundEnabled: fieldCopy(
+        "Spielt beim Eintritt in BUST und in der Vorschau einen Glasbruch-Sound ab.",
+        "Aktiviert den zusätzlichen Glasbruch-Sound parallel zu roter Markierung, Glasrissen und optionalem Wackeln. Bei blockierter Browser-Audiowiedergabe bleibt der visuelle Effekt unverändert.",
+        "Schaltet den Glasbruch-Sound für Effekt und Vorschau ein."
       ),
       debug: DEBUG_FIELD,
     },
