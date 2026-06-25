@@ -348,6 +348,56 @@ test("tv-board-zoom clears an active zoom when the DOM variant switches away fro
   }
 });
 
+test("tv-board-zoom clears an active zoom immediately while the turn score shows BUST", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const logs = [];
+  const gameState = createMutableX01GameState({
+    activeScore: 10,
+    throws: [],
+  });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+    featureConfig: {
+      checkoutZoomTarget: "finish-only",
+    },
+    featureDebug: {
+      enabled: true,
+      log(...args) {
+        logs.push(args);
+      },
+      warn(...args) {
+        logs.push(args);
+      },
+    },
+  });
+
+  try {
+    timers.advance(25);
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+
+    documentRef.turnScoreElement.textContent = "BUST";
+    gameState.notify();
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(String(targetNode.style.transform || ""), "");
+    assert.ok(logs.some((entry) => entry[1]?.status === "reset" && entry[1]?.reason === "bust"));
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
 test("tv-board-zoom hard-resets before applying zoom in a new X01 game", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

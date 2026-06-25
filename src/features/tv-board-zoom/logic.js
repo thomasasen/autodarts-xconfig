@@ -37,6 +37,26 @@ const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
 const TRANSLATE_PREFIX = "translate(";
 const SCALE_PREFIX = "scale(";
 const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
+const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
+
+function normalizeText(value) {
+  return String(value || "")
+    .replaceAll("\u00a0", " ")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+}
+
+function queryAll(rootNode, selector) {
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
+    return [];
+  }
+
+  try {
+    return Array.from(rootNode.querySelectorAll(selector));
+  } catch (_) {
+    return [];
+  }
+}
 
 function parseViewBox(svgNode) {
   if (!svgNode || typeof svgNode.getAttribute !== "function") {
@@ -1218,6 +1238,22 @@ function resetZoomIntentForInactiveVariant(state) {
   state.pendingLifecycleResetReason = "variant-inactive";
 }
 
+function resetZoomIntentForBust(state) {
+  state.holdUntilTs = 0;
+  state.activeIntent = null;
+  state.stickyUntilTurnChange = false;
+  state.stickyUntilLegEnd = false;
+  state.manualPause = false;
+  state.manualPauseThrowCount = -1;
+  state.pendingLifecycleResetReason = "bust";
+}
+
+function hasVisibleBustTurnScore(documentRef) {
+  return queryAll(documentRef, TURN_POINTS_SELECTOR).some((node) => {
+    return normalizeText(node?.textContent || "").toUpperCase() === "BUST";
+  });
+}
+
 function syncBoundaryTokenState(state, boundaryToken) {
   const lastBoundaryToken = String(state.matchBoundaryToken || "");
   if (boundaryToken && lastBoundaryToken && boundaryToken !== lastBoundaryToken) {
@@ -1593,6 +1629,11 @@ export function computeZoomIntent(options = {}) {
   });
   if (!active) {
     resetZoomIntentForInactiveVariant(state);
+    return null;
+  }
+
+  if (hasVisibleBustTurnScore(documentRef)) {
+    resetZoomIntentForBust(state);
     return null;
   }
 
