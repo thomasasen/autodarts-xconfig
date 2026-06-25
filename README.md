@@ -918,17 +918,20 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### X01 Bust Active Player Highlight
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.
-- Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen und die aktive Karte wackelt drei Sekunden im schnellen Earthquake-Stil. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
+- Was macht es sichtbar? Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
+- Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen. Wenn der Wackeleffekt aktiv ist, wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Wenn der Glasbruch-Sound aktiviert ist, wird er gleichzeitig gestartet. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
 - Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
 
 **Einstellungen einfach erklärt**
 
+- `Vorschau`: Löst die BUST-Vorschau mit roter aktiver Spielerkarte, aktueller Glasriss-Anzahl und optionalem Sound direkt im Einstellungsdialog aus.
 - `Anzahl Glasrisse`: Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt Markierung und Wackeln aktiv.
   - `Aus`: Deaktiviert nur die Glasriss-Overlays. Die rote BUST-Markierung und der Earthquake-Effekt der aktiven Spielerkarte bleiben unverändert aktiv.
   - `1`: Erzeugt beim Eintritt in BUST ein einzelnes zufällig platziertes Einschlagzentrum mit Glasrissstruktur auf der aktiven Spielerkarte.
   - `2`: Erzeugt beim Eintritt in BUST zwei voneinander unabhängige Einschlagzentren und verteilt sie zufällig auf der aktiven Spielerkarte.
   - `3`: Erzeugt beim Eintritt in BUST drei zufällig verteilte Einschlagzentren. Diese Stufe füllt die aktive Spielerkarte am stärksten mit Glasrissstrukturen.
+- `Wackeleffekt`: Steuert nur die kurze Earthquake-Bewegung der aktiven Spielerkarte. Rote Markierung, Glasrisse und optionaler Sound bleiben von dieser Einstellung unberührt.
+- `Glasbruch-Sound`: Aktiviert den zusätzlichen Glasbruch-Sound parallel zu roter Markierung, Glasrissen und optionalem Wackeln. Bei blockierter Browser-Audiowiedergabe bleibt der visuelle Effekt unverändert.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 ![X01 Bust Active Player Highlight](docs/screenshots/animation-x01-bust-active-player-highlight.gif)

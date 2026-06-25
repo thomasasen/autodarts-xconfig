@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.6] - 2026-06-25
+
+### Added
+
+- Nutzerwirkung: `X01 Bust Active Player Highlight` kann beim Überwurf zusätzlich einen Glass-Crack-Sound abspielen und die Vorschau zeigt den Effekt direkter im Einstellungsdialog.
+  Technik: Das Bust-Modul bündelt Crack-Overlay, Audio-Asset, Config-Normalisierung und Preview-/Descriptor-Wiring mit zusätzlichen Runtime- und Struktur-Regressionen.
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom` behandelt einen sichtbaren `BUST`-Zustand stabiler und zoomt nicht weiter auf überholte Checkout-Ziele.
+  Technik: Die Zoom-Logik erkennt Bust-Zustände als eigenen Spielzustand, räumt aktive Zieltransforms kontrolliert ab und deckt den Pfad mit fokussierten Runtime-Tests ab.
+
 ## [2.4.5] - 2026-06-24
 
 ### Fixed
@@ -1747,7 +1759,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.5]: https://github.com/thomasasen/autodarts-xconfig/compare/106b63c...HEAD
+[2.4.6]: https://github.com/thomasasen/autodarts-xconfig/compare/4da06d6...HEAD
+[2.4.5]: https://github.com/thomasasen/autodarts-xconfig/compare/106b63c...4da06d6
 [2.4.4]: https://github.com/thomasasen/autodarts-xconfig/compare/e93e11d...106b63c
 [2.4.3]: https://github.com/thomasasen/autodarts-xconfig/compare/73900ce...e93e11d
 [2.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/24f6686...73900ce

@@ -673,13 +673,16 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### X01 Bust Active Player Highlight
 
 - Gilt für: `X01`
-- Kurz: Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln.
-- Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen und die aktive Karte wackelt drei Sekunden im schnellen Earthquake-Stil. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
+- Kurz: Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
+- Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen. Wenn der Wackeleffekt aktiv ist, wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Wenn der Glasbruch-Sound aktiviert ist, wird er gleichzeitig gestartet. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
+- `Vorschau`: Startet die BUST-Vorschau im Einstellungsdialog.
 - `Anzahl Glasrisse`: Bestimmt die Anzahl zufällig platzierter Glasrisse.
   - `Aus`: Keine Glasrisse; Rotmarkierung und Wackeln bleiben aktiv.
   - `1`: Zeigt ein zufällig platziertes Einschlagzentrum.
   - `2`: Zeigt zwei zufällig und unabhängig platzierte Einschlagzentren.
   - `3`: Zeigt drei Einschlagzentren und damit die dichteste Darstellung.
+- `Wackeleffekt`: Schaltet den Wackeleffekt für Effekt und Vorschau ein.
+- `Glasbruch-Sound`: Schaltet den Glasbruch-Sound für Effekt und Vorschau ein.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![X01 Bust Active Player Highlight](screenshots/animation-x01-bust-active-player-highlight.gif)

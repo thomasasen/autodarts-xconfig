@@ -34,7 +34,7 @@ function collectBundledDataUrls(text) {
       currentSource = sourceMatch[1];
     }
 
-    Array.from(line.matchAll(/data:(?:image|audio)\/[^"']+/g)).forEach((match) => {
+    Array.from(line.matchAll(/data:(?:image|audio|application)\/[^"']+/g)).forEach((match) => {
       rows.push({
         source: currentSource,
         value: match[0],

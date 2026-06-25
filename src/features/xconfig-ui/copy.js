@@ -561,6 +561,11 @@ export const xconfigFeatureCopy = deepFreeze({
       image("X01 Bust Active Player Highlight", "animation-x01-bust-active-player-highlight.gif"),
     ],
     fields: {
+      preview: fieldCopy(
+        "Startet eine sofortige BUST-Vorschau auf der Beispielkarte.",
+        "Löst die BUST-Vorschau mit roter aktiver Spielerkarte, aktueller Glasriss-Anzahl und optionalem Sound direkt im Einstellungsdialog aus.",
+        "Startet die BUST-Vorschau im Einstellungsdialog."
+      ),
       crackCount: fieldCopy(
         "Legt fest, wie viele Glasrisse beim BUST erscheinen; `Aus` deaktiviert nur die Glasrisse.",
         "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt Markierung und Wackeln aktiv.",
