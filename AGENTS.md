@@ -119,6 +119,9 @@ Do not run full validation merely because source code changed.
 
 SonarQube is Tier 3 only. When Tier 3 requires it, follow
 `$validate-repo-change`; never print or commit the SonarQube token.
+When SonarQube cleanup is explicitly requested, query all unresolved project
+issues and treat a green Quality Gate as insufficient proof that cleanup is
+complete.
 
 ## Completion and reporting
 

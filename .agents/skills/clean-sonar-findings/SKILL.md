@@ -6,6 +6,9 @@ description: Use for explicit SonarQube issue cleanup, Sonar code smells, low-ri
 # Goal
 
 Resolve low-risk SonarQube findings without mixing static-analysis cleanup with behavior changes.
+When working from SonarQube server results, resolve every unresolved issue in
+the requested project or scope. Do not stop because the Quality Gate is green.
+If any issue remains, report it explicitly with the reason it was not fixed.
 
 # Good candidates
 
@@ -24,6 +27,8 @@ Resolve low-risk SonarQube findings without mixing static-analysis cleanup with 
 
 # Context budget
 
+- query unresolved SonarQube issues for the requested project or scope before
+  deciding cleanup is complete
 - start from the explicit Sonar finding or touched scope
 - search first, then open only the finding location and nearest tests
 - avoid broad tours through `src/**`
