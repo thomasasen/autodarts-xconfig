@@ -10,7 +10,6 @@ import { isX01VariantText } from "../../domain/variant-rules.js";
 import { removeBustCracks, renderBustCracks } from "./cracks.js";
 
 export const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
-export const TURN_THROW_SELECTOR = "#ad-ext-turn .ad-ext-turn-throw, .ad-ext-turn-throw";
 export const ACTIVE_PLAYER_SELECTOR =
   "#ad-ext-player-display .ad-ext-player.ad-ext-player-active, #ad-ext-player-display .ad-ext-player-active, .ad-ext-player.ad-ext-player-active, .ad-ext-player-active";
 export const SHAKE_DURATION_MS = 3000;
@@ -101,31 +100,12 @@ export function findActiveX01PlayerCard(documentRef) {
   return queryOne(documentRef, ACTIVE_PLAYER_SELECTOR);
 }
 
-function readComputedValue(style, propertyName, fallbackValue) {
-  const value = String(style?.[propertyName] || "").trim();
-  return value || fallbackValue;
-}
-
-export function resolveBustCardVisuals(documentRef, windowRef = null) {
-  const throwNode = queryOne(documentRef, TURN_THROW_SELECTOR);
-  const getComputedStyleRef =
-    windowRef && typeof windowRef.getComputedStyle === "function"
-      ? windowRef.getComputedStyle.bind(windowRef)
-      : null;
-  const style = throwNode && getComputedStyleRef ? getComputedStyleRef(throwNode) : null;
-
+export function resolveBustCardVisuals() {
   return {
-    background: readComputedValue(style, "background", FALLBACK_BUST_CARD_VISUALS.background),
-    backgroundColor: readComputedValue(
-      style,
-      "backgroundColor",
-      FALLBACK_BUST_CARD_VISUALS.backgroundColor
-    ),
-    border: readComputedValue(style, "border", FALLBACK_BUST_CARD_VISUALS.border),
-    borderColor: readComputedValue(style, "borderColor", "rgb(207, 52, 52)"),
-    borderStyle: readComputedValue(style, "borderStyle", "solid"),
-    borderWidth: readComputedValue(style, "borderWidth", "0.8px"),
-    boxShadow: readComputedValue(style, "boxShadow", FALLBACK_BUST_CARD_VISUALS.boxShadow),
+    ...FALLBACK_BUST_CARD_VISUALS,
+    borderColor: "rgb(207, 52, 52)",
+    borderStyle: "solid",
+    borderWidth: "0.8px",
   };
 }
 
@@ -625,7 +605,7 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
   }
 
   const enteredBust = state.wasBust !== true;
-  const visuals = resolveBustCardVisuals(documentRef, windowRef);
+  const visuals = resolveBustCardVisuals();
   activeNode.classList.add(BUST_ACTIVE_CLASS);
   applyBustCardVisuals(activeNode, visuals);
   state.activeNode = activeNode;

@@ -22,6 +22,7 @@ Do not use it for ordinary implementation, cleanup, validation, or docs work.
 - keep local working tree, local commit, GitHub-published, and installed-userscript truth separate
 - use `$maintain-changelog` for changelog curation; do not duplicate changelog policy here
 - do not claim remote publication or installed-version availability unless actually verified
+- include a suitable draft commit message whenever a version bump is performed
 
 # Context budget
 
@@ -48,3 +49,4 @@ A valid result must:
 - align all local version markers
 - distinguish local, committed, GitHub-published, and installed truth
 - report validation and publication state honestly
+- include a suitable draft commit message when the task included a version bump

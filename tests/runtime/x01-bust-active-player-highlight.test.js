@@ -129,7 +129,7 @@ function setupBustDocument(options = {}) {
   documentRef.variantElement.textContent = options.variantText || "X01";
   setTurnScore(documentRef, options.turnScoreText || "BUST");
   const players = appendPlayerDisplay(documentRef);
-  documentRef.throwRow.__computedStyle = {
+  documentRef.throwRow.__computedStyle = options.throwComputedStyle || {
     background:
       "rgba(255, 0, 0, 0.15) none repeat scroll 0% 0% / auto padding-box border-box",
     backgroundColor: "rgba(255, 0, 0, 0.15)",
@@ -179,6 +179,38 @@ test("x01 bust highlight styles and shakes only the active player on bust entry"
   assert.equal(activeCard.style.getPropertyPriority("border-style"), "important");
   assert.equal(activeCard.style.getPropertyValue("box-shadow"), "none");
   assert.equal(activeCard.style.getPropertyPriority("box-shadow"), "important");
+});
+
+test("x01 bust highlight keeps copied hit visuals when current hit tiles use another theme", () => {
+  const { documentRef, activeCard, activeSurface } = setupBustDocument({
+    throwComputedStyle: {
+      background:
+        "rgba(0, 0, 0, 0) linear-gradient(165deg, rgba(8, 12, 12, 0.98) 0%, rgba(11, 19, 12, 0.96) 48%, rgba(6, 11, 8, 0.99) 100%) repeat scroll 0% 0% / auto padding-box border-box",
+      backgroundColor: "rgba(0, 0, 0, 0)",
+      border: "0.8px solid rgba(255, 255, 255, 0.14)",
+      borderColor: "rgba(255, 255, 255, 0.14)",
+      borderStyle: "solid",
+      borderWidth: "0.8px",
+      boxShadow:
+        "rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.28) 0px -8px 18px 0px inset",
+    },
+  });
+  const state = createBustActivePlayerHighlightState();
+  const { windowRef } = createManualTimerWindow(documentRef);
+
+  syncBustActivePlayerHighlight({ documentRef, windowRef }, state);
+
+  assert.equal(
+    activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-background-color"),
+    "rgba(255, 0, 0, 0.15)"
+  );
+  assert.equal(
+    activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-border"),
+    "0.8px solid rgb(207, 52, 52)"
+  );
+  assert.equal(activeSurface.style.getPropertyValue("background-color"), "rgba(255, 0, 0, 0.15)");
+  assert.equal(activeCard.style.getPropertyValue("border-color"), "rgb(207, 52, 52)");
+  assert.equal(activeCard.style.getPropertyValue("box-shadow"), "none");
 });
 
 test("x01 bust highlight plays the glass crack sound only on bust entry when enabled", () => {

@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.7] - 2026-06-25
+
+### Fixed
+
+- Nutzerwirkung: `X01 Bust Active Player Highlight` behält beim Überwurf das rote `60 T20`-Hitkachel-Design auf der aktiven Spielerkarte, auch wenn spätere Trefferanimationen andere Farben verwenden.
+  Technik: Das Bust-Modul verwendet eine feste Kopie der roten Hitkachel-Visuals statt aktueller Throw-Tile-Styles und schützt den Pfad mit einer Regression gegen anders eingefärbte Trefferflächen.
+
 ## [2.4.6] - 2026-06-25
 
 ### Added
@@ -1759,7 +1766,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.6]: https://github.com/thomasasen/autodarts-xconfig/compare/4da06d6...HEAD
+[2.4.7]: https://github.com/thomasasen/autodarts-xconfig/compare/369c519...HEAD
+[2.4.6]: https://github.com/thomasasen/autodarts-xconfig/compare/4da06d6...369c519
 [2.4.5]: https://github.com/thomasasen/autodarts-xconfig/compare/106b63c...4da06d6
 [2.4.4]: https://github.com/thomasasen/autodarts-xconfig/compare/e93e11d...106b63c
 [2.4.3]: https://github.com/thomasasen/autodarts-xconfig/compare/73900ce...e93e11d
