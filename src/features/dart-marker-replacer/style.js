@@ -1,10 +1,12 @@
 import { DART_DESIGN_KEYS } from "#feature-assets";
+import { normalizeDartImpactStyle } from "./pose.js";
 
 export const STYLE_ID = "ad-ext-dart-marker-replacer-style";
 export const OVERLAY_ID = "ad-ext-dart-image-overlay";
 export const OVERLAY_SCENE_ID = "ad-ext-dart-image-overlay-scene";
 export const DART_CONTAINER_CLASS = "ad-ext-dart-flight-group";
 export const DART_ROTATE_CLASS = "ad-ext-dart-rotate-group";
+export const DART_POSE_CLASS = "ad-ext-dart-pose-group";
 export const DART_SHADOW_CLASS = "ad-ext-dart-shadow";
 export const DART_CLASS = "ad-ext-dart-image";
 
@@ -59,6 +61,7 @@ export function resolveDartMarkerReplacerConfig(featureConfig = {}) {
     sizePercent,
     sizeMultiplier: sizePercent / 100,
     hideOriginalMarkers: normalizeBoolean(featureConfig.hideOriginalMarkers, false),
+    impactStyle: normalizeDartImpactStyle(featureConfig.impactStyle),
     enableShadow: normalizeBoolean(featureConfig.enableShadow, true),
     enableShadowBlur: normalizeBoolean(featureConfig.enableShadowBlur, true),
     enableWobble: normalizeBoolean(featureConfig.enableWobble, true),
@@ -79,6 +82,7 @@ export function buildStyleText() {
 
 .${DART_CONTAINER_CLASS},
 .${DART_ROTATE_CLASS},
+.${DART_POSE_CLASS},
 .${DART_SHADOW_CLASS},
 .${DART_CLASS} {
   pointer-events: none;
@@ -100,6 +104,7 @@ export function buildStyleText() {
 @media (prefers-reduced-motion: reduce) {
   .${DART_CONTAINER_CLASS},
   .${DART_ROTATE_CLASS},
+  .${DART_POSE_CLASS},
   .${DART_SHADOW_CLASS},
   .${DART_CLASS} {
     animation: none !important;

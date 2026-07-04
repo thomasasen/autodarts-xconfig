@@ -5,6 +5,10 @@ import {
 } from "./logic.js";
 import {
   DART_CLASS,
+  DART_CONTAINER_CLASS,
+  DART_POSE_CLASS,
+  DART_ROTATE_CLASS,
+  DART_SHADOW_CLASS,
   OVERLAY_ID,
   STYLE_ID,
   buildStyleText,
@@ -27,7 +31,30 @@ const LISTENER_KEYS = Object.freeze({
   popstate: `${FEATURE_KEY}:window-popstate`,
   hashchange: `${FEATURE_KEY}:window-hashchange`,
   navigationCurrentEntry: `${FEATURE_KEY}:navigation-currententrychange`,
+  transitionRun: `${FEATURE_KEY}:zoom-transition-run`,
+  transitionEnd: `${FEATURE_KEY}:zoom-transition-end`,
+  transitionCancel: `${FEATURE_KEY}:zoom-transition-cancel`,
 });
+
+const ZOOM_CLASS = "ad-ext-tv-board-zoom";
+const ZOOM_HOST_CLASS = "ad-ext-tv-board-zoom-host";
+
+function isZoomMutationTarget(node) {
+  if (!node || typeof node !== "object") {
+    return false;
+  }
+  if (node.classList?.contains?.(ZOOM_CLASS) || node.classList?.contains?.(ZOOM_HOST_CLASS)) {
+    return true;
+  }
+  if (typeof node.closest !== "function") {
+    return false;
+  }
+  return Boolean(node.closest(`.${ZOOM_CLASS}, .${ZOOM_HOST_CLASS}, .ad-ext-theme-board-canvas, .showAnimations`));
+}
+
+function isZoomTransformTransition(event) {
+  return String(event?.propertyName || "") === "transform" && isZoomMutationTarget(event?.target);
+}
 
 function getCurrentHref(windowRef) {
   if (!windowRef?.location) {
@@ -92,6 +119,9 @@ function hasRelevantBoardMutation(mutations = [], isManagedNode = null) {
 
   return mutations.some((mutation) => {
     if (mutation?.type === "attributes") {
+      if (["class", "style"].includes(String(mutation?.attributeName || ""))) {
+        return isZoomMutationTarget(mutation?.target || null);
+      }
       return isBoardMutationNode(mutation?.target || null);
     }
 
@@ -256,6 +286,7 @@ export function initializeDartMarkerReplacer(context = {}) {
             animateDarts: true,
             sizePercent: 120,
             hideOriginalMarkers: false,
+            impactStyle: "classic",
             enableShadow: true,
             enableShadowBlur: true,
             enableWobble: true,
@@ -270,6 +301,7 @@ export function initializeDartMarkerReplacer(context = {}) {
       animateDarts: visualConfig.animateDarts,
       sizePercent: visualConfig.sizePercent,
       hideOriginalMarkers: visualConfig.hideOriginalMarkers,
+      impactStyle: visualConfig.impactStyle,
       enableShadow: visualConfig.enableShadow,
       enableShadowBlur: visualConfig.enableShadowBlur,
       enableWobble: visualConfig.enableWobble,
@@ -308,7 +340,7 @@ export function initializeDartMarkerReplacer(context = {}) {
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   const isManagedNode = createManagedNodeMatcher({
     ids: [OVERLAY_ID],
-    classNames: [DART_CLASS],
+    classNames: [DART_CLASS, DART_CONTAINER_CLASS, DART_ROTATE_CLASS, DART_POSE_CLASS, DART_SHADOW_CLASS],
   });
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
@@ -325,13 +357,49 @@ export function initializeDartMarkerReplacer(context = {}) {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ["cx", "cy", "d", "points", "transform"],
+        attributeFilter: ["cx", "cy", "d", "points", "transform", "class", "style"],
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
   }
 
   if (listenerRegistry && typeof listenerRegistry.register === "function") {
+    let zoomTransitionFrame = 0;
+    let zoomTransitionActive = false;
+    const cancelZoomTransitionLoop = () => {
+      zoomTransitionActive = false;
+      if (!zoomTransitionFrame) {
+        return;
+      }
+      windowRef?.cancelAnimationFrame?.(zoomTransitionFrame);
+      zoomTransitionFrame = 0;
+    };
+    const runZoomTransitionFrame = () => {
+      zoomTransitionFrame = 0;
+      scheduleUpdate(UPDATE_REASON.reposition);
+      if (zoomTransitionActive) {
+        zoomTransitionFrame = windowRef?.requestAnimationFrame?.(runZoomTransitionFrame) || 0;
+      }
+    };
+    const startZoomTransitionLoop = (event) => {
+      if (!isZoomTransformTransition(event) || zoomTransitionFrame) {
+        return;
+      }
+      zoomTransitionActive = true;
+      scheduleUpdate(UPDATE_REASON.reposition);
+      zoomTransitionFrame = windowRef?.requestAnimationFrame?.(runZoomTransitionFrame) || 0;
+    };
+    const stopZoomTransitionLoop = (event) => {
+      if (!isZoomTransformTransition(event)) {
+        return;
+      }
+      cancelZoomTransitionLoop();
+      scheduleUpdate(UPDATE_REASON.reposition);
+    };
+    state.cancelZoomTransitionLoop = cancelZoomTransitionLoop;
+    listenerRegistry.register({ key: LISTENER_KEYS.transitionRun, target: documentRef, type: "transitionrun", handler: startZoomTransitionLoop });
+    listenerRegistry.register({ key: LISTENER_KEYS.transitionEnd, target: documentRef, type: "transitionend", handler: stopZoomTransitionLoop });
+    listenerRegistry.register({ key: LISTENER_KEYS.transitionCancel, target: documentRef, type: "transitioncancel", handler: stopZoomTransitionLoop });
     listenerRegistry.register({
       key: LISTENER_KEYS.visibility,
       target: documentRef,
@@ -404,6 +472,7 @@ export function initializeDartMarkerReplacer(context = {}) {
     cleanedUp = true;
 
     scheduler?.cancel?.();
+    state.cancelZoomTransitionLoop?.();
 
     try {
       unsubscribeGameState();

@@ -2,6 +2,7 @@ import { resolveDartDesignAsset } from "#feature-assets";
 import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
+  DART_POSE_CLASS,
   DART_ROTATE_CLASS,
   DART_SHADOW_CLASS,
   buildStyleText,
@@ -19,6 +20,11 @@ import {
   createDartImpactWobbleKeyframes,
   createDartImpactWobbleOptions,
 } from "./impact.js";
+import {
+  buildShadowPoseSettings,
+  buildTipAnchoredPoseTransform,
+  resolveDartImpactPose,
+} from "./pose.js";
 
 const PREVIEW_ID = "ad-ext-dart-marker-replacer-preview";
 const PREVIEW_STYLE_ID = "ad-ext-dart-marker-replacer-preview-style";
@@ -291,19 +297,40 @@ export function runDartMarkerReplacerPreview(options = {}) {
     class: DART_ROTATE_CLASS,
     transform: `rotate(18 ${target.x} ${target.y})`,
   });
+  const pose = resolveDartImpactPose({
+    markerKey: "preview-marker",
+    index: 0,
+    impactStyle: visualConfig.impactStyle,
+  });
+  const poseTransform = buildTipAnchoredPoseTransform({
+    tip: target,
+    dartLength,
+    pose,
+  });
+  const poseGroup = createSvgElement(documentRef, "g", {
+    class: DART_POSE_CLASS,
+    ...(poseTransform.transform ? { transform: poseTransform.transform } : {}),
+  });
   const shadowNode = createPreviewImage(
     documentRef,
     DART_SHADOW_CLASS,
     sourceUrl,
     geometry
   );
-  shadowNode.style.opacity = visualConfig.enableShadow ? "0.26" : "0";
+  const shadowPose = buildShadowPoseSettings({
+    pose,
+    baseOpacity: 0.26,
+    baseScaleX: 1.08,
+    baseSkewYDeg: 3,
+  });
+  shadowNode.style.opacity = visualConfig.enableShadow ? String(shadowPose.opacity) : "0";
   shadowNode.style.display = visualConfig.enableShadow ? "" : "none";
-  shadowNode.style.transform = "translate(6px,5px) scale(1.08,1) skewY(3deg)";
+  shadowNode.style.transform = `translate(6px,5px) scale(${shadowPose.scaleX},1) skewY(${shadowPose.skewYDeg}deg)`;
   shadowNode.style.filter =
     visualConfig.enableShadow && visualConfig.enableShadowBlur ? "blur(2px)" : "";
   const imageNode = createPreviewImage(documentRef, DART_CLASS, sourceUrl, geometry);
-  rotateGroup.append(shadowNode, imageNode);
+  poseGroup.append(shadowNode, imageNode);
+  rotateGroup.appendChild(poseGroup);
   container.appendChild(rotateGroup);
   svg.appendChild(container);
 
@@ -346,6 +373,7 @@ export function runDartMarkerReplacerPreview(options = {}) {
     designKey: visualConfig.designKey,
     sizePercent: visualConfig.sizePercent,
     animateDarts: visualConfig.animateDarts,
+    impactStyle: visualConfig.impactStyle,
     mode: isInlinePreview ? "inline" : "overlay",
   };
 }

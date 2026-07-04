@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.8] - 2026-07-04
+
+### Added
+
+- Nutzerwirkung: `Dart Marker Replacer` bietet mit `Natürlich` und `Dramatisch` zwei stabile Einschlagstile, die Dart-Winkel, Perspektive und Schatten sichtbar variieren, während `Klassisch` den bisherigen Look beibehält und die Spitze exakt am Trefferpunkt bleibt.
+  Technik: Eine gemeinsame deterministische Pose-Matrix steuert Runtime und Vorschau, erweitert die SVG-Struktur tip-verankert und hält das Overlay auch bei `TV Board Zoom` während Mutation, Transition und Reset synchron.
+
 ## [2.4.7] - 2026-06-25
 
 ### Fixed
@@ -1766,7 +1773,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.7]: https://github.com/thomasasen/autodarts-xconfig/compare/369c519...HEAD
+[2.4.8]: https://github.com/thomasasen/autodarts-xconfig/compare/848458d...HEAD
+[2.4.7]: https://github.com/thomasasen/autodarts-xconfig/compare/369c519...848458d
 [2.4.6]: https://github.com/thomasasen/autodarts-xconfig/compare/4da06d6...369c519
 [2.4.5]: https://github.com/thomasasen/autodarts-xconfig/compare/106b63c...4da06d6
 [2.4.4]: https://github.com/thomasasen/autodarts-xconfig/compare/e93e11d...106b63c

@@ -764,6 +764,11 @@ export const xconfigDescriptors = Object.freeze([
         { value: 138, label: "Groß" },
       ]),
       checkboxField("hideOriginalMarkers", "Original-Marker ausblenden"),
+      selectField("impactStyle", "Einschlagstil", [
+        { value: "classic", label: "Klassisch" },
+        { value: "natural", label: "Natürlich" },
+        { value: "dramatic", label: "Dramatisch" },
+      ]),
       checkboxField("enableShadow", "Einschlag-Schatten"),
       checkboxField("enableShadowBlur", "Schatten-Weichzeichnung"),
       checkboxField("enableWobble", "Einschlag-Wobble"),

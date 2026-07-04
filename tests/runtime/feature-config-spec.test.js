@@ -102,6 +102,14 @@ test("feature config spec carries remove-key rules for retired config fields", (
   assert.deepEqual(getFeatureConfigSpec("checkoutScoreHighlight")?.removeKeys, []);
 });
 
+test("dart marker replacer impact style defaults and normalization stay compatible", () => {
+  const spec = getFeatureConfigSpec("dartMarkerReplacer");
+  assert.equal(spec.createDefaultConfig().impactStyle, "classic");
+  assert.equal(spec.normalizeConfig({ impactStyle: "natural" }).impactStyle, "natural");
+  assert.equal(spec.normalizeConfig({ impactStyle: "dramatic" }).impactStyle, "dramatic");
+  assert.equal(spec.normalizeConfig({ impactStyle: "invalid" }).impactStyle, "classic");
+});
+
 test("x01 bust active player highlight defaults and normalization stay stable", () => {
   const spec = getFeatureConfigSpec("x01BustActivePlayerHighlight");
 
@@ -219,6 +227,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     animateDarts: true,
     sizePercent: 120,
     hideOriginalMarkers: true,
+    impactStyle: "natural",
     enableShadow: true,
     enableShadowBlur: true,
     enableWobble: true,

@@ -20,6 +20,7 @@ import { runDartMarkerReplacerPreview } from "../../src/features/dart-marker-rep
 import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
+  DART_POSE_CLASS,
   DART_ROTATE_CLASS,
   DART_SHADOW_CLASS,
   OVERLAY_ID,
@@ -39,6 +40,7 @@ const VISUAL_CONFIG = Object.freeze({
   sizePercent: 100,
   sizeMultiplier: 1,
   hideOriginalMarkers: false,
+  impactStyle: "classic",
   enableShadow: true,
   enableShadowBlur: true,
   enableWobble: true,
@@ -79,6 +81,8 @@ test("dart-marker-replacer resolves size settings twenty percent larger with leg
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 100 }).sizePercent, 120);
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 115 }).sizePercent, 138);
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 999 }).sizePercent, 120);
+  assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "natural" }).impactStyle, "natural");
+  assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "invalid" }).impactStyle, "classic");
 });
 
 async function waitForCondition(predicate, options = {}) {
@@ -328,7 +332,7 @@ test("coordinate input mode detection recognizes multiple active-state contracts
   assert.equal(isLiveBoardInputModeActive(documentRef), false);
 });
 
-test("dart-marker-replacer separates flight container, rotation group, and image node", () => {
+test("dart-marker-replacer separates flight, rotation, pose, and image layers", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const { markers } = installBoardFixture(documentRef, [
@@ -351,8 +355,11 @@ test("dart-marker-replacer separates flight container, rotation group, and image
   assert.ok(entry);
   assert.equal(entry.container.parentNode?.id, "ad-ext-dart-image-overlay-scene");
   assert.equal(entry.rotateGroup.parentNode, entry.container);
-  assert.equal(entry.imageNode.parentNode, entry.rotateGroup);
-  assert.equal(entry.shadowNode.parentNode, entry.rotateGroup);
+  assert.equal(entry.poseGroup.parentNode, entry.rotateGroup);
+  assert.equal(entry.imageNode.parentNode, entry.poseGroup);
+  assert.equal(entry.shadowNode.parentNode, entry.poseGroup);
+  assert.equal(entry.poseGroup.classList.contains(DART_POSE_CLASS), true);
+  assert.equal(entry.poseGroup.getAttribute("transform"), null);
   assert.equal(getFlightGroups(documentRef).length, 1);
   assert.equal(getRotateGroups(documentRef).length, 1);
   assert.equal(getShadowImages(documentRef).length, 1);
@@ -1038,6 +1045,47 @@ test("dart-marker-replacer ignores unrelated document churn outside the X01 boar
   cleanup();
 });
 
+test("dart-marker-replacer reacts to zoom styles and ignores its own pose mutations", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  installBoardFixture(documentRef, [{ cx: 0, cy: 0, r: 5 }]);
+  const observers = createObserverRegistry();
+  const scheduleCounter = { count: 0 };
+  const cleanup = initializeDartMarkerReplacer({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers, listeners: createListenerRegistry() },
+    config: { getFeatureConfig: () => ({ ...VISUAL_CONFIG, impactStyle: "natural" }) },
+    gameState: { subscribe: () => () => {} },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() { scheduleCounter.count += 1; callback(); },
+          cancel() {},
+          isScheduled() { return false; },
+        };
+      },
+    },
+  });
+
+  await wait(5);
+  const observer = observers.get("dart-marker-replacer:dom-observer");
+  const zoomTarget = documentRef.createElement("div");
+  zoomTarget.classList.add("ad-ext-tv-board-zoom");
+  documentRef.main.appendChild(zoomTarget);
+  const beforeZoom = scheduleCounter.count;
+  observer.callback([{ type: "attributes", attributeName: "style", target: zoomTarget }]);
+  assert.equal(scheduleCounter.count, beforeZoom + 1);
+
+  const poseGroup = documentRef.querySelector(`g.${DART_POSE_CLASS}`);
+  const afterZoom = scheduleCounter.count;
+  observer.callback([{ type: "attributes", attributeName: "transform", target: poseGroup }]);
+  assert.equal(scheduleCounter.count, afterZoom);
+
+  cleanup();
+});
+
 test("dart-marker-replacer ignores unchanged game-state snapshots for scheduling", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -1371,7 +1419,7 @@ test("dart-marker-replacer debug logging is gated, deduplicated, and reports ren
   const entry = state.entriesByMarker.get(markers[0]);
   entry.flightAnimation?.finish?.();
   entry.settleUntil = 0;
-  entry.rotateGroup.getScreenCTM = () => ({ a: 1, b: 0, c: 0, d: 1, e: 60, f: 60 });
+  entry.poseGroup.getScreenCTM = () => ({ a: 1, b: 0, c: 0, d: 1, e: 60, f: 60 });
 
   updateDartMarkerReplacer({
     documentRef,

@@ -1043,6 +1043,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Replacer` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.",
         "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch."
       ),
+      impactStyle: fieldCopy(
+        "Bestimmt, wie stark sich Winkel, Perspektive und Schatten der Darts unterscheiden. Natürlich ist sichtbar, aber dezent; Dramatisch wirkt kräftiger.",
+        "Klassisch erhält die bisherige einheitliche Ausrichtung. Natürlich gibt jedem Dart eine stabile, realistische Variation bei Winkel, Perspektive und Schatten. Dramatisch verstärkt diese Unterschiede für einen deutlicheren Demo- und TV-Look, ohne die Spitze vom Trefferpunkt zu verschieben.",
+        "Regelt die stabile Variation von Dart-Winkel, Perspektive und Schatten."
+      ),
       enableShadow: fieldCopy(
         "Schaltet den Einschlag-Schatten unter dem Dart ein oder aus. Zusätzliche Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
         "Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt, erhöht aber je nach Szene auch die Grafiklast.",
@@ -2987,6 +2992,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           { label: "Dart-Fluganimation", key: "animateDarts" },
           { label: "Dart-Größe", key: "sizePercent" },
           { label: "Original-Marker ausblenden", key: "hideOriginalMarkers" },
+          { label: "Einschlagstil", key: "impactStyle" },
           { label: "Einschlag-Schatten", key: "enableShadow" },
           { label: "Schatten-Weichzeichnung", key: "enableShadowBlur" },
           { label: "Einschlag-Wobble", key: "enableWobble" },

@@ -96,6 +96,7 @@ const DART_MARKER_DARTS_LEGACY_SIZE_PERCENT = Object.freeze({
   115: 138,
 });
 const DART_MARKER_DARTS_FLIGHT_SPEED = new Set(["schnell", "standard", "cinematic"]);
+const DART_MARKER_IMPACT_STYLES = new Set(["classic", "natural", "dramatic"]);
 const REMOVE_DARTS_NOTIFICATION_IMAGE_SIZE = new Set(["compact", "standard", "large"]);
 const REMOVE_DARTS_NOTIFICATION_PULSE_SCALE = new Set([1.02, 1.04, 1.08]);
 const SINGLE_BULL_SOUND_VOLUME = new Set([0.5, 0.75, 0.9, 1]);
@@ -373,7 +374,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   cricketTargetHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
   cricketGridStatusEffects: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal", debug: false },
   dartboardMarkerHighlight: { enabled: false, size: 6, color: "rgb(49, 130, 206)", effect: "soft-glow", opacityPercent: 85, outline: "aus", debug: false },
-  dartMarkerReplacer: { enabled: false, design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: false, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard", debug: false },
+  dartMarkerReplacer: { enabled: false, design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: false, impactStyle: "classic", enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard", debug: false },
   takeOutDartsAlert: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
   singleBullHitSound: { enabled: false, volume: 0.9, cooldownMs: 700, pollIntervalMs: 0, debug: false },
   turnScoreCounter: { enabled: false, durationMs: 3000, countEffect: "smooth-count", flashOnChange: true, flashMode: "on-change", debug: false },
@@ -427,7 +428,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   cricketTargetHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
   cricketGridStatusEffects: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal" },
   dartboardMarkerHighlight: { size: 6, color: "rgb(49, 130, 206)", effect: "size-pulse", opacityPercent: 100, outline: "weiss" },
-  dartMarkerReplacer: { design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: true, enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard" },
+  dartMarkerReplacer: { design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: true, impactStyle: "natural", enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard" },
   takeOutDartsAlert: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
   singleBullHitSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
   turnScoreCounter: { durationMs: 3000, countEffect: "smooth-count", flashOnChange: false, flashMode: "on-change" },
@@ -594,6 +595,7 @@ const LEGACY_IMPORTERS = Object.freeze({
       animateDarts: readLegacySetting(settings, "ANIMATE_DARTS", true),
       sizePercent: readLegacySetting(settings, "DART_GROESSE", 120),
       hideOriginalMarkers: readLegacySetting(settings, "ORIGINAL_MARKER_AUSBLENDEN", false),
+      impactStyle: "classic",
       enableShadow: readLegacySetting(settings, "SCHATTEN_AKTIV", true),
       enableShadowBlur: true,
       enableWobble: readLegacySetting(settings, "WOBBLE_AKTIV", true),
@@ -744,7 +746,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), size: normalizeNumberChoice(rawConfig.size, 6, DARTBOARD_MARKER_HIGHLIGHT_SIZES), color: DARTBOARD_MARKER_HIGHLIGHT_COLORS.has(colorThemeRaw) ? colorThemeRaw : "rgb(49, 130, 206)", effect: normalizeMappedStringChoice(rawConfig.effect, "soft-glow", DARTBOARD_MARKER_HIGHLIGHT_EFFECT_ALIASES), opacityPercent: normalizeNumberChoice(rawConfig.opacityPercent, 85, DARTBOARD_MARKER_HIGHLIGHT_OPACITY), outline: normalizeStringChoice(rawConfig.outline, "aus", DARTBOARD_MARKER_HIGHLIGHT_OUTLINE), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   dartMarkerReplacer(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), design: normalizeStringChoice(rawConfig.design, "autodarts", DART_MARKER_DARTS_DESIGNS), animateDarts: normalizeBoolean(rawConfig.animateDarts, true), sizePercent: normalizeDartMarkerReplacerSizePercent(rawConfig.sizePercent), hideOriginalMarkers: normalizeBoolean(rawConfig.hideOriginalMarkers, false), enableShadow: normalizeBoolean(rawConfig.enableShadow, true), enableShadowBlur: normalizeBoolean(rawConfig.enableShadowBlur, true), enableWobble: normalizeBoolean(rawConfig.enableWobble, true), enableFlightBlur: normalizeBoolean(rawConfig.enableFlightBlur, true), flightSpeed: normalizeStringChoice(rawConfig.flightSpeed, "standard", DART_MARKER_DARTS_FLIGHT_SPEED), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), design: normalizeStringChoice(rawConfig.design, "autodarts", DART_MARKER_DARTS_DESIGNS), animateDarts: normalizeBoolean(rawConfig.animateDarts, true), sizePercent: normalizeDartMarkerReplacerSizePercent(rawConfig.sizePercent), hideOriginalMarkers: normalizeBoolean(rawConfig.hideOriginalMarkers, false), impactStyle: normalizeStringChoice(rawConfig.impactStyle, "classic", DART_MARKER_IMPACT_STYLES), enableShadow: normalizeBoolean(rawConfig.enableShadow, true), enableShadowBlur: normalizeBoolean(rawConfig.enableShadowBlur, true), enableWobble: normalizeBoolean(rawConfig.enableWobble, true), enableFlightBlur: normalizeBoolean(rawConfig.enableFlightBlur, true), flightSpeed: normalizeStringChoice(rawConfig.flightSpeed, "standard", DART_MARKER_DARTS_FLIGHT_SPEED), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   takeOutDartsAlert(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), imageSize: normalizeStringChoice(rawConfig.imageSize, "standard", REMOVE_DARTS_NOTIFICATION_IMAGE_SIZE), pulseAnimation: normalizeBoolean(rawConfig.pulseAnimation, true), pulseScale: normalizeNumberChoice(rawConfig.pulseScale, 1.04, REMOVE_DARTS_NOTIFICATION_PULSE_SCALE), debug: normalizeBoolean(rawConfig.debug, false) };

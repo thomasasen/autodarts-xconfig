@@ -14,8 +14,14 @@ import {
   createDartImpactWobbleOptions,
 } from "./impact.js";
 import {
+  buildShadowPoseSettings,
+  buildTipAnchoredPoseTransform,
+  resolveDartImpactPose,
+} from "./pose.js";
+import {
   DART_CLASS,
   DART_CONTAINER_CLASS,
+  DART_POSE_CLASS,
   DART_ROTATE_CLASS,
   DART_SHADOW_CLASS,
   OVERLAY_ID,
@@ -621,6 +627,9 @@ function createDartEntry(ownerDocument) {
   const rotateGroup = ownerDocument.createElementNS(SVG_NS, "g");
   rotateGroup.classList.add(DART_ROTATE_CLASS);
 
+  const poseGroup = ownerDocument.createElementNS(SVG_NS, "g");
+  poseGroup.classList.add(DART_POSE_CLASS);
+
   const shadowNode = ownerDocument.createElementNS(SVG_NS, "image");
   shadowNode.classList.add(DART_SHADOW_CLASS);
   shadowNode.setAttribute("preserveAspectRatio", "xMidYMid meet");
@@ -631,14 +640,16 @@ function createDartEntry(ownerDocument) {
   imageNode.setAttribute("preserveAspectRatio", "xMidYMid meet");
   imageNode.setAttribute("aria-hidden", "true");
 
-  rotateGroup.appendChild(shadowNode);
-  rotateGroup.appendChild(imageNode);
+  poseGroup.appendChild(shadowNode);
+  poseGroup.appendChild(imageNode);
+  rotateGroup.appendChild(poseGroup);
   container.appendChild(rotateGroup);
 
   return {
     marker: null,
     container,
     rotateGroup,
+    poseGroup,
     shadowNode,
     imageNode,
     dartLength: 0,
@@ -646,6 +657,7 @@ function createDartEntry(ownerDocument) {
     center: null,
     tipPointLocal: null,
     rotationDeg: 0,
+    pose: null,
     flightAnimation: null,
     wobbleAnimation: null,
     shadowImpactAnimation: null,
@@ -809,7 +821,8 @@ function setDartGeometry(entry, options = {}) {
   const imageNode = entry?.imageNode;
   const shadowNode = entry?.shadowNode;
   const rotateGroup = entry?.rotateGroup;
-  if (!imageNode || !rotateGroup) {
+  const poseGroup = entry?.poseGroup;
+  if (!imageNode || !rotateGroup || !poseGroup) {
     return null;
   }
 
@@ -828,6 +841,16 @@ function setDartGeometry(entry, options = {}) {
     : getRotationDeg(center, boardCenter);
   const dartOpacity = DART_OPACITY;
   const shadowSettings = getShadowSettings(dartLength, dartOpacity, visualConfig);
+  const pose = resolveDartImpactPose({
+    markerKey: options.markerKey,
+    index: options.index,
+    impactStyle: visualConfig.impactStyle,
+  });
+  const poseTransform = buildTipAnchoredPoseTransform({
+    tip: center,
+    dartLength,
+    pose,
+  });
 
   if (sourceUrl) {
     setImageSource(imageNode, sourceUrl);
@@ -842,6 +865,11 @@ function setDartGeometry(entry, options = {}) {
   setAttributeIfChanged(imageNode, "y", String(y));
   removeAttributeIfPresent(imageNode, "transform");
   setStyleIfChanged(imageNode.style, "opacity", String(dartOpacity));
+  if (poseTransform.transform) {
+    setAttributeIfChanged(poseGroup, "transform", poseTransform.transform);
+  } else {
+    removeAttributeIfPresent(poseGroup, "transform");
+  }
 
   if (dartLength > 0 && dartHeight > 0) {
     const originX = Math.min(100, Math.max(0, (offsets.offsetX / dartLength) * 100));
@@ -863,11 +891,13 @@ function setDartGeometry(entry, options = {}) {
     setAttributeIfChanged(shadowNode, "height", String(dartHeight));
     setAttributeIfChanged(shadowNode, "x", String(x));
     setAttributeIfChanged(shadowNode, "y", String(y));
-    setStyleIfChanged(
-      shadowNode.style,
-      "opacity",
-      shadowSettings.enabled ? String(shadowSettings.baseOpacity) : "0"
-    );
+    const shadowPose = buildShadowPoseSettings({
+      pose,
+      baseOpacity: shadowSettings.baseOpacity,
+      baseScaleX: 1,
+      baseSkewYDeg: 0,
+    });
+    setStyleIfChanged(shadowNode.style, "opacity", shadowSettings.enabled ? String(shadowPose.opacity) : "0");
     setStyleIfChanged(shadowNode.style, "display", shadowSettings.enabled ? "" : "none");
     setStyleIfChanged(shadowNode.style, "filter", "");
     if (shadowSettings.enabled) {
@@ -884,7 +914,13 @@ function setDartGeometry(entry, options = {}) {
       const localY = -shadowSettings.offsetX * Math.sin(theta) + shadowSettings.offsetY * Math.cos(theta);
       const scaleX = Math.max(0.2, 1 + localX / tailLength);
       const skewYDeg = (Math.atan2(localY, tailLength) * 180) / Math.PI;
-      setStyleIfChanged(shadowNode.style, "transform", `scale(${scaleX}, 1) skewY(${skewYDeg}deg)`);
+      const posedShadow = buildShadowPoseSettings({
+        pose,
+        baseOpacity: shadowSettings.baseOpacity,
+        baseScaleX: scaleX,
+        baseSkewYDeg: skewYDeg,
+      });
+      setStyleIfChanged(shadowNode.style, "transform", `scale(${posedShadow.scaleX}, 1) skewY(${posedShadow.skewYDeg}deg)`);
     } else {
       setStyleIfChanged(shadowNode.style, "transform", "");
     }
@@ -896,6 +932,7 @@ function setDartGeometry(entry, options = {}) {
   entry.dartLength = dartLength;
   entry.dartHeight = dartHeight;
   entry.rotationDeg = rotationDeg;
+  entry.pose = pose;
   entry.tipPointLocal = {
     x: x + offsets.offsetX,
     y: y + offsets.offsetY,
@@ -1082,7 +1119,10 @@ function buildDartGeometrySignature({
   sourceUrl,
   visualConfig,
   rotationDeg,
+  markerKey,
+  index,
 }) {
+  const pose = resolveDartImpactPose({ markerKey, index, impactStyle: visualConfig?.impactStyle });
   return [
     Number(center?.x || 0).toFixed(2),
     Number(center?.y || 0).toFixed(2),
@@ -1091,6 +1131,12 @@ function buildDartGeometrySignature({
     Number(dartLength || 0).toFixed(2),
     Number(dartHeight || 0).toFixed(2),
     Number(rotationDeg || 0).toFixed(2),
+    pose.impactStyle,
+    Number(pose.rotationJitterDeg).toFixed(4),
+    Number(pose.skewYDeg).toFixed(4),
+    Number(pose.scaleX).toFixed(4),
+    Number(pose.scaleY).toFixed(4),
+    Number(pose.tailLiftPx).toFixed(4),
     String(sourceUrl || ""),
     visualConfig?.enableShadow ? "shadow-on" : "shadow-off",
     visualConfig?.enableShadowBlur ? "shadow-blur-on" : "shadow-blur-off",
@@ -1109,6 +1155,7 @@ function buildVisualSignature(visualConfig, sourceUrl) {
     Number(visualConfig?.sizeMultiplier || 0).toFixed(4),
     visualConfig?.animateDarts ? "animate-on" : "animate-off",
     visualConfig?.hideOriginalMarkers ? "hide-on" : "hide-off",
+    String(visualConfig?.impactStyle || "classic"),
     visualConfig?.enableShadow ? "shadow-on" : "shadow-off",
     visualConfig?.enableShadowBlur ? "shadow-blur-on" : "shadow-blur-off",
     visualConfig?.enableWobble ? "wobble-on" : "wobble-off",
@@ -1428,16 +1475,16 @@ function maybeEmitBoardAndOverlayDebug({
 }
 
 function getRenderedTipScreenPoint(entry) {
-  const overlaySvg = entry?.rotateGroup?.ownerSVGElement || entry?.imageNode?.ownerSVGElement;
+  const overlaySvg = entry?.poseGroup?.ownerSVGElement || entry?.imageNode?.ownerSVGElement;
   const tipPointLocal = entry?.tipPointLocal;
   if (
     overlaySvg &&
     tipPointLocal &&
     typeof overlaySvg.createSVGPoint === "function" &&
-    entry?.rotateGroup &&
-    typeof entry.rotateGroup.getScreenCTM === "function"
+    entry?.poseGroup &&
+    typeof entry.poseGroup.getScreenCTM === "function"
   ) {
-    const matrix = entry.rotateGroup.getScreenCTM();
+    const matrix = entry.poseGroup.getScreenCTM();
     if (matrix) {
       const point = overlaySvg.createSVGPoint();
       point.x = Number(tipPointLocal.x);
@@ -1801,6 +1848,8 @@ export function updateDartMarkerReplacer(options = {}) {
 
     entry.marker = marker;
     const appliedGeometry = applyDartGeometryIfNeeded(entry, {
+      markerKey: buildMarkerKey(marker),
+      index,
       center,
       boardCenter,
       dartLength,
