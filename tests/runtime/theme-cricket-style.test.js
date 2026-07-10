@@ -63,6 +63,20 @@ test("cricket theme uses the stable cricket-card attribute contract and readabil
   );
   assert.match(css, /--ad-ext-theme-cricket-score-size-active:\s*clamp\(/);
   assert.match(css, /--ad-ext-theme-cricket-score-size-inactive:\s*clamp\(/);
+  assert.match(css, /--ad-ext-theme-cricket-score-vertical-offset-active:\s*0\.11em;/);
+  assert.match(css, /--ad-ext-theme-cricket-score-vertical-offset-inactive:\s*0\.18em;/);
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-turn-tile-height:\s*clamp\(6\.8rem,\s*min\(13\.5vh,\s*12cqi\),\s*8\.6rem\);/
+  );
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-turn-score-size:\s*clamp\(2\.65rem,\s*min\(15cqi,\s*38cqb\),\s*4\.25rem\);/
+  );
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-turn-segment-size:\s*clamp\(1\.05rem,\s*min\(5\.8cqi,\s*16cqb\),\s*1\.65rem\);/
+  );
   assert.match(css, /--ad-ext-theme-cricket-score-end-inset:\s*0\.38rem;/);
   assert.match(css, /--ad-ext-theme-cricket-player-grid-gap:\s*0\.35rem;/);
   assert.doesNotMatch(css, /min-height:\s*206px\s*!important;/);
@@ -213,7 +227,7 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-inactive\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-inactive\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s*\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-inactive\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-inactive\);[^}]*--ad-ext-theme-cricket-score-vertical-offset:\s*var\(--ad-ext-theme-cricket-score-vertical-offset-inactive\);/s
   );
   assert.ok(
     css.includes(
@@ -222,6 +236,11 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.ok(css.includes(`--ad-ext-theme-cricket-name-size: var(--ad-ext-theme-cricket-name-size-active);`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-score-size: var(--ad-ext-theme-cricket-score-size-active);`));
+  assert.ok(
+    css.includes(
+      `--ad-ext-theme-cricket-score-vertical-offset: var(--ad-ext-theme-cricket-score-vertical-offset-active);`
+    )
+  );
   assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-min-width: 2.55rem;`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-padding-inline: 0.54rem;`));
   assert.ok(css.includes(`--ad-ext-theme-cricket-matches-badge-radius: 0.56rem;`));
@@ -256,7 +275,7 @@ test("cricket theme keeps score and active-card hierarchy on stable selectors", 
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;[^}]*margin-inline-end:\s*var\(--ad-ext-theme-cricket-score-end-inset\)\s*!important;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;[^}]*font-size:\s*var\(--ad-ext-theme-cricket-score-size\)\s*!important;[^}]*transform:\s*translateY\(var\(--ad-ext-theme-cricket-score-vertical-offset\)\)\s*!important;[^}]*margin-inline-end:\s*var\(--ad-ext-theme-cricket-score-end-inset\)\s*!important;/s
   );
   const matchesBadgeRule = extractRuleSlice(
     css,

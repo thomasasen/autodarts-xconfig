@@ -227,6 +227,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Dart-Fluganimation`: An
 - `Dart-Größe`: Standard
 - `Original-Marker ausblenden`: An
+- `Einschlagstil`: Natürlich
 - `Einschlag-Schatten`: An
 - `Schatten-Weichzeichnung`: An
 - `Einschlag-Wobble`: An
@@ -1194,6 +1195,10 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Standard`: Der Dart entspricht der vorgesehenen Grundgröße des Moduls. Das ist der Mittelweg zwischen Präsenz und freier Segmentfläche.
   - `Groß`: Der Dart füllt mehr vom Segment aus und fällt stärker ins Auge. Das ist die plakativste Größenstufe.
 - `Original-Marker ausblenden`: Verhindert Doppelanzeigen, indem der originale Marker unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt `Dart Marker Replacer` dabei aktiv, im Live-Modus pausiert das Modul jedoch vollständig automatisch.
+- `Einschlagstil`: Klassisch erhält die bisherige einheitliche Ausrichtung. Natürlich gibt jedem Dart eine stabile, realistische Variation bei Winkel, Perspektive und Schatten. Dramatisch verstärkt diese Unterschiede für einen deutlicheren Demo- und TV-Look, ohne die Spitze vom Trefferpunkt zu verschieben.
+  - `Klassisch`: Alle Dart-Bilder landen mit der klassischen neutralen Ausrichtung. Winkel, Perspektive und Schatten bleiben dadurch möglichst ruhig und vorhersehbar.
+  - `Natürlich`: Jeder Dart bekommt eine stabile, realistische Variation. Die Spitze bleibt exakt am Trefferpunkt, während der Einschlag natürlicher wirkt als bei `Klassisch`.
+  - `Dramatisch`: Winkel, Perspektive und Schatten werden kräftiger variiert. Die Darstellung wirkt präsenter und demo-tauglicher, ohne die Spitze vom Trefferpunkt zu lösen.
 - `Einschlag-Schatten`: Aktiviert einen leichten Schlagschatten unter dem Dart-Bild. Das gibt mehr räumlichen Eindruck rund um den Einschlagpunkt, erhöht aber je nach Szene auch die Grafiklast.
 - `Schatten-Weichzeichnung`: Bestimmt, ob der Einschlag-Schatten weichgezeichnet dargestellt wird oder als klarere, schärfere Schattenform erscheint. Die Weichzeichnung erzeugt den realistischeren Eindruck, benötigt aber mehr GPU-Leistung.
 - `Einschlag-Wobble`: Aktiviert eine kurze Wackelbewegung des Dart-Bildes direkt nach der Landung. Das verstärkt den Einschlag-Effekt visuell und erhöht je nach Szene die Animationslast leicht.

@@ -2602,6 +2602,24 @@ const WINNER_PARTICLE_AMOUNT_OPTION_COPY = deepFreeze({
   ),
 });
 
+const DART_IMPACT_STYLE_OPTION_COPY = deepFreeze({
+  classic: optionCopy(
+    "Behält den bisherigen, einheitlichen Dart-Einschlag bei.",
+    "Alle Dart-Bilder landen mit der klassischen neutralen Ausrichtung. Winkel, Perspektive und Schatten bleiben dadurch möglichst ruhig und vorhersehbar.",
+    "Der Dart-Einschlag bleibt klassisch und einheitlich ausgerichtet."
+  ),
+  natural: optionCopy(
+    "Variiert Winkel, Perspektive und Schatten dezent.",
+    "Jeder Dart bekommt eine stabile, realistische Variation. Die Spitze bleibt exakt am Trefferpunkt, während der Einschlag natürlicher wirkt als bei `Klassisch`.",
+    "Darts wirken natürlicher, bleiben aber kontrolliert und gut lesbar."
+  ),
+  dramatic: optionCopy(
+    "Verstärkt die Einschlagvariation sichtbar.",
+    "Winkel, Perspektive und Schatten werden kräftiger variiert. Die Darstellung wirkt präsenter und demo-tauglicher, ohne die Spitze vom Trefferpunkt zu lösen.",
+    "Darts wirken markanter und stärker inszeniert."
+  ),
+});
+
 const X01_BUST_CRACK_COUNT_OPTION_COPY = deepFreeze({
   "0": optionCopy(
     "Blendet die Glasrisse aus; Rotmarkierung und Wackeln bleiben aktiv.",
@@ -2735,6 +2753,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   "dart-marker-replacer": {
     design: DART_DESIGN_OPTION_COPY,
     sizePercent: DART_IMAGE_SIZE_OPTION_COPY,
+    impactStyle: DART_IMPACT_STYLE_OPTION_COPY,
     flightSpeed: DART_FLIGHT_SPEED_OPTION_COPY,
   },
   "take-out-darts-alert": {

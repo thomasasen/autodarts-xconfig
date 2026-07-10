@@ -412,7 +412,7 @@ test("dart-marker-replacer mounts idempotently and removes style on cleanup", as
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-replacer-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
-  assert.equal(runtime.context.registries.listeners.size(), 5);
+  assert.equal(runtime.context.registries.listeners.size(), 8);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-replacer-style")), false);

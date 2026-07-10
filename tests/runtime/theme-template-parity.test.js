@@ -575,7 +575,11 @@ test("cricket theme scales player columns and active player parts responsively",
 
   assert.match(
     css,
-    /--ad-ext-theme-cricket-player-column-max-width:\s*18\.5rem;[^}]*--ad-ext-theme-cricket-player-avatar-size-active:\s*clamp\(2\.32rem,\s*2\.6vw,\s*3rem\);[^}]*--ad-ext-theme-cricket-name-size-active:\s*clamp\(1\.488rem,\s*min\(1\.95vw,\s*8cqi\),\s*2\.05rem\);[^}]*--ad-ext-theme-cricket-score-size-active:\s*clamp\(3\.35rem,\s*min\(4\.7vw,\s*25cqi\),\s*5\.6rem\);/s
+    /--ad-ext-theme-cricket-player-column-max-width:\s*18\.5rem;[^}]*--ad-ext-theme-cricket-player-avatar-size-active:\s*clamp\(2\.32rem,\s*2\.6vw,\s*3rem\);[^}]*--ad-ext-theme-cricket-name-size-active:\s*clamp\(1\.488rem,\s*min\(1\.95vw,\s*8cqi\),\s*2\.05rem\);[^}]*--ad-ext-theme-cricket-score-size-active:\s*clamp\(3\.55rem,\s*min\(5vw,\s*27cqi\),\s*5\.85rem\);/s
+  );
+  assert.match(
+    css,
+    /--ad-ext-theme-cricket-turn-tile-height:\s*clamp\(6\.8rem,\s*min\(13\.5vh,\s*12cqi\),\s*8\.6rem\);[^}]*--ad-ext-theme-cricket-turn-score-size:\s*clamp\(2\.65rem,\s*min\(15cqi,\s*38cqb\),\s*4\.25rem\);[^}]*--ad-ext-theme-cricket-turn-segment-size:\s*clamp\(1\.05rem,\s*min\(5\.8cqi,\s*16cqb\),\s*1\.65rem\);/s
   );
   assert.match(
     css,
@@ -583,15 +587,15 @@ test("cricket theme scales player columns and active player parts responsively",
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-inactive\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-inactive\);[^}]*--ad-ext-theme-cricket-player-avatar-size:\s*var\(--ad-ext-theme-cricket-player-avatar-size-inactive\);[^}]*--ad-ext-theme-cricket-wins-font-size:\s*var\(--ad-ext-theme-cricket-wins-font-size-inactive\);[^}]*--ad-ext-theme-cricket-wins-scale:\s*1;/s
+    /#ad-ext-player-display\s+\.ad-ext-player\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-inactive\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-inactive\);[^}]*--ad-ext-theme-cricket-score-vertical-offset:\s*var\(--ad-ext-theme-cricket-score-vertical-offset-inactive\);[^}]*--ad-ext-theme-cricket-player-avatar-size:\s*var\(--ad-ext-theme-cricket-player-avatar-size-inactive\);[^}]*--ad-ext-theme-cricket-wins-font-size:\s*var\(--ad-ext-theme-cricket-wins-font-size-inactive\);[^}]*--ad-ext-theme-cricket-wins-scale:\s*1;/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="true"\]\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-active\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-active\);[^}]*--ad-ext-theme-cricket-player-avatar-size:\s*var\(--ad-ext-theme-cricket-player-avatar-size-active\);[^}]*--ad-ext-theme-cricket-wins-font-size:\s*var\(--ad-ext-theme-cricket-wins-font-size-active\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="true"\]\{[^}]*--ad-ext-theme-cricket-name-size:\s*var\(--ad-ext-theme-cricket-name-size-active\);[^}]*--ad-ext-theme-cricket-score-size:\s*var\(--ad-ext-theme-cricket-score-size-active\);[^}]*--ad-ext-theme-cricket-score-vertical-offset:\s*var\(--ad-ext-theme-cricket-score-vertical-offset-active\);[^}]*--ad-ext-theme-cricket-player-avatar-size:\s*var\(--ad-ext-theme-cricket-player-avatar-size-active\);[^}]*--ad-ext-theme-cricket-wins-font-size:\s*var\(--ad-ext-theme-cricket-wins-font-size-active\);/s
   );
   assert.match(
     css,
-    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="true"\]\{[^}]*--ad-ext-theme-cricket-score-size:\s*clamp\(3\.35rem,\s*min\(25cqi,\s*42cqb\),\s*5\.6rem\);[^}]*--ad-ext-theme-cricket-player-avatar-size:\s*clamp\(2\.32rem,\s*min\(12cqi,\s*18cqb\),\s*3rem\);/s
+    /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active,\s*#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-winner,\s*#ad-ext-player-display\s+\.ad-ext-player\[data-ad-ext-theme-cricket-active="true"\]\{[^}]*--ad-ext-theme-cricket-score-size:\s*clamp\(3\.55rem,\s*min\(27cqi,\s*43cqb\),\s*5\.85rem\);[^}]*--ad-ext-theme-cricket-player-avatar-size:\s*clamp\(2\.32rem,\s*min\(12cqi,\s*18cqb\),\s*3rem\);/s
   );
   assert.match(
     css,

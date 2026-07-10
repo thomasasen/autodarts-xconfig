@@ -72,6 +72,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Dart-Fluganimation`: An
 - `Dart-Größe`: Standard
 - `Original-Marker ausblenden`: An
+- `Einschlagstil`: Natürlich
 - `Einschlag-Schatten`: An
 - `Schatten-Weichzeichnung`: An
 - `Einschlag-Wobble`: An
@@ -892,6 +893,10 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Standard`: Diese Einstellung verwendet die reguläre Grundgröße für den Dart-Marker. Der Dart ist klar sichtbar, ohne den Trefferbereich unnötig stark zu füllen.
   - `Groß`: Diese Stufe vergrößert die Dart-Grafik sichtbar über die Standardgröße hinaus. Treffer wirken dadurch präsenter, nehmen aber auch mehr vom Segmentbild ein.
 - `Original-Marker ausblenden`: Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch.
+- `Einschlagstil`: Regelt die stabile Variation von Dart-Winkel, Perspektive und Schatten.
+  - `Klassisch`: Der Dart-Einschlag bleibt klassisch und einheitlich ausgerichtet.
+  - `Natürlich`: Darts wirken natürlicher, bleiben aber kontrolliert und gut lesbar.
+  - `Dramatisch`: Darts wirken markanter und stärker inszeniert.
 - `Einschlag-Schatten`: Schaltet den Einschlag-Schatten der Dart-Grafik ein oder aus.
 - `Schatten-Weichzeichnung`: Schaltet die Weichzeichnung des Einschlag-Schattens ein oder aus.
 - `Einschlag-Wobble`: Schaltet das kurze Wobble der Dart-Grafik beim Einschlag ein oder aus.

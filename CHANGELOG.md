@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.9] - 2026-07-10
+
+### Changed
+
+- Nutzerwirkung: Im Cricket-Theme wirken Spielerpunkte und Wurfkacheln luftiger; die Punktezahl nutzt den rechten Kartenbereich besser aus und `60`/`T20` sitzt in höheren, responsiven Wurfkacheln mit mehr Abstand zum Rand.
+  Technik: Cricket-spezifische Score- und Turn-Tile-Variablen steuern Schriftgröße, vertikalen Offset, Kachelhöhe, Innenabstand und Segmentzeile über responsive `clamp()`-Werte.
+
 ## [2.4.8] - 2026-07-04
 
 ### Added
@@ -1773,7 +1780,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.8]: https://github.com/thomasasen/autodarts-xconfig/compare/848458d...HEAD
+[2.4.9]: https://github.com/thomasasen/autodarts-xconfig/compare/68e9ac5...HEAD
+[2.4.8]: https://github.com/thomasasen/autodarts-xconfig/compare/848458d...68e9ac5
 [2.4.7]: https://github.com/thomasasen/autodarts-xconfig/compare/369c519...848458d
 [2.4.6]: https://github.com/thomasasen/autodarts-xconfig/compare/4da06d6...369c519
 [2.4.5]: https://github.com/thomasasen/autodarts-xconfig/compare/106b63c...4da06d6
