@@ -1,5 +1,6 @@
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_CONFIG_ATTRIBUTES,
   X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
   X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE,
   X01_TWO_PLAYER_SLOTS,
@@ -35,6 +36,23 @@ const PLAYER_NAME_MIN_SIZE_PX = 18;
 const PLAYER_NAME_MAX_SIZE_PX = 96;
 const PLAYER_NAME_WIDTH_CLEARANCE_PX = 4;
 const PLAYER_NAME_FALLBACK_WIDTH_FACTOR = 0.62;
+const PLAYER_NAME_TWO_LINE_SEARCH_STEPS = 12;
+const X01_TWO_PLAYER_CONFIG_DEFAULTS = Object.freeze({
+  visualStyle: "studio",
+  colorScheme: "studio-mint",
+  activePlayerEmphasis: "standard",
+  informationDensity: "full",
+  identityDensity: "full",
+  playerNameLayout: "single-line",
+});
+const X01_TWO_PLAYER_CONFIG_VALUES = Object.freeze({
+  visualStyle: new Set(["studio", "broadcast", "high-contrast"]),
+  colorScheme: new Set(["studio-mint", "lime", "amber", "midnight-blue", "monochrome"]),
+  activePlayerEmphasis: new Set(["subtle", "standard", "strong"]),
+  informationDensity: new Set(["full", "tv", "compact"]),
+  identityDensity: new Set(["full", "name-only"]),
+  playerNameLayout: new Set(["single-line", "two-lines"]),
+});
 const BOARD_VISIBILITY_CONTROL_SELECTOR = [
   "button",
   "[role='button']",
@@ -279,6 +297,35 @@ function getRootStyleTarget(documentRef) {
   return documentRef?.documentElement?.style || documentRef?.body?.style || null;
 }
 
+function resolveX01TwoPlayerConfig(rawConfig = {}) {
+  return Object.fromEntries(
+    Object.entries(X01_TWO_PLAYER_CONFIG_DEFAULTS).map(([key, fallback]) => {
+      const value = String(rawConfig?.[key] || "").trim().toLowerCase();
+      return [key, X01_TWO_PLAYER_CONFIG_VALUES[key].has(value) ? value : fallback];
+    })
+  );
+}
+
+function syncThemeConfigAttributes(documentRef, featureConfig = {}) {
+  const rootNode = documentRef?.documentElement;
+  if (!rootNode?.setAttribute) {
+    return resolveX01TwoPlayerConfig(featureConfig);
+  }
+
+  const resolved = resolveX01TwoPlayerConfig(featureConfig);
+  Object.entries(X01_TWO_PLAYER_CONFIG_ATTRIBUTES).forEach(([key, attributeName]) => {
+    rootNode.setAttribute(attributeName, resolved[key]);
+  });
+  return resolved;
+}
+
+function clearThemeConfigAttributes(documentRef) {
+  const rootNode = documentRef?.documentElement;
+  Object.values(X01_TWO_PLAYER_CONFIG_ATTRIBUTES).forEach((attributeName) => {
+    rootNode?.removeAttribute?.(attributeName);
+  });
+}
+
 function clearLiveTurnHeight(documentRef, themeState = {}) {
   const styleTarget = getRootStyleTarget(documentRef);
   if (styleTarget && typeof styleTarget.removeProperty === "function") {
@@ -305,6 +352,7 @@ function clearSharedPlayerNameSize(documentRef, themeState = {}) {
   const playerDisplayNode = getPlayerDisplayNode(documentRef);
   playerDisplayNode?.style?.removeProperty?.(SHARED_PLAYER_NAME_SIZE_VARIABLE);
   themeState.lastMeasuredSharedPlayerNameSizePx = 0;
+  themeState.lastPlayerNameMeasureSignature = "";
 }
 
 function getNodeText(node) {
@@ -366,10 +414,10 @@ function measurePlayerNameWidthPx(documentRef, themeState, windowRef, nameTextNo
   return text.length * fontSizePx * PLAYER_NAME_FALLBACK_WIDTH_FACTOR;
 }
 
-function findPlayerNameFitSizePx(documentRef, themeState, windowRef, stackNode, nameTextNode) {
-  const stackRect = stackNode?.getBoundingClientRect?.() || {};
+function findPlayerNameFitSizePx(documentRef, themeState, windowRef, fitNode, nameTextNode) {
+  const fitRect = fitNode?.getBoundingClientRect?.() || {};
   const availableWidthPx =
-    Math.max(0, Number(stackRect.width) || 0) - PLAYER_NAME_WIDTH_CLEARANCE_PX;
+    Math.max(0, Number(fitRect.width) || 0) - PLAYER_NAME_WIDTH_CLEARANCE_PX;
   if (!(availableWidthPx > 0) || !nameTextNode) {
     return PLAYER_NAME_MIN_SIZE_PX;
   }
@@ -395,41 +443,138 @@ function findPlayerNameFitSizePx(documentRef, themeState, windowRef, stackNode, 
   return minSize;
 }
 
-function syncSharedPlayerNameSize(documentRef, themeState = {}, windowRef = null) {
+function getPlayerNameMeasureEntries(documentRef, windowRef = null) {
+  return getPlayerCards(documentRef)
+    .map((cardNode) => {
+      const stackNode = findDirectPlayerStack(cardNode);
+      const nameNode = stackNode?.querySelector?.(PLAYER_NAME_SELECTOR) || null;
+      const nameTextNode = resolveNameTextNode(nameNode);
+      const text = getNodeText(nameTextNode);
+      if (!stackNode || !nameTextNode || !text) {
+        return null;
+      }
+      const nameRect = nameNode?.getBoundingClientRect?.() || {};
+      const stackRect = stackNode.getBoundingClientRect?.() || {};
+      const availableNameWidth = Math.max(0, Number(nameRect.width) || 0);
+      return {
+        fitNode: availableNameWidth > 0 ? nameNode : stackNode,
+        nameTextNode,
+        text,
+        width: availableNameWidth || Math.max(0, Number(stackRect.width) || 0),
+        fontFamily: getComputedFontValue(windowRef, nameTextNode, "fontFamily", "sans-serif"),
+        fontWeight: getComputedFontValue(windowRef, nameTextNode, "fontWeight", "800"),
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildPlayerNameMeasureSignature(entries, resolvedConfig) {
+  return JSON.stringify({
+    layout: resolvedConfig.playerNameLayout,
+    informationDensity: resolvedConfig.informationDensity,
+    identityDensity: resolvedConfig.identityDensity,
+    names: entries.map((entry) => [
+      entry.text,
+      entry.width.toFixed(2),
+      entry.fontFamily,
+      entry.fontWeight,
+    ]),
+  });
+}
+
+function renderedNameFitsTwoLines(windowRef, nameTextNode, candidateSizePx) {
+  const computedStyle = windowRef?.getComputedStyle?.(nameTextNode) || {};
+  const parsedLineHeight = Number.parseFloat(computedStyle.lineHeight);
+  const lineHeightPx = Number.isFinite(parsedLineHeight) && parsedLineHeight > 0
+    ? parsedLineHeight
+    : candidateSizePx * 0.98;
+  const scrollHeight = Number(nameTextNode?.scrollHeight) ||
+    Number(nameTextNode?.getBoundingClientRect?.().height) || 0;
+  const scrollWidth = Number(nameTextNode?.scrollWidth) || 0;
+  const clientWidth = Number(nameTextNode?.clientWidth) ||
+    Number(nameTextNode?.getBoundingClientRect?.().width) || 0;
+
+  return (
+    (!(scrollHeight > 0) || scrollHeight <= lineHeightPx * 2 + 1) &&
+    (!(scrollWidth > 0 && clientWidth > 0) || scrollWidth <= clientWidth + 1)
+  );
+}
+
+function findTwoLinePlayerNameFitSizePx(playerDisplayNode, entries, windowRef) {
+  let minSize = PLAYER_NAME_MIN_SIZE_PX;
+  let maxSize = PLAYER_NAME_MAX_SIZE_PX;
+  for (let index = 0; index < PLAYER_NAME_TWO_LINE_SEARCH_STEPS; index += 1) {
+    const candidateSize = (minSize + maxSize) / 2;
+    playerDisplayNode.style.setProperty(
+      SHARED_PLAYER_NAME_SIZE_VARIABLE,
+      `${candidateSize.toFixed(2)}px`
+    );
+    if (entries.every((entry) => renderedNameFitsTwoLines(windowRef, entry.nameTextNode, candidateSize))) {
+      minSize = candidateSize;
+    } else {
+      maxSize = candidateSize;
+    }
+  }
+  return minSize;
+}
+
+function syncSharedPlayerNameSize(
+  documentRef,
+  themeState = {},
+  windowRef = null,
+  featureConfig = {}
+) {
   const playerDisplayNode = getPlayerDisplayNode(documentRef);
   if (!playerDisplayNode?.style || typeof playerDisplayNode.style.setProperty !== "function") {
     clearSharedPlayerNameSize(documentRef, themeState);
     return false;
   }
 
-  const playerCards = getPlayerCards(documentRef);
-  const fittedNameSizes = playerCards
-    .map((cardNode) => {
-      const stackNode = findDirectPlayerStack(cardNode);
-      const nameNode = stackNode?.querySelector?.(PLAYER_NAME_SELECTOR) || null;
-      const nameTextNode = resolveNameTextNode(nameNode);
-      if (!stackNode || !getNodeText(nameTextNode)) {
-        return null;
-      }
+  if (themeState.measuringPlayerNames) {
+    return false;
+  }
 
-      return findPlayerNameFitSizePx(documentRef, themeState, windowRef, stackNode, nameTextNode);
-    })
-    .filter((sizePx) => Number.isFinite(sizePx) && sizePx > 0);
+  const resolvedConfig = resolveX01TwoPlayerConfig(featureConfig);
+  const entries = getPlayerNameMeasureEntries(documentRef, windowRef);
+  const signature = buildPlayerNameMeasureSignature(entries, resolvedConfig);
+  if (signature === themeState.lastPlayerNameMeasureSignature) {
+    return false;
+  }
 
-  if (!fittedNameSizes.length) {
+  if (!entries.length) {
     clearSharedPlayerNameSize(documentRef, themeState);
     return false;
   }
 
-  const nextSharedSizePx = Math.max(
-    PLAYER_NAME_MIN_SIZE_PX,
-    Math.min(PLAYER_NAME_MAX_SIZE_PX, ...fittedNameSizes)
-  );
+  themeState.measuringPlayerNames = true;
+  let nextSharedSizePx;
+  try {
+    if (resolvedConfig.playerNameLayout === "two-lines") {
+      nextSharedSizePx = findTwoLinePlayerNameFitSizePx(playerDisplayNode, entries, windowRef);
+    } else {
+      const fittedNameSizes = entries.map((entry) =>
+        findPlayerNameFitSizePx(
+          documentRef,
+          themeState,
+          windowRef,
+          entry.fitNode,
+          entry.nameTextNode
+        )
+      );
+      nextSharedSizePx = Math.max(
+        PLAYER_NAME_MIN_SIZE_PX,
+        Math.min(PLAYER_NAME_MAX_SIZE_PX, ...fittedNameSizes)
+      );
+    }
+  } finally {
+    themeState.measuringPlayerNames = false;
+  }
   const nextValue = `${nextSharedSizePx.toFixed(2)}px`;
   playerDisplayNode.style.setProperty(SHARED_PLAYER_NAME_SIZE_VARIABLE, nextValue);
 
   const didChange = nextValue !== String(themeState.lastMeasuredSharedPlayerNameSizePx || "");
   themeState.lastMeasuredSharedPlayerNameSizePx = nextValue;
+  themeState.lastPlayerNameMeasureSignature = signature;
   return didChange;
 }
 
@@ -1090,6 +1235,8 @@ export function createX01TwoPlayerThemePolicy() {
         lastMeasuredTurnHeightPx: 0,
         lastMeasuredThrowPointsFontSize: "",
         lastMeasuredSharedPlayerNameSizePx: "",
+        lastPlayerNameMeasureSignature: "",
+        measuringPlayerNames: false,
         nameMeasureContext: null,
         boardVisibilityOverride: null,
         boardControlsPortal: null,
@@ -1102,9 +1249,15 @@ export function createX01TwoPlayerThemePolicy() {
       return hasX01TwoPlayerPlayerStateMutation(mutations);
     },
     onActivate(context = {}) {
+      const resolvedConfig = syncThemeConfigAttributes(context.documentRef, context.featureConfig);
       ensureThemeBoardVisible(context.documentRef, context.themeState);
       syncX01TwoPlayerLayoutState(context.documentRef, context.gameState);
-      syncSharedPlayerNameSize(context.documentRef, context.themeState, context.windowRef);
+      syncSharedPlayerNameSize(
+        context.documentRef,
+        context.themeState,
+        context.windowRef,
+        resolvedConfig
+      );
       ensureTurnResizeObserver(context);
       syncBoardControlsPortal(context);
     },
@@ -1122,6 +1275,7 @@ export function createX01TwoPlayerThemePolicy() {
       }
       clearLiveTurnHeight(context.documentRef, context.themeState);
       clearSharedPlayerNameSize(context.documentRef, context.themeState);
+      clearThemeConfigAttributes(context.documentRef);
       clearX01TwoPlayerLayoutState(context.documentRef);
     },
   });

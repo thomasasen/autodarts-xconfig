@@ -1338,6 +1338,38 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.themes.x01.showAvg, false);
 
+  documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
+  await waitForSettingsClosed(documentRef);
+  const openTwoPlayerSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01-2player']"
+  );
+  assert.ok(openTwoPlayerSettings);
+  openTwoPlayerSettings.click();
+  await waitForSettingsModal(documentRef);
+  await waitFor(() =>
+    ["layout und stil", "spieler", "hintergrund"].every(
+      (sectionName) => Boolean(
+        documentRef.querySelector(`[data-adxconfig-settings-section='${sectionName}']`)
+      )
+    )
+  );
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-x01-2player'][data-setting-key='colorScheme']"
+    ).length,
+    5
+  );
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-x01-2player'][data-setting-key='identityDensity']"
+    ).length,
+    2
+  );
+  assert.equal(
+    documentRef.querySelector("[data-adxconfig-settings-section='bestehende anzeige']"),
+    null
+  );
+
   runtime.stop();
 });
 

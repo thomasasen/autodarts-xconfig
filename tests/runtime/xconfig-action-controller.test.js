@@ -274,6 +274,63 @@ test("createShellActionController dispatches runtime, update and theme commands"
   ]);
 });
 
+test("createShellActionController resets only x01 two-player presentation defaults", async () => {
+  const savedPatches = [];
+  let confirmed = true;
+  const controller = createShellActionController({
+    windowRef: {
+      confirm(message) {
+        assert.match(message, /Aktivierung und eigenes Hintergrundbild bleiben erhalten/);
+        return confirmed;
+      },
+    },
+    runtimeApi: {
+      saveConfig(patch) {
+        savedPatches.push(patch);
+        return Promise.resolve();
+      },
+    },
+  });
+  const feature = {
+    featureKey: "theme-x01-2player",
+    configKey: "themes.x01TwoPlayer",
+  };
+
+  controller.handleAction("resetX01TwoPlayerTheme", null, feature);
+  await flushMicrotasks();
+  assert.deepEqual(savedPatches, [
+    {
+      features: {
+        themes: {
+          x01TwoPlayer: {
+            visualStyle: "studio",
+            colorScheme: "studio-mint",
+            activePlayerEmphasis: "standard",
+            informationDensity: "full",
+            identityDensity: "full",
+            playerNameLayout: "single-line",
+            showAvg: true,
+            backgroundDisplayMode: "fill",
+            backgroundOpacity: 25,
+            playerFieldTransparency: 10,
+            debug: false,
+          },
+        },
+      },
+    },
+  ]);
+  assert.equal(Object.hasOwn(savedPatches[0].features.themes.x01TwoPlayer, "enabled"), false);
+  assert.equal(
+    Object.hasOwn(savedPatches[0].features.themes.x01TwoPlayer, "backgroundImageDataUrl"),
+    false
+  );
+
+  confirmed = false;
+  controller.handleAction("resetX01TwoPlayerTheme", null, feature);
+  await flushMicrotasks();
+  assert.equal(savedPatches.length, 1);
+});
+
 test("createShellActionController dispatches feature and setting payload commands", async () => {
   const calls = [];
   const notices = [];

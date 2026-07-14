@@ -366,28 +366,51 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "theme-x01-2player": featureCopy({
     cardDescription:
-      "Beta-Theme für genau zwei X01-Spieler mit Board-Fokus; wird weiter ausgebaut und stabilisiert.",
+      "Anpassbares X01-Theme für genau zwei Spieler mit zentriertem Board und TV-tauglichen Presets.",
     visibleDescription:
-      "Eine Beta-Version des dunklen X01-Layouts für exakt 2 Spieler mit Board-Fokus, seitlichen Spieler-Karten und optionaler AVG-Zeile.",
+      "Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.",
     visualDescription:
-      "Das Theme legt zwei große Spieler-Karten links und rechts um ein betontes Board an. Farben, Flächen und Kontraste werden neu interpretiert; außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.",
+      "Stil, Farbschema und Spielerinformationen lassen sich für Desktop, TV oder kompakte Fenster abstimmen. Außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.",
     usefulWhen:
-      "Wenn du das neue TV-artige 2-Spieler-X01-Layout schon nutzen möchtest und Beta-Stand, weitere Stabilisierung sowie spätere xConfig-Ausbaustufen für Farben und Feineinstellungen für dich in Ordnung sind.",
-    readmeDetailHeading: "Beta-Hinweis",
+      "Wenn du ein gut lesbares Zweispieler-Layout für Desktop, TV oder eine kompakte Livecam-Ansicht möchtest.",
+    readmeDetailHeading: "Darstellung",
     readmeDetails: [
-      "Diese Variante ist bewusst als Beta-Version markiert und wird weiter ausgebaut sowie stabilisiert.",
-      "Zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.",
+      "Die Presets verändern nur das Zweispieler-Theme und erhalten dessen zentriertes Board sowie die bestehende Zustandslogik.",
     ],
     featuresDetails: [
-      "Beta-Hinweis: Diese Variante wird weiter ausgebaut sowie stabilisiert.",
-      "Zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.",
+      "Stil, Farbschema, Informationsdichte und Namensdarstellung sind getrennt konfigurierbar.",
     ],
     images: [image("Theme X01 2Player in AD xConfig", "template-theme-x01-2player-xConfig.jpg")],
     fields: {
-      showAvg: fieldCopy(
-        "Blendet die AVG-Anzeige im 2Player-Theme ein oder aus.",
-        "Schaltet die AVG-Anzeige im X01-2Player-Theme sichtbar an oder aus. Das 2-Spieler-Layout und die Board-Platzierung bleiben dabei unverändert.",
-        "Blendet die AVG-Anzeige im X01-2Player-Theme ein oder aus."
+      visualStyle: fieldCopy(
+        "Steuert Radien, Kanten, Schatten und Board-Glow.",
+        "Wählt zwischen dem bisherigen Studio-Look, einem flacheren Broadcast-Look und einer kontraststarken Darstellung.",
+        "Steuert Geometrie und Effekte des Zweispieler-Themes."
+      ),
+      colorScheme: fieldCopy(
+        "Wählt die Akzent- und Oberflächenfarben des Themes.",
+        "Ändert ausschließlich die Farbtokens und lässt Geometrie sowie Informationsdichte unverändert.",
+        "Wählt das Farbschema des Zweispieler-Themes."
+      ),
+      informationDensity: fieldCopy(
+        "Passt Scoregröße, Abstände und Flächennutzung an.",
+        "Optimiert die Karten für vollständige Informationen, TV-Betrachtung oder kompakte Fenster, ohne spielrelevante Zustände auszublenden.",
+        "Passt Größen und Abstände an den verfügbaren Platz an."
+      ),
+      activePlayerEmphasis: fieldCopy(
+        "Regelt Kante, innere Outline und Kopftönung des aktiven Spielers.",
+        "Verstärkt den aktiven Spieler ohne Kartenskalierung oder schwer lesbare inaktive Inhalte.",
+        "Regelt die stabile Hervorhebung des aktiven Spielers."
+      ),
+      identityDensity: fieldCopy(
+        "Wählt zwischen der vollständigen Identitätszeile und einer reinen Namensanzeige.",
+        "Vollständig zeigt Avatar und Flagge vor dem Namen sowie den Spieler-Zusatzwert wie „35+“ dahinter. Nur Name entfernt diese drei Elemente. Gewonnene Runden und die Rundenstatistik bleiben in beiden Varianten sichtbar.",
+        "Steuert Avatar, Flagge und Spieler-Zusatzwert, nicht die dauerhaft sichtbaren Rundeninformationen."
+      ),
+      playerNameLayout: fieldCopy(
+        "Zeigt Spielernamen in einer oder maximal zwei kollisionsfreien Zeilen.",
+        "Eine Zeile passt den Namen zwischen Avatar und Zusatzwert ein. Bis zu zwei Zeilen nutzt den tatsächlichen Browserumbruch; beide Spieler behalten eine gemeinsame Schriftgröße.",
+        "Wählt eine ein- oder zweizeilige Namensdarstellung."
       ),
       backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
       backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
@@ -395,6 +418,11 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
       uploadThemeBackground: THEME_UPLOAD_FIELD,
       clearThemeBackground: THEME_CLEAR_FIELD,
+      resetX01TwoPlayerTheme: fieldCopy(
+        "Setzt die Darstellung zurück und behält Aktivierung sowie eigenes Hintergrundbild.",
+        "Übernimmt die kanonischen Standardwerte für alle Darstellungsoptionen. Aktivierung und gespeichertes Hintergrundbild bleiben unverändert.",
+        "Setzt nur die Darstellung des Zweispieler-Themes zurück."
+      ),
     },
   }),
   "theme-shanghai": featureCopy({
@@ -2667,6 +2695,42 @@ const xconfigFieldOptionCopy = deepFreeze({
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
   },
   "theme-x01-2player": {
+    visualStyle: {
+      studio: optionCopy("Bewahrt den bisherigen Studio-Look.", "Bewahrt Kartenflächen, Radien, Schatten und Board-Glow des bisherigen Designs."),
+      broadcast: optionCopy("Flacher Sports-TV-Look.", "Reduziert Radien, Schatten, Blur und Board-Glow für eine ruhige Broadcast-Darstellung."),
+      "high-contrast": optionCopy("Maximale klare Abgrenzung.", "Verwendet stärkere reservierte Kanten und reduzierte Effekte für große Betrachtungsabstände."),
+    },
+    colorScheme: {
+      "studio-mint": optionCopy("Bisheriger Mint-Akzent.", "Verwendet die bisherige mintgrüne Studio-Palette."),
+      lime: optionCopy("Heller Lime-Akzent.", "Verwendet Lime auf dunklen olivfarbenen Flächen."),
+      amber: optionCopy("Warmer Amber-Akzent.", "Verwendet Amber auf warmen dunklen Flächen."),
+      "midnight-blue": optionCopy("Kühler blauer Akzent.", "Verwendet helles Blau auf tiefblauen Flächen."),
+      monochrome: optionCopy("Neutrale Graustufen.", "Verwendet Weiß und Grautöne ohne farbigen Akzent."),
+    },
+    activePlayerEmphasis: {
+      subtle: optionCopy("Dezente Aktivkante.", "Verwendet eine zurückhaltende Kante und Kopftönung."),
+      standard: optionCopy("Klare stabile Hervorhebung.", "Verwendet eine klare Kante, innere Outline und priorisierte Score-/Namensfarbe."),
+      strong: optionCopy("Kräftige Hervorhebung.", "Verstärkt Kante, Outline und Kopftönung ohne die Karte zu skalieren."),
+    },
+    informationDensity: {
+      full: optionCopy("Vollständige Darstellung.", "Bewahrt die bisherigen Größen und Abstände."),
+      tv: optionCopy("Für größere Betrachtungsabstände.", "Vergrößert Hauptscore und Namen und reduziert sekundäre Abstände."),
+      compact: optionCopy("Für kleine Fenster.", "Reduziert Kartenhöhe, Padding und Abstände bei sichtbaren Spielinformationen."),
+    },
+    identityDensity: {
+      full: optionCopy(
+        "Zeigt Avatar und Flagge vor dem Namen sowie den Spieler-Zusatzwert wie „35+“ dahinter.",
+        "Avatar, Flagge, Name und Spieler-Zusatzwert stehen in einer gemeinsamen Identitätszeile. Gewonnene Runden und Rundenstatistik bleiben separat in der oberen Kartenecke sichtbar."
+      ),
+      "name-only": optionCopy(
+        "Zeigt nur den Spielernamen ohne Avatar, Flagge und Spieler-Zusatzwert.",
+        "Die Identitätszeile enthält ausschließlich den Namen. Gewonnene Runden, Rundenstatistik, Spielstand und weitere spielrelevante Anzeigen bleiben sichtbar."
+      ),
+    },
+    playerNameLayout: {
+      "single-line": optionCopy("Name in einer Zeile.", "Verwendet die bestehende Canvas-basierte Einpassung."),
+      "two-lines": optionCopy("Name in maximal zwei Zeilen.", "Misst den tatsächlichen DOM-Umbruch und verwendet für beide Spieler eine gemeinsame Schriftgröße."),
+    },
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,

@@ -215,6 +215,36 @@ const TURN_DART_SIZE_OPTIONS = Object.freeze([
   { value: 115, label: "Standard" },
   { value: 135, label: "Groß" },
 ]);
+const X01_TWO_PLAYER_VISUAL_STYLE_OPTIONS = Object.freeze([
+  { value: "studio", label: "Studio" },
+  { value: "broadcast", label: "Broadcast" },
+  { value: "high-contrast", label: "Hoher Kontrast" },
+]);
+const X01_TWO_PLAYER_COLOR_SCHEME_OPTIONS = Object.freeze([
+  { value: "studio-mint", label: "Studio Mint" },
+  { value: "lime", label: "Lime" },
+  { value: "amber", label: "Amber" },
+  { value: "midnight-blue", label: "Midnight Blue" },
+  { value: "monochrome", label: "Monochrom" },
+]);
+const X01_TWO_PLAYER_ACTIVE_EMPHASIS_OPTIONS = Object.freeze([
+  { value: "subtle", label: "Dezent" },
+  { value: "standard", label: "Standard" },
+  { value: "strong", label: "Stark" },
+]);
+const X01_TWO_PLAYER_INFORMATION_DENSITY_OPTIONS = Object.freeze([
+  { value: "full", label: "Vollständig" },
+  { value: "tv", label: "TV" },
+  { value: "compact", label: "Kompakt" },
+]);
+const X01_TWO_PLAYER_IDENTITY_DENSITY_OPTIONS = Object.freeze([
+  { value: "full", label: "Vollständig" },
+  { value: "name-only", label: "Nur Name" },
+]);
+const X01_TWO_PLAYER_NAME_LAYOUT_OPTIONS = Object.freeze([
+  { value: "single-line", label: "Eine Zeile" },
+  { value: "two-lines", label: "Bis zu zwei Zeilen" },
+]);
 const DEBUG_FIELD = checkboxField("debug", "Debug");
 
 function backgroundThemeFields(prefixFields = []) {
@@ -374,9 +404,45 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "template-autodarts-theme-x01-2player",
     description:
       "Eigenständiges X01-Theme für genau zwei Spieler mit zentriertem Board und eigenem Hintergrundbild.",
-    fields: backgroundThemeFields([
-      checkboxField("showAvg", "AVG anzeigen"),
-    ]),
+    fields: [
+      selectField("visualStyle", "Darstellungsstil", X01_TWO_PLAYER_VISUAL_STYLE_OPTIONS, {
+        section: "Layout und Stil",
+      }),
+      selectField("colorScheme", "Farbschema", X01_TWO_PLAYER_COLOR_SCHEME_OPTIONS, {
+        section: "Layout und Stil",
+      }),
+      selectField(
+        "informationDensity",
+        "Informationsdichte",
+        X01_TWO_PLAYER_INFORMATION_DENSITY_OPTIONS,
+        { section: "Layout und Stil" }
+      ),
+      selectField(
+        "activePlayerEmphasis",
+        "Aktivspieler-Hervorhebung",
+        X01_TWO_PLAYER_ACTIVE_EMPHASIS_OPTIONS,
+        { section: "Spieler" }
+      ),
+      selectField(
+        "identityDensity",
+        "Spielerinformationen",
+        X01_TWO_PLAYER_IDENTITY_DENSITY_OPTIONS,
+        { section: "Spieler" }
+      ),
+      selectField("playerNameLayout", "Namensdarstellung", X01_TWO_PLAYER_NAME_LAYOUT_OPTIONS, {
+        section: "Spieler",
+      }),
+      ...backgroundThemeFields().map((field) =>
+        Object.freeze({ ...field, section: "Hintergrund" })
+      ),
+      actionField("resetX01TwoPlayerTheme", "Zweispieler-Theme auf Standard zurücksetzen", {
+        section: "Hintergrund",
+        description:
+          "Setzt die Darstellung zurück; Aktivierung und eigenes Hintergrundbild bleiben erhalten.",
+        successMessage: "Zweispieler-Theme auf Standard zurückgesetzt.",
+        errorMessage: "Zweispieler-Theme konnte nicht zurückgesetzt werden.",
+      }),
+    ],
   }),
   descriptorEntry({
     featureKey: "theme-cricket",

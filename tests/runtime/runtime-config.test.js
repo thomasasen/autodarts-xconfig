@@ -126,6 +126,12 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.themes.gotcha.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
   assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.x01TwoPlayer.visualStyle, "studio");
+  assert.equal(config.features.themes.x01TwoPlayer.colorScheme, "studio-mint");
+  assert.equal(config.features.themes.x01TwoPlayer.activePlayerEmphasis, "standard");
+  assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "full");
+  assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "full");
+  assert.equal(config.features.themes.x01TwoPlayer.playerNameLayout, "single-line");
   assert.equal(config.features.themes.shanghai.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.bullOff.debug, false);
 });
@@ -201,6 +207,12 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
   assert.equal(config.features.themes.gotcha.deltaItalic, true);
   assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
+  assert.equal(config.features.themes.x01TwoPlayer.visualStyle, "studio");
+  assert.equal(config.features.themes.x01TwoPlayer.colorScheme, "studio-mint");
+  assert.equal(config.features.themes.x01TwoPlayer.activePlayerEmphasis, "standard");
+  assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "full");
+  assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "full");
+  assert.equal(config.features.themes.x01TwoPlayer.playerNameLayout, "single-line");
   assert.equal(config.features.themes.shanghai.enabled, true);
   assert.equal(config.features.themes.cricket.enabled, true);
   assert.equal(config.features.themes.globalTypography.enabled, false);
@@ -213,6 +225,67 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
   assert.equal(config.features.themes.cricket.backgroundImageDataUrl, "data:image/png;base64,BBBB");
   assert.equal(config.features.themes.bullOff.backgroundImageDataUrl, "");
+});
+
+test("createRuntimeConfig normalizes x01 two-player theme presets and old configs", () => {
+  const oldConfig = createRuntimeConfig({
+    features: {
+      themes: {
+        x01TwoPlayer: {
+          showAvg: false,
+        },
+      },
+    },
+  });
+  const oldThemeConfig = oldConfig.getFeatureConfig("themes.x01TwoPlayer");
+  assert.deepEqual(
+    {
+      visualStyle: oldThemeConfig.visualStyle,
+      colorScheme: oldThemeConfig.colorScheme,
+      activePlayerEmphasis: oldThemeConfig.activePlayerEmphasis,
+      informationDensity: oldThemeConfig.informationDensity,
+      identityDensity: oldThemeConfig.identityDensity,
+      playerNameLayout: oldThemeConfig.playerNameLayout,
+    },
+    {
+      visualStyle: "studio",
+      colorScheme: "studio-mint",
+      activePlayerEmphasis: "standard",
+      informationDensity: "full",
+      identityDensity: "full",
+      playerNameLayout: "single-line",
+    }
+  );
+
+  const normalized = createRuntimeConfig({
+    features: {
+      themes: {
+        x01TwoPlayer: {
+          visualStyle: "invalid",
+          colorScheme: "remote-blue",
+          activePlayerEmphasis: "maximum",
+          informationDensity: "tiny",
+          identityDensity: "hidden",
+          playerNameLayout: "many-lines",
+        },
+      },
+    },
+  });
+  const normalizedThemeConfig = normalized.getFeatureConfig("themes.x01TwoPlayer");
+  assert.equal(normalizedThemeConfig.visualStyle, "studio");
+  assert.equal(normalizedThemeConfig.colorScheme, "studio-mint");
+  assert.equal(normalizedThemeConfig.activePlayerEmphasis, "standard");
+  assert.equal(normalizedThemeConfig.informationDensity, "full");
+  assert.equal(normalizedThemeConfig.identityDensity, "full");
+  assert.equal(normalizedThemeConfig.playerNameLayout, "single-line");
+
+  const retiredCompactConfig = createRuntimeConfig({
+    features: { themes: { x01TwoPlayer: { identityDensity: "compact" } } },
+  });
+  assert.equal(
+    retiredCompactConfig.getFeatureConfig("themes.x01TwoPlayer").identityDensity,
+    "full"
+  );
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {

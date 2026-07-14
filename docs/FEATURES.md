@@ -398,11 +398,33 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Theme X01 2Player (Beta)
 
 - Gilt für: `X01`
-- Kurz: Eine Beta-Version des dunklen X01-Layouts für exakt 2 Spieler mit Board-Fokus, seitlichen Spieler-Karten und optionaler AVG-Zeile.
-- Grafisch: Das Theme legt zwei große Spieler-Karten links und rechts um ein betontes Board an. Farben, Flächen und Kontraste werden neu interpretiert; außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.
-- Beta-Hinweis: Diese Variante wird weiter ausgebaut sowie stabilisiert.
-- Zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.
-- `AVG anzeigen`: Blendet die AVG-Anzeige im X01-2Player-Theme ein oder aus.
+- Kurz: Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.
+- Grafisch: Stil, Farbschema und Spielerinformationen lassen sich für Desktop, TV oder kompakte Fenster abstimmen. Außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.
+- Stil, Farbschema, Informationsdichte und Namensdarstellung sind getrennt konfigurierbar.
+- `Darstellungsstil`: Steuert Geometrie und Effekte des Zweispieler-Themes.
+  - `Studio`: Bewahrt Kartenflächen, Radien, Schatten und Board-Glow des bisherigen Designs.
+  - `Broadcast`: Reduziert Radien, Schatten, Blur und Board-Glow für eine ruhige Broadcast-Darstellung.
+  - `Hoher Kontrast`: Verwendet stärkere reservierte Kanten und reduzierte Effekte für große Betrachtungsabstände.
+- `Farbschema`: Wählt das Farbschema des Zweispieler-Themes.
+  - `Studio Mint`: Verwendet die bisherige mintgrüne Studio-Palette.
+  - `Lime`: Verwendet Lime auf dunklen olivfarbenen Flächen.
+  - `Amber`: Verwendet Amber auf warmen dunklen Flächen.
+  - `Midnight Blue`: Verwendet helles Blau auf tiefblauen Flächen.
+  - `Monochrom`: Verwendet Weiß und Grautöne ohne farbigen Akzent.
+- `Informationsdichte`: Passt Größen und Abstände an den verfügbaren Platz an.
+  - `Vollständig`: Bewahrt die bisherigen Größen und Abstände.
+  - `TV`: Vergrößert Hauptscore und Namen und reduziert sekundäre Abstände.
+  - `Kompakt`: Reduziert Kartenhöhe, Padding und Abstände bei sichtbaren Spielinformationen.
+- `Aktivspieler-Hervorhebung`: Regelt die stabile Hervorhebung des aktiven Spielers.
+  - `Dezent`: Verwendet eine zurückhaltende Kante und Kopftönung.
+  - `Standard`: Verwendet eine klare Kante, innere Outline und priorisierte Score-/Namensfarbe.
+  - `Stark`: Verstärkt Kante, Outline und Kopftönung ohne die Karte zu skalieren.
+- `Spielerinformationen`: Steuert Avatar, Flagge und Spieler-Zusatzwert, nicht die dauerhaft sichtbaren Rundeninformationen.
+  - `Vollständig`: Avatar, Flagge, Name und Spieler-Zusatzwert stehen in einer gemeinsamen Identitätszeile. Gewonnene Runden und Rundenstatistik bleiben separat in der oberen Kartenecke sichtbar.
+  - `Nur Name`: Die Identitätszeile enthält ausschließlich den Namen. Gewonnene Runden, Rundenstatistik, Spielstand und weitere spielrelevante Anzeigen bleiben sichtbar.
+- `Namensdarstellung`: Wählt eine ein- oder zweizeilige Namensdarstellung.
+  - `Eine Zeile`: Verwendet die bestehende Canvas-basierte Einpassung.
+  - `Bis zu zwei Zeilen`: Misst den tatsächlichen DOM-Umbruch und verwendet für beide Spieler eine gemeinsame Schriftgröße.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
   - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
@@ -428,6 +450,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 - `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
 - `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
+- `Zweispieler-Theme auf Standard zurücksetzen`: Setzt nur die Darstellung des Zweispieler-Themes zurück.
 
 ![Theme X01 2Player in AD xConfig](screenshots/template-theme-x01-2player-xConfig.jpg)
 

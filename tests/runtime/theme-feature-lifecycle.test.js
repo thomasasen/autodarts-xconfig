@@ -2133,6 +2133,7 @@ function createX01TwoPlayerTestCard(documentRef, score, name, options = {}) {
     playerNode,
     stackNode,
     identityNode,
+    nameNode,
     headerMetaNode,
     scoreNode,
     progressNode,
@@ -2558,6 +2559,8 @@ test("theme-x01-2player shares responsive player name size from the tightest nam
   });
   firstPlayer.stackNode.__rect = { width: 300, height: 220 };
   secondPlayer.stackNode.__rect = { width: 300, height: 220 };
+  firstPlayer.nameNode.__rect = { width: 220, height: 40 };
+  secondPlayer.nameNode.__rect = { width: 260, height: 40 };
   playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
   playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
 
@@ -2593,11 +2596,112 @@ test("theme-x01-2player shares responsive player name size from the tightest nam
     "--ad-ext-x01-2player-shared-name-size"
   );
   assert.match(sharedNameSize, /^\d+\.\d{2}px$/);
-  assert.equal(Number.parseFloat(sharedNameSize) < 44, true);
-  assert.equal(Number.parseFloat(sharedNameSize) > 43, true);
+  assert.equal(Number.parseFloat(sharedNameSize) < 32, true);
+  assert.equal(Number.parseFloat(sharedNameSize) > 30, true);
 
   cleanup();
 
+  assert.equal(
+    playerDisplayNode.style.getPropertyValue("--ad-ext-x01-2player-shared-name-size"),
+    ""
+  );
+});
+
+test("theme-x01-2player measures a shared two-line name size from rendered DOM and caches it", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+
+  const firstPlayer = createX01TwoPlayerTestCard(
+    documentRef,
+    501,
+    "VERY LONG PLAYER NAME WITHOUT LIMIT"
+  );
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 501, "SHORT NAME");
+  firstPlayer.stackNode.__rect = { width: 300, height: 220 };
+  secondPlayer.stackNode.__rect = { width: 300, height: 220 };
+  firstPlayer.nameNode.__rect = { width: 300, height: 40 };
+  secondPlayer.nameNode.__rect = { width: 300, height: 40 };
+  let layoutReadCount = 0;
+  [firstPlayer, secondPlayer].forEach((player, playerIndex) => {
+    Object.defineProperty(player.nameNode, "clientWidth", { value: 300 });
+    Object.defineProperty(player.nameNode, "scrollWidth", { value: 300 });
+    Object.defineProperty(player.nameNode, "scrollHeight", {
+      configurable: true,
+      get() {
+        layoutReadCount += 1;
+        const candidate = Number.parseFloat(
+          playerDisplayNode.style.getPropertyValue("--ad-ext-x01-2player-shared-name-size")
+        ) || 18;
+        if (playerIndex === 0 && candidate > 42) {
+          return candidate * 2.9;
+        }
+        return candidate * 1.9;
+      },
+    });
+  });
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
+
+  const windowRef = createMatchWindow(documentRef, "theme-x01-2player-two-line-name-size");
+  windowRef.getComputedStyle = (node) => {
+    const candidate = Number.parseFloat(
+      playerDisplayNode.style.getPropertyValue("--ad-ext-x01-2player-shared-name-size")
+    ) || 18;
+    return {
+      display: "",
+      visibility: "",
+      opacity: "1",
+      fontFamily: "sans-serif",
+      fontWeight: "800",
+      lineHeight: node === firstPlayer.nameNode || node === secondPlayer.nameNode
+        ? `${candidate * 0.98}px`
+        : "normal",
+    };
+  };
+  const gameState = createX01TwoPlayerLifecycleGameState(0);
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState,
+    config: {
+      getFeatureConfig(configKey) {
+        return configKey === "themes.x01TwoPlayer"
+          ? { playerNameLayout: "two-lines" }
+          : {};
+      },
+    },
+    helpers: {
+      createRafScheduler(callback) {
+        return {
+          schedule() {
+            callback();
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+
+  await wait(5);
+  const sharedNameSize = Number.parseFloat(
+    playerDisplayNode.style.getPropertyValue("--ad-ext-x01-2player-shared-name-size")
+  );
+  assert.equal(sharedNameSize > 41.8 && sharedNameSize <= 42, true);
+  const readsAfterInitialMeasure = layoutReadCount;
+
+  gameState.setActivePlayerIndex(1);
+  await wait(5);
+  assert.equal(layoutReadCount, readsAfterInitialMeasure);
+
+  cleanup();
   assert.equal(
     playerDisplayNode.style.getPropertyValue("--ad-ext-x01-2player-shared-name-size"),
     ""

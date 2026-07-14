@@ -140,6 +140,18 @@ const THEME_ACTIVE_PLAYER_TINT_INTENSITY = new Set([0, 10, 15, 20, 25, 30]);
 const THEME_GOTCHA_DELTA_PLACEMENTS = new Set(["below", "inline-divider"]);
 const THEME_GOTCHA_DELTA_ALIGNMENTS = new Set(["left", "right"]);
 const THEME_CONTRAST_PRESETS = new Set(["soft", "standard", "high"]);
+const THEME_X01_TWO_PLAYER_VISUAL_STYLES = new Set(["studio", "broadcast", "high-contrast"]);
+const THEME_X01_TWO_PLAYER_COLOR_SCHEMES = new Set([
+  "studio-mint",
+  "lime",
+  "amber",
+  "midnight-blue",
+  "monochrome",
+]);
+const THEME_X01_TWO_PLAYER_ACTIVE_EMPHASIS = new Set(["subtle", "standard", "strong"]);
+const THEME_X01_TWO_PLAYER_INFORMATION_DENSITIES = new Set(["full", "tv", "compact"]);
+const THEME_X01_TWO_PLAYER_IDENTITY_DENSITIES = new Set(["full", "name-only"]);
+const THEME_X01_TWO_PLAYER_NAME_LAYOUTS = new Set(["single-line", "two-lines"]);
 const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
 );
@@ -409,7 +421,21 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     backgroundImageDataUrl: "",
     debug: false,
   },
-  "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
+  "themes.x01TwoPlayer": {
+    enabled: false,
+    showAvg: true,
+    visualStyle: "studio",
+    colorScheme: "studio-mint",
+    activePlayerEmphasis: "standard",
+    informationDensity: "full",
+    identityDensity: "full",
+    playerNameLayout: "single-line",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
+    debug: false,
+  },
   "themes.shanghai": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.bermuda": { enabled: false, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
   "themes.cricket": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
@@ -457,7 +483,19 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     deltaAlignment: "right",
     deltaItalic: true,
   },
-  "themes.x01TwoPlayer": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
+  "themes.x01TwoPlayer": {
+    enabled: false,
+    showAvg: true,
+    visualStyle: "studio",
+    colorScheme: "studio-mint",
+    activePlayerEmphasis: "standard",
+    informationDensity: "full",
+    identityDensity: "full",
+    playerNameLayout: "single-line",
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+  },
   "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.bermuda": { backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
   "themes.cricket": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
@@ -863,7 +901,16 @@ const FEATURE_NORMALIZERS = Object.freeze({
     };
   },
   "themes.x01TwoPlayer"(rawConfig = {}) {
-    return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01TwoPlayer"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
+    return {
+      ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01TwoPlayer"]),
+      showAvg: normalizeBoolean(rawConfig.showAvg, true),
+      visualStyle: normalizeStringChoice(rawConfig.visualStyle, "studio", THEME_X01_TWO_PLAYER_VISUAL_STYLES),
+      colorScheme: normalizeStringChoice(rawConfig.colorScheme, "studio-mint", THEME_X01_TWO_PLAYER_COLOR_SCHEMES),
+      activePlayerEmphasis: normalizeStringChoice(rawConfig.activePlayerEmphasis, "standard", THEME_X01_TWO_PLAYER_ACTIVE_EMPHASIS),
+      informationDensity: normalizeStringChoice(rawConfig.informationDensity, "full", THEME_X01_TWO_PLAYER_INFORMATION_DENSITIES),
+      identityDensity: normalizeStringChoice(rawConfig.identityDensity, "full", THEME_X01_TWO_PLAYER_IDENTITY_DENSITIES),
+      playerNameLayout: normalizeStringChoice(rawConfig.playerNameLayout, "single-line", THEME_X01_TWO_PLAYER_NAME_LAYOUTS),
+    };
   },
   "themes.shanghai"(rawConfig = {}) {
     return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.shanghai"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };

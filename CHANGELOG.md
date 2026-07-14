@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.10] - 2026-07-14
+
+### Added
+
+- Nutzerwirkung: Das X01-Zweispieler-Theme bietet konfigurierbare Darstellungsstile, Farbschemata, Informationsdichten, Aktivspieler-Hervorhebungen und ein- oder zweizeilige Spielernamen; die Spielerinformationen lassen sich vollständig oder ausschließlich als Name darstellen.
+  Technik: Kanonisch normalisierte Presets, Root-Attribute, getrennte Stil- und Farbtokens sowie DOM-basierte Zweizeilenmessung erweitern Theme, xConfig und Regressionstests ohne Migration bestehender Konfigurationen.
+
+### Fixed
+
+- Nutzerwirkung: Lange Spielernamen, Rundenzähler und Statistiken überlagern sich nicht mehr; gewonnene Runden stehen links oben, Statistiken rechts oben und der Name erhält einen dezenten Abstand zur Kopfzeile.
+  Technik: Ein spezifischer finaler Grid-Guard hält Karten, Score und Fortschritt über die volle Breite stabil, entfernt die Aktivspieler-Skalierung und schützt die Anordnung gegen konkurrierende X01-Theme-Regeln.
+
 ## [2.4.9] - 2026-07-10
 
 ### Changed
@@ -1780,7 +1792,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.9]: https://github.com/thomasasen/autodarts-xconfig/compare/68e9ac5...HEAD
+[2.4.10]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...HEAD
+[2.4.9]: https://github.com/thomasasen/autodarts-xconfig/compare/68e9ac5...185451c
 [2.4.8]: https://github.com/thomasasen/autodarts-xconfig/compare/848458d...68e9ac5
 [2.4.7]: https://github.com/thomasasen/autodarts-xconfig/compare/369c519...848458d
 [2.4.6]: https://github.com/thomasasen/autodarts-xconfig/compare/4da06d6...369c519

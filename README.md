@@ -582,18 +582,40 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Theme X01 2Player (Beta)
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Eine Beta-Version des dunklen X01-Layouts für exakt 2 Spieler mit Board-Fokus, seitlichen Spieler-Karten und optionaler AVG-Zeile.
-- Grafisch: Das Theme legt zwei große Spieler-Karten links und rechts um ein betontes Board an. Farben, Flächen und Kontraste werden neu interpretiert; außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.
-- Wann sinnvoll? Wenn du das neue TV-artige 2-Spieler-X01-Layout schon nutzen möchtest und Beta-Stand, weitere Stabilisierung sowie spätere xConfig-Ausbaustufen für Farben und Feineinstellungen für dich in Ordnung sind.
+- Was macht es sichtbar? Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.
+- Grafisch: Stil, Farbschema und Spielerinformationen lassen sich für Desktop, TV oder kompakte Fenster abstimmen. Außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.
+- Wann sinnvoll? Wenn du ein gut lesbares Zweispieler-Layout für Desktop, TV oder eine kompakte Livecam-Ansicht möchtest.
 
-**Beta-Hinweis**
+**Darstellung**
 
-- Diese Variante ist bewusst als Beta-Version markiert und wird weiter ausgebaut sowie stabilisiert.
-- Zusätzliche xConfig-Optionen wie Farben und weitere Feineinstellungen sind für kommende Ausbaustufen vorgesehen.
+- Die Presets verändern nur das Zweispieler-Theme und erhalten dessen zentriertes Board sowie die bestehende Zustandslogik.
 
 **Einstellungen einfach erklärt**
 
-- `AVG anzeigen`: Schaltet die AVG-Anzeige im X01-2Player-Theme sichtbar an oder aus. Das 2-Spieler-Layout und die Board-Platzierung bleiben dabei unverändert.
+- `Darstellungsstil`: Wählt zwischen dem bisherigen Studio-Look, einem flacheren Broadcast-Look und einer kontraststarken Darstellung.
+  - `Studio`: Bewahrt Kartenflächen, Radien, Schatten und Board-Glow des bisherigen Designs.
+  - `Broadcast`: Reduziert Radien, Schatten, Blur und Board-Glow für eine ruhige Broadcast-Darstellung.
+  - `Hoher Kontrast`: Verwendet stärkere reservierte Kanten und reduzierte Effekte für große Betrachtungsabstände.
+- `Farbschema`: Ändert ausschließlich die Farbtokens und lässt Geometrie sowie Informationsdichte unverändert.
+  - `Studio Mint`: Verwendet die bisherige mintgrüne Studio-Palette.
+  - `Lime`: Verwendet Lime auf dunklen olivfarbenen Flächen.
+  - `Amber`: Verwendet Amber auf warmen dunklen Flächen.
+  - `Midnight Blue`: Verwendet helles Blau auf tiefblauen Flächen.
+  - `Monochrom`: Verwendet Weiß und Grautöne ohne farbigen Akzent.
+- `Informationsdichte`: Optimiert die Karten für vollständige Informationen, TV-Betrachtung oder kompakte Fenster, ohne spielrelevante Zustände auszublenden.
+  - `Vollständig`: Bewahrt die bisherigen Größen und Abstände.
+  - `TV`: Vergrößert Hauptscore und Namen und reduziert sekundäre Abstände.
+  - `Kompakt`: Reduziert Kartenhöhe, Padding und Abstände bei sichtbaren Spielinformationen.
+- `Aktivspieler-Hervorhebung`: Verstärkt den aktiven Spieler ohne Kartenskalierung oder schwer lesbare inaktive Inhalte.
+  - `Dezent`: Verwendet eine zurückhaltende Kante und Kopftönung.
+  - `Standard`: Verwendet eine klare Kante, innere Outline und priorisierte Score-/Namensfarbe.
+  - `Stark`: Verstärkt Kante, Outline und Kopftönung ohne die Karte zu skalieren.
+- `Spielerinformationen`: Vollständig zeigt Avatar und Flagge vor dem Namen sowie den Spieler-Zusatzwert wie „35+“ dahinter. Nur Name entfernt diese drei Elemente. Gewonnene Runden und die Rundenstatistik bleiben in beiden Varianten sichtbar.
+  - `Vollständig`: Avatar, Flagge, Name und Spieler-Zusatzwert stehen in einer gemeinsamen Identitätszeile. Gewonnene Runden und Rundenstatistik bleiben separat in der oberen Kartenecke sichtbar.
+  - `Nur Name`: Die Identitätszeile enthält ausschließlich den Namen. Gewonnene Runden, Rundenstatistik, Spielstand und weitere spielrelevante Anzeigen bleiben sichtbar.
+- `Namensdarstellung`: Eine Zeile passt den Namen zwischen Avatar und Zusatzwert ein. Bis zu zwei Zeilen nutzt den tatsächlichen Browserumbruch; beide Spieler behalten eine gemeinsame Schriftgröße.
+  - `Eine Zeile`: Verwendet die bestehende Canvas-basierte Einpassung.
+  - `Bis zu zwei Zeilen`: Misst den tatsächlichen DOM-Umbruch und verwendet für beide Spieler eine gemeinsame Schriftgröße.
 - `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.
   - `Füllen`: Das Bild legt sich wie ein Vollflächen-Hintergrund über den gesamten Spielbereich. Leere Ränder entstehen nicht, dafür können Randbereiche abgeschnitten werden.
   - `Einpassen`: Das komplette Bild bleibt sichtbar und wird in die verfügbare Fläche eingepasst. Wenn das Seitenverhältnis nicht passt, bleiben am Rand freie Bereiche des Themes sichtbar.
@@ -619,6 +641,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 - `Hintergrundbild hochladen`: Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal auf maximal 1920×1080 optimiert, bis 1,5 MiB begrenzt und nach Reloads wieder für genau dieses Theme verwendet.
 - `Hintergrundbild entfernen`: Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.
+- `Zweispieler-Theme auf Standard zurücksetzen`: Übernimmt die kanonischen Standardwerte für alle Darstellungsoptionen. Aktivierung und gespeichertes Hintergrundbild bleiben unverändert.
 
 ![Theme X01 2Player in AD xConfig](docs/screenshots/template-theme-x01-2player-xConfig.jpg)
 

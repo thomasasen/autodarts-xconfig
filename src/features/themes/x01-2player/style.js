@@ -1,15 +1,21 @@
 import { buildThemeCssBundle } from "../shared/theme-style-builder.js";
-import { buildPreviewPlacementCss, normalizeBoolean } from "../shared/theme-utils.js";
+import { buildPreviewPlacementCss } from "../shared/theme-utils.js";
 import {
   PLAYER_CARD_PART_ATTRIBUTE,
   PLAYER_CARD_PARTS,
 } from "../../shared/player-card-parts.js";
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_ACTIVE_EMPHASIS_ATTRIBUTE,
+  X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE,
+  X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE,
+  X01_TWO_PLAYER_INFORMATION_DENSITY_ATTRIBUTE,
+  X01_TWO_PLAYER_NAME_LAYOUT_ATTRIBUTE,
   X01_TWO_PLAYER_PLAYER_INDEX_ATTRIBUTE,
   X01_TWO_PLAYER_PLAYER_WRAPPER_ATTRIBUTE,
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
+  X01_TWO_PLAYER_VISUAL_STYLE_ATTRIBUTE,
 } from "./layout-contract.js";
 import { X01_TWO_PLAYER_STALE_REMAINING_CLASS } from "./scoreboard-state.js";
 
@@ -38,32 +44,14 @@ const TABLE_SLOT_SELECTOR = `[${X01_TWO_PLAYER_SLOT_ATTRIBUTE}="table"]`;
 const STACK_HEADER_META_SELECTOR = `.css-1igwmid:not([${X01_TWO_PLAYER_SLOT_ATTRIBUTE}])`;
 const LEGACY_PROGRESS_STACK_SELECTOR = `.chakra-stack[data-ad-ext-x01-remaining-score-bar-stack="true"]:not(${STACK_SELECTOR})`;
 const IDENTITY_MEDIA_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.identityMedia}"]`;
+const AVATAR_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.avatar}"]`;
 const FLAG_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.flag}"]`;
 const ROUND_BADGE_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.roundBadge}"]`;
 const PROFILE_BADGE_SELECTOR = `[${PLAYER_CARD_PART_ATTRIBUTE}="${PLAYER_CARD_PARTS.profileBadge}"]`;
 
-function resolveThemeX01TwoPlayerConfig(rawConfig = {}) {
-  return {
-    showAvg: normalizeBoolean(rawConfig.showAvg, true),
-  };
-}
-
 export function buildX01TwoPlayerThemeCss(featureConfig = {}, options = {}) {
-  const resolved = resolveThemeX01TwoPlayerConfig(featureConfig);
   const visualConfig = options.visualConfig || featureConfig;
   const previewCss = buildPreviewPlacementCss(PREVIEW_PLACEMENT);
-  const avgVisibilityCss = resolved.showAvg
-    ? ""
-    : `
-p.chakra-text.css-1j0bqop{
-  display:none !important;
-}
-
-.ad-ext-avg-trend-arrow{
-  display:none !important;
-}
-`;
-
   const themeCss = `
 :root{
   --theme-bg:#040709;
@@ -90,6 +78,26 @@ p.chakra-text.css-1j0bqop{
   --ad-ext-theme-meta-inactive-color:var(--ad-ext-theme-meta-color);
   --ad-ext-theme-turn-points-color:#f4f8f6;
   --ad-ext-theme-throw-label-color:rgba(244, 248, 246, 0.72);
+  --ad-ext-x01-2player-accent-rgb:143, 226, 141;
+  --ad-ext-x01-2player-card-surface-top:rgba(20, 24, 28, 0.94);
+  --ad-ext-x01-2player-card-surface-mid:rgba(14, 18, 21, 0.92);
+  --ad-ext-x01-2player-card-surface-bottom:rgba(8, 11, 13, 0.92);
+  --ad-ext-x01-2player-card-radius:1.2rem;
+  --ad-ext-x01-2player-card-border-width:1px;
+  --ad-ext-x01-2player-card-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 60px rgba(0, 0, 0, 0.32);
+  --ad-ext-x01-2player-inner-outline-width:1px;
+  --ad-ext-x01-2player-inner-outline-alpha:0.24;
+  --ad-ext-x01-2player-active-header-alpha:0.05;
+  --ad-ext-x01-2player-header-current-alpha:0;
+  --ad-ext-x01-2player-active-name-weight:850;
+  --ad-ext-x01-2player-board-glow-alpha:0.46;
+  --ad-ext-x01-2player-board-glow-blur:18px;
+  --ad-ext-x01-2player-density-score-scale:1;
+  --ad-ext-x01-2player-density-name-scale:1;
+  --ad-ext-x01-2player-density-meta-scale:1;
+  --ad-ext-x01-2player-density-min-height:clamp(18rem, 58vh, 34rem);
+  --ad-ext-x01-2player-identity-scale:1;
+  --ad-ext-x01-2player-active-outline-color:rgba(var(--ad-ext-x01-2player-accent-rgb), var(--ad-ext-x01-2player-inner-outline-alpha));
   --ad-ext-x01-2player-column-gap:clamp(0.9rem, 1.6vw, 1.4rem);
   --ad-ext-x01-2player-center-min-width:48rem;
   --ad-ext-x01-2player-side-width:clamp(
@@ -119,6 +127,121 @@ p.chakra-text.css-1j0bqop{
     + var(--ad-ext-x01-2player-board-gap)
   );
   --ad-ext-x01-2player-card-padding:clamp(0.8rem, 1.25vw, 1rem);
+}
+
+:root[${X01_TWO_PLAYER_VISUAL_STYLE_ATTRIBUTE}="broadcast"]{
+  --ad-ext-x01-2player-card-radius:0.55rem;
+  --ad-ext-x01-2player-card-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 8px 20px rgba(0, 0, 0, 0.22);
+  --ad-ext-x01-2player-active-header-alpha:0.035;
+  --ad-ext-x01-2player-board-glow-alpha:0.2;
+  --ad-ext-x01-2player-board-glow-blur:8px;
+}
+
+:root[${X01_TWO_PLAYER_VISUAL_STYLE_ATTRIBUTE}="high-contrast"]{
+  --ad-ext-x01-2player-card-radius:0.7rem;
+  --ad-ext-x01-2player-card-border-width:2px;
+  --ad-ext-x01-2player-card-shadow:0 0 0 rgba(0, 0, 0, 0);
+  --ad-ext-x01-2player-inner-outline-width:2px;
+  --ad-ext-x01-2player-active-header-alpha:0.1;
+  --ad-ext-x01-2player-board-glow-alpha:0.16;
+  --ad-ext-x01-2player-board-glow-blur:6px;
+}
+
+:root[${X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE}="lime"]{
+  --theme-bg:#080b05;
+  --theme-background:#080b05;
+  --theme-text-highlight-color:#b7f34a;
+  --theme-navigation-bg:#11170a;
+  --theme-navigation-item-color:#1d2910;
+  --theme-text-color:#f8ffe8;
+  --ad-ext-x01-2player-accent-rgb:183, 243, 74;
+  --ad-ext-theme-text-primary-color:#f8ffe8;
+  --ad-ext-theme-text-secondary-color:#dbe8bd;
+  --ad-ext-theme-meta-color:rgba(219, 232, 189, 0.92);
+  --ad-ext-theme-card-inactive-border-color:rgba(219, 232, 189, 0.22);
+  --ad-ext-x01-2player-card-surface-top:rgba(17, 23, 10, 0.95);
+  --ad-ext-x01-2player-card-surface-mid:rgba(12, 17, 7, 0.94);
+  --ad-ext-x01-2player-card-surface-bottom:rgba(8, 11, 5, 0.94);
+}
+
+:root[${X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE}="amber"]{
+  --theme-bg:#0d0904;
+  --theme-background:#0d0904;
+  --theme-text-highlight-color:#f6b84a;
+  --theme-navigation-bg:#181208;
+  --theme-navigation-item-color:#291d0b;
+  --theme-text-color:#fff8e8;
+  --ad-ext-x01-2player-accent-rgb:246, 184, 74;
+  --ad-ext-theme-text-primary-color:#fff8e8;
+  --ad-ext-theme-text-secondary-color:#ead9b8;
+  --ad-ext-theme-meta-color:rgba(234, 217, 184, 0.92);
+  --ad-ext-theme-card-inactive-border-color:rgba(234, 217, 184, 0.22);
+  --ad-ext-x01-2player-card-surface-top:rgba(24, 18, 8, 0.95);
+  --ad-ext-x01-2player-card-surface-mid:rgba(17, 12, 5, 0.94);
+  --ad-ext-x01-2player-card-surface-bottom:rgba(13, 9, 4, 0.94);
+}
+
+:root[${X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE}="midnight-blue"]{
+  --theme-bg:#050914;
+  --theme-background:#050914;
+  --theme-text-highlight-color:#68a8ff;
+  --theme-navigation-bg:#0a1226;
+  --theme-navigation-item-color:#101d3b;
+  --theme-text-color:#f2f7ff;
+  --ad-ext-x01-2player-accent-rgb:104, 168, 255;
+  --ad-ext-theme-text-primary-color:#f2f7ff;
+  --ad-ext-theme-text-secondary-color:#c5d4eb;
+  --ad-ext-theme-meta-color:rgba(197, 212, 235, 0.92);
+  --ad-ext-theme-card-inactive-border-color:rgba(197, 212, 235, 0.24);
+  --ad-ext-x01-2player-card-surface-top:rgba(10, 18, 38, 0.95);
+  --ad-ext-x01-2player-card-surface-mid:rgba(7, 13, 29, 0.94);
+  --ad-ext-x01-2player-card-surface-bottom:rgba(5, 9, 20, 0.94);
+}
+
+:root[${X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE}="monochrome"]{
+  --theme-bg:#080808;
+  --theme-background:#080808;
+  --theme-text-highlight-color:#f4f4f5;
+  --theme-navigation-bg:#171717;
+  --theme-navigation-item-color:#262626;
+  --theme-text-color:#ffffff;
+  --ad-ext-x01-2player-accent-rgb:244, 244, 245;
+  --ad-ext-theme-text-primary-color:#ffffff;
+  --ad-ext-theme-text-secondary-color:#d4d4d8;
+  --ad-ext-theme-meta-color:rgba(212, 212, 216, 0.94);
+  --ad-ext-theme-card-inactive-border-color:rgba(212, 212, 216, 0.28);
+  --ad-ext-x01-2player-card-surface-top:rgba(23, 23, 23, 0.96);
+  --ad-ext-x01-2player-card-surface-mid:rgba(15, 15, 15, 0.95);
+  --ad-ext-x01-2player-card-surface-bottom:rgba(8, 8, 8, 0.95);
+}
+
+:root[${X01_TWO_PLAYER_ACTIVE_EMPHASIS_ATTRIBUTE}="subtle"]{
+  --ad-ext-x01-2player-inner-outline-alpha:0.12;
+  --ad-ext-x01-2player-active-header-alpha:0.025;
+  --ad-ext-x01-2player-active-name-weight:800;
+}
+
+:root[${X01_TWO_PLAYER_ACTIVE_EMPHASIS_ATTRIBUTE}="strong"]{
+  --ad-ext-x01-2player-inner-outline-alpha:0.48;
+  --ad-ext-x01-2player-active-header-alpha:0.14;
+  --ad-ext-x01-2player-active-name-weight:900;
+}
+
+:root[${X01_TWO_PLAYER_INFORMATION_DENSITY_ATTRIBUTE}="tv"]{
+  --ad-ext-x01-2player-density-score-scale:1.12;
+  --ad-ext-x01-2player-density-name-scale:1.06;
+  --ad-ext-x01-2player-density-meta-scale:0.9;
+  --ad-ext-x01-2player-card-padding:clamp(0.72rem, 1.05vw, 0.9rem);
+  --ad-ext-x01-2player-stack-gap:clamp(0.16rem, 0.36vh, 0.3rem);
+}
+
+:root[${X01_TWO_PLAYER_INFORMATION_DENSITY_ATTRIBUTE}="compact"]{
+  --ad-ext-x01-2player-density-score-scale:0.96;
+  --ad-ext-x01-2player-density-name-scale:0.94;
+  --ad-ext-x01-2player-density-meta-scale:0.86;
+  --ad-ext-x01-2player-density-min-height:clamp(15rem, 48vh, 28rem);
+  --ad-ext-x01-2player-card-padding:clamp(0.55rem, 0.85vw, 0.75rem);
+  --ad-ext-x01-2player-stack-gap:clamp(0.1rem, 0.28vh, 0.22rem);
 }
 
 @media screen and (min-width: 48em){
@@ -370,9 +493,9 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 }
 
 #ad-ext-player-display .ad-ext-player{
-  --ad-ext-x01-2player-state-scale:0.9;
+  --ad-ext-x01-2player-state-scale:1;
   --ad-ext-x01-2player-score-size:clamp(5.6rem, min(43cqi, 17cqb, 14.2vh), 11.6rem);
-  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
+  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-density-score-scale);
   --ad-ext-x01-2player-table-font-size:clamp(0.92rem, min(3.8cqi, 1.72cqb, 1.85vh), calc(1.16rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), calc(2.52rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 7.8cqb, 4.8vh), calc(3.68rem * var(--ad-ext-x01-2player-state-scale)));
@@ -381,8 +504,8 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, calc(3.12rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-round-font-size:min(calc(var(--ad-ext-x01-2player-round-size) * 0.72), 1.55rem);
   --ad-ext-x01-2player-header-meta-font-size:clamp(1.47rem, min(7.2cqi, 3.075cqb), calc(1.95rem * var(--ad-ext-x01-2player-state-scale)));
-  --ad-ext-x01-2player-avatar-size:clamp(2.6rem, 16cqi, calc(3.75rem * var(--ad-ext-x01-2player-state-scale)));
-  --ad-ext-x01-2player-flag-size:clamp(0.8rem, 4cqi, calc(1.16rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-avatar-size:calc(clamp(2.6rem, 16cqi, 3.75rem) * var(--ad-ext-x01-2player-identity-scale));
+  --ad-ext-x01-2player-flag-size:calc(clamp(0.8rem, 4cqi, 1.16rem) * var(--ad-ext-x01-2player-identity-scale));
   --ad-ext-x01-2player-player-name-font-size:var(
     --ad-ext-x01-2player-shared-name-size,
     clamp(1.55rem, min(12cqi, 4.6cqb), calc(3.2rem * var(--ad-ext-x01-2player-state-scale)))
@@ -394,7 +517,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-progress-pad-block-start:clamp(0.08rem, 0.24vh, 0.18rem);
   --ad-ext-x01-2player-progress-min-block-size:calc(clamp(1.08rem, 1.9vw, 1.4rem) + var(--ad-ext-x01-2player-progress-pad-block-start));
   min-width:0 !important;
-  min-height:clamp(18rem, 58vh, 34rem) !important;
+  min-height:var(--ad-ext-x01-2player-density-min-height) !important;
   height:auto !important;
   container-type:size !important;
   display:grid !important;
@@ -405,18 +528,16 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   align-content:stretch !important;
   align-items:stretch !important;
   padding:var(--ad-ext-x01-2player-card-padding) !important;
-  border:1px solid rgba(236, 247, 240, 0.16) !important;
-  border-radius:1.2rem !important;
+  border:var(--ad-ext-x01-2player-card-border-width) solid var(--ad-ext-theme-card-inactive-border-color) !important;
+  border-radius:var(--ad-ext-x01-2player-card-radius) !important;
   background:
     linear-gradient(
       180deg,
       var(--ad-ext-theme-card-tint-top-current),
       var(--ad-ext-theme-card-tint-bottom-current)
     ),
-    linear-gradient(180deg, rgba(20, 24, 28, 0.94) 0%, rgba(14, 18, 21, 0.92) 48%, rgba(8, 11, 13, 0.92) 100%) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 24px 60px rgba(0, 0, 0, 0.32) !important;
+    linear-gradient(180deg, var(--ad-ext-x01-2player-card-surface-top) 0%, var(--ad-ext-x01-2player-card-surface-mid) 48%, var(--ad-ext-x01-2player-card-surface-bottom) 100%) !important;
+  box-shadow:var(--ad-ext-x01-2player-card-shadow) !important;
   overflow:hidden !important;
   position:relative !important;
 }
@@ -426,7 +547,7 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   position:absolute !important;
   inset:0 !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 32%),
+    linear-gradient(180deg, rgba(var(--ad-ext-x01-2player-accent-rgb), var(--ad-ext-x01-2player-header-current-alpha)), rgba(255, 255, 255, 0) 32%),
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0, rgba(255, 255, 255, 0) 28%, rgba(255, 255, 255, 0.04) 100%) !important;
   pointer-events:none !important;
 }
@@ -470,25 +591,26 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active,
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
-  --ad-ext-x01-2player-state-scale:1.06;
-  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
+  --ad-ext-x01-2player-state-scale:1;
+  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-density-score-scale);
   --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
   --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
-  border:1px solid rgba(236, 247, 240, 0.16) !important;
+  --ad-ext-x01-2player-header-current-alpha:var(--ad-ext-x01-2player-active-header-alpha);
+  border:var(--ad-ext-x01-2player-card-border-width) solid var(--ad-ext-theme-card-active-border-color) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 24px 60px rgba(0, 0, 0, 0.32) !important;
+    inset 0 0 0 var(--ad-ext-x01-2player-inner-outline-width) var(--ad-ext-x01-2player-active-outline-color),
+    var(--ad-ext-x01-2player-card-shadow) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-active{
-  border:1px solid var(--theme-text-highlight-color) !important;
+  border-color:var(--ad-ext-theme-card-active-border-color) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.ad-ext-player-inactive,
 #ad-ext-player-display .ad-ext-player:not(.ad-ext-player-active):not(.ad-ext-player-winner){
-  --ad-ext-x01-2player-state-scale:0.9;
-  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
-  border:1px solid rgba(236, 247, 240, 0.16) !important;
+  --ad-ext-x01-2player-state-scale:1;
+  --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-density-score-scale);
+  border:var(--ad-ext-x01-2player-card-border-width) solid var(--ad-ext-theme-card-inactive-border-color) !important;
   opacity:1 !important;
 }
 
@@ -712,7 +834,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELEC
   width:100% !important;
   max-width:100% !important;
   max-inline-size:100% !important;
-  font-size:var(--ad-ext-x01-2player-player-name-font-size) !important;
+  font-size:calc(var(--ad-ext-x01-2player-player-name-font-size) * var(--ad-ext-x01-2player-density-name-scale)) !important;
   line-height:0.95 !important;
   font-weight:800 !important;
   letter-spacing:0 !important;
@@ -732,6 +854,22 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player > ${LEGACY_PROGRESS_STACK_SELEC
   word-break:normal !important;
   hyphens:none !important;
   text-overflow:clip !important;
+}
+
+:root[${X01_TWO_PLAYER_NAME_LAYOUT_ATTRIBUTE}="two-lines"] #ad-ext-player-display .ad-ext-player .ad-ext-player-name,
+:root[${X01_TWO_PLAYER_NAME_LAYOUT_ATTRIBUTE}="two-lines"] #ad-ext-player-display .ad-ext-player .ad-ext-player-name > p{
+  display:-webkit-box !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-height:1.9em !important;
+  max-height:1.9em !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  -webkit-box-orient:vertical !important;
+  -webkit-line-clamp:2 !important;
+  line-clamp:2 !important;
 }
 
 ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name,
@@ -835,7 +973,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR} .css-1j0bqop{
-  font-size:var(--ad-ext-x01-2player-header-meta-font-size) !important;
+  font-size:calc(var(--ad-ext-x01-2player-header-meta-font-size) * var(--ad-ext-x01-2player-density-meta-scale)) !important;
   line-height:1.05 !important;
   text-align:right !important;
 }
@@ -888,6 +1026,16 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   width:var(--ad-ext-x01-2player-flag-size) !important;
   height:auto !important;
   min-width:var(--ad-ext-x01-2player-flag-size) !important;
+}
+
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player ${IDENTITY_MEDIA_SELECTOR},
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player ${FLAG_SELECTOR},
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player ${AVATAR_SELECTOR}{
+  display:none !important;
+}
+
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}{
+  grid-template-columns:minmax(0, 1fr) !important;
 }
 
 #ad-ext-player-display .ad-ext-player .css-1k3nd6z > .css-3fr5p8,
@@ -973,12 +1121,12 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR}{
-  grid-column:2 !important;
+  grid-column:1 !important;
   grid-row:1 !important;
   display:flex !important;
   align-items:center !important;
   justify-content:flex-end !important;
-  justify-items:start !important;
+  justify-items:end !important;
   align-content:start !important;
   text-align:right !important;
   min-height:var(--ad-ext-x01-2player-round-size) !important;
@@ -1014,6 +1162,7 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :first-child{
   position:absolute !important;
   top:0 !important;
+  right:auto !important;
   left:0 !important;
   z-index:3 !important;
   display:grid !important;
@@ -1032,16 +1181,17 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span{
-  display:block !important;
+  display:grid !important;
+  grid-template-columns:max-content minmax(0, 1fr) !important;
+  align-items:center !important;
+  column-gap:clamp(0.38rem, 1.5cqi, 0.62rem) !important;
   min-width:0 !important;
   width:100% !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :first-child{
-  display:none !important;
-}
-
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :first-child:not(:last-child),
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > ${IDENTITY_MEDIA_SELECTOR}{
+  grid-column:1 !important;
   display:inline-flex !important;
   align-items:center !important;
   justify-content:center !important;
@@ -1049,38 +1199,68 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   width:max-content !important;
   min-width:0 !important;
   max-width:100% !important;
-  margin:0 auto clamp(0.12rem, 0.3cqi, 0.22rem) !important;
+  margin:0 !important;
   overflow:visible !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child{
+  grid-column:2 !important;
   min-width:0 !important;
-  display:block !important;
+  display:grid !important;
   width:100% !important;
-  grid-template-columns:minmax(0, 1fr) !important;
+  grid-template-columns:minmax(0, 1fr) max-content !important;
   grid-auto-rows:max-content !important;
-  align-items:start !important;
+  align-items:center !important;
   align-content:center !important;
+  column-gap:clamp(0.32rem, 1.2cqi, 0.52rem) !important;
   row-gap:0 !important;
+}
+
+#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :only-child{
+  grid-column:1 / -1 !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .ad-ext-player-name,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-g0ywsj{
   grid-column:1 !important;
+  min-width:0 !important;
+  max-width:100% !important;
   justify-self:stretch !important;
+  overflow:hidden !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .chakra-badge,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-n2903v,
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${PROFILE_BADGE_SELECTOR}{
-  display:block !important;
+  grid-column:2 !important;
+  display:inline-grid !important;
+  place-items:center !important;
+  align-self:center !important;
   justify-self:center !important;
   width:auto !important;
   min-width:0 !important;
   max-width:100% !important;
-  margin-inline:auto !important;
-  margin-top:clamp(0.16rem, 0.42cqi, 0.28rem) !important;
-  padding:0 4px !important;
+  margin:0 !important;
+  padding:0.08em 0.38em !important;
+  font-size:clamp(0.72rem, 3.6cqi, 1rem) !important;
+  line-height:1.15 !important;
+}
+
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span{
+  grid-template-columns:minmax(0, 1fr) !important;
+}
+
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :first-child:not(:last-child),
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > ${IDENTITY_MEDIA_SELECTOR},
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .chakra-badge,
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > .css-n2903v,
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${PROFILE_BADGE_SELECTOR}{
+  display:none !important;
+}
+
+:root[${X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE}="name-only"] #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child{
+  grid-column:1 / -1 !important;
+  grid-template-columns:minmax(0, 1fr) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR} > :last-child > span > :last-child > ${ROUND_BADGE_SELECTOR}{
@@ -1176,12 +1356,12 @@ ${ACTIVE_CARD_SELECTOR},
 #ad-ext-player-display .ad-ext-player.ad-ext-player-winner{
   --ad-ext-theme-card-tint-top-current: var(--ad-ext-theme-active-card-tint-top);
   --ad-ext-theme-card-tint-bottom-current: var(--ad-ext-theme-active-card-tint-bottom);
-  border:1px solid var(--ad-ext-theme-card-active-border-color) !important;
+  border:var(--ad-ext-x01-2player-card-border-width) solid var(--ad-ext-theme-card-active-border-color) !important;
 }
 
 ${INACTIVE_CARD_SELECTOR},
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active{
-  border:1px solid var(--ad-ext-theme-card-inactive-border-color) !important;
+  border:var(--ad-ext-x01-2player-card-border-width) solid var(--ad-ext-theme-card-inactive-border-color) !important;
 }
 
 ${ACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
@@ -1196,6 +1376,14 @@ ${INACTIVE_CARD_SELECTOR} > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p,
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
 ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
   color:var(--ad-ext-theme-meta-inactive-color) !important;
+}
+
+${ACTIVE_CARD_SELECTOR} .ad-ext-player-name,
+${ACTIVE_CARD_SELECTOR} .ad-ext-player-name > p,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-name,
+#ad-ext-player-display .ad-ext-player.ad-ext-player-winner .ad-ext-player-name > p{
+  color:var(--ad-ext-theme-score-active-color) !important;
+  font-weight:var(--ad-ext-x01-2player-active-name-weight) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${TABLE_SLOT_SELECTOR}{
@@ -1240,31 +1428,37 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 /* Final slot-order guard:
    keep the 2player score stack deterministic even when legacy theme rules
    and shared score-progress stack defaults both match the same DOM. */
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR}{
+#ad-ext-player-display .ad-ext-player > .chakra-stack${STACK_SELECTOR}{
   display:grid !important;
-  grid-template-columns:var(--ad-ext-x01-2player-round-size) minmax(0, 1fr) !important;
+  grid-template-columns:minmax(0, 1fr) !important;
   grid-template-rows:minmax(var(--ad-ext-x01-2player-round-size), max-content) max-content minmax(var(--ad-ext-x01-2player-score-min-block-size), max-content) max-content !important;
   grid-template-areas:
-    "rounds meta"
-    "identity identity"
-    "score score"
-    "progress progress" !important;
-  column-gap:clamp(0.5rem, 2.4cqi, 0.75rem) !important;
+    "meta"
+    "identity"
+    "score"
+    "progress" !important;
+  column-gap:0 !important;
   row-gap:var(--ad-ext-x01-2player-stack-gap) !important;
   padding:0 !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR}{
+#ad-ext-player-display .ad-ext-player > .chakra-stack${STACK_SELECTOR} > ${STACK_HEADER_META_SELECTOR}{
   grid-area:meta !important;
-  grid-column:2 !important;
+  grid-column:1 !important;
   grid-row:1 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  min-height:var(--ad-ext-x01-2player-round-size) !important;
+  padding:0 0 0 calc(var(--ad-ext-x01-2player-round-size) + clamp(0.42rem, 1.6cqi, 0.68rem)) !important;
   z-index:3 !important;
 }
 
-#ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}{
+#ad-ext-player-display .ad-ext-player > .chakra-stack${STACK_SELECTOR} > ${IDENTITY_SLOT_SELECTOR}{
   grid-area:identity !important;
   grid-column:1 / -1 !important;
   grid-row:2 !important;
+  padding-block-start:clamp(0.16rem, 0.4vh, 0.3rem) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR},
@@ -1495,8 +1689,8 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
   inset:-14% !important;
   border-radius:50% !important;
   background:
-    radial-gradient(circle, rgba(90, 244, 163, 0.46) 0, rgba(90, 244, 163, 0.2) 29%, rgba(90, 244, 163, 0.08) 46%, rgba(90, 244, 163, 0) 70%) !important;
-  filter:blur(18px) !important;
+    radial-gradient(circle, rgba(var(--ad-ext-x01-2player-accent-rgb), var(--ad-ext-x01-2player-board-glow-alpha)) 0, rgba(var(--ad-ext-x01-2player-accent-rgb), 0.2) 29%, rgba(var(--ad-ext-x01-2player-accent-rgb), 0.08) 46%, rgba(var(--ad-ext-x01-2player-accent-rgb), 0) 70%) !important;
+  filter:blur(var(--ad-ext-x01-2player-board-glow-blur)) !important;
   z-index:-1 !important;
   pointer-events:none !important;
 }
@@ -1540,7 +1734,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 
   #ad-ext-player-display .ad-ext-player{
     --ad-ext-x01-2player-score-size:clamp(6.048rem, min(24vw, 14.4vh), 9.7rem);
-    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
+    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-density-score-scale);
     --ad-ext-x01-2player-table-font-size:clamp(0.88rem, min(3.2vw, 1.75vh), 1rem);
     --ad-ext-x01-2player-table-cell-font-size:clamp(1.6rem, min(7.4vw, 8cqb, 5vh), 2.15rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(2.1rem, min(5.8vw, 3.8vh), 2.85rem);
@@ -1581,7 +1775,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 
   #ad-ext-player-display .ad-ext-player{
     --ad-ext-x01-2player-score-size:clamp(5.616rem, min(22vw, 12vh), 8.75rem);
-    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
+    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-density-score-scale);
     --ad-ext-x01-2player-table-font-size:clamp(0.84rem, min(3.8vw, 1.7vh), 0.96rem);
     --ad-ext-x01-2player-table-cell-font-size:clamp(1.42rem, min(6.4vw, 7cqb, 4.3vh), 1.95rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(1.95rem, min(6.2vw, 3.5vh), 2.55rem);
@@ -1610,7 +1804,7 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 @media (max-height: 860px){
   #ad-ext-player-display .ad-ext-player{
     --ad-ext-x01-2player-score-size:clamp(5.76rem, min(23.5cqi, 12.8vh), 9.25rem);
-    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-state-scale);
+    --ad-ext-x01-2player-score-scale:var(--ad-ext-x01-2player-density-score-scale);
     --ad-ext-x01-2player-table-font-size:clamp(0.84rem, min(3.5cqi, 1.58vh), 0.98rem);
     --ad-ext-x01-2player-table-cell-font-size:clamp(1.85rem, min(10.8cqi, 8.2cqb, 5.4vh), 2.25rem);
     --ad-ext-x01-2player-table-cell-min-height:clamp(1.95rem, min(6.4cqi, 3.2vh), 2.6rem);
@@ -1619,9 +1813,5 @@ ${INACTIVE_CARD_SELECTOR}.ad-ext-player-active > ${STACK_SELECTOR} > ${SCORE_SLO
 }
 `;
 
-  return buildThemeCssBundle(
-    featureConfig,
-    `${previewCss}${avgVisibilityCss}${themeCss}`,
-    visualConfig
-  );
+  return buildThemeCssBundle(featureConfig, `${previewCss}${themeCss}`, visualConfig);
 }

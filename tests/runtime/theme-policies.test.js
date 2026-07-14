@@ -6,8 +6,14 @@ import { resolveThemePolicy } from "../../src/features/themes/shared/theme-polic
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import {
   X01_TWO_PLAYER_ACTIVE_ATTRIBUTE,
+  X01_TWO_PLAYER_ACTIVE_EMPHASIS_ATTRIBUTE,
+  X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE,
+  X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE,
+  X01_TWO_PLAYER_INFORMATION_DENSITY_ATTRIBUTE,
+  X01_TWO_PLAYER_NAME_LAYOUT_ATTRIBUTE,
   X01_TWO_PLAYER_SLOT_ATTRIBUTE,
   X01_TWO_PLAYER_STACK_ATTRIBUTE,
+  X01_TWO_PLAYER_VISUAL_STYLE_ATTRIBUTE,
 } from "../../src/features/themes/x01-2player/layout-contract.js";
 import {
   X01_TWO_PLAYER_CURRENT_REMAINING_ATTRIBUTE,
@@ -219,6 +225,14 @@ test("theme-x01-2player policy marks active cards and semantic slots without res
   const themeState = policy.createState();
   policy.onActivate({
     documentRef,
+    featureConfig: {
+      visualStyle: "broadcast",
+      colorScheme: "amber",
+      activePlayerEmphasis: "strong",
+      informationDensity: "tv",
+      identityDensity: "name-only",
+      playerNameLayout: "two-lines",
+    },
     gameState: {
       getActivePlayerIndex() {
         return 1;
@@ -234,6 +248,12 @@ test("theme-x01-2player policy marks active cards and semantic slots without res
   assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), "identity");
   assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), "score");
   assert.equal(firstPlayer.tableSlot.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), "table");
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_VISUAL_STYLE_ATTRIBUTE), "broadcast");
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE), "amber");
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_ACTIVE_EMPHASIS_ATTRIBUTE), "strong");
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_INFORMATION_DENSITY_ATTRIBUTE), "tv");
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE), "name-only");
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_NAME_LAYOUT_ATTRIBUTE), "two-lines");
 
   policy.onDeactivate({
     documentRef,
@@ -245,6 +265,12 @@ test("theme-x01-2player policy marks active cards and semantic slots without res
   assert.equal(firstPlayer.identityNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.tableSlot.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_VISUAL_STYLE_ATTRIBUTE), null);
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_COLOR_SCHEME_ATTRIBUTE), null);
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_ACTIVE_EMPHASIS_ATTRIBUTE), null);
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_INFORMATION_DENSITY_ATTRIBUTE), null);
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_IDENTITY_DENSITY_ATTRIBUTE), null);
+  assert.equal(documentRef.documentElement.getAttribute(X01_TWO_PLAYER_NAME_LAYOUT_ATTRIBUTE), null);
 });
 
 test("theme-x01-2player policy separates round and profile badges in online player markup", () => {
