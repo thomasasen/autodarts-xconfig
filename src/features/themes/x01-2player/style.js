@@ -405,6 +405,7 @@ div.chakra-stack.navigation.css-ege71s{
   overflow:visible !important;
 }
 
+.css-tkevr6 .ad-ext-theme-content-slot > .ad-ext-theme-content-left,
 .ad-ext-theme-content-slot > .ad-ext-theme-content-left,
 .ad-ext-theme-content-left{
   grid-area:auto !important;

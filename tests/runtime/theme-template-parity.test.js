@@ -64,6 +64,15 @@ test("x01 two-player keeps turn totals stable and enlarges round information", (
   );
 });
 
+test("x01 two-player spans the player display across all columns when it is the content-left hook", () => {
+  const css = buildX01TwoPlayerThemeCss({ showAvg: true });
+
+  assert.match(
+    css,
+    /\.css-tkevr6\s+\.ad-ext-theme-content-slot\s*>\s*\.ad-ext-theme-content-left,[^{]*\{[^}]*grid-column:1\s*\/\s*-1\s*!important;[^}]*grid-row:1\s*\/\s*-1\s*!important;[^}]*justify-self:stretch\s*!important;/s
+  );
+});
+
 test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   const css = buildX01ThemeCss({ showAvg: true });
 
