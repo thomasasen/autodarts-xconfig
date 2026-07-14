@@ -270,18 +270,43 @@ function readDrawableMetrics(rootNode) {
     };
   }
 
-  const pathCount = rootNode.querySelectorAll("path").length;
-  const circles = Array.from(rootNode.querySelectorAll("circle"));
-  const circleCount = circles.length;
-  const positiveCircleRadii = circles
-    .map((node) => Number.parseFloat(node?.getAttribute?.("r")))
-    .filter((value) => Number.isFinite(value) && value > 0)
-    .map((value) => Number(value.toFixed(4)));
-  const lineCount = rootNode.querySelectorAll("line").length;
-  const polygonCount = rootNode.querySelectorAll("polygon").length;
-  const polylineCount = rootNode.querySelectorAll("polyline").length;
-  const textCount = rootNode.querySelectorAll("text").length;
-  const drawableCount = rootNode.querySelectorAll(BOARD_DRAWABLE_SELECTOR).length;
+  const drawables = Array.from(rootNode.querySelectorAll(BOARD_DRAWABLE_SELECTOR));
+  let pathCount = 0;
+  let circleCount = 0;
+  let lineCount = 0;
+  let polygonCount = 0;
+  let polylineCount = 0;
+  let textCount = 0;
+  const positiveCircleRadii = [];
+
+  for (let i = 0; i < drawables.length; i++) {
+    const tag = drawables[i].tagName.toLowerCase();
+    switch (tag) {
+      case "path":
+        pathCount++;
+        break;
+      case "circle": {
+        circleCount++;
+        const r = Number.parseFloat(drawables[i]?.getAttribute?.("r"));
+        if (Number.isFinite(r) && r > 0) {
+          positiveCircleRadii.push(Number(r.toFixed(4)));
+        }
+        break;
+      }
+      case "line":
+        lineCount++;
+        break;
+      case "polygon":
+        polygonCount++;
+        break;
+      case "polyline":
+        polylineCount++;
+        break;
+      case "text":
+        textCount++;
+        break;
+    }
+  }
 
   return {
     pathCount,
@@ -292,7 +317,7 @@ function readDrawableMetrics(rootNode) {
     polygonCount,
     polylineCount,
     textCount,
-    drawableCount,
+    drawableCount: drawables.length,
   };
 }
 
