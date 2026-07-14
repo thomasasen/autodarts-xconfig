@@ -263,12 +263,15 @@ function createBustAudioState(windowRef = null) {
         context,
         buffer: null,
         loadPromise: null,
-        fetchRef:
-          typeof windowRef.fetch === "function"
-            ? windowRef.fetch.bind(windowRef)
-            : typeof fetch === "function"
-              ? fetch
-              : null,
+        fetchRef: (function selectFetch() {
+          if (typeof windowRef.fetch === "function") {
+            return windowRef.fetch.bind(windowRef);
+          }
+          if (typeof fetch === "function") {
+            return fetch;
+          }
+          return null;
+        })(),
       };
     } catch (_) {
       // fall back to HTMLAudio
@@ -285,7 +288,7 @@ function createBustAudioState(windowRef = null) {
 }
 
 function loadBustAudioBuffer(audioState) {
-  if (!audioState || audioState.sourceType !== BUST_AUDIO_WEB_SOURCE) {
+  if (audioState?.sourceType !== BUST_AUDIO_WEB_SOURCE) {
     return Promise.resolve(null);
   }
   if (audioState.buffer) {

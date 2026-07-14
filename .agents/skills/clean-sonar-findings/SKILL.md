@@ -40,3 +40,12 @@ If any issue remains, report it explicitly with the reason it was not fixed.
 - validate with `npm run lint` and relevant tests
 - use `$validate-repo-change` for final validation reporting
 - if SonarQube is unavailable, report the concrete blocker instead of implying cleanup was server-verified
+
+# SonarQube timing
+
+- Full analysis (`npm run sonar`) takes approximately **2–3 minutes** on the local
+  project with a LAN-based SonarQube server.
+- When waiting for the analysis to complete, use a background sleep of about 90
+  seconds before checking the result, then poll again if still processing.
+- Issue queries via `api/issues/search` return instantly and should be used to
+  confirm cleanup instead of re-running full analysis unnecessarily.
