@@ -44,6 +44,26 @@ function assertNoFragileLayoutSelectors(cssText) {
   assert.doesNotMatch(cssText, /:has\(/);
 }
 
+test("x01 two-player keeps turn totals stable and enlarges round information", () => {
+  const css = buildX01TwoPlayerThemeCss({ showAvg: true });
+
+  assert.match(
+    css,
+    /#ad-ext-turn\{[^}]*grid-template-columns:clamp\(5\.75rem,\s*7vw,\s*8rem\) repeat\(3,\s*minmax\(9\.5rem,\s*1fr\)\)/s
+  );
+  assert.match(
+    css,
+    /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*display:block\s*!important;[^}]*width:100%\s*!important;[^}]*max-width:100%\s*!important;/s
+  );
+  assert.match(css, /--ad-ext-x01-2player-round-size:clamp\(2\.85rem,\s*14\.7cqi,/);
+  assert.match(css, /--ad-ext-x01-2player-round-font-size:min\([^;]+2\.325rem\);/);
+  assert.match(css, /--ad-ext-x01-2player-header-meta-font-size:clamp\(2\.205rem,/);
+  assert.match(
+    css,
+    /\.chakra-stack\[data-ad-ext-x01-2player-stack="true"\][^{]*\[data-ad-ext-x01-2player-slot="score"\][^{]*\{[^}]*font-size:calc\(var\(--ad-ext-x01-2player-score-size\) \* var\(--ad-ext-x01-2player-score-scale\)\)\s*!important;/s
+  );
+});
+
 test("x01 theme keeps oldrepo preview and stat scaling anchors", () => {
   const css = buildX01ThemeCss({ showAvg: true });
 
@@ -391,7 +411,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   assert.doesNotMatch(css, /transform:\s*scale\(/i);
   assert.match(
     css,
-    /#ad-ext-turn\s*\{[^}]*grid-template-columns:max-content repeat\(3,\s*minmax\(9\.5rem,\s*1fr\)\)\s*!important;/s
+    /#ad-ext-turn\s*\{[^}]*grid-template-columns:clamp\(5\.75rem,\s*7vw,\s*8rem\) repeat\(3,\s*minmax\(9\.5rem,\s*1fr\)\)\s*!important;/s
   );
   assert.match(
     css,
@@ -403,7 +423,7 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*min-width:0\s*!important;[^}]*width:max-content\s*!important;[^}]*max-width:none\s*!important;[^}]*padding-inline:clamp\(0\.24rem,\s*0\.48vw,\s*0\.42rem\)\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;[^}]*font-weight:800\s*!important;[^}]*line-height:1\s*!important;/s
+    /#ad-ext-turn\s+\.ad-ext-turn-points\{[^}]*min-width:0\s*!important;[^}]*width:100%\s*!important;[^}]*max-width:100%\s*!important;[^}]*padding-inline:clamp\(0\.24rem,\s*0\.48vw,\s*0\.42rem\)\s*!important;[^}]*font-size:var\(--ad-ext-x01-2player-live-throw-points-size\)\s*!important;[^}]*font-weight:800\s*!important;[^}]*line-height:1\s*!important;/s
   );
   assert.match(
     css,

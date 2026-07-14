@@ -37,6 +37,7 @@ const PLAYER_NAME_MAX_SIZE_PX = 96;
 const PLAYER_NAME_WIDTH_CLEARANCE_PX = 4;
 const PLAYER_NAME_FALLBACK_WIDTH_FACTOR = 0.62;
 const PLAYER_NAME_TWO_LINE_SEARCH_STEPS = 12;
+const HYDRATION_RECHECK_DELAYS_MS = Object.freeze([40, 160, 400]);
 const X01_TWO_PLAYER_CONFIG_DEFAULTS = Object.freeze({
   visualStyle: "studio",
   colorScheme: "studio-mint",
@@ -282,6 +283,82 @@ function getTurnContainer(documentRef) {
   } catch (_) {
     return null;
   }
+}
+
+function syncTurnPointsForPlayerChange(documentRef, gameState, themeState = {}) {
+  const activePlayerIndex = Number(gameState?.getActivePlayerIndex?.());
+  if (!Number.isFinite(activePlayerIndex)) {
+    return false;
+  }
+
+  const markedPlayerIndex = getPlayerCards(documentRef).findIndex(
+    (node) => node?.getAttribute?.(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE) === "true"
+  );
+  const previousPlayerIndex = markedPlayerIndex >= 0
+    ? markedPlayerIndex
+    : Number(themeState.lastActivePlayerIndex);
+  themeState.lastActivePlayerIndex = activePlayerIndex;
+  if (!Number.isFinite(previousPlayerIndex) || previousPlayerIndex === activePlayerIndex) {
+    return false;
+  }
+
+  const activeThrows = gameState?.getActiveThrows?.();
+  if (!Array.isArray(activeThrows) || activeThrows.length > 0) {
+    return false;
+  }
+
+  const turnPointsNode = documentRef?.querySelector?.(
+    `${TURN_CONTAINER_SELECTOR} .ad-ext-turn-points`
+  );
+  if (!turnPointsNode || String(turnPointsNode.textContent || "").trim() === "0") {
+    return false;
+  }
+
+  turnPointsNode.textContent = "0";
+  return true;
+}
+
+function clearHydrationRechecks(themeState = {}) {
+  const windowRef = themeState.hydrationRecheckWindowRef;
+  Array.from(themeState.hydrationRecheckTimerIds || []).forEach((timerId) => {
+    try {
+      windowRef?.clearTimeout?.(timerId);
+    } catch (_) {
+      // Keep theme cleanup fail-soft.
+    }
+  });
+  themeState.hydrationRecheckTimerIds = [];
+  themeState.hydrationRecheckWindowRef = null;
+}
+
+function hasSamePlayerCardNodes(previousNodes = [], nextNodes = []) {
+  return (
+    previousNodes.length === nextNodes.length &&
+    previousNodes.every((node, index) => node === nextNodes[index])
+  );
+}
+
+function scheduleHydrationRechecks(context = {}) {
+  const themeState = context.themeState || {};
+  const playerCards = getPlayerCards(context.documentRef);
+  if (
+    themeState.hydrationRechecksInitialized === true &&
+    hasSamePlayerCardNodes(themeState.hydrationPlayerCardNodes || [], playerCards)
+  ) {
+    return;
+  }
+
+  clearHydrationRechecks(themeState);
+  themeState.hydrationRechecksInitialized = true;
+  themeState.hydrationPlayerCardNodes = playerCards;
+  if (typeof context.windowRef?.setTimeout !== "function") {
+    return;
+  }
+
+  themeState.hydrationRecheckWindowRef = context.windowRef;
+  themeState.hydrationRecheckTimerIds = HYDRATION_RECHECK_DELAYS_MS.map((delayMs) =>
+    context.windowRef.setTimeout(() => context.scheduler?.schedule?.(), delayMs)
+  );
 }
 
 function getRootContainer(documentRef) {
@@ -1240,6 +1317,11 @@ export function createX01TwoPlayerThemePolicy() {
         nameMeasureContext: null,
         boardVisibilityOverride: null,
         boardControlsPortal: null,
+        lastActivePlayerIndex: Number.NaN,
+        hydrationPlayerCardNodes: [],
+        hydrationRechecksInitialized: false,
+        hydrationRecheckTimerIds: [],
+        hydrationRecheckWindowRef: null,
       };
     },
     getObservedAttributeFilter() {
@@ -1251,6 +1333,7 @@ export function createX01TwoPlayerThemePolicy() {
     onActivate(context = {}) {
       const resolvedConfig = syncThemeConfigAttributes(context.documentRef, context.featureConfig);
       ensureThemeBoardVisible(context.documentRef, context.themeState);
+      syncTurnPointsForPlayerChange(context.documentRef, context.gameState, context.themeState);
       syncX01TwoPlayerLayoutState(context.documentRef, context.gameState);
       syncSharedPlayerNameSize(
         context.documentRef,
@@ -1260,8 +1343,10 @@ export function createX01TwoPlayerThemePolicy() {
       );
       ensureTurnResizeObserver(context);
       syncBoardControlsPortal(context);
+      scheduleHydrationRechecks(context);
     },
     onDeactivate(context = {}) {
+      clearHydrationRechecks(context.themeState);
       restoreBoardControlsPortal(context.themeState);
       restoreThemeBoardVisibility(context.documentRef, context.themeState);
       detachTurnResizeObserver(context.themeState);
@@ -1272,6 +1357,9 @@ export function createX01TwoPlayerThemePolicy() {
       }
       if (context.themeState) {
         context.themeState.turnResizeObserver = null;
+        context.themeState.lastActivePlayerIndex = Number.NaN;
+        context.themeState.hydrationPlayerCardNodes = [];
+        context.themeState.hydrationRechecksInitialized = false;
       }
       clearLiveTurnHeight(context.documentRef, context.themeState);
       clearSharedPlayerNameSize(context.documentRef, context.themeState);

@@ -319,7 +319,7 @@ div.chakra-stack.navigation.css-ege71s{
   grid-column:2 !important;
   grid-row:2 !important;
   display:grid !important;
-  grid-template-columns:max-content repeat(3, minmax(9.5rem, 1fr)) !important;
+  grid-template-columns:clamp(5.75rem, 7vw, 8rem) repeat(3, minmax(9.5rem, 1fr)) !important;
   gap:0.8rem !important;
   align-items:stretch !important;
   width:100% !important;
@@ -370,11 +370,11 @@ div.chakra-stack.navigation.css-ege71s{
 }
 
 #ad-ext-turn .ad-ext-turn-points{
-  display:inline-block !important;
+  display:block !important;
   box-sizing:border-box !important;
   min-width:0 !important;
-  width:max-content !important;
-  max-width:none !important;
+  width:100% !important;
+  max-width:100% !important;
   padding-inline:clamp(0.24rem, 0.48vw, 0.42rem) !important;
   text-align:center !important;
   font-size:var(--ad-ext-x01-2player-live-throw-points-size) !important;
@@ -501,9 +501,9 @@ ${DIRECT_PLAYER_WRAPPER_SELECTOR} > .ad-ext-player{
   --ad-ext-x01-2player-table-cell-min-height:clamp(2.25rem, min(7.2cqi, 7.8cqb, 4.8vh), calc(3.68rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-progress-gap:clamp(0.03rem, 0.12vh, 0.1rem);
   --ad-ext-x01-2player-stack-gap:clamp(0.22rem, 0.48vh, 0.4rem);
-  --ad-ext-x01-2player-round-size:clamp(1.9rem, 9.8cqi, calc(3.12rem * var(--ad-ext-x01-2player-state-scale)));
-  --ad-ext-x01-2player-round-font-size:min(calc(var(--ad-ext-x01-2player-round-size) * 0.72), 1.55rem);
-  --ad-ext-x01-2player-header-meta-font-size:clamp(1.47rem, min(7.2cqi, 3.075cqb), calc(1.95rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-round-size:clamp(2.85rem, 14.7cqi, calc(4.68rem * var(--ad-ext-x01-2player-state-scale)));
+  --ad-ext-x01-2player-round-font-size:min(calc(var(--ad-ext-x01-2player-round-size) * 0.72), 2.325rem);
+  --ad-ext-x01-2player-header-meta-font-size:clamp(2.205rem, min(10.8cqi, 4.6125cqb), calc(2.925rem * var(--ad-ext-x01-2player-state-scale)));
   --ad-ext-x01-2player-avatar-size:calc(clamp(2.6rem, 16cqi, 3.75rem) * var(--ad-ext-x01-2player-identity-scale));
   --ad-ext-x01-2player-flag-size:calc(clamp(0.8rem, 4cqi, 1.16rem) * var(--ad-ext-x01-2player-identity-scale));
   --ad-ext-x01-2player-player-name-font-size:var(
@@ -1290,6 +1290,14 @@ ${SECOND_PLAYER_WRAPPER_SELECTOR} .ad-ext-player .ad-ext-player-name > p{
   background-color:transparent !important;
   box-shadow:none !important;
   overflow:visible !important;
+}
+
+/* Keep both player scores on the same responsive scale after Autodarts swaps
+   active/inactive stack classes during hydration or a player change. */
+#ad-ext-player-display .ad-ext-player > .chakra-stack${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR}.ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player > .chakra-stack${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > .ad-ext-player-score,
+#ad-ext-player-display .ad-ext-player > .chakra-stack${STACK_SELECTOR} > ${SCORE_SLOT_SELECTOR} > p{
+  font-size:calc(var(--ad-ext-x01-2player-score-size) * var(--ad-ext-x01-2player-score-scale)) !important;
 }
 
 #ad-ext-player-display .ad-ext-player > ${STACK_SELECTOR} > ${PROGRESS_SLOT_SELECTOR}{

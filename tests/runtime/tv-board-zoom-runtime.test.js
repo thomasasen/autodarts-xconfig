@@ -454,6 +454,36 @@ test("tv-board-zoom hard-resets before applying zoom in a new X01 game", async (
   }
 });
 
+test("tv-board-zoom resets immediately when the active match surface is left", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({ activeScore: 40, throws: [] });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+  const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState: gameState.api });
+
+  try {
+    timers.advance(25);
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+
+    const turnContainer = documentRef.turnContainer;
+    turnContainer.remove();
+    documentRef.flushMutations([
+      { type: "childList", target: documentRef.main, addedNodes: [], removedNodes: [turnContainer] },
+    ]);
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(String(targetNode.style.transform || ""), "");
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
 test("tv-board-zoom resets after board stays missing beyond transient grace", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

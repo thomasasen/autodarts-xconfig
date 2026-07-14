@@ -5,6 +5,7 @@ import { createBootstrap } from "../../src/core/bootstrap.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
+import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import * as cricketRules from "../../src/domain/cricket-rules.js";
 import * as variantRules from "../../src/domain/variant-rules.js";
 import { initializeCricketGridStatusEffects } from "../../src/features/cricket-grid-status-effects/index.js";
@@ -2143,6 +2144,7 @@ function createX01TwoPlayerTestCard(documentRef, score, name, options = {}) {
 
 function createX01TwoPlayerLifecycleGameState(initialActivePlayerIndex = 0) {
   let activePlayerIndex = Number(initialActivePlayerIndex) || 0;
+  let activeThrows = [];
   const listeners = new Set();
 
   return {
@@ -2151,6 +2153,14 @@ function createX01TwoPlayerLifecycleGameState(initialActivePlayerIndex = 0) {
     },
     setActivePlayerIndex(nextIndex) {
       activePlayerIndex = Number(nextIndex) || 0;
+      activeThrows = [];
+      listeners.forEach((listener) => listener());
+    },
+    getActiveThrows() {
+      return activeThrows;
+    },
+    setActiveThrows(nextThrows) {
+      activeThrows = Array.isArray(nextThrows) ? nextThrows : [];
       listeners.forEach((listener) => listener());
     },
     isX01Variant() {
@@ -2353,11 +2363,14 @@ test("theme-x01-2player syncs semantic slot markers and active attributes from g
   assert.equal(firstPlayer.progressNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.progress);
   assert.equal(firstPlayer.tableSlotNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), X01_TWO_PLAYER_SLOTS.table);
 
+  documentRef.turnContainer.appendChild(documentRef.turnScoreElement);
+  documentRef.turnScoreElement.textContent = "49";
   gameState.setActivePlayerIndex(0);
   await wait(5);
 
   assert.equal(firstPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "true");
   assert.equal(secondPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "false");
+  assert.equal(documentRef.turnScoreElement.textContent, "0");
 
   cleanup();
 
@@ -2367,6 +2380,46 @@ test("theme-x01-2player syncs semantic slot markers and active attributes from g
   assert.equal(firstPlayer.scoreNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.progressNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
   assert.equal(firstPlayer.tableSlotNode.getAttribute(X01_TWO_PLAYER_SLOT_ATTRIBUTE), null);
+});
+
+test("theme-x01-2player stabilizes player markers after late match hydration without a reload", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "501";
+  createBoardFixture(documentRef, { withContentSlot: true });
+  const playerDisplayNode = documentRef.getElementById("ad-ext-player-display");
+  playerDisplayNode.replaceChildren();
+  const gameState = createX01TwoPlayerLifecycleGameState(0);
+  const cleanup = mountThemeX01TwoPlayer({
+    windowRef: createMatchWindow(documentRef, "theme-x01-2player-late-hydration"),
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+      listeners: createListenerRegistry(),
+    },
+    gameState,
+    config: {
+      getFeatureConfig() {
+        return { showAvg: true };
+      },
+    },
+    helpers: { createRafScheduler },
+  });
+
+  await wait(10);
+  const firstPlayer = createX01TwoPlayerTestCard(documentRef, 501, "A");
+  const secondPlayer = createX01TwoPlayerTestCard(documentRef, 501, "B");
+  playerDisplayNode.appendChild(firstPlayer.playerWrapperNode);
+  playerDisplayNode.appendChild(secondPlayer.playerWrapperNode);
+
+  await wait(190);
+
+  assert.equal(firstPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "true");
+  assert.equal(secondPlayer.playerNode.getAttribute(X01_TWO_PLAYER_ACTIVE_ATTRIBUTE), "false");
+  assert.equal(firstPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), "true");
+  assert.equal(secondPlayer.stackNode.getAttribute(X01_TWO_PLAYER_STACK_ATTRIBUTE), "true");
+
+  cleanup();
 });
 
 test("theme-x01-2player marks the direct player-display child when player cards are nested", async () => {

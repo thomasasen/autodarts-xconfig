@@ -295,6 +295,11 @@ function isReusableBoardSurface(surface) {
   return true;
 }
 
+function hasActiveTurnSurface(documentRef) {
+  const turnNode = documentRef?.getElementById?.("ad-ext-turn") || null;
+  return Boolean(turnNode) && turnNode.isConnected !== false;
+}
+
 function createDebugState(featureDebug) {
   return {
     featureDebug,
@@ -502,6 +507,15 @@ export function initializeTvBoardZoom(context = {}) {
   }
 
   scheduler = schedulerFactory(() => {
+    if (!hasActiveTurnSurface(documentRef)) {
+      invalidateBoardCache();
+      requestZoomReset("match-surface-inactive", {
+        force: true,
+        immediate: true,
+      });
+      return;
+    }
+
     const boardSurface = getBoardSurface();
     const boardSvg = boardSurface?.svg || null;
     if (!boardSvg) {
