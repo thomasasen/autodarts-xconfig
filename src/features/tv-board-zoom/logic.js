@@ -183,14 +183,30 @@ function parseSegmentWithFallback(segmentName, x01Rules) {
   };
 }
 
+const BOARD_RADIUS_CACHE = new WeakMap();
+
 function getBoardRadius(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return 0;
   }
-  return Array.from(rootNode.querySelectorAll("circle")).reduce((max, circle) => {
-    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
-    return Number.isFinite(radius) && radius > max ? radius : max;
-  }, 0);
+
+  const cached = BOARD_RADIUS_CACHE.get(rootNode);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const circles = rootNode.querySelectorAll("circle");
+  let max = 0;
+
+  for (let i = 0; i < circles.length; i += 1) {
+    const radius = Number.parseFloat(circles[i]?.getAttribute?.("r"));
+    if (Number.isFinite(radius) && radius > max) {
+      max = radius;
+    }
+  }
+
+  BOARD_RADIUS_CACHE.set(rootNode, max);
+  return max;
 }
 
 function segmentAngles(value) {

@@ -22,16 +22,32 @@ const IGNORED_BOARD_SVG_ANCESTOR_SELECTOR = [
   "[data-adxconfig-checkout-board-preview-kind]",
 ].join(",");
 const BOARD_SNAPSHOT_CACHE = new WeakMap();
+const BOARD_RADIUS_CACHE = new WeakMap();
+const SVG_QUERY_CACHE = new WeakMap();
+const SVG_QUERY_CACHE_TTL_MS = 300;
 
 function getBoardRadius(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return 0;
   }
 
-  return Array.from(rootNode.querySelectorAll("circle")).reduce((max, circle) => {
-    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
-    return Number.isFinite(radius) && radius > max ? radius : max;
-  }, 0);
+  const cached = BOARD_RADIUS_CACHE.get(rootNode);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const circles = rootNode.querySelectorAll("circle");
+  let max = 0;
+
+  for (let i = 0; i < circles.length; i += 1) {
+    const radius = Number.parseFloat(circles[i]?.getAttribute?.("r"));
+    if (Number.isFinite(radius) && radius > max) {
+      max = radius;
+    }
+  }
+
+  BOARD_RADIUS_CACHE.set(rootNode, max);
+  return max;
 }
 
 export function findBoardSvgRoot(documentRef) {
@@ -636,6 +652,18 @@ function queryCandidateSvgNodes(documentRef) {
     return [];
   }
 
+  const cached = SVG_QUERY_CACHE.get(documentRef);
+  if (cached && cached.expiry > Date.now()) {
+    // Validate that at least one cached node is still in the DOM.
+    // If all nodes were removed, skip the stale cache.
+    const stillLive = cached.nodes.some((node) => {
+      return node && typeof documentRef.contains === "function" && documentRef.contains(node);
+    });
+    if (stillLive) {
+      return cached.nodes;
+    }
+  }
+
   const seen = new Set();
   const preferred = [];
 
@@ -655,6 +683,11 @@ function queryCandidateSvgNodes(documentRef) {
     }
     seen.add(node);
     preferred.push(node);
+  });
+
+  SVG_QUERY_CACHE.set(documentRef, {
+    nodes: preferred,
+    expiry: Date.now() + SVG_QUERY_CACHE_TTL_MS,
   });
 
   return preferred;

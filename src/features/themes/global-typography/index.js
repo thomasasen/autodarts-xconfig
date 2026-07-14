@@ -229,6 +229,7 @@ export function mountThemeGlobalTypography(context = {}) {
       subtree: true,
       characterData: true,
       attributes: true,
+      attributeFilter: ["class", "style"],
     },
   });
 

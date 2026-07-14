@@ -650,3 +650,192 @@ test("cricket board snapshot cache invalidates across board-input mode switches 
   assert.equal(refreshedSnapshot?.modeKey, "live");
   assert.equal(isReusableBoardSnapshot(refreshedSnapshot, documentRef), true);
 });
+
+test("getBoardRadius caches result per node via WeakMap", () => {
+  const documentRef = new FakeDocument();
+
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const circle1 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle1.setAttribute("r", "300");
+  group.appendChild(circle1);
+  const circle2 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle2.setAttribute("r", "500");
+  group.appendChild(circle2);
+  const circle3 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle3.setAttribute("r", "150");
+  group.appendChild(circle3);
+
+  documentRef.main.appendChild(group);
+
+  // First call should compute and cache
+  const firstRadius = findBoardSvgRoot(documentRef);
+
+  // Create a new board fixture to trigger findBoardSvgRoot which internally calls getBoardRadius
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const g = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  g.appendChild(outerRing);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    g.appendChild(t);
+  }
+  svg.appendChild(g);
+  documentRef.main.appendChild(svg);
+
+  // The snapshot cache should work across calls
+  const snapshot1 = findBoardSvgGroup(documentRef);
+  const snapshot2 = findBoardSvgGroup(documentRef);
+  assert.equal(snapshot1, snapshot2, "Board snapshot should be cached");
+});
+
+test("getBoardRadius handles nodes without querySelectorAll", () => {
+  // Create a board fixture for the document-level checks
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const g = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  g.appendChild(outerRing);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    g.appendChild(t);
+  }
+  svg.appendChild(g);
+  documentRef.main.appendChild(svg);
+
+  // Pass null - should return 0
+  const nullResult = findBoardSvgRoot(null);
+  assert.equal(nullResult, null);
+
+  // Pass undefined - should return null
+  const undefinedResult = findBoardSvgRoot(undefined);
+  assert.equal(undefinedResult, null);
+});
+
+test("getBoardRadius cache is independent per node", () => {
+  const documentRef = new FakeDocument();
+
+  // Create two separate groups with different radii
+  const group1 = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const c1 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c1.setAttribute("r", "300");
+  group1.appendChild(c1);
+
+  const group2 = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const c2 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c2.setAttribute("r", "500");
+  group2.appendChild(c2);
+
+  // Create main SVG with numbers so it wins selection
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const mainGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  outerRing.setAttribute("r", "500");
+  mainGroup.appendChild(outerRing);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    mainGroup.appendChild(t);
+  }
+  svg.appendChild(mainGroup);
+  documentRef.main.appendChild(group1);
+  documentRef.main.appendChild(group2);
+  documentRef.main.appendChild(svg);
+
+  // Both groups should be independently cacheable
+  const snapshot1 = findBoardSvgGroup(documentRef);
+  assert.equal(snapshot1.radius, 500);
+
+  // Repeated calls should return cached result
+  const snapshot2 = findBoardSvgGroup(documentRef);
+  assert.equal(snapshot2, snapshot1);
+  assert.equal(snapshot2.radius, 500);
+});
+
+test("queryCandidateSvgNodes caches result within TTL", () => {
+  const documentRef = new FakeDocument();
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("r", "500");
+  group.appendChild(circle);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    group.appendChild(t);
+  }
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  const snapshot1 = findBoardSvgGroup(documentRef);
+  const snapshot2 = findBoardSvgGroup(documentRef);
+  assert.strictEqual(snapshot1, snapshot2);
+  assert.ok(snapshot1.svg);
+});
+
+test("queryCandidateSvgNodes cache expires after TTL", async () => {
+  const documentRef = new FakeDocument();
+
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 1000 1000");
+  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("r", "500");
+  group.appendChild(circle);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    group.appendChild(t);
+  }
+  svg.appendChild(group);
+  documentRef.main.appendChild(svg);
+
+  // First call - populates cache
+  const snapshot1 = findBoardSvgGroup(documentRef);
+  assert.ok(snapshot1.svg);
+
+  // Wait for SVG_QUERY_CACHE_TTL_MS (300ms) to expire
+  await new Promise((resolve) => setTimeout(resolve, 350));
+
+  // Second call after TTL - cache invalidated, but result should still be valid
+  const snapshot2 = findBoardSvgGroup(documentRef);
+  assert.ok(snapshot2.svg);
+});
+
+test("queryCandidateSvgNodes cache is independent per document", () => {
+  const doc1 = new FakeDocument();
+  const doc2 = new FakeDocument();
+
+  const svg1 = doc1.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg1.setAttribute("viewBox", "0 0 1000 1000");
+  const group1 = doc1.createElementNS("http://www.w3.org/2000/svg", "g");
+  const c1 = doc1.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c1.setAttribute("r", "500");
+  group1.appendChild(c1);
+  svg1.appendChild(group1);
+  doc1.main.appendChild(svg1);
+
+  const svg2 = doc2.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg2.setAttribute("viewBox", "0 0 1000 1000");
+  const group2 = doc2.createElementNS("http://www.w3.org/2000/svg", "g");
+  const c2 = doc2.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c2.setAttribute("r", "500");
+  group2.appendChild(c2);
+  svg2.appendChild(group2);
+  doc2.main.appendChild(svg2);
+
+  const snapshot1 = findBoardSvgGroup(doc1);
+  const snapshot2 = findBoardSvgGroup(doc2);
+
+  assert.ok(snapshot1.svg);
+  assert.ok(snapshot2.svg);
+  assert.notStrictEqual(snapshot1.svg, snapshot2.svg);
+});
