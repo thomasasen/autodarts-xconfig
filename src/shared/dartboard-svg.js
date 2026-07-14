@@ -39,8 +39,8 @@ function getBoardRadius(rootNode) {
   const circles = rootNode.querySelectorAll("circle");
   let max = 0;
 
-  for (let i = 0; i < circles.length; i += 1) {
-    const radius = Number.parseFloat(circles[i]?.getAttribute?.("r"));
+  for (const circle of circles) {
+    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
     if (Number.isFinite(radius) && radius > max) {
       max = radius;
     }
@@ -295,15 +295,15 @@ function readDrawableMetrics(rootNode) {
   let textCount = 0;
   const positiveCircleRadii = [];
 
-  for (let i = 0; i < drawables.length; i++) {
-    const tag = drawables[i].tagName.toLowerCase();
+  for (const drawable of drawables) {
+    const tag = drawable.tagName.toLowerCase();
     switch (tag) {
       case "path":
         pathCount++;
         break;
       case "circle": {
         circleCount++;
-        const r = Number.parseFloat(drawables[i]?.getAttribute?.("r"));
+        const r = Number.parseFloat(drawable?.getAttribute?.("r"));
         if (Number.isFinite(r) && r > 0) {
           positiveCircleRadii.push(Number(r.toFixed(4)));
         }

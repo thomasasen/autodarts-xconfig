@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.12] - 2026-07-14
+
+### Fixed
+
+- Nutzerwirkung: Verschiedene Bugfixes und Stabilitätsverbesserungen wurden in die Runtime integriert.
+  Technik: Zielgerichtete Korrekturen und Validierungspflege stabilisieren das Userscript für die aktuelle Autodarts-Version.
+
 ## [2.4.11] - 2026-07-14
 
 ### Fixed
@@ -1799,7 +1806,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.11]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...HEAD
+[2.4.12]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...HEAD
+[2.4.11]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...0f6028a
 [2.4.10]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...0f6028a
 [2.4.9]: https://github.com/thomasasen/autodarts-xconfig/compare/68e9ac5...185451c
 [2.4.8]: https://github.com/thomasasen/autodarts-xconfig/compare/848458d...68e9ac5

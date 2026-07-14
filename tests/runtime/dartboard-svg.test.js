@@ -668,7 +668,7 @@ test("getBoardRadius caches result per node via WeakMap", () => {
   documentRef.main.appendChild(group);
 
   // First call should compute and cache
-  const firstRadius = findBoardSvgRoot(documentRef);
+  findBoardSvgRoot(documentRef);
 
   // Create a new board fixture to trigger findBoardSvgRoot which internally calls getBoardRadius
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -820,6 +820,11 @@ test("queryCandidateSvgNodes cache is independent per document", () => {
   const c1 = doc1.createElementNS("http://www.w3.org/2000/svg", "circle");
   c1.setAttribute("r", "500");
   group1.appendChild(c1);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = doc1.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    group1.appendChild(t);
+  }
   svg1.appendChild(group1);
   doc1.main.appendChild(svg1);
 
@@ -829,6 +834,11 @@ test("queryCandidateSvgNodes cache is independent per document", () => {
   const c2 = doc2.createElementNS("http://www.w3.org/2000/svg", "circle");
   c2.setAttribute("r", "500");
   group2.appendChild(c2);
+  for (let v = 1; v <= 20; v += 1) {
+    const t = doc2.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.textContent = String(v);
+    group2.appendChild(t);
+  }
   svg2.appendChild(group2);
   doc2.main.appendChild(svg2);
 

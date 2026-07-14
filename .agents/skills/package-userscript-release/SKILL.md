@@ -50,3 +50,17 @@ A valid result must:
 - distinguish local, committed, GitHub-published, and installed truth
 - report validation and publication state honestly
 - include a suitable draft commit message when the task included a version bump
+- resolve all SonarQube issues blocking the Quality Gate before considering the release complete
+- a green Quality Gate is mandatory; do not ship with unresolved findings in scope
+
+# SonarQube mandatory for releases
+
+When Tier 3 validation applies (release, version bump, package):
+1. Run `npm run sonar` and verify the Quality Gate passes
+2. If the Quality Gate fails, fetch open issues via `scripts/fetch-sonar-issues.ps1`
+3. Resolve all findings within the current change scope before proceeding
+4. Re-run `npm run sonar` until the Quality Gate turns green
+5. Do not treat missing blame information as acceptable; commit changes first if needed
+
+Out-of-scope Sonar findings that predate the current change may be noted but must not
+block the release if they are confirmed unrelated and covered by a separate cleanup task.>>>>>>> REPLACE

@@ -198,8 +198,8 @@ function getBoardRadius(rootNode) {
   const circles = rootNode.querySelectorAll("circle");
   let max = 0;
 
-  for (let i = 0; i < circles.length; i += 1) {
-    const radius = Number.parseFloat(circles[i]?.getAttribute?.("r"));
+  for (const circle of circles) {
+    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
     if (Number.isFinite(radius) && radius > max) {
       max = radius;
     }
