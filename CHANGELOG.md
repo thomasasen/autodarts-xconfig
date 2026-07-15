@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.13] - 2026-07-15
+
+### Changed
+
+- Nutzerwirkung: Keine sichtbaren Änderungen für Endnutzer.
+  Technik: Version-Bump auf 2.4.13 inkl. Bereinigung ungetrackter Artefakte im Working Tree.
+
 ## [2.4.12] - 2026-07-14
 
 ### Changed
