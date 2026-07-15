@@ -6,6 +6,7 @@ import {
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import { isX01VariantText } from "../../domain/variant-rules.js";
 import {
+  getBoardRadius,
   resolveBoardZoomHostNode,
   resolveBoardZoomTargetNode,
 } from "../../shared/dartboard-svg.js";
@@ -181,32 +182,6 @@ function parseSegmentWithFallback(segmentName, x01Rules) {
     value,
     score: value * multiplier,
   };
-}
-
-const BOARD_RADIUS_CACHE = new WeakMap();
-
-function getBoardRadius(rootNode) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return 0;
-  }
-
-  const cached = BOARD_RADIUS_CACHE.get(rootNode);
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  const circles = rootNode.querySelectorAll("circle");
-  let max = 0;
-
-  for (const circle of circles) {
-    const radius = Number.parseFloat(circle?.getAttribute?.("r"));
-    if (Number.isFinite(radius) && radius > max) {
-      max = radius;
-    }
-  }
-
-  BOARD_RADIUS_CACHE.set(rootNode, max);
-  return max;
 }
 
 function segmentAngles(value) {

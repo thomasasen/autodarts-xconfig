@@ -26,7 +26,7 @@ const BOARD_RADIUS_CACHE = new WeakMap();
 const SVG_QUERY_CACHE = new WeakMap();
 const SVG_QUERY_CACHE_TTL_MS = 300;
 
-function getBoardRadius(rootNode) {
+export function getBoardRadius(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return 0;
   }

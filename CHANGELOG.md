@@ -14,10 +14,10 @@ direkt zu einer versionierten Release-Sektion.
 
 ## [2.4.12] - 2026-07-14
 
-### Fixed
+### Changed
 
-- Nutzerwirkung: Verschiedene Bugfixes und Stabilitätsverbesserungen wurden in die Runtime integriert.
-  Technik: Zielgerichtete Korrekturen und Validierungspflege stabilisieren das Userscript für die aktuelle Autodarts-Version.
+- Nutzerwirkung: Keine sichtbaren Änderungen für Endnutzer.
+  Technik: `getBoardRadius()` und `readDrawableMetrics()` verwenden `for..of` statt `for..i`-Loops für klareren Code in `tv-board-zoom/logic.js` und `shared/dartboard-svg.js`. Test- und Skill-Dokumentation wurden an die Signaturanpassungen angeglichen.
 
 ## [2.4.11] - 2026-07-14
 
