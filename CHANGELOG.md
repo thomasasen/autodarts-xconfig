@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.14] - 2026-07-16
+
+### Fixed
+
+- Nutzerwirkung: Die Dartboard-Erkennung bleibt auch bei verzögert aufgebauten oder nachträglich aktualisierten SVG-Boards zuverlässig.
+  Technik: Der dauerhafte Radius-Cache wurde entfernt, Radius-, SVG-Query- und Agent-Checker-Regressionen direkt abgesichert sowie Release-Metadaten und Agent-Anweisungen bereinigt.
+
 ## [2.4.13] - 2026-07-15
 
 ### Changed
@@ -1813,9 +1820,11 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.12]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...HEAD
-[2.4.11]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...0f6028a
-[2.4.10]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...0f6028a
+[2.4.14]: https://github.com/thomasasen/autodarts-xconfig/compare/4511528...HEAD
+[2.4.13]: https://github.com/thomasasen/autodarts-xconfig/compare/7983e07...4511528
+[2.4.12]: https://github.com/thomasasen/autodarts-xconfig/compare/f555f53...7983e07
+[2.4.11]: https://github.com/thomasasen/autodarts-xconfig/compare/f1d3f7e...f555f53
+[2.4.10]: https://github.com/thomasasen/autodarts-xconfig/compare/185451c...f1d3f7e
 [2.4.9]: https://github.com/thomasasen/autodarts-xconfig/compare/68e9ac5...185451c
 [2.4.8]: https://github.com/thomasasen/autodarts-xconfig/compare/848458d...68e9ac5
 [2.4.7]: https://github.com/thomasasen/autodarts-xconfig/compare/369c519...848458d

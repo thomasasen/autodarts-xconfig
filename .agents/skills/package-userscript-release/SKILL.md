@@ -63,4 +63,4 @@ When Tier 3 validation applies (release, version bump, package):
 5. Do not treat missing blame information as acceptable; commit changes first if needed
 
 Out-of-scope Sonar findings that predate the current change may be noted but must not
-block the release if they are confirmed unrelated and covered by a separate cleanup task.>>>>>>> REPLACE
+block the release if they are confirmed unrelated and covered by a separate cleanup task.

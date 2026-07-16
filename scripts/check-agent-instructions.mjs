@@ -6,6 +6,13 @@ const agentsPath = path.join(root, 'AGENTS.md');
 const skillsRoot = path.join(root, '.agents', 'skills');
 const packagePath = path.join(root, 'package.json');
 const errors = [];
+const patchAndEditMarkers = new Set([
+  ['***', 'Begin', 'Patch'].join(' '),
+  ['***', 'End', 'Patch'].join(' '),
+  ['BEGIN', 'EDITED'].join(' '),
+  ['END', 'EDITED'].join(' '),
+]);
+const conflictSeparatorPattern = /^={7,}$/;
 
 function fail(message) {
   errors.push(message);
@@ -77,6 +84,54 @@ function escapeRegExp(value) {
   ).join('');
 }
 
+function hasConflictMarkerRun(line, marker) {
+  let runLength = 0;
+
+  for (const character of line) {
+    if (character === marker) {
+      runLength += 1;
+      continue;
+    }
+
+    if (runLength >= 7 && character.trim() === '') {
+      return true;
+    }
+    runLength = 0;
+  }
+
+  return runLength >= 7;
+}
+
+function validateInstructionMarkers(text, label) {
+  const lines = String(text || '').replaceAll('\r\n', '\n').split('\n');
+  let conflictBlockOpen = false;
+
+  lines.forEach((line, index) => {
+    const trimmedLine = line.trim();
+    const lineNumber = index + 1;
+    const hasConflictStart = hasConflictMarkerRun(line, '<');
+    const hasConflictEnd = hasConflictMarkerRun(line, '>');
+
+    if (hasConflictStart) {
+      conflictBlockOpen = true;
+      fail(`${label}:${lineNumber}: conflict marker found`);
+    }
+
+    if (conflictBlockOpen && conflictSeparatorPattern.test(trimmedLine)) {
+      fail(`${label}:${lineNumber}: conflict marker found`);
+    }
+
+    if (hasConflictEnd) {
+      fail(`${label}:${lineNumber}: conflict marker found`);
+      conflictBlockOpen = false;
+    }
+
+    if (patchAndEditMarkers.has(trimmedLine)) {
+      fail(`${label}:${lineNumber}: patch or edit marker found`);
+    }
+  });
+}
+
 if (!exists(agentsPath)) {
   fail('AGENTS.md is missing');
 }
@@ -136,6 +191,7 @@ for (const filePath of collectInstructionFiles(skillDirs)) {
 
   const rel = path.relative(root, filePath).replaceAll(path.sep, '/');
   const text = readText(filePath);
+  validateInstructionMarkers(text, rel);
 
   for (const match of reportMatches(text, /\$([A-Za-z0-9][A-Za-z0-9_-]*)/g)) {
     const skillName = match[1];

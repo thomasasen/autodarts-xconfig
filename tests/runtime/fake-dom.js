@@ -1348,6 +1348,10 @@ class FakeDocument extends FakeEventTarget {
     return this.documentElement.querySelectorAll(selector);
   }
 
+  contains(node) {
+    return this.documentElement.contains(node);
+  }
+
   flushMutations(records = []) {
     const mutationRecords = Array.isArray(records) && records.length
       ? records

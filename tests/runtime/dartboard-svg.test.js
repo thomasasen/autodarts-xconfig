@@ -5,6 +5,7 @@ import {
   findCheckoutCompatibleBoardSnapshot,
   findBoardSvgRoot,
   findBoardSvgGroup,
+  getBoardRadius,
   isReusableBoardSnapshot,
   resolveBoardRenderSurface,
 } from "../../src/shared/dartboard-svg.js";
@@ -651,201 +652,175 @@ test("cricket board snapshot cache invalidates across board-input mode switches 
   assert.equal(isReusableBoardSnapshot(refreshedSnapshot, documentRef), true);
 });
 
-test("getBoardRadius caches result per node via WeakMap", () => {
-  const documentRef = new FakeDocument();
-
-  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const circle1 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle1.setAttribute("r", "300");
-  group.appendChild(circle1);
-  const circle2 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle2.setAttribute("r", "500");
-  group.appendChild(circle2);
-  const circle3 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle3.setAttribute("r", "150");
-  group.appendChild(circle3);
-
-  documentRef.main.appendChild(group);
-
-  // First call should compute and cache
-  findBoardSvgRoot(documentRef);
-
-  // Create a new board fixture to trigger findBoardSvgRoot which internally calls getBoardRadius
-  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 1000 1000");
-  const g = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  outerRing.setAttribute("r", "500");
-  g.appendChild(outerRing);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    g.appendChild(t);
-  }
-  svg.appendChild(g);
-  documentRef.main.appendChild(svg);
-
-  // The snapshot cache should work across calls
-  const snapshot1 = findBoardSvgGroup(documentRef);
-  const snapshot2 = findBoardSvgGroup(documentRef);
-  assert.equal(snapshot1, snapshot2, "Board snapshot should be cached");
-});
-
-test("getBoardRadius handles nodes without querySelectorAll", () => {
-  // Create a board fixture for the document-level checks
-  const documentRef = new FakeDocument();
-  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 1000 1000");
-  const g = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  outerRing.setAttribute("r", "500");
-  g.appendChild(outerRing);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    g.appendChild(t);
-  }
-  svg.appendChild(g);
-  documentRef.main.appendChild(svg);
-
-  // Pass null - should return 0
-  const nullResult = findBoardSvgRoot(null);
-  assert.equal(nullResult, null);
-
-  // Pass undefined - should return null
-  const undefinedResult = findBoardSvgRoot(undefined);
-  assert.equal(undefinedResult, null);
-});
-
-test("getBoardRadius cache is independent per node", () => {
-  const documentRef = new FakeDocument();
-
-  // Create two separate groups with different radii
-  const group1 = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const c1 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  c1.setAttribute("r", "300");
-  group1.appendChild(c1);
-
-  const group2 = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const c2 = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  c2.setAttribute("r", "500");
-  group2.appendChild(c2);
-
-  // Create main SVG with numbers so it wins selection
-  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 1000 1000");
-  const mainGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const outerRing = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  outerRing.setAttribute("r", "500");
-  mainGroup.appendChild(outerRing);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    mainGroup.appendChild(t);
-  }
-  svg.appendChild(mainGroup);
-  documentRef.main.appendChild(group1);
-  documentRef.main.appendChild(group2);
-  documentRef.main.appendChild(svg);
-
-  // Both groups should be independently cacheable
-  const snapshot1 = findBoardSvgGroup(documentRef);
-  assert.equal(snapshot1.radius, 500);
-
-  // Repeated calls should return cached result
-  const snapshot2 = findBoardSvgGroup(documentRef);
-  assert.equal(snapshot2, snapshot1);
-  assert.equal(snapshot2.radius, 500);
-});
-
-test("queryCandidateSvgNodes caches result within TTL", () => {
-  const documentRef = new FakeDocument();
-
-  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 1000 1000");
-  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+function appendRadiusCircle(documentRef, rootNode, radius) {
   const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle.setAttribute("r", "500");
-  group.appendChild(circle);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    group.appendChild(t);
-  }
-  svg.appendChild(group);
-  documentRef.main.appendChild(svg);
+  circle.setAttribute("r", String(radius));
+  rootNode.appendChild(circle);
+  return circle;
+}
 
-  const snapshot1 = findBoardSvgGroup(documentRef);
-  const snapshot2 = findBoardSvgGroup(documentRef);
-  assert.strictEqual(snapshot1, snapshot2);
-  assert.ok(snapshot1.svg);
+function withControlledNow(initialNow, callback) {
+  const originalNow = Date.now;
+  let currentNow = initialNow;
+  Date.now = () => currentNow;
+
+  try {
+    return callback({
+      advance(milliseconds) {
+        currentNow += milliseconds;
+      },
+    });
+  } finally {
+    Date.now = originalNow;
+  }
+}
+
+function withSvgQueryCounter(documentRef, callback) {
+  const originalQuerySelectorAll = documentRef.querySelectorAll;
+  let svgQueryCount = 0;
+  documentRef.querySelectorAll = function querySelectorAllWithSvgCount(selector) {
+    if (selector === "svg") {
+      svgQueryCount += 1;
+    }
+    return originalQuerySelectorAll.call(this, selector);
+  };
+
+  try {
+    return callback(() => svgQueryCount);
+  } finally {
+    documentRef.querySelectorAll = originalQuerySelectorAll;
+  }
+}
+
+test("getBoardRadius returns zero for invalid roots", () => {
+  assert.equal(getBoardRadius(null), 0);
+  assert.equal(getBoardRadius(undefined), 0);
+  assert.equal(getBoardRadius({}), 0);
 });
 
-test("queryCandidateSvgNodes cache expires after TTL", async () => {
+test("getBoardRadius returns zero for an svg without circles", () => {
   const documentRef = new FakeDocument();
-
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 1000 1000");
-  const group = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
-  const circle = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle.setAttribute("r", "500");
-  group.appendChild(circle);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = documentRef.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    group.appendChild(t);
-  }
-  svg.appendChild(group);
-  documentRef.main.appendChild(svg);
 
-  // First call - populates cache
-  const snapshot1 = findBoardSvgGroup(documentRef);
-  assert.ok(snapshot1.svg);
-
-  // Wait for SVG_QUERY_CACHE_TTL_MS (300ms) to expire
-  await new Promise((resolve) => setTimeout(resolve, 350));
-
-  // Second call after TTL - cache invalidated, but result should still be valid
-  const snapshot2 = findBoardSvgGroup(documentRef);
-  assert.ok(snapshot2.svg);
+  assert.equal(getBoardRadius(svg), 0);
 });
 
-test("queryCandidateSvgNodes cache is independent per document", () => {
-  const doc1 = new FakeDocument();
-  const doc2 = new FakeDocument();
+test("getBoardRadius observes a circle added after an initial zero result", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-  const svg1 = doc1.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg1.setAttribute("viewBox", "0 0 1000 1000");
-  const group1 = doc1.createElementNS("http://www.w3.org/2000/svg", "g");
-  const c1 = doc1.createElementNS("http://www.w3.org/2000/svg", "circle");
-  c1.setAttribute("r", "500");
-  group1.appendChild(c1);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = doc1.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    group1.appendChild(t);
-  }
-  svg1.appendChild(group1);
-  doc1.main.appendChild(svg1);
+  assert.equal(getBoardRadius(svg), 0);
+  appendRadiusCircle(documentRef, svg, 500);
+  assert.equal(getBoardRadius(svg), 500);
+});
 
-  const svg2 = doc2.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg2.setAttribute("viewBox", "0 0 1000 1000");
-  const group2 = doc2.createElementNS("http://www.w3.org/2000/svg", "g");
-  const c2 = doc2.createElementNS("http://www.w3.org/2000/svg", "circle");
-  c2.setAttribute("r", "500");
-  group2.appendChild(c2);
-  for (let v = 1; v <= 20; v += 1) {
-    const t = doc2.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.textContent = String(v);
-    group2.appendChild(t);
-  }
-  svg2.appendChild(group2);
-  doc2.main.appendChild(svg2);
+test("getBoardRadius observes a larger circle added after a positive result", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-  const snapshot1 = findBoardSvgGroup(doc1);
-  const snapshot2 = findBoardSvgGroup(doc2);
+  appendRadiusCircle(documentRef, svg, 300);
+  assert.equal(getBoardRadius(svg), 300);
+  appendRadiusCircle(documentRef, svg, 500);
+  assert.equal(getBoardRadius(svg), 500);
+});
 
-  assert.ok(snapshot1.svg);
-  assert.ok(snapshot2.svg);
-  assert.notStrictEqual(snapshot1.svg, snapshot2.svg);
+test("getBoardRadius ignores invalid, non-positive, and non-finite radii", () => {
+  const documentRef = new FakeDocument();
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  ["invalid", -10, 0, "Infinity"].forEach((radius) => {
+    appendRadiusCircle(documentRef, svg, radius);
+  });
+  appendRadiusCircle(documentRef, svg, 250);
+
+  assert.equal(getBoardRadius(svg), 250);
+});
+
+test("getBoardRadius keeps separate DOM nodes independent", () => {
+  const documentRef = new FakeDocument();
+  const firstGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  const secondGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+
+  appendRadiusCircle(documentRef, firstGroup, 300);
+  appendRadiusCircle(documentRef, secondGroup, 500);
+
+  assert.equal(getBoardRadius(firstGroup), 300);
+  assert.equal(getBoardRadius(secondGroup), 500);
+});
+
+test("board svg discovery avoids redundant document scans within the TTL", () => {
+  const documentRef = new FakeDocument();
+  const board = createBoardFixture(documentRef);
+
+  withControlledNow(1_000, () => {
+    withSvgQueryCounter(documentRef, (getSvgQueryCount) => {
+      assert.equal(findBoardSvgRoot(documentRef) === board.svg, true);
+      assert.equal(findBoardSvgRoot(documentRef) === board.svg, true);
+      assert.equal(getSvgQueryCount(), 1);
+    });
+  });
+});
+
+test("board svg discovery scans the document again after the TTL expires", () => {
+  const documentRef = new FakeDocument();
+  const board = createBoardFixture(documentRef);
+
+  withControlledNow(1_000, (clock) => {
+    withSvgQueryCounter(documentRef, (getSvgQueryCount) => {
+      assert.equal(findBoardSvgRoot(documentRef) === board.svg, true);
+      clock.advance(301);
+      assert.equal(findBoardSvgRoot(documentRef) === board.svg, true);
+      assert.equal(getSvgQueryCount(), 2);
+    });
+  });
+});
+
+test("board svg discovery discards removed cached nodes before the TTL expires", () => {
+  const documentRef = new FakeDocument();
+  const board = createBoardFixture(documentRef);
+
+  withControlledNow(1_000, () => {
+    withSvgQueryCounter(documentRef, (getSvgQueryCount) => {
+      assert.equal(findBoardSvgRoot(documentRef) === board.svg, true);
+      board.svg.remove();
+      assert.equal(findBoardSvgRoot(documentRef), null);
+      assert.equal(getSvgQueryCount(), 2);
+    });
+  });
+});
+
+test("board svg discovery recognizes a better board added after the TTL", () => {
+  const documentRef = new FakeDocument();
+  const initialBoard = createBoardFixture(documentRef, { boardRadius: 300 });
+
+  withControlledNow(1_000, (clock) => {
+    withSvgQueryCounter(documentRef, (getSvgQueryCount) => {
+      assert.equal(findBoardSvgRoot(documentRef) === initialBoard.svg, true);
+      const betterBoard = createBoardFixture(documentRef, { boardRadius: 500 });
+      assert.equal(findBoardSvgRoot(documentRef) === initialBoard.svg, true);
+      clock.advance(301);
+      assert.equal(findBoardSvgRoot(documentRef) === betterBoard.svg, true);
+      assert.equal(getSvgQueryCount(), 2);
+    });
+  });
+});
+
+test("board svg discovery keeps query caches isolated per document", () => {
+  const firstDocument = new FakeDocument();
+  const secondDocument = new FakeDocument();
+  const firstBoard = createBoardFixture(firstDocument, { boardRadius: 300 });
+  const secondBoard = createBoardFixture(secondDocument, { boardRadius: 500 });
+
+  withControlledNow(1_000, () => {
+    withSvgQueryCounter(firstDocument, (getFirstSvgQueryCount) => {
+      withSvgQueryCounter(secondDocument, (getSecondSvgQueryCount) => {
+        assert.equal(findBoardSvgRoot(firstDocument) === firstBoard.svg, true);
+        assert.equal(findBoardSvgRoot(secondDocument) === secondBoard.svg, true);
+        assert.equal(findBoardSvgRoot(firstDocument) === firstBoard.svg, true);
+        assert.equal(findBoardSvgRoot(secondDocument) === secondBoard.svg, true);
+        assert.equal(getFirstSvgQueryCount(), 1);
+        assert.equal(getSecondSvgQueryCount(), 1);
+      });
+    });
+  });
 });

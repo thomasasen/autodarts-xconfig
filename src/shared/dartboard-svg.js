@@ -22,18 +22,12 @@ const IGNORED_BOARD_SVG_ANCESTOR_SELECTOR = [
   "[data-adxconfig-checkout-board-preview-kind]",
 ].join(",");
 const BOARD_SNAPSHOT_CACHE = new WeakMap();
-const BOARD_RADIUS_CACHE = new WeakMap();
 const SVG_QUERY_CACHE = new WeakMap();
 const SVG_QUERY_CACHE_TTL_MS = 300;
 
 export function getBoardRadius(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return 0;
-  }
-
-  const cached = BOARD_RADIUS_CACHE.get(rootNode);
-  if (cached !== undefined) {
-    return cached;
   }
 
   const circles = rootNode.querySelectorAll("circle");
@@ -46,7 +40,6 @@ export function getBoardRadius(rootNode) {
     }
   }
 
-  BOARD_RADIUS_CACHE.set(rootNode, max);
   return max;
 }
 
