@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.15] - 2026-07-17
+
+### Changed
+
+- Nutzerwirkung: Laufende Partien reagieren bei vielen gleichzeitigen DOM-Änderungen flüssiger; Themes, X01-Spieler-Effekte, Checkout-Anzeigen, Treffer-Effekte und Bull-Sound verursachen weniger unnötige Hintergrundarbeit, ohne Funktionen oder Darstellung einzuschränken.
+  Technik: Revisionsbasierte Game-State- und Theme-Caches, eng begrenzte Spieler- und Turn-Surface-Observer sowie ein signaturbasierter X01-Zweispieler-Control-Mirror reduzieren Clones, CSS-Erzeugung, DOM-Scans, Scheduler-Aufrufe und Mirror-Neuaufbauten; zählerbasierte Regressionstests sichern die Hotpaths ab.
+
 ## [2.4.14] - 2026-07-16
 
 ### Fixed
@@ -1820,7 +1827,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.14]: https://github.com/thomasasen/autodarts-xconfig/compare/4511528...HEAD
+[2.4.15]: https://github.com/thomasasen/autodarts-xconfig/compare/99baa67...HEAD
+[2.4.14]: https://github.com/thomasasen/autodarts-xconfig/compare/4511528...99baa67
 [2.4.13]: https://github.com/thomasasen/autodarts-xconfig/compare/7983e07...4511528
 [2.4.12]: https://github.com/thomasasen/autodarts-xconfig/compare/f555f53...7983e07
 [2.4.11]: https://github.com/thomasasen/autodarts-xconfig/compare/f1d3f7e...f555f53

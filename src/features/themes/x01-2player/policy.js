@@ -929,6 +929,56 @@ function getControlActionNodes(rootNode) {
   ].join(","));
 }
 
+const BOARD_CONTROL_SIGNATURE_ATTRIBUTES = Object.freeze([
+  "id",
+  "class",
+  "role",
+  "type",
+  "value",
+  "disabled",
+  "hidden",
+  "aria-disabled",
+  "aria-hidden",
+  "aria-pressed",
+  "aria-selected",
+  "data-state",
+  "data-status",
+]);
+
+function buildBoardControlsSignature(rootNode) {
+  if (!rootNode) {
+    return "";
+  }
+
+  const entries = [];
+  const queue = [{ node: rootNode, depth: 0 }];
+  while (queue.length) {
+    const { node, depth } = queue.shift();
+    if (!node || Number(node.nodeType) !== 1) {
+      continue;
+    }
+
+    const attributes = BOARD_CONTROL_SIGNATURE_ATTRIBUTES.map((name) => {
+      const attributeValue = node.getAttribute?.(name);
+      const propertyValue = ["disabled", "hidden", "value"].includes(name)
+        ? String(node?.[name] ?? "")
+        : "";
+      const serializedAttributeValue =
+        attributeValue === null ? "0" : `1:${String(attributeValue)}`;
+      return `${name}=${serializedAttributeValue}:${propertyValue}`;
+    }).join(";");
+    const children = Array.from(node.children || []);
+    const leafText = children.length
+      ? ""
+      : String(node.textContent || "").replaceAll(/\s+/g, " ").trim();
+    entries.push(
+      `${depth}:${String(node.tagName || "").toLowerCase()}:${attributes}:text=${leafText}`
+    );
+    children.forEach((child) => queue.push({ node: child, depth: depth + 1 }));
+  }
+  return entries.join("|");
+}
+
 function clearBoardControlsMirror(themeState = {}) {
   const portalState = getBoardControlsPortalState(themeState);
   if (!portalState) {
@@ -943,8 +993,15 @@ function clearBoardControlsMirror(themeState = {}) {
     }
   });
   portalState.mirrorClickHandlers = [];
+  try {
+    portalState.resizeObserver?.unobserve?.(portalState.mirrorControlsNode);
+  } catch (_) {
+    // Keep mirror cleanup fail-soft.
+  }
   portalState.mirrorControlsNode?.remove?.();
   portalState.mirrorControlsNode = null;
+  portalState.mirrorSourceNode = null;
+  portalState.mirrorSourceSignature = "";
 }
 
 function syncBoardControlsMirror(themeState = {}) {
@@ -952,6 +1009,16 @@ function syncBoardControlsMirror(themeState = {}) {
   const sourceControlsNode = portalState?.sourceControlsNode || null;
   const portalNode = portalState?.portalNode || null;
   if (!portalState || !sourceControlsNode || !portalNode) {
+    return false;
+  }
+
+  const sourceSignature = buildBoardControlsSignature(sourceControlsNode);
+  if (
+    portalState.mirrorControlsNode?.isConnected !== false &&
+    portalState.mirrorControlsNode &&
+    portalState.mirrorSourceNode === sourceControlsNode &&
+    portalState.mirrorSourceSignature === sourceSignature
+  ) {
     return false;
   }
 
@@ -984,6 +1051,13 @@ function syncBoardControlsMirror(themeState = {}) {
 
   portalState.mirrorClickHandlers = mirrorClickHandlers;
   portalState.mirrorControlsNode = mirrorControlsNode;
+  portalState.mirrorSourceNode = sourceControlsNode;
+  portalState.mirrorSourceSignature = sourceSignature;
+  try {
+    portalState.resizeObserver?.observe?.(mirrorControlsNode);
+  } catch (_) {
+    // Keep resize synchronization fail-soft.
+  }
   return true;
 }
 
@@ -1031,6 +1105,8 @@ function syncBoardControlsPortal(context = {}) {
   themeState.boardControlsPortal = {
     mirrorClickHandlers: [],
     mirrorControlsNode: null,
+    mirrorSourceNode: null,
+    mirrorSourceSignature: "",
     portalNode,
     resizeListener: null,
     resizeObserver: null,

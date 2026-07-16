@@ -9,6 +9,7 @@ import {
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
+import { createX01PlayerSurfaceObserverController } from "../shared/x01-player-surface-adapter.js";
 
 const FEATURE_KEY = "x01-bust-active-player-highlight";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -65,17 +66,14 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
     return () => {};
   }
 
-  harness.registerObserver({
-    key: OBSERVER_KEY,
-    callback: () => harness.schedule(),
-    observeOptions: {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ["class"],
-    },
-  });
+  harness.addCleanup(createX01PlayerSurfaceObserverController({
+    documentRef,
+    observerRegistry: context.registries?.observers,
+    MutationObserverRef: windowRef?.MutationObserver,
+    keyPrefix: OBSERVER_KEY,
+    onSurfaceMutation: () => harness.schedule(),
+    onSurfaceChange: () => harness.schedule(),
+  }));
   harness.subscribeToGameState();
   if (featureConfig.soundEnabled === true && windowRef) {
     harness.registerListeners([

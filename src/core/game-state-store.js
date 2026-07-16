@@ -18,11 +18,38 @@ function safeClone(value) {
     try {
       return structuredClone(value);
     } catch (_) {
-      return value;
+      // Fall through to the plain-data clone used by websocket payloads.
     }
   }
 
-  return value;
+  const clones = new WeakMap();
+  function clonePlainData(entry) {
+    if (entry === null || typeof entry !== "object") {
+      return entry;
+    }
+    if (clones.has(entry)) {
+      return clones.get(entry);
+    }
+
+    const clone = Array.isArray(entry) ? [] : {};
+    clones.set(entry, clone);
+    Object.keys(entry).forEach((key) => {
+      clone[key] = clonePlainData(entry[key]);
+    });
+    return clone;
+  }
+
+  return clonePlainData(value);
+}
+
+function deepFreeze(value, seen = new WeakSet()) {
+  if (value === null || typeof value !== "object" || seen.has(value)) {
+    return value;
+  }
+
+  seen.add(value);
+  Object.values(value).forEach((entry) => deepFreeze(entry, seen));
+  return Object.freeze(value);
 }
 
 function parseTimestamp(value) {
@@ -114,12 +141,25 @@ export function createGameStateStore(options = {}) {
     source: "none",
     topic: "",
     payloadKind: "",
+    lastMessageRawData: "",
+    lastMessageTopic: "",
     lastMessageSignature: "",
   };
 
   let started = false;
   let interceptionInstalled = false;
   let originalDataDescriptor = null;
+  let stateRevision = 0;
+  let stateDerivedCache = null;
+  let variantDerivedCache = null;
+  let snapshotCache = null;
+
+  function invalidateDerivedCache() {
+    stateRevision += 1;
+    stateDerivedCache = null;
+    variantDerivedCache = null;
+    snapshotCache = null;
+  }
 
   function readVariantFromDom() {
     if (!documentRef || typeof documentRef.getElementById !== "function") {
@@ -130,24 +170,15 @@ export function createGameStateStore(options = {}) {
     return String(variantElement?.textContent || "").trim();
   }
 
-  function getVariant() {
-    if (state.match?.variant) {
-      return String(state.match.variant);
-    }
-    return readVariantFromDom();
+  function resolveVariant(domVariantText) {
+    return state.match?.variant ? String(state.match.variant) : domVariantText;
   }
 
-  function getVariantNormalized() {
-    return normalizeVariant(getVariant());
-  }
-
-  function getCricketGameMode(options = {}) {
-    const includeHiddenCricket = Boolean(options.includeHiddenCricket);
-
+  function resolveCricketGameMode(domVariantText, includeHiddenCricket) {
     const candidates = [
       state.match?.settings?.gameMode,
       state.match?.gameMode,
-      readVariantFromDom(),
+      domVariantText,
     ];
 
     for (const candidate of candidates) {
@@ -162,7 +193,7 @@ export function createGameStateStore(options = {}) {
       return String(candidate || "").trim();
     }
 
-    const fallbackVariant = getVariantNormalized();
+    const fallbackVariant = normalizeVariant(resolveVariant(domVariantText));
     if (fallbackVariant === "cricket" || fallbackVariant.startsWith("cricket ")) {
       return "Cricket";
     }
@@ -170,39 +201,12 @@ export function createGameStateStore(options = {}) {
     return "";
   }
 
-  function getCricketGameModeNormalized(options = {}) {
-    return classifyCricketGameMode(getCricketGameMode(options));
-  }
-
-  function isX01Variant(options = {}) {
-    return isX01VariantText(getVariant(), options);
-  }
-
-  function isCricketVariant(options = {}) {
-    const domMode = classifyCricketGameMode(readVariantFromDom());
-    if (domMode === "hidden-cricket" && !options.includeHiddenCricket) {
-      return false;
-    }
-
-    const mode = getCricketGameModeNormalized(options);
-    if (mode === "cricket" || mode === "tactics") {
-      return true;
-    }
-
-    if (mode === "hidden-cricket") {
-      return Boolean(options.includeHiddenCricket);
-    }
-
-    return isCricketVariantText(getVariant(), options);
-  }
-
-  function getActivePlayerIndex() {
+  function resolveActivePlayerIndex() {
     const activeIndex = state.match?.player;
     return Number.isFinite(activeIndex) ? activeIndex : null;
   }
 
-  function getActivePlayerId() {
-    const activeIndex = getActivePlayerIndex();
+  function resolveActivePlayerId(activeIndex) {
     const players = state.match?.players;
     if (!Array.isArray(players) || !Number.isFinite(activeIndex)) {
       return null;
@@ -212,13 +216,12 @@ export function createGameStateStore(options = {}) {
     return playerId ? String(playerId) : null;
   }
 
-  function getActiveTurn() {
+  function resolveActiveTurn(activePlayerId) {
     const turns = state.match?.turns;
     if (!Array.isArray(turns) || !turns.length) {
       return null;
     }
 
-    const activePlayerId = getActivePlayerId();
     const unfinishedTurns = turns.filter((turn) => {
       if (!turn || typeof turn !== "object") {
         return false;
@@ -244,13 +247,7 @@ export function createGameStateStore(options = {}) {
     return selectNewestTurn(activeTurns) || selectNewestTurn(turns) || turns[0] || null;
   }
 
-  function getActiveThrows() {
-    const activeTurn = getActiveTurn();
-    return Array.isArray(activeTurn?.throws) ? activeTurn.throws : [];
-  }
-
-  function getActiveScore() {
-    const activeIndex = getActivePlayerIndex();
+  function resolveActiveScore(activeIndex, activeTurn) {
     const gameScores = state.match?.gameScores;
 
     if (Array.isArray(gameScores) && Number.isFinite(activeIndex)) {
@@ -260,21 +257,20 @@ export function createGameStateStore(options = {}) {
       }
     }
 
-    const activeTurn = getActiveTurn();
     return Number.isFinite(activeTurn?.score) ? activeTurn.score : null;
   }
 
-  function getOutMode() {
+  function resolveOutMode() {
     const outMode = state.match?.settings?.outMode;
     return outMode ? String(outMode) : "";
   }
 
-  function getCricketMode() {
+  function resolveCricketMode() {
     const cricketMode = state.match?.settings?.mode;
     return cricketMode ? String(cricketMode) : "";
   }
 
-  function getCricketScoringMode() {
+  function resolveCricketScoringMode() {
     const candidates = [
       state.match?.settings?.mode,
       state.match?.settings?.gameMode,
@@ -290,30 +286,174 @@ export function createGameStateStore(options = {}) {
     return "";
   }
 
+  function getStateDerivedState() {
+    if (stateDerivedCache?.revision === stateRevision) {
+      return stateDerivedCache;
+    }
+
+    const activePlayerIndex = resolveActivePlayerIndex();
+    const activePlayerId = resolveActivePlayerId(activePlayerIndex);
+    const activeTurn = resolveActiveTurn(activePlayerId);
+    const activeThrows = Array.isArray(activeTurn?.throws) ? activeTurn.throws : [];
+    const cricketScoringMode = resolveCricketScoringMode();
+
+    stateDerivedCache = Object.freeze({
+      revision: stateRevision,
+      activePlayerIndex,
+      activePlayerId,
+      activeTurn,
+      activeThrows,
+      activeScore: resolveActiveScore(activePlayerIndex, activeTurn),
+      outMode: resolveOutMode(),
+      cricketMode: resolveCricketMode(),
+      cricketScoringMode,
+      cricketScoringModeNormalized: classifyCricketScoringMode(cricketScoringMode),
+    });
+    return stateDerivedCache;
+  }
+
+  function getVariantDerivedState() {
+    const domVariantText = readVariantFromDom();
+    if (
+      variantDerivedCache?.revision === stateRevision &&
+      variantDerivedCache.domVariantText === domVariantText
+    ) {
+      return variantDerivedCache;
+    }
+
+    const variant = resolveVariant(domVariantText);
+    const cricketGameMode = resolveCricketGameMode(domVariantText, false);
+    const cricketGameModeIncludingHidden = resolveCricketGameMode(domVariantText, true);
+
+    variantDerivedCache = Object.freeze({
+      revision: stateRevision,
+      domVariantText,
+      variant,
+      variantNormalized: normalizeVariant(variant),
+      cricketGameMode,
+      cricketGameModeNormalized: classifyCricketGameMode(cricketGameMode),
+      cricketGameModeIncludingHidden,
+      cricketGameModeIncludingHiddenNormalized: classifyCricketGameMode(
+        cricketGameModeIncludingHidden
+      ),
+    });
+    snapshotCache = null;
+    return variantDerivedCache;
+  }
+
+  function getVariant() {
+    return getVariantDerivedState().variant;
+  }
+
+  function getVariantNormalized() {
+    return getVariantDerivedState().variantNormalized;
+  }
+
+  function getCricketGameMode(options = {}) {
+    const derived = getVariantDerivedState();
+    return options.includeHiddenCricket
+      ? derived.cricketGameModeIncludingHidden
+      : derived.cricketGameMode;
+  }
+
+  function getCricketGameModeNormalized(options = {}) {
+    const derived = getVariantDerivedState();
+    return options.includeHiddenCricket
+      ? derived.cricketGameModeIncludingHiddenNormalized
+      : derived.cricketGameModeNormalized;
+  }
+
+  function isX01Variant(options = {}) {
+    return isX01VariantText(getVariantDerivedState().variant, options);
+  }
+
+  function isCricketVariant(options = {}) {
+    const derived = getVariantDerivedState();
+    const domMode = classifyCricketGameMode(derived.domVariantText);
+    if (domMode === "hidden-cricket" && !options.includeHiddenCricket) {
+      return false;
+    }
+
+    const mode = options.includeHiddenCricket
+      ? derived.cricketGameModeIncludingHiddenNormalized
+      : derived.cricketGameModeNormalized;
+    if (mode === "cricket" || mode === "tactics") {
+      return true;
+    }
+    if (mode === "hidden-cricket") {
+      return Boolean(options.includeHiddenCricket);
+    }
+    return isCricketVariantText(derived.variant, options);
+  }
+
+  function getActivePlayerIndex() {
+    return getStateDerivedState().activePlayerIndex;
+  }
+
+  function getActiveTurn() {
+    return getStateDerivedState().activeTurn;
+  }
+
+  function getActiveThrows() {
+    return getStateDerivedState().activeThrows;
+  }
+
+  function getActiveScore() {
+    return getStateDerivedState().activeScore;
+  }
+
+  function getOutMode() {
+    return getStateDerivedState().outMode;
+  }
+
+  function getCricketMode() {
+    return getStateDerivedState().cricketMode;
+  }
+
+  function getCricketScoringMode() {
+    return getStateDerivedState().cricketScoringMode;
+  }
+
   function getCricketScoringModeNormalized() {
-    return classifyCricketScoringMode(getCricketScoringMode());
+    return getStateDerivedState().cricketScoringModeNormalized;
   }
 
   function getSnapshot() {
-    return {
+    const stateDerived = getStateDerivedState();
+    const variantDerived = getVariantDerivedState();
+    if (
+      snapshotCache &&
+      snapshotCache.revision === stateDerived.revision &&
+      snapshotCache.domVariantText === variantDerived.domVariantText
+    ) {
+      return snapshotCache.value;
+    }
+
+    const value = Object.freeze({
       running: started,
       interceptionInstalled,
-      match: safeClone(state.match),
+      match: state.match,
       updatedAt: state.updatedAt,
       source: state.source,
       topic: state.topic,
       payloadKind: state.payloadKind,
-      variant: getVariant(),
-      variantNormalized: getVariantNormalized(),
-      activePlayerIndex: getActivePlayerIndex(),
-      activeScore: getActiveScore(),
-      outMode: getOutMode(),
-      cricketMode: getCricketMode(),
-      cricketScoringMode: getCricketScoringMode(),
-      cricketScoringModeNormalized: getCricketScoringModeNormalized(),
-      cricketGameMode: getCricketGameMode(),
-      cricketGameModeNormalized: getCricketGameModeNormalized(),
+      variant: variantDerived.variant,
+      variantNormalized: variantDerived.variantNormalized,
+      activePlayerIndex: stateDerived.activePlayerIndex,
+      activeScore: stateDerived.activeScore,
+      outMode: stateDerived.outMode,
+      cricketMode: stateDerived.cricketMode,
+      cricketScoringMode: stateDerived.cricketScoringMode,
+      cricketScoringModeNormalized: stateDerived.cricketScoringModeNormalized,
+      cricketGameMode: variantDerived.cricketGameMode,
+      cricketGameModeNormalized: variantDerived.cricketGameModeNormalized,
+    });
+    snapshotCache = {
+      revision: stateDerived.revision,
+      domVariantText: variantDerived.domVariantText,
+      value,
     };
+    return value;
   }
 
   function notifyUpdate() {
@@ -337,30 +477,40 @@ export function createGameStateStore(options = {}) {
       return;
     }
 
-    const messageSignature =
-      meta && typeof meta.messageSignature === "string"
-        ? String(meta.messageSignature)
-        : "";
-    if (messageSignature && messageSignature === state.lastMessageSignature) {
+    const messageRawData = meta && typeof meta.rawData === "string" ? meta.rawData : "";
+    const messageTopic = meta && typeof meta.topic === "string" ? meta.topic : "";
+    const legacyMessageSignature =
+      meta && typeof meta.messageSignature === "string" ? meta.messageSignature : "";
+    if (
+      (messageRawData &&
+        messageRawData === state.lastMessageRawData &&
+        messageTopic === state.lastMessageTopic) ||
+      (legacyMessageSignature && legacyMessageSignature === state.lastMessageSignature)
+    ) {
       return;
     }
 
-    state.match = match;
+    state.match = deepFreeze(safeClone(match));
     state.updatedAt = Date.now();
     state.source = String(source || "unknown");
-    state.topic =
-      meta && typeof meta.topic === "string" ? String(meta.topic) : "";
+    state.topic = messageTopic;
     state.payloadKind =
       meta && typeof meta.payloadKind === "string"
         ? String(meta.payloadKind)
         : classifyPayloadKind(match);
-    state.lastMessageSignature = messageSignature;
+    state.lastMessageRawData = messageRawData;
+    state.lastMessageTopic = messageTopic;
+    state.lastMessageSignature = legacyMessageSignature;
+    invalidateDerivedCache();
 
     notifyUpdate();
   }
 
   function processMessageData(rawData) {
     if (typeof rawData !== "string") {
+      return;
+    }
+    if (rawData && rawData === state.lastMessageRawData) {
       return;
     }
 
@@ -383,13 +533,11 @@ export function createGameStateStore(options = {}) {
     const payloadKind = classifyPayloadKind(parsed.data);
     const fromStateTopic = topic.endsWith(TOPIC_STATE_SUFFIX);
     const fromStateShape = isLikelyMatchStatePayload(parsed.data);
-    const messageSignature = `${topic}|${rawData}`;
-
     if (fromStateTopic && fromStateShape) {
       applyMatch(parsed.data, "websocket-state-topic", {
         topic,
         payloadKind,
-        messageSignature,
+        rawData,
       });
       return;
     }
@@ -398,7 +546,7 @@ export function createGameStateStore(options = {}) {
       applyMatch(parsed.data, "websocket-state-shape", {
         topic,
         payloadKind,
-        messageSignature,
+        rawData,
       });
     }
   }
@@ -490,6 +638,7 @@ export function createGameStateStore(options = {}) {
 
     started = true;
     installWebSocketInterception();
+    invalidateDerivedCache();
 
     if (eventBus && typeof eventBus.emit === "function") {
       eventBus.emit("game-state:started", getSnapshot());
@@ -504,8 +653,11 @@ export function createGameStateStore(options = {}) {
     }
 
     started = false;
+    state.lastMessageRawData = "";
+    state.lastMessageTopic = "";
     state.lastMessageSignature = "";
     uninstallWebSocketInterception();
+    invalidateDerivedCache();
 
     if (eventBus && typeof eventBus.emit === "function") {
       eventBus.emit("game-state:stopped", getSnapshot());

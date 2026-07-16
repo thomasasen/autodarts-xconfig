@@ -6,6 +6,7 @@ import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import {
+  THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS,
   mountThemeGlobalTypography,
   resolveThemeGlobalTypographyActiveTheme,
 } from "../../src/features/themes/global-typography/index.js";
@@ -562,6 +563,81 @@ test("theme global typography mounts only for enabled theme contexts and removes
   cleanup();
   assert.equal(documentRef.getElementById(STYLE_ID), null);
   assert.equal(toolsHost.shadowRoot.getElementById(TOOLS_SHADOW_STYLE_ID), null);
+});
+
+test("theme global typography reuses config and CSS until the runtime revision changes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/abc",
+  });
+  const observers = createObserverRegistry();
+  const baseConfig = createEnabledTypographyConfig();
+  let featureConfigReadCount = 0;
+  let enabledReadCount = 0;
+  const config = {
+    getRevision: () => baseConfig.getRevision(),
+    getFeatureConfig(featureKey) {
+      featureConfigReadCount += 1;
+      return baseConfig.getFeatureConfig(featureKey);
+    },
+    isFeatureEnabled(featureKey) {
+      enabledReadCount += 1;
+      return baseConfig.isFeatureEnabled(featureKey);
+    },
+  };
+  const cleanup = mountThemeGlobalTypography({
+    windowRef,
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    config,
+    gameState: {
+      subscribe() {
+        return () => {};
+      },
+      isX01Variant() {
+        return true;
+      },
+      isCricketVariant() {
+        return false;
+      },
+    },
+    registries: {
+      observers,
+      listeners: createListenerRegistry(),
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(),
+    },
+  });
+  const observer = observers.get("theme-global-typography:dom-observer");
+  const initialFeatureConfigReadCount = featureConfigReadCount;
+  const initialEnabledReadCount = enabledReadCount;
+  const unrelatedNode = documentRef.createElement("div");
+  documentRef.sidebar.appendChild(unrelatedNode);
+
+  observer.callback([{ target: documentRef.sidebar, addedNodes: [unrelatedNode] }]);
+  assert.equal(featureConfigReadCount, initialFeatureConfigReadCount);
+  assert.equal(enabledReadCount, initialEnabledReadCount);
+
+  baseConfig.update({
+    features: {
+      themes: {
+        globalTypography: {
+          accentColor: "#123456",
+        },
+      },
+    },
+  });
+  observer.callback([{ target: documentRef.variantElement }]);
+  assert.equal(featureConfigReadCount, initialFeatureConfigReadCount + 1);
+  assert.equal(
+    enabledReadCount,
+    initialEnabledReadCount + THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS.length
+  );
+  assert.match(documentRef.getElementById(STYLE_ID)?.textContent || "", /#123456/i);
+
+  cleanup();
 });
 
 test("theme global typography re-appends its style after theme styles so color overrides stay authoritative", () => {

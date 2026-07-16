@@ -125,14 +125,25 @@ test("checkout-score-highlight observes player surface mutations without schedul
   const mounted = mountPulseWithCountingRaf(documentRef);
   assert.equal(mounted.getRafCount(), 1);
 
-  const observer = mounted.observers.get("checkout-score-highlight:dom-observer");
-  assert.ok(observer);
-  assert.equal(observer.observeCalls[0].target, root);
-  assert.deepEqual(observer.observeCalls[0].options, createX01PlayerSurfaceObserveOptions());
+  const lifecycleObserver = mounted.observers.get(
+    "checkout-score-highlight:dom-observer:lifecycle"
+  );
+  const surfaceObserver = mounted.observers.get(
+    "checkout-score-highlight:dom-observer:surface"
+  );
+  assert.ok(lifecycleObserver);
+  assert.ok(surfaceObserver);
+  assert.equal(lifecycleObserver.observeCalls[0].target, documentRef.documentElement);
+  assert.deepEqual(lifecycleObserver.observeCalls[0].options, {
+    childList: true,
+    subtree: true,
+  });
+  assert.equal(surfaceObserver.observeCalls[0].target, root);
+  assert.deepEqual(surfaceObserver.observeCalls[0].options, createX01PlayerSurfaceObserveOptions());
 
   const unrelatedNode = documentRef.createElement("div");
   documentRef.sidebar.appendChild(unrelatedNode);
-  observer.callback([
+  surfaceObserver.callback([
     {
       target: documentRef.sidebar,
       addedNodes: [unrelatedNode],
@@ -141,7 +152,7 @@ test("checkout-score-highlight observes player surface mutations without schedul
   ]);
   assert.equal(mounted.getRafCount(), 1);
 
-  observer.callback([
+  surfaceObserver.callback([
     {
       target: root,
       addedNodes: [],
@@ -153,23 +164,93 @@ test("checkout-score-highlight observes player surface mutations without schedul
   mounted.cleanup();
 });
 
-test("checkout-score-highlight keeps the document observer fallback when player surface is absent", () => {
+test("checkout-score-highlight uses a narrow lifecycle observer until the player surface appears", () => {
   const documentRef = new FakeDocument();
   const mounted = mountPulseWithCountingRaf(documentRef);
   assert.equal(mounted.getRafCount(), 1);
 
-  const observer = mounted.observers.get("checkout-score-highlight:dom-observer");
-  assert.ok(observer);
-  assert.equal(observer.observeCalls[0].target, documentRef.documentElement);
+  const lifecycleObserver = mounted.observers.get(
+    "checkout-score-highlight:dom-observer:lifecycle"
+  );
+  assert.ok(lifecycleObserver);
+  assert.equal(lifecycleObserver.observeCalls[0].target, documentRef.documentElement);
+  assert.equal(
+    mounted.observers.get("checkout-score-highlight:dom-observer:surface"),
+    null
+  );
 
-  observer.callback([
+  lifecycleObserver.callback([
     {
       target: documentRef.sidebar,
       addedNodes: [],
       removedNodes: [],
     },
   ]);
+  assert.equal(mounted.getRafCount(), 1);
+
+  const root = appendPlayerSurfaceRoot(documentRef);
+  appendSurfacePlayer(documentRef, root, "170", { active: true });
+  lifecycleObserver.callback([
+    {
+      target: documentRef.main,
+      addedNodes: [root],
+      removedNodes: [],
+    },
+  ]);
   assert.equal(mounted.getRafCount(), 2);
+  assert.equal(
+    mounted.observers.get("checkout-score-highlight:dom-observer:surface")?.observeCalls[0].target,
+    root
+  );
+
+  mounted.cleanup();
+});
+
+test("checkout-score-highlight rebinds only when the player surface root is replaced", () => {
+  const documentRef = new FakeDocument();
+  const firstRoot = appendPlayerSurfaceRoot(documentRef);
+  appendSurfacePlayer(documentRef, firstRoot, "170", { active: true });
+  const mounted = mountPulseWithCountingRaf(documentRef);
+  const lifecycleObserver = mounted.observers.get(
+    "checkout-score-highlight:dom-observer:lifecycle"
+  );
+  const firstSurfaceObserver = mounted.observers.get(
+    "checkout-score-highlight:dom-observer:surface"
+  );
+
+  const unrelatedNode = documentRef.createElement("div");
+  documentRef.sidebar.appendChild(unrelatedNode);
+  lifecycleObserver.callback([
+    {
+      target: documentRef.sidebar,
+      addedNodes: [unrelatedNode],
+      removedNodes: [],
+    },
+  ]);
+  assert.equal(mounted.getRafCount(), 1);
+  assert.equal(
+    mounted.observers.get("checkout-score-highlight:dom-observer:surface"),
+    firstSurfaceObserver
+  );
+
+  firstRoot.remove();
+  const secondRoot = appendPlayerSurfaceRoot(documentRef);
+  appendSurfacePlayer(documentRef, secondRoot, "40", { active: true });
+  lifecycleObserver.callback([
+    {
+      target: documentRef.main,
+      addedNodes: [secondRoot],
+      removedNodes: [firstRoot],
+    },
+  ]);
+
+  const secondSurfaceObserver = mounted.observers.get(
+    "checkout-score-highlight:dom-observer:surface"
+  );
+  assert.equal(mounted.getRafCount(), 2);
+  assert.equal(firstSurfaceObserver.disconnected, true);
+  assert.notEqual(secondSurfaceObserver, firstSurfaceObserver);
+  assert.equal(secondSurfaceObserver.observeCalls[0].target, secondRoot);
 
   mounted.cleanup();
 });

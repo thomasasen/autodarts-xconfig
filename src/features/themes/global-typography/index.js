@@ -138,13 +138,20 @@ export function resolveThemeGlobalTypographyActiveTheme(options = {}) {
   const gameState = options.gameState || null;
   const documentRef = options.documentRef || null;
   const windowRef = options.windowRef || null;
+  const enabledThemeConfigKeys =
+    options.enabledThemeConfigKeys instanceof Set
+      ? options.enabledThemeConfigKeys
+      : null;
 
   if (!isThemeGameContextActive({ documentRef, windowRef })) {
     return null;
   }
 
   return THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS.find((themeContext) => {
-    if (!isThemeConfigEnabled(config, themeContext.configKey)) {
+    const themeEnabled = enabledThemeConfigKeys
+      ? enabledThemeConfigKeys.has(themeContext.configKey)
+      : isThemeConfigEnabled(config, themeContext.configKey);
+    if (!themeEnabled) {
       return false;
     }
 
@@ -167,6 +174,49 @@ export function mountThemeGlobalTypography(context = {}) {
     return () => {};
   }
 
+  let cachedConfigRevision = null;
+  let cachedFeatureConfig = null;
+  let cachedCssText = "";
+  let cachedEnabledThemeConfigKeys = null;
+
+  function readTypographyConfig() {
+    const revision =
+      config && typeof config.getRevision === "function"
+        ? Number(config.getRevision())
+        : Number.NaN;
+    if (
+      Number.isFinite(revision) &&
+      revision === cachedConfigRevision &&
+      cachedFeatureConfig
+    ) {
+      return {
+        featureConfig: cachedFeatureConfig,
+        cssText: cachedCssText,
+        enabledThemeConfigKeys: cachedEnabledThemeConfigKeys,
+      };
+    }
+
+    const featureConfig =
+      config && typeof config.getFeatureConfig === "function"
+        ? config.getFeatureConfig(CONFIG_KEY)
+        : null;
+    const cssText = featureConfig?.enabled
+      ? buildThemeGlobalTypographyStyleText(featureConfig)
+      : "";
+    const enabledThemeConfigKeys = new Set(
+      THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS
+        .filter((themeContext) => isThemeConfigEnabled(config, themeContext.configKey))
+        .map((themeContext) => themeContext.configKey)
+    );
+    if (Number.isFinite(revision)) {
+      cachedConfigRevision = revision;
+      cachedFeatureConfig = featureConfig;
+      cachedCssText = cssText;
+      cachedEnabledThemeConfigKeys = enabledThemeConfigKeys;
+    }
+    return { featureConfig, cssText, enabledThemeConfigKeys };
+  }
+
   function removeStyle() {
     domGuards.removeNodeById(STYLE_ID);
     removeToolsShadowStyles(documentRef);
@@ -175,10 +225,7 @@ export function mountThemeGlobalTypography(context = {}) {
   const harness = createFeatureMountHarness(context, {
     isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
     update: () => {
-      const featureConfig =
-        config && typeof config.getFeatureConfig === "function"
-          ? config.getFeatureConfig(CONFIG_KEY)
-          : null;
+      const { featureConfig, cssText, enabledThemeConfigKeys } = readTypographyConfig();
 
       if (!featureConfig?.enabled) {
         removeStyle();
@@ -190,12 +237,12 @@ export function mountThemeGlobalTypography(context = {}) {
         gameState: context.gameState,
         documentRef,
         windowRef,
+        enabledThemeConfigKeys,
       })) {
         removeStyle();
         return;
       }
 
-      const cssText = buildThemeGlobalTypographyStyleText(featureConfig);
       if (!cssText) {
         removeStyle();
         return;

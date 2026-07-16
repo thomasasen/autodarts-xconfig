@@ -164,3 +164,113 @@ export function createX01PlayerSurfaceObserveOptions() {
     attributeFilter: ["class"],
   };
 }
+
+function containsNode(rootNode, node) {
+  return Boolean(rootNode && node && (rootNode === node || rootNode.contains?.(node)));
+}
+
+function mutationRecordsTouchRoot(records, rootNode) {
+  if (!Array.isArray(records) || records.length === 0) {
+    return true;
+  }
+
+  return records.some((record) => {
+    return (
+      containsNode(rootNode, record?.target) ||
+      Array.from(record?.addedNodes || []).some((node) => containsNode(rootNode, node)) ||
+      Array.from(record?.removedNodes || []).some((node) => containsNode(rootNode, node))
+    );
+  });
+}
+
+export function createX01PlayerSurfaceObserverController(options = {}) {
+  const documentRef = options.documentRef || null;
+  const observerRegistry = options.observerRegistry || null;
+  const MutationObserverRef = options.MutationObserverRef || null;
+  const keyPrefix = String(options.keyPrefix || "x01-player-surface").trim();
+  const onSurfaceMutation =
+    typeof options.onSurfaceMutation === "function" ? options.onSurfaceMutation : () => {};
+  const onSurfaceChange =
+    typeof options.onSurfaceChange === "function" ? options.onSurfaceChange : () => {};
+  const lifecycleKey = `${keyPrefix}:lifecycle`;
+  const surfaceKey = `${keyPrefix}:surface`;
+  let currentRoot = null;
+  let surfaceInitialized = false;
+  let cleanedUp = false;
+
+  if (
+    !documentRef ||
+    !observerRegistry ||
+    typeof observerRegistry.registerMutationObserver !== "function"
+  ) {
+    return () => {};
+  }
+
+  function disconnect(key) {
+    if (typeof observerRegistry.disconnect === "function") {
+      observerRegistry.disconnect(key);
+    }
+  }
+
+  function bindCurrentSurface() {
+    if (cleanedUp) {
+      return false;
+    }
+
+    const nextRoot = queryOne(documentRef, X01_PLAYER_DISPLAY_ROOT_SELECTOR);
+    if (nextRoot === currentRoot) {
+      surfaceInitialized = true;
+      return false;
+    }
+
+    const previousRoot = currentRoot;
+    const shouldNotifyChange = surfaceInitialized;
+    disconnect(surfaceKey);
+    currentRoot = nextRoot;
+
+    if (currentRoot) {
+      observerRegistry.registerMutationObserver({
+        key: surfaceKey,
+        target: currentRoot,
+        callback: (records = []) => {
+          if (currentRoot && mutationRecordsTouchRoot(records, currentRoot)) {
+            onSurfaceMutation(records, currentRoot);
+          }
+        },
+        observeOptions: createX01PlayerSurfaceObserveOptions(),
+        MutationObserverRef,
+      });
+    }
+
+    surfaceInitialized = true;
+    if (shouldNotifyChange) {
+      onSurfaceChange(currentRoot, previousRoot);
+    }
+    return true;
+  }
+
+  const lifecycleTarget = documentRef.documentElement || documentRef.body || documentRef;
+  observerRegistry.registerMutationObserver({
+    key: lifecycleKey,
+    target: lifecycleTarget,
+    callback: () => {
+      bindCurrentSurface();
+    },
+    observeOptions: {
+      childList: true,
+      subtree: true,
+    },
+    MutationObserverRef,
+  });
+  bindCurrentSurface();
+
+  return function cleanupX01PlayerSurfaceObserverController() {
+    if (cleanedUp) {
+      return;
+    }
+    cleanedUp = true;
+    disconnect(surfaceKey);
+    disconnect(lifecycleKey);
+    currentRoot = null;
+  };
+}

@@ -5,8 +5,10 @@ import {
   playSingleBullHitSoundPreview,
   updateSingleBullHitSound,
 } from "../../src/features/single-bull-hit-sound/logic.js";
+import { initializeSingleBullHitSound } from "../../src/features/single-bull-hit-sound/index.js";
+import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import * as x01Rules from "../../src/domain/x01-rules.js";
-import { FakeDocument } from "./fake-dom.js";
+import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 
 function createAudioState(playCalls, audioOverrides = {}) {
   const audio = {
@@ -83,6 +85,54 @@ function appendExternalThrowPlaceholder(documentRef, parentId = "", text = "") {
     textNode,
   };
 }
+
+test("single-bull-hit-sound schedules only turn-surface or game-state changes without polling", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const observers = createObserverRegistry();
+  let scheduleCount = 0;
+  let gameStateSubscriber = null;
+  const cleanup = initializeSingleBullHitSound({
+    documentRef,
+    windowRef,
+    domain: { x01Rules },
+    registries: { observers },
+    config: {
+      getFeatureConfig() {
+        return { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 };
+      },
+    },
+    gameState: {
+      subscribe(subscriber) {
+        gameStateSubscriber = subscriber;
+        return () => {};
+      },
+    },
+    helpers: {
+      createRafScheduler() {
+        return {
+          schedule() {
+            scheduleCount += 1;
+          },
+          cancel() {},
+        };
+      },
+    },
+  });
+  const observer = observers.get("single-bull-hit-sound:dom-observer");
+  const unrelatedNode = documentRef.createElement("div");
+  documentRef.sidebar.appendChild(unrelatedNode);
+
+  assert.equal(scheduleCount, 1);
+  observer.callback([{ target: documentRef.sidebar, addedNodes: [unrelatedNode] }]);
+  assert.equal(scheduleCount, 1);
+
+  observer.callback([{ target: documentRef.throwRow }]);
+  gameStateSubscriber();
+  assert.equal(scheduleCount, 3);
+
+  cleanup();
+});
 
 test("single-bull-hit-sound preview plays the sound asset at the configured volume", async () => {
   const audioInstances = [];

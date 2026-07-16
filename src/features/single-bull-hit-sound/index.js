@@ -8,7 +8,10 @@
 } from "./logic.js";
 import { resolveSingleBullHitSoundConfig } from "./style.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
-import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
+import {
+  createTurnSurfaceObserveOptions,
+  hasRelevantTurnSurfaceMutation,
+} from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "single-bull-hit-sound";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -63,7 +66,11 @@ export function initializeSingleBullHitSound(context = {}) {
   const scheduleUpdate = () => harness.schedule();
   harness.registerObserver({
     key: OBSERVER_KEY,
-    callback: scheduleUpdate,
+    callback: (mutations = []) => {
+      if (hasRelevantTurnSurfaceMutation(mutations)) {
+        scheduleUpdate();
+      }
+    },
     observeOptions: createTurnSurfaceObserveOptions(),
   });
 

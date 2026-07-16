@@ -90,11 +90,15 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
   assert.equal(documentRef.activeScoreElement.classList.contains(HIGHLIGHT_CLASS), true);
   assert.equal(Boolean(documentRef.getElementById(STYLE_ID)), true);
   assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(
+    runtime.context.registries.observers.get("checkout-score-highlight:dom-observer:surface"),
+    null
+  );
   assert.deepEqual(
     runtime.context.registries.observers
-      .get("checkout-score-highlight:dom-observer")
-      .observeCalls[0].options.attributeFilter,
-    ["class"]
+      .get("checkout-score-highlight:dom-observer:lifecycle")
+      .observeCalls[0].options,
+    { childList: true, subtree: true }
   );
 
   runtime.stop();

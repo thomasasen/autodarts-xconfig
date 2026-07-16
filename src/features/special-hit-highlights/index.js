@@ -5,8 +5,11 @@ import {
 } from "../../shared/electric-border-engine.js";
 import { clearHitDecoration, updateHitDecorations } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
-import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import {
+  createTurnSurfaceObserveOptions,
+  hasRelevantTurnSurfaceMutation,
+} from "../shared/turn-surface-adapter.js";
+import { createManagedNodeMatcher } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "special-hit-highlights";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -84,60 +87,6 @@ function formatRowDebug(rows) {
 
 function usesElectricArc(featureConfig = {}) {
   return String(featureConfig.animationStyle || "").trim().toLowerCase() === "electric-jolt";
-}
-
-function isTurnSurfaceNode(node) {
-  if (!node || typeof node !== "object") {
-    return false;
-  }
-
-  if (String(node.id || "").trim() === "ad-ext-turn") {
-    return true;
-  }
-
-  if (node.classList?.contains?.("ad-ext-turn-throw") || node.classList?.contains?.("ad-ext-turn-points")) {
-    return true;
-  }
-
-  if (typeof node.closest === "function") {
-    return Boolean(node.closest("#ad-ext-turn"));
-  }
-
-  return false;
-}
-
-function nodeContainsTurnSurface(node) {
-  if (isTurnSurfaceNode(node)) {
-    return true;
-  }
-
-  if (!node || typeof node.querySelector !== "function") {
-    return false;
-  }
-
-  return Boolean(node.querySelector("#ad-ext-turn, .ad-ext-turn-throw, .ad-ext-turn-points"));
-}
-
-function hasRelevantTurnSurfaceMutation(mutations = [], isManagedNode = null) {
-  if (!hasExternalDomMutation(mutations, isManagedNode)) {
-    return false;
-  }
-
-  if (!Array.isArray(mutations) || mutations.length === 0) {
-    return true;
-  }
-
-  return mutations.some((mutation) => {
-    if (mutation?.type === "attributes") {
-      return isTurnSurfaceNode(mutation?.target || null);
-    }
-
-    return [
-      mutation?.target || null,
-      ...Array.from(mutation?.addedNodes || []),
-      ...Array.from(mutation?.removedNodes || []),
-    ].some((node) => nodeContainsTurnSurface(node));
-  });
 }
 
 export function initializeSpecialHitHighlights(context = {}) {
@@ -274,7 +223,7 @@ export function initializeSpecialHitHighlights(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasRelevantTurnSurfaceMutation(mutations, isManagedNode)) {
+        if (!hasRelevantTurnSurfaceMutation(mutations, { isManagedNode })) {
           return;
         }
         scheduler.schedule();

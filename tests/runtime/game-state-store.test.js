@@ -91,7 +91,7 @@ test("game state store derives a match snapshot from websocket state messages", 
   store.stop();
 });
 
-test("game state store clones match snapshots and suppresses duplicate subscriber work", () => {
+test("game state store reuses frozen snapshots and suppresses duplicate subscriber work", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const eventBus = createEventBus();
@@ -121,19 +121,97 @@ test("game state store clones match snapshots and suppresses duplicate subscribe
     data: payload,
   });
   let subscriberCalls = 0;
+  let subscribedSnapshot = null;
 
-  store.subscribe(() => {
+  store.subscribe((snapshot) => {
     subscriberCalls += 1;
+    subscribedSnapshot = snapshot;
   });
   store.start();
 
   void new FakeMessageEvent(rawPayload, new FakeWebSocket()).data;
   const snapshot = store.getSnapshot();
-  snapshot.match.players[0].name = "mutated";
+  const repeatedSnapshot = store.getSnapshot();
+
+  assert.equal(snapshot, repeatedSnapshot);
+  assert.equal(snapshot, subscribedSnapshot);
+  assert.equal(Object.isFrozen(snapshot), true);
+  assert.equal(Object.isFrozen(snapshot.match), true);
+  assert.equal(Object.isFrozen(snapshot.match.players), true);
+  assert.throws(() => {
+    snapshot.match.players[0].name = "mutated";
+  }, TypeError);
+
   void new FakeMessageEvent(rawPayload, new FakeWebSocket()).data;
 
   assert.equal(subscriberCalls, 1);
   assert.equal(store.getSnapshot().match.players[0].name, "Player 1");
+
+  store.stop();
+});
+
+test("game state store clones incoming match data only once across repeated reads", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const store = createGameStateStore({ windowRef, documentRef });
+  let sourceNameReadCount = 0;
+  const player = { id: "player-1" };
+  Object.defineProperty(player, "name", {
+    enumerable: true,
+    get() {
+      sourceNameReadCount += 1;
+      return "Player 1";
+    },
+  });
+
+  store.applyMatch({
+    variant: "X01",
+    player: 0,
+    players: [player],
+    gameScores: [301],
+    turns: [{ playerId: "player-1", score: 301, throws: [] }],
+  });
+  store.getSnapshot();
+  store.getSnapshot();
+  store.getActiveTurn();
+  store.getActiveScore();
+
+  assert.equal(sourceNameReadCount, 1);
+  assert.equal(store.getSnapshot().match.players[0].name, "Player 1");
+});
+
+test("game state store invalidates cached derived state when websocket or DOM variant changes", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const store = createGameStateStore({ windowRef, documentRef });
+
+  store.start();
+  documentRef.variantElement.textContent = "501";
+  const firstSnapshot = store.getSnapshot();
+  const repeatedSnapshot = store.getSnapshot();
+
+  assert.equal(firstSnapshot, repeatedSnapshot);
+  assert.equal(firstSnapshot.variantNormalized, "501");
+  assert.equal(store.isX01Variant({ allowNumeric: true }), true);
+
+  documentRef.variantElement.textContent = "Cricket";
+  const domVariantSnapshot = store.getSnapshot();
+  assert.notEqual(domVariantSnapshot, firstSnapshot);
+  assert.equal(domVariantSnapshot.variantNormalized, "cricket");
+  assert.equal(store.getSnapshot(), domVariantSnapshot);
+
+  store.applyMatch({
+    variant: "X01",
+    player: 0,
+    players: [{ id: "player-1" }],
+    gameScores: [301],
+    turns: [{ playerId: "player-1", round: 1, turn: 1, score: 301, throws: [] }],
+  });
+  const matchSnapshot = store.getSnapshot();
+  assert.notEqual(matchSnapshot, domVariantSnapshot);
+  assert.equal(matchSnapshot.variantNormalized, "x01");
+  assert.equal(store.getActiveTurn(), matchSnapshot.match.turns[0]);
+  assert.equal(store.getActiveTurn(), store.getActiveTurn());
 
   store.stop();
 });

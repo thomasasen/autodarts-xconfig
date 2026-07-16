@@ -1,6 +1,6 @@
 import { createRafScheduler } from "../../shared/raf-scheduler.js";
 import {
-  createX01PlayerSurfaceObserveOptions,
+  createX01PlayerSurfaceObserverController,
   getX01PlayerSurfaceSnapshot,
 } from "../shared/x01-player-surface-adapter.js";
 import {
@@ -14,31 +14,6 @@ import { STYLE_ID, buildStyleText } from "./style.js";
 
 const FEATURE_KEY = "checkout-score-highlight";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
-const FALLBACK_OBSERVE_OPTIONS = {
-  childList: true,
-  subtree: true,
-  characterData: true,
-  attributes: true,
-  attributeFilter: ["class"],
-};
-
-function containsNode(rootNode, node) {
-  return Boolean(rootNode && node && (rootNode === node || rootNode.contains?.(node)));
-}
-
-function mutationRecordsTouchRoot(records, rootNode) {
-  if (!Array.isArray(records) || records.length === 0) {
-    return true;
-  }
-
-  return records.some((record) => {
-    return (
-      containsNode(rootNode, record?.target) ||
-      Array.from(record?.addedNodes || []).some((node) => containsNode(rootNode, node)) ||
-      Array.from(record?.removedNodes || []).some((node) => containsNode(rootNode, node))
-    );
-  });
-}
 
 export function mountCheckoutScoreHighlight(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -97,25 +72,14 @@ export function mountCheckoutScoreHighlight(context = {}) {
 
   const scheduler = createRafScheduler(update, { windowRef });
 
-  const observerPlayerSurfaceSnapshot = getX01PlayerSurfaceSnapshot(documentRef);
-  const playerSurfaceRoot = observerPlayerSurfaceSnapshot.playerDisplayRoot;
-  const rootNode = playerSurfaceRoot || documentRef.documentElement || documentRef.body || documentRef;
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: (records) => {
-        if (playerSurfaceRoot && !mutationRecordsTouchRoot(records, playerSurfaceRoot)) {
-          return;
-        }
-        scheduler.schedule();
-      },
-      observeOptions: playerSurfaceRoot
-        ? createX01PlayerSurfaceObserveOptions()
-        : FALLBACK_OBSERVE_OPTIONS,
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
+  const cleanupSurfaceObserver = createX01PlayerSurfaceObserverController({
+    documentRef,
+    observerRegistry,
+    MutationObserverRef: windowRef?.MutationObserver,
+    keyPrefix: OBSERVER_KEY,
+    onSurfaceMutation: () => scheduler.schedule(),
+    onSurfaceChange: () => scheduler.schedule(),
+  });
 
   const unsubscribeGameState =
     gameState && typeof gameState.subscribe === "function"
@@ -140,9 +104,7 @@ export function mountCheckoutScoreHighlight(context = {}) {
       // Fail-soft for resilience during teardown.
     }
 
-    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
-    }
+    cleanupSurfaceObserver();
 
     clearHighlightState(getAllScoreNodes(documentRef));
     domGuards.removeNodeById(STYLE_ID);

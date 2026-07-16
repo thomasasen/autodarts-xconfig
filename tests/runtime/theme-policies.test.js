@@ -441,6 +441,12 @@ test("theme-x01-2player policy mirrors board controls above the dart overlay wit
   boardControls.appendChild(nextButton);
   boardPanel.appendChild(boardControls);
   documentRef.main.appendChild(boardPanel);
+  const cloneBoardControls = boardControls.cloneNode.bind(boardControls);
+  let mirrorCloneCount = 0;
+  boardControls.cloneNode = (deep) => {
+    mirrorCloneCount += 1;
+    return cloneBoardControls(deep);
+  };
 
   const policy = resolveThemePolicy({ featureKey: "theme-x01-2player" });
   const themeState = policy.createState();
@@ -464,6 +470,7 @@ test("theme-x01-2player policy mirrors board controls above the dart overlay wit
   assert.equal(mirrorControls.getAttribute("aria-hidden"), "true");
   assert.equal(portalNode.style.getPropertyValue("top"), "211.0px");
   assert.equal(portalNode.style.getPropertyValue("right"), "385.0px");
+  assert.equal(mirrorCloneCount, 1);
 
   mirrorUndoButton.click();
   assert.equal(undoClickCount, 1);
@@ -474,10 +481,71 @@ test("theme-x01-2player policy mirrors board controls above the dart overlay wit
     windowRef,
   });
 
+  const retainedMirrorControls = portalNode?.querySelector(".ad-ext-theme-board-controls") || null;
   assert.equal(
     documentRef.querySelectorAll('[data-ad-ext-x01-2player-board-controls-portal="true"]').length,
     1
   );
+  assert.equal(retainedMirrorControls, mirrorControls);
+  assert.equal(mirrorCloneCount, 1);
+
+  nextButton.setAttribute("aria-disabled", "true");
+  policy.onActivate({
+    documentRef,
+    themeState,
+    windowRef,
+  });
+
+  const replacedMirrorControls = portalNode?.querySelector(".ad-ext-theme-board-controls") || null;
+  const replacedMirrorUndoButton = replacedMirrorControls?.querySelector("button") || null;
+  assert.notEqual(replacedMirrorControls, retainedMirrorControls);
+  assert.equal(mirrorCloneCount, 2);
+  assert.equal(
+    replacedMirrorControls?.querySelectorAll("button")?.[1]?.getAttribute("aria-disabled"),
+    "true"
+  );
+  replacedMirrorUndoButton.click();
+  assert.equal(undoClickCount, 2);
+
+  const replacementControls = documentRef.createElement("div");
+  replacementControls.classList.add("ad-ext-theme-board-controls");
+  replacementControls.__rect = { ...boardControls.__rect };
+  const replacementUndoButton = documentRef.createElement("button");
+  replacementUndoButton.textContent = "Undo";
+  const replacementNextButton = documentRef.createElement("button");
+  replacementNextButton.textContent = "Next";
+  replacementNextButton.setAttribute("aria-disabled", "true");
+  let replacementUndoClickCount = 0;
+  replacementUndoButton.addEventListener("click", () => {
+    replacementUndoClickCount += 1;
+  });
+  replacementControls.appendChild(replacementUndoButton);
+  replacementControls.appendChild(replacementNextButton);
+  const cloneReplacementControls = replacementControls.cloneNode.bind(replacementControls);
+  let replacementMirrorCloneCount = 0;
+  replacementControls.cloneNode = (deep) => {
+    replacementMirrorCloneCount += 1;
+    return cloneReplacementControls(deep);
+  };
+  boardControls.remove();
+  boardPanel.appendChild(replacementControls);
+
+  policy.onActivate({
+    documentRef,
+    themeState,
+    windowRef,
+  });
+
+  const reboundPortalNode = documentRef.querySelector(
+    '[data-ad-ext-x01-2player-board-controls-portal="true"]'
+  );
+  const reboundMirrorControls =
+    reboundPortalNode?.querySelector(".ad-ext-theme-board-controls") || null;
+  assert.notEqual(reboundMirrorControls, replacedMirrorControls);
+  assert.equal(replacementMirrorCloneCount, 1);
+  reboundMirrorControls?.querySelector("button")?.click();
+  assert.equal(undoClickCount, 2);
+  assert.equal(replacementUndoClickCount, 1);
 
   policy.onDeactivate({
     documentRef,
@@ -488,7 +556,7 @@ test("theme-x01-2player policy mirrors board controls above the dart overlay wit
     documentRef.querySelector('[data-ad-ext-x01-2player-board-controls-portal="true"]'),
     null
   );
-  assert.equal(boardControls.parentNode, boardPanel);
+  assert.equal(replacementControls.parentNode, boardPanel);
 });
 
 test("theme-x01-2player policy removes board-control portals from stale theme states", () => {
@@ -797,6 +865,136 @@ test("mountThemeFeature honors an injected policy without changing the theme lif
   cleanup();
   assert.ok(policyCalls.some((entry) => entry.startsWith("deactivate:policy-state")));
   assert.ok(removedStyles.includes("test-theme-style"));
+});
+
+test("mountThemeFeature skips inactive churn and rebuilds CSS only for a new config revision", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "cricket";
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/test-match",
+  });
+  const observerCalls = [];
+  const listenerCalls = [];
+  const removedStyles = [];
+  let configRevision = 0;
+  let configReadCount = 0;
+  let cssBuildCount = 0;
+  let scheduleCount = 0;
+  let gameStateSubscriber = null;
+
+  const cleanup = mountThemeFeature(
+    {
+      documentRef,
+      windowRef,
+      domGuards: {
+        ensureStyle() {},
+        removeNodeById(styleId) {
+          removedStyles.push(styleId);
+        },
+      },
+      gameState: {
+        isX01Variant() {
+          return true;
+        },
+        subscribe(subscriber) {
+          gameStateSubscriber = subscriber;
+          return () => {};
+        },
+      },
+      config: {
+        getRevision() {
+          return configRevision;
+        },
+        getFeatureConfig() {
+          configReadCount += 1;
+          return {};
+        },
+      },
+      registries: {
+        observers: {
+          registerMutationObserver(options) {
+            observerCalls.push(options);
+          },
+          disconnect() {},
+        },
+        listeners: {
+          register(options) {
+            listenerCalls.push(options);
+          },
+          remove() {},
+        },
+      },
+      helpers: {
+        createRafScheduler(callback) {
+          return {
+            schedule() {
+              scheduleCount += 1;
+              callback();
+            },
+            cancel() {},
+          };
+        },
+      },
+    },
+    {
+      featureKey: "theme-x01",
+      configKey: "themes.x01",
+      styleId: "test-theme-cache-style",
+      variantName: "x01",
+      buildThemeCss() {
+        cssBuildCount += 1;
+        return "body { color: red; }";
+      },
+    }
+  );
+
+  const observerCallback = observerCalls[0].callback;
+  const resizeHandler = listenerCalls.find((entry) => entry.type === "resize").handler;
+  const scrollHandler = listenerCalls.find((entry) => entry.type === "scroll").handler;
+  const unrelatedNode = documentRef.createElement("div");
+  documentRef.sidebar.appendChild(unrelatedNode);
+  const inactiveTurnChild = documentRef.createElement("div");
+  documentRef.turnContainer.appendChild(inactiveTurnChild);
+
+  assert.equal(scheduleCount, 1);
+  assert.equal(configReadCount, 0);
+  assert.equal(cssBuildCount, 0);
+  assert.equal(removedStyles.length, 1);
+
+  observerCallback([{ target: documentRef.sidebar, addedNodes: [unrelatedNode] }]);
+  observerCallback([{ target: documentRef.turnContainer, addedNodes: [inactiveTurnChild] }]);
+  resizeHandler();
+  scrollHandler();
+  assert.equal(scheduleCount, 1);
+  assert.equal(removedStyles.length, 1);
+
+  documentRef.variantElement.textContent = "x01";
+  observerCallback([{ target: documentRef.variantElement }]);
+  assert.equal(scheduleCount, 2);
+  assert.equal(configReadCount, 2);
+  assert.equal(cssBuildCount, 1);
+
+  observerCallback([{ target: documentRef.sidebar, addedNodes: [unrelatedNode] }]);
+  resizeHandler();
+  scrollHandler();
+  assert.equal(scheduleCount, 5);
+  assert.equal(configReadCount, 2);
+  assert.equal(cssBuildCount, 1);
+
+  configRevision += 1;
+  observerCallback([{ target: documentRef.variantElement }]);
+  assert.equal(configReadCount, 4);
+  assert.equal(cssBuildCount, 2);
+
+  documentRef.variantElement.textContent = "cricket";
+  observerCallback([{ target: documentRef.variantElement }]);
+  const inactiveScheduleCount = scheduleCount;
+  gameStateSubscriber();
+  assert.equal(scheduleCount, inactiveScheduleCount + 1);
+  assert.equal(cssBuildCount, 2);
+
+  cleanup();
 });
 
 test("mountThemeFeature deactivates the theme when an injected support check rejects the context", async () => {

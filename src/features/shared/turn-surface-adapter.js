@@ -1,3 +1,5 @@
+import { hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+
 export const TURN_SURFACE_SELECTOR = "#ad-ext-turn";
 export const TURN_THROW_ROW_SELECTOR = ".ad-ext-turn-throw";
 export const TURN_SCORE_SELECTOR = ".ad-ext-turn-points";
@@ -10,6 +12,11 @@ export const TURN_SURFACE_MUTATION_ATTRIBUTE_FILTER = Object.freeze([
   "data-status",
   "aria-selected",
   "selected",
+]);
+const TURN_SURFACE_RELEVANT_SELECTORS = Object.freeze([
+  TURN_SURFACE_SELECTOR,
+  TURN_THROW_ROW_SELECTOR,
+  TURN_SCORE_SELECTOR,
 ]);
 
 export function createTurnSurfaceObserveOptions(options = {}) {
@@ -31,6 +38,55 @@ export function createTurnSurfaceObserveOptions(options = {}) {
     attributes: true,
     attributeFilter,
   };
+}
+
+function normalizeSurfaceSelector(extraSelectors = []) {
+  return Array.from(
+    new Set(
+      [...TURN_SURFACE_RELEVANT_SELECTORS, ...(Array.isArray(extraSelectors) ? extraSelectors : [])]
+        .map((selector) => String(selector || "").trim())
+        .filter(Boolean)
+    )
+  ).join(",");
+}
+
+function nodeTouchesTurnSurface(node, selector) {
+  const elementNode = Number(node?.nodeType) === 3 ? node?.parentNode || null : node;
+  if (!elementNode || !selector) {
+    return false;
+  }
+
+  try {
+    if (typeof elementNode.matches === "function" && elementNode.matches(selector)) {
+      return true;
+    }
+    if (typeof elementNode.closest === "function" && elementNode.closest(selector)) {
+      return true;
+    }
+    return Boolean(
+      typeof elementNode.querySelector === "function" && elementNode.querySelector(selector)
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+export function hasRelevantTurnSurfaceMutation(mutations = [], options = {}) {
+  if (!hasExternalDomMutation(mutations, options.isManagedNode)) {
+    return false;
+  }
+  if (!Array.isArray(mutations) || mutations.length === 0) {
+    return true;
+  }
+
+  const selector = normalizeSurfaceSelector(options.extraSelectors);
+  return mutations.some((mutation) => {
+    return [
+      mutation?.target || null,
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].some((node) => nodeTouchesTurnSurface(node, selector));
+  });
 }
 
 function normalizeText(value) {

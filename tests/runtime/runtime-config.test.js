@@ -9,6 +9,22 @@ import {
 } from "../../src/config/runtime-config.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 
+test("runtime config exposes a monotonic revision for cache invalidation", () => {
+  const runtimeConfig = createRuntimeConfig();
+
+  assert.equal(runtimeConfig.getRevision(), 0);
+  runtimeConfig.setFeatureEnabled("checkoutScoreHighlight", true);
+  assert.equal(runtimeConfig.getRevision(), 1);
+  runtimeConfig.update({
+    features: {
+      checkoutScoreHighlight: {
+        effect: "blink",
+      },
+    },
+  });
+  assert.equal(runtimeConfig.getRevision(), 2);
+});
+
 function getStoredFeatureConfig(storedConfig, configKey) {
   if (String(configKey || "").startsWith("themes.")) {
     const themeKey = String(configKey).split(".")[1];

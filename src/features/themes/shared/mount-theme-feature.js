@@ -97,9 +97,71 @@ function resolveThemeMountOptions(options = {}) {
 
 function createThemeState(themePolicy) {
   return {
+    lifecycleActive: null,
+    configRevisionCache: null,
     layoutHookTargets: {},
     ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
   };
+}
+
+const THEME_VARIANT_SELECTOR = "#ad-ext-game-variant";
+const THEME_MATCH_SURFACE_SELECTOR = ["#ad-ext-player-display", "#ad-ext-turn"].join(",");
+
+function nodeIsOrContainsSelector(node, selector) {
+  const elementNode = Number(node?.nodeType) === 3 ? node?.parentNode || null : node;
+  if (!elementNode || typeof elementNode !== "object" || !selector) {
+    return false;
+  }
+
+  try {
+    if (typeof elementNode.matches === "function" && elementNode.matches(selector)) {
+      return true;
+    }
+    return Boolean(
+      typeof elementNode.querySelector === "function" &&
+      elementNode.querySelector(selector)
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+function nodeTouchesVariantMarker(node) {
+  const elementNode = Number(node?.nodeType) === 3 ? node?.parentNode || null : node;
+  if (!elementNode || typeof elementNode !== "object") {
+    return false;
+  }
+
+  try {
+    return Boolean(
+      nodeIsOrContainsSelector(elementNode, THEME_VARIANT_SELECTOR) ||
+      elementNode.closest?.(THEME_VARIANT_SELECTOR)
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+function hasThemeActivationMutation(mutations = []) {
+  if (!Array.isArray(mutations) || mutations.length === 0) {
+    return true;
+  }
+
+  return mutations.some((mutation) => {
+    if (nodeTouchesVariantMarker(mutation?.target || null)) {
+      return true;
+    }
+
+    return [
+      ...Array.from(mutation?.addedNodes || []),
+      ...Array.from(mutation?.removedNodes || []),
+    ].some((node) => {
+      return (
+        nodeTouchesVariantMarker(node) ||
+        nodeIsOrContainsSelector(node, THEME_MATCH_SURFACE_SELECTOR)
+      );
+    });
+  });
 }
 
 function resolveManagedThemeClassNames(previewSpaceClass, themePolicy, themeState) {
@@ -172,6 +234,33 @@ function resolveThemeCssText(buildThemeCss, featureConfig, globalTypographyConfi
   ).trim();
 }
 
+function readConfigRevision(config) {
+  if (!config || typeof config.getRevision !== "function") {
+    return null;
+  }
+  const revision = Number(config.getRevision());
+  return Number.isFinite(revision) ? revision : null;
+}
+
+function readCachedThemeConfigs(options = {}) {
+  const revision = readConfigRevision(options.config);
+  const cached = options.themeState?.configRevisionCache || null;
+  if (revision !== null && cached?.revision === revision) {
+    return cached;
+  }
+
+  const configs = readThemeConfigs(options.config, options.configKey);
+  const nextCache = {
+    revision,
+    ...configs,
+    cssText: null,
+  };
+  if (options.themeState && revision !== null) {
+    options.themeState.configRevisionCache = nextCache;
+  }
+  return nextCache;
+}
+
 function createLayoutHookRecheckController(windowRef, onRecheck) {
   let pendingLayoutHookRecheckHandle = 0;
   let pendingLayoutHookRecheckSignature = "";
@@ -217,6 +306,12 @@ function createLayoutHookRecheckController(windowRef, onRecheck) {
 }
 
 function deactivateThemeFeature(options = {}) {
+  if (!options.force && options.themeState?.lifecycleActive === false) {
+    return;
+  }
+  if (options.themeState) {
+    options.themeState.lifecycleActive = false;
+  }
   options.layoutHookRecheck?.clear?.();
   options.domGuards?.removeNodeById?.(options.styleId);
   togglePreviewSpace(options.documentRef, options.resolvedPreviewPlacement, false);
@@ -236,11 +331,6 @@ function deactivateThemeFeature(options = {}) {
 
 function createThemeStateEvaluator(options = {}) {
   return function evaluateThemeState() {
-    const { featureConfig, globalTypographyConfig } = readThemeConfigs(
-      options.config,
-      options.configKey
-    );
-
     const isActive = isThemeVariantActive({
       variantName: options.variantName,
       matchMode: options.matchMode,
@@ -248,6 +338,14 @@ function createThemeStateEvaluator(options = {}) {
       windowRef: options.windowRef,
       documentRef: options.documentRef,
     });
+
+    if (!isActive) {
+      deactivateThemeFeature(options);
+      return;
+    }
+
+    const configCache = readCachedThemeConfigs(options);
+    const { featureConfig, globalTypographyConfig } = configCache;
 
     const lifecycleContext = createThemeLifecycleContext({
       config: options.config,
@@ -259,21 +357,27 @@ function createThemeStateEvaluator(options = {}) {
       themeState: options.themeState,
       windowRef: options.windowRef,
     });
-    if (!isActive || !isThemeContextSupported(options.isSupportedContext, lifecycleContext)) {
+    if (!isThemeContextSupported(options.isSupportedContext, lifecycleContext)) {
       deactivateThemeFeature(options);
       return;
     }
 
-    const cssText = resolveThemeCssText(
-      options.buildThemeCss,
-      featureConfig,
-      globalTypographyConfig
-    );
+    const cssText = configCache.cssText === null
+      ? resolveThemeCssText(
+          options.buildThemeCss,
+          featureConfig,
+          globalTypographyConfig
+        )
+      : configCache.cssText;
+    if (configCache.revision !== null && configCache.cssText === null) {
+      configCache.cssText = cssText;
+    }
     if (!cssText) {
       deactivateThemeFeature(options);
       return;
     }
 
+    options.themeState.lifecycleActive = true;
     options.domGuards.ensureStyle(options.styleId, cssText);
     const previewSpaceEnabled = isPreviewPlacementEnabled(
       options.documentRef,
@@ -310,6 +414,13 @@ function createThemeStateEvaluator(options = {}) {
 
 function createThemeMutationCallback(options = {}) {
   return function handleThemeMutations(mutations = []) {
+    if (
+      options.themeState?.lifecycleActive === false &&
+      !hasThemeActivationMutation(mutations)
+    ) {
+      return;
+    }
+
     const policyMutation = options.themePolicy &&
       typeof options.themePolicy.shouldScheduleMutation === "function" &&
       options.themePolicy.shouldScheduleMutation(mutations, {
@@ -431,18 +542,23 @@ export function mountThemeFeature(context = {}, options = {}) {
   }
 
   if (listenerRegistry && windowRef && typeof windowRef === "object") {
+    const scheduleActiveTheme = () => {
+      if (themeState.lifecycleActive === true) {
+        schedulerRef.current?.schedule?.();
+      }
+    };
     listenerRegistry.register({
       key: resizeListenerKey,
       target: windowRef,
       type: "resize",
-      handler: () => schedulerRef.current?.schedule?.(),
+      handler: scheduleActiveTheme,
     });
 
     listenerRegistry.register({
       key: scrollListenerKey,
       target: windowRef,
       type: "scroll",
-      handler: () => schedulerRef.current?.schedule?.(),
+      handler: scheduleActiveTheme,
       options: true,
     });
   }
@@ -466,6 +582,7 @@ export function mountThemeFeature(context = {}, options = {}) {
       documentRef,
       domGuards,
       gameState,
+      force: true,
       layoutHookRecheck,
       resolvedPreviewPlacement,
       runtimeContext: context,

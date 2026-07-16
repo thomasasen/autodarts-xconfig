@@ -5,6 +5,7 @@ import {
 } from "./logic.js";
 import { STYLE_ID, buildStyleText, resolveActivePlayerSweepConfig } from "./style.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
+import { createX01PlayerSurfaceObserverController } from "../shared/x01-player-surface-adapter.js";
 
 const FEATURE_KEY = "active-player-sweep";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -58,32 +59,29 @@ export function initializeActivePlayerSweep(context = {}) {
     return () => {};
   }
 
-  harness.registerObserver({
-    key: OBSERVER_KEY,
-    callback: (mutations = []) => {
-        if (
-          Array.isArray(mutations) &&
-          mutations.length &&
-          mutations.every((mutation) => {
-            return (
-              mutation?.type === "attributes" &&
-              mutation?.attributeName === "class" &&
-              state.nodes.has(mutation?.target || null)
-            );
-          })
-        ) {
-          return;
-        }
-        harness.schedule();
-      },
-    observeOptions: {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      characterData: false,
-      attributeFilter: ["class"],
+  harness.addCleanup(createX01PlayerSurfaceObserverController({
+    documentRef,
+    observerRegistry: context.registries?.observers,
+    MutationObserverRef: windowRef?.MutationObserver,
+    keyPrefix: OBSERVER_KEY,
+    onSurfaceMutation: (mutations = []) => {
+      if (
+        Array.isArray(mutations) &&
+        mutations.length &&
+        mutations.every((mutation) => {
+          return (
+            mutation?.type === "attributes" &&
+            mutation?.attributeName === "class" &&
+            state.nodes.has(mutation?.target || null)
+          );
+        })
+      ) {
+        return;
+      }
+      harness.schedule();
     },
-  });
+    onSurfaceChange: () => harness.schedule(),
+  }));
   harness.subscribeToGameState();
   harness.schedule();
 

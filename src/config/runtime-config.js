@@ -280,6 +280,11 @@ export function createRuntimeConfig(overrides = {}) {
   let rawConfig = migrateLegacyFeatureConfigKeys(
     deepMerge(createDefaultConfigFromFeatureSpecs(), migrateLegacyFeatureConfigKeys(deepClone(overrides)))
   );
+  let revision = 0;
+
+  function getRevision() {
+    return revision;
+  }
 
   function getRaw() {
     return deepClone(rawConfig);
@@ -396,16 +401,19 @@ export function createRuntimeConfig(overrides = {}) {
         : {}),
       enabled: normalizedEnabled,
     });
+    revision += 1;
   }
 
   function update(partialConfig = {}) {
     rawConfig = migrateLegacyFeatureConfigKeys(
       deepMerge(rawConfig, migrateLegacyFeatureConfigKeys(deepClone(partialConfig)))
     );
+    revision += 1;
     return getRaw();
   }
 
   return {
+    getRevision,
     getRaw,
     getNormalized,
     getFeatureConfig,

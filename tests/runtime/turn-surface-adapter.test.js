@@ -7,6 +7,7 @@ import {
   createTurnSurfaceObserveOptions,
   findTurnContainer,
   getTurnSurfaceSnapshot,
+  hasRelevantTurnSurfaceMutation,
   readTurnScoreToken,
 } from "../../src/features/shared/turn-surface-adapter.js";
 import { FakeDocument } from "./fake-dom.js";
@@ -257,5 +258,72 @@ test("createTurnSurfaceObserveOptions watches throw-surface attribute changes wi
   assert.equal(
     observeOptions.attributeFilter.filter((value) => value === "class").length,
     1
+  );
+});
+
+test("turn-surface mutation filter ignores unrelated game DOM churn", () => {
+  const documentRef = new FakeDocument();
+  const unrelatedNode = documentRef.createElement("div");
+  documentRef.sidebar.appendChild(unrelatedNode);
+
+  assert.equal(
+    hasRelevantTurnSurfaceMutation([
+      {
+        target: documentRef.sidebar,
+        addedNodes: [unrelatedNode],
+        removedNodes: [],
+      },
+    ]),
+    false
+  );
+});
+
+test("turn-surface mutation filter accepts turn rows, scores, suggestions, and root replacement", () => {
+  const documentRef = new FakeDocument();
+  const suggestionNode = documentRef.createElement("span");
+  suggestionNode.classList.add("suggestion");
+  const suggestionWrapper = documentRef.createElement("div");
+  suggestionWrapper.appendChild(suggestionNode);
+
+  assert.equal(
+    hasRelevantTurnSurfaceMutation([{ target: documentRef.throwRow }]),
+    true
+  );
+  assert.equal(
+    hasRelevantTurnSurfaceMutation([{ target: documentRef.turnScoreElement }]),
+    true
+  );
+  assert.equal(
+    hasRelevantTurnSurfaceMutation(
+      [{ target: documentRef.main, addedNodes: [suggestionWrapper] }],
+      { extraSelectors: [".suggestion"] }
+    ),
+    true
+  );
+
+  const removedTurnRoot = documentRef.turnContainer;
+  removedTurnRoot.remove();
+  assert.equal(
+    hasRelevantTurnSurfaceMutation([
+      { target: documentRef.main, addedNodes: [], removedNodes: [removedTurnRoot] },
+    ]),
+    true
+  );
+});
+
+test("turn-surface mutation filter suppresses feature-managed mutations", () => {
+  const documentRef = new FakeDocument();
+  documentRef.throwRow.classList.add("feature-managed");
+
+  assert.equal(
+    hasRelevantTurnSurfaceMutation(
+      [{ target: documentRef.throwRow, addedNodes: [], removedNodes: [] }],
+      {
+        isManagedNode(node) {
+          return node?.classList?.contains("feature-managed") === true;
+        },
+      }
+    ),
+    false
   );
 });

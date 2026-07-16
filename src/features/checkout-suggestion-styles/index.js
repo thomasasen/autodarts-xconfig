@@ -5,6 +5,10 @@ import {
   resetSuggestionNode,
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
+import {
+  createTurnSurfaceObserveOptions,
+  hasRelevantTurnSurfaceMutation,
+} from "../shared/turn-surface-adapter.js";
 
 const FEATURE_KEY = "checkout-suggestion-styles";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -61,12 +65,14 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
     observerRegistry.registerMutationObserver({
       key: OBSERVER_KEY,
       target: rootNode,
-      callback: () => scheduler.schedule(),
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
+      callback: (mutations = []) => {
+        if (hasRelevantTurnSurfaceMutation(mutations, {
+          extraSelectors: [".suggestion", "#ad-ext-game-variant"],
+        })) {
+          scheduler.schedule();
+        }
       },
+      observeOptions: createTurnSurfaceObserveOptions(),
       MutationObserverRef: windowRef?.MutationObserver,
     });
   }
