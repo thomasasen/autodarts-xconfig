@@ -12,17 +12,24 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.16] - 2026-07-17
+
+### Added
+
+- Nutzerwirkung: Das Dartboard kann mit zehn eingebetteten Designs dargestellt werden; wahlweise nur während Bot-Zügen oder auf allen Match-Boards.
+  Technik: Ein neues konfigurierbares Board-Style-Feature bindet optimierte WebP-Assets in die erkannte SVG-Board-Fläche ein und synchronisiert Auswahl, Spielzustand, DOM-Ersatz sowie vollständiges Cleanup über den bestehenden Feature-Lifecycle.
+
+### Fixed
+
+- Nutzerwirkung: Live-, Virtual- und weitere verfügbare Board-Eingabemodi bleiben in allen aktiven Themes sichtbar, per Maus und Tastatur erreichbar und werden nur angeboten, wenn Autodarts eine funktionierende Host-Aktion bereitstellt.
+  Technik: Gemeinsame semantische Control-Erkennung, plurale Layout-Gruppen und ein zustandsgepatchtes Theme-Portal ersetzen das X01-Zweispieler-Index-Mirroring und sichern Tabs, Radios, Switches, Checkboxen, React-Neurendering sowie vollständiges Cleanup ab.
+
 ## [2.4.15] - 2026-07-17
 
 ### Changed
 
 - Nutzerwirkung: Laufende Partien reagieren bei vielen gleichzeitigen DOM-Änderungen flüssiger; Themes, X01-Spieler-Effekte, Checkout-Anzeigen, Treffer-Effekte und Bull-Sound verursachen weniger unnötige Hintergrundarbeit, ohne Funktionen oder Darstellung einzuschränken.
   Technik: Revisionsbasierte Game-State- und Theme-Caches, eng begrenzte Spieler- und Turn-Surface-Observer sowie ein signaturbasierter X01-Zweispieler-Control-Mirror reduzieren Clones, CSS-Erzeugung, DOM-Scans, Scheduler-Aufrufe und Mirror-Neuaufbauten; zählerbasierte Regressionstests sichern die Hotpaths ab.
-
-### Fixed
-
-- Nutzerwirkung: Live-, Virtual- und weitere verfügbare Board-Eingabemodi bleiben in allen aktiven Themes sichtbar, per Maus und Tastatur erreichbar und werden nur angeboten, wenn Autodarts eine funktionierende Host-Aktion bereitstellt.
-  Technik: Gemeinsame semantische Control-Erkennung, plurale Layout-Gruppen und ein zustandsgepatchtes Theme-Portal ersetzen das X01-Zweispieler-Index-Mirroring und sichern Tabs, Radios, Switches, Checkboxen, React-Neurendering sowie vollständiges Cleanup ab.
 
 ## [2.4.14] - 2026-07-16
 
@@ -1832,7 +1839,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.15]: https://github.com/thomasasen/autodarts-xconfig/compare/99baa67...HEAD
+[2.4.16]: https://github.com/thomasasen/autodarts-xconfig/compare/74b026d...HEAD
+[2.4.15]: https://github.com/thomasasen/autodarts-xconfig/compare/99baa67...74b026d
 [2.4.14]: https://github.com/thomasasen/autodarts-xconfig/compare/4511528...99baa67
 [2.4.13]: https://github.com/thomasasen/autodarts-xconfig/compare/7983e07...4511528
 [2.4.12]: https://github.com/thomasasen/autodarts-xconfig/compare/f555f53...7983e07
