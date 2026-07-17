@@ -497,6 +497,14 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
     css,
     /\.ad-ext-theme-board-controls-mirror-group\{[^}]*position:\s*fixed\s*!important;[^}]*max-width:\s*calc\(100vw - 0\.5rem\)\s*!important;[^}]*z-index:\s*2147483000\s*!important;[^}]*pointer-events:\s*auto\s*!important;/s
   );
+  assert.match(
+    css,
+    /\[data-ad-ext-board-controls-source-mirrored="true"\]\{[^}]*visibility:\s*hidden\s*!important;[^}]*pointer-events:\s*none\s*!important;/s
+  );
+  assert.match(
+    css,
+    /\.ad-ext-theme-board-controls-mirror-group\[data-ad-ext-board-controls-kind="primary"\]\s*>\s*\.ad-ext-theme-board-controls\{[^}]*flex-wrap:\s*nowrap\s*!important;/s
+  );
   assert.doesNotMatch(
     css,
     /\.ad-ext-x01-2player-board-controls-portal/s

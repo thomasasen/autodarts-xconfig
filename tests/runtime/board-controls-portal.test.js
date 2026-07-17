@@ -6,6 +6,7 @@ import {
   cleanupBoardControlsPortal,
   syncBoardControlsPortal,
 } from "../../src/features/themes/shared/board-controls-portal.js";
+import { BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE } from "../../src/shared/board-input-mode.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
 
 function createGroup(documentRef, kind, controls) {
@@ -58,6 +59,14 @@ test("shared board-control portal mirrors separated groups with direct click and
 
   assert.equal(mirrorGroups.length, 2);
   assert.equal(groups[0].sourceRoot.getAttribute("aria-hidden"), "true");
+  assert.equal(
+    groups[0].sourceRoot.getAttribute(BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE),
+    "true"
+  );
+  assert.equal(
+    mirrorGroups[0].firstElementChild.getAttribute(BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE),
+    null
+  );
   assert.equal(undoButton.getAttribute("tabindex"), "-1");
   assert.equal(mirrorGroups[0].firstElementChild.getAttribute("aria-hidden"), null);
   assert.equal(mirrorLive.getAttribute("tabindex"), "0");
@@ -71,6 +80,10 @@ test("shared board-control portal mirrors separated groups with direct click and
 
   cleanupBoardControlsPortal(themeState);
   assert.equal(groups[0].sourceRoot.getAttribute("aria-hidden"), null);
+  assert.equal(
+    groups[0].sourceRoot.getAttribute(BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE),
+    null
+  );
   assert.equal(undoButton.getAttribute("tabindex"), null);
   assert.equal(documentRef.querySelector(`[${BOARD_CONTROLS_PORTAL_ATTRIBUTE}="true"]`), null);
 });

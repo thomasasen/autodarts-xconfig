@@ -2,6 +2,7 @@ import {
   PLAYER_CARD_PART_ATTRIBUTE,
   PLAYER_CARD_PARTS,
 } from "../../shared/player-card-parts.js";
+import { BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE } from "../../../shared/board-input-mode.js";
 
 export const commonThemeCss = `
 :root{
@@ -456,6 +457,11 @@ div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > .css-1igwmid{
   pointer-events: auto !important;
 }
 
+[${BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE}="true"]{
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .ad-ext-theme-board-controls-portal{
   position: fixed !important;
   inset: 0 !important;
@@ -487,6 +493,10 @@ div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > .css-1igwmid{
   flex-wrap: wrap !important;
   overflow: visible !important;
   pointer-events: auto !important;
+}
+
+.ad-ext-theme-board-controls-mirror-group[data-ad-ext-board-controls-kind="primary"] > .ad-ext-theme-board-controls{
+  flex-wrap: nowrap !important;
 }
 
 .ad-ext-theme-board-controls-mirror-group button,
