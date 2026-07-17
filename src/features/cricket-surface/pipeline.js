@@ -475,7 +475,7 @@ function summarizeLabelGeometry(labelEntries, cricketRules, targetSet) {
   };
 }
 
-function getRootScore(rootNode, cricketRules, targetSet) {
+function getRootScore(rootNode, cricketRules, targetSet, options = {}) {
   if (!isCandidateGridRoot(rootNode)) {
     return {
       score: 0,
@@ -504,6 +504,11 @@ function getRootScore(rootNode, cricketRules, targetSet) {
     const cells = collectPlayerCellsForLabel(entry.node, cricketRules, targetSet);
     return count + (cells.length > 0 ? 1 : 0);
   }, 0);
+  const labelGeometry = summarizeLabelGeometry(labels, cricketRules, targetSet);
+  const allowLabelOnlyRows =
+    options.allowLabelOnlyRows === true &&
+    uniqueLabels.size >= BASE_CRICKET_OBJECTIVE_COUNT &&
+    labelGeometry.usable;
 
   if (uniqueLabels.size < GRID_MIN_UNIQUE_LABELS) {
     return {
@@ -514,7 +519,7 @@ function getRootScore(rootNode, cricketRules, targetSet) {
       coverage,
     };
   }
-  if (rowsWithPlayerCells < GRID_MIN_ROWS_WITH_PLAYER_CELLS) {
+  if (rowsWithPlayerCells < GRID_MIN_ROWS_WITH_PLAYER_CELLS && !allowLabelOnlyRows) {
     return {
       score: 0,
       labels,
@@ -533,7 +538,6 @@ function getRootScore(rootNode, cricketRules, targetSet) {
     };
   }
 
-  const labelGeometry = summarizeLabelGeometry(labels, cricketRules, targetSet);
   const requiredRowBands = Math.min(
     uniqueLabels.size,
     Math.max(GRID_MIN_ROW_BAND_COUNT, Math.ceil(uniqueLabels.size * GRID_ROW_BAND_RATIO))
@@ -591,7 +595,9 @@ export function findCricketGrid(options = {}) {
   let bestCoverage = 0;
 
   collectPreferredGridRoots(documentRef).forEach((candidate) => {
-    const snapshot = getRootScore(candidate, cricketRules, targetSet);
+    const snapshot = getRootScore(candidate, cricketRules, targetSet, {
+      allowLabelOnlyRows: true,
+    });
     if (snapshot.score > bestScore) {
       bestRoot = candidate;
       bestScore = snapshot.score;

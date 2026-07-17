@@ -12,6 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.4.17] - 2026-07-17
+
+### Fixed
+
+- Nutzerwirkung: Checkout-Ziele, Cricket-Hervorhebungen und das gelb blinkende zuletzt getroffene Segment bleiben auch mit aktivem Bot-Board-Design sichtbar.
+  Technik: Die Board-Style-Schichtung platziert native Trefferflächen, Dartmarker und verwaltete Erweiterungs-Overlays stabil über dem eingebetteten Board-Bild, ohne bestehende SVG-Knoten zu ersetzen.
+- Nutzerwirkung: Der Cricket Target Highlighter funktioniert auch in Einspieler-Partien mit der kompakten Zielanzeige.
+  Technik: Die Grid-Erkennung akzeptiert den direkten vertikalen Zielstreifen mit sieben Cricket-Zielen ohne separate Spielerzellen und weist horizontale oder unvollständige Kandidaten weiterhin ab.
+
 ## [2.4.16] - 2026-07-17
 
 ### Added
@@ -1839,7 +1848,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.16]: https://github.com/thomasasen/autodarts-xconfig/compare/74b026d...HEAD
+[2.4.17]: https://github.com/thomasasen/autodarts-xconfig/compare/fffbee4...HEAD
+[2.4.16]: https://github.com/thomasasen/autodarts-xconfig/compare/74b026d...fffbee4
 [2.4.15]: https://github.com/thomasasen/autodarts-xconfig/compare/99baa67...74b026d
 [2.4.14]: https://github.com/thomasasen/autodarts-xconfig/compare/4511528...99baa67
 [2.4.13]: https://github.com/thomasasen/autodarts-xconfig/compare/7983e07...4511528

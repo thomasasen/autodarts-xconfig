@@ -289,6 +289,15 @@ function createLiveThemeObjectiveStripLayout(documentRef, marksByRow, options = 
     const labelText = documentRef.createElement("p");
     labelText.setAttribute("class", "chakra-text css-1qlemha");
     labelText.textContent = label === "BULL" ? "Bull" : label;
+    if (options.labelLayout === "vertical") {
+      const top = 120 + index * 48;
+      labelCell.__rect = { left: 40, top, width: 60, height: 40 };
+      labelText.__rect = { left: 48, top: top + 4, width: 44, height: 32 };
+    } else if (options.labelLayout === "horizontal") {
+      const left = 40 + index * 64;
+      labelCell.__rect = { left, top: 120, width: 60, height: 40 };
+      labelText.__rect = { left: left + 8, top: 124, width: 44, height: 32 };
+    }
     labelCell.appendChild(labelText);
 
     const ownMarks = Number(Array.isArray(marks) ? marks[0] : 0);
@@ -297,18 +306,19 @@ function createLiveThemeObjectiveStripLayout(documentRef, marksByRow, options = 
       icon.setAttribute("alt", String(ownMarks));
       labelCell.appendChild(icon);
     }
-
-    const playerCell = documentRef.createElement("div");
-    playerCell.setAttribute("class", className);
-    const opponentMarks = Number(Array.isArray(marks) ? marks[1] : 0);
-    if (opponentMarks > 0) {
-      const icon = documentRef.createElement("img");
-      icon.setAttribute("alt", String(opponentMarks));
-      playerCell.appendChild(icon);
-    }
-
     objectiveStrip.appendChild(labelCell);
-    objectiveStrip.appendChild(playerCell);
+
+    if (!options.omitPlayerCells) {
+      const playerCell = documentRef.createElement("div");
+      playerCell.setAttribute("class", className);
+      const opponentMarks = Number(Array.isArray(marks) ? marks[1] : 0);
+      if (opponentMarks > 0) {
+        const icon = documentRef.createElement("img");
+        icon.setAttribute("alt", String(opponentMarks));
+        playerCell.appendChild(icon);
+      }
+      objectiveStrip.appendChild(playerCell);
+    }
   });
 
   boardCanvas.appendChild(boardSvg);
@@ -1601,6 +1611,88 @@ test("render state prefers the sibling live theme objective strip host over the 
   assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(renderState?.stateMap.get("19")?.boardPresentation, "open");
   assert.equal(renderState?.stateMap.get("BULL")?.boardPresentation, "open");
+});
+
+test("render state accepts a vertical one-player objective strip without separate player cells", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  const fixture = createLiveThemeObjectiveStripLayout(
+    documentRef,
+    {
+      "20": [0],
+      "19": [0],
+      "18": [0],
+      "17": [0],
+      "16": [0],
+      "15": [0],
+      BULL: [0],
+    },
+    {
+      labelLayout: "vertical",
+      omitPlayerCells: true,
+    }
+  );
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.surfaceStatus, "ready");
+  assert.equal(renderState?.gridSnapshot?.root, fixture.objectiveStrip);
+  assert.equal(renderState?.gridSnapshot?.rowsWithPlayerCells, 0);
+  assert.equal(renderState?.gridSnapshot?.rows?.length, 7);
+  assert.equal(renderState?.marksByLabel["20"]?.join(","), "0");
+  assert.equal(renderState?.stateMap.get("20")?.boardPresentation, "open");
+});
+
+test("render state still rejects a horizontal one-player objective strip without player cells", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+
+  createLiveThemeObjectiveStripLayout(
+    documentRef,
+    {
+      "20": [0],
+      "19": [0],
+      "18": [0],
+      "17": [0],
+      "16": [0],
+      "15": [0],
+      BULL: [0],
+    },
+    {
+      labelLayout: "horizontal",
+      omitPlayerCells: true,
+    }
+  );
+
+  const renderState = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      getCricketGameModeNormalized: () => "cricket",
+      getCricketGameMode: () => "Cricket",
+      getCricketScoringModeNormalized: () => "standard",
+      getActivePlayerIndex: () => 0,
+      getSnapshot: () => ({ match: { players: [{ id: "a" }] } }),
+    }),
+  });
+
+  assert.equal(renderState?.surfaceStatus, "missing-grid");
+  assert.equal(Boolean(renderState?.gridSnapshot?.root), false);
 });
 
 test("render state keeps tactics numeric targets and bull on the same 4-state model", () => {

@@ -192,13 +192,44 @@ function isManagedOverlayNode(node) {
   return Boolean(id && id !== BOARD_STYLE_IMAGE_ID && id.startsWith("ad-ext-"));
 }
 
-function findInsertionAnchor(boardGroup, imageNode) {
-  return Array.from(boardGroup?.children || []).find((childNode) => {
-    if (!childNode || childNode === imageNode) {
-      return false;
-    }
-    return isManagedOverlayNode(childNode) || isLikelyBoardMarker(childNode);
-  }) || null;
+function isLikelyNativeHitHighlight(node) {
+  const className =
+    typeof node?.className === "string"
+      ? node.className
+      : String(node?.className?.baseVal || node?.getAttribute?.("class") || "");
+  return className
+    .split(/\s+/)
+    .some((classToken) => /(?:^|[_-])highlight(?:[_-]|$)/i.test(classToken));
+}
+
+function isForegroundNode(node) {
+  return (
+    isManagedOverlayNode(node) ||
+    isLikelyNativeHitHighlight(node) ||
+    isLikelyBoardMarker(node)
+  );
+}
+
+function findLastNativeGeometryNode(boardGroup, imageNode) {
+  return Array.from(boardGroup?.children || [])
+    .filter((childNode) => childNode && childNode !== imageNode && !isForegroundNode(childNode))
+    .at(-1) || null;
+}
+
+function liftForegroundNodes(boardGroup, imageNode) {
+  const children = Array.from(boardGroup?.children || []);
+  const imageIndex = children.indexOf(imageNode);
+  if (imageIndex < 0) {
+    return;
+  }
+
+  const foregroundNodesBelowImage = children
+    .slice(0, imageIndex)
+    .filter((childNode) => isForegroundNode(childNode));
+  const insertionReference = imageNode.nextElementSibling;
+  foregroundNodesBelowImage.forEach((foregroundNode) => {
+    boardGroup.insertBefore(foregroundNode, insertionReference);
+  });
 }
 
 function placeImageInLayer(boardGroup, imageNode) {
@@ -206,17 +237,13 @@ function placeImageInLayer(boardGroup, imageNode) {
     return;
   }
 
-  const anchor = findInsertionAnchor(boardGroup, imageNode);
-  if (anchor) {
-    if (imageNode.parentNode !== boardGroup || imageNode.nextElementSibling !== anchor) {
-      anchor.before(imageNode);
-    }
-    return;
+  const lastNativeGeometryNode = findLastNativeGeometryNode(boardGroup, imageNode);
+  const insertionReference = lastNativeGeometryNode?.nextElementSibling || null;
+  if (insertionReference !== imageNode) {
+    boardGroup.insertBefore(imageNode, insertionReference);
   }
 
-  if (imageNode.parentNode !== boardGroup || imageNode !== boardGroup.lastElementChild) {
-    boardGroup.appendChild(imageNode);
-  }
+  liftForegroundNodes(boardGroup, imageNode);
 }
 
 function removeDuplicateImages(documentRef, keepNode = null) {

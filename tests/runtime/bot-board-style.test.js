@@ -161,6 +161,89 @@ test("bot board style places the embedded board above native geometry and below 
   assert.ok(children.indexOf(imageNode) < children.indexOf(fixture.checkoutOverlay));
 });
 
+test("bot board style lifts an existing overlay above the board image without replacing it", () => {
+  const documentRef = new FakeDocument();
+  const fixture = createBoardFixture(documentRef);
+  const state = createBotBoardStyleState();
+  const overlayShape = documentRef.createElementNS(SVG_NS, "path");
+  fixture.checkoutOverlay.appendChild(overlayShape);
+  fixture.boardGroup.insertBefore(
+    fixture.checkoutOverlay,
+    fixture.boardGroup.firstElementChild
+  );
+
+  const imageNode = updateBotBoardStyle({
+    documentRef,
+    state,
+    featureConfig: {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+    },
+    assetResolver: (design) => `data:image/webp;base64,${design}`,
+  });
+
+  const children = fixture.boardGroup.children;
+  assert.ok(children.indexOf(imageNode) > children.indexOf(fixture.lastNativePath));
+  assert.ok(children.indexOf(fixture.checkoutOverlay) > children.indexOf(imageNode));
+  assert.equal(fixture.checkoutOverlay.children[0], overlayShape);
+
+  const stableOrder = Array.from(children);
+  updateBotBoardStyle({
+    documentRef,
+    state,
+    featureConfig: {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+    },
+    assetResolver: (design) => `data:image/webp;base64,${design}`,
+  });
+  assert.deepEqual(Array.from(fixture.boardGroup.children), stableOrder);
+});
+
+test("bot board style keeps the native hit highlight above the board image", () => {
+  const documentRef = new FakeDocument();
+  const fixture = createBoardFixture(documentRef);
+  const state = createBotBoardStyleState();
+  const nativeHitHighlight = documentRef.createElementNS(SVG_NS, "path");
+  nativeHitHighlight.classList.add("_Highlight_7z2b9_13");
+  nativeHitHighlight.setAttribute("d", "M 0 -378 L 20 -352 L -20 -352 Z");
+  fixture.boardGroup.insertBefore(
+    nativeHitHighlight,
+    fixture.boardGroup.firstElementChild
+  );
+
+  const imageNode = updateBotBoardStyle({
+    documentRef,
+    state,
+    featureConfig: {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+    },
+    assetResolver: (design) => `data:image/webp;base64,${design}`,
+  });
+
+  const children = fixture.boardGroup.children;
+  assert.ok(children.indexOf(imageNode) > children.indexOf(fixture.lastNativePath));
+  assert.ok(children.indexOf(nativeHitHighlight) > children.indexOf(imageNode));
+
+  const stableOrder = Array.from(children);
+  updateBotBoardStyle({
+    documentRef,
+    state,
+    featureConfig: {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+    },
+    assetResolver: (design) => `data:image/webp;base64,${design}`,
+  });
+  assert.deepEqual(Array.from(fixture.boardGroup.children), stableOrder);
+  assert.equal(nativeHitHighlight.isConnected, true);
+});
+
 test("bot-only scope fails closed for humans and recognizes bot state, icon, and name", () => {
   const documentRef = new FakeDocument();
   createBoardFixture(documentRef);
