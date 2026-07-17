@@ -491,15 +491,15 @@ test("x01 2player theme keeps stable board-first contracts without fragile layou
   );
   assert.match(
     css,
-    /\.ad-ext-x01-2player-board-controls-portal\{[^}]*position:fixed\s*!important;[^}]*z-index:2147483000\s*!important;[^}]*pointer-events:none\s*!important;/s
+    /\.ad-ext-theme-board-controls-portal\{[^}]*position:\s*fixed\s*!important;[^}]*inset:\s*0\s*!important;[^}]*z-index:\s*2147483000\s*!important;[^}]*pointer-events:\s*none\s*!important;/s
   );
   assert.match(
     css,
-    /\.ad-ext-x01-2player-board-controls-portal\s*>\s*\.ad-ext-theme-board-controls\{[^}]*position:relative\s*!important;[^}]*top:auto\s*!important;[^}]*right:auto\s*!important;[^}]*z-index:2147483000\s*!important;[^}]*pointer-events:auto\s*!important;/s
+    /\.ad-ext-theme-board-controls-mirror-group\{[^}]*position:\s*fixed\s*!important;[^}]*max-width:\s*calc\(100vw - 0\.5rem\)\s*!important;[^}]*z-index:\s*2147483000\s*!important;[^}]*pointer-events:\s*auto\s*!important;/s
   );
   assert.doesNotMatch(
     css,
-    /\.ad-ext-x01-2player-board-controls-portal\s+\.ad-ext-theme-board-controls\s+button\{[^}]*background/s
+    /\.ad-ext-x01-2player-board-controls-portal/s
   );
   assert.match(
     css,

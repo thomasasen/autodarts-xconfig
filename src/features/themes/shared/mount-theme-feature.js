@@ -13,6 +13,12 @@ import {
   hasBoardInputModeMutation,
   updateBoardLayoutHooks,
 } from "./board-layout-resolver.js";
+import {
+  BOARD_CONTROLS_MIRROR_GROUP_CLASS,
+  BOARD_CONTROLS_PORTAL_CLASS,
+  cleanupBoardControlsPortal,
+  syncBoardControlsPortal,
+} from "./board-controls-portal.js";
 import { THEME_LAYOUT_HOOK_CLASSES } from "./theme-layout-contract.js";
 import { resolveThemePolicy } from "./theme-policies.js";
 import { resolveThemeVisualSettingsConfig } from "./theme-visuals.js";
@@ -100,6 +106,7 @@ function createThemeState(themePolicy) {
     lifecycleActive: null,
     configRevisionCache: null,
     layoutHookTargets: {},
+    boardControlsPortal: null,
     ...(themePolicy && typeof themePolicy.createState === "function" ? themePolicy.createState() : {}),
   };
 }
@@ -169,6 +176,8 @@ function resolveManagedThemeClassNames(previewSpaceClass, themePolicy, themeStat
     new Set(
       [
         previewSpaceClass,
+        BOARD_CONTROLS_PORTAL_CLASS,
+        BOARD_CONTROLS_MIRROR_GROUP_CLASS,
         ...Object.values(THEME_LAYOUT_HOOK_CLASSES),
         ...(
           themePolicy && typeof themePolicy.getManagedClassNames === "function"
@@ -315,6 +324,7 @@ function deactivateThemeFeature(options = {}) {
   options.layoutHookRecheck?.clear?.();
   options.domGuards?.removeNodeById?.(options.styleId);
   togglePreviewSpace(options.documentRef, options.resolvedPreviewPlacement, false);
+  cleanupBoardControlsPortal(options.themeState);
   clearBoardLayoutHooks(options.themeState);
   cleanupToolsAnimationGifContainment(options.themeState);
 
@@ -395,6 +405,13 @@ function createThemeStateEvaluator(options = {}) {
     } else {
       options.layoutHookRecheck.clear();
     }
+
+    syncBoardControlsPortal({
+      documentRef: options.documentRef,
+      scheduler: options.schedulerRef.current,
+      themeState: options.themeState,
+      windowRef: options.windowRef,
+    });
 
     if (options.themePolicy && typeof options.themePolicy.onActivate === "function") {
       options.themePolicy.onActivate({

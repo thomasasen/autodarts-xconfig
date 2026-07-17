@@ -5,6 +5,7 @@ export const THEME_LAYOUT_HOOK_CLASSES = Object.freeze({
   boardPanel: "ad-ext-theme-board-panel",
   boardImageBackedMode: "ad-ext-theme-board-image-backed",
   boardControls: "ad-ext-theme-board-controls",
+  boardInputModeControls: "ad-ext-theme-board-input-mode-controls",
   boardViewport: "ad-ext-theme-board-viewport",
   boardEventShell: "ad-ext-theme-board-event-shell",
   boardCanvas: "ad-ext-theme-board-canvas",

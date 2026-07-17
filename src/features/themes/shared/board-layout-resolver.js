@@ -1,6 +1,12 @@
 import { findBoardSvgGroup } from "../../../shared/dartboard-svg.js";
 import {
+  BOARD_INPUT_MODE_CONTROL_SELECTOR,
+  BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE,
+  collectBoardInputModeControls,
+  isBoardInputControlAvailable,
   isBoardInputModeControl,
+  isBoardInputModeControlAvailable,
+  isBoardInputModeInteractiveControl,
 } from "../../../shared/board-input-mode.js";
 import {
   THEME_LAYOUT_HOOK_CLASSES,
@@ -64,15 +70,19 @@ function getElementChildren(node) {
   return Array.from(node.children).filter((child) => child?.nodeType === 1);
 }
 
-function countButtons(rootNode) {
+function collectInteractiveControls(rootNode) {
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return 0;
+    return [];
   }
   try {
-    return rootNode.querySelectorAll("button").length;
+    return Array.from(rootNode.querySelectorAll(BOARD_INPUT_MODE_CONTROL_SELECTOR));
   } catch (_) {
-    return 0;
+    return [];
   }
+}
+
+function countInteractiveControls(rootNode) {
+  return collectInteractiveControls(rootNode).length;
 }
 
 function findBoardSvg(documentRef) {
@@ -99,6 +109,10 @@ function getComputedStyleRef(node) {
 function isNodeExplicitlyHidden(node) {
   if (!node || typeof node !== "object") {
     return true;
+  }
+
+  if (node.getAttribute?.(BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE) === "true") {
+    return false;
   }
 
   const hiddenCache = layoutMeasurements.getCustomCache("hiddenByNode");
@@ -157,16 +171,7 @@ function isInteractiveControlAncestor(node) {
   let depth = 0;
 
   while (current && depth < 8) {
-    const tagName = normalizeText(current.tagName || current.nodeName);
-    const role = normalizeText(current.getAttribute?.("role"));
-    const inputType = normalizeText(current.getAttribute?.("type"));
-    if (
-      tagName === "button" ||
-      role === "button" ||
-      role === "tab" ||
-      role === "radio" ||
-      (tagName === "input" && inputType === "radio")
-    ) {
+    if (isBoardInputModeInteractiveControl(current)) {
       return true;
     }
     current = current.parentElement || current.parentNode || null;
@@ -224,7 +229,7 @@ function getLayoutFallbackBoardSvgScore(svgNode, documentRef) {
   }
 
   const boardPanel = resolveBoardPanel(svgNode, documentRef);
-  if (!boardPanel || countButtons(boardPanel) <= 0) {
+  if (!boardPanel || countInteractiveControls(boardPanel) <= 0) {
     return 0;
   }
 
@@ -316,7 +321,7 @@ function isLikelyBoardMediaWrapper(node, boardSvg) {
     return true;
   }
 
-  if (countButtons(node) > 0) {
+  if (countInteractiveControls(node) > 0) {
     return false;
   }
 
@@ -338,7 +343,7 @@ function isImageBackedBoardMediaRoot(node, boardSvg) {
     return false;
   }
 
-  if (!elementContains(node, boardSvg) || countButtons(node) > 0) {
+  if (!elementContains(node, boardSvg) || countInteractiveControls(node) > 0) {
     return false;
   }
 
@@ -501,7 +506,7 @@ function resolveBoardPanel(boardSvg, documentRef) {
         if (elementContains(child, boardSvg)) {
           return false;
         }
-        return countButtons(child) > 0;
+        return countInteractiveControls(child) > 0;
       });
       if (hasBoardChild && hasControlsSibling) {
         return current;
@@ -524,11 +529,11 @@ function resolveBoardControls(panelNode, boardSvg) {
     if (elementContains(child, boardSvg)) {
       return;
     }
-    const buttonCount = countButtons(child);
-    if (buttonCount <= 0) {
+    const controlCount = countInteractiveControls(child);
+    if (controlCount <= 0) {
       return;
     }
-    const score = buttonCount * 100 + getElementChildren(child).length;
+    const score = controlCount * 100 + getElementChildren(child).length;
     if (score > bestScore) {
       bestScore = score;
       bestNode = child;
@@ -536,6 +541,79 @@ function resolveBoardControls(panelNode, boardSvg) {
   });
 
   return bestNode;
+}
+
+function isExcludedBoardControl(node) {
+  if (!node || typeof node.closest !== "function") {
+    return false;
+  }
+
+  try {
+    return Boolean(
+      node.closest(
+        "#ad-xconfig-panel-host, [data-ad-ext-theme-board-controls-portal='true']"
+      )
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+function resolveBoardInputModeGroupRoot(controlNode, scopeNode) {
+  const parentNode = controlNode?.parentElement || controlNode?.parentNode || null;
+  if (!parentNode || parentNode === scopeNode) {
+    return controlNode;
+  }
+
+  const interactiveNodes = collectInteractiveControls(parentNode);
+  if (
+    interactiveNodes.length > 0 &&
+    interactiveNodes.every((node) => isBoardInputModeControlAvailable(node))
+  ) {
+    return parentNode;
+  }
+  return controlNode;
+}
+
+function resolveBoardControlGroups(documentRef, boardPanel, primaryControls, contentTargets = {}) {
+  const groups = [];
+  if (primaryControls && !isNodeExplicitlyHidden(primaryControls)) {
+    groups.push({
+      kind: "primary",
+      sourceRoot: primaryControls,
+      actionNodes: collectInteractiveControls(primaryControls).filter(isBoardInputControlAvailable),
+    });
+  }
+
+  const matchScope =
+    contentTargets.contentSlot ||
+    documentRef?.querySelector?.("main") ||
+    boardPanel?.parentElement ||
+    documentRef?.body ||
+    null;
+  const modeControls = collectBoardInputModeControls(matchScope, { availableOnly: true })
+    .filter((node) => !isExcludedBoardControl(node));
+  const groupedControls = new Map();
+
+  modeControls.forEach((controlNode) => {
+    if (primaryControls && elementContains(primaryControls, controlNode)) {
+      return;
+    }
+    const sourceRoot = resolveBoardInputModeGroupRoot(controlNode, matchScope);
+    const current = groupedControls.get(sourceRoot) || [];
+    current.push(controlNode);
+    groupedControls.set(sourceRoot, current);
+  });
+
+  groupedControls.forEach((actionNodes, sourceRoot) => {
+    groups.push({
+      kind: "input-mode",
+      sourceRoot,
+      actionNodes: [...new Set(actionNodes)],
+    });
+  });
+
+  return groups.filter((group) => group.sourceRoot && group.actionNodes.length > 0);
 }
 
 function findSharedAncestor(firstNode, secondNode, stopNode) {
@@ -1006,6 +1084,12 @@ function resolveBoardLayoutTargets(documentRef) {
   const boardViewport = resolveThemeBoardViewportTarget(boardCanvas, boardSvg);
   const boardPanel = resolveBoardPanel(boardSvg, documentRef);
   const boardControls = boardPanel ? resolveBoardControls(boardPanel, boardSvg) : null;
+  const boardControlGroups = resolveBoardControlGroups(
+    documentRef,
+    boardPanel,
+    boardControls,
+    rawContentTargets
+  );
 
   const targets = {
     ...(hasCompleteContentTargets ? contentTargets : {}),
@@ -1014,6 +1098,10 @@ function resolveBoardLayoutTargets(documentRef) {
       ? boardPanel
       : null,
     boardControls,
+    boardControlGroups,
+    boardInputModeControls: boardControlGroups
+      .filter((group) => group.kind === "input-mode")
+      .map((group) => group.sourceRoot),
     boardViewport,
     ...boardEventTargets,
     boardCanvas,
@@ -1056,9 +1144,7 @@ export function hasBoardInputModeMutation(mutations = []) {
 
       try {
         return Array.from(
-          node.querySelectorAll(
-            "button, [role='button'], [role='tab'], [role='radio'], input[type='radio']"
-          )
+          node.querySelectorAll(BOARD_INPUT_MODE_CONTROL_SELECTOR)
         ).some((candidate) => isBoardInputModeControl(candidate));
       } catch (_) {
         return false;
@@ -1068,17 +1154,31 @@ export function hasBoardInputModeMutation(mutations = []) {
 }
 
 function removeClass(node, className) {
-  if (!node || !className || !node.classList || typeof node.classList.remove !== "function") {
-    return;
-  }
-  node.classList.remove(className);
+  const nodes = Array.isArray(node) ? node : [node];
+  nodes.forEach((targetNode) => {
+    if (
+      targetNode &&
+      className &&
+      targetNode.classList &&
+      typeof targetNode.classList.remove === "function"
+    ) {
+      targetNode.classList.remove(className);
+    }
+  });
 }
 
 function addClass(node, className) {
-  if (!node || !className || !node.classList || typeof node.classList.add !== "function") {
-    return;
-  }
-  node.classList.add(className);
+  const nodes = Array.isArray(node) ? node : [node];
+  nodes.forEach((targetNode) => {
+    if (
+      targetNode &&
+      className &&
+      targetNode.classList &&
+      typeof targetNode.classList.add === "function"
+    ) {
+      targetNode.classList.add(className);
+    }
+  });
 }
 
 function toggleClass(node, className, enabled) {
@@ -1194,6 +1294,7 @@ function areLayoutHookTargetsConnected(targets) {
     targets.contentSlot,
     targets.contentLeft,
     targets.contentBoard,
+    ...(targets.boardControlGroups || []).map((group) => group?.sourceRoot),
   ].filter(Boolean);
   if (!relevantNodes.length) {
     return false;
@@ -1215,6 +1316,7 @@ function areRetainableLayoutHookTargetsConnected(targets) {
     targets.boardEventShell,
     targets.boardCanvas,
     targets.boardMediaRoot,
+    ...(targets.boardControlGroups || []).map((group) => group?.sourceRoot),
   ].filter(Boolean);
   if (!connectedNodes.length) {
     return false;
@@ -1292,6 +1394,10 @@ export function hasBoardLayoutHookMutation(mutations = [], state = {}) {
     targets.boardCanvas,
     targets.boardMediaRoot,
     targets.boardSvg,
+    ...(targets.boardControlGroups || []).flatMap((group) => [
+      group?.sourceRoot,
+      ...(group?.actionNodes || []),
+    ]),
   ].filter(Boolean);
   if (!trackedNodes.length) {
     return false;

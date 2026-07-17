@@ -12,7 +12,6 @@ import {
   isX01TwoPlayerScoreboardStateMutation,
   syncX01TwoPlayerScoreboardState,
 } from "./scoreboard-state.js";
-import { THEME_LAYOUT_HOOK_CLASSES } from "../shared/theme-layout-contract.js";
 import {
   clearPlayerCardPartMarkers,
   markPlayerCardParts,
@@ -21,12 +20,6 @@ import {
 const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
 const PLAYER_CARD_SELECTOR = `${PLAYER_DISPLAY_SELECTOR} .ad-ext-player`;
 const TURN_CONTAINER_SELECTOR = "#ad-ext-turn";
-const ROOT_CONTAINER_SELECTOR = "#root";
-const BOARD_CONTROLS_CLASS = THEME_LAYOUT_HOOK_CLASSES.boardControls;
-const BOARD_CONTROLS_SELECTOR = `.${BOARD_CONTROLS_CLASS}`;
-const BOARD_CONTROLS_PORTAL_CLASS = "ad-ext-x01-2player-board-controls-portal";
-const BOARD_CONTROLS_PORTAL_ATTRIBUTE = "data-ad-ext-x01-2player-board-controls-portal";
-const BOARD_CONTROLS_PORTAL_SELECTOR = `[${BOARD_CONTROLS_PORTAL_ATTRIBUTE}="true"]`;
 const LIVE_TURN_HEIGHT_VARIABLE = "--ad-ext-x01-2player-live-turn-height";
 const LIVE_THROW_POINTS_SIZE_VARIABLE = "--ad-ext-x01-2player-live-throw-points-size";
 const SHARED_PLAYER_NAME_SIZE_VARIABLE = "--ad-ext-x01-2player-shared-name-size";
@@ -358,15 +351,6 @@ function scheduleHydrationRechecks(context = {}) {
   themeState.hydrationRecheckWindowRef = context.windowRef;
   themeState.hydrationRecheckTimerIds = HYDRATION_RECHECK_DELAYS_MS.map((delayMs) =>
     context.windowRef.setTimeout(() => context.scheduler?.schedule?.(), delayMs)
-  );
-}
-
-function getRootContainer(documentRef) {
-  return (
-    documentRef?.querySelector?.(ROOT_CONTAINER_SELECTOR) ||
-    documentRef?.body ||
-    documentRef?.documentElement ||
-    null
   );
 }
 
@@ -768,371 +752,23 @@ function detachTurnResizeObserver(themeState = {}) {
   themeState.turnResizeObservedNode = null;
 }
 
-function setStyleValue(node, name, value) {
-  if (!node?.style || !name) {
-    return;
-  }
 
-  const normalizedValue = String(value);
-  node.style.setProperty?.(name, normalizedValue);
-  node.style[name] = normalizedValue;
-}
 
-function getViewportWidth(documentRef, windowRef = null) {
-  const width = Number(windowRef?.innerWidth);
-  if (Number.isFinite(width) && width > 0) {
-    return width;
-  }
 
-  const documentWidth = Number(documentRef?.documentElement?.getBoundingClientRect?.().width);
-  if (Number.isFinite(documentWidth) && documentWidth > 0) {
-    return documentWidth;
-  }
 
-  const bodyWidth = Number(documentRef?.body?.getBoundingClientRect?.().width);
-  return Number.isFinite(bodyWidth) && bodyWidth > 0 ? bodyWidth : 0;
-}
 
-function getElementRect(node) {
-  return node?.getBoundingClientRect?.() || null;
-}
 
-function getBoardControlsPortalState(themeState = {}) {
-  const portalState = themeState.boardControlsPortal;
-  return portalState && typeof portalState === "object" ? portalState : null;
-}
 
-function isPortalNode(node) {
-  return Boolean(
-    node?.closest?.(`[${BOARD_CONTROLS_PORTAL_ATTRIBUTE}="true"]`)
-  );
-}
 
-function findBoardControls(documentRef) {
-  return queryAll(documentRef, BOARD_CONTROLS_SELECTOR)
-    .find((node) => !isPortalNode(node)) || null;
-}
 
-function createBoardControlsPortal(documentRef, rootNode) {
-  const portalNode = documentRef?.createElement?.("div") || null;
-  if (!portalNode || !rootNode?.appendChild) {
-    return null;
-  }
 
-  portalNode.classList?.add?.(BOARD_CONTROLS_PORTAL_CLASS);
-  portalNode.setAttribute?.(BOARD_CONTROLS_PORTAL_ATTRIBUTE, "true");
-  rootNode.appendChild(portalNode);
-  return portalNode;
-}
 
-function removeStaleBoardControlsPortals(documentRef, retainedPortalNode = null) {
-  queryAll(documentRef, BOARD_CONTROLS_PORTAL_SELECTOR).forEach((node) => {
-    if (node && node !== retainedPortalNode) {
-      node.remove?.();
-    }
-  });
-}
 
-function syncBoardControlsPortalPosition(documentRef, themeState = {}, windowRef = null) {
-  const portalState = getBoardControlsPortalState(themeState);
-  const portalNode = portalState?.portalNode || null;
-  const sourceControlsNode = portalState?.sourceControlsNode || null;
-  if (!portalNode || portalNode.isConnected === false || !sourceControlsNode) {
-    return false;
-  }
 
-  const controlsRect = getElementRect(sourceControlsNode);
-  const viewportWidth = getViewportWidth(documentRef, windowRef);
-  if (!controlsRect || !(viewportWidth > 0)) {
-    return false;
-  }
 
-  const topPx = Math.max(0, Number(controlsRect.top) || 0);
-  const rightPx = Math.max(0, viewportWidth - (Number(controlsRect.right) || 0));
-  setStyleValue(portalNode, "top", `${topPx.toFixed(1)}px`);
-  setStyleValue(portalNode, "right", `${rightPx.toFixed(1)}px`);
-  return true;
-}
 
-function detachBoardControlsPortalResizeObserver(themeState = {}) {
-  const portalState = getBoardControlsPortalState(themeState);
-  if (!portalState?.resizeObserver) {
-    return;
-  }
 
-  try {
-    portalState.resizeObserver.disconnect?.();
-  } catch (_) {
-    // Keep portal cleanup fail-soft.
-  }
-  portalState.resizeObserver = null;
-}
 
-function detachBoardControlsPortalResizeListener(themeState = {}) {
-  const portalState = getBoardControlsPortalState(themeState);
-  if (!portalState?.windowRef || !portalState.resizeListener) {
-    return;
-  }
-
-  try {
-    portalState.windowRef.removeEventListener?.("resize", portalState.resizeListener);
-  } catch (_) {
-    // Keep portal cleanup fail-soft.
-  }
-  portalState.resizeListener = null;
-  portalState.windowRef = null;
-}
-
-function ensureBoardControlsPortalPositionSync(context = {}) {
-  const themeState = context.themeState || {};
-  const portalState = getBoardControlsPortalState(themeState);
-  if (!portalState) {
-    return;
-  }
-
-  const syncPosition = () => {
-    syncBoardControlsPortalPosition(context.documentRef, themeState, context.windowRef);
-  };
-
-  syncPosition();
-
-  const ResizeObserverRef = context.windowRef?.ResizeObserver;
-  if (typeof ResizeObserverRef === "function" && !portalState.resizeObserver) {
-    portalState.resizeObserver = new ResizeObserverRef(syncPosition);
-    [portalState.sourceControlsNode, portalState.mirrorControlsNode].filter(Boolean).forEach((node) => {
-      try {
-        portalState.resizeObserver.observe?.(node);
-      } catch (_) {
-        // Keep observer registration fail-soft.
-      }
-    });
-  }
-
-  if (
-    context.windowRef &&
-    typeof context.windowRef.addEventListener === "function" &&
-    portalState.windowRef !== context.windowRef
-  ) {
-    detachBoardControlsPortalResizeListener(themeState);
-    portalState.resizeListener = syncPosition;
-    portalState.windowRef = context.windowRef;
-    context.windowRef.addEventListener("resize", portalState.resizeListener);
-  }
-}
-
-function getControlActionNodes(rootNode) {
-  return queryAll(rootNode, [
-    "button",
-    "[role='button']",
-    "input[type='button']",
-    "input[type='submit']",
-  ].join(","));
-}
-
-const BOARD_CONTROL_SIGNATURE_ATTRIBUTES = Object.freeze([
-  "id",
-  "class",
-  "role",
-  "type",
-  "value",
-  "disabled",
-  "hidden",
-  "aria-disabled",
-  "aria-hidden",
-  "aria-pressed",
-  "aria-selected",
-  "data-state",
-  "data-status",
-]);
-
-function buildBoardControlsSignature(rootNode) {
-  if (!rootNode) {
-    return "";
-  }
-
-  const entries = [];
-  const queue = [{ node: rootNode, depth: 0 }];
-  while (queue.length) {
-    const { node, depth } = queue.shift();
-    if (!node || Number(node.nodeType) !== 1) {
-      continue;
-    }
-
-    const attributes = BOARD_CONTROL_SIGNATURE_ATTRIBUTES.map((name) => {
-      const attributeValue = node.getAttribute?.(name);
-      const propertyValue = ["disabled", "hidden", "value"].includes(name)
-        ? String(node?.[name] ?? "")
-        : "";
-      const serializedAttributeValue =
-        attributeValue === null ? "0" : `1:${String(attributeValue)}`;
-      return `${name}=${serializedAttributeValue}:${propertyValue}`;
-    }).join(";");
-    const children = Array.from(node.children || []);
-    const leafText = children.length
-      ? ""
-      : String(node.textContent || "").replaceAll(/\s+/g, " ").trim();
-    entries.push(
-      `${depth}:${String(node.tagName || "").toLowerCase()}:${attributes}:text=${leafText}`
-    );
-    children.forEach((child) => queue.push({ node: child, depth: depth + 1 }));
-  }
-  return entries.join("|");
-}
-
-function clearBoardControlsMirror(themeState = {}) {
-  const portalState = getBoardControlsPortalState(themeState);
-  if (!portalState) {
-    return;
-  }
-
-  (portalState.mirrorClickHandlers || []).forEach(({ node, handler }) => {
-    try {
-      node?.removeEventListener?.("click", handler);
-    } catch (_) {
-      // Keep mirror cleanup fail-soft.
-    }
-  });
-  portalState.mirrorClickHandlers = [];
-  try {
-    portalState.resizeObserver?.unobserve?.(portalState.mirrorControlsNode);
-  } catch (_) {
-    // Keep mirror cleanup fail-soft.
-  }
-  portalState.mirrorControlsNode?.remove?.();
-  portalState.mirrorControlsNode = null;
-  portalState.mirrorSourceNode = null;
-  portalState.mirrorSourceSignature = "";
-}
-
-function syncBoardControlsMirror(themeState = {}) {
-  const portalState = getBoardControlsPortalState(themeState);
-  const sourceControlsNode = portalState?.sourceControlsNode || null;
-  const portalNode = portalState?.portalNode || null;
-  if (!portalState || !sourceControlsNode || !portalNode) {
-    return false;
-  }
-
-  const sourceSignature = buildBoardControlsSignature(sourceControlsNode);
-  if (
-    portalState.mirrorControlsNode?.isConnected !== false &&
-    portalState.mirrorControlsNode &&
-    portalState.mirrorSourceNode === sourceControlsNode &&
-    portalState.mirrorSourceSignature === sourceSignature
-  ) {
-    return false;
-  }
-
-  clearBoardControlsMirror(themeState);
-
-  const mirrorControlsNode = sourceControlsNode.cloneNode?.(true) || null;
-  if (!mirrorControlsNode) {
-    return false;
-  }
-
-  mirrorControlsNode.classList?.add?.(BOARD_CONTROLS_CLASS);
-  mirrorControlsNode.setAttribute?.("aria-hidden", "true");
-  portalNode.appendChild(mirrorControlsNode);
-
-  const sourceActionNodes = getControlActionNodes(sourceControlsNode);
-  const mirrorActionNodes = getControlActionNodes(mirrorControlsNode);
-  const mirrorClickHandlers = mirrorActionNodes.map((node, index) => {
-    const sourceNode = sourceActionNodes[index] || null;
-    const handler = (event) => {
-      event?.preventDefault?.();
-      event?.stopPropagation?.();
-      sourceNode?.click?.();
-    };
-    node.addEventListener?.("click", handler);
-    return {
-      handler,
-      node,
-    };
-  });
-
-  portalState.mirrorClickHandlers = mirrorClickHandlers;
-  portalState.mirrorControlsNode = mirrorControlsNode;
-  portalState.mirrorSourceNode = sourceControlsNode;
-  portalState.mirrorSourceSignature = sourceSignature;
-  try {
-    portalState.resizeObserver?.observe?.(mirrorControlsNode);
-  } catch (_) {
-    // Keep resize synchronization fail-soft.
-  }
-  return true;
-}
-
-function syncBoardControlsPortal(context = {}) {
-  const documentRef = context.documentRef;
-  const themeState = context.themeState || {};
-  if (!documentRef) {
-    return false;
-  }
-
-  const existingPortalState = getBoardControlsPortalState(themeState);
-  if (
-    existingPortalState &&
-    existingPortalState?.portalNode?.isConnected !== false &&
-    existingPortalState?.sourceControlsNode?.isConnected !== false
-  ) {
-    removeStaleBoardControlsPortals(documentRef, existingPortalState.portalNode);
-    syncBoardControlsMirror(themeState);
-    ensureBoardControlsPortalPositionSync(context);
-    return true;
-  }
-
-  if (existingPortalState) {
-    restoreBoardControlsPortal(themeState);
-  }
-  removeStaleBoardControlsPortals(documentRef);
-
-  const sourceControlsNode = findBoardControls(documentRef);
-  const rootNode = getRootContainer(documentRef);
-  if (!sourceControlsNode || !rootNode || rootNode.contains?.(sourceControlsNode) !== true) {
-    return false;
-  }
-
-  const controlsRect = getElementRect(sourceControlsNode);
-  if (!controlsRect) {
-    return false;
-  }
-
-  const portalNode = createBoardControlsPortal(documentRef, rootNode);
-  if (!portalNode) {
-    portalNode?.remove?.();
-    return false;
-  }
-
-  themeState.boardControlsPortal = {
-    mirrorClickHandlers: [],
-    mirrorControlsNode: null,
-    mirrorSourceNode: null,
-    mirrorSourceSignature: "",
-    portalNode,
-    resizeListener: null,
-    resizeObserver: null,
-    sourceControlsNode,
-    windowRef: null,
-  };
-
-  syncBoardControlsMirror(themeState);
-  ensureBoardControlsPortalPositionSync(context);
-  return true;
-}
-
-function restoreBoardControlsPortal(themeState = {}) {
-  const portalState = getBoardControlsPortalState(themeState);
-  if (!portalState) {
-    return false;
-  }
-
-  detachBoardControlsPortalResizeObserver(themeState);
-  detachBoardControlsPortalResizeListener(themeState);
-  clearBoardControlsMirror(themeState);
-
-  portalState.portalNode?.remove?.();
-  themeState.boardControlsPortal = null;
-  return true;
-}
 
 function ensureTurnResizeObserver(context = {}) {
   const themeState = context.themeState || {};
@@ -1392,7 +1028,6 @@ export function createX01TwoPlayerThemePolicy() {
         measuringPlayerNames: false,
         nameMeasureContext: null,
         boardVisibilityOverride: null,
-        boardControlsPortal: null,
         lastActivePlayerIndex: Number.NaN,
         hydrationPlayerCardNodes: [],
         hydrationRechecksInitialized: false,
@@ -1418,12 +1053,10 @@ export function createX01TwoPlayerThemePolicy() {
         resolvedConfig
       );
       ensureTurnResizeObserver(context);
-      syncBoardControlsPortal(context);
       scheduleHydrationRechecks(context);
     },
     onDeactivate(context = {}) {
       clearHydrationRechecks(context.themeState);
-      restoreBoardControlsPortal(context.themeState);
       restoreThemeBoardVisibility(context.documentRef, context.themeState);
       detachTurnResizeObserver(context.themeState);
       try {

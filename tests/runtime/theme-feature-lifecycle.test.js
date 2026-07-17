@@ -1347,6 +1347,20 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
   const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  const modeControls = documentRef.createElement("div");
+  const liveTab = documentRef.createElement("div");
+  const virtualTab = documentRef.createElement("div");
+  liveTab.setAttribute("role", "tab");
+  liveTab.setAttribute("aria-label", "Live Mode");
+  liveTab.setAttribute("aria-selected", "false");
+  virtualTab.setAttribute("role", "tab");
+  virtualTab.setAttribute("aria-label", "Virtual Board");
+  virtualTab.setAttribute("aria-selected", "true");
+  let liveClickCount = 0;
+  liveTab.addEventListener("click", () => { liveClickCount += 1; });
+  modeControls.appendChild(liveTab);
+  modeControls.appendChild(virtualTab);
+  boardNodes.contentLeft.appendChild(modeControls);
   const windowRef = createMatchWindow(documentRef, "theme-x01-board-hooks");
   const runtime = createBootstrap({
     windowRef,
@@ -1361,6 +1375,21 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   await wait(5);
 
   assertThemeHookState(boardNodes, true);
+  assert.equal(
+    modeControls.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardInputModeControls),
+    true
+  );
+  const portalNode = documentRef.querySelector(
+    '[data-ad-ext-theme-board-controls-portal="true"]'
+  );
+  const mirrorGroups = portalNode?.querySelectorAll("[data-ad-ext-board-controls-kind]") || [];
+  const mirrorLiveTab = mirrorGroups
+    .find((node) => node.getAttribute("data-ad-ext-board-controls-kind") === "input-mode")
+    ?.querySelector("[role='tab']");
+  assert.equal(mirrorGroups.length, 2);
+  assert.ok(mirrorLiveTab);
+  mirrorLiveTab.click();
+  assert.equal(liveClickCount, 1);
   assert.equal(
     boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
     "620px"
@@ -1401,9 +1430,82 @@ test("theme-x01 applies board layout hooks when board exists and removes them on
   runtime.stop();
   assertThemeHookState(boardNodes, false);
   assert.equal(
+    modeControls.classList.contains(THEME_LAYOUT_HOOK_CLASSES.boardInputModeControls),
+    false
+  );
+  assert.equal(modeControls.getAttribute("aria-hidden"), null);
+  assert.equal(
+    documentRef.querySelector('[data-ad-ext-theme-board-controls-portal="true"]'),
+    null
+  );
+  assert.equal(
     boardNodes.boardCanvas.style.getPropertyValue("--ad-ext-theme-board-size"),
     ""
   );
+});
+
+test("shared board-control portal stays available across supported theme variants", async () => {
+  const cases = [
+    { configKey: "x01", variant: "501" },
+    { configKey: "gotcha", variant: "Gotcha" },
+    { configKey: "shanghai", variant: "Shanghai" },
+    { configKey: "bermuda", variant: "Bermuda 701" },
+    { configKey: "cricket", variant: "Cricket" },
+    { configKey: "bullOff", variant: "Bull-off Finals" },
+  ];
+
+  for (const entry of cases) {
+    const documentRef = new FakeDocument();
+    documentRef.variantElement.textContent = entry.variant;
+    const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+    const modeButtons = createBoardModeButtons(documentRef, "live");
+    boardNodes.contentLeft.appendChild(modeButtons.live.parentElement);
+    const runtime = createBootstrap({
+      windowRef: createMatchWindow(documentRef, `theme-board-controls-${entry.configKey}`),
+      documentRef,
+      config: createThemeConfig(entry.configKey),
+    });
+
+    runtime.start();
+    await wait(5);
+    const portalNode = documentRef.querySelector(
+      '[data-ad-ext-theme-board-controls-portal="true"]'
+    );
+    assert.ok(portalNode, entry.configKey);
+    assert.equal(
+      portalNode.querySelectorAll('[data-ad-ext-board-controls-kind="input-mode"]').length,
+      1,
+      entry.configKey
+    );
+
+    runtime.stop();
+    assert.equal(
+      documentRef.querySelector('[data-ad-ext-theme-board-controls-portal="true"]'),
+      null,
+      entry.configKey
+    );
+  }
+});
+
+test("board controls remain untouched when no configured theme is active", async () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.textContent = "Cricket";
+  const boardNodes = createBoardFixture(documentRef, { withContentSlot: true });
+  const modeButtons = createBoardModeButtons(documentRef, "live");
+  const modeControls = modeButtons.live.parentElement;
+  boardNodes.contentLeft.appendChild(modeControls);
+  const runtime = createBootstrap({
+    windowRef: createMatchWindow(documentRef, "theme-board-controls-inactive"),
+    documentRef,
+    config: createThemeConfig("x01"),
+  });
+
+  runtime.start();
+  await wait(5);
+  assert.equal(documentRef.querySelector('[data-ad-ext-theme-board-controls-portal="true"]'), null);
+  assert.equal(modeControls.getAttribute("aria-hidden"), null);
+  assert.equal(modeButtons.live.getAttribute("tabindex"), null);
+  runtime.stop();
 });
 
 test("theme-x01 keeps info-style content slot layout hooks stable across mutations", async () => {

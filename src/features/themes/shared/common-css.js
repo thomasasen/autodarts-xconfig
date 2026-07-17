@@ -449,6 +449,61 @@ div.css-y3hfdd:not([data-ad-ext-cricket-stack="true"]) > .css-1igwmid{
   pointer-events: auto !important;
 }
 
+.ad-ext-theme-board-input-mode-controls{
+  position: relative !important;
+  z-index: 3 !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+.ad-ext-theme-board-controls-portal{
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483000 !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+}
+
+.ad-ext-theme-board-controls-mirror-group{
+  position: fixed !important;
+  right: auto !important;
+  bottom: auto !important;
+  max-width: calc(100vw - 0.5rem) !important;
+  max-height: calc(100vh - 0.5rem) !important;
+  z-index: 2147483000 !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+.ad-ext-theme-board-controls-mirror-group > .ad-ext-theme-board-controls,
+.ad-ext-theme-board-controls-mirror-group > .ad-ext-theme-board-input-mode-controls{
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+.ad-ext-theme-board-controls-mirror-group button,
+.ad-ext-theme-board-controls-mirror-group input,
+.ad-ext-theme-board-controls-mirror-group [role="button"],
+.ad-ext-theme-board-controls-mirror-group [role="tab"],
+.ad-ext-theme-board-controls-mirror-group [role="radio"],
+.ad-ext-theme-board-controls-mirror-group [role="switch"],
+.ad-ext-theme-board-controls-mirror-group [role="checkbox"]{
+  pointer-events: auto !important;
+}
+
+.ad-ext-theme-board-controls-mirror-group :focus-visible{
+  outline: 0.18rem solid rgba(126, 220, 255, 0.98) !important;
+  outline-offset: 0.16rem !important;
+}
+
 .ad-ext-theme-board-viewport{
   min-height: 0 !important;
   height: 100% !important;

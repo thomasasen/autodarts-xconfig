@@ -19,6 +19,11 @@ direkt zu einer versionierten Release-Sektion.
 - Nutzerwirkung: Laufende Partien reagieren bei vielen gleichzeitigen DOM-Änderungen flüssiger; Themes, X01-Spieler-Effekte, Checkout-Anzeigen, Treffer-Effekte und Bull-Sound verursachen weniger unnötige Hintergrundarbeit, ohne Funktionen oder Darstellung einzuschränken.
   Technik: Revisionsbasierte Game-State- und Theme-Caches, eng begrenzte Spieler- und Turn-Surface-Observer sowie ein signaturbasierter X01-Zweispieler-Control-Mirror reduzieren Clones, CSS-Erzeugung, DOM-Scans, Scheduler-Aufrufe und Mirror-Neuaufbauten; zählerbasierte Regressionstests sichern die Hotpaths ab.
 
+### Fixed
+
+- Nutzerwirkung: Live-, Virtual- und weitere verfügbare Board-Eingabemodi bleiben in allen aktiven Themes sichtbar, per Maus und Tastatur erreichbar und werden nur angeboten, wenn Autodarts eine funktionierende Host-Aktion bereitstellt.
+  Technik: Gemeinsame semantische Control-Erkennung, plurale Layout-Gruppen und ein zustandsgepatchtes Theme-Portal ersetzen das X01-Zweispieler-Index-Mirroring und sichern Tabs, Radios, Switches, Checkboxen, React-Neurendering sowie vollständiges Cleanup ab.
+
 ## [2.4.14] - 2026-07-16
 
 ### Fixed

@@ -1,5 +1,20 @@
 import { getRenderableArea, isNodeVisible } from "./dom-visibility.js";
 
+export const BOARD_INPUT_MODE_CONTROL_SELECTOR = Object.freeze([
+  "button",
+  "[role='button']",
+  "[role='tab']",
+  "[role='radio']",
+  "[role='switch']",
+  "[role='checkbox']",
+  "input[type='button']",
+  "input[type='submit']",
+  "input[type='radio']",
+  "input[type='checkbox']",
+].join(","));
+export const BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE =
+  "data-ad-ext-board-controls-source-mirrored";
+
 const ACTIVE_ATTRIBUTE_RULES = Object.freeze([
   Object.freeze({ name: "aria-pressed", values: ["true"] }),
   Object.freeze({ name: "aria-selected", values: ["true"] }),
@@ -15,9 +30,20 @@ export const BOARD_INPUT_MODE_ATTRIBUTE_FILTER = Object.freeze([
   ...new Set([
     ...ACTIVE_ATTRIBUTE_RULES.map((rule) => rule.name),
     "checked",
+    "selected",
+    "hidden",
+    "disabled",
     "aria-label",
+    "aria-labelledby",
     "title",
     "aria-description",
+    "aria-hidden",
+    "aria-disabled",
+    "data-disabled",
+    "data-hidden",
+    "data-label",
+    "data-status",
+    "data-tooltip",
   ]),
 ]);
 
@@ -32,7 +58,11 @@ const MODE_DEFINITIONS = Object.freeze([
   }),
   Object.freeze({
     key: "live",
-    labels: ["live-modus", "live mode"],
+    labels: ["live-modus", "live mode", "live board", "live-board", "liveboard"],
+  }),
+  Object.freeze({
+    key: "virtual",
+    labels: ["virtual board", "virtual-board", "virtuelles board", "virtuelle tafel"],
   }),
 ]);
 
@@ -43,13 +73,28 @@ function normalizeText(value) {
     .replaceAll(/\s+/g, " ");
 }
 
-function getNodeLabelCandidates(node) {
+function getLabelledByText(node) {
+  const documentRef = node?.ownerDocument || null;
+  const labelledBy = String(node?.getAttribute?.("aria-labelledby") || "").trim();
+  if (!documentRef || !labelledBy || typeof documentRef.getElementById !== "function") {
+    return "";
+  }
+
+  return labelledBy
+    .split(/\s+/)
+    .map((id) => documentRef.getElementById(id)?.textContent || "")
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function getBoardInputModeLabelCandidates(node) {
   if (!node || typeof node !== "object") {
     return [];
   }
 
   const values = [
     node.getAttribute?.("aria-label"),
+    getLabelledByText(node),
     node.getAttribute?.("title"),
     node.getAttribute?.("aria-description"),
     node.dataset?.tooltip,
@@ -66,7 +111,7 @@ function nodeMatchesMode(node, modeDefinition) {
     return false;
   }
 
-  const labelCandidates = getNodeLabelCandidates(node);
+  const labelCandidates = getBoardInputModeLabelCandidates(node);
   if (!labelCandidates.length) {
     return false;
   }
@@ -76,12 +121,96 @@ function nodeMatchesMode(node, modeDefinition) {
   });
 }
 
-export function isBoardInputModeControl(node) {
-  if (!node) {
+export function isBoardInputModeInteractiveControl(node) {
+  if (!node || typeof node.matches !== "function") {
     return false;
   }
 
-  return MODE_DEFINITIONS.some((modeDefinition) => nodeMatchesMode(node, modeDefinition));
+  try {
+    return node.matches(BOARD_INPUT_MODE_CONTROL_SELECTOR);
+  } catch (_) {
+    return false;
+  }
+}
+
+export function getBoardInputModeKey(node) {
+  if (!node) {
+    return "";
+  }
+
+  return MODE_DEFINITIONS.find((modeDefinition) => nodeMatchesMode(node, modeDefinition))?.key || "";
+}
+
+export function isBoardInputModeControl(node) {
+  return isBoardInputModeInteractiveControl(node) && Boolean(getBoardInputModeKey(node));
+}
+
+function hasUnavailableDataState(node) {
+  const dataFlagEnabled = (name) => {
+    const rawValue = node?.getAttribute?.(name);
+    if (rawValue === null || rawValue === undefined) {
+      return false;
+    }
+    return !["false", "0", "off", "no"].includes(normalizeText(rawValue));
+  };
+  const stateValues = [
+    node?.getAttribute?.("data-state"),
+    node?.getAttribute?.("data-status"),
+  ].map(normalizeText);
+  return (
+    dataFlagEnabled("data-disabled") ||
+    dataFlagEnabled("data-hidden") ||
+    stateValues.some((value) => ["disabled", "hidden", "unavailable"].includes(value))
+  );
+}
+
+export function isBoardInputControlAvailable(node) {
+  const mirroredSource = node?.closest?.(
+    `[${BOARD_CONTROLS_SOURCE_MIRRORED_ATTRIBUTE}="true"]`
+  );
+  if (
+    !isBoardInputModeInteractiveControl(node) ||
+    node.isConnected === false ||
+    (!mirroredSource && !isNodeVisible(node))
+  ) {
+    return false;
+  }
+
+  return !(
+    node.hidden === true ||
+    node.disabled === true ||
+    node.getAttribute?.("hidden") !== null ||
+    (!mirroredSource && normalizeText(node.getAttribute?.("aria-hidden")) === "true") ||
+    normalizeText(node.getAttribute?.("aria-disabled")) === "true" ||
+    hasUnavailableDataState(node)
+  );
+}
+
+export function isBoardInputModeControlAvailable(node) {
+  return isBoardInputModeControl(node) && isBoardInputControlAvailable(node);
+}
+
+export function collectBoardInputModeControls(rootNode, options = {}) {
+  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
+    return [];
+  }
+
+  const candidates = [];
+  if (isBoardInputModeControl(rootNode)) {
+    candidates.push(rootNode);
+  }
+
+  try {
+    candidates.push(...Array.from(rootNode.querySelectorAll(BOARD_INPUT_MODE_CONTROL_SELECTOR)));
+  } catch (_) {
+    return candidates;
+  }
+
+  return [...new Set(candidates)].filter((node) => {
+    return options.availableOnly === true
+      ? isBoardInputModeControlAvailable(node)
+      : isBoardInputModeControl(node);
+  });
 }
 
 function isNodeActive(node) {
@@ -117,29 +246,7 @@ function collectModeNodes(documentRef) {
     return [];
   }
 
-  const selectors = [
-    "button",
-    "[role='button']",
-    "[role='tab']",
-    "[role='radio']",
-    "input[type='radio']",
-    "[aria-label]",
-    "[title]",
-  ];
-  const seen = new Set();
-  const nodes = [];
-
-  selectors.forEach((selector) => {
-    Array.from(documentRef.querySelectorAll(selector)).forEach((node) => {
-      if (!node || seen.has(node)) {
-        return;
-      }
-      seen.add(node);
-      nodes.push(node);
-    });
-  });
-
-  return nodes;
+  return collectBoardInputModeControls(documentRef);
 }
 
 export function getActiveBoardInputMode(documentRef) {
@@ -152,23 +259,21 @@ export function getActiveBoardInputMode(documentRef) {
   let bestScore = -1;
 
   nodes.forEach((node, index) => {
-    const modeDefinition = MODE_DEFINITIONS.find((definition) => nodeMatchesMode(node, definition));
-    if (!modeDefinition || !isNodeActive(node)) {
+    const modeKey = getBoardInputModeKey(node);
+    if (!modeKey || !isNodeActive(node) || !isNodeVisible(node)) {
       return;
     }
 
     const activeStrength = getNodeActiveStrength(node);
-    const visible = isNodeVisible(node);
     const area = getRenderableArea(node);
     const score =
-      (visible ? 10_000_000 : 0) +
       activeStrength * 100_000 +
       Math.min(area, 99_999) +
       index;
 
     if (score > bestScore) {
       bestScore = score;
-      bestCandidate = modeDefinition.key;
+      bestCandidate = modeKey;
     }
   });
 
