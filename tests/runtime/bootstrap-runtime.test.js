@@ -234,6 +234,39 @@ test("runtime public config API persists updates and survives feature toggles", 
   runtime.stop();
 });
 
+test("runtime previews settings imports without writes and persists confirmed compatible values", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  assert.equal(typeof runtime.createSettingsExport, "function");
+  assert.equal(typeof runtime.previewSettingsImport, "function");
+  assert.equal(typeof runtime.importSettings, "function");
+
+  const exported = await runtime.createSettingsExport({ includeAssets: false });
+  exported.payload.features.tvBoardZoom.enabled = true;
+  exported.payload.features.tvBoardZoom.settings.zoomLevel = 3.15;
+  exported.payload.features.tvBoardZoom.settings.zoomSpeed = "unsupported";
+  const beforePreview = localStorage.getItem(CONFIG_STORAGE_KEY);
+
+  const preview = await runtime.previewSettingsImport(exported.payload, { mode: "merge" });
+  assert.equal(localStorage.getItem(CONFIG_STORAGE_KEY), beforePreview);
+  assert.equal(preview.status, "ready");
+  assert.ok(preview.counts.applied >= 2);
+  assert.ok(preview.counts.skipped >= 1);
+
+  const imported = await runtime.importSettings(exported.payload, { mode: "merge" });
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(imported.report.status, "ready");
+  assert.equal(storedConfig.featureToggles.tvBoardZoom, true);
+  assert.equal(storedConfig.features.tvBoardZoom.zoomLevel, 3.15);
+  assert.equal(storedConfig.features.tvBoardZoom.zoomSpeed, "mittel");
+  assert.equal(runtime.getSnapshot().features["tv-board-zoom"].enabled, true);
+
+  runtime.stop();
+});
+
 test("runtime syncs persisted config changes from another window via storage events", async () => {
   const localStorage = new FakeStorage();
   const firstDocument = new FakeDocument();
@@ -502,8 +535,14 @@ test("runtime rejects theme background writes when persistence fails", async () 
     runtime.setThemeBackgroundImage("x01", "data:image/png;base64,AAAA")
   );
 
+  const exported = await runtime.createSettingsExport({ includeAssets: false });
+  exported.payload.features.tvBoardZoom.enabled = true;
+  exported.payload.features.tvBoardZoom.settings.zoomLevel = 3.15;
+  await assert.rejects(() => runtime.importSettings(exported.payload, { mode: "merge" }));
+
   const snapshot = runtime.getSnapshot();
   assert.equal(snapshot.features["theme-x01"].config.backgroundImageDataUrl, "");
+  assert.equal(snapshot.features["tv-board-zoom"].enabled, false);
 
   runtime.stop();
 });

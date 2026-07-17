@@ -428,6 +428,24 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-modal-actions{display:flex;align-items:flex-start;gap:.55rem}
 #${PANEL_HOST_ID} .ad-xconfig-modal-title{margin:0;font-size:1.05rem;line-height:1.3}
 #${PANEL_HOST_ID} .ad-xconfig-modal-subtitle{margin:.35rem 0 0;color:rgba(255,255,255,.75);font-size:.82rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-dialog{width:min(40rem,100%);display:grid;gap:.8rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-copy{margin:0;color:rgba(235,243,255,.88);font-size:.86rem;line-height:1.45}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-option{display:flex;align-items:center;gap:.58rem;padding:.7rem;border-radius:10px;border:1px solid rgba(126,216,255,.32);background:rgba(58,148,255,.1);font-size:.86rem;font-weight:700;cursor:pointer}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-option input{width:1.05rem;height:1.05rem;accent-color:#69d4ff}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-source{margin:0;color:rgba(220,234,250,.72);font-size:.76rem;line-height:1.4}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-modes{display:flex;flex-wrap:wrap;gap:.5rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-modes .ad-xconfig-btn[data-active="true"]{border-color:rgba(126,220,255,.98);background:rgba(58,148,255,.34);box-shadow:0 0 0 1px rgba(126,220,255,.18)}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-stat{padding:.5rem .58rem;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:.78rem;font-weight:700}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-ok{margin:0;padding:.58rem .68rem;border-radius:8px;border:1px solid rgba(58,180,122,.5);background:rgba(58,180,122,.14);color:rgba(184,255,216,.98);font-size:.8rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-issue-groups{max-height:15rem;overflow:auto;display:grid;gap:.65rem;padding-right:.2rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-issue-group{display:grid;gap:.28rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-issue-title{margin:0;font-size:.75rem;color:rgba(235,243,255,.94)}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-issues{margin:0;padding:.1rem 0 .1rem 1.25rem;display:grid;gap:.42rem;font-size:.78rem;line-height:1.4}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-issue--fatal,#${PANEL_HOST_ID} .ad-xconfig-transfer-issue--skipped{color:rgba(255,202,202,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-issue--migrated,#${PANEL_HOST_ID} .ad-xconfig-transfer-issue--warning{color:rgba(187,232,255,.98)}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-actions{justify-content:flex-end;margin-top:.15rem}
+#${PANEL_HOST_ID} .ad-xconfig-transfer-actions .ad-xconfig-btn:disabled{opacity:.5;cursor:not-allowed}
 #${PANEL_HOST_ID} .ad-xconfig-modal-body{margin-top:.95rem;display:grid;gap:.65rem}
 #${PANEL_HOST_ID} .ad-xconfig-settings-section{display:grid;gap:.65rem}
 #${PANEL_HOST_ID} .ad-xconfig-settings-section + .ad-xconfig-settings-section{margin-top:.15rem}

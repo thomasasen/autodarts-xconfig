@@ -16,6 +16,15 @@ export function buildShellRenderSignature(state, features, routeActive) {
     activeSettingsFeatureKey: String(state?.activeSettingsFeatureKey || ""),
     noticeType: String(state?.notice?.type || ""),
     noticeMessage: String(state?.notice?.message || ""),
+    settingsTransfer: {
+      dialog: String(state?.settingsTransfer?.dialog || ""),
+      includeAssets: state?.settingsTransfer?.includeAssets !== false,
+      importMode: String(state?.settingsTransfer?.importMode || "merge"),
+      fileName: String(state?.settingsTransfer?.fileName || ""),
+      fileSize: Number(state?.settingsTransfer?.fileSize || 0),
+      busy: Boolean(state?.settingsTransfer?.busy),
+      report: state?.settingsTransfer?.report || null,
+    },
     updateStatus: {
       capable: Boolean(state?.updateStatus?.capable),
       status: String(state?.updateStatus?.status || ""),

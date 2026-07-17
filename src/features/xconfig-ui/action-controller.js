@@ -551,6 +551,13 @@ function buildCommandHandlers(controller) {
       });
     }],
     ["install-update", () => handleInstallUpdate(controller)],
+    ["open-settings-export", () => controller.openSettingsExport()],
+    ["start-settings-export", () => controller.startSettingsExport()],
+    ["open-settings-import", () => controller.openSettingsImport()],
+    ["set-settings-import-mode", (actionNode) =>
+      controller.setSettingsImportMode(actionNode?.getAttribute?.("data-import-mode"))],
+    ["confirm-settings-import", () => controller.confirmSettingsImport()],
+    ["close-settings-transfer", () => controller.closeSettingsTransfer()],
     ["reset", () => handleResetConfig(controller)],
     ["apply-recommended-defaults", () => handleApplyRecommendedDefaults(controller)],
     ["set-feature", (actionNode, feature) => handleSetFeature(controller, actionNode, feature)],
@@ -641,6 +648,12 @@ function buildShellActionControllerContext(options = {}) {
     syncThemeBackgroundIndicators: resolveOptionalFunction(options.syncThemeBackgroundIndicators, () => {}),
     syncTurnDartImageIndicators: resolveOptionalFunction(options.syncTurnDartImageIndicators, () => {}),
     setThemeActionFeedback: resolveOptionalFunction(options.setThemeActionFeedback, () => {}),
+    openSettingsExport: resolveOptionalFunction(options.openSettingsExport, () => {}),
+    startSettingsExport: resolveOptionalFunction(options.startSettingsExport, () => {}),
+    openSettingsImport: resolveOptionalFunction(options.openSettingsImport, () => {}),
+    setSettingsImportMode: resolveOptionalFunction(options.setSettingsImportMode, () => {}),
+    confirmSettingsImport: resolveOptionalFunction(options.confirmSettingsImport, () => {}),
+    closeSettingsTransfer: resolveOptionalFunction(options.closeSettingsTransfer, () => {}),
   };
 }
 

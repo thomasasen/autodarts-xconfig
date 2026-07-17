@@ -234,6 +234,31 @@ export function createConfigStore(options = {}) {
     });
   }
 
+  async function transact(transform) {
+    return enqueueWrite(async () => {
+      const currentConfig = await load();
+      const outcome =
+        typeof transform === "function"
+          ? await transform(currentConfig)
+          : null;
+      if (!outcome || !isObjectLike(outcome.config)) {
+        return {
+          config: currentConfig,
+          persisted: false,
+          result: outcome?.result,
+        };
+      }
+
+      const normalized = normalizeRuntimeConfig(outcome.config);
+      await storage.setValue(CONFIG_STORAGE_KEY, normalized);
+      return {
+        config: normalized,
+        persisted: true,
+        result: outcome.result,
+      };
+    });
+  }
+
   async function importLegacyConfigIfAvailable() {
     return enqueueWrite(async () => {
       const currentStoredConfig = await storage.getValue(CONFIG_STORAGE_KEY, null);
@@ -289,6 +314,7 @@ export function createConfigStore(options = {}) {
     save,
     update,
     reset,
+    transact,
     importLegacyConfigIfAvailable,
   };
 }

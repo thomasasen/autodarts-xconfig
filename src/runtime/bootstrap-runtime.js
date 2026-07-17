@@ -3,11 +3,16 @@ import {
   ConfigPersistenceError,
   createConfigStore,
 } from "../config/config-store.js";
+import {
+  analyzeSettingsImport,
+  createSettingsExport as createSettingsExportPayload,
+} from "../config/config-transfer.js";
 import { setNestedValue, splitFeaturePath } from "../config/feature-path-utils.js";
-import { createBootstrap } from "../core/bootstrap.js";
+import { API_VERSION, createBootstrap } from "../core/bootstrap.js";
 import { createRecommendedRuntimeConfig } from "../config/runtime-config.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
+import { xconfigDescriptors } from "../features/xconfig-ui/descriptors.js";
 import {
   normalizeThemeBackgroundHost,
   VALID_THEME_BACKGROUND_HOSTS,
@@ -228,6 +233,48 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       return runtime.getSnapshot();
     }
 
+    async function createSettingsExport(options = {}) {
+      const currentConfig = await configStore.load();
+      return createSettingsExportPayload(currentConfig, {
+        ...options,
+        appVersion: API_VERSION,
+        descriptors: xconfigDescriptors,
+      });
+    }
+
+    async function previewSettingsImport(payload, options = {}) {
+      const currentConfig = await configStore.load();
+      const analysis = analyzeSettingsImport(payload, currentConfig, {
+        ...options,
+        appVersion: API_VERSION,
+        descriptors: xconfigDescriptors,
+      });
+      return analysis.report;
+    }
+
+    async function importSettings(payload, options = {}) {
+      const transaction = await configStore.transact((currentConfig) => {
+        const analysis = analyzeSettingsImport(payload, currentConfig, {
+          ...options,
+          appVersion: API_VERSION,
+          descriptors: xconfigDescriptors,
+        });
+        return {
+          config: analysis.report.status === "ready" ? analysis.config : null,
+          result: analysis.report,
+        };
+      });
+
+      if (transaction.persisted) {
+        rememberStoredConfigSnapshot();
+        runtime.updateConfig(transaction.config);
+      }
+      return {
+        report: transaction.result,
+        snapshot: runtime.getSnapshot(),
+      };
+    }
+
     async function persistentSetFeatureEnabled(featureRef, enabled) {
       const normalizedFeatureRef = String(featureRef || "");
       const snapshot = runtime.getSnapshot();
@@ -303,6 +350,9 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       saveConfig,
       resetConfig,
       applyRecommendedDefaults,
+      createSettingsExport,
+      previewSettingsImport,
+      importSettings,
       setFeatureEnabled: persistentSetFeatureEnabled,
       runFeatureAction: (featureRef, actionId, options) =>
         runtime.runFeatureAction(featureRef, actionId, options),
@@ -343,6 +393,9 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       saveConfig,
       resetConfig,
       applyRecommendedDefaults,
+      createSettingsExport,
+      previewSettingsImport,
+      importSettings,
       setFeatureEnabled: persistentSetFeatureEnabled,
       runFeatureAction: (featureRef, actionId, options) =>
         runtime.runFeatureAction(featureRef, actionId, options),

@@ -2060,9 +2060,13 @@ test("xConfig shell renders reset and recommended default header actions", async
   const recommendedButton = documentRef.querySelector(
     "[data-adxconfig-action='apply-recommended-defaults']"
   );
+  const exportButton = documentRef.querySelector("[data-adxconfig-action='open-settings-export']");
+  const importButton = documentRef.querySelector("[data-adxconfig-action='open-settings-import']");
 
   assert.ok(resetButton);
   assert.ok(recommendedButton);
+  assert.ok(exportButton);
+  assert.ok(importButton);
   assert.equal(resetButton.classList.contains("ad-xconfig-btn--danger"), true);
   assert.equal(recommendedButton.classList.contains("ad-xconfig-btn--primary"), true);
   assert.equal(
@@ -2071,6 +2075,72 @@ test("xConfig shell renders reset and recommended default header actions", async
   );
 
   runtime.stop();
+});
+
+test("xConfig shell previews partial settings imports and applies the selected mode", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+
+    clickHeaderAction(documentRef, "open-settings-export");
+    await waitFor(() => Boolean(documentRef.querySelector("[data-adxconfig-transfer-dialog='export']")));
+    assert.ok(documentRef.querySelector("[data-adxconfig-transfer-include-assets='true']"));
+    clickHeaderAction(documentRef, "close-settings-transfer");
+    await waitFor(() => !documentRef.querySelector("[data-adxconfig-transfer-dialog]"));
+
+    const exported = await runtime.createSettingsExport({ includeAssets: false });
+    exported.payload.features.tvBoardZoom.enabled = true;
+    exported.payload.features.tvBoardZoom.settings.zoomLevel = 3.15;
+    exported.payload.features.tvBoardZoom.settings.zoomSpeed = "warp";
+
+    clickHeaderAction(documentRef, "open-settings-import");
+    const fileInput = documentRef.body.children.find((node) => node.tagName === "INPUT");
+    assert.ok(fileInput);
+    fileInput.files = [{
+      name: "teilimport.json",
+      size: 2048,
+      text: async () => JSON.stringify(exported.payload),
+    }];
+    fileInput.onchange();
+
+    await waitFor(() => {
+      const dialog = documentRef.querySelector("[data-adxconfig-transfer-dialog='import']");
+      const confirm = documentRef.querySelector("[data-adxconfig-action='confirm-settings-import']");
+      return Boolean(dialog && confirm && !confirm.disabled);
+    }, { timeoutMs: 1000, intervalMs: 8 });
+
+    const stats = documentRef.querySelectorAll(".ad-xconfig-transfer-stat");
+    assert.ok(stats.some((node) => String(node.textContent).includes("Ausgelassen: 1")));
+    assert.ok(documentRef.querySelector(".ad-xconfig-transfer-issue--skipped"));
+
+    const replaceButton = documentRef.querySelector(
+      "[data-adxconfig-action='set-settings-import-mode'][data-import-mode='replace']"
+    );
+    replaceButton.click();
+    await waitFor(() => {
+      const active = documentRef.querySelector(
+        "[data-adxconfig-action='set-settings-import-mode'][data-import-mode='replace']"
+      );
+      return active?.getAttribute("data-active") === "true";
+    });
+
+    clickHeaderAction(documentRef, "confirm-settings-import");
+    await waitFor(() => Boolean(documentRef.querySelector("[data-adxconfig-transfer-dialog='result']")), {
+      timeoutMs: 1000,
+      intervalMs: 8,
+    });
+    const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+    assert.equal(storedConfig.featureToggles.tvBoardZoom, true);
+    assert.equal(storedConfig.features.tvBoardZoom.zoomLevel, 3.15);
+    assert.equal(storedConfig.features.tvBoardZoom.zoomSpeed, "mittel");
+  } finally {
+    runtime.stop();
+  }
 });
 
 test("xConfig shell hard reset clears all modules and recommended defaults preserve theme images", async () => {

@@ -113,6 +113,12 @@ test("createShellActionController dispatches navigation and shell-state commands
     navigateBack: () => calls.push("close"),
     openReadme: (_windowRef, featureKey) => calls.push(["readme", featureKey]),
     openChangelog: () => calls.push("changelog"),
+    openSettingsExport: () => calls.push("open-export"),
+    startSettingsExport: () => calls.push("start-export"),
+    openSettingsImport: () => calls.push("open-import"),
+    setSettingsImportMode: (mode) => calls.push(["import-mode", mode]),
+    confirmSettingsImport: () => calls.push("confirm-import"),
+    closeSettingsTransfer: () => calls.push("close-transfer"),
   });
 
   controller.handleAction("open");
@@ -122,6 +128,14 @@ test("createShellActionController dispatches navigation and shell-state commands
   controller.handleAction("close-settings-backdrop");
   controller.handleAction("open-readme", null, { featureKey: "winner-celebration-effect" });
   controller.handleAction("open-changelog");
+  controller.handleAction("open-settings-export");
+  controller.handleAction("start-settings-export");
+  controller.handleAction("open-settings-import");
+  controller.handleAction("set-settings-import-mode", createActionNode({
+    "data-import-mode": "replace",
+  }));
+  controller.handleAction("confirm-settings-import");
+  controller.handleAction("close-settings-transfer");
   controller.handleAction("unknown-action");
 
   assert.deepEqual(calls, [
@@ -132,6 +146,12 @@ test("createShellActionController dispatches navigation and shell-state commands
     "sync",
     ["readme", "winner-celebration-effect"],
     "changelog",
+    "open-export",
+    "start-export",
+    "open-import",
+    ["import-mode", "replace"],
+    "confirm-import",
+    "close-transfer",
   ]);
   assert.equal(state.activeSettingsFeatureKey, "");
 });

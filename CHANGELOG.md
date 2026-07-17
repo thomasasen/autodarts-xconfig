@@ -12,6 +12,13 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.5.0] - 2026-07-17
+
+### Added
+
+- Nutzerwirkung: AD xConfig Einstellungen lassen sich als einzelne JSON-Datei exportieren, vor dem Import prüfen und wahlweise sicher zusammenführen oder vollständig ersetzen; inkompatible Einträge werden einzeln gemeldet, während alle weiterhin gültigen Einstellungen übernommen werden. Eigene Theme- und Dart-Bilder können direkt im Backup mitgesichert werden.
+  Technik: Ein versioniertes Transfer-Schema mit Legacy- und Alias-Migrationen, feldweiser Validierung, geschützten Asset-Grenzen und atomarer Config-Persistenz ergänzt Runtime-API, xConfig-Dialoge, Dokumentation und Regressionstests.
+
 ## [2.4.17] - 2026-07-17
 
 ### Fixed
@@ -1848,7 +1855,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.4.17]: https://github.com/thomasasen/autodarts-xconfig/compare/fffbee4...HEAD
+[2.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/ca6bbdf...HEAD
+[2.4.17]: https://github.com/thomasasen/autodarts-xconfig/compare/fffbee4...ca6bbdf
 [2.4.16]: https://github.com/thomasasen/autodarts-xconfig/compare/74b026d...fffbee4
 [2.4.15]: https://github.com/thomasasen/autodarts-xconfig/compare/99baa67...74b026d
 [2.4.14]: https://github.com/thomasasen/autodarts-xconfig/compare/4511528...99baa67

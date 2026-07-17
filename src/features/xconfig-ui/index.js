@@ -46,6 +46,10 @@ import { createTurnScoreCounterPreviewAdapter } from "./turn-score-preview-adapt
 import { createAvgTrendArrowPreviewAdapter } from "./avg-trend-preview-adapter.js";
 import { createDartboardMarkerHighlightPreviewAdapter } from "./dartboard-marker-highlight-preview-adapter.js";
 import { createX01RemainingScoreBarPreviewController } from "./x01-remaining-score-bar-preview-controller.js";
+import {
+  downloadSettingsExport,
+  selectSettingsImportFile,
+} from "./settings-transfer.js";
 import { styleText } from "./shell-style.js";
 import {
   buildThemeGlobalTypographyPreviewImports,
@@ -209,6 +213,17 @@ function ensureXConfigShell(options = {}) {
     syncHandleType: "",
     notice: { type: "", message: "" },
     noticeTimer: null,
+    settingsTransfer: {
+      dialog: "",
+      includeAssets: true,
+      importMode: "merge",
+      fileName: "",
+      fileSize: 0,
+      payload: "",
+      report: null,
+      busy: false,
+      returnAction: "",
+    },
     shellNode: null,
     renderSignature: "",
     updateStatus: readStoredUpdateStatus({
@@ -255,6 +270,166 @@ function ensureXConfigShell(options = {}) {
       ? runtimeApi.listFeatures()
       : [];
     return Array.isArray(features) ? features : [];
+  }
+
+  function focusTransferReturnAction(action) {
+    if (!action || typeof windowRef.setTimeout !== "function") {
+      return;
+    }
+    windowRef.setTimeout(() => {
+      documentRef
+        .querySelector?.(`[data-adxconfig-action='${action}']`)
+        ?.focus?.();
+    }, 0);
+  }
+
+  function closeSettingsTransfer() {
+    const returnAction = state.settingsTransfer.returnAction;
+    state.settingsTransfer = {
+      dialog: "",
+      includeAssets: true,
+      importMode: "merge",
+      fileName: "",
+      fileSize: 0,
+      payload: "",
+      report: null,
+      busy: false,
+      returnAction: "",
+    };
+    queueSync();
+    focusTransferReturnAction(returnAction);
+  }
+
+  function openSettingsExport() {
+    state.activeSettingsFeatureKey = "";
+    state.settingsTransfer = {
+      ...state.settingsTransfer,
+      dialog: "export",
+      includeAssets: true,
+      report: null,
+      busy: false,
+      returnAction: "open-settings-export",
+    };
+    queueSync();
+  }
+
+  function startSettingsExport() {
+    if (state.settingsTransfer.busy || typeof runtimeApi.createSettingsExport !== "function") {
+      return;
+    }
+    state.settingsTransfer.busy = true;
+    queueSync();
+    Promise.resolve(
+      runtimeApi.createSettingsExport({
+        includeAssets: state.settingsTransfer.includeAssets,
+      })
+    )
+      .then((exportResult) => {
+        downloadSettingsExport({ documentRef, windowRef, exportResult });
+        closeSettingsTransfer();
+        setNotice("success", `Einstellungen exportiert: ${exportResult.fileName}`);
+      })
+      .catch((error) => {
+        state.settingsTransfer.busy = false;
+        setNotice("error", String(error?.message || "Export fehlgeschlagen."));
+        queueSync();
+      });
+  }
+
+  function previewSelectedSettingsImport() {
+    if (
+      !state.settingsTransfer.payload ||
+      typeof runtimeApi.previewSettingsImport !== "function"
+    ) {
+      return;
+    }
+    state.settingsTransfer.busy = true;
+    state.settingsTransfer.report = null;
+    queueSync();
+    Promise.resolve(
+      runtimeApi.previewSettingsImport(state.settingsTransfer.payload, {
+        mode: state.settingsTransfer.importMode,
+      })
+    )
+      .then((report) => {
+        state.settingsTransfer.report = report;
+      })
+      .catch((error) => {
+        state.settingsTransfer.report = {
+          status: "fatal",
+          counts: { applied: 0, migrated: 0, skipped: 0, unchanged: 0, warning: 0, fatal: 1 },
+          issues: [{ status: "fatal", message: String(error?.message || "Importprüfung fehlgeschlagen.") }],
+        };
+      })
+      .finally(() => {
+        state.settingsTransfer.busy = false;
+        queueSync();
+      });
+  }
+
+  function openSettingsImport() {
+    selectSettingsImportFile({
+      documentRef,
+      windowRef,
+      onSuccess(fileInfo) {
+        state.activeSettingsFeatureKey = "";
+        state.settingsTransfer = {
+          ...state.settingsTransfer,
+          dialog: "import",
+          importMode: "merge",
+          fileName: fileInfo.fileName,
+          fileSize: fileInfo.fileSize,
+          payload: fileInfo.payload,
+          report: null,
+          busy: false,
+          returnAction: "open-settings-import",
+        };
+        previewSelectedSettingsImport();
+      },
+      onError(error) {
+        setNotice("error", String(error?.message || "Importdatei konnte nicht gelesen werden."));
+      },
+    });
+  }
+
+  function setSettingsImportMode(mode) {
+    if (!state.settingsTransfer.payload || !["merge", "replace"].includes(mode)) {
+      return;
+    }
+    state.settingsTransfer.importMode = mode;
+    previewSelectedSettingsImport();
+  }
+
+  function confirmSettingsImport() {
+    const report = state.settingsTransfer.report;
+    const applicable = Number(report?.counts?.applied || 0) + Number(report?.counts?.migrated || 0);
+    if (
+      state.settingsTransfer.busy ||
+      report?.status !== "ready" ||
+      applicable === 0 ||
+      typeof runtimeApi.importSettings !== "function"
+    ) {
+      return;
+    }
+    state.settingsTransfer.busy = true;
+    queueSync();
+    Promise.resolve(
+      runtimeApi.importSettings(state.settingsTransfer.payload, {
+        mode: state.settingsTransfer.importMode,
+      })
+    )
+      .then((result) => {
+        state.settingsTransfer.dialog = "result";
+        state.settingsTransfer.report = result.report;
+        setNotice("success", "Einstellungen wurden importiert.");
+      })
+      .catch((error) => {
+        setNotice("error", String(error?.message || "Einstellungen konnten nicht gespeichert werden."));
+      })
+      .finally(() => {
+        state.settingsTransfer.busy = false;
+        queueSync();
+      });
   }
 
   function setThemeActionFeedback(featureKey, type, message) {
@@ -473,7 +648,12 @@ function ensureXConfigShell(options = {}) {
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
     },
-    onAfterRender: () => x01RemainingScoreBarPreviewController?.start(),
+    onAfterRender: () => {
+      x01RemainingScoreBarPreviewController?.start();
+      documentRef
+        .querySelector?.("[data-adxconfig-transfer-dialog] button:not([disabled])")
+        ?.focus?.();
+    },
     panelHostId: PANEL_HOST_ID,
     parseShellRenderSignature,
     sidebarRouteHints: SIDEBAR_ROUTE_HINTS,
@@ -494,6 +674,12 @@ function ensureXConfigShell(options = {}) {
     openChangelog,
     openReadme,
     openUserscriptInstall,
+    openSettingsExport,
+    startSettingsExport,
+    openSettingsImport,
+    setSettingsImportMode,
+    confirmSettingsImport,
+    closeSettingsTransfer,
     parseFieldValue,
     queueSync,
     refreshUpdateStatus,
@@ -621,6 +807,12 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
+    if (target.dataset?.adxconfigTransferIncludeAssets === "true") {
+      state.settingsTransfer.includeAssets = Boolean(target.checked);
+      queueSync();
+      return;
+    }
+
     if (target.dataset?.adxconfigFeatureToggle === "true") {
       const featureKey = target.dataset?.featureKey || "";
       if (featureKey && typeof runtimeApi.setFeatureEnabled === "function") {
@@ -694,6 +886,10 @@ function ensureXConfigShell(options = {}) {
   }
 
   function onDocumentKeydown(event) {
+    if (event?.key === "Escape" && state.settingsTransfer.dialog && !state.settingsTransfer.busy) {
+      closeSettingsTransfer();
+      return;
+    }
     if (event?.key === "Escape" && state.activeSettingsFeatureKey) {
       effectPreviewController?.stopActivePreview();
       state.activeSettingsFeatureKey = "";

@@ -13,6 +13,7 @@ import {
 } from "./theme-background.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
+import { getFeatureCatalogEntryByFeatureKey } from "../../shared/feature-catalog.js";
 import {
   TURN_SCORE_PREVIEW_SCORE_ATTRIBUTE,
   TURN_SCORE_PREVIEW_SCORE_CLASS,
@@ -2835,6 +2836,249 @@ function buildAnimationGroups(documentRef, features = []) {
   return sections;
 }
 
+function formatTransferFileSize(value) {
+  const bytes = Math.max(0, Number(value) || 0);
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+  }
+  if (bytes >= 1024) {
+    return `${Math.round(bytes / 1024)} KiB`;
+  }
+  return `${bytes} Byte`;
+}
+
+function appendTransferDialogHeading(documentRef, card, title, description) {
+  card.appendChild(createElement(documentRef, "h2", {
+    id: "ad-xconfig-transfer-title",
+    className: "ad-xconfig-modal-title",
+    text: title,
+  }));
+  card.appendChild(createElement(documentRef, "p", {
+    className: "ad-xconfig-transfer-copy",
+    text: description,
+  }));
+}
+
+function appendTransferReport(documentRef, card, report) {
+  if (!report) {
+    card.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-transfer-copy",
+      text: "Backup wird geprüft …",
+    }));
+    return;
+  }
+  const counts = report.counts || {};
+  const summary = createElement(documentRef, "div", {
+    className: "ad-xconfig-transfer-summary",
+  });
+  [
+    ["Übernommen", counts.applied],
+    ["Migriert", counts.migrated],
+    ["Ausgelassen", counts.skipped],
+    ["Unverändert", counts.unchanged],
+  ].forEach(([label, value]) => {
+    summary.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-transfer-stat",
+      text: `${label}: ${Number(value || 0)}`,
+    }));
+  });
+  card.appendChild(summary);
+
+  if (report.source?.appVersion || report.source?.exportedAt) {
+    const sourceParts = [];
+    if (report.source.appVersion) {
+      sourceParts.push(`AD xConfig ${report.source.appVersion}`);
+    }
+    if (report.source.exportedAt) {
+      sourceParts.push(String(report.source.exportedAt));
+    }
+    card.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-transfer-source",
+      text: `Quelle: ${sourceParts.join(" · ")}`,
+    }));
+  }
+
+  const visibleIssues = (report.issues || []).filter((issue) =>
+    ["fatal", "skipped", "migrated", "warning"].includes(issue.status)
+  );
+  if (!visibleIssues.length) {
+    card.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-transfer-ok",
+      text: "Alle erkannten Einstellungen sind kompatibel.",
+    }));
+    return;
+  }
+  const groups = new Map();
+  visibleIssues.forEach((issue) => {
+    const groupKey = String(issue.featureKey || "general");
+    const entries = groups.get(groupKey) || [];
+    entries.push(issue);
+    groups.set(groupKey, entries);
+  });
+  const groupRoot = createElement(documentRef, "div", {
+    className: "ad-xconfig-transfer-issue-groups",
+  });
+  groups.forEach((issues, featureKey) => {
+    const group = createElement(documentRef, "section", {
+      className: "ad-xconfig-transfer-issue-group",
+    });
+    group.appendChild(createElement(documentRef, "h3", {
+      className: "ad-xconfig-transfer-issue-title",
+      text: featureKey === "general"
+        ? "Allgemeine Hinweise"
+        : getFeatureCatalogEntryByFeatureKey(featureKey)?.title || featureKey,
+    }));
+    const list = createElement(documentRef, "ul", {
+      className: "ad-xconfig-transfer-issues",
+    });
+    issues.forEach((issue) => {
+      list.appendChild(createElement(documentRef, "li", {
+        className: `ad-xconfig-transfer-issue ad-xconfig-transfer-issue--${issue.status}`,
+        text: String(issue.message || issue.code || "Importhinweis"),
+      }));
+    });
+    group.appendChild(list);
+    groupRoot.appendChild(group);
+  });
+  card.appendChild(groupRoot);
+}
+
+function appendSettingsTransferContent(documentRef, card, transfer) {
+  if (transfer.dialog === "export") {
+    appendTransferDialogHeading(
+      documentRef,
+      card,
+      "Einstellungen exportieren",
+      "Erstellt ein versioniertes JSON-Backup deiner AD xConfig Einstellungen."
+    );
+    const optionLabel = createElement(documentRef, "label", {
+      className: "ad-xconfig-transfer-option",
+    });
+    optionLabel.appendChild(createElement(documentRef, "input", {
+      type: "checkbox",
+      attributes: {
+        checked: transfer.includeAssets ? "" : undefined,
+        "data-adxconfig-transfer-include-assets": "true",
+      },
+    }));
+    optionLabel.appendChild(createElement(documentRef, "span", {
+      text: "Eigene Theme- und Dart-Bilder einschließen",
+    }));
+    card.appendChild(optionLabel);
+    card.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-transfer-source",
+      text: "Mit Bildern kann die Backup-Datei deutlich größer werden.",
+    }));
+    return;
+  }
+
+  const resultMode = transfer.dialog === "result";
+  appendTransferDialogHeading(
+    documentRef,
+    card,
+    resultMode ? "Import abgeschlossen" : "Einstellungen importieren",
+    transfer.fileName
+      ? `${transfer.fileName} · ${formatTransferFileSize(transfer.fileSize)}`
+      : "Das ausgewählte Backup wird vor dem Speichern vollständig geprüft."
+  );
+  if (!resultMode) {
+    const modes = createElement(documentRef, "div", {
+      className: "ad-xconfig-transfer-modes",
+      attributes: { role: "group", "aria-label": "Importmodus" },
+    });
+    [
+      ["merge", "Sicher zusammenführen"],
+      ["replace", "Vollständig ersetzen"],
+    ].forEach(([mode, label]) => {
+      modes.appendChild(createElement(documentRef, "button", {
+        className: "ad-xconfig-btn ad-xconfig-btn--compact",
+        type: "button",
+        text: label,
+        attributes: {
+          "data-adxconfig-action": "set-settings-import-mode",
+          "data-import-mode": mode,
+          "data-active": transfer.importMode === mode ? "true" : "false",
+          "aria-pressed": transfer.importMode === mode ? "true" : "false",
+          disabled: transfer.busy ? "" : undefined,
+        },
+      }));
+    });
+    card.appendChild(modes);
+    card.appendChild(createElement(documentRef, "p", {
+      className: "ad-xconfig-transfer-source",
+      text: transfer.importMode === "replace"
+        ? "Fehlende Einstellungen werden auf die heutigen Standards gesetzt; nicht enthaltene eigene Bilder bleiben erhalten."
+        : "Nur gültige Werte aus dem Backup werden übernommen; alles andere bleibt unverändert.",
+    }));
+  }
+  appendTransferReport(documentRef, card, transfer.report);
+}
+
+function appendSettingsTransferActions(documentRef, card, transfer) {
+  const actions = createElement(documentRef, "div", {
+    className: "ad-xconfig-modal-actions ad-xconfig-transfer-actions",
+  });
+  actions.appendChild(createElement(documentRef, "button", {
+    className: "ad-xconfig-btn",
+    type: "button",
+    text: transfer.dialog === "result" ? "Schließen" : "Abbrechen",
+    attributes: {
+      "data-adxconfig-action": "close-settings-transfer",
+      disabled: transfer.busy ? "" : undefined,
+    },
+  }));
+  if (transfer.dialog === "export") {
+    actions.appendChild(createElement(documentRef, "button", {
+      className: "ad-xconfig-btn ad-xconfig-btn--primary",
+      type: "button",
+      text: transfer.busy ? "Export läuft …" : "Backup herunterladen",
+      attributes: {
+        "data-adxconfig-action": "start-settings-export",
+        disabled: transfer.busy ? "" : undefined,
+      },
+    }));
+  } else if (transfer.dialog === "import") {
+    const applicable =
+      Number(transfer.report?.counts?.applied || 0) +
+      Number(transfer.report?.counts?.migrated || 0);
+    const canImport = transfer.report?.status === "ready" && applicable > 0 && !transfer.busy;
+    actions.appendChild(createElement(documentRef, "button", {
+      className: "ad-xconfig-btn ad-xconfig-btn--primary",
+      type: "button",
+      text: transfer.busy ? "Prüfung läuft …" : "Import bestätigen",
+      attributes: {
+        "data-adxconfig-action": "confirm-settings-import",
+        disabled: canImport ? undefined : "",
+      },
+    }));
+  }
+  card.appendChild(actions);
+}
+
+function buildSettingsTransferDialog(documentRef, state) {
+  const transfer = state.settingsTransfer;
+  if (!transfer?.dialog) {
+    return null;
+  }
+  const backdrop = createElement(documentRef, "div", {
+    className: "ad-xconfig-modal-backdrop ad-xconfig-transfer-backdrop",
+  });
+  const card = createElement(documentRef, "section", {
+    className: "ad-xconfig-modal ad-xconfig-transfer-dialog",
+    attributes: {
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "ad-xconfig-transfer-title",
+      "data-adxconfig-transfer-dialog": transfer.dialog,
+    },
+  });
+
+  appendSettingsTransferContent(documentRef, card, transfer);
+  appendSettingsTransferActions(documentRef, card, transfer);
+  backdrop.appendChild(card);
+  return backdrop;
+}
+
 export function buildShellContent(documentRef, state, features) {
   const page = createElement(documentRef, "div", {
     className: "ad-xconfig-page",
@@ -2864,6 +3108,24 @@ export function buildShellContent(documentRef, state, features) {
   const headerActions = createElement(documentRef, "div", {
     className: "ad-xconfig-header-actions",
   });
+  headerActions.appendChild(createElement(documentRef, "button", {
+    className: "ad-xconfig-btn",
+    text: "Exportieren",
+    type: "button",
+    attributes: {
+      "data-adxconfig-action": "open-settings-export",
+      "aria-label": "AD xConfig Einstellungen exportieren",
+    },
+  }));
+  headerActions.appendChild(createElement(documentRef, "button", {
+    className: "ad-xconfig-btn",
+    text: "Importieren",
+    type: "button",
+    attributes: {
+      "data-adxconfig-action": "open-settings-import",
+      "aria-label": "AD xConfig Einstellungen importieren",
+    },
+  }));
   headerActions.appendChild(createElement(documentRef, "button", {
     className: "ad-xconfig-btn ad-xconfig-btn--danger",
     text: "↺ Zurücksetzen",
@@ -3015,6 +3277,10 @@ export function buildShellContent(documentRef, state, features) {
   const modal = buildSettingsModal(documentRef, state, features);
   if (modal) {
     shell.appendChild(modal);
+  }
+  const transferDialog = buildSettingsTransferDialog(documentRef, state);
+  if (transferDialog) {
+    shell.appendChild(transferDialog);
   }
 
   page.appendChild(shell);

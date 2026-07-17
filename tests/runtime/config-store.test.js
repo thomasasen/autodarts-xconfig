@@ -146,6 +146,35 @@ test("config store serializes overlapping updates without losing patches", async
   assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
 });
 
+test("config store transactions analyze and replace the latest queued config atomically", async () => {
+  const localStorage = new FakeStorage();
+  const store = createConfigStore({ localStorageRef: localStorage });
+
+  const update = store.update({
+    features: { tvBoardZoom: { zoomSpeed: "langsam" } },
+  });
+  const transaction = store.transact((currentConfig) => ({
+    config: {
+      ...currentConfig,
+      features: {
+        ...currentConfig.features,
+        tvBoardZoom: {
+          ...currentConfig.features.tvBoardZoom,
+          zoomLevel: 3.15,
+        },
+      },
+    },
+    result: "imported",
+  }));
+
+  await update;
+  const outcome = await transaction;
+  assert.equal(outcome.persisted, true);
+  assert.equal(outcome.result, "imported");
+  assert.equal(outcome.config.features.tvBoardZoom.zoomSpeed, "langsam");
+  assert.equal(outcome.config.features.tvBoardZoom.zoomLevel, 3.15);
+});
+
 test("config store imports migrated legacy feature and theme settings once without overwriting later config", async () => {
   const localStorage = new FakeStorage({
     [LEGACY_CONFIG_STORAGE_KEY]: JSON.stringify({
