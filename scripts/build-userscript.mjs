@@ -2,6 +2,7 @@ import { build } from "esbuild";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { USERSCRIPT_ASSET_LOADERS } from "./userscript-build-config.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,13 +43,7 @@ await build({
   outfile: outFile,
   charset: "utf8",
   legalComments: "none",
-  loader: {
-    ".png": "dataurl",
-    ".jpg": "dataurl",
-    ".jpeg": "dataurl",
-    ".gif": "dataurl",
-    ".mp3": "dataurl",
-  },
+  loader: USERSCRIPT_ASSET_LOADERS,
   banner: {
     js: userscriptHeader,
   },

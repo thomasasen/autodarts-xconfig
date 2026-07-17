@@ -42,6 +42,7 @@ const rawFeatureCatalog = [
   catalogEntry("winner-celebration-effect", "winnerCelebrationEffect", "Winner Celebration Effect", ["all"], "Animation/Autodarts Animate Winner Celebration Effect.user.js", "a-winner-celebration-effect"),
   catalogEntry("x01-remaining-score-bar", "x01RemainingScoreBar", "X01 Remaining Score Bar", ["x01"], "", "", immediate),
   catalogEntry("theme-global-typography", "themes.globalTypography", "Templates Global", ["all"], "", "", immediate),
+  catalogEntry("bot-board-style", "botBoardStyle", "Bot Board Style", ["all"]),
   catalogEntry("theme-x01", "themes.x01", "Theme X01", ["x01"], "Template/Autodarts Theme X01.user.js", "theme-x01", immediate),
   catalogEntry("theme-gotcha", "themes.gotcha", "Theme Gotcha", ["gotcha"], "", "", immediate),
   catalogEntry("theme-x01-2player", "themes.x01TwoPlayer", "Theme X01 2Player (Beta)", ["x01"], "", "", immediate),

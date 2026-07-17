@@ -20,7 +20,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Im Überblick
 
-- Insgesamt `25` Module: `17` Animationen und Komfortfunktionen sowie `8` Themes.
+- Insgesamt `26` Module: `17` Animationen und Komfortfunktionen sowie `9` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
@@ -146,6 +146,7 @@ Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. I
 ### Themen
 
 - [Templates Global](#template-global-typography)
+- [Bot Board Style](#bot-board-style)
 - [Theme Bull-off](#template-autodarts-theme-bull-off)
 - [Theme X01](#template-autodarts-theme-x01)
 - [Theme Gotcha](#template-autodarts-theme-gotcha)
@@ -196,6 +197,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrundbild-Deckkraft`: 25 %
 - `Spielerfelder-Transparenz`: 10 %
 - `Aktivspieler-Tönung`: 15 %
+- `Debug`: Aus
+
+**Bot Board Style**
+- `Aktiv`: An
+- `Board-Design`: Winmau Blade 6 TC
+- `Geltungsbereich`: Nur bei Bot-Zügen
 - `Debug`: Aus
 
 ### Animationen
@@ -441,6 +448,33 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](docs/screenshots/template-theme-global-typography-xConfig.png)
 ![Templates Global Wurffeld-Darts mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
+
+<a id="bot-board-style"></a>
+
+### Bot Board Style
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.
+- Grafisch: Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.
+- Wann sinnvoll? Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.
+
+**Einstellungen einfach erklärt**
+
+- `Board-Design`: Legt fest, welche optimierte Board-Grafik über der nativen Autodarts-Boardfläche dargestellt wird. Das Deaktivieren des Moduls stellt das native Board wieder her.
+  - `Winmau Blade 6 TC`: Verwendet die lokal eingebettete und optimierte Grafik von Winmau Blade 6 TC für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Winmau Blade X`: Verwendet die lokal eingebettete und optimierte Grafik von Winmau Blade X für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Winmau Blade 360 TC`: Verwendet die lokal eingebettete und optimierte Grafik von Winmau Blade 360 TC für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Target Tor`: Verwendet die lokal eingebettete und optimierte Grafik von Target Tor für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Target Aspar`: Verwendet die lokal eingebettete und optimierte Grafik von Target Aspar für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Unicorn Eclipse Pro 2`: Verwendet die lokal eingebettete und optimierte Grafik von Unicorn Eclipse Pro 2 für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Mission Samurai 4`: Verwendet die lokal eingebettete und optimierte Grafik von Mission Samurai 4 für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Bull’s NL Advantage 701`: Verwendet die lokal eingebettete und optimierte Grafik von Bull’s NL Advantage 701 für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `Shot Bandit`: Verwendet die lokal eingebettete und optimierte Grafik von Shot Bandit für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+  - `One80 G4 Surge`: Verwendet die lokal eingebettete und optimierte Grafik von One80 G4 Surge für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.
+- `Geltungsbereich`: Mit `Nur bei Bot-Zügen` wird das Design bei einem zuverlässig erkannten aktiven Bot eingeblendet. `Alle Match-Boards` verwendet es unabhängig vom aktiven Spieler und Spielmodus auf jedem unterstützten sichtbaren Board.
+  - `Nur bei Bot-Zügen`: Blendet das Design nur ein, wenn der aktive Spieler anhand von Spielzustand, Bot-Icon oder `BOT LEVEL` eindeutig als Bot erkannt wird. Bei unklarer Erkennung bleibt das native Board sichtbar.
+  - `Alle Match-Boards`: Verwendet das Design unabhängig vom aktiven Spieler und Spielmodus auf jedem Board, das von der gemeinsamen xConfig-Board-Erkennung gefunden wird.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
 <a id="template-autodarts-theme-bull-off"></a>
 

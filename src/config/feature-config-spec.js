@@ -10,6 +10,7 @@ import { normalizeThemeBackgroundHost } from "../shared/theme-background-host-ut
 import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
+import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
 
 const CHECKOUT_EFFECT_ALIASES = Object.freeze({
   "": "grow-only",
@@ -89,6 +90,8 @@ const DARTBOARD_MARKER_HIGHLIGHT_EFFECT_ALIASES = Object.freeze({
 const DARTBOARD_MARKER_HIGHLIGHT_OPACITY = new Set([65, 85, 100]);
 const DARTBOARD_MARKER_HIGHLIGHT_OUTLINE = new Set(["aus", "weiss", "schwarz"]);
 const DART_MARKER_DARTS_DESIGNS = new Set(DART_DESIGN_KEYS);
+const BOT_BOARD_STYLE_DESIGNS = new Set(BOARD_STYLE_DESIGN_KEYS);
+const BOT_BOARD_STYLE_SCOPES = new Set(["bot-turns", "all-match-boards"]);
 const DART_MARKER_DARTS_SIZE_PERCENT = new Set([108, 120, 138]);
 const DART_MARKER_DARTS_LEGACY_SIZE_PERCENT = Object.freeze({
   90: 108,
@@ -392,6 +395,12 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   turnScoreCounter: { enabled: false, durationMs: 3000, countEffect: "smooth-count", flashOnChange: true, flashMode: "on-change", debug: false },
   winnerCelebrationEffect: { enabled: false, style: "center-side-burst", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true, debug: false },
   x01RemainingScoreBar: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "bar-pulse", debug: false },
+  botBoardStyle: {
+    enabled: false,
+    design: "winmau-blade-6-tc",
+    scope: "bot-turns",
+    debug: false,
+  },
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "system",
@@ -460,6 +469,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   turnScoreCounter: { durationMs: 3000, countEffect: "smooth-count", flashOnChange: false, flashMode: "on-change" },
   winnerCelebrationEffect: { style: "top-fireworks", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true },
   x01RemainingScoreBar: { colorTheme: "checkout-focus", barSize: "breit", effect: "off" },
+  botBoardStyle: { design: "winmau-blade-6-tc", scope: "bot-turns", debug: false },
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "system",
@@ -810,6 +820,18 @@ const FEATURE_NORMALIZERS = Object.freeze({
     const legacyThresholdColorMode = normalizeStringChoice(rawConfig.thresholdColorMode, "", X01_REMAINING_SCORE_BAR_COLOR_THEMES);
     const normalizedColorTheme = normalizeStringChoice(rawConfig.colorTheme, legacyThresholdColorMode || "checkout-focus", X01_REMAINING_SCORE_BAR_COLOR_THEMES);
     return { enabled: normalizeBoolean(rawConfig.enabled, false), colorTheme: normalizedColorTheme, barSize: normalizeStringChoice(rawConfig.barSize, "standard", X01_REMAINING_SCORE_BAR_BAR_SIZES), effect: normalizeMappedStringChoice(rawConfig.effect, "bar-pulse", { "": "bar-pulse", off: "off", "bar-pulse": "bar-pulse", "glass-light-sweep": "glass-light-sweep", "glass-charge": "glass-light-sweep", "moving-segments": "moving-segments", "previous-score-trail": "previous-score-trail", "fast-signal-sweep": "fast-signal-sweep", "electric-surge": "fast-signal-sweep", "pulse-on-change": "bar-pulse", "charge-release": "bar-pulse", "sheen-sweep": "glass-light-sweep", "checkout-glow": "glass-light-sweep", "burn-down": "moving-segments", "segment-pop": "moving-segments", "spark-trail": "previous-score-trail", "heat-edge": "fast-signal-sweep", "danger-flicker": "fast-signal-sweep", "electric-border": "fast-signal-sweep", "arc-burst": "fast-signal-sweep" }), debug: normalizeBoolean(rawConfig.debug, false) };
+  },
+  botBoardStyle(rawConfig = {}) {
+    return {
+      enabled: normalizeBoolean(rawConfig.enabled, false),
+      design: normalizeStringChoice(
+        rawConfig.design,
+        "winmau-blade-6-tc",
+        BOT_BOARD_STYLE_DESIGNS
+      ),
+      scope: normalizeStringChoice(rawConfig.scope, "bot-turns", BOT_BOARD_STYLE_SCOPES),
+      debug: normalizeBoolean(rawConfig.debug, false),
+    };
   },
   "themes.globalTypography"(rawConfig = {}) {
     return {

@@ -342,6 +342,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "turn-score-counter"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "x01-remaining-score-bar"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "winner-celebration-effect"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "bot-board-style"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-gotcha"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-x01-2player"), true);

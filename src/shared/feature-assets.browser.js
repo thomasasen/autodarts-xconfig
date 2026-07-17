@@ -22,7 +22,18 @@ import dartWhitePng from "../assets/darts/Dart_white.png";
 import dartWhiteTriplePng from "../assets/darts/Dart_whitetrible.png";
 import dartYellowPng from "../assets/darts/Dart_yellow.png";
 import dartYellowSkullPng from "../assets/darts/Dart_yellowscull.png";
+import boardBullsNlAdvantage701Webp from "../assets/board-styles/bulls-nl-advantage-701.webp";
+import boardMissionSamurai4Webp from "../assets/board-styles/mission-samurai-4.webp";
+import boardOne80G4SurgeWebp from "../assets/board-styles/one80-g4-surge.webp";
+import boardShotBanditWebp from "../assets/board-styles/shot-bandit.webp";
+import boardTargetAsparWebp from "../assets/board-styles/target-aspar.webp";
+import boardTargetTorWebp from "../assets/board-styles/target-tor.webp";
+import boardUnicornEclipsePro2Webp from "../assets/board-styles/unicorn-eclipse-pro-2.webp";
+import boardWinmauBlade360TcWebp from "../assets/board-styles/winmau-blade-360-tc.webp";
+import boardWinmauBlade6TcWebp from "../assets/board-styles/winmau-blade-6-tc.webp";
+import boardWinmauBladeXWebp from "../assets/board-styles/winmau-blade-x.webp";
 export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
+export { BOARD_STYLE_DESIGN_KEYS } from "./board-style-assets.manifest.js";
 export { default as TAKEOUT_IMAGE_ASSET } from "../assets/TakeOut.png";
 export { default as SINGLE_BULL_SOUND_ASSET } from "../assets/singlebull.mp3";
 export { default as X01_BUST_GLASS_CRACK_SOUND_ASSET } from "../assets/glasscrack.mp3";
@@ -57,5 +68,23 @@ export const DART_DESIGNS = Object.freeze({
 export function resolveDartDesignAsset(designKey) {
   const key = String(designKey || "").trim().toLowerCase();
   return DART_DESIGNS[key] || DART_DESIGNS.autodarts;
+}
+
+export const BOARD_STYLE_DESIGN_ASSETS = Object.freeze({
+  "winmau-blade-6-tc": boardWinmauBlade6TcWebp,
+  "winmau-blade-x": boardWinmauBladeXWebp,
+  "winmau-blade-360-tc": boardWinmauBlade360TcWebp,
+  "target-tor": boardTargetTorWebp,
+  "target-aspar": boardTargetAsparWebp,
+  "unicorn-eclipse-pro-2": boardUnicornEclipsePro2Webp,
+  "mission-samurai-4": boardMissionSamurai4Webp,
+  "bulls-nl-advantage-701": boardBullsNlAdvantage701Webp,
+  "shot-bandit": boardShotBanditWebp,
+  "one80-g4-surge": boardOne80G4SurgeWebp,
+});
+
+export function resolveBoardStyleDesignAsset(designKey) {
+  const key = String(designKey || "").trim().toLowerCase();
+  return BOARD_STYLE_DESIGN_ASSETS[key] || BOARD_STYLE_DESIGN_ASSETS["winmau-blade-6-tc"];
 }
 

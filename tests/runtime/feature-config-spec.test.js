@@ -110,6 +110,40 @@ test("dart marker replacer impact style defaults and normalization stay compatib
   assert.equal(spec.normalizeConfig({ impactStyle: "invalid" }).impactStyle, "classic");
 });
 
+test("bot board style defaults and normalization stay restricted to the bundled choices", () => {
+  const spec = getFeatureConfigSpec("botBoardStyle");
+
+  assert.ok(spec);
+  assert.deepEqual(spec.createDefaultConfig(), {
+    enabled: false,
+    design: "winmau-blade-6-tc",
+    scope: "bot-turns",
+    debug: false,
+  });
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: "aktiv",
+      design: "target-tor",
+      scope: "all-match-boards",
+    }),
+    {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+      debug: false,
+    }
+  );
+  assert.deepEqual(
+    spec.normalizeConfig({ enabled: true, design: "unknown", scope: "everywhere" }),
+    {
+      enabled: true,
+      design: "winmau-blade-6-tc",
+      scope: "bot-turns",
+      debug: false,
+    }
+  );
+});
+
 test("x01 bust active player highlight defaults and normalization stay stable", () => {
   const spec = getFeatureConfigSpec("x01BustActivePlayerHighlight");
 

@@ -5,6 +5,7 @@ import {
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
 } from "../../shared/theme-global-typography-presets.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
+import { BOARD_STYLE_DESIGN_OPTIONS } from "../../shared/board-style-assets.manifest.js";
 
 function checkboxField(key, label) {
   return Object.freeze({
@@ -362,6 +363,20 @@ export const xconfigDescriptors = Object.freeze([
         description: "Entfernt nur das globale Fallback-Hintergrundbild aus Templates Global.",
         successMessage: "Globales Hintergrundbild entfernt.",
       }),
+      DEBUG_FIELD,
+    ],
+  }),
+  descriptorEntry({
+    featureKey: "bot-board-style",
+    tab: "themes",
+    readmeAnchor: "bot-board-style",
+    description: "Ersetzt das sichtbare Match-Board durch ein ausgewähltes Board-Design.",
+    fields: [
+      selectField("design", "Board-Design", BOARD_STYLE_DESIGN_OPTIONS),
+      selectField("scope", "Geltungsbereich", [
+        { value: "bot-turns", label: "Nur bei Bot-Zügen" },
+        { value: "all-match-boards", label: "Alle Match-Boards" },
+      ]),
       DEBUG_FIELD,
     ],
   }),

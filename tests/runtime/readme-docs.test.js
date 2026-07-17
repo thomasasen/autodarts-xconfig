@@ -120,9 +120,9 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 25);
+  assert.equal(overviewCounts.totalModules, 26);
   assert.equal(overviewCounts.animationModules, 17);
-  assert.equal(overviewCounts.themeModules, 8);
+  assert.equal(overviewCounts.themeModules, 9);
 });
 
 test("README and FEATURES share the generated xConfig overview copy", () => {

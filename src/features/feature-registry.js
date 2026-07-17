@@ -18,6 +18,7 @@ import { mountSingleBullHitSound, runSingleBullHitSoundAction } from "./single-b
 import { mountTurnScoreCounter } from "./turn-score-counter/index.js";
 import { mountWinnerCelebrationEffect, runWinnerCelebrationEffectAction } from "./winner-celebration-effect/index.js";
 import { mountX01RemainingScoreBar } from "./x01-remaining-score-bar/index.js";
+import { mountBotBoardStyle } from "./bot-board-style/index.js";
 import { mountThemeX01 } from "./themes/x01/index.js";
 import { mountThemeGotcha } from "./themes/gotcha/index.js";
 import { mountThemeX01TwoPlayer } from "./themes/x01-2player/index.js";
@@ -163,6 +164,7 @@ const featureInitializers = Object.freeze({
   "winner-celebration-effect": mountWinnerCelebrationEffect,
   "x01-remaining-score-bar": mountX01RemainingScoreBar,
   "theme-global-typography": mountThemeGlobalTypography,
+  "bot-board-style": mountBotBoardStyle,
   "theme-x01": mountThemeX01,
   "theme-gotcha": mountThemeGotcha,
   "theme-x01-2player": mountThemeX01TwoPlayer,

@@ -79,6 +79,22 @@ test("theme global typography stays first in the themes descriptor order", () =>
   const themeDescriptors = xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes");
   assert.ok(themeDescriptors.length > 0);
   assert.equal(themeDescriptors[0]?.featureKey, "theme-global-typography");
+  assert.equal(themeDescriptors[1]?.featureKey, "bot-board-style");
+});
+
+test("bot board style descriptor exposes exactly ten designs and both scopes", () => {
+  const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "bot-board-style");
+  const designField = descriptor?.fields.find((field) => field.key === "design");
+  const scopeField = descriptor?.fields.find((field) => field.key === "scope");
+
+  assert.ok(descriptor);
+  assert.equal(descriptor.tab, "themes");
+  assert.deepEqual(descriptor.fields.map((field) => field.key), ["design", "scope", "debug"]);
+  assert.equal(designField.options.length, 10);
+  assert.deepEqual(scopeField.options.map((option) => option.value), [
+    "bot-turns",
+    "all-match-boards",
+  ]);
 });
 
 test("x01 two-player descriptor exposes grouped presentation presets and local reset", () => {

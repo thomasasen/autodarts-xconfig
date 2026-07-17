@@ -987,6 +987,29 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
+  "bot-board-style": featureCopy({
+    cardDescription:
+      "Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards.",
+    visibleDescription:
+      "Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.",
+    visualDescription:
+      "Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.",
+    usefulWhen:
+      "Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.",
+    fields: {
+      design: fieldCopy(
+        "Wählt eines der zehn eingebetteten Board-Designs aus.",
+        "Legt fest, welche optimierte Board-Grafik über der nativen Autodarts-Boardfläche dargestellt wird. Das Deaktivieren des Moduls stellt das native Board wieder her.",
+        "Wählt eines von zehn lokal eingebetteten Board-Designs."
+      ),
+      scope: fieldCopy(
+        "Bestimmt, ob das Design nur bei Bot-Zügen oder auf jedem Match-Board erscheint.",
+        "Mit `Nur bei Bot-Zügen` wird das Design bei einem zuverlässig erkannten aktiven Bot eingeblendet. `Alle Match-Boards` verwendet es unabhängig vom aktiven Spieler und Spielmodus auf jedem unterstützten sichtbaren Board.",
+        "Begrenzt das Design auf Bot-Züge oder aktiviert es global für Match-Boards."
+      ),
+      debug: DEBUG_FIELD,
+    },
+  }),
   "dartboard-marker-highlight": featureCopy({
     cardDescription:
       "Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger.",
@@ -2671,6 +2694,32 @@ const X01_BUST_CRACK_COUNT_OPTION_COPY = deepFreeze({
   ),
 });
 
+const BOT_BOARD_STYLE_DESIGN_OPTION_COPY = deepFreeze(
+  Object.fromEntries(
+    BOARD_STYLE_DESIGNS.map((design) => [
+      design.value,
+      optionCopy(
+        `Zeigt ${design.label} als Board-Design.`,
+        `Verwendet die lokal eingebettete und optimierte Grafik von ${design.label} für die Board-Fläche. Treffer und xConfig-Zieloverlays bleiben darüber sichtbar.`,
+        `Verwendet ${design.label} als Board-Grafik.`
+      ),
+    ])
+  )
+);
+
+const BOT_BOARD_STYLE_SCOPE_OPTION_COPY = deepFreeze({
+  "bot-turns": optionCopy(
+    "Zeigt das Design ausschließlich während eines zuverlässig erkannten Bot-Zugs.",
+    "Blendet das Design nur ein, wenn der aktive Spieler anhand von Spielzustand, Bot-Icon oder `BOT LEVEL` eindeutig als Bot erkannt wird. Bei unklarer Erkennung bleibt das native Board sichtbar.",
+    "Zeigt das Design nur bei eindeutig erkannten Bot-Zügen."
+  ),
+  "all-match-boards": optionCopy(
+    "Zeigt das Design auf allen unterstützten sichtbaren Match-Boards.",
+    "Verwendet das Design unabhängig vom aktiven Spieler und Spielmodus auf jedem Board, das von der gemeinsamen xConfig-Board-Erkennung gefunden wird.",
+    "Verwendet das Design global auf unterstützten Match-Boards."
+  ),
+});
+
 const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
@@ -2806,6 +2855,10 @@ const xconfigFieldOptionCopy = deepFreeze({
   "cricket-grid-status-effects": {
     colorTheme: CRICKET_GRID_COLOR_OPTION_COPY,
     intensity: CRICKET_GRID_INTENSITY_OPTION_COPY,
+  },
+  "bot-board-style": {
+    design: BOT_BOARD_STYLE_DESIGN_OPTION_COPY,
+    scope: BOT_BOARD_STYLE_SCOPE_OPTION_COPY,
   },
   "dartboard-marker-highlight": {
     size: DART_MARKER_SIZE_OPTION_COPY,
@@ -2970,6 +3023,28 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Aktivspieler-Tönung",
             key: "activePlayerTintIntensity",
+          },
+          {
+            label: "Debug",
+            key: "debug",
+          },
+        ],
+      },
+      {
+        title: "Bot Board Style",
+        featureKey: "bot-board-style",
+        fields: [
+          {
+            label: "Aktiv",
+            key: "enabled",
+          },
+          {
+            label: "Board-Design",
+            key: "design",
+          },
+          {
+            label: "Geltungsbereich",
+            key: "scope",
           },
           {
             label: "Debug",
@@ -3482,3 +3557,4 @@ import {
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
 } from "../../shared/theme-global-typography-presets.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
+import { BOARD_STYLE_DESIGNS } from "../../shared/board-style-assets.manifest.js";

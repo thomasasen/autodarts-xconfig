@@ -1,16 +1,16 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `25` Module in einem Userscript:
+`autodarts-xconfig` bündelt `26` Module in einem Userscript:
 
 - `17` Animationen und Komfortfunktionen
-- `8` Themes
+- `9` Themes
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `25` Module: `17` Animationen und Komfortfunktionen sowie `8` Themes.
+- Insgesamt `26` Module: `17` Animationen und Komfortfunktionen sowie `9` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
 - `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
@@ -41,6 +41,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrundbild-Deckkraft`: 25 %
 - `Spielerfelder-Transparenz`: 10 %
 - `Aktivspieler-Tönung`: 15 %
+- `Debug`: Aus
+
+**Bot Board Style**
+- `Aktiv`: An
+- `Board-Design`: Winmau Blade 6 TC
+- `Geltungsbereich`: Nur bei Bot-Zügen
 - `Debug`: Aus
 
 ### Animationen
@@ -280,6 +286,27 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)
 ![Templates Global Wurffeld-Darts mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
+
+### Bot Board Style
+
+- Gilt für: `alle Modi`
+- Kurz: Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.
+- Grafisch: Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.
+- `Board-Design`: Wählt eines von zehn lokal eingebetteten Board-Designs.
+  - `Winmau Blade 6 TC`: Verwendet Winmau Blade 6 TC als Board-Grafik.
+  - `Winmau Blade X`: Verwendet Winmau Blade X als Board-Grafik.
+  - `Winmau Blade 360 TC`: Verwendet Winmau Blade 360 TC als Board-Grafik.
+  - `Target Tor`: Verwendet Target Tor als Board-Grafik.
+  - `Target Aspar`: Verwendet Target Aspar als Board-Grafik.
+  - `Unicorn Eclipse Pro 2`: Verwendet Unicorn Eclipse Pro 2 als Board-Grafik.
+  - `Mission Samurai 4`: Verwendet Mission Samurai 4 als Board-Grafik.
+  - `Bull’s NL Advantage 701`: Verwendet Bull’s NL Advantage 701 als Board-Grafik.
+  - `Shot Bandit`: Verwendet Shot Bandit als Board-Grafik.
+  - `One80 G4 Surge`: Verwendet One80 G4 Surge als Board-Grafik.
+- `Geltungsbereich`: Begrenzt das Design auf Bot-Züge oder aktiviert es global für Match-Boards.
+  - `Nur bei Bot-Zügen`: Zeigt das Design nur bei eindeutig erkannten Bot-Zügen.
+  - `Alle Match-Boards`: Verwendet das Design global auf unterstützten Match-Boards.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ### Theme Bull-off
 
