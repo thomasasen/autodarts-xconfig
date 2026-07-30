@@ -784,6 +784,7 @@ test("xConfig shell keeps listener and observer counts stable across open/close 
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   await waitForMenuButton(documentRef);
+  await waitForRuntimeToSettle(runtime);
 
   const initialInspect = windowRef.__adXConfig.inspect();
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
@@ -797,6 +798,7 @@ test("xConfig shell keeps listener and observer counts stable across open/close 
     await waitForShellClosed(windowRef, documentRef);
   }
 
+  await waitForRuntimeToSettle(runtime);
   const currentInspect = windowRef.__adXConfig.inspect();
   assert.equal(currentInspect.observerCount, initialInspect.observerCount);
   assert.equal(currentInspect.listenerCount, initialInspect.listenerCount);
@@ -1230,8 +1232,8 @@ test("xConfig shell persists rapid back-to-back UI actions without losing earlie
   const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
   assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
   assert.equal(storedConfig.featureToggles.winnerCelebrationEffect, true);
-  assert.equal(runtime.getSnapshot().features["active-player-sweep"].mounted, true);
-  assert.equal(runtime.getSnapshot().features["winner-celebration-effect"].mounted, true);
+  assert.equal(runtime.getSnapshot().features["active-player-sweep"].enabled, true);
+  assert.equal(runtime.getSnapshot().features["winner-celebration-effect"].enabled, true);
 
   runtime.stop();
 });
@@ -1548,12 +1550,12 @@ test("xConfig checkout score pulse renders real effect previews and color button
   assert.equal(previewScore.textContent, "40");
   assert.equal(previewScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS), true);
   assert.equal(
-    previewScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_EFFECT_CLASSES["grow-only"]),
+    previewScore.classList.contains(CHECKOUT_SCORE_HIGHLIGHT_EFFECT_CLASSES["fade-blink"]),
     true
   );
   assert.equal(
     previewScore.style.getPropertyValue(CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES.color),
-    "159, 219, 88"
+    "56, 189, 248"
   );
   assert.equal(
     previewScore.style.getPropertyValue(CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES.scaleMax),
@@ -1697,9 +1699,9 @@ test("xConfig X01 score progress renders configured size effect and color previe
   assert.ok(previewScore);
   assert.ok(previewRoute);
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar"), "true");
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme"), "checkout-focus");
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-size"), "standard");
-  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-effect"), "bar-pulse");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme"), "traffic-light");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-size"), "breit");
+  assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-effect"), "previous-score-trail");
   assert.equal(previewBar.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-cycle"), "true");
   assert.equal(previewScore.textContent, "100%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
@@ -1709,7 +1711,7 @@ test("xConfig X01 score progress renders configured size effect and color previe
   assert.ok(previewBar.querySelector(".ad-ext-x01-remaining-score-bar__trail"));
   assert.ok(
     previewBar.querySelector(
-      ".ad-ext-x01-remaining-score-bar__fill.ad-ext-x01-remaining-score-bar__fill--effect-bar-pulse"
+      ".ad-ext-x01-remaining-score-bar__fill.ad-ext-x01-remaining-score-bar__fill--effect-previous-score-trail"
     )
   );
   assert.equal(typeof x01PreviewIntervalCallback, "function");
@@ -1772,10 +1774,10 @@ test("xConfig X01 score progress renders configured size effect and color previe
     6
   );
 
-  clickSelectSettingOption(documentRef, "x01-remaining-score-bar", "colorTheme", "traffic-light");
+  clickSelectSettingOption(documentRef, "x01-remaining-score-bar", "colorTheme", "checkout-focus");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.x01RemainingScoreBar.colorTheme === "traffic-light"
+    (config) => config.features.x01RemainingScoreBar.colorTheme === "checkout-focus"
   );
 
   assert.equal(
@@ -1785,7 +1787,7 @@ test("xConfig X01 score progress renders configured size effect and color previe
       );
       return (
         refreshedPreviewBar?.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme") ===
-          "traffic-light" &&
+          "checkout-focus" &&
         Boolean(refreshedPreviewBar?.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-bg-active"))
       );
     }),
@@ -2227,39 +2229,35 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
       const expectedRecommendedState = runtime.listFeatures().every((feature) => {
         const toggleValue = config.featureToggles[feature.configKey];
         const featureConfig = getFeatureConfigValue(config, feature.configKey);
-        if (
-          feature.featureKey === "theme-global-typography" ||
-          feature.featureKey === "theme-x01-2player"
-        ) {
-          return toggleValue === false && featureConfig?.enabled === false;
-        }
         return toggleValue === true && featureConfig?.enabled === true;
       });
 
       return (
         expectedRecommendedState &&
         config.features.checkoutTargetHighlights.visualPreset === "fast-blink" &&
-        config.features.checkoutTargetHighlights.colorTheme === "cyan" &&
+        config.features.checkoutTargetHighlights.colorTheme === "violet" &&
         config.features.checkoutSuggestionStyles.style === "stripe" &&
         config.features.checkoutSuggestionStyles.labelText === "CHECKOUT" &&
-        config.features.activePlayerSweep.sweepStyle === "standard" &&
+        config.features.activePlayerSweep.sweepStyle === "strong" &&
         config.features.specialHitHighlights.animationStyle === "electric-jolt" &&
         config.features.cricketTargetHighlighter.irrelevantBoardDimStyle === "hatch" &&
         config.features.cricketGridStatusEffects.intensity === "normal" &&
+        config.features.cricketGridStatusEffects.colorTheme === "high-contrast" &&
         config.features.cricketGridStatusEffects.pressureOverlay === true &&
         config.features.dartboardMarkerHighlight.effect === "size-pulse" &&
         config.features.dartMarkerReplacer.hideOriginalMarkers === true &&
+        config.features.dartMarkerReplacer.design === "germangiant" &&
         config.features.dartMarkerReplacer.enableShadowBlur === true &&
         config.features.dartMarkerReplacer.enableWobble === true &&
         config.features.dartMarkerReplacer.enableFlightBlur === true &&
         config.features.takeOutDartsAlert.imageSize === "large" &&
         config.features.singleBullHitSound.volume === 0.9 &&
-        config.features.winnerCelebrationEffect.style === "top-fireworks" &&
+        config.features.winnerCelebrationEffect.style === "center-cannon" &&
         config.features.winnerCelebrationEffect.intensity === "standard" &&
         config.features.winnerCelebrationEffect.durationSeconds === 5 &&
-        config.features.winnerCelebrationEffect.particleAmount === "optimiert" &&
+        config.features.winnerCelebrationEffect.particleAmount === "sparsam" &&
         config.features.x01RemainingScoreBar.barSize === "breit" &&
-        config.features.x01RemainingScoreBar.effect === "off" &&
+        config.features.x01RemainingScoreBar.effect === "previous-score-trail" &&
         config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
       );
     }, { timeoutMs: 2000, intervalMs: 8 });
@@ -3103,7 +3101,7 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   assert.equal(scopeOptionButtons.length, 3);
   assert.equal(
     scopeOptionButtons.filter((node) => node.getAttribute("data-active") === "true").length,
-    1
+    3
   );
   assert.equal(
     scopeOptionButtons.find((node) => node.getAttribute("data-setting-value") === "scores")?.getAttribute("data-active"),
@@ -3116,16 +3114,17 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     (config) =>
       Array.isArray(config.features?.themes?.globalTypography?.applyTo) &&
       config.features.themes.globalTypography.applyTo.includes("scores") &&
-      config.features.themes.globalTypography.applyTo.includes("throws")
+      !config.features.themes.globalTypography.applyTo.includes("throws") &&
+      config.features.themes.globalTypography.applyTo.includes("names")
   );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["scores", "throws"]);
+  assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["scores", "names"]);
   assert.equal(
     documentRef.querySelector(
       "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='applyTo'][data-setting-value='throws']"
     )?.getAttribute("data-active"),
-    "true"
+    "false"
   );
 
   clickSelectSettingOption(documentRef, "theme-global-typography", "applyTo", "scores");
@@ -3134,11 +3133,11 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     (config) =>
       Array.isArray(config.features?.themes?.globalTypography?.applyTo) &&
       config.features.themes.globalTypography.applyTo.length === 1 &&
-      config.features.themes.globalTypography.applyTo[0] === "throws"
+      config.features.themes.globalTypography.applyTo[0] === "names"
   );
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["throws"]);
+  assert.deepEqual(storedConfig.features.themes.globalTypography.applyTo, ["names"]);
 
   const colorFields = documentRef.querySelectorAll(
     "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography']"
@@ -3295,7 +3294,10 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   );
 
   storedTypographyConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedTypographyConfig.features.themes.globalTypography.throwLabelColor, "");
+  assert.equal(
+    storedTypographyConfig.features.themes.globalTypography.throwLabelColor,
+    "#8FA9C2"
+  );
 
   const resetAccentButton = accentField.querySelector(
     "[data-adxconfig-action='clear-setting-color'][data-setting-key='accentColor']"
@@ -3381,6 +3383,9 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
     backgroundImageDataUrl: "",
     backgroundAssetKey: "cyberpunk",
     ...DEFAULT_TURN_DART_CONFIG,
+    turnDartStyle: "image",
+    turnDartGradientColor: "#00D9FF",
+    turnDartSizePercent: 135,
     debug: false,
   });
 

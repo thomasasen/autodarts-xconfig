@@ -259,10 +259,21 @@ export function createConfigStore(options = {}) {
     });
   }
 
-  async function importLegacyConfigIfAvailable() {
+  async function importLegacyConfigIfAvailable(options = {}) {
     return enqueueWrite(async () => {
       const currentStoredConfig = await storage.getValue(CONFIG_STORAGE_KEY, null);
       const hasStoredCurrentConfig = isObjectLike(currentStoredConfig);
+      const createInitialConfig = options.createInitialConfig;
+
+      async function initializeMissingConfig() {
+        if (hasStoredCurrentConfig || typeof createInitialConfig !== "function") {
+          return null;
+        }
+
+        const initialConfig = normalizeRuntimeConfig(await createInitialConfig());
+        await storage.setValue(CONFIG_STORAGE_KEY, initialConfig);
+        return initialConfig;
+      }
 
       if (hasStoredCurrentConfig && !isDefaultRuntimeConfig(currentStoredConfig)) {
         await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
@@ -275,12 +286,16 @@ export function createConfigStore(options = {}) {
 
       const alreadyImported = await storage.getValue(LEGACY_IMPORT_FLAG_KEY, false);
       if (alreadyImported) {
+        const initialConfig = await initializeMissingConfig();
         return {
           imported: false,
-          reason: "already-imported",
-          config: hasStoredCurrentConfig
-            ? normalizeRuntimeConfig(currentStoredConfig)
-            : await load(),
+          initialized: Boolean(initialConfig),
+          reason: initialConfig ? "initial-config-created" : "already-imported",
+          config:
+            initialConfig ||
+            (hasStoredCurrentConfig
+              ? normalizeRuntimeConfig(currentStoredConfig)
+              : await load()),
         };
       }
 
@@ -290,12 +305,16 @@ export function createConfigStore(options = {}) {
       await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
 
       if (!mappedConfig) {
+        const initialConfig = await initializeMissingConfig();
         return {
           imported: false,
-          reason: "no-compatible-legacy-config",
-          config: hasStoredCurrentConfig
-            ? normalizeRuntimeConfig(currentStoredConfig)
-            : await load(),
+          initialized: Boolean(initialConfig),
+          reason: initialConfig ? "initial-config-created" : "no-compatible-legacy-config",
+          config:
+            initialConfig ||
+            (hasStoredCurrentConfig
+              ? normalizeRuntimeConfig(currentStoredConfig)
+              : await load()),
         };
       }
 

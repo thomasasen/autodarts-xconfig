@@ -89,7 +89,9 @@ export async function initializeTampermonkeyRuntime(options = {}) {
 
     let initialConfig = await configStore.load();
     try {
-      const importResult = await configStore.importLegacyConfigIfAvailable();
+      const importResult = await configStore.importLegacyConfigIfAvailable({
+        createInitialConfig: () => createRecommendedRuntimeConfig(),
+      });
       initialConfig = importResult?.config || initialConfig;
       await configStore.save(initialConfig);
     } catch (error) {

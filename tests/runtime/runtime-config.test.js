@@ -158,6 +158,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
       themes: {
         globalTypography: {
           backgroundImageDataUrl: "data:image/png;base64,GGGG",
+          turnDartImageDataUrl: "data:image/png;base64,DDDD",
         },
         x01: {
           backgroundImageDataUrl: "data:image/png;base64,AAAA",
@@ -170,11 +171,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   });
 
   defaultFeatureDefinitions.forEach((definition) => {
-    const expectedEnabled =
-      definition.featureKey === "theme-global-typography" ||
-      definition.featureKey === "theme-x01-2player"
-        ? false
-        : true;
+    const expectedEnabled = true;
     assert.equal(config.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(config, definition.configKey).enabled,
@@ -184,21 +181,24 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   });
 
   assert.equal(config.features.checkoutScoreHighlight.enabled, true);
-  assert.equal(config.features.checkoutScoreHighlight.effect, "grow-only");
+  assert.equal(config.features.checkoutScoreHighlight.effect, "fade-blink");
+  assert.equal(config.features.checkoutScoreHighlight.colorTheme, "56, 189, 248");
   assert.equal(config.features.checkoutTargetHighlights.visualPreset, "fast-blink");
-  assert.equal(config.features.checkoutTargetHighlights.colorTheme, "cyan");
-  assert.equal(config.features.checkoutTargetHighlights.segmentStyle, "surface-only");
+  assert.equal(config.features.checkoutTargetHighlights.colorTheme, "violet");
+  assert.equal(config.features.checkoutTargetHighlights.segmentStyle, "surface-outline");
   assert.equal(config.features.tvBoardZoom.checkoutZoomEnabled, true);
   assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
   assert.equal(config.features.checkoutSuggestionStyles.style, "stripe");
   assert.equal(config.features.checkoutSuggestionStyles.labelText, "CHECKOUT");
   assert.equal(config.features.checkoutSuggestionStyles.colorTheme, "amber");
-  assert.equal(config.features.activePlayerSweep.sweepStyle, "standard");
-  assert.equal(config.features.activePlayerSweep.durationMs, 420);
+  assert.equal(config.features.avgTrendArrow.durationMs, 500);
+  assert.equal(config.features.activePlayerSweep.sweepStyle, "strong");
+  assert.equal(config.features.activePlayerSweep.durationMs, 620);
   assert.equal(config.features.specialHitHighlights.colorTheme, "kind-signal");
   assert.equal(config.features.specialHitHighlights.animationStyle, "electric-jolt");
   assert.equal(config.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
   assert.equal(config.features.cricketGridStatusEffects.intensity, "normal");
+  assert.equal(config.features.cricketGridStatusEffects.colorTheme, "high-contrast");
   assert.equal(config.features.cricketGridStatusEffects.pressureOverlay, true);
   assert.equal(config.features.dartboardMarkerHighlight.effect, "size-pulse");
   assert.equal(config.features.dartboardMarkerHighlight.opacityPercent, 100);
@@ -206,35 +206,49 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.dartMarkerReplacer.hideOriginalMarkers, true);
   assert.equal(config.features.dartMarkerReplacer.enableWobble, true);
   assert.equal(config.features.dartMarkerReplacer.sizePercent, 120);
+  assert.equal(config.features.dartMarkerReplacer.design, "germangiant");
+  assert.equal(config.features.dartMarkerReplacer.impactStyle, "dramatic");
   assert.equal(config.features.takeOutDartsAlert.imageSize, "large");
   assert.equal(config.features.singleBullHitSound.volume, 0.9);
-  assert.equal(config.features.turnScoreCounter.durationMs, 3000);
+  assert.equal(config.features.turnScoreCounter.durationMs, 1000);
   assert.equal(config.features.turnScoreCounter.countEffect, "smooth-count");
   assert.equal(config.features.turnScoreCounter.flashOnChange, false);
-  assert.equal(config.features.winnerCelebrationEffect.style, "top-fireworks");
+  assert.equal(config.features.winnerCelebrationEffect.style, "center-cannon");
+  assert.equal(config.features.winnerCelebrationEffect.colorTheme, "gold");
   assert.equal(config.features.winnerCelebrationEffect.intensity, "standard");
   assert.equal(config.features.winnerCelebrationEffect.durationSeconds, 5);
-  assert.equal(config.features.winnerCelebrationEffect.particleAmount, "optimiert");
+  assert.equal(config.features.winnerCelebrationEffect.particleAmount, "sparsam");
+  assert.equal(config.features.winnerCelebrationEffect.includeBullOut, false);
+  assert.equal(config.features.x01RemainingScoreBar.colorTheme, "traffic-light");
   assert.equal(config.features.x01RemainingScoreBar.barSize, "breit");
-  assert.equal(config.features.x01RemainingScoreBar.effect, "off");
+  assert.equal(config.features.x01RemainingScoreBar.effect, "previous-score-trail");
+  assert.equal(config.features.botBoardStyle.scope, "all-match-boards");
   assert.equal(config.features.themes.x01.enabled, true);
   assert.equal(config.features.themes.gotcha.enabled, true);
   assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
   assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
   assert.equal(config.features.themes.gotcha.deltaItalic, true);
-  assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
+  assert.equal(config.features.themes.x01TwoPlayer.enabled, true);
   assert.equal(config.features.themes.x01TwoPlayer.visualStyle, "studio");
   assert.equal(config.features.themes.x01TwoPlayer.colorScheme, "studio-mint");
   assert.equal(config.features.themes.x01TwoPlayer.activePlayerEmphasis, "standard");
-  assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "full");
-  assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "full");
+  assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "tv");
+  assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "name-only");
   assert.equal(config.features.themes.x01TwoPlayer.playerNameLayout, "single-line");
   assert.equal(config.features.themes.shanghai.enabled, true);
   assert.equal(config.features.themes.cricket.enabled, true);
-  assert.equal(config.features.themes.globalTypography.enabled, false);
+  assert.equal(config.features.themes.globalTypography.enabled, true);
+  assert.equal(config.features.themes.globalTypography.fontPreset, "aldrich");
+  assert.deepEqual(config.features.themes.globalTypography.applyTo, ["scores", "throws", "names"]);
+  assert.equal(config.features.themes.globalTypography.turnDartStyle, "image");
+  assert.equal(config.features.themes.globalTypography.turnDartSizePercent, 135);
   assert.equal(
     config.features.themes.globalTypography.backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
+  );
+  assert.equal(
+    config.features.themes.globalTypography.turnDartImageDataUrl,
+    "data:image/png;base64,DDDD"
   );
   assert.equal(config.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
   assert.equal(config.features.themes.gotcha.backgroundImageDataUrl, "");

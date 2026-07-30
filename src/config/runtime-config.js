@@ -226,6 +226,9 @@ function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClea
 
     if (shouldClear) {
       targetThemeConfig.backgroundImageDataUrl = "";
+      if (Object.hasOwn(targetThemeConfig, "turnDartImageDataUrl")) {
+        targetThemeConfig.turnDartImageDataUrl = "";
+      }
       return;
     }
 
@@ -233,6 +236,11 @@ function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClea
     targetThemeConfig.backgroundImageDataUrl = normalizeThemeBackgroundImage(
       sourceThemeConfig?.backgroundImageDataUrl || ""
     );
+    if (Object.hasOwn(targetThemeConfig, "turnDartImageDataUrl")) {
+      targetThemeConfig.turnDartImageDataUrl = normalizeThemeBackgroundImage(
+        sourceThemeConfig?.turnDartImageDataUrl || ""
+      );
+    }
   });
 }
 
@@ -271,8 +279,8 @@ function buildHardResetRuntimeConfig() {
 function buildRecommendedRuntimeConfig(sourceConfig = {}) {
   const config = createPresetBaseConfig();
   applyFeatureToggleState(config, true);
-  applyThemeBackgroundImages(config, sourceConfig, false);
   applyRecommendedFeatureDefaults(config);
+  applyThemeBackgroundImages(config, sourceConfig, false);
   return normalizeRuntimeConfig(config);
 }
 

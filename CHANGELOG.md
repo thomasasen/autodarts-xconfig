@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.6.0] - 2026-07-30
+
+### Added
+
+- Nutzerwirkung: Neue Installationen starten automatisch mit dem vollständigen empfohlenen Profil; Updates und Neuinitialisierungen mit bereits gespeicherter Konfiguration behalten sämtliche vorhandenen Einstellungen unverändert.
+  Technik: Der Config-Store erzeugt das zentrale empfohlene Runtime-Profil ausschließlich bei fehlender aktueller und fehlender kompatibler Legacy-Konfiguration; Regressionstests sichern leeren Storage, individuelle Bestandskonfigurationen und gespeicherte Konfigurationen in alter Default-Form ab.
+
+### Changed
+
+- Nutzerwirkung: Die Aktion `Empfohlene Standards` übernimmt das am 30. Juli 2026 exportierte Profil mit allen 26 aktivierten Modulen, aktualisierten Effekt-, Theme- und Dart-Einstellungen und bewahrt eigene Theme- sowie Wurffeld-Dartbilder.
+  Technik: Die zentrale Preset-Quelle wurde vollständig mit dem validierten xConfig-Backup synchronisiert, der Asset-Schutz um lokale Wurffeld-Dartbilder erweitert und die daraus generierte README- und Feature-Dokumentation aktualisiert.
+
 ## [2.5.0] - 2026-07-17
 
 ### Added
@@ -1855,7 +1867,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/ca6bbdf...HEAD
+[2.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/8f7c754...HEAD
+[2.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/ca6bbdf...8f7c754
 [2.4.17]: https://github.com/thomasasen/autodarts-xconfig/compare/fffbee4...ca6bbdf
 [2.4.16]: https://github.com/thomasasen/autodarts-xconfig/compare/74b026d...fffbee4
 [2.4.15]: https://github.com/thomasasen/autodarts-xconfig/compare/99baa67...74b026d

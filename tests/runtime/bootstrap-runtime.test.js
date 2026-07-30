@@ -68,6 +68,70 @@ test("parallel runtime initialization shares one startup promise and one namespa
   first.stop();
 });
 
+test("fresh runtime initialization persists the recommended profile", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
+  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
+  assert.equal(storedConfig.features.dartMarkerReplacer.design, "germangiant");
+  assert.equal(storedConfig.features.themes.globalTypography.enabled, true);
+  assert.equal(storedConfig.features.themes.x01TwoPlayer.enabled, true);
+  defaultFeatureDefinitions.forEach((definition) => {
+    assert.equal(storedConfig.featureToggles[definition.configKey], true, definition.configKey);
+  });
+
+  runtime.stop();
+});
+
+test("runtime initialization preserves settings from an existing installation", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      featureToggles: {
+        checkoutScoreHighlight: false,
+        activePlayerSweep: false,
+        "themes.globalTypography": false,
+      },
+      features: {
+        checkoutScoreHighlight: {
+          enabled: false,
+          effect: "glow-only",
+        },
+        activePlayerSweep: {
+          enabled: false,
+          durationMs: 300,
+          sweepStyle: "subtle",
+        },
+        themes: {
+          globalTypography: {
+            enabled: false,
+            fontPreset: "system",
+          },
+        },
+      },
+    }),
+  });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "glow-only");
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, false);
+  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 300);
+  assert.equal(storedConfig.features.activePlayerSweep.sweepStyle, "subtle");
+  assert.equal(storedConfig.featureToggles["themes.globalTypography"], false);
+  assert.equal(storedConfig.features.themes.globalTypography.fontPreset, "system");
+
+  runtime.stop();
+});
+
 test("runtime removes storage sync listener when stopped", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -100,7 +164,7 @@ test("runtime public config API persists updates and survives feature toggles", 
   await wait(5);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "grow-only");
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
 
   await runtime.saveConfig({
     features: {
@@ -253,7 +317,7 @@ test("runtime previews settings imports without writes and persists confirmed co
   const preview = await runtime.previewSettingsImport(exported.payload, { mode: "merge" });
   assert.equal(localStorage.getItem(CONFIG_STORAGE_KEY), beforePreview);
   assert.equal(preview.status, "ready");
-  assert.ok(preview.counts.applied >= 2);
+  assert.ok(preview.counts.applied >= 1);
   assert.ok(preview.counts.skipped >= 1);
 
   const imported = await runtime.importSettings(exported.payload, { mode: "merge" });
@@ -397,6 +461,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
         themes: {
           globalTypography: {
             backgroundImageDataUrl: "data:image/png;base64,GGGG",
+            turnDartImageDataUrl: "data:image/png;base64,DDDD",
           },
           x01: {
             backgroundImageDataUrl: "data:image/png;base64,AAAA",
@@ -418,30 +483,36 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(snapshot.features["checkout-score-highlight"].enabled, true);
   assert.equal(storedConfig.features.checkoutScoreHighlight.enabled, true);
   assert.equal(storedConfig.features.checkoutTargetHighlights.visualPreset, "fast-blink");
-  assert.equal(storedConfig.features.checkoutTargetHighlights.colorTheme, "cyan");
+  assert.equal(storedConfig.features.checkoutTargetHighlights.colorTheme, "violet");
   assert.equal(storedConfig.features.checkoutSuggestionStyles.style, "stripe");
-  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 420);
-  assert.equal(storedConfig.features.activePlayerSweep.sweepStyle, "standard");
+  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
+  assert.equal(storedConfig.features.activePlayerSweep.sweepStyle, "strong");
   assert.equal(storedConfig.features.specialHitHighlights.animationStyle, "electric-jolt");
   assert.equal(storedConfig.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
   assert.equal(storedConfig.features.cricketGridStatusEffects.intensity, "normal");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.colorTheme, "high-contrast");
   assert.equal(storedConfig.features.cricketGridStatusEffects.pressureOverlay, true);
   assert.equal(storedConfig.features.dartboardMarkerHighlight.effect, "size-pulse");
   assert.equal(storedConfig.features.dartboardMarkerHighlight.opacityPercent, 100);
   assert.equal(storedConfig.features.dartMarkerReplacer.hideOriginalMarkers, true);
   assert.equal(storedConfig.features.dartMarkerReplacer.enableWobble, true);
+  assert.equal(storedConfig.features.dartMarkerReplacer.design, "germangiant");
   assert.equal(storedConfig.features.takeOutDartsAlert.imageSize, "large");
   assert.equal(storedConfig.features.singleBullHitSound.volume, 0.9);
   assert.equal(storedConfig.features.turnScoreCounter.flashOnChange, false);
-  assert.equal(storedConfig.features.winnerCelebrationEffect.style, "top-fireworks");
+  assert.equal(storedConfig.features.winnerCelebrationEffect.style, "center-cannon");
   assert.equal(storedConfig.features.winnerCelebrationEffect.intensity, "standard");
   assert.equal(storedConfig.features.winnerCelebrationEffect.durationSeconds, 5);
-  assert.equal(storedConfig.features.winnerCelebrationEffect.particleAmount, "optimiert");
+  assert.equal(storedConfig.features.winnerCelebrationEffect.particleAmount, "sparsam");
   assert.equal(storedConfig.features.x01RemainingScoreBar.barSize, "breit");
-  assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "off");
+  assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "previous-score-trail");
   assert.equal(
     storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
+  );
+  assert.equal(
+    storedConfig.features.themes.globalTypography.turnDartImageDataUrl,
+    "data:image/png;base64,DDDD"
   );
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
   assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
@@ -451,9 +522,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   );
 
   defaultFeatureDefinitions.forEach((definition) => {
-    const expectedEnabled =
-      definition.featureKey !== "theme-global-typography" &&
-      definition.featureKey !== "theme-x01-2player";
+    const expectedEnabled = true;
     assert.equal(storedConfig.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(storedConfig, definition.configKey).enabled,
@@ -480,6 +549,7 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
           globalTypography: {
             enabled: true,
             backgroundImageDataUrl: "data:image/png;base64,GGGG",
+            turnDartImageDataUrl: "data:image/png;base64,DDDD",
           },
           x01: {
             enabled: true,
@@ -502,6 +572,7 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "grow-only");
   assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
   assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
+  assert.equal(storedConfig.features.themes.globalTypography.turnDartImageDataUrl, "");
   assert.equal(storedConfig.features.themes.x01.enabled, false);
   assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
 

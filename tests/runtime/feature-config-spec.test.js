@@ -195,20 +195,23 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
 
 test("createRecommendedFeatureConfig returns the documented recommended defaults", () => {
   assert.deepEqual(createRecommendedFeatureConfig("themes.globalTypography"), {
-    enabled: false,
-    fontPreset: "system",
-    applyTo: ["scores"],
-    accentColor: "",
-    scoreColor: "",
-    secondaryTextColor: "",
-    throwLabelColor: "",
-    activePlayerTintIntensity: 15,
+    enabled: true,
+    fontPreset: "aldrich",
+    applyTo: ["scores", "throws", "names"],
+    accentColor: "#00D9FF",
+    scoreColor: "#FFFFFF",
+    secondaryTextColor: "#DCE9FF",
+    throwLabelColor: "#8FA9C2",
+    activePlayerTintIntensity: 20,
     backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
+    backgroundOpacity: 10,
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "",
     ...DEFAULT_TURN_DART_CONFIG,
+    turnDartStyle: "image",
+    turnDartGradientColor: "#00D9FF",
+    turnDartSizePercent: 135,
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
@@ -234,10 +237,10 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
   assert.deepEqual(createRecommendedFeatureConfig("checkoutTargetHighlights"), {
     enabled: true,
     visualPreset: "fast-blink",
-    segmentStyle: "surface-only",
+    segmentStyle: "surface-outline",
     singleRing: "both",
     targetSelectionMode: "next",
-    colorTheme: "cyan",
+    colorTheme: "violet",
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("specialHitHighlights"), {
@@ -257,11 +260,11 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
   });
   assert.deepEqual(createRecommendedFeatureConfig("dartMarkerReplacer"), {
     enabled: true,
-    design: "autodarts",
+    design: "germangiant",
     animateDarts: true,
     sizePercent: 120,
     hideOriginalMarkers: true,
-    impactStyle: "natural",
+    impactStyle: "dramatic",
     enableShadow: true,
     enableShadowBlur: true,
     enableWobble: true,
@@ -278,12 +281,12 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
   });
   assert.deepEqual(createRecommendedFeatureConfig("winnerCelebrationEffect"), {
     enabled: true,
-    style: "top-fireworks",
-    colorTheme: "autodarts",
+    style: "center-cannon",
+    colorTheme: "gold",
     intensity: "standard",
     durationSeconds: 5,
-    particleAmount: "optimiert",
-    includeBullOut: true,
+    particleAmount: "sparsam",
+    includeBullOut: false,
     pointerDismiss: true,
     debug: false,
   });

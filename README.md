@@ -204,19 +204,19 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aus
 
 **Templates Global**
-- `Aktiv`: Aus
-- `Schriftart`: Standard (deaktiviert)
-- `Greift bei`: Scores
+- `Aktiv`: An
+- `Schriftart`: Aldrich
+- `Greift bei`: scores,throws,names
 - `Hintergrund-Darstellung`: Füllen
-- `Hintergrundbild-Deckkraft`: 25 %
+- `Hintergrundbild-Deckkraft`: 10 %
 - `Spielerfelder-Transparenz`: 10 %
-- `Aktivspieler-Tönung`: 15 %
+- `Aktivspieler-Tönung`: 20 %
 - `Debug`: Aus
 
 **Bot Board Style**
 - `Aktiv`: An
 - `Board-Design`: Winmau Blade 6 TC
-- `Geltungsbereich`: Nur bei Bot-Zügen
+- `Geltungsbereich`: Alle Match-Boards
 - `Debug`: Aus
 
 ### Animationen
@@ -226,17 +226,17 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aus
 
 **Active Player Sweep**
-- `Sweep-Geschwindigkeit`: Standard
-- `Sweep-Stil`: Standard
+- `Sweep-Geschwindigkeit`: Langsam
+- `Sweep-Stil`: Kräftig
 
 **Turn Score Counter**
 - `Zählstil`: Smooth Count
-- `Zählgeschwindigkeit`: Standard
+- `Zählgeschwindigkeit`: Schnell
 - `Aufblitz-Effekt`: Aus
 - `Aufblitz-Modus`: Nur bei Änderung
 
 **AVG Trend Arrow**
-- `Animationsdauer`: Standard
+- `Animationsdauer`: Lang
 - `Pfeil-Größe`: Standard
 
 **Special Hit Highlights**
@@ -244,11 +244,11 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Animationsstil`: Electric Jolt
 
 **Dart Marker Replacer**
-- `Dart Design`: Autodarts
+- `Dart Design`: German Giant
 - `Dart-Fluganimation`: An
 - `Dart-Größe`: Standard
 - `Original-Marker ausblenden`: An
-- `Einschlagstil`: Natürlich
+- `Einschlagstil`: Dramatisch
 - `Einschlag-Schatten`: An
 - `Schatten-Weichzeichnung`: An
 - `Einschlag-Wobble`: An
@@ -273,12 +273,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Fallback-Scan`: Nur live
 
 **Winner Celebration Effect**
-- `Style`: Top Fireworks
-- `Farbe`: Autodarts
+- `Style`: Center Cannon
+- `Farbe`: Gold
 - `Intensität`: Standard
 - `Dauer`: 5 s
-- `Partikelanzahl`: Optimiert
-- `Bei Bull-Out aktiv`: An
+- `Partikelanzahl`: Sparsam
+- `Bei Bull-Out aktiv`: Aus
 - `Klick beendet Effekt`: An
 
 **Checkout Suggestion Styles**
@@ -287,23 +287,23 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Farbthema`: Amber
 
 **Checkout Score Highlight**
-- `Effekt`: Grow Only
-- `Farbthema`: Autodarts Grün
+- `Effekt`: Fade Blink
+- `Farbthema`: Cyan
 - `Intensität`: Standard
 - `Trigger-Quelle`: Vorschlag zuerst
 
 **X01 Remaining Score Bar**
-- `Farben`: Checkout Focus
+- `Farben`: Traffic Light
 - `Balkengröße`: Breit
-- `Effekt`: Aus
+- `Effekt`: Previous Score Trail
 
 **X01 Bust Active Player Highlight**
 
 **Checkout Target Highlights**
 - `Darstellung`: Fast Blink
-- `Segmentstil`: Nur Fläche
+- `Segmentstil`: Fläche + Rahmen
 - `Zielauswahl`: Nächstes Feld
-- `Farbthema`: Cyan
+- `Farbthema`: Violett
 
 **TV Board Zoom**
 - `Zoom-Stufe`: 2,75
@@ -330,7 +330,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Treffer-Impuls`: An
 - `Zugwechsel-Übergang`: An
 - `PRESSURE-Overlay`: An
-- `Farbthema`: Standard
+- `Farbthema`: High Contrast
 - `Intensität`: Standard
 
 ## Themen

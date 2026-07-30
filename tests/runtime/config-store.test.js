@@ -7,6 +7,10 @@ import {
   LEGACY_IMPORT_FLAG_KEY,
   createConfigStore,
 } from "../../src/config/config-store.js";
+import {
+  createRecommendedRuntimeConfig,
+  normalizeRuntimeConfig,
+} from "../../src/config/runtime-config.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 import { createFakeWindow, FakeStorage } from "./fake-dom.js";
 
@@ -48,6 +52,83 @@ test("config store loads defaults when storage is empty", async () => {
   assert.equal(config.features.checkoutTargetHighlights.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
   assert.equal(config.features.tvBoardZoom.t20SetupZoomEnabled, true);
+});
+
+test("config store creates the recommended profile only when no current or legacy config exists", async () => {
+  const localStorage = new FakeStorage();
+  const store = createConfigStore({ localStorageRef: localStorage });
+  let createCalls = 0;
+
+  const result = await store.importLegacyConfigIfAvailable({
+    createInitialConfig: () => {
+      createCalls += 1;
+      return createRecommendedRuntimeConfig();
+    },
+  });
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(result.imported, false);
+  assert.equal(result.initialized, true);
+  assert.equal(result.reason, "initial-config-created");
+  assert.equal(createCalls, 1);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
+  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
+  assert.equal(storedConfig.features.themes.globalTypography.enabled, true);
+  assert.equal(localStorage.getItem(LEGACY_IMPORT_FLAG_KEY), "true");
+});
+
+test("config store never creates the recommended profile over an existing config", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      featureToggles: {
+        checkoutScoreHighlight: false,
+      },
+      features: {
+        checkoutScoreHighlight: {
+          enabled: false,
+          effect: "glow-only",
+        },
+      },
+    }),
+  });
+  const store = createConfigStore({ localStorageRef: localStorage });
+  let createCalls = 0;
+
+  const result = await store.importLegacyConfigIfAvailable({
+    createInitialConfig: () => {
+      createCalls += 1;
+      return createRecommendedRuntimeConfig();
+    },
+  });
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(result.imported, false);
+  assert.equal(result.reason, "existing-current-config");
+  assert.equal(createCalls, 0);
+  assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "glow-only");
+});
+
+test("config store treats a stored default-shaped config as an existing installation", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify(normalizeRuntimeConfig()),
+  });
+  const store = createConfigStore({ localStorageRef: localStorage });
+  let createCalls = 0;
+
+  const result = await store.importLegacyConfigIfAvailable({
+    createInitialConfig: () => {
+      createCalls += 1;
+      return createRecommendedRuntimeConfig();
+    },
+  });
+  const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+
+  assert.equal(result.imported, false);
+  assert.equal(result.reason, "no-compatible-legacy-config");
+  assert.equal(createCalls, 0);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "grow-only");
+  assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
 });
 
 test("config store saves, updates, and resets persisted config", async () => {

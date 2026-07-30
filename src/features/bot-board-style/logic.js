@@ -212,8 +212,10 @@ function isForegroundNode(node) {
 
 function findLastNativeGeometryNode(boardGroup, imageNode) {
   return Array.from(boardGroup?.children || [])
-    .filter((childNode) => childNode && childNode !== imageNode && !isForegroundNode(childNode))
-    .at(-1) || null;
+    .findLast(
+      (childNode) =>
+        childNode && childNode !== imageNode && !isForegroundNode(childNode),
+    ) || null;
 }
 
 function liftForegroundNodes(boardGroup, imageNode) {
@@ -228,7 +230,11 @@ function liftForegroundNodes(boardGroup, imageNode) {
     .filter((childNode) => isForegroundNode(childNode));
   const insertionReference = imageNode.nextElementSibling;
   foregroundNodesBelowImage.forEach((foregroundNode) => {
-    boardGroup.insertBefore(foregroundNode, insertionReference);
+    if (insertionReference) {
+      insertionReference.before(foregroundNode);
+    } else {
+      boardGroup.appendChild(foregroundNode);
+    }
   });
 }
 
@@ -240,7 +246,11 @@ function placeImageInLayer(boardGroup, imageNode) {
   const lastNativeGeometryNode = findLastNativeGeometryNode(boardGroup, imageNode);
   const insertionReference = lastNativeGeometryNode?.nextElementSibling || null;
   if (insertionReference !== imageNode) {
-    boardGroup.insertBefore(imageNode, insertionReference);
+    if (insertionReference) {
+      insertionReference.before(imageNode);
+    } else {
+      boardGroup.appendChild(imageNode);
+    }
   }
 
   liftForegroundNodes(boardGroup, imageNode);
