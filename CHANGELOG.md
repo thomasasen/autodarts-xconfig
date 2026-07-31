@@ -12,6 +12,18 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.7.0] - 2026-08-01
+
+### Added
+
+- Nutzerwirkung: Templates Global bietet zwölf zusätzliche, thematisch abgestimmte Presets mit eingebetteten Wallpapern, passenden Schriften, Farbrollen, Aktivspieler-Tönungen und Transparenzwerten.
+  Technik: Optimierte WebP-Assets, ein gemeinsames Preset-Manifest und Browser-/Node-Resolver erweitern die bestehende Preset-Pipeline; Regressionstests sichern Assetzuordnung, auswählbare Konfigurationswerte, Abmessungen und Größenbudget ab.
+
+### Changed
+
+- Nutzerwirkung: Presets erscheinen als kompakte zweispaltige Live-Kacheln, die Wallpaper, Typografie, Farbpalette und eine exemplarische Spielerkarte direkt zeigen; Änderungen an einem Preset aktualisieren automatisch auch seine Vorschau.
+  Technik: Der generische xConfig-Renderer leitet die Vorschau vollständig aus den realen Presetdefinitionen und gebündelten Assets ab, lädt benötigte Vorschau-Schriften kontrolliert und hält das Layout responsiv; README und Feature-Dokumentation enthalten die neue Presetübersicht.
+
 ## [2.6.0] - 2026-07-30
 
 ### Added
@@ -1867,7 +1879,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/8f7c754...HEAD
+[2.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/3a795d2...HEAD
+[2.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/8f7c754...3a795d2
 [2.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/ca6bbdf...8f7c754
 [2.4.17]: https://github.com/thomasasen/autodarts-xconfig/compare/fffbee4...ca6bbdf
 [2.4.16]: https://github.com/thomasasen/autodarts-xconfig/compare/74b026d...fffbee4

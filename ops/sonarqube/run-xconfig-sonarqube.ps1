@@ -51,6 +51,13 @@ function Read-CodexSonarQubeEnv {
 
     $envMatch = [regex]::Match($sectionMatch.Groups["section"].Value, 'env\s*=\s*\{(?<body>[^}]*)\}')
     if (-not $envMatch.Success) {
+      $envMatch = [regex]::Match(
+        $content,
+        '(?ms)^\[mcp_servers\.sonarqube\.env\]\s*(?<body>.*?)(?=^\[|\z)'
+      )
+    }
+
+    if (-not $envMatch.Success) {
       continue
     }
 
@@ -86,6 +93,9 @@ function Invoke-Scanner {
     if ($scanner) {
       Write-Host "Running SonarQube analysis with sonar-scanner on PATH."
       & $scanner.Source "-Dsonar.qualitygate.wait=true"
+      if ($LASTEXITCODE -ne 0) {
+        throw "SonarQube scanner failed with exit code $LASTEXITCODE."
+      }
       return
     }
 
@@ -98,6 +108,9 @@ function Invoke-Scanner {
         -v "$($repoRoot):/usr/src" `
         sonarsource/sonar-scanner-cli `
         "-Dsonar.qualitygate.wait=true"
+      if ($LASTEXITCODE -ne 0) {
+        throw "SonarQube Docker scanner failed with exit code $LASTEXITCODE."
+      }
       return
     }
 
@@ -105,6 +118,9 @@ function Invoke-Scanner {
     if ($npx) {
       Write-Host "Running SonarQube analysis with npx sonarqube-scanner."
       & $npx.Source --yes sonarqube-scanner "-Dsonar.qualitygate.wait=true"
+      if ($LASTEXITCODE -ne 0) {
+        throw "SonarQube npx scanner failed with exit code $LASTEXITCODE."
+      }
       return
     }
 

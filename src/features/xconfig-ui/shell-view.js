@@ -12,6 +12,8 @@ import {
   resolveThemeBackgroundPreviewUrl,
 } from "./theme-background.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
+import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
+import { resolveThemePresetAsset } from "#theme-preset-assets";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 import { getFeatureCatalogEntryByFeatureKey } from "../../shared/feature-catalog.js";
 import {
@@ -1988,6 +1990,11 @@ function buildX01BustActivePlayerHighlightPreview(documentRef) {
 }
 
 function buildFeatureActionField(documentRef, feature, field, fieldId) {
+  const previewTarget = String(field?.previewTarget || "").trim();
+  if (previewTarget === "theme-global-template-preset") {
+    return buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId);
+  }
+
   const previewColorTheme = String(field?.previewColorTheme || "").trim();
   const wrapper = createElement(documentRef, "div", {
     className: "ad-xconfig-setting-action",
@@ -2009,7 +2016,6 @@ function buildFeatureActionField(documentRef, feature, field, fieldId) {
       "data-preview-color-theme": previewColorTheme || undefined,
     },
   });
-  const previewTarget = String(field.previewTarget || "").trim();
   if (previewTarget) {
     const previewNode = createElement(documentRef, "div", {
       className: "ad-xconfig-setting-action-preview",
@@ -2044,6 +2050,137 @@ function buildFeatureActionField(documentRef, feature, field, fieldId) {
   if (field.action === "uploadTurnDartImage") {
     wrapper.appendChild(buildTurnDartImageStatus(documentRef, feature));
   }
+  return wrapper;
+}
+
+function appendThemeGlobalTemplatePresetSwatches(documentRef, parent, preset) {
+  const swatches = createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-swatches",
+    attributes: {
+      "aria-hidden": "true",
+    },
+  });
+  [preset.accentColor, preset.scoreColor, preset.secondaryTextColor, preset.throwLabelColor]
+    .forEach((color) => {
+      const swatch = createElement(documentRef, "span", {
+        className: "ad-xconfig-theme-preset-swatch",
+      });
+      swatch.style.backgroundColor = color;
+      swatches.appendChild(swatch);
+    });
+  parent.appendChild(swatches);
+}
+
+function applyThemeGlobalTemplatePresetPreviewStyles(button, preset, fontPreset) {
+  const backgroundOpacity = Math.max(0, Math.min(100, Number(preset.backgroundOpacity) || 0));
+  const playerFieldTransparency = Math.max(
+    0,
+    Math.min(95, Number(preset.playerFieldTransparency) || 0)
+  );
+  const tintIntensity = Math.max(0, Math.min(100, Number(preset.activePlayerTintIntensity) || 0));
+  button.style.setProperty("--ad-xconfig-theme-preset-accent", preset.accentColor);
+  button.style.setProperty("--ad-xconfig-theme-preset-score", preset.scoreColor);
+  button.style.setProperty("--ad-xconfig-theme-preset-secondary", preset.secondaryTextColor);
+  button.style.setProperty("--ad-xconfig-theme-preset-throw", preset.throwLabelColor);
+  button.style.setProperty(
+    "--ad-xconfig-theme-preset-overlay-alpha",
+    String((100 - backgroundOpacity) / 100)
+  );
+  button.style.setProperty(
+    "--ad-xconfig-theme-preset-player-alpha",
+    String((100 - playerFieldTransparency) / 100)
+  );
+  button.style.setProperty("--ad-xconfig-theme-preset-tint", `${tintIntensity}%`);
+  button.style.setProperty(
+    "--ad-xconfig-theme-preset-font",
+    String(fontPreset?.previewFontFamily || "inherit")
+  );
+}
+
+function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId) {
+  const preset = getThemeGlobalTemplatePreset(field?.actionId);
+  if (!preset) {
+    return createElement(documentRef, "p", {
+      className: "ad-xconfig-note",
+      text: `Preset ${field?.buttonLabel || field?.label || ""} ist nicht verfügbar.`,
+    });
+  }
+
+  const wallpaperUrl = resolveThemePresetAsset(preset.backgroundAssetKey);
+  const fontPreset = getThemeGlobalTypographyPreset(preset.fontPreset);
+  const wrapper = createElement(documentRef, "div", {
+    className: "ad-xconfig-setting-action ad-xconfig-setting-action--theme-preset",
+  });
+  const button = createElement(documentRef, "button", {
+    id: fieldId,
+    type: "button",
+    className: "ad-xconfig-theme-preset-card",
+    attributes: {
+      "data-adxconfig-action": field.action,
+      "data-feature-key": feature.featureKey,
+      "data-config-key": feature.configKey,
+      "data-feature-action-id": preset.key,
+      "data-theme-preset-key": preset.key,
+      "data-theme-preset-has-wallpaper": wallpaperUrl ? "true" : "false",
+      "data-theme-preset-background-mode": preset.backgroundDisplayMode,
+      "aria-label": `Preset ${preset.label} anwenden`,
+      title: preset.description,
+    },
+  });
+  applyThemeGlobalTemplatePresetPreviewStyles(button, preset, fontPreset);
+
+  if (wallpaperUrl) {
+    button.appendChild(createElement(documentRef, "img", {
+      className: "ad-xconfig-theme-preset-wallpaper",
+      attributes: {
+        src: wallpaperUrl,
+        alt: "",
+        loading: "lazy",
+        decoding: "async",
+      },
+    }));
+  }
+
+  const content = createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-content",
+  });
+  const identity = createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-identity",
+  });
+  identity.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-name",
+    text: preset.label,
+  }));
+  if (!wallpaperUrl) {
+    identity.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-theme-preset-wallpaper-state",
+      text: "ohne Wallpaper",
+    }));
+  }
+  appendThemeGlobalTemplatePresetSwatches(documentRef, identity, preset);
+  content.appendChild(identity);
+
+  const player = createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-player",
+  });
+  player.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-player-name",
+    text: "THOMAS",
+    attributes: {
+      "data-adxconfig-preview-font": fontPreset?.remote ? fontPreset.value : undefined,
+    },
+  }));
+  player.appendChild(createElement(documentRef, "strong", {
+    className: "ad-xconfig-theme-preset-score",
+    text: "501",
+  }));
+  player.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-throw",
+    text: "T20",
+  }));
+  content.appendChild(player);
+  button.appendChild(content);
+  wrapper.appendChild(button);
   return wrapper;
 }
 
@@ -2727,8 +2864,12 @@ function buildSettingsModal(documentRef, state, features) {
           className: "ad-xconfig-settings-section-title",
           text: sectionLabel,
         }));
+        const isThemePresetSection =
+          isThemeGlobalTypographyFeature(feature) && sectionLabel === "Presets";
         const nextSectionBody = createElement(documentRef, "div", {
-          className: "ad-xconfig-settings-section-body",
+          className: isThemePresetSection
+            ? "ad-xconfig-settings-section-body ad-xconfig-settings-section-body--theme-presets"
+            : "ad-xconfig-settings-section-body",
         });
         section.appendChild(nextSectionBody);
         body.appendChild(section);
@@ -2737,13 +2878,20 @@ function buildSettingsModal(documentRef, state, features) {
       sectionBody = sectionBodies.get(sectionLabel) || body;
     }
 
+    const isThemePresetField = field.previewTarget === "theme-global-template-preset";
+    let rowClassName = "ad-xconfig-setting-row";
+    if (isThemePresetField) {
+      rowClassName += " ad-xconfig-setting-row--theme-preset";
+    } else if (String(field.key || field.action || "").toLowerCase() === "debug") {
+      rowClassName += " ad-xconfig-setting-row--debug";
+    }
     const row = createElement(documentRef, "div", {
-      className: String(field.key || field.action || "").toLowerCase() === "debug"
-        ? "ad-xconfig-setting-row ad-xconfig-setting-row--debug"
-        : "ad-xconfig-setting-row",
+      className: rowClassName,
     });
     const inputWrap = createElement(documentRef, "div", {
-      className: "ad-xconfig-setting-input",
+      className: isThemePresetField
+        ? "ad-xconfig-setting-input ad-xconfig-setting-input--theme-preset"
+        : "ad-xconfig-setting-input",
     });
     if (field.control !== "action") {
       row.appendChild(createElement(documentRef, "label", {

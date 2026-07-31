@@ -353,6 +353,18 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Matrix`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Matrix. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
 - `Fire`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Fire. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
 - `Ice`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Ice. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Spider-Man`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Spider-Man. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Neon Splash`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Neon Splash. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `John Wick`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf John Wick. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Solar Pulse`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Solar Pulse. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Crimson Facets`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Crimson Facets. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Aqua Flux`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Aqua Flux. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Avengers Endgame`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Avengers Endgame. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Gladiator`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Gladiator. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Deutschland`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Deutschland. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Dark Side`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Dark Side. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Darts Arena`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Darts Arena. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
+- `Bayern`: Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf Bayern. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.
 - `Schriftart`: Wählt eine kuratierte Remote-Schrift für die Template-Typografie. Die Schrift wirkt nur in den unterstützten Bereichen des aktiven xConfig-Themes und verwendet bei Ladeproblemen automatisch einen lokalen Fallback-Stack.
   - Standard (deaktiviert)
   - <span style="font-family: &quot;Aldrich&quot;, &quot;Open Sans&quot;, &quot;Segoe UI&quot;, Tahoma, sans-serif; font-size: 1.08em;">Aldrich</span>
@@ -460,6 +472,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrundbild entfernen`: Löscht nur das in Templates Global gespeicherte Fallback-Bild. Einzelne Themes mit eigenem Bild bleiben unverändert; Themes ohne eigenes Bild fallen danach wieder auf ihr aktives Preset-Wallpaper oder den normalen Theme-Background zurück.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben und Diagnosehinweise. Für den normalen Spielbetrieb ist die Option nicht gedacht und sollte in der Regel ausgeschaltet bleiben.
 
+![Templates Global Presetübersicht mit Live-Vorschauen](docs/screenshots/templates-global-presets.webp)
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](docs/screenshots/template-theme-global-typography-xConfig.png)
 ![Templates Global Wurffeld-Darts mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
 

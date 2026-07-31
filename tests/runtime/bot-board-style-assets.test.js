@@ -12,7 +12,7 @@ import {
 import { USERSCRIPT_ASSET_LOADERS } from "../../scripts/userscript-build-config.mjs";
 
 const boardAssetDirectory = path.resolve(process.cwd(), "src", "assets", "board-styles");
-const loaderEntry = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
+const browserAssetEntry = path.resolve(process.cwd(), "src", "shared", "feature-assets.browser.js");
 
 function readUint24LE(buffer, offset) {
   return buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16);
@@ -64,9 +64,9 @@ test("optimized board assets preserve alpha, fit 1000 pixels, and stay below the
   assert.ok(totalBytes <= 1.8 * 1024 * 1024, `board assets use ${totalBytes} bytes`);
 });
 
-test("userscript source bundles WebP board assets as data URLs without writing dist", async () => {
+test("browser asset resolver bundles WebP board assets as data URLs without writing dist", async () => {
   const result = await build({
-    entryPoints: [loaderEntry],
+    entryPoints: [browserAssetEntry],
     bundle: true,
     format: "iife",
     platform: "browser",

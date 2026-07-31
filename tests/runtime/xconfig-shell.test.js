@@ -5,7 +5,10 @@ import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-template-presets.js";
-import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
+import {
+  getThemeGlobalTypographyPreset,
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+} from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import {
   DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE,
@@ -3026,8 +3029,78 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   );
   assert.equal(presetButtons.length, THEME_GLOBAL_TEMPLATE_PRESETS.length);
   assert.deepEqual(
-    presetButtons.map((button) => String(button.textContent || "").trim()),
+    presetButtons.map((button) => String(
+      button.querySelector(".ad-xconfig-theme-preset-name")?.textContent || ""
+    ).trim()),
     THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) => preset.label)
+  );
+  const presetGrid = documentRef.querySelector(
+    "[data-adxconfig-settings-section='presets'] .ad-xconfig-settings-section-body--theme-presets"
+  );
+  assert.ok(presetGrid);
+
+  presetButtons.forEach((button, index) => {
+    const preset = THEME_GLOBAL_TEMPLATE_PRESETS[index];
+    const fontPreset = getThemeGlobalTypographyPreset(preset.fontPreset);
+    const wallpaper = button.querySelector(".ad-xconfig-theme-preset-wallpaper");
+    assert.equal(button.getAttribute("data-theme-preset-key"), preset.key);
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-accent"),
+      preset.accentColor
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-score"),
+      preset.scoreColor
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-secondary"),
+      preset.secondaryTextColor
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-throw"),
+      preset.throwLabelColor
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-font"),
+      fontPreset.previewFontFamily
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-overlay-alpha"),
+      String((100 - preset.backgroundOpacity) / 100)
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-player-alpha"),
+      String((100 - preset.playerFieldTransparency) / 100)
+    );
+    assert.equal(
+      button.style.getPropertyValue("--ad-xconfig-theme-preset-tint"),
+      `${preset.activePlayerTintIntensity}%`
+    );
+    assert.equal(
+      button.getAttribute("data-theme-preset-background-mode"),
+      preset.backgroundDisplayMode
+    );
+    assert.equal(Boolean(wallpaper), Boolean(preset.backgroundAssetKey));
+    assert.deepEqual(
+      button.querySelectorAll(".ad-xconfig-theme-preset-swatch")
+        .map((swatch) => swatch.style.backgroundColor),
+      [preset.accentColor, preset.scoreColor, preset.secondaryTextColor, preset.throwLabelColor]
+    );
+  });
+
+  const classicButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-preset-classic"
+  );
+  assert.equal(
+    String(classicButton?.querySelector(".ad-xconfig-theme-preset-wallpaper-state")?.textContent || ""),
+    "ohne Wallpaper"
+  );
+  const cyberpunkButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-typography-preset-cyberpunk"
+  );
+  assert.match(
+    String(cyberpunkButton?.querySelector(".ad-xconfig-theme-preset-wallpaper")?.getAttribute("src") || ""),
+    /theme-presets\/cyberpunk\.jpg/
   );
 
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");

@@ -178,6 +178,18 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Matrix`: Wendet das Preset Matrix mit einem Klick auf Templates Global an.
 - `Fire`: Wendet das Preset Fire mit einem Klick auf Templates Global an.
 - `Ice`: Wendet das Preset Ice mit einem Klick auf Templates Global an.
+- `Spider-Man`: Wendet das Preset Spider-Man mit einem Klick auf Templates Global an.
+- `Neon Splash`: Wendet das Preset Neon Splash mit einem Klick auf Templates Global an.
+- `John Wick`: Wendet das Preset John Wick mit einem Klick auf Templates Global an.
+- `Solar Pulse`: Wendet das Preset Solar Pulse mit einem Klick auf Templates Global an.
+- `Crimson Facets`: Wendet das Preset Crimson Facets mit einem Klick auf Templates Global an.
+- `Aqua Flux`: Wendet das Preset Aqua Flux mit einem Klick auf Templates Global an.
+- `Avengers Endgame`: Wendet das Preset Avengers Endgame mit einem Klick auf Templates Global an.
+- `Gladiator`: Wendet das Preset Gladiator mit einem Klick auf Templates Global an.
+- `Deutschland`: Wendet das Preset Deutschland mit einem Klick auf Templates Global an.
+- `Dark Side`: Wendet das Preset Dark Side mit einem Klick auf Templates Global an.
+- `Darts Arena`: Wendet das Preset Darts Arena mit einem Klick auf Templates Global an.
+- `Bayern`: Wendet das Preset Bayern mit einem Klick auf Templates Global an.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Template-Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
@@ -285,6 +297,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrundbild entfernen`: Entfernt nur das globale Fallback-Hintergrundbild.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Templates Global Presetübersicht mit Live-Vorschauen](screenshots/templates-global-presets.webp)
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)
 ![Templates Global Wurffeld-Darts mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
 

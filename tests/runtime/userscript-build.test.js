@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { BOARD_STYLE_DESIGN_FILES } from "../../src/shared/board-style-assets.manifest.js";
 import { DART_DESIGN_FILES } from "../../src/shared/feature-assets.manifest.js";
 import { THEME_PRESET_ASSET_FILES } from "../../src/shared/theme-preset-assets.manifest.js";
 import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
@@ -48,6 +49,9 @@ function collectBundledDataUrls(text) {
 function buildAllowedBundledAssetSources() {
   return new Set([
     ...Object.values(DART_DESIGN_FILES).map((fileName) => `src/assets/darts/${fileName}`),
+    ...Object.values(BOARD_STYLE_DESIGN_FILES).map(
+      (fileName) => `src/assets/board-styles/${fileName}`
+    ),
     ...Object.values(THEME_PRESET_ASSET_FILES).map(
       (fileName) => `src/assets/theme-presets/${fileName}`
     ),
@@ -158,7 +162,7 @@ test("checked-in userscript bundle embeds only approved runtime assets", () => {
   const allowedSources = buildAllowedBundledAssetSources();
   const bundledAssetSources = collectBundledDataUrls(text)
     .map((entry) => entry.source)
-    .filter((source) => /\.(?:png|jpe?g|gif|mp3)$/i.test(source));
+    .filter((source) => /\.(?:png|jpe?g|gif|webp|mp3)$/i.test(source));
   const uniqueBundledAssetSources = [...new Set(bundledAssetSources)].sort();
   const unexpectedAssetSources = uniqueBundledAssetSources.filter(
     (source) => !allowedSources.has(source)

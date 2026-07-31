@@ -15,6 +15,9 @@ foreach ($path in $codexPaths) {
     $sectionMatch = [regex]::Match($content, '(?ms)^\[mcp_servers\.sonarqube\]\s*(?<section>.*?)(?=^\[|\z)')
     if (-not $sectionMatch.Success) { continue }
     $envMatch = [regex]::Match($sectionMatch.Groups["section"].Value, 'env\s*=\s*\{(?<body>[^}]*)\}')
+    if (-not $envMatch.Success) {
+        $envMatch = [regex]::Match($content, '(?ms)^\[mcp_servers\.sonarqube\.env\]\s*(?<body>.*?)(?=^\[|\z)')
+    }
     if (-not $envMatch.Success) { continue }
     foreach ($m in [regex]::Matches($envMatch.Groups["body"].Value, '([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"((?:\\.|[^"\\])*)"')) {
         $key = $m.Groups[1].Value

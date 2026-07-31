@@ -242,6 +242,10 @@ export const xconfigFeatureCopy = deepFreeze({
       "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
     images: [
       image(
+        "Templates Global Presetübersicht mit Live-Vorschauen",
+        "templates-global-presets.webp"
+      ),
+      image(
         "Templates Global mit lila Aktiv-Akzent in AD xConfig",
         "template-theme-global-typography-xConfig.png"
       ),

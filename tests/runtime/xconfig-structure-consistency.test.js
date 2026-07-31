@@ -424,27 +424,19 @@ test("xConfig color preset settings expose matching preview themes", () => {
   );
 });
 
-test("theme global template preset actions expose color previews", () => {
+test("theme global template preset actions use the live preset preview target", () => {
   const descriptor = xconfigDescriptors.find(
     (entry) => entry.featureKey === "theme-global-typography"
   );
-  const previewColorThemes = (descriptor?.fields || [])
-    .filter((field) => field.action === "applyThemeGlobalPreset")
-    .map((field) => String(field.previewColorTheme || ""));
+  const presetActions = (descriptor?.fields || [])
+    .filter((field) => field.action === "applyThemeGlobalPreset");
 
-  assert.deepEqual(previewColorThemes, [
-    "template-classic",
-    "template-broadcast",
-    "template-british-flag",
-    "template-cyberpunk",
-    "template-matrix",
-    "template-fire",
-    "template-ice",
-  ]);
-  previewColorThemes.forEach((previewColorTheme) => {
-    assert.equal(
-      xconfigShellStyleText.includes(`data-preview-color-theme="${previewColorTheme}"`),
-      true
-    );
-  });
+  assert.deepEqual(
+    presetActions.map((field) => String(field.previewTarget || "")),
+    presetActions.map(() => "theme-global-template-preset")
+  );
+  assert.equal(
+    xconfigShellStyleText.includes("ad-xconfig-settings-section-body--theme-presets"),
+    true
+  );
 });

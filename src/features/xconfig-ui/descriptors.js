@@ -281,7 +281,7 @@ export const xconfigDescriptors = Object.freeze([
           key: `preset-${preset.key}`,
           actionId: preset.key,
           buttonLabel: preset.label,
-          previewColorTheme: `template-${preset.key}`,
+          previewTarget: "theme-global-template-preset",
           section: "Presets",
         })
       ),
