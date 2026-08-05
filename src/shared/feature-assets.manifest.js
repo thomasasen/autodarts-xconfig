@@ -26,3 +26,37 @@ export const DART_DESIGN_FILES = Object.freeze({
 });
 
 export const DART_DESIGN_KEYS = Object.freeze(Object.keys(DART_DESIGN_FILES));
+
+export const DART_DESIGN_LABELS = Object.freeze({
+  aireplicant: "AI Replicant",
+  bullet: "Bullet",
+  germangiant: "German Giant",
+  mandalorian: "Mandalorian",
+  nuke: "Nuke",
+  philtaylor: "Phil Taylor",
+  snakebite: "Snakebite",
+  standard: "Standard",
+  stdyellow: "Standard Yellow",
+  stdyellow2: "Standard Yellow 2",
+  ultramarine: "Ultramarine",
+  autodarts: "Autodarts",
+  blackblue: "Black Blue",
+  blackgreen: "Black Green",
+  blackred: "Black Red",
+  blue: "Blue",
+  camoflage: "Camouflage",
+  green: "Green",
+  pride: "Pride",
+  red: "Red",
+  white: "White",
+  whitetrible: "White Trible",
+  yellow: "Yellow",
+  yellowscull: "Yellow Scull",
+});
+
+export const DART_DESIGN_OPTIONS = Object.freeze(
+  DART_DESIGN_KEYS.map((value) => Object.freeze({
+    value,
+    label: DART_DESIGN_LABELS[value],
+  }))
+);

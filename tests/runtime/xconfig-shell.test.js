@@ -4,6 +4,10 @@ import assert from "node:assert/strict";
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
+import {
+  TURN_DART_ASSET_KEYS,
+  TURN_DART_ASSET_LABELS,
+} from "../../src/shared/turn-dart-assets.manifest.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-template-presets.js";
 import {
   getThemeGlobalTypographyPreset,
@@ -30,10 +34,12 @@ import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-d
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const DEFAULT_TURN_DART_CONFIG = Object.freeze({
   turnDartStyle: "original",
+  turnDartAssetKey: "german-giant",
   turnDartTextTemplate: "",
   turnDartColor: "#FFFFFF",
   turnDartGradientColor: "#F97316",
   turnDartSizePercent: 115,
+  turnDartShineEnabled: true,
   turnDartImageDataUrl: "",
 });
 
@@ -2997,7 +3003,7 @@ test("xConfig shell links every card README button to the matching README anchor
   runtime.stop();
 });
 
-test("xConfig shell renders Templates Global font options as preview buttons and scopes preview font loading to the modal", async () => {
+test("xConfig shell renders a compact searchable Templates Global font picker and scopes preview font loading to the modal", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -3111,6 +3117,25 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='fontPreset']"
   );
   assert.equal(fontOptionButtons.length, THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.length);
+  const fontPicker = documentRef.querySelector("[data-adxconfig-font-picker='true']");
+  assert.ok(fontPicker);
+  assert.equal(fontPicker.getAttribute("open"), null);
+  const initialFontOption = fontOptionButtons.find(
+    (button) => button.getAttribute("data-active") === "true"
+  );
+  assert.ok(initialFontOption);
+  assert.equal(
+    String(
+      fontPicker.querySelector("[data-adxconfig-font-picker-current-name='true']")?.textContent || ""
+    ).trim(),
+    String(initialFontOption.querySelector(".ad-xconfig-option-label")?.textContent || "").trim()
+  );
+  assert.deepEqual(
+    fontPicker
+      .querySelector("[data-adxconfig-font-picker-current-preview='true']")
+      ?.children.map((node) => String(node.textContent || "")),
+    ["THOMAS", "501", "T20"]
+  );
   assert.equal(
     new Set(THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)).size,
     THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.length
@@ -3138,16 +3163,22 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     assert.equal(optionButton.classList.contains("ad-xconfig-option-item--typography-font"), true);
 
     const optionLabels = optionButton.querySelectorAll(".ad-xconfig-option-label");
+    const optionSamples = optionButton.querySelectorAll(".ad-xconfig-font-option-sample");
     assert.equal(optionLabels.length, 1, `unexpected preview layout for ${preset.value}`);
+    assert.equal(optionSamples.length, 1, `missing score preview for ${preset.value}`);
     assert.equal(String(optionLabels[0].textContent || "").trim(), preset.label);
+    assert.equal(String(optionSamples[0].textContent || "").trim(), "501");
 
     if (preset.value === "system") {
       assert.equal(optionLabels[0].getAttribute("data-adxconfig-preview-font"), null);
+      assert.equal(optionSamples[0].getAttribute("data-adxconfig-preview-font"), null);
       return;
     }
 
     assert.equal(optionLabels[0].getAttribute("data-adxconfig-preview-font"), preset.value);
+    assert.equal(optionSamples[0].getAttribute("data-adxconfig-preview-font"), preset.value);
     assert.match(String(optionLabels[0].style.fontFamily || ""), new RegExp(preset.familyName));
+    assert.match(String(optionSamples[0].style.fontFamily || ""), new RegExp(preset.familyName));
   });
 
   assert.equal(
@@ -3160,12 +3191,62 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   const shellStyleNode = documentRef.getElementById("ad-xconfig-shell-style");
   assert.ok(shellStyleNode);
   assert.equal(
-    String(shellStyleNode.textContent || "").includes("padding:.79rem .9rem;min-height:4.51rem"),
+    String(shellStyleNode.textContent || "").includes(
+      "grid-template-columns:repeat(2,minmax(0,1fr));max-height:min(28rem,55vh)"
+    ),
     true
   );
   assert.equal(
-    String(shellStyleNode.textContent || "").includes("font-size:1.19rem;line-height:1.2;font-weight:600;letter-spacing:.01em"),
+    String(shellStyleNode.textContent || "").includes("min-height:3.35rem;padding:.55rem .7rem"),
     true
+  );
+
+  const fontSearch = fontPicker.querySelector("[data-adxconfig-font-search='true']");
+  const emptyFontSearch = fontPicker.querySelector(".ad-xconfig-font-picker-empty");
+  const audiowideOption = fontOptionButtons.find(
+    (button) => button.getAttribute("data-setting-value") === "audiowide"
+  );
+  const aldrichOption = fontOptionButtons.find(
+    (button) => button.getAttribute("data-setting-value") === "aldrich"
+  );
+  assert.ok(fontSearch);
+  assert.ok(emptyFontSearch);
+  assert.ok(audiowideOption);
+  assert.ok(aldrichOption);
+
+  fontSearch.value = "audio";
+  fontSearch.dispatchEvent(new FakeEvent("input", { bubbles: true, target: fontSearch }));
+  assert.equal(aldrichOption.getAttribute("hidden"), "");
+  assert.equal(audiowideOption.getAttribute("hidden"), null);
+  assert.equal(emptyFontSearch.getAttribute("hidden"), "");
+
+  fontSearch.value = "nicht vorhanden";
+  fontSearch.dispatchEvent(new FakeEvent("input", { bubbles: true, target: fontSearch }));
+  assert.equal(fontOptionButtons.every((button) => button.getAttribute("hidden") === ""), true);
+  assert.equal(emptyFontSearch.getAttribute("hidden"), null);
+
+  fontSearch.value = "";
+  fontSearch.dispatchEvent(new FakeEvent("input", { bubbles: true, target: fontSearch }));
+  assert.equal(fontOptionButtons.every((button) => button.getAttribute("hidden") === null), true);
+  fontPicker.open = true;
+  fontPicker.setAttribute("open", "");
+  audiowideOption.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.fontPreset === "audiowide"
+  );
+  assert.equal(fontPicker.getAttribute("open"), null);
+  assert.equal(
+    String(
+      fontPicker.querySelector("[data-adxconfig-font-picker-current-name='true']")?.textContent || ""
+    ).trim(),
+    "Audiowide"
+  );
+  assert.equal(
+    fontPicker
+      .querySelector("[data-adxconfig-font-picker-current-preview='true']")
+      ?.getAttribute("data-adxconfig-preview-font"),
+    "audiowide"
   );
 
   const scopeOptionButtons = documentRef.querySelectorAll(
@@ -3260,6 +3341,30 @@ test("xConfig shell renders Templates Global font options as preview buttons and
     ),
     true
   );
+  const turnDartAssetOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='turnDartAssetKey']"
+  );
+  assert.equal(turnDartAssetOptions.length, TURN_DART_ASSET_KEYS.length);
+  assert.deepEqual(
+    turnDartAssetOptions.map((node) => node.getAttribute("data-setting-value")),
+    TURN_DART_ASSET_KEYS
+  );
+  turnDartAssetOptions.forEach((optionNode) => {
+    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--dart-design"), true);
+    assert.ok(optionNode.querySelector(".ad-xconfig-option-preview"));
+    assert.equal(optionNode.querySelector(".ad-xconfig-option-copy"), null);
+    const assetKey = optionNode.getAttribute("data-setting-value");
+    assert.equal(
+      String(optionNode.querySelector(".ad-xconfig-option-label")?.textContent || "").trim(),
+      TURN_DART_ASSET_LABELS[assetKey]
+    );
+  });
+  assert.equal(
+    turnDartAssetOptions[0]?.parentElement?.classList?.contains(
+      "ad-xconfig-turn-dart-asset-option-list"
+    ),
+    true
+  );
   assert.equal(
     backgroundSelectFields.some(
       (node) => node.getAttribute("data-setting-key") === "turnDartSizePercent"
@@ -3275,6 +3380,21 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   );
   assert.ok(turnDartTextInput);
   assert.equal(turnDartTextInput.getAttribute("placeholder"), "Wurf #");
+  const turnDartShineToggle = documentRef.querySelector(
+    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='turnDartShineEnabled'][data-setting-control='checkbox']"
+  );
+  assert.ok(turnDartShineToggle);
+  assert.equal(turnDartShineToggle.checked, true);
+  turnDartShineToggle.checked = false;
+  documentRef.dispatchEvent(new FakeEvent("change", {
+    bubbles: true,
+    cancelable: true,
+    target: turnDartShineToggle,
+  }));
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.turnDartShineEnabled === false
+  );
   const turnDartImageStatus = documentRef.querySelector(
     "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
   );
@@ -3283,6 +3403,32 @@ test("xConfig shell renders Templates Global font options as preview buttons and
   assert.equal(
     String(turnDartImageStatus.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
     "Aktuelles Dart-Bild: keines."
+  );
+
+  const markerDesignBefore = JSON.parse(
+    localStorage.getItem(CONFIG_STORAGE_KEY)
+  ).features?.dartMarkerReplacer?.design;
+  clickSelectSettingOption(documentRef, "theme-global-typography", "turnDartAssetKey", "german-giant");
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features?.themes?.globalTypography?.turnDartStyle === "preset" &&
+      config.features.themes.globalTypography.turnDartAssetKey === "german-giant"
+  );
+  assert.equal(
+    JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features?.dartMarkerReplacer?.design,
+    markerDesignBefore
+  );
+  assert.equal(
+    await waitFor(() => {
+      const statusNode = documentRef.querySelector(
+        "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+      );
+      return String(
+        statusNode?.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""
+      ) === "Aktuelles Dart-Bild: Marker-Bild German Gigant.";
+    }),
+    true
   );
 
   clickSelectSettingOption(documentRef, "theme-global-typography", "activePlayerTintIntensity", 20);

@@ -7,6 +7,7 @@ import {
   hexColorToRgba,
   normalizeHexColor,
 } from "../../../shared/hex-color-utils.js";
+import { resolveTurnDartAsset } from "#feature-assets";
 
 export const STYLE_ID = "ad-ext-theme-global-typography-style";
 export const TOOLS_SHADOW_STYLE_ID = "ad-ext-theme-global-typography-tools-style";
@@ -14,6 +15,7 @@ export const TOOLS_SHADOW_STYLE_ID = "ad-ext-theme-global-typography-tools-style
 const TURN_DART_PLACEHOLDER_DATA_URL =
   "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20477%20102%22%3E%3C/svg%3E";
 const TURN_DART_LARGE_SIZE_BOOST = 1.25;
+const TURN_DART_PRESET_SIZE_BOOST = 1.7;
 const TURN_DART_IMAGE_SELECTOR = `#ad-ext-turn > .ad-ext-turn-throw img[alt="Dart"],
 #ad-ext-turn > .score img[alt="Dart"]`;
 const TURN_SUGGESTION_DART_SELECTOR = `#ad-ext-turn > .suggestion img[alt="Dart"]`;
@@ -153,17 +155,30 @@ function resolveUploadedTurnDartImageUrl(featureConfig = {}) {
   return dataUrl.startsWith("data:image/") ? dataUrl : "";
 }
 
-function resolveTurnDartImageUrl(featureConfig = {}) {
-  const uploadedImageUrl = resolveUploadedTurnDartImageUrl(featureConfig);
-  if (uploadedImageUrl) {
-    return uploadedImageUrl;
+function resolveTurnDartImage(featureConfig = {}) {
+  const style = String(featureConfig.turnDartStyle || "").trim().toLowerCase();
+  if (style === "image") {
+    return {
+      source: "upload",
+      url: resolveUploadedTurnDartImageUrl(featureConfig),
+    };
+  }
+  if (style === "preset") {
+    return {
+      source: "preset",
+      url: resolveTurnDartAsset(featureConfig.turnDartAssetKey),
+    };
   }
 
-  return buildTurnDartSvgDataUrl(featureConfig);
+  return {
+    source: "generated",
+    url: buildTurnDartSvgDataUrl(featureConfig),
+  };
 }
 
 function buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx) {
-  if (resolveUploadedTurnDartImageUrl(featureConfig)) {
+  const image = resolveTurnDartImage(featureConfig);
+  if (image.url && (image.source === "upload" || image.source === "preset")) {
     return "";
   }
 
@@ -224,10 +239,14 @@ function buildTurnSuggestionDartGuardStyleBlock() {
 function buildTurnDartStyleBlock(featureConfig = {}) {
   const sizePercent = Number(featureConfig.turnDartSizePercent);
   const normalizedSizePercent = [100, 115, 135].includes(sizePercent) ? sizePercent : 115;
-  const sizeScale =
+  const configuredSizeScale =
     normalizedSizePercent === 135
       ? (normalizedSizePercent / 100) * TURN_DART_LARGE_SIZE_BOOST
       : normalizedSizePercent / 100;
+  const style = String(featureConfig.turnDartStyle || "").trim().toLowerCase();
+  const sizeScale = style === "preset"
+    ? configuredSizeScale * TURN_DART_PRESET_SIZE_BOOST
+    : configuredSizeScale;
   const widthPx = Math.round(120 * sizeScale);
   const heightPx = Math.round(26 * sizeScale);
   const textStyleBlock = buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx);
@@ -235,12 +254,16 @@ function buildTurnDartStyleBlock(featureConfig = {}) {
     return textStyleBlock;
   }
 
-  const imageUrl = resolveTurnDartImageUrl(featureConfig);
+  const turnDartImage = resolveTurnDartImage(featureConfig);
+  const imageUrl = turnDartImage.url;
   if (!imageUrl) {
     return "";
   }
 
-  const isUploadedImage = Boolean(resolveUploadedTurnDartImageUrl(featureConfig));
+  const isUploadedImage = turnDartImage.source === "upload";
+  const shineFilter = featureConfig.turnDartShineEnabled === false
+    ? "none"
+    : "drop-shadow(0 0 5px rgba(255, 255, 255, 0.34))";
   const objectFit = isUploadedImage ? "cover" : "contain";
   const imageDeclarations =
     isUploadedImage
@@ -259,7 +282,7 @@ function buildTurnDartStyleBlock(featureConfig = {}) {
   height: ${heightPx}px !important;
   object-fit: ${objectFit} !important;
   opacity: 1 !important;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.34));
+  filter: ${shineFilter} !important;
 }
 
 ${buildTurnSuggestionDartGuardStyleBlock()}`;

@@ -567,3 +567,28 @@ test("turn dart image status nodes show and remove uploaded dart previews", () =
     "Aktuelles Dart-Bild: keines."
   );
 });
+
+test("turn dart image status shows the selected bundled turn dart image", () => {
+  const documentRef = new FakeDocument();
+  const status = buildTurnDartImageStatus(documentRef, {
+    featureKey: "theme-global-typography",
+    title: "Templates Global",
+    config: {
+      turnDartStyle: "preset",
+      turnDartAssetKey: "german-giant",
+      turnDartImageDataUrl: "data:image/webp;base64,SHOULD_NOT_WIN",
+    },
+  });
+
+  assert.equal(status.dataset.turnDartImageState, "present");
+  assert.equal(status.dataset.turnDartImageType, "preset");
+  assert.equal(status.dataset.turnDartImageSize, "");
+  assert.equal(
+    String(status.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
+    "Aktuelles Dart-Bild: Marker-Bild German Gigant."
+  );
+  assert.match(
+    String(status.querySelector(".ad-xconfig-turn-dart-image-preview")?.getAttribute("src") || ""),
+    /turn-dart-german-giant\.png/
+  );
+});

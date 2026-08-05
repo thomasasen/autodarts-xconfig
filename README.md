@@ -341,7 +341,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf oder eigenes Bild darstellen.
+- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf, gebündeltes Marker-Bild oder eigenes Bild darstellen.
 - Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
 
 **Einstellungen einfach erklärt**
@@ -432,18 +432,32 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `20 %`: Die aktive Karte wirkt klarer eingefärbt und übernimmt mehr von der Rahmenfarbe. Der Effekt bleibt noch kontrolliert, tritt aber sichtbar präsenter hervor als bei 15 %.
   - `25 %`: Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten deutlich und verändert den Kartencharakter spürbar. Diese Stufe ist markant, bleibt aber noch gut kontrollierbar.
   - `30 %`: Die Rahmenfarbe prägt den Hintergrund aktiver oder gewinnender Spielerkarten sehr deutlich. Diese Stufe ist die markanteste Variante und verändert den Kartencharakter am stärksten.
-- `Wurffeld-Darts`: Legt fest, ob die Darts im Wurffeld original bleiben, als einfarbige SVG, als Verlauf oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Wurffeld-Darts, nicht die Board-Marker.
+- `Wurffeld-Darts`: Legt fest, ob die Darts im Wurffeld original bleiben, als einfarbige SVG, als Verlauf, mit einem gebündelten Marker-Bild oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Wurffeld-Darts, nicht die Board-Marker.
   - `Original`: Die drei Dart-Grafiken im Wurffeld bleiben im Originalzustand von Autodarts.
   - `Farbe`: Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik in der gewählten Dart-Farbe ersetzt.
   - `Verlauf`: Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik mit Verlauf aus Verlaufsfarbe, Dart-Farbe und heller Spitze ersetzt.
+  - `Marker-Bild`: Die drei Dart-Grafiken im Wurffeld verwenden das unter `Dart auswählen` gewählte, lokal gebündelte Dart-Bild. Das Board-Design des Dart Marker Replacers bleibt dabei unverändert.
   - `Eigenes Bild`: Die drei Dart-Grafiken im Wurffeld verwenden das in Templates Global gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.
-- `Dart-Text`: Schreibt einen Text in die drei Wurffeld-Dartfelder, solange kein eigenes Dart-Bild gespeichert ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.
+- `Dart auswählen`: Zeigt passende, freigestellte Dart-Bilder für die drei Wurffelder. Die Auswahl aktiviert automatisch den Modus `Marker-Bild`, behält ein eventuell hochgeladenes eigenes Bild und verändert das Design der Board-Marker nicht.
+  - `German Gigant`: Verwendet den horizontal ausgerichteten German-Gigant-Dart mit Flight links und Spitze rechts für die drei Darts im Wurffeld. In der Auswahl wird nur die Dartbezeichnung angezeigt.
+  - `Blue Lightning`: Verwendet Blue Lightning mit blauem Blitz-Flight als Wurffeld-Dart.
+  - `Copper Grid`: Verwendet Copper Grid mit kupferfarbenem Gitter-Flight als Wurffeld-Dart.
+  - `Snakebite Purple`: Verwendet Snakebite Purple mit pink-violettem Schlangen-Flight als Wurffeld-Dart.
+  - `Iceman Blue`: Verwendet Iceman Blue mit schwarz-blauem Flight als Wurffeld-Dart.
+  - `Bullet Red`: Verwendet Bullet Red mit rotem Flight und goldener Spitze als Wurffeld-Dart.
+  - `Carbon Gold`: Verwendet Carbon Gold mit geometrischem schwarz-goldenem Flight als Wurffeld-Dart.
+  - `Vecta Gold`: Verwendet Vecta Gold mit EVO-Flight und goldenen Akzenten als Wurffeld-Dart.
+  - `GVV Blue`: Verwendet GVV Blue mit kontrastreichem schwarz-weiß-blauem Flight als Wurffeld-Dart.
+  - `Cool Hand Luke`: Verwendet Cool Hand Luke mit signiertem schwarz-goldenem Flight als Wurffeld-Dart.
+  - `Target Neon`: Verwendet Target Neon mit transluzentem Flight und Shaft als Wurffeld-Dart.
+- `Dart-Text`: Schreibt einen Text in die drei Wurffeld-Dartfelder, solange weder `Marker-Bild` noch `Eigenes Bild` aktiv ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.
 - `Dart-Farbe`: Bestimmt die Hauptfarbe der generierten Wurffeld-Darts. Im Verlaufsmodus bildet sie die Mitte des Verlaufs, im Farbmodus füllt sie den Dart vollständig.
 - `Verlaufsfarbe`: Bestimmt die zweite Farbe im Verlaufsmodus. Zusammen mit der Hauptfarbe entsteht eine horizontale Dart-Grafik mit leichter heller Spitze.
 - `Dart-Größe`: Regelt die dargestellte Größe der ersetzten Darts im Wurffeld. Die feste Höhe hält die Score-Leiste stabil, auch wenn ein eigenes Bild verwendet wird.
   - `Kompakt`: Die ersetzten Wurffeld-Darts bleiben kompakt und verändern die Leiste nur minimal.
   - `Standard`: Die Wurffeld-Darts werden etwas präsenter, bleiben aber innerhalb der üblichen Leistenhöhe.
   - `Groß`: Die Wurffeld-Darts werden größer angezeigt. Das passt besonders für reduzierte oder transparente eigene Bilder.
+- `Dart-Glanz`: Aktiviert oder entfernt den hellen Drop-Shadow um ersetzte Wurffeld-Darts. Größe, Dart-Bild und eigener Upload bleiben unverändert.
 - `Dart-Bild hochladen`: Öffnet die Dateiauswahl und speichert ein eigenes Bild für die drei Darts im Wurffeld. Empfohlen sind transparente PNG-, WebP- oder SVG-Dateien, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.
 - `Dart-Bild entfernen`: Löscht das in Templates Global gespeicherte Wurffeld-Dart-Bild und stellt die Wurffeld-Darts wieder auf `Original`. Farben, Verläufe und andere Templates-Global-Werte bleiben erhalten.
 - `Hintergrund-Darstellung`: Bestimmt, ob ein eigenes Theme-Bild den Bereich füllt, eingepasst wird, gestreckt erscheint, mittig ohne Skalierung liegt oder gekachelt wiederholt wird. Grafisch ändert sich die Bildplatzierung, nicht die Struktur des Themes.

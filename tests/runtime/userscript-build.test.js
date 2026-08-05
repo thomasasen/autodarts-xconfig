@@ -5,6 +5,7 @@ import path from "node:path";
 import { BOARD_STYLE_DESIGN_FILES } from "../../src/shared/board-style-assets.manifest.js";
 import { DART_DESIGN_FILES } from "../../src/shared/feature-assets.manifest.js";
 import { THEME_PRESET_ASSET_FILES } from "../../src/shared/theme-preset-assets.manifest.js";
+import { TURN_DART_ASSET_FILES } from "../../src/shared/turn-dart-assets.manifest.js";
 import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
 
 const bundlePath = path.resolve(
@@ -54,6 +55,9 @@ function buildAllowedBundledAssetSources() {
     ),
     ...Object.values(THEME_PRESET_ASSET_FILES).map(
       (fileName) => `src/assets/theme-presets/${fileName}`
+    ),
+    ...Object.values(TURN_DART_ASSET_FILES).map(
+      (fileName) => `src/assets/turn-darts/${fileName}`
     ),
     ...Object.values(XCONFIG_PREVIEW_SCREENSHOTS).map(
       (fileName) => `docs/screenshots/${fileName}`

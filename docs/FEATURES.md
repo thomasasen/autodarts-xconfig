@@ -170,7 +170,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `alle Modi`
 - Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf oder eigenes Bild darstellen.
+- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf, gebündeltes Marker-Bild oder eigenes Bild darstellen.
 - `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
 - `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
 - `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.
@@ -261,7 +261,20 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Original`: Belässt die Wurffeld-Darts unverändert.
   - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
   - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
+  - `Marker-Bild`: Nutzt das ausgewählte gebündelte Marker-Bild.
   - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
+- `Dart auswählen`: Wählt ein vorbereitetes Bild für die Wurffeld-Darts aus.
+  - `German Gigant`: Verwendet den German-Gigant-Dart als Wurffeld-Dart.
+  - `Blue Lightning`: Verwendet Blue Lightning als Wurffeld-Dart.
+  - `Copper Grid`: Verwendet Copper Grid als Wurffeld-Dart.
+  - `Snakebite Purple`: Verwendet Snakebite Purple als Wurffeld-Dart.
+  - `Iceman Blue`: Verwendet Iceman Blue als Wurffeld-Dart.
+  - `Bullet Red`: Verwendet Bullet Red als Wurffeld-Dart.
+  - `Carbon Gold`: Verwendet Carbon Gold als Wurffeld-Dart.
+  - `Vecta Gold`: Verwendet Vecta Gold als Wurffeld-Dart.
+  - `GVV Blue`: Verwendet GVV Blue als Wurffeld-Dart.
+  - `Cool Hand Luke`: Verwendet Cool Hand Luke als Wurffeld-Dart.
+  - `Target Neon`: Verwendet Target Neon als Wurffeld-Dart.
 - `Dart-Text`: Zeigt Wurftext mit `#` als Nummernplatzhalter an.
 - `Dart-Farbe`: Setzt die Hauptfarbe der Wurffeld-Darts.
 - `Verlaufsfarbe`: Setzt die zweite Verlaufsfarbe.
@@ -269,6 +282,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Kompakt`: Kompakte Wurffeld-Darts.
   - `Standard`: Standardgröße für Wurffeld-Darts.
   - `Groß`: Große Wurffeld-Darts.
+- `Dart-Glanz`: Schaltet den Dart-Glanz ein oder aus.
 - `Dart-Bild hochladen`: Speichert ein eigenes Wurffeld-Dart-Bild bis 350 KB.
 - `Dart-Bild entfernen`: Entfernt das gespeicherte Wurffeld-Dart-Bild.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.

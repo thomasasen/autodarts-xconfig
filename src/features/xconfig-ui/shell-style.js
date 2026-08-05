@@ -213,6 +213,7 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-onoff-btn--off[data-active="true"]{background:rgba(199,63,63,.42);color:#fff}
 #${PANEL_HOST_ID} .ad-xconfig-note{margin:.5rem 0 0;color:rgba(234,244,255,.9);font-size:.82rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-list{margin:.55rem 0 0;padding:0;list-style:none;display:grid;gap:.4rem}
+#${PANEL_HOST_ID} .ad-xconfig-turn-dart-asset-option-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:min(28rem,55vh);overflow:auto;padding-right:.15rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-item{appearance:none;display:block;width:100%;text-align:left;padding:.42rem .5rem;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:#fff;cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview{position:relative;overflow:hidden;transform-origin:center;will-change:transform,filter,box-shadow}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview>*,#${PANEL_HOST_ID} .ad-xconfig-option-item--color-preview>*{position:relative;z-index:1}
@@ -267,9 +268,36 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-option-item[data-active="false"] .ad-xconfig-option-label{color:rgba(232,244,255,.92)}
 #${PANEL_HOST_ID} .ad-xconfig-option-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-label{font-size:.75rem;font-weight:700;color:#fff}
-#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font{padding:.79rem .9rem;min-height:4.51rem;border-radius:11px}
-#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font .ad-xconfig-option-head{align-items:flex-start}
-#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font .ad-xconfig-option-label{font-size:1.19rem;line-height:1.2;font-weight:600;letter-spacing:.01em}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker{margin:.55rem 0 0}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current{list-style:none;display:grid;grid-template-columns:minmax(8rem,.8fr) minmax(13rem,1.25fr) auto;align-items:center;gap:.9rem;min-height:4rem;padding:.72rem .9rem;border-radius:11px;border:1px solid rgba(126,216,255,.32);background:linear-gradient(145deg,rgba(65,105,178,.16),rgba(15,27,61,.38));cursor:pointer}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current::-webkit-details-marker{display:none}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current::marker{content:""}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current:hover{border-color:rgba(154,227,255,.68);background:linear-gradient(145deg,rgba(74,129,214,.22),rgba(18,34,76,.44))}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current:focus-visible{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.32)}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-identity{min-width:0;display:grid;gap:.18rem}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.08rem;line-height:1.15;color:#f3f8ff}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-state{font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#56e6ff}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-preview{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:end;gap:.72rem;color:#f7fbff;font-weight:800}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-preview span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.92rem;letter-spacing:.04em}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-preview span:nth-child(2){font-size:1.5rem;line-height:1;font-variant-numeric:tabular-nums}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-preview span:last-child{font-size:.82rem;color:rgba(202,225,255,.82)}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-action{display:inline-flex;align-items:center;gap:.35rem;font-size:.76rem;font-weight:700;color:rgba(205,225,250,.86);white-space:nowrap}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-action::after{content:"⌄";font-size:1rem;line-height:1;transition:transform 140ms ease}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker[open] .ad-xconfig-font-picker-current-action::after{transform:rotate(180deg)}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-panel{margin-top:.5rem;padding:.85rem;border-radius:11px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(155deg,rgba(31,48,91,.98),rgba(18,30,68,.98));box-shadow:0 14px 34px rgba(3,8,24,.28)}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-title{display:block;font-size:.92rem;color:#f3f8ff}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-search{width:100%;min-height:2.65rem;margin-top:.65rem;padding:.6rem .78rem;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(7,15,38,.48);color:#fff;font:inherit}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-search::placeholder{color:rgba(203,220,245,.56)}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-search:focus-visible{outline:none;border-color:rgba(154,227,255,.95);box-shadow:0 0 0 2px rgba(112,196,255,.28)}
+#${PANEL_HOST_ID} .ad-xconfig-font-option-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:min(28rem,55vh);overflow:auto;padding-right:.15rem}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font{min-width:0;min-height:3.35rem;padding:.55rem .7rem;border-radius:9px}
+#${PANEL_HOST_ID} .ad-xconfig-font-option-layout{display:grid;grid-template-columns:minmax(0,1fr) auto 1rem;align-items:center;gap:.55rem;width:100%}
+#${PANEL_HOST_ID} .ad-xconfig-option-item--typography-font .ad-xconfig-option-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.94rem;line-height:1.15;font-weight:600;letter-spacing:.01em}
+#${PANEL_HOST_ID} .ad-xconfig-font-option-sample{font-size:1.2rem;line-height:1;font-weight:700;font-variant-numeric:tabular-nums;color:rgba(243,249,255,.96)}
+#${PANEL_HOST_ID} .ad-xconfig-font-option-active-slot{display:grid;place-items:center;width:1rem;min-height:1rem}
+#${PANEL_HOST_ID} .ad-xconfig-font-option-check{display:inline-grid;place-items:center;width:1rem;height:1rem;padding:0;border:0;background:transparent;color:#5cecff;font-size:1rem;line-height:1}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-empty{margin:.7rem 0 .1rem;padding:.65rem;border-radius:8px;background:rgba(255,255,255,.05);text-align:center;color:rgba(221,234,252,.76);font-size:.8rem}
+#${PANEL_HOST_ID} .ad-xconfig-font-picker-empty[hidden]{display:none}
 #${PANEL_HOST_ID} .ad-xconfig-option-active{display:inline-flex;align-items:center;padding:.12rem .38rem;border-radius:999px;background:rgba(126,216,255,.22);border:1px solid rgba(126,216,255,.48);font-size:.66rem;font-weight:700;letter-spacing:.01em;color:#eef8ff}
 #${PANEL_HOST_ID} .ad-xconfig-option-copy{display:block;margin-top:.18rem;color:rgba(228,240,255,.88);font-size:.74rem;line-height:1.34}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--turn-score-counter-preview{overflow:hidden;isolation:isolate}
@@ -535,6 +563,7 @@ ${buildColorPreviewRules()}
 @media(max-width:880px){#${PANEL_HOST_ID} .ad-xconfig-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style,#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-score-highlight-preview,#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview,#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-remaining-score-bar-preview{grid-template-columns:minmax(0,1fr) auto}#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-option-preview,#${PANEL_HOST_ID} .ad-xconfig-checkout-score-highlight-option-preview,#${PANEL_HOST_ID} .ad-xconfig-checkout-board-option-preview,#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-option-preview{grid-column:1/span 2;grid-row:2}#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-suggestion-style [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-score-highlight-preview [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--checkout-board-preview [data-option-active-slot='true'],#${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-remaining-score-bar-preview [data-option-active-slot='true']{grid-column:2;grid-row:1}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-settings-section-body--theme-presets{grid-template-columns:1fr}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-font-picker-current{grid-template-columns:minmax(7rem,1fr) minmax(9rem,1fr) auto;gap:.6rem}#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-preview{gap:.45rem}#${PANEL_HOST_ID} .ad-xconfig-font-option-list,#${PANEL_HOST_ID} .ad-xconfig-turn-dart-asset-option-list{grid-template-columns:1fr;max-height:min(24rem,52vh)}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
 @media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::before,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::after{animation:none!important;transform:none!important;transition:none!important}}
 `;

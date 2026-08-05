@@ -225,6 +225,16 @@ function resolveNextSelection(field, currentValues, settingRawValue, optionValue
   return nextValues.length ? nextValues : [optionValues[0] || ""];
 }
 
+function buildSelectSettingPatch(controller, configKey, settingKey, nextValue) {
+  if (configKey === "themes.globalTypography" && settingKey === "turnDartAssetKey") {
+    return buildFeaturePatch(configKey, {
+      turnDartStyle: "preset",
+      turnDartAssetKey: nextValue,
+    });
+  }
+  return controller.buildFeatureSettingPatch(configKey, settingKey, nextValue);
+}
+
 function handleSetSettingSelectOption(controller, actionNode, feature) {
   if (!feature || !controller.runtimeApi || typeof controller.runtimeApi.saveConfig !== "function") {
     return;
@@ -268,10 +278,11 @@ function handleSetSettingSelectOption(controller, actionNode, feature) {
     controller,
     Promise.resolve(
       controller.runtimeApi.saveConfig(
-        controller.buildFeatureSettingPatch(configKey, settingKey, nextValue)
+        buildSelectSettingPatch(controller, configKey, settingKey, nextValue)
       )
     ).then(() => {
       controller.syncThemeBackgroundIndicators(feature.featureKey);
+      controller.syncTurnDartImageIndicators(feature.featureKey);
     }),
     "Einstellung gespeichert.",
     "Einstellung konnte nicht gespeichert werden."

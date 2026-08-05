@@ -10,6 +10,7 @@ import { normalizeThemeBackgroundHost } from "../shared/theme-background-host-ut
 import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
+import { TURN_DART_ASSET_KEYS } from "../shared/turn-dart-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
 
 const CHECKOUT_EFFECT_ALIASES = Object.freeze({
@@ -90,6 +91,7 @@ const DARTBOARD_MARKER_HIGHLIGHT_EFFECT_ALIASES = Object.freeze({
 const DARTBOARD_MARKER_HIGHLIGHT_OPACITY = new Set([65, 85, 100]);
 const DARTBOARD_MARKER_HIGHLIGHT_OUTLINE = new Set(["aus", "weiss", "schwarz"]);
 const DART_MARKER_DARTS_DESIGNS = new Set(DART_DESIGN_KEYS);
+const THEME_GLOBAL_TURN_DART_ASSETS = new Set(TURN_DART_ASSET_KEYS);
 const BOT_BOARD_STYLE_DESIGNS = new Set(BOARD_STYLE_DESIGN_KEYS);
 const BOT_BOARD_STYLE_SCOPES = new Set(["bot-turns", "all-match-boards"]);
 const DART_MARKER_DARTS_SIZE_PERCENT = new Set([108, 120, 138]);
@@ -162,7 +164,7 @@ const THEME_PRESET_ASSET_KEY_SET = new Set(THEME_PRESET_ASSET_KEYS);
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS.map((option) => option.value)
 );
-const THEME_GLOBAL_TURN_DART_STYLES = new Set(["original", "solid", "gradient", "image"]);
+const THEME_GLOBAL_TURN_DART_STYLES = new Set(["original", "solid", "gradient", "preset", "image"]);
 const THEME_GLOBAL_TURN_DART_SIZE_PERCENT = new Set([100, 115, 135]);
 const THEME_GLOBAL_TURN_DART_TEXT_MAX_LENGTH = 48;
 const LEGACY_COLOR_THEME_ALIASES = Object.freeze({
@@ -370,10 +372,12 @@ function normalizeThemeBaseConfig(rawConfig = {}, defaults = {}) {
 
 const DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG = Object.freeze({
   turnDartStyle: "original",
+  turnDartAssetKey: "german-giant",
   turnDartTextTemplate: "",
   turnDartColor: "#FFFFFF",
   turnDartGradientColor: "#F97316",
   turnDartSizePercent: 115,
+  turnDartShineEnabled: true,
   turnDartImageDataUrl: "",
 });
 
@@ -885,6 +889,11 @@ const FEATURE_NORMALIZERS = Object.freeze({
         DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartStyle,
         THEME_GLOBAL_TURN_DART_STYLES
       ),
+      turnDartAssetKey: normalizeStringChoice(
+        rawConfig.turnDartAssetKey,
+        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartAssetKey,
+        THEME_GLOBAL_TURN_DART_ASSETS
+      ),
       turnDartColor: normalizeHexColor(
         rawConfig.turnDartColor,
         DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartColor
@@ -901,6 +910,10 @@ const FEATURE_NORMALIZERS = Object.freeze({
         rawConfig.turnDartSizePercent,
         DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartSizePercent,
         THEME_GLOBAL_TURN_DART_SIZE_PERCENT
+      ),
+      turnDartShineEnabled: normalizeBoolean(
+        rawConfig.turnDartShineEnabled,
+        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartShineEnabled
       ),
       turnDartImageDataUrl: normalizeThemeBackgroundImage(rawConfig.turnDartImageDataUrl),
       debug: normalizeBoolean(rawConfig.debug, false),

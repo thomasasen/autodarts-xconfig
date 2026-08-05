@@ -6,12 +6,15 @@ import {
 } from "../../shared/theme-global-typography-presets.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
 import { BOARD_STYLE_DESIGN_OPTIONS } from "../../shared/board-style-assets.manifest.js";
+import { DART_DESIGN_OPTIONS } from "../../shared/feature-assets.manifest.js";
+import { TURN_DART_ASSET_OPTIONS } from "../../shared/turn-dart-assets.manifest.js";
 
-function checkboxField(key, label) {
+function checkboxField(key, label, fieldOptions = {}) {
   return Object.freeze({
     key,
     label,
     control: "checkbox",
+    section: String(fieldOptions.section || "").trim(),
   });
 }
 
@@ -208,6 +211,7 @@ const TURN_DART_STYLE_OPTIONS = Object.freeze([
   { value: "original", label: "Original" },
   { value: "solid", label: "Farbe" },
   { value: "gradient", label: "Verlauf" },
+  { value: "preset", label: "Marker-Bild" },
   { value: "image", label: "Eigenes Bild" },
 ]);
 
@@ -315,6 +319,9 @@ export const xconfigDescriptors = Object.freeze([
       selectField("turnDartStyle", "Wurffeld-Darts", TURN_DART_STYLE_OPTIONS, {
         section: "Wurffeld-Darts",
       }),
+      selectField("turnDartAssetKey", "Dart auswählen", TURN_DART_ASSET_OPTIONS, {
+        section: "Wurffeld-Darts",
+      }),
       textField("turnDartTextTemplate", "Dart-Text", {
         section: "Wurffeld-Darts",
         placeholder: "Wurf #",
@@ -327,6 +334,9 @@ export const xconfigDescriptors = Object.freeze([
         section: "Wurffeld-Darts",
       }),
       selectField("turnDartSizePercent", "Dart-Größe", TURN_DART_SIZE_OPTIONS, {
+        section: "Wurffeld-Darts",
+      }),
+      checkboxField("turnDartShineEnabled", "Dart-Glanz", {
         section: "Wurffeld-Darts",
       }),
       actionField("uploadTurnDartImage", "Dart-Bild hochladen", {
@@ -812,32 +822,7 @@ export const xconfigDescriptors = Object.freeze([
         prominent: true,
         previewTarget: "dart-marker-replacer",
       }),
-      selectField("design", "Dart Design", [
-        { value: "aireplicant", label: "AI Replicant" },
-        { value: "bullet", label: "Bullet" },
-        { value: "germangiant", label: "German Giant" },
-        { value: "mandalorian", label: "Mandalorian" },
-        { value: "nuke", label: "Nuke" },
-        { value: "philtaylor", label: "Phil Taylor" },
-        { value: "snakebite", label: "Snakebite" },
-        { value: "standard", label: "Standard" },
-        { value: "stdyellow", label: "Standard Yellow" },
-        { value: "stdyellow2", label: "Standard Yellow 2" },
-        { value: "ultramarine", label: "Ultramarine" },
-        { value: "autodarts", label: "Autodarts" },
-        { value: "blackblue", label: "Black Blue" },
-        { value: "blackgreen", label: "Black Green" },
-        { value: "blackred", label: "Black Red" },
-        { value: "blue", label: "Blue" },
-        { value: "camoflage", label: "Camouflage" },
-        { value: "green", label: "Green" },
-        { value: "pride", label: "Pride" },
-        { value: "red", label: "Red" },
-        { value: "white", label: "White" },
-        { value: "whitetrible", label: "White Trible" },
-        { value: "yellow", label: "Yellow" },
-        { value: "yellowscull", label: "Yellow Scull" },
-      ]),
+      selectField("design", "Dart Design", DART_DESIGN_OPTIONS),
       checkboxField("animateDarts", "Dart-Fluganimation"),
       selectField("sizePercent", "Dart-Größe", [
         { value: 108, label: "Klein" },

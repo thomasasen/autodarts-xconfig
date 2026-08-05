@@ -153,8 +153,14 @@ const THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD = fieldCopy(
 
 const THEME_GLOBAL_TURN_DART_STYLE_FIELD = fieldCopy(
   "Ändert die Dart-Grafiken im Wurffeld oben im Spiel.",
-  "Legt fest, ob die Darts im Wurffeld original bleiben, als einfarbige SVG, als Verlauf oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Wurffeld-Darts, nicht die Board-Marker.",
+  "Legt fest, ob die Darts im Wurffeld original bleiben, als einfarbige SVG, als Verlauf, mit einem gebündelten Marker-Bild oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Wurffeld-Darts, nicht die Board-Marker.",
   "Ändert die Dart-Grafiken im Wurffeld."
+);
+
+const THEME_GLOBAL_TURN_DART_ASSET_FIELD = fieldCopy(
+  "Wählt ein speziell für die Wurffelder vorbereitetes Dart-Bild aus.",
+  "Zeigt passende, freigestellte Dart-Bilder für die drei Wurffelder. Die Auswahl aktiviert automatisch den Modus `Marker-Bild`, behält ein eventuell hochgeladenes eigenes Bild und verändert das Design der Board-Marker nicht.",
+  "Wählt ein vorbereitetes Bild für die Wurffeld-Darts aus."
 );
 
 const THEME_GLOBAL_TURN_DART_COLOR_FIELD = fieldCopy(
@@ -237,7 +243,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.",
     visualDescription:
-      "Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf oder eigenes Bild darstellen.",
+      "Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf, gebündeltes Marker-Bild oder eigenes Bild darstellen.",
     usefulWhen:
       "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
     images: [
@@ -264,14 +270,20 @@ export const xconfigFeatureCopy = deepFreeze({
       throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
       activePlayerTintIntensity: THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD,
       turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_FIELD,
+      turnDartAssetKey: THEME_GLOBAL_TURN_DART_ASSET_FIELD,
       turnDartTextTemplate: fieldCopy(
         "Zeigt statt der generierten Dart-Grafik einen Text pro Wurf an.",
-        "Schreibt einen Text in die drei Wurffeld-Dartfelder, solange kein eigenes Dart-Bild gespeichert ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.",
+        "Schreibt einen Text in die drei Wurffeld-Dartfelder, solange weder `Marker-Bild` noch `Eigenes Bild` aktiv ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.",
         "Zeigt Wurftext mit `#` als Nummernplatzhalter an."
       ),
       turnDartColor: THEME_GLOBAL_TURN_DART_COLOR_FIELD,
       turnDartGradientColor: THEME_GLOBAL_TURN_DART_GRADIENT_FIELD,
       turnDartSizePercent: THEME_GLOBAL_TURN_DART_SIZE_FIELD,
+      turnDartShineEnabled: fieldCopy(
+        "Schaltet den hellen Glanz um die Wurffeld-Darts ein oder aus.",
+        "Aktiviert oder entfernt den hellen Drop-Shadow um ersetzte Wurffeld-Darts. Größe, Dart-Bild und eigener Upload bleiben unverändert.",
+        "Schaltet den Dart-Glanz ein oder aus."
+      ),
       uploadTurnDartImage: fieldCopy(
         "Speichert ein eigenes Bild für die drei Wurffeld-Darts.",
         "Öffnet die Dateiauswahl und speichert ein eigenes Bild für die drei Darts im Wurffeld. Empfohlen sind transparente PNG-, WebP- oder SVG-Dateien, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
@@ -1440,6 +1452,11 @@ const THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY = deepFreeze({
     "Die drei Dart-Grafiken im Wurffeld werden durch eine generierte SVG-Grafik mit Verlauf aus Verlaufsfarbe, Dart-Farbe und heller Spitze ersetzt.",
     "Nutzt eine Dart-Grafik mit Verlauf."
   ),
+  preset: optionCopy(
+    "Nutzt das ausgewählte Marker-Bild als Wurffeld-Dart.",
+    "Die drei Dart-Grafiken im Wurffeld verwenden das unter `Dart auswählen` gewählte, lokal gebündelte Dart-Bild. Das Board-Design des Dart Marker Replacers bleibt dabei unverändert.",
+    "Nutzt das ausgewählte gebündelte Marker-Bild."
+  ),
   image: optionCopy(
     "Nutzt das hochgeladene Bild als Wurffeld-Dart.",
     "Die drei Dart-Grafiken im Wurffeld verwenden das in Templates Global gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.",
@@ -2243,6 +2260,32 @@ const DART_DESIGN_OPTION_COPY = deepFreeze({
   ),
 });
 
+function turnDartAssetOptionCopy(label, detail) {
+  return optionCopy(
+    `Nutzt ${label} für die Wurffelder.`,
+    `Verwendet ${label} ${detail} als Wurffeld-Dart.`,
+    `Verwendet ${label} als Wurffeld-Dart.`
+  );
+}
+
+const THEME_GLOBAL_TURN_DART_ASSET_OPTION_COPY = deepFreeze({
+  "german-giant": optionCopy(
+    "Nutzt den freigestellten German-Gigant-Dart für die Wurffelder.",
+    "Verwendet den horizontal ausgerichteten German-Gigant-Dart mit Flight links und Spitze rechts für die drei Darts im Wurffeld. In der Auswahl wird nur die Dartbezeichnung angezeigt.",
+    "Verwendet den German-Gigant-Dart als Wurffeld-Dart."
+  ),
+  "blue-lightning": turnDartAssetOptionCopy("Blue Lightning", "mit blauem Blitz-Flight"),
+  "copper-grid": turnDartAssetOptionCopy("Copper Grid", "mit kupferfarbenem Gitter-Flight"),
+  "snakebite-purple": turnDartAssetOptionCopy("Snakebite Purple", "mit pink-violettem Schlangen-Flight"),
+  "iceman-blue": turnDartAssetOptionCopy("Iceman Blue", "mit schwarz-blauem Flight"),
+  "bullet-red": turnDartAssetOptionCopy("Bullet Red", "mit rotem Flight und goldener Spitze"),
+  "carbon-gold": turnDartAssetOptionCopy("Carbon Gold", "mit geometrischem schwarz-goldenem Flight"),
+  "vecta-gold": turnDartAssetOptionCopy("Vecta Gold", "mit EVO-Flight und goldenen Akzenten"),
+  "gvv-blue": turnDartAssetOptionCopy("GVV Blue", "mit kontrastreichem schwarz-weiß-blauem Flight"),
+  "cool-hand-luke": turnDartAssetOptionCopy("Cool Hand Luke", "mit signiertem schwarz-goldenem Flight"),
+  "target-neon": turnDartAssetOptionCopy("Target Neon", "mit transluzentem Flight und Shaft"),
+});
+
 const DART_IMAGE_SIZE_OPTION_COPY = deepFreeze({
   "108": optionCopy(
     "Zeigt die Dart-Grafik etwas kleiner als den Standard.",
@@ -2730,6 +2773,7 @@ const xconfigFieldOptionCopy = deepFreeze({
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
     turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY,
+    turnDartAssetKey: THEME_GLOBAL_TURN_DART_ASSET_OPTION_COPY,
     turnDartSizePercent: THEME_GLOBAL_TURN_DART_SIZE_OPTION_COPY,
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,

@@ -1,7 +1,9 @@
 import { DART_DESIGN_FILES } from "./feature-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_FILES } from "./board-style-assets.manifest.js";
+import { TURN_DART_ASSET_FILES } from "./turn-dart-assets.manifest.js";
 export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
 export { BOARD_STYLE_DESIGN_KEYS } from "./board-style-assets.manifest.js";
+export { TURN_DART_ASSET_KEYS } from "./turn-dart-assets.manifest.js";
 
 function toAssetUrl(relativePath) {
   return new URL(relativePath, import.meta.url).href;
@@ -18,6 +20,19 @@ export const DART_DESIGNS = Object.freeze(
 export function resolveDartDesignAsset(designKey) {
   const key = String(designKey || "").trim().toLowerCase();
   return DART_DESIGNS[key] || DART_DESIGNS.autodarts;
+}
+
+export const TURN_DART_ASSETS = Object.freeze(
+  Object.fromEntries(
+    Object.entries(TURN_DART_ASSET_FILES).map(([assetKey, fileName]) => {
+      return [assetKey, toAssetUrl(`../assets/turn-darts/${fileName}`)];
+    })
+  )
+);
+
+export function resolveTurnDartAsset(assetKey) {
+  const key = String(assetKey || "").trim().toLowerCase();
+  return TURN_DART_ASSETS[key] || TURN_DART_ASSETS["german-giant"];
 }
 
 export const BOARD_STYLE_DESIGN_ASSETS = Object.freeze(

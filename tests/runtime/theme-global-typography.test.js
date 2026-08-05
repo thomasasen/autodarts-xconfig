@@ -156,6 +156,7 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
     turnDartColor: "#22c55e",
     turnDartGradientColor: "#ef4444",
     turnDartSizePercent: 135,
+    turnDartImageDataUrl: "data:image/png;base64,SHOULD_NOT_WIN",
   });
 
   assert.match(gradientStyle, /#ad-ext-turn > \.ad-ext-turn-throw img\[alt="Dart"\],/);
@@ -174,6 +175,7 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
   );
   assert.match(decodeURIComponent(gradientStyle), /stop-color="#EF4444"/);
   assert.match(decodeURIComponent(gradientStyle), /stop-color="#22C55E"/);
+  assert.doesNotMatch(gradientStyle, /SHOULD_NOT_WIN/);
 
   const textStyle = buildThemeGlobalTypographyStyleText({
     fontPreset: "system",
@@ -205,6 +207,33 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
     /#ad-ext-turn > \.suggestion img\[alt="Dart"\]\s*\{[^}]*background-image:/s
   );
   assert.doesNotMatch(imageStyle, /counter-reset: ad-ext-turn-dart-text;/);
+
+  const presetStyle = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    turnDartStyle: "preset",
+    turnDartAssetKey: "german-giant",
+    turnDartTextTemplate: "Wurf #",
+    turnDartImageDataUrl: "data:image/png;base64,SHOULD_NOT_WIN",
+  });
+  assert.match(presetStyle, /content: url\("file:.*turn-dart-german-giant\.png"\) !important;/);
+  assert.match(presetStyle, /width: 235px !important;/);
+  assert.match(presetStyle, /height: 51px !important;/);
+  assert.match(presetStyle, /object-fit: contain !important;/);
+  assert.match(presetStyle, /filter: drop-shadow\(0 0 5px rgba\(255, 255, 255, 0\.34\)\) !important;/);
+  assert.doesNotMatch(presetStyle, /background-image:/);
+  assert.doesNotMatch(presetStyle, /SHOULD_NOT_WIN/);
+  assert.doesNotMatch(presetStyle, /counter-reset: ad-ext-turn-dart-text;/);
+
+  const presetStyleWithoutShine = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    turnDartStyle: "preset",
+    turnDartAssetKey: "german-giant",
+    turnDartShineEnabled: false,
+  });
+  assert.match(presetStyleWithoutShine, /filter: none !important;/);
+  assert.doesNotMatch(presetStyleWithoutShine, /drop-shadow/);
 
   const originalStyle = buildThemeGlobalTypographyStyleText({
     fontPreset: "system",

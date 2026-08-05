@@ -12,6 +12,22 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.8.0] - 2026-08-05
+
+### Added
+
+- Nutzerwirkung: Templates Global bietet einen eigenen Katalog mit elf freigestellten Wurffeld-Darts; die Auswahl verändert den Dart Marker Replacer nicht, und eigene Dart-Bilder können weiterhin separat hochgeladen werden.
+  Technik: Ein unabhängiges Asset-Manifest mit Browser-/Node-Resolvern, transparenten PNGs und vollständiger Konfigurationsvalidierung bindet die vorbereiteten Dart-Bilder mit Flight links und Spitze rechts ein; Hash-, Asset-, UI- und Runtime-Tests sichern den Katalog ab.
+- Nutzerwirkung: Der helle Glanz um ersetzte Wurffeld-Darts lässt sich ein- und ausschalten.
+  Technik: `turnDartShineEnabled` steuert den Drop-Shadow unabhängig von Bildquelle, Größe und Upload und ist in Konfiguration, Rendering, xConfig und Regressionstests integriert.
+
+### Changed
+
+- Nutzerwirkung: Die Schriftwahl in Templates Global ist kompakter, zweispaltig und durchsuchbar; Name und Score-Vorschau zeigen die jeweilige Schrift direkt an.
+  Technik: Ein eigener Font-Picker ersetzt die lange Optionsliste, lädt Vorschau-Schriften weiterhin kontrolliert und hält Auswahl, Suche sowie responsive Darstellung im bestehenden xConfig-Lifecycle.
+- Nutzerwirkung: Vorbereitete Wurffeld-Darts erscheinen deutlich größer und ihre Auswahlkacheln zeigen nur noch den jeweiligen Dartnamen.
+  Technik: Ein separater Größenfaktor skaliert ausschließlich gebündelte Wurffeld-Darts, während Uploads unverändert bleiben; der Renderer unterdrückt für diese Asset-Auswahl redundante Beschreibungstexte.
+
 ## [2.7.0] - 2026-08-01
 
 ### Added
@@ -1879,7 +1895,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/3a795d2...HEAD
+[2.8.0]: https://github.com/thomasasen/autodarts-xconfig/compare/a0d05cf...HEAD
+[2.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/3a795d2...a0d05cf
 [2.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/8f7c754...3a795d2
 [2.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/ca6bbdf...8f7c754
 [2.4.17]: https://github.com/thomasasen/autodarts-xconfig/compare/fffbee4...ca6bbdf

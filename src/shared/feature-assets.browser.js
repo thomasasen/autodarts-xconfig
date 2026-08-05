@@ -22,6 +22,17 @@ import dartWhitePng from "../assets/darts/Dart_white.png";
 import dartWhiteTriplePng from "../assets/darts/Dart_whitetrible.png";
 import dartYellowPng from "../assets/darts/Dart_yellow.png";
 import dartYellowSkullPng from "../assets/darts/Dart_yellowscull.png";
+import turnDartBlueLightningPng from "../assets/turn-darts/turn-dart-blue-lightning.png";
+import turnDartBulletRedPng from "../assets/turn-darts/turn-dart-bullet-red.png";
+import turnDartCarbonGoldPng from "../assets/turn-darts/turn-dart-carbon-gold.png";
+import turnDartCoolHandLukePng from "../assets/turn-darts/turn-dart-cool-hand-luke.png";
+import turnDartCopperGridPng from "../assets/turn-darts/turn-dart-copper-grid.png";
+import turnDartGermanGiantPng from "../assets/turn-darts/turn-dart-german-giant.png";
+import turnDartGvvBluePng from "../assets/turn-darts/turn-dart-gvv-blue.png";
+import turnDartIcemanBluePng from "../assets/turn-darts/turn-dart-iceman-blue.png";
+import turnDartSnakebitePurplePng from "../assets/turn-darts/turn-dart-snakebite-purple.png";
+import turnDartTargetNeonPng from "../assets/turn-darts/turn-dart-target-neon.png";
+import turnDartVectaGoldPng from "../assets/turn-darts/turn-dart-vecta-gold.png";
 import boardBullsNlAdvantage701Webp from "../assets/board-styles/bulls-nl-advantage-701.webp";
 import boardMissionSamurai4Webp from "../assets/board-styles/mission-samurai-4.webp";
 import boardOne80G4SurgeWebp from "../assets/board-styles/one80-g4-surge.webp";
@@ -33,6 +44,7 @@ import boardWinmauBlade360TcWebp from "../assets/board-styles/winmau-blade-360-t
 import boardWinmauBlade6TcWebp from "../assets/board-styles/winmau-blade-6-tc.webp";
 import boardWinmauBladeXWebp from "../assets/board-styles/winmau-blade-x.webp";
 export { DART_DESIGN_KEYS } from "./feature-assets.manifest.js";
+export { TURN_DART_ASSET_KEYS } from "./turn-dart-assets.manifest.js";
 export { BOARD_STYLE_DESIGN_KEYS } from "./board-style-assets.manifest.js";
 export { default as TAKEOUT_IMAGE_ASSET } from "../assets/TakeOut.png";
 export { default as SINGLE_BULL_SOUND_ASSET } from "../assets/singlebull.mp3";
@@ -68,6 +80,25 @@ export const DART_DESIGNS = Object.freeze({
 export function resolveDartDesignAsset(designKey) {
   const key = String(designKey || "").trim().toLowerCase();
   return DART_DESIGNS[key] || DART_DESIGNS.autodarts;
+}
+
+export const TURN_DART_ASSETS = Object.freeze({
+  "german-giant": turnDartGermanGiantPng,
+  "blue-lightning": turnDartBlueLightningPng,
+  "copper-grid": turnDartCopperGridPng,
+  "snakebite-purple": turnDartSnakebitePurplePng,
+  "iceman-blue": turnDartIcemanBluePng,
+  "bullet-red": turnDartBulletRedPng,
+  "carbon-gold": turnDartCarbonGoldPng,
+  "vecta-gold": turnDartVectaGoldPng,
+  "gvv-blue": turnDartGvvBluePng,
+  "cool-hand-luke": turnDartCoolHandLukePng,
+  "target-neon": turnDartTargetNeonPng,
+});
+
+export function resolveTurnDartAsset(assetKey) {
+  const key = String(assetKey || "").trim().toLowerCase();
+  return TURN_DART_ASSETS[key] || TURN_DART_ASSETS["german-giant"];
 }
 
 export const BOARD_STYLE_DESIGN_ASSETS = Object.freeze({

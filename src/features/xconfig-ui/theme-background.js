@@ -1,5 +1,7 @@
 import { resolveThemePresetAsset } from "#theme-preset-assets";
+import { resolveTurnDartAsset } from "#feature-assets";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
+import { TURN_DART_ASSET_LABELS } from "../../shared/turn-dart-assets.manifest.js";
 
 function estimateBase64ByteSize(rawPayload) {
   const payload = String(rawPayload || "").replaceAll(/\s+/g, "");
@@ -468,6 +470,21 @@ function buildThemeBackgroundStatusSummary(imageInfo) {
 }
 
 function readTurnDartImageInfo(feature) {
+  const style = String(feature?.config?.turnDartStyle || "").trim().toLowerCase();
+  if (style === "preset") {
+    const assetKey = String(feature?.config?.turnDartAssetKey || "german-giant").trim().toLowerCase();
+    const normalizedAssetKey = TURN_DART_ASSET_LABELS[assetKey] ? assetKey : "german-giant";
+    return {
+      hasImage: true,
+      dataUrl: "",
+      mimeType: "preset",
+      byteSize: 0,
+      sourceType: "preset-asset",
+      presetLabel: TURN_DART_ASSET_LABELS[normalizedAssetKey],
+      previewUrl: resolveTurnDartAsset(normalizedAssetKey),
+    };
+  }
+
   const info = parseDataUrlInfo(feature?.config?.turnDartImageDataUrl);
   return {
     ...info,
@@ -478,6 +495,10 @@ function readTurnDartImageInfo(feature) {
 function buildTurnDartImageStatusSummary(imageInfo) {
   if (!imageInfo?.hasImage) {
     return "Aktuelles Dart-Bild: keines.";
+  }
+
+  if (imageInfo.sourceType === "preset-asset") {
+    return `Aktuelles Dart-Bild: Marker-Bild ${imageInfo.presetLabel}.`;
   }
 
   const sizeText =

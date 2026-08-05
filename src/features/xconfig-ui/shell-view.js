@@ -1,5 +1,5 @@
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
-import { resolveDartDesignAsset } from "#feature-assets";
+import { resolveDartDesignAsset, resolveTurnDartAsset } from "#feature-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
   isBackgroundThemeFeature,
@@ -128,6 +128,7 @@ const STYLE_CHECKOUT_SUGGESTIONS_THEMES = Object.freeze({
 });
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
+const THEME_GLOBAL_TYPOGRAPHY_TURN_DART_ASSET_FIELD_KEY = "turnDartAssetKey";
 const XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
@@ -618,8 +619,20 @@ function isDartDesignSelectField(feature, field) {
   if (field?.control !== "select") {
     return false;
   }
-  return feature?.featureKey === DART_MARKER_DARTS_FEATURE_KEY &&
-    String(field?.key || "").trim() === DART_MARKER_DARTS_DESIGN_SETTING_KEY;
+  const featureKey = String(feature?.featureKey || "").trim();
+  const fieldKey = String(field?.key || "").trim();
+  return (
+    (featureKey === DART_MARKER_DARTS_FEATURE_KEY &&
+      fieldKey === DART_MARKER_DARTS_DESIGN_SETTING_KEY) ||
+    (featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
+      fieldKey === THEME_GLOBAL_TYPOGRAPHY_TURN_DART_ASSET_FIELD_KEY)
+  );
+}
+
+function isTurnDartAssetSelectField(feature, field) {
+  return feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
+    field?.control === "select" &&
+    String(field?.key || "").trim() === THEME_GLOBAL_TYPOGRAPHY_TURN_DART_ASSET_FIELD_KEY;
 }
 
 function isThemeGlobalTypographyFontField(feature, field) {
@@ -1575,6 +1588,9 @@ function resolveFieldOptionPreview(feature, field, optionValue) {
   if (!isDartDesignSelectField(feature, field)) {
     return "";
   }
+  if (isTurnDartAssetSelectField(feature, field)) {
+    return resolveTurnDartAsset(optionValue);
+  }
   return resolveDartDesignAsset(optionValue);
 }
 
@@ -1583,13 +1599,184 @@ function buildThemeGlobalTypographyOptionLabel(documentRef, option) {
     className: "ad-xconfig-option-label",
     text: option?.label || "",
   });
-  const preset = getThemeGlobalTypographyPreset(option?.value);
+  applyThemeGlobalTypographyPreviewFont(labelNode, option?.value);
+  return labelNode;
+}
+
+function applyThemeGlobalTypographyPreviewFont(node, optionValue) {
+  if (!node) {
+    return;
+  }
+  const preset = getThemeGlobalTypographyPreset(optionValue);
   const previewFontFamily = String(preset?.previewFontFamily || "").trim();
   if (previewFontFamily && preset?.remote) {
-    labelNode.style.fontFamily = previewFontFamily;
-    labelNode.dataset.adxconfigPreviewFont = preset.value;
+    node.style.fontFamily = previewFontFamily;
+    node.dataset.adxconfigPreviewFont = preset.value;
+    return;
   }
-  return labelNode;
+  node.style.fontFamily = "";
+  node.removeAttribute?.("data-adxconfig-preview-font");
+}
+
+function buildThemeGlobalTypographyFontOptionLayout(documentRef, option, isActive) {
+  const layout = createElement(documentRef, "span", {
+    className: "ad-xconfig-font-option-layout",
+  });
+  layout.appendChild(buildThemeGlobalTypographyOptionLabel(documentRef, option));
+
+  const sample = createElement(documentRef, "span", {
+    className: "ad-xconfig-font-option-sample",
+    text: "501",
+    attributes: {
+      "aria-hidden": "true",
+    },
+  });
+  applyThemeGlobalTypographyPreviewFont(sample, option?.value);
+  layout.appendChild(sample);
+
+  const activeSlot = createElement(documentRef, "span", {
+    className: "ad-xconfig-font-option-active-slot",
+    attributes: {
+      "data-option-active-slot": "true",
+    },
+  });
+  if (isActive) {
+    activeSlot.appendChild(buildTypographyFontActiveMark(documentRef));
+  }
+  layout.appendChild(activeSlot);
+  return layout;
+}
+
+function buildTypographyFontActiveMark(documentRef) {
+  return createElement(documentRef, "span", {
+    className: "ad-xconfig-option-active ad-xconfig-font-option-check",
+    text: "✓",
+    attributes: {
+      "aria-hidden": "true",
+    },
+  });
+}
+
+function normalizeTypographyFontSearchValue(value) {
+  return String(value || "").trim().toLocaleLowerCase("de");
+}
+
+function setTypographyFontSearchVisibility(optionList, emptyState, rawQuery) {
+  const query = normalizeTypographyFontSearchValue(rawQuery);
+  let visibleCount = 0;
+  Array.from(optionList?.children || []).forEach((optionNode) => {
+    const searchValue = String(optionNode.dataset?.fontSearchValue || "");
+    const isVisible = !query || searchValue.includes(query);
+    optionNode.hidden = !isVisible;
+    if (isVisible) {
+      optionNode.removeAttribute?.("hidden");
+      visibleCount += 1;
+    } else {
+      optionNode.setAttribute?.("hidden", "");
+    }
+  });
+  if (emptyState) {
+    emptyState.hidden = visibleCount > 0;
+    if (visibleCount > 0) {
+      emptyState.setAttribute?.("hidden", "");
+    } else {
+      emptyState.removeAttribute?.("hidden");
+    }
+  }
+}
+
+function buildThemeGlobalTypographyFontPicker(
+  documentRef,
+  field,
+  selectedOptionValues,
+  optionList
+) {
+  const selectedValue = selectedOptionValues[0] || String(field.options[0]?.value || "");
+  const selectedOption = field.options.find(
+    (option) => String(option?.value ?? "") === selectedValue
+  ) || field.options[0] || {};
+  const picker = createElement(documentRef, "details", {
+    className: "ad-xconfig-font-picker",
+    attributes: {
+      "data-adxconfig-font-picker": "true",
+    },
+  });
+  const current = createElement(documentRef, "summary", {
+    className: "ad-xconfig-font-picker-current",
+  });
+  const identity = createElement(documentRef, "span", {
+    className: "ad-xconfig-font-picker-current-identity",
+  });
+  const currentName = createElement(documentRef, "strong", {
+    className: "ad-xconfig-font-picker-current-name",
+    text: selectedOption.label || "Standard",
+    attributes: {
+      "data-adxconfig-font-picker-current-name": "true",
+    },
+  });
+  applyThemeGlobalTypographyPreviewFont(currentName, selectedValue);
+  identity.appendChild(currentName);
+  identity.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-font-picker-current-state",
+    text: "Aktiv",
+  }));
+  current.appendChild(identity);
+
+  const preview = createElement(documentRef, "span", {
+    className: "ad-xconfig-font-picker-current-preview",
+    attributes: {
+      "data-adxconfig-font-picker-current-preview": "true",
+      "aria-hidden": "true",
+    },
+  });
+  applyThemeGlobalTypographyPreviewFont(preview, selectedValue);
+  ["THOMAS", "501", "T20"].forEach((sampleText) => {
+    preview.appendChild(createElement(documentRef, "span", { text: sampleText }));
+  });
+  current.appendChild(preview);
+  current.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-font-picker-current-action",
+    text: "Ändern",
+    attributes: {
+      "aria-hidden": "true",
+    },
+  }));
+  picker.appendChild(current);
+
+  const panel = createElement(documentRef, "div", {
+    className: "ad-xconfig-font-picker-panel",
+  });
+  panel.appendChild(createElement(documentRef, "strong", {
+    className: "ad-xconfig-font-picker-title",
+    text: "Schriftart auswählen",
+  }));
+  const searchInput = createElement(documentRef, "input", {
+    type: "search",
+    className: "ad-xconfig-font-picker-search",
+    attributes: {
+      placeholder: "Schrift suchen …",
+      "aria-label": "Schrift suchen",
+      "data-adxconfig-font-search": "true",
+      autocomplete: "off",
+    },
+  });
+  panel.appendChild(searchInput);
+  panel.appendChild(optionList);
+  const emptyState = createElement(documentRef, "p", {
+    className: "ad-xconfig-font-picker-empty",
+    text: "Keine Schrift gefunden.",
+    attributes: {
+      hidden: "",
+      "aria-live": "polite",
+    },
+  });
+  emptyState.hidden = true;
+  panel.appendChild(emptyState);
+  searchInput.addEventListener("input", () => {
+    setTypographyFontSearchVisibility(optionList, emptyState, searchInput.value);
+  });
+  picker.appendChild(panel);
+  return picker;
 }
 
 function isTurnScoreCounterPreviewEffect(previewEffect) {
@@ -2250,10 +2437,16 @@ function appendDefaultSelectOptionLayout(documentRef, optionButton, option, opti
 
 function appendSelectOptionLayout(documentRef, optionButton, feature, field, option, state, isActive) {
   const optionValue = String(option?.value ?? "");
-  const optionDescription = state.isTypographyFontField
+  const optionDescription = state.isTypographyFontField || isTurnDartAssetSelectField(feature, field)
     ? ""
     : String(option?.description || "").trim();
 
+  if (state.isTypographyFontField) {
+    optionButton.appendChild(
+      buildThemeGlobalTypographyFontOptionLayout(documentRef, option, isActive)
+    );
+    return;
+  }
   if (state.isDartDesignField) {
     const optionPreviewUrl = resolveFieldOptionPreview(feature, field, optionValue);
     optionButton.appendChild(
@@ -2343,6 +2536,9 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
         "data-preview-color-theme": previewColorTheme || undefined,
         "data-multiple": isMultiSelectField(field) ? "true" : "false",
         "data-active": isActive ? "true" : "false",
+        "data-font-search-value": state.isTypographyFontField
+          ? normalizeTypographyFontSearchValue(option?.label)
+          : undefined,
         "aria-pressed": isActive ? "true" : "false",
       },
     });
@@ -2350,6 +2546,18 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
     list.appendChild(optionButton);
   });
 
+  if (isThemeGlobalTypographyFontField(feature, field)) {
+    list.className = "ad-xconfig-option-list ad-xconfig-font-option-list";
+    return buildThemeGlobalTypographyFontPicker(
+      documentRef,
+      field,
+      selectedOptionValues,
+      list
+    );
+  }
+  if (isTurnDartAssetSelectField(feature, field)) {
+    list.className = "ad-xconfig-option-list ad-xconfig-turn-dart-asset-option-list";
+  }
   return list;
 }
 
@@ -2571,12 +2779,51 @@ function setSelectOptionActiveState(documentRef, optionNode, isActive) {
   const activeBadge = activeContainer.querySelector?.(".ad-xconfig-option-active") || null;
   if (isActive) {
     if (!activeBadge) {
-      activeContainer.appendChild(buildOptionActiveBadge(documentRef));
+      activeContainer.appendChild(
+        optionNode.classList?.contains("ad-xconfig-option-item--typography-font")
+          ? buildTypographyFontActiveMark(documentRef)
+          : buildOptionActiveBadge(documentRef)
+      );
     }
     return;
   }
 
   activeBadge?.remove?.();
+}
+
+function syncTypographyFontPicker(inputWrap, optionButtons, selectedValues) {
+  const picker = inputWrap?.querySelector?.("[data-adxconfig-font-picker='true']") || null;
+  if (!picker) {
+    return;
+  }
+  const selectedOption = optionButtons.find((optionNode) =>
+    selectedValues.includes(String(optionNode.dataset?.settingValue ?? ""))
+  );
+  if (!selectedOption) {
+    return;
+  }
+
+  const selectedValue = String(selectedOption.dataset?.settingValue ?? "");
+  const selectedLabel = String(
+    selectedOption.querySelector?.(".ad-xconfig-option-label")?.textContent || "Standard"
+  ).trim();
+  const currentName = picker.querySelector?.("[data-adxconfig-font-picker-current-name='true']");
+  const currentPreview = picker.querySelector?.("[data-adxconfig-font-picker-current-preview='true']");
+  if (currentName) {
+    currentName.textContent = selectedLabel;
+    applyThemeGlobalTypographyPreviewFont(currentName, selectedValue);
+  }
+  applyThemeGlobalTypographyPreviewFont(currentPreview, selectedValue);
+
+  const searchInput = picker.querySelector?.("[data-adxconfig-font-search='true']");
+  const emptyState = picker.querySelector?.(".ad-xconfig-font-picker-empty");
+  if (searchInput) {
+    searchInput.value = "";
+  }
+  const optionList = picker.querySelector?.(".ad-xconfig-font-option-list");
+  setTypographyFontSearchVisibility(optionList, emptyState, "");
+  picker.open = false;
+  picker.removeAttribute?.("open");
 }
 
 export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) {
@@ -2610,6 +2857,7 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
     const optionValue = String(optionNode.dataset?.settingValue ?? "");
     setSelectOptionActiveState(documentRef, optionNode, selectedValues.includes(optionValue));
   });
+  syncTypographyFontPicker(inputWrap, optionButtons, selectedValues);
 
   const optionList = inputWrap.querySelector?.(
     `[data-adxconfig-setting='true'][data-setting-control='select'][data-setting-key='${settingKey}']`
