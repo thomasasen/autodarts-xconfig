@@ -3,6 +3,10 @@ import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import {
+  resolveBoardStyleDesignAsset,
+  resolveDartDesignAsset,
+} from "../../src/shared/feature-assets.node.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
 import {
   TURN_DART_ASSET_KEYS,
@@ -3818,6 +3822,30 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     String(styleNode.textContent || "").includes('.ad-xconfig-onoff-btn--off[data-active="true"]'),
     true
   );
+  assert.equal(
+    String(styleNode.textContent || "").includes(
+      '.ad-xconfig-card[data-preview-kind="avg-trend-arrow"] .ad-xconfig-card-bg img{right:-20%;object-position:left bottom'
+    ),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes(
+      '.ad-xconfig-card[data-preview-kind="checkout-target-highlights"] .ad-xconfig-card-bg img{object-position:right center'
+    ),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes(
+      '.ad-xconfig-card[data-preview-kind="take-out-darts-alert"] .ad-xconfig-card-bg img{top:3%;right:3%;width:50%;height:94%;object-fit:contain'
+    ),
+    true
+  );
+  assert.equal(
+    String(styleNode.textContent || "").includes(
+      '.ad-xconfig-card[data-preview-kind="turn-score-counter"] .ad-xconfig-card-bg img{right:-18%;object-position:left bottom'
+    ),
+    true
+  );
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
@@ -3829,11 +3857,129 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     "checkout-target-highlights",
     "tv-board-zoom",
     "active-player-sweep",
+    "avg-trend-arrow",
+    "take-out-darts-alert",
+    "turn-score-counter",
   ].forEach((featureKey) => {
     const card = documentRef.querySelector(`.ad-xconfig-card[data-feature-key='${featureKey}']`);
     assert.ok(card, `missing card for ${featureKey}`);
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing preview background for ${featureKey}`);
   });
+
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='avg-trend-arrow']"
+    )?.getAttribute("data-preview-kind"),
+    "avg-trend-arrow"
+  );
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='checkout-target-highlights']"
+    )?.getAttribute("data-preview-kind"),
+    "checkout-target-highlights"
+  );
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='take-out-darts-alert']"
+    )?.getAttribute("data-preview-kind"),
+    "take-out-darts-alert"
+  );
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='turn-score-counter']"
+    )?.getAttribute("data-preview-kind"),
+    "turn-score-counter"
+  );
+
+  runtime.stop();
+});
+
+test("Bot Board Style card uses and updates the selected board as its background", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-themes").click();
+  await waitForActiveTab(documentRef, "themes");
+
+  const previewSelector =
+    ".ad-xconfig-card[data-feature-key='bot-board-style'] .ad-xconfig-card-bg img";
+  assert.equal(
+    documentRef.querySelector(previewSelector)?.getAttribute("src"),
+    resolveBoardStyleDesignAsset("winmau-blade-6-tc")
+  );
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='bot-board-style']"
+    )?.getAttribute("data-preview-kind"),
+    "board"
+  );
+
+  documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='bot-board-style']"
+  ).click();
+  await waitForSettingsModal(documentRef);
+  clickSelectSettingOption(documentRef, "bot-board-style", "design", "target-tor");
+
+  assert.equal(
+    await waitFor(() => (
+      documentRef.querySelector(previewSelector)?.getAttribute("src") ===
+      resolveBoardStyleDesignAsset("target-tor")
+    )),
+    true
+  );
+  assert.equal(
+    JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.botBoardStyle.design,
+    "target-tor"
+  );
+
+  runtime.stop();
+});
+
+test("Dart Marker Replacer card features and updates the selected dart", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  const cardSelector = ".ad-xconfig-card[data-feature-key='dart-marker-replacer']";
+  const previewSelector = `${cardSelector} .ad-xconfig-card-bg img`;
+  assert.equal(
+    documentRef.querySelector(cardSelector)?.getAttribute("data-preview-kind"),
+    "dart-marker"
+  );
+  assert.equal(
+    documentRef.querySelector(previewSelector)?.getAttribute("src"),
+    resolveDartDesignAsset("germangiant")
+  );
+
+  documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-replacer']"
+  ).click();
+  await waitForSettingsModal(documentRef);
+  clickSelectSettingOption(documentRef, "dart-marker-replacer", "design", "red");
+
+  assert.equal(
+    await waitFor(() => (
+      documentRef.querySelector(previewSelector)?.getAttribute("src") ===
+      resolveDartDesignAsset("red")
+    )),
+    true
+  );
+  assert.equal(
+    JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.design,
+    "red"
+  );
 
   runtime.stop();
 });

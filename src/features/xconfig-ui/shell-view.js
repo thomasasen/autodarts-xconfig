@@ -1,6 +1,5 @@
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
 import { resolveDartDesignAsset, resolveTurnDartAsset } from "#feature-assets";
-import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
   isBackgroundThemeFeature,
   isThemeFeature,
@@ -9,8 +8,8 @@ import {
   buildThemeBackgroundStatus,
   buildTurnDartImageStatus,
   formatThemeBackgroundSummary,
-  resolveThemeBackgroundPreviewUrl,
 } from "./theme-background.js";
+import { resolveFeatureCardPreview } from "./feature-card-preview.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
 import { resolveThemePresetAsset } from "#theme-preset-assets";
@@ -2874,18 +2873,19 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
 function buildFeatureCard(documentRef, feature) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
   const isThemeGlobalCard = isThemeGlobalTypographyFeature(feature);
+  const preview = resolveFeatureCardPreview(feature);
   const card = createElement(documentRef, "article", {
-    className: isThemeGlobalCard
-      ? "ad-xconfig-card ad-xconfig-card--theme-global"
-      : "ad-xconfig-card",
+    className: [
+      "ad-xconfig-card",
+      isThemeGlobalCard ? "ad-xconfig-card--theme-global" : "",
+    ].filter(Boolean).join(" "),
     attributes: {
       "data-feature-key": feature.featureKey,
       "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
+      "data-preview-kind": preview.kind,
     },
   });
-  const previewUrl =
-    resolveThemeBackgroundPreviewUrl(feature) ||
-    resolveXConfigPreviewAsset(feature.featureKey);
+  const previewUrl = preview.url;
   if (previewUrl) {
     const bg = createElement(documentRef, "div", {
       className: "ad-xconfig-card-bg",

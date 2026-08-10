@@ -12,6 +12,15 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.9.0] - 2026-08-10
+
+### Changed
+
+- Nutzerwirkung: xConfig funktioniert während der Autodarts-Domainumstellung sowohl unter `play.autodarts.io` als auch unter `play.autodarts.com`.
+  Technik: Userscript-Matches, Build-Ziele, Layout-Erkennung, Dokumentation und Regressionstests akzeptieren beide Domains, ohne bestehende Installationen auf der bisherigen Adresse auszuschließen.
+- Nutzerwirkung: Die Kacheln für Bot Board Style und Dart Marker Replacer zeigen direkt das aktuell ausgewählte Design; AVG Trend Arrow, Checkout Target Highlights, Take Out Darts Alert und Turn Score Counter verwenden passendere, klar erkennbare Bildausschnitte.
+  Technik: Ein gemeinsamer Feature-Preview-Resolver verbindet reale Runtime-Assets mit kachelspezifischen Darstellungsvarianten und aktualisiert auswahlabhängige Vorschauen unmittelbar nach dem Speichern; DOM-Regressionstests sichern Zuordnung und Aktualisierung ab.
+
 ## [2.8.1] - 2026-08-10
 
 ### Fixed
@@ -1913,7 +1922,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.8.1]: https://github.com/thomasasen/autodarts-xconfig/compare/0b2d233...HEAD
+[2.9.0]: https://github.com/thomasasen/autodarts-xconfig/compare/f541eff...HEAD
+[2.8.1]: https://github.com/thomasasen/autodarts-xconfig/compare/0b2d233...f541eff
 [2.8.0]: https://github.com/thomasasen/autodarts-xconfig/compare/a0d05cf...0b2d233
 [2.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/3a795d2...a0d05cf
 [2.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/8f7c754...3a795d2

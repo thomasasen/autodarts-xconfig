@@ -1,5 +1,4 @@
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
-import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import {
   openUserscriptInstall,
   readStoredUpdateStatus,
@@ -35,9 +34,9 @@ import {
   applyTurnDartImageStatusNode,
   clearThemeBackgroundImage,
   formatThemeBackgroundSummary,
-  resolveThemeBackgroundPreviewUrl,
   uploadThemeBackgroundImage,
 } from "./theme-background.js";
+import { resolveFeatureCardPreview } from "./feature-card-preview.js";
 import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
@@ -455,6 +454,27 @@ function ensureXConfigShell(options = {}) {
     });
   }
 
+  function syncFeatureCardPreview(featureKey) {
+    const normalizedFeatureKey = String(featureKey || "").trim();
+    if (!normalizedFeatureKey) {
+      return;
+    }
+
+    const feature = getFeatures().find((entry) => entry?.featureKey === normalizedFeatureKey) || null;
+    if (!feature) {
+      return;
+    }
+
+    const nextCardPreviewUrl = resolveFeatureCardPreview(feature).url;
+    const cardPreviewNodes = Array.from(documentRef.querySelectorAll(
+      `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}'] .ad-xconfig-card-bg img`
+    ));
+    cardPreviewNodes.forEach((node) => {
+      node.setAttribute("src", nextCardPreviewUrl);
+      node.setAttribute("alt", `${feature.title} Vorschau`);
+    });
+  }
+
   function syncThemeBackgroundIndicators(featureKey) {
     const normalizedFeatureKey = String(featureKey || "").trim();
     if (!normalizedFeatureKey) {
@@ -466,22 +486,13 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
+    syncFeatureCardPreview(normalizedFeatureKey);
     const cardStatusNodes = Array.from(documentRef.querySelectorAll(
       `[data-adxconfig-theme-card-status='true'][data-feature-key='${normalizedFeatureKey}']`
     ));
     const cardStatusText = formatThemeBackgroundSummary(feature);
     cardStatusNodes.forEach((node) => {
       node.textContent = cardStatusText;
-    });
-    const nextCardPreviewUrl =
-      resolveThemeBackgroundPreviewUrl(feature) ||
-      resolveXConfigPreviewAsset(feature.featureKey);
-    const cardPreviewNodes = Array.from(documentRef.querySelectorAll(
-      `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}'] .ad-xconfig-card-bg img`
-    ));
-    cardPreviewNodes.forEach((node) => {
-      node.setAttribute("src", nextCardPreviewUrl);
-      node.setAttribute("alt", `${feature.title} Vorschau`);
     });
     const modalStatusNodes = Array.from(documentRef.querySelectorAll(
       `[data-adxconfig-theme-image-status='true'][data-feature-key='${normalizedFeatureKey}']`
@@ -695,6 +706,7 @@ function ensureXConfigShell(options = {}) {
     syncSelectOptionButtons,
     syncSettingsPreview: (featureKey, settingKey, settingValue) =>
       syncSettingsPreview(documentRef, getFeatures(), featureKey, settingKey, settingValue),
+    syncFeatureCardPreview,
     syncThemeBackgroundIndicators,
     syncTurnDartImageIndicators,
     themeKeyFromConfigKey,

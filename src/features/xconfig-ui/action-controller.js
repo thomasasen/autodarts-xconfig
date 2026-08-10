@@ -281,6 +281,7 @@ function handleSetSettingSelectOption(controller, actionNode, feature) {
         buildSelectSettingPatch(controller, configKey, settingKey, nextValue)
       )
     ).then(() => {
+      controller.syncFeatureCardPreview(feature.featureKey);
       controller.syncThemeBackgroundIndicators(feature.featureKey);
       controller.syncTurnDartImageIndicators(feature.featureKey);
     }),
@@ -653,6 +654,7 @@ function buildShellActionControllerContext(options = {}) {
     syncSelectOptionButtons: resolveOptionalFunction(options.syncSelectOptionButtons, () => {}),
     syncSettingsPreview: resolveOptionalFunction(options.syncSettingsPreview, () => {}),
     syncColorFieldControl: resolveOptionalFunction(options.syncColorFieldControl, () => {}),
+    syncFeatureCardPreview: resolveOptionalFunction(options.syncFeatureCardPreview, () => {}),
     themeKeyFromConfigKey: resolveOptionalFunction(options.themeKeyFromConfigKey, () => ""),
     clearThemeBackgroundImage: resolveOptionalFunction(options.clearThemeBackgroundImage, () => {}),
     uploadThemeBackgroundImage: resolveOptionalFunction(options.uploadThemeBackgroundImage, () => {}),
