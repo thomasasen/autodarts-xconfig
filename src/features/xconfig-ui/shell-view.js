@@ -1481,6 +1481,50 @@ function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, override
   return card;
 }
 
+const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
+  "checkout-suggestion-style": (documentRef, host, feature) => {
+    host.replaceChildren(
+      buildCheckoutSuggestionSample(documentRef, feature?.config || {})
+    );
+  },
+});
+
+export function syncFeatureCardPreviewContent(
+  documentRef,
+  card,
+  feature,
+  preview = resolveFeatureCardPreview(feature)
+) {
+  if (!card) {
+    return;
+  }
+
+  const fillPreview = FEATURE_CARD_PREVIEW_FILLERS[preview?.kind];
+  let previewHost = card.querySelector(
+    "[data-adxconfig-feature-card-preview='true']"
+  );
+  if (!fillPreview) {
+    previewHost?.remove?.();
+    return;
+  }
+
+  if (!previewHost) {
+    const background = card.querySelector(".ad-xconfig-card-bg");
+    if (!background) {
+      return;
+    }
+    previewHost = createElement(documentRef, "div", {
+      className: "ad-xconfig-feature-card-preview",
+      attributes: {
+        "data-adxconfig-feature-card-preview": "true",
+      },
+    });
+    background.appendChild(previewHost);
+  }
+
+  fillPreview(documentRef, previewHost, feature);
+}
+
 function buildCheckoutSuggestionPreviewSection(documentRef, feature) {
   return buildSettingsPreviewSection(documentRef, {
     previewAttribute: "data-adxconfig-checkout-suggestion-styles-preview",
@@ -2899,6 +2943,7 @@ function buildFeatureCard(documentRef, feature) {
       },
     }));
     card.appendChild(bg);
+    syncFeatureCardPreviewContent(documentRef, card, feature, preview);
   }
 
   const cardContent = createElement(documentRef, "div", {

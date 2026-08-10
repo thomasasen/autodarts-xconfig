@@ -14,6 +14,10 @@ const FEATURE_PREVIEW_RESOLVERS = Object.freeze({
     kind: "checkout-target-highlights",
     url: resolveXConfigPreviewAsset("checkout-target-highlights"),
   }),
+  "checkout-suggestion-styles": () => ({
+    kind: "checkout-suggestion-style",
+    url: resolveXConfigPreviewAsset("checkout-suggestion-styles"),
+  }),
   "bot-board-style": (feature) => ({
     kind: "board",
     url: resolveBoardStyleDesignAsset(feature?.config?.design),

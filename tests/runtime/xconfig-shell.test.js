@@ -1492,6 +1492,20 @@ test("xConfig style checkout suggestions renders live preview and style option s
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-suggestion-styles'][data-setting-key='style'][data-active='true']"
   );
   assert.ok(activeStyleOption);
+  const cardSelector = ".ad-xconfig-card[data-feature-key='checkout-suggestion-styles']";
+  const card = documentRef.querySelector(cardSelector);
+  assert.ok(card);
+  assert.equal(card.getAttribute("data-preview-kind"), "checkout-suggestion-style");
+  const cardPreviewSelector =
+    `${cardSelector} [data-adxconfig-feature-card-preview='true'] .ad-xconfig-checkout-suggestion-demo`;
+  const cardPreview = documentRef.querySelector(cardPreviewSelector);
+  assert.ok(cardPreview);
+  assert.equal(
+    cardPreview.classList.contains(
+      `ad-xconfig-checkout-suggestion-demo--${activeStyleOption.getAttribute("data-setting-value")}`
+    ),
+    true
+  );
   assert.equal(
     previewSuggestion.classList.contains(
       `ad-xconfig-checkout-suggestion-demo--${activeStyleOption.getAttribute("data-setting-value")}`
@@ -1525,6 +1539,14 @@ test("xConfig style checkout suggestions renders live preview and style option s
         .querySelector(
           "[data-adxconfig-checkout-suggestion-styles-preview='true'] .ad-xconfig-checkout-suggestion-demo"
         )
+        ?.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket") === true
+    ),
+    true
+  );
+  assert.equal(
+    await waitFor(() =>
+      documentRef
+        .querySelector(cardPreviewSelector)
         ?.classList.contains("ad-xconfig-checkout-suggestion-demo--ticket") === true
     ),
     true
@@ -3842,7 +3864,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   );
   assert.equal(
     String(styleNode.textContent || "").includes(
-      '.ad-xconfig-card[data-preview-kind="turn-score-counter"] .ad-xconfig-card-bg img{right:-18%;object-position:left bottom'
+      '.ad-xconfig-card[data-preview-kind="turn-score-counter"] .ad-xconfig-card-bg img{top:18%;right:-15%;object-position:left top'
     ),
     true
   );

@@ -68,6 +68,7 @@ import {
   openReadme,
   parseFieldValue,
   syncSettingsPreview,
+  syncFeatureCardPreviewContent,
   syncColorFieldControl,
   syncSelectOptionButtons,
 } from "./shell-view.js";
@@ -465,13 +466,18 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
-    const nextCardPreviewUrl = resolveFeatureCardPreview(feature).url;
-    const cardPreviewNodes = Array.from(documentRef.querySelectorAll(
-      `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}'] .ad-xconfig-card-bg img`
+    const nextCardPreview = resolveFeatureCardPreview(feature);
+    const cardNodes = Array.from(documentRef.querySelectorAll(
+      `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}']`
     ));
-    cardPreviewNodes.forEach((node) => {
-      node.setAttribute("src", nextCardPreviewUrl);
-      node.setAttribute("alt", `${feature.title} Vorschau`);
+    cardNodes.forEach((card) => {
+      card.setAttribute("data-preview-kind", nextCardPreview.kind);
+      const imageNode = card.querySelector(".ad-xconfig-card-bg img");
+      if (imageNode && nextCardPreview.url) {
+        imageNode.setAttribute("src", nextCardPreview.url);
+        imageNode.setAttribute("alt", `${feature.title} Vorschau`);
+      }
+      syncFeatureCardPreviewContent(documentRef, card, feature, nextCardPreview);
     });
   }
 

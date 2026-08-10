@@ -12,6 +12,20 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.9.1] - 2026-08-10
+
+### Fixed
+
+- Nutzerwirkung: Die Turn-Score-Counter-Kachel zeigt jetzt die Turn-/Rundenpunkte in der Wurfzeile statt des verbleibenden Spielerscores.
+  Technik: Der kachelspezifische Bildausschnitt fokussiert das echte Turn-Punkte-Feld oben links und blendet die semantisch unpassende Spielerkarte aus.
+- Nutzerwirkung: Der Dart Marker Replacer ist genauso gut abgedunkelt und lesbar wie die übrigen Funktionskacheln.
+  Technik: Motivdeckkraft und Overlay-Verlauf verwenden nun dieselbe Kontrastbasis wie die anderen kachelspezifischen Vorschauen, während Zielraster und Hover-Effekt erhalten bleiben.
+
+### Changed
+
+- Nutzerwirkung: Checkout Suggestion Styles zeigt auf der Kachel direkt den aktuell gewählten Stil samt Labeltext und Farbthema und aktualisiert sich nach dem Speichern sofort.
+  Technik: Die Kachel verwendet dieselbe echte Preview-Komponente wie der Einstellungsdialog; der gemeinsame Preview-Synchronisierer aktualisiert Bild, Preview-Typ und gerenderten Inhalt ohne Neuladen.
+
 ## [2.9.0] - 2026-08-10
 
 ### Changed
@@ -1922,7 +1936,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.9.0]: https://github.com/thomasasen/autodarts-xconfig/compare/f541eff...HEAD
+[2.9.1]: https://github.com/thomasasen/autodarts-xconfig/compare/633ff78...HEAD
+[2.9.0]: https://github.com/thomasasen/autodarts-xconfig/compare/f541eff...633ff78
 [2.8.1]: https://github.com/thomasasen/autodarts-xconfig/compare/0b2d233...f541eff
 [2.8.0]: https://github.com/thomasasen/autodarts-xconfig/compare/a0d05cf...0b2d233
 [2.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/3a795d2...a0d05cf
