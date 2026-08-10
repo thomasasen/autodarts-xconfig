@@ -115,7 +115,7 @@ export function toRoutePathname(windowRef, hrefValue) {
   }
 
   try {
-    const parsed = new URL(href, windowRef?.location?.origin || "https://play.autodarts.io");
+    const parsed = new URL(href, windowRef?.location?.origin || "https://play.autodarts.com");
     return normalizeRoutePath(parsed.pathname);
   } catch (_) {
     return normalizeRoutePath(href);

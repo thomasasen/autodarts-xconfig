@@ -6,8 +6,11 @@
 // @author       Thomas Asen
 // @license      MIT
 // @match        https://play.autodarts.io/*
+// @match        https://play.autodarts.com/*
 // @exclude      https://play.autodarts.io/boards
 // @exclude      https://play.autodarts.io/boards/*
+// @exclude      https://play.autodarts.com/boards
+// @exclude      https://play.autodarts.com/boards/*
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue

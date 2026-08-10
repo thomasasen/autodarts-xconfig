@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { build } from "esbuild";
 import {
+  buildUserscriptHeader,
   USERSCRIPT_ASSET_LOADERS,
   USERSCRIPT_BROWSER_TARGETS,
 } from "../../scripts/userscript-build-config.mjs";
@@ -27,6 +28,10 @@ const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const bootstrapPath = path.resolve(process.cwd(), "src", "core", "bootstrap.js");
 const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
 const SOURCE_BUNDLE_BYTE_BUDGET = 25 * 1024 * 1024;
+const SUPPORTED_AUTODARTS_ORIGINS = Object.freeze([
+  "https://play.autodarts.io",
+  "https://play.autodarts.com",
+]);
 let sourceBundlePromise = null;
 
 function buildSourceBundle() {
@@ -184,6 +189,21 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
     /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.meta\.js/
   );
   assert.doesNotMatch(text, /initializeTampermonkeyRuntime/);
+});
+
+test("source userscript metadata supports old and new Autodarts domains", () => {
+  const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
+  const generatedHeader = buildUserscriptHeader(packageVersion);
+  const loader = readFileSync(loaderPath, "utf8");
+
+  for (const origin of SUPPORTED_AUTODARTS_ORIGINS) {
+    const escapedOrigin = escapeRegExp(origin);
+    for (const metadata of [generatedHeader, loader]) {
+      assert.match(metadata, new RegExp(String.raw`@match\s+${escapedOrigin}/\*`));
+      assert.match(metadata, new RegExp(String.raw`@exclude\s+${escapedOrigin}/boards(?:\s|$)`));
+      assert.match(metadata, new RegExp(String.raw`@exclude\s+${escapedOrigin}/boards/\*`));
+    }
+  }
 });
 
 test("source userscript bundle embeds only approved runtime assets", async () => {

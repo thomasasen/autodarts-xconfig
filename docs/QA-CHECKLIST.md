@@ -12,7 +12,7 @@ Das Script schreibt ausschließlich in ein neu angelegtes Verzeichnis unter dem 
 
 ## Pflichtprüfung in Chrome und Firefox
 
-1. Autodarts öffnen und die Browser-Konsole leeren.
+1. Autodarts unter `https://play.autodarts.com/` öffnen und die Browser-Konsole leeren; während der Umstellung zusätzlich `https://play.autodarts.io/` prüfen, sofern die Adresse noch erreichbar ist.
 2. xConfig mehrfach öffnen und schließen; Menü, Modal und Hintergrund müssen jeweils vollständig verschwinden und wieder erscheinen.
 3. Bot Board Style aktivieren und die Ebenenreihenfolge von Board, Markern und Overlays prüfen.
 4. Sämtliche Bildauswahlen nacheinander öffnen und auf sichtbare Vorschaufehler prüfen.
@@ -24,4 +24,4 @@ Das Script schreibt ausschließlich in ein neu angelegtes Verzeichnis unter dem 
 
 ## Ergebnis dokumentieren
 
-Für jeden Browser werden Version, Tampermonkey-Version, getestetes Autodarts-Szenario, Ergebnis und offene Abweichungen festgehalten. Ein nicht verfügbarer Browser wird nicht als bestanden gewertet, sondern ausdrücklich als ungeprüft dokumentiert.
+Für jeden Browser werden Version, Tampermonkey-Version, getestete Autodarts-Domain, Szenario, Ergebnis und offene Abweichungen festgehalten. Ein nicht verfügbarer Browser oder eine nicht erreichbare Domain wird nicht als bestanden gewertet, sondern ausdrücklich als ungeprüft dokumentiert.

@@ -27,16 +27,20 @@ const SIDEBAR_ROUTE_HINTS = new Set([
   "/settings",
 ]);
 
-test("xconfig layout utils normalize routes and config locations consistently", () => {
+test("xconfig layout utils normalize routes on old and new Autodarts domains", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
     localStorage: new FakeStorage(),
-    href: "https://play.autodarts.io/boards?tab=all#section",
+    href: "https://play.autodarts.com/boards?tab=all#section",
   });
 
   assert.equal(normalizeRoutePath("boards?tab=all"), "/boards");
   assert.equal(toRoutePathname(windowRef, "/matches?state=open"), "/matches");
+  assert.equal(
+    toRoutePathname(windowRef, "https://play.autodarts.io/matches/legacy?tab=board"),
+    "/matches/legacy"
+  );
   assert.equal(currentRoute(windowRef), "/boards?tab=all#section");
   assert.equal(isLegacyConfigPath("/ad-xconfig", CONFIG_PATH), true);
   assert.equal(isConfigHash("ad-xconfig", CONFIG_HASH), true);

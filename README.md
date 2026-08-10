@@ -37,7 +37,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Voraussetzungen
 
-- Ein aktueller Desktop-Browser, in dem Autodarts unter `https://play.autodarts.io/` läuft.
+- Ein aktueller Desktop-Browser, in dem Autodarts unter `https://play.autodarts.com/` oder während der Umstellung noch unter `https://play.autodarts.io/` läuft.
 - Eine installierte Tampermonkey-Erweiterung.
 - Die Screenshots und Bezeichnungen in dieser Anleitung stammen aus einem Chrome-/Chromium-Setup. In anderen Browsern können Menüpunkte und Schalter leicht anders heißen oder an einer etwas anderen Stelle liegen.
 
@@ -45,7 +45,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 1. Tampermonkey installieren: [tampermonkey.net](https://www.tampermonkey.net/)
 2. Oben auf `Installieren` klicken
-3. `https://play.autodarts.io/` neu laden
+3. `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu laden
 4. Links in der Navigation **AD xConfig** öffnen
 5. Erst `Themen` und `Animationen` in Ruhe ansehen, dann einzelne Module einschalten
 
@@ -65,7 +65,7 @@ Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die empfohlene Browse
 ## Wenn AD xConfig nicht erscheint
 
 1. In Tampermonkey prüfen, ob `autodarts-xconfig` installiert und aktiviert ist.
-2. `https://play.autodarts.io/` vollständig neu laden.
+2. `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse vollständig neu laden.
 3. In den Browsererweiterungen bei Tampermonkey `Nutzerscripts zulassen` und `Zugriff auf Datei-URLs zulassen` aktivieren.
 4. Falls Tampermonkey beim Installieren oder Aktualisieren einen zusätzlichen Tab geöffnet hat, die Installation dort vollständig bestätigen.
 5. Wenn ein Injection-Hinweis erscheint, die empfohlene Browser-Einstellung übernehmen.

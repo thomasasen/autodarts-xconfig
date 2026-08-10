@@ -336,13 +336,13 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   runtime.stop();
 });
 
-test("xConfig shell normalizes legacy /ad-xconfig path to a reload-safe hash route", async () => {
+test("xConfig shell normalizes legacy /ad-xconfig path on the new Autodarts domain", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
     localStorage,
-    href: "https://play.autodarts.io/ad-xconfig",
+    href: "https://play.autodarts.com/ad-xconfig",
   });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
