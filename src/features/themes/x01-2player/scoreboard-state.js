@@ -103,9 +103,13 @@ export function deriveX01TwoPlayerScoreboardRowState(rows = []) {
     };
   });
 
-  const currentRemainingIndex = rowStates.findLastIndex((rowState) => {
-    return rowState.hasRemainingValue;
-  });
+  let currentRemainingIndex = -1;
+  for (let index = rowStates.length - 1; index >= 0; index -= 1) {
+    if (rowStates[index].hasRemainingValue) {
+      currentRemainingIndex = index;
+      break;
+    }
+  }
 
   if (currentRemainingIndex < 0) {
     return rowStates;

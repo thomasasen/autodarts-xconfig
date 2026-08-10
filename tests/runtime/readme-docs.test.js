@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
+import { XCONFIG_PREVIEW_ASSET_FILES } from "../../src/shared/xconfig-preview-assets.manifest.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import {
   buildRecommendedDefaultsSection,
@@ -307,13 +307,13 @@ test("docs/screenshots contains no duplicate files by content hash", () => {
   assert.equal(duplicates.length, 0, `duplicate screenshots found: ${JSON.stringify(duplicates)}`);
 });
 
-test("xConfig preview screenshot manifest points only to existing canonical screenshots", () => {
-  Object.entries(XCONFIG_PREVIEW_SCREENSHOTS).forEach(([featureKey, fileName]) => {
-    const screenshotPath = path.resolve(process.cwd(), "docs", "screenshots", fileName);
+test("xConfig preview asset manifest points only to existing runtime WebPs", () => {
+  Object.entries(XCONFIG_PREVIEW_ASSET_FILES).forEach(([featureKey, fileName]) => {
+    const screenshotPath = path.resolve(process.cwd(), "src", "assets", "xconfig-previews", fileName);
     assert.equal(
       existsSync(screenshotPath),
       true,
-      `missing preview screenshot for ${featureKey}: ${fileName}`
+      `missing runtime preview for ${featureKey}: ${fileName}`
     );
   });
 });
@@ -348,7 +348,7 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
 
   requiredPreviewFeatureKeys.forEach((featureKey) => {
     assert.equal(
-      Object.hasOwn(XCONFIG_PREVIEW_SCREENSHOTS, featureKey),
+      Object.hasOwn(XCONFIG_PREVIEW_ASSET_FILES, featureKey),
       true,
       `missing preview mapping for ${featureKey}`
     );

@@ -3111,7 +3111,8 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
 
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
   assert.ok(previewStyleNode);
-  assert.match(String(previewStyleNode.textContent || ""), /fonts\.bunny\.net/);
+  assert.equal(String(previewStyleNode.textContent || "").match(/@import\s+url/g)?.length, 1);
+  assert.match(String(previewStyleNode.textContent || ""), /family=Aldrich/);
 
   const fontOptionButtons = documentRef.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='fontPreset']"
@@ -3170,11 +3171,13 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
     assert.equal(String(optionSamples[0].textContent || "").trim(), "501");
 
     if (preset.value === "system") {
+      assert.equal(optionButton.getAttribute("data-adxconfig-preview-font"), null);
       assert.equal(optionLabels[0].getAttribute("data-adxconfig-preview-font"), null);
       assert.equal(optionSamples[0].getAttribute("data-adxconfig-preview-font"), null);
       return;
     }
 
+    assert.equal(optionButton.getAttribute("data-adxconfig-preview-font"), preset.value);
     assert.equal(optionLabels[0].getAttribute("data-adxconfig-preview-font"), preset.value);
     assert.equal(optionSamples[0].getAttribute("data-adxconfig-preview-font"), preset.value);
     assert.match(String(optionLabels[0].style.fontFamily || ""), new RegExp(preset.familyName));
@@ -3200,6 +3203,24 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
     String(shellStyleNode.textContent || "").includes("min-height:3.35rem;padding:.55rem .7rem"),
     true
   );
+  assert.equal(
+    String(shellStyleNode.textContent || "").includes(
+      ".ad-xconfig-turn-dart-asset-option-list .ad-xconfig-option-layout--dart-design{grid-template-columns:minmax(0,1fr) minmax(0,120px) auto}"
+    ),
+    true
+  );
+  assert.equal(
+    String(shellStyleNode.textContent || "").includes(
+      ".ad-xconfig-turn-dart-asset-option-list .ad-xconfig-option-preview{width:120px;max-width:100%;height:40px;object-fit:contain;object-position:right center"
+    ),
+    true
+  );
+  assert.equal(
+    String(shellStyleNode.textContent || "").includes(
+      ".ad-xconfig-turn-dart-image-preview{width:120px;max-width:100%;height:40px;object-fit:contain;object-position:right center"
+    ),
+    true
+  );
 
   const fontSearch = fontPicker.querySelector("[data-adxconfig-font-search='true']");
   const emptyFontSearch = fontPicker.querySelector(".ad-xconfig-font-picker-empty");
@@ -3219,6 +3240,7 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
   assert.equal(aldrichOption.getAttribute("hidden"), "");
   assert.equal(audiowideOption.getAttribute("hidden"), null);
   assert.equal(emptyFontSearch.getAttribute("hidden"), "");
+  assert.equal(String(previewStyleNode.textContent || "").match(/@import\s+url/g)?.length, 1);
 
   fontSearch.value = "nicht vorhanden";
   fontSearch.dispatchEvent(new FakeEvent("input", { bubbles: true, target: fontSearch }));
@@ -3228,6 +3250,23 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
   fontSearch.value = "";
   fontSearch.dispatchEvent(new FakeEvent("input", { bubbles: true, target: fontSearch }));
   assert.equal(fontOptionButtons.every((button) => button.getAttribute("hidden") === null), true);
+  documentRef.dispatchEvent(new FakeEvent("pointerover", {
+    bubbles: true,
+    target: audiowideOption,
+  }));
+  assert.equal(String(previewStyleNode.textContent || "").match(/@import\s+url/g)?.length, 2);
+  assert.match(String(previewStyleNode.textContent || ""), /family=Audiowide/);
+  documentRef.dispatchEvent(new FakeEvent("pointerover", {
+    bubbles: true,
+    target: audiowideOption,
+  }));
+  assert.equal(String(previewStyleNode.textContent || "").match(/@import\s+url/g)?.length, 2);
+  documentRef.dispatchEvent(new FakeEvent("focusin", {
+    bubbles: true,
+    target: aldrichOption,
+  }));
+  assert.equal(String(previewStyleNode.textContent || "").match(/@import\s+url/g)?.length, 2);
+  assert.match(String(previewStyleNode.textContent || ""), /family=Aldrich/);
   fontPicker.open = true;
   fontPicker.setAttribute("open", "");
   audiowideOption.click();

@@ -130,6 +130,24 @@ function createGameState(options = {}) {
   };
 }
 
+function withoutArrayMethod(methodName, callback) {
+  const descriptor = Object.getOwnPropertyDescriptor(Array.prototype, methodName);
+  Object.defineProperty(Array.prototype, methodName, {
+    configurable: true,
+    value: undefined,
+    writable: true,
+  });
+  try {
+    return callback();
+  } finally {
+    if (descriptor) {
+      Object.defineProperty(Array.prototype, methodName, descriptor);
+    } else {
+      delete Array.prototype[methodName];
+    }
+  }
+}
+
 test("bot board style places the embedded board above native geometry and below markers", () => {
   const documentRef = new FakeDocument();
   const fixture = createBoardFixture(documentRef);
@@ -159,6 +177,28 @@ test("bot board style places the embedded board above native geometry and below 
   assert.ok(children.indexOf(imageNode) > children.indexOf(fixture.lastNativePath));
   assert.ok(children.indexOf(imageNode) < children.indexOf(fixture.marker));
   assert.ok(children.indexOf(imageNode) < children.indexOf(fixture.checkoutOverlay));
+});
+
+test("bot board style preserves layer order when Array.findLast is unavailable", () => {
+  withoutArrayMethod("findLast", () => {
+    const documentRef = new FakeDocument();
+    const fixture = createBoardFixture(documentRef);
+    const imageNode = updateBotBoardStyle({
+      documentRef,
+      state: createBotBoardStyleState(),
+      featureConfig: {
+        enabled: true,
+        design: "target-tor",
+        scope: "all-match-boards",
+      },
+      assetResolver: (design) => `data:image/webp;base64,${design}`,
+    });
+
+    const children = fixture.boardGroup.children;
+    assert.ok(children.indexOf(imageNode) > children.indexOf(fixture.lastNativePath));
+    assert.ok(children.indexOf(imageNode) < children.indexOf(fixture.marker));
+    assert.ok(children.indexOf(imageNode) < children.indexOf(fixture.checkoutOverlay));
+  });
 });
 
 test("bot board style lifts an existing overlay above the board image without replacing it", () => {

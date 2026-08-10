@@ -2,11 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { build } from "esbuild";
+import {
+  USERSCRIPT_ASSET_LOADERS,
+  USERSCRIPT_BROWSER_TARGETS,
+} from "../../scripts/userscript-build-config.mjs";
 import { BOARD_STYLE_DESIGN_FILES } from "../../src/shared/board-style-assets.manifest.js";
 import { DART_DESIGN_FILES } from "../../src/shared/feature-assets.manifest.js";
 import { THEME_PRESET_ASSET_FILES } from "../../src/shared/theme-preset-assets.manifest.js";
 import { TURN_DART_ASSET_FILES } from "../../src/shared/turn-dart-assets.manifest.js";
-import { XCONFIG_PREVIEW_SCREENSHOTS } from "../../src/shared/xconfig-preview-assets.manifest.js";
+import { XCONFIG_PREVIEW_ASSET_FILES } from "../../src/shared/xconfig-preview-assets.manifest.js";
 
 const bundlePath = path.resolve(
   process.cwd(),
@@ -21,6 +26,26 @@ const metaPath = path.resolve(
 const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const bootstrapPath = path.resolve(process.cwd(), "src", "core", "bootstrap.js");
 const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
+const SOURCE_BUNDLE_BYTE_BUDGET = 25 * 1024 * 1024;
+let sourceBundlePromise = null;
+
+function buildSourceBundle() {
+  if (!sourceBundlePromise) {
+    sourceBundlePromise = build({
+      entryPoints: [loaderPath],
+      bundle: true,
+      format: "iife",
+      platform: "browser",
+      target: USERSCRIPT_BROWSER_TARGETS,
+      charset: "utf8",
+      legalComments: "none",
+      loader: USERSCRIPT_ASSET_LOADERS,
+      write: false,
+      logLevel: "silent",
+    }).then((result) => result.outputFiles.map((file) => file.text).join("\n"));
+  }
+  return sourceBundlePromise;
+}
 
 function escapeRegExp(text) {
   return String(text || "").replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -59,8 +84,8 @@ function buildAllowedBundledAssetSources() {
     ...Object.values(TURN_DART_ASSET_FILES).map(
       (fileName) => `src/assets/turn-darts/${fileName}`
     ),
-    ...Object.values(XCONFIG_PREVIEW_SCREENSHOTS).map(
-      (fileName) => `docs/screenshots/${fileName}`
+    ...Object.values(XCONFIG_PREVIEW_ASSET_FILES).map(
+      (fileName) => `src/assets/xconfig-previews/${fileName}`
     ),
     "src/assets/TakeOut.png",
     "src/assets/singlebull.mp3",
@@ -161,8 +186,8 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
   assert.doesNotMatch(text, /initializeTampermonkeyRuntime/);
 });
 
-test("checked-in userscript bundle embeds only approved runtime assets", () => {
-  const text = readFileSync(bundlePath, "utf8");
+test("source userscript bundle embeds only approved runtime assets", async () => {
+  const text = await buildSourceBundle();
   const allowedSources = buildAllowedBundledAssetSources();
   const bundledAssetSources = collectBundledDataUrls(text)
     .map((entry) => entry.source)
@@ -181,6 +206,15 @@ test("checked-in userscript bundle embeds only approved runtime assets", () => {
   assert.deepEqual(unexpectedAssetSources, []);
   assert.deepEqual(missingAssetSources, []);
   assert.deepEqual(readmeOnlyAssetSources, []);
+});
+
+test("source userscript bundle stays within the 25 MiB budget", async () => {
+  const text = await buildSourceBundle();
+  const byteSize = Buffer.byteLength(text, "utf8");
+  assert.ok(
+    byteSize <= SOURCE_BUNDLE_BYTE_BUDGET,
+    `source userscript bundle uses ${byteSize} bytes; budget is ${SOURCE_BUNDLE_BYTE_BUDGET}`
+  );
 });
 
 test("bundle, runtime API version and package version stay in sync", () => {

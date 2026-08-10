@@ -21,17 +21,17 @@ const dartAssetHashes = new Map(
     .map((entry) => entry.split("="))
 );
 const turnDartAssetMetadata = new Map([
-  ["turn-dart-blue-lightning.png", { width: 2098, height: 471, sha256: "38df34e30d477ceeb66c9851d6785a42c4257ba30789ee6dec04b5d1421369e0" }],
-  ["turn-dart-bullet-red.png", { width: 1700, height: 500, sha256: "fb6cfe07b37c3f343d457a68db43a820619066fd5722a069768be5d10d6f0213" }],
-  ["turn-dart-carbon-gold.png", { width: 2062, height: 457, sha256: "0a648f0b47fc8e5c5355ae9a7f00953df165b1090c82d2814765b375cf958a4c" }],
-  ["turn-dart-cool-hand-luke.png", { width: 2066, height: 511, sha256: "1a9c081f31eb049d36b9229b4a04ecafbb1ec78de43ef1fc2560c8999833350f" }],
-  ["turn-dart-copper-grid.png", { width: 2169, height: 487, sha256: "f61c4d2fbbffe979c6b66a066b1286273440f9d8d327262f5a098f05b39b6853" }],
-  ["turn-dart-german-giant.png", { width: 2170, height: 725, sha256: "31058daaa30102d6b092187472310a863cb0d31b6d722fd09f08f4292c182673" }],
-  ["turn-dart-gvv-blue.png", { width: 1993, height: 466, sha256: "6181e904df762886c092282af0ae914fcd09b17935f53071582537442d8345b2" }],
-  ["turn-dart-iceman-blue.png", { width: 2041, height: 443, sha256: "791dc9c13aaf51e94df34b263397ba9c3dc0f5c3b2bf85edd666628159966ace" }],
-  ["turn-dart-snakebite-purple.png", { width: 2095, height: 456, sha256: "dce2ac90aac64859076a8ddb6ffd620468e38bc4bac939fc4fa309a6e7ab8122" }],
-  ["turn-dart-target-neon.png", { width: 1939, height: 454, sha256: "985833cf6b152a071bd29efff247ddbdad71be03b9bcaabb30fa1316bbc88289" }],
-  ["turn-dart-vecta-gold.png", { width: 1938, height: 463, sha256: "5e8e31fcf9ddeabfac8ede51cb9e0ad4b6237bf6fa09b150a6f33fcf85b9d988" }],
+  ["turn-dart-blue-lightning.png", { width: 2098, height: 471, sha256: "a7135847b554763a602772b21f64259c07b3716445e44879d324051f798057f9" }],
+  ["turn-dart-bullet-red.png", { width: 1700, height: 500, sha256: "0661723cf7284a4444912eefeb5725f959e678a772a6e88e25814d2c69ccdfa4" }],
+  ["turn-dart-carbon-gold.png", { width: 2062, height: 457, sha256: "df9d5a24c95b267c82466fb8837e54ecbf01d613840c46f51a6b89cc8f7037e2" }],
+  ["turn-dart-cool-hand-luke.png", { width: 2066, height: 511, sha256: "432bca69b02837a1dfb1a201548d7b568e24832e7eee41897caa69c0bc923bf9" }],
+  ["turn-dart-copper-grid.png", { width: 2169, height: 487, sha256: "dde4e169a28da9ed23d1ed09f8d94f81292b55b6c748a205c3d62f5d4e310969" }],
+  ["turn-dart-german-giant.png", { width: 2170, height: 725, sha256: "f61f6b3d3b84fba8882ff7696cd5e569cdf442dd0d2abd6ef39a17d6f28c77ab" }],
+  ["turn-dart-gvv-blue.png", { width: 1993, height: 466, sha256: "c86bb4b93d2d8479c54026a1aca6588e813c42c0b05a89c91c62ba59f93907c5" }],
+  ["turn-dart-iceman-blue.png", { width: 2041, height: 443, sha256: "6cfbb8b4b6fe82432844e95459bb7f0d32a6463167e90d6055ccccbacbcf7b6b" }],
+  ["turn-dart-snakebite-purple.png", { width: 2095, height: 456, sha256: "45da0a5bcfd271fbbb0ccaf4bf7a7cb38cbe80b7d9e74c5a686b7eb07efe5ffe" }],
+  ["turn-dart-target-neon.png", { width: 1939, height: 454, sha256: "9a8e66032c90d11db773ea208f68182d8f962706c50bc5d365ac373d766a73b6" }],
+  ["turn-dart-vecta-gold.png", { width: 1938, height: 463, sha256: "5194ac0bdb8f5310cc4474a3ea7d2d3508d715cf89a3602444ae35a2b77839cd" }],
 ]);
 
 function sha256Hex(buffer) {

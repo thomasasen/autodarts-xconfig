@@ -12,6 +12,24 @@ zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [2.8.1] - 2026-08-10
+
+### Fixed
+
+- Nutzerwirkung: Bot-Board-Design und X01-Spieleranzeige funktionieren auch in Firefox 100 zuverlässig.
+  Technik: Nicht unterstützte `findLast`- und `findLastIndex`-Aufrufe wurden durch explizite Rückwärtssuchen ersetzt; ein Quellcode-Kompatibilitätstest schützt das gemeinsame Chrome-/Firefox-100-Buildziel vor weiteren nicht transpillbaren Array-Methoden.
+
+### Changed
+
+- Nutzerwirkung: Die 25 Funktionsvorschauen laden schneller und benötigen deutlich weniger Bundle-Speicher, ohne die Dokumentationsbilder zu verändern.
+  Technik: Ein eigener lokaler WebP-Katalog trennt Runtime- und Dokumentationsassets; Generator, Metadatenprüfer sowie verbindliche Größen-, Abmessungs-, Animations- und Bundle-Budgets sichern die Optimierung reproduzierbar ab.
+- Nutzerwirkung: Schriftvorschauen verursachen beim Öffnen und Suchen weniger Netzwerkanfragen; weitere Schriften werden erst bei Fokus oder Mauszeigerkontakt geladen.
+  Technik: Ein lifecycle-gebundener Font-Controller dedupliziert bedarfsgesteuerte Ladevorgänge und entfernt Listener sowie temporäre Styles beim Schließen vollständig.
+- Nutzerwirkung: Alle vorbereiteten Wurffeld-Darts erscheinen in Auswahl und Spielansicht gleich lang, rechtsbündig und ohne Beschnitt.
+  Technik: Ein gemeinsamer Darstellungsrahmen von 120 x 40 Pixeln mit `object-fit: contain` ersetzt unterschiedliche intrinsische Layoutwirkungen; bestehende PNGs wurden verlustfrei komprimiert und per Pixel- sowie DOM-Regression abgesichert.
+- Nutzerwirkung: Die Qualitätssicherung enthält einen nachvollziehbaren Chrome-/Firefox-Smoke-Test für Installation, Konfiguration, Assets, Import/Export, Vorschauen und Cleanup.
+  Technik: Ein temporärer Source-Userscript-Build erzeugt außerhalb von `dist` ein installierbares Prüfartefakt; die QA-Checkliste dokumentiert Ablauf und verbleibende Browser-Risiken.
+
 ## [2.8.0] - 2026-08-05
 
 ### Added
@@ -1895,7 +1913,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.8.0]: https://github.com/thomasasen/autodarts-xconfig/compare/a0d05cf...HEAD
+[2.8.1]: https://github.com/thomasasen/autodarts-xconfig/compare/0b2d233...HEAD
+[2.8.0]: https://github.com/thomasasen/autodarts-xconfig/compare/a0d05cf...0b2d233
 [2.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/3a795d2...a0d05cf
 [2.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/8f7c754...3a795d2
 [2.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/ca6bbdf...8f7c754

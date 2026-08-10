@@ -2310,6 +2310,7 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
       "data-theme-preset-key": preset.key,
       "data-theme-preset-has-wallpaper": wallpaperUrl ? "true" : "false",
       "data-theme-preset-background-mode": preset.backgroundDisplayMode,
+      "data-adxconfig-preview-font": fontPreset?.remote ? fontPreset.value : undefined,
       "aria-label": `Preset ${preset.label} anwenden`,
       title: preset.description,
     },
@@ -2538,6 +2539,9 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
         "data-active": isActive ? "true" : "false",
         "data-font-search-value": state.isTypographyFontField
           ? normalizeTypographyFontSearchValue(option?.label)
+          : undefined,
+        "data-adxconfig-preview-font": state.isTypographyFontField && optionValue !== "system"
+          ? optionValue
           : undefined,
         "aria-pressed": isActive ? "true" : "false",
       },

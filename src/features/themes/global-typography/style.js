@@ -248,7 +248,7 @@ function buildTurnDartStyleBlock(featureConfig = {}) {
     ? configuredSizeScale * TURN_DART_PRESET_SIZE_BOOST
     : configuredSizeScale;
   const widthPx = Math.round(120 * sizeScale);
-  const heightPx = Math.round(26 * sizeScale);
+  const heightPx = Math.round(40 * sizeScale);
   const textStyleBlock = buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx);
   if (textStyleBlock) {
     return textStyleBlock;
@@ -264,14 +264,13 @@ function buildTurnDartStyleBlock(featureConfig = {}) {
   const shineFilter = featureConfig.turnDartShineEnabled === false
     ? "none"
     : "drop-shadow(0 0 5px rgba(255, 255, 255, 0.34))";
-  const objectFit = isUploadedImage ? "cover" : "contain";
   const imageDeclarations =
     isUploadedImage
       ? [
           `content: url(${cssString(TURN_DART_PLACEHOLDER_DATA_URL)}) !important;`,
           `background-image: url(${cssString(imageUrl)}) !important;`,
-          "background-size: 100% auto !important;",
-          "background-position: center center !important;",
+          "background-size: contain !important;",
+          "background-position: right center !important;",
           "background-repeat: no-repeat !important;",
         ]
       : [`content: url(${cssString(imageUrl)}) !important;`];
@@ -280,7 +279,8 @@ function buildTurnDartStyleBlock(featureConfig = {}) {
   ${imageDeclarations.join("\n  ")}
   width: ${widthPx}px !important;
   height: ${heightPx}px !important;
-  object-fit: ${objectFit} !important;
+  object-fit: contain !important;
+  object-position: right center !important;
   opacity: 1 !important;
   filter: ${shineFilter} !important;
 }

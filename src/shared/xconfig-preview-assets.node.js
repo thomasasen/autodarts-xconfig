@@ -1,13 +1,13 @@
-import { XCONFIG_PREVIEW_SCREENSHOTS } from "./xconfig-preview-assets.manifest.js";
+import { XCONFIG_PREVIEW_ASSET_FILES } from "./xconfig-preview-assets.manifest.js";
 
-function toScreenshotUrl(fileName) {
-  return new URL(`../../docs/screenshots/${fileName}`, import.meta.url).href;
+function toPreviewAssetUrl(fileName) {
+  return new URL(`../assets/xconfig-previews/${fileName}`, import.meta.url).href;
 }
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze(
   Object.fromEntries(
-    Object.entries(XCONFIG_PREVIEW_SCREENSHOTS).map(([featureKey, fileName]) => {
-      return [featureKey, toScreenshotUrl(fileName)];
+    Object.entries(XCONFIG_PREVIEW_ASSET_FILES).map(([featureKey, fileName]) => {
+      return [featureKey, toPreviewAssetUrl(fileName)];
     })
   )
 );

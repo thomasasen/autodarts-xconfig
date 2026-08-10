@@ -339,6 +339,8 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-head{display:block}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-copy{margin-top:.12rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-preview{grid-column:2;grid-row:1/span 2;width:3.9rem;height:1.62rem;object-fit:contain;justify-self:center;align-self:center;opacity:.96;filter:drop-shadow(0 2px 3px rgba(4,10,26,.35))}
+#${PANEL_HOST_ID} .ad-xconfig-turn-dart-asset-option-list .ad-xconfig-option-layout--dart-design{grid-template-columns:minmax(0,1fr) minmax(0,120px) auto}
+#${PANEL_HOST_ID} .ad-xconfig-turn-dart-asset-option-list .ad-xconfig-option-preview{width:120px;max-width:100%;height:40px;object-fit:contain;object-position:right center;justify-self:end}
 #${PANEL_HOST_ID} .ad-xconfig-option-active-slot{grid-column:3;grid-row:1;display:flex;justify-content:flex-end;align-self:start;min-height:1rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--dart-design .ad-xconfig-option-active{margin-left:.2rem;white-space:nowrap}
 #${PANEL_HOST_ID} .ad-xconfig-setting-row--checkout-suggestion-preview{padding:.65rem}
@@ -536,7 +538,7 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-theme-image-status--empty{border-color:rgba(255,255,255,.26);background:rgba(255,255,255,.06)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-image-status-summary{margin:0;font-size:.75rem;line-height:1.35;color:rgba(240,248,255,.95)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-image-preview{width:100%;max-height:8rem;object-fit:cover;border-radius:7px;border:1px solid rgba(255,255,255,.24);background:rgba(9,16,34,.8)}
-#${PANEL_HOST_ID} .ad-xconfig-turn-dart-image-preview{height:3.4rem;object-fit:cover;object-position:center center}
+#${PANEL_HOST_ID} .ad-xconfig-turn-dart-image-preview{width:120px;max-width:100%;height:40px;object-fit:contain;object-position:right center;justify-self:start}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback{margin:.15rem 0 0;font-size:.75rem;line-height:1.35}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--success{color:rgba(152,244,195,.98)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-action-feedback--error{color:rgba(255,198,198,.98)}

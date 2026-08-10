@@ -163,8 +163,9 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
   assert.match(gradientStyle, /#ad-ext-turn > \.score img\[alt="Dart"\] \{/);
   assert.match(gradientStyle, /content: url\("data:image\/svg\+xml,/);
   assert.match(gradientStyle, /width: 203px !important;/);
-  assert.match(gradientStyle, /height: 44px !important;/);
+  assert.match(gradientStyle, /height: 68px !important;/);
   assert.match(gradientStyle, /object-fit: contain !important;/);
+  assert.match(gradientStyle, /object-position: right center !important;/);
   assert.doesNotMatch(
     gradientStyle,
     /#ad-ext-turn > \.suggestion img\[alt="Dart"\]\s*\{[^}]*content:/s
@@ -200,8 +201,9 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
   });
   assert.match(imageStyle, /content: url\("data:image\/svg\+xml,/);
   assert.match(imageStyle, /background-image: url\("data:image\/png;base64,AAAA"\) !important;/);
-  assert.match(imageStyle, /background-size: 100% auto !important;/);
-  assert.match(imageStyle, /object-fit: cover !important;/);
+  assert.match(imageStyle, /background-size: contain !important;/);
+  assert.match(imageStyle, /background-position: right center !important;/);
+  assert.match(imageStyle, /object-fit: contain !important;/);
   assert.doesNotMatch(
     imageStyle,
     /#ad-ext-turn > \.suggestion img\[alt="Dart"\]\s*\{[^}]*background-image:/s
@@ -218,8 +220,9 @@ test("theme global typography can replace Wurffeld dart images with colors, grad
   });
   assert.match(presetStyle, /content: url\("file:.*turn-dart-german-giant\.png"\) !important;/);
   assert.match(presetStyle, /width: 235px !important;/);
-  assert.match(presetStyle, /height: 51px !important;/);
+  assert.match(presetStyle, /height: 78px !important;/);
   assert.match(presetStyle, /object-fit: contain !important;/);
+  assert.match(presetStyle, /object-position: right center !important;/);
   assert.match(presetStyle, /filter: drop-shadow\(0 0 5px rgba\(255, 255, 255, 0\.34\)\) !important;/);
   assert.doesNotMatch(presetStyle, /background-image:/);
   assert.doesNotMatch(presetStyle, /SHOULD_NOT_WIN/);

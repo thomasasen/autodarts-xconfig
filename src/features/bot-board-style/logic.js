@@ -211,11 +211,14 @@ function isForegroundNode(node) {
 }
 
 function findLastNativeGeometryNode(boardGroup, imageNode) {
-  return Array.from(boardGroup?.children || [])
-    .findLast(
-      (childNode) =>
-        childNode && childNode !== imageNode && !isForegroundNode(childNode),
-    ) || null;
+  const children = Array.from(boardGroup?.children || []);
+  for (let index = children.length - 1; index >= 0; index -= 1) {
+    const childNode = children[index];
+    if (childNode && childNode !== imageNode && !isForegroundNode(childNode)) {
+      return childNode;
+    }
+  }
+  return null;
 }
 
 function liftForegroundNodes(boardGroup, imageNode) {

@@ -1448,6 +1448,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - [Technische Architektur](docs/TECHNICAL-ARCHITECTURE.md)
 - [Runtime-Entrypoints](docs/RUNTIME-ENTRYPOINTS.md)
 - [Performance-Audit](docs/PERFORMANCE-AUDIT.md)
+- [QA-Checkliste](docs/QA-CHECKLIST.md)
 - [Dart-Rule-Module](docs/DART-RULE-MODULES.md)
 - [Dart-Rules-Referenz](docs/DART-RULES-REFERENCE.md)
 - [Dart-Rule-Audit](docs/DART-RULE-AUDIT.md)

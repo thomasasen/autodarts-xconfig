@@ -166,11 +166,13 @@ export function buildThemeGlobalTypographyBunnyUrl(familyName) {
   return encodedFamilyName ? `https://fonts.bunny.net/css?family=${encodedFamilyName}` : "";
 }
 
-export function buildThemeGlobalTypographyPreviewImports() {
+export function buildThemeGlobalTypographyPreviewImports(presetValues = []) {
+  const values = Array.isArray(presetValues) ? presetValues : [presetValues];
   return Array.from(
     new Set(
-      THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS
-        .filter((preset) => preset.remote)
+      values
+        .map((value) => getThemeGlobalTypographyPreset(value))
+        .filter((preset) => preset?.remote)
         .map((preset) => buildThemeGlobalTypographyBunnyUrl(preset.familyName))
         .filter(Boolean)
     )

@@ -2,7 +2,11 @@ import { build } from "esbuild";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { USERSCRIPT_ASSET_LOADERS } from "./userscript-build-config.mjs";
+import {
+  buildUserscriptHeader,
+  USERSCRIPT_ASSET_LOADERS,
+  USERSCRIPT_BROWSER_TARGETS,
+} from "./userscript-build-config.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,23 +18,7 @@ const outMetaFile = path.join(outDir, "autodarts-xconfig.meta.js");
 const packageJson = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
 const packageVersion = String(packageJson.version || "").trim() || "0.0.0";
 
-const userscriptHeader = `// ==UserScript==
-// @name         autodarts-xconfig
-// @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      ${packageVersion}
-// @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
-// @author       Thomas Asen
-// @license      MIT
-// @match        https://play.autodarts.io/*
-// @exclude      https://play.autodarts.io/boards
-// @exclude      https://play.autodarts.io/boards/*
-// @run-at       document-start
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @downloadURL  https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js
-// @updateURL    https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js
-// ==/UserScript==
-`;
+const userscriptHeader = buildUserscriptHeader(packageVersion);
 
 await mkdir(outDir, { recursive: true });
 
@@ -39,7 +27,7 @@ await build({
   bundle: true,
   format: "iife",
   platform: "browser",
-  target: ["chrome100", "firefox100"],
+  target: USERSCRIPT_BROWSER_TARGETS,
   outfile: outFile,
   charset: "utf8",
   legalComments: "none",

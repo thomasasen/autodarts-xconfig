@@ -42,6 +42,7 @@ import { createShellActionController } from "./action-controller.js";
 import { createUpdateStatusController } from "./update-controller.js";
 import { createShellLifecycleController } from "./lifecycle-controller.js";
 import { createXConfigEffectPreviewController } from "./effect-preview-controller.js";
+import { createTypographyPreviewFontController } from "./typography-preview-font-controller.js";
 import { createTurnScoreCounterPreviewAdapter } from "./turn-score-preview-adapter.js";
 import { createAvgTrendArrowPreviewAdapter } from "./avg-trend-preview-adapter.js";
 import { createDartboardMarkerHighlightPreviewAdapter } from "./dartboard-marker-highlight-preview-adapter.js";
@@ -51,9 +52,6 @@ import {
   selectSettingsImportFile,
 } from "./settings-transfer.js";
 import { styleText } from "./shell-style.js";
-import {
-  buildThemeGlobalTypographyPreviewImports,
-} from "../../shared/theme-global-typography-presets.js";
 import {
   isHexColorInputValue,
   normalizeHexColor,
@@ -242,6 +240,7 @@ function ensureXConfigShell(options = {}) {
   let actionController = null;
   let lifecycleController = null;
   let effectPreviewController = null;
+  let typographyPreviewFontController = null;
   let x01RemainingScoreBarPreviewController = null;
   let electricPreviewFiltersRetained = false;
 
@@ -522,12 +521,12 @@ function ensureXConfigShell(options = {}) {
         isConfigRoute() &&
         state.activeSettingsFeatureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
       ) {
-        domGuards.ensureStyle(
-          PREVIEW_FONTS_STYLE_ID,
-          `${buildThemeGlobalTypographyPreviewImports()}\n#${PANEL_HOST_ID} [data-adxconfig-preview-font]{font-kerning:normal;}`
+        const typographyFeature = getFeatures().find(
+          (feature) => feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
         );
+        typographyPreviewFontController?.activate(typographyFeature?.config?.fontPreset);
       } else {
-        domGuards.removeNodeById(PREVIEW_FONTS_STYLE_ID);
+        typographyPreviewFontController?.deactivate();
       }
       ensureMenuButton();
       syncVisibility();
@@ -623,6 +622,11 @@ function ensureXConfigShell(options = {}) {
     getFeatures,
     panelHostId: PANEL_HOST_ID,
   });
+  typographyPreviewFontController = createTypographyPreviewFontController({
+    domGuards,
+    panelHostId: PANEL_HOST_ID,
+    styleId: PREVIEW_FONTS_STYLE_ID,
+  });
   x01RemainingScoreBarPreviewController = createX01RemainingScoreBarPreviewController({
     documentRef,
     windowRef,
@@ -712,16 +716,23 @@ function ensureXConfigShell(options = {}) {
     normalizeLegacyConfigPathIfNeeded: () => routeController?.normalizeLegacyConfigPathIfNeeded(),
     observerRegistry,
     onDocumentChange,
-    onDocumentFocusin: (event) => effectPreviewController?.handlePreviewStartEvent(event),
+    onDocumentFocusin: (event) => {
+      effectPreviewController?.handlePreviewStartEvent(event);
+      typographyPreviewFontController?.handlePreviewRequest(event);
+    },
     onDocumentFocusout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
     onDocumentClick,
     onDocumentKeydown,
-    onDocumentPointerover: (event) => effectPreviewController?.handlePreviewStartEvent(event),
+    onDocumentPointerover: (event) => {
+      effectPreviewController?.handlePreviewStartEvent(event);
+      typographyPreviewFontController?.handlePreviewRequest(event);
+    },
     onDocumentPointerout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
     onMounted: retainElectricPreviewFilters,
     onTeardown: () => {
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
+      typographyPreviewFontController?.deactivate();
       releaseElectricPreviewFilters();
     },
     onVisibilityChange: (event) => {

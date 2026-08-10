@@ -440,6 +440,31 @@ test("x01 2player scoreboard state marks only older remaining values stale", () 
   );
 });
 
+test("x01 2player scoreboard state works when Array.findLastIndex is unavailable", () => {
+  const descriptor = Object.getOwnPropertyDescriptor(Array.prototype, "findLastIndex");
+  Object.defineProperty(Array.prototype, "findLastIndex", {
+    configurable: true,
+    value: undefined,
+    writable: true,
+  });
+  try {
+    const rowStates = deriveX01TwoPlayerScoreboardRowState([
+      { scoreText: "", remainingText: "501" },
+      { scoreText: "60", remainingText: "441" },
+    ]);
+    assert.deepEqual(
+      rowStates.map((rowState) => rowState.isCurrentRemaining),
+      [false, true]
+    );
+  } finally {
+    if (descriptor) {
+      Object.defineProperty(Array.prototype, "findLastIndex", descriptor);
+    } else {
+      delete Array.prototype.findLastIndex;
+    }
+  }
+});
+
 test("theme-x01-2player policy strikes stale remaining cells per player and recomputes after correction", () => {
   const documentRef = new FakeDocument();
   const playerDisplayNode = documentRef.createElement("div");
