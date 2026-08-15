@@ -87,15 +87,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          error_file="$(mktemp)"
-          if release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" 2>"${error_file}")"; then
-            :
-          elif grep -q "HTTP 404" "${error_file}"; then
-            release_json=""
-          else
-            cat "${error_file}" >&2
-            exit 1
-          fi
+          fetch_release_json() {
+            gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100" |
+              jq -c --arg tag "${TAG}" '
+                [.[][] | select(.tag_name == $tag)] as $matches |
+                if ($matches | length) > 1 then
+                  error("multiple releases exist for tag " + $tag)
+                elif ($matches | length) == 1 then
+                  $matches[0]
+                else
+                  empty
+                end
+              '
+          }
+
+          release_json="$(fetch_release_json)"
           if [[ -z "${release_json}" ]]; then
             gh release create "${TAG}" \
               dist/autodarts-xconfig.user.js \
@@ -105,7 +111,8 @@ jobs:
               --draft \
               --title "${TAG}" \
               --generate-notes
-            release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}")"
+            release_json="$(fetch_release_json)"
+            [[ -n "${release_json}" ]]
           fi
 
           [[ "$(jq -r '.draft' <<<"${release_json}")" == "true" ]]
@@ -117,7 +124,7 @@ jobs:
               dist/autodarts-xconfig.user.js \
               dist/autodarts-xconfig.meta.js \
               --repo "${GITHUB_REPOSITORY}"
-            release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}")"
+            release_json="$(fetch_release_json)"
             mapfile -t names < <(jq -r '.assets[].name' <<<"${release_json}" | sort)
           fi
           diff <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${names[@]}")

@@ -166,12 +166,23 @@ function validateWorkflowContract(errors, workflowPath) {
     ],
     ["contents: write", "release workflow cannot create a draft release"],
     ["--draft", "release workflow does not stage a draft release"],
+    [
+      'releases?per_page=100',
+      "release workflow cannot discover GitHub draft releases by tag",
+    ],
+    [
+      'select(.tag_name == $tag)',
+      "release workflow does not select an existing draft by its immutable tag",
+    ],
     ["git diff --exit-code -- dist", "release workflow does not verify reproducible dist output"],
   ];
   for (const [needle, message] of workflowContracts) {
     if (!normalizeNewlines(workflow).includes(needle)) {
       errors.push(message);
     }
+  }
+  if (workflow.includes('releases/tags/${TAG}')) {
+    errors.push("release workflow uses the endpoint that cannot retrieve GitHub drafts");
   }
   requireMatch(
     errors,
