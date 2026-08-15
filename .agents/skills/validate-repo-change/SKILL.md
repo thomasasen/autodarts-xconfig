@@ -88,6 +88,7 @@ Validation hints:
 
 Preferred release validation:
 - run `npm run verify`
+- run `npm run check:release` before the tag and again against the final tag version
 - use `$package-userscript-release` when packaging, `dist/`, version parity, or publication truth is in scope
 
 # Command selection
@@ -110,6 +111,7 @@ Preferred release validation:
 - never print, quote, commit, or otherwise expose the SonarQube token
 - prefer configured local SonarQube settings over hardcoded scanner parameters
 - after analysis, query or inspect SonarQube issues for the touched scope when access allows it; fix actionable open issues, then re-run SonarQube until no actionable touched-scope issues remain or a concrete blocker is reached
+- for releases, SonarQube is a mandatory local pre-tag gate; a green GitHub Actions run is not a substitute
 - when the user explicitly asks for Sonar cleanup, resolve all actionable open project issues that are low-risk and in editable source/test scope, not only the findings that affect the Quality Gate
 - report whether SonarQube ran, whether the server processed it, Quality Gate status, and whether relevant open issues remain
 - if blocked, name the blocker: unavailable MCP, missing auth, unreachable server, scanner failure, or project visibility

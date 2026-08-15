@@ -21,6 +21,7 @@ Prioritize:
 - missing regression coverage
 - when npm run check:syntax, npm test, npm run build, npm run check:changelog, or npm run verify are required
 - explicit expectations for tests/runtime/update-check.test.js, tests/runtime/xconfig-shell.test.js, and tests/runtime/userscript-build.test.js when startup/update/version logic is touched
+- release-contract coverage for tag/package parity, fixed assets, reproducible dist, payload-first ordering, permanent Raw bridges, skipped historical versions, cache migration, and downgrade prevention
 
 Rules:
 - stay read-only

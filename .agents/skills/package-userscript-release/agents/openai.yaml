@@ -1,4 +1,4 @@
 interface:
   display_name: "Package Userscript Release"
-  short_description: "Prepare shipped-source releases with version parity, rebuilt artifacts, and honest publication state."
-  default_prompt: "Use this skill to package a shipped-source change into a release-ready userscript state."
+  short_description: "Publish immutable userscript releases with verified assets and a permanent Raw compatibility bridge."
+  default_prompt: "Package and publish the userscript with SemVer/tag parity, local Tier-3 and Sonar gates, a verified Draft Release, payload-first main promotion, and post-publish Raw bridge checks."

@@ -11,6 +11,8 @@ Prioritize:
 - behavior regressions
 - architecture drift against AGENTS.md guardrails
 - release-sensitive paths: bootstrap, startup, update-check, cache, version sync, and release metadata
+- release ordering and races: payload-first main promotion, immutable tag, Draft/Stable state, latest target, asset/dist hash parity, and permanent Raw bridges
+- migration paths for legacy Raw clients, skipped versions, cache migration, downgrade prevention, and absence of background release-user downloads
 - missing or weak regression coverage
 
 Rules:

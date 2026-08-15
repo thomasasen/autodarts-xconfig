@@ -17,6 +17,9 @@ Keep `CHANGELOG.md` accurate, curated, and synchronized with repository truth.
 - keep local working tree, committed history, and GitHub-published truth separate
 - point packaging, version parity, `dist/**`, and publication work to `$package-userscript-release`
 - do not duplicate release workflow here
+- preserve tagless historical links; do not invent retroactive tags
+- from `2.9.2` onward, compare immutable release tags, except the first tagged release may compare the real `2.9.1` release commit to `v2.9.2`
+- a finalized tagged release compare link must never point to `HEAD`
 
 # Context budget
 
@@ -30,6 +33,7 @@ Keep `CHANGELOG.md` accurate, curated, and synchronized with repository truth.
 1. Inspect repository truth: `git status --short`, `git diff --name-only HEAD`, relevant `git log --oneline`, `package.json`, and `CHANGELOG.md`.
 2. Update the correct released section; this repository does not maintain an `Unreleased` staging section.
 3. Update compare links when release sections change.
+   For `2.9.2`, use `<2.9.1-release-commit>...v2.9.2`; for later releases use `v<previous>...v<current>`.
 4. Leave `CHANGELOG.md` untouched for purely internal cleanup with no shipped or maintainer-visible effect.
 5. Run `npm run check:changelog` when changelog structure, release notes, compare links, or version parity are relevant.
 
