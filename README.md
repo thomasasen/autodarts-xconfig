@@ -5,6 +5,8 @@
 
 [![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js)
 
+[Releases und Downloads](https://github.com/thomasasen/autodarts-xconfig/releases) · [Changelog](CHANGELOG.md)
+
 ## Was ist AD xConfig?
 
 `autodarts-xconfig` ergänzt Autodarts um Themes, Animationen und kleine Komfortfunktionen. Du kannst damit das Spiel übersichtlicher machen und die Oberfläche nach deinem Geschmack anpassen.
@@ -114,6 +116,8 @@ Erst `Import bestätigen` schreibt die geprüfte Konfiguration. Bei unlesbarem J
 7. Es kann ein paar Sekunden dauern, bis Tampermonkey die Aufforderung zur Re-Installation anzeigt. Danach das Update einfach bestätigen.
 
 Die automatische Versionsprüfung lädt nur die kleine Metadaten-Datei; das vollständige Userscript wird erst bei einer tatsächlichen Installation oder Aktualisierung abgerufen. Bestehende ältere Installationen bleiben über die dauerhafte Raw-Kompatibilitätsadresse updatefähig und können Zwischenversionen überspringen. Der Installationsbutton in README und xConfig nutzt weiterhin diese bewährte Kompatibilitätsadresse.
+
+Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https://github.com/thomasasen/autodarts-xconfig/releases). Dort stehen für jede Version die Metadatei und das vollständige Userscript als Release Assets bereit. Der [Changelog](CHANGELOG.md) beschreibt die Änderungen der einzelnen Versionen.
 
 ## So ist eine Kachel aufgebaut
 
