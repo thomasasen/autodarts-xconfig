@@ -5,8 +5,12 @@ import path from "node:path";
 import { build } from "esbuild";
 import {
   buildUserscriptHeader,
+  resolveUserscriptDownloadUrl,
   USERSCRIPT_ASSET_LOADERS,
   USERSCRIPT_BROWSER_TARGETS,
+  USERSCRIPT_LEGACY_DOWNLOAD_URL,
+  USERSCRIPT_RELEASE_DOWNLOAD_URL,
+  USERSCRIPT_UPDATE_URL,
 } from "../../scripts/userscript-build-config.mjs";
 import { BOARD_STYLE_DESIGN_FILES } from "../../src/shared/board-style-assets.manifest.js";
 import { DART_DESIGN_FILES } from "../../src/shared/feature-assets.manifest.js";
@@ -111,11 +115,11 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   assert.match(text, /@grant\s+GM_setValue/);
   assert.match(
     text,
-    /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.user\.js/
+    new RegExp(String.raw`@downloadURL\s+${escapeRegExp(resolveUserscriptDownloadUrl(packageVersion))}`)
   );
   assert.match(
     text,
-    /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.meta\.js/
+    new RegExp(String.raw`@updateURL\s+${escapeRegExp(USERSCRIPT_UPDATE_URL)}`)
   );
   assert.match(text, /initializeTampermonkeyRuntime/);
   assert.match(text, /windowRef\.__adXConfig/);
@@ -182,11 +186,11 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
   assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
   assert.match(
     text,
-    /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.user\.js/
+    new RegExp(String.raw`@downloadURL\s+${escapeRegExp(resolveUserscriptDownloadUrl(packageVersion))}`)
   );
   assert.match(
     text,
-    /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.meta\.js/
+    new RegExp(String.raw`@updateURL\s+${escapeRegExp(USERSCRIPT_UPDATE_URL)}`)
   );
   assert.doesNotMatch(text, /initializeTampermonkeyRuntime/);
 });
@@ -203,6 +207,30 @@ test("source userscript metadata supports old and new Autodarts domains", () => 
       assert.match(metadata, new RegExp(String.raw`@exclude\s+${escapedOrigin}/boards(?:\s|$)`));
       assert.match(metadata, new RegExp(String.raw`@exclude\s+${escapedOrigin}/boards/\*`));
     }
+  }
+});
+
+test("userscript metadata switches payload delivery at 2.9.2 while retaining the Raw manifest", () => {
+  const legacyHeader = buildUserscriptHeader("2.9.1");
+  const migratedHeader = buildUserscriptHeader("2.9.2");
+  const futureHeader = buildUserscriptHeader("3.4.2");
+
+  assert.equal(resolveUserscriptDownloadUrl("2.9.1"), USERSCRIPT_LEGACY_DOWNLOAD_URL);
+  assert.equal(resolveUserscriptDownloadUrl("2.9.2"), USERSCRIPT_RELEASE_DOWNLOAD_URL);
+  assert.equal(resolveUserscriptDownloadUrl("3.4.2"), USERSCRIPT_RELEASE_DOWNLOAD_URL);
+  assert.match(
+    legacyHeader,
+    new RegExp(String.raw`@downloadURL\s+${escapeRegExp(USERSCRIPT_LEGACY_DOWNLOAD_URL)}`)
+  );
+  for (const header of [migratedHeader, futureHeader]) {
+    assert.match(
+      header,
+      new RegExp(String.raw`@downloadURL\s+${escapeRegExp(USERSCRIPT_RELEASE_DOWNLOAD_URL)}`)
+    );
+    assert.match(
+      header,
+      new RegExp(String.raw`@updateURL\s+${escapeRegExp(USERSCRIPT_UPDATE_URL)}`)
+    );
   }
 });
 

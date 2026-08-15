@@ -15,6 +15,8 @@ const linkReferencePattern =
   /^\[([^\]]+)\]:\s+(https:\/\/github\.com\/thomasasen\/autodarts-xconfig\/\S+)$/gm;
 const placeholderPattern = /^_Noch keine Änderungen erfasst\._$/m;
 const semanticReleaseFloor = "2.0.81";
+const taggedReleaseFloor = "2.9.2";
+const firstTaggedReleaseBase = "3feb60bd269741fd1414b3b2bca7f68e8c6f2137";
 
 export function compareSemver(left, right) {
   const leftParts = String(left || "")
@@ -229,6 +231,32 @@ function validateRecentCompareLinks(sections, linkReferences) {
     if (compareLink.head === "HEAD" && index !== 0) {
       errors.push(
         `Abschnitt ${section.name}: Nur die oberste lokale Release-Sektion darf vorübergehend auf HEAD zeigen.`
+      );
+    }
+
+    if (compareSemver(section.name, taggedReleaseFloor) < 0) {
+      return;
+    }
+
+    if (compareLink.head !== `v${section.name}`) {
+      errors.push(
+        `Abschnitt ${section.name}: Getaggte Releases müssen auf v${section.name} enden.`
+      );
+    }
+
+    if (section.name === taggedReleaseFloor) {
+      if (compareLink.base !== firstTaggedReleaseBase) {
+        errors.push(
+          `Abschnitt ${section.name}: Der erste Tag-Vergleich muss beim 2.9.1-Release-Commit ${firstTaggedReleaseBase} beginnen.`
+        );
+      }
+      return;
+    }
+
+    const previousSection = relevantSections[index + 1] || null;
+    if (!previousSection || compareLink.base !== `v${previousSection.name}`) {
+      errors.push(
+        `Abschnitt ${section.name}: Der Vergleich muss beim vorherigen Release-Tag v${previousSection?.name || "<missing>"} beginnen.`
       );
     }
   });

@@ -1,0 +1,45 @@
+{
+  "oldestVerified": {
+    "version": "1.2.0",
+    "commit": "4331f4703733bb439c9fb640780ad343a9d016b5",
+    "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+    "downloadUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+  },
+  "historicalClients": [
+    {
+      "version": "2.0.70",
+      "commit": "fbc6e167ac89a2fb267f47d104c45b56550232e1",
+      "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+      "downloadUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+    },
+    {
+      "version": "2.1.27",
+      "commit": "2f3e7963905d0e8e93eddb1b53747be33ea25382",
+      "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+      "downloadUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+    },
+    {
+      "version": "2.6.0",
+      "commit": "3a795d2ce0adc76943aab67b07164be2565c3641",
+      "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+      "downloadUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+    },
+    {
+      "version": "2.8.0",
+      "commit": "0b2d2334c8f203ddea284b2ca11d1bc341285d43",
+      "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+      "downloadUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+    },
+    {
+      "version": "2.9.1",
+      "commit": "3feb60bd269741fd1414b3b2bca7f68e8c6f2137",
+      "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+      "downloadUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js"
+    }
+  ],
+  "migrationTarget": {
+    "version": "2.9.2",
+    "updateUrl": "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js",
+    "downloadUrl": "https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js"
+  }
+}

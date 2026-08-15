@@ -113,6 +113,8 @@ Erst `Import bestätigen` schreibt die geprüfte Konfiguration. Bei unlesbarem J
 6. Ein Klick auf `Update installieren` öffnet die Userscript-Datei in einem neuen Tab. Tampermonkey übernimmt dort die Neuinstallation.
 7. Es kann ein paar Sekunden dauern, bis Tampermonkey die Aufforderung zur Re-Installation anzeigt. Danach das Update einfach bestätigen.
 
+Die automatische Versionsprüfung lädt nur die kleine Metadaten-Datei; das vollständige Userscript wird erst bei einer tatsächlichen Installation oder Aktualisierung abgerufen. Bestehende ältere Installationen bleiben über die dauerhafte Raw-Kompatibilitätsadresse updatefähig und können Zwischenversionen überspringen. Der Installationsbutton in README und xConfig nutzt weiterhin diese bewährte Kompatibilitätsadresse.
+
 ## So ist eine Kachel aufgebaut
 
 ![Beispiel für eine AD xConfig Kachel](docs/screenshots/ad-xconfig-kachel.png)

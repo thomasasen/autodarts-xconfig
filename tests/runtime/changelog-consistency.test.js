@@ -72,6 +72,24 @@ function buildRecentReleaseChangelog({
 `;
 }
 
+function buildTaggedReleaseChangelog({
+  version = "2.9.2",
+  base = "3feb60bd269741fd1414b3b2bca7f68e8c6f2137",
+  head = "v2.9.2",
+} = {}) {
+  return `# Changelog
+
+## [${version}] - 2026-08-15
+
+### Changed
+
+- Nutzerwirkung: Sichtbare Änderung für Nutzer.
+  Technik: Technischer Hintergrund der Änderung.
+
+[${version}]: https://github.com/thomasasen/autodarts-xconfig/compare/${base}...${head}
+`;
+}
+
 test("parseChangelogSections reads released sections in order", () => {
   const sections = parseChangelogSections(buildSampleChangelog());
 
@@ -99,6 +117,33 @@ test("validateChangelogDocument accepts bounded compare links for the current re
   });
 
   assert.deepEqual(errors, []);
+});
+
+test("validateChangelogDocument accepts the first immutable tagged release range", () => {
+  const errors = validateChangelogDocument({
+    text: buildTaggedReleaseChangelog(),
+    packageVersion: "2.9.2",
+    headPackageVersion: "2.9.1",
+    changedFiles: ["CHANGELOG.md", "package.json"],
+  });
+
+  assert.deepEqual(errors, []);
+});
+
+test("validateChangelogDocument rejects HEAD or the wrong base for tagged releases", () => {
+  const headErrors = validateChangelogDocument({
+    text: buildTaggedReleaseChangelog({ head: "HEAD" }),
+    packageVersion: "2.9.2",
+    changedFiles: ["CHANGELOG.md"],
+  });
+  const baseErrors = validateChangelogDocument({
+    text: buildTaggedReleaseChangelog({ base: "633ff78" }),
+    packageVersion: "2.9.2",
+    changedFiles: ["CHANGELOG.md"],
+  });
+
+  assert.match(headErrors.join("\n"), /Getaggte Releases müssen auf v2\.9\.2 enden/);
+  assert.match(baseErrors.join("\n"), /erste Tag-Vergleich muss beim 2\.9\.1-Release-Commit/);
 });
 
 test("validateChangelogDocument rejects entries without a Technik line", () => {

@@ -2,13 +2,11 @@
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js";
 const USERSCRIPT_UPDATE_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js";
+const USERSCRIPT_UPDATE_FALLBACK_URL =
+  "https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.meta.js";
 const UPDATE_STATUS_STORAGE_KEY = "autodarts-xconfig:update-status:v1";
 const UPDATE_CHECK_TTL_MS = 60 * 60 * 1000;
 const UPDATE_CACHE_BUST_PARAM = "_adxconfig_ts";
-const UPDATE_SOURCE_PRIORITY = Object.freeze({
-  [USERSCRIPT_UPDATE_URL]: 1,
-  [USERSCRIPT_DOWNLOAD_URL]: 2,
-});
 
 function normalizeVersion(value) {
   return String(value || "").trim();
@@ -203,10 +201,6 @@ function parseUserscriptVersion(text) {
   return normalizeVersion(match?.[1] || "");
 }
 
-function getUpdateSourcePriority(sourceUrl) {
-  return UPDATE_SOURCE_PRIORITY[String(sourceUrl || "").trim()] || 0;
-}
-
 function buildCacheBustedUrl(sourceUrl, now = Date.now()) {
   const normalizedSourceUrl = String(sourceUrl || "").trim();
   if (!normalizedSourceUrl) {
@@ -347,33 +341,12 @@ async function fetchRemoteVersionFromSource(fetchFn, sourceUrl, options = {}) {
   };
 }
 
-function pickPreferredRemoteVersion(candidates = []) {
-  return candidates.reduce((bestCandidate, candidate) => {
-    if (!bestCandidate) {
-      return candidate;
-    }
-
-    const comparison = compareVersions(candidate.remoteVersion, bestCandidate.remoteVersion);
-    if (comparison > 0) {
-      return candidate;
-    }
-    if (comparison < 0) {
-      return bestCandidate;
-    }
-
-    return getUpdateSourcePriority(candidate.sourceUrl) > getUpdateSourcePriority(bestCandidate.sourceUrl)
-      ? candidate
-      : bestCandidate;
-  }, null);
-}
-
 async function fetchRemoteVersion(fetchFn, options = {}) {
   const now = Number(options.now || Date.now());
   const validators = normalizeValidatorsMap(options.validators);
-  const candidateUrls = [USERSCRIPT_UPDATE_URL, USERSCRIPT_DOWNLOAD_URL];
+  const candidateUrls = [USERSCRIPT_UPDATE_URL, USERSCRIPT_UPDATE_FALLBACK_URL];
   let lastError = null;
   let nextValidators = validators;
-  const resolvedCandidates = [];
 
   for (const sourceUrl of candidateUrls) {
     try {
@@ -383,22 +356,17 @@ async function fetchRemoteVersion(fetchFn, options = {}) {
         signal: options.signal,
       });
       nextValidators = mergeValidatorEntry(nextValidators, sourceUrl, remoteInfo.validatorEntry);
-      resolvedCandidates.push({
+      return {
         remoteVersion: remoteInfo.remoteVersion,
         sourceUrl,
-      });
+        validators: nextValidators,
+      };
     } catch (error) {
+      if (error?.name === "AbortError") {
+        throw error;
+      }
       lastError = error;
     }
-  }
-
-  const preferredCandidate = pickPreferredRemoteVersion(resolvedCandidates);
-  if (preferredCandidate) {
-    return {
-      remoteVersion: preferredCandidate.remoteVersion,
-      sourceUrl: preferredCandidate.sourceUrl,
-      validators: nextValidators,
-    };
   }
 
   throw lastError || new Error("Versionsabgleich fehlgeschlagen.");
@@ -518,4 +486,8 @@ export function openUserscriptInstall(windowRef) {
   return false;
 }
 
-export { USERSCRIPT_DOWNLOAD_URL, USERSCRIPT_UPDATE_URL };
+export {
+  USERSCRIPT_DOWNLOAD_URL,
+  USERSCRIPT_UPDATE_FALLBACK_URL,
+  USERSCRIPT_UPDATE_URL,
+};

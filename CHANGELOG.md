@@ -5,12 +5,21 @@ Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei festgeha
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 und die Versionsvergabe folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Solange dieses Repository noch keine Git-Tags verwendet, verweisen die Versionslinks auf
-GitHub-Vergleiche zwischen Release-Commits. Der neueste lokale Release-Eintrag kann bis
-zum nächsten Release-Commit vorübergehend auf `HEAD` zeigen.
+Die historische Release-Historie bis einschließlich `2.9.1` bleibt über Vergleiche
+zwischen den damaligen Release-Commits erhalten. Ab `2.9.2` verweisen neue Einträge auf
+immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-Release-Commit.
 
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
+
+## [2.9.2] - 2026-08-15
+
+### Changed
+
+- Nutzerwirkung: Neue Versionen werden als verifizierte GitHub Releases ausgeliefert; die Versionsprüfung lädt dafür nur noch kleine Metadaten und nicht mehr bei jedem Check das vollständige Userscript.
+  Technik: Der dauerhafte Raw-Meta-Endpunkt verweist auf den aktuellen Stable-Stand, während der Payload über feste Release-Assets bereitsteht und erst nach veröffentlichter sowie geprüfter Release-Datei auf `main` angekündigt wird.
+- Nutzerwirkung: Bereits installierte xConfig-Versionen bleiben ohne erforderliche Zwischenupdates kompatibel und können direkt von alten 2.x-Ständen auf die jeweils aktuelle Stable-Version wechseln.
+  Technik: Raw Meta und das vollständige Raw Userscript bleiben als permanente Legacy-Bridge erhalten; historische Kanal-Fixtures und Skip-Version-Regressionen sichern beide möglichen Migrationspfade sowie die neue Release-Downloadadresse ab.
 
 ## [2.9.1] - 2026-08-10
 
@@ -1936,7 +1945,8 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[2.9.1]: https://github.com/thomasasen/autodarts-xconfig/compare/633ff78...HEAD
+[2.9.2]: https://github.com/thomasasen/autodarts-xconfig/compare/3feb60bd269741fd1414b3b2bca7f68e8c6f2137...v2.9.2
+[2.9.1]: https://github.com/thomasasen/autodarts-xconfig/compare/633ff78...3feb60bd269741fd1414b3b2bca7f68e8c6f2137
 [2.9.0]: https://github.com/thomasasen/autodarts-xconfig/compare/f541eff...633ff78
 [2.8.1]: https://github.com/thomasasen/autodarts-xconfig/compare/0b2d233...f541eff
 [2.8.0]: https://github.com/thomasasen/autodarts-xconfig/compare/a0d05cf...0b2d233

@@ -910,15 +910,10 @@ test("xConfig shell can recheck update status and promote a current build to upd
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   let refreshCount = 0;
-  let requestsInRefresh = 0;
   windowRef.fetch = async () => {
     const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
     const remoteVersion = refreshCount === 0 ? installedVersion : incrementPatchVersion(installedVersion);
-    requestsInRefresh += 1;
-    if (requestsInRefresh >= 2) {
-      refreshCount += 1;
-      requestsInRefresh = 0;
-    }
+    refreshCount += 1;
     return {
       ok: true,
       status: 200,
@@ -982,15 +977,10 @@ test("xConfig shell checks update status in the background without manual rechec
 
   let runtime = null;
   let refreshCount = 0;
-  let requestsInRefresh = 0;
   windowRef.fetch = async () => {
     const installedVersion = String(windowRef.__adXConfig?.apiVersion || "0.0.0");
     const remoteVersion = refreshCount === 0 ? installedVersion : incrementPatchVersion(installedVersion);
-    requestsInRefresh += 1;
-    if (requestsInRefresh >= 2) {
-      refreshCount += 1;
-      requestsInRefresh = 0;
-    }
+    refreshCount += 1;
     return {
       ok: true,
       status: 200,
@@ -1084,7 +1074,6 @@ test("xConfig shell replays a manual update check after an inflight check finish
   const secondRefreshGate = createDeferred();
   let fetchCount = 0;
   let refreshCount = 0;
-  let requestsInRefresh = 0;
 
   windowRef.fetch = async () => {
     fetchCount += 1;
@@ -1093,11 +1082,7 @@ test("xConfig shell replays a manual update check after an inflight check finish
     const gate = refreshIndex === 0 ? firstRefreshGate : secondRefreshGate;
     await gate.promise;
 
-    requestsInRefresh += 1;
-    if (requestsInRefresh >= 2) {
-      refreshCount += 1;
-      requestsInRefresh = 0;
-    }
+    refreshCount += 1;
 
     return {
       ok: true,
@@ -1132,7 +1117,7 @@ test("xConfig shell replays a manual update check after an inflight check finish
     await waitFor(() => refreshCount >= 1, { timeoutMs: 260, intervalMs: 5 });
     assert.equal(
       await waitFor(
-        () => fetchCount >= 3,
+        () => fetchCount >= 2,
         { timeoutMs: 260, intervalMs: 5 }
       ),
       true
@@ -1147,7 +1132,7 @@ test("xConfig shell replays a manual update check after an inflight check finish
       ),
       true
     );
-    assert.equal(fetchCount, 4);
+    assert.equal(fetchCount, 2);
 
     const notice = documentRef.querySelector(".ad-xconfig-notice");
     assert.ok(notice);
