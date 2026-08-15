@@ -3,7 +3,13 @@
 > Visuelle Erweiterungen für Autodarts: bessere Lesbarkeit, klarere Hinweise, Themes und optionale Effekte.  
 > Die Spiellogik bleibt unverändert.
 
-[![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js)
+## Installieren
+
+[![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js)
+
+**Installiere immer nur die Datei `autodarts-xconfig.user.js`.** Der Button lädt automatisch die neueste stabile Version herunter. Öffne anschließend die heruntergeladene Datei und bestätige die Installation in Tampermonkey.
+
+Die ebenfalls bei GitHub Releases angebotene Datei `autodarts-xconfig.meta.js` ist nur für die automatische Update-Prüfung bestimmt und muss nicht heruntergeladen oder installiert werden.
 
 [Releases und Downloads](https://github.com/thomasasen/autodarts-xconfig/releases) · [Changelog](CHANGELOG.md)
 
@@ -47,9 +53,10 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 1. Tampermonkey installieren: [tampermonkey.net](https://www.tampermonkey.net/)
 2. Oben auf `Installieren` klicken
-3. `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu laden
-4. Links in der Navigation **AD xConfig** öffnen
-5. Erst `Themen` und `Animationen` in Ruhe ansehen, dann einzelne Module einschalten
+3. Die heruntergeladene Datei `autodarts-xconfig.user.js` öffnen und die Installation in Tampermonkey bestätigen
+4. `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu laden
+5. Links in der Navigation **AD xConfig** öffnen
+6. Erst `Themen` und `Animationen` in Ruhe ansehen, dann einzelne Module einschalten
 
 Wichtige Tampermonkey-Einstellung im Browser: Öffne unter den Browsererweiterungen die Detailseite von Tampermonkey und aktiviere dort `Nutzerscripts zulassen` sowie `Zugriff auf Datei-URLs zulassen`.
 
@@ -115,9 +122,9 @@ Erst `Import bestätigen` schreibt die geprüfte Konfiguration. Bei unlesbarem J
 6. Ein Klick auf `Update installieren` öffnet die Userscript-Datei in einem neuen Tab. Tampermonkey übernimmt dort die Neuinstallation.
 7. Es kann ein paar Sekunden dauern, bis Tampermonkey die Aufforderung zur Re-Installation anzeigt. Danach das Update einfach bestätigen.
 
-Die automatische Versionsprüfung lädt nur die kleine Metadaten-Datei; das vollständige Userscript wird erst bei einer tatsächlichen Installation oder Aktualisierung abgerufen. Bestehende ältere Installationen bleiben über die dauerhafte Raw-Kompatibilitätsadresse updatefähig und können Zwischenversionen überspringen. Der Installationsbutton in README und xConfig nutzt weiterhin diese bewährte Kompatibilitätsadresse.
+Die automatische Versionsprüfung lädt nur die kleine Metadaten-Datei; das vollständige Userscript wird erst bei einer tatsächlichen Installation oder Aktualisierung abgerufen. Bestehende ältere Installationen bleiben über die dauerhafte Raw-Kompatibilitätsadresse updatefähig und können Zwischenversionen überspringen. Der Installationsbutton oben in der README lädt immer das vollständige Userscript der neuesten stabilen GitHub-Version herunter.
 
-Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https://github.com/thomasasen/autodarts-xconfig/releases). Dort stehen für jede Version die Metadatei und das vollständige Userscript als Release Assets bereit. Der [Changelog](CHANGELOG.md) beschreibt die Änderungen der einzelnen Versionen.
+Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https://github.com/thomasasen/autodarts-xconfig/releases). Dort werden zwei Dateien angezeigt: `autodarts-xconfig.user.js` ist die installierbare Datei für Nutzer; `autodarts-xconfig.meta.js` enthält nur technische Update-Informationen und muss nicht manuell installiert werden. Der [Changelog](CHANGELOG.md) beschreibt die Änderungen der einzelnen Versionen.
 
 ## So ist eine Kachel aufgebaut
 
