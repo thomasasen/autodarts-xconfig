@@ -20,6 +20,8 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle 
 ![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)
 
+<a id="empfohlene-standards"></a>
+
 ## Empfohlene Standards
 
 Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
@@ -166,11 +168,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Themes
 
+<a id="template-global-typography"></a>
+
 ### Templates Global
 
 - Gilt für: `alle Modi`
 - Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
 - Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf, gebündeltes Marker-Bild oder eigenes Bild darstellen.
+- Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
 - `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
 - `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
 - `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.
@@ -315,11 +320,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)
 ![Templates Global Wurffeld-Darts mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
 
+<a id="bot-board-style"></a>
+
 ### Bot Board Style
 
 - Gilt für: `alle Modi`
 - Kurz: Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.
 - Grafisch: Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.
+- Wann sinnvoll? Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.
 - `Board-Design`: Wählt eines von zehn lokal eingebetteten Board-Designs.
   - `Winmau Blade 6 TC`: Verwendet Winmau Blade 6 TC als Board-Grafik.
   - `Winmau Blade X`: Verwendet Winmau Blade X als Board-Grafik.
@@ -336,11 +344,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Alle Match-Boards`: Verwendet das Design global auf unterstützten Match-Boards.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+<a id="template-autodarts-theme-bull-off"></a>
+
 ### Theme Bull-off
 
 - Gilt für: `Bull-off`
 - Kurz: Ein kontrastbetontes Bull-off-Layout mit wählbarer Stärke und eigener Bildfläche.
 - Grafisch: Das Theme verändert Farben, Kontrast und Flächen speziell für Bull-off. Ein optionales Hintergrundbild liegt dahinter, während der Spielaufbau gleich bleibt.
+- Wann sinnvoll? Wenn Bull-off auf helleren Displays oder aus der Distanz klarer lesbar sein soll.
 - `Kontrast-Preset`: Schaltet die Kontrastwirkung des Bull-off-Themes um.
   - `Sanft`: Diese Stufe reduziert sichtbare Kanten, Schatten und Farbtrennung im Bull-off-Theme. Aktive und inaktive Bereiche bleiben erkennbar, wirken aber weicher und weniger aggressiv voneinander abgesetzt.
   - `Standard`: Diese Stufe liefert den vorgesehenen Mittelwert für Rahmen, aktive Hervorhebungen, Schatten und Bedienflächen. Das Layout bleibt kontrastreich genug für Lesbarkeit, ohne so hart wie `Kräftig` zu zeichnen.
@@ -373,11 +384,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Theme Bull-off in AD xConfig](screenshots/template-theme-bull-off-xConfig.png)
 
+<a id="template-autodarts-theme-x01"></a>
+
 ### Theme X01
 
 - Gilt für: `X01`
 - Kurz: Ein ruhiges X01-Layout mit eigener Bildfläche und optionaler AVG-Zeile.
 - Grafisch: Farben, Flächen und Karten werden neu gestaltet; ein eigenes Hintergrundbild liegt hinter dem Spielbereich, während die Grundstruktur des X01-Layouts erhalten bleibt.
+- Wann sinnvoll? Wenn dir das Standardlayout zu unruhig ist oder du X01 optisch personalisieren möchtest.
 - `AVG anzeigen`: Blendet die AVG-Anzeige im X01-Theme ein oder aus.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
@@ -409,11 +423,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Theme X01 Vorschau Standard](screenshots/template-theme-x01-preview-standard-readme.png)
 ![Theme X01 Vorschau unter Würfen](screenshots/template-theme-x01-preview-under-throws-readme.png)
 
+<a id="template-autodarts-theme-gotcha"></a>
+
 ### Theme Gotcha
 
-- Gilt für: `gotcha`
+- Gilt für: `Gotcha`
 - Kurz: Ein ruhiges Gotcha-Layout auf X01-Basis, das die Differenz zum führenden Gegner direkt in der Spielerkarte mitzieht. Dafür muss `Gotcha Helper` in `Tools für Autodarts` aktiv sein.
 - Grafisch: Die Karten folgen bewusst der X01-Optik, ergänzen aber die zusätzliche Gotcha-Differenz als eigene, klar abgesetzte Live-Zahl innerhalb derselben Theme-Struktur.
+- Wann sinnvoll? Wenn du Gotcha ähnlich ruhig wie X01 lesen möchtest, ohne auf die abgesetzte Delta-Information zwischen den Spielern zu verzichten.
 - Hinweis: Die zusätzliche Gotcha-Differenz erscheint nur, wenn `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.
 - `Delta-Position`: Wählt, ob die Gotcha-Differenz unter dem Score oder in derselben Zeile mit `|` steht.
   - `Unter Score`: Setzt die Gotcha-Differenz in eine eigene Zeile unter dem Score.
@@ -450,11 +467,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Theme Gotcha in AD xConfig](screenshots/template-theme-gotcha-xConfig.png)
 
+<a id="template-autodarts-theme-x01-2player"></a>
+
 ### Theme X01 2Player (Beta)
 
 - Gilt für: `X01`
 - Kurz: Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.
 - Grafisch: Stil, Farbschema und Spielerinformationen lassen sich für Desktop, TV oder kompakte Fenster abstimmen. Außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.
+- Wann sinnvoll? Wenn du ein gut lesbares Zweispieler-Layout für Desktop, TV oder eine kompakte Livecam-Ansicht möchtest.
 - Stil, Farbschema, Informationsdichte und Namensdarstellung sind getrennt konfigurierbar.
 - `Darstellungsstil`: Steuert Geometrie und Effekte des Zweispieler-Themes.
   - `Studio`: Bewahrt Kartenflächen, Radien, Schatten und Board-Glow des bisherigen Designs.
@@ -509,11 +529,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Theme X01 2Player in AD xConfig](screenshots/template-theme-x01-2player-xConfig.jpg)
 
+<a id="template-autodarts-theme-cricket"></a>
+
 ### Theme Cricket
 
 - Gilt für: `Cricket`, `Tactics`
 - Kurz: Ein gemeinsames Theme für Cricket und Tactics mit ruhigerer Grundoptik und optionaler AVG-Zeile.
 - Grafisch: Farben, Karten und Hintergründe werden auf eine gemeinsame Cricket-/Tactics-Optik gezogen. Ein eigenes Bild kann hinter dem Spielbereich liegen, ohne die Board- oder Grid-Logik zu verändern.
+- Wann sinnvoll? Wenn du für Cricket und Tactics eine einheitliche visuelle Basis möchtest, besonders zusammen mit den Cricket-Effekten.
 - `AVG anzeigen`: Blendet die AVG-Anzeige im Cricket-/Tactics-Theme ein oder aus.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
@@ -543,11 +566,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Theme Cricket in AD xConfig](screenshots/template-theme-cricket-xConfig.png)
 
+<a id="template-autodarts-theme-shanghai"></a>
+
 ### Theme Shanghai
 
 - Gilt für: `Shanghai`
 - Kurz: Ein aufgeräumtes Shanghai-Layout mit optionaler AVG-Zeile und ruhigerem Kontrast.
 - Grafisch: Das Theme ordnet Flächen und Farben neu, ohne den Spielaufbau zu verändern. Ein eigenes Hintergrundbild liegt hinter der Oberfläche und kann die Wirkung zusätzlich prägen.
+- Wann sinnvoll? Wenn du in Shanghai mehr Struktur und weniger visuelle Unruhe möchtest.
 - `AVG anzeigen`: Blendet die AVG-Anzeige im Shanghai-Theme ein oder aus.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
@@ -577,11 +603,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Theme Shanghai in AD xConfig](screenshots/template-theme-shanghai-xConfig.png)
 
+<a id="template-autodarts-theme-bermuda"></a>
+
 ### Theme Bermuda
 
 - Gilt für: `Bermuda`
 - Kurz: Ein ruhigeres Bermuda-Layout mit eigener Bildfläche im Hintergrund.
 - Grafisch: Das Theme passt Farben und Flächen für Bermuda an; ein gespeichertes Hintergrundbild liegt hinter dem Spielbereich, während die Bermuda-Anordnung selbst erhalten bleibt.
+- Wann sinnvoll? Wenn Bermuda besser lesbar sein soll, ohne viele Zusatzschalter zu benötigen.
 - `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
   - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
   - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
@@ -612,11 +641,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Animationen für X01
 
+<a id="animation-autodarts-animate-checkout-score-highlight"></a>
+<a id="animation-autodarts-animate-checkout-score-pulse"></a>
+
 ### Checkout Score Highlight
 
 - Gilt für: `X01`
 - Kurz: Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
 - Grafisch: Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.
+- Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
 - `Effekt`: Wählt die Animationsart der hervorgehobenen Restpunktzahl.
   - `Grow + Glow`: Die Restpunktzahl bekommt einen weichen Puls aus Größenänderung, Helligkeit und Schattierung. Der Effekt wirkt organisch und wiederkehrend, ohne die Zahl hart springen zu lassen.
   - `Glow Only`: Der Fokus liegt auf einem an- und abschwellenden Glühen um die Zahl herum. Die Score-Anzeige selbst bleibt relativ stabil, während der Lichtschein die Aufmerksamkeit auf das Finish lenkt.
@@ -639,11 +672,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Checkout Score Highlight](screenshots/animation-checkout-score-pulse.gif)
 
+<a id="animation-autodarts-x01-remaining-score-bar"></a>
+<a id="animation-autodarts-x01-score-progress"></a>
+
 ### X01 Remaining Score Bar
 
 - Gilt für: `X01`
 - Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
 - Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
+- Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
 - `Farben`: Steuert statische Farbpaletten und dynamische Schwellenfarben in einer gemeinsamen Auswahl.
   - `Checkout Focus`: Dynamischer Standardmodus mit Checkout-Fokus.
   - `Traffic Light`: Stufenmodus mit klaren Rot/Amber/Grün-Prozentschwellen.
@@ -673,11 +710,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![X01 Remaining Score Bar](screenshots/animation-x01-score-progress.png)
 
+<a id="animation-autodarts-animate-checkout-target-highlights"></a>
+<a id="animation-autodarts-animate-checkout-board-targets"></a>
+
 ### Checkout Target Highlights
 
 - Gilt für: `X01`
 - Kurz: Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
 - Grafisch: Die relevanten Segmente erhalten eine ruhige farbige Füllung, optional eine Kontur und einen kontrollierten Halo. Unter `180` validiert das Modul sichtbare Vorschläge gegen Score und Out-Mode, ergänzt sinnvolle Finish-Routen scorebasiert und hält bei klaren Setup-Hinweisen das zuerst zu spielende Feld direkt am Board sichtbar. Wenn mehrere Routenschritte sichtbar sind, bleibt das zuerst zu spielende Feld klar am stärksten betont. Single-Ziele markieren standardmäßig immer beide Single-Ringe des Segments.
+- Wann sinnvoll? Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.
 - `Darstellung`: Wählt die visuelle Darstellung der markierten Segmente.
   - `Soft Pulse`: Diese Darstellung hält das nächste sinnvolle Checkout-Ziel ruhig und klar im Fokus und ergänzt Helligkeit, Halo und Kontur um eine kleine, kontrollierte Skalierung.
   - `Fast Blink`: Diese Darstellung orientiert sich am nativen Blinkgefühl und setzt das Ziel mit klaren Helligkeitswechseln, leichtem Wachstum und sauberem Halo in Szene.
@@ -700,11 +741,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Checkout Target Highlights](screenshots/animation-checkout-board-targets.gif)
 
+<a id="animation-autodarts-animate-tv-board-zoom"></a>
+
 ### TV Board Zoom
 
 - Gilt für: `X01`
 - Kurz: Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil.
 - Grafisch: Das Board wird innerhalb des rechten Board-Bereichs vergrößert, damit relevante Segmente mehr Platz bekommen. Nach `T20,T20,T20` bleibt der Fokus bis zum Spielerwechsel bestehen, nach getroffenem Checkout bis zum Leg-Ende. Klicks auf die Wurfanzeigenleiste zoomen sofort aus, damit Korrekturen auf der ganzen Scheibe möglich bleiben.
+- Wann sinnvoll? Wenn du bei dritten Darts und Finishes mehr Fokus auf Zielbereiche willst, aber bei Korrekturen schnell wieder die ganze Scheibe brauchst.
 - `Zoom-Stufe`: Bestimmt die Stärke des Board-Zooms.
   - `2,35`: Diese Stufe vergrößert das Ziel spürbar, lässt aber noch viel vom restlichen Board im Bild. Der Effekt wirkt eher wie ein sanfter Fokus als wie ein enger Ausschnitt.
   - `2,75`: Diese Stufe liefert den vorgesehenen Mittelwert für den Board-Zoom. Das Zielsegment wird deutlich hervorgehoben, während rundherum noch genug Board sichtbar bleibt, um sich räumlich zu orientieren.
@@ -722,11 +766,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![TV Board Zoom](screenshots/animation-tv-board-zoom.gif)
 
+<a id="animation-autodarts-checkout-suggestion-styles"></a>
+<a id="animation-autodarts-style-checkout-suggestions"></a>
+
 ### Checkout Suggestion Styles
 
 - Gilt für: `X01`
 - Kurz: Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.
 - Grafisch: Der sichtbare Vorschlagsblock erhält je nach Stil eine Badge-, Ribbon-, Stripe-, Ticket- oder Outline-Optik. Optional sitzt darüber ein eigenes Label wie `CHECKOUT` oder `FINISH`.
+- Wann sinnvoll? Wenn du Suggestionen schneller scannen möchtest oder der Standard-Look zu unauffällig ist.
 - `Stil`: Wechselt die Hülle des Checkout-Vorschlags.
   - `Badge`: Diese Variante legt um den Suggestion-Block eine plakative Badge-Hülle mit gestrichelter Outline und weicher Akzentfläche. Der Hinweis wirkt dadurch wie ein klar eingestempeltes Label im Interface.
   - `Ribbon`: Diese Variante inszeniert den Suggestion-Block wie ein leuchtendes Ribbon oder Banner. Durch Innenrahmen, Glow und leicht gekipptes Label wirkt der Hinweis energischer und auffälliger.
@@ -749,11 +797,14 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Format Ticket](screenshots/animation-style-checkout-suggestions-format-ticket-readme.png)
 ![Format Outline](screenshots/animation-style-checkout-suggestions-format-outline-readme.png)
 
+<a id="animation-autodarts-x01-bust-active-player-highlight"></a>
+
 ### X01 Bust Active Player Highlight
 
 - Gilt für: `X01`
 - Kurz: Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
 - Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen. Wenn der Wackeleffekt aktiv ist, wackelt die aktive Karte drei Sekunden im schnellen Earthquake-Stil. Wenn der Glasbruch-Sound aktiviert ist, wird er gleichzeitig gestartet. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
+- Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
 - `Vorschau`: Startet die BUST-Vorschau im Einstellungsdialog.
 - `Anzahl Glasrisse`: Bestimmt die Anzahl zufällig platzierter Glasrisse.
   - `Aus`: Keine Glasrisse; Rotmarkierung und Wackeln bleiben aktiv.
@@ -768,11 +819,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Animationen für Cricket und Tactics
 
+<a id="animation-autodarts-animate-cricket-target-highlighter"></a>
+<a id="animation-autodarts-animate-cricket-highlighter"></a>
+
 ### Cricket Target Highlighter
 
 - Gilt für: `Cricket`, `Tactics`
 - Kurz: Zielzustände und Drucksituationen werden direkt am Board sichtbar.
 - Grafisch: Board-Segmente erhalten je nach Zustand farbige Overlays. Relevante Ziele leuchten grün oder rot, irrelevante Felder werden je nach Stil abgeschwächt, geschraffiert oder maskiert.
+- Wann sinnvoll? Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, scorable, unter Druck oder bereits erledigt sind.
 - `OPEN-Ziele anzeigen`: Zeigt offene Ziele zusätzlich am Board an.
 - `DEAD-Ziele anzeigen`: Zeigt erledigte Ziele weiter als `DEAD` an.
 - `Irrelevante Felder abdunkeln`: Bestimmt den Abdunkelungsstil für irrelevante Felder.
@@ -791,11 +846,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Cricket Target Highlighter](screenshots/animation-cricket-target-highlighter.png)
 
+<a id="animation-autodarts-animate-cricket-grid-status-effects"></a>
+<a id="animation-autodarts-animate-cricket-grid-fx"></a>
+
 ### Cricket Grid Status Effects
 
 - Gilt für: `Cricket`, `Tactics`
 - Kurz: Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
 - Grafisch: Zellen, Zeilen, Labels und Badges reagieren mit grünen und roten Zuständen, kurzen Chips, Kanten und Übergängen. So werden Fortschritt, Gegnerdruck und Zugwechsel in der Matrix selbst sichtbarer.
+- Wann sinnvoll? Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.
 - `Zeilen-Sweep`: Lässt nach Änderungen einen kurzen Lichtlauf über die Zeile laufen.
 - `Ziel-Badge-Hinweis`: Verstärkt Ziel-Badges und Labelzellen mit zusätzlichem Glow.
 - `Mark-Fortschritt`: Betont die Mark-Stufen in den Spielerzellen.
@@ -819,11 +878,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Animationen für alle Modi
 
+<a id="animation-autodarts-animate-avg-trend-arrow"></a>
+<a id="animation-autodarts-animate-average-trend-arrow"></a>
+
 ### AVG Trend Arrow
 
 - Gilt für: `alle Modi`
 - Kurz: Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.
 - Grafisch: Bei einer AVG-Änderung erscheint neben dem Wert kurz ein grüner Aufwärtspfeil oder roter Abwärtspfeil und verschwindet nach der eingestellten Zeit wieder.
+- Wann sinnvoll? Wenn du Formwechsel während eines Legs schnell am AVG erkennen möchtest.
 - Trendberechnung: Vergleich von `AVG_aktuell` mit `AVG_vorher` aus der AutoDarts-Anzeige.
 - Bei einer Anzeige wie `55.0 / 55.0` wird der linke Wert vor dem `/` verwendet.
 - Formel: `AVG_Delta = AVG_aktuell - AVG_vorher`; `> 0` = Aufwärtspfeil, `< 0` = Abwärtspfeil, `= 0` = keine neue Pfeilrichtung.
@@ -841,11 +904,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![AVG Trend Arrow](screenshots/animation-average-trend-arrow.png)
 
+<a id="animation-autodarts-animate-active-player-sweep"></a>
+<a id="animation-autodarts-animate-turn-start-sweep"></a>
+
 ### Active Player Sweep
 
 - Gilt für: `alle Modi`
 - Kurz: Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.
 - Grafisch: Eine helle, halbtransparente Bahn zieht einmal quer über die aktive Karte. So springt der neue Zugwechsel schneller ins Auge.
+- Wann sinnvoll? Wenn du in schnellen Matches einen klareren Wechsel zwischen den Spielern sehen willst.
 - `Sweep-Geschwindigkeit`: Bestimmt das Tempo des Sweeps.
   - `Schnell`: Diese Stufe verkürzt den Sweep auf einen schnellen, klaren Lichtimpuls. Der Turn-Wechsel springt ins Auge, ohne lange auf der Karte stehen zu bleiben.
   - `Standard`: Diese Einstellung hält die Balance zwischen schnellem Impuls und gut lesbarer Bewegung. Der Sweep wirkt bewusst gesetzt, aber nicht ausgedehnt.
@@ -858,11 +925,15 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![Active Player Sweep](screenshots/animation-turn-start-sweep.gif)
 
+<a id="animation-autodarts-animate-special-hit-highlights"></a>
+<a id="animation-autodarts-animate-triple-double-bull-hits"></a>
+
 ### Special Hit Highlights
 
 - Gilt für: `alle Modi`
 - Kurz: Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
 - Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken einmaligen Burst.
+- Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.
 - `Farbstil`: Wählt die visuelle Farbwelt für Verlauf, Glow und Rand der Treffer-Highlights.
   - `Rot/Blau/Grün`: Verwendet feste Signalfarben pro Trefferart: `Triple = rot`, `Double = blau`, `Bull = grün`.
   - `Solar Flare`: Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtöne mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und präsent.
@@ -901,11 +972,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+<a id="animation-autodarts-animate-dartboard-marker-highlight"></a>
+<a id="animation-autodarts-animate-dart-marker-emphasis"></a>
+
 ### Dartboard Marker Highlight
 
 - Gilt für: `alle Modi`
 - Kurz: Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
 - Grafisch: Die bestehenden Marker werden größer, farbiger und auf Wunsch mit Pulse, Glow oder Outline versehen. Das Modul ersetzt die Marker nicht, sondern betont sie.
+- Wann sinnvoll? Wenn die Standardmarker zu klein oder zu unauffällig sind.
 - `Marker-Größe`: Vergrößert oder verkleinert die Marker.
   - `Klein`: Diese Stufe lässt die Marker nur leicht anwachsen und bleibt nah an der ursprünglichen Geometrie des Boards. Die Treffer werden klarer, aber nicht großflächig.
   - `Standard`: Diese Einstellung liefert den Standardwert für die Markergröße. Treffer springen besser ins Auge, ohne die Board-Geometrie optisch zu überladen.
@@ -932,11 +1007,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 ![Dartboard Marker Highlight](screenshots/animation-dart-marker-emphasis.gif)
 
+<a id="animation-autodarts-animate-dart-marker-replacer"></a>
+<a id="animation-autodarts-animate-dart-marker-darts"></a>
+
 ### Dart Marker Replacer
 
 - Gilt für: `alle Modi`
 - Kurz: Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
 - Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
+- Wann sinnvoll? Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.
 - Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
 - Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart-Demo`: Startet eine direkte Vorschau mit dem aktuell konfigurierten Dart-Design.
@@ -987,11 +1066,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 ![Dart Marker Replacer](screenshots/animation-dart-marker-darts.png)
 
+<a id="animation-autodarts-animate-take-out-darts-alert"></a>
+<a id="animation-autodarts-animate-remove-darts-notification"></a>
+
 ### Take Out Darts Alert
 
 - Gilt für: `alle Modi`
 - Kurz: Der Hinweis zum Entfernen der Darts wird als große Grafik deutlich präsenter dargestellt.
 - Grafisch: Der normale Hinweis wird durch eine zentrierte Bildkarte ersetzt. Optional pulsiert die Grafik leicht, damit sie im Spielablauf nicht übersehen wird.
+- Wann sinnvoll? Wenn der Standardhinweis zu leicht übersehen wird.
 - `Bildgröße`: Bestimmt die Größe der Hinweisgrafik.
   - `Kompakt`: Diese Stufe begrenzt die Hinweisgrafik auf eine kompaktere Maximalgröße. Der `Take Out`-Hinweis bleibt deutlich erkennbar, wirkt aber weniger raumgreifend.
   - `Standard`: Diese Einstellung nutzt die vorgesehene Standardgröße für die Hinweisgrafik. Der Hinweis ist gut sichtbar und bleibt zugleich noch ausgewogen im Bild.
@@ -1005,11 +1088,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 ![Take Out Darts Alert](screenshots/animation-remove-darts-notification.png)
 
+<a id="animation-autodarts-animate-single-bull-hit-sound"></a>
+<a id="animation-autodarts-animate-single-bull-sound"></a>
+
 ### Single Bull Hit Sound
 
 - Gilt für: `alle Modi`
 - Kurz: Bei Single Bull hörst du einen kurzen Ton; grafisch bleibt das Spiel unverändert.
 - Grafisch: Es wird keine zusätzliche Grafik eingeblendet. Die Rückmeldung ist rein akustisch und reagiert auf erkannte Single-Bull-Treffer.
+- Wann sinnvoll? Wenn du Single Bull akustisch schneller bestätigen möchtest, ohne auf eine zusätzliche Animation zu achten.
 - `Sound-Test`: Startet einen direkten Sound-Test mit der gespeicherten Lautstärke.
 - `Lautstärke`: Regelt die Lautstärke des Single-Bull-Sounds.
   - `Leise`: Diese Stufe hält den Single-Bull-Sound bewusst leise und unaufdringlich. Der Treffer wird hörbar bestätigt, ohne andere Audioquellen stark zu überdecken.
@@ -1025,11 +1112,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `1200 ms`: Diese Option ergänzt die normale Live-Reaktion um einen 1200-ms-Fallback-Scan. Dadurch können Single-Bull-Treffer auch in schwierigeren DOM-Situationen zuverlässiger erkannt und nachträglich hörbar gemacht werden.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+<a id="animation-autodarts-animate-turn-score-counter"></a>
+<a id="animation-autodarts-animate-turn-points-count"></a>
+
 ### Turn Score Counter
 
 - Gilt für: `alle Modi`
 - Kurz: Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
 - Grafisch: Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.
+- Wann sinnvoll? Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.
 - `Zählstil`: Wählt den Zählstil der Turn-Punkte.
   - `Smooth Count`: Smooth-Count-Zählstil.
   - `Rolling Digits`: Rolling-Digits-Zählstil mit rollenden Ziffern.
@@ -1047,11 +1138,15 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 ![Turn Score Counter](screenshots/animation-turn-points-count.gif)
 ![Turn Score Counter Detail](screenshots/animation-turn-points-count-detail-readme.gif)
 
+<a id="animation-autodarts-animate-winner-celebration-effect"></a>
+<a id="animation-autodarts-animate-winner-fireworks"></a>
+
 ### Winner Celebration Effect
 
 - Gilt für: `alle Modi`
 - Kurz: Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
 - Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.
+- Wann sinnvoll? Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.
 - `Style`: Wählt das Bewegungsmuster des Siegereffekts.
   - `Center Side Burst`: Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feierwirkung des Moduls.
   - `Top Fireworks`: Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel.

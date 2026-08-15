@@ -2,6 +2,7 @@
 import path from "node:path";
 import { xconfigDescriptors } from "../src/features/xconfig-ui/descriptors.js";
 import {
+  buildModuleFinderSection,
   buildRecommendedDefaultsSection,
   buildXConfigOverviewSection,
   buildFeaturesDocSection,
@@ -39,23 +40,14 @@ const overviewCounts = Object.freeze({
   themeImageLimit: "1,5 MiB",
 });
 
-function buildQuickNavigation() {
-  const themeEntries = orderedEntries.filter((entry) => entry.descriptor.tab === "themes");
-  const animationEntries = orderedEntries.filter((entry) => entry.descriptor.tab !== "themes");
-
-  const lines = ["## Schnellnavigation", "", "### Themen", ""];
-
-  themeEntries.forEach(({ descriptor, definition }) => {
-    lines.push(`- [${definition.title}](#${descriptor.readmeAnchor})`);
-  });
-
-  lines.push("", "### Animationen und Komfort", "");
-
-  animationEntries.forEach(({ descriptor, definition }) => {
-    lines.push(`- [${definition.title}](#${descriptor.readmeAnchor})`);
-  });
-
-  return `${lines.join("\n")}\n`;
+function buildRecommendedDefaultsSummary() {
+  return [
+    "## Empfohlene Standards",
+    "",
+    "Die Aktion `Empfohlene Standards` aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.",
+    "",
+    "[Vollständiges Profil der empfohlenen Standards](docs/FEATURES.md#empfohlene-standards)",
+  ].join("\n");
 }
 
 function buildReadmeFeatureDocs() {
@@ -69,13 +61,9 @@ function buildReadmeFeatureDocs() {
     .join("\n\n");
 
   return [
-    buildQuickNavigation().trim(),
+    buildModuleFinderSection("Modul-Finder", orderedEntries).trim(),
     "",
-    buildRecommendedDefaultsSection(
-      "Empfohlene Standards",
-      xconfigDescriptors,
-      resolveRecommendedConfig
-    ).trim(),
+    buildRecommendedDefaultsSummary(),
     "",
     "## Themen",
     "",
@@ -127,6 +115,8 @@ function buildFeaturesDocSections() {
 
   return [
     introSection.trim(),
+    "",
+    '<a id="empfohlene-standards"></a>',
     "",
     buildRecommendedDefaultsSection(
       "Empfohlene Standards",

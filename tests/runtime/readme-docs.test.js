@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { XCONFIG_PREVIEW_ASSET_FILES } from "../../src/shared/xconfig-preview-assets.manifest.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import {
+  buildModuleFinderSection,
   buildRecommendedDefaultsSection,
   buildXConfigOverviewSection,
   buildFeaturesDocSection,
@@ -54,6 +55,12 @@ const mojibakePattern =
 const featureDefinitionByKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );
+const orderedFeatureEntries = xconfigDescriptors
+  .map((descriptor) => ({
+    descriptor,
+    definition: featureDefinitionByKey.get(descriptor.featureKey) || null,
+  }))
+  .filter((entry) => entry.definition);
 function resolveRecommendedConfig(featureKey) {
   const definition = featureDefinitionByKey.get(String(featureKey || "").trim());
   return definition?.configKey ? createRecommendedFeatureConfig(definition.configKey) : null;
@@ -75,13 +82,26 @@ function escapeRegExp(text) {
 
 test("README references the canonical userscript install target", () => {
   const readme = readText(readmePath);
+  const badgeMatch = /\[!\[Installieren\]\([^)]+\)\]\(([^)]+)\)/.exec(readme);
 
-  assert.match(readme, /dist\/autodarts-xconfig\.user\.js/);
-  assert.match(
-    readme,
-    /https:\/\/raw\.githubusercontent\.com\/thomasasen\/autodarts-xconfig\/main\/dist\/autodarts-xconfig\.user\.js/
+  assert.ok(badgeMatch, "missing install badge target");
+  assert.equal(
+    badgeMatch[1],
+    "https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js"
   );
-  assert.doesNotMatch(readme, /dist\/autodarts-xconfig-loader\.user\.js/);
+  assert.doesNotMatch(badgeMatch[1], /autodarts-xconfig\.meta\.js/);
+  assert.doesNotMatch(badgeMatch[1], /autodarts-xconfig-loader\.user\.js/);
+  assert.doesNotMatch(readme, /\]\([^)]*autodarts-xconfig\.meta\.js[^)]*\)/);
+  assert.match(readme, /autodarts-xconfig\.meta\.js[^\n]+automatische Update-Prüfung/);
+});
+
+test("README explains the real fresh-install profile without overwriting existing settings", () => {
+  const readme = readText(readmePath);
+
+  assert.match(readme, /wirklich frischen Installation[^\n]+Empfohlene Standards/);
+  assert.match(readme, /alle Module mit ausgewogenen Presets aktiviert/);
+  assert.match(readme, /bestehende Konfiguration bleibt dagegen unverändert/);
+  assert.doesNotMatch(readme, /Alle Themes sind zuerst ausgeschaltet/);
 });
 
 test("README screenshot paths exist in docs/screenshots", () => {
@@ -138,7 +158,7 @@ test("README and FEATURES share the generated xConfig overview copy", () => {
   assert.match(featuresDoc, new RegExp(escapeRegExp(featuresOverviewCopy)));
 });
 
-test("README and FEATURES share the generated recommended defaults profile", () => {
+test("FEATURES contains the full generated recommended profile and README links to it", () => {
   const readme = readText(readmePath);
   const featuresDoc = readText(featuresDocPath);
   const recommendedDefaultsCopy = buildRecommendedDefaultsSection(
@@ -147,7 +167,9 @@ test("README and FEATURES share the generated recommended defaults profile", () 
     resolveRecommendedConfig
   ).trim();
 
-  assert.match(readme, new RegExp(escapeRegExp(recommendedDefaultsCopy)));
+  assert.match(readme, /docs\/FEATURES\.md#empfohlene-standards/);
+  assert.doesNotMatch(readme, new RegExp(escapeRegExp(recommendedDefaultsCopy)));
+  assert.match(featuresDoc, /<a id="empfohlene-standards"><\/a>/);
   assert.match(featuresDoc, new RegExp(escapeRegExp(recommendedDefaultsCopy)));
 });
 
@@ -170,14 +192,34 @@ test("README contains a visible install badge", () => {
   assert.match(readme, /!\[Installieren\]\(https:\/\/img\.shields\.io\/badge\//);
 });
 
-test("README contains stable anchors for every xConfig module entry", () => {
+test("README and FEATURES contain every stable xConfig module anchor", () => {
   const readme = readText(readmePath);
+  const featuresDoc = readText(featuresDocPath);
 
   xconfigDescriptors.forEach((descriptor) => {
-    assert.match(
-      readme,
-      new RegExp(`<a id="${descriptor.readmeAnchor}"></a>`),
-      `missing README anchor for ${descriptor.featureKey}`
+    const anchorIds = [descriptor.readmeAnchor, ...(descriptor.readmeAnchorAliases || [])];
+    anchorIds.forEach((anchorId) => {
+      const anchorPattern = new RegExp(`<a id="${escapeRegExp(anchorId)}"></a>`);
+      assert.match(readme, anchorPattern, `missing README anchor ${anchorId}`);
+      assert.match(featuresDoc, anchorPattern, `missing FEATURES anchor ${anchorId}`);
+    });
+  });
+});
+
+test("README contains the generated module finder with every module exactly once", () => {
+  const readme = readText(readmePath);
+  const expectedFinder = buildModuleFinderSection("Modul-Finder", orderedFeatureEntries).trim();
+
+  assert.match(readme, new RegExp(escapeRegExp(expectedFinder)));
+  xconfigDescriptors.forEach((descriptor) => {
+    const linkPattern = new RegExp(
+      String.raw`\]\(#${escapeRegExp(descriptor.readmeAnchor)}\)`,
+      "g"
+    );
+    assert.equal(
+      Array.from(expectedFinder.matchAll(linkPattern)).length,
+      1,
+      `module finder entry count for ${descriptor.featureKey}`
     );
   });
 });
@@ -217,7 +259,7 @@ test("every xConfig select option carries UI and docs descriptions", () => {
   });
 });
 
-test("README contains the generated xConfig feature sections and all setting explanations", () => {
+test("README contains concise generated xConfig feature summaries", () => {
   const readme = readText(readmePath);
 
   xconfigDescriptors.forEach((descriptor) => {
@@ -230,9 +272,12 @@ test("README contains the generated xConfig feature sections and all setting exp
       `README drift for ${descriptor.featureKey}`
     );
   });
+
+  assert.doesNotMatch(readme, /\*\*Einstellungen einfach erklärt\*\*/);
+  assert.ok(readme.split("\n").length < 700, "README exceeds the concise line budget");
 });
 
-test("Templates Global README renders font names as preview labels instead of repeated option copy", () => {
+test("Templates Global keeps font option details in FEATURES and out of the README summary", () => {
   const descriptor = xconfigDescriptors.find(
     (entry) => entry.featureKey === "theme-global-typography"
   );
@@ -240,11 +285,13 @@ test("Templates Global README renders font names as preview labels instead of re
   const definition = featureDefinitionByKey.get("theme-global-typography");
   assert.ok(definition);
 
-  const section = buildReadmeFeatureSection(descriptor, definition);
-  assert.match(section, /<span style="font-family: .*">Aldrich<\/span>/);
-  assert.match(section, /<span style="font-family: .*">Inconsolata<\/span>/);
-  assert.doesNotMatch(section, /\s{2}- `Aldrich`:/);
-  assert.doesNotMatch(section, /\s{2}- `Inconsolata`:/);
+  const readmeSection = buildReadmeFeatureSection(descriptor, definition);
+  const featuresSection = buildFeaturesDocSection(descriptor, definition);
+  assert.doesNotMatch(readmeSection, /`Schriftart`:/);
+  assert.doesNotMatch(readmeSection, /`Aldrich`:/);
+  assert.match(featuresSection, /`Schriftart`:/);
+  assert.match(featuresSection, /\s{2}- `Aldrich`:/);
+  assert.match(featuresSection, /\s{2}- `Inconsolata`:/);
 });
 
 test("FEATURES doc screenshot paths exist in docs/screenshots", () => {

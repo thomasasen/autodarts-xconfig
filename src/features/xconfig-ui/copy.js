@@ -47,14 +47,6 @@ function appendRawLines(lines, entries = []) {
   });
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
 function getFieldAppendixLines(copy, fieldKey, variant) {
   if (!copy || !fieldKey) {
     return [];
@@ -221,8 +213,6 @@ function buildThemeGlobalTypographyFontOptionCopy() {
 }
 
 const THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY = buildThemeGlobalTypographyFontOptionCopy();
-const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
-const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 const THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY = deepFreeze(
   Object.fromEntries(
     THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) => [
@@ -3442,6 +3432,9 @@ export function formatVariantLabel(variants = []) {
     if (normalized === "x01") {
       return "X01";
     }
+    if (normalized === "gotcha") {
+      return "Gotcha";
+    }
     if (normalized === "bull-off") {
       return "Bull-off";
     }
@@ -3463,18 +3456,44 @@ export function formatVariantLabel(variants = []) {
   return labels.map((label) => `\`${label}\``).join(", ");
 }
 
-function buildThemeGlobalTypographyReadmeOptionLine(option) {
-  const label = escapeHtml(String(option?.label || "").trim());
-  if (!label) {
-    return "";
-  }
+function escapeMarkdownTableCell(value) {
+  return String(value || "")
+    .replaceAll(/\s+/g, " ")
+    .replaceAll("|", String.raw`\|`)
+    .trim();
+}
 
-  const previewFontFamily = escapeHtml(String(option?.previewFontFamily || "").trim());
-  if (!previewFontFamily || String(option?.value || "").trim() === "system") {
-    return `  - ${label}`;
-  }
+export function buildModuleFinderSection(title, entries = []) {
+  const lines = [
+    `## ${String(title || "Modul-Finder").trim()}`,
+    "",
+    "Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschließend die passende Kurzbeschreibung.",
+    "",
+    "| Modul | Bereich | Geeignet für | Kurz erklärt |",
+    "| --- | --- | --- | --- |",
+  ];
 
-  return `  - <span style="font-family: ${previewFontFamily}; font-size: 1.08em;">${label}</span>`;
+  entries.forEach(({ descriptor, definition }) => {
+    const featureKey = String(descriptor?.featureKey || definition?.featureKey || "").trim();
+    const anchor = String(descriptor?.readmeAnchor || "").trim();
+    const label = String(definition?.title || descriptor?.title || featureKey).trim();
+    const copy = getXConfigFeatureCopy(featureKey);
+    const description = String(
+      descriptor?.description || definition?.description || copy?.visibleDescription || ""
+    ).trim();
+    if (!descriptor || !definition || !anchor || !label || !description) {
+      return;
+    }
+
+    const area = descriptor.tab === "themes" ? "Theme" : "Animation & Komfort";
+    lines.push(
+      `| [${escapeMarkdownTableCell(label)}](#${anchor}) | ${area} | ${formatVariantLabel(
+        definition.variants
+      )} | ${escapeMarkdownTableCell(description)} |`
+    );
+  });
+
+  return `${lines.join("\n")}\n`;
 }
 
 function appendFieldWithOptions(lines, field, description, optionDescriptionKey, options = {}) {
@@ -3522,44 +3541,21 @@ export function buildReadmeFeatureSection(descriptor, definition) {
     "",
     `- Gilt für: ${formatVariantLabel(definition.variants)}`,
     `- Was macht es sichtbar? ${copy.visibleDescription}`,
-    `- Grafisch: ${copy.visualDescription}`,
     `- Wann sinnvoll? ${copy.usefulWhen}`,
     "",
   ];
 
-  const readmeDetails = Array.isArray(copy.readmeDetails)
-    ? copy.readmeDetails.map((entry) => String(entry || "").trim()).filter(Boolean)
-    : [];
-  if (readmeDetails.length) {
-    const readmeDetailHeading = String(copy.readmeDetailHeading || "").trim();
-    if (readmeDetailHeading) {
-      lines.push(`**${readmeDetailHeading}**`, "");
-    }
-    readmeDetails.forEach((entry) => {
-      lines.push(`- ${entry}`);
-    });
-    lines.push("");
+  const primaryAnchor = anchorIds[0];
+  if (primaryAnchor) {
+    lines.push(
+      `[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#${primaryAnchor})`
+    );
   }
-
-  lines.push("**Einstellungen einfach erklärt**", "");
-
-  (descriptor.fields || []).forEach((field) => {
-    const docsDescription = String(field.docsDescription || "").trim();
-    appendFieldWithOptions(lines, field, docsDescription, "docsDescription", {
-      optionLineBuilder:
-        featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
-        String(field?.key || "").trim() === THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY
-          ? buildThemeGlobalTypographyReadmeOptionLine
-          : null,
-    });
-    appendRawLines(lines, getFieldAppendixLines(copy, field.key, "readme"));
-  });
 
   if (Array.isArray(copy.images) && copy.images.length) {
     lines.push("");
-    copy.images.forEach((entry) => {
-      lines.push(`![${entry.alt}](docs/screenshots/${entry.fileName})`);
-    });
+    const [previewImage] = copy.images;
+    lines.push(`![${previewImage.alt}](docs/screenshots/${previewImage.fileName})`);
   }
 
   return `${lines.join("\n")}\n`;
@@ -3572,12 +3568,20 @@ export function buildFeaturesDocSection(descriptor, definition) {
     return "";
   }
 
+  const anchorIds = [
+    String(descriptor.readmeAnchor || "").trim(),
+    ...(Array.isArray(descriptor.readmeAnchorAliases) ? descriptor.readmeAnchorAliases : []),
+  ].filter(Boolean);
+
   const lines = [
+    ...anchorIds.map((anchorId) => `<a id="${anchorId}"></a>`),
+    "",
     `### ${definition.title}`,
     "",
     `- Gilt für: ${formatVariantLabel(definition.variants)}`,
     `- Kurz: ${copy.visibleDescription}`,
     `- Grafisch: ${copy.visualDescription}`,
+    `- Wann sinnvoll? ${copy.usefulWhen}`,
   ];
 
   const featuresDetails = Array.isArray(copy.featuresDetails)
