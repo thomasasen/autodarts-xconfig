@@ -79,6 +79,13 @@ test("feature config spec stays aligned with catalog and registry order", () => 
   });
 });
 
+test("all default and recommended feature profiles remain disabled", () => {
+  listFeatureConfigSpecs().forEach((entry) => {
+    assert.equal(entry.createDefaultConfig().enabled, false, entry.configKey);
+    assert.equal(createRecommendedFeatureConfig(entry.configKey).enabled, false, entry.configKey);
+  });
+});
+
 test("renamed feature catalog entries expose one canonical key with legacy aliases", () => {
   RENAMED_FEATURES.forEach(([featureKey, configKey, legacyFeatureKey, legacyConfigKey]) => {
     const canonicalEntry = getFeatureCatalogEntryByFeatureKey(featureKey);
@@ -151,14 +158,14 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
 
   assert.ok(spec);
   assert.deepEqual(spec.createDefaultConfig(), {
-    enabled: true,
+    enabled: false,
     crackCount: 2,
     shakeEnabled: false,
     soundEnabled: true,
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("x01BustActivePlayerHighlight"), {
-    enabled: true,
+    enabled: false,
     crackCount: 2,
     shakeEnabled: false,
     soundEnabled: true,
@@ -197,7 +204,7 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
 
 test("createRecommendedFeatureConfig returns the documented recommended defaults", () => {
   assert.deepEqual(createRecommendedFeatureConfig("themes.globalTypography"), {
-    enabled: true,
+    enabled: false,
     fontPreset: "aldrich",
     applyTo: ["scores", "throws", "names"],
     accentColor: "#00D9FF",
@@ -217,7 +224,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
-    enabled: true,
+    enabled: false,
     contrastPreset: "standard",
     backgroundDisplayMode: "fill",
     backgroundOpacity: 25,
@@ -226,7 +233,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("themes.gotcha"), {
-    enabled: true,
+    enabled: false,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
@@ -237,7 +244,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("checkoutTargetHighlights"), {
-    enabled: true,
+    enabled: false,
     visualPreset: "fast-blink",
     segmentStyle: "surface-outline",
     singleRing: "both",
@@ -246,13 +253,13 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("specialHitHighlights"), {
-    enabled: true,
+    enabled: false,
     colorTheme: "kind-signal",
     animationStyle: "electric-jolt",
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("dartboardMarkerHighlight"), {
-    enabled: true,
+    enabled: false,
     size: 6,
     color: "rgb(49, 130, 206)",
     effect: "size-pulse",
@@ -261,7 +268,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("dartMarkerReplacer"), {
-    enabled: true,
+    enabled: false,
     design: "germangiant",
     animateDarts: true,
     sizePercent: 120,
@@ -275,14 +282,14 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("singleBullHitSound"), {
-    enabled: true,
+    enabled: false,
     volume: 0.9,
     cooldownMs: 700,
     pollIntervalMs: 0,
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("winnerCelebrationEffect"), {
-    enabled: true,
+    enabled: false,
     style: "center-cannon",
     colorTheme: "gold",
     intensity: "standard",

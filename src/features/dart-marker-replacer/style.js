@@ -77,7 +77,7 @@ export function buildStyleText() {
   position: fixed;
   overflow: visible;
   pointer-events: none;
-  z-index: 5;
+  z-index: 50;
 }
 
 .${DART_CONTAINER_CLASS},

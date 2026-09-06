@@ -22,6 +22,7 @@ const fixturePath = path.resolve(
   "release-channel-metadata.json"
 );
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
+const currentVersion = JSON.parse(readFileSync(path.resolve(process.cwd(), "package.json"), "utf8")).version;
 const FUTURE_STABLE_VERSION = "3.4.2";
 const currentMetaPath = path.resolve(process.cwd(), "dist", "autodarts-xconfig.meta.js");
 const currentUserPath = path.resolve(process.cwd(), "dist", "autodarts-xconfig.user.js");
@@ -76,7 +77,7 @@ test("historical fixtures match metadata stored in their real release commits", 
   assert.equal(fixture.migrationTarget.downloadUrl, USERSCRIPT_RELEASE_DOWNLOAD_URL);
 });
 
-test("2.9.1 Path A and Path B both install the same current 2.9.2 payload", () => {
+test("2.9.1 Path A and Path B both install the same current release payload", () => {
   const historical291 = fixture.historicalClients.find((client) => client.version === "2.9.1");
   const installed291Metadata = parseMetadata(readHistoricalMeta(historical291.commit));
   const advertisedMetadata = parseMetadata(readFileSync(currentMetaPath, "utf8"));
@@ -87,13 +88,13 @@ test("2.9.1 Path A and Path B both install the same current 2.9.2 payload", () =
   assert.equal(installed291Metadata.updateUrl, USERSCRIPT_UPDATE_URL);
   assert.equal(installed291Metadata.downloadUrl, USERSCRIPT_LEGACY_DOWNLOAD_URL);
   assert.deepEqual(advertisedMetadata, {
-    version: "2.9.2",
+    version: currentVersion,
     updateUrl: USERSCRIPT_UPDATE_URL,
     downloadUrl: USERSCRIPT_RELEASE_DOWNLOAD_URL,
   });
 
   // Path A: the old installed download URL retrieves the permanent Raw user bridge.
-  assert.equal(rawBridgeMetadata.version, "2.9.2");
+  assert.equal(rawBridgeMetadata.version, currentVersion);
   assert.equal(rawBridgeMetadata.updateUrl, USERSCRIPT_UPDATE_URL);
   assert.equal(rawBridgeMetadata.downloadUrl, USERSCRIPT_RELEASE_DOWNLOAD_URL);
   assert.match(rawBridgePayload, /initializeTampermonkeyRuntime/);

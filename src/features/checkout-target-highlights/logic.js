@@ -114,7 +114,67 @@ function createBull(ownerDocument, radius, innerRatio, outerRatio, solid, option
 }
 
 export function findBoard(documentRef) {
-  return resolveBoardRenderSurface(documentRef);
+  const board = resolveBoardRenderSurface(documentRef);
+  if (!board) {
+    return null;
+  }
+
+  return {
+    ...board,
+    overlayGroup: resolveCheckoutOverlayGroup(board),
+  };
+}
+
+function normalizeViewBox(svgNode) {
+  return String(svgNode?.getAttribute?.("viewBox") || "")
+    .trim()
+    .replaceAll(",", " ")
+    .replaceAll(/\s+/g, " ");
+}
+
+function findCoordinateMatchingGroup(svgNode, boardGroup) {
+  if (!svgNode || !boardGroup) {
+    return null;
+  }
+  if (svgNode === boardGroup) {
+    return svgNode;
+  }
+
+  const boardTransform = String(boardGroup.getAttribute?.("transform") || "").trim();
+  return (
+    Array.from(svgNode.children || []).find((node) => {
+      if (String(node?.tagName || node?.nodeName || "").toLowerCase() !== "g") {
+        return false;
+      }
+      return String(node.getAttribute?.("transform") || "").trim() === boardTransform;
+    }) || null
+  );
+}
+
+function resolveCheckoutOverlayGroup(board) {
+  const boardSvg = board?.svg;
+  const boardGroup = board?.group;
+  const parentNode = boardSvg?.parentElement || null;
+  const boardViewBox = normalizeViewBox(boardSvg);
+  if (!parentNode || !boardViewBox) {
+    return boardGroup || null;
+  }
+
+  const matchingLayers = Array.from(parentNode.children || []).filter((node) => {
+    return (
+      String(node?.tagName || node?.nodeName || "").toLowerCase() === "svg" &&
+      normalizeViewBox(node) === boardViewBox
+    );
+  });
+
+  for (let index = matchingLayers.length - 1; index >= 0; index -= 1) {
+    const matchingGroup = findCoordinateMatchingGroup(matchingLayers[index], boardGroup);
+    if (matchingGroup) {
+      return matchingGroup;
+    }
+  }
+
+  return boardGroup || null;
 }
 
 export function ensureOverlay(boardGroup) {
@@ -616,9 +676,13 @@ export function renderCheckoutTargets(options = {}) {
     return;
   }
 
-  const overlay = ensureOverlay(board.group);
+  const overlayGroup = board.overlayGroup || board.group;
+  const overlay = ensureOverlay(overlayGroup);
   if (!overlay) {
     return;
+  }
+  if (overlayGroup !== board.group && overlayGroup.firstChild !== overlay) {
+    overlayGroup.firstChild?.before?.(overlay);
   }
 
   if (!checkoutTargets.length) {

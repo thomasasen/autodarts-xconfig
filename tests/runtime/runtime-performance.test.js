@@ -113,6 +113,29 @@ function appendBoardFixture(documentRef) {
   return { svg, group };
 }
 
+function appendLayeredBoardFixture(documentRef) {
+  const board = appendBoardFixture(documentRef);
+  board.group.setAttribute("transform", "translate(500, 500)");
+
+  const markerSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  markerSvg.setAttribute("viewBox", "0 0 1000 1000");
+  const markerGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  markerGroup.setAttribute("transform", "translate(500, 500)");
+  markerSvg.appendChild(markerGroup);
+  documentRef.main.appendChild(markerSvg);
+
+  return { ...board, markerSvg, markerGroup };
+}
+
+function appendModernCheckoutSuggestion(documentRef, text, left, top) {
+  const node = documentRef.createElement("div");
+  node.classList.add("text-checkout-suggestion");
+  node.textContent = text;
+  node.__rect = { left, top, width: 80, height: 48 };
+  documentRef.main.appendChild(node);
+  return node;
+}
+
 function appendCricketGridFixture(documentRef) {
   const table = documentRef.createElement("table");
   table.id = "grid";
@@ -145,6 +168,66 @@ function appendCheckoutMarkedSuggestion(documentRef, text, left, top) {
   documentRef.main.appendChild(node);
   return node;
 }
+
+test("checkout-target-highlights renders the modern checkout surface in the top board layer", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.remove();
+  documentRef.suggestionElement.remove();
+  documentRef.activePlayerRow.remove();
+  appendModernCheckoutSuggestion(documentRef, "T20", 720, 30);
+  appendModernCheckoutSuggestion(documentRef, "25", 820, 30);
+  appendModernCheckoutSuggestion(documentRef, "D18", 920, 30);
+  const board = appendLayeredBoardFixture(documentRef);
+  const dartMarker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  board.markerGroup.appendChild(dartMarker);
+  const windowRef = createFakeWindow({ documentRef });
+
+  const cleanup = initializeCheckoutTargetHighlights({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => false,
+      getActiveThrows: () => [],
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          visualPreset: "soft-pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "amber",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory({ count: 0 }),
+    },
+  });
+
+  try {
+    const overlay = board.markerGroup.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+    assert.ok(overlay);
+    assert.equal(board.group.querySelector(`#${CHECKOUT_OVERLAY_ID}`), null);
+    assert.equal(board.markerGroup.firstChild, overlay);
+    assert.equal(board.markerGroup.children[1], dartMarker);
+    assert.equal(overlay.children[0]?.dataset?.targetRing, "T");
+    assert.equal(overlay.children[0]?.dataset?.targetValue, "20");
+  } finally {
+    cleanup();
+  }
+});
 
 test("checkout-target-highlights ignores self-managed overlay mutations", () => {
   const documentRef = new FakeDocument();
@@ -256,6 +339,23 @@ test("checkout-target-highlights classifies semantic and board mutations without
           attributeName: "class",
           addedNodes: [],
           removedNodes: [],
+        },
+      ],
+      { board }
+    ),
+    {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: false,
+    }
+  );
+
+  const modernSuggestion = appendModernCheckoutSuggestion(documentRef, "D20", 720, 30);
+  assert.deepEqual(
+    resolveCheckoutBoardMutationReaction(
+      [
+        {
+          type: "characterData",
+          target: modernSuggestion,
         },
       ],
       { board }
@@ -503,8 +603,8 @@ test("checkout-target-highlights surface-only mode keeps the S20 fill animated b
   assert.equal(firstShapeNode.style.getPropertyValue("stroke"), "none");
   assert.equal(firstShapeNode.style.getPropertyValue("stroke-width"), "0");
   assert.match(firstShapeNode.style.getPropertyValue("--ad-ext-target-color"), /245, 158, 11/);
-  assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.968");
-  assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
+  assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.992");
+  assert.equal(firstShapeNode.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.036");
 });
 
 test("checkout-target-highlights always uses both single rings while Segmentstil still controls outlines", () => {
@@ -653,8 +753,8 @@ test("checkout-target-highlights keeps focus targets readable across single, out
     Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.56
   );
-  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.988");
-  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.046");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.992");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.028");
   assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
     Number.parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-width")),
@@ -696,8 +796,8 @@ test("checkout-target-highlights keeps focus targets readable across single, out
     Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.64
   );
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.985");
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.068");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.99");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.04");
   assert.match(
     outerShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
@@ -742,8 +842,8 @@ test("checkout-target-highlights keeps focus targets readable across single, out
     Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.76
   );
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.983");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.082");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.988");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.048");
   assert.match(
     bullShape.style.getPropertyValue("--ad-ext-target-filter"),
     /drop-shadow/
@@ -930,10 +1030,10 @@ test("checkout-target-highlights applies dedicated slow-glow and fast-blink prof
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-stroke-width"), "3px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-outline-width"), "4.85px");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity"), "0.6799999999999999");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.998");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.022");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.994");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.036");
   assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
-  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.48");
+  assert.equal(bullOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity"), "0.52");
 
   renderCheckoutTargets({
     board: {
@@ -967,8 +1067,8 @@ test("checkout-target-highlights applies dedicated slow-glow and fast-blink prof
     Number.parseFloat(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.16
   );
-  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.968");
-  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.088");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.992");
+  assert.equal(singleShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.036");
   assert.match(singleShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
     Number.parseFloat(singleOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
@@ -1007,8 +1107,8 @@ test("checkout-target-highlights applies dedicated slow-glow and fast-blink prof
     Number.parseFloat(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.24
   );
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.964");
-  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.11");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.99");
+  assert.equal(outerShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.046");
   assert.match(outerShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
     Number.parseFloat(outerOutline.style.getPropertyValue("--ad-ext-target-outline-pulse-min-opacity")),
@@ -1047,8 +1147,8 @@ test("checkout-target-highlights applies dedicated slow-glow and fast-blink prof
     Number.parseFloat(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-opacity")),
     0.3
   );
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.958");
-  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.124");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-min-scale"), "0.988");
+  assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-scale"), "1.054");
   assert.equal(bullShape.style.getPropertyValue("--ad-ext-target-pulse-max-opacity"), "1");
   assert.match(bullShape.style.getPropertyValue("--ad-ext-target-filter"), /drop-shadow/);
   assertApprox(
@@ -1061,7 +1161,7 @@ test("checkout-target-highlights applies dedicated slow-glow and fast-blink prof
   );
 });
 
-test("checkout-target-highlights style text animates scale and keeps fast-blink close to the native board blink", () => {
+test("checkout-target-highlights keeps explicitly selected motion effects animated", () => {
   const css = buildStyleText();
 
   assert.match(
@@ -1078,7 +1178,7 @@ test("checkout-target-highlights style text animates scale and keeps fast-blink 
   );
   assert.match(
     css,
-    /@keyframes ad-ext-checkout-signal\s*\{[\s\S]*0%,\s*100%\s*\{[\s\S]*50%\s*\{/s
+    /@keyframes ad-ext-checkout-signal\s*\{[\s\S]*0%,\s*32%,\s*100%\s*\{[\s\S]*46%,\s*68%\s*\{/s
   );
   assert.match(
     css,
@@ -1087,6 +1187,8 @@ test("checkout-target-highlights style text animates scale and keeps fast-blink 
       "s"
     )
   );
+  assert.equal(css.includes("prefers-reduced-motion"), false);
+  assert.equal(css.includes("animation: none !important"), false);
 });
 
 test("checkout-target-highlights selects next, finish or all segments from the authoritative route", () => {

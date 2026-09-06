@@ -1,4 +1,10 @@
-export const SUGGESTION_SELECTOR = ".suggestion";
+import { findModernTurnSurface, isMatchNodeVisible } from "./shared/x01-match-surface.js";
+
+export const MODERN_CHECKOUT_SUGGESTION_SELECTOR = ".text-checkout-suggestion";
+export const SUGGESTION_SELECTOR = [
+  ".suggestion",
+  MODERN_CHECKOUT_SUGGESTION_SELECTOR,
+].join(", ");
 const CHECKOUT_MARKER_PATTERN = /\bCHECKOUT\b/i;
 
 function isElementStyleVisible(element, windowRef) {
@@ -107,14 +113,23 @@ function getStableNodeIndex(node, allNodes) {
 function compareSuggestionNodes(left, right) {
   const leftRect = left?.rect || {};
   const rightRect = right?.rect || {};
+  const leftY = Number.isFinite(leftRect.top) ? leftRect.top : 0;
+  const rightY = Number.isFinite(rightRect.top) ? rightRect.top : 0;
+  const smallestHeight = Math.min(
+    Number.isFinite(leftRect.height) ? leftRect.height : 0,
+    Number.isFinite(rightRect.height) ? rightRect.height : 0
+  );
+  const rowTolerance = Math.max(4, smallestHeight * 0.5);
+  if (Math.abs(leftY - rightY) > rowTolerance) {
+    return leftY - rightY;
+  }
+
   const leftX = Number.isFinite(leftRect.left) ? leftRect.left : 0;
   const rightX = Number.isFinite(rightRect.left) ? rightRect.left : 0;
   if (leftX !== rightX) {
     return leftX - rightX;
   }
 
-  const leftY = Number.isFinite(leftRect.top) ? leftRect.top : 0;
-  const rightY = Number.isFinite(rightRect.top) ? rightRect.top : 0;
   if (leftY !== rightY) {
     return leftY - rightY;
   }
@@ -179,7 +194,11 @@ export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Ru
     return [];
   }
 
-  const allSuggestionNodes = Array.from(documentRef.querySelectorAll(SUGGESTION_SELECTOR));
+  const turn = findModernTurnSurface(documentRef, windowRef);
+  // The three slots are one route surface. A player-card copy is not another dart.
+  const suggestionRoot = turn?.turnContainer || documentRef;
+  const allSuggestionNodes = Array.from(suggestionRoot.querySelectorAll(SUGGESTION_SELECTOR))
+    .filter((node) => !turn || isMatchNodeVisible(node, windowRef));
   const suggestionAnalyses = allSuggestionNodes.map((node) =>
     analyzeSuggestionNode(node, allSuggestionNodes, windowRef, x01Rules)
   );

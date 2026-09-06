@@ -171,7 +171,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   });
 
   defaultFeatureDefinitions.forEach((definition) => {
-    const expectedEnabled = true;
+    const expectedEnabled = false;
     assert.equal(config.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(config, definition.configKey).enabled,
@@ -180,7 +180,7 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
     );
   });
 
-  assert.equal(config.features.checkoutScoreHighlight.enabled, true);
+  assert.equal(config.features.checkoutScoreHighlight.enabled, false);
   assert.equal(config.features.checkoutScoreHighlight.effect, "fade-blink");
   assert.equal(config.features.checkoutScoreHighlight.colorTheme, "56, 189, 248");
   assert.equal(config.features.checkoutTargetHighlights.visualPreset, "fast-blink");
@@ -223,21 +223,21 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.x01RemainingScoreBar.barSize, "breit");
   assert.equal(config.features.x01RemainingScoreBar.effect, "previous-score-trail");
   assert.equal(config.features.botBoardStyle.scope, "all-match-boards");
-  assert.equal(config.features.themes.x01.enabled, true);
-  assert.equal(config.features.themes.gotcha.enabled, true);
+  assert.equal(config.features.themes.x01.enabled, false);
+  assert.equal(config.features.themes.gotcha.enabled, false);
   assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
   assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
   assert.equal(config.features.themes.gotcha.deltaItalic, true);
-  assert.equal(config.features.themes.x01TwoPlayer.enabled, true);
+  assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
   assert.equal(config.features.themes.x01TwoPlayer.visualStyle, "studio");
   assert.equal(config.features.themes.x01TwoPlayer.colorScheme, "studio-mint");
   assert.equal(config.features.themes.x01TwoPlayer.activePlayerEmphasis, "standard");
   assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "tv");
   assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "name-only");
   assert.equal(config.features.themes.x01TwoPlayer.playerNameLayout, "single-line");
-  assert.equal(config.features.themes.shanghai.enabled, true);
-  assert.equal(config.features.themes.cricket.enabled, true);
-  assert.equal(config.features.themes.globalTypography.enabled, true);
+  assert.equal(config.features.themes.shanghai.enabled, false);
+  assert.equal(config.features.themes.cricket.enabled, false);
+  assert.equal(config.features.themes.globalTypography.enabled, false);
   assert.equal(config.features.themes.globalTypography.fontPreset, "aldrich");
   assert.deepEqual(config.features.themes.globalTypography.applyTo, ["scores", "throws", "names"]);
   assert.equal(config.features.themes.globalTypography.turnDartStyle, "image");

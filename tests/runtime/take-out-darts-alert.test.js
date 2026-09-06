@@ -15,6 +15,8 @@ import {
   OVERLAY_ROOT_CLASS,
 } from "../../src/features/take-out-darts-alert/style.js";
 import { FakeDocument, useHtmlCollectionChildren } from "./fake-dom.js";
+import { initializeTakeOutDartsAlert } from "../../src/features/take-out-darts-alert/index.js";
+import { createDomGuards } from "../../src/core/dom-guards.js";
 
 function createSingleNodeTreeWalker(nodeOrNull) {
   let consumed = false;
@@ -28,6 +30,77 @@ function createSingleNodeTreeWalker(nodeOrNull) {
     },
   };
 }
+
+function createPersistentTakeoutNotice(documentRef) {
+  const host = documentRef.createElement("div");
+  host.id = "adt-takeout";
+  const panel = documentRef.createElement("div");
+  panel.classList.add("adt-takeout-panel");
+  panel.textContent = "Removing Darts";
+  host.appendChild(panel);
+  documentRef.body.appendChild(host);
+  documentRef.createTreeWalker = (_root, nodeFilter) =>
+    createSingleNodeTreeWalker(nodeFilter === 4
+      ? { nodeValue: panel.textContent, parentElement: panel }
+      : null);
+  return { host, panel };
+}
+
+test("take-out-darts-alert ignores the closed GUI panel in text and legacy selector scans", () => {
+  const documentRef = new FakeDocument();
+  const { host, panel } = createPersistentTakeoutNotice(documentRef);
+  const state = createTakeOutDartsAlertState();
+
+  for (const legacySelector of [false, true]) {
+    panel.classList.toggle("adt-remove", legacySelector);
+    requestImmediateFallbackScan(state);
+    updateTakeOutDartsAlert({ documentRef, state });
+    assert.equal(host.classList.contains(HIDDEN_NOTICE_CLASS), false);
+    assert.equal(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`), null);
+  }
+});
+
+test("take-out-darts-alert follows GUI open and close attributes without text or game-state changes", () => {
+  const documentRef = new FakeDocument();
+  const { host, panel } = createPersistentTakeoutNotice(documentRef);
+  let observer;
+  const cleanup = initializeTakeOutDartsAlert({
+    documentRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: {
+        registerMutationObserver(options) {
+          observer = options;
+          return {};
+        },
+      },
+    },
+    helpers: {
+      createRafScheduler: (callback) => ({ schedule: callback, cancel() {} }),
+    },
+  });
+
+  assert.equal(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`), null);
+  assert.equal(observer.observeOptions.attributes, true);
+  assert.ok(observer.observeOptions.attributeFilter.includes("data-open"));
+
+  for (const open of [true, true, false, true, false, true]) {
+    if (open) {
+      host.setAttribute("data-open", "");
+    } else {
+      host.removeAttribute("data-open");
+    }
+    observer.callback([{ type: "attributes", attributeName: "data-open", target: host }]);
+    assert.equal(Boolean(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`)), open);
+    assert.equal(host.classList.contains(HIDDEN_NOTICE_CLASS), open);
+    assert.equal(documentRef.body.classList.contains(HIDDEN_NOTICE_CLASS), false);
+    assert.equal(panel.textContent, "Removing Darts");
+  }
+
+  cleanup();
+  assert.equal(host.classList.contains(HIDDEN_NOTICE_CLASS), false);
+  assert.equal(documentRef.body.querySelector(`.${OVERLAY_ROOT_CLASS}`), null);
+});
 
 test("take-out-darts-alert hides the host notice and mounts an isolated overlay", () => {
   const documentRef = new FakeDocument();

@@ -11,7 +11,8 @@ import {
   AUTODARTS_TAKEOUT_NOTICE_TEXTS,
 } from "../../shared/autodarts-doc-terms.js";
 
-const PRIMARY_SELECTOR = ".adt-remove";
+const TAKEOUT_HOST_SELECTOR = "#adt-takeout";
+const PRIMARY_SELECTOR = `.adt-remove, ${TAKEOUT_HOST_SELECTOR}`;
 const XCONFIG_ROUTE_PATH = "/ad-xconfig";
 const XCONFIG_ROUTE_HASH = "#ad-xconfig";
 const XCONFIG_SCOPE_SELECTOR = [
@@ -112,6 +113,12 @@ function isInsideXConfigScope(node) {
   return Boolean(node.closest(XCONFIG_SCOPE_SELECTOR));
 }
 
+function isInactiveTakeoutNotice(node) {
+  // The new GUI keeps the notice text mounted even while the panel is closed.
+  const host = node?.closest?.(TAKEOUT_HOST_SELECTOR);
+  return host?.getAttribute("data-open") === null;
+}
+
 export function classifyRemoveDartsNoticeText(value) {
   const normalized = normalizeText(value);
   if (!normalized) {
@@ -142,7 +149,7 @@ function collectPrimaryNoticesInRoots(roots = []) {
     }
 
     root.querySelectorAll(PRIMARY_SELECTOR).forEach((node) => {
-      if (!isInsideXConfigScope(node)) {
+      if (!isInsideXConfigScope(node) && !isInactiveTakeoutNotice(node)) {
         notices.add(node);
       }
     });
@@ -347,7 +354,7 @@ function collectFallbackNotices(documentRef, state) {
     while (node && budget > 0) {
       budget -= 1;
       const parentElement = node.parentElement || null;
-      if (isInsideXConfigScope(parentElement)) {
+      if (isInsideXConfigScope(parentElement) || isInactiveTakeoutNotice(parentElement)) {
         node = walker.nextNode();
         continue;
       }
@@ -431,6 +438,11 @@ function onlyContainsCurrentBranch(parentNode, currentNode) {
 function resolveVisibleNoticeHost(noticeNode) {
   if (!noticeNode?.parentElement) {
     return null;
+  }
+
+  const takeoutHost = noticeNode.closest?.(TAKEOUT_HOST_SELECTOR);
+  if (takeoutHost) {
+    return takeoutHost;
   }
 
   const parentNode = noticeNode.parentElement;

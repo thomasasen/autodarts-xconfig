@@ -1234,7 +1234,7 @@ class FakeDocument extends FakeEventTarget {
       ["/lobbies", "Lobbies"],
       ["/boards", "Boards"],
       ["/matches", "Matches"],
-      ["/statistics", "Statistik"],
+      ["/stats", "Stats"],
       ["/settings", "Settings"],
     ].forEach(([href, label]) => {
       this.sidebar.appendChild(createSidebarLink(this, href, label));

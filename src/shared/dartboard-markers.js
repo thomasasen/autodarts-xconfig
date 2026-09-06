@@ -61,9 +61,21 @@ export function collectBoardMarkers(documentRef, options = {}) {
     return [];
   }
 
-  return Array.from(boardRoot.querySelectorAll("circle")).filter((node) => {
-    return isLikelyBoardMarker(node);
+  const boardLayerParent = board?.svg?.parentElement || null;
+  const siblingSvgLayers = Array.from(boardLayerParent?.children || []).filter((node) => {
+    return String(node?.tagName || node?.nodeName || "").toLowerCase() === "svg";
   });
+  const markerRoots = siblingSvgLayers.length > 1 ? siblingSvgLayers : [boardRoot];
+  const seen = new Set();
+
+  return markerRoots.flatMap((root) => Array.from(root.querySelectorAll("circle")))
+    .filter((node) => {
+      if (seen.has(node) || !isLikelyBoardMarker(node)) {
+        return false;
+      }
+      seen.add(node);
+      return true;
+    });
 }
 
 export function buildMarkerKey(node) {

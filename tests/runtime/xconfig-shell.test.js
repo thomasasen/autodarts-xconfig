@@ -210,18 +210,21 @@ function createDeferred() {
   };
 }
 
+function changeSwitch(documentRef, selector, enabled) {
+  const input = documentRef.querySelector(selector);
+  assert.ok(input, `missing switch ${selector}`);
+  assert.equal(input.getAttribute("role"), "switch");
+  assert.ok(input.getAttribute("aria-label"));
+  input.checked = enabled;
+  input.dispatchEvent(new FakeEvent("change", { bubbles: true }));
+}
+
 function clickFeatureToggle(documentRef, featureKey, enabled) {
-  const selector = `[data-adxconfig-action='set-feature'][data-feature-key='${featureKey}'][data-feature-enabled='${enabled ? "true" : "false"}']`;
-  const button = documentRef.querySelector(selector);
-  assert.ok(button, `missing toggle button for ${featureKey}`);
-  button.click();
+  changeSwitch(documentRef, `[data-adxconfig-feature-toggle='true'][data-feature-key='${featureKey}']`, enabled);
 }
 
 function clickSettingToggle(documentRef, featureKey, settingKey, enabled) {
-  const selector = `[data-adxconfig-action='set-setting-toggle'][data-feature-key='${featureKey}'][data-setting-key='${settingKey}'][data-setting-value='${enabled ? "true" : "false"}']`;
-  const button = documentRef.querySelector(selector);
-  assert.ok(button, `missing setting toggle button for ${featureKey}.${settingKey}`);
-  button.click();
+  changeSwitch(documentRef, `[data-adxconfig-setting='true'][data-feature-key='${featureKey}'][data-setting-key='${settingKey}']`, enabled);
 }
 
 function clickSelectSettingOption(documentRef, featureKey, settingKey, settingValue) {
@@ -293,9 +296,28 @@ function getUrlWithoutQuery(url) {
   return parsed.toString();
 }
 
-test("xConfig shell injects one menu entry, opens route and closes back safely", async () => {
+test("xConfig shell injects after Stats, clones its presentation, opens route and closes safely", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
+  const statsTemplate = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
+    .find((link) => String(link.getAttribute("href") || "") === "/stats");
+  assert.ok(statsTemplate);
+  statsTemplate.classList.remove("chakra-link");
+  statsTemplate.classList.add("autodarts-main-menu-item", "text-inactive");
+  const lobbiesLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
+    .find((link) => String(link.getAttribute("href") || "") === "/lobbies");
+  assert.ok(lobbiesLink);
+  lobbiesLink.className = "autodarts-main-menu-item text-active";
+  lobbiesLink.setAttribute("aria-current", "page");
+  lobbiesLink.setAttribute("data-status", "active");
+  lobbiesLink.__rect = { left: 20, width: 70, height: 64 };
+  documentRef.sidebar.__rect = { left: 10, width: 500, height: 64 };
+  const nativeIndicator = documentRef.createElement("div");
+  nativeIndicator.setAttribute("aria-hidden", "true");
+  nativeIndicator.classList.add("pointer-events-none", "absolute", "bottom-0");
+  nativeIndicator.style.left = "10px";
+  nativeIndicator.style.width = "70px";
+  documentRef.sidebar.appendChild(nativeIndicator);
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
@@ -311,19 +333,50 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
   assert.ok(menuButton);
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
   assert.equal(menuButton.getAttribute("data-adxconfig-action"), "open");
+  assert.equal(menuButton.getAttribute("aria-label"), "xConfig");
+  assert.equal(String(menuButton.querySelector(".ad-xconfig-menu-label")?.textContent || "").trim(), "xConfig");
+  assert.equal(menuButton.querySelector("svg"), null);
+  assert.equal(menuButton.querySelector(".ad-xconfig-menu-icon"), null);
   assert.ok(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID));
-  const boardsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
-    .find((link) => String(link.getAttribute("href") || "") === "/boards");
-  assert.ok(boardsLink);
-  assert.equal(boardsLink.nextElementSibling, menuButton);
-  assert.ok(menuButton.classList.contains("chakra-link"));
+  const statsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
+    .find((link) => String(link.getAttribute("href") || "") === "/stats");
+  assert.ok(statsLink);
+  assert.equal(statsLink.nextElementSibling, menuButton);
+  assert.ok(menuButton.classList.contains("autodarts-main-menu-item"));
+  assert.equal(menuButton.classList.contains("chakra-link"), false);
+  menuButton.__rect = { left: 390, width: 68, height: 64 };
 
   menuButton.click();
   await waitForShellOpen(windowRef, documentRef);
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "#ad-xconfig");
+  assert.equal(menuButton.getAttribute("aria-current"), "page");
+  assert.equal(menuButton.className, "autodarts-main-menu-item text-active");
+  assert.equal(lobbiesLink.className, "autodarts-main-menu-item text-inactive");
+  assert.equal(lobbiesLink.getAttribute("aria-current"), null);
+  assert.equal(lobbiesLink.getAttribute("data-status"), null);
+  assert.equal(nativeIndicator.style.left, "380px");
+  assert.equal(nativeIndicator.style.width, "68px");
   assert.equal(documentRef.variantElement.style.display, "none");
+
+  const replacementIndicator = documentRef.createElement("div");
+  replacementIndicator.setAttribute("aria-hidden", "true");
+  replacementIndicator.classList.add("pointer-events-none", "absolute", "bottom-0");
+  replacementIndicator.style.left = "10px";
+  replacementIndicator.style.width = "70px";
+  nativeIndicator.remove();
+  documentRef.sidebar.appendChild(replacementIndicator);
+  documentRef.flushMutations([{
+    target: documentRef.sidebar,
+    addedNodes: [replacementIndicator],
+    removedNodes: [nativeIndicator],
+  }]);
+  await waitFor(() => replacementIndicator.style.left === "380px");
+
+  assert.equal(menuButton.className, "autodarts-main-menu-item text-active");
+  assert.equal(lobbiesLink.getAttribute("aria-current"), null);
+  assert.equal(replacementIndicator.style.width, "68px");
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   assert.ok(panelHost);
@@ -334,6 +387,13 @@ test("xConfig shell injects one menu entry, opens route and closes back safely",
 
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "");
+  assert.equal(menuButton.getAttribute("aria-current"), null);
+  assert.equal(menuButton.className, "autodarts-main-menu-item text-inactive");
+  assert.equal(lobbiesLink.className, "autodarts-main-menu-item text-active");
+  assert.equal(lobbiesLink.getAttribute("aria-current"), "page");
+  assert.equal(lobbiesLink.getAttribute("data-status"), "active");
+  assert.equal(replacementIndicator.style.left, "10px");
+  assert.equal(replacementIndicator.style.width, "70px");
   assert.equal(panelHost.style.display, "none");
   assert.equal(documentRef.variantElement.style.display, "");
 
@@ -491,12 +551,12 @@ test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => 
 
   const label = repaired.querySelector(".ad-xconfig-menu-label");
   assert.ok(label);
-  assert.equal(String(label.textContent || "").trim(), "AD xConfig");
+  assert.equal(String(label.textContent || "").trim(), "xConfig");
 
-  const boardsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
-    .find((link) => String(link.getAttribute("href") || "") === "/boards");
-  assert.ok(boardsLink);
-  assert.equal(boardsLink.nextElementSibling, repaired);
+  const statsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
+    .find((link) => String(link.getAttribute("href") || "") === "/stats");
+  assert.ok(statsLink);
+  assert.equal(statsLink.nextElementSibling, repaired);
 
   runtime.stop();
 });
@@ -737,7 +797,7 @@ test("xConfig settings modal keeps container identity while applying setting upd
   runtime.stop();
 });
 
-test("xConfig menu injection stays idempotent and label collapses on narrow sidebar", async () => {
+test("xConfig menu injection stays idempotent and keeps its text visible without an icon", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -752,15 +812,12 @@ test("xConfig menu injection stays idempotent and label collapses on narrow side
 
   documentRef.sidebar.__rect = { width: 96, height: 720 };
   documentRef.flushMutations();
-  await waitFor(() => label.style.display === "none");
-
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
-  assert.equal(label.style.display, "none");
+  assert.equal(label.style.display, "inline");
+  assert.equal(documentRef.querySelector("#ad-xconfig-menu-item .ad-xconfig-menu-icon"), null);
 
   documentRef.sidebar.__rect = { width: 260, height: 720 };
   documentRef.flushMutations();
-  await waitFor(() => label.style.display === "inline");
-
   assert.equal(label.style.display, "inline");
   runtime.stop();
 });
@@ -1249,17 +1306,12 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   let themesTab = documentRef.getElementById("ad-xconfig-tab-themes");
   let animationsTab = documentRef.getElementById("ad-xconfig-tab-animations");
   const tablist = documentRef.querySelector(".ad-xconfig-tabs");
-  const tabsTitle = documentRef.getElementById("ad-xconfig-tabs-title");
-  const tabsCopy = documentRef.getElementById("ad-xconfig-tabs-copy");
   const tabpanel = documentRef.querySelector(".ad-xconfig-content");
   assert.equal(tablist?.getAttribute("role"), "tablist");
-  assert.equal(tablist?.getAttribute("aria-labelledby"), "ad-xconfig-tabs-title");
-  assert.equal(tablist?.getAttribute("aria-describedby"), "ad-xconfig-tabs-copy");
-  assert.equal(tabsTitle?.textContent, "Wähle deinen Bereich");
-  assert.equal(
-    tabsCopy?.textContent,
-    "Wechsle zwischen Themen für Farben und Layout sowie Animationen für Effekte und Komfortfunktionen."
-  );
+  assert.equal(tablist?.getAttribute("aria-label"), "Bereich wählen");
+  assert.equal(documentRef.getElementById("ad-xconfig-tabs-copy"), null);
+  assert.equal(themesTab?.querySelector(".ad-xconfig-tab-title")?.textContent, "Themen");
+  assert.equal(animationsTab?.querySelector(".ad-xconfig-tab-title")?.textContent, "Animationen");
   assert.equal(themesTab?.getAttribute("role"), "tab");
   assert.equal(themesTab?.getAttribute("aria-selected"), "true");
   assert.equal(animationsTab?.getAttribute("aria-selected"), "false");
@@ -1448,6 +1500,61 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   runtime.stop();
 });
 
+test("xConfig shell marks every theme and pending animation as deprecated", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const assertCardStatus = (featureKey, expectedStatus) => {
+    const card = documentRef.querySelector(
+      `.ad-xconfig-card[data-feature-key='${featureKey}']`
+    );
+    assert.ok(card, `missing card ${featureKey}`);
+    assert.equal(card.getAttribute("data-design-status"), expectedStatus);
+    const badge = card.querySelector("[data-adxconfig-status-badge='deprecated']");
+    if (expectedStatus === "deprecated") {
+      assert.equal(badge?.textContent, "Deprecated");
+    } else {
+      assert.equal(badge, null);
+    }
+  };
+
+  [
+    "theme-global-typography",
+    "bot-board-style",
+    "theme-bull-off",
+    "theme-x01",
+    "theme-gotcha",
+    "theme-x01-2player",
+    "theme-cricket",
+    "theme-shanghai",
+    "theme-bermuda",
+  ].forEach((featureKey) => assertCardStatus(featureKey, "deprecated"));
+
+  const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
+  assert.match(styleText, /\.ad-xconfig-status-badge--deprecated\{[^}]*border:[^}]*background:[^}]*color:/);
+
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
+
+  documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
+    const featureKey = String(card.getAttribute("data-feature-key") || "");
+    const expectedStatus = ["checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert"].includes(
+      featureKey
+    )
+      ? "ready"
+      : "deprecated";
+    assertCardStatus(featureKey, expectedStatus);
+  });
+
+  runtime.stop();
+});
+
 test("xConfig style checkout suggestions renders live preview and style option samples", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -1536,6 +1643,24 @@ test("xConfig style checkout suggestions renders live preview and style option s
     ),
     true
   );
+
+  runtime.stop();
+});
+
+test("xConfig shell styles its panel as the scroll container for fixed-height Autodarts layouts", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  await waitForMenuButton(documentRef);
+  const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
+
+  assert.equal(
+    styleText.includes("height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable"),
+    true
+  );
+  assert.equal(styleText.includes(".ad-xconfig-page{box-sizing:border-box;min-height:100%"), true);
 
   runtime.stop();
 });
@@ -2249,7 +2374,7 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
       const expectedRecommendedState = runtime.listFeatures().every((feature) => {
         const toggleValue = config.featureToggles[feature.configKey];
         const featureConfig = getFeatureConfigValue(config, feature.configKey);
-        return toggleValue === true && featureConfig?.enabled === true;
+        return toggleValue === false && featureConfig?.enabled === false;
       });
 
       return (
@@ -2359,8 +2484,8 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   assert.ok(displayModeOptionList);
   const displayModeInputWrap = displayModeOptionList.closest(".ad-xconfig-setting-input");
   assert.ok(displayModeInputWrap);
-  assert.equal(displayModeInputWrap.children[0].classList.contains("ad-xconfig-note"), true);
-  assert.equal(displayModeInputWrap.children[1].classList.contains("ad-xconfig-option-list"), true);
+  assert.ok(displayModeInputWrap.closest(".ad-xconfig-setting-row").querySelector(".ad-xconfig-setting-copy .ad-xconfig-note"));
+  assert.equal(displayModeInputWrap.children[0].classList.contains("ad-xconfig-option-list"), true);
 
   clickSelectSettingOption(documentRef, "theme-x01", "backgroundDisplayMode", "tile");
   await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundDisplayMode === "tile");
@@ -3791,68 +3916,14 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
 
   const styleNode = documentRef.getElementById("ad-xconfig-shell-style");
   assert.ok(styleNode);
-  assert.equal(String(styleNode.textContent || "").includes("flex-direction:column"), true);
-  assert.equal(
-    String(styleNode.textContent || "").includes(".ad-xconfig-card-head{display:flex;justify-content:space-between;align-items:flex-start"),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes(".ad-xconfig-card--theme-global{grid-column:1/-1;min-height:16.5rem"),
-    true
-  );
-  assert.equal(String(styleNode.textContent || "").includes(".ad-xconfig-card-global-grid"), false);
-  assert.equal(
-    String(styleNode.textContent || "").includes(".ad-xconfig-onoff-btn + .ad-xconfig-onoff-btn"),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes(".ad-xconfig-onoff{position:relative;display:inline-flex;align-self:flex-start"),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes("height:2.2rem;min-height:2.2rem"),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes("height:100%;padding:0 .45rem"),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes("display:flex;align-items:center;justify-content:center"),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes('.ad-xconfig-onoff-btn[data-active="false"]'),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes('.ad-xconfig-onoff-btn--off[data-active="true"]'),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes(
-      '.ad-xconfig-card[data-preview-kind="avg-trend-arrow"] .ad-xconfig-card-bg img{right:-20%;object-position:left bottom'
-    ),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes(
-      '.ad-xconfig-card[data-preview-kind="checkout-target-highlights"] .ad-xconfig-card-bg img{object-position:right center'
-    ),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes(
-      '.ad-xconfig-card[data-preview-kind="take-out-darts-alert"] .ad-xconfig-card-bg img{top:3%;right:3%;width:50%;height:94%;object-fit:contain'
-    ),
-    true
-  );
-  assert.equal(
-    String(styleNode.textContent || "").includes(
-      '.ad-xconfig-card[data-preview-kind="turn-score-counter"] .ad-xconfig-card-bg img{top:18%;right:-15%;object-position:left top'
-    ),
-    true
-  );
+  const globalCard = documentRef.querySelector(".ad-xconfig-card--theme-global");
+  assert.ok(globalCard);
+  const preview = globalCard.querySelector(".ad-xconfig-card-bg");
+  const content = globalCard.querySelector(".ad-xconfig-card-content");
+  assert.equal(preview.parentNode, content.parentNode);
+  assert.equal(content.querySelector(".ad-xconfig-card-bg"), null);
+  assert.equal(globalCard.querySelectorAll("[role='switch']").length, 1);
+  assert.equal(globalCard.querySelectorAll(".ad-xconfig-onoff-btn").length, 0);
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
@@ -4669,18 +4740,18 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   await waitForShellOpen(secondWindow, secondDocument);
 
   const restoredThemeToggle = secondDocument.querySelector(
-    "[data-adxconfig-action='set-feature'][data-feature-key='theme-x01'][data-feature-enabled='true']"
+    "[data-adxconfig-feature-toggle='true'][data-feature-key='theme-x01']"
   );
   assert.ok(restoredThemeToggle);
-  assert.equal(restoredThemeToggle.getAttribute("data-active"), "true");
+  assert.equal(restoredThemeToggle.checked, true);
 
   secondDocument.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(secondDocument, "animations");
   const restoredX01ProgressToggle = secondDocument.querySelector(
-    "[data-adxconfig-action='set-feature'][data-feature-key='x01-remaining-score-bar'][data-feature-enabled='true']"
+    "[data-adxconfig-feature-toggle='true'][data-feature-key='x01-remaining-score-bar']"
   );
   assert.ok(restoredX01ProgressToggle);
-  assert.equal(restoredX01ProgressToggle.getAttribute("data-active"), "true");
+  assert.equal(restoredX01ProgressToggle.checked, true);
   const openSecondSettings = secondDocument.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
   );
@@ -4727,3 +4798,36 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   secondRuntime.stop();
 });
 
+
+
+test("xConfig switches save once per change and preserve the checked setting after reopening", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  let writes = 0;
+  const setItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = (key, value) => {
+    if (key === CONFIG_STORAGE_KEY) writes += 1;
+    setItem(key, value);
+  };
+  clickFeatureToggle(documentRef, "theme-x01", true);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.enabled === true);
+  assert.equal(writes, 1);
+  const open = () => documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']").click();
+  open();
+  await waitForSettingsModal(documentRef);
+  writes = 0;
+  clickSettingToggle(documentRef, "theme-x01", "showAvg", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.showAvg === false);
+  assert.equal(writes, 1);
+  documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
+  await waitFor(() => !documentRef.querySelector("[data-adxconfig-modal='true']"));
+  open();
+  await waitForSettingsModal(documentRef);
+  assert.equal(documentRef.querySelector("[data-adxconfig-setting='true'][data-setting-key='showAvg']").checked, false);
+  runtime.stop();
+});

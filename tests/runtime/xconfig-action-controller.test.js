@@ -230,7 +230,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
     "install",
     ["confirm", "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht alle gespeicherten Theme-Bilder."],
     "reset",
-    ["confirm", "Bist du sicher? Die empfohlenen Standards aktivieren alle Module und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."],
+    ["confirm", "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."],
     "defaults",
     ["clear-theme", "x01"],
     ["upload-theme", "x01"],

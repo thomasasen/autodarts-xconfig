@@ -79,10 +79,10 @@ test("fresh runtime initialization persists the recommended profile", async () =
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
   assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
   assert.equal(storedConfig.features.dartMarkerReplacer.design, "germangiant");
-  assert.equal(storedConfig.features.themes.globalTypography.enabled, true);
-  assert.equal(storedConfig.features.themes.x01TwoPlayer.enabled, true);
+  assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
+  assert.equal(storedConfig.features.themes.x01TwoPlayer.enabled, false);
   defaultFeatureDefinitions.forEach((definition) => {
-    assert.equal(storedConfig.featureToggles[definition.configKey], true, definition.configKey);
+    assert.equal(storedConfig.featureToggles[definition.configKey], false, definition.configKey);
   });
 
   runtime.stop();
@@ -165,6 +165,8 @@ test("runtime public config API persists updates and survives feature toggles", 
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
+
+  await runtime.setFeatureEnabled("checkout-score-highlight", true);
 
   await runtime.saveConfig({
     features: {
@@ -480,8 +482,8 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   const snapshot = await runtime.applyRecommendedDefaults();
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
 
-  assert.equal(snapshot.features["checkout-score-highlight"].enabled, true);
-  assert.equal(storedConfig.features.checkoutScoreHighlight.enabled, true);
+  assert.equal(snapshot.features["checkout-score-highlight"].enabled, false);
+  assert.equal(storedConfig.features.checkoutScoreHighlight.enabled, false);
   assert.equal(storedConfig.features.checkoutTargetHighlights.visualPreset, "fast-blink");
   assert.equal(storedConfig.features.checkoutTargetHighlights.colorTheme, "violet");
   assert.equal(storedConfig.features.checkoutSuggestionStyles.style, "stripe");
@@ -522,7 +524,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   );
 
   defaultFeatureDefinitions.forEach((definition) => {
-    const expectedEnabled = true;
+    const expectedEnabled = false;
     assert.equal(storedConfig.featureToggles[definition.configKey], expectedEnabled, definition.configKey);
     assert.equal(
       getStoredFeatureConfig(storedConfig, definition.configKey).enabled,

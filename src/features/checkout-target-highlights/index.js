@@ -7,6 +7,8 @@ import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } 
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import {
   mapRouteSegmentsToBoardTargets,
+  MODERN_CHECKOUT_SUGGESTION_SELECTOR,
+  SUGGESTION_SELECTOR,
 } from "../x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
@@ -16,7 +18,7 @@ const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const TRANSIENT_ROUTE_RETENTION_MS = 1500;
 const CHECKOUT_SEMANTIC_ATTRIBUTE_SELECTORS = Object.freeze([
   "#ad-ext-game-variant",
-  ".suggestion",
+  SUGGESTION_SELECTOR,
   "#ad-ext-turn",
   ".ad-ext-turn-throw",
   ".ad-ext-turn-points",
@@ -124,7 +126,11 @@ export function resolveCheckoutBoardMutationReaction(mutations = [], context = {
     };
   }
 
-  const watchedNodes = [context.board?.svg || null, context.board?.group || null].filter(Boolean);
+  const watchedNodes = [
+    context.board?.svg || null,
+    context.board?.group || null,
+    context.board?.overlayGroup || null,
+  ].filter(Boolean);
   let shouldSchedule = false;
   let shouldInvalidateBoardCache = false;
 
@@ -408,13 +414,16 @@ function buildDebugSummary(payload = {}) {
   }`;
 }
 
-function isX01Active({ gameState, documentRef, variantRules }) {
+function isX01Active({ gameState, documentRef, windowRef, variantRules }) {
   if (gameState && typeof gameState.isX01Variant === "function") {
-    return gameState.isX01Variant({
+    const gameStateIsX01 = gameState.isX01Variant({
       allowMissing: false,
       allowEmpty: false,
       allowNumeric: true,
     });
+    if (gameStateIsX01) {
+      return true;
+    }
   }
 
   if (!documentRef || typeof documentRef.getElementById !== "function") {
@@ -425,11 +434,19 @@ function isX01Active({ gameState, documentRef, variantRules }) {
   }
 
   const variantNode = documentRef.getElementById("ad-ext-game-variant");
-  return variantRules.isX01VariantText(variantNode?.textContent || "", {
-    allowMissing: false,
-    allowEmpty: false,
-    allowNumeric: true,
-  });
+  if (
+    variantRules.isX01VariantText(variantNode?.textContent || "", {
+      allowMissing: false,
+      allowEmpty: false,
+      allowNumeric: true,
+    })
+  ) {
+    return true;
+  }
+
+  return Array.from(
+    documentRef.querySelectorAll?.(MODERN_CHECKOUT_SUGGESTION_SELECTOR) || []
+  ).some((node) => isDebugNodeVisible(node, windowRef));
 }
 
 function buildRenderSignature({
@@ -611,10 +628,11 @@ export function initializeCheckoutTargetHighlights(context = {}) {
 
   function clearCurrentOverlay() {
     const board = getBoard();
-    if (!board?.group) {
+    const overlayGroup = board?.overlayGroup || board?.group;
+    if (!overlayGroup) {
       return;
     }
-    const overlay = board.group.querySelector?.(`#${OVERLAY_ID}`) || null;
+    const overlay = overlayGroup.querySelector?.(`#${OVERLAY_ID}`) || null;
     if (overlay) {
       clearOverlay(overlay);
     }
@@ -707,6 +725,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     const active = isX01Active({
       gameState,
       documentRef,
+      windowRef,
       variantRules,
     });
     const variantText = String(

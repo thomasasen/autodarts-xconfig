@@ -14,7 +14,12 @@ import {
   resolveZoomSpeedConfig,
 } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
-import { resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
+import { NATIVE_BOARD_SELECTOR, resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
+import {
+  MODERN_MATCH_SEMANTIC_SELECTORS,
+  findModernTurnSurface,
+  readModernMatchSurface,
+} from "../shared/x01-match-surface.js";
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -31,6 +36,7 @@ const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
   ".ad-ext-turn-throw",
 ]);
 const ZOOM_STRUCTURE_TARGET_SELECTORS = Object.freeze([
+  NATIVE_BOARD_SELECTOR,
   "svg",
   ".showAnimations",
   ".ad-ext-theme-board-canvas",
@@ -39,6 +45,8 @@ const ZOOM_STRUCTURE_TARGET_SELECTORS = Object.freeze([
   ".ad-ext-theme-content-board",
 ]);
 const ZOOM_SEMANTIC_CONTAINER_SELECTORS = Object.freeze([
+  ...MODERN_MATCH_SEMANTIC_SELECTORS,
+  ".text-checkout-suggestion",
   ".suggestion",
   ".ad-ext-player-score",
   "#ad-ext-turn",
@@ -55,7 +63,12 @@ function isThrowHistoryClickTarget(targetNode) {
     return false;
   }
 
-  return THROW_HISTORY_CLICK_SELECTORS.some((selector) => Boolean(targetNode.closest(selector)));
+  if (THROW_HISTORY_CLICK_SELECTORS.some((selector) => Boolean(targetNode.closest(selector)))) {
+    return true;
+  }
+  const surface = findModernTurnSurface(targetNode.ownerDocument);
+  return Boolean(surface?.throwRows.some((row) =>
+    row.classList?.contains("cursor-pointer") && row.contains(targetNode)));
 }
 
 function resolveZoomLevel(zoomLevel) {
@@ -101,6 +114,10 @@ function getTouchedMutationNodes(mutation) {
   Array.from(mutation?.addedNodes || []).forEach(pushNode);
   Array.from(mutation?.removedNodes || []).forEach(pushNode);
   return nodes;
+}
+
+function containsMatchingDescendant(node, selectors) {
+  return selectors.some((selector) => Boolean(node?.querySelector?.(selector)));
 }
 
 function isDirectWatchedNodeMutation(mutation, watchedNodes = []) {
@@ -162,7 +179,8 @@ function shouldInvalidateBoardSurfaceForTvBoardZoomMutation(mutation, watchedNod
   }
 
   return getTouchedMutationNodes(mutation).some((node) =>
-    nodeOrAncestorMatchesAnySelector(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
+    nodeOrAncestorMatchesAnySelector(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS) ||
+    containsMatchingDescendant(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
   );
 }
 
@@ -182,6 +200,11 @@ export function resolveTvBoardZoomMutationReaction(mutations = [], context = {})
     context.zoomState?.zoomedElement || null,
     context.zoomState?.zoomHost || null,
   ].filter(Boolean);
+  const semanticNodes = [
+    context.matchSurface?.turnContainer,
+    context.matchSurface?.playerCard,
+    context.matchSurface?.variantNode,
+  ].filter(Boolean);
 
   let shouldSchedule = false;
   let shouldInvalidateBoardCache = false;
@@ -199,6 +222,7 @@ export function resolveTvBoardZoomMutationReaction(mutations = [], context = {})
     if (mutationType === "attributes") {
       if (
         isDirectWatchedNodeMutation(mutation, watchedNodes) ||
+        isDescendantWatchedNodeMutation(mutation, semanticNodes) ||
         nodeOrAncestorMatchesAnySelector(mutation.target, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
       ) {
         shouldSchedule = true;
@@ -218,9 +242,10 @@ export function resolveTvBoardZoomMutationReaction(mutations = [], context = {})
         mutation,
         watchedNodes
       );
-      const touchesSemanticSurface = getTouchedMutationNodes(mutation).some((node) =>
-        nodeOrAncestorMatchesAnySelector(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
-      );
+      const touchesSemanticSurface = isDescendantWatchedNodeMutation(mutation, semanticNodes) ||
+        getTouchedMutationNodes(mutation).some((node) =>
+          nodeOrAncestorMatchesAnySelector(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
+        );
       if (touchesSemanticSurface || invalidatesBoardSurface) {
         shouldSchedule = true;
       }
@@ -295,9 +320,10 @@ function isReusableBoardSurface(surface) {
   return true;
 }
 
-function hasActiveTurnSurface(documentRef) {
+function hasActiveTurnSurface(documentRef, matchSurface) {
   const turnNode = documentRef?.getElementById?.("ad-ext-turn") || null;
-  return Boolean(turnNode) && turnNode.isConnected !== false;
+  return (Boolean(turnNode) && turnNode.isConnected !== false) ||
+    Boolean(matchSurface?.turnContainer && matchSurface.variant === "X01");
 }
 
 function createDebugState(featureDebug) {
@@ -417,6 +443,7 @@ export function initializeTvBoardZoom(context = {}) {
   const boardCache = {
     surface: null,
   };
+  let lastMatchSurface = null;
   const debugState = createDebugState(featureDebug);
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
@@ -437,6 +464,14 @@ export function initializeTvBoardZoom(context = {}) {
   }
 
   let scheduler = null;
+  let holdTimerId = 0;
+
+  function clearHoldTimer() {
+    if (holdTimerId) {
+      windowRef.clearTimeout(holdTimerId);
+    }
+    holdTimerId = 0;
+  }
 
   function clearTransientResetTimer() {
     if (!zoomState.transientResetTimerId) {
@@ -507,8 +542,15 @@ export function initializeTvBoardZoom(context = {}) {
   }
 
   scheduler = schedulerFactory(() => {
-    if (!hasActiveTurnSurface(documentRef)) {
+    clearHoldTimer();
+    const matchSurface = readModernMatchSurface(documentRef, windowRef);
+    lastMatchSurface = matchSurface;
+    if (!hasActiveTurnSurface(documentRef, matchSurface)) {
       invalidateBoardCache();
+      markManualZoomPause(zoomState);
+      zoomState.lastTurnId = "";
+      zoomState.lastThrowCount = -1;
+      zoomState.manualPause = false;
       requestZoomReset("match-surface-inactive", {
         force: true,
         immediate: true,
@@ -536,7 +578,14 @@ export function initializeTvBoardZoom(context = {}) {
       documentRef,
       windowRef,
       featureConfig,
+      matchSurface,
     });
+    if (zoomState.holdUntilTs > Date.now()) {
+      holdTimerId = windowRef.setTimeout(() => {
+        holdTimerId = 0;
+        scheduler.schedule();
+      }, zoomState.holdUntilTs - Date.now());
+    }
     const lifecycleResetReason = String(zoomState.pendingLifecycleResetReason || "");
     zoomState.pendingLifecycleResetReason = "";
 
@@ -598,12 +647,19 @@ export function initializeTvBoardZoom(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+        // Host replacement can target the zoom container itself. Ignore only our
+        // attribute writes there; child-list changes must still rebind the SVG.
+        const externalMutations = mutations.filter((mutation) =>
+          resolveMutationType(mutation) !== "attributes" ||
+          !["class", "style"].includes(mutation.attributeName) ||
+          hasExternalDomMutation([mutation], isManagedNode));
+        if (!externalMutations.length) {
           return;
         }
-        const mutationReaction = resolveTvBoardZoomMutationReaction(mutations, {
+        const mutationReaction = resolveTvBoardZoomMutationReaction(externalMutations, {
           boardSurface: boardCache.surface,
           zoomState,
+          matchSurface: lastMatchSurface,
         });
         if (!mutationReaction.shouldSchedule) {
           return;
@@ -618,7 +674,7 @@ export function initializeTvBoardZoom(context = {}) {
         subtree: true,
         characterData: true,
         attributes: true,
-        attributeFilter: ["class", "style"],
+        attributeFilter: ["class", "style", "hidden", "aria-hidden"],
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -660,6 +716,7 @@ export function initializeTvBoardZoom(context = {}) {
           return;
         }
         markManualZoomPause(zoomState);
+        clearHoldTimer();
         clearTransientResetState();
         resetZoom(speedConfig, zoomState);
       },
@@ -679,6 +736,7 @@ export function initializeTvBoardZoom(context = {}) {
       type: "beforeunload",
       handler: () => {
         clearTransientResetState();
+        clearHoldTimer();
         zoomState.holdUntilTs = 0;
         zoomState.activeIntent = null;
         resetZoom(speedConfig, zoomState, true);
@@ -696,6 +754,7 @@ export function initializeTvBoardZoom(context = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
+    clearHoldTimer();
     try {
       unsubscribeGameState();
     } catch (_) {

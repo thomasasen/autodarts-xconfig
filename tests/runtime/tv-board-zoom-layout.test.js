@@ -11,10 +11,35 @@ import {
 } from "../../src/features/tv-board-zoom/logic.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 const ZOOM_LEVELS = Object.freeze([2.35, 2.75, 3.15]);
 const NUMBER_RING_PADDING_PX = 8;
 const NUMBER_RING_OUTER_OFFSET_RATIO = 0.2;
+
+test("native board keeps checkout segments and their number ring inside the fixed viewport at every zoom level", () => {
+  const f = createModernX01Fixture();
+  for (const segment of ["D18", "D5", "D11", "BULL"]) {
+    for (const zoomLevel of ZOOM_LEVELS) {
+      const data = buildZoomTransform({ ...f, targetNode: f.board, hostNode: f.host,
+        boardSvg: f.layers[0], zoomLevel, intent: { reason: "checkout", segment }, x01Rules });
+      assert.ok(data);
+      const transform = parseTransform(data.transform);
+      const point = resolveSegmentPoint(segment, f.layers[0], x01Rules);
+      const points = [point];
+      if (segment !== "BULL") points.push(resolveEstimatedNumberRingPoint(point, f.layers[0]));
+      for (const p of points) {
+        const local = projectViewBoxPointToTargetLocal(f.layers[0], f.board, p);
+        const screen = applyTransformToScreenPoint(f.board.getBoundingClientRect(), transform, local);
+        const viewport = f.host.getBoundingClientRect();
+        assert.ok(screen.x >= viewport.left && screen.x <= viewport.right,
+          `${segment} at ${zoomLevel}: x=${screen.x}`);
+        assert.ok(screen.y >= viewport.top && screen.y <= viewport.bottom,
+          `${segment} at ${zoomLevel}: y=${screen.y}`);
+      }
+    }
+  }
+});
 
 function createZoomState() {
   return {

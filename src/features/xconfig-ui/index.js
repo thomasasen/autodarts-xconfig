@@ -27,6 +27,7 @@ import {
   buildShellRenderSignature,
   parseShellRenderSignature,
 } from "./render-signature.js";
+import { createShellFocusController } from "./focus-controller.js";
 import { createShellRenderController } from "./render-controller.js";
 import { createShellRouteController } from "./route-controller.js";
 import {
@@ -61,7 +62,6 @@ import {
   retainElectricFilterDefs,
 } from "../../shared/electric-border-engine.js";
 import {
-  buildMenuIconElement,
   buildShellContent,
   createElement,
   openChangelog,
@@ -75,8 +75,7 @@ import {
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
-const MENU_LABEL = "AD xConfig";
-const MENU_LABEL_COLLAPSE_WIDTH = 120;
+const MENU_LABEL = "xConfig";
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
 const STYLE_ID = "ad-xconfig-shell-style";
@@ -119,6 +118,7 @@ const SIDEBAR_ROUTE_HINTS = new Set([
   "/boards",
   "/matches",
   "/tournaments",
+  "/stats",
   "/statistics",
   "/plus",
   "/settings",
@@ -203,6 +203,7 @@ function ensureXConfigShell(options = {}) {
     activeSettingsFeatureKey: "",
     hiddenDisplays: new Map(),
     contentHidden: false,
+    nativeNavigationPresentation: null,
     lastNonConfigRoute: initialLastNonConfigRoute,
     started: false,
     historyRestore: null,
@@ -649,8 +650,8 @@ function ensureXConfigShell(options = {}) {
     windowRef,
   });
 
+  const focusController = createShellFocusController({ documentRef, panelHostId: PANEL_HOST_ID });
   renderController = createShellRenderController({
-    buildMenuIconElement,
     buildShellContent,
     buildShellRenderSignature,
     createElement,
@@ -664,16 +665,14 @@ function ensureXConfigShell(options = {}) {
     isThemeFeature,
     menuItemId: MENU_ITEM_ID,
     menuLabel: MENU_LABEL,
-    menuLabelCollapseWidth: MENU_LABEL_COLLAPSE_WIDTH,
     onBeforeRender: () => {
+      focusController.beforeRender();
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
     },
     onAfterRender: () => {
       x01RemainingScoreBarPreviewController?.start();
-      documentRef
-        .querySelector?.("[data-adxconfig-transfer-dialog] button:not([disabled])")
-        ?.focus?.();
+      focusController.afterRender();
     },
     panelHostId: PANEL_HOST_ID,
     parseShellRenderSignature,
@@ -816,6 +815,9 @@ function ensureXConfigShell(options = {}) {
     }
 
     const action = actionNode.dataset?.adxconfigAction || "";
+    if (action === "open-settings-import") {
+      focusController.rememberTrigger(actionNode);
+    }
 
     if (action === "close-settings-backdrop") {
       const insideModal = target.closest("[data-adxconfig-modal='true']");
@@ -915,6 +917,9 @@ function ensureXConfigShell(options = {}) {
   }
 
   function onDocumentKeydown(event) {
+    if (focusController.handleKeydown(event)) return;
+    if (event?.target?.closest?.('[role="dialog"]') &&
+        !event.target.closest(`#${PANEL_HOST_ID}`)) return;
     if (event?.key === "Escape" && state.settingsTransfer.dialog && !state.settingsTransfer.busy) {
       closeSettingsTransfer();
       return;

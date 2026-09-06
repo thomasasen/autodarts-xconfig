@@ -2,6 +2,7 @@ import { getActiveBoardInputMode } from "./board-input-mode.js";
 import { getRenderableArea, isNodeVisible } from "./dom-visibility.js";
 
 const BOARD_DRAWABLE_SELECTOR = "path, circle, line, polygon, polyline, text";
+export const NATIVE_BOARD_SELECTOR = '[role="img"][aria-label="Dartboard"]';
 const BOARD_EXACT_VIEWBOX = Object.freeze({
   x: 0,
   y: 0,
@@ -906,6 +907,10 @@ export function resolveBoardZoomTargetNode(boardSvg) {
     return null;
   }
 
+  const nativeBoard = boardSvg.closest(NATIVE_BOARD_SELECTOR);
+  if (nativeBoard && isValidZoomTargetCandidate(nativeBoard, boardSvg)) {
+    return nativeBoard;
+  }
   const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
   const showAnimations = boardSvg.closest(".showAnimations");
   const directParent = boardSvg.parentElement || null;
@@ -948,6 +953,10 @@ export function resolveBoardZoomHostNode(zoomTarget) {
     return null;
   }
 
+  if (zoomTarget.matches?.(NATIVE_BOARD_SELECTOR) &&
+      isValidZoomHostCandidate(zoomTarget.parentElement, zoomTarget)) {
+    return zoomTarget.parentElement;
+  }
   const candidateOrder = [
     zoomTarget.closest(".ad-ext-theme-board-viewport"),
     zoomTarget.closest(".css-tqsk66"),

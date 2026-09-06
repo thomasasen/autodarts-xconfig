@@ -99,11 +99,18 @@ const README_ANCHOR_ALIASES = Object.freeze({
   "winner-celebration-effect": ["animation-autodarts-animate-winner-fireworks"],
 });
 
+const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
+  "checkout-target-highlights",
+  "dart-marker-replacer",
+  "take-out-darts-alert",
+]);
+
 function descriptorEntry(definition) {
   const featureKey = normalizeFeatureKey(definition.featureKey);
   const featureCopy = getXConfigFeatureCopy(featureKey);
   return Object.freeze({
     ...definition,
+    designStatus: NEW_DESIGN_READY_FEATURE_KEYS.has(featureKey) ? "ready" : "deprecated",
     readmeAnchorAliases: Object.freeze([
       ...(Array.isArray(definition.readmeAnchorAliases)
         ? definition.readmeAnchorAliases.map((entry) => String(entry || "").trim()).filter(Boolean)

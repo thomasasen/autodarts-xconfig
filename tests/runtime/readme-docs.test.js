@@ -99,7 +99,7 @@ test("README explains the real fresh-install profile without overwriting existin
   const readme = readText(readmePath);
 
   assert.match(readme, /wirklich frischen Installation[^\n]+Empfohlene Standards/);
-  assert.match(readme, /alle Module mit ausgewogenen Presets aktiviert/);
+  assert.match(readme, /ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet/);
   assert.match(readme, /bestehende Konfiguration bleibt dagegen unverändert/);
   assert.doesNotMatch(readme, /Alle Themes sind zuerst ausgeschaltet/);
 });

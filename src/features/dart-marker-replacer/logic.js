@@ -1720,7 +1720,7 @@ export function updateDartMarkerReplacer(options = {}) {
   ensureShadowFilter(overlay, visualConfig.enableShadow, visualConfig.enableShadowBlur);
 
   const scale = getSvgScale(board.svg);
-  const radiusPx = Math.max(1, Number(board.radius) * Math.max(1, scale));
+  const radiusPx = Math.max(1, Number(board.radius) * scale);
   const dartLength = Math.max(18, radiusPx * 0.416 * visualConfig.sizeMultiplier);
   const dartHeight = dartLength / DART_ASPECT_RATIO;
   const dartImageSource = resolveDartDesignAsset(visualConfig.designKey);

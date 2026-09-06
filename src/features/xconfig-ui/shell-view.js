@@ -69,7 +69,6 @@ import {
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
 const MENU_LABEL = "AD xConfig";
-const MENU_LABEL_COLLAPSE_WIDTH = 120;
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
@@ -557,61 +556,33 @@ function buildUpdatePanel(documentRef, updateStatus) {
   return panel;
 }
 
-function menuIconMarkup() {
-  return "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M3 6.5A1.5 1.5 0 0 1 4.5 5h10A1.5 1.5 0 0 1 16 6.5v1A1.5 1.5 0 0 1 14.5 9h-10A1.5 1.5 0 0 1 3 7.5zm0 10A1.5 1.5 0 0 1 4.5 15h6A1.5 1.5 0 0 1 12 16.5v1a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 17.5zM18 4a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0 10a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3\"/></svg>";
-}
-
-export function buildMenuIconElement(documentRef, template) {
-  const icon = createElement(documentRef, "span");
-  const templateIcon =
-    template && typeof template.querySelector === "function"
-      ? template.querySelector(".chakra-button__icon")
-      : null;
-  icon.className = templateIcon?.className
-    ? `${templateIcon.className} ad-xconfig-menu-icon`
-    : "ad-xconfig-menu-icon";
-  icon.innerHTML = menuIconMarkup();
-  return icon;
+function buildSwitch(documentRef, input, label) {
+  input.className = "ad-xconfig-switch-input";
+  input.setAttribute("role", "switch");
+  input.setAttribute("aria-label", label);
+  const wrapper = createElement(documentRef, "label", {
+    className: "ad-xconfig-switch",
+    attributes: { for: input.id },
+  });
+  wrapper.appendChild(input);
+  wrapper.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-switch-track",
+    attributes: { "aria-hidden": "true" },
+  }));
+  return wrapper;
 }
 
 function buildFeatureToggle(documentRef, feature) {
-  const wrapper = createElement(documentRef, "div", {
-    className: "ad-xconfig-onoff",
-  });
-  const checkbox = createElement(documentRef, "input", {
+  const input = createElement(documentRef, "input", {
     id: `ad-xconfig-toggle-${feature.featureKey}`,
     type: "checkbox",
-    className: "ad-xconfig-hidden-input",
     attributes: {
       "data-adxconfig-feature-toggle": "true",
       "data-feature-key": feature.featureKey,
     },
   });
-  checkbox.checked = Boolean(feature.enabled);
-  wrapper.appendChild(checkbox);
-  wrapper.appendChild(createElement(documentRef, "button", {
-    type: "button",
-    className: "ad-xconfig-onoff-btn ad-xconfig-onoff-btn--on",
-    text: "An",
-    attributes: {
-      "data-adxconfig-action": "set-feature",
-      "data-feature-key": feature.featureKey,
-      "data-feature-enabled": "true",
-      "data-active": feature.enabled ? "true" : "false",
-    },
-  }));
-  wrapper.appendChild(createElement(documentRef, "button", {
-    type: "button",
-    className: "ad-xconfig-onoff-btn ad-xconfig-onoff-btn--off",
-    text: "Aus",
-    attributes: {
-      "data-adxconfig-action": "set-feature",
-      "data-feature-key": feature.featureKey,
-      "data-feature-enabled": "false",
-      "data-active": feature.enabled ? "false" : "true",
-    },
-  }));
-  return wrapper;
+  input.checked = Boolean(feature.enabled);
+  return buildSwitch(documentRef, input, `${feature.title} aktivieren`);
 }
 
 function isDartDesignSelectField(feature, field) {
@@ -1746,6 +1717,7 @@ function buildThemeGlobalTypographyFontPicker(
   });
   const current = createElement(documentRef, "summary", {
     className: "ad-xconfig-font-picker-current",
+    attributes: { "aria-label": "Schriftart ändern" },
   });
   const identity = createElement(documentRef, "span", {
     className: "ad-xconfig-font-picker-current-identity",
@@ -2616,13 +2588,9 @@ function buildFeatureField(documentRef, feature, field) {
   }
 
   if (field.control === "checkbox") {
-    const wrapper = createElement(documentRef, "div", {
-      className: "ad-xconfig-onoff",
-    });
     const input = createElement(documentRef, "input", {
       id: fieldId,
       type: "checkbox",
-      className: "ad-xconfig-hidden-input",
       attributes: {
         "data-adxconfig-setting": "true",
         "data-feature-key": feature.featureKey,
@@ -2632,34 +2600,7 @@ function buildFeatureField(documentRef, feature, field) {
       },
     });
     input.checked = Boolean(feature.config?.[field.key]);
-    wrapper.appendChild(input);
-    wrapper.appendChild(createElement(documentRef, "button", {
-      type: "button",
-      className: "ad-xconfig-onoff-btn ad-xconfig-onoff-btn--on",
-      text: "An",
-      attributes: {
-        "data-adxconfig-action": "set-setting-toggle",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-setting-value": "true",
-        "data-active": input.checked ? "true" : "false",
-      },
-    }));
-    wrapper.appendChild(createElement(documentRef, "button", {
-      type: "button",
-      className: "ad-xconfig-onoff-btn ad-xconfig-onoff-btn--off",
-      text: "Aus",
-      attributes: {
-        "data-adxconfig-action": "set-setting-toggle",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-setting-value": "false",
-        "data-active": input.checked ? "false" : "true",
-      },
-    }));
-    return wrapper;
+    return buildSwitch(documentRef, input, field.label);
   }
 
   if (field.control === "color") {
@@ -2926,6 +2867,7 @@ function buildFeatureCard(documentRef, feature) {
     attributes: {
       "data-feature-key": feature.featureKey,
       "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
+      "data-design-status": descriptor?.designStatus || "deprecated",
       "data-preview-kind": preview.kind,
     },
   });
@@ -2968,6 +2910,15 @@ function buildFeatureCard(documentRef, feature) {
   const badges = createElement(documentRef, "div", {
     className: "ad-xconfig-card-badges",
   });
+  if (descriptor?.designStatus === "deprecated") {
+    badges.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-status-badge ad-xconfig-status-badge--deprecated",
+      text: "Deprecated",
+      attributes: {
+        "data-adxconfig-status-badge": "deprecated",
+      },
+    }));
+  }
   const variantLabel = formatVariantLabel(feature.variants);
   if (variantLabel) {
     badges.appendChild(createElement(documentRef, "span", {
@@ -2994,7 +2945,7 @@ function buildFeatureCard(documentRef, feature) {
     actions.appendChild(createElement(documentRef, "button", {
       type: "button",
       className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--settings",
-      text: "⚙ Einstellungen",
+      text: "Einstellungen",
       attributes: {
         "data-adxconfig-action": "open-settings",
         "data-feature-key": feature.featureKey,
@@ -3003,7 +2954,7 @@ function buildFeatureCard(documentRef, feature) {
     actions.appendChild(createElement(documentRef, "button", {
       type: "button",
       className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--readme",
-      text: "📖 README",
+      text: "README",
       attributes: {
         "data-adxconfig-action": "open-readme",
         "data-feature-key": feature.featureKey,
@@ -3017,7 +2968,7 @@ function buildFeatureCard(documentRef, feature) {
     actions.appendChild(createElement(documentRef, "button", {
       type: "button",
       className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--readme",
-      text: "📖 README",
+      text: "README",
       attributes: {
         "data-adxconfig-action": "open-readme",
         "data-feature-key": feature.featureKey,
@@ -3065,6 +3016,8 @@ function buildSettingsModal(documentRef, state, features) {
       role: "dialog",
       "aria-modal": "true",
       "data-adxconfig-modal": "true",
+      "aria-labelledby": "ad-xconfig-settings-title",
+      tabindex: "-1",
     },
   });
 
@@ -3073,6 +3026,7 @@ function buildSettingsModal(documentRef, state, features) {
   });
   const heading = createElement(documentRef, "div");
   heading.appendChild(createElement(documentRef, "h3", {
+    id: "ad-xconfig-settings-title",
     className: "ad-xconfig-modal-title",
     text: `${feature.title} - Einstellungen`,
   }));
@@ -3087,7 +3041,7 @@ function buildSettingsModal(documentRef, state, features) {
   modalActions.appendChild(createElement(documentRef, "button", {
     type: "button",
     className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--readme",
-    text: "📖 README",
+    text: "README",
     attributes: {
       "data-adxconfig-action": "open-readme",
       "data-feature-key": feature.featureKey,
@@ -3191,13 +3145,16 @@ function buildSettingsModal(documentRef, state, features) {
         : "ad-xconfig-setting-input",
     });
     if (field.control !== "action") {
-      row.appendChild(createElement(documentRef, "label", {
+      const copy = createElement(documentRef, "div", { className: "ad-xconfig-setting-copy" });
+      copy.appendChild(createElement(documentRef, "label", {
         className: "ad-xconfig-setting-label",
         text: field.label,
+        attributes: { for: `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}` },
       }));
+      row.appendChild(copy);
       const noteText = getFieldNoteText(field);
       if (noteText) {
-        inputWrap.appendChild(createElement(documentRef, "p", {
+        copy.appendChild(createElement(documentRef, "p", {
           className: "ad-xconfig-note",
           text: noteText,
         }));
@@ -3293,15 +3250,17 @@ function formatTransferFileSize(value) {
 }
 
 function appendTransferDialogHeading(documentRef, card, title, description) {
-  card.appendChild(createElement(documentRef, "h2", {
+  const heading = createElement(documentRef, "header", { className: "ad-xconfig-modal-header" });
+  heading.appendChild(createElement(documentRef, "h2", {
     id: "ad-xconfig-transfer-title",
     className: "ad-xconfig-modal-title",
     text: title,
   }));
-  card.appendChild(createElement(documentRef, "p", {
+  heading.appendChild(createElement(documentRef, "p", {
     className: "ad-xconfig-transfer-copy",
     text: description,
   }));
+  card.appendChild(heading);
 }
 
 function appendTransferReport(documentRef, card, report) {
@@ -3515,6 +3474,7 @@ function buildSettingsTransferDialog(documentRef, state) {
       "aria-modal": "true",
       "aria-labelledby": "ad-xconfig-transfer-title",
       "data-adxconfig-transfer-dialog": transfer.dialog,
+      tabindex: "-1",
     },
   });
 
@@ -3573,7 +3533,7 @@ export function buildShellContent(documentRef, state, features) {
   }));
   headerActions.appendChild(createElement(documentRef, "button", {
     className: "ad-xconfig-btn ad-xconfig-btn--danger",
-    text: "↺ Zurücksetzen",
+    text: "Zurücksetzen",
     type: "button",
     attributes: {
       "data-adxconfig-action": "reset",
@@ -3604,27 +3564,15 @@ export function buildShellContent(documentRef, state, features) {
     }));
   }
 
-  const tabsIntro = createElement(documentRef, "div", {
-    className: "ad-xconfig-tabs-intro",
-  });
-  tabsIntro.appendChild(createElement(documentRef, "h2", {
-    id: "ad-xconfig-tabs-title",
-    className: "ad-xconfig-tabs-title",
-    text: "Wähle deinen Bereich",
+  shell.appendChild(createElement(documentRef, "p", {
+    className: "ad-xconfig-tabs-label",
+    text: "Bereich auswählen",
   }));
-  tabsIntro.appendChild(createElement(documentRef, "p", {
-    id: "ad-xconfig-tabs-copy",
-    className: "ad-xconfig-tabs-copy",
-    text: "Wechsle zwischen Themen für Farben und Layout sowie Animationen für Effekte und Komfortfunktionen.",
-  }));
-  shell.appendChild(tabsIntro);
-
   const tabs = createElement(documentRef, "nav", {
     className: "ad-xconfig-tabs",
     attributes: {
       role: "tablist",
-      "aria-labelledby": "ad-xconfig-tabs-title",
-      "aria-describedby": "ad-xconfig-tabs-copy",
+      "aria-label": "Bereich wählen",
     },
   });
   TAB_DEFINITIONS.forEach((tab) => {
@@ -3637,18 +3585,16 @@ export function buildShellContent(documentRef, state, features) {
         "data-adxconfig-tab": tab.id,
         "data-active": isActive ? "true" : "false",
         role: "tab",
+        "aria-controls": `ad-xconfig-tabpanel-${tab.id}`,
         "aria-selected": isActive ? "true" : "false",
         tabindex: isActive ? "0" : "-1",
       },
     });
     button.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-tab-title",
-      text: `${tab.icon} ${tab.label}`,
+      text: tab.label,
     }));
-    button.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-tab-desc",
-      text: tab.description,
-    }));
+
     tabs.appendChild(button);
   });
   shell.appendChild(tabs);

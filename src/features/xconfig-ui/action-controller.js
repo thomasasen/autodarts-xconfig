@@ -112,7 +112,7 @@ function handleApplyRecommendedDefaults(controller) {
 
   const confirmed = confirmAction(
     controller.windowRef,
-    "Bist du sicher? Die empfohlenen Standards aktivieren alle Module und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."
+    "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."
   );
   if (!confirmed) {
     return;

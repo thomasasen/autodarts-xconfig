@@ -13,6 +13,7 @@ import {
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function createMutableX01GameState(initial = {}) {
   const state = {
@@ -132,6 +133,165 @@ function startTvBoardZoom({ documentRef, windowRef, gameState, featureConfig = {
     helpers: { createRafScheduler },
   });
 }
+
+function startModernZoom(options = {}) {
+  const fixture = createModernX01Fixture(options);
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(fixture.windowRef);
+  timers.installGlobals();
+  const events = [];
+  const cleanup = startTvBoardZoom({ ...fixture,
+    gameState: options.gameState || { isX01Variant: () => false },
+    featureDebug: { enabled: true, log: (_summary, event) => events.push(event), warn: () => {} },
+  });
+  const tick = (node = fixture.total) => {
+    fixture.documentRef.flushMutations([{ type: "childList", target: node, addedNodes: [], removedNodes: [] }]);
+    timers.advance(25);
+  };
+  return { ...fixture, timers, events, tick, stop() { cleanup(); timers.restoreGlobals(); } };
+}
+
+test("native D18 zoom moves all four board layers together and restores clipping on cleanup", () => {
+  const f = startModernZoom();
+  try {
+    f.timers.advance(25);
+    assert.equal(f.documentRef.getElementById("ad-ext-turn"), null);
+    assert.equal(f.events.find((event) => event.status === "apply")?.segment, "D18");
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+    f.layers.forEach((layer) => {
+      assert.equal(layer.parentElement, f.board);
+      assert.equal(layer.style.transform || "", "");
+    });
+    assert.equal(f.turn.style.transform || "", "");
+    assert.equal(f.host.style.overflow, "hidden");
+    const originalTransform = f.board.style.transform;
+    f.tick();
+    assert.equal(f.board.style.transform, originalTransform);
+  } finally { f.stop(); }
+  assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+  assert.equal(f.board.style.transform || "", "");
+  assert.equal(f.host.style.overflow || "", "");
+});
+
+test("native correction click pauses zoom until the next dart", () => {
+  const f = startModernZoom();
+  try {
+    f.timers.advance(25);
+    f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
+    f.tick();
+    f.timers.advance(260);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    f.score.textContent = "61";
+    f.setVisit(["T20"], ["25", "D18"]);
+    f.tick();
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    f.score.textContent = "36";
+    f.setVisit(["T20", "25"], ["D18"]);
+    f.tick();
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+  } finally { f.stop(); }
+});
+
+test("native Bust and leaving the match immediately remove active zoom", () => {
+  for (const exit of ["bust", "variant", "leave"]) {
+    const f = startModernZoom();
+    try {
+      f.timers.advance(25);
+      if (exit === "bust") f.total.textContent = "BUST";
+      if (exit === "variant") f.variant.textContent = "Bull-off";
+      if (exit === "leave") {
+        f.turn.remove();
+        f.documentRef.flushMutations([{ type: "childList", target: f.documentRef.main,
+          removedNodes: [f.turn], addedNodes: [] }]);
+      } else f.tick(exit === "variant" ? f.variant : f.total);
+      f.timers.advance(25);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false, exit);
+      assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false, exit);
+    } finally { f.stop(); }
+  }
+});
+
+test("native new player and new leg release a finished-checkout hold", () => {
+  const f = startModernZoom();
+  try {
+    f.timers.advance(25);
+    f.score.textContent = "0";
+    f.setVisit(["T20", "25", "D18"], []);
+    f.tick();
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    f.player.textContent = "Player 2";
+    f.score.textContent = "301";
+    f.setVisit([], []);
+    f.tick();
+    f.timers.advance(450);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    f.score.textContent = "22";
+    f.setVisit([], ["D11"]);
+    f.tick();
+    assert.equal(f.events.filter((event) => event.status === "apply").at(-1)?.segment, "D11");
+  } finally { f.stop(); }
+});
+
+test("native board replacement rebinds the common target without touching sibling controls", () => {
+  const f = startModernZoom();
+  try {
+    f.timers.advance(25);
+    const replacement = f.board.cloneNode(true);
+    replacement.classList.remove(ZOOM_CLASS);
+    replacement.style.transform = "";
+    replacement.__rect = { ...f.board.__rect };
+    replacement.offsetWidth = replacement.offsetHeight = 549;
+    replacement.offsetParent = f.host;
+    f.board.remove();
+    f.host.appendChild(replacement);
+    f.documentRef.flushMutations([{ type: "childList", target: f.host,
+      removedNodes: [f.board], addedNodes: [replacement] }]);
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(replacement.classList.contains(ZOOM_CLASS), true);
+    assert.match(replacement.style.transform, /scale/);
+    assert.equal(f.turn.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("native missed third dart zoom expires without another DOM event", () => {
+  const f = startModernZoom({ score: 181, throws: ["T20", "T20"], route: [] });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.events.find((event) => event.status === "apply")?.reason, "t20-setup");
+    f.score.textContent = "180";
+    f.setVisit(["T20", "T20", "1"], []);
+    f.tick();
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    f.timers.advance(1800);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+  } finally { f.stop(); }
+});
+
+test("native late board mounting and a resize recover zoom without legacy DOM anchors", () => {
+  const f = startModernZoom();
+  try {
+    f.host.remove();
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    const wrapper = f.node(f.documentRef.main, "div");
+    wrapper.appendChild(f.host);
+    f.documentRef.flushMutations([{ type: "childList", target: f.documentRef.main,
+      addedNodes: [wrapper], removedNodes: [] }]);
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    const before = f.board.style.transform;
+    f.host.__rect = f.board.__rect = { left: 500, top: 100, width: 400, height: 400 };
+    f.layers.forEach((layer) => { layer.__rect = { ...f.board.__rect }; });
+    f.board.offsetWidth = f.board.offsetHeight = 400;
+    f.windowRef.dispatchEvent({ type: "resize" });
+    f.timers.advance(25);
+    assert.notEqual(f.board.style.transform, before);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+  } finally { f.stop(); }
+});
 
 test("tv-board-zoom keeps active zoom during a short missing-board gap", async () => {
   const documentRef = new FakeDocument();

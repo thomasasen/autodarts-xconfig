@@ -29,6 +29,106 @@ function hideShellContent(controller, content, host) {
   controller.state.contentHidden = true;
 }
 
+function restoreAttribute(node, name, value) {
+  if (!node) {
+    return;
+  }
+  if (value === null) {
+    node.removeAttribute?.(name);
+  } else {
+    node.setAttribute?.(name, value);
+  }
+}
+
+function restoreNativeNavigationState(controller) {
+  const presentation = controller.state.nativeNavigationPresentation;
+  if (!presentation) {
+    return;
+  }
+
+  const { activeItem, menuItem, indicator } = presentation;
+  if (activeItem?.isConnected) {
+    restoreAttribute(activeItem, "class", presentation.activeItemClass);
+    restoreAttribute(activeItem, "aria-current", presentation.activeItemAriaCurrent);
+    restoreAttribute(activeItem, "data-status", presentation.activeItemDataStatus);
+  }
+  if (menuItem?.isConnected) {
+    restoreAttribute(menuItem, "class", presentation.menuItemClass);
+  }
+  if (indicator?.isConnected) {
+    indicator.style.left = presentation.indicatorLeft;
+    indicator.style.width = presentation.indicatorWidth;
+  }
+
+  controller.state.nativeNavigationPresentation = null;
+}
+
+function findNativeNavigationIndicator(sidebar, menuItem) {
+  return Array.from(sidebar?.children || []).find((node) => {
+    return node !== menuItem &&
+      node.getAttribute?.("aria-hidden") === "true" &&
+      node.classList?.contains?.("absolute") &&
+      node.classList?.contains?.("bottom-0");
+  }) || null;
+}
+
+function syncNativeNavigationState(controller, menuItem) {
+  const sidebar = menuItem?.parentElement || null;
+  if (!sidebar) {
+    return;
+  }
+
+  const existing = controller.state.nativeNavigationPresentation;
+  if (
+    existing &&
+    (
+      existing.menuItem !== menuItem ||
+      !existing.activeItem?.isConnected ||
+      !existing.indicator?.isConnected
+    )
+  ) {
+    restoreNativeNavigationState(controller);
+  }
+
+  if (!controller.state.nativeNavigationPresentation) {
+    const sidebarItems = Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []);
+    const activeItem = sidebarItems.find((item) => {
+      return item !== menuItem &&
+        (item.getAttribute?.("aria-current") === "page" || item.getAttribute?.("data-status") === "active");
+    }) || null;
+    const indicator = findNativeNavigationIndicator(sidebar, menuItem);
+    if (!activeItem || !indicator) {
+      return;
+    }
+
+    controller.state.nativeNavigationPresentation = {
+      activeItem,
+      activeItemClass: activeItem.getAttribute?.("class"),
+      activeItemAriaCurrent: activeItem.getAttribute?.("aria-current"),
+      activeItemDataStatus: activeItem.getAttribute?.("data-status"),
+      menuItem,
+      menuItemClass: menuItem.getAttribute?.("class"),
+      indicator,
+      indicatorLeft: indicator.style.left || "",
+      indicatorWidth: indicator.style.width || "",
+    };
+
+    restoreAttribute(activeItem, "class", controller.state.nativeNavigationPresentation.menuItemClass);
+    activeItem.removeAttribute?.("aria-current");
+    activeItem.removeAttribute?.("data-status");
+    restoreAttribute(menuItem, "class", controller.state.nativeNavigationPresentation.activeItemClass);
+  }
+
+  const presentation = controller.state.nativeNavigationPresentation;
+  const sidebarRect = sidebar.getBoundingClientRect?.();
+  const menuRect = menuItem.getBoundingClientRect?.();
+  if (!sidebarRect || !menuRect || menuRect.width <= 0) {
+    return;
+  }
+  presentation.indicator.style.left = `${menuRect.left - sidebarRect.left}px`;
+  presentation.indicator.style.width = `${menuRect.width}px`;
+}
+
 function syncMenuButtonState(controller) {
   const button = controller.documentRef.getElementById?.(controller.menuItemId);
   if (!button) {
@@ -36,8 +136,12 @@ function syncMenuButtonState(controller) {
   }
   if (controller.isConfigRoute()) {
     button.dataset.active = "true";
+    button.setAttribute("aria-current", "page");
+    syncNativeNavigationState(controller, button);
   } else {
+    restoreNativeNavigationState(controller);
     delete button.dataset.active;
+    button.removeAttribute("aria-current");
   }
 }
 
@@ -64,23 +168,16 @@ function syncMenuUpdateState(controller, item = null) {
   button.setAttribute("aria-label", title);
 }
 
-function syncMenuLabelForWidth(controller, sidebar = null, item = null) {
+function syncMenuLabelVisibility(controller, item = null) {
   const menuItem = item || controller.documentRef.getElementById?.(controller.menuItemId);
-  const sidebarElement =
-    sidebar ||
-    controller.getSidebarElement(controller.windowRef, controller.documentRef, {
-      panelHostId: controller.panelHostId,
-      sidebarRouteHints: controller.sidebarRouteHints,
-    });
-  if (!menuItem || !sidebarElement) {
+  if (!menuItem) {
     return;
   }
   const label = menuItem.querySelector?.(".ad-xconfig-menu-label");
   if (!label) {
     return;
   }
-  const width = Number(sidebarElement.getBoundingClientRect?.().width || 0);
-  label.style.display = width > 0 && width < controller.menuLabelCollapseWidth ? "none" : "inline";
+  label.style.display = "inline";
 }
 
 function resolveSidebarTemplate(controller, sidebar, insertionAnchor) {
@@ -105,12 +202,19 @@ function ensureMenuButton(controller) {
     return null;
   }
 
-  const sidebarLinks = Array.from(sidebar.querySelectorAll("a[href]"));
+  const sidebarItems = Array.from(sidebar.querySelectorAll("a[href], button, [role='button']"));
+  const sidebarLinks = sidebarItems.filter((item) => item.getAttribute?.("href"));
+  const statsAnchor = sidebarItems.find((item) => {
+    const route = controller.toRoutePathname(controller.windowRef, item.getAttribute?.("href"));
+    const label = String(item.textContent || "").trim().toLowerCase();
+    return route === "/statistics" || route === "/stats" || label === "stats" || label === "statistik";
+  }) || null;
   const boardsAnchor =
     sidebarLinks.find((link) => controller.toRoutePathname(controller.windowRef, link.getAttribute("href")) === "/boards") ||
     sidebarLinks.find((link) => String(link.textContent || "").trim().toLowerCase() === "meine boards") ||
     null;
   const insertionAnchor =
+    statsAnchor ||
     boardsAnchor ||
     sidebarLinks.find((link) => controller.sidebarRouteHints.has(controller.toRoutePathname(controller.windowRef, link.getAttribute("href")))) ||
     null;
@@ -132,12 +236,12 @@ function ensureMenuButton(controller) {
 
   if (!item) {
     item = template ? template.cloneNode(true) : controller.createElement(controller.documentRef, "button", { type: "button" });
-    const icon = controller.buildMenuIconElement(controller.documentRef, template);
     const label = controller.createElement(controller.documentRef, "span", {
       className: "ad-xconfig-menu-label",
       text: controller.menuLabel,
     });
-    item.replaceChildren(icon, label);
+    item.textContent = "";
+    item.replaceChildren(label);
   }
 
   item.id = controller.menuItemId;
@@ -158,18 +262,14 @@ function ensureMenuButton(controller) {
 
   const labelNode = item.querySelector?.(".ad-xconfig-menu-label");
   if (!labelNode) {
-    const icon = controller.buildMenuIconElement(controller.documentRef, template);
     const label = controller.createElement(controller.documentRef, "span", {
       className: "ad-xconfig-menu-label",
       text: controller.menuLabel,
     });
-    item.replaceChildren(icon, label);
+    item.replaceChildren(label);
   } else {
     labelNode.textContent = controller.menuLabel;
-    if (!item.querySelector?.(".ad-xconfig-menu-icon")) {
-      const icon = controller.buildMenuIconElement(controller.documentRef, template);
-      item.insertBefore?.(icon, item.firstChild || null);
-    }
+    item.replaceChildren(labelNode);
   }
 
   if (insertionAnchor) {
@@ -182,7 +282,7 @@ function ensureMenuButton(controller) {
 
   syncMenuButtonState(controller);
   syncMenuUpdateState(controller, item);
-  syncMenuLabelForWidth(controller, sidebar, item);
+  syncMenuLabelVisibility(controller, item);
   return item;
 }
 
@@ -388,10 +488,8 @@ function buildShellRenderControllerContext(options = {}) {
     menuItemId: String(options.menuItemId || "").trim(),
     panelHostId: String(options.panelHostId || "").trim(),
     menuLabel: String(options.menuLabel || "").trim(),
-    menuLabelCollapseWidth: Number(options.menuLabelCollapseWidth) || 0,
     installedVersion: String(options.installedVersion || "").trim(),
     sidebarRouteHints: normalizeSidebarRouteHints(options.sidebarRouteHints),
-    buildMenuIconElement: resolveOptionalFunction(options.buildMenuIconElement, () => null),
     buildShellContent: resolveOptionalFunction(options.buildShellContent, () => null),
     createElement: resolveOptionalFunction(options.createElement, null),
     getContentElement: resolveOptionalFunction(options.getContentElement, () => null),
@@ -415,9 +513,11 @@ export function createShellRenderController(options = {}) {
     ensurePanelHost: () => ensurePanelHost(controller),
     hideContent: (content, host) => hideShellContent(controller, content, host),
     render: () => renderShell(controller),
-    restoreContent: () => restoreShellContent(controller),
+    restoreContent: () => {
+      restoreShellContent(controller);
+      restoreNativeNavigationState(controller);
+    },
     syncMenuButtonState: () => syncMenuButtonState(controller),
-    syncMenuLabelForWidth: (sidebar, item) => syncMenuLabelForWidth(controller, sidebar, item),
     syncMenuUpdateState: (item) => syncMenuUpdateState(controller, item),
     syncVisibility: () => syncShellVisibility(controller),
   };

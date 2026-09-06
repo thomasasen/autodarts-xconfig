@@ -12,6 +12,22 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.0] - 2026-09-06
+
+### Changed
+
+- Nutzerwirkung: Mit dem neuen Autodarts-Design beginnt xConfig 3.0 als Major-Release. Viele Optionen sind vorübergehend als `Deprecated` markiert und können eingeschränkt oder ohne Funktion sein; sie werden in den kommenden Tagen Stück für Stück angepasst.
+  Technik: Ein zentraler Designstatus kennzeichnet noch nicht freigegebene Module. Weitere Freigaben erfolgen separat und sind nicht Bestandteil dieses ersten Migrations-Releases.
+- Nutzerwirkung: Die Verwaltung erhält neutrale dunkle Karten mit separaten Vorschauen, übersichtliche Schalter und Dialoge sowie eine deutlich sichtbare Auswahl zwischen Themen und Animationen, auch auf schmalen Bildschirmen.
+  Technik: Begrenzte Host-Farbvariablen, responsive Raster, Checkbox-Schalter, Tastaturnavigation und Fokuswiederherstellung ersetzen die bisherige Verlaufsgestaltung; die native Navigation wird beim Schließen wiederhergestellt.
+- Nutzerwirkung: Neue Installationen und die Aktion `Empfohlene Standards` starten mit ausgeschalteten Modulen und vorbereiteten Presets. Bestehende gespeicherte Konfigurationen bleiben beim Update erhalten.
+  Technik: Standardnormalisierung und empfohlenes Profil setzen Aktivierungsflags auf `false`; Speicherformat und Konfigurationsschlüssel bleiben kompatibel.
+
+### Fixed
+
+- Nutzerwirkung: Erste Anpassungen unterstützen Dart Marker Replacer, Checkout Target Highlights und Take Out Darts Alert in der neuen Oberfläche. TV Board Zoom bleibt trotz vorbereitender Anpassungen weiterhin als `Deprecated` gekennzeichnet.
+  Technik: Gemeinsame Erkennung moderner X01-Matchflächen, Board-SVGs und Dart-Marker sowie angepasste Checkout- und Zoom-Auswertung werden durch Runtime- und DOM-Regressionen abgesichert.
+
 ## [2.9.2] - 2026-08-15
 
 ### Changed
@@ -1945,6 +1961,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v2.9.2...v3.0.0
 [2.9.2]: https://github.com/thomasasen/autodarts-xconfig/compare/3feb60bd269741fd1414b3b2bca7f68e8c6f2137...v2.9.2
 [2.9.1]: https://github.com/thomasasen/autodarts-xconfig/compare/633ff78...3feb60bd269741fd1414b3b2bca7f68e8c6f2137
 [2.9.0]: https://github.com/thomasasen/autodarts-xconfig/compare/f541eff...633ff78

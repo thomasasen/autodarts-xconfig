@@ -73,6 +73,8 @@ export function initializeTakeOutDartsAlert(context = {}) {
       childList: true,
       subtree: true,
       characterData: true,
+      attributes: true,
+      attributeFilter: ["data-open"],
     },
   });
   harness.subscribeToGameState();

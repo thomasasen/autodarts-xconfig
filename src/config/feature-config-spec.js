@@ -382,11 +382,11 @@ const DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG = Object.freeze({
 });
 
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
-  checkoutScoreHighlight: { enabled: true, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
+  checkoutScoreHighlight: { enabled: false, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
   checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
-  x01BustActivePlayerHighlight: { enabled: true, crackCount: 2, shakeEnabled: false, soundEnabled: true, debug: false },
+  x01BustActivePlayerHighlight: { enabled: false, crackCount: 2, shakeEnabled: false, soundEnabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   activePlayerSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
   specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
@@ -475,7 +475,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   x01RemainingScoreBar: { colorTheme: "traffic-light", barSize: "breit", effect: "previous-score-trail" },
   botBoardStyle: { design: "winmau-blade-6-tc", scope: "all-match-boards", debug: false },
   "themes.globalTypography": {
-    enabled: true,
+    enabled: false,
     fontPreset: "aldrich",
     applyTo: ["scores", "throws", "names"],
     accentColor: "#00D9FF",
@@ -501,7 +501,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     deltaItalic: true,
   },
   "themes.x01TwoPlayer": {
-    enabled: true,
+    enabled: false,
     showAvg: true,
     visualStyle: "studio",
     colorScheme: "studio-mint",
@@ -751,7 +751,7 @@ const LEGACY_IMPORTERS = Object.freeze({
 
 const FEATURE_NORMALIZERS = Object.freeze({
   checkoutScoreHighlight(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, true), effect: normalizeMappedStringChoice(rawConfig.effect, "grow-only", CHECKOUT_EFFECT_ALIASES), colorTheme: normalizeLegacyColorTheme(rawConfig.colorTheme, "159, 219, 88"), intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), effect: normalizeMappedStringChoice(rawConfig.effect, "grow-only", CHECKOUT_EFFECT_ALIASES), colorTheme: normalizeLegacyColorTheme(rawConfig.colorTheme, "159, 219, 88"), intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   checkoutTargetHighlights(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: normalizeMappedStringChoice(resolveLegacyBoardTargetVisualPreset(rawConfig), "soft-pulse", BOARD_TARGET_VISUAL_PRESET_ALIASES), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: "both", targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
@@ -763,7 +763,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   x01BustActivePlayerHighlight(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, true), crackCount: normalizeNumberChoice(rawConfig.crackCount, 2, new Set([0, 1, 2, 3])), shakeEnabled: normalizeBoolean(rawConfig.shakeEnabled, false), soundEnabled: normalizeBoolean(rawConfig.soundEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), crackCount: normalizeNumberChoice(rawConfig.crackCount, 2, new Set([0, 1, 2, 3])), shakeEnabled: normalizeBoolean(rawConfig.shakeEnabled, false), soundEnabled: normalizeBoolean(rawConfig.soundEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   avgTrendArrow(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 320, AVG_TREND_DURATIONS), size: normalizeMappedStringChoice(rawConfig.size, "standard", { klein: "klein", small: "klein", standard: "standard", gross: "gross", ["gro" + "\u00df"]: "gross", big: "gross", large: "gross" }), debug: normalizeBoolean(rawConfig.debug, false) };
@@ -1046,9 +1046,9 @@ export function createRecommendedFeatureConfig(configKey) {
 
   const recommendedConfig = {
     ...defaultConfig,
-    enabled: true,
     ...(Object.hasOwn(defaultConfig, "debug") ? { debug: false } : {}),
     ...deepClone(RECOMMENDED_FEATURE_CONFIGS[normalizedKey] || {}),
+    enabled: false,
   };
   return recommendedConfig;
 }

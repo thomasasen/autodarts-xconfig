@@ -3,9 +3,11 @@ import {
   getFirstCheckoutRouteSegment,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
-import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
+import { isGameStateStaleForCurrentMatchRoute, resolveX01CheckoutContext } from "../x01-checkout-context.js";
+import { readModernMatchSurface, readModernThrows } from "../shared/x01-match-surface.js";
 import { isX01VariantText } from "../../domain/variant-rules.js";
 import {
+  NATIVE_BOARD_SELECTOR,
   getBoardRadius,
   resolveBoardZoomHostNode,
   resolveBoardZoomTargetNode,
@@ -1116,8 +1118,32 @@ export function buildZoomTransform(options = {}) {
   const minTy = viewportRect.bottom - targetRect.top - zoomLevel * layoutHeight;
   const maxTy = viewportRect.top - targetRect.top;
 
-  const tx = clamp(rawTx, minTx, maxTx);
-  const ty = clamp(rawTy, minTy, maxTy);
+  let tx = clamp(rawTx, minTx, maxTx);
+  let ty = clamp(rawTy, minTy, maxTy);
+  if (targetNode.matches?.(NATIVE_BOARD_SELECTOR) &&
+      segmentPoint.parsedSegment?.ring === "D" && segmentPoint.parsedSegment?.value !== 25 &&
+      (intent.reason === "checkout" || intent.reason === "route-finish")) {
+    // The native viewport is square and clips the shared board layer. Keep the
+    // number just outside the double in view, without changing the segment point.
+    const viewBox = segmentPoint.viewBox;
+    const dx = segmentPoint.x - (viewBox.x + viewBox.width / 2);
+    const dy = segmentPoint.y - (viewBox.y + viewBox.height / 2);
+    const distance = Math.hypot(dx, dy);
+    if (distance > 0) {
+      const offset = getBoardRadius(boardSvg) * 0.2;
+      const labelPoint = getScreenPointFromRect({
+        x: segmentPoint.x + dx / distance * offset,
+        y: segmentPoint.y + dy / distance * offset,
+      }, viewBox, boardRect);
+      const labelX = zoomLevel * (labelPoint.x - targetRect.left) / scaleX;
+      const labelY = zoomLevel * (labelPoint.y - targetRect.top) / scaleY;
+      const padding = 8;
+      tx = clamp(tx, Math.max(minTx, viewportRect.left + padding - targetRect.left - labelX),
+        Math.min(maxTx, viewportRect.right - padding - targetRect.left - labelX));
+      ty = clamp(ty, Math.max(minTy, viewportRect.top + padding - targetRect.top - labelY),
+        Math.min(maxTy, viewportRect.bottom - padding - targetRect.top - labelY));
+    }
+  }
 
   let baseTransform = providedBaseTransform;
   if (baseTransform === null) {
@@ -1179,8 +1205,37 @@ export function buildZoomTransform(options = {}) {
   };
 }
 
+function resolveZoomGameState(options) {
+  const surface = options.matchSurface || readModernMatchSurface(options.documentRef, options.windowRef);
+  const original = options.gameState;
+  if (!surface.turnContainer || surface.variant !== "X01") {
+    return original;
+  }
+  const stale = isGameStateStaleForCurrentMatchRoute(original, options.windowRef, options.documentRef);
+  const current = stale ? null : original;
+  const domThrows = readModernThrows(surface, options.x01Rules);
+  const domTurn = domThrows && Number.isFinite(surface.activeScore) && surface.playerKey
+    ? {
+        id: `dom:${surface.playerKey}:${surface.activeScore + domThrows.reduce((sum, entry) => sum + entry.score, 0)}`,
+        playerId: surface.playerKey,
+        throws: domThrows,
+      }
+    : null;
+  const turn = current?.getActiveTurn?.() || domTurn;
+  return {
+    isX01Variant: () => true,
+    getOutMode: () => current?.getOutMode?.() || surface.outMode,
+    getActiveTurn: () => turn,
+    getActiveThrows: () => turn === domTurn ? domThrows || [] : current?.getActiveThrows?.() || [],
+    getActiveScore: () => current?.getActiveScore?.() ?? surface.activeScore,
+    getSnapshot: () => current?.getSnapshot?.() || {
+      match: { id: String(options.windowRef?.location?.pathname || "").split("/").at(-1) },
+    },
+  };
+}
+
 function resolveZoomIntentSettings(options = {}) {
-  const gameState = options.gameState;
+  const gameState = resolveZoomGameState(options);
   const config = options.featureConfig;
   const checkoutZoomTarget =
     String(config?.checkoutZoomTarget || "").trim().toLowerCase() === "route-first"
@@ -1239,10 +1294,11 @@ function resetZoomIntentForBust(state) {
   state.pendingLifecycleResetReason = "bust";
 }
 
-function hasVisibleBustTurnScore(documentRef) {
-  return queryAll(documentRef, TURN_POINTS_SELECTOR).some((node) => {
-    return normalizeText(node?.textContent || "").toUpperCase() === "BUST";
-  });
+function hasVisibleBustTurnScore(documentRef, surface) {
+  return String(surface?.turnScoreToken || "").toUpperCase() === "BUST" ||
+    queryAll(documentRef, TURN_POINTS_SELECTOR).some((node) => {
+      return normalizeText(node?.textContent || "").toUpperCase() === "BUST";
+    });
 }
 
 function syncBoundaryTokenState(state, boundaryToken) {
@@ -1587,6 +1643,7 @@ function resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setu
 }
 
 export function computeZoomIntent(options = {}) {
+  const matchSurface = options.matchSurface || readModernMatchSurface(options.documentRef, options.windowRef);
   const {
     gameState,
     x01Rules,
@@ -1599,7 +1656,7 @@ export function computeZoomIntent(options = {}) {
     checkoutZoomTarget,
     t20SetupZoomEnabled,
     finishOnlyCheckoutZoom,
-  } = resolveZoomIntentSettings(options);
+  } = resolveZoomIntentSettings({ ...options, matchSurface });
 
   if (!gameState || typeof gameState.isX01Variant !== "function") {
     return null;
@@ -1608,7 +1665,8 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
-  if (hasExplicitNonX01DomVariant(documentRef)) {
+  if (hasExplicitNonX01DomVariant(documentRef) ||
+      (matchSurface.variant && matchSurface.variant !== "X01")) {
     resetZoomIntentForInactiveVariant(state);
     return null;
   }
@@ -1623,7 +1681,7 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
-  if (hasVisibleBustTurnScore(documentRef)) {
+  if (hasVisibleBustTurnScore(documentRef, matchSurface)) {
     resetZoomIntentForBust(state);
     return null;
   }

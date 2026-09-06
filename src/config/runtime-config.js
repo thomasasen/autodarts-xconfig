@@ -278,8 +278,8 @@ function buildHardResetRuntimeConfig() {
 
 function buildRecommendedRuntimeConfig(sourceConfig = {}) {
   const config = createPresetBaseConfig();
-  applyFeatureToggleState(config, true);
   applyRecommendedFeatureDefaults(config);
+  applyFeatureToggleState(config, false);
   applyThemeBackgroundImages(config, sourceConfig, false);
   return normalizeRuntimeConfig(config);
 }

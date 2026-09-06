@@ -44,7 +44,7 @@ function buildRecommendedDefaultsSummary() {
   return [
     "## Empfohlene Standards",
     "",
-    "Die Aktion `Empfohlene Standards` aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.",
+    "Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.",
     "",
     "[Vollständiges Profil der empfohlenen Standards](docs/FEATURES.md#empfohlene-standards)",
   ].join("\n");

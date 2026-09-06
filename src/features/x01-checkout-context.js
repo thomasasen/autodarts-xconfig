@@ -2,6 +2,7 @@ import {
   collectVisibleCheckoutRouteEntries,
   resolveCheckoutSurfaceSemantics,
 } from "./x01-checkout-route.js";
+import { readModernMatchSurface } from "./shared/x01-match-surface.js";
 
 const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
@@ -131,7 +132,7 @@ function collectSnapshotMatchIds(snapshot) {
     .filter(Boolean);
 }
 
-function isGameStateStaleForCurrentMatchRoute(gameState, windowRef, documentRef) {
+export function isGameStateStaleForCurrentMatchRoute(gameState, windowRef, documentRef) {
   if (!gameState || typeof gameState.getSnapshot !== "function") {
     return false;
   }
@@ -254,6 +255,10 @@ function collectScoreCandidates(documentRef, windowRef) {
 }
 
 export function readDomActiveScore(documentRef, windowRef) {
+  const modernSurface = readModernMatchSurface(documentRef, windowRef);
+  if (modernSurface.turnContainer) {
+    return modernSurface.activeScore;
+  }
   const candidates = collectScoreCandidates(documentRef, windowRef);
   if (!candidates.length) {
     return Number.NaN;
@@ -432,9 +437,8 @@ export function resolveX01CheckoutContext(context = {}) {
     Array.isArray(entry?.segments) ? entry.segments : []
   );
   const outMode =
-    gameState && typeof gameState.getOutMode === "function"
-      ? String(gameState.getOutMode() || "")
-      : String(context.outMode || "");
+    String(gameState?.getOutMode?.() || context.outMode ||
+      readModernMatchSurface(documentRef, windowRef).outMode || "");
   const dartsRemaining = resolveDartsRemaining(gameState, context.dartsRemaining);
   const activeScoreState = resolveX01ActiveScoreState({
     gameState,

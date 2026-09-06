@@ -175,6 +175,57 @@ test("x01 checkout route returns an empty route when the base surface has no sug
   assert.equal(getSingleSuggestionSegmentFromRoute(route), "");
 });
 
+test("x01 checkout route reads the modern Autodarts checkout suggestion surface", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.remove();
+  const windowRef = createFakeWindow({ documentRef });
+
+  ["T20", "25", "D18"].forEach((segment, index) => {
+    const node = documentRef.createElement("div");
+    node.classList.add("text-checkout-suggestion");
+    node.textContent = segment;
+    node.__rect = { left: 300 + index * 100, top: 10, width: 80, height: 48 };
+    documentRef.main.appendChild(node);
+  });
+
+  assert.deepEqual(
+    collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules),
+    ["T20", "S25", "D18"]
+  );
+});
+
+test("x01 checkout route keeps modern vertical and horizontal route copies in reading order", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.remove();
+  const windowRef = createFakeWindow({ documentRef });
+
+  [
+    ["25", 900, 20, 22, 20],
+    ["D18", 1040, 20, 30, 20],
+    ["25", 294, 350, 22, 20],
+    ["D18", 290, 390, 30, 20],
+  ].forEach(([segment, left, top, width, height]) => {
+    const node = documentRef.createElement("div");
+    node.classList.add("text-checkout-suggestion");
+    node.textContent = segment;
+    node.__rect = { left, top, width, height };
+    documentRef.main.appendChild(node);
+  });
+
+  const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  assert.deepEqual(routeSegments, ["S25", "D18", "S25", "D18"]);
+  assert.deepEqual(
+    resolveCheckoutSurfaceSemantics({
+      routeSegments,
+      activeScore: 61,
+      outMode: "Double Out",
+      dartsRemaining: 3,
+      x01Rules,
+    }).authoritativeRouteSegments,
+    ["S25", "D18"]
+  );
+});
+
 test("x01 checkout route keeps segment order from a single multi-step suggestion node", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "T16 D8";

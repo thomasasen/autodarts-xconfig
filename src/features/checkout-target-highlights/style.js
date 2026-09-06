@@ -62,8 +62,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       base: Object.freeze({
         minOpacity: 0.56,
         maxOpacity: 0.94,
-        minScale: 0.988,
-        maxScale: 1.046,
+        minScale: 0.992,
+        maxScale: 1.028,
         filter: buildDropShadowFilter(3, 9),
         filterMin: buildDropShadowFilter(2, 6),
         filterMax: buildDropShadowFilter(4, 12),
@@ -78,8 +78,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       outer: Object.freeze({
         minOpacity: 0.64,
         maxOpacity: 1,
-        minScale: 0.985,
-        maxScale: 1.068,
+        minScale: 0.99,
+        maxScale: 1.04,
         filter: buildDropShadowFilter(4, 11),
         filterMin: buildDropShadowFilter(3, 8),
         filterMax: buildDropShadowFilter(5, 14),
@@ -94,8 +94,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       bull: Object.freeze({
         minOpacity: 0.76,
         maxOpacity: 1,
-        minScale: 0.983,
-        maxScale: 1.082,
+        minScale: 0.988,
+        maxScale: 1.048,
         filter: buildDropShadowFilter(4, 12),
         filterMin: buildDropShadowFilter(3, 9),
         filterMax: buildDropShadowFilter(6, 15),
@@ -123,8 +123,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       base: Object.freeze({
         minOpacity: 0.16,
         maxOpacity: 0.98,
-        minScale: 0.968,
-        maxScale: 1.088,
+        minScale: 0.992,
+        maxScale: 1.036,
         filter: buildDropShadowFilter(3, 8),
         filterMin: "none",
         filterMax: buildDropShadowFilter(4, 11),
@@ -139,8 +139,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       outer: Object.freeze({
         minOpacity: 0.24,
         maxOpacity: 1,
-        minScale: 0.964,
-        maxScale: 1.11,
+        minScale: 0.99,
+        maxScale: 1.046,
         filter: buildDropShadowFilter(4, 10),
         filterMin: "none",
         filterMax: buildDropShadowFilter(5, 13),
@@ -155,8 +155,8 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
       bull: Object.freeze({
         minOpacity: 0.3,
         maxOpacity: 1,
-        minScale: 0.958,
-        maxScale: 1.124,
+        minScale: 0.988,
+        maxScale: 1.054,
         filter: buildDropShadowFilter(4, 11),
         filterMin: "none",
         filterMax: buildDropShadowFilter(6, 15),
@@ -173,59 +173,59 @@ const VISUAL_PRESET_PROFILES = Object.freeze({
   "slow-glow": Object.freeze({
     animationMs: 1760,
     outlineIntensity: Object.freeze({
-      strokeAlpha: 0.88,
-      baseOpacity: 0.54,
-      pulseMinOpacity: 0.48,
-      pulseMaxOpacity: 0.72,
+      strokeAlpha: 0.94,
+      baseOpacity: 0.58,
+      pulseMinOpacity: 0.42,
+      pulseMaxOpacity: 0.92,
       widthDownPx: 0.1,
-      widthUpPx: 0.45,
+      widthUpPx: 0.72,
     }),
     effectProfiles: Object.freeze({
       base: Object.freeze({
-        minOpacity: 0.64,
-        maxOpacity: 0.82,
-        minScale: 0.998,
-        maxScale: 1.018,
-        filter: buildDropShadowFilter(2, 7),
-        filterMin: buildDropShadowFilter(2, 6),
-        filterMax: buildDropShadowFilter(3, 9),
-        outlineBaseOpacityFloor: 0.52,
-        outlinePulseMinOpacityFloor: 0.46,
-        outlinePulseMaxOpacityFloor: 0.7,
+        minOpacity: 0.56,
+        maxOpacity: 0.94,
+        minScale: 0.996,
+        maxScale: 1.022,
+        filter: buildDropShadowFilter(3, 9),
+        filterMin: buildDropShadowFilter(2, 5),
+        filterMax: buildDropShadowFilter(4, 12),
+        outlineBaseOpacityFloor: 0.58,
+        outlinePulseMinOpacityFloor: 0.42,
+        outlinePulseMaxOpacityFloor: 0.9,
         outlineWidthDownPxFloor: 0.08,
-        outlineWidthUpPxFloor: 0.4,
+        outlineWidthUpPxFloor: 0.68,
       }),
       outer: Object.freeze({
-        minOpacity: 0.7,
-        maxOpacity: 0.88,
-        minScale: 0.997,
-        maxScale: 1.024,
-        filter: buildDropShadowFilter(3, 8),
-        filterMin: buildDropShadowFilter(2, 7),
-        filterMax: buildDropShadowFilter(4, 10),
+        minOpacity: 0.62,
+        maxOpacity: 0.98,
+        minScale: 0.994,
+        maxScale: 1.03,
+        filter: buildDropShadowFilter(3, 10),
+        filterMin: buildDropShadowFilter(2, 6),
+        filterMax: buildDropShadowFilter(5, 14),
         strokeWidthBoostPx: 0.35,
         outlineWidthBoostPx: 0.85,
-        outlineBaseOpacityFloor: 0.56,
-        outlinePulseMinOpacityFloor: 0.5,
-        outlinePulseMaxOpacityFloor: 0.76,
+        outlineBaseOpacityFloor: 0.62,
+        outlinePulseMinOpacityFloor: 0.46,
+        outlinePulseMaxOpacityFloor: 0.96,
         outlineWidthDownPxFloor: 0.08,
-        outlineWidthUpPxFloor: 0.42,
+        outlineWidthUpPxFloor: 0.76,
       }),
       bull: Object.freeze({
         minOpacity: 0.68,
-        maxOpacity: 0.86,
-        minScale: 0.998,
-        maxScale: 1.022,
-        filter: buildDropShadowFilter(2, 7),
+        maxOpacity: 1,
+        minScale: 0.994,
+        maxScale: 1.036,
+        filter: buildDropShadowFilter(3, 10),
         filterMin: buildDropShadowFilter(2, 6),
-        filterMax: buildDropShadowFilter(3, 9),
+        filterMax: buildDropShadowFilter(5, 14),
         strokeWidthBoostPx: 0.2,
         outlineWidthBoostPx: 0.55,
-        outlineBaseOpacityFloor: 0.54,
-        outlinePulseMinOpacityFloor: 0.48,
-        outlinePulseMaxOpacityFloor: 0.74,
+        outlineBaseOpacityFloor: 0.66,
+        outlinePulseMinOpacityFloor: 0.52,
+        outlinePulseMaxOpacityFloor: 1,
         outlineWidthDownPxFloor: 0.08,
-        outlineWidthUpPxFloor: 0.36,
+        outlineWidthUpPxFloor: 0.82,
       }),
     }),
   }),
@@ -361,15 +361,22 @@ export function buildStyleText() {
 
 @keyframes ad-ext-checkout-signal {
   0%,
+  32%,
   100% {
     opacity: var(--ad-ext-target-pulse-min-opacity, 0.12);
     filter: var(--ad-ext-target-blink-filter-min, none);
     transform: scale(var(--ad-ext-target-pulse-min-scale, 1));
   }
-  50% {
+  46%,
+  68% {
     opacity: var(--ad-ext-target-pulse-max-opacity, 1);
     filter: var(--ad-ext-target-blink-filter-max, none);
     transform: scale(var(--ad-ext-target-pulse-max-scale, 1));
+  }
+  82% {
+    opacity: var(--ad-ext-target-pulse-min-opacity, 0.12);
+    filter: var(--ad-ext-target-blink-filter-min, none);
+    transform: scale(var(--ad-ext-target-pulse-min-scale, 1));
   }
 }
 
@@ -399,13 +406,5 @@ export function buildStyleText() {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .${TARGET_CLASS},
-  .${OUTLINE_CLASS} {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-}
 `;
 }

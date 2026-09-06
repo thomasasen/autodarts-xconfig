@@ -47,7 +47,7 @@ test("config store loads defaults when storage is empty", async () => {
   const config = await store.load();
 
   assert.equal(config.features.checkoutScoreHighlight.effect, "grow-only");
-  assert.equal(config.featureToggles.checkoutScoreHighlight, true);
+  assert.equal(config.featureToggles.checkoutScoreHighlight, false);
   assert.equal(config.features.checkoutTargetHighlights.visualPreset, "soft-pulse");
   assert.equal(config.features.checkoutTargetHighlights.targetSelectionMode, "next");
   assert.equal(config.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
@@ -73,7 +73,7 @@ test("config store creates the recommended profile only when no current or legac
   assert.equal(createCalls, 1);
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
   assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
-  assert.equal(storedConfig.features.themes.globalTypography.enabled, true);
+  assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
   assert.equal(localStorage.getItem(LEGACY_IMPORT_FLAG_KEY), "true");
 });
 

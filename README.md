@@ -3,6 +3,16 @@
 > Visuelle Erweiterungen für Autodarts: bessere Lesbarkeit, klarere Hinweise, Themes und optionale Effekte.  
 > Die Spiellogik bleibt unverändert.
 
+## Version 3.0: Umstellung auf das neue Autodarts-Design
+
+Autodarts hat sein Design und die Struktur der Oberfläche geändert. xConfig 3.0 startet deshalb eine neue Major-Version mit angepasster Verwaltung, neutralen Karten und Dialogen sowie einer deutlichen Bereichsauswahl zwischen **Themen** und **Animationen**.
+
+**Viele Optionen sind derzeit als `Deprecated` markiert.** Sie sind noch nicht vollständig an die neue Autodarts-Oberfläche angepasst und können eingeschränkt oder ohne Funktion sein. Die Anpassung erfolgt in den kommenden Tagen Stück für Stück; weitere Updates folgen. Das Badge bleibt bis zur Freigabe des jeweiligen Moduls sichtbar.
+
+Bei einer frischen Installation und beim Anwenden von `Empfohlene Standards` bleiben zunächst alle Module ausgeschaltet. Aktiviere benötigte Module gezielt. Bereits gespeicherte Einstellungen bleiben beim Update erhalten.
+
+Die folgenden Screenshots zeigen teilweise noch das frühere Design und werden schrittweise aktualisiert.
+
 ## Installieren
 
 1. Installiere [Tampermonkey](https://www.tampermonkey.net/) in einem aktuellen Desktop-Browser.
@@ -12,7 +22,7 @@
    [![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js)
 
 4. Öffne die heruntergeladene Datei `autodarts-xconfig.user.js` und bestätige die Installation in Tampermonkey.
-5. Lade `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu und öffne links **AD xConfig**.
+5. Lade `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu und öffne in der Navigation **AD xConfig**.
 
 **Installiere immer nur die Datei `autodarts-xconfig.user.js`.** Der Button lädt automatisch die neueste stabile Version herunter.
 
@@ -45,7 +55,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 - Insgesamt `26` Module: `17` Animationen und Komfortfunktionen sowie `9` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
-- `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
+- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
 - Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
 - Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
@@ -60,9 +70,9 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Nach der Installation
 
-Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind alle Module mit ausgewogenen Presets aktiviert. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
+Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
 
-1. Öffne links in Autodarts **AD xConfig**.
+1. Öffne in der Autodarts-Navigation **AD xConfig**.
 2. Prüfe unter `Themen` und `Animationen`, welche Module zum gerade verwendeten Spielmodus passen.
 3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne gespeicherte Theme-Bilder beginnen möchtest.
 4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigene Theme-Bilder bleiben dabei erhalten.
@@ -77,7 +87,7 @@ Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Ei
 3. In den Browsererweiterungen bei Tampermonkey `Nutzerscripts zulassen` und `Zugriff auf Datei-URLs zulassen` aktivieren.
 4. Falls Tampermonkey beim Installieren oder Aktualisieren einen zusätzlichen Tab geöffnet hat, die Installation dort vollständig bestätigen.
 5. Wenn ein Injection-Hinweis erscheint, die empfohlene Browser-Einstellung übernehmen.
-6. Danach erneut links in der Navigation nach **AD xConfig** suchen.
+6. Danach erneut in der Navigation nach **AD xConfig** suchen.
 
 ## Wo finde ich was?
 
@@ -92,7 +102,7 @@ Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Ei
 ![AD xConfig Kopfbereich](docs/screenshots/ad-xconfig-header.png)
 
 - `↺ Zurücksetzen`: Führt einen echten Hard Reset aus. Alle Einstellungen gehen auf Standard, alle Module werden deaktiviert, Debug wird ausgeschaltet und gespeicherte Theme-Bilder werden entfernt.
-- `Empfohlene Standards`: Aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
+- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
 - `Exportieren`: Erstellt ein lokales JSON-Backup. Eigene Theme- und Dart-Bilder sind standardmäßig enthalten, können für eine kleinere Datei aber abgewählt werden.
 - `Importieren`: Prüft ein Backup vor dem Speichern und zeigt, welche Einstellungen übernommen, migriert oder ausgelassen werden.
 - Versionsstatus: Hier siehst du, ob deine Version aktuell ist, ob ein Update verfügbar ist oder ob die Update-Prüfung fehlgeschlagen ist.
@@ -126,7 +136,7 @@ Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https
 
 ![Beispiel für eine AD xConfig Kachel](docs/screenshots/ad-xconfig-kachel.png)
 
-- Oben steht die Überschrift des Moduls.
+- Oben siehst du eine abgegrenzte Vorschau; darunter steht die Überschrift des Moduls.
 - Darunter steht eine kurze Beschreibung, was das Modul macht.
 - `Gilt für` zeigt dir, in welchen Spielmodi das Modul gedacht ist.
 - Die Zahl bei `Einstellungen` zeigt, wie viele Einstellmöglichkeiten es gibt.
@@ -199,7 +209,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 
 ## Empfohlene Standards
 
-Die Aktion `Empfohlene Standards` aktiviert alle Module mit ausgewogenen Presets und lässt eigene Theme-Bilder unangetastet.
+Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
 
 [Vollständiges Profil der empfohlenen Standards](docs/FEATURES.md#empfohlene-standards)
 

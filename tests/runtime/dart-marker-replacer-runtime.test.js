@@ -24,6 +24,7 @@ import {
   DART_ROTATE_CLASS,
   DART_SHADOW_CLASS,
   OVERLAY_ID,
+  buildStyleText,
   resolveDartMarkerReplacerConfig,
 } from "../../src/features/dart-marker-replacer/style.js";
 import {
@@ -83,6 +84,10 @@ test("dart-marker-replacer resolves size settings twenty percent larger with leg
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 999 }).sizePercent, 120);
   assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "natural" }).impactStyle, "natural");
   assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "invalid" }).impactStyle, "classic");
+});
+
+test("dart-marker-replacer renders above Autodarts board SVG layers", () => {
+  assert.match(buildStyleText(), /#ad-ext-dart-image-overlay\s*\{[^}]*z-index:\s*50;/s);
 });
 
 async function waitForCondition(predicate, options = {}) {
@@ -145,7 +150,7 @@ function createMarker(documentRef, parentNode, spec = {}) {
 function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.__rect = options.svgRect || { left: 100, top: 50, width: 600, height: 600 };
-  svg.getScreenCTM = () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 });
+  svg.getScreenCTM = () => options.svgMatrix || ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 });
   svg.createSVGPoint = () => createSvgPointFactory();
 
   const boardGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -182,6 +187,27 @@ function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
     boardGroup,
     markers,
     viewportNode,
+  };
+}
+
+function installLayeredBoardFixture(documentRef, markerSpecs = []) {
+  const fixture = installBoardFixture(documentRef, [], {
+    viewportClasses: ["relative", "overflow-hidden"],
+  });
+  const markerSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  markerSvg.__rect = { ...fixture.svg.__rect };
+  markerSvg.getScreenCTM = fixture.svg.getScreenCTM;
+  markerSvg.createSVGPoint = fixture.svg.createSVGPoint;
+  const markerGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  markerSvg.appendChild(markerGroup);
+  fixture.viewportNode.appendChild(markerSvg);
+
+  const markers = markerSpecs.map((spec) => createMarker(documentRef, markerGroup, spec));
+  return {
+    ...fixture,
+    markerSvg,
+    markerGroup,
+    markers,
   };
 }
 
@@ -303,6 +329,73 @@ test("dart-marker-replacer keeps separate darts for markers with identical cx/cy
   assert.equal(state.entriesByMarker.size, 2);
   assert.equal(getFlightGroups(documentRef).length, 2);
   assert.equal(getDartImages(documentRef).length, 2);
+
+  clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer finds markers in the dedicated sibling SVG layer used by Autodarts", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installLayeredBoardFixture(documentRef, [
+    {
+      cx: 12,
+      cy: -280,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 }),
+    },
+    {
+      cx: 82,
+      cy: -109,
+      r: 5,
+      getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 440, f: 390 }),
+    },
+  ]);
+
+  const state = createDartMarkerReplacerState(windowRef);
+  updateDartMarkerReplacer({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  assert.equal(state.entriesByMarker.size, 2);
+  assert.equal(state.entriesByMarker.has(markers[0]), true);
+  assert.equal(state.entriesByMarker.has(markers[1]), true);
+  assert.equal(getDartImages(documentRef).length, 2);
+
+  clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer scales dart length down with the rendered SVG board", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(
+    documentRef,
+    [{
+      cx: 0,
+      cy: -280,
+      r: 5,
+      rectLeft: 188,
+      rectTop: 80,
+      rectWidth: 3.8,
+      rectHeight: 3.8,
+    }],
+    {
+      svgRect: { left: 0, top: 0, width: 380, height: 380 },
+      svgMatrix: { a: 0.38, b: 0, c: 0, d: 0.38, e: 0, f: 0 },
+    }
+  );
+
+  const state = createDartMarkerReplacerState(windowRef);
+  updateDartMarkerReplacer({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const entry = state.entriesByMarker.get(markers[0]);
+  assert.ok(entry);
+  approxEqual(entry.dartLength, 450 * 0.38 * 0.416);
 
   clearDartMarkerReplacerState(state);
 });
