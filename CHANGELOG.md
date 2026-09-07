@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.2] - 2026-09-07
+
+### Fixed
+
+- Nutzerwirkung: Cricket Grid Status Effects funktioniert im neuen Autodarts-Design als reines Overlay, ohne die native Zahlen- und Spieleranordnung zu ersetzen. Treffer lassen die Punktetabelle nicht mehr flackern oder kurz in das alte Layout springen.
+  Technik: Die moderne Flat-Grid-Erkennung ignoriert gekennzeichnete temporäre Overlay-Knoten. Ein eigener Rundentransitions-Token trennt echte Spielerwechsel von einzelnen Darts, während native Labels und Zellen von der bisherigen Legacy-Ausrichtung ausgenommen bleiben.
+
 ## [3.0.1] - 2026-09-07
 
 ### Fixed
@@ -1968,6 +1975,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v2.9.2...v3.0.0
 [2.9.2]: https://github.com/thomasasen/autodarts-xconfig/compare/3feb60bd269741fd1414b3b2bca7f68e8c6f2137...v2.9.2

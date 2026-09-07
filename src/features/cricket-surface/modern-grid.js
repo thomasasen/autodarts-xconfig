@@ -1,13 +1,16 @@
 import { isNodeVisible, queryAll } from "./grid-discovery.js";
 
 export const MODERN_CRICKET_GRID_SELECTOR = "main .grid";
+export const CRICKET_SURFACE_OVERLAY_ATTRIBUTE = "data-ad-ext-cricket-surface-overlay";
 
 // Native Cricket has one flat CSS grid: a header, then label/player cells.
 // Read each row afresh so React replacements cannot retain stale cell owners.
 export function readModernCricketGrid(documentRef) {
   for (const root of queryAll(documentRef, MODERN_CRICKET_GRID_SELECTOR)) {
     if (!isNodeVisible(root) || root.closest?.("#ad-xconfig-panel-host")) continue;
-    const children = Array.from(root.children || []);
+    const children = Array.from(root.children || []).filter(
+      (node) => node.getAttribute?.(CRICKET_SURFACE_OVERLAY_ATTRIBUTE) !== "true"
+    );
     const width = children.findIndex((node) => String(node.textContent || "").trim() === "20");
     if (width < 2 || width > 7 || children.length % width !== 0) continue;
     const headers = children.slice(1, width);

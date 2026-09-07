@@ -56,6 +56,21 @@ export function buildTurnToken(gameState, activePlayerIndex = 0) {
   return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}:${throwCount}`;
 }
 
+export function buildRoundTransitionToken(gameState, activePlayerIndex = 0) {
+  const turn =
+    gameState && typeof gameState.getActiveTurn === "function"
+      ? gameState.getActiveTurn()
+      : null;
+
+  if (turn && typeof turn === "object") {
+    const round = Number.isFinite(turn.round) ? turn.round : "";
+    const part = Number.isFinite(turn.turn) ? turn.turn : "";
+    return `${turn.id || ""}|${turn.playerId || ""}|${round}|${part}|${turn.createdAt || ""}`;
+  }
+
+  return `fallback:${Number.isFinite(activePlayerIndex) ? activePlayerIndex : 0}`;
+}
+
 export function enrichStateMapForUi(stateMap) {
   if (!(stateMap instanceof Map) || stateMap.size === 0) {
     return new Map();

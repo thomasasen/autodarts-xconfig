@@ -145,6 +145,10 @@ function handleGridSurfaceStatus(options = {}) {
   }
 
   if (surfaceStatus === CRICKET_SURFACE_STATUS.MISSING_BOARD) {
+    const gridRoot = renderState?.gridSnapshot?.root || null;
+    if (renderState?.gridSnapshot?.modern === true && gridRoot && gridRoot.isConnected !== false) {
+      return { handled: false, lastStatusSignature: "" };
+    }
     if (statusSignature === lastStatusSignature) {
       return { handled: true, lastStatusSignature };
     }
@@ -276,6 +280,7 @@ export function initializeCricketGridStatusEffects(context = {}) {
         state,
         visualConfig,
         turnToken: renderState.turnToken || "",
+        roundTransitionToken: renderState.roundTransitionToken || "",
         debugStats,
       });
 

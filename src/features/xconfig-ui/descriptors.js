@@ -106,6 +106,7 @@ const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "single-bull-hit-sound",
   "x01-remaining-score-bar",
   "cricket-target-highlighter",
+  "cricket-grid-status-effects",
 ]);
 
 function descriptorEntry(definition) {

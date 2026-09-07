@@ -11,6 +11,8 @@
   HIDDEN_LABEL_ATTRIBUTE,
   LABEL_CLASS,
   LABEL_STATE_CLASS,
+  MODERN_ROOT_CLASS,
+  NATIVE_LABEL_CLASS,
   MARK_L1_CLASS,
   MARK_L2_CLASS,
   MARK_L3_CLASS,
@@ -32,6 +34,7 @@ import {
   normalizeCricketPresentationToken,
   resolveCricketRowPresentation,
 } from "../cricket-surface/presentation.js";
+import { CRICKET_SURFACE_OVERLAY_ATTRIBUTE } from "../cricket-surface/modern-grid.js";
 import {
   clearCricketSurfaceWatchState,
   createCricketSurfaceWatchState,
@@ -340,6 +343,7 @@ function clearLabelClasses(node) {
     BADGE_CLASS,
     BADGE_BURST_CLASS,
     LABEL_CLASS,
+    NATIVE_LABEL_CLASS,
     BADGE_BEACON_CLASS,
     LABEL_STATE_CLASS.neutral,
     LABEL_STATE_CLASS.scoring,
@@ -396,6 +400,7 @@ function appendTransientNode(state, parentNode, className, timeoutMs, options = 
   }
 
   const node = ownerDocument.createElement("span");
+  node.setAttribute?.(CRICKET_SURFACE_OVERLAY_ATTRIBUTE, "true");
   if (node.classList?.add) {
     node.classList.add(className);
   } else {
@@ -508,7 +513,7 @@ function clearPersistentState(state) {
   });
 
   if (state.gridRoot?.classList) {
-    state.gridRoot.classList.remove(ROOT_CLASS);
+    state.gridRoot.classList.remove(ROOT_CLASS, MODERN_ROOT_CLASS);
   }
 
   state.trackedCells.clear();
@@ -1122,6 +1127,12 @@ function resolveGridFxRows(options = {}) {
     upsertGridFxRow(rowByLabel, row, context);
   });
 
+  if (options.modern === true) {
+    return targetOrder
+      .map((label) => rowByLabel.get(label))
+      .filter(Boolean);
+  }
+
   if (options.stableRowsByLabel instanceof Map) {
     targetOrder.forEach((label) => {
       const stableRow = options.stableRowsByLabel.get(label);
@@ -1436,6 +1447,7 @@ function resolveGridFxBadgeBinding(options = {}) {
   const row = options.row || {};
   const labelCellNode = options.labelCellNode || null;
   const state = options.state || null;
+  const preserveNativeLabel = options.preserveNativeLabel === true;
   let badgeNode =
     row.badgeNode?.classList &&
     row.badgeNode !== labelCellNode &&
@@ -1448,7 +1460,7 @@ function resolveGridFxBadgeBinding(options = {}) {
   if (isProtectedCricketHostNode(badgeNode)) {
     badgeNode = null;
   }
-  if (!badgeNode && safeLabelCellNode?.ownerDocument?.createElement) {
+  if (!badgeNode && !preserveNativeLabel && safeLabelCellNode?.ownerDocument?.createElement) {
     badgeNode = safeLabelCellNode.ownerDocument.createElement("span");
     badgeNode.setAttribute(SYNTHETIC_BADGE_ATTRIBUTE, "true");
     badgeNode.textContent = getDisplayLabel(row.label);
@@ -1465,6 +1477,7 @@ function resolveGridFxBadgeBinding(options = {}) {
     safeLabelCellNode,
     badgeNode,
     badgeFallbackCount,
+    useNativeLabel: preserveNativeLabel && !badgeNode && Boolean(safeLabelCellNode),
   };
 }
 
@@ -1503,6 +1516,7 @@ function buildGridFxResolvedCellDescriptors(options = {}) {
   });
 
   const mergedOwnerLabelColumn =
+    options.preserveNativeLabel !== true &&
     playerStateCount >= 2 &&
     Boolean(labelCellNode?.classList) &&
     typeof labelCellNode?.closest === "function" &&
@@ -1642,7 +1656,9 @@ function applyGridFxResolvedCells(options = {}) {
     }
 
     if (delta > 0) {
-      triggerMarkProgress(state, cellNode, marks, visualConfig);
+      if (options.overlayOnly !== true) {
+        triggerMarkProgress(state, cellNode, marks, visualConfig);
+      }
     }
 
     state.trackedCells.add(cellNode);
@@ -1722,15 +1738,18 @@ function applyGridFxRow(options = {}) {
     safeLabelCellNode,
     badgeNode,
     badgeFallbackCount: rowBadgeFallbackCount,
+    useNativeLabel,
   } = resolveGridFxBadgeBinding({
     row,
     labelCellNode,
     state,
+    preserveNativeLabel: options.preserveNativeLabel,
   });
   badgeFallbackCount += rowBadgeFallbackCount;
 
   if (safeLabelCellNode?.classList) {
     safeLabelCellNode.classList.add(LABEL_CLASS);
+    toggleClass(safeLabelCellNode, NATIVE_LABEL_CLASS, useNativeLabel);
     setLabelStateClasses(safeLabelCellNode, labelPresentation);
     toggleClass(
       safeLabelCellNode,
@@ -1771,8 +1790,9 @@ function applyGridFxRow(options = {}) {
     }
   }
 
-  if (badgeNode?.classList && hasIncrease) {
-    toggleTimedClass(state, badgeNode, BADGE_BURST_CLASS, 700);
+  const burstNode = badgeNode || (useNativeLabel ? safeLabelCellNode : null);
+  if (burstNode?.classList && hasIncrease) {
+    toggleTimedClass(state, burstNode, BADGE_BURST_CLASS, 700);
   }
 
   const rowPresentation = normalizePresentationToken(presentation);
@@ -1783,6 +1803,7 @@ function applyGridFxRow(options = {}) {
     rowPresentation,
     playerStateCount,
     activePlayerIndex,
+    preserveNativeLabel: options.preserveNativeLabel,
   });
   const cellResult = applyGridFxResolvedCells({
     stateEntry,
@@ -1794,6 +1815,7 @@ function applyGridFxRow(options = {}) {
     activePlayerIndex,
     diffEntry,
     visualConfig,
+    overlayOnly: options.preserveNativeLabel,
   });
 
   return {
@@ -1836,6 +1858,7 @@ export function updateCricketGridStatusEffects(options = {}) {
   const state = options.state;
   const visualConfig = options.visualConfig;
   const turnToken = String(options.turnToken || "");
+  const roundTransitionToken = String(options.roundTransitionToken || turnToken);
   const debugStats = options.debugStats && typeof options.debugStats === "object"
     ? options.debugStats
     : null;
@@ -1880,6 +1903,7 @@ export function updateCricketGridStatusEffects(options = {}) {
       gridRoot,
       cricketRules,
       renderState,
+      modern: gridSnapshot.modern === true,
       getRect: gridFxMeasurements.getRect,
     })
   );
@@ -1918,6 +1942,7 @@ export function updateCricketGridStatusEffects(options = {}) {
 
   state.gridRoot = gridRoot;
   state.gridRoot.classList.add(ROOT_CLASS);
+  toggleClass(state.gridRoot, MODERN_ROOT_CLASS, gridSnapshot.modern === true);
   applyRootCssVars(state.gridRoot, visualConfig);
 
   const marksDiff =
@@ -1941,8 +1966,8 @@ export function updateCricketGridStatusEffects(options = {}) {
   if (
     visualConfig.roundTransitionWipe &&
     state.previousTurnToken &&
-    turnToken &&
-    state.previousTurnToken !== turnToken
+    roundTransitionToken &&
+    state.previousTurnToken !== roundTransitionToken
   ) {
     removeTransientNodes(state.gridRoot, WIPE_CLASS, state);
     appendTransientNode(state, state.gridRoot, WIPE_CLASS, 760);
@@ -1975,6 +2000,7 @@ export function updateCricketGridStatusEffects(options = {}) {
       transitions,
       visualConfig,
       cricketRules,
+      preserveNativeLabel: gridSnapshot.modern === true,
     });
 
     scoringRowCount += rowResult.scoringRowCount;
@@ -1993,7 +2019,7 @@ export function updateCricketGridStatusEffects(options = {}) {
   state.previousMarksByLabel = cloneMarksByLabel(renderState.marksByLabel);
   state.previousStateMap = new Map(renderState.stateMap);
   state.previousActivePlayerIndex = Number(renderState.activePlayerIndex);
-  state.previousTurnToken = turnToken;
+  state.previousTurnToken = roundTransitionToken;
   if (debugStats) {
     debugStats.status = "ok";
     debugStats.scoringRowCount = scoringRowCount;

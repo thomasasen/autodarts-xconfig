@@ -325,7 +325,7 @@ test("cricket theme CSS can use Templates Global semantic colors without typogra
   assert.doesNotMatch(typographyCss, /ad-ext-cricket-target/);
   assert.match(combinedCss, /#ad-ext-player-display\s+\.ad-ext-player\s+\.ad-ext-player-score\s*\{[^}]*color:\s*var\(--ad-ext-theme-cricket-score-color\)\s*!important;/s);
   assert.match(combinedCss, /#ad-ext-player-display\s+\.ad-ext-player\.ad-ext-player-active\s+\.ad-ext-player-name,[^}]*color:\s*var\(--ad-ext-theme-name-active-color\)\s*!important;/s);
-  assert.match(gridFxCss, /\.ad-ext-crfx-root\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*repeating-linear-gradient\(/s);
+  assert.match(gridFxCss, /\.ad-ext-crfx-root:not\(\.ad-ext-crfx-modern-root\)\s+\.ad-ext-crfx-cell\.ad-ext-crfx-score\s*\{[^}]*repeating-linear-gradient\(/s);
 });
 
 test("theme global typography only resolves an active theme inside the matching game context", () => {

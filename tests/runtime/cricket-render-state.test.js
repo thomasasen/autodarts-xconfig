@@ -1872,9 +1872,28 @@ test("transition signature changes on each throw even when active turn id and bo
       getActiveThrows: () => [{ segment: { name: "S5" } }],
     }),
   });
+  const stateNextTurn = buildCricketRenderState({
+    documentRef,
+    cricketRules,
+    variantRules,
+    visualConfig: VISUAL_CONFIG,
+    gameState: createGameState({
+      ...baseOverrides,
+      getActivePlayerIndex: () => 1,
+      getActiveTurn: () => ({
+        ...fixedTurn,
+        id: "turn-next",
+        playerId: "b",
+        turn: 2,
+      }),
+      getActiveThrows: () => [],
+    }),
+  });
 
   assert.equal(stateThrow0?.pipelineSignature, stateThrow1?.pipelineSignature);
   assert.notEqual(stateThrow0?.transitionSignature, stateThrow1?.transitionSignature);
+  assert.equal(stateThrow0?.roundTransitionToken, stateThrow1?.roundTransitionToken);
+  assert.notEqual(stateThrow1?.roundTransitionToken, stateNextTurn?.roundTransitionToken);
   assert.equal(stateThrow0?.stateMap.get("20")?.boardPresentation, "scoring");
   assert.equal(stateThrow1?.stateMap.get("20")?.boardPresentation, "scoring");
 });

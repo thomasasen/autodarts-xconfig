@@ -1545,7 +1545,8 @@ test("xConfig shell marks every theme and pending animation as deprecated", asyn
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     const expectedStatus = ["checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert",
-      "single-bull-hit-sound", "x01-remaining-score-bar", "cricket-target-highlighter"].includes(
+      "single-bull-hit-sound", "x01-remaining-score-bar", "cricket-target-highlighter",
+      "cricket-grid-status-effects"].includes(
       featureKey
     )
       ? "ready"

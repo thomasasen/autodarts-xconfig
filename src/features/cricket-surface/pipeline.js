@@ -1,5 +1,6 @@
 import {
   buildPipelineSignature,
+  buildRoundTransitionToken,
   buildTurnToken,
   deriveTargetStates,
   enrichStateMapForUi,
@@ -1450,6 +1451,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     stateMap,
     gridSnapshot: {
       root: grid.root,
+      modern: grid.modern === true,
       labels: grid.labels,
       diagnostics: labelDiagnostics,
       rows: gridRows,
@@ -1581,6 +1583,10 @@ export function buildCricketRenderState(input = {}, options = {}) {
     extracted.gameState || input?.gameState || options?.gameState,
     Number(extracted.activePlayerIndex) || 0
   );
+  const roundTransitionToken = buildRoundTransitionToken(
+    extracted.gameState || input?.gameState || options?.gameState,
+    Number(extracted.activePlayerIndex) || 0
+  );
   const transitionSignature = `${pipelineSignature}::${turnToken}`;
   const targetStates = deriveTargetStates({
     stateMap,
@@ -1591,6 +1597,7 @@ export function buildCricketRenderState(input = {}, options = {}) {
     stateMap,
     targetStates,
     turnToken,
+    roundTransitionToken,
     pipelineSignature,
     transitionSignature,
   };

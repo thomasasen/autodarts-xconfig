@@ -1,6 +1,7 @@
 ﻿export const STYLE_ID = "ad-ext-cricket-grid-status-effects-style";
 
 export const ROOT_CLASS = "ad-ext-crfx-root";
+export const MODERN_ROOT_CLASS = "ad-ext-crfx-modern-root";
 export const CELL_CLASS = "ad-ext-crfx-cell";
 export const THREAT_CLASS = "ad-ext-crfx-threat";
 export const SCORE_CLASS = "ad-ext-crfx-score";
@@ -11,6 +12,7 @@ export const OPEN_CLASS = "ad-ext-crfx-open";
 export const OPEN_ACTIVE_CLASS = "ad-ext-crfx-open-active";
 export const OPEN_INACTIVE_CLASS = "ad-ext-crfx-open-inactive";
 export const LABEL_CLASS = "ad-ext-crfx-label-cell";
+export const NATIVE_LABEL_CLASS = "ad-ext-crfx-native-label";
 export const BADGE_CLASS = "ad-ext-crfx-badge";
 export const BADGE_BEACON_CLASS = "ad-ext-crfx-badge-beacon";
 export const BADGE_BURST_CLASS = "ad-ext-crfx-badge-burst";
@@ -158,7 +160,7 @@ export function buildStyleText() {
   transition: filter 180ms ease, opacity 180ms ease, box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${OPEN_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${OPEN_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(127, 214, 247, 0.2),
     inset 0 0 10px rgba(5, 24, 36, 0.16) !important;
@@ -170,7 +172,7 @@ export function buildStyleText() {
     ) !important;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${OPEN_INACTIVE_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${OPEN_INACTIVE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(110, 138, 154, 0.26),
     inset 0 0 10px rgba(3, 16, 24, 0.2) !important;
@@ -190,10 +192,25 @@ export function buildStyleText() {
   --ad-ext-crfx-badge-glow: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.48));
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${LABEL_CLASS} {
   position: relative;
   overflow: hidden;
   transition: box-shadow 180ms ease, background-color 180ms ease, color 180ms ease, filter 180ms ease, opacity 180ms ease;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS} {
+  position: relative;
+  isolation: isolate;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS}::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--ad-ext-crfx-badge-border);
+  opacity: 0.86;
+  z-index: 0;
 }
 
 .${ROOT_CLASS} .${LABEL_CLASS}.${LABEL_STATE_CLASS.neutral},
@@ -231,7 +248,7 @@ export function buildStyleText() {
   text-shadow: none !important;
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}::before {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${LABEL_CLASS}::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -240,7 +257,7 @@ export function buildStyleText() {
   opacity: 1;
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}::after {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${LABEL_CLASS}::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -253,7 +270,7 @@ export function buildStyleText() {
   opacity: 1;
 }
 
-.${ROOT_CLASS} .${LABEL_CLASS}.${BADGE_BEACON_CLASS},
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${LABEL_CLASS}.${BADGE_BEACON_CLASS},
 .${ROOT_CLASS} .${BADGE_CLASS}.${BADGE_BEACON_CLASS} {
   box-shadow: 0 0 0 1px var(--ad-ext-crfx-badge-border), 0 0 14px var(--ad-ext-crfx-badge-glow);
 }
@@ -284,7 +301,19 @@ export function buildStyleText() {
   animation: ad-ext-crfx-badge-burst-b 700ms ease;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${THREAT_CLASS} {
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS}.${BADGE_BEACON_CLASS}::before {
+  box-shadow: inset 0 0 0 1px var(--ad-ext-crfx-badge-border), 0 0 12px var(--ad-ext-crfx-badge-glow);
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS}.${BADGE_BURST_CLASS}[${BADGE_BURST_SEQUENCE_ATTRIBUTE}="0"]::before {
+  animation: ad-ext-crfx-native-label-burst-a 700ms ease;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS}.${BADGE_BURST_CLASS}[${BADGE_BURST_SEQUENCE_ATTRIBUTE}="1"]::before {
+  animation: ad-ext-crfx-native-label-burst-b 700ms ease;
+}
+
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${THREAT_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
     inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.3)) !important;
@@ -303,7 +332,7 @@ export function buildStyleText() {
     ) !important;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${SCORE_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${SCORE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
     inset 0 0 24px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.24)) !important;
@@ -322,12 +351,12 @@ export function buildStyleText() {
     ) !important;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${DEAD_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${DEAD_CLASS} {
   filter: grayscale(0.88) saturate(0.28) brightness(0.76);
   opacity: 0.72;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${PRESSURE_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${PRESSURE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + var(--ad-ext-crfx-stroke-boost))),
     inset 0 0 28px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.32)) !important;
@@ -346,7 +375,7 @@ export function buildStyleText() {
     ) !important;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${ACTIVE_COLUMN_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${ACTIVE_COLUMN_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(127, 214, 247, 0.36),
     inset 0 0 16px rgba(127, 214, 247, 0.12) !important;
@@ -358,7 +387,7 @@ export function buildStyleText() {
     ) !important;
 }
 
-.${ROOT_CLASS} .${CELL_CLASS}.${OPEN_ACTIVE_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}.${OPEN_ACTIVE_CLASS} {
   box-shadow:
     inset 0 0 0 1px rgba(127, 214, 247, 0.36),
     inset 0 0 16px rgba(127, 214, 247, 0.12) !important;
@@ -370,27 +399,66 @@ export function buildStyleText() {
     ) !important;
 }
 
-.${ROOT_CLASS} .${MARK_PROGRESS_CLASS} {
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 180ms ease, box-shadow 180ms ease;
+  z-index: 1;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS} > :not(.${ROW_WAVE_CLASS}):not(.${DELTA_CLASS}):not(.${SPARK_CLASS}) {
+  position: relative;
+  z-index: 2;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${THREAT_CLASS}::before,
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${PRESSURE_CLASS}::before {
+  background: rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.24));
+  box-shadow: inset 0 0 0 1px rgba(var(--ad-ext-crfx-danger-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.18));
+  opacity: 1;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${SCORE_CLASS}::before {
+  background: rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) * 0.26));
+  box-shadow: inset 0 0 0 1px rgba(var(--ad-ext-crfx-offense-rgb), calc(var(--ad-ext-crfx-highlight-opacity) + 0.18));
+  opacity: 1;
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${DEAD_CLASS}::before {
+  background: rgba(78, 85, 94, 0.34);
+  opacity: calc(var(--ad-ext-crfx-highlight-opacity) * 0.5);
+}
+
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${OPEN_ACTIVE_CLASS}::before {
+  box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.36);
+  opacity: 1;
+}
+
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS} {
   transform-origin: center;
 }
 
-.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}[${MARK_PROGRESS_SEQUENCE_ATTRIBUTE}="0"] {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS}[${MARK_PROGRESS_SEQUENCE_ATTRIBUTE}="0"] {
   animation: ad-ext-crfx-mark-a 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}[${MARK_PROGRESS_SEQUENCE_ATTRIBUTE}="1"] {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS}[${MARK_PROGRESS_SEQUENCE_ATTRIBUTE}="1"] {
   animation: ad-ext-crfx-mark-b 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L1_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS}.${MARK_L1_CLASS} {
   filter: drop-shadow(0 0 4px rgba(var(--ad-ext-crfx-offense-rgb), 0.62));
 }
 
-.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L2_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS}.${MARK_L2_CLASS} {
   filter: drop-shadow(0 0 6px rgba(var(--ad-ext-crfx-offense-rgb), 0.76));
 }
 
-.${ROOT_CLASS} .${MARK_PROGRESS_CLASS}.${MARK_L3_CLASS} {
+.${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS}.${MARK_L3_CLASS} {
   filter: drop-shadow(0 0 8px rgba(var(--ad-ext-crfx-offense-rgb), 0.92));
 }
 
@@ -481,6 +549,18 @@ export function buildStyleText() {
   0% { transform: translateY(-50%) scale(1); }
   24% { transform: translateY(-50%) scale(1.09); }
   100% { transform: translateY(-50%) scale(1); }
+}
+
+@keyframes ad-ext-crfx-native-label-burst-a {
+  0% { transform: scale(1); }
+  24% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ad-ext-crfx-native-label-burst-b {
+  0% { transform: scale(1); }
+  24% { transform: scale(1.09); }
+  100% { transform: scale(1); }
 }
 
 @keyframes ad-ext-crfx-mark-a {
