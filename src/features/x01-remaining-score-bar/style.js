@@ -84,8 +84,30 @@ export function getEffectFillClassList() {
   return EFFECTS.map((value) => getEffectFillClass(value));
 }
 
+export function buildModernSizeStyle(hostSelector) {
+  return Object.entries({ schmal: 8, standard: 12, breit: 20, extrabreit: 28 })
+    .map(([size, height]) => `${hostSelector}.${ACTIVE_CLASS}.${SIZE_CLASS_PREFIX}${size}{
+  --ad-ext-x01-remaining-score-bar-height-active:${height}px;
+}`).join("\n");
+}
+
 export function buildStyleText() {
   return `
+/* Reserve a compact footer without replacing the native card layout. */
+[${STACK_ATTRIBUTE}='modern']{
+  position:relative;
+  padding-bottom:calc(28px + 1rem);
+}
+[${STACK_ATTRIBUTE}='modern'] > ${HOST_SELECTOR}{
+  position:absolute;
+  inset-inline:.75rem;
+  bottom:.45rem;
+  width:auto;
+  margin:0;
+  pointer-events:none;
+  --ad-ext-x01-remaining-score-bar-height-inactive:6px;
+}
+${buildModernSizeStyle(`[${STACK_ATTRIBUTE}='modern'] > ${HOST_SELECTOR}`)}
 ${STACK_SELECTOR}{
   display:grid !important;
   grid-template-columns:1fr auto !important;
@@ -354,8 +376,8 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-remaining-score-bar__
 }
 
 @keyframes ad-ext-x01-remaining-score-bar-bar-pulse{
-  0%,100%{transform:scaleY(1);filter:brightness(1.02) saturate(1.05);box-shadow:var(--ad-ext-x01-remaining-score-bar-fill-shadow)}
-  48%{transform:scaleY(1.34);filter:brightness(1.36) saturate(1.28);box-shadow:var(--ad-ext-x01-remaining-score-bar-fill-shadow),0 0 16px var(--ad-ext-x01-remaining-score-bar-fill-outline-active),0 0 26px var(--ad-ext-x01-remaining-score-bar-fill-ambient-active)}
+  0%,100%{transform:scaleY(.7);filter:brightness(1.02) saturate(1.05);box-shadow:var(--ad-ext-x01-remaining-score-bar-fill-shadow)}
+  48%{transform:scaleY(1);filter:brightness(1.36) saturate(1.28);box-shadow:var(--ad-ext-x01-remaining-score-bar-fill-shadow),0 0 16px var(--ad-ext-x01-remaining-score-bar-fill-outline-active),0 0 26px var(--ad-ext-x01-remaining-score-bar-fill-ambient-active)}
 }
 
 @keyframes ad-ext-x01-remaining-score-bar-glass-light-sweep-core{

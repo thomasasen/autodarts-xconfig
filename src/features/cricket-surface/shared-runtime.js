@@ -1,4 +1,5 @@
 import { buildCricketRenderState, CRICKET_SURFACE_STATUS } from "./pipeline.js";
+import { MODERN_CRICKET_GRID_SELECTOR } from "./modern-grid.js";
 import {
   canDelayMissingMatchBoardGap,
   clearDegradedHostRecoveryRecord,
@@ -30,6 +31,7 @@ const SHARED_LISTENER_KEYS = Object.freeze({
 const POST_TRANSITION_SURFACE_AUDIT_MS = 420;
 
 const SURFACE_SELECTOR = [
+  MODERN_CRICKET_GRID_SELECTOR,
   "#grid",
   ".ad-ext-cricket-grid",
   ".ad-ext-crfx-root",
@@ -53,6 +55,7 @@ const SURFACE_SELECTOR = [
 ].join(",");
 
 const SURFACE_SCOPE_SELECTOR = [
+  MODERN_CRICKET_GRID_SELECTOR,
   "#grid",
   ".ad-ext-cricket-grid",
   ".ad-ext-crfx-root",
@@ -67,6 +70,7 @@ const SURFACE_SCOPE_SELECTOR = [
 ].join(",");
 
 const GRID_CACHE_SURFACE_SELECTOR = [
+  MODERN_CRICKET_GRID_SELECTOR,
   "#grid",
   ".ad-ext-cricket-grid",
   ".ad-ext-crfx-root",
@@ -81,6 +85,7 @@ const GRID_CACHE_SURFACE_SELECTOR = [
 ].join(",");
 
 export const SHARED_CRICKET_SURFACE_ATTRIBUTE_FILTER = Object.freeze([
+  "src",
   "class",
   "alt",
   "title",
@@ -228,7 +233,8 @@ function isRelevantAttributeMutation(mutation) {
     return false;
   }
 
-  return target.matches(".ad-ext-player, #ad-ext-player-display, #ad-ext-game-variant");
+  return target.matches(".ad-ext-player, #ad-ext-player-display, #ad-ext-game-variant") ||
+    Boolean(target.closest?.(MODERN_CRICKET_GRID_SELECTOR));
 }
 
 function hasRelevantCricketMutation(mutations = []) {

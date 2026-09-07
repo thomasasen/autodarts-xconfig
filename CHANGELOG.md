@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.1] - 2026-09-07
+
+### Fixed
+
+- Nutzerwirkung: X01 Remaining Score Bar, Single Bull Hit Sound und Cricket Target Highlighter funktionieren im neuen Autodarts-Design und werden nicht mehr als `Deprecated` angezeigt.
+  Technik: Gemeinsame Matchflächen-Erkennung liest die modernen Spieler-, Wurf- und Cricket-Raster. Native SVG-Treffersymbole, aktive Spielerwechsel und ersetzte DOM-Knoten lösen eine sichere Aktualisierung aus.
+
 ## [3.0.0] - 2026-09-06
 
 ### Changed
@@ -1961,6 +1968,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v2.9.2...v3.0.0
 [2.9.2]: https://github.com/thomasasen/autodarts-xconfig/compare/3feb60bd269741fd1414b3b2bca7f68e8c6f2137...v2.9.2
 [2.9.1]: https://github.com/thomasasen/autodarts-xconfig/compare/633ff78...3feb60bd269741fd1414b3b2bca7f68e8c6f2137

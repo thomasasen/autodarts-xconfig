@@ -103,6 +103,9 @@ const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "checkout-target-highlights",
   "dart-marker-replacer",
   "take-out-darts-alert",
+  "single-bull-hit-sound",
+  "x01-remaining-score-bar",
+  "cricket-target-highlighter",
 ]);
 
 function descriptorEntry(definition) {

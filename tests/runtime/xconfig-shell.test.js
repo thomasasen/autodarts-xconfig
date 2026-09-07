@@ -1544,7 +1544,8 @@ test("xConfig shell marks every theme and pending animation as deprecated", asyn
 
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert"].includes(
+    const expectedStatus = ["checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert",
+      "single-bull-hit-sound", "x01-remaining-score-bar", "cricket-target-highlighter"].includes(
       featureKey
     )
       ? "ready"
@@ -1847,6 +1848,12 @@ test("xConfig X01 score progress renders configured size effect and color previe
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme"), "traffic-light");
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-size"), "breit");
   assert.equal(previewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-effect"), "previous-score-trail");
+  const previewCss = documentRef.getElementById("ad-xconfig-shell-style").textContent;
+  for (const [size, height] of [["schmal", 8], ["standard", 12], ["breit", 20], ["extrabreit", 28]]) {
+    assert.ok(previewCss.includes(
+      `.ad-xconfig-x01-remaining-score-bar-preview-host.ad-ext-x01-remaining-score-bar--active.ad-ext-x01-remaining-score-bar--size-${size}{\n  --ad-ext-x01-remaining-score-bar-height-active:${height}px;`
+    ));
+  }
   assert.equal(previewBar.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-cycle"), "true");
   assert.equal(previewScore.textContent, "100%");
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");

@@ -7,6 +7,7 @@
   updateSingleBullHitSound,
 } from "./logic.js";
 import { resolveSingleBullHitSoundConfig } from "./style.js";
+import { MODERN_TURN_SELECTOR } from "../shared/x01-match-surface.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import {
   createTurnSurfaceObserveOptions,
@@ -67,7 +68,7 @@ export function initializeSingleBullHitSound(context = {}) {
   harness.registerObserver({
     key: OBSERVER_KEY,
     callback: (mutations = []) => {
-      if (hasRelevantTurnSurfaceMutation(mutations)) {
+      if (hasRelevantTurnSurfaceMutation(mutations, { extraSelectors: [MODERN_TURN_SELECTOR] })) {
         scheduleUpdate();
       }
     },

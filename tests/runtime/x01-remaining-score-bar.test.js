@@ -17,10 +17,149 @@ import {
   STACK_ATTRIBUTE,
   TRACK_CLASS,
   TRAIL_CLASS,
+  EFFECTS,
+  getEffectFillClass,
   buildStyleText,
 } from "../../src/features/x01-remaining-score-bar/style.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
+
+test("modern cards keep each explicitly selected effect across passive updates and stop it with off", () => {
+  const f = createModernX01Fixture({ base: 501, score: 301 });
+  const state = createScoreProgressState();
+  const featureConfig = { effect: "bar-pulse" };
+  const sync = () => syncScoreProgress({ ...f, featureConfig }, state);
+  sync();
+  const host = f.card.querySelector(HOST_SELECTOR);
+  const fill = host.querySelector(`.${FILL_CLASS}`);
+  for (const effect of EFFECTS.filter((value) => value !== "off")) {
+    featureConfig.effect = effect;
+    f.score.textContent = String(Number(f.score.textContent) - 20);
+    sync();
+    assert.ok(fill.classList.contains(getEffectFillClass(effect)));
+    const token = fill.getAttribute("data-ad-ext-x01-remaining-score-bar-effect-token");
+    sync();
+    assert.equal(host.querySelector(`.${FILL_CLASS}`), fill);
+    assert.equal(fill.getAttribute("data-ad-ext-x01-remaining-score-bar-effect-token"), token);
+  }
+  featureConfig.effect = "off";
+  sync();
+  assert.ok(fill.classList.contains(getEffectFillClass("off")));
+  for (const effect of EFFECTS.filter((value) => value !== "off")) {
+    assert.equal(fill.classList.contains(getEffectFillClass(effect)), false);
+  }
+  assert.equal(host.querySelector(`.${TRAIL_CLASS}`).style.getPropertyValue("opacity"), "0");
+  const css = buildStyleText();
+  assert.equal(css.includes("prefers-reduced-motion"), true);
+});
+
+test("modern score bars use the native base and preserve nested score, stats and checkout rows", () => {
+  const f = createModernX01Fixture({ base: 501, score: 301 });
+  const state = createScoreProgressState();
+  const content = f.node(f.card, "div", "relative flex flex-1");
+  const stack = f.node(content, "div", "flex flex-col gap-2");
+  const scoreRow = f.node(stack, "div", "flex justify-center");
+  scoreRow.appendChild(f.score);
+  const stats = f.node(stack, "div", "", "Leg 60.0 / Match 60.0");
+  const card2 = f.node(f.documentRef.main, "div", "relative overflow-clip");
+  f.node(card2, "div", "", "Player 2").setAttribute("role", "button");
+  f.node(card2, "div", "font-number overflow-hidden", "501");
+  const context = { ...f, gameState: {
+    getSnapshot: () => ({ match: { id: "old-match", variant: "X01 701" } }),
+    getActivePlayerIndex: () => 1,
+  } };
+  assert.equal(syncScoreProgress(context, state).renderedCards, 2);
+  const host = f.card.querySelector(HOST_SELECTOR);
+  const host2 = card2.querySelector(HOST_SELECTOR);
+  assert.equal(host.parentNode, f.card);
+  assert.equal(f.score.parentNode, scoreRow);
+  assert.equal(stats.parentNode, stack);
+  assert.equal(f.cardRoute.parentNode, f.card);
+  assert.equal(f.card.getAttribute(STACK_ATTRIBUTE), "modern");
+  assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "60.08%");
+  assert.ok(host.classList.contains(ACTIVE_CLASS));
+  assert.ok(host2.classList.contains(INACTIVE_CLASS));
+  f.marker.remove();
+  f.node(card2, "div", "bg-mono-white rounded-full");
+  f.score.textContent = "241";
+  syncScoreProgress(context, state);
+  assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "48.10%");
+  assert.ok(host.classList.contains(INACTIVE_CLASS));
+  assert.ok(host2.classList.contains(ACTIVE_CLASS));
+  f.score.textContent = "301";
+  syncScoreProgress(context, state);
+  assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "60.08%");
+  assert.equal(f.documentRef.querySelectorAll(HOST_SELECTOR).length, 2);
+});
+
+test("modern score bars recover replaced nodes, reject ambiguous scores and clean up on variant or route exit", () => {
+  const f = createModernX01Fixture({ base: 121, score: 36 });
+  const state = createScoreProgressState();
+  syncScoreProgress(f, state);
+  f.score.remove();
+  const score = f.node(f.card, "div", "font-number overflow-hidden", "0");
+  syncScoreProgress(f, state);
+  assert.equal(f.card.querySelector(HOST_SELECTOR).style.getPropertyValue(WIDTH_PROPERTY), "0%");
+  const duplicate = f.node(f.card, "div", "font-number overflow-hidden", "50");
+  assert.equal(syncScoreProgress(f, state).renderedCards, 0);
+  assert.equal(f.card.getAttribute(STACK_ATTRIBUTE), null);
+  duplicate.remove();
+  score.textContent = "170";
+  f.variant.textContent = "170";
+  syncScoreProgress(f, state);
+  assert.equal(f.card.querySelector(HOST_SELECTOR).style.getPropertyValue(WIDTH_PROPERTY), "100%");
+  f.card.querySelector(HOST_SELECTOR).remove();
+  syncScoreProgress(f, state);
+  assert.equal(f.card.querySelectorAll(HOST_SELECTOR).length, 1);
+  f.variant.textContent = "Cricket";
+  assert.equal(syncScoreProgress(f, state).renderedCards, 0);
+  assert.equal(f.card.getAttribute(STACK_ATTRIBUTE), null);
+  f.variant.textContent = "501";
+  syncScoreProgress(f, state);
+  assert.equal(f.card.querySelector(HOST_SELECTOR).style.getPropertyValue(WIDTH_PROPERTY), "33.93%");
+  f.windowRef.location.pathname = "/lobbies";
+  assert.equal(syncScoreProgress(f, state).renderedCards, 0);
+  assert.equal(f.documentRef.querySelectorAll(HOST_SELECTOR).length, 0);
+  assert.equal(f.card.getAttribute(STACK_ATTRIBUTE), null);
+});
+
+test("modern score bar observer tracks native score mutations after mounting and ignores its own rendering", () => {
+  const f = createModernX01Fixture({ base: 501, score: 301 });
+  let observer;
+  let scheduled = 0;
+  let disconnected = false;
+  const cleanup = mountX01RemainingScoreBar({
+    ...f,
+    domGuards: createDomGuards({ documentRef: f.documentRef }),
+    registries: { observers: {
+      registerMutationObserver(options) { observer = options; },
+      disconnect() { disconnected = true; },
+    } },
+    helpers: { createRafScheduler(update) {
+      return { schedule() { scheduled += 1; update(); }, cancel() {} };
+    } },
+  });
+  const host = f.card.querySelector(HOST_SELECTOR);
+  const initial = scheduled;
+  observer.callback([{ type: "childList", target: f.card, addedNodes: [host], removedNodes: [] }]);
+  observer.callback([{ type: "attributes", target: host, attributeName: "style" }]);
+  assert.equal(scheduled, initial);
+  f.score.textContent = "241";
+  observer.callback([{ type: "characterData", target: { nodeType: 3, parentNode: f.score } }]);
+  assert.equal(scheduled, initial + 1);
+  assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "48.10%");
+  f.marker.hidden = true;
+  observer.callback([{ type: "attributes", target: f.marker, attributeName: "hidden" }]);
+  assert.ok(host.classList.contains(INACTIVE_CLASS));
+  f.variant.textContent = "Cricket";
+  observer.callback([{ type: "childList", target: f.variant, addedNodes: [], removedNodes: [] }]);
+  assert.equal(f.card.querySelector(HOST_SELECTOR), null);
+  cleanup();
+  cleanup();
+  assert.equal(disconnected, true);
+  assert.equal(f.card.getAttribute(STACK_ATTRIBUTE), null);
+});
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -1393,9 +1532,9 @@ test("syncScoreProgress uses a stronger bar-pulse score-change animation", () =>
   const fillNode = player.cardNode.querySelector(`.${FILL_CLASS}`);
   assert.ok(fillNode);
   assert.deepEqual(fillNode.__lastAnimation?.keyframes, [
-    { transform: "scaleY(1)", filter: "brightness(1.08) saturate(1.06)" },
-    { transform: "scaleY(1.38)", filter: "brightness(1.46) saturate(1.3)" },
-    { transform: "scaleY(1)", filter: "brightness(1.04) saturate(1.04)" },
+    { transform: "scaleY(0.7)", filter: "brightness(1.08) saturate(1.06)" },
+    { transform: "scaleY(1)", filter: "brightness(1.46) saturate(1.3)" },
+    { transform: "scaleY(0.7)", filter: "brightness(1.04) saturate(1.04)" },
   ]);
   assert.deepEqual(fillNode.__lastAnimation?.options, {
     fill: "none",
@@ -1822,7 +1961,7 @@ test("score-progress style gives glass charge a slower layered charge effect", (
   );
 });
 
-test("score-progress style gives pulse core a stronger visible pulse", () => {
+test("score-progress pulse changes height inside the clipped track instead of growing beyond it", () => {
   const css = buildStyleText();
 
   assert.match(
@@ -1831,7 +1970,7 @@ test("score-progress style gives pulse core a stronger visible pulse", () => {
   );
   assert.match(
     css,
-    /@keyframes ad-ext-x01-remaining-score-bar-bar-pulse\{[\s\S]*48%\{transform:scaleY\(1\.34\);filter:brightness\(1\.36\) saturate\(1\.28\);box-shadow:[^}]*0 0 26px var\(--ad-ext-x01-remaining-score-bar-fill-ambient-active\)/s
+    /@keyframes ad-ext-x01-remaining-score-bar-bar-pulse\{\s*0%,100%\{transform:scaleY\(\.7\);[^}]+\}\s*48%\{transform:scaleY\(1\);filter:brightness\(1\.36\) saturate\(1\.28\);box-shadow:[^}]*0 0 26px var\(--ad-ext-x01-remaining-score-bar-fill-ambient-active\)/s
   );
 });
 

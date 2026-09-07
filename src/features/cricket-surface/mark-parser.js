@@ -79,6 +79,26 @@ function parseMarksFromIcons(node, cricketRules, countMultipleIcons) {
   return null;
 }
 
+function parseNativeMarkImage(node) {
+  for (const icon of Array.from(node?.querySelectorAll?.("img[src]") || [])) {
+    const source = String(icon.getAttribute("src") || "");
+    if (!source.startsWith("data:image/svg+xml,")) continue;
+    let svg;
+    try {
+      svg = decodeURIComponent(source.slice("data:image/svg+xml,".length));
+    } catch (_) {
+      continue;
+    }
+    // Native mark assets: slash, cross, circled cross. Do not count arbitrary images.
+    if (!/viewBox=['"]0 0 140 140['"]/.test(svg) || /<(?:path|image|use)\b/i.test(svg)) continue;
+    const lines = (svg.match(/<line\b/g) || []).length;
+    const circles = (svg.match(/<circle\b/g) || []).length;
+    if (lines === 2 && circles === 1) return 3;
+    if (circles === 0 && (lines === 1 || lines === 2)) return lines;
+  }
+  return null;
+}
+
 function parseIndexCandidate(value) {
   const parsed = Number.parseInt(String(value || "").trim(), 10);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
@@ -117,6 +137,9 @@ export function parseMarksValue(node, cricketRules, options = {}) {
   if (Number.isFinite(iconValue)) {
     return iconValue;
   }
+
+  const nativeValue = parseNativeMarkImage(node);
+  if (Number.isFinite(nativeValue)) return nativeValue;
 
   const textValue = parseMarkCandidate(node.textContent || "", cricketRules);
   return Number.isFinite(textValue) ? textValue : 0;

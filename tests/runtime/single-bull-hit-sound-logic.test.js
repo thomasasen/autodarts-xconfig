@@ -39,6 +39,92 @@ function flushMicrotasks() {
   return Promise.resolve();
 }
 
+function modernSoundFixture() {
+  const documentRef = new FakeDocument();
+  const root = documentRef.createElement("div");
+  root.classList.add("bg-surface-surface");
+  root.style.width = "300px";
+  root.style.height = "72px";
+  const slots = documentRef.createElement("div");
+  const rows = Array.from({ length: 3 }, () => {
+    const row = documentRef.createElement("div");
+    row.classList.add("font-number");
+    slots.appendChild(row);
+    return row;
+  });
+  const total = documentRef.createElement("div");
+  total.classList.add("font-number");
+  root.appendChild(slots);
+  root.appendChild(total);
+  documentRef.main.appendChild(root);
+  const calls = [];
+  const state = createAudioState(calls);
+  function set(index, token, suggestion = false) {
+    const row = rows[index];
+    row.replaceChildren();
+    row.classList.toggle("text-checkout-suggestion", suggestion);
+    const label = documentRef.createElement("span");
+    label.textContent = token;
+    row.appendChild(label);
+  }
+  return {
+    calls, state, set, rows,
+    update() {
+      state.lastSignalPlayedAt = 0;
+      updateSingleBullHitSound({ documentRef, state, x01Rules,
+        config: { volume: 0.9, cooldownMs: 700 } });
+    },
+  };
+}
+
+test("modern single bull ignores suggestions, bullseye and repeated renders, and resets for the next turn", () => {
+  const fixture = modernSoundFixture();
+  fixture.set(0, "25", true);
+  fixture.update();
+  assert.equal(fixture.calls.length, 0);
+  fixture.set(0, "25");
+  fixture.update();
+  assert.equal(fixture.calls.length, 1);
+  fixture.set(0, "25");
+  fixture.update();
+  assert.equal(fixture.calls.length, 1);
+  fixture.set(1, "BULL");
+  fixture.update();
+  assert.equal(fixture.calls.length, 1);
+  fixture.set(2, "25");
+  fixture.update();
+  assert.equal(fixture.calls.length, 2);
+  [0, 1, 2].forEach((index) => fixture.set(index, ""));
+  fixture.update();
+  fixture.set(0, "25");
+  fixture.update();
+  assert.equal(fixture.calls.length, 3);
+});
+
+test("modern single bull establishes a quiet baseline and detects corrections", () => {
+  const fixture = modernSoundFixture();
+  fixture.set(0, "25");
+  fixture.update();
+  assert.equal(fixture.calls.length, 0);
+  fixture.set(0, "20");
+  fixture.update();
+  fixture.set(0, "25");
+  fixture.update();
+  assert.equal(fixture.calls.length, 1);
+});
+
+test("modern single bull retries rejected audio playback", async () => {
+  const fixture = modernSoundFixture();
+  fixture.update();
+  fixture.state.audio.play = () => Promise.reject(new Error("blocked"));
+  fixture.set(0, "25");
+  fixture.update();
+  await flushMicrotasks();
+  fixture.state.audio.play = () => { fixture.calls.push(1); return Promise.resolve(); };
+  fixture.update();
+  assert.equal(fixture.calls.length, 1);
+});
+
 function createGameState(activeTurn, activeThrows) {
   return {
     getActiveTurn() {
@@ -130,6 +216,14 @@ test("single-bull-hit-sound schedules only turn-surface or game-state changes wi
   observer.callback([{ target: documentRef.throwRow }]);
   gameStateSubscriber();
   assert.equal(scheduleCount, 3);
+
+  const modernTurn = documentRef.createElement("div");
+  modernTurn.classList.add("bg-surface-surface");
+  documentRef.main.appendChild(modernTurn);
+  observer.callback([{ target: modernTurn, type: "characterData" }]);
+  assert.equal(scheduleCount, 4);
+  observer.callback([{ target: modernTurn, type: "attributes", attributeName: "class" }]);
+  assert.equal(scheduleCount, 5);
 
   cleanup();
 });

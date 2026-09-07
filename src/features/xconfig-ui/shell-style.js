@@ -23,7 +23,7 @@ import {
 } from "../dartboard-marker-highlight/style.js";
 import { buildStyleText as buildCheckoutScoreHighlightStyleText } from "../checkout-score-highlight/style.js";
 import { buildStyleText as buildCheckoutTargetHighlightsStyleText } from "../checkout-target-highlights/style.js";
-import { buildStyleText as buildX01RemainingScoreBarStyleText } from "../x01-remaining-score-bar/style.js";
+import { buildStyleText as buildX01RemainingScoreBarStyleText, buildModernSizeStyle as buildX01RemainingScoreBarSizeStyle } from "../x01-remaining-score-bar/style.js";
 import { TURN_SCORE_PREVIEW_SCORE_CLASS } from "./turn-score-preview-contract.js";
 import { AVG_TREND_PREVIEW_CLASS } from "./avg-trend-preview-contract.js";
 import { DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_CLASS } from "./dartboard-marker-highlight-preview-contract.js";
@@ -414,10 +414,7 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host.ad-ext-x01-remaining-score-bar--active{--ad-ext-x01-remaining-score-bar-margin-top-active:0}
 #${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host--main{width:100%}
 #${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host--mini{width:8.6rem;max-width:100%;align-self:center}
-#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host--mini.ad-ext-x01-remaining-score-bar--size-schmal{--ad-ext-x01-remaining-score-bar-height-active:5px}
-#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host--mini.ad-ext-x01-remaining-score-bar--size-standard{--ad-ext-x01-remaining-score-bar-height-active:10px}
-#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host--mini.ad-ext-x01-remaining-score-bar--size-breit{--ad-ext-x01-remaining-score-bar-height-active:16px}
-#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host--mini.ad-ext-x01-remaining-score-bar--size-extrabreit{--ad-ext-x01-remaining-score-bar-height-active:22px}
+${buildX01RemainingScoreBarSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-preview-host`)}
 #${PANEL_HOST_ID} .ad-xconfig-option-item--x01-remaining-score-bar-preview{overflow:visible}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-remaining-score-bar-preview{display:grid;grid-template-columns:minmax(0,1fr) minmax(7.2rem,8.8rem) auto;grid-template-rows:auto auto;align-items:center;column-gap:.62rem;row-gap:.14rem}
 #${PANEL_HOST_ID} .ad-xconfig-option-layout--x01-remaining-score-bar-preview .ad-xconfig-option-text{grid-column:1;grid-row:1/span 2;min-width:0}

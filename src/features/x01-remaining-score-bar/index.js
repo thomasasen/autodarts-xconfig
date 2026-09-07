@@ -4,14 +4,15 @@ import {
   createScoreProgressState,
   syncScoreProgress,
 } from "./logic.js";
-import { buildStyleText, HOST_ATTRIBUTE, STACK_ATTRIBUTE, STYLE_ID } from "./style.js";
+import { buildStyleText, HOST_ATTRIBUTE, STYLE_ID } from "./style.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import { MODERN_MATCH_SEMANTIC_SELECTORS } from "../shared/x01-match-surface.js";
 
 const FEATURE_KEY = "x01-remaining-score-bar";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
-const X01_MUTATION_AREA_SELECTOR = "#ad-ext-player-display, #ad-ext-turn";
+const X01_MUTATION_AREA_SELECTOR = ["#ad-ext-player-display", "#ad-ext-turn", ...MODERN_MATCH_SEMANTIC_SELECTORS].join(", ");
 const X01_RELEVANT_SUBTREE_SELECTOR =
-  "#ad-ext-player-display, .ad-ext-player, .ad-ext-player-score, #ad-ext-turn";
+  `${X01_MUTATION_AREA_SELECTOR}, .ad-ext-player, .ad-ext-player-score`;
 const GENERIC_X01_MUTATION_TAG_NAMES = new Set(["button", "span", "p"]);
 
 function createDebugState(featureDebug) {
@@ -285,8 +286,7 @@ export function mountX01RemainingScoreBar(context = {}) {
     ids: [STYLE_ID],
     predicates: [
       (node) =>
-        node?.getAttribute?.(HOST_ATTRIBUTE) === "true" ||
-        node?.getAttribute?.(STACK_ATTRIBUTE) === "true",
+        node?.getAttribute?.(HOST_ATTRIBUTE) === "true",
     ],
   });
   const update = () => {
@@ -337,6 +337,9 @@ export function mountX01RemainingScoreBar(context = {}) {
         attributes: true,
         attributeFilter: [
           "class",
+          "style",
+          "hidden",
+          "aria-hidden",
           "selected",
           "aria-selected",
           "data-selected",

@@ -12,11 +12,11 @@ import {
   normalizeColorTheme,
   normalizeEffect,
   STACK_ATTRIBUTE,
-  STACK_SELECTOR,
   TRAIL_CLASS,
   TRACK_CLASS,
 } from "./style.js";
 import { markPlayerCardParts } from "../shared/player-card-parts.js";
+import { readModernMatchSurface } from "../shared/x01-match-surface.js";
 
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 export const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
@@ -654,6 +654,24 @@ export function createScoreProgressState() {
 }
 
 export function resolveStartScoreWithDebug(context = {}, state = createScoreProgressState()) {
+  const modern = context.modernSurface || readModernMatchSurface(context.documentRef, context.windowRef);
+  if (modern.variantNode) {
+    const cacheKey = `${buildMatchCacheKey(context)}:${modern.variant}:${modern.startScore}`;
+    const cacheReset = state.matchCacheKey !== cacheKey;
+    if (cacheReset) {
+      state.matchCacheKey = cacheKey;
+      state.cardScores = new Map();
+      state.hostScores = new WeakMap();
+    }
+    state.cachedStartScore = modern.variant === "X01" ? modern.startScore : null;
+    state.cachedStartScoreSource = "modern-header";
+    return {
+      startScore: state.cachedStartScore, source: "modern-header",
+      cacheHit: !cacheReset, cacheReset, cacheKey,
+      snapshotVariant: "", domVariant: modern.variant,
+      variantStripTexts: [], allowDomFallback: false,
+    };
+  }
   const cacheKey = buildMatchCacheKey(context);
   const { snapshotVariant, domVariant } = getVariantTexts(context);
   const variantStripTexts = readVariantStripTexts(context.documentRef);
@@ -849,6 +867,7 @@ function resolveCardIdentity(cardNode, scoreNode, cardIndex) {
 
   const nameNode =
     cardNode?.querySelector?.(".ad-ext-player-name") ||
+    cardNode?.querySelector?.('[role="button"]') ||
     cardNode?.querySelector?.(".chakra-avatar + p") ||
     null;
   const nameText = String(nameNode?.textContent || "").replaceAll(/\s+/g, " ").trim();
@@ -908,7 +927,7 @@ function ensureProgressChildren(hostNode, documentRef) {
   return { trackNode, trailNode, fillNode };
 }
 
-export function ensureProgressHost(cardNode, documentRef) {
+export function ensureProgressHost(cardNode, documentRef, modernPlayer = null) {
   if (!cardNode || !documentRef || typeof documentRef.createElement !== "function") {
     return null;
   }
@@ -919,8 +938,13 @@ export function ensureProgressHost(cardNode, documentRef) {
     hostNode.setAttribute(HOST_ATTRIBUTE, "true");
   }
 
-  const stackNode = getPlayerStack(cardNode) || cardNode;
-  stackNode?.setAttribute?.(STACK_ATTRIBUTE, "true");
+  const stackNode = modernPlayer ? cardNode : getPlayerStack(cardNode) || cardNode;
+  setAttributeIfChanged(stackNode, STACK_ATTRIBUTE, modernPlayer ? "modern" : "true");
+  if (modernPlayer) {
+    if (hostNode.parentNode !== cardNode) cardNode.appendChild(hostNode);
+    ensureProgressChildren(hostNode, documentRef);
+    return hostNode;
+  }
   const scoreNode = getPlayerScoreNode(cardNode);
   const scoreContainerNode = getPlayerScoreContainer(cardNode, scoreNode);
   if (hostNode.parentNode !== stackNode) {
@@ -946,7 +970,7 @@ export function ensureProgressHost(cardNode, documentRef) {
 }
 
 function cleanupStackMarkers(documentRef) {
-  queryAll(documentRef, STACK_SELECTOR).forEach((stackNode) => {
+  queryAll(documentRef, `[${STACK_ATTRIBUTE}]`).forEach((stackNode) => {
     const hasHost = Boolean(stackNode?.querySelector?.(HOST_SELECTOR));
     if (!hasHost) {
       stackNode?.removeAttribute?.(STACK_ATTRIBUTE);
@@ -1064,9 +1088,9 @@ function createEffectAnimationDefinition(effect) {
   if (normalizedEffect === "bar-pulse") {
     return {
       keyframes: [
-        { transform: "scaleY(1)", filter: "brightness(1.08) saturate(1.06)" },
-        { transform: "scaleY(1.38)", filter: "brightness(1.46) saturate(1.3)" },
-        { transform: "scaleY(1)", filter: "brightness(1.04) saturate(1.04)" },
+        { transform: "scaleY(0.7)", filter: "brightness(1.08) saturate(1.06)" },
+        { transform: "scaleY(1)", filter: "brightness(1.46) saturate(1.3)" },
+        { transform: "scaleY(0.7)", filter: "brightness(1.04) saturate(1.04)" },
       ],
       options: { duration: 440, easing: "cubic-bezier(0.16, 0.9, 0.2, 1)" },
     };
@@ -1306,6 +1330,9 @@ export function updateProgressHost(hostNode, options = {}) {
 }
 
 function shouldRenderFeature(context = {}) {
+  if (context.modernSurface?.variantNode) {
+    return isMatchRoute(context.windowRef) && context.modernSurface.variant === "X01";
+  }
   const { snapshotVariant, domVariant } = getVariantTexts(context);
 
   if (isSupportedX01VariantText(snapshotVariant) || isSupportedX01VariantText(domVariant)) {
@@ -1316,6 +1343,8 @@ function shouldRenderFeature(context = {}) {
 }
 
 export function syncScoreProgress(context = {}, state = createScoreProgressState()) {
+  const modernSurface = readModernMatchSurface(context.documentRef, context.windowRef);
+  context = { ...context, modernSurface };
   const documentRef = context.documentRef;
   const debugEnabled = context.featureConfig?.debug === true;
   const normalizedColorTheme = normalizeColorTheme(context.featureConfig?.colorTheme);
@@ -1406,7 +1435,10 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     return withDebug({ startScore: null, renderedCards: 0 });
   }
 
-  const cards = getPlayerCards(documentRef);
+  const modernPlayers = modernSurface.variantNode ? modernSurface.players : [];
+  const cards = modernSurface.variantNode
+    ? modernPlayers.map((player) => player.cardNode)
+    : getPlayerCards(documentRef);
   debugPayload.cardCount = cards.length;
   if (!cards.length) {
     clearAllScoreProgress(documentRef);
@@ -1430,9 +1462,10 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     : null;
 
   cards.forEach((cardNode, cardIndex) => {
-    markPlayerCardParts(cardNode);
-    const stackNode = getPlayerStack(cardNode) || cardNode;
-    const scoreNode = getPlayerScoreNode(cardNode);
+    const modernPlayer = modernPlayers[cardIndex] || null;
+    if (!modernPlayer) markPlayerCardParts(cardNode);
+    const stackNode = modernPlayer ? cardNode : getPlayerStack(cardNode) || cardNode;
+    const scoreNode = modernPlayer ? modernPlayer.scoreNode : getPlayerScoreNode(cardNode);
     const scoreContainerNode = getPlayerScoreContainer(cardNode, scoreNode);
     const scoreValue = parseDisplayedScore(scoreNode?.textContent || "");
     if (!isFiniteNumber(scoreValue)) {
@@ -1453,7 +1486,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
       return;
     }
 
-    const hostNode = ensureProgressHost(cardNode, documentRef);
+    const hostNode = ensureProgressHost(cardNode, documentRef, modernPlayer);
     if (!hostNode) {
       if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
         sampledCards.push({
@@ -1482,7 +1515,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
       isFiniteNumber(previousScore) && previousScore !== scoreValue && scoreValue >= 0;
     state.hostScores.set(hostNode, scoreValue);
     state.cardScores.set(cardIdentity, scoreValue);
-    const isActive = isPlayerCardActive(
+    const isActive = modernPlayer ? modernSurface.playerCard === cardNode : isPlayerCardActive(
       cardNode,
       scoreNode,
       documentRef,

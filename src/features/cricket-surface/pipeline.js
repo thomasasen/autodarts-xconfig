@@ -28,6 +28,7 @@ import {
   resolveLabelCell as resolveLabelCellFromDiscovery,
 } from "./grid-discovery.js";
 import { isProtectedCricketGridRootCandidate } from "./protected-hosts.js";
+import { readModernCricketGrid } from "./modern-grid.js";
 
 export const CRICKET_SURFACE_STATUS = Object.freeze({
   READY: "ready",
@@ -143,6 +144,7 @@ function isXConfigRoute(windowRef, documentRef) {
 }
 
 function isCricketFamilyActive(gameState, documentRef, variantRules) {
+  if (readModernCricketGrid(documentRef)) return true;
   if (gameState && typeof gameState.isCricketVariant === "function") {
     return gameState.isCricketVariant({
       allowMissing: false,
@@ -586,6 +588,8 @@ export function findCricketGrid(options = {}) {
   if (!documentRef) {
     return null;
   }
+  const modernGrid = readModernCricketGrid(documentRef);
+  if (modernGrid) return modernGrid;
   const targetSet = new Set(Array.isArray(targetOrder) ? targetOrder : []);
   let bestRoot = null;
   let bestScore = 0;
@@ -636,6 +640,12 @@ export function findCricketGrid(options = {}) {
 }
 
 function resolveGridSnapshot(documentRef, cricketRules, targetOrder, cache = null) {
+  const modernGrid = readModernCricketGrid(documentRef);
+  if (modernGrid) {
+    if (cache) cache.grid = modernGrid;
+    return modernGrid;
+  }
+  if (cache?.grid?.modern) cache.grid = null;
   return resolveGridSnapshotFromCache(
     documentRef,
     cricketRules,
@@ -1227,7 +1237,7 @@ function buildMarksByLabelSnapshot(options = {}) {
   }
 
   const discoveredLabels = grid.labels.map((entry) => entry.label);
-  const inferredGameModeNormalized = explicitGameModeNormalized ||
+  const inferredGameModeNormalized = (!grid.modern && explicitGameModeNormalized) ||
     cricketRules.inferCricketGameModeByLabels(discoveredLabels);
   const gameModeNormalized = inferredGameModeNormalized || "cricket";
   const targetOrder =
@@ -1245,10 +1255,10 @@ function buildMarksByLabelSnapshot(options = {}) {
   const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
   const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
   const playerCountFromDom = resolveVisiblePlayerCount(documentRef);
-  const expectedPlayerCount =
+  const expectedPlayerCount = grid.modern ? grid.headers.length :
     playerCountFromMatch > 0 ? playerCountFromMatch : playerCountFromDom;
   const cachedStableRows =
-    options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
+    !grid.modern && options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
   const {
     hasIndexedPlayerColumns,
     labelCellMarkSourceLabels,
@@ -1259,16 +1269,17 @@ function buildMarksByLabelSnapshot(options = {}) {
     shortfallRepairLabels,
   } = buildGridRowSnapshot({
     cachedStableRows,
-    collectPlayerCellsForLabel: (labelNode) =>
-      collectPlayerCellsForLabel(labelNode, cricketRules, targetSet),
+    collectPlayerCellsForLabel: (labelNode, label) => grid.modern
+      ? grid.cellsByLabel.get(label) || []
+      : collectPlayerCellsForLabel(labelNode, cricketRules, targetSet),
     cricketRules,
     expectedPlayerCount,
-    getRowNode,
+    getRowNode: grid.modern ? () => null : getRowNode,
     gridLabels: grid.labels,
     isInsideTurnPreview,
-    resolveBadgeNode: (labelNode, labelCell, label) =>
+    resolveBadgeNode: (labelNode, labelCell, label) => grid.modern ? labelNode :
       resolveBadgeNode(labelNode, labelCell, cricketRules, label),
-    resolveLabelCell: (labelNode, label) =>
+    resolveLabelCell: (labelNode, label) => grid.modern ? labelNode :
       resolveLabelCell(labelNode, cricketRules, targetSet, label),
     targetOrder,
     targetSet,
@@ -1285,7 +1296,7 @@ function buildMarksByLabelSnapshot(options = {}) {
     }
   });
 
-  const activePlayerIndex = resolveActivePlayerIndex(gameState, documentRef, playerCount, {
+  const activePlayerIndex = grid.activePlayerIndex ?? resolveActivePlayerIndex(gameState, documentRef, playerCount, {
     preferGameStateIndex: hasIndexedPlayerColumns,
   });
   const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];

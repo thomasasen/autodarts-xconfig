@@ -55,18 +55,17 @@ export function readModernMatchSurface(documentRef, windowRef = documentRef?.def
   const variant = mode && /^\d+$/.test(variantText) && Number(variantText) >= 2
     ? "X01" : variantText;
   const outMode = ({ SO: "Straight Out", DO: "Double Out", MO: "Master Out" })[mode.slice(-2)] || "";
-  const cards = all(documentRef, MODERN_PLAYER_SELECTOR).filter((node) =>
-    node.querySelector?.('[role="button"]') && isMatchNodeVisible(node, windowRef));
-  const activeCards = cards.filter((node) => all(node, ".bg-mono-white.rounded-full").some((marker) =>
-    isMatchNodeVisible(marker, windowRef)));
+  const players = readModernPlayerSurfaces(documentRef, windowRef);
+  const cards = players.map((player) => player.cardNode);
+  const activeCards = players.filter((player) => player.active).map((player) => player.cardNode);
   // Ambiguous players must never fall back to a random score on the page.
   const card = activeCards.length === 1 ? activeCards[0] : null;
-  const scores = all(card, ".font-number.overflow-hidden").filter((node) =>
-    /^\d+$/.test(text(node)) && isMatchNodeVisible(node, windowRef));
-  const scoreNode = scores.length === 1 ? scores[0] : null;
+  const scoreNode = players.find((player) => player.cardNode === card)?.scoreNode || null;
   return {
     ...turn,
     variantNode: header || null,
+    startScore: variant === "X01" && /^\d+$/.test(variantText) ? Number(variantText) : null,
+    players,
     variant,
     outMode,
     playerCard: card,
@@ -74,6 +73,21 @@ export function readModernMatchSurface(documentRef, windowRef = documentRef?.def
     scoreNode,
     activeScore: scoreNode ? Number(text(scoreNode)) : Number.NaN,
   };
+}
+
+export function readModernPlayerSurfaces(documentRef, windowRef = documentRef?.defaultView) {
+  return all(documentRef, MODERN_PLAYER_SELECTOR).filter((node) =>
+    node.querySelector?.('[role="button"]') && isMatchNodeVisible(node, windowRef)
+  ).map((cardNode) => {
+    const scores = all(cardNode, ".font-number.overflow-hidden").filter((node) =>
+      /^\d+$/.test(text(node)) && isMatchNodeVisible(node, windowRef));
+    return {
+      cardNode,
+      scoreNode: scores.length === 1 ? scores[0] : null,
+      active: all(cardNode, ".bg-mono-white.rounded-full").some((marker) =>
+        isMatchNodeVisible(marker, windowRef)),
+    };
+  });
 }
 
 export function readModernThrows(surface, x01Rules) {

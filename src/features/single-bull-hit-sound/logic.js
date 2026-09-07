@@ -1,5 +1,6 @@
 import { SINGLE_BULL_SOUND_ASSET } from "#feature-assets";
 import { THROW_TEXT_SELECTORS } from "./style.js";
+import { findModernTurnSurface, readModernThrows } from "../shared/x01-match-surface.js";
 import {
   collectTurnThrowRows,
   collectTurnThrowTextNodes,
@@ -379,6 +380,7 @@ export function createSingleBullHitSoundState(windowRef, config) {
     windowRef,
     audio: createAudio(windowRef, config),
     audioUnlocked: false,
+    modernThrows: null,
     lastProcessedTurnId: "",
     lastSignalPlayedAt: 0,
     lastTextByNode: new Map(),
@@ -412,12 +414,35 @@ export function clearSingleBullHitSoundState(state) {
   }
 
   state.lastProcessedTurnId = "";
+  state.modernThrows = null;
   state.lastTextByNode.clear();
   state.lastPlayedAtByNode.clear();
   state.processedThrowKeys.clear();
 }
 
 export function updateSingleBullHitSound(options = {}) {
+  const { documentRef, state, x01Rules, config } = options;
+  if (!state || !x01Rules || !config) return;
+  const surface = findModernTurnSurface(documentRef, state.windowRef || documentRef?.defaultView);
+  if (surface) {
+    const throws = readModernThrows(surface, x01Rules);
+    if (!throws) return;
+    const tokens = throws.map((entry) => entry.segment.name);
+    // Mounting into an existing turn must not replay historical hits.
+    const previous = state.modernThrows;
+    state.modernThrows = tokens;
+    if (!previous) return;
+    throws.forEach((entry, index) => {
+      if (previous[index] === tokens[index] || !x01Rules.isSingleBullThrowEntry(entry)) return;
+      const retry = () => {
+        if (state.modernThrows === tokens) tokens[index] = previous[index];
+      };
+      const result = safePlayAudio(state, config, { onPlaybackFailure: retry });
+      if (!result.played) retry();
+    });
+    return;
+  }
+  state.modernThrows = null;
   scanDomRows(options);
   scanGameStateThrows(options);
 }
