@@ -100,6 +100,7 @@ const README_ANCHOR_ALIASES = Object.freeze({
 });
 
 const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
+  "bot-board-style",
   "checkout-target-highlights",
   "dart-marker-replacer",
   "take-out-darts-alert",

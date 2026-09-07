@@ -8,11 +8,13 @@ import {
   hasRelevantBotBoardStyleMutation,
 } from "../../src/features/bot-board-style/index.js";
 import {
+  clearBotBoardStyle,
   createBotBoardStyleState,
   isBotTurn,
   updateBotBoardStyle,
 } from "../../src/features/bot-board-style/logic.js";
 import {
+  BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS,
   BOARD_STYLE_IMAGE_ID,
   STYLE_ID,
 } from "../../src/features/bot-board-style/style.js";
@@ -79,6 +81,61 @@ function createBoardFixture(documentRef) {
     lastNativePath,
     marker,
     checkoutOverlay,
+  };
+}
+
+function createModernBoardFixture(documentRef) {
+  const board = documentRef.createElement("div");
+  board.setAttribute("role", "img");
+  board.setAttribute("aria-label", "Dartboard");
+  board.__rect = { left: 820, top: 150, width: 520, height: 520 };
+
+  const interactiveSvg = documentRef.createElementNS(SVG_NS, "svg");
+  const interactiveGroup = documentRef.createElementNS(SVG_NS, "g");
+  interactiveSvg.setAttribute("viewBox", "0 0 1000 1000");
+  interactiveSvg.__rect = { left: 820, top: 150, width: 520, height: 520 };
+  interactiveGroup.setAttribute("transform", "translate(500, 500)");
+
+  const outerRing = documentRef.createElementNS(SVG_NS, "circle");
+  outerRing.setAttribute("r", "500");
+  interactiveGroup.appendChild(outerRing);
+  let lastNativePath = null;
+  for (let index = 0; index < 50; index += 1) {
+    const path = documentRef.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", `M ${index} 0 L ${index + 1} 4 L ${index + 2} 0 Z`);
+    interactiveGroup.appendChild(path);
+    lastNativePath = path;
+  }
+  interactiveSvg.appendChild(interactiveGroup);
+
+  const brandingSvg = documentRef.createElementNS(SVG_NS, "svg");
+  brandingSvg.setAttribute("viewBox", "0 0 1281.3 1281.3");
+  brandingSvg.__rect = { left: 820, top: 150, width: 520, height: 520 };
+  const numberShroudSvg = documentRef.createElementNS(SVG_NS, "svg");
+  numberShroudSvg.setAttribute("viewBox", "0 0 1281.3 1281.3");
+  numberShroudSvg.__rect = { left: 820, top: 150, width: 520, height: 520 };
+
+  const markerSvg = documentRef.createElementNS(SVG_NS, "svg");
+  const markerGroup = documentRef.createElementNS(SVG_NS, "g");
+  markerSvg.setAttribute("viewBox", "0 0 1000 1000");
+  markerSvg.__rect = { left: 820, top: 150, width: 520, height: 520 };
+  markerGroup.setAttribute("transform", "translate(500, 500)");
+  markerSvg.appendChild(markerGroup);
+
+  board.appendChild(interactiveSvg);
+  board.appendChild(brandingSvg);
+  board.appendChild(numberShroudSvg);
+  board.appendChild(markerSvg);
+  documentRef.main.appendChild(board);
+
+  return {
+    board,
+    interactiveSvg,
+    interactiveGroup,
+    lastNativePath,
+    brandingSvg,
+    numberShroudSvg,
+    markerSvg,
   };
 }
 
@@ -201,6 +258,75 @@ test("bot board style preserves layer order when Array.findLast is unavailable",
   });
 });
 
+test("bot board style replaces modern native artwork without hiding the marker layer", () => {
+  const documentRef = new FakeDocument();
+  const fixture = createModernBoardFixture(documentRef);
+  const state = createBotBoardStyleState();
+
+  const imageNode = updateBotBoardStyle({
+    documentRef,
+    state,
+    featureConfig: {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+    },
+    assetResolver: (design) => `data:image/webp;base64,${design}`,
+  });
+
+  assert.ok(imageNode);
+  assert.equal(imageNode.parentElement, fixture.interactiveGroup);
+  assert.ok(
+    fixture.interactiveGroup.children.indexOf(imageNode) >
+      fixture.interactiveGroup.children.indexOf(fixture.lastNativePath)
+  );
+  assert.equal(
+    fixture.brandingSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    true
+  );
+  assert.equal(
+    fixture.numberShroudSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    true
+  );
+  assert.equal(
+    fixture.markerSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    false
+  );
+
+  fixture.board.remove();
+  const replacement = createModernBoardFixture(documentRef);
+  const replacementImage = updateBotBoardStyle({
+    documentRef,
+    state,
+    featureConfig: {
+      enabled: true,
+      design: "target-tor",
+      scope: "all-match-boards",
+    },
+    assetResolver: (design) => `data:image/webp;base64,${design}`,
+  });
+
+  assert.equal(replacementImage?.parentElement, replacement.interactiveGroup);
+  assert.equal(
+    fixture.brandingSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    false
+  );
+  assert.equal(
+    replacement.brandingSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    true
+  );
+
+  clearBotBoardStyle(documentRef, state);
+  assert.equal(
+    replacement.brandingSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    false
+  );
+  assert.equal(
+    replacement.numberShroudSvg.classList.contains(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS),
+    false
+  );
+});
+
 test("bot board style lifts an existing overlay above the board image without replacing it", () => {
   const documentRef = new FakeDocument();
   const fixture = createBoardFixture(documentRef);
@@ -320,6 +446,35 @@ test("bot-only scope fails closed for humans and recognizes bot state, icon, and
   iconSvg.remove();
   const payloadGameState = createGameState({ players: [{ id: "bot", isBot: true }] });
   assert.equal(isBotTurn(documentRef, payloadGameState), true);
+
+  const modernBotGameState = createGameState({
+    activePlayerIndex: 1,
+    players: [
+      { id: "human", cpuPPR: null },
+      { id: "bot", user: null, cpuPPR: 42 },
+    ],
+  });
+  assert.equal(isBotTurn(documentRef, modernBotGameState), true);
+  assert.ok(
+    updateBotBoardStyle({
+      documentRef,
+      state,
+      gameState: modernBotGameState,
+      featureConfig,
+      assetResolver,
+    })
+  );
+  assert.equal(
+    updateBotBoardStyle({
+      documentRef,
+      state,
+      gameState: humanGameState,
+      featureConfig,
+      assetResolver,
+    }),
+    null
+  );
+  assert.equal(documentRef.getElementById(BOARD_STYLE_IMAGE_ID), null);
 });
 
 test("bot board style rehydrates once after the host replaces the board and cleans up fully", () => {

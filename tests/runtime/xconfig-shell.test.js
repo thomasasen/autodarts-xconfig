@@ -1500,7 +1500,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   runtime.stop();
 });
 
-test("xConfig shell marks every theme and pending animation as deprecated", async () => {
+test("xConfig shell marks pending themes and animations as deprecated", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1526,7 +1526,6 @@ test("xConfig shell marks every theme and pending animation as deprecated", asyn
 
   [
     "theme-global-typography",
-    "bot-board-style",
     "theme-bull-off",
     "theme-x01",
     "theme-gotcha",
@@ -1535,6 +1534,7 @@ test("xConfig shell marks every theme and pending animation as deprecated", asyn
     "theme-shanghai",
     "theme-bermuda",
   ].forEach((featureKey) => assertCardStatus(featureKey, "deprecated"));
+  assertCardStatus("bot-board-style", "ready");
 
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
   assert.match(styleText, /\.ad-xconfig-status-badge--deprecated\{[^}]*border:[^}]*background:[^}]*color:/);

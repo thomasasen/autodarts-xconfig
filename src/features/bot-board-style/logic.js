@@ -1,6 +1,7 @@
 import { isLikelyBoardMarker } from "../../shared/dartboard-markers.js";
 import { resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
 import {
+  BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS,
   BOARD_STYLE_IMAGE_CLASS,
   BOARD_STYLE_IMAGE_ID,
 } from "./style.js";
@@ -87,6 +88,10 @@ function isBotPlayerPayload(player) {
   }
 
   if (player.isBot === true || player.bot === true) {
+    return true;
+  }
+
+  if (player.cpuPPR !== null && player.cpuPPR !== undefined) {
     return true;
   }
 
@@ -267,6 +272,65 @@ function removeDuplicateImages(documentRef, keepNode = null) {
   });
 }
 
+function readViewBox(node) {
+  const values = String(node?.getAttribute?.("viewBox") || "")
+    .trim()
+    .replaceAll(",", " ")
+    .split(/\s+/)
+    .map((value) => Number.parseFloat(value));
+  return values.length === 4 && values.every(Number.isFinite) ? values : null;
+}
+
+function hasMatchingViewBox(leftNode, rightNode) {
+  const left = readViewBox(leftNode);
+  const right = readViewBox(rightNode);
+  return Boolean(
+    left &&
+      right &&
+      left.every((value, index) => Math.abs(value - right[index]) <= 0.001)
+  );
+}
+
+function restoreHiddenNativeLayers(state, keepNodes = null) {
+  if (!state?.hiddenNativeLayers) {
+    return;
+  }
+
+  Array.from(state.hiddenNativeLayers).forEach((node) => {
+    if (keepNodes?.has(node)) {
+      return;
+    }
+    node?.classList?.remove?.(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS);
+    state.hiddenNativeLayers.delete(node);
+  });
+}
+
+function syncModernNativeBoardLayers(state, board) {
+  const boardContainer = board?.zoomTarget;
+  const isModernNativeBoard = boardContainer?.matches?.(
+    '[role="img"][aria-label="Dartboard"]'
+  );
+  if (!state || !board?.svg || !isModernNativeBoard) {
+    restoreHiddenNativeLayers(state);
+    return;
+  }
+
+  const hiddenLayers = new Set(
+    Array.from(boardContainer.children || []).filter(
+      (node) =>
+        String(node?.tagName || "").toLowerCase() === "svg" &&
+        node !== board.svg &&
+        !hasMatchingViewBox(node, board.svg)
+    )
+  );
+
+  restoreHiddenNativeLayers(state, hiddenLayers);
+  hiddenLayers.forEach((node) => {
+    node.classList?.add?.(BOARD_STYLE_HIDDEN_NATIVE_LAYER_CLASS);
+    state.hiddenNativeLayers.add(node);
+  });
+}
+
 function ensureBoardStyleImage(documentRef, state, boardGroup) {
   let imageNode = state?.imageNode;
   if (imageNode && (imageNode.isConnected === false || imageNode.parentNode !== boardGroup)) {
@@ -304,6 +368,7 @@ export function createBotBoardStyleState() {
   return {
     imageNode: null,
     boardGroup: null,
+    hiddenNativeLayers: new Set(),
     signature: "",
   };
 }
@@ -311,6 +376,7 @@ export function createBotBoardStyleState() {
 export function clearBotBoardStyle(documentRef, state) {
   removeDuplicateImages(documentRef);
   if (state) {
+    restoreHiddenNativeLayers(state);
     state.imageNode = null;
     state.boardGroup = null;
     state.signature = "";
@@ -338,6 +404,8 @@ export function updateBotBoardStyle(options = {}) {
     clearBotBoardStyle(documentRef, state);
     return null;
   }
+
+  syncModernNativeBoardLayers(state, board);
 
   const assetUrl = String(assetResolver(config.design) || "").trim();
   if (!assetUrl) {
