@@ -1648,7 +1648,7 @@ test("xConfig style checkout suggestions renders live preview and style option s
   runtime.stop();
 });
 
-test("xConfig shell styles its panel as the scroll container for fixed-height Autodarts layouts", async () => {
+test("xConfig shell keeps the native header visible above fixed modal backdrops", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1662,6 +1662,8 @@ test("xConfig shell styles its panel as the scroll container for fixed-height Au
     true
   );
   assert.equal(styleText.includes(".ad-xconfig-page{box-sizing:border-box;min-height:100%"), true);
+  assert.equal(styleText.includes(".ad-xconfig-modal-backdrop{position:fixed;inset:64px 0 0"), true);
+  assert.equal(styleText.includes("max-height:calc(100dvh - 96px)"), true);
 
   runtime.stop();
 });
