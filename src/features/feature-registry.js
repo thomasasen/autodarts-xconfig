@@ -19,14 +19,9 @@ import { mountTurnScoreCounter } from "./turn-score-counter/index.js";
 import { mountWinnerCelebrationEffect, runWinnerCelebrationEffectAction } from "./winner-celebration-effect/index.js";
 import { mountX01RemainingScoreBar } from "./x01-remaining-score-bar/index.js";
 import { mountBotBoardStyle } from "./bot-board-style/index.js";
-import { mountThemeX01 } from "./themes/x01/index.js";
-import { mountThemeGotcha } from "./themes/gotcha/index.js";
-import { mountThemeX01TwoPlayer } from "./themes/x01-2player/index.js";
-import { mountThemeShanghai } from "./themes/shanghai/index.js";
-import { mountThemeBermuda } from "./themes/bermuda/index.js";
-import { mountThemeCricket } from "./themes/cricket/index.js";
-import { mountThemeBullOff } from "./themes/bull-off/index.js";
+import { mountThemeGlobalBackground } from "./themes/global-background/index.js";
 import { mountThemeGlobalTypography } from "./themes/global-typography/index.js";
+import { mountTurnDartDisplay } from "./turn-dart-display/index.js";
 import { normalizeFeatureIdentity, normalizeFeatureKey } from "./feature-metadata.js";
 import {
   featureCatalog,
@@ -163,15 +158,11 @@ const featureInitializers = Object.freeze({
   "turn-score-counter": mountTurnScoreCounter,
   "winner-celebration-effect": mountWinnerCelebrationEffect,
   "x01-remaining-score-bar": mountX01RemainingScoreBar,
+  "theme-global-background": mountThemeGlobalBackground,
   "theme-global-typography": mountThemeGlobalTypography,
+  "theme-global-presets": () => () => {},
   "bot-board-style": mountBotBoardStyle,
-  "theme-x01": mountThemeX01,
-  "theme-gotcha": mountThemeGotcha,
-  "theme-x01-2player": mountThemeX01TwoPlayer,
-  "theme-shanghai": mountThemeShanghai,
-  "theme-bermuda": mountThemeBermuda,
-  "theme-cricket": mountThemeCricket,
-  "theme-bull-off": mountThemeBullOff,
+  "turn-dart-display": mountTurnDartDisplay,
 });
 
 const featureActions = Object.freeze({

@@ -5,6 +5,7 @@ import {
   EFFECT_ATTRIBUTE,
   WIDTH_PROPERTY,
   createScoreProgressState,
+  resolveActiveVisualVars,
   resolveStartScore,
   syncScoreProgress,
 } from "../../src/features/x01-remaining-score-bar/logic.js";
@@ -24,6 +25,93 @@ import {
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
+
+test("checkout-zone-blue keeps the normal bar blue and hatches only the checkout range", () => {
+  const aboveCheckout = resolveActiveVisualVars({
+    colorTheme: "checkout-zone-blue",
+    startScore: 501,
+    score: 301,
+    ratio: 301 / 501,
+  });
+
+  assert.equal(
+    aboveCheckout["--ad-ext-x01-remaining-score-bar-track-bg-active"],
+    "rgb(30,41,59)"
+  );
+  assert.equal(
+    aboveCheckout["--ad-ext-x01-remaining-score-bar-fill-bg-active"],
+    "linear-gradient(90deg,rgb(11,85,223) 0%,rgb(55,76,152) 100%)"
+  );
+  assert.equal(
+    aboveCheckout["--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active"],
+    "33.93%"
+  );
+  assert.equal(
+    aboveCheckout["--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active"],
+    "1"
+  );
+  assert.equal(
+    aboveCheckout["--ad-ext-x01-remaining-score-bar-fill-overlay-width-active"],
+    "56.48%"
+  );
+  assert.match(
+    aboveCheckout["--ad-ext-x01-remaining-score-bar-fill-overlay-image-active"],
+    /repeating-linear-gradient\(45deg/
+  );
+
+  const inCheckout = resolveActiveVisualVars({
+    colorTheme: "checkout-zone-blue",
+    startScore: 501,
+    score: 170,
+    ratio: 170 / 501,
+  });
+  assert.equal(
+    inCheckout["--ad-ext-x01-remaining-score-bar-fill-overlay-width-active"],
+    "100%"
+  );
+
+  const shortGame = resolveActiveVisualVars({
+    colorTheme: "checkout-zone-blue",
+    startScore: 170,
+    score: 170,
+    ratio: 1,
+  });
+  assert.equal(
+    shortGame["--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active"],
+    "0"
+  );
+});
+
+test("syncScoreProgress anchors the checkout-zone-blue marker to 170 points", () => {
+  const fixture = createModernX01Fixture({ base: 501, score: 301 });
+  const state = createScoreProgressState();
+  const featureConfig = {
+    colorTheme: "checkout-zone-blue",
+    barSize: "standard",
+    effect: "off",
+  };
+
+  syncScoreProgress({ ...fixture, featureConfig }, state);
+  const host = fixture.card.querySelector(HOST_SELECTOR);
+  assert.ok(host);
+  assert.equal(
+    host.style.getPropertyValue(
+      "--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active"
+    ),
+    "33.93%"
+  );
+  assert.equal(
+    host.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-overlay-width-active"),
+    "56.48%"
+  );
+
+  fixture.score.textContent = "170";
+  syncScoreProgress({ ...fixture, featureConfig }, state);
+  assert.equal(
+    host.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-overlay-width-active"),
+    "100%"
+  );
+});
 
 test("modern cards keep each explicitly selected effect across passive updates and stop it with off", () => {
   const f = createModernX01Fixture({ base: 501, score: 301 });

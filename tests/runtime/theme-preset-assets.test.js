@@ -87,12 +87,11 @@ test("theme preset definitions and bundled wallpaper manifest stay aligned", () 
   assert.deepEqual(bundledFiles, manifestFiles);
 });
 
-test("theme preset values remain selectable in the Templates Global settings", () => {
-  const descriptor = xconfigDescriptors.find(
-    (entry) => entry.featureKey === "theme-global-typography"
-  );
+test("theme preset values remain selectable in the global background and font settings", () => {
+  const descriptors = ["theme-global-typography", "theme-global-background"]
+    .map((featureKey) => xconfigDescriptors.find((entry) => entry.featureKey === featureKey));
   const fieldsByKey = new Map(
-    (descriptor?.fields || []).map((field) => [field.key, field])
+    descriptors.flatMap((descriptor) => descriptor?.fields || []).map((field) => [field.key, field])
   );
   const selectKeys = [
     "fontPreset",

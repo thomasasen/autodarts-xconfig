@@ -12,14 +12,15 @@ import {
 import { resolveXConfigPreviewAsset } from "../../src/shared/xconfig-preview-assets.node.js";
 
 test("xConfig runtime previews are local bounded WebPs within the bundle budget", async () => {
-  assert.equal(Object.keys(XCONFIG_PREVIEW_ASSET_FILES).length, 25);
+  const previewFeatureKeys = Object.keys(XCONFIG_PREVIEW_ASSET_FILES);
+  assert.ok(previewFeatureKeys.length > 0);
   assert.deepEqual(
-    Object.keys(XCONFIG_PREVIEW_ASSET_FILES).sort(),
+    previewFeatureKeys.sort(),
     Object.keys(XCONFIG_PREVIEW_SOURCE_FILES).sort()
   );
 
   const result = await checkXConfigPreviewAssets();
-  assert.equal(result.entries.length, 25);
+  assert.equal(result.entries.length, previewFeatureKeys.length);
   assert.ok(result.totalBytes <= 4 * 1024 * 1024);
 
   const animatedKeys = new Set(XCONFIG_ANIMATED_PREVIEW_FEATURE_KEYS);

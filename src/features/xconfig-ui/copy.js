@@ -89,27 +89,15 @@ const THEME_PLAYER_TRANSPARENCY_FIELD = fieldCopy(
   "Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an."
 );
 
-const THEME_UPLOAD_FIELD = fieldCopy(
-  "Öffnet die Dateiauswahl, optimiert das Bild auf maximal 1920×1080 und speichert es lokal bis 1,5 MiB nur für dieses Theme.",
-  "Öffnet die Dateiauswahl und speichert das gewählte Bild ausschließlich für dieses Theme. Das Bild wird lokal auf maximal 1920×1080 optimiert, bis 1,5 MiB begrenzt und nach Reloads wieder für genau dieses Theme verwendet.",
-  "Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme."
-);
-
-const THEME_CLEAR_FIELD = fieldCopy(
-  "Entfernt nur das für dieses Theme gespeicherte Bild.",
-  "Löscht nur den lokalen Bild-Override dieses Themes. Das Theme bleibt aktiv, verwendet danach aber wieder kein eigenes gespeichertes Hintergrundbild.",
-  "Entfernt nur das für dieses Theme gespeicherte Hintergrundbild."
-);
-
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD = fieldCopy(
   "Wählt eine kuratierte Schrift für stabile Template-Bereiche wie Scores, Würfe oder Namen.",
-  "Wählt eine kuratierte Remote-Schrift für die Template-Typografie. Die Schrift wirkt nur in den unterstützten Bereichen des aktiven xConfig-Themes und verwendet bei Ladeproblemen automatisch einen lokalen Fallback-Stack.",
+  "Wählt eine kuratierte Remote-Schrift für die globale Typografie. Die Schrift wirkt in den ausgewählten Bereichen aller Spielansichten und verwendet bei Ladeproblemen automatisch einen lokalen Fallback-Stack.",
   "Wählt eine kuratierte Schrift für unterstützte Template-Bereiche."
 );
 
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD = fieldCopy(
   "Legt per Mehrfachauswahl fest, ob Scores, Würfe und/oder Namen die gewählte Schrift erhalten.",
-  "Bestimmt per Mehrfachauswahl, welche stabilen Textbereiche des aktiven xConfig-Themes die gewählte Schrift übernehmen. V1 beschränkt sich bewusst auf Scores, Würfe und Spielernamen.",
+  "Bestimmt per Mehrfachauswahl, welche stabilen Textbereiche aller Spielansichten die gewählte Schrift übernehmen. Die Auswahl beschränkt sich bewusst auf Scores, Würfe und Spielernamen.",
   "Legt fest, welche stabilen Template-Bereiche die Schrift übernehmen."
 );
 
@@ -218,40 +206,45 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY = deepFreeze(
     THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) => [
       `preset-${preset.key}`,
       fieldCopy(
-        `Wendet das Preset ${preset.label} sofort auf Templates Global an.`,
-        `Aktiviert Templates Global und setzt Schrift, Farben sowie Hintergrundwerte direkt auf ${preset.label}. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben.`,
-        `Wendet das Preset ${preset.label} mit einem Klick auf Templates Global an.`
+        `Wendet die Vorlage ${preset.label} sofort an.`,
+        `Aktiviert Hintergrund und Schrift und setzt deren Werte direkt auf ${preset.label}. Dabei wird auch ein bereits gespeichertes globales Wallpaper überschrieben; Wurffeld-Darts bleiben unverändert.`,
+        `Wendet die Vorlage ${preset.label} mit einem Klick an.`
       ),
     ])
   )
 );
 
 export const xconfigFeatureCopy = deepFreeze({
-  "theme-global-typography": featureCopy({
-    cardDescription:
-      "Legt den gemeinsamen Look für unterstützte xConfig-Themes fest: Presets, Schriften, Farbrollen, Aktivkarten-Tönung und ein globales Hintergrundbild dienen als Basis für alle Themes ohne eigenes Bild.",
-    visibleDescription:
-      "Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.",
-    visualDescription:
-      "Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf, gebündeltes Marker-Bild oder eigenes Bild darstellen.",
-    usefulWhen:
-      "Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.",
-    images: [
-      image(
-        "Templates Global Presetübersicht mit Live-Vorschauen",
-        "templates-global-presets.webp"
-      ),
-      image(
-        "Templates Global mit lila Aktiv-Akzent in AD xConfig",
-        "template-theme-global-typography-xConfig.png"
-      ),
-      image(
-        "Templates Global Wurffeld-Darts mit Verlauf",
-        "template-global-turn-darts-gradient.png"
-      ),
-    ],
+  "theme-global-background": featureCopy({
+    cardDescription: "Globales Wallpaper und transparente Spielerfelder für alle Spielansichten.",
+    visibleDescription: "Steuert ein gemeinsames Hintergrundbild und die Transparenz der Spielerfelder unter /matches.",
+    visualDescription: "Das Wallpaper liegt hinter dem unveränderten Autodarts-Spielaufbau. Darstellung, Bilddeckkraft und Spielerfelder-Transparenz lassen sich unabhängig von Schrift und Wurffeld-Darts einstellen.",
+    usefulWhen: "Wenn alle Spielvarianten denselben Hintergrund erhalten sollen.",
+    images: [image("Globaler Hintergrund", "templates-global-presets.webp")],
     fields: {
-      ...THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY,
+      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
+      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
+      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
+      uploadThemeBackground: fieldCopy(
+        "Speichert ein globales Hintergrundbild bis 1,5 MiB.",
+        "Öffnet die Dateiauswahl, optimiert das Bild lokal auf maximal 1920×1080 und verwendet es in allen Spielansichten.",
+        "Speichert ein globales Hintergrundbild bis 1,5 MiB."
+      ),
+      clearThemeBackground: fieldCopy(
+        "Entfernt das gespeicherte globale Hintergrundbild.",
+        "Löscht den lokalen Wallpaper-Upload. Ein gewähltes Preset-Wallpaper bleibt davon unabhängig verfügbar.",
+        "Entfernt das globale Hintergrundbild."
+      ),
+      debug: DEBUG_FIELD,
+    },
+  }),
+  "theme-global-typography": featureCopy({
+    cardDescription: "Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen.",
+    visibleDescription: "Wendet Schrift, Farbrollen und Aktivspieler-Tönung auf ausgewählte Bereiche aller Spielansichten an.",
+    visualDescription: "Schriftart und Textfarben ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.",
+    usefulWhen: "Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.",
+    images: [image("Globale Schrift", "template-theme-global-typography-xConfig.png")],
+    fields: {
       fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD,
       applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD,
       accentColor: THEME_GLOBAL_TYPOGRAPHY_ACCENT_COLOR_FIELD,
@@ -259,265 +252,34 @@ export const xconfigFeatureCopy = deepFreeze({
       secondaryTextColor: THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD,
       throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
       activePlayerTintIntensity: THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD,
+      debug: DEBUG_FIELD,
+    },
+  }),
+  "theme-global-presets": featureCopy({
+    cardDescription: "Fertige Vorlagen für globalen Hintergrund und globale Schrift.",
+    visibleDescription: "Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.",
+    visualDescription: "Jede Vorschau zeigt das echte Preset-Wallpaper, die zugehörige Schrift und die Farbrollen. Die Aktion aktiviert Hintergrund und Schrift und ersetzt einen eigenen Wallpaper-Upload.",
+    usefulWhen: "Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.",
+    images: [image("Globale Vorlagen", "templates-global-presets.webp")],
+    fields: THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY,
+  }),
+  "turn-dart-display": featureCopy({
+    cardDescription: "Globale Darstellung der drei Darts im Wurffeld.",
+    visibleDescription: "Ersetzt Wurffeld-Darts durch Farbe, Verlauf, Text, Marker-Bild oder eigenen Upload.",
+    visualDescription: "Das Modul arbeitet unabhängig von Hintergrund und Schrift und verändert keine Board-Marker.",
+    usefulWhen: "Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.",
+    images: [image("Wurffeld-Darts mit Verlauf", "template-global-turn-darts-gradient.png")],
+    fields: {
       turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_FIELD,
       turnDartAssetKey: THEME_GLOBAL_TURN_DART_ASSET_FIELD,
-      turnDartTextTemplate: fieldCopy(
-        "Zeigt statt der generierten Dart-Grafik einen Text pro Wurf an.",
-        "Schreibt einen Text in die drei Wurffeld-Dartfelder, solange weder `Marker-Bild` noch `Eigenes Bild` aktiv ist. Das Zeichen `#` wird pro Feld durch die Wurfnummer ersetzt, also zum Beispiel `Wurf #` als `Wurf 1`, `Wurf 2` und `Wurf 3`. Dart-Farbe und Schriftart aus Templates Global greifen auch auf diesen Text.",
-        "Zeigt Wurftext mit `#` als Nummernplatzhalter an."
-      ),
+      turnDartTextTemplate: fieldCopy("Zeigt Text pro Wurf an.", "Das Zeichen `#` wird durch die Wurfnummer ersetzt.", "Zeigt Wurftext mit Nummernplatzhalter."),
       turnDartColor: THEME_GLOBAL_TURN_DART_COLOR_FIELD,
       turnDartGradientColor: THEME_GLOBAL_TURN_DART_GRADIENT_FIELD,
       turnDartSizePercent: THEME_GLOBAL_TURN_DART_SIZE_FIELD,
-      turnDartShineEnabled: fieldCopy(
-        "Schaltet den hellen Glanz um die Wurffeld-Darts ein oder aus.",
-        "Aktiviert oder entfernt den hellen Drop-Shadow um ersetzte Wurffeld-Darts. Größe, Dart-Bild und eigener Upload bleiben unverändert.",
-        "Schaltet den Dart-Glanz ein oder aus."
-      ),
-      uploadTurnDartImage: fieldCopy(
-        "Speichert ein eigenes Bild für die drei Wurffeld-Darts.",
-        "Öffnet die Dateiauswahl und speichert ein eigenes Bild für die drei Darts im Wurffeld. Empfohlen sind transparente PNG-, WebP- oder SVG-Dateien, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
-        "Speichert ein eigenes Wurffeld-Dart-Bild bis 350 KB."
-      ),
-      clearTurnDartImage: fieldCopy(
-        "Entfernt nur das gespeicherte Wurffeld-Dart-Bild.",
-        "Löscht das in Templates Global gespeicherte Wurffeld-Dart-Bild und stellt die Wurffeld-Darts wieder auf `Original`. Farben, Verläufe und andere Templates-Global-Werte bleiben erhalten.",
-        "Entfernt das gespeicherte Wurffeld-Dart-Bild."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      uploadThemeBackground: fieldCopy(
-        "Speichert ein globales Fallback-Bild bis 1,5 MiB für unterstützte xConfig-Themes.",
-        "Öffnet die Dateiauswahl, optimiert das Bild lokal auf maximal 1920×1080 und speichert es als globales Fallback für unterstützte xConfig-Themes. Hat das aktive Theme ein eigenes gespeichertes Bild, überschreibt dieses Theme-Bild weiterhin den kompletten globalen Background-Block; ohne eigenes Theme-Bild überstimmt das gespeicherte Fallback auch ein Preset-Wallpaper aus Templates Global.",
-        "Speichert ein globales Fallback-Hintergrundbild bis 1,5 MiB."
-      ),
-      clearThemeBackground: fieldCopy(
-        "Entfernt nur das globale Fallback-Bild aus Templates Global.",
-        "Löscht nur das in Templates Global gespeicherte Fallback-Bild. Einzelne Themes mit eigenem Bild bleiben unverändert; Themes ohne eigenes Bild fallen danach wieder auf ihr aktives Preset-Wallpaper oder den normalen Theme-Background zurück.",
-        "Entfernt nur das globale Fallback-Hintergrundbild."
-      ),
+      turnDartShineEnabled: fieldCopy("Schaltet den Dart-Glanz ein oder aus.", "Steuert den hellen Drop-Shadow der ersetzten Darts.", "Schaltet den Dart-Glanz ein oder aus."),
+      uploadTurnDartImage: fieldCopy("Speichert ein eigenes Wurffeld-Dart-Bild.", "Optimiert und speichert ein eigenes Bild bis 350 KB.", "Speichert ein eigenes Dart-Bild."),
+      clearTurnDartImage: fieldCopy("Entfernt das gespeicherte Dart-Bild.", "Löscht ausschließlich den globalen Dart-Upload.", "Entfernt das eigene Dart-Bild."),
       debug: DEBUG_FIELD,
-    },
-  }),
-  "theme-x01": featureCopy({
-    cardDescription: "Ruhiges X01-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild.",
-    visibleDescription: "Ein ruhiges X01-Layout mit eigener Bildfläche und optionaler AVG-Zeile.",
-    visualDescription:
-      "Farben, Flächen und Karten werden neu gestaltet; ein eigenes Hintergrundbild liegt hinter dem Spielbereich, während die Grundstruktur des X01-Layouts erhalten bleibt.",
-    usefulWhen:
-      "Wenn dir das Standardlayout zu unruhig ist oder du X01 optisch personalisieren möchtest.",
-    images: [
-      image("Theme X01 in AD xConfig", "template-theme-x01-xConfig.png"),
-      image("Theme X01 Vorschau Standard", "template-theme-x01-preview-standard-readme.png"),
-      image(
-        "Theme X01 Vorschau unter Würfen",
-        "template-theme-x01-preview-under-throws-readme.png"
-      ),
-    ],
-    fields: {
-      showAvg: fieldCopy(
-        "Blendet die AVG-Anzeige im Theme ein oder aus.",
-        "Schaltet die AVG-Anzeige im X01-Theme sichtbar an oder aus. Grafisch bleibt das Layout gleich, nur der AVG-Bereich erscheint oder verschwindet.",
-        "Blendet die AVG-Anzeige im X01-Theme ein oder aus."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
-    },
-  }),
-  "theme-gotcha": featureCopy({
-    cardDescription:
-      "X01-nahes Gotcha-Theme mit integrierter Delta-Anzeige und eigenem Hintergrundbild.",
-    visibleDescription:
-      "Ein ruhiges Gotcha-Layout auf X01-Basis, das die Differenz zum führenden Gegner direkt in der Spielerkarte mitzieht. Dafür muss `Gotcha Helper` in `Tools für Autodarts` aktiv sein.",
-    visualDescription:
-      "Die Karten folgen bewusst der X01-Optik, ergänzen aber die zusätzliche Gotcha-Differenz als eigene, klar abgesetzte Live-Zahl innerhalb derselben Theme-Struktur.",
-    usefulWhen:
-      "Wenn du Gotcha ähnlich ruhig wie X01 lesen möchtest, ohne auf die abgesetzte Delta-Information zwischen den Spielern zu verzichten.",
-    readmeDetailHeading: "Hinweis",
-    readmeDetails: [
-      "Die zusätzliche Gotcha-Differenz erscheint nur, wenn das Feature `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.",
-    ],
-    featuresDetails: [
-      "Hinweis: Die zusätzliche Gotcha-Differenz erscheint nur, wenn `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.",
-    ],
-    images: [image("Theme Gotcha in AD xConfig", "template-theme-gotcha-xConfig.png")],
-    fields: {
-      deltaPlacement: fieldCopy(
-        "Wählt, ob die Gotcha-Differenz unter dem Score oder in derselben Zeile mit `|` steht.",
-        "Legt fest, ob die zusätzliche Gotcha-Differenz als eigene Zeile unterhalb der Hauptzahl erscheint oder direkt in derselben Zeile mit einem Trenner `|`. Im Inline-Modus bestimmt die Delta-Ausrichtung zusätzlich die Reihenfolge links oder rechts vom Score.",
-        "Wählt, ob die Gotcha-Differenz unter dem Score oder in derselben Zeile mit `|` steht."
-      ),
-      deltaAlignment: fieldCopy(
-        "Richtet die zusätzliche Gotcha-Differenz unter dem Score links oder rechts aus.",
-        "Legt fest, ob die zusätzliche Gotcha-Differenz in der Score-Spalte unterhalb der Hauptzahl links- oder rechtsbündig steht. Im Modus `Score-Zeile |` steuert die Option zusätzlich die Reihenfolge: `Linksbündig` setzt `Differenz | Score`, `Rechtsbündig` setzt `Score | Differenz`.",
-        "Richtet die zusätzliche Gotcha-Differenz unter dem Score links oder rechts aus."
-      ),
-      deltaItalic: fieldCopy(
-        "Schaltet die Gotcha-Differenz kursiv oder normal.",
-        "Bestimmt, ob die zusätzliche Gotcha-Differenz in kursiver Schrift erscheint. Kursiv trennt die Sekundärinfo stärker vom Hauptscore; ausgeschaltet bleibt die Zahl ruhiger und sachlicher.",
-        "Schaltet die Gotcha-Differenz kursiv oder normal."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
-    },
-  }),
-  "theme-x01-2player": featureCopy({
-    cardDescription:
-      "Anpassbares X01-Theme für genau zwei Spieler mit zentriertem Board und TV-tauglichen Presets.",
-    visibleDescription:
-      "Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.",
-    visualDescription:
-      "Stil, Farbschema und Spielerinformationen lassen sich für Desktop, TV oder kompakte Fenster abstimmen. Außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.",
-    usefulWhen:
-      "Wenn du ein gut lesbares Zweispieler-Layout für Desktop, TV oder eine kompakte Livecam-Ansicht möchtest.",
-    readmeDetailHeading: "Darstellung",
-    readmeDetails: [
-      "Die Presets verändern nur das Zweispieler-Theme und erhalten dessen zentriertes Board sowie die bestehende Zustandslogik.",
-    ],
-    featuresDetails: [
-      "Stil, Farbschema, Informationsdichte und Namensdarstellung sind getrennt konfigurierbar.",
-    ],
-    images: [image("Theme X01 2Player in AD xConfig", "template-theme-x01-2player-xConfig.jpg")],
-    fields: {
-      visualStyle: fieldCopy(
-        "Steuert Radien, Kanten, Schatten und Board-Glow.",
-        "Wählt zwischen dem bisherigen Studio-Look, einem flacheren Broadcast-Look und einer kontraststarken Darstellung.",
-        "Steuert Geometrie und Effekte des Zweispieler-Themes."
-      ),
-      colorScheme: fieldCopy(
-        "Wählt die Akzent- und Oberflächenfarben des Themes.",
-        "Ändert ausschließlich die Farbtokens und lässt Geometrie sowie Informationsdichte unverändert.",
-        "Wählt das Farbschema des Zweispieler-Themes."
-      ),
-      informationDensity: fieldCopy(
-        "Passt Scoregröße, Abstände und Flächennutzung an.",
-        "Optimiert die Karten für vollständige Informationen, TV-Betrachtung oder kompakte Fenster, ohne spielrelevante Zustände auszublenden.",
-        "Passt Größen und Abstände an den verfügbaren Platz an."
-      ),
-      activePlayerEmphasis: fieldCopy(
-        "Regelt Kante, innere Outline und Kopftönung des aktiven Spielers.",
-        "Verstärkt den aktiven Spieler ohne Kartenskalierung oder schwer lesbare inaktive Inhalte.",
-        "Regelt die stabile Hervorhebung des aktiven Spielers."
-      ),
-      identityDensity: fieldCopy(
-        "Wählt zwischen der vollständigen Identitätszeile und einer reinen Namensanzeige.",
-        "Vollständig zeigt Avatar und Flagge vor dem Namen sowie den Spieler-Zusatzwert wie „35+“ dahinter. Nur Name entfernt diese drei Elemente. Gewonnene Runden und die Rundenstatistik bleiben in beiden Varianten sichtbar.",
-        "Steuert Avatar, Flagge und Spieler-Zusatzwert, nicht die dauerhaft sichtbaren Rundeninformationen."
-      ),
-      playerNameLayout: fieldCopy(
-        "Zeigt Spielernamen in einer oder maximal zwei kollisionsfreien Zeilen.",
-        "Eine Zeile passt den Namen zwischen Avatar und Zusatzwert ein. Bis zu zwei Zeilen nutzt den tatsächlichen Browserumbruch; beide Spieler behalten eine gemeinsame Schriftgröße.",
-        "Wählt eine ein- oder zweizeilige Namensdarstellung."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
-      resetX01TwoPlayerTheme: fieldCopy(
-        "Setzt die Darstellung zurück und behält Aktivierung sowie eigenes Hintergrundbild.",
-        "Übernimmt die kanonischen Standardwerte für alle Darstellungsoptionen. Aktivierung und gespeichertes Hintergrundbild bleiben unverändert.",
-        "Setzt nur die Darstellung des Zweispieler-Themes zurück."
-      ),
-    },
-  }),
-  "theme-shanghai": featureCopy({
-    cardDescription:
-      "Aufgeräumtes Shanghai-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild.",
-    visibleDescription:
-      "Ein aufgeräumtes Shanghai-Layout mit optionaler AVG-Zeile und ruhigerem Kontrast.",
-    visualDescription:
-      "Das Theme ordnet Flächen und Farben neu, ohne den Spielaufbau zu verändern. Ein eigenes Hintergrundbild liegt hinter der Oberfläche und kann die Wirkung zusätzlich prägen.",
-    usefulWhen: "Wenn du in Shanghai mehr Struktur und weniger visuelle Unruhe möchtest.",
-    images: [image("Theme Shanghai in AD xConfig", "template-theme-shanghai-xConfig.png")],
-    fields: {
-      showAvg: fieldCopy(
-        "Blendet die AVG-Anzeige im Theme ein oder aus.",
-        "Schaltet die AVG-Anzeige im Shanghai-Theme sichtbar an oder aus. Das restliche Theme bleibt unverändert; nur der AVG-Bereich wird ein- oder ausgeblendet.",
-        "Blendet die AVG-Anzeige im Shanghai-Theme ein oder aus."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
-    },
-  }),
-  "theme-bermuda": featureCopy({
-    cardDescription:
-      "Bermuda-Theme mit ruhigerem Grundbild und optional eigenem Hintergrund.",
-    visibleDescription: "Ein ruhigeres Bermuda-Layout mit eigener Bildfläche im Hintergrund.",
-    visualDescription:
-      "Das Theme passt Farben und Flächen für Bermuda an; ein gespeichertes Hintergrundbild liegt hinter dem Spielbereich, während die Bermuda-Anordnung selbst erhalten bleibt.",
-    usefulWhen:
-      "Wenn Bermuda besser lesbar sein soll, ohne viele Zusatzschalter zu benötigen.",
-    images: [image("Theme Bermuda in AD xConfig", "template-theme-bermuda-xConfig.png")],
-    fields: {
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
-    },
-  }),
-  "theme-cricket": featureCopy({
-    cardDescription:
-      "Gemeinsames Cricket-/Tactics-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild.",
-    visibleDescription:
-      "Ein gemeinsames Theme für Cricket und Tactics mit ruhigerer Grundoptik und optionaler AVG-Zeile.",
-    visualDescription:
-      "Farben, Karten und Hintergründe werden auf eine gemeinsame Cricket-/Tactics-Optik gezogen. Ein eigenes Bild kann hinter dem Spielbereich liegen, ohne die Board- oder Grid-Logik zu verändern.",
-    usefulWhen:
-      "Wenn du für Cricket und Tactics eine einheitliche visuelle Basis möchtest, besonders zusammen mit den Cricket-Effekten.",
-    images: [image("Theme Cricket in AD xConfig", "template-theme-cricket-xConfig.png")],
-    fields: {
-      showAvg: fieldCopy(
-        "Blendet die AVG-Anzeige im Theme ein oder aus.",
-        "Schaltet die AVG-Anzeige im Cricket-/Tactics-Theme an oder aus. Grafisch bleibt das Theme gleich; nur der AVG-Bereich erscheint oder verschwindet.",
-        "Blendet die AVG-Anzeige im Cricket-/Tactics-Theme ein oder aus."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
-    },
-  }),
-  "theme-bull-off": featureCopy({
-    cardDescription:
-      "Bull-off-Theme mit wählbarem Kontrast und eigenem Hintergrundbild.",
-    visibleDescription:
-      "Ein kontrastbetontes Bull-off-Layout mit wählbarer Stärke und eigener Bildfläche.",
-    visualDescription:
-      "Das Theme verändert Farben, Kontrast und Flächen speziell für Bull-off. Ein optionales Hintergrundbild liegt dahinter, während der Spielaufbau gleich bleibt.",
-    usefulWhen:
-      "Wenn Bull-off auf helleren Displays oder aus der Distanz klarer lesbar sein soll.",
-    images: [image("Theme Bull-off in AD xConfig", "template-theme-bull-off-xConfig.png")],
-    fields: {
-      contrastPreset: fieldCopy(
-        "Schaltet zwischen sanfter, normaler und kräftiger Kontrastwirkung um.",
-        "Wählt, wie stark Texte, Flächen und Hervorhebungen im Bull-off-Theme voneinander abgesetzt werden. Grafisch wirkt `Sanft` zurückhaltender, `Kräftig` zeichnet Kanten und Kontraste deutlich härter.",
-        "Schaltet die Kontrastwirkung des Bull-off-Themes um."
-      ),
-      backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
-      backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
-      playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
-      debug: DEBUG_FIELD,
-      uploadThemeBackground: THEME_UPLOAD_FIELD,
-      clearThemeBackground: THEME_CLEAR_FIELD,
     },
   }),
   "checkout-score-highlight": featureCopy({
@@ -1449,7 +1211,7 @@ const THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY = deepFreeze({
   ),
   image: optionCopy(
     "Nutzt das hochgeladene Bild als Wurffeld-Dart.",
-    "Die drei Dart-Grafiken im Wurffeld verwenden das in Templates Global gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.",
+    "Die drei Dart-Grafiken im Wurffeld verwenden das im Modul Wurffeld-Darts gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.",
     "Nutzt ein eigenes gespeichertes Dart-Bild."
   ),
 });
@@ -1469,24 +1231,6 @@ const THEME_GLOBAL_TURN_DART_SIZE_OPTION_COPY = deepFreeze({
     "Macht die Wurffeld-Darts deutlich präsenter.",
     "Die Wurffeld-Darts werden größer angezeigt. Das passt besonders für reduzierte oder transparente eigene Bilder.",
     "Große Wurffeld-Darts."
-  ),
-});
-
-const BULL_OFF_CONTRAST_PRESET_OPTION_COPY = deepFreeze({
-  soft: optionCopy(
-    "Hält Kanten, Schatten und aktive Hervorhebungen bewusst weich.",
-    "Die Bull-off-Oberfläche bleibt kontrastärmer. Rahmen, Glows und aktive Flächen wirken ruhiger und weniger hart voneinander getrennt.",
-    "Diese Stufe reduziert sichtbare Kanten, Schatten und Farbtrennung im Bull-off-Theme. Aktive und inaktive Bereiche bleiben erkennbar, wirken aber weicher und weniger aggressiv voneinander abgesetzt."
-  ),
-  standard: optionCopy(
-    "Nutzen den ausgewogenen Standardkontrast des Themes.",
-    "Das Theme zeigt klare, aber noch ausgewogene Kanten, Rahmen und Hervorhebungen. Diese Stufe ist der Mittelweg zwischen ruhiger Fläche und deutlicher Lesbarkeit.",
-    "Diese Stufe liefert den vorgesehenen Mittelwert für Rahmen, aktive Hervorhebungen, Schatten und Bedienflächen. Das Layout bleibt kontrastreich genug für Lesbarkeit, ohne so hart wie `Kräftig` zu zeichnen."
-  ),
-  high: optionCopy(
-    "Zieht Kanten, Schatten und aktive Bereiche deutlich härter auf.",
-    "Rahmen, Glows und aktive Flächen treten sichtbar stärker hervor. Das Theme wirkt klarer, markanter und kontrastreicher.",
-    "Diese Stufe erhöht die sichtbare Trennung zwischen aktiven und inaktiven Bereichen deutlich. Ränder, Schatten und Leuchtakzente werden kräftiger, sodass das Bull-off-Theme härter und präsenter erscheint."
   ),
 });
 
@@ -1569,32 +1313,6 @@ const CHECKOUT_SCORE_TRIGGER_OPTION_COPY = deepFreeze({
     "Lässt nur einen vorhandenen Checkout-Vorschlag auslösen.",
     "Der Effekt erscheint nur dann, wenn der sichtbare Suggestion-Hinweis genau den aktuell fälligen Finish-Dart trägt. Ein direkt finishbarer Score ohne passenden Vorschlag bleibt ohne Effekt.",
     "Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch direkt finishbarer Wert erzeugt keinen Effekt, solange kein passender Finish-Vorschlag erkannt wird."
-  ),
-});
-
-const GOTCHA_DELTA_ALIGNMENT_OPTION_COPY = deepFreeze({
-  right: optionCopy(
-    "Setzt die Gotcha-Differenz unter dem Score rechtsbündig.",
-    "Platziert die zusätzliche Gotcha-Differenz in der Score-Spalte unterhalb der Hauptzahl und richtet sie innerhalb dieser Spalte rechts aus. Das passt am stärksten zur bestehenden X01-Lesehierarchie.",
-    "Setzt die Gotcha-Differenz unter dem Score rechtsbündig."
-  ),
-  left: optionCopy(
-    "Setzt die Gotcha-Differenz unter dem Score linksbündig.",
-    "Platziert die zusätzliche Gotcha-Differenz ebenfalls unterhalb der Hauptzahl, richtet sie innerhalb der Score-Spalte aber links aus. Dadurch wirkt die Zusatzinfo etwas lockerer und weniger an der Kantenlinie der Hauptzahl ausgerichtet.",
-    "Setzt die Gotcha-Differenz unter dem Score linksbündig."
-  ),
-});
-
-const GOTCHA_DELTA_PLACEMENT_OPTION_COPY = deepFreeze({
-  below: optionCopy(
-    "Setzt die Gotcha-Differenz in eine eigene Zeile unter dem Score.",
-    "Platziert die zusätzliche Gotcha-Differenz als zweite, visuell abgesetzte Zeile direkt unterhalb der Hauptzahl. Das hält die Hierarchie zwischen Hauptscore und Zusatzinfo am ruhigsten.",
-    "Setzt die Gotcha-Differenz in eine eigene Zeile unter dem Score."
-  ),
-  ["inline-divider"]: optionCopy(
-    "Setzt die Gotcha-Differenz in dieselbe Zeile wie den Score und trennt sie mit `|`.",
-    "Platziert die zusätzliche Gotcha-Differenz direkt rechts neben der Hauptzahl in derselben Zeile und fügt davor einen sichtbaren Trenner `|` ein. Dadurch bleibt die Zusatzinfo kompakt am Score, wirkt aber dichter als die getrennte Zeile.",
-    "Setzt die Gotcha-Differenz in dieselbe Zeile wie den Score und trennt sie mit `|`."
   ),
 });
 
@@ -2457,6 +2175,11 @@ const X01_REMAINING_SCORE_BAR_COLOR_OPTION_COPY = deepFreeze({
     "Färbt den Balken abhängig vom Restscore mit Fokus auf den Bereich bis `170` und steigert die visuelle Dringlichkeit in Checkout-Nähe.",
     "Dynamischer Standardmodus mit Checkout-Fokus."
   ),
+  "checkout-zone-blue": optionCopy(
+    "Zeigt den Restscore blau und markiert die Checkout-Zone bis 170 blau-weiß schraffiert.",
+    "Oberhalb von 170 bleibt der Balken im normalen Blau. Eine weiße Trennlinie markiert den maximal möglichen Checkout; der Bereich bis 170 wird wie bei „Checkout Points Average“ blau-weiß schraffiert.",
+    "Blauer Restscore-Balken mit weißer 170-Linie und schraffierter Checkout-Zone."
+  ),
   "traffic-light": optionCopy(
     "Schaltet stufenweise zwischen Rot, Amber und Grün nach Fortschritt.",
     "Nutzt feste Prozentstufen des verbleibenden Scores. Viel Rest = eher Rot, mittlerer Bereich = Amber, niedriger Rest = Grün.",
@@ -2758,90 +2481,20 @@ const BOT_BOARD_STYLE_SCOPE_OPTION_COPY = deepFreeze({
 });
 
 const xconfigFieldOptionCopy = deepFreeze({
+  "theme-global-background": {
+    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
+    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
+    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
+  },
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
+  },
+  "turn-dart-display": {
     turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY,
     turnDartAssetKey: THEME_GLOBAL_TURN_DART_ASSET_OPTION_COPY,
     turnDartSizePercent: THEME_GLOBAL_TURN_DART_SIZE_OPTION_COPY,
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-x01": {
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-gotcha": {
-    deltaPlacement: GOTCHA_DELTA_PLACEMENT_OPTION_COPY,
-    deltaAlignment: GOTCHA_DELTA_ALIGNMENT_OPTION_COPY,
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-x01-2player": {
-    visualStyle: {
-      studio: optionCopy("Bewahrt den bisherigen Studio-Look.", "Bewahrt Kartenflächen, Radien, Schatten und Board-Glow des bisherigen Designs."),
-      broadcast: optionCopy("Flacher Sports-TV-Look.", "Reduziert Radien, Schatten, Blur und Board-Glow für eine ruhige Broadcast-Darstellung."),
-      "high-contrast": optionCopy("Maximale klare Abgrenzung.", "Verwendet stärkere reservierte Kanten und reduzierte Effekte für große Betrachtungsabstände."),
-    },
-    colorScheme: {
-      "studio-mint": optionCopy("Bisheriger Mint-Akzent.", "Verwendet die bisherige mintgrüne Studio-Palette."),
-      lime: optionCopy("Heller Lime-Akzent.", "Verwendet Lime auf dunklen olivfarbenen Flächen."),
-      amber: optionCopy("Warmer Amber-Akzent.", "Verwendet Amber auf warmen dunklen Flächen."),
-      "midnight-blue": optionCopy("Kühler blauer Akzent.", "Verwendet helles Blau auf tiefblauen Flächen."),
-      monochrome: optionCopy("Neutrale Graustufen.", "Verwendet Weiß und Grautöne ohne farbigen Akzent."),
-    },
-    activePlayerEmphasis: {
-      subtle: optionCopy("Dezente Aktivkante.", "Verwendet eine zurückhaltende Kante und Kopftönung."),
-      standard: optionCopy("Klare stabile Hervorhebung.", "Verwendet eine klare Kante, innere Outline und priorisierte Score-/Namensfarbe."),
-      strong: optionCopy("Kräftige Hervorhebung.", "Verstärkt Kante, Outline und Kopftönung ohne die Karte zu skalieren."),
-    },
-    informationDensity: {
-      full: optionCopy("Vollständige Darstellung.", "Bewahrt die bisherigen Größen und Abstände."),
-      tv: optionCopy("Für größere Betrachtungsabstände.", "Vergrößert Hauptscore und Namen und reduziert sekundäre Abstände."),
-      compact: optionCopy("Für kleine Fenster.", "Reduziert Kartenhöhe, Padding und Abstände bei sichtbaren Spielinformationen."),
-    },
-    identityDensity: {
-      full: optionCopy(
-        "Zeigt Avatar und Flagge vor dem Namen sowie den Spieler-Zusatzwert wie „35+“ dahinter.",
-        "Avatar, Flagge, Name und Spieler-Zusatzwert stehen in einer gemeinsamen Identitätszeile. Gewonnene Runden und Rundenstatistik bleiben separat in der oberen Kartenecke sichtbar."
-      ),
-      "name-only": optionCopy(
-        "Zeigt nur den Spielernamen ohne Avatar, Flagge und Spieler-Zusatzwert.",
-        "Die Identitätszeile enthält ausschließlich den Namen. Gewonnene Runden, Rundenstatistik, Spielstand und weitere spielrelevante Anzeigen bleiben sichtbar."
-      ),
-    },
-    playerNameLayout: {
-      "single-line": optionCopy("Name in einer Zeile.", "Verwendet die bestehende Canvas-basierte Einpassung."),
-      "two-lines": optionCopy("Name in maximal zwei Zeilen.", "Misst den tatsächlichen DOM-Umbruch und verwendet für beide Spieler eine gemeinsame Schriftgröße."),
-    },
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-shanghai": {
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-bermuda": {
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-cricket": {
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
-  },
-  "theme-bull-off": {
-    contrastPreset: BULL_OFF_CONTRAST_PRESET_OPTION_COPY,
-    backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
-    backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
-    playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
   },
   "checkout-score-highlight": {
     effect: CHECKOUT_SCORE_EFFECT_OPTION_COPY,
@@ -2982,11 +2635,11 @@ export function buildXConfigOverviewSection(title, summary = {}) {
     `## ${sectionTitle}`,
     "",
     `- Insgesamt \`${totalModules}\` Module: \`${animationModules}\` Animationen und Komfortfunktionen sowie \`${themeModules}\` Themes.`,
-    `- \`↺ Zurücksetzen\`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.`,
-    `- \`Empfohlene Standards\`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.`,
+    `- \`↺ Zurücksetzen\`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt globales Wallpaper sowie Dart-Upload.`,
+    `- \`Empfohlene Standards\`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.`,
     `- \`Exportieren\` / \`Importieren\`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.`,
-    `- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.`,
-    `- Bildgröße: Als Orientierung gilt ein empfohlenes Limit von \`${themeImageLimit}\` pro gespeichertem Bild.`,
+    `- Hintergrundbild: Die Kachel \`Hintergrund\` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.`,
+    `- Bildgröße: Für das globale Wallpaper gilt ein empfohlenes Limit von \`${themeImageLimit}\`; der separate Dart-Upload wird kompakter gespeichert.`,
   ];
 
   return `${lines.join("\n")}\n`;
@@ -2997,98 +2650,25 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
     title: "Themen",
     sections: [
       {
-        title: "In allen Themen",
+        title: "Hintergrund",
+        featureKey: "theme-global-background",
         fields: [
-          {
-            label: "Alle aktiviert",
-            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
-            key: "enabled",
-          },
-          {
-            label: "Kontrast-Preset",
-            featureKey: "theme-bull-off",
-            key: "contrastPreset",
-          },
-          {
-            label: "Hintergrund-Darstellung",
-            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
-            key: "backgroundDisplayMode",
-          },
-          {
-            label: "Hintergrundbild-Deckkraft",
-            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
-            key: "backgroundOpacity",
-          },
-          {
-            label: "Spielerfelder-Transparenz",
-            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
-            key: "playerFieldTransparency",
-          },
-          {
-            label: "Debug",
-            featureKeys: ["theme-x01", "theme-gotcha", "theme-shanghai", "theme-bermuda", "theme-cricket", "theme-bull-off"],
-            key: "debug",
-          },
+          { label: "Aktiv", key: "enabled" },
+          { label: "Hintergrund-Darstellung", key: "backgroundDisplayMode" },
+          { label: "Hintergrundbild-Deckkraft", key: "backgroundOpacity" },
+          { label: "Spielerfelder-Transparenz", key: "playerFieldTransparency" },
+          { label: "Debug", key: "debug" },
         ],
       },
       {
-        title: "Templates Global",
+        title: "Schrift",
         featureKey: "theme-global-typography",
         fields: [
-          {
-            label: "Aktiv",
-            key: "enabled",
-          },
-          {
-            label: "Schriftart",
-            key: "fontPreset",
-          },
-          {
-            label: "Greift bei",
-            key: "applyTo",
-          },
-          {
-            label: "Hintergrund-Darstellung",
-            key: "backgroundDisplayMode",
-          },
-          {
-            label: "Hintergrundbild-Deckkraft",
-            key: "backgroundOpacity",
-          },
-          {
-            label: "Spielerfelder-Transparenz",
-            key: "playerFieldTransparency",
-          },
-          {
-            label: "Aktivspieler-Tönung",
-            key: "activePlayerTintIntensity",
-          },
-          {
-            label: "Debug",
-            key: "debug",
-          },
-        ],
-      },
-      {
-        title: "Bot Board Style",
-        featureKey: "bot-board-style",
-        fields: [
-          {
-            label: "Aktiv",
-            key: "enabled",
-          },
-          {
-            label: "Board-Design",
-            key: "design",
-          },
-          {
-            label: "Geltungsbereich",
-            key: "scope",
-          },
-          {
-            label: "Debug",
-            key: "debug",
-          },
+          { label: "Aktiv", key: "enabled" },
+          { label: "Schriftart", key: "fontPreset" },
+          { label: "Greift bei", key: "applyTo" },
+          { label: "Aktivspieler-Tönung", key: "activePlayerTintIntensity" },
+          { label: "Debug", key: "debug" },
         ],
       },
     ],
@@ -3106,6 +2686,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
               "turn-score-counter",
               "avg-trend-arrow",
               "special-hit-highlights",
+              "bot-board-style",
+              "turn-dart-display",
               "dart-marker-replacer",
               "dartboard-marker-highlight",
               "take-out-darts-alert",
@@ -3129,6 +2711,8 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
               "turn-score-counter",
               "avg-trend-arrow",
               "special-hit-highlights",
+              "bot-board-style",
+              "turn-dart-display",
               "dart-marker-replacer",
               "dartboard-marker-highlight",
               "take-out-darts-alert",
@@ -3179,6 +2763,25 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         fields: [
           { label: "Farbstil", key: "colorTheme" },
           { label: "Animationsstil", key: "animationStyle" },
+        ],
+      },
+      {
+        title: "Bot Board Style",
+        featureKey: "bot-board-style",
+        fields: [
+          { label: "Board-Design", key: "design" },
+          { label: "Geltungsbereich", key: "scope" },
+        ],
+      },
+      {
+        title: "Wurffeld-Darts",
+        featureKey: "turn-dart-display",
+        fields: [
+          { label: "Stil", key: "turnDartStyle" },
+          { label: "Dart auswählen", key: "turnDartAssetKey" },
+          { label: "Text", key: "turnDartTextTemplate" },
+          { label: "Größe", key: "turnDartSizePercent" },
+          { label: "Glanz", key: "turnDartShineEnabled" },
         ],
       },
       {
@@ -3352,7 +2955,7 @@ function resolveRecommendedValueLabel(descriptorsByFeatureKey, featureKey, field
     }
   }
 
-  return String(fieldValue ?? "").trim();
+  return String(fieldValue ?? "").trim() || "Leer";
 }
 
 function resolveRecommendedFieldLabel(
@@ -3485,7 +3088,12 @@ export function buildModuleFinderSection(title, entries = []) {
       return;
     }
 
-    const area = descriptor.tab === "themes" ? "Theme" : "Animation & Komfort";
+    let area = "Animation & Komfort";
+    if (descriptor.cardType === "action") {
+      area = "Aktion";
+    } else if (descriptor.tab === "themes") {
+      area = "Theme";
+    }
     lines.push(
       `| [${escapeMarkdownTableCell(label)}](#${anchor}) | ${area} | ${formatVariantLabel(
         definition.variants

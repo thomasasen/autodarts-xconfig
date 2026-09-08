@@ -53,13 +53,10 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.x01RemainingScoreBar, "object");
   assert.equal(typeof config.features.winnerCelebrationEffect, "object");
   assert.equal(typeof config.features.themes, "object");
-  assert.equal(typeof config.features.themes.x01, "object");
-  assert.equal(typeof config.features.themes.gotcha, "object");
-  assert.equal(typeof config.features.themes.x01TwoPlayer, "object");
-  assert.equal(typeof config.features.themes.shanghai, "object");
-  assert.equal(typeof config.features.themes.bermuda, "object");
-  assert.equal(typeof config.features.themes.cricket, "object");
-  assert.equal(typeof config.features.themes.bullOff, "object");
+  assert.equal(typeof config.features.themes.globalBackground, "object");
+  assert.equal(typeof config.features.themes.globalTypography, "object");
+  assert.equal(typeof config.features.themes.globalPresets, "object");
+  assert.equal(typeof config.features.turnDartDisplay, "object");
   assert.equal(config.featureToggles.checkoutTargetHighlights, false);
   assert.equal(config.featureToggles.tvBoardZoom, false);
   assert.equal(config.featureToggles.activePlayerSweep, false);
@@ -73,13 +70,10 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles.turnScoreCounter, false);
   assert.equal(config.featureToggles.x01RemainingScoreBar, false);
   assert.equal(config.featureToggles.winnerCelebrationEffect, false);
-  assert.equal(config.featureToggles["themes.x01"], false);
-  assert.equal(config.featureToggles["themes.gotcha"], false);
-  assert.equal(config.featureToggles["themes.x01TwoPlayer"], false);
-  assert.equal(config.featureToggles["themes.shanghai"], false);
-  assert.equal(config.featureToggles["themes.bermuda"], false);
-  assert.equal(config.featureToggles["themes.cricket"], false);
-  assert.equal(config.featureToggles["themes.bullOff"], false);
+  assert.equal(config.featureToggles["themes.globalBackground"], false);
+  assert.equal(config.featureToggles["themes.globalTypography"], false);
+  assert.equal(config.featureToggles.turnDartDisplay, false);
+  assert.equal(config.featureToggles["themes.x01"], undefined);
   assert.equal(config.features.specialHitHighlights.colorTheme, "kind-signal");
   assert.equal(config.features.specialHitHighlights.animationStyle, "pop-hit");
   assert.equal(config.features.cricketTargetHighlighter.showOpenObjectives, false);
@@ -108,14 +102,14 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   const config = createHardResetRuntimeConfig({
     features: {
       themes: {
-        globalTypography: {
+        globalBackground: {
           backgroundImageDataUrl: "data:image/png;base64,GGGG",
           backgroundAssetKey: "cyberpunk",
         },
-        x01: {
-          backgroundImageDataUrl: "data:image/png;base64,AAAA",
+        globalTypography: {
         },
       },
+      turnDartDisplay: { turnDartImageDataUrl: "data:image/png;base64,DDDD" },
     },
   });
 
@@ -130,43 +124,25 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.tvBoardZoom.enabled, false);
   assert.equal(config.features.specialHitHighlights.enabled, false);
   assert.equal(config.features.cricketGridStatusEffects.enabled, false);
+  assert.equal(config.features.themes.globalBackground.enabled, false);
+  assert.equal(config.features.themes.globalBackground.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.globalBackground.backgroundAssetKey, "");
   assert.equal(config.features.themes.globalTypography.enabled, false);
-  assert.equal(config.features.themes.globalTypography.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.globalTypography.backgroundAssetKey, "");
-  assert.equal(config.features.themes.x01.enabled, false);
-  assert.equal(config.features.themes.x01.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.gotcha.enabled, false);
-  assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
-  assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
-  assert.equal(config.features.themes.gotcha.deltaItalic, true);
-  assert.equal(config.features.themes.gotcha.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
-  assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.x01TwoPlayer.visualStyle, "studio");
-  assert.equal(config.features.themes.x01TwoPlayer.colorScheme, "studio-mint");
-  assert.equal(config.features.themes.x01TwoPlayer.activePlayerEmphasis, "standard");
-  assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "full");
-  assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "full");
-  assert.equal(config.features.themes.x01TwoPlayer.playerNameLayout, "single-line");
-  assert.equal(config.features.themes.shanghai.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.bullOff.debug, false);
+  assert.equal(config.features.turnDartDisplay.turnDartImageDataUrl, "");
+  assert.equal(config.features.themes.x01, undefined);
 });
 
 test("createRecommendedRuntimeConfig applies the documented recommended profile and preserves theme images", () => {
   const config = createRecommendedRuntimeConfig({
     features: {
       themes: {
-        globalTypography: {
+        globalBackground: {
           backgroundImageDataUrl: "data:image/png;base64,GGGG",
-          turnDartImageDataUrl: "data:image/png;base64,DDDD",
         },
-        x01: {
-          backgroundImageDataUrl: "data:image/png;base64,AAAA",
-        },
-        cricket: {
-          backgroundImageDataUrl: "data:image/png;base64,BBBB",
+        globalTypography: {
         },
       },
+      turnDartDisplay: { turnDartImageDataUrl: "data:image/png;base64,DDDD" },
     },
   });
 
@@ -223,99 +199,30 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.x01RemainingScoreBar.barSize, "breit");
   assert.equal(config.features.x01RemainingScoreBar.effect, "previous-score-trail");
   assert.equal(config.features.botBoardStyle.scope, "all-match-boards");
-  assert.equal(config.features.themes.x01.enabled, false);
-  assert.equal(config.features.themes.gotcha.enabled, false);
-  assert.equal(config.features.themes.gotcha.deltaPlacement, "below");
-  assert.equal(config.features.themes.gotcha.deltaAlignment, "right");
-  assert.equal(config.features.themes.gotcha.deltaItalic, true);
-  assert.equal(config.features.themes.x01TwoPlayer.enabled, false);
-  assert.equal(config.features.themes.x01TwoPlayer.visualStyle, "studio");
-  assert.equal(config.features.themes.x01TwoPlayer.colorScheme, "studio-mint");
-  assert.equal(config.features.themes.x01TwoPlayer.activePlayerEmphasis, "standard");
-  assert.equal(config.features.themes.x01TwoPlayer.informationDensity, "tv");
-  assert.equal(config.features.themes.x01TwoPlayer.identityDensity, "name-only");
-  assert.equal(config.features.themes.x01TwoPlayer.playerNameLayout, "single-line");
-  assert.equal(config.features.themes.shanghai.enabled, false);
-  assert.equal(config.features.themes.cricket.enabled, false);
+  assert.equal(config.features.themes.globalBackground.enabled, false);
   assert.equal(config.features.themes.globalTypography.enabled, false);
   assert.equal(config.features.themes.globalTypography.fontPreset, "aldrich");
   assert.deepEqual(config.features.themes.globalTypography.applyTo, ["scores", "throws", "names"]);
-  assert.equal(config.features.themes.globalTypography.turnDartStyle, "image");
-  assert.equal(config.features.themes.globalTypography.turnDartSizePercent, 135);
+  assert.equal(config.features.turnDartDisplay.turnDartStyle, "image");
+  assert.equal(config.features.turnDartDisplay.turnDartSizePercent, 135);
   assert.equal(
-    config.features.themes.globalTypography.backgroundImageDataUrl,
+    config.features.themes.globalBackground.backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
   );
   assert.equal(
-    config.features.themes.globalTypography.turnDartImageDataUrl,
+    config.features.turnDartDisplay.turnDartImageDataUrl,
     "data:image/png;base64,DDDD"
   );
-  assert.equal(config.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
-  assert.equal(config.features.themes.gotcha.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
-  assert.equal(config.features.themes.cricket.backgroundImageDataUrl, "data:image/png;base64,BBBB");
-  assert.equal(config.features.themes.bullOff.backgroundImageDataUrl, "");
+  assert.equal(config.features.themes.x01, undefined);
 });
 
-test("createRuntimeConfig normalizes x01 two-player theme presets and old configs", () => {
-  const oldConfig = createRuntimeConfig({
-    features: {
-      themes: {
-        x01TwoPlayer: {
-          showAvg: false,
-        },
-      },
-    },
-  });
-  const oldThemeConfig = oldConfig.getFeatureConfig("themes.x01TwoPlayer");
-  assert.deepEqual(
-    {
-      visualStyle: oldThemeConfig.visualStyle,
-      colorScheme: oldThemeConfig.colorScheme,
-      activePlayerEmphasis: oldThemeConfig.activePlayerEmphasis,
-      informationDensity: oldThemeConfig.informationDensity,
-      identityDensity: oldThemeConfig.identityDensity,
-      playerNameLayout: oldThemeConfig.playerNameLayout,
-    },
-    {
-      visualStyle: "studio",
-      colorScheme: "studio-mint",
-      activePlayerEmphasis: "standard",
-      informationDensity: "full",
-      identityDensity: "full",
-      playerNameLayout: "single-line",
-    }
-  );
-
-  const normalized = createRuntimeConfig({
-    features: {
-      themes: {
-        x01TwoPlayer: {
-          visualStyle: "invalid",
-          colorScheme: "remote-blue",
-          activePlayerEmphasis: "maximum",
-          informationDensity: "tiny",
-          identityDensity: "hidden",
-          playerNameLayout: "many-lines",
-        },
-      },
-    },
-  });
-  const normalizedThemeConfig = normalized.getFeatureConfig("themes.x01TwoPlayer");
-  assert.equal(normalizedThemeConfig.visualStyle, "studio");
-  assert.equal(normalizedThemeConfig.colorScheme, "studio-mint");
-  assert.equal(normalizedThemeConfig.activePlayerEmphasis, "standard");
-  assert.equal(normalizedThemeConfig.informationDensity, "full");
-  assert.equal(normalizedThemeConfig.identityDensity, "full");
-  assert.equal(normalizedThemeConfig.playerNameLayout, "single-line");
-
-  const retiredCompactConfig = createRuntimeConfig({
-    features: { themes: { x01TwoPlayer: { identityDensity: "compact" } } },
-  });
-  assert.equal(
-    retiredCompactConfig.getFeatureConfig("themes.x01TwoPlayer").identityDensity,
-    "full"
-  );
+test("createRuntimeConfig removes retired game theme configs", () => {
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.x01TwoPlayer": true },
+    features: { themes: { x01TwoPlayer: { enabled: true, showAvg: false } } },
+  }).getNormalized();
+  assert.equal(config.featureToggles["themes.x01TwoPlayer"], undefined);
+  assert.equal(config.features.themes.x01TwoPlayer, undefined);
 });
 
 test("createRuntimeConfig normalizes wave-2 feature options", () => {
@@ -559,35 +466,35 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     20
   );
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundDisplayMode,
+    runtimeConfig.getFeatureConfig("themes.globalBackground").backgroundDisplayMode,
     "tile"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundOpacity, 70);
+  assert.equal(runtimeConfig.getFeatureConfig("themes.globalBackground").backgroundOpacity, 70);
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").playerFieldTransparency,
+    runtimeConfig.getFeatureConfig("themes.globalBackground").playerFieldTransparency,
     45
   );
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundImageDataUrl,
+    runtimeConfig.getFeatureConfig("themes.globalBackground").backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
   );
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").backgroundAssetKey,
+    runtimeConfig.getFeatureConfig("themes.globalBackground").backgroundAssetKey,
     "matrix"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartStyle, "gradient");
+  assert.equal(runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartStyle, "gradient");
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartTextTemplate,
+    runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartTextTemplate,
     "Wurf #"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartColor, "#DDEEFF");
+  assert.equal(runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartColor, "#DDEEFF");
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartGradientColor,
+    runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartGradientColor,
     "#123456"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartSizePercent, 135);
+  assert.equal(runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartSizePercent, 135);
   assert.equal(
-    runtimeConfig.getFeatureConfig("themes.globalTypography").turnDartImageDataUrl,
+    runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartImageDataUrl,
     "data:image/png;base64,DDDD"
   );
   assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").style, "top-fireworks");
@@ -597,28 +504,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").particleAmount, "voll");
   assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").includeBullOut, false);
   assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").pointerDismiss, false);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.x01").showAvg, false);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.x01").backgroundDisplayMode, "fit");
-  assert.equal(runtimeConfig.getFeatureConfig("themes.x01").backgroundOpacity, 40);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.x01").playerFieldTransparency, 30);
-  assert.equal(
-    runtimeConfig.getFeatureConfig("themes.x01").backgroundImageDataUrl,
-    "data:image/png;base64,AAAA"
-  );
-  assert.equal(runtimeConfig.getFeatureConfig("themes.shanghai").showAvg, false);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.shanghai").backgroundDisplayMode, "tile");
-  assert.equal(runtimeConfig.getFeatureConfig("themes.shanghai").backgroundOpacity, 70);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.shanghai").playerFieldTransparency, 45);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.shanghai").backgroundImageDataUrl, "");
-  assert.equal(runtimeConfig.getFeatureConfig("themes.bermuda").backgroundDisplayMode, "stretch");
-  assert.equal(runtimeConfig.getFeatureConfig("themes.bermuda").backgroundOpacity, 55);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.bermuda").playerFieldTransparency, 15);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").showAvg, true);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").backgroundDisplayMode, "center");
-  assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").backgroundOpacity, 85);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.cricket").playerFieldTransparency, 5);
-  assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").contrastPreset, "high");
-  assert.equal(runtimeConfig.getFeatureConfig("themes.bullOff").backgroundDisplayMode, "fill");
+  assert.equal(runtimeConfig.getNormalized().features.themes.x01, undefined);
 });
 
 test("createRuntimeConfig normalizes turn-score-counter speed presets and legacy durations", () => {
@@ -708,6 +594,9 @@ test("normalized feature configs expose a boolean debug flag for every registere
   const runtimeConfig = createRuntimeConfig();
 
   defaultFeatureDefinitions.forEach((definition) => {
+    if (definition.configKey === "themes.globalPresets") {
+      return;
+    }
     const normalizedFeatureConfig = runtimeConfig.getFeatureConfig(definition.configKey);
     assert.equal(
       typeof normalizedFeatureConfig.debug,
@@ -854,7 +743,7 @@ test("cricket highlighter dim style supports enum values and legacy boolean mapp
   assert.equal(legacyEnabled.getFeatureConfig("cricketTargetHighlighter").dimIrrelevantBoardTargets, true);
 });
 
-test("runtime config keeps unknown feature fields for forward-compatible setting removal", () => {
+test("runtime config removes retired game theme fields", () => {
   const runtimeConfig = createRuntimeConfig({
     features: {
       themes: {
@@ -866,12 +755,8 @@ test("runtime config keeps unknown feature fields for forward-compatible setting
     },
   });
 
-  const themeConfig = runtimeConfig.getFeatureConfig("themes.x01");
-  assert.equal(themeConfig.showAvg, false);
-  assert.equal(themeConfig.retiredBackgroundFlag, "legacy-value");
-
   const normalized = runtimeConfig.getNormalized();
-  assert.equal(normalized.features.themes.x01.retiredBackgroundFlag, "legacy-value");
+  assert.equal(normalized.features.themes.x01, undefined);
 });
 
 test("x01-remaining-score-bar falls back to thresholdColorMode when colorTheme is missing", () => {
@@ -885,6 +770,21 @@ test("x01-remaining-score-bar falls back to thresholdColorMode when colorTheme i
   });
 
   assert.equal(runtimeConfig.getFeatureConfig("x01RemainingScoreBar").colorTheme, "danger-endgame");
+});
+
+test("x01-remaining-score-bar accepts the checkout-zone-blue design", () => {
+  const runtimeConfig = createRuntimeConfig({
+    features: {
+      x01RemainingScoreBar: {
+        colorTheme: "checkout-zone-blue",
+      },
+    },
+  });
+
+  assert.equal(
+    runtimeConfig.getFeatureConfig("x01RemainingScoreBar").colorTheme,
+    "checkout-zone-blue"
+  );
 });
 
 test("x01-remaining-score-bar maps legacy effect keys to the reduced effect set", () => {

@@ -178,8 +178,9 @@ test("config store saves, updates, and resets persisted config", async () => {
   assert.equal(reset.features.tvBoardZoom.checkoutZoomTarget, "finish-only");
   assert.equal(reset.features.tvBoardZoom.t20SetupZoomEnabled, true);
   assert.equal(reset.features.checkoutScoreHighlight.enabled, false);
-  assert.equal(reset.features.themes.x01.enabled, false);
-  assert.equal(reset.features.themes.x01.backgroundImageDataUrl, "");
+  assert.equal(reset.features.themes.globalBackground.enabled, false);
+  assert.equal(reset.features.themes.globalBackground.backgroundImageDataUrl, "");
+  assert.equal(reset.features.turnDartDisplay.turnDartImageDataUrl, "");
   defaultFeatureDefinitions.forEach((definition) => {
     assert.equal(reset.featureToggles[definition.configKey], false, definition.configKey);
     const featureConfig = getStoredFeatureConfig(reset, definition.configKey);
@@ -410,13 +411,8 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.dartMarkerReplacer.enableWobble, false);
   assert.equal(importedConfig.features.dartMarkerReplacer.flightSpeed, "cinematic");
   assert.equal(importedConfig.features.dartMarkerReplacer.debug, true);
-  assert.equal(importedConfig.featureToggles["themes.x01"], true);
-  assert.equal(importedConfig.features.themes.x01.enabled, true);
-  assert.equal(importedConfig.features.themes.x01.showAvg, false);
-  assert.equal(importedConfig.features.themes.x01.backgroundDisplayMode, "fit");
-  assert.equal(importedConfig.features.themes.x01.backgroundOpacity, 40);
-  assert.equal(importedConfig.features.themes.x01.playerFieldTransparency, 30);
-  assert.equal(importedConfig.features.themes.x01.debug, true);
+  assert.equal(importedConfig.featureToggles["themes.x01"], undefined);
+  assert.equal(importedConfig.features.themes.x01, undefined);
   assert.equal(localStorage.getItem(LEGACY_IMPORT_FLAG_KEY), "true");
 
   const secondRun = await store.importLegacyConfigIfAvailable();
@@ -496,7 +492,7 @@ test("config store fails loudly when no storage backend can persist writes", asy
   );
 });
 
-test("config store keeps unknown feature fields during updates", async () => {
+test("config store removes retired game theme fields during updates", async () => {
   const localStorage = new FakeStorage({
     [CONFIG_STORAGE_KEY]: JSON.stringify({
       featureToggles: {
@@ -527,9 +523,8 @@ test("config store keeps unknown feature fields during updates", async () => {
     },
   });
 
-  assert.equal(nextConfig.features.themes.x01.showAvg, false);
-  assert.equal(nextConfig.features.themes.x01.retiredBackgroundFlag, "keep-me");
+  assert.equal(nextConfig.features.themes.x01, undefined);
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.retiredBackgroundFlag, "keep-me");
+  assert.equal(storedConfig.features.themes.x01, undefined);
 });

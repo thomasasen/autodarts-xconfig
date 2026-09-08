@@ -2,26 +2,12 @@ import {
   createThemeGlobalTemplatePresetPatch,
   getThemeGlobalTemplatePreset,
 } from "../../shared/theme-global-template-presets.js";
-import { createDefaultFeatureConfig } from "../../config/feature-config-spec.js";
 import { setNestedValue, splitFeaturePath } from "./path-utils.js";
 import { uploadNormalizedThemeImage } from "./theme-background.js";
 
 const TURN_DART_IMAGE_MAX_WIDTH = 960;
 const TURN_DART_IMAGE_MAX_HEIGHT = 240;
 const TURN_DART_IMAGE_MAX_BYTES = 350 * 1024;
-const X01_TWO_PLAYER_RESET_FIELDS = Object.freeze([
-  "visualStyle",
-  "colorScheme",
-  "activePlayerEmphasis",
-  "informationDensity",
-  "identityDensity",
-  "playerNameLayout",
-  "showAvg",
-  "backgroundDisplayMode",
-  "backgroundOpacity",
-  "playerFieldTransparency",
-  "debug",
-]);
 
 function isControllerActive(controller) {
   return controller?.state?.started !== false;
@@ -90,7 +76,7 @@ function handleResetConfig(controller) {
 
   const confirmed = confirmAction(
     controller.windowRef,
-    "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht alle gespeicherten Theme-Bilder."
+    "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht globales Wallpaper sowie Dart-Upload."
   );
   if (!confirmed) {
     return;
@@ -112,7 +98,7 @@ function handleApplyRecommendedDefaults(controller) {
 
   const confirmed = confirmAction(
     controller.windowRef,
-    "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."
+    "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Globales Wallpaper und Dart-Upload bleiben erhalten."
   );
   if (!confirmed) {
     return;
@@ -226,7 +212,7 @@ function resolveNextSelection(field, currentValues, settingRawValue, optionValue
 }
 
 function buildSelectSettingPatch(controller, configKey, settingKey, nextValue) {
-  if (configKey === "themes.globalTypography" && settingKey === "turnDartAssetKey") {
+  if (configKey === "turnDartDisplay" && settingKey === "turnDartAssetKey") {
     return buildFeaturePatch(configKey, {
       turnDartStyle: "preset",
       turnDartAssetKey: nextValue,
@@ -368,7 +354,7 @@ function handleApplyThemeGlobalPreset(controller, actionNode, feature) {
 
   const confirmed = confirmAction(
     controller.windowRef,
-    `Preset "${preset.label}" anwenden? Dadurch werden alle Einstellungen in Templates Global inklusive globalem Wallpaper überschrieben.`
+    `Vorlage "${preset.label}" anwenden? Hintergrund, Schrift und Farben werden ersetzt; Wurffeld-Darts bleiben unverändert.`
   );
   if (!confirmed) {
     return;
@@ -377,7 +363,7 @@ function handleApplyThemeGlobalPreset(controller, actionNode, feature) {
   withRuntimeCall(
     controller,
     Promise.resolve(controller.runtimeApi.saveConfig(patch)).then(() => {
-      controller.syncThemeBackgroundIndicators(feature.featureKey);
+      controller.syncThemeBackgroundIndicators("theme-global-background");
     }),
     `Preset "${preset.label}" angewendet.`,
     `Preset "${preset.label}" konnte nicht angewendet werden.`
@@ -432,35 +418,6 @@ function buildFeaturePatch(configKey, featurePatch) {
   const patch = { features: {} };
   setNestedValue(patch.features, splitFeaturePath(configKey), featurePatch);
   return patch;
-}
-
-function handleResetX01TwoPlayerTheme(controller, feature) {
-  if (
-    feature?.configKey !== "themes.x01TwoPlayer" ||
-    typeof controller.runtimeApi?.saveConfig !== "function"
-  ) {
-    return;
-  }
-
-  const confirmed = confirmAction(
-    controller.windowRef,
-    "Zweispieler-Theme auf Standard zurücksetzen? Aktivierung und eigenes Hintergrundbild bleiben erhalten."
-  );
-  if (!confirmed) {
-    return;
-  }
-
-  const defaults = createDefaultFeatureConfig("themes.x01TwoPlayer");
-  const resetConfig = Object.fromEntries(
-    X01_TWO_PLAYER_RESET_FIELDS.map((key) => [key, defaults[key]])
-  );
-  withRuntimeCall(
-    controller,
-    controller.runtimeApi.saveConfig(buildFeaturePatch(feature.configKey, resetConfig)),
-    "Zweispieler-Theme auf Standard zurückgesetzt.",
-    "Zweispieler-Theme konnte nicht zurückgesetzt werden.",
-    "info"
-  );
 }
 
 function handleUploadTurnDartImage(controller, feature) {
@@ -587,8 +544,6 @@ function buildCommandHandlers(controller) {
       }
       handleApplyThemeGlobalPreset(controller, actionNode, feature);
     }],
-    ["resetX01TwoPlayerTheme", (_actionNode, feature) =>
-      handleResetX01TwoPlayerTheme(controller, feature)],
     ["clearThemeBackground", (_actionNode, feature) => {
       if (!feature) {
         return;

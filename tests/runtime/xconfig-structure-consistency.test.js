@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import { defaultConfig } from "../../src/config/default-config.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 import { xconfigDescriptorOrder, xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
-import { getXConfigFieldOptionCopy } from "../../src/features/xconfig-ui/copy.js";
 import { styleText as xconfigShellStyleText } from "../../src/features/xconfig-ui/shell-style.js";
 import {
   ELECTRIC_FILTER_SOFT_ID,
@@ -35,22 +34,6 @@ function readNestedValue(rootValue, pathParts = []) {
   }, rootValue);
 }
 
-test("x01 two-player identity options explain persistent round information", () => {
-  const optionDescriptions = Object.fromEntries(
-    ["full", "name-only"].map((optionValue) => [
-      optionValue,
-      getXConfigFieldOptionCopy("theme-x01-2player", "identityDensity", optionValue)?.description,
-    ])
-  );
-
-  assert.match(optionDescriptions.full, /Avatar und Flagge.*Namen.*35\+/);
-  assert.match(optionDescriptions["name-only"], /nur den Spielernamen.*Avatar, Flagge.*Zusatzwert/);
-  assert.equal(
-    getXConfigFieldOptionCopy("theme-x01-2player", "identityDensity", "compact"),
-    null
-  );
-});
-
 test("default feature definitions have matching default toggles and config branches", () => {
   defaultFeatureDefinitions.forEach((definition) => {
     const configKey = String(definition?.configKey || "").trim();
@@ -75,11 +58,19 @@ test("xConfig descriptors stay aligned with registry definitions and exported or
   });
 });
 
-test("theme global typography stays first in the themes descriptor order", () => {
+test("themes contain exactly background, font and action-only presets", () => {
   const themeDescriptors = xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes");
-  assert.ok(themeDescriptors.length > 0);
-  assert.equal(themeDescriptors[0]?.featureKey, "theme-global-typography");
-  assert.equal(themeDescriptors[1]?.featureKey, "bot-board-style");
+  assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.featureKey), [
+    "theme-global-background",
+    "theme-global-typography",
+    "theme-global-presets",
+  ]);
+  assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.cardType), [
+    "toggle",
+    "toggle",
+    "action",
+  ]);
+  assert.equal(themeDescriptors.every((descriptor) => descriptor.toggleable === undefined), true);
 });
 
 test("bot board style descriptor exposes exactly ten designs and both scopes", () => {
@@ -88,7 +79,7 @@ test("bot board style descriptor exposes exactly ten designs and both scopes", (
   const scopeField = descriptor?.fields.find((field) => field.key === "scope");
 
   assert.ok(descriptor);
-  assert.equal(descriptor.tab, "themes");
+  assert.equal(descriptor.tab, "animations");
   assert.deepEqual(descriptor.fields.map((field) => field.key), ["design", "scope", "debug"]);
   assert.equal(designField.options.length, 10);
   assert.deepEqual(scopeField.options.map((option) => option.value), [
@@ -97,53 +88,12 @@ test("bot board style descriptor exposes exactly ten designs and both scopes", (
   ]);
 });
 
-test("x01 two-player descriptor exposes grouped presentation presets and local reset", () => {
-  const descriptor = xconfigDescriptors.find(
-    (entry) => entry.featureKey === "theme-x01-2player"
-  );
+test("turn dart display is an independent global animation module", () => {
+  const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "turn-dart-display");
   assert.ok(descriptor);
-  assert.deepEqual(
-    descriptor.fields.map((field) => field.key || field.action),
-    [
-      "visualStyle",
-      "colorScheme",
-      "informationDensity",
-      "activePlayerEmphasis",
-      "identityDensity",
-      "playerNameLayout",
-      "backgroundDisplayMode",
-      "backgroundOpacity",
-      "playerFieldTransparency",
-      "debug",
-      "uploadThemeBackground",
-      "clearThemeBackground",
-      "resetX01TwoPlayerTheme",
-    ]
-  );
-  assert.deepEqual(
-    descriptor.fields.slice(0, 6).map((field) => field.section),
-    [
-      "Layout und Stil",
-      "Layout und Stil",
-      "Layout und Stil",
-      "Spieler",
-      "Spieler",
-      "Spieler",
-    ]
-  );
-  assert.deepEqual(
-    descriptor.fields.find((field) => field.key === "visualStyle").options.map((option) => option.value),
-    ["studio", "broadcast", "high-contrast"]
-  );
-  assert.deepEqual(
-    descriptor.fields.find((field) => field.key === "colorScheme").options.map((option) => option.value),
-    ["studio-mint", "lime", "amber", "midnight-blue", "monochrome"]
-  );
-  assert.deepEqual(
-    descriptor.fields.find((field) => field.key === "identityDensity").options.map((option) => option.value),
-    ["full", "name-only"]
-  );
-  assert.equal(descriptor.fields.some((field) => field.key === "showAvg"), false);
+  assert.equal(descriptor.tab, "animations");
+  assert.equal(descriptor.fields.some((field) => field.key === "turnDartStyle"), true);
+  assert.equal(descriptor.fields.some((field) => field.action === "uploadTurnDartImage"), true);
 });
 
 test("x01 bust active player highlight descriptor exposes the configurable crack count", () => {
@@ -337,6 +287,7 @@ test("xConfig color preset settings expose matching preview themes", () => {
       "x01-remaining-score-bar:colorTheme",
       [
         "x01-checkout-focus",
+        "x01-checkout-zone-blue",
         "x01-traffic-light",
         "x01-danger-endgame",
         "x01-gradient-by-progress",

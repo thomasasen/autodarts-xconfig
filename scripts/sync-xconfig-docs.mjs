@@ -44,7 +44,7 @@ function buildRecommendedDefaultsSummary() {
   return [
     "## Empfohlene Standards",
     "",
-    "Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.",
+    "Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.",
     "",
     "[Vollständiges Profil der empfohlenen Standards](docs/FEATURES.md#empfohlene-standards)",
   ].join("\n");
@@ -124,7 +124,7 @@ function buildFeaturesDocSections() {
       resolveRecommendedConfig
     ).trim(),
     "",
-    buildFeaturesDocGroup("Themes", themeEntries).trim(),
+    buildFeaturesDocGroup("Themen", themeEntries).trim(),
     "",
     buildFeaturesDocGroup("Animationen für X01", x01Entries).trim(),
     "",

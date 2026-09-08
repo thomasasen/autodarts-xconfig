@@ -92,6 +92,7 @@ const CHECKOUT_BOARD_TARGETS_LIVE_PREVIEW_FIELD_KEYS = new Set([
   "colorTheme",
 ]);
 const X01_REMAINING_SCORE_BAR_FEATURE_KEY = "x01-remaining-score-bar";
+const X01_REMAINING_SCORE_BAR_COLOR_THEME_FIELD_KEY = "colorTheme";
 const X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY = "barSize";
 const X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY = "effect";
 const X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE = 501;
@@ -126,7 +127,8 @@ const STYLE_CHECKOUT_SUGGESTIONS_THEMES = Object.freeze({
 });
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
-const THEME_GLOBAL_TYPOGRAPHY_TURN_DART_ASSET_FIELD_KEY = "turnDartAssetKey";
+const TURN_DART_DISPLAY_FEATURE_KEY = "turn-dart-display";
+const TURN_DART_DISPLAY_ASSET_FIELD_KEY = "turnDartAssetKey";
 const XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",
@@ -168,6 +170,8 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
       "turn-score-counter",
       "avg-trend-arrow",
       "special-hit-highlights",
+      "bot-board-style",
+      "turn-dart-display",
       "dart-marker-replacer",
       "dartboard-marker-highlight",
       "take-out-darts-alert",
@@ -236,7 +240,7 @@ function formatVariantLabel(variants = []) {
 }
 
 function isThemeGlobalTypographyFeature(feature) {
-  return String(feature?.featureKey || "").trim() === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY;
+  return String(feature?.featureKey || "").trim().startsWith("theme-global-");
 }
 
 function buildThemeGlobalCardSummary(documentRef) {
@@ -594,15 +598,15 @@ function isDartDesignSelectField(feature, field) {
   return (
     (featureKey === DART_MARKER_DARTS_FEATURE_KEY &&
       fieldKey === DART_MARKER_DARTS_DESIGN_SETTING_KEY) ||
-    (featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
-      fieldKey === THEME_GLOBAL_TYPOGRAPHY_TURN_DART_ASSET_FIELD_KEY)
+    (featureKey === TURN_DART_DISPLAY_FEATURE_KEY &&
+      fieldKey === TURN_DART_DISPLAY_ASSET_FIELD_KEY)
   );
 }
 
 function isTurnDartAssetSelectField(feature, field) {
-  return feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY &&
+  return feature?.featureKey === TURN_DART_DISPLAY_FEATURE_KEY &&
     field?.control === "select" &&
-    String(field?.key || "").trim() === THEME_GLOBAL_TYPOGRAPHY_TURN_DART_ASSET_FIELD_KEY;
+    String(field?.key || "").trim() === TURN_DART_DISPLAY_ASSET_FIELD_KEY;
 }
 
 function isThemeGlobalTypographyFontField(feature, field) {
@@ -1232,7 +1236,8 @@ function isX01RemainingScoreBarPreviewField(feature, field) {
     return false;
   }
   const fieldKey = String(field?.key || "").trim();
-  return fieldKey === X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY ||
+  return fieldKey === X01_REMAINING_SCORE_BAR_COLOR_THEME_FIELD_KEY ||
+    fieldKey === X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY ||
     fieldKey === X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY;
 }
 
@@ -1261,6 +1266,7 @@ function applyX01RemainingScoreBarPreviewVariables(node, previewConfig = {}, opt
     colorTheme: previewConfig.colorTheme,
     ratio,
     score,
+    startScore: X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE,
   });
   Object.entries(visualVars).forEach(([propertyName, value]) => {
     node.style.setProperty(propertyName, value);
@@ -1349,6 +1355,19 @@ function buildX01RemainingScoreBarPreviewSection(documentRef, feature) {
   });
 }
 
+function resolveX01RemainingScoreBarPreviewOverrides(fieldKey, optionValue) {
+  if (fieldKey === X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY) {
+    return { barSize: optionValue };
+  }
+  if (fieldKey === X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY) {
+    return { effect: optionValue };
+  }
+  if (fieldKey === X01_REMAINING_SCORE_BAR_COLOR_THEME_FIELD_KEY) {
+    return { colorTheme: optionValue };
+  }
+  return {};
+}
+
 function buildX01RemainingScoreBarOptionLayout(
   documentRef,
   feature,
@@ -1359,10 +1378,7 @@ function buildX01RemainingScoreBarOptionLayout(
   isActive
 ) {
   const fieldKey = String(field?.key || "").trim();
-  const previewOverrides =
-    fieldKey === X01_REMAINING_SCORE_BAR_BAR_SIZE_FIELD_KEY
-      ? { barSize: optionValue }
-      : { effect: optionValue };
+  const previewOverrides = resolveX01RemainingScoreBarPreviewOverrides(fieldKey, optionValue);
   const isEffectPreview = fieldKey === X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY;
   const previewEffect = normalizeX01RemainingScoreBarEffect(previewOverrides.effect);
   const preview = createElement(documentRef, "div", {
@@ -2140,11 +2156,11 @@ function buildDartDesignOptionLayout(
 
 function resolveThemeActionNoteText(action) {
   if (action === "clearThemeBackground") {
-    return "Entfernt das gespeicherte Bild für dieses Theme.";
+    return "Entfernt das gespeicherte globale Hintergrundbild.";
   }
 
   if (action === "uploadThemeBackground") {
-    return "Öffnet die Dateiauswahl und speichert das Bild für dieses Theme.";
+    return "Öffnet die Dateiauswahl und speichert das Bild global.";
   }
 
   return "";
@@ -2867,6 +2883,7 @@ function buildFeatureCard(documentRef, feature) {
     attributes: {
       "data-feature-key": feature.featureKey,
       "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
+      "data-card-type": descriptor?.cardType || "toggle",
       "data-design-status": descriptor?.designStatus || "deprecated",
       "data-preview-kind": preview.kind,
     },
@@ -2904,7 +2921,9 @@ function buildFeatureCard(documentRef, feature) {
     text: descriptor?.description || "Modulares Feature für Autodarts xConfig.",
   }));
   head.appendChild(copy);
-  head.appendChild(buildFeatureToggle(documentRef, feature));
+  if (descriptor?.cardType !== "action") {
+    head.appendChild(buildFeatureToggle(documentRef, feature));
+  }
   cardContent.appendChild(head);
 
   const badges = createElement(documentRef, "div", {

@@ -55,6 +55,9 @@ const ACTIVE_STYLE_PROPERTIES = Object.freeze([
   "--ad-ext-x01-remaining-score-bar-fill-overlay-repeat-active",
   "--ad-ext-x01-remaining-score-bar-fill-overlay-blend-active",
   "--ad-ext-x01-remaining-score-bar-fill-overlay-opacity-active",
+  "--ad-ext-x01-remaining-score-bar-fill-overlay-width-active",
+  "--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active",
+  "--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active",
 ]);
 const SIZE_CLASS_LIST = Object.freeze(getSizeClassList());
 const EFFECT_FILL_CLASS_LIST = Object.freeze(getEffectFillClassList());
@@ -68,6 +71,12 @@ const THRESHOLD_COLOR_THEMES = new Set([
   "gradient-by-progress",
 ]);
 const STATIC_COLOR_THEME_PALETTES = Object.freeze({
+  "checkout-zone-blue": Object.freeze({
+    start: [11, 85, 223],
+    mid: [55, 76, 152],
+    end: [55, 76, 152],
+    track: [30, 41, 59],
+  }),
   autodarts: Object.freeze({
     start: [56, 189, 248],
     mid: [96, 165, 250],
@@ -266,10 +275,19 @@ function resolveColorPalette(colorTheme, ratio, score) {
 export function resolveActiveVisualVars(options = {}) {
   const ratio = clamp(Number(options.ratio) || 0, 0, 1);
   const score = clamp(Number(options.score) || 0, 0, Number.MAX_SAFE_INTEGER);
-  const palette = resolveColorPalette(options.colorTheme, ratio, score);
+  const startScore = clamp(Number(options.startScore) || 0, 0, Number.MAX_SAFE_INTEGER);
+  const colorTheme = normalizeColorTheme(options.colorTheme);
+  const palette = resolveColorPalette(colorTheme, ratio, score);
+  const isCheckoutZoneBlue = colorTheme === "checkout-zone-blue";
+  const checkoutThresholdRatio = startScore > 0 ? clamp(170 / startScore, 0, 1) : 0;
+  const checkoutOverlayRatio = score > 0 ? clamp(170 / score, 0, 1) : 0;
+  const trackBackground = isCheckoutZoneBlue ? "rgb(30,41,59)" : buildTrackGradient(palette);
+  const fillBackground = isCheckoutZoneBlue
+    ? "linear-gradient(90deg,rgb(11,85,223) 0%,rgb(55,76,152) 100%)"
+    : buildFillGradient(palette);
   return {
-    "--ad-ext-x01-remaining-score-bar-track-base-active": buildTrackGradient(palette),
-    "--ad-ext-x01-remaining-score-bar-fill-base-active": buildFillGradient(palette),
+    "--ad-ext-x01-remaining-score-bar-track-base-active": trackBackground,
+    "--ad-ext-x01-remaining-score-bar-fill-base-active": fillBackground,
     "--ad-ext-x01-remaining-score-bar-track-solid-active": toRgba(palette?.track, 0.28),
     "--ad-ext-x01-remaining-score-bar-fill-solid-active": toRgba(palette?.mid || palette?.start, 0.96),
     "--ad-ext-x01-remaining-score-bar-fill-outline-active": toRgba(
@@ -284,8 +302,8 @@ export function resolveActiveVisualVars(options = {}) {
       palette?.end || palette?.mid || palette?.track,
       0.16
     ),
-    "--ad-ext-x01-remaining-score-bar-track-bg-active": buildTrackGradient(palette),
-    "--ad-ext-x01-remaining-score-bar-fill-bg-active": buildFillGradient(palette),
+    "--ad-ext-x01-remaining-score-bar-track-bg-active": trackBackground,
+    "--ad-ext-x01-remaining-score-bar-fill-bg-active": fillBackground,
     "--ad-ext-x01-remaining-score-bar-fill-shadow-active": buildShadowColor(palette),
     "--ad-ext-x01-remaining-score-bar-track-overlay-active": `linear-gradient(180deg,${toRgba(
       [255, 255, 255],
@@ -295,12 +313,24 @@ export function resolveActiveVisualVars(options = {}) {
     "--ad-ext-x01-remaining-score-bar-track-inner-shadow-active":
       "inset 0 0 0 1px rgba(255,255,255,.06)",
     "--ad-ext-x01-remaining-score-bar-track-backdrop-filter-active": "blur(8px) saturate(115%)",
-    "--ad-ext-x01-remaining-score-bar-fill-overlay-image-active": "none",
+    "--ad-ext-x01-remaining-score-bar-fill-overlay-image-active": isCheckoutZoneBlue
+      ? "repeating-linear-gradient(45deg,rgba(255,255,255,.16) 0 2px,transparent 2px 7px)"
+      : "none",
     "--ad-ext-x01-remaining-score-bar-fill-overlay-size-active": "auto",
     "--ad-ext-x01-remaining-score-bar-fill-overlay-position-active": "0 0",
     "--ad-ext-x01-remaining-score-bar-fill-overlay-repeat-active": "repeat",
-    "--ad-ext-x01-remaining-score-bar-fill-overlay-blend-active": "screen",
-    "--ad-ext-x01-remaining-score-bar-fill-overlay-opacity-active": "0",
+    "--ad-ext-x01-remaining-score-bar-fill-overlay-blend-active": isCheckoutZoneBlue
+      ? "normal"
+      : "screen",
+    "--ad-ext-x01-remaining-score-bar-fill-overlay-opacity-active": isCheckoutZoneBlue ? "1" : "0",
+    "--ad-ext-x01-remaining-score-bar-fill-overlay-width-active": isCheckoutZoneBlue
+      ? formatProgressWidth(checkoutOverlayRatio)
+      : "100%",
+    "--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active": isCheckoutZoneBlue
+      ? formatProgressWidth(checkoutThresholdRatio)
+      : "0%",
+    "--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active":
+      isCheckoutZoneBlue && startScore > 170 ? "1" : "0",
   };
 }
 
@@ -1306,6 +1336,7 @@ export function updateProgressHost(hostNode, options = {}) {
       resolveActiveVisualVars({
         ratio,
         score: options.score,
+        startScore: options.startScore,
         colorTheme,
       })
     );
@@ -1526,6 +1557,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
       ratio,
       previousRatio: isFiniteNumber(previousScore) ? previousScore / startScore : null,
       score: scoreValue,
+      startScore,
       scoreChanged,
       active: isActive,
       colorTheme: normalizedColorTheme,

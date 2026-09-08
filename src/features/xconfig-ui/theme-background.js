@@ -390,8 +390,8 @@ export function readThemeBackgroundPreviewInfo(feature) {
     };
   }
 
-  const isGlobalBackgroundFallback = String(feature?.configKey || "").trim() === "themes.globalTypography";
-  if (!isGlobalBackgroundFallback) {
+  const isGlobalBackground = String(feature?.configKey || "").trim() === "themes.globalBackground";
+  if (!isGlobalBackground) {
     return {
       hasImage: false,
       mimeType: "",
@@ -435,23 +435,23 @@ export function resolveThemeBackgroundPreviewUrl(feature) {
 
 export function formatThemeBackgroundSummary(feature) {
   const imageInfo = readThemeBackgroundPreviewInfo(feature);
-  const isGlobalBackgroundFallback = String(feature?.configKey || "").trim() === "themes.globalTypography";
+  const isGlobalBackground = String(feature?.configKey || "").trim() === "themes.globalBackground";
   if (!imageInfo.hasImage) {
-    return isGlobalBackgroundFallback
-      ? "Kein globales Fallback-Hintergrundbild gespeichert."
+    return isGlobalBackground
+      ? "Kein globales Hintergrundbild gespeichert."
       : "Kein eigenes Hintergrundbild gespeichert.";
   }
 
   if (imageInfo.sourceType === "preset-asset") {
-    return isGlobalBackgroundFallback
+    return isGlobalBackground
       ? `Globales Preset-Wallpaper: ${imageInfo.presetLabel || "aktiv"}.`
       : "Preset-Wallpaper aktiv.";
   }
 
   const sizeText = formatByteSize(imageInfo.byteSize);
   const detailText = sizeText ? `${imageInfo.mimeType}, ${sizeText}` : imageInfo.mimeType;
-  return isGlobalBackgroundFallback
-    ? `Globales Fallback-Bild: ${detailText}.`
+  return isGlobalBackground
+    ? `Globales Hintergrundbild: ${detailText}.`
     : `Eigenes Hintergrundbild: ${detailText}.`;
 }
 

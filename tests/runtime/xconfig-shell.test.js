@@ -8,15 +8,8 @@ import {
   resolveDartDesignAsset,
 } from "../../src/shared/feature-assets.node.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
-import {
-  TURN_DART_ASSET_KEYS,
-  TURN_DART_ASSET_LABELS,
-} from "../../src/shared/turn-dart-assets.manifest.js";
-import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../src/shared/theme-global-template-presets.js";
-import {
-  getThemeGlobalTypographyPreset,
-  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
-} from "../../src/shared/theme-global-typography-presets.js";
+import { getThemeGlobalTemplatePreset } from "../../src/shared/theme-global-template-presets.js";
+import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import {
   DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE,
@@ -36,17 +29,6 @@ import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-e
 import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
 
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
-const DEFAULT_TURN_DART_CONFIG = Object.freeze({
-  turnDartStyle: "original",
-  turnDartAssetKey: "german-giant",
-  turnDartTextTemplate: "",
-  turnDartColor: "#FFFFFF",
-  turnDartGradientColor: "#F97316",
-  turnDartSizePercent: 115,
-  turnDartShineEnabled: true,
-  turnDartImageDataUrl: "",
-});
-
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -1320,8 +1302,11 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   assert.equal(tabpanel?.getAttribute("role"), "tabpanel");
   assert.equal(tabpanel?.getAttribute("aria-labelledby"), "ad-xconfig-tab-themes");
 
-  clickFeatureToggle(documentRef, "theme-x01", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.x01"] === true);
+  clickFeatureToggle(documentRef, "theme-global-background", true);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.featureToggles["themes.globalBackground"] === true
+  );
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
   themesTab = documentRef.getElementById("ad-xconfig-tab-themes");
@@ -1338,7 +1323,7 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   await waitForStoredConfig(localStorage, (config) => config.featureToggles.activePlayerSweep === true);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles["themes.x01"], true);
+  assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
   assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
 
   const openCheckoutSettings = documentRef.querySelector(
@@ -1378,48 +1363,34 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   documentRef.getElementById("ad-xconfig-tab-themes").click();
   await waitForActiveTab(documentRef, "themes");
   const openThemeSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-background']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
   await waitForSettingsModal(documentRef);
 
-  clickSettingToggle(documentRef, "theme-x01", "showAvg", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.showAvg === false);
+  clickSelectSettingOption(documentRef, "theme-global-background", "backgroundDisplayMode", "tile");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalBackground.backgroundDisplayMode === "tile"
+  );
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.showAvg, false);
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundDisplayMode, "tile");
 
   documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
   await waitForSettingsClosed(documentRef);
-  const openTwoPlayerSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01-2player']"
-  );
-  assert.ok(openTwoPlayerSettings);
-  openTwoPlayerSettings.click();
-  await waitForSettingsModal(documentRef);
-  await waitFor(() =>
-    ["layout und stil", "spieler", "hintergrund"].every(
-      (sectionName) => Boolean(
-        documentRef.querySelector(`[data-adxconfig-settings-section='${sectionName}']`)
-      )
-    )
-  );
   assert.equal(
-    documentRef.querySelectorAll(
-      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-x01-2player'][data-setting-key='colorScheme']"
-    ).length,
-    5
-  );
-  assert.equal(
-    documentRef.querySelectorAll(
-      "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-x01-2player'][data-setting-key='identityDensity']"
-    ).length,
-    2
-  );
-  assert.equal(
-    documentRef.querySelector("[data-adxconfig-settings-section='bestehende anzeige']"),
+    documentRef.querySelector(
+      "[data-adxconfig-feature-toggle='true'][data-feature-key='theme-global-presets']"
+    ),
     null
+  );
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='theme-global-presets']"
+    )?.getAttribute("data-card-type"),
+    "action"
   );
 
   runtime.stop();
@@ -1440,14 +1411,9 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""))
     .filter((featureKey) => featureKey.startsWith("theme-"));
   assert.deepEqual(themeCardFeatureKeys, [
+    "theme-global-background",
     "theme-global-typography",
-    "theme-bull-off",
-    "theme-x01",
-    "theme-gotcha",
-    "theme-x01-2player",
-    "theme-cricket",
-    "theme-shanghai",
-    "theme-bermuda",
+    "theme-global-presets",
   ]);
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
@@ -1478,6 +1444,8 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "turn-score-counter",
     "avg-trend-arrow",
     "special-hit-highlights",
+    "bot-board-style",
+    "turn-dart-display",
     "dart-marker-replacer",
     "dartboard-marker-highlight",
     "take-out-darts-alert",
@@ -1525,16 +1493,10 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
   };
 
   [
+    "theme-global-background",
     "theme-global-typography",
-    "theme-bull-off",
-    "theme-x01",
-    "theme-gotcha",
-    "theme-x01-2player",
-    "theme-cricket",
-    "theme-shanghai",
-    "theme-bermuda",
-  ].forEach((featureKey) => assertCardStatus(featureKey, "deprecated"));
-  assertCardStatus("bot-board-style", "ready");
+    "theme-global-presets",
+  ].forEach((featureKey) => assertCardStatus(featureKey, "ready"));
 
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
   assert.match(styleText, /\.ad-xconfig-status-badge--deprecated\{[^}]*border:[^}]*background:[^}]*color:/);
@@ -1544,7 +1506,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
 
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert",
+    const expectedStatus = ["bot-board-style", "turn-dart-display", "checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert",
       "single-bull-hit-sound", "x01-remaining-score-bar", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
@@ -1918,6 +1880,33 @@ test("xConfig X01 score progress renders configured size effect and color previe
 
   assert.equal(
     documentRef.querySelectorAll(
+      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'] .ad-xconfig-x01-remaining-score-bar-option-preview"
+    ).length,
+    13
+  );
+  const checkoutZonePreviewBar = documentRef.querySelector(
+    "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'][data-setting-value='checkout-zone-blue'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
+  );
+  assert.ok(checkoutZonePreviewBar);
+  assert.equal(
+    checkoutZonePreviewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme"),
+    "checkout-zone-blue"
+  );
+  assert.equal(
+    checkoutZonePreviewBar.style.getPropertyValue(
+      "--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active"
+    ),
+    "33.93%"
+  );
+  assert.equal(
+    checkoutZonePreviewBar.style.getPropertyValue(
+      "--ad-ext-x01-remaining-score-bar-fill-overlay-width-active"
+    ),
+    "100%"
+  );
+
+  assert.equal(
+    documentRef.querySelectorAll(
       "[data-feature-key='x01-remaining-score-bar'][data-setting-key='barSize'] .ad-xconfig-x01-remaining-score-bar-option-preview"
     ).length,
     4
@@ -1929,10 +1918,10 @@ test("xConfig X01 score progress renders configured size effect and color previe
     6
   );
 
-  clickSelectSettingOption(documentRef, "x01-remaining-score-bar", "colorTheme", "checkout-focus");
+  clickSelectSettingOption(documentRef, "x01-remaining-score-bar", "colorTheme", "checkout-zone-blue");
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.x01RemainingScoreBar.colorTheme === "checkout-focus"
+    (config) => config.features.x01RemainingScoreBar.colorTheme === "checkout-zone-blue"
   );
 
   assert.equal(
@@ -1942,8 +1931,10 @@ test("xConfig X01 score progress renders configured size effect and color previe
       );
       return (
         refreshedPreviewBar?.getAttribute("data-ad-ext-x01-remaining-score-bar-color-theme") ===
-          "checkout-focus" &&
-        Boolean(refreshedPreviewBar?.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-bg-active"))
+          "checkout-zone-blue" &&
+        refreshedPreviewBar?.style.getPropertyValue(
+          "--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active"
+        ) === "33.93%"
       );
     }),
     true
@@ -2316,8 +2307,11 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
     documentRef.getElementById("ad-xconfig-menu-item").click();
     await waitForShellOpen(windowRef, documentRef);
 
-    await runtime.setFeatureEnabled("theme-x01", true);
-    await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,ZmFrZS1oZWFkZXI=");
+    await runtime.setFeatureEnabled("theme-global-background", true);
+    await runtime.setThemeBackgroundImage(
+      "globalBackground",
+      "data:image/png;base64,ZmFrZS1oZWFkZXI="
+    );
     await runtime.saveConfig({
       features: {
         checkoutScoreHighlight: {
@@ -2333,7 +2327,7 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
     await assert.equal(
       await waitFor(() =>
         confirmMessages.some((message) =>
-          message.includes("Hard Reset") && message.includes("Theme-Bilder")
+          message.includes("Hard Reset") && message.includes("Dart-Upload")
         ),
         { timeoutMs: 120, intervalMs: 4 }
       ),
@@ -2349,7 +2343,8 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
       return (
         allDisabled &&
         config.features.checkoutScoreHighlight.effect === "grow-only" &&
-        config.features.themes.x01.backgroundImageDataUrl === ""
+        config.features.themes.globalBackground.backgroundImageDataUrl === "" &&
+        config.features.turnDartDisplay.turnDartImageDataUrl === ""
       );
     }, { timeoutMs: 2000, intervalMs: 8 });
 
@@ -2358,7 +2353,10 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
       return noticeText.includes("Hard Reset ausgeführt.");
     });
 
-    await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,cmVwbGF5LWhlYWRlcg==");
+    await runtime.setThemeBackgroundImage(
+      "globalBackground",
+      "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
+    );
     await runtime.saveConfig({
       features: {
         checkoutScoreHighlight: {
@@ -2374,7 +2372,7 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
     await assert.equal(
       await waitFor(() =>
         confirmMessages.some((message) =>
-          message.includes("empfohlenen Standards") && message.includes("Theme-Bilder")
+          message.includes("empfohlenen Standards") && message.includes("Dart-Upload")
         ),
         { timeoutMs: 120, intervalMs: 4 }
       ),
@@ -2413,7 +2411,8 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
         config.features.winnerCelebrationEffect.particleAmount === "sparsam" &&
         config.features.x01RemainingScoreBar.barSize === "breit" &&
         config.features.x01RemainingScoreBar.effect === "previous-score-trail" &&
-        config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
+        config.features.themes.globalBackground.backgroundImageDataUrl ===
+          "data:image/png;base64,cmVwbGF5LWhlYWRlcg=="
       );
     }, { timeoutMs: 2000, intervalMs: 8 });
 
@@ -2437,7 +2436,7 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   await waitForShellOpen(windowRef, documentRef);
 
   const openThemeSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-background']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
@@ -2450,16 +2449,12 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
     .map((node) => String(node.textContent || ""));
 
   assert.ok(
-    noteTexts.includes("Blendet die AVG-Anzeige im Theme ein oder aus."),
-    "missing checkbox explanation note"
-  );
-  assert.ok(
     noteTexts.includes("Legt fest, wie ein eigenes Hintergrundbild im Spielbereich platziert wird."),
     "missing select explanation note"
   );
   assert.ok(
     noteTexts.includes(
-      "Öffnet die Dateiauswahl, optimiert das Bild auf maximal 1920×1080 und speichert es lokal bis 1,5 MiB nur für dieses Theme."
+      "Speichert ein globales Hintergrundbild bis 1,5 MiB."
     ),
     "missing action explanation note"
   );
@@ -2497,8 +2492,11 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   assert.ok(displayModeInputWrap.closest(".ad-xconfig-setting-row").querySelector(".ad-xconfig-setting-copy .ad-xconfig-note"));
   assert.equal(displayModeInputWrap.children[0].classList.contains("ad-xconfig-option-list"), true);
 
-  clickSelectSettingOption(documentRef, "theme-x01", "backgroundDisplayMode", "tile");
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundDisplayMode === "tile");
+  clickSelectSettingOption(documentRef, "theme-global-background", "backgroundDisplayMode", "tile");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalBackground.backgroundDisplayMode === "tile"
+  );
 
   assert.equal(fillOption.getAttribute("data-active"), "false");
   assert.equal(tileOption.getAttribute("data-active"), "true");
@@ -2513,7 +2511,7 @@ test("xConfig settings modal renders explanatory notes for checkbox, select and 
   assert.equal(fillActiveBadge, null);
 
   assert.equal(
-    documentRef.querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='showAvg']").length,
+    documentRef.querySelectorAll("[data-adxconfig-option-note='true'][data-setting-key='debug']").length,
     0,
     "checkboxes should not render select option explanation lists"
   );
@@ -3161,7 +3159,7 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
 
   const themeCards = documentRef.querySelectorAll(".ad-xconfig-card");
   assert.ok(themeCards.length > 0);
-  assert.equal(themeCards[0]?.getAttribute("data-feature-key"), "theme-global-typography");
+  assert.equal(themeCards[1]?.getAttribute("data-feature-key"), "theme-global-typography");
   assert.equal(documentRef.getElementById("ad-xconfig-preview-fonts-style"), null);
 
   const openSettings = documentRef.querySelector(
@@ -3174,86 +3172,7 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
   const sectionTitles = documentRef
     .querySelectorAll(".ad-xconfig-settings-section-title")
     .map((node) => String(node.textContent || "").trim());
-  assert.deepEqual(sectionTitles, ["Presets", "Schrift", "Farben", "Wurffeld-Darts", "Hintergrund"]);
-
-  const presetButtons = documentRef.querySelectorAll(
-    "[data-adxconfig-action='applyThemeGlobalPreset'][data-feature-key='theme-global-typography']"
-  );
-  assert.equal(presetButtons.length, THEME_GLOBAL_TEMPLATE_PRESETS.length);
-  assert.deepEqual(
-    presetButtons.map((button) => String(
-      button.querySelector(".ad-xconfig-theme-preset-name")?.textContent || ""
-    ).trim()),
-    THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) => preset.label)
-  );
-  const presetGrid = documentRef.querySelector(
-    "[data-adxconfig-settings-section='presets'] .ad-xconfig-settings-section-body--theme-presets"
-  );
-  assert.ok(presetGrid);
-
-  presetButtons.forEach((button, index) => {
-    const preset = THEME_GLOBAL_TEMPLATE_PRESETS[index];
-    const fontPreset = getThemeGlobalTypographyPreset(preset.fontPreset);
-    const wallpaper = button.querySelector(".ad-xconfig-theme-preset-wallpaper");
-    assert.equal(button.getAttribute("data-theme-preset-key"), preset.key);
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-accent"),
-      preset.accentColor
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-score"),
-      preset.scoreColor
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-secondary"),
-      preset.secondaryTextColor
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-throw"),
-      preset.throwLabelColor
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-font"),
-      fontPreset.previewFontFamily
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-overlay-alpha"),
-      String((100 - preset.backgroundOpacity) / 100)
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-player-alpha"),
-      String((100 - preset.playerFieldTransparency) / 100)
-    );
-    assert.equal(
-      button.style.getPropertyValue("--ad-xconfig-theme-preset-tint"),
-      `${preset.activePlayerTintIntensity}%`
-    );
-    assert.equal(
-      button.getAttribute("data-theme-preset-background-mode"),
-      preset.backgroundDisplayMode
-    );
-    assert.equal(Boolean(wallpaper), Boolean(preset.backgroundAssetKey));
-    assert.deepEqual(
-      button.querySelectorAll(".ad-xconfig-theme-preset-swatch")
-        .map((swatch) => swatch.style.backgroundColor),
-      [preset.accentColor, preset.scoreColor, preset.secondaryTextColor, preset.throwLabelColor]
-    );
-  });
-
-  const classicButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-preset-classic"
-  );
-  assert.equal(
-    String(classicButton?.querySelector(".ad-xconfig-theme-preset-wallpaper-state")?.textContent || ""),
-    "ohne Wallpaper"
-  );
-  const cyberpunkButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-preset-cyberpunk"
-  );
-  assert.match(
-    String(cyberpunkButton?.querySelector(".ad-xconfig-theme-preset-wallpaper")?.getAttribute("src") || ""),
-    /theme-presets\/cyberpunk\.jpg/
-  );
+  assert.deepEqual(sectionTitles, ["Schrift", "Farben"]);
 
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
   assert.ok(previewStyleNode);
@@ -3481,7 +3400,7 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
   const colorFields = documentRef.querySelectorAll(
     "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography']"
   );
-  assert.equal(colorFields.length, 6);
+  assert.equal(colorFields.length, 4);
   assert.deepEqual(
     colorFields.map((node) => String(node.getAttribute("data-setting-key") || "").trim()),
     [
@@ -3489,130 +3408,15 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
       "scoreColor",
       "secondaryTextColor",
       "throwLabelColor",
-      "turnDartColor",
-      "turnDartGradientColor",
     ]
   );
-  const backgroundSelectFields = documentRef.querySelectorAll(
+  const typographySelectFields = documentRef.querySelectorAll(
     "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-control='select']"
   );
   assert.equal(
-    backgroundSelectFields.some(
-      (node) => node.getAttribute("data-setting-key") === "backgroundDisplayMode"
-    ),
-    true
-  );
-  assert.equal(
-    backgroundSelectFields.some(
-      (node) => node.getAttribute("data-setting-key") === "backgroundOpacity"
-    ),
-    true
-  );
-  assert.equal(
-    backgroundSelectFields.some(
-      (node) => node.getAttribute("data-setting-key") === "playerFieldTransparency"
-    ),
-    true
-  );
-  assert.equal(
-    backgroundSelectFields.some(
+    typographySelectFields.some(
       (node) => node.getAttribute("data-setting-key") === "activePlayerTintIntensity"
     ),
-    true
-  );
-  assert.equal(
-    backgroundSelectFields.some(
-      (node) => node.getAttribute("data-setting-key") === "turnDartStyle"
-    ),
-    true
-  );
-  const turnDartAssetOptions = documentRef.querySelectorAll(
-    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='turnDartAssetKey']"
-  );
-  assert.equal(turnDartAssetOptions.length, TURN_DART_ASSET_KEYS.length);
-  assert.deepEqual(
-    turnDartAssetOptions.map((node) => node.getAttribute("data-setting-value")),
-    TURN_DART_ASSET_KEYS
-  );
-  turnDartAssetOptions.forEach((optionNode) => {
-    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--dart-design"), true);
-    assert.ok(optionNode.querySelector(".ad-xconfig-option-preview"));
-    assert.equal(optionNode.querySelector(".ad-xconfig-option-copy"), null);
-    const assetKey = optionNode.getAttribute("data-setting-value");
-    assert.equal(
-      String(optionNode.querySelector(".ad-xconfig-option-label")?.textContent || "").trim(),
-      TURN_DART_ASSET_LABELS[assetKey]
-    );
-  });
-  assert.equal(
-    turnDartAssetOptions[0]?.parentElement?.classList?.contains(
-      "ad-xconfig-turn-dart-asset-option-list"
-    ),
-    true
-  );
-  assert.equal(
-    backgroundSelectFields.some(
-      (node) => node.getAttribute("data-setting-key") === "turnDartSizePercent"
-    ),
-    true
-  );
-  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-uploadThemeBackground"));
-  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-clearThemeBackground"));
-  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-uploadTurnDartImage"));
-  assert.ok(documentRef.getElementById("ad-xconfig-field-theme-global-typography-clearTurnDartImage"));
-  const turnDartTextInput = documentRef.querySelector(
-    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='turnDartTextTemplate'][data-setting-control='text']"
-  );
-  assert.ok(turnDartTextInput);
-  assert.equal(turnDartTextInput.getAttribute("placeholder"), "Wurf #");
-  const turnDartShineToggle = documentRef.querySelector(
-    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='turnDartShineEnabled'][data-setting-control='checkbox']"
-  );
-  assert.ok(turnDartShineToggle);
-  assert.equal(turnDartShineToggle.checked, true);
-  turnDartShineToggle.checked = false;
-  documentRef.dispatchEvent(new FakeEvent("change", {
-    bubbles: true,
-    cancelable: true,
-    target: turnDartShineToggle,
-  }));
-  await waitForStoredConfig(
-    localStorage,
-    (config) => config.features?.themes?.globalTypography?.turnDartShineEnabled === false
-  );
-  const turnDartImageStatus = documentRef.querySelector(
-    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
-  );
-  assert.ok(turnDartImageStatus);
-  assert.equal(turnDartImageStatus.getAttribute("data-turn-dart-image-state"), "empty");
-  assert.equal(
-    String(turnDartImageStatus.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
-    "Aktuelles Dart-Bild: keines."
-  );
-
-  const markerDesignBefore = JSON.parse(
-    localStorage.getItem(CONFIG_STORAGE_KEY)
-  ).features?.dartMarkerReplacer?.design;
-  clickSelectSettingOption(documentRef, "theme-global-typography", "turnDartAssetKey", "german-giant");
-  await waitForStoredConfig(
-    localStorage,
-    (config) =>
-      config.features?.themes?.globalTypography?.turnDartStyle === "preset" &&
-      config.features.themes.globalTypography.turnDartAssetKey === "german-giant"
-  );
-  assert.equal(
-    JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features?.dartMarkerReplacer?.design,
-    markerDesignBefore
-  );
-  assert.equal(
-    await waitFor(() => {
-      const statusNode = documentRef.querySelector(
-        "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
-      );
-      return String(
-        statusNode?.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""
-      ) === "Aktuelles Dart-Bild: Marker-Bild German Gigant.";
-    }),
     true
   );
 
@@ -3620,16 +3424,6 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
   await waitForStoredConfig(
     localStorage,
     (config) => config.features?.themes?.globalTypography?.activePlayerTintIntensity === 20
-  );
-
-  changeSettingInput(
-    documentRef,
-    "[data-adxconfig-setting='true'][data-feature-key='theme-global-typography'][data-setting-key='turnDartTextTemplate']",
-    "Wurf #"
-  );
-  await waitForStoredConfig(
-    localStorage,
-    (config) => config.features?.themes?.globalTypography?.turnDartTextTemplate === "Wurf #"
   );
 
   changeSettingInput(
@@ -3747,31 +3541,67 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
+  await runtime.saveConfig({
+    features: {
+      turnDartDisplay: {
+        turnDartStyle: "solid",
+        turnDartColor: "#123456",
+      },
+    },
+  });
+
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-presets']"
   );
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
 
   const presetButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-preset-cyberpunk"
+    "ad-xconfig-field-theme-global-presets-preset-cyberpunk"
   );
   assert.ok(presetButton);
+  assert.match(
+    String(presetButton.querySelector(".ad-xconfig-theme-preset-wallpaper")?.getAttribute("src") || ""),
+    /theme-presets\/cyberpunk\.jpg/
+  );
+  const cyberpunkPreset = getThemeGlobalTemplatePreset("cyberpunk");
+  assert.equal(
+    presetButton.style.getPropertyValue("--ad-xconfig-theme-preset-accent"),
+    cyberpunkPreset.accentColor
+  );
+  assert.match(
+    presetButton.style.getPropertyValue("--ad-xconfig-theme-preset-font"),
+    /Audiowide/
+  );
+  assert.deepEqual(
+    presetButton
+      .querySelectorAll(".ad-xconfig-theme-preset-swatch")
+      .map((swatch) => swatch.style.backgroundColor),
+    [
+      cyberpunkPreset.accentColor,
+      cyberpunkPreset.scoreColor,
+      cyberpunkPreset.secondaryTextColor,
+      cyberpunkPreset.throwLabelColor,
+    ]
+  );
   presetButton.click();
 
   await waitForStoredConfig(
     localStorage,
     (config) =>
       config.featureToggles?.["themes.globalTypography"] === true &&
+      config.featureToggles?.["themes.globalBackground"] === true &&
       config.features?.themes?.globalTypography?.enabled === true &&
       config.features.themes.globalTypography.fontPreset === "audiowide" &&
-      config.features.themes.globalTypography.backgroundAssetKey === "cyberpunk" &&
-      config.features.themes.globalTypography.backgroundImageDataUrl === ""
+      config.features?.themes?.globalBackground?.enabled === true &&
+      config.features.themes.globalBackground.backgroundAssetKey === "cyberpunk" &&
+      config.features.themes.globalBackground.backgroundImageDataUrl === ""
   );
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.globalTypography"], true);
+  assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
   assert.deepEqual(storedConfig.features.themes.globalTypography, {
     enabled: true,
     fontPreset: "audiowide",
@@ -3781,55 +3611,26 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
     secondaryTextColor: "#FFD0F5",
     throwLabelColor: "#FF5CD6",
     activePlayerTintIntensity: 15,
+    debug: false,
+  });
+  assert.deepEqual(storedConfig.features.themes.globalBackground, {
+    enabled: true,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 40,
     playerFieldTransparency: 30,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "cyberpunk",
-    ...DEFAULT_TURN_DART_CONFIG,
-    turnDartStyle: "image",
-    turnDartGradientColor: "#00D9FF",
-    turnDartSizePercent: 135,
     debug: false,
   });
+  assert.equal(storedConfig.features.turnDartDisplay.turnDartStyle, "solid");
+  assert.equal(storedConfig.features.turnDartDisplay.turnDartColor, "#123456");
 
   assert.equal(confirmMessages.length, 1);
-  assert.match(confirmMessages[0], /Preset "Cyberpunk"/);
-  assert.match(confirmMessages[0], /Wallpaper/);
-
-  let status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
-  );
-  assert.ok(status);
-  assert.equal(
-    await waitFor(
-      () =>
-        documentRef
-          .querySelector(
-            "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
-          )
-          ?.getAttribute("data-theme-image-state") === "present",
-      { timeoutMs: 500, intervalMs: 8 }
-    ),
-    true
-  );
-  status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
-  );
-  assert.ok(status);
-  assert.equal(status.getAttribute("data-theme-image-state"), "present");
-  assert.equal(status.getAttribute("data-theme-image-type"), "preset-asset");
-
-  const summary = status.querySelector(".ad-xconfig-theme-image-status-summary");
-  assert.ok(summary);
-  assert.match(String(summary.textContent || ""), /Preset Cyberpunk/);
-
-  const preview = status.querySelector(".ad-xconfig-theme-image-preview");
-  assert.ok(preview);
-  assert.match(String(preview.getAttribute("src") || ""), /theme-presets\/cyberpunk\.jpg/);
+  assert.match(confirmMessages[0], /Vorlage "Cyberpunk"/);
+  assert.match(confirmMessages[0], /Wurffeld-Darts bleiben unverändert/);
 
   const themeCard = documentRef.querySelector(
-    ".ad-xconfig-card[data-feature-key='theme-global-typography']"
+    ".ad-xconfig-card[data-feature-key='theme-global-presets']"
   );
   assert.ok(themeCard);
   assert.match(String(themeCard.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
@@ -3848,16 +3649,15 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   assert.deepEqual(themeGlobalValues, []);
 
   const themeCardCopy = themeCard.querySelector(".ad-xconfig-card-copy");
-  assert.match(String(themeCardCopy?.textContent || ""), /gemeinsamen Look/);
-  assert.match(String(themeCardCopy?.textContent || ""), /Themes ohne eigenes Bild/);
-
-  const themeCardNote = themeCard.querySelector(".ad-xconfig-note");
-  assert.ok(themeCardNote);
-  assert.match(String(themeCardNote.textContent || ""), /Globales Preset-Wallpaper: Cyberpunk/);
+  assert.match(String(themeCardCopy?.textContent || ""), /Vorlagen/);
+  assert.equal(
+    themeCard.querySelector("[data-adxconfig-feature-toggle='true']"),
+    null
+  );
 
   const themeCardPreview = themeCard.querySelector(".ad-xconfig-card-bg img");
   assert.ok(themeCardPreview);
-  assert.match(String(themeCardPreview.getAttribute("src") || ""), /theme-presets\/cyberpunk\.jpg/);
+  assert.match(String(themeCardPreview.getAttribute("src") || ""), /theme-global-typography\.webp/);
 
   runtime.stop();
 });
@@ -3991,8 +3791,8 @@ test("Bot Board Style card uses and updates the selected board as its background
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-themes").click();
-  await waitForActiveTab(documentRef, "themes");
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
 
   const previewSelector =
     ".ad-xconfig-card[data-feature-key='bot-board-style'] .ad-xconfig-card-bg img";
@@ -4072,7 +3872,7 @@ test("Dart Marker Replacer card features and updates the selected dart", async (
   runtime.stop();
 });
 
-test("xConfig shell theme background upload and clear actions persist and expose status feedback", async () => {
+test("xConfig shell global background upload and clear actions persist and expose status feedback", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -4135,14 +3935,14 @@ test("xConfig shell theme background upload and clear actions persist and expose
   await waitForShellOpen(windowRef, documentRef);
 
   const openThemeSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-background']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
   await waitForSettingsModal(documentRef);
 
   let status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "empty");
@@ -4150,21 +3950,25 @@ test("xConfig shell theme background upload and clear actions persist and expose
   assert.ok(emptySummary);
   assert.equal(String(emptySummary.textContent || "").trim(), "Aktuelles Bild: keines.");
 
-  const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
+  const uploadButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-background-uploadThemeBackground"
+  );
   assert.ok(uploadButton);
   uploadButton.click();
   await waitForStoredConfig(
     localStorage,
-    (config) => config.features.themes.x01.backgroundImageDataUrl === `data:image/webp;base64,${"a".repeat(40)}`
+    (config) =>
+      config.features.themes.globalBackground.backgroundImageDataUrl ===
+      `data:image/webp;base64,${"a".repeat(40)}`
   );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(
-    storedConfig.features.themes.x01.backgroundImageDataUrl,
+    storedConfig.features.themes.globalBackground.backgroundImageDataUrl,
     `data:image/webp;base64,${"a".repeat(40)}`
   );
   const uploadFeedback = documentRef.querySelector(
-    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(uploadFeedback);
   assert.match(String(uploadFeedback.textContent || ""), /optimiert gespeichert/);
@@ -4175,7 +3979,7 @@ test("xConfig shell theme background upload and clear actions persist and expose
   );
 
   status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "present");
@@ -4192,18 +3996,23 @@ test("xConfig shell theme background upload and clear actions persist and expose
   assert.equal(preview.getAttribute("src"), `data:image/webp;base64,${"a".repeat(40)}`);
 
   const themeCardNote = documentRef.querySelector(
-    ".ad-xconfig-card[data-feature-key='theme-x01'] .ad-xconfig-note"
+    ".ad-xconfig-card[data-feature-key='theme-global-background'] .ad-xconfig-note"
   );
   assert.ok(themeCardNote);
   assert.match(String(themeCardNote.textContent || ""), /Hintergrundbild/);
 
-  const clearButton = documentRef.getElementById("ad-xconfig-field-theme-x01-clearThemeBackground");
+  const clearButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-background-clearThemeBackground"
+  );
   assert.ok(clearButton);
   clearButton.click();
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalBackground.backgroundImageDataUrl === ""
+  );
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "");
   assert.match(String(uploadFeedback.textContent || ""), /entfernt/);
   assert.equal(
     uploadFeedback.classList.contains("ad-xconfig-theme-action-feedback--info"),
@@ -4211,24 +4020,24 @@ test("xConfig shell theme background upload and clear actions persist and expose
   );
 
   status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "empty");
 
   const clearedCardNote = documentRef.querySelector(
-    ".ad-xconfig-card[data-feature-key='theme-x01'] .ad-xconfig-note"
+    ".ad-xconfig-card[data-feature-key='theme-global-background'] .ad-xconfig-note"
   );
   assert.ok(clearedCardNote);
   assert.equal(
     String(clearedCardNote.textContent || "").trim(),
-    "Kein eigenes Hintergrundbild gespeichert."
+    "Kein globales Hintergrundbild gespeichert."
   );
 
   runtime.stop();
 });
 
-test("xConfig shell supports global background upload and clear actions for Templates Global", async () => {
+test("xConfig shell supports independent turn dart upload and clear actions", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -4260,7 +4069,7 @@ test("xConfig shell supports global background upload and clear actions for Temp
       const originalClick = typeof node.click === "function" ? node.click.bind(node) : null;
       node.click = () => {
         if (node.type === "file") {
-          node.files = [{ name: "global-bg.png", type: "image/png" }];
+          node.files = [{ name: "turn-dart.png", type: "image/png" }];
           if (typeof node.onchange === "function") {
             node.onchange();
           }
@@ -4289,48 +4098,44 @@ test("xConfig shell supports global background upload and clear actions for Temp
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
+  documentRef.getElementById("ad-xconfig-tab-animations").click();
+  await waitForActiveTab(documentRef, "animations");
 
   const openThemeSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='turn-dart-display']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
   await waitForSettingsModal(documentRef);
 
-  let status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
-  );
-  assert.ok(status);
-  assert.equal(status.getAttribute("data-theme-image-state"), "empty");
-
   let turnDartStatus = documentRef.querySelector(
-    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='turn-dart-display']"
   );
   assert.ok(turnDartStatus);
   assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-state"), "empty");
 
   const uploadTurnDartButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-uploadTurnDartImage"
+    "ad-xconfig-field-turn-dart-display-uploadTurnDartImage"
   );
   assert.ok(uploadTurnDartButton);
   uploadTurnDartButton.click();
   await waitForStoredConfig(
     localStorage,
     (config) =>
-      config.features.themes.globalTypography.turnDartStyle === "image" &&
-      config.features.themes.globalTypography.turnDartImageDataUrl ===
+      config.features.turnDartDisplay.turnDartStyle === "image" &&
+      config.features.turnDartDisplay.turnDartImageDataUrl ===
         `data:image/webp;base64,${"g".repeat(40)}`
   );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.globalTypography.turnDartStyle, "image");
+  assert.equal(storedConfig.features.turnDartDisplay.turnDartStyle, "image");
   assert.equal(
-    storedConfig.features.themes.globalTypography.turnDartImageDataUrl,
+    storedConfig.features.turnDartDisplay.turnDartImageDataUrl,
     `data:image/webp;base64,${"g".repeat(40)}`
   );
 
   turnDartStatus = documentRef.querySelector(
-    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='turn-dart-display']"
   );
   assert.ok(turnDartStatus);
   assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-state"), "present");
@@ -4340,92 +4145,32 @@ test("xConfig shell supports global background upload and clear actions for Temp
   assert.equal(turnDartPreview.getAttribute("src"), `data:image/webp;base64,${"g".repeat(40)}`);
 
   const clearTurnDartButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-clearTurnDartImage"
+    "ad-xconfig-field-turn-dart-display-clearTurnDartImage"
   );
   assert.ok(clearTurnDartButton);
   clearTurnDartButton.click();
   await waitForStoredConfig(
     localStorage,
     (config) =>
-      config.features.themes.globalTypography.turnDartStyle === "original" &&
-      config.features.themes.globalTypography.turnDartImageDataUrl === ""
+      config.features.turnDartDisplay.turnDartStyle === "original" &&
+      config.features.turnDartDisplay.turnDartImageDataUrl === ""
   );
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.globalTypography.turnDartStyle, "original");
-  assert.equal(storedConfig.features.themes.globalTypography.turnDartImageDataUrl, "");
+  assert.equal(storedConfig.features.turnDartDisplay.turnDartStyle, "original");
+  assert.equal(storedConfig.features.turnDartDisplay.turnDartImageDataUrl, "");
 
   turnDartStatus = documentRef.querySelector(
-    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='theme-global-typography']"
+    "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='turn-dart-display']"
   );
   assert.ok(turnDartStatus);
   assert.equal(turnDartStatus.getAttribute("data-turn-dart-image-state"), "empty");
   assert.equal(turnDartStatus.querySelector(".ad-xconfig-turn-dart-image-preview"), null);
 
-  const uploadButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-uploadThemeBackground"
-  );
-  assert.ok(uploadButton);
-  uploadButton.click();
-  await waitForStoredConfig(
-    localStorage,
-    (config) =>
-      config.features.themes.globalTypography.backgroundImageDataUrl ===
-      `data:image/webp;base64,${"g".repeat(40)}`
-  );
-
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(
-    storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
-    `data:image/webp;base64,${"g".repeat(40)}`
-  );
-  const uploadFeedback = documentRef.querySelector(
-    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-global-typography']"
-  );
-  assert.ok(uploadFeedback);
-  assert.match(String(uploadFeedback.textContent || ""), /optimiert gespeichert/);
-  assert.match(String(uploadFeedback.textContent || ""), /global-bg\.png/);
-
-  status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-typography']"
-  );
-  assert.ok(status);
-  assert.equal(status.getAttribute("data-theme-image-state"), "present");
-  assert.equal(status.getAttribute("data-theme-image-type"), "upload");
-
-  const themeCardNote = documentRef.querySelector(
-    ".ad-xconfig-card[data-feature-key='theme-global-typography'] .ad-xconfig-note"
-  );
-  assert.ok(themeCardNote);
-  assert.match(String(themeCardNote.textContent || ""), /Globales Fallback-Bild/);
-
-  const clearButton = documentRef.getElementById(
-    "ad-xconfig-field-theme-global-typography-clearThemeBackground"
-  );
-  assert.ok(clearButton);
-  clearButton.click();
-  await waitForStoredConfig(
-    localStorage,
-    (config) => config.features.themes.globalTypography.backgroundImageDataUrl === ""
-  );
-
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
-  assert.match(String(uploadFeedback.textContent || ""), /entfernt/);
-
-  const clearedCardNote = documentRef.querySelector(
-    ".ad-xconfig-card[data-feature-key='theme-global-typography'] .ad-xconfig-note"
-  );
-  assert.ok(clearedCardNote);
-  assert.equal(
-    String(clearedCardNote.textContent || "").trim(),
-    "Kein globales Fallback-Hintergrundbild gespeichert."
-  );
-
   runtime.stop();
 });
 
-test("xConfig shell reports invalid theme upload payloads as error and keeps previous state", async () => {
+test("xConfig shell reports invalid global background uploads and keeps previous state", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -4465,27 +4210,29 @@ test("xConfig shell reports invalid theme upload payloads as error and keeps pre
   await waitForShellOpen(windowRef, documentRef);
 
   const openThemeSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-background']"
   );
   assert.ok(openThemeSettings);
   openThemeSettings.click();
   await waitForSettingsModal(documentRef);
 
-  const uploadButton = documentRef.getElementById("ad-xconfig-field-theme-x01-uploadThemeBackground");
+  const uploadButton = documentRef.getElementById(
+    "ad-xconfig-field-theme-global-background-uploadThemeBackground"
+  );
   assert.ok(uploadButton);
   uploadButton.click();
   await waitFor(() => {
     const errorFeedback = documentRef.querySelector(
-      "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
+      "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-global-background']"
     );
     return Boolean(errorFeedback) && /kein unterstütztes Bild/.test(String(errorFeedback.textContent || ""));
   });
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "");
 
   const errorFeedback = documentRef.querySelector(
-    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-theme-action-feedback='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(errorFeedback);
   assert.match(String(errorFeedback.textContent || ""), /kein unterstütztes Bild/);
@@ -4495,7 +4242,7 @@ test("xConfig shell reports invalid theme upload payloads as error and keeps pre
   );
 
   const status = documentRef.querySelector(
-    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-theme-image-status='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(status);
   assert.equal(status.getAttribute("data-theme-image-state"), "empty");
@@ -4678,8 +4425,11 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   firstDocument.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(firstWindow, firstDocument);
 
-  clickFeatureToggle(firstDocument, "theme-x01", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.x01"] === true);
+  clickFeatureToggle(firstDocument, "theme-global-background", true);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.featureToggles["themes.globalBackground"] === true
+  );
   firstDocument.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(firstDocument, "animations");
   clickFeatureToggle(firstDocument, "active-player-sweep", true);
@@ -4711,16 +4461,27 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   clickSelectSettingOption(firstDocument, "x01-remaining-score-bar", "effect", "previous-score-trail");
   await waitForStoredConfig(localStorage, (config) => config.features.x01RemainingScoreBar.effect === "previous-score-trail");
 
-  await firstWindow.__adXConfig.setThemeBackgroundImage("x01", "data:image/png;base64,cGVyc2lzdGVk");
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.backgroundImageDataUrl === "data:image/png;base64,cGVyc2lzdGVk");
+  await firstWindow.__adXConfig.setThemeBackgroundImage(
+    "globalTypography",
+    "data:image/png;base64,cGVyc2lzdGVk"
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features.themes.globalBackground.backgroundImageDataUrl ===
+      "data:image/png;base64,cGVyc2lzdGVk"
+  );
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles["themes.x01"], true);
+  assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
   assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
   assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "glow-only");
   assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "previous-score-trail");
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,cGVyc2lzdGVk");
+  assert.equal(
+    storedConfig.features.themes.globalBackground.backgroundImageDataUrl,
+    "data:image/png;base64,cGVyc2lzdGVk"
+  );
 
   firstRuntime.stop();
 
@@ -4734,15 +4495,15 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   await waitForRuntimeToSettle(secondRuntime);
 
   const secondSnapshot = secondRuntime.getSnapshot();
-  assert.equal(secondSnapshot.features["theme-x01"].enabled, true);
+  assert.equal(secondSnapshot.features["theme-global-background"].enabled, true);
   assert.equal(secondSnapshot.features["active-player-sweep"].enabled, true);
   assert.equal(secondSnapshot.features["x01-remaining-score-bar"].enabled, true);
   assert.equal(secondSnapshot.features["active-player-sweep"].mounted, true);
-  assert.equal(secondSnapshot.features["theme-x01"].mounted, true);
+  assert.equal(secondSnapshot.features["theme-global-background"].mounted, true);
   assert.equal(secondSnapshot.features["x01-remaining-score-bar"].mounted, true);
   assert.equal(secondSnapshot.features["x01-remaining-score-bar"].config.effect, "previous-score-trail");
   assert.equal(
-    secondSnapshot.features["theme-x01"].config.backgroundImageDataUrl,
+    secondSnapshot.features["theme-global-background"].config.backgroundImageDataUrl,
     "data:image/png;base64,cGVyc2lzdGVk"
   );
 
@@ -4750,7 +4511,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   await waitForShellOpen(secondWindow, secondDocument);
 
   const restoredThemeToggle = secondDocument.querySelector(
-    "[data-adxconfig-feature-toggle='true'][data-feature-key='theme-x01']"
+    "[data-adxconfig-feature-toggle='true'][data-feature-key='theme-global-background']"
   );
   assert.ok(restoredThemeToggle);
   assert.equal(restoredThemeToggle.checked, true);
@@ -4801,7 +4562,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   assert.equal(restoredActiveX01Effects[0].getAttribute("data-setting-value"), "previous-score-trail");
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles["themes.x01"], true);
+  assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
   assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
   assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
 
@@ -4824,20 +4585,31 @@ test("xConfig switches save once per change and preserve the checked setting aft
     if (key === CONFIG_STORAGE_KEY) writes += 1;
     setItem(key, value);
   };
-  clickFeatureToggle(documentRef, "theme-x01", true);
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.enabled === true);
+  clickFeatureToggle(documentRef, "theme-global-typography", true);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalTypography.enabled === true
+  );
   assert.equal(writes, 1);
-  const open = () => documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='theme-x01']").click();
+  const open = () => documentRef
+    .querySelector("[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']")
+    .click();
   open();
   await waitForSettingsModal(documentRef);
   writes = 0;
-  clickSettingToggle(documentRef, "theme-x01", "showAvg", false);
-  await waitForStoredConfig(localStorage, (config) => config.features.themes.x01.showAvg === false);
+  clickSettingToggle(documentRef, "theme-global-typography", "debug", true);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalTypography.debug === true
+  );
   assert.equal(writes, 1);
   documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
   await waitFor(() => !documentRef.querySelector("[data-adxconfig-modal='true']"));
   open();
   await waitForSettingsModal(documentRef);
-  assert.equal(documentRef.querySelector("[data-adxconfig-setting='true'][data-setting-key='showAvg']").checked, false);
+  assert.equal(
+    documentRef.querySelector("[data-adxconfig-setting='true'][data-setting-key='debug']").checked,
+    true
+  );
   runtime.stop();
 });

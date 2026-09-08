@@ -100,7 +100,11 @@ const README_ANCHOR_ALIASES = Object.freeze({
 });
 
 const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
+  "theme-global-background",
+  "theme-global-typography",
+  "theme-global-presets",
   "bot-board-style",
+  "turn-dart-display",
   "checkout-target-highlights",
   "dart-marker-replacer",
   "take-out-darts-alert",
@@ -115,6 +119,7 @@ function descriptorEntry(definition) {
   const featureCopy = getXConfigFeatureCopy(featureKey);
   return Object.freeze({
     ...definition,
+    cardType: definition.cardType === "action" ? "action" : "toggle",
     designStatus: NEW_DESIGN_READY_FEATURE_KEYS.has(featureKey) ? "ready" : "deprecated",
     readmeAnchorAliases: Object.freeze([
       ...(Array.isArray(definition.readmeAnchorAliases)
@@ -209,16 +214,6 @@ const ACTIVE_PLAYER_TINT_INTENSITY_OPTIONS = Object.freeze([
   { value: 30, label: "30 %" },
 ]);
 
-const GOTCHA_DELTA_ALIGNMENT_OPTIONS = Object.freeze([
-  { value: "right", label: "Rechtsbündig" },
-  { value: "left", label: "Linksbündig" },
-]);
-
-const GOTCHA_DELTA_PLACEMENT_OPTIONS = Object.freeze([
-  { value: "below", label: "Unter Score" },
-  { value: "inline-divider", label: "Score-Zeile |" },
-]);
-
 const TURN_DART_STYLE_OPTIONS = Object.freeze([
   { value: "original", label: "Original" },
   { value: "solid", label: "Farbe" },
@@ -232,75 +227,33 @@ const TURN_DART_SIZE_OPTIONS = Object.freeze([
   { value: 115, label: "Standard" },
   { value: 135, label: "Groß" },
 ]);
-const X01_TWO_PLAYER_VISUAL_STYLE_OPTIONS = Object.freeze([
-  { value: "studio", label: "Studio" },
-  { value: "broadcast", label: "Broadcast" },
-  { value: "high-contrast", label: "Hoher Kontrast" },
-]);
-const X01_TWO_PLAYER_COLOR_SCHEME_OPTIONS = Object.freeze([
-  { value: "studio-mint", label: "Studio Mint" },
-  { value: "lime", label: "Lime" },
-  { value: "amber", label: "Amber" },
-  { value: "midnight-blue", label: "Midnight Blue" },
-  { value: "monochrome", label: "Monochrom" },
-]);
-const X01_TWO_PLAYER_ACTIVE_EMPHASIS_OPTIONS = Object.freeze([
-  { value: "subtle", label: "Dezent" },
-  { value: "standard", label: "Standard" },
-  { value: "strong", label: "Stark" },
-]);
-const X01_TWO_PLAYER_INFORMATION_DENSITY_OPTIONS = Object.freeze([
-  { value: "full", label: "Vollständig" },
-  { value: "tv", label: "TV" },
-  { value: "compact", label: "Kompakt" },
-]);
-const X01_TWO_PLAYER_IDENTITY_DENSITY_OPTIONS = Object.freeze([
-  { value: "full", label: "Vollständig" },
-  { value: "name-only", label: "Nur Name" },
-]);
-const X01_TWO_PLAYER_NAME_LAYOUT_OPTIONS = Object.freeze([
-  { value: "single-line", label: "Eine Zeile" },
-  { value: "two-lines", label: "Bis zu zwei Zeilen" },
-]);
 const DEBUG_FIELD = checkboxField("debug", "Debug");
 
-function backgroundThemeFields(prefixFields = []) {
-  return [
-    ...prefixFields,
-    selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-    selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-    selectField(
-      "playerFieldTransparency",
-      "Spielerfelder-Transparenz",
-      PLAYER_FIELD_TRANSPARENCY_OPTIONS
-    ),
-    DEBUG_FIELD,
-    actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-      description: "Öffnet die Dateiauswahl und speichert das Bild nur für dieses Theme.",
-    }),
-    actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-      description: "Entfernt nur das gespeicherte Bild dieses Themes.",
-      successMessage: "Hintergrundbild entfernt.",
-    }),
-  ];
-}
-
 export const xconfigDescriptors = Object.freeze([
+  descriptorEntry({
+    featureKey: "theme-global-background",
+    tab: "themes",
+    readmeAnchor: "theme-global-background",
+    fields: [
+      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
+      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
+      selectField("playerFieldTransparency", "Spielerfelder-Transparenz", PLAYER_FIELD_TRANSPARENCY_OPTIONS),
+      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
+        description: "Speichert ein globales Hintergrundbild für alle Spielansichten.",
+      }),
+      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
+        description: "Entfernt das gespeicherte globale Hintergrundbild.",
+        successMessage: "Globales Hintergrundbild entfernt.",
+      }),
+      DEBUG_FIELD,
+    ],
+  }),
   descriptorEntry({
     featureKey: "theme-global-typography",
     tab: "themes",
     readmeAnchor: "template-global-typography",
     description: "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
     fields: [
-      ...THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) =>
-        actionField("applyThemeGlobalPreset", preset.label, {
-          key: `preset-${preset.key}`,
-          actionId: preset.key,
-          buttonLabel: preset.label,
-          previewTarget: "theme-global-template-preset",
-          section: "Presets",
-        })
-      ),
       selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS, {
         section: "Schrift",
       }),
@@ -328,183 +281,54 @@ export const xconfigDescriptors = Object.freeze([
           section: "Farben",
         }
       ),
-      selectField("turnDartStyle", "Wurffeld-Darts", TURN_DART_STYLE_OPTIONS, {
-        section: "Wurffeld-Darts",
-      }),
-      selectField("turnDartAssetKey", "Dart auswählen", TURN_DART_ASSET_OPTIONS, {
-        section: "Wurffeld-Darts",
-      }),
-      textField("turnDartTextTemplate", "Dart-Text", {
-        section: "Wurffeld-Darts",
-        placeholder: "Wurf #",
-        maxLength: 48,
-      }),
-      colorField("turnDartColor", "Dart-Farbe", {
-        section: "Wurffeld-Darts",
-      }),
-      colorField("turnDartGradientColor", "Verlaufsfarbe", {
-        section: "Wurffeld-Darts",
-      }),
-      selectField("turnDartSizePercent", "Dart-Größe", TURN_DART_SIZE_OPTIONS, {
-        section: "Wurffeld-Darts",
-      }),
-      checkboxField("turnDartShineEnabled", "Dart-Glanz", {
-        section: "Wurffeld-Darts",
-      }),
-      actionField("uploadTurnDartImage", "Dart-Bild hochladen", {
-        section: "Wurffeld-Darts",
-        description:
-          "Empfohlen: transparentes PNG, WebP oder SVG, horizontal und eng zugeschnitten, etwa 5:1 bis 6:1. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
-      }),
-      actionField("clearTurnDartImage", "Dart-Bild entfernen", {
-        section: "Wurffeld-Darts",
-        description: "Entfernt nur das in Templates Global gespeicherte Dart-Bild.",
-        successMessage: "Dart-Bild entfernt.",
-      }),
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS, {
-        section: "Hintergrund",
-      }),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS, {
-        section: "Hintergrund",
-      }),
-      selectField(
-        "playerFieldTransparency",
-        "Spielerfelder-Transparenz",
-        PLAYER_FIELD_TRANSPARENCY_OPTIONS,
-        {
-          section: "Hintergrund",
-        }
-      ),
-      actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
-        section: "Hintergrund",
-        description:
-          "Speichert ein globales Fallback-Hintergrundbild. Ein eigenes Bild des aktiven Themes überschreibt es vollständig.",
-      }),
-      actionField("clearThemeBackground", "Hintergrundbild entfernen", {
-        section: "Hintergrund",
-        description: "Entfernt nur das globale Fallback-Hintergrundbild aus Templates Global.",
-        successMessage: "Globales Hintergrundbild entfernt.",
-      }),
       DEBUG_FIELD,
     ],
   }),
   descriptorEntry({
-    featureKey: "bot-board-style",
+    featureKey: "theme-global-presets",
     tab: "themes",
+    readmeAnchor: "theme-global-presets",
+    cardType: "action",
+    fields: THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) =>
+      actionField("applyThemeGlobalPreset", preset.label, {
+        key: `preset-${preset.key}`,
+        actionId: preset.key,
+        buttonLabel: preset.label,
+        previewTarget: "theme-global-template-preset",
+        section: "Vorlagen",
+      })
+    ),
+  }),
+  animationDescriptorEntry({
+    featureKey: "bot-board-style",
     readmeAnchor: "bot-board-style",
-    description: "Ersetzt das sichtbare Match-Board durch ein ausgewähltes Board-Design.",
     fields: [
       selectField("design", "Board-Design", BOARD_STYLE_DESIGN_OPTIONS),
       selectField("scope", "Geltungsbereich", [
         { value: "bot-turns", label: "Nur bei Bot-Zügen" },
         { value: "all-match-boards", label: "Alle Match-Boards" },
       ]),
-      DEBUG_FIELD,
     ],
   }),
-  descriptorEntry({
-    featureKey: "theme-bull-off",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-bull-off",
-    description: "Bull-off-Theme mit wählbarem Kontrast und Hintergrundbild.",
-    fields: backgroundThemeFields([
-      selectField("contrastPreset", "Kontrast-Preset", [
-        { value: "soft", label: "Sanft" },
-        { value: "standard", label: "Standard" },
-        { value: "high", label: "Kräftig" },
-      ]),
-    ]),
-  }),
-  descriptorEntry({
-    featureKey: "theme-x01",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-x01",
-    description: "Klares X01-Layout mit optionalem AVG und eigenem Hintergrundbild.",
-    fields: backgroundThemeFields([
-      checkboxField("showAvg", "AVG anzeigen"),
-    ]),
-  }),
-  descriptorEntry({
-    featureKey: "theme-gotcha",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-gotcha",
-    description: "X01-nahes Gotcha-Theme mit integrierter Delta-Anzeige und eigenem Hintergrundbild.",
-    fields: backgroundThemeFields([
-      selectField("deltaPlacement", "Delta-Position", GOTCHA_DELTA_PLACEMENT_OPTIONS),
-      selectField("deltaAlignment", "Delta-Ausrichtung", GOTCHA_DELTA_ALIGNMENT_OPTIONS),
-      checkboxField("deltaItalic", "Delta kursiv"),
-    ]),
-  }),
-  descriptorEntry({
-    featureKey: "theme-x01-2player",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-x01-2player",
-    description:
-      "Eigenständiges X01-Theme für genau zwei Spieler mit zentriertem Board und eigenem Hintergrundbild.",
+  animationDescriptorEntry({
+    featureKey: "turn-dart-display",
+    readmeAnchor: "turn-dart-display",
     fields: [
-      selectField("visualStyle", "Darstellungsstil", X01_TWO_PLAYER_VISUAL_STYLE_OPTIONS, {
-        section: "Layout und Stil",
+      selectField("turnDartStyle", "Stil", TURN_DART_STYLE_OPTIONS),
+      selectField("turnDartAssetKey", "Dart auswählen", TURN_DART_ASSET_OPTIONS),
+      textField("turnDartTextTemplate", "Dart-Text", { placeholder: "Wurf #", maxLength: 48 }),
+      colorField("turnDartColor", "Dart-Farbe"),
+      colorField("turnDartGradientColor", "Verlaufsfarbe"),
+      selectField("turnDartSizePercent", "Dart-Größe", TURN_DART_SIZE_OPTIONS),
+      checkboxField("turnDartShineEnabled", "Dart-Glanz"),
+      actionField("uploadTurnDartImage", "Dart-Bild hochladen", {
+        description: "Empfohlen: transparentes PNG oder WebP, horizontal und eng zugeschnitten. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
       }),
-      selectField("colorScheme", "Farbschema", X01_TWO_PLAYER_COLOR_SCHEME_OPTIONS, {
-        section: "Layout und Stil",
-      }),
-      selectField(
-        "informationDensity",
-        "Informationsdichte",
-        X01_TWO_PLAYER_INFORMATION_DENSITY_OPTIONS,
-        { section: "Layout und Stil" }
-      ),
-      selectField(
-        "activePlayerEmphasis",
-        "Aktivspieler-Hervorhebung",
-        X01_TWO_PLAYER_ACTIVE_EMPHASIS_OPTIONS,
-        { section: "Spieler" }
-      ),
-      selectField(
-        "identityDensity",
-        "Spielerinformationen",
-        X01_TWO_PLAYER_IDENTITY_DENSITY_OPTIONS,
-        { section: "Spieler" }
-      ),
-      selectField("playerNameLayout", "Namensdarstellung", X01_TWO_PLAYER_NAME_LAYOUT_OPTIONS, {
-        section: "Spieler",
-      }),
-      ...backgroundThemeFields().map((field) =>
-        Object.freeze({ ...field, section: "Hintergrund" })
-      ),
-      actionField("resetX01TwoPlayerTheme", "Zweispieler-Theme auf Standard zurücksetzen", {
-        section: "Hintergrund",
-        description:
-          "Setzt die Darstellung zurück; Aktivierung und eigenes Hintergrundbild bleiben erhalten.",
-        successMessage: "Zweispieler-Theme auf Standard zurückgesetzt.",
-        errorMessage: "Zweispieler-Theme konnte nicht zurückgesetzt werden.",
+      actionField("clearTurnDartImage", "Dart-Bild entfernen", {
+        description: "Entfernt das gespeicherte globale Dart-Bild.",
+        successMessage: "Dart-Bild entfernt.",
       }),
     ],
-  }),
-  descriptorEntry({
-    featureKey: "theme-cricket",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-cricket",
-    description: "Gemeinsames Theme für Cricket und Tactics mit optionalem AVG.",
-    fields: backgroundThemeFields([
-      checkboxField("showAvg", "AVG anzeigen"),
-    ]),
-  }),
-  descriptorEntry({
-    featureKey: "theme-shanghai",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-shanghai",
-    description: "Aufgeräumtes Shanghai-Theme mit optionalem AVG und Hintergrundbild.",
-    fields: backgroundThemeFields([
-      checkboxField("showAvg", "AVG anzeigen"),
-    ]),
-  }),
-  descriptorEntry({
-    featureKey: "theme-bermuda",
-    tab: "themes",
-    readmeAnchor: "template-autodarts-theme-bermuda",
-    description: "Bermuda-Theme mit ruhigerem Layout und eigenem Hintergrundbild.",
-    fields: backgroundThemeFields(),
   }),
   animationDescriptorEntry({
     featureKey: "checkout-score-highlight",
@@ -542,6 +366,7 @@ export const xconfigDescriptors = Object.freeze([
     fields: [
       selectField("colorTheme", "Farben", [
         colorPreviewOption("checkout-focus", "Checkout Focus", "x01-checkout-focus"),
+        colorPreviewOption("checkout-zone-blue", "Checkout-Zone Blau/Weiß", "x01-checkout-zone-blue"),
         colorPreviewOption("traffic-light", "Traffic Light", "x01-traffic-light"),
         colorPreviewOption("danger-endgame", "Danger Endgame", "x01-danger-endgame"),
         colorPreviewOption("gradient-by-progress", "Gradient Progress", "x01-gradient-by-progress"),

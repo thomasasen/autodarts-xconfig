@@ -41,15 +41,11 @@ const rawFeatureCatalog = [
   catalogEntry("turn-score-counter", "turnScoreCounter", "Turn Score Counter", ["all"], "Animation/Autodarts Animate Turn Score Counter.user.js", "a-turn-points"),
   catalogEntry("winner-celebration-effect", "winnerCelebrationEffect", "Winner Celebration Effect", ["all"], "Animation/Autodarts Animate Winner Celebration Effect.user.js", "a-winner-celebration-effect"),
   catalogEntry("x01-remaining-score-bar", "x01RemainingScoreBar", "X01 Remaining Score Bar", ["x01"], "", "", immediate),
-  catalogEntry("theme-global-typography", "themes.globalTypography", "Templates Global", ["all"], "", "", immediate),
+  catalogEntry("theme-global-background", "themes.globalBackground", "Hintergrund", ["all"], "", "", immediate),
+  catalogEntry("theme-global-typography", "themes.globalTypography", "Schrift", ["all"], "", "", immediate),
+  catalogEntry("theme-global-presets", "themes.globalPresets", "Vorlagen", ["all"], "", "", immediate),
   catalogEntry("bot-board-style", "botBoardStyle", "Bot Board Style", ["all"]),
-  catalogEntry("theme-x01", "themes.x01", "Theme X01", ["x01"], "Template/Autodarts Theme X01.user.js", "theme-x01", immediate),
-  catalogEntry("theme-gotcha", "themes.gotcha", "Theme Gotcha", ["gotcha"], "", "", immediate),
-  catalogEntry("theme-x01-2player", "themes.x01TwoPlayer", "Theme X01 2Player (Beta)", ["x01"], "", "", immediate),
-  catalogEntry("theme-shanghai", "themes.shanghai", "Theme Shanghai", ["shanghai"], "Template/Autodarts Theme Shanghai.user.js", "theme-shanghai", immediate),
-  catalogEntry("theme-bermuda", "themes.bermuda", "Theme Bermuda", ["bermuda"], "Template/Autodarts Theme Bermuda.user.js", "theme-bermuda", immediate),
-  catalogEntry("theme-cricket", "themes.cricket", "Theme Cricket", ["cricket", "tactics"], "Template/Autodarts Theme Cricket.user.js", "theme-cricket", immediate),
-  catalogEntry("theme-bull-off", "themes.bullOff", "Theme Bull-off", ["bull-off"], "Template/Autodarts Theme Bull-off.user.js", "theme-bull-off", immediate),
+  catalogEntry("turn-dart-display", "turnDartDisplay", "Wurffeld-Darts", ["all"], "", "", immediate),
 ];
 
 const FEATURE_KEY_ALIASES = Object.freeze({

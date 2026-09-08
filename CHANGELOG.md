@@ -12,6 +12,25 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.3] - 2026-09-08
+
+### Added
+
+- Nutzerwirkung: X01 Remaining Score Bar bietet das zusätzliche Design `Checkout-Zone Blau/Weiß`: Oberhalb des maximalen Checkouts bleibt der Restscore blau, bei 170 trennt eine weiße Linie die blau-weiß schraffierte Checkout-Zone ab.
+  Technik: Die Laufzeit verankert Schwellenlinie und Schraffur am Startscore und hält die Checkout-Zone bei Scoreänderungen geometrisch auf 170 Punkten; echte Optionsvorschauen und Regressionstests verwenden dieselbe Berechnung.
+
+### Changed
+
+- Nutzerwirkung: Unter `Themen` stehen nur noch die drei globalen Kacheln `Hintergrund`, `Schrift` und `Vorlagen`. Hintergrund und Schrift wirken unabhängig in allen Spielansichten; die bisherigen spielbezogenen Theme-Layouts entfallen.
+  Technik: Konfiguration, Migration, Import/Export und Runtime wurden auf `themes.globalBackground` und das reduzierte `themes.globalTypography` umgestellt. Legacy-Werte füllen nur fehlende globale Felder, während alte Spiel-Theme-Schlüssel bereinigt werden.
+- Nutzerwirkung: `Wurffeld-Darts` und `Bot Board Style` befinden sich als unabhängige globale Module unter `Animationen`. Vorlagen aktivieren Hintergrund und Schrift gemeinsam, ohne Wurffeld-Darts zu verändern.
+  Technik: Wurffeld-Darts besitzen einen eigenen Konfigurations- und Runtime-Lebenszyklus; globale Presets sind aktionsbasierte Karten ohne wirkungslosen Schalter. Nicht mehr benötigte Theme-Layouts, Policies und DOM-Helfer wurden entfernt.
+
+### Fixed
+
+- Nutzerwirkung: Bot Board Style erfasst im modernen Autodarts-Board auch zunächst ausgeblendete native Board-Ebenen und stellt das gewählte Design nach DOM-Aktualisierungen zuverlässig wieder her.
+  Technik: Die moderne Board-Erkennung und Wiederherstellung verwalten sichtbare und versteckte native Layer gemeinsam; Runtime- und UI-Regressionen sichern den Lebenszyklus ab.
+
 ## [3.0.2] - 2026-09-07
 
 ### Fixed
@@ -1975,6 +1994,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v2.9.2...v3.0.0

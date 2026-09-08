@@ -24,11 +24,11 @@ test("xconfig path utils build nested feature setting patches and theme keys", (
   );
 
   assert.deepEqual(
-    buildFeatureSettingPatch("themes.cricket", "backgroundOpacity", 40),
+    buildFeatureSettingPatch("themes.globalBackground", "backgroundOpacity", 40),
     {
       features: {
         themes: {
-          cricket: {
+          globalBackground: {
             backgroundOpacity: 40,
           },
         },
@@ -36,7 +36,7 @@ test("xconfig path utils build nested feature setting patches and theme keys", (
     }
   );
 
-  assert.equal(themeKeyFromConfigKey("themes.cricket"), "cricket");
+  assert.equal(themeKeyFromConfigKey("themes.globalBackground"), "globalBackground");
   assert.equal(themeKeyFromConfigKey("checkoutScoreHighlight"), "");
 });
 

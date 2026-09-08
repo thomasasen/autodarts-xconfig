@@ -212,35 +212,23 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     secondaryTextColor: "#DCE9FF",
     throwLabelColor: "#8FA9C2",
     activePlayerTintIntensity: 20,
+    debug: false,
+  });
+  assert.deepEqual(createRecommendedFeatureConfig("themes.globalBackground"), {
+    enabled: false,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 10,
     playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "",
+    debug: false,
+  });
+  assert.deepEqual(createRecommendedFeatureConfig("turnDartDisplay"), {
+    enabled: false,
     ...DEFAULT_TURN_DART_CONFIG,
     turnDartStyle: "image",
     turnDartGradientColor: "#00D9FF",
     turnDartSizePercent: 135,
-    debug: false,
-  });
-  assert.deepEqual(createRecommendedFeatureConfig("themes.bullOff"), {
-    enabled: false,
-    contrastPreset: "standard",
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    backgroundImageDataUrl: "",
-    debug: false,
-  });
-  assert.deepEqual(createRecommendedFeatureConfig("themes.gotcha"), {
-    enabled: false,
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    deltaPlacement: "below",
-    deltaAlignment: "right",
-    deltaItalic: true,
-    backgroundImageDataUrl: "",
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("checkoutTargetHighlights"), {
@@ -311,12 +299,6 @@ test("theme global typography defaults and normalization stay stable", () => {
     secondaryTextColor: "",
     throwLabelColor: "",
     activePlayerTintIntensity: 15,
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    backgroundImageDataUrl: "",
-    backgroundAssetKey: "",
-    ...DEFAULT_TURN_DART_CONFIG,
     debug: false,
   });
 
@@ -357,19 +339,6 @@ test("theme global typography defaults and normalization stay stable", () => {
       secondaryTextColor: "#AABBCC",
       throwLabelColor: "#DEF012",
       activePlayerTintIntensity: 20,
-      backgroundDisplayMode: "fit",
-      backgroundOpacity: 40,
-      playerFieldTransparency: 30,
-      backgroundImageDataUrl: "data:image/png;base64,AAAA",
-      backgroundAssetKey: "cyberpunk",
-      turnDartStyle: "gradient",
-      turnDartAssetKey: "german-giant",
-      turnDartTextTemplate: "Wurf #",
-      turnDartColor: "#F97316",
-      turnDartGradientColor: "#AABBCC",
-      turnDartSizePercent: 135,
-      turnDartShineEnabled: false,
-      turnDartImageDataUrl: "data:image/webp;base64,BBBB",
       debug: true,
     }
   );
@@ -408,19 +377,6 @@ test("theme global typography defaults and normalization stay stable", () => {
       secondaryTextColor: "#123123",
       throwLabelColor: "#445566",
       activePlayerTintIntensity: 10,
-      backgroundDisplayMode: "tile",
-      backgroundOpacity: 70,
-      playerFieldTransparency: 45,
-      backgroundImageDataUrl: "",
-      backgroundAssetKey: "ice",
-      turnDartStyle: "image",
-      turnDartAssetKey: "german-giant",
-      turnDartTextTemplate: "Dart #",
-      turnDartColor: "#123456",
-      turnDartGradientColor: "#445566",
-      turnDartSizePercent: 100,
-      turnDartShineEnabled: true,
-      turnDartImageDataUrl: "data:image/svg+xml;base64,CCCC",
       debug: false,
     }
   );
@@ -459,81 +415,13 @@ test("theme global typography defaults and normalization stay stable", () => {
       secondaryTextColor: "",
       throwLabelColor: "",
       activePlayerTintIntensity: 15,
-      backgroundDisplayMode: "fill",
-      backgroundOpacity: 25,
-      playerFieldTransparency: 10,
-      backgroundImageDataUrl: "",
-      backgroundAssetKey: "",
-      ...DEFAULT_TURN_DART_CONFIG,
-      turnDartTextTemplate: "x".repeat(48),
       debug: false,
     }
   );
 });
 
-test("gotcha theme defaults and normalization stay stable", () => {
-  assert.deepEqual(getDefaultFeatureConfig("themes.gotcha"), {
-    enabled: false,
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    deltaPlacement: "below",
-    deltaAlignment: "right",
-    deltaItalic: true,
-    backgroundImageDataUrl: "",
-    debug: false,
-  });
-
-  const spec = getFeatureConfigSpec("themes.gotcha");
-  assert.ok(spec);
-
-  assert.deepEqual(
-    spec.normalizeConfig({
-      enabled: "true",
-      backgroundDisplayMode: "fit",
-      backgroundOpacity: "40",
-      playerFieldTransparency: "30",
-      deltaPlacement: "INLINE-DIVIDER",
-      deltaAlignment: "LEFT",
-      deltaItalic: "false",
-      backgroundImageDataUrl: "data:image/png;base64,AAAA",
-      debug: "true",
-    }),
-    {
-      enabled: true,
-      backgroundDisplayMode: "fit",
-      backgroundOpacity: 40,
-      playerFieldTransparency: 30,
-      deltaPlacement: "inline-divider",
-      deltaAlignment: "left",
-      deltaItalic: false,
-      backgroundImageDataUrl: "data:image/png;base64,AAAA",
-      debug: true,
-    }
-  );
-
-  assert.deepEqual(
-    spec.normalizeConfig({
-      enabled: "no",
-      backgroundDisplayMode: "wallpaper",
-      backgroundOpacity: "12",
-      playerFieldTransparency: "88",
-      deltaPlacement: "inline",
-      deltaAlignment: "center",
-      deltaItalic: "invalid",
-      backgroundImageDataUrl: "https://example.invalid/bg.png",
-      debug: "no",
-    }),
-    {
-      enabled: false,
-      backgroundDisplayMode: "fill",
-      backgroundOpacity: 25,
-      playerFieldTransparency: 10,
-      deltaPlacement: "below",
-      deltaAlignment: "right",
-      deltaItalic: true,
-      backgroundImageDataUrl: "",
-      debug: false,
-    }
-  );
+test("retired game themes no longer expose config specs", () => {
+  assert.equal(getDefaultFeatureConfig("themes.gotcha"), null);
+  assert.equal(getFeatureConfigSpec("themes.gotcha"), null);
+  assert.equal(getFeatureConfigSpec("themes.bullOff"), null);
 });

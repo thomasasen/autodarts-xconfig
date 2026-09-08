@@ -79,8 +79,9 @@ test("fresh runtime initialization persists the recommended profile", async () =
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
   assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
   assert.equal(storedConfig.features.dartMarkerReplacer.design, "germangiant");
+  assert.equal(storedConfig.features.themes.globalBackground.enabled, false);
   assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
-  assert.equal(storedConfig.features.themes.x01TwoPlayer.enabled, false);
+  assert.equal(storedConfig.features.turnDartDisplay.enabled, false);
   defaultFeatureDefinitions.forEach((definition) => {
     assert.equal(storedConfig.featureToggles[definition.configKey], false, definition.configKey);
   });
@@ -232,70 +233,52 @@ test("runtime public config API persists updates and survives feature toggles", 
     true
   );
 
-  await runtime.setFeatureEnabled("theme-x01", true);
+  await runtime.setFeatureEnabled("theme-global-background", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles["themes.x01"], true);
-  assert.equal(storedConfig.features.themes.x01.enabled, true);
-  assert.equal(runtime.getSnapshot().features["theme-x01"].mounted, true);
+  assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
+  assert.equal(storedConfig.features.themes.globalBackground.enabled, true);
+  assert.equal(runtime.getSnapshot().features["theme-global-background"].mounted, true);
 
-  await runtime.setFeatureEnabled("theme-x01-2player", true);
+  await runtime.setFeatureEnabled("turn-dart-display", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles["themes.x01TwoPlayer"], true);
-  assert.equal(storedConfig.features.themes.x01TwoPlayer.enabled, true);
-  assert.equal(runtime.getSnapshot().features["theme-x01-2player"].mounted, true);
+  assert.equal(storedConfig.featureToggles.turnDartDisplay, true);
+  assert.equal(storedConfig.features.turnDartDisplay.enabled, true);
+  assert.equal(runtime.getSnapshot().features["turn-dart-display"].mounted, true);
 
-  await runtime.setThemeBackgroundImage("x01", "data:image/png;base64,AAAA");
+  await runtime.setThemeBackgroundImage("globalBackground", "data:image/png;base64,AAAA");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "data:image/png;base64,AAAA");
 
-  await runtime.setThemeBackgroundImage("gotcha", "data:image/png;base64,CCCC");
+  await runtime.setThemeBackgroundImage("globalTypography", "data:image/png;base64,CCCC");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.gotcha.backgroundImageDataUrl, "data:image/png;base64,CCCC");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "data:image/png;base64,CCCC");
 
-  await runtime.setThemeBackgroundImage("x01", "https://example.invalid/bg.png");
+  await runtime.setThemeBackgroundImage("globalBackground", "https://example.invalid/bg.png");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "data:image/png;base64,CCCC");
 
-  await runtime.clearThemeBackgroundImage("x01");
+  await runtime.clearThemeBackgroundImage("globalTypography");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
-
-  await runtime.clearThemeBackgroundImage("gotcha");
-  await wait(5);
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.gotcha.backgroundImageDataUrl, "");
-
-  await runtime.setThemeBackgroundImage("x01TwoPlayer", "data:image/png;base64,BBBB");
-  await wait(5);
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(
-    storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl,
-    "data:image/png;base64,BBBB"
-  );
-
-  await runtime.clearThemeBackgroundImage("x01TwoPlayer");
-  await wait(5);
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "");
 
   await runtime.setThemeBackgroundImage("globalTypography", "data:image/png;base64,GGGG");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(
-    storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
+    storedConfig.features.themes.globalBackground.backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
   );
 
   await runtime.clearThemeBackgroundImage("globalTypography");
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "");
 
   runtime.stop();
 });
@@ -442,13 +425,11 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "x01-remaining-score-bar"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "winner-celebration-effect"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "bot-board-style"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-gotcha"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-x01-2player"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-shanghai"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-bermuda"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-cricket"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "theme-bull-off"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "theme-global-background"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "theme-global-typography"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "theme-global-presets"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "turn-dart-display"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "theme-x01"), false);
 
   runtime.stop();
 });
@@ -461,16 +442,14 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
       },
       features: {
         themes: {
-          globalTypography: {
+          globalBackground: {
             backgroundImageDataUrl: "data:image/png;base64,GGGG",
-            turnDartImageDataUrl: "data:image/png;base64,DDDD",
           },
-          x01: {
-            backgroundImageDataUrl: "data:image/png;base64,AAAA",
+          globalTypography: {
           },
-          cricket: {
-            backgroundImageDataUrl: "data:image/png;base64,BBBB",
-          },
+        },
+        turnDartDisplay: {
+          turnDartImageDataUrl: "data:image/png;base64,DDDD",
         },
       },
     }),
@@ -509,19 +488,14 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.x01RemainingScoreBar.barSize, "breit");
   assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "previous-score-trail");
   assert.equal(
-    storedConfig.features.themes.globalTypography.backgroundImageDataUrl,
+    storedConfig.features.themes.globalBackground.backgroundImageDataUrl,
     "data:image/png;base64,GGGG"
   );
   assert.equal(
-    storedConfig.features.themes.globalTypography.turnDartImageDataUrl,
+    storedConfig.features.turnDartDisplay.turnDartImageDataUrl,
     "data:image/png;base64,DDDD"
   );
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "data:image/png;base64,AAAA");
-  assert.equal(storedConfig.features.themes.x01TwoPlayer.backgroundImageDataUrl, "");
-  assert.equal(
-    storedConfig.features.themes.cricket.backgroundImageDataUrl,
-    "data:image/png;base64,BBBB"
-  );
+  assert.equal(storedConfig.features.themes.x01, undefined);
 
   defaultFeatureDefinitions.forEach((definition) => {
     const expectedEnabled = false;
@@ -548,15 +522,17 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
           effect: "blink",
         },
         themes: {
-          globalTypography: {
+          globalBackground: {
             enabled: true,
             backgroundImageDataUrl: "data:image/png;base64,GGGG",
-            turnDartImageDataUrl: "data:image/png;base64,DDDD",
           },
-          x01: {
+          globalTypography: {
             enabled: true,
-            backgroundImageDataUrl: "data:image/png;base64,AAAA",
           },
+        },
+        turnDartDisplay: {
+          enabled: true,
+          turnDartImageDataUrl: "data:image/png;base64,DDDD",
         },
       },
     }),
@@ -572,11 +548,12 @@ test("runtime resetConfig performs a hard reset and clears theme images", async 
   assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
   assert.equal(storedConfig.features.checkoutScoreHighlight.enabled, false);
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "grow-only");
+  assert.equal(storedConfig.features.themes.globalBackground.enabled, false);
+  assert.equal(storedConfig.features.themes.globalBackground.backgroundImageDataUrl, "");
   assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
-  assert.equal(storedConfig.features.themes.globalTypography.backgroundImageDataUrl, "");
-  assert.equal(storedConfig.features.themes.globalTypography.turnDartImageDataUrl, "");
-  assert.equal(storedConfig.features.themes.x01.enabled, false);
-  assert.equal(storedConfig.features.themes.x01.backgroundImageDataUrl, "");
+  assert.equal(storedConfig.features.turnDartDisplay.enabled, false);
+  assert.equal(storedConfig.features.turnDartDisplay.turnDartImageDataUrl, "");
+  assert.equal(storedConfig.features.themes.x01, undefined);
 
   defaultFeatureDefinitions.forEach((definition) => {
     assert.equal(storedConfig.featureToggles[definition.configKey], false, definition.configKey);
@@ -605,7 +582,7 @@ test("runtime rejects theme background writes when persistence fails", async () 
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
   await assert.rejects(() =>
-    runtime.setThemeBackgroundImage("x01", "data:image/png;base64,AAAA")
+    runtime.setThemeBackgroundImage("globalTypography", "data:image/png;base64,AAAA")
   );
 
   const exported = await runtime.createSettingsExport({ includeAssets: false });
@@ -614,7 +591,7 @@ test("runtime rejects theme background writes when persistence fails", async () 
   await assert.rejects(() => runtime.importSettings(exported.payload, { mode: "merge" }));
 
   const snapshot = runtime.getSnapshot();
-  assert.equal(snapshot.features["theme-x01"].config.backgroundImageDataUrl, "");
+  assert.equal(snapshot.features["theme-global-background"].config.backgroundImageDataUrl, "");
   assert.equal(snapshot.features["tv-board-zoom"].enabled, false);
 
   runtime.stop();

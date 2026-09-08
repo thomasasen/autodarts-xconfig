@@ -123,52 +123,17 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
   );
   assert.match(text, /initializeTampermonkeyRuntime/);
   assert.match(text, /windowRef\.__adXConfig/);
-  assert.match(text, /ad-ext-theme-content-slot/);
-  assert.match(
+  assert.match(text, /ad-ext-theme-global-background-style/);
+  assert.match(text, /ad-ext-theme-global-typography-style/);
+  assert.match(text, /ad-ext-turn-dart-display-style/);
+  assert.match(text, /theme-global-background/);
+  assert.match(text, /theme-global-presets/);
+  assert.match(text, /turnDartDisplay/);
+  assert.doesNotMatch(
     text,
     /grid-template-columns:\s*minmax\(18rem,\s*clamp\(22rem,\s*34vw,\s*38rem\)\)\s*minmax\(0,\s*1fr\)\s*!important;/
   );
-  assert.match(text, /grid-column:\s*1 \/ -1\s*!important;/);
-  assert.match(text, /grid-row:\s*3\s*!important;/);
-  assert.match(text, /grid-template-rows:\s*minmax\(0,\s*1fr\)\s*!important;/);
-  assert.match(text, /position:\s*absolute\s*!important;/);
-  assert.match(text, /top:\s*0\.5rem\s*!important;/);
-  assert.match(text, /right:\s*0\.5rem\s*!important;/);
-  assert.match(text, /bottom:\s*auto\s*!important;/);
-  assert.match(text, /left:\s*auto\s*!important;/);
-  assert.match(
-    text,
-    /\.ad-ext-theme-board-panel\s*\{[^}]*overflow:\s*visible\s*!important;/s
-  );
-  assert.match(
-    text,
-    /\.ad-ext-theme-board-viewport\s*\{[^}]*overflow:\s*visible\s*!important;/s
-  );
-  assert.match(text, /ad-ext-theme-board-canvas\s*\{/);
-  assert.match(text, /flex:\s*0\s+0\s+auto\s*!important;/);
-  assert.match(text, /--ad-ext-theme-board-size,\s*100%/);
-  assert.match(
-    text,
-    /\.ad-ext-theme-board-canvas\s*\{[^}]*overflow:\s*visible\s*!important;/s
-  );
-  assert.match(text, /ad-ext-theme-board-canvas\s*>\s*\*/);
-  assert.match(
-    text,
-    /\.ad-ext-theme-board-canvas\s*>\s*\*\s*\{[^}]*overflow:\s*visible\s*!important;/s
-  );
-  assert.match(
-    text,
-    /-ms-overflow-style:\s*none\s*!important;/
-  );
-  assert.match(
-    text,
-    /scrollbar-width:\s*none\s*!important;/
-  );
-  assert.match(
-    text,
-    /::-webkit-scrollbar\s*\{[^}]*width:\s*0\s*!important;[^}]*height:\s*0\s*!important;[^}]*display:\s*none\s*!important;/s
-  );
-  assert.match(text, /height:\s*100%\s*!important;/);
+  assert.doesNotMatch(text, /--ad-ext-theme-board-size,\s*100%/);
   assert.doesNotMatch(text, /minmax\(20rem,\s*0\.95fr\)\s*minmax\(0,\s*1\.05fr\)/);
   assert.doesNotMatch(text, /width:\s*min\(100%,\s*100vh\)\s*!important;/);
   assert.doesNotMatch(text, /96cqw|96cqh/);

@@ -1,11 +1,4 @@
 import themeGlobalTypographyWebp from "../assets/xconfig-previews/theme-global-typography.webp";
-import themeX01Webp from "../assets/xconfig-previews/theme-x01.webp";
-import themeGotchaWebp from "../assets/xconfig-previews/theme-gotcha.webp";
-import themeX01TwoPlayerWebp from "../assets/xconfig-previews/theme-x01-2player.webp";
-import themeShanghaiWebp from "../assets/xconfig-previews/theme-shanghai.webp";
-import themeBermudaWebp from "../assets/xconfig-previews/theme-bermuda.webp";
-import themeCricketWebp from "../assets/xconfig-previews/theme-cricket.webp";
-import themeBullOffWebp from "../assets/xconfig-previews/theme-bull-off.webp";
 import checkoutScoreHighlightWebp from "../assets/xconfig-previews/checkout-score-highlight.webp";
 import x01RemainingScoreBarWebp from "../assets/xconfig-previews/x01-remaining-score-bar.webp";
 import x01BustActivePlayerHighlightWebp from "../assets/xconfig-previews/x01-bust-active-player-highlight.webp";
@@ -25,14 +18,10 @@ import turnScoreCounterWebp from "../assets/xconfig-previews/turn-score-counter.
 import winnerCelebrationEffectWebp from "../assets/xconfig-previews/winner-celebration-effect.webp";
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
+  "theme-global-background": themeGlobalTypographyWebp,
   "theme-global-typography": themeGlobalTypographyWebp,
-  "theme-x01": themeX01Webp,
-  "theme-gotcha": themeGotchaWebp,
-  "theme-x01-2player": themeX01TwoPlayerWebp,
-  "theme-shanghai": themeShanghaiWebp,
-  "theme-bermuda": themeBermudaWebp,
-  "theme-cricket": themeCricketWebp,
-  "theme-bull-off": themeBullOffWebp,
+  "theme-global-presets": themeGlobalTypographyWebp,
+  "turn-dart-display": dartMarkerReplacerWebp,
   "checkout-score-highlight": checkoutScoreHighlightWebp,
   "x01-remaining-score-bar": x01RemainingScoreBarWebp,
   "x01-bust-active-player-highlight": x01BustActivePlayerHighlightWebp,

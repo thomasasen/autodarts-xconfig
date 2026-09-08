@@ -61,6 +61,127 @@ function deleteNestedValue(rootValue, pathParts = []) {
   delete current[pathParts.at(-1)];
 }
 
+const LEGACY_GAME_THEME_KEYS = Object.freeze([
+  "x01",
+  "gotcha",
+  "x01TwoPlayer",
+  "shanghai",
+  "bermuda",
+  "cricket",
+  "bullOff",
+]);
+const LEGACY_GLOBAL_BACKGROUND_FIELDS = Object.freeze([
+  "backgroundDisplayMode",
+  "backgroundOpacity",
+  "playerFieldTransparency",
+  "backgroundImageDataUrl",
+  "backgroundAssetKey",
+]);
+const LEGACY_TURN_DART_FIELDS = Object.freeze([
+  "turnDartStyle",
+  "turnDartAssetKey",
+  "turnDartTextTemplate",
+  "turnDartColor",
+  "turnDartGradientColor",
+  "turnDartSizePercent",
+  "turnDartShineEnabled",
+  "turnDartImageDataUrl",
+]);
+
+function isObjectLike(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function copyMissingFields(target, source, fieldKeys) {
+  fieldKeys.forEach((fieldKey) => {
+    if (!Object.hasOwn(target, fieldKey) && Object.hasOwn(source, fieldKey)) {
+      target[fieldKey] = deepClone(source[fieldKey]);
+    }
+  });
+}
+
+function ensureObjectProperty(parent, key) {
+  if (isObjectLike(parent[key])) {
+    return parent[key];
+  }
+  const nextValue = {};
+  parent[key] = nextValue;
+  return nextValue;
+}
+
+function resolveLegacyThemeEnabled(featureToggles, typography) {
+  if (Object.hasOwn(featureToggles, "themes.globalTypography")) {
+    return featureToggles["themes.globalTypography"];
+  }
+  return typography.enabled;
+}
+
+function copyLegacyDebug(targets, typography) {
+  if (!Object.hasOwn(typography, "debug")) {
+    return;
+  }
+  targets.forEach((target) => {
+    if (!Object.hasOwn(target, "debug")) {
+      target.debug = typography.debug;
+    }
+  });
+}
+
+function copyLegacyEnabled(target, legacyEnabled) {
+  if (!Object.hasOwn(target, "enabled") && legacyEnabled !== undefined) {
+    target.enabled = legacyEnabled;
+  }
+}
+
+function copyLegacyToggle(featureToggles, configKey, legacyEnabled) {
+  if (!Object.hasOwn(featureToggles, configKey) && legacyEnabled !== undefined) {
+    featureToggles[configKey] = legacyEnabled;
+  }
+}
+
+function migrateLegacyGlobalThemeSettings(features, themes, featureToggles) {
+  const typography = isObjectLike(themes.globalTypography)
+    ? themes.globalTypography
+    : null;
+  if (!typography) {
+    return;
+  }
+
+  const legacyEnabled = resolveLegacyThemeEnabled(featureToggles, typography);
+  const globalBackground = ensureObjectProperty(themes, "globalBackground");
+  const turnDartDisplay = ensureObjectProperty(features, "turnDartDisplay");
+
+  copyMissingFields(globalBackground, typography, LEGACY_GLOBAL_BACKGROUND_FIELDS);
+  copyMissingFields(turnDartDisplay, typography, LEGACY_TURN_DART_FIELDS);
+  copyLegacyDebug([globalBackground, turnDartDisplay], typography);
+  copyLegacyEnabled(globalBackground, legacyEnabled);
+  copyLegacyEnabled(turnDartDisplay, legacyEnabled);
+  copyLegacyToggle(featureToggles, "themes.globalBackground", legacyEnabled);
+  copyLegacyToggle(featureToggles, "turnDartDisplay", legacyEnabled);
+
+  new Set([...LEGACY_GLOBAL_BACKGROUND_FIELDS, ...LEGACY_TURN_DART_FIELDS])
+    .forEach((fieldKey) => delete typography[fieldKey]);
+}
+
+function removeLegacyGameThemes(themes, featureToggles) {
+  LEGACY_GAME_THEME_KEYS.forEach((themeKey) => {
+    delete themes[themeKey];
+    delete featureToggles[`themes.${themeKey}`];
+  });
+}
+
+function migrateLegacyThemeStructure(configValue = {}) {
+  if (!isObjectLike(configValue)) {
+    return;
+  }
+
+  const featureToggles = ensureObjectProperty(configValue, "featureToggles");
+  const features = ensureObjectProperty(configValue, "features");
+  const themes = ensureObjectProperty(features, "themes");
+  migrateLegacyGlobalThemeSettings(features, themes, featureToggles);
+  removeLegacyGameThemes(themes, featureToggles);
+}
+
 function canonicalConfigKey(configKey) {
   const normalizedKey = String(configKey || "").trim();
   return getFeatureCatalogEntryByConfigKey(normalizedKey)?.configKey || normalizedKey;
@@ -226,9 +347,6 @@ function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClea
 
     if (shouldClear) {
       targetThemeConfig.backgroundImageDataUrl = "";
-      if (Object.hasOwn(targetThemeConfig, "turnDartImageDataUrl")) {
-        targetThemeConfig.turnDartImageDataUrl = "";
-      }
       return;
     }
 
@@ -236,12 +354,16 @@ function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClea
     targetThemeConfig.backgroundImageDataUrl = normalizeThemeBackgroundImage(
       sourceThemeConfig?.backgroundImageDataUrl || ""
     );
-    if (Object.hasOwn(targetThemeConfig, "turnDartImageDataUrl")) {
-      targetThemeConfig.turnDartImageDataUrl = normalizeThemeBackgroundImage(
-        sourceThemeConfig?.turnDartImageDataUrl || ""
-      );
-    }
   });
+
+  const targetTurnDartConfig = configValue?.features?.turnDartDisplay;
+  if (isObjectLike(targetTurnDartConfig)) {
+    targetTurnDartConfig.turnDartImageDataUrl = shouldClear
+      ? ""
+      : normalizeThemeBackgroundImage(
+          sourceConfig?.features?.turnDartDisplay?.turnDartImageDataUrl || ""
+        );
+  }
 }
 
 function applyRecommendedFeatureDefaults(configValue) {
@@ -285,8 +407,13 @@ function buildRecommendedRuntimeConfig(sourceConfig = {}) {
 }
 
 export function createRuntimeConfig(overrides = {}) {
+  const migratedOverrides = deepClone(overrides);
+  migrateLegacyThemeStructure(migratedOverrides);
   let rawConfig = migrateLegacyFeatureConfigKeys(
-    deepMerge(createDefaultConfigFromFeatureSpecs(), migrateLegacyFeatureConfigKeys(deepClone(overrides)))
+    deepMerge(
+      createDefaultConfigFromFeatureSpecs(),
+      migrateLegacyFeatureConfigKeys(migratedOverrides)
+    )
   );
   let revision = 0;
 
@@ -413,8 +540,10 @@ export function createRuntimeConfig(overrides = {}) {
   }
 
   function update(partialConfig = {}) {
+    const migratedPartialConfig = deepClone(partialConfig);
+    migrateLegacyThemeStructure(migratedPartialConfig);
     rawConfig = migrateLegacyFeatureConfigKeys(
-      deepMerge(rawConfig, migrateLegacyFeatureConfigKeys(deepClone(partialConfig)))
+      deepMerge(rawConfig, migrateLegacyFeatureConfigKeys(migratedPartialConfig))
     );
     revision += 1;
     return getRaw();

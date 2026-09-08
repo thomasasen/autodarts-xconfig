@@ -1,21 +1,21 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `26` Module in einem Userscript:
+`autodarts-xconfig` bündelt `22` Module in einem Userscript:
 
-- `17` Animationen und Komfortfunktionen
-- `9` Themes
+- `19` Animationen und Komfortfunktionen
+- `3` Themes
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `26` Module: `17` Animationen und Komfortfunktionen sowie `9` Themes.
-- `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
-- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
+- Insgesamt `22` Module: `19` Animationen und Komfortfunktionen sowie `3` Themes.
+- `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt globales Wallpaper sowie Dart-Upload.
+- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
-- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
-- Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
+- Hintergrundbild: Die Kachel `Hintergrund` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.
+- Bildgröße: Für das globale Wallpaper gilt ein empfohlenes Limit von `1,5 MiB`; der separate Dart-Upload wird kompakter gespeichert.
 
 ![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)
@@ -28,28 +28,18 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ### Themen
 
-**In allen Themen**
-- `Alle aktiviert`: Aus
-- `Kontrast-Preset`: Standard
-- `Hintergrund-Darstellung`: Füllen
-- `Hintergrundbild-Deckkraft`: 25 %
-- `Spielerfelder-Transparenz`: 10 %
-- `Debug`: Aus
-
-**Templates Global**
+**Hintergrund**
 - `Aktiv`: Aus
-- `Schriftart`: Aldrich
-- `Greift bei`: scores,throws,names
 - `Hintergrund-Darstellung`: Füllen
 - `Hintergrundbild-Deckkraft`: 10 %
 - `Spielerfelder-Transparenz`: 10 %
-- `Aktivspieler-Tönung`: 20 %
 - `Debug`: Aus
 
-**Bot Board Style**
+**Schrift**
 - `Aktiv`: Aus
-- `Board-Design`: Winmau Blade 6 TC
-- `Geltungsbereich`: Alle Match-Boards
+- `Schriftart`: Aldrich
+- `Greift bei`: scores,throws,names
+- `Aktivspieler-Tönung`: 20 %
 - `Debug`: Aus
 
 ### Animationen
@@ -75,6 +65,17 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 **Special Hit Highlights**
 - `Farbstil`: Rot/Blau/Grün
 - `Animationsstil`: Electric Jolt
+
+**Bot Board Style**
+- `Board-Design`: Winmau Blade 6 TC
+- `Geltungsbereich`: Alle Match-Boards
+
+**Wurffeld-Darts**
+- `Stil`: Eigenes Bild
+- `Dart auswählen`: German Gigant
+- `Text`: Leer
+- `Größe`: Groß
+- `Glanz`: An
 
 **Dart Marker Replacer**
 - `Dart Design`: German Giant
@@ -166,35 +167,52 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Farbthema`: High Contrast
 - `Intensität`: Standard
 
-## Themes
+## Themen
+
+<a id="theme-global-background"></a>
+
+### Hintergrund
+
+- Gilt für: `alle Modi`
+- Kurz: Steuert ein gemeinsames Hintergrundbild und die Transparenz der Spielerfelder unter /matches.
+- Grafisch: Das Wallpaper liegt hinter dem unveränderten Autodarts-Spielaufbau. Darstellung, Bilddeckkraft und Spielerfelder-Transparenz lassen sich unabhängig von Schrift und Wurffeld-Darts einstellen.
+- Wann sinnvoll? Wenn alle Spielvarianten denselben Hintergrund erhalten sollen.
+- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
+  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
+  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
+  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
+  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
+  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
+- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
+  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
+  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
+  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
+  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
+  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
+  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
+  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
+- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
+  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
+  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
+  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
+  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
+  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
+  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
+  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
+- `Hintergrundbild hochladen`: Speichert ein globales Hintergrundbild bis 1,5 MiB.
+- `Hintergrundbild entfernen`: Entfernt das globale Hintergrundbild.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Globaler Hintergrund](screenshots/templates-global-presets.webp)
 
 <a id="template-global-typography"></a>
 
-### Templates Global
+### Schrift
 
 - Gilt für: `alle Modi`
-- Kurz: Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Grafisch: Templates Global setzt eine gemeinsame Basis für unterstützte xConfig-Themes. Presets ändern Schrift, Farben und Hintergrundwerte zusammen; die einzelnen Einstellungen lassen sich danach gezielt anpassen. Die gewählte Schrift wirkt nur in stabilen Bereichen wie Scores, Würfen und Namen. Das globale Hintergrundbild ist ein Fallback: Themes mit eigenem Bild behalten ihr eigenes Hintergrundbild, alle anderen können das gespeicherte Fallback-Bild oder ein Preset-Wallpaper aus Templates Global verwenden. Zusätzlich lassen sich die drei Darts im Wurffeld als Farbe, Verlauf, gebündeltes Marker-Bild oder eigenes Bild darstellen.
-- Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
-- `Classic`: Wendet das Preset Classic mit einem Klick auf Templates Global an.
-- `Broadcast`: Wendet das Preset Broadcast mit einem Klick auf Templates Global an.
-- `British Flag`: Wendet das Preset British Flag mit einem Klick auf Templates Global an.
-- `Cyberpunk`: Wendet das Preset Cyberpunk mit einem Klick auf Templates Global an.
-- `Matrix`: Wendet das Preset Matrix mit einem Klick auf Templates Global an.
-- `Fire`: Wendet das Preset Fire mit einem Klick auf Templates Global an.
-- `Ice`: Wendet das Preset Ice mit einem Klick auf Templates Global an.
-- `Spider-Man`: Wendet das Preset Spider-Man mit einem Klick auf Templates Global an.
-- `Neon Splash`: Wendet das Preset Neon Splash mit einem Klick auf Templates Global an.
-- `John Wick`: Wendet das Preset John Wick mit einem Klick auf Templates Global an.
-- `Solar Pulse`: Wendet das Preset Solar Pulse mit einem Klick auf Templates Global an.
-- `Crimson Facets`: Wendet das Preset Crimson Facets mit einem Klick auf Templates Global an.
-- `Aqua Flux`: Wendet das Preset Aqua Flux mit einem Klick auf Templates Global an.
-- `Avengers Endgame`: Wendet das Preset Avengers Endgame mit einem Klick auf Templates Global an.
-- `Gladiator`: Wendet das Preset Gladiator mit einem Klick auf Templates Global an.
-- `Deutschland`: Wendet das Preset Deutschland mit einem Klick auf Templates Global an.
-- `Dark Side`: Wendet das Preset Dark Side mit einem Klick auf Templates Global an.
-- `Darts Arena`: Wendet das Preset Darts Arena mit einem Klick auf Templates Global an.
-- `Bayern`: Wendet das Preset Bayern mit einem Klick auf Templates Global an.
+- Kurz: Wendet Schrift, Farbrollen und Aktivspieler-Tönung auf ausgewählte Bereiche aller Spielansichten an.
+- Grafisch: Schriftart und Textfarben ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.
+- Wann sinnvoll? Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Template-Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
@@ -262,382 +280,39 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `20 %`: Die Kartenfläche übernimmt den Aktiv-Akzent bereits deutlich.
   - `25 %`: Die Aktivkarten-Tönung wird stark sichtbar und prägt den Kartenhintergrund klar.
   - `30 %`: Die Aktivkarten-Tönung wird maximal sichtbar und prägt den Kartenhintergrund stark.
-- `Wurffeld-Darts`: Ändert die Dart-Grafiken im Wurffeld.
-  - `Original`: Belässt die Wurffeld-Darts unverändert.
-  - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
-  - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
-  - `Marker-Bild`: Nutzt das ausgewählte gebündelte Marker-Bild.
-  - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
-- `Dart auswählen`: Wählt ein vorbereitetes Bild für die Wurffeld-Darts aus.
-  - `German Gigant`: Verwendet den German-Gigant-Dart als Wurffeld-Dart.
-  - `Blue Lightning`: Verwendet Blue Lightning als Wurffeld-Dart.
-  - `Copper Grid`: Verwendet Copper Grid als Wurffeld-Dart.
-  - `Snakebite Purple`: Verwendet Snakebite Purple als Wurffeld-Dart.
-  - `Iceman Blue`: Verwendet Iceman Blue als Wurffeld-Dart.
-  - `Bullet Red`: Verwendet Bullet Red als Wurffeld-Dart.
-  - `Carbon Gold`: Verwendet Carbon Gold als Wurffeld-Dart.
-  - `Vecta Gold`: Verwendet Vecta Gold als Wurffeld-Dart.
-  - `GVV Blue`: Verwendet GVV Blue als Wurffeld-Dart.
-  - `Cool Hand Luke`: Verwendet Cool Hand Luke als Wurffeld-Dart.
-  - `Target Neon`: Verwendet Target Neon als Wurffeld-Dart.
-- `Dart-Text`: Zeigt Wurftext mit `#` als Nummernplatzhalter an.
-- `Dart-Farbe`: Setzt die Hauptfarbe der Wurffeld-Darts.
-- `Verlaufsfarbe`: Setzt die zweite Verlaufsfarbe.
-- `Dart-Größe`: Regelt die Größe der Wurffeld-Darts.
-  - `Kompakt`: Kompakte Wurffeld-Darts.
-  - `Standard`: Standardgröße für Wurffeld-Darts.
-  - `Groß`: Große Wurffeld-Darts.
-- `Dart-Glanz`: Schaltet den Dart-Glanz ein oder aus.
-- `Dart-Bild hochladen`: Speichert ein eigenes Wurffeld-Dart-Bild bis 350 KB.
-- `Dart-Bild entfernen`: Entfernt das gespeicherte Wurffeld-Dart-Bild.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Hintergrundbild hochladen`: Speichert ein globales Fallback-Hintergrundbild bis 1,5 MiB.
-- `Hintergrundbild entfernen`: Entfernt nur das globale Fallback-Hintergrundbild.
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Templates Global Presetübersicht mit Live-Vorschauen](screenshots/templates-global-presets.webp)
-![Templates Global mit lila Aktiv-Akzent in AD xConfig](screenshots/template-theme-global-typography-xConfig.png)
-![Templates Global Wurffeld-Darts mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
+![Globale Schrift](screenshots/template-theme-global-typography-xConfig.png)
 
-<a id="bot-board-style"></a>
+<a id="theme-global-presets"></a>
 
-### Bot Board Style
+### Vorlagen
 
 - Gilt für: `alle Modi`
-- Kurz: Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.
-- Grafisch: Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.
-- Wann sinnvoll? Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.
-- `Board-Design`: Wählt eines von zehn lokal eingebetteten Board-Designs.
-  - `Winmau Blade 6 TC`: Verwendet Winmau Blade 6 TC als Board-Grafik.
-  - `Winmau Blade X`: Verwendet Winmau Blade X als Board-Grafik.
-  - `Winmau Blade 360 TC`: Verwendet Winmau Blade 360 TC als Board-Grafik.
-  - `Target Tor`: Verwendet Target Tor als Board-Grafik.
-  - `Target Aspar`: Verwendet Target Aspar als Board-Grafik.
-  - `Unicorn Eclipse Pro 2`: Verwendet Unicorn Eclipse Pro 2 als Board-Grafik.
-  - `Mission Samurai 4`: Verwendet Mission Samurai 4 als Board-Grafik.
-  - `Bull’s NL Advantage 701`: Verwendet Bull’s NL Advantage 701 als Board-Grafik.
-  - `Shot Bandit`: Verwendet Shot Bandit als Board-Grafik.
-  - `One80 G4 Surge`: Verwendet One80 G4 Surge als Board-Grafik.
-- `Geltungsbereich`: Begrenzt das Design auf Bot-Züge oder aktiviert es global für Match-Boards.
-  - `Nur bei Bot-Zügen`: Zeigt das Design nur bei eindeutig erkannten Bot-Zügen.
-  - `Alle Match-Boards`: Verwendet das Design global auf unterstützten Match-Boards.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+- Kurz: Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
+- Grafisch: Jede Vorschau zeigt das echte Preset-Wallpaper, die zugehörige Schrift und die Farbrollen. Die Aktion aktiviert Hintergrund und Schrift und ersetzt einen eigenen Wallpaper-Upload.
+- Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
+- `Classic`: Wendet die Vorlage Classic mit einem Klick an.
+- `Broadcast`: Wendet die Vorlage Broadcast mit einem Klick an.
+- `British Flag`: Wendet die Vorlage British Flag mit einem Klick an.
+- `Cyberpunk`: Wendet die Vorlage Cyberpunk mit einem Klick an.
+- `Matrix`: Wendet die Vorlage Matrix mit einem Klick an.
+- `Fire`: Wendet die Vorlage Fire mit einem Klick an.
+- `Ice`: Wendet die Vorlage Ice mit einem Klick an.
+- `Spider-Man`: Wendet die Vorlage Spider-Man mit einem Klick an.
+- `Neon Splash`: Wendet die Vorlage Neon Splash mit einem Klick an.
+- `John Wick`: Wendet die Vorlage John Wick mit einem Klick an.
+- `Solar Pulse`: Wendet die Vorlage Solar Pulse mit einem Klick an.
+- `Crimson Facets`: Wendet die Vorlage Crimson Facets mit einem Klick an.
+- `Aqua Flux`: Wendet die Vorlage Aqua Flux mit einem Klick an.
+- `Avengers Endgame`: Wendet die Vorlage Avengers Endgame mit einem Klick an.
+- `Gladiator`: Wendet die Vorlage Gladiator mit einem Klick an.
+- `Deutschland`: Wendet die Vorlage Deutschland mit einem Klick an.
+- `Dark Side`: Wendet die Vorlage Dark Side mit einem Klick an.
+- `Darts Arena`: Wendet die Vorlage Darts Arena mit einem Klick an.
+- `Bayern`: Wendet die Vorlage Bayern mit einem Klick an.
 
-<a id="template-autodarts-theme-bull-off"></a>
-
-### Theme Bull-off
-
-- Gilt für: `Bull-off`
-- Kurz: Ein kontrastbetontes Bull-off-Layout mit wählbarer Stärke und eigener Bildfläche.
-- Grafisch: Das Theme verändert Farben, Kontrast und Flächen speziell für Bull-off. Ein optionales Hintergrundbild liegt dahinter, während der Spielaufbau gleich bleibt.
-- Wann sinnvoll? Wenn Bull-off auf helleren Displays oder aus der Distanz klarer lesbar sein soll.
-- `Kontrast-Preset`: Schaltet die Kontrastwirkung des Bull-off-Themes um.
-  - `Sanft`: Diese Stufe reduziert sichtbare Kanten, Schatten und Farbtrennung im Bull-off-Theme. Aktive und inaktive Bereiche bleiben erkennbar, wirken aber weicher und weniger aggressiv voneinander abgesetzt.
-  - `Standard`: Diese Stufe liefert den vorgesehenen Mittelwert für Rahmen, aktive Hervorhebungen, Schatten und Bedienflächen. Das Layout bleibt kontrastreich genug für Lesbarkeit, ohne so hart wie `Kräftig` zu zeichnen.
-  - `Kräftig`: Diese Stufe erhöht die sichtbare Trennung zwischen aktiven und inaktiven Bereichen deutlich. Ränder, Schatten und Leuchtakzente werden kräftiger, sodass das Bull-off-Theme härter und präsenter erscheint.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-
-![Theme Bull-off in AD xConfig](screenshots/template-theme-bull-off-xConfig.png)
-
-<a id="template-autodarts-theme-x01"></a>
-
-### Theme X01
-
-- Gilt für: `X01`
-- Kurz: Ein ruhiges X01-Layout mit eigener Bildfläche und optionaler AVG-Zeile.
-- Grafisch: Farben, Flächen und Karten werden neu gestaltet; ein eigenes Hintergrundbild liegt hinter dem Spielbereich, während die Grundstruktur des X01-Layouts erhalten bleibt.
-- Wann sinnvoll? Wenn dir das Standardlayout zu unruhig ist oder du X01 optisch personalisieren möchtest.
-- `AVG anzeigen`: Blendet die AVG-Anzeige im X01-Theme ein oder aus.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-
-![Theme X01 in AD xConfig](screenshots/template-theme-x01-xConfig.png)
-![Theme X01 Vorschau Standard](screenshots/template-theme-x01-preview-standard-readme.png)
-![Theme X01 Vorschau unter Würfen](screenshots/template-theme-x01-preview-under-throws-readme.png)
-
-<a id="template-autodarts-theme-gotcha"></a>
-
-### Theme Gotcha
-
-- Gilt für: `Gotcha`
-- Kurz: Ein ruhiges Gotcha-Layout auf X01-Basis, das die Differenz zum führenden Gegner direkt in der Spielerkarte mitzieht. Dafür muss `Gotcha Helper` in `Tools für Autodarts` aktiv sein.
-- Grafisch: Die Karten folgen bewusst der X01-Optik, ergänzen aber die zusätzliche Gotcha-Differenz als eigene, klar abgesetzte Live-Zahl innerhalb derselben Theme-Struktur.
-- Wann sinnvoll? Wenn du Gotcha ähnlich ruhig wie X01 lesen möchtest, ohne auf die abgesetzte Delta-Information zwischen den Spielern zu verzichten.
-- Hinweis: Die zusätzliche Gotcha-Differenz erscheint nur, wenn `Gotcha Helper` in `Tools für Autodarts` aktiviert ist.
-- `Delta-Position`: Wählt, ob die Gotcha-Differenz unter dem Score oder in derselben Zeile mit `|` steht.
-  - `Unter Score`: Setzt die Gotcha-Differenz in eine eigene Zeile unter dem Score.
-  - `Score-Zeile |`: Setzt die Gotcha-Differenz in dieselbe Zeile wie den Score und trennt sie mit `|`.
-- `Delta-Ausrichtung`: Richtet die zusätzliche Gotcha-Differenz unter dem Score links oder rechts aus.
-  - `Rechtsbündig`: Setzt die Gotcha-Differenz unter dem Score rechtsbündig.
-  - `Linksbündig`: Setzt die Gotcha-Differenz unter dem Score linksbündig.
-- `Delta kursiv`: Schaltet die Gotcha-Differenz kursiv oder normal.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-
-![Theme Gotcha in AD xConfig](screenshots/template-theme-gotcha-xConfig.png)
-
-<a id="template-autodarts-theme-x01-2player"></a>
-
-### Theme X01 2Player (Beta)
-
-- Gilt für: `X01`
-- Kurz: Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.
-- Grafisch: Stil, Farbschema und Spielerinformationen lassen sich für Desktop, TV oder kompakte Fenster abstimmen. Außerhalb von X01 mit genau zwei Spielern bleibt alles unverändert.
-- Wann sinnvoll? Wenn du ein gut lesbares Zweispieler-Layout für Desktop, TV oder eine kompakte Livecam-Ansicht möchtest.
-- Stil, Farbschema, Informationsdichte und Namensdarstellung sind getrennt konfigurierbar.
-- `Darstellungsstil`: Steuert Geometrie und Effekte des Zweispieler-Themes.
-  - `Studio`: Bewahrt Kartenflächen, Radien, Schatten und Board-Glow des bisherigen Designs.
-  - `Broadcast`: Reduziert Radien, Schatten, Blur und Board-Glow für eine ruhige Broadcast-Darstellung.
-  - `Hoher Kontrast`: Verwendet stärkere reservierte Kanten und reduzierte Effekte für große Betrachtungsabstände.
-- `Farbschema`: Wählt das Farbschema des Zweispieler-Themes.
-  - `Studio Mint`: Verwendet die bisherige mintgrüne Studio-Palette.
-  - `Lime`: Verwendet Lime auf dunklen olivfarbenen Flächen.
-  - `Amber`: Verwendet Amber auf warmen dunklen Flächen.
-  - `Midnight Blue`: Verwendet helles Blau auf tiefblauen Flächen.
-  - `Monochrom`: Verwendet Weiß und Grautöne ohne farbigen Akzent.
-- `Informationsdichte`: Passt Größen und Abstände an den verfügbaren Platz an.
-  - `Vollständig`: Bewahrt die bisherigen Größen und Abstände.
-  - `TV`: Vergrößert Hauptscore und Namen und reduziert sekundäre Abstände.
-  - `Kompakt`: Reduziert Kartenhöhe, Padding und Abstände bei sichtbaren Spielinformationen.
-- `Aktivspieler-Hervorhebung`: Regelt die stabile Hervorhebung des aktiven Spielers.
-  - `Dezent`: Verwendet eine zurückhaltende Kante und Kopftönung.
-  - `Standard`: Verwendet eine klare Kante, innere Outline und priorisierte Score-/Namensfarbe.
-  - `Stark`: Verstärkt Kante, Outline und Kopftönung ohne die Karte zu skalieren.
-- `Spielerinformationen`: Steuert Avatar, Flagge und Spieler-Zusatzwert, nicht die dauerhaft sichtbaren Rundeninformationen.
-  - `Vollständig`: Avatar, Flagge, Name und Spieler-Zusatzwert stehen in einer gemeinsamen Identitätszeile. Gewonnene Runden und Rundenstatistik bleiben separat in der oberen Kartenecke sichtbar.
-  - `Nur Name`: Die Identitätszeile enthält ausschließlich den Namen. Gewonnene Runden, Rundenstatistik, Spielstand und weitere spielrelevante Anzeigen bleiben sichtbar.
-- `Namensdarstellung`: Wählt eine ein- oder zweizeilige Namensdarstellung.
-  - `Eine Zeile`: Verwendet die bestehende Canvas-basierte Einpassung.
-  - `Bis zu zwei Zeilen`: Misst den tatsächlichen DOM-Umbruch und verwendet für beide Spieler eine gemeinsame Schriftgröße.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-- `Zweispieler-Theme auf Standard zurücksetzen`: Setzt nur die Darstellung des Zweispieler-Themes zurück.
-
-![Theme X01 2Player in AD xConfig](screenshots/template-theme-x01-2player-xConfig.jpg)
-
-<a id="template-autodarts-theme-cricket"></a>
-
-### Theme Cricket
-
-- Gilt für: `Cricket`, `Tactics`
-- Kurz: Ein gemeinsames Theme für Cricket und Tactics mit ruhigerer Grundoptik und optionaler AVG-Zeile.
-- Grafisch: Farben, Karten und Hintergründe werden auf eine gemeinsame Cricket-/Tactics-Optik gezogen. Ein eigenes Bild kann hinter dem Spielbereich liegen, ohne die Board- oder Grid-Logik zu verändern.
-- Wann sinnvoll? Wenn du für Cricket und Tactics eine einheitliche visuelle Basis möchtest, besonders zusammen mit den Cricket-Effekten.
-- `AVG anzeigen`: Blendet die AVG-Anzeige im Cricket-/Tactics-Theme ein oder aus.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-
-![Theme Cricket in AD xConfig](screenshots/template-theme-cricket-xConfig.png)
-
-<a id="template-autodarts-theme-shanghai"></a>
-
-### Theme Shanghai
-
-- Gilt für: `Shanghai`
-- Kurz: Ein aufgeräumtes Shanghai-Layout mit optionaler AVG-Zeile und ruhigerem Kontrast.
-- Grafisch: Das Theme ordnet Flächen und Farben neu, ohne den Spielaufbau zu verändern. Ein eigenes Hintergrundbild liegt hinter der Oberfläche und kann die Wirkung zusätzlich prägen.
-- Wann sinnvoll? Wenn du in Shanghai mehr Struktur und weniger visuelle Unruhe möchtest.
-- `AVG anzeigen`: Blendet die AVG-Anzeige im Shanghai-Theme ein oder aus.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-
-![Theme Shanghai in AD xConfig](screenshots/template-theme-shanghai-xConfig.png)
-
-<a id="template-autodarts-theme-bermuda"></a>
-
-### Theme Bermuda
-
-- Gilt für: `Bermuda`
-- Kurz: Ein ruhigeres Bermuda-Layout mit eigener Bildfläche im Hintergrund.
-- Grafisch: Das Theme passt Farben und Flächen für Bermuda an; ein gespeichertes Hintergrundbild liegt hinter dem Spielbereich, während die Bermuda-Anordnung selbst erhalten bleibt.
-- Wann sinnvoll? Wenn Bermuda besser lesbar sein soll, ohne viele Zusatzschalter zu benötigen.
-- `Hintergrund-Darstellung`: Legt fest, wie ein eigenes Hintergrundbild im Theme platziert wird.
-  - `Füllen`: Das Bild wirkt wie ein vollflächiges Wallpaper hinter dem Theme. Der komplette Bereich ist gefüllt, aber Motivteile am Rand können aus dem sichtbaren Ausschnitt herausfallen.
-  - `Einpassen`: Das Motiv bleibt vollständig erhalten und wird vollständig in den verfügbaren Raum eingepasst. Dadurch geht nichts vom Bild verloren, aber je nach Format bleiben seitlich oder oben und unten sichtbare Theme-Flächen frei.
-  - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
-  - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
-  - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
-- `Hintergrundbild-Deckkraft`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
-  - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
-  - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
-  - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
-  - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
-  - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
-  - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
-  - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
-- `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
-  - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.
-  - `5 %`: Die Karten wirken weiterhin fast deckend, zeigen aber schon eine leichte Durchlässigkeit. Das ist für Nutzer gedacht, die kaum Transparenz möchten, aber etwas mehr Tiefe als bei komplett geschlossenen Flächen.
-  - `10 %`: Die Karten behalten eine stabile Lesbarkeit, bekommen aber eine leichte Glasscheiben-Wirkung. Hintergrundfarben und Motive bleiben nur dezent hinter den Spielerflächen sichtbar.
-  - `15 %`: Die Karten wirken bereits spürbar transparenter und vermitteln mehr Tiefe zwischen Oberfläche und Hintergrund. Das Motiv hinter den Spielerfeldern wird deutlicher wahrnehmbar, ohne die Lesbarkeit stark zu gefährden.
-  - `30 %`: Die Spielerfelder erscheinen deutlich luftiger und geben dem Hintergrundbild sichtbar mehr Raum. Diese Stufe verschiebt das Layout klar in Richtung transparentes Overlay statt geschlossener Kartenfläche.
-  - `45 %`: Die Karten verlieren einen großen Teil ihrer optischen Dichte und lassen das Motiv dahinter klar durchkommen. Das Layout wirkt dadurch offener, aber auch stärker vom Hintergrundbild beeinflusst.
-  - `60 %`: Die Karten erscheinen fast wie halbtransparente Glasflächen über dem Hintergrund. Das Motiv dahinter bleibt stark sichtbar und gestaltet die Oberfläche sehr aktiv mit.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-- `Hintergrundbild hochladen`: Speichert ein eigenes Bild bis 1,5 MiB nur für dieses Theme.
-- `Hintergrundbild entfernen`: Entfernt nur das für dieses Theme gespeicherte Hintergrundbild.
-
-![Theme Bermuda in AD xConfig](screenshots/template-theme-bermuda-xConfig.png)
+![Globale Vorlagen](screenshots/templates-global-presets.webp)
 
 ## Animationen für X01
 
@@ -683,6 +358,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
 - `Farben`: Steuert statische Farbpaletten und dynamische Schwellenfarben in einer gemeinsamen Auswahl.
   - `Checkout Focus`: Dynamischer Standardmodus mit Checkout-Fokus.
+  - `Checkout-Zone Blau/Weiß`: Blauer Restscore-Balken mit weißer 170-Linie und schraffierter Checkout-Zone.
   - `Traffic Light`: Stufenmodus mit klaren Rot/Amber/Grün-Prozentschwellen.
   - `Danger Endgame`: Dynamischer Endgame-Modus mit starkem Warnfokus.
   - `Gradient Progress`: Kontinuierlicher Farbverlauf entlang des Score-Fortschritts.
@@ -877,6 +553,70 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![Cricket Grid Status Effects](screenshots/animation-cricket-grid-fx.png)
 
 ## Animationen für alle Modi
+
+<a id="bot-board-style"></a>
+
+### Bot Board Style
+
+- Gilt für: `alle Modi`
+- Kurz: Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.
+- Grafisch: Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.
+- Wann sinnvoll? Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.
+- `Board-Design`: Wählt eines von zehn lokal eingebetteten Board-Designs.
+  - `Winmau Blade 6 TC`: Verwendet Winmau Blade 6 TC als Board-Grafik.
+  - `Winmau Blade X`: Verwendet Winmau Blade X als Board-Grafik.
+  - `Winmau Blade 360 TC`: Verwendet Winmau Blade 360 TC als Board-Grafik.
+  - `Target Tor`: Verwendet Target Tor als Board-Grafik.
+  - `Target Aspar`: Verwendet Target Aspar als Board-Grafik.
+  - `Unicorn Eclipse Pro 2`: Verwendet Unicorn Eclipse Pro 2 als Board-Grafik.
+  - `Mission Samurai 4`: Verwendet Mission Samurai 4 als Board-Grafik.
+  - `Bull’s NL Advantage 701`: Verwendet Bull’s NL Advantage 701 als Board-Grafik.
+  - `Shot Bandit`: Verwendet Shot Bandit als Board-Grafik.
+  - `One80 G4 Surge`: Verwendet One80 G4 Surge als Board-Grafik.
+- `Geltungsbereich`: Begrenzt das Design auf Bot-Züge oder aktiviert es global für Match-Boards.
+  - `Nur bei Bot-Zügen`: Zeigt das Design nur bei eindeutig erkannten Bot-Zügen.
+  - `Alle Match-Boards`: Verwendet das Design global auf unterstützten Match-Boards.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+<a id="turn-dart-display"></a>
+
+### Wurffeld-Darts
+
+- Gilt für: `alle Modi`
+- Kurz: Ersetzt Wurffeld-Darts durch Farbe, Verlauf, Text, Marker-Bild oder eigenen Upload.
+- Grafisch: Das Modul arbeitet unabhängig von Hintergrund und Schrift und verändert keine Board-Marker.
+- Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
+- `Stil`: Ändert die Dart-Grafiken im Wurffeld.
+  - `Original`: Belässt die Wurffeld-Darts unverändert.
+  - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
+  - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
+  - `Marker-Bild`: Nutzt das ausgewählte gebündelte Marker-Bild.
+  - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
+- `Dart auswählen`: Wählt ein vorbereitetes Bild für die Wurffeld-Darts aus.
+  - `German Gigant`: Verwendet den German-Gigant-Dart als Wurffeld-Dart.
+  - `Blue Lightning`: Verwendet Blue Lightning als Wurffeld-Dart.
+  - `Copper Grid`: Verwendet Copper Grid als Wurffeld-Dart.
+  - `Snakebite Purple`: Verwendet Snakebite Purple als Wurffeld-Dart.
+  - `Iceman Blue`: Verwendet Iceman Blue als Wurffeld-Dart.
+  - `Bullet Red`: Verwendet Bullet Red als Wurffeld-Dart.
+  - `Carbon Gold`: Verwendet Carbon Gold als Wurffeld-Dart.
+  - `Vecta Gold`: Verwendet Vecta Gold als Wurffeld-Dart.
+  - `GVV Blue`: Verwendet GVV Blue als Wurffeld-Dart.
+  - `Cool Hand Luke`: Verwendet Cool Hand Luke als Wurffeld-Dart.
+  - `Target Neon`: Verwendet Target Neon als Wurffeld-Dart.
+- `Dart-Text`: Zeigt Wurftext mit Nummernplatzhalter.
+- `Dart-Farbe`: Setzt die Hauptfarbe der Wurffeld-Darts.
+- `Verlaufsfarbe`: Setzt die zweite Verlaufsfarbe.
+- `Dart-Größe`: Regelt die Größe der Wurffeld-Darts.
+  - `Kompakt`: Kompakte Wurffeld-Darts.
+  - `Standard`: Standardgröße für Wurffeld-Darts.
+  - `Groß`: Große Wurffeld-Darts.
+- `Dart-Glanz`: Schaltet den Dart-Glanz ein oder aus.
+- `Dart-Bild hochladen`: Speichert ein eigenes Dart-Bild.
+- `Dart-Bild entfernen`: Entfernt das eigene Dart-Bild.
+- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Wurffeld-Darts mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
@@ -1184,6 +924,6 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 ## Weitere Hinweise zur Konfiguration
 
 - Alle Einstellungen werden lokal gespeichert.
-- Theme-Hintergründe werden pro Theme als Data-URL abgelegt.
-- Aktivierungen, Theme-Bilder und Feineinstellungen bleiben nach Reload erhalten.
+- Globales Wallpaper und eigener Dart-Upload werden lokal als Data-URL abgelegt.
+- Aktivierungen, Bild-Uploads und Feineinstellungen bleiben nach Reload erhalten.
 - `Winner Celebration Effect` besitzt wieder einen integrierten Test-Button in AD xConfig.

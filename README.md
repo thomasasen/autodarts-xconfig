@@ -46,19 +46,19 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Was bringt es mir?
 
-- ruhigere oder auffälligere Themes
+- ein globaler Look aus Hintergrund, Schrift und fertigen Vorlagen
 - besser sichtbare Hinweise für Checkouts, Spielerwechsel und Treffer
 - Einstellungen direkt im Spiel statt in einzelnen Skripten
-- eigene Hintergrundbilder pro Theme und zusätzlich ein globales Fallback-Bild oder Preset-Wallpaper über `Templates Global`, jeweils empfohlen bis `1,5 MiB` pro gespeichertem Bild
+- ein eigenes globales Wallpaper sowie unabhängig gestaltbare Wurffeld-Darts
 
 ## Im Überblick
 
-- Insgesamt `26` Module: `17` Animationen und Komfortfunktionen sowie `9` Themes.
-- `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt gespeicherte Theme-Bilder.
-- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
+- Insgesamt `22` Module: `19` Animationen und Komfortfunktionen sowie `3` Themes.
+- `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt globales Wallpaper sowie Dart-Upload.
+- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
-- Theme-Bilder: Jedes Theme speichert sein Bild getrennt; Templates Global kann zusätzlich ein gemeinsames Fallback-Bild oder ein Preset-Wallpaper liefern, solange das aktive Theme kein eigenes Bild gespeichert hat.
-- Bildgröße: Als Orientierung gilt ein empfohlenes Limit von `1,5 MiB` pro gespeichertem Bild.
+- Hintergrundbild: Die Kachel `Hintergrund` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.
+- Bildgröße: Für das globale Wallpaper gilt ein empfohlenes Limit von `1,5 MiB`; der separate Dart-Upload wird kompakter gespeichert.
 
 ## Was du zuerst lesen solltest
 
@@ -73,9 +73,9 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
 
 1. Öffne in der Autodarts-Navigation **AD xConfig**.
-2. Prüfe unter `Themen` und `Animationen`, welche Module zum gerade verwendeten Spielmodus passen.
-3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne gespeicherte Theme-Bilder beginnen möchtest.
-4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigene Theme-Bilder bleiben dabei erhalten.
+2. Stelle unter `Themen` Hintergrund und Schrift global ein oder wende eine Vorlage an.
+3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne globales Wallpaper oder Dart-Upload beginnen möchtest.
+4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigenes Wallpaper und Dart-Upload bleiben dabei erhalten.
 
 ![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](docs/screenshots/ad-xconfig-animationen.png)
@@ -91,19 +91,19 @@ Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Ei
 
 ## Wo finde ich was?
 
-- `Themen`: Hier findest du Farben, Layouts und Hintergründe.
-- `Animationen`: Hier findest du Effekte und Komfortfunktionen.
+- `Themen`: Hier findest du den globalen Hintergrund, die globale Schrift und fertige Vorlagen.
+- `Animationen`: Hier findest du Effekte, Komfortfunktionen, Bot Board Style und Wurffeld-Darts.
 - `⚙ Einstellungen`: Mit diesem Button öffnest du die Einstellungen einer Kachel.
 - `📖 README`: Mit diesem Button öffnest du die GitHub-README direkt an der passenden Modulstelle in einem neuen Tab.
-- An/Aus-Schalter: Hier schaltest du ein Modul direkt ein oder aus.
+- An/Aus-Schalter: Hier schaltest du ein Modul direkt ein oder aus. Die Aktionskachel `Vorlagen` hat bewusst keinen Schalter.
 
 ## Der obere Bereich im Menü
 
 ![AD xConfig Kopfbereich](docs/screenshots/ad-xconfig-header.png)
 
-- `↺ Zurücksetzen`: Führt einen echten Hard Reset aus. Alle Einstellungen gehen auf Standard, alle Module werden deaktiviert, Debug wird ausgeschaltet und gespeicherte Theme-Bilder werden entfernt.
-- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
-- `Exportieren`: Erstellt ein lokales JSON-Backup. Eigene Theme- und Dart-Bilder sind standardmäßig enthalten, können für eine kleinere Datei aber abgewählt werden.
+- `↺ Zurücksetzen`: Führt einen echten Hard Reset aus. Alle Einstellungen gehen auf Standard, alle Module werden deaktiviert, Debug wird ausgeschaltet und globales Wallpaper sowie Dart-Upload werden entfernt.
+- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
+- `Exportieren`: Erstellt ein lokales JSON-Backup. Eigenes Wallpaper und Dart-Bild sind standardmäßig enthalten, können für eine kleinere Datei aber abgewählt werden.
 - `Importieren`: Prüft ein Backup vor dem Speichern und zeigt, welche Einstellungen übernommen, migriert oder ausgelassen werden.
 - Versionsstatus: Hier siehst du, ob deine Version aktuell ist, ob ein Update verfügbar ist oder ob die Update-Prüfung fehlgeschlagen ist.
 - `Changelog` / `Was ist neu?`: Öffnet direkt die veröffentlichten Änderungen auf GitHub in einem neuen Tab.
@@ -112,7 +112,7 @@ Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Ei
 
 ## Einstellungen exportieren und importieren
 
-Mit `Exportieren` lädst du ein versioniertes Backup aller AD xConfig Einstellungen herunter. Das Backup enthält keine Autodarts-Anmeldedaten und wird nicht an einen externen Dienst übertragen. Wenn `Eigene Theme- und Dart-Bilder einschließen` aktiv ist, werden auch lokal gespeicherte Bilder mitgesichert; dadurch kann die Datei deutlich größer werden.
+Mit `Exportieren` lädst du ein versioniertes Backup aller AD xConfig Einstellungen herunter. Das Backup enthält keine Autodarts-Anmeldedaten und wird nicht an einen externen Dienst übertragen. Wenn `Eigenes Wallpaper und Dart-Bild einschließen` aktiv ist, werden auch lokal gespeicherte Bilder mitgesichert; dadurch kann die Datei deutlich größer werden.
 
 Beim `Importieren` wird die ausgewählte JSON-Datei zuerst vollständig geprüft. Der Prüfbericht zeigt gültige, migrierte und nicht mehr unterstützte Einstellungen einzeln an. Ein veraltetes oder aus einer neueren Version stammendes Feature bricht den Import nicht ab: kompatible Einstellungen werden weiterhin übernommen, unbekannte oder ungültige Werte werden ausgelassen.
 
@@ -142,8 +142,8 @@ Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https
 - Die Zahl bei `Einstellungen` zeigt, wie viele Einstellmöglichkeiten es gibt.
 - `⚙ Einstellungen` öffnet das Einstellungsfenster dieser Kachel.
 - `📖 README` öffnet die GitHub-README direkt an der passenden Modulstelle.
-- Der Hinweis unten zeigt bei Themes zum Beispiel an, ob schon ein eigenes Hintergrundbild gespeichert ist.
-- Der An/Aus-Schalter oben rechts ist die wichtigste Aktion: Hier schaltest du das Modul direkt ein oder aus.
+- Der Hinweis unten zeigt bei `Hintergrund` zum Beispiel an, ob schon ein eigenes Wallpaper gespeichert ist.
+- Der An/Aus-Schalter oben rechts aktiviert das jeweilige Modul; `Vorlagen` ist stattdessen eine reine Aktionskachel ohne Schalter.
 
 ## So sieht das Einstellungsfenster aus
 
@@ -156,16 +156,15 @@ Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https
 - Manche Einstellungen sind einfache An/Aus-Schalter.
 - `Debug` ist nur für Entwicklung und Fehlersuche gedacht. Diese Option nur aktivieren, wenn du ausdrücklich dazu aufgefordert wirst. Sonst kann es zu unerwünschten Nebeneffekten kommen.
 
-## Eigene Hintergrundbilder in Themes
+## Globales Hintergrundbild
 
 ![Theme-Hintergrundbild in AD xConfig](docs/screenshots/ad-xconfig-theme-background.png)
 
-Bei den Themes kannst du ein eigenes Hintergrundbild hochladen und später auch wieder entfernen. Das Bild wird nur für das jeweilige Theme gespeichert.
-Empfohlen ist dabei ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
+In der Kachel `Hintergrund` kannst du ein eigenes Wallpaper hochladen und später wieder entfernen. Das Bild gilt für alle Spielansichten unter `/matches`. Empfohlen ist ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
 
-`Templates Global` bietet zusätzlich denselben Hintergrundblock als globales Fallback oder als Preset-Wallpaper. Solange das aktive Theme kein eigenes Bild gespeichert hat, greifen Bild, Darstellung, Deckkraft und Spielerfelder-Transparenz aus `Templates Global`. Sobald ein Theme ein eigenes Bild speichert, überschreibt dieses Theme den kompletten globalen Background-Block wieder vollständig.
+Eine Vorlage kann das eigene Wallpaper durch ihr Preset-Wallpaper ersetzen und aktiviert dabei `Hintergrund` und `Schrift`. Wurffeld-Darts bleiben von Vorlagen unverändert.
 
-Je nach Theme kannst du dein Hintergrundbild zusätzlich anpassen:
+Den globalen Hintergrund kannst du zusätzlich anpassen:
 
 - `Hintergrund-Darstellung`: Hier legst du fest, wie das Bild platziert wird.
 - `Hintergrundbild-Deckkraft`: Hier regelst du, wie stark das Bild sichtbar bleibt.
@@ -180,15 +179,11 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 
 | Modul | Bereich | Geeignet für | Kurz erklärt |
 | --- | --- | --- | --- |
-| [Templates Global](#template-global-typography) | Theme | `alle Modi` | Legt den gemeinsamen Look für unterstützte xConfig-Themes fest: Presets, Schriften, Farbrollen, Aktivkarten-Tönung und ein globales Hintergrundbild dienen als Basis für alle Themes ohne eigenes Bild. |
-| [Bot Board Style](#bot-board-style) | Theme | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
-| [Theme Bull-off](#template-autodarts-theme-bull-off) | Theme | `Bull-off` | Bull-off-Theme mit wählbarem Kontrast und eigenem Hintergrundbild. |
-| [Theme X01](#template-autodarts-theme-x01) | Theme | `X01` | Ruhiges X01-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild. |
-| [Theme Gotcha](#template-autodarts-theme-gotcha) | Theme | `Gotcha` | X01-nahes Gotcha-Theme mit integrierter Delta-Anzeige und eigenem Hintergrundbild. |
-| [Theme X01 2Player (Beta)](#template-autodarts-theme-x01-2player) | Theme | `X01` | Anpassbares X01-Theme für genau zwei Spieler mit zentriertem Board und TV-tauglichen Presets. |
-| [Theme Cricket](#template-autodarts-theme-cricket) | Theme | `Cricket`, `Tactics` | Gemeinsames Cricket-/Tactics-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild. |
-| [Theme Shanghai](#template-autodarts-theme-shanghai) | Theme | `Shanghai` | Aufgeräumtes Shanghai-Theme mit optionaler AVG-Zeile und eigenem Hintergrundbild. |
-| [Theme Bermuda](#template-autodarts-theme-bermuda) | Theme | `Bermuda` | Bermuda-Theme mit ruhigerem Grundbild und optional eigenem Hintergrund. |
+| [Hintergrund](#theme-global-background) | Theme | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
+| [Schrift](#template-global-typography) | Theme | `alle Modi` | Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen. |
+| [Vorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
+| [Bot Board Style](#bot-board-style) | Animation & Komfort | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
+| [Wurffeld-Darts](#turn-dart-display) | Animation & Komfort | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
 | [Checkout Score Highlight](#animation-autodarts-animate-checkout-score-highlight) | Animation & Komfort | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
 | [X01 Remaining Score Bar](#animation-autodarts-x01-remaining-score-bar) | Animation & Komfort | `X01` | Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl. |
 | [Checkout Target Highlights](#animation-autodarts-animate-checkout-target-highlights) | Animation & Komfort | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
@@ -209,23 +204,49 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 
 ## Empfohlene Standards
 
-Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle Module aus und lässt eigene Theme-Bilder unangetastet.
+Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 
 [Vollständiges Profil der empfohlenen Standards](docs/FEATURES.md#empfohlene-standards)
 
 ## Themen
 
-<a id="template-global-typography"></a>
+<a id="theme-global-background"></a>
 
-### Templates Global
+### Hintergrund
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Bietet fertige Templates-Global-Presets, kuratierte Schriften, feste Farbrollen, eine optionale Aktivkarten-Tönung und ein gemeinsames Fallback-Hintergrundbild für aktive xConfig-Themes.
-- Wann sinnvoll? Wenn du mit einem Klick einen kompletten Look setzen oder Scores, Würfe, Spielernamen, den Aktiv-Akzent, die Aktivkarten-Tönung und den globalen Hintergrundblock anpassen möchtest, ohne jedes Theme separat pflegen zu müssen.
+- Was macht es sichtbar? Steuert ein gemeinsames Hintergrundbild und die Transparenz der Spielerfelder unter /matches.
+- Wann sinnvoll? Wenn alle Spielvarianten denselben Hintergrund erhalten sollen.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-background)
+
+![Globaler Hintergrund](docs/screenshots/templates-global-presets.webp)
+
+<a id="template-global-typography"></a>
+
+### Schrift
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Wendet Schrift, Farbrollen und Aktivspieler-Tönung auf ausgewählte Bereiche aller Spielansichten an.
+- Wann sinnvoll? Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-global-typography)
 
-![Templates Global Presetübersicht mit Live-Vorschauen](docs/screenshots/templates-global-presets.webp)
+![Globale Schrift](docs/screenshots/template-theme-global-typography-xConfig.png)
+
+<a id="theme-global-presets"></a>
+
+### Vorlagen
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
+- Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-presets)
+
+![Globale Vorlagen](docs/screenshots/templates-global-presets.webp)
+
+## Animationen und Komfort
 
 <a id="bot-board-style"></a>
 
@@ -237,91 +258,17 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#bot-board-style)
 
-<a id="template-autodarts-theme-bull-off"></a>
+<a id="turn-dart-display"></a>
 
-### Theme Bull-off
+### Wurffeld-Darts
 
-- Gilt für: `Bull-off`
-- Was macht es sichtbar? Ein kontrastbetontes Bull-off-Layout mit wählbarer Stärke und eigener Bildfläche.
-- Wann sinnvoll? Wenn Bull-off auf helleren Displays oder aus der Distanz klarer lesbar sein soll.
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Ersetzt Wurffeld-Darts durch Farbe, Verlauf, Text, Marker-Bild oder eigenen Upload.
+- Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
 
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-bull-off)
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#turn-dart-display)
 
-![Theme Bull-off in AD xConfig](docs/screenshots/template-theme-bull-off-xConfig.png)
-
-<a id="template-autodarts-theme-x01"></a>
-
-### Theme X01
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Ein ruhiges X01-Layout mit eigener Bildfläche und optionaler AVG-Zeile.
-- Wann sinnvoll? Wenn dir das Standardlayout zu unruhig ist oder du X01 optisch personalisieren möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-x01)
-
-![Theme X01 in AD xConfig](docs/screenshots/template-theme-x01-xConfig.png)
-
-<a id="template-autodarts-theme-gotcha"></a>
-
-### Theme Gotcha
-
-- Gilt für: `Gotcha`
-- Was macht es sichtbar? Ein ruhiges Gotcha-Layout auf X01-Basis, das die Differenz zum führenden Gegner direkt in der Spielerkarte mitzieht. Dafür muss `Gotcha Helper` in `Tools für Autodarts` aktiv sein.
-- Wann sinnvoll? Wenn du Gotcha ähnlich ruhig wie X01 lesen möchtest, ohne auf die abgesetzte Delta-Information zwischen den Spielern zu verzichten.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-gotcha)
-
-![Theme Gotcha in AD xConfig](docs/screenshots/template-theme-gotcha-xConfig.png)
-
-<a id="template-autodarts-theme-x01-2player"></a>
-
-### Theme X01 2Player (Beta)
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Dunkles X01-Layout für exakt zwei Spieler mit Board-Fokus, seitlichen Spielerkarten und wählbarer Informationsdichte.
-- Wann sinnvoll? Wenn du ein gut lesbares Zweispieler-Layout für Desktop, TV oder eine kompakte Livecam-Ansicht möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-x01-2player)
-
-![Theme X01 2Player in AD xConfig](docs/screenshots/template-theme-x01-2player-xConfig.jpg)
-
-<a id="template-autodarts-theme-cricket"></a>
-
-### Theme Cricket
-
-- Gilt für: `Cricket`, `Tactics`
-- Was macht es sichtbar? Ein gemeinsames Theme für Cricket und Tactics mit ruhigerer Grundoptik und optionaler AVG-Zeile.
-- Wann sinnvoll? Wenn du für Cricket und Tactics eine einheitliche visuelle Basis möchtest, besonders zusammen mit den Cricket-Effekten.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-cricket)
-
-![Theme Cricket in AD xConfig](docs/screenshots/template-theme-cricket-xConfig.png)
-
-<a id="template-autodarts-theme-shanghai"></a>
-
-### Theme Shanghai
-
-- Gilt für: `Shanghai`
-- Was macht es sichtbar? Ein aufgeräumtes Shanghai-Layout mit optionaler AVG-Zeile und ruhigerem Kontrast.
-- Wann sinnvoll? Wenn du in Shanghai mehr Struktur und weniger visuelle Unruhe möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-shanghai)
-
-![Theme Shanghai in AD xConfig](docs/screenshots/template-theme-shanghai-xConfig.png)
-
-<a id="template-autodarts-theme-bermuda"></a>
-
-### Theme Bermuda
-
-- Gilt für: `Bermuda`
-- Was macht es sichtbar? Ein ruhigeres Bermuda-Layout mit eigener Bildfläche im Hintergrund.
-- Wann sinnvoll? Wenn Bermuda besser lesbar sein soll, ohne viele Zusatzschalter zu benötigen.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-autodarts-theme-bermuda)
-
-![Theme Bermuda in AD xConfig](docs/screenshots/template-theme-bermuda-xConfig.png)
-
-## Animationen und Komfort
+![Wurffeld-Darts mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
 
 <a id="animation-autodarts-animate-checkout-score-highlight"></a>
 <a id="animation-autodarts-animate-checkout-score-pulse"></a>

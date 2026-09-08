@@ -71,6 +71,7 @@ function applyPreviewStepToHost(documentRef, hostNode, tickIndex) {
   updateProgressHost(hostNode, {
     active: true,
     score: displayScore,
+    startScore: PREVIEW_START_SCORE,
     ratio,
     previousRatio,
     scoreChanged: step.scoreChanged === true,

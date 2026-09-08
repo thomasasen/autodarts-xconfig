@@ -60,13 +60,11 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.equal(listed.some((feature) => feature.featureKey === "turn-score-counter"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "x01-remaining-score-bar"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "winner-celebration-effect"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-x01"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-gotcha"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-x01-2player"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-shanghai"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-bermuda"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-cricket"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "theme-bull-off"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "theme-global-background"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "theme-global-typography"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "theme-global-presets"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "turn-dart-display"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "theme-x01"), false);
   assert.equal(
     listed.find((feature) => feature.featureKey === "checkout-target-highlights")?.enabled,
     false

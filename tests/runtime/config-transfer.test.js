@@ -45,10 +45,10 @@ test("settings transfer schema covers every visible stored field", () => {
 
 test("settings export creates a stable versioned backup and optionally omits local images", () => {
   const config = normalizeRuntimeConfig({
-    featureToggles: { "themes.x01": true },
+    featureToggles: { "themes.globalBackground": true },
     features: {
       themes: {
-        x01: {
+        globalBackground: {
           enabled: true,
           backgroundImageDataUrl: SMALL_PNG,
           backgroundDisplayMode: "fit",
@@ -65,8 +65,9 @@ test("settings export creates a stable versioned backup and optionally omits loc
   assert.equal(complete.fileName, "autodarts-xconfig-backup-20260717-1234.json");
   assert.equal(complete.payload.format, SETTINGS_TRANSFER_FORMAT);
   assert.equal(complete.payload.schemaVersion, 1);
-  assert.equal(complete.payload.features["themes.x01"].enabled, true);
-  assert.equal(complete.payload.features["themes.x01"].settings.backgroundImageDataUrl, SMALL_PNG);
+  assert.equal(complete.payload.features["themes.globalBackground"].enabled, true);
+  assert.equal(complete.payload.features["themes.globalBackground"].settings.backgroundImageDataUrl, SMALL_PNG);
+  assert.equal(complete.payload.features["themes.x01"], undefined);
 
   const compact = createSettingsExport(config, {
     includeAssets: false,
@@ -75,10 +76,10 @@ test("settings export creates a stable versioned backup and optionally omits loc
   });
   assert.equal(compact.payload.assets.included, false);
   assert.equal(
-    Object.hasOwn(compact.payload.features["themes.x01"].settings, "backgroundImageDataUrl"),
+    Object.hasOwn(compact.payload.features["themes.globalBackground"].settings, "backgroundImageDataUrl"),
     false
   );
-  assert.equal(compact.payload.features["themes.x01"].settings.backgroundDisplayMode, "fit");
+  assert.equal(compact.payload.features["themes.globalBackground"].settings.backgroundDisplayMode, "fit");
 });
 
 test("settings import applies valid values and skips incompatible fields without aborting", () => {
@@ -123,7 +124,7 @@ test("merge preserves missing values while replace starts from current defaults"
     featureToggles: { tvBoardZoom: true },
     features: {
       tvBoardZoom: { enabled: true, zoomSpeed: "langsam" },
-      themes: { x01: { backgroundImageDataUrl: SMALL_PNG } },
+      themes: { globalBackground: { backgroundImageDataUrl: SMALL_PNG } },
     },
   });
   const payload = createEnvelope({
@@ -144,7 +145,7 @@ test("merge preserves missing values while replace starts from current defaults"
     mode: "replace",
   });
   assert.equal(replaced.config.features.tvBoardZoom.zoomSpeed, "mittel");
-  assert.equal(replaced.config.features.themes.x01.backgroundImageDataUrl, SMALL_PNG);
+  assert.equal(replaced.config.features.themes.globalBackground.backgroundImageDataUrl, SMALL_PNG);
 });
 
 test("settings import migrates known feature and field aliases", () => {
@@ -200,16 +201,52 @@ test("settings import accepts raw runtime and known legacy config structures", (
   assert.ok(legacy.report.counts.migrated > 0);
 });
 
+test("legacy Templates Global values split once while existing new values win", () => {
+  const legacyPayload = createEnvelope({
+    "themes.globalTypography": {
+      enabled: true,
+      settings: {
+        fontPreset: "aldrich",
+        backgroundDisplayMode: "fit",
+        backgroundOpacity: 40,
+        backgroundImageDataUrl: SMALL_PNG,
+        turnDartStyle: "gradient",
+        turnDartColor: "#22c55e",
+      },
+    },
+    "themes.globalBackground": {
+      enabled: false,
+      settings: { backgroundOpacity: 70 },
+    },
+  });
+  const first = analyzeSettingsImport(legacyPayload, normalizeRuntimeConfig(), {
+    descriptors: xconfigDescriptors,
+  });
+
+  assert.equal(first.config.features.themes.globalTypography.fontPreset, "aldrich");
+  assert.equal(first.config.features.themes.globalTypography.backgroundOpacity, undefined);
+  assert.equal(first.config.features.themes.globalBackground.backgroundDisplayMode, "fit");
+  assert.equal(first.config.features.themes.globalBackground.backgroundOpacity, 70);
+  assert.equal(first.config.features.themes.globalBackground.backgroundImageDataUrl, SMALL_PNG);
+  assert.equal(first.config.features.turnDartDisplay.turnDartStyle, "gradient");
+  assert.equal(first.config.features.turnDartDisplay.turnDartColor, "#22C55E");
+  assert.equal(first.config.featureToggles["themes.globalBackground"], false);
+  assert.equal(first.config.featureToggles.turnDartDisplay, true);
+
+  const normalizedAgain = normalizeRuntimeConfig(first.config);
+  assert.deepEqual(normalizedAgain, first.config);
+});
+
 test("future backups import known fields with a warning and invalid assets stay untouched", () => {
   const current = normalizeRuntimeConfig({
-    features: { themes: { x01: { backgroundImageDataUrl: SMALL_PNG } } },
+    features: { themes: { globalBackground: { backgroundImageDataUrl: SMALL_PNG } } },
   });
   const analysis = analyzeSettingsImport(
     createEnvelope({
-      "themes.x01": {
+      "themes.globalBackground": {
         enabled: true,
         settings: {
-          showAvg: false,
+          backgroundOpacity: 40,
           backgroundImageDataUrl: "data:image/svg+xml;base64,PHN2Zz4=",
         },
       },
@@ -219,8 +256,9 @@ test("future backups import known fields with a warning and invalid assets stay 
   );
 
   assert.equal(analysis.report.status, "ready");
-  assert.equal(analysis.config.features.themes.x01.showAvg, false);
-  assert.equal(analysis.config.features.themes.x01.backgroundImageDataUrl, SMALL_PNG);
+  assert.equal(analysis.report.status, "ready");
+  assert.equal(analysis.config.features.themes.globalBackground.backgroundOpacity, 40);
+  assert.equal(analysis.config.features.themes.globalBackground.backgroundImageDataUrl, SMALL_PNG);
   assert.ok(analysis.report.issues.some((issue) => issue.code === "newer-schema-version"));
   assert.ok(analysis.report.issues.some((issue) => issue.code === "newer-app-version"));
   assert.ok(analysis.report.issues.some((issue) => issue.settingKey === "backgroundImageDataUrl"));

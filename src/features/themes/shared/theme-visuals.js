@@ -65,27 +65,6 @@ function resolveConfiguredBackgroundUrl(featureConfig = {}) {
   return sanitizeBackgroundUrl(resolveThemePresetAsset(featureConfig.backgroundAssetKey));
 }
 
-function normalizeThemeVisualConfig(candidate) {
-  return candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
-}
-
-export function resolveThemeVisualSettingsConfig(themeFeatureConfig = {}, globalTypographyConfig = {}) {
-  const themeConfig = normalizeThemeVisualConfig(themeFeatureConfig);
-  const globalConfig = normalizeThemeVisualConfig(globalTypographyConfig);
-  const themeHasBackground = Boolean(resolveConfiguredBackgroundUrl(themeConfig));
-  const globalHasBackground = Boolean(resolveConfiguredBackgroundUrl(globalConfig));
-
-  if (themeHasBackground) {
-    return themeConfig;
-  }
-
-  if (globalConfig.enabled && globalHasBackground) {
-    return globalConfig;
-  }
-
-  return themeConfig;
-}
-
 export function buildThemeVisualSettingsCss(featureConfig = {}) {
   const displayMode = BACKGROUND_DISPLAY_MODES[normalizeBackgroundMode(featureConfig.backgroundDisplayMode)];
   const backgroundOpacity = clampNumber(featureConfig.backgroundOpacity, 0, 100, 25);

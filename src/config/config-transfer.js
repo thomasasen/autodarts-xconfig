@@ -63,6 +63,32 @@ const SPECIAL_TRANSFER_FIELDS = Object.freeze({
     label: "Preset-Wallpaper",
   }),
 });
+const RETIRED_GAME_THEME_CONFIG_KEYS = Object.freeze([
+  "themes.x01",
+  "themes.gotcha",
+  "themes.x01TwoPlayer",
+  "themes.shanghai",
+  "themes.bermuda",
+  "themes.cricket",
+  "themes.bullOff",
+]);
+const LEGACY_GLOBAL_BACKGROUND_FIELDS = Object.freeze([
+  "backgroundDisplayMode",
+  "backgroundOpacity",
+  "playerFieldTransparency",
+  "backgroundImageDataUrl",
+  "backgroundAssetKey",
+]);
+const LEGACY_TURN_DART_FIELDS = Object.freeze([
+  "turnDartStyle",
+  "turnDartAssetKey",
+  "turnDartTextTemplate",
+  "turnDartColor",
+  "turnDartGradientColor",
+  "turnDartSizePercent",
+  "turnDartShineEnabled",
+  "turnDartImageDataUrl",
+]);
 
 function isObjectLike(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -443,6 +469,68 @@ function detectSource(parsed, mode) {
   return fatalReport("Die Einstellungsstruktur wird nicht unterstützt.", "unsupported-structure", {}, mode);
 }
 
+function copyLegacyTransferFields(sourceFeature, targetFeature, fieldKeys) {
+  if (!isObjectLike(sourceFeature?.settings)) {
+    return;
+  }
+  fieldKeys.forEach((key) => {
+    if (
+      Object.hasOwn(sourceFeature.settings, key) &&
+      !Object.hasOwn(targetFeature.settings, key)
+    ) {
+      targetFeature.settings[key] = deepClone(sourceFeature.settings[key]);
+      targetFeature.migrated = true;
+    }
+    delete sourceFeature.settings[key];
+  });
+}
+
+function migrateDetectedThemeFeatures(detected) {
+  const features = detected.features || {};
+  const typography = features["themes.globalTypography"];
+  if (isObjectLike(typography)) {
+    const createTarget = (configKey) => {
+      if (!isObjectLike(features[configKey])) {
+        features[configKey] = { settings: {}, migrated: true };
+      }
+      if (!isObjectLike(features[configKey].settings)) {
+        features[configKey].settings = {};
+      }
+      if (typeof features[configKey].enabled !== "boolean" && typeof typography.enabled === "boolean") {
+        features[configKey].enabled = typography.enabled;
+        features[configKey].migrated = true;
+      }
+      if (
+        isObjectLike(typography.settings) &&
+        Object.hasOwn(typography.settings, "debug") &&
+        !Object.hasOwn(features[configKey].settings, "debug")
+      ) {
+        features[configKey].settings.debug = typography.settings.debug;
+        features[configKey].migrated = true;
+      }
+      return features[configKey];
+    };
+    copyLegacyTransferFields(
+      typography,
+      createTarget("themes.globalBackground"),
+      LEGACY_GLOBAL_BACKGROUND_FIELDS
+    );
+    copyLegacyTransferFields(
+      typography,
+      createTarget("turnDartDisplay"),
+      LEGACY_TURN_DART_FIELDS
+    );
+  }
+
+  RETIRED_GAME_THEME_CONFIG_KEYS.forEach((configKey) => {
+    if (Object.hasOwn(features, configKey)) {
+      delete features[configKey];
+      detected.retiredFeatureKeys = [...(detected.retiredFeatureKeys || []), configKey];
+    }
+  });
+  return detected;
+}
+
 function normalizeSelectFieldValue(field, rawValue, spec, defaults, sourceType) {
   const options = field.options || [];
   if (field.multiple) {
@@ -554,6 +642,7 @@ export function analyzeSettingsImport(payload, currentRawConfig = {}, options = 
   if (detected.report) {
     return detected;
   }
+  migrateDetectedThemeFeatures(detected);
   const report = createReport(detected.source, mode);
   if (detected.source.schemaVersion > SETTINGS_TRANSFER_SCHEMA_VERSION) {
     addIssue(report, "warning", {
@@ -576,6 +665,13 @@ export function analyzeSettingsImport(payload, currentRawConfig = {}, options = 
       code: "unknown-feature",
       configKey,
       message: `Unbekanntes Feature „${configKey}“ wurde ausgelassen.`,
+    });
+  });
+  (detected.retiredFeatureKeys || []).forEach((configKey) => {
+    addIssue(report, "skipped", {
+      code: "retired-theme",
+      configKey,
+      message: `Entferntes Spiel-Theme „${configKey}“ wurde ausgelassen.`,
     });
   });
 

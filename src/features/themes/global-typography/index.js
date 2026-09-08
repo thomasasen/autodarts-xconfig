@@ -1,9 +1,6 @@
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 import { createFeatureMountHarness } from "../../shared/feature-mount-harness.js";
-import {
-  isThemeGameContextActive,
-  isThemeVariantActive,
-} from "../shared/theme-utils.js";
+import { isThemeGameContextActive } from "../shared/theme-utils.js";
 import {
   STYLE_ID,
   TOOLS_SHADOW_STYLE_ID,
@@ -17,51 +14,6 @@ const POPSTATE_LISTENER_KEY = `${FEATURE_KEY}:popstate`;
 const HASHCHANGE_LISTENER_KEY = `${FEATURE_KEY}:hashchange`;
 const RESIZE_LISTENER_KEY = `${FEATURE_KEY}:resize`;
 const TOOLS_HOST_SELECTOR = "autodarts-tools-wxt";
-
-export const THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS = Object.freeze([
-  Object.freeze({
-    configKey: "themes.x01",
-    variantName: "x01",
-    matchMode: "equals",
-  }),
-  Object.freeze({
-    configKey: "themes.gotcha",
-    variantName: "gotcha",
-    matchMode: "equals",
-  }),
-  Object.freeze({
-    configKey: "themes.x01TwoPlayer",
-    variantName: "x01",
-    matchMode: "equals",
-  }),
-  Object.freeze({
-    configKey: "themes.shanghai",
-    variantName: "shanghai",
-    matchMode: "equals",
-  }),
-  Object.freeze({
-    configKey: "themes.bermuda",
-    variantName: "bermuda",
-    matchMode: "equals",
-  }),
-  Object.freeze({
-    configKey: "themes.cricket",
-    variantName: "cricket",
-    matchMode: "equals",
-  }),
-  Object.freeze({
-    configKey: "themes.bullOff",
-    variantName: "bull-off",
-    matchMode: "equals",
-  }),
-]);
-
-function isThemeConfigEnabled(configRef, configKey) {
-  if (!configRef || typeof configRef.isFeatureEnabled !== "function") {
-    return false;
-  }
-  return configRef.isFeatureEnabled(configKey);
-}
 
 function queryToolsHosts(documentRef) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
@@ -134,34 +86,11 @@ function removeToolsShadowStyles(documentRef) {
 }
 
 export function resolveThemeGlobalTypographyActiveTheme(options = {}) {
-  const config = options.config || null;
-  const gameState = options.gameState || null;
   const documentRef = options.documentRef || null;
   const windowRef = options.windowRef || null;
-  const enabledThemeConfigKeys =
-    options.enabledThemeConfigKeys instanceof Set
-      ? options.enabledThemeConfigKeys
-      : null;
-
-  if (!isThemeGameContextActive({ documentRef, windowRef })) {
-    return null;
-  }
-
-  return THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS.find((themeContext) => {
-    const themeEnabled = enabledThemeConfigKeys
-      ? enabledThemeConfigKeys.has(themeContext.configKey)
-      : isThemeConfigEnabled(config, themeContext.configKey);
-    if (!themeEnabled) {
-      return false;
-    }
-
-    return isThemeVariantActive({
-      ...themeContext,
-      gameState,
-      documentRef,
-      windowRef,
-    });
-  }) || null;
+  return isThemeGameContextActive({ documentRef, windowRef })
+    ? { configKey: CONFIG_KEY, variantName: "all" }
+    : null;
 }
 
 export function mountThemeGlobalTypography(context = {}) {
@@ -177,7 +106,6 @@ export function mountThemeGlobalTypography(context = {}) {
   let cachedConfigRevision = null;
   let cachedFeatureConfig = null;
   let cachedCssText = "";
-  let cachedEnabledThemeConfigKeys = null;
 
   function readTypographyConfig() {
     const revision =
@@ -192,7 +120,6 @@ export function mountThemeGlobalTypography(context = {}) {
       return {
         featureConfig: cachedFeatureConfig,
         cssText: cachedCssText,
-        enabledThemeConfigKeys: cachedEnabledThemeConfigKeys,
       };
     }
 
@@ -203,18 +130,12 @@ export function mountThemeGlobalTypography(context = {}) {
     const cssText = featureConfig?.enabled
       ? buildThemeGlobalTypographyStyleText(featureConfig)
       : "";
-    const enabledThemeConfigKeys = new Set(
-      THEME_GLOBAL_TYPOGRAPHY_THEME_CONTEXTS
-        .filter((themeContext) => isThemeConfigEnabled(config, themeContext.configKey))
-        .map((themeContext) => themeContext.configKey)
-    );
     if (Number.isFinite(revision)) {
       cachedConfigRevision = revision;
       cachedFeatureConfig = featureConfig;
       cachedCssText = cssText;
-      cachedEnabledThemeConfigKeys = enabledThemeConfigKeys;
     }
-    return { featureConfig, cssText, enabledThemeConfigKeys };
+    return { featureConfig, cssText };
   }
 
   function removeStyle() {
@@ -225,7 +146,7 @@ export function mountThemeGlobalTypography(context = {}) {
   const harness = createFeatureMountHarness(context, {
     isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
     update: () => {
-      const { featureConfig, cssText, enabledThemeConfigKeys } = readTypographyConfig();
+      const { featureConfig, cssText } = readTypographyConfig();
 
       if (!featureConfig?.enabled) {
         removeStyle();
@@ -233,11 +154,8 @@ export function mountThemeGlobalTypography(context = {}) {
       }
 
       if (!resolveThemeGlobalTypographyActiveTheme({
-        config,
-        gameState: context.gameState,
         documentRef,
         windowRef,
-        enabledThemeConfigKeys,
       })) {
         removeStyle();
         return;

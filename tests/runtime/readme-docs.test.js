@@ -140,9 +140,9 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 26);
-  assert.equal(overviewCounts.animationModules, 17);
-  assert.equal(overviewCounts.themeModules, 9);
+  assert.equal(overviewCounts.totalModules, 22);
+  assert.equal(overviewCounts.animationModules, 19);
+  assert.equal(overviewCounts.themeModules, 3);
 });
 
 test("README and FEATURES share the generated xConfig overview copy", () => {
@@ -367,14 +367,10 @@ test("xConfig preview asset manifest points only to existing runtime WebPs", () 
 
 test("xConfig preview manifest covers the key animation/theme cards with visual backgrounds", () => {
   const requiredPreviewFeatureKeys = [
+    "theme-global-background",
     "theme-global-typography",
-    "theme-x01",
-    "theme-gotcha",
-    "theme-x01-2player",
-    "theme-shanghai",
-    "theme-bermuda",
-    "theme-cricket",
-    "theme-bull-off",
+    "theme-global-presets",
+    "turn-dart-display",
     "checkout-score-highlight",
     "x01-bust-active-player-highlight",
     "checkout-target-highlights",

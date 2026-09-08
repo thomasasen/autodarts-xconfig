@@ -194,7 +194,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
     },
     clearThemeBackgroundImage: (options) => calls.push(["clear-theme", options.themeKey]),
     uploadThemeBackgroundImage: (options) => calls.push(["upload-theme", options.themeKey]),
-    themeKeyFromConfigKey: (configKey) => (configKey === "themes.x01" ? "x01" : ""),
+    themeKeyFromConfigKey: (configKey) => (configKey === "themes.globalBackground" ? "globalBackground" : ""),
     syncTurnDartImageIndicators: (featureKey) => calls.push(["sync-turn-dart", featureKey]),
   });
 
@@ -203,14 +203,14 @@ test("createShellActionController dispatches runtime, update and theme commands"
   controller.handleAction("reset");
   controller.handleAction("apply-recommended-defaults");
   controller.handleAction("clearThemeBackground", null, {
-    configKey: "themes.x01",
+    configKey: "themes.globalBackground",
   });
   controller.handleAction("uploadThemeBackground", null, {
-    configKey: "themes.x01",
+    configKey: "themes.globalBackground",
   });
   controller.handleAction("clearTurnDartImage", null, {
-    featureKey: "theme-global-typography",
-    configKey: "themes.globalTypography",
+    featureKey: "turn-dart-display",
+    configKey: "turnDartDisplay",
   });
   controller.handleAction(
     "applyThemeGlobalPreset",
@@ -218,8 +218,8 @@ test("createShellActionController dispatches runtime, update and theme commands"
       "data-feature-action-id": "cyberpunk",
     }),
     {
-      featureKey: "theme-global-typography",
-      configKey: "themes.globalTypography",
+      featureKey: "theme-global-presets",
+      configKey: "themes.globalPresets",
     }
   );
 
@@ -228,37 +228,45 @@ test("createShellActionController dispatches runtime, update and theme commands"
   assert.deepEqual(calls, [
     ["refresh", { force: true, announce: true }],
     "install",
-    ["confirm", "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht alle gespeicherten Theme-Bilder."],
+    ["confirm", "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht globales Wallpaper sowie Dart-Upload."],
     "reset",
-    ["confirm", "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Deine eigenen Theme-Bilder bleiben erhalten."],
+    ["confirm", "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Globales Wallpaper und Dart-Upload bleiben erhalten."],
     "defaults",
-    ["clear-theme", "x01"],
-    ["upload-theme", "x01"],
+    ["clear-theme", "globalBackground"],
+    ["upload-theme", "globalBackground"],
     [
       "save-config",
       {
         features: {
-          themes: {
-            globalTypography: {
-              turnDartStyle: "original",
-              turnDartImageDataUrl: "",
-            },
+          turnDartDisplay: {
+            turnDartStyle: "original",
+            turnDartImageDataUrl: "",
           },
         },
       },
     ],
     [
       "confirm",
-      'Preset "Cyberpunk" anwenden? Dadurch werden alle Einstellungen in Templates Global inklusive globalem Wallpaper überschrieben.',
+      'Vorlage "Cyberpunk" anwenden? Hintergrund, Schrift und Farben werden ersetzt; Wurffeld-Darts bleiben unverändert.',
     ],
     [
       "save-config",
       {
         featureToggles: {
+          "themes.globalBackground": true,
           "themes.globalTypography": true,
         },
         features: {
           themes: {
+            globalBackground: {
+              enabled: true,
+              backgroundDisplayMode: "fill",
+              backgroundOpacity: 40,
+              playerFieldTransparency: 30,
+              backgroundImageDataUrl: "",
+              backgroundAssetKey: "cyberpunk",
+              debug: false,
+            },
             globalTypography: {
               enabled: true,
               fontPreset: "audiowide",
@@ -268,18 +276,13 @@ test("createShellActionController dispatches runtime, update and theme commands"
               secondaryTextColor: "#FFD0F5",
               throwLabelColor: "#FF5CD6",
               activePlayerTintIntensity: 15,
-              backgroundDisplayMode: "fill",
-              backgroundOpacity: 40,
-              playerFieldTransparency: 30,
-              backgroundImageDataUrl: "",
-              backgroundAssetKey: "cyberpunk",
               debug: false,
             },
           },
         },
       },
     ],
-    ["sync-turn-dart", "theme-global-typography"],
+    ["sync-turn-dart", "turn-dart-display"],
     "sync",
     "sync",
     "sync",
@@ -292,63 +295,6 @@ test("createShellActionController dispatches runtime, update and theme commands"
     ["info", "Dart-Bild entfernt."],
     ["success", 'Preset "Cyberpunk" angewendet.'],
   ]);
-});
-
-test("createShellActionController resets only x01 two-player presentation defaults", async () => {
-  const savedPatches = [];
-  let confirmed = true;
-  const controller = createShellActionController({
-    windowRef: {
-      confirm(message) {
-        assert.match(message, /Aktivierung und eigenes Hintergrundbild bleiben erhalten/);
-        return confirmed;
-      },
-    },
-    runtimeApi: {
-      saveConfig(patch) {
-        savedPatches.push(patch);
-        return Promise.resolve();
-      },
-    },
-  });
-  const feature = {
-    featureKey: "theme-x01-2player",
-    configKey: "themes.x01TwoPlayer",
-  };
-
-  controller.handleAction("resetX01TwoPlayerTheme", null, feature);
-  await flushMicrotasks();
-  assert.deepEqual(savedPatches, [
-    {
-      features: {
-        themes: {
-          x01TwoPlayer: {
-            visualStyle: "studio",
-            colorScheme: "studio-mint",
-            activePlayerEmphasis: "standard",
-            informationDensity: "full",
-            identityDensity: "full",
-            playerNameLayout: "single-line",
-            showAvg: true,
-            backgroundDisplayMode: "fill",
-            backgroundOpacity: 25,
-            playerFieldTransparency: 10,
-            debug: false,
-          },
-        },
-      },
-    },
-  ]);
-  assert.equal(Object.hasOwn(savedPatches[0].features.themes.x01TwoPlayer, "enabled"), false);
-  assert.equal(
-    Object.hasOwn(savedPatches[0].features.themes.x01TwoPlayer, "backgroundImageDataUrl"),
-    false
-  );
-
-  confirmed = false;
-  controller.handleAction("resetX01TwoPlayerTheme", null, feature);
-  await flushMicrotasks();
-  assert.equal(savedPatches.length, 1);
 });
 
 test("createShellActionController dispatches feature and setting payload commands", async () => {

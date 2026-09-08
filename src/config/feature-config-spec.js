@@ -8,7 +8,6 @@ import {
 import { THEME_PRESET_ASSET_KEYS } from "../shared/theme-preset-assets.manifest.js";
 import { normalizeThemeBackgroundHost } from "../shared/theme-background-host-utils.js";
 import { normalizeHexColor } from "../shared/hex-color-utils.js";
-import { normalizeThemeKey } from "../shared/theme-key-utils.js";
 import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
 import { TURN_DART_ASSET_KEYS } from "../shared/turn-dart-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
@@ -117,7 +116,7 @@ const TURN_SCORE_COUNT_EFFECT_ALIASES = Object.freeze({
   steps: "step-count",
   "step-count": "step-count",
 });
-const X01_REMAINING_SCORE_BAR_COLOR_THEMES = new Set(["checkout-focus", "traffic-light", "danger-endgame", "gradient-by-progress", "autodarts", "signal-lime", "glass-mint", "ember-rush", "ice-circuit", "neon-violet", "sunset-amber", "monochrome-steel"]);
+const X01_REMAINING_SCORE_BAR_COLOR_THEMES = new Set(["checkout-focus", "checkout-zone-blue", "traffic-light", "danger-endgame", "gradient-by-progress", "autodarts", "signal-lime", "glass-mint", "ember-rush", "ice-circuit", "neon-violet", "sunset-amber", "monochrome-steel"]);
 const X01_REMAINING_SCORE_BAR_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
 const WINNER_CELEBRATION_STYLE_ALIASES = Object.freeze({
   "": "center-side-burst",
@@ -142,21 +141,6 @@ const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "cente
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 25, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
 const THEME_ACTIVE_PLAYER_TINT_INTENSITY = new Set([0, 10, 15, 20, 25, 30]);
-const THEME_GOTCHA_DELTA_PLACEMENTS = new Set(["below", "inline-divider"]);
-const THEME_GOTCHA_DELTA_ALIGNMENTS = new Set(["left", "right"]);
-const THEME_CONTRAST_PRESETS = new Set(["soft", "standard", "high"]);
-const THEME_X01_TWO_PLAYER_VISUAL_STYLES = new Set(["studio", "broadcast", "high-contrast"]);
-const THEME_X01_TWO_PLAYER_COLOR_SCHEMES = new Set([
-  "studio-mint",
-  "lime",
-  "amber",
-  "midnight-blue",
-  "monochrome",
-]);
-const THEME_X01_TWO_PLAYER_ACTIVE_EMPHASIS = new Set(["subtle", "standard", "strong"]);
-const THEME_X01_TWO_PLAYER_INFORMATION_DENSITIES = new Set(["full", "tv", "compact"]);
-const THEME_X01_TWO_PLAYER_IDENTITY_DENSITIES = new Set(["full", "name-only"]);
-const THEME_X01_TWO_PLAYER_NAME_LAYOUTS = new Set(["single-line", "two-lines"]);
 const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
 );
@@ -359,18 +343,20 @@ function buildFeatureImport(configKey, legacyFeatureState, mappedSettings = {}) 
   };
 }
 
-function normalizeThemeBaseConfig(rawConfig = {}, defaults = {}) {
+function normalizeThemeBackgroundConfig(rawConfig = {}, defaults = {}) {
   return {
     enabled: normalizeBoolean(rawConfig.enabled, false),
     backgroundDisplayMode: normalizeStringChoice(rawConfig.backgroundDisplayMode, String(defaults.backgroundDisplayMode || "fill"), THEME_BACKGROUND_DISPLAY_MODES),
     backgroundOpacity: normalizeNumberChoice(rawConfig.backgroundOpacity, Number(defaults.backgroundOpacity || 25), THEME_BACKGROUND_OPACITY),
     playerFieldTransparency: normalizeNumberChoice(rawConfig.playerFieldTransparency, Number(defaults.playerFieldTransparency || 10), THEME_PLAYER_FIELD_TRANSPARENCY),
     backgroundImageDataUrl: normalizeThemeBackgroundImage(rawConfig.backgroundImageDataUrl || defaults.backgroundImageDataUrl || ""),
+    backgroundAssetKey: normalizeThemeBackgroundAssetKey(rawConfig.backgroundAssetKey || defaults.backgroundAssetKey || ""),
     debug: normalizeBoolean(rawConfig.debug, Boolean(defaults.debug)),
   };
 }
 
-const DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG = Object.freeze({
+const DEFAULT_TURN_DART_DISPLAY_CONFIG = Object.freeze({
+  enabled: false,
   turnDartStyle: "original",
   turnDartAssetKey: "german-giant",
   turnDartTextTemplate: "",
@@ -379,6 +365,7 @@ const DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG = Object.freeze({
   turnDartSizePercent: 115,
   turnDartShineEnabled: true,
   turnDartImageDataUrl: "",
+  debug: false,
 });
 
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
@@ -405,6 +392,15 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     scope: "bot-turns",
     debug: false,
   },
+  "themes.globalBackground": {
+    enabled: false,
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 25,
+    playerFieldTransparency: 10,
+    backgroundImageDataUrl: "",
+    backgroundAssetKey: "",
+    debug: false,
+  },
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "system",
@@ -414,45 +410,10 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     secondaryTextColor: "",
     throwLabelColor: "",
     activePlayerTintIntensity: 15,
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    backgroundImageDataUrl: "",
-    backgroundAssetKey: "",
-    ...DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG,
     debug: false,
   },
-  "themes.x01": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
-  "themes.gotcha": {
-    enabled: false,
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    deltaPlacement: "below",
-    deltaAlignment: "right",
-    deltaItalic: true,
-    backgroundImageDataUrl: "",
-    debug: false,
-  },
-  "themes.x01TwoPlayer": {
-    enabled: false,
-    showAvg: true,
-    visualStyle: "studio",
-    colorScheme: "studio-mint",
-    activePlayerEmphasis: "standard",
-    informationDensity: "full",
-    identityDensity: "full",
-    playerNameLayout: "single-line",
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    backgroundImageDataUrl: "",
-    debug: false,
-  },
-  "themes.shanghai": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
-  "themes.bermuda": { enabled: false, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
-  "themes.cricket": { enabled: false, showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
-  "themes.bullOff": { enabled: false, contrastPreset: "standard", backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10, backgroundImageDataUrl: "", debug: false },
+  "themes.globalPresets": { enabled: false },
+  turnDartDisplay: DEFAULT_TURN_DART_DISPLAY_CONFIG,
 });
 
 const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
@@ -474,6 +435,11 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   winnerCelebrationEffect: { style: "center-cannon", colorTheme: "gold", intensity: "standard", durationSeconds: 5, particleAmount: "sparsam", includeBullOut: false, pointerDismiss: true },
   x01RemainingScoreBar: { colorTheme: "traffic-light", barSize: "breit", effect: "previous-score-trail" },
   botBoardStyle: { design: "winmau-blade-6-tc", scope: "all-match-boards", debug: false },
+  "themes.globalBackground": {
+    backgroundDisplayMode: "fill",
+    backgroundOpacity: 10,
+    playerFieldTransparency: 10,
+  },
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "aldrich",
@@ -483,40 +449,14 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     secondaryTextColor: "#DCE9FF",
     throwLabelColor: "#8FA9C2",
     activePlayerTintIntensity: 20,
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 10,
-    playerFieldTransparency: 10,
-    ...DEFAULT_THEME_GLOBAL_TURN_DART_CONFIG,
+  },
+  "themes.globalPresets": {},
+  turnDartDisplay: {
+    ...DEFAULT_TURN_DART_DISPLAY_CONFIG,
     turnDartStyle: "image",
     turnDartGradientColor: "#00D9FF",
     turnDartSizePercent: 135,
   },
-  "themes.x01": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
-  "themes.gotcha": {
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-    deltaPlacement: "below",
-    deltaAlignment: "right",
-    deltaItalic: true,
-  },
-  "themes.x01TwoPlayer": {
-    enabled: false,
-    showAvg: true,
-    visualStyle: "studio",
-    colorScheme: "studio-mint",
-    activePlayerEmphasis: "standard",
-    informationDensity: "tv",
-    identityDensity: "name-only",
-    playerNameLayout: "single-line",
-    backgroundDisplayMode: "fill",
-    backgroundOpacity: 25,
-    playerFieldTransparency: 10,
-  },
-  "themes.shanghai": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
-  "themes.bermuda": { backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
-  "themes.cricket": { showAvg: true, backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
-  "themes.bullOff": { contrastPreset: "standard", backgroundDisplayMode: "fill", backgroundOpacity: 25, playerFieldTransparency: 10 },
 });
 
 const FEATURE_REMOVE_KEYS = Object.freeze({
@@ -698,55 +638,6 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  "themes.x01"(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("themes.x01", legacyFeatureState, {
-      showAvg: readLegacySetting(settings, "AVG_ANZEIGE", true),
-      backgroundDisplayMode: readLegacySetting(settings, "HINTERGRUND_DARSTELLUNG", "fill"),
-      backgroundOpacity: readLegacySetting(settings, "HINTERGRUND_OPAZITAET", 25),
-      playerFieldTransparency: readLegacySetting(settings, "SPIELERFELD_TRANSPARENZ", 10),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
-  "themes.shanghai"(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("themes.shanghai", legacyFeatureState, {
-      showAvg: readLegacySetting(settings, "AVG_ANZEIGE", true),
-      backgroundDisplayMode: readLegacySetting(settings, "HINTERGRUND_DARSTELLUNG", "fill"),
-      backgroundOpacity: readLegacySetting(settings, "HINTERGRUND_OPAZITAET", 25),
-      playerFieldTransparency: readLegacySetting(settings, "SPIELERFELD_TRANSPARENZ", 10),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
-  "themes.bermuda"(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("themes.bermuda", legacyFeatureState, {
-      backgroundDisplayMode: readLegacySetting(settings, "HINTERGRUND_DARSTELLUNG", "fill"),
-      backgroundOpacity: readLegacySetting(settings, "HINTERGRUND_OPAZITAET", 25),
-      playerFieldTransparency: readLegacySetting(settings, "SPIELERFELD_TRANSPARENZ", 10),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
-  "themes.cricket"(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("themes.cricket", legacyFeatureState, {
-      showAvg: readLegacySetting(settings, "AVG_ANZEIGE", true),
-      backgroundDisplayMode: readLegacySetting(settings, "HINTERGRUND_DARSTELLUNG", "fill"),
-      backgroundOpacity: readLegacySetting(settings, "HINTERGRUND_OPAZITAET", 25),
-      playerFieldTransparency: readLegacySetting(settings, "SPIELERFELD_TRANSPARENZ", 10),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
-  "themes.bullOff"(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("themes.bullOff", legacyFeatureState, {
-      contrastPreset: readLegacySetting(settings, "KONTRAST_PRESET", "standard"),
-      backgroundDisplayMode: readLegacySetting(settings, "HINTERGRUND_DARSTELLUNG", "fill"),
-      backgroundOpacity: readLegacySetting(settings, "HINTERGRUND_OPAZITAET", 25),
-      playerFieldTransparency: readLegacySetting(settings, "SPIELERFELD_TRANSPARENZ", 10),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
 });
 
 const FEATURE_NORMALIZERS = Object.freeze({
@@ -840,6 +731,12 @@ const FEATURE_NORMALIZERS = Object.freeze({
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },
+  "themes.globalBackground"(rawConfig = {}) {
+    return normalizeThemeBackgroundConfig(
+      rawConfig,
+      DEFAULT_FEATURE_CONFIGS["themes.globalBackground"]
+    );
+  },
   "themes.globalTypography"(rawConfig = {}) {
     return {
       enabled: normalizeBoolean(rawConfig.enabled, false),
@@ -859,44 +756,28 @@ const FEATURE_NORMALIZERS = Object.freeze({
         Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].activePlayerTintIntensity || 0),
         THEME_ACTIVE_PLAYER_TINT_INTENSITY
       ),
-      backgroundDisplayMode: normalizeStringChoice(
-        rawConfig.backgroundDisplayMode,
-        String(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundDisplayMode || "fill"),
-        THEME_BACKGROUND_DISPLAY_MODES
-      ),
-      backgroundOpacity: normalizeNumberChoice(
-        rawConfig.backgroundOpacity,
-        Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundOpacity || 25),
-        THEME_BACKGROUND_OPACITY
-      ),
-      playerFieldTransparency: normalizeNumberChoice(
-        rawConfig.playerFieldTransparency,
-        Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].playerFieldTransparency || 10),
-        THEME_PLAYER_FIELD_TRANSPARENCY
-      ),
-      backgroundImageDataUrl: normalizeThemeBackgroundImage(
-        rawConfig.backgroundImageDataUrl ||
-          DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundImageDataUrl ||
-          ""
-      ),
-      backgroundAssetKey: normalizeThemeBackgroundAssetKey(
-        rawConfig.backgroundAssetKey ||
-          DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].backgroundAssetKey ||
-          ""
-      ),
+      debug: normalizeBoolean(rawConfig.debug, false),
+    };
+  },
+  "themes.globalPresets"() {
+    return { enabled: false };
+  },
+  turnDartDisplay(rawConfig = {}) {
+    return {
+      enabled: normalizeBoolean(rawConfig.enabled, false),
       turnDartStyle: normalizeStringChoice(
         rawConfig.turnDartStyle,
-        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartStyle,
+        DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartStyle,
         THEME_GLOBAL_TURN_DART_STYLES
       ),
       turnDartAssetKey: normalizeStringChoice(
         rawConfig.turnDartAssetKey,
-        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartAssetKey,
+        DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartAssetKey,
         THEME_GLOBAL_TURN_DART_ASSETS
       ),
       turnDartColor: normalizeHexColor(
         rawConfig.turnDartColor,
-        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartColor
+        DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartColor
       ),
       turnDartTextTemplate: normalizeLimitedText(
         rawConfig.turnDartTextTemplate,
@@ -904,63 +785,20 @@ const FEATURE_NORMALIZERS = Object.freeze({
       ),
       turnDartGradientColor: normalizeHexColor(
         rawConfig.turnDartGradientColor,
-        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartGradientColor
+        DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartGradientColor
       ),
       turnDartSizePercent: normalizeNumberChoice(
         rawConfig.turnDartSizePercent,
-        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartSizePercent,
+        DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartSizePercent,
         THEME_GLOBAL_TURN_DART_SIZE_PERCENT
       ),
       turnDartShineEnabled: normalizeBoolean(
         rawConfig.turnDartShineEnabled,
-        DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].turnDartShineEnabled
+        DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartShineEnabled
       ),
       turnDartImageDataUrl: normalizeThemeBackgroundImage(rawConfig.turnDartImageDataUrl),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
-  },
-  "themes.x01"(rawConfig = {}) {
-    return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
-  },
-  "themes.gotcha"(rawConfig = {}) {
-    return {
-      ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.gotcha"]),
-      deltaPlacement: normalizeStringChoice(
-        rawConfig.deltaPlacement,
-        "below",
-        THEME_GOTCHA_DELTA_PLACEMENTS
-      ),
-      deltaAlignment: normalizeStringChoice(
-        rawConfig.deltaAlignment,
-        "right",
-        THEME_GOTCHA_DELTA_ALIGNMENTS
-      ),
-      deltaItalic: normalizeBoolean(rawConfig.deltaItalic, true),
-    };
-  },
-  "themes.x01TwoPlayer"(rawConfig = {}) {
-    return {
-      ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.x01TwoPlayer"]),
-      showAvg: normalizeBoolean(rawConfig.showAvg, true),
-      visualStyle: normalizeStringChoice(rawConfig.visualStyle, "studio", THEME_X01_TWO_PLAYER_VISUAL_STYLES),
-      colorScheme: normalizeStringChoice(rawConfig.colorScheme, "studio-mint", THEME_X01_TWO_PLAYER_COLOR_SCHEMES),
-      activePlayerEmphasis: normalizeStringChoice(rawConfig.activePlayerEmphasis, "standard", THEME_X01_TWO_PLAYER_ACTIVE_EMPHASIS),
-      informationDensity: normalizeStringChoice(rawConfig.informationDensity, "full", THEME_X01_TWO_PLAYER_INFORMATION_DENSITIES),
-      identityDensity: normalizeStringChoice(rawConfig.identityDensity, "full", THEME_X01_TWO_PLAYER_IDENTITY_DENSITIES),
-      playerNameLayout: normalizeStringChoice(rawConfig.playerNameLayout, "single-line", THEME_X01_TWO_PLAYER_NAME_LAYOUTS),
-    };
-  },
-  "themes.shanghai"(rawConfig = {}) {
-    return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.shanghai"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
-  },
-  "themes.bermuda"(rawConfig = {}) {
-    return normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.bermuda"]);
-  },
-  "themes.cricket"(rawConfig = {}) {
-    return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.cricket"]), showAvg: normalizeBoolean(rawConfig.showAvg, true) };
-  },
-  "themes.bullOff"(rawConfig = {}) {
-    return { ...normalizeThemeBaseConfig(rawConfig, DEFAULT_FEATURE_CONFIGS["themes.bullOff"]), contrastPreset: normalizeStringChoice(rawConfig.contrastPreset, "standard", THEME_CONTRAST_PRESETS) };
   },
 });
 
@@ -1013,7 +851,7 @@ export function getFeatureConfigKeys() {
 export function getThemeConfigKeys() {
   return featureCatalog
     .filter((entry) => entry.configKey.startsWith("themes."))
-    .map((entry) => normalizeThemeKey(splitFeaturePath(entry.configKey)[1]))
+    .map((entry) => splitFeaturePath(entry.configKey)[1])
     .filter(Boolean);
 }
 

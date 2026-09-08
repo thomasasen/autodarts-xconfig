@@ -322,10 +322,20 @@ export function createThemeGlobalTemplatePresetPatch(presetKey) {
 
   return {
     featureToggles: {
+      "themes.globalBackground": true,
       "themes.globalTypography": true,
     },
     features: {
       themes: {
+        globalBackground: {
+          enabled: true,
+          backgroundDisplayMode: preset.backgroundDisplayMode,
+          backgroundOpacity: preset.backgroundOpacity,
+          playerFieldTransparency: preset.playerFieldTransparency,
+          backgroundImageDataUrl: "",
+          backgroundAssetKey: preset.backgroundAssetKey,
+          debug: false,
+        },
         globalTypography: {
           enabled: true,
           fontPreset: preset.fontPreset,
@@ -335,11 +345,6 @@ export function createThemeGlobalTemplatePresetPatch(presetKey) {
           secondaryTextColor: preset.secondaryTextColor,
           throwLabelColor: preset.throwLabelColor,
           activePlayerTintIntensity: preset.activePlayerTintIntensity,
-          backgroundDisplayMode: preset.backgroundDisplayMode,
-          backgroundOpacity: preset.backgroundOpacity,
-          playerFieldTransparency: preset.playerFieldTransparency,
-          backgroundImageDataUrl: "",
-          backgroundAssetKey: preset.backgroundAssetKey,
           debug: false,
         },
       },

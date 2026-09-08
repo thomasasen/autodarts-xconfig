@@ -1,24 +1,6 @@
-import { normalizeThemeKey as normalizeSharedThemeKey } from "../../../shared/theme-key-utils.js";
-
-export const PREVIEW_SPACE_CLASS = "ad-ext-turn-preview-space";
-const GAME_ROUTE_PREFIXES = Object.freeze(["/matches"]);
+const MATCH_ROUTE_PREFIX = "/matches";
 const XCONFIG_ROUTE_PATH = "/ad-xconfig";
 const XCONFIG_ROUTE_HASH = "#ad-xconfig";
-
-export function normalizeBoolean(value, fallbackValue = false) {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  const normalized = String(value || "").trim().toLowerCase();
-  if (["1", "true", "yes", "on", "aktiv", "active"].includes(normalized)) {
-    return true;
-  }
-  if (["0", "false", "no", "off", "inaktiv", "inactive"].includes(normalized)) {
-    return false;
-  }
-  return Boolean(fallbackValue);
-}
 
 export function clampNumber(value, minValue, maxValue, fallbackValue) {
   const numeric = Number(value);
@@ -29,18 +11,7 @@ export function clampNumber(value, minValue, maxValue, fallbackValue) {
   return Math.min(Math.max(resolved, Number(minValue)), Number(maxValue));
 }
 
-export function normalizeThemeKey(themeKey) {
-  return normalizeSharedThemeKey(themeKey);
-}
-
-export function normalizeVariant(value) {
-  return String(value || "")
-    .replaceAll(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-export function normalizeRoutePath(pathValue) {
+function normalizeRoutePath(pathValue) {
   let normalized = String(pathValue || "").trim().toLowerCase();
   if (!normalized) {
     return "";
@@ -50,254 +21,32 @@ export function normalizeRoutePath(pathValue) {
     normalized = `/${normalized}`;
   }
 
-  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
-  if (normalized.length > 1) {
-    normalized = normalized.replace(/\/+$/, "");
+  const suffixIndex = normalized.search(/[?#]/);
+  if (suffixIndex >= 0) {
+    normalized = normalized.slice(0, suffixIndex);
   }
-
+  while (normalized.includes("//")) {
+    normalized = normalized.replaceAll("//", "/");
+  }
+  while (normalized.length > 1 && normalized.endsWith("/")) {
+    normalized = normalized.slice(0, -1);
+  }
   return normalized;
-}
-
-function normalizeHashValue(hashValue) {
-  const normalized = String(hashValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  return normalized.startsWith("#") ? normalized : `#${normalized}`;
-}
-
-function isXConfigRouteActive(locationRef) {
-  if (!locationRef) {
-    return false;
-  }
-  const path = normalizeRoutePath(locationRef.pathname || "");
-  const hash = normalizeHashValue(locationRef.hash || "");
-  return path === XCONFIG_ROUTE_PATH || hash === XCONFIG_ROUTE_HASH;
 }
 
 function resolveRoutePath(windowRef, documentRef) {
   const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
-  if (isXConfigRouteActive(locationRef)) {
+  const path = normalizeRoutePath(locationRef?.pathname || "");
+  const hash = String(locationRef?.hash || "").trim().toLowerCase();
+
+  if (path === XCONFIG_ROUTE_PATH || hash === XCONFIG_ROUTE_HASH) {
     return "";
   }
-  return normalizeRoutePath(locationRef?.pathname || "");
-}
 
-function matchesRoutePrefix(routePath, prefix) {
-  if (!routePath || !prefix) {
-    return false;
-  }
-  return routePath === prefix || routePath.startsWith(`${prefix}/`);
+  return path;
 }
 
 export function isThemeGameContextActive(options = {}) {
   const routePath = resolveRoutePath(options.windowRef, options.documentRef);
-  if (!routePath) {
-    return false;
-  }
-
-  return GAME_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(routePath, prefix));
-}
-
-function getDocumentVariantName(documentRef) {
-  if (documentRef && typeof documentRef.getElementById === "function") {
-    const variantElement = documentRef.getElementById("ad-ext-game-variant");
-    return normalizeVariant(variantElement?.textContent || "");
-  }
-
-  return "";
-}
-
-function isX01VariantName(variantName) {
-  return variantName.includes("x01") || /\b\d+01\b/.test(variantName);
-}
-
-export function getVariantName(gameState, documentRef) {
-  const variantFromDocument = getDocumentVariantName(documentRef);
-  if (variantFromDocument) {
-    return variantFromDocument;
-  }
-
-  if (gameState && typeof gameState.getVariant === "function") {
-    const variantFromState = normalizeVariant(gameState.getVariant());
-    if (variantFromState) {
-      return variantFromState;
-    }
-  }
-
-  return "";
-}
-
-function isCricketOrTactics(variantName) {
-  return (
-    variantName === "cricket" ||
-    variantName.startsWith("cricket ") ||
-    variantName === "tactics" ||
-    variantName.startsWith("tactics ")
-  );
-}
-
-export function isThemeVariantActive(options = {}) {
-  const variantName = normalizeVariant(options.variantName);
-  if (!variantName) {
-    return false;
-  }
-
-  if (!isThemeGameContextActive(options)) {
-    return false;
-  }
-
-  const matchMode = String(options.matchMode || "equals").trim().toLowerCase();
-  const gameState = options.gameState || null;
-  const currentVariant = getVariantName(gameState, options.documentRef);
-
-  if (variantName === "x01") {
-    if (currentVariant && !isX01VariantName(currentVariant)) {
-      return false;
-    }
-
-    if (gameState && typeof gameState.isX01Variant === "function") {
-      return gameState.isX01Variant({
-        allowMissing: false,
-        allowEmpty: false,
-        allowNumeric: true,
-      });
-    }
-    return isX01VariantName(currentVariant);
-  }
-
-  if (variantName === "cricket") {
-    if (gameState && typeof gameState.isCricketVariant === "function") {
-      return gameState.isCricketVariant({
-        allowMissing: false,
-        allowEmpty: false,
-        includeHiddenCricket: false,
-      });
-    }
-    return isCricketOrTactics(currentVariant);
-  }
-
-  if (!currentVariant) {
-    return false;
-  }
-
-  if (matchMode === "includes") {
-    return currentVariant.includes(variantName);
-  }
-
-  return currentVariant === variantName || currentVariant.startsWith(`${variantName} `);
-}
-
-export function buildPreviewPlacementCss(previewOptions = {}) {
-  const mode = String(previewOptions.mode || "standard").trim().toLowerCase();
-  if (mode !== "under-throws") {
-    return "";
-  }
-
-  const className = String(previewOptions.previewSpaceClass || PREVIEW_SPACE_CLASS).trim();
-  if (!className) {
-    return "";
-  }
-
-  const previewHeightPx = clampNumber(previewOptions.previewHeightPx, 40, 260, 128);
-  const previewGapPx = clampNumber(previewOptions.previewGapPx, 0, 48, 8);
-  return `
-#ad-ext-turn.${className}{
-  padding-bottom: ${Math.round(previewHeightPx + previewGapPx)}px !important;
-}
-`;
-}
-
-function isElementVisible(node, windowRef = null, options = {}) {
-  const allowDisconnected = options.allowDisconnected === true;
-  if (!node || (!allowDisconnected && node.isConnected === false)) {
-    return false;
-  }
-
-  if (typeof node.getClientRects === "function" && node.getClientRects().length === 0) {
-    return false;
-  }
-
-  const ownerWindow = windowRef || node.ownerDocument?.defaultView || null;
-  if (ownerWindow && typeof ownerWindow.getComputedStyle === "function") {
-    const style = ownerWindow.getComputedStyle(node);
-    if (style) {
-      if (style.display === "none" || style.visibility === "hidden") {
-        return false;
-      }
-      if (String(style.opacity || "1") === "0") {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-function hasVisibleDartsZoomPreviewCard(shadowRoot, windowRef = null) {
-  if (!shadowRoot || typeof shadowRoot.querySelectorAll !== "function") {
-    return false;
-  }
-
-  const previewImages = Array.from(shadowRoot.querySelectorAll("img"));
-  if (!previewImages.length) {
-    return false;
-  }
-
-  return previewImages.some((imageNode) => {
-    const source = String(imageNode?.getAttribute?.("src") || imageNode?.src || "");
-    if (!source.includes("/images/board.png")) {
-      return false;
-    }
-    return isElementVisible(imageNode, windowRef, { allowDisconnected: true });
-  });
-}
-
-export function isPreviewPlacementEnabled(documentRef, previewOptions = {}, windowRef = null) {
-  const mode = String(previewOptions.mode || "standard").trim().toLowerCase();
-  if (mode !== "under-throws") {
-    return false;
-  }
-
-  const activationMode = String(previewOptions.activationMode || "always")
-    .trim()
-    .toLowerCase();
-  if (activationMode !== "autodarts-tools-zoom") {
-    return true;
-  }
-
-  if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
-    return false;
-  }
-
-  const zoomNodes = Array.from(documentRef.querySelectorAll("autodarts-tools-zoom"));
-  if (!zoomNodes.length) {
-    return false;
-  }
-
-  return zoomNodes.some((zoomNode) => {
-    if (!isElementVisible(zoomNode, windowRef)) {
-      return false;
-    }
-    return hasVisibleDartsZoomPreviewCard(zoomNode.shadowRoot || null, windowRef);
-  });
-}
-
-export function togglePreviewSpace(documentRef, previewOptions = {}, enabled = false) {
-  const mode = String(previewOptions.mode || "standard").trim().toLowerCase();
-  if (mode !== "under-throws") {
-    return;
-  }
-
-  const className = String(previewOptions.previewSpaceClass || PREVIEW_SPACE_CLASS).trim();
-  if (!className || !documentRef || typeof documentRef.getElementById !== "function") {
-    return;
-  }
-
-  const turnNode = documentRef.getElementById("ad-ext-turn");
-  if (!turnNode?.classList || typeof turnNode.classList.toggle !== "function") {
-    return;
-  }
-
-  turnNode.classList.toggle(className, Boolean(enabled));
+  return routePath === MATCH_ROUTE_PREFIX || routePath.startsWith(`${MATCH_ROUTE_PREFIX}/`);
 }

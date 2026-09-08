@@ -13,6 +13,7 @@ export const EFFECT_FILL_CLASS_PREFIX = "ad-ext-x01-remaining-score-bar__fill--e
 
 export const COLOR_THEMES = Object.freeze([
   "checkout-focus",
+  "checkout-zone-blue",
   "traffic-light",
   "danger-endgame",
   "gradient-by-progress",
@@ -166,6 +167,9 @@ ${HOST_SELECTOR}{
   --ad-ext-x01-remaining-score-bar-fill-overlay-repeat-active:repeat;
   --ad-ext-x01-remaining-score-bar-fill-overlay-blend-active:screen;
   --ad-ext-x01-remaining-score-bar-fill-overlay-opacity-active:0;
+  --ad-ext-x01-remaining-score-bar-fill-overlay-width-active:100%;
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-position-active:0%;
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active:0;
   --ad-ext-x01-remaining-score-bar-track-bg:var(--ad-ext-x01-remaining-score-bar-track-bg-active);
   --ad-ext-x01-remaining-score-bar-fill-bg:var(--ad-ext-x01-remaining-score-bar-fill-bg-active);
   --ad-ext-x01-remaining-score-bar-fill-shadow:var(--ad-ext-x01-remaining-score-bar-fill-shadow-active);
@@ -180,6 +184,9 @@ ${HOST_SELECTOR}{
   --ad-ext-x01-remaining-score-bar-fill-overlay-repeat:var(--ad-ext-x01-remaining-score-bar-fill-overlay-repeat-active);
   --ad-ext-x01-remaining-score-bar-fill-overlay-blend:var(--ad-ext-x01-remaining-score-bar-fill-overlay-blend-active);
   --ad-ext-x01-remaining-score-bar-fill-overlay-opacity:var(--ad-ext-x01-remaining-score-bar-fill-overlay-opacity-active);
+  --ad-ext-x01-remaining-score-bar-fill-overlay-width:var(--ad-ext-x01-remaining-score-bar-fill-overlay-width-active);
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-position:var(--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active);
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-opacity:var(--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active);
   display:block;
   width:100%;
   min-width:0;
@@ -210,6 +217,9 @@ ${HOST_SELECTOR}.${ACTIVE_CLASS}{
   --ad-ext-x01-remaining-score-bar-fill-overlay-repeat:var(--ad-ext-x01-remaining-score-bar-fill-overlay-repeat-active);
   --ad-ext-x01-remaining-score-bar-fill-overlay-blend:var(--ad-ext-x01-remaining-score-bar-fill-overlay-blend-active);
   --ad-ext-x01-remaining-score-bar-fill-overlay-opacity:var(--ad-ext-x01-remaining-score-bar-fill-overlay-opacity-active);
+  --ad-ext-x01-remaining-score-bar-fill-overlay-width:var(--ad-ext-x01-remaining-score-bar-fill-overlay-width-active);
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-position:var(--ad-ext-x01-remaining-score-bar-checkout-threshold-position-active);
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-opacity:var(--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity-active);
 }
 
 ${HOST_SELECTOR}.${INACTIVE_CLASS}{
@@ -229,6 +239,9 @@ ${HOST_SELECTOR}.${INACTIVE_CLASS}{
   --ad-ext-x01-remaining-score-bar-fill-overlay-repeat:repeat;
   --ad-ext-x01-remaining-score-bar-fill-overlay-blend:screen;
   --ad-ext-x01-remaining-score-bar-fill-overlay-opacity:0;
+  --ad-ext-x01-remaining-score-bar-fill-overlay-width:100%;
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-position:0%;
+  --ad-ext-x01-remaining-score-bar-checkout-threshold-opacity:0;
   opacity:.88;
 }
 
@@ -251,6 +264,19 @@ ${HOST_SELECTOR} .${TRACK_CLASS}::after{
   inset:0;
   background:var(--ad-ext-x01-remaining-score-bar-track-overlay);
   opacity:var(--ad-ext-x01-remaining-score-bar-track-overlay-opacity);
+  pointer-events:none;
+}
+
+${HOST_SELECTOR} .${TRACK_CLASS}::before{
+  content:"";
+  position:absolute;
+  z-index:3;
+  top:0;
+  bottom:0;
+  left:var(--ad-ext-x01-remaining-score-bar-checkout-threshold-position);
+  border-left:2px dashed rgba(255,255,255,.45);
+  transform:translateX(-1px);
+  opacity:var(--ad-ext-x01-remaining-score-bar-checkout-threshold-opacity);
   pointer-events:none;
 }
 
@@ -297,6 +323,8 @@ ${HOST_SELECTOR} .${FILL_CLASS}::after{
 }
 
 ${HOST_SELECTOR} .${FILL_CLASS}::before{
+  inset:0 auto 0 0;
+  width:var(--ad-ext-x01-remaining-score-bar-fill-overlay-width);
   background-image:var(--ad-ext-x01-remaining-score-bar-fill-overlay-image);
   background-size:var(--ad-ext-x01-remaining-score-bar-fill-overlay-size);
   background-position:var(--ad-ext-x01-remaining-score-bar-fill-overlay-position);
