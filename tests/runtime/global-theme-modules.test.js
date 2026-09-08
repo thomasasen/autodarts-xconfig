@@ -63,6 +63,30 @@ test("global background, typography and turn darts build isolated CSS", () => {
   assert.doesNotMatch(dartCss, /font-family: "Fragment Mono"/);
 });
 
+test("global typography keeps modern match font scopes independent", () => {
+  const buildScopeCss = (scope) => buildThemeGlobalTypographyStyleText({
+    fontPreset: "fragment-mono",
+    applyTo: [scope],
+  });
+
+  const scoresCss = buildScopeCss("scores");
+  assert.match(scoresCss, /main \.overflow-clip \.font-number\.overflow-hidden/);
+  assert.match(scoresCss, /main \.bg-surface-surface > \.font-number/);
+  assert.doesNotMatch(scoresCss, /:first-child \.font-number/);
+  assert.doesNotMatch(scoresCss, /main \.font-display/);
+
+  const throwsCss = buildScopeCss("throws");
+  assert.match(throwsCss, /main \.bg-surface-surface > :first-child \.font-number/);
+  assert.match(throwsCss, /main \.text-checkout-suggestion/);
+  assert.doesNotMatch(throwsCss, /\.font-number\.overflow-hidden/);
+  assert.doesNotMatch(throwsCss, /main \.font-display/);
+
+  const namesCss = buildScopeCss("names");
+  assert.match(namesCss, /main \.font-display/);
+  assert.doesNotMatch(namesCss, /\.font-number/);
+  assert.doesNotMatch(namesCss, /\.text-checkout-suggestion/);
+});
+
 test("global modules mount independently on matches and clean up after a route change", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

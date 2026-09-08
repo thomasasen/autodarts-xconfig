@@ -467,12 +467,17 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
-    const nextCardPreview = resolveFeatureCardPreview(feature);
+    const nextCardPreview = resolveFeatureCardPreview(feature, getFeatures());
     const cardNodes = Array.from(documentRef.querySelectorAll(
       `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}']`
     ));
     cardNodes.forEach((card) => {
       card.setAttribute("data-preview-kind", nextCardPreview.kind);
+      if (nextCardPreview.displayMode) {
+        card.setAttribute("data-preview-display-mode", nextCardPreview.displayMode);
+      } else {
+        card.removeAttribute("data-preview-display-mode");
+      }
       const imageNode = card.querySelector(".ad-xconfig-card-bg img");
       if (imageNode && nextCardPreview.url) {
         imageNode.setAttribute("src", nextCardPreview.url);
@@ -494,6 +499,10 @@ function ensureXConfigShell(options = {}) {
     }
 
     syncFeatureCardPreview(normalizedFeatureKey);
+    if (normalizedFeatureKey === "theme-global-background") {
+      syncFeatureCardPreview("theme-global-presets");
+      syncFeatureCardPreview("theme-global-typography");
+    }
     const cardStatusNodes = Array.from(documentRef.querySelectorAll(
       `[data-adxconfig-theme-card-status='true'][data-feature-key='${normalizedFeatureKey}']`
     ));
@@ -537,7 +546,8 @@ function ensureXConfigShell(options = {}) {
       domGuards.ensureStyle(STYLE_ID, styleText);
       if (
         isConfigRoute() &&
-        state.activeSettingsFeatureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
+        (state.activeSettingsFeatureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY ||
+          state.activeTab === "themes")
       ) {
         const typographyFeature = getFeatures().find(
           (feature) => feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY

@@ -69,6 +69,13 @@ import {
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
 const MENU_LABEL = "AD xConfig";
+const MAIN_NAVIGATION_ITEMS = Object.freeze([
+  Object.freeze({ label: "Home", href: "/" }),
+  Object.freeze({ label: "Play", href: "/play" }),
+  Object.freeze({ label: "Online", href: "/lobbies" }),
+  Object.freeze({ label: "Tournaments", href: "/tournaments" }),
+  Object.freeze({ label: "Stats", href: "/statistics" }),
+]);
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
@@ -126,6 +133,7 @@ const STYLE_CHECKOUT_SUGGESTIONS_THEMES = Object.freeze({
   }),
 });
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
+const THEME_GLOBAL_PRESETS_FEATURE_KEY = "theme-global-presets";
 const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 const TURN_DART_DISPLAY_FEATURE_KEY = "turn-dart-display";
 const TURN_DART_DISPLAY_ASSET_FIELD_KEY = "turnDartAssetKey";
@@ -239,8 +247,12 @@ function formatVariantLabel(variants = []) {
   return variants.map((variant) => toTitleCase(variant)).join(" / ");
 }
 
-function isThemeGlobalTypographyFeature(feature) {
+function isThemeGlobalFeature(feature) {
   return String(feature?.featureKey || "").trim().startsWith("theme-global-");
+}
+
+function isThemeGlobalWideCard(feature) {
+  return String(feature?.featureKey || "").trim() === THEME_GLOBAL_PRESETS_FEATURE_KEY;
 }
 
 function buildThemeGlobalCardSummary(documentRef) {
@@ -569,10 +581,19 @@ function buildSwitch(documentRef, input, label) {
     attributes: { for: input.id },
   });
   wrapper.appendChild(input);
-  wrapper.appendChild(createElement(documentRef, "span", {
+  const track = createElement(documentRef, "span", {
     className: "ad-xconfig-switch-track",
     attributes: { "aria-hidden": "true" },
+  });
+  track.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-switch-option ad-xconfig-switch-option--on",
+    text: "On",
   }));
+  track.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-switch-option ad-xconfig-switch-option--off",
+    text: "Off",
+  }));
+  wrapper.appendChild(track);
   return wrapper;
 }
 
@@ -1474,7 +1495,63 @@ const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
       buildCheckoutSuggestionSample(documentRef, feature?.config || {})
     );
   },
+  "theme-global-typography": (documentRef, host, feature) => {
+    host.replaceChildren(
+      buildThemeGlobalCardPreviewSample(documentRef, feature?.config || {}, "Aktuelle Schrift")
+    );
+  },
+  "theme-global-presets": (documentRef, host, _feature, preview) => {
+    const preset = preview?.preset;
+    if (!preset) {
+      host.replaceChildren();
+      return;
+    }
+    host.replaceChildren(
+      buildThemeGlobalCardPreviewSample(
+        documentRef,
+        preset,
+        `${preview.active ? "Aktuelle Vorlage" : "Vorlage"}: ${preset.label}`
+      )
+    );
+  },
 });
+
+function buildThemeGlobalCardPreviewSample(documentRef, config = {}, label = "") {
+  const sample = createElement(documentRef, "div", {
+    className: "ad-xconfig-theme-card-preview-sample",
+    attributes: {
+      "aria-hidden": "true",
+    },
+  });
+  applyThemeGlobalTypographyPreviewFont(sample, config.fontPreset);
+  sample.style.setProperty("--ad-xconfig-theme-card-accent", normalizeHexColor(config.accentColor, "#69D4FF"));
+  sample.style.setProperty("--ad-xconfig-theme-card-score", normalizeHexColor(config.scoreColor, "#FFFFFF"));
+  sample.style.setProperty(
+    "--ad-xconfig-theme-card-secondary",
+    normalizeHexColor(config.secondaryTextColor, "#DCE9FF")
+  );
+  sample.style.setProperty(
+    "--ad-xconfig-theme-card-throw",
+    normalizeHexColor(config.throwLabelColor, "#9FDB58")
+  );
+  sample.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-card-preview-label",
+    text: label,
+  }));
+  sample.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-card-preview-name",
+    text: "THOMAS",
+  }));
+  sample.appendChild(createElement(documentRef, "strong", {
+    className: "ad-xconfig-theme-card-preview-score",
+    text: "501",
+  }));
+  sample.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-card-preview-throw",
+    text: "T20  D20",
+  }));
+  return sample;
+}
 
 export function syncFeatureCardPreviewContent(
   documentRef,
@@ -1509,7 +1586,7 @@ export function syncFeatureCardPreviewContent(
     background.appendChild(previewHost);
   }
 
-  fillPreview(documentRef, previewHost, feature);
+  fillPreview(documentRef, previewHost, feature, preview);
 }
 
 function buildCheckoutSuggestionPreviewSection(documentRef, feature) {
@@ -2871,14 +2948,16 @@ export function syncSelectOptionButtons(documentRef, actionNode, selectedValue) 
   }
 }
 
-function buildFeatureCard(documentRef, feature) {
+function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   const descriptor = getXConfigDescriptor(feature.featureKey);
-  const isThemeGlobalCard = isThemeGlobalTypographyFeature(feature);
-  const preview = resolveFeatureCardPreview(feature);
+  const fieldCount = Array.isArray(descriptor?.fields) ? descriptor.fields.length : 0;
+  const isThemeGlobalCard = isThemeGlobalFeature(feature);
+  const isWideCard = isThemeGlobalWideCard(feature);
+  const preview = resolveFeatureCardPreview(feature, previewFeatures);
   const card = createElement(documentRef, "article", {
     className: [
       "ad-xconfig-card",
-      isThemeGlobalCard ? "ad-xconfig-card--theme-global" : "",
+      isWideCard ? "ad-xconfig-card--theme-global" : "",
     ].filter(Boolean).join(" "),
     attributes: {
       "data-feature-key": feature.featureKey,
@@ -2886,6 +2965,7 @@ function buildFeatureCard(documentRef, feature) {
       "data-card-type": descriptor?.cardType || "toggle",
       "data-design-status": descriptor?.designStatus || "deprecated",
       "data-preview-kind": preview.kind,
+      "data-preview-display-mode": preview.displayMode || undefined,
     },
   });
   const previewUrl = preview.url;
@@ -2912,10 +2992,43 @@ function buildFeatureCard(documentRef, feature) {
     className: "ad-xconfig-card-head",
   });
   const copy = createElement(documentRef, "div");
-  copy.appendChild(createElement(documentRef, "h3", {
+  const title = createElement(documentRef, "h3", {
     className: "ad-xconfig-card-title",
     text: feature.title,
-  }));
+  });
+  if (fieldCount > 0) {
+    const settingsButton = createElement(documentRef, "button", {
+      className: "ad-xconfig-card-settings-icon",
+      type: "button",
+      attributes: {
+        "data-adxconfig-action": "open-settings",
+        "data-feature-key": feature.featureKey,
+        "aria-label": `${feature.title} Einstellungen öffnen`,
+        title: "Einstellungen",
+      },
+    });
+    const settingsIcon = createSvgElement(documentRef, "svg", {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": "2",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      focusable: "false",
+      "aria-hidden": "true",
+    });
+    settingsIcon.appendChild(createSvgElement(documentRef, "circle", {
+      cx: "12",
+      cy: "12",
+      r: "3",
+    }));
+    settingsIcon.appendChild(createSvgElement(documentRef, "path", {
+      d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.08A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.08A1.65 1.65 0 0 0 20.91 10H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15z",
+    }));
+    settingsButton.appendChild(settingsIcon);
+    title.appendChild(settingsButton);
+  }
+  copy.appendChild(title);
   copy.appendChild(createElement(documentRef, "p", {
     className: "ad-xconfig-card-copy",
     text: descriptor?.description || "Modulares Feature für Autodarts xConfig.",
@@ -2943,13 +3056,6 @@ function buildFeatureCard(documentRef, feature) {
     badges.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-variant",
       text: `Gilt für: ${variantLabel}`,
-    }));
-  }
-  const fieldCount = Array.isArray(descriptor?.fields) ? descriptor.fields.length : 0;
-  if (fieldCount > 0) {
-    badges.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-variant",
-      text: fieldCount === 1 ? "1 Einstellung" : `${fieldCount} Einstellungen`,
     }));
   }
   cardContent.appendChild(badges);
@@ -3135,7 +3241,7 @@ function buildSettingsModal(documentRef, state, features) {
           text: sectionLabel,
         }));
         const isThemePresetSection =
-          isThemeGlobalTypographyFeature(feature) && sectionLabel === "Presets";
+          isThemeGlobalFeature(feature) && sectionLabel === "Presets";
         const nextSectionBody = createElement(documentRef, "div", {
           className: isThemePresetSection
             ? "ad-xconfig-settings-section-body ad-xconfig-settings-section-body--theme-presets"
@@ -3503,10 +3609,61 @@ function buildSettingsTransferDialog(documentRef, state) {
   return backdrop;
 }
 
+function buildMainNavigation(documentRef) {
+  const header = createElement(documentRef, "header", {
+    className: "ad-xconfig-main-nav",
+  });
+  const inner = createElement(documentRef, "div", {
+    className: "ad-xconfig-main-nav-inner",
+  });
+  const brand = createElement(documentRef, "a", {
+    className: "ad-xconfig-main-nav-brand",
+    attributes: {
+      href: "/",
+      "aria-label": "Autodarts",
+    },
+  });
+  brand.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-main-nav-brand-mark",
+    text: "AD",
+    attributes: { "aria-hidden": "true" },
+  }));
+  brand.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-main-nav-brand-text",
+    text: "AUTODARTS",
+  }));
+  inner.appendChild(brand);
+
+  const navigation = createElement(documentRef, "nav", {
+    className: "ad-xconfig-main-nav-links",
+    attributes: { "aria-label": "Hauptnavigation" },
+  });
+  MAIN_NAVIGATION_ITEMS.forEach((item) => {
+    navigation.appendChild(createElement(documentRef, "a", {
+      className: "ad-xconfig-main-nav-link",
+      text: item.label,
+      attributes: { href: item.href },
+    }));
+  });
+  navigation.appendChild(createElement(documentRef, "button", {
+    className: "ad-xconfig-main-nav-link ad-xconfig-main-nav-link--active",
+    text: "xConfig",
+    type: "button",
+    attributes: {
+      "aria-current": "page",
+      "aria-label": "xConfig, aktuelle Seite",
+    },
+  }));
+  inner.appendChild(navigation);
+  header.appendChild(inner);
+  return header;
+}
+
 export function buildShellContent(documentRef, state, features) {
   const page = createElement(documentRef, "div", {
     className: "ad-xconfig-page",
   });
+  page.appendChild(buildMainNavigation(documentRef));
   const shell = createElement(documentRef, "div", {
     className: "ad-xconfig-shell",
   });
@@ -3671,7 +3828,7 @@ export function buildShellContent(documentRef, state, features) {
       .slice()
       .sort(sortFeatures)
       .forEach((feature) => {
-        grid.appendChild(buildFeatureCard(documentRef, feature));
+        grid.appendChild(buildFeatureCard(documentRef, feature, activeTabFeatures));
       });
     if (grid.children.length) {
       content.appendChild(grid);

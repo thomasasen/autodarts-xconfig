@@ -1411,9 +1411,9 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""))
     .filter((featureKey) => featureKey.startsWith("theme-"));
   assert.deepEqual(themeCardFeatureKeys, [
+    "theme-global-presets",
     "theme-global-background",
     "theme-global-typography",
-    "theme-global-presets",
   ]);
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
@@ -1611,20 +1611,44 @@ test("xConfig style checkout suggestions renders live preview and style option s
   runtime.stop();
 });
 
-test("xConfig shell keeps the native header visible above fixed modal backdrops", async () => {
+test("xConfig shell keeps a functional main navigation visible above fixed modal backdrops", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
   await waitForMenuButton(documentRef);
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const mainNavigation = documentRef.querySelector(".ad-xconfig-main-nav");
+  assert.ok(mainNavigation);
+  assert.equal(mainNavigation.tagName, "HEADER");
+  assert.equal(
+    mainNavigation.querySelector(".ad-xconfig-main-nav-links")?.getAttribute("aria-label"),
+    "Hauptnavigation"
+  );
+  const navigationTargets = Array.from(mainNavigation.querySelectorAll(".ad-xconfig-main-nav-links a[href]"))
+    .map((link) => [String(link.textContent || "").trim(), link.getAttribute("href")]);
+  assert.deepEqual(navigationTargets, [
+    ["Home", "/"],
+    ["Play", "/play"],
+    ["Online", "/lobbies"],
+    ["Tournaments", "/tournaments"],
+    ["Stats", "/statistics"],
+  ]);
+  const activeItem = mainNavigation.querySelector(".ad-xconfig-main-nav-link--active");
+  assert.equal(String(activeItem?.textContent || "").trim(), "xConfig");
+  assert.equal(activeItem?.getAttribute("aria-current"), "page");
+
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
 
   assert.equal(
-    styleText.includes("height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable"),
+    styleText.includes("position:fixed;inset:0;z-index:2147483000;width:100%;height:100dvh"),
     true
   );
   assert.equal(styleText.includes(".ad-xconfig-page{box-sizing:border-box;min-height:100%"), true);
+  assert.equal(styleText.includes(".ad-xconfig-main-nav{position:fixed;z-index:60;inset:0 0 auto;height:64px"), true);
   assert.equal(styleText.includes(".ad-xconfig-modal-backdrop{position:fixed;inset:64px 0 0"), true);
   assert.equal(styleText.includes("max-height:calc(100dvh - 96px)"), true);
 
@@ -3147,7 +3171,7 @@ test("xConfig shell links every card README button to the matching README anchor
   runtime.stop();
 });
 
-test("xConfig shell renders a compact searchable Templates Global font picker and scopes preview font loading to the modal", async () => {
+test("xConfig shell renders a compact searchable global font picker and loads the selected card preview font", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -3159,8 +3183,12 @@ test("xConfig shell renders a compact searchable Templates Global font picker an
 
   const themeCards = documentRef.querySelectorAll(".ad-xconfig-card");
   assert.ok(themeCards.length > 0);
-  assert.equal(themeCards[1]?.getAttribute("data-feature-key"), "theme-global-typography");
-  assert.equal(documentRef.getElementById("ad-xconfig-preview-fonts-style"), null);
+  assert.equal(themeCards[0]?.getAttribute("data-feature-key"), "theme-global-presets");
+  assert.equal(themeCards[1]?.getAttribute("data-feature-key"), "theme-global-background");
+  assert.equal(themeCards[2]?.getAttribute("data-feature-key"), "theme-global-typography");
+  const initialPreviewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
+  assert.ok(initialPreviewStyleNode);
+  assert.match(String(initialPreviewStyleNode.textContent || ""), /family=Aldrich/);
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-typography']"
@@ -3657,7 +3685,34 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
 
   const themeCardPreview = themeCard.querySelector(".ad-xconfig-card-bg img");
   assert.ok(themeCardPreview);
-  assert.match(String(themeCardPreview.getAttribute("src") || ""), /theme-global-typography\.webp/);
+  assert.match(String(themeCardPreview.getAttribute("src") || ""), /theme-presets\/cyberpunk\.jpg/);
+  assert.equal(themeCard.getAttribute("data-preview-kind"), "theme-global-presets");
+  assert.match(
+    String(themeCard.querySelector(".ad-xconfig-theme-card-preview-label")?.textContent || ""),
+    /Aktuelle Vorlage: Cyberpunk/
+  );
+
+  const backgroundCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-background']"
+  );
+  assert.match(
+    String(backgroundCard?.querySelector(".ad-xconfig-card-bg img")?.getAttribute("src") || ""),
+    /theme-presets\/cyberpunk\.jpg/
+  );
+  assert.doesNotMatch(String(backgroundCard?.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
+
+  const typographyCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-typography']"
+  );
+  assert.doesNotMatch(String(typographyCard?.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
+  assert.equal(typographyCard?.getAttribute("data-preview-kind"), "theme-global-typography");
+  const typographySample = typographyCard?.querySelector(".ad-xconfig-theme-card-preview-sample");
+  assert.ok(typographySample);
+  assert.equal(typographySample.dataset.adxconfigPreviewFont, "audiowide");
+  assert.equal(
+    typographySample.style.getPropertyValue("--ad-xconfig-theme-card-score"),
+    cyberpunkPreset.scoreColor
+  );
 
   runtime.stop();
 });
@@ -3726,32 +3781,69 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
 
   const styleNode = documentRef.getElementById("ad-xconfig-shell-style");
   assert.ok(styleNode);
-  const globalCard = documentRef.querySelector(".ad-xconfig-card--theme-global");
-  assert.ok(globalCard);
-  const preview = globalCard.querySelector(".ad-xconfig-card-bg");
-  const content = globalCard.querySelector(".ad-xconfig-card-content");
+  const styleText = String(styleNode.textContent || "");
+  assert.match(styleText, /\.ad-xconfig-card\{[^}]*min-height:224px[^}]*border-radius:12px[^}]*border:0/);
+  assert.match(styleText, /\.ad-xconfig-card-bg\{[^}]*position:absolute[^}]*inset:0 0 0 33\.333%/);
+  assert.match(styleText, /\.ad-xconfig-card-bg::after\{[^}]*linear-gradient/);
+  const presetCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-presets']"
+  );
+  const backgroundCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-background']"
+  );
+  const typographyCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='theme-global-typography']"
+  );
+  assert.ok(presetCard);
+  assert.match(String(presetCard.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
+  assert.doesNotMatch(String(backgroundCard?.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
+  assert.doesNotMatch(String(typographyCard?.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
+  const preview = presetCard.querySelector(".ad-xconfig-card-bg");
+  const content = presetCard.querySelector(".ad-xconfig-card-content");
   assert.equal(preview.parentNode, content.parentNode);
   assert.equal(content.querySelector(".ad-xconfig-card-bg"), null);
-  assert.equal(globalCard.querySelectorAll("[role='switch']").length, 1);
-  assert.equal(globalCard.querySelectorAll(".ad-xconfig-onoff-btn").length, 0);
+  assert.equal(presetCard.querySelectorAll("[role='switch']").length, 0);
+  assert.equal(backgroundCard?.querySelectorAll("[role='switch']").length, 1);
+  assert.equal(typographyCard?.querySelectorAll("[role='switch']").length, 1);
+  assert.deepEqual(
+    backgroundCard
+      ?.querySelectorAll(".ad-xconfig-switch-option")
+      .map((node) => String(node.textContent || "").trim()),
+    ["On", "Off"]
+  );
+  const settingsIcon = backgroundCard?.querySelector(".ad-xconfig-card-settings-icon");
+  assert.ok(settingsIcon);
+  assert.equal(settingsIcon.getAttribute("data-adxconfig-action"), "open-settings");
+  assert.equal(settingsIcon.getAttribute("title"), "Einstellungen");
+  assert.ok(settingsIcon.querySelector("svg"));
+  assert.deepEqual(
+    backgroundCard
+      ?.querySelectorAll(".ad-xconfig-variant")
+      .map((node) => String(node.textContent || "")),
+    ["Gilt für: Alle Modi"]
+  );
+  assert.equal(
+    Array.from(documentRef.querySelectorAll(".ad-xconfig-card .ad-xconfig-variant"))
+      .some((node) => /Einstellung/.test(String(node.textContent || ""))),
+    false
+  );
+  assert.match(styleText, /\.ad-xconfig-switch\{[^}]*width:114px[^}]*height:44px/);
+  assert.match(styleText, /\.ad-xconfig-switch-track\{[^}]*border-radius:12px[^}]*background:#0e2250/);
+  assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track \.ad-xconfig-switch-option--on\{[^}]*linear-gradient\(90deg,#901f7d 0%,#c12f63 100%\)/);
+  assert.match(styleText, /\.ad-xconfig-switch-input:not\(:checked\) \+ \.ad-xconfig-switch-track \.ad-xconfig-switch-option--off\{[^}]*background:#2d313a/);
+  documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
+    const featureKey = String(card.getAttribute("data-feature-key") || "");
+    assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
+    assert.ok(card.querySelector(".ad-xconfig-variant"), `missing retained theme tag for ${featureKey}`);
+  });
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
 
-  [
-    "checkout-score-highlight",
-    "x01-remaining-score-bar",
-    "x01-bust-active-player-highlight",
-    "checkout-target-highlights",
-    "tv-board-zoom",
-    "active-player-sweep",
-    "avg-trend-arrow",
-    "take-out-darts-alert",
-    "turn-score-counter",
-  ].forEach((featureKey) => {
-    const card = documentRef.querySelector(`.ad-xconfig-card[data-feature-key='${featureKey}']`);
-    assert.ok(card, `missing card for ${featureKey}`);
-    assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing preview background for ${featureKey}`);
+  documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
+    const featureKey = String(card.getAttribute("data-feature-key") || "");
+    assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing animation card image for ${featureKey}`);
+    assert.ok(card.querySelector(".ad-xconfig-variant"), `missing retained animation tag for ${featureKey}`);
   });
 
   assert.equal(

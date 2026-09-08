@@ -169,6 +169,36 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ## Themen
 
+<a id="theme-global-presets"></a>
+
+### Vorlagen
+
+- Gilt für: `alle Modi`
+- Kurz: Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
+- Grafisch: Jede Vorschau zeigt das echte Preset-Wallpaper, die zugehörige Schrift und die Farbrollen. Die Aktion aktiviert Hintergrund und Schrift und ersetzt einen eigenen Wallpaper-Upload.
+- Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
+- `Classic`: Wendet die Vorlage Classic mit einem Klick an.
+- `Broadcast`: Wendet die Vorlage Broadcast mit einem Klick an.
+- `British Flag`: Wendet die Vorlage British Flag mit einem Klick an.
+- `Cyberpunk`: Wendet die Vorlage Cyberpunk mit einem Klick an.
+- `Matrix`: Wendet die Vorlage Matrix mit einem Klick an.
+- `Fire`: Wendet die Vorlage Fire mit einem Klick an.
+- `Ice`: Wendet die Vorlage Ice mit einem Klick an.
+- `Spider-Man`: Wendet die Vorlage Spider-Man mit einem Klick an.
+- `Neon Splash`: Wendet die Vorlage Neon Splash mit einem Klick an.
+- `John Wick`: Wendet die Vorlage John Wick mit einem Klick an.
+- `Solar Pulse`: Wendet die Vorlage Solar Pulse mit einem Klick an.
+- `Crimson Facets`: Wendet die Vorlage Crimson Facets mit einem Klick an.
+- `Aqua Flux`: Wendet die Vorlage Aqua Flux mit einem Klick an.
+- `Avengers Endgame`: Wendet die Vorlage Avengers Endgame mit einem Klick an.
+- `Gladiator`: Wendet die Vorlage Gladiator mit einem Klick an.
+- `Deutschland`: Wendet die Vorlage Deutschland mit einem Klick an.
+- `Dark Side`: Wendet die Vorlage Dark Side mit einem Klick an.
+- `Darts Arena`: Wendet die Vorlage Darts Arena mit einem Klick an.
+- `Bayern`: Wendet die Vorlage Bayern mit einem Klick an.
+
+![Globale Vorlagen](screenshots/templates-global-presets.webp)
+
 <a id="theme-global-background"></a>
 
 ### Hintergrund
@@ -283,36 +313,6 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Globale Schrift](screenshots/template-theme-global-typography-xConfig.png)
-
-<a id="theme-global-presets"></a>
-
-### Vorlagen
-
-- Gilt für: `alle Modi`
-- Kurz: Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
-- Grafisch: Jede Vorschau zeigt das echte Preset-Wallpaper, die zugehörige Schrift und die Farbrollen. Die Aktion aktiviert Hintergrund und Schrift und ersetzt einen eigenen Wallpaper-Upload.
-- Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
-- `Classic`: Wendet die Vorlage Classic mit einem Klick an.
-- `Broadcast`: Wendet die Vorlage Broadcast mit einem Klick an.
-- `British Flag`: Wendet die Vorlage British Flag mit einem Klick an.
-- `Cyberpunk`: Wendet die Vorlage Cyberpunk mit einem Klick an.
-- `Matrix`: Wendet die Vorlage Matrix mit einem Klick an.
-- `Fire`: Wendet die Vorlage Fire mit einem Klick an.
-- `Ice`: Wendet die Vorlage Ice mit einem Klick an.
-- `Spider-Man`: Wendet die Vorlage Spider-Man mit einem Klick an.
-- `Neon Splash`: Wendet die Vorlage Neon Splash mit einem Klick an.
-- `John Wick`: Wendet die Vorlage John Wick mit einem Klick an.
-- `Solar Pulse`: Wendet die Vorlage Solar Pulse mit einem Klick an.
-- `Crimson Facets`: Wendet die Vorlage Crimson Facets mit einem Klick an.
-- `Aqua Flux`: Wendet die Vorlage Aqua Flux mit einem Klick an.
-- `Avengers Endgame`: Wendet die Vorlage Avengers Endgame mit einem Klick an.
-- `Gladiator`: Wendet die Vorlage Gladiator mit einem Klick an.
-- `Deutschland`: Wendet die Vorlage Deutschland mit einem Klick an.
-- `Dark Side`: Wendet die Vorlage Dark Side mit einem Klick an.
-- `Darts Arena`: Wendet die Vorlage Darts Arena mit einem Klick an.
-- `Bayern`: Wendet die Vorlage Bayern mit einem Klick an.
-
-![Globale Vorlagen](screenshots/templates-global-presets.webp)
 
 ## Animationen für X01
 

@@ -231,6 +231,21 @@ const DEBUG_FIELD = checkboxField("debug", "Debug");
 
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
+    featureKey: "theme-global-presets",
+    tab: "themes",
+    readmeAnchor: "theme-global-presets",
+    cardType: "action",
+    fields: THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) =>
+      actionField("applyThemeGlobalPreset", preset.label, {
+        key: `preset-${preset.key}`,
+        actionId: preset.key,
+        buttonLabel: preset.label,
+        previewTarget: "theme-global-template-preset",
+        section: "Vorlagen",
+      })
+    ),
+  }),
+  descriptorEntry({
     featureKey: "theme-global-background",
     tab: "themes",
     readmeAnchor: "theme-global-background",
@@ -283,21 +298,6 @@ export const xconfigDescriptors = Object.freeze([
       ),
       DEBUG_FIELD,
     ],
-  }),
-  descriptorEntry({
-    featureKey: "theme-global-presets",
-    tab: "themes",
-    readmeAnchor: "theme-global-presets",
-    cardType: "action",
-    fields: THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) =>
-      actionField("applyThemeGlobalPreset", preset.label, {
-        key: `preset-${preset.key}`,
-        actionId: preset.key,
-        buttonLabel: preset.label,
-        previewTarget: "theme-global-template-preset",
-        section: "Vorlagen",
-      })
-    ),
   }),
   animationDescriptorEntry({
     featureKey: "bot-board-style",

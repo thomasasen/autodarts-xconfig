@@ -61,14 +61,14 @@ test("xConfig descriptors stay aligned with registry definitions and exported or
 test("themes contain exactly background, font and action-only presets", () => {
   const themeDescriptors = xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes");
   assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.featureKey), [
+    "theme-global-presets",
     "theme-global-background",
     "theme-global-typography",
-    "theme-global-presets",
   ]);
   assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.cardType), [
-    "toggle",
-    "toggle",
     "action",
+    "toggle",
+    "toggle",
   ]);
   assert.equal(themeDescriptors.every((descriptor) => descriptor.toggleable === undefined), true);
 });

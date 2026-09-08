@@ -179,9 +179,9 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 
 | Modul | Bereich | Geeignet für | Kurz erklärt |
 | --- | --- | --- | --- |
+| [Vorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
 | [Hintergrund](#theme-global-background) | Theme | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
 | [Schrift](#template-global-typography) | Theme | `alle Modi` | Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen. |
-| [Vorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
 | [Bot Board Style](#bot-board-style) | Animation & Komfort | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
 | [Wurffeld-Darts](#turn-dart-display) | Animation & Komfort | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
 | [Checkout Score Highlight](#animation-autodarts-animate-checkout-score-highlight) | Animation & Komfort | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
@@ -210,6 +210,18 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 ## Themen
 
+<a id="theme-global-presets"></a>
+
+### Vorlagen
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
+- Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-presets)
+
+![Globale Vorlagen](docs/screenshots/templates-global-presets.webp)
+
 <a id="theme-global-background"></a>
 
 ### Hintergrund
@@ -233,18 +245,6 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-global-typography)
 
 ![Globale Schrift](docs/screenshots/template-theme-global-typography-xConfig.png)
-
-<a id="theme-global-presets"></a>
-
-### Vorlagen
-
-- Gilt für: `alle Modi`
-- Was macht es sichtbar? Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
-- Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-presets)
-
-![Globale Vorlagen](docs/screenshots/templates-global-presets.webp)
 
 ## Animationen und Komfort
 

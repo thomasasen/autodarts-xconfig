@@ -14,6 +14,8 @@ export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
     ".ad-ext-player-score",
     ".ad-ext-turn-points",
     "#ad-ext-turn > .score",
+    "main .overflow-clip .font-number.overflow-hidden",
+    "main .bg-surface-surface > .font-number",
   ]),
   throws: Object.freeze([
     "#ad-ext-turn > .ad-ext-turn-throw",
@@ -21,10 +23,15 @@ export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
     "#ad-ext-turn > .suggestion *",
     ".ad-ext-checkout-suggestion",
     ".ad-ext-checkout-suggestion *",
+    "main .bg-surface-surface > :first-child .font-number",
+    "main .bg-surface-surface > :first-child .font-number *",
+    "main .text-checkout-suggestion",
+    "main .text-checkout-suggestion *",
   ]),
   names: Object.freeze([
     ".ad-ext-player-name",
     ".ad-ext-player-name > p",
+    "main .font-display",
   ]),
 });
 
