@@ -41,7 +41,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.tvBoardZoom, "object");
   assert.equal(typeof config.features.checkoutSuggestionStyles, "object");
   assert.equal(typeof config.features.avgTrendArrow, "object");
-  assert.equal(typeof config.features.activePlayerSweep, "object");
+  assert.equal(config.features.activePlayerSweep, undefined);
   assert.equal(typeof config.features.specialHitHighlights, "object");
   assert.equal(typeof config.features.cricketTargetHighlighter, "object");
   assert.equal(typeof config.features.cricketGridStatusEffects, "object");
@@ -51,7 +51,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.singleBullHitSound, "object");
   assert.equal(typeof config.features.turnScoreCounter, "object");
   assert.equal(typeof config.features.x01RemainingScoreBar, "object");
-  assert.equal(typeof config.features.winnerCelebrationEffect, "object");
+  assert.equal(config.features.winnerCelebrationEffect, undefined);
   assert.equal(typeof config.features.themes, "object");
   assert.equal(typeof config.features.themes.globalBackground, "object");
   assert.equal(typeof config.features.themes.globalTypography, "object");
@@ -59,7 +59,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.turnDartDisplay, "object");
   assert.equal(config.featureToggles.checkoutTargetHighlights, false);
   assert.equal(config.featureToggles.tvBoardZoom, false);
-  assert.equal(config.featureToggles.activePlayerSweep, false);
+  assert.equal(config.featureToggles.activePlayerSweep, undefined);
   assert.equal(config.featureToggles.specialHitHighlights, false);
   assert.equal(config.featureToggles.cricketTargetHighlighter, false);
   assert.equal(config.featureToggles.cricketGridStatusEffects, false);
@@ -69,7 +69,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(config.featureToggles.singleBullHitSound, false);
   assert.equal(config.featureToggles.turnScoreCounter, false);
   assert.equal(config.featureToggles.x01RemainingScoreBar, false);
-  assert.equal(config.featureToggles.winnerCelebrationEffect, false);
+  assert.equal(config.featureToggles.winnerCelebrationEffect, undefined);
   assert.equal(config.featureToggles["themes.globalBackground"], false);
   assert.equal(config.featureToggles["themes.globalTypography"], false);
   assert.equal(config.featureToggles.turnDartDisplay, false);
@@ -168,8 +168,6 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.checkoutSuggestionStyles.labelText, "CHECKOUT");
   assert.equal(config.features.checkoutSuggestionStyles.colorTheme, "amber");
   assert.equal(config.features.avgTrendArrow.durationMs, 500);
-  assert.equal(config.features.activePlayerSweep.sweepStyle, "strong");
-  assert.equal(config.features.activePlayerSweep.durationMs, 620);
   assert.equal(config.features.specialHitHighlights.colorTheme, "kind-signal");
   assert.equal(config.features.specialHitHighlights.animationStyle, "electric-jolt");
   assert.equal(config.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
@@ -189,12 +187,6 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.turnScoreCounter.durationMs, 1000);
   assert.equal(config.features.turnScoreCounter.countEffect, "smooth-count");
   assert.equal(config.features.turnScoreCounter.flashOnChange, false);
-  assert.equal(config.features.winnerCelebrationEffect.style, "center-cannon");
-  assert.equal(config.features.winnerCelebrationEffect.colorTheme, "gold");
-  assert.equal(config.features.winnerCelebrationEffect.intensity, "standard");
-  assert.equal(config.features.winnerCelebrationEffect.durationSeconds, 5);
-  assert.equal(config.features.winnerCelebrationEffect.particleAmount, "sparsam");
-  assert.equal(config.features.winnerCelebrationEffect.includeBullOut, false);
   assert.equal(config.features.x01RemainingScoreBar.colorTheme, "traffic-light");
   assert.equal(config.features.x01RemainingScoreBar.barSize, "breit");
   assert.equal(config.features.x01RemainingScoreBar.effect, "previous-score-trail");
@@ -248,10 +240,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       avgTrendArrow: {
         durationMs: "500",
         size: "gro" + "\u00df",
-      },
-      activePlayerSweep: {
-        durationMs: "620",
-        sweepStyle: "STRONG",
       },
       specialHitHighlights: {
         colorTheme: "EMBER-RUSH",
@@ -316,15 +304,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         thresholdColorMode: "TRAFFIC-LIGHT",
         barSize: "EXTRABREIT",
         effect: "GLASS-CHARGE",
-      },
-      winnerCelebrationEffect: {
-        style: "FIREWORKS",
-        colorTheme: "ICE",
-        intensity: "STARK",
-        durationSeconds: "2",
-        particleAmount: "VOLL",
-        includeBullOut: "false",
-        pointerDismiss: "false",
       },
       themes: {
         globalTypography: {
@@ -395,8 +374,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("checkoutSuggestionStyles").labelText, "FINISH");
   assert.equal(runtimeConfig.getFeatureConfig("avgTrendArrow").durationMs, 500);
   assert.equal(runtimeConfig.getFeatureConfig("avgTrendArrow").size, "gross");
-  assert.equal(runtimeConfig.getFeatureConfig("activePlayerSweep").durationMs, 620);
-  assert.equal(runtimeConfig.getFeatureConfig("activePlayerSweep").sweepStyle, "strong");
   assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").colorTheme, "ember-rush");
   assert.equal(
     runtimeConfig.getFeatureConfig("specialHitHighlights").animationStyle,
@@ -497,13 +474,6 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     runtimeConfig.getFeatureConfig("turnDartDisplay").turnDartImageDataUrl,
     "data:image/png;base64,DDDD"
   );
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").style, "top-fireworks");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").colorTheme, "ice");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").intensity, "stark");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").durationSeconds, 2);
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").particleAmount, "voll");
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").includeBullOut, false);
-  assert.equal(runtimeConfig.getFeatureConfig("winnerCelebrationEffect").pointerDismiss, false);
   assert.equal(runtimeConfig.getNormalized().features.themes.x01, undefined);
 });
 
@@ -635,11 +605,12 @@ test("special-hit-highlights keeps default kind-signal when only legacy hitColor
   assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").colorTheme, "kind-signal");
 });
 
-test("createRuntimeConfig migrates legacy feature config keys without overwriting canonical values", () => {
+test("createRuntimeConfig migrates supported legacy keys and drops removed feature keys", () => {
   const runtimeConfig = createRuntimeConfig({
     featureToggles: {
       checkoutScorePulse: true,
       checkoutScoreHighlight: false,
+      turnStartSweep: true,
       winnerFireworks: true,
     },
     features: {
@@ -655,6 +626,9 @@ test("createRuntimeConfig migrates legacy feature config keys without overwritin
         enabled: true,
         countEffect: "odometer",
       },
+      turnStartSweep: {
+        durationMs: 620,
+      },
       winnerFireworks: {
         style: "cannon",
       },
@@ -663,18 +637,21 @@ test("createRuntimeConfig migrates legacy feature config keys without overwritin
   const normalized = runtimeConfig.getNormalized();
 
   assert.equal(runtimeConfig.isFeatureEnabled("checkoutScorePulse"), false);
-  assert.equal(runtimeConfig.isFeatureEnabled("winnerFireworks"), true);
+  assert.equal(runtimeConfig.isFeatureEnabled("winnerFireworks"), false);
   assert.equal(normalized.features.checkoutScorePulse, undefined);
   assert.equal(normalized.features.turnPointsCount, undefined);
+  assert.equal(normalized.features.turnStartSweep, undefined);
   assert.equal(normalized.features.winnerFireworks, undefined);
   assert.equal(normalized.featureToggles.checkoutScorePulse, undefined);
+  assert.equal(normalized.featureToggles.turnStartSweep, undefined);
   assert.equal(normalized.featureToggles.winnerFireworks, undefined);
   assert.equal(normalized.features.checkoutScoreHighlight.enabled, true);
   assert.equal(normalized.features.checkoutScoreHighlight.effect, "glow-only");
   assert.equal(normalized.features.checkoutScoreHighlight.colorTheme, "56, 189, 248");
   assert.equal(normalized.features.turnScoreCounter.enabled, true);
   assert.equal(normalized.features.turnScoreCounter.countEffect, "rolling-digits");
-  assert.equal(normalized.features.winnerCelebrationEffect.style, "center-cannon");
+  assert.equal(normalized.features.activePlayerSweep, undefined);
+  assert.equal(normalized.features.winnerCelebrationEffect, undefined);
 });
 
 test("special-hit-highlights maps retired animation styles to one-shot replacements", () => {

@@ -1,16 +1,16 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `22` Module in einem Userscript:
+`autodarts-xconfig` bündelt `20` Module in einem Userscript:
 
-- `19` Animationen und Komfortfunktionen
+- `17` Animationen und Komfortfunktionen
 - `3` Themes
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `22` Module: `19` Animationen und Komfortfunktionen sowie `3` Themes.
+- Insgesamt `20` Module: `17` Animationen und Komfortfunktionen sowie `3` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt globales Wallpaper sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -47,10 +47,6 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 **In allen Animationen**
 - `Alle aktiviert`: Aus
 - `Debug`: Aus
-
-**Active Player Sweep**
-- `Sweep-Geschwindigkeit`: Langsam
-- `Sweep-Stil`: Kräftig
 
 **Turn Score Counter**
 - `Zählstil`: Smooth Count
@@ -105,15 +101,6 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Lautstärke`: Standard
 - `Wiederholsperre`: 700 ms
 - `Fallback-Scan`: Nur live
-
-**Winner Celebration Effect**
-- `Style`: Center Cannon
-- `Farbe`: Gold
-- `Intensität`: Standard
-- `Dauer`: 5 s
-- `Partikelanzahl`: Sparsam
-- `Bei Bull-Out aktiv`: Aus
-- `Klick beendet Effekt`: An
 
 **Checkout Suggestion Styles**
 - `Stil`: Stripe
@@ -451,19 +438,19 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Checkout Suggestion Styles
 
 - Gilt für: `X01`
-- Kurz: Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.
-- Grafisch: Der sichtbare Vorschlagsblock erhält je nach Stil eine Badge-, Ribbon-, Stripe-, Ticket- oder Outline-Optik. Optional sitzt darüber ein eigenes Label wie `CHECKOUT` oder `FINISH`.
-- Wann sinnvoll? Wenn du Suggestionen schneller scannen möchtest oder der Standard-Look zu unauffällig ist.
-- `Stil`: Wechselt die Hülle des Checkout-Vorschlags.
-  - `Badge`: Diese Variante legt um den Suggestion-Block eine plakative Badge-Hülle mit gestrichelter Outline und weicher Akzentfläche. Der Hinweis wirkt dadurch wie ein klar eingestempeltes Label im Interface.
-  - `Ribbon`: Diese Variante inszeniert den Suggestion-Block wie ein leuchtendes Ribbon oder Banner. Durch Innenrahmen, Glow und leicht gekipptes Label wirkt der Hinweis energischer und auffälliger.
-  - `Stripe`: Diese Variante kombiniert einen akzentfarbenen Rahmen mit diagonalem Streifenmuster in der Fläche. Der Vorschlag wirkt dadurch besonders signalhaft und gut scanbar.
-  - `Ticket`: Diese Variante formt den Suggestion-Block wie ein Ticket mit eigener Labelzone und gestrichelter Trennlinie. Dadurch wirkt die Empfehlung spielerischer und stärker wie ein separates Element.
+- Kurz: Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.
+- Grafisch: Schriftart und Textfarbe bleiben beim Theme. Badge, Ribbon, Stripe, Ticket oder Outline ergänzen Fläche, Kontur und optional ein Label im ersten Checkout-Feld.
+- Wann sinnvoll? Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.
+- `Stil`: Wechselt den Akzentstil der Checkout-Felder.
+  - `Badge`: Diese Variante verbindet die vergrößerten Checkout-Felder mit einer gestrichelten Kontur und einer dezenten Akzentfläche. Schrift und Textfarbe kommen weiterhin aus dem aktiven Theme.
+  - `Ribbon`: Diese Variante inszeniert die Checkout-Felder mit einer farbigen Oberkante und einem kontrollierten Glow. Das Label bleibt gerade und die Theme-Typografie vollständig lesbar.
+  - `Stripe`: Diese Variante markiert die Checkout-Felder mit einer seitlichen Akzentleiste und einem ruhigen Flächenverlauf. Dadurch bleibt die Route signalstark und zugleich gut lesbar.
+  - `Ticket`: Diese Variante formt jedes Checkout-Feld mit einer gestrichelten Innenkontur wie ein Ticket. Der Segmenttext bleibt frei von überlagernden Linien oder Mustern.
   - `Outline`: Diese Variante hält die Fläche selbst relativ ruhig und setzt auf eine kräftige äußere Kontur. Der Vorschlag wirkt dadurch klar, präzise und eher technisch als verspielt.
-- `Labeltext`: Legt den festen Labeltext über dem Vorschlag fest oder blendet ihn aus.
-  - `CHECKOUT`: Diese Einstellung setzt oberhalb der Empfehlung ein festes `CHECKOUT`-Label. Dadurch wird der Block sofort als Checkout-Hinweis lesbar, auch wenn man nur kurz auf die Fläche schaut.
-  - `FINISH`: Mit dieser Option trägt der Suggestion-Block das Label `FINISH` statt `CHECKOUT`. Das wirkt sprachlich etwas kompakter und rückt den erfolgreichen Abschluss stärker in den Vordergrund.
-  - `Kein Label`: Diese Option entfernt die kleine Label-Marke oberhalb des Suggestion-Blocks vollständig. Die farbige Hülle bleibt erhalten, aber der Vorschlag wirkt minimalistischer und weniger plakativ.
+- `Labeltext`: Legt den festen Labeltext im ersten Checkout-Feld fest oder blendet ihn aus.
+  - `CHECKOUT`: Diese Einstellung setzt im ersten Checkout-Feld ein festes `CHECKOUT`-Label. Dadurch wird die Route sofort als Checkout-Hinweis lesbar, auch wenn man nur kurz auf die Fläche schaut.
+  - `FINISH`: Mit dieser Option trägt das erste Feld der Checkout-Route das Label `FINISH` statt `CHECKOUT`. Das wirkt sprachlich kompakter und rückt den Abschluss stärker in den Vordergrund.
+  - `Kein Label`: Diese Option entfernt die kleine Label-Marke aus dem ersten Checkout-Feld vollständig. Die farbige Hülle bleibt erhalten, aber die Route wirkt minimalistischer.
 - `Farbthema`: Wählt die Akzentfarbe des Suggestion-Styles.
   - `Amber`: Diese Palette taucht die Hülle in warme Amber- und Goldtöne. Dadurch wirkt die Empfehlung freundlich, energisch und sehr gut vom dunklen Hintergrund abgesetzt.
   - `Cyan`: Diese Farbpalette setzt auf kühle Cyan-Töne für Rahmen, Label und Hintergrundakzent. Der Vorschlag wirkt dadurch moderner, technischer und etwas nüchterner als bei warmen Farben.
@@ -646,27 +633,6 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![AVG Trend Arrow](screenshots/animation-average-trend-arrow.png)
-
-<a id="animation-autodarts-animate-active-player-sweep"></a>
-<a id="animation-autodarts-animate-turn-start-sweep"></a>
-
-### Active Player Sweep
-
-- Gilt für: `alle Modi`
-- Kurz: Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.
-- Grafisch: Eine helle, halbtransparente Bahn zieht einmal quer über die aktive Karte. So springt der neue Zugwechsel schneller ins Auge.
-- Wann sinnvoll? Wenn du in schnellen Matches einen klareren Wechsel zwischen den Spielern sehen willst.
-- `Sweep-Geschwindigkeit`: Bestimmt das Tempo des Sweeps.
-  - `Schnell`: Diese Stufe verkürzt den Sweep auf einen schnellen, klaren Lichtimpuls. Der Turn-Wechsel springt ins Auge, ohne lange auf der Karte stehen zu bleiben.
-  - `Standard`: Diese Einstellung hält die Balance zwischen schnellem Impuls und gut lesbarer Bewegung. Der Sweep wirkt bewusst gesetzt, aber nicht ausgedehnt.
-  - `Langsam`: Diese Stufe verlängert den Sweep sichtbar und macht den Spielerwechsel stärker zum kleinen Übergangseffekt. Die Karte bleibt dadurch länger in einer hellen Bewegung markiert.
-- `Sweep-Stil`: Regelt Breite und Helligkeit des Sweeps.
-  - `Dezent`: Diese Variante hält Breite und Helligkeit des Sweeps bewusst niedrig. Der Spielerwechsel bleibt sichtbar, wirkt aber nicht wie ein dominanter Effektstreifen.
-  - `Standard`: Diese Einstellung liefert den vorgesehenen Mittelwert für Breite und Helligkeit des Sweeps. Der Wechsel ist gut sichtbar, ohne die Karte optisch zu dominieren.
-  - `Kräftig`: Diese Variante verbreitert und verstärkt den Lichtlauf deutlich. Der aktive Kartenwechsel wird dadurch sehr plakativ markiert und ist auch in schnellen Matches kaum zu übersehen.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-
-![Active Player Sweep](screenshots/animation-turn-start-sweep.gif)
 
 <a id="animation-autodarts-animate-special-hit-highlights"></a>
 <a id="animation-autodarts-animate-triple-double-bull-hits"></a>
@@ -880,53 +846,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 ![Turn Score Counter](screenshots/animation-turn-points-count.gif)
 ![Turn Score Counter Detail](screenshots/animation-turn-points-count-detail-readme.gif)
-
-<a id="animation-autodarts-animate-winner-celebration-effect"></a>
-<a id="animation-autodarts-animate-winner-fireworks"></a>
-
-### Winner Celebration Effect
-
-- Gilt für: `alle Modi`
-- Kurz: Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
-- Grafisch: Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.
-- Wann sinnvoll? Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.
-- `Style`: Wählt das Bewegungsmuster des Siegereffekts.
-  - `Center Side Burst`: Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feierwirkung des Moduls.
-  - `Top Fireworks`: Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel.
-  - `Center Cannon`: Diese Einstellung bündelt den Effekt in einer dichten Kanonen-Salve aus der unteren Bildmitte. Der Ausbruch wirkt kompakt, kräftig und sehr direkt.
-  - `Triple Burst`: Diese Variante verbindet zentrale und seitliche Ausbrüche zu einem breiten Effektteppich. Dadurch entsteht der vollste und raumgreifendste Feiermoment unter den Mehrfachmustern.
-  - `Star Burst`: Diese Einstellung ersetzt die Standardpartikel durch Sternformen und lässt sie mit ruhigerer Bewegung durchs Bild laufen. Der Effekt wirkt dadurch dekorativer und weniger wie klassisches Konfetti.
-  - `Side Cannons`: Diese Variante setzt auf kurze Seitenschüsse von links und rechts. Der Effekt rahmt das Bild stärker ein und wirkt dynamischer, aber weniger flächig als zentrale Bursts.
-- `Farbe`: Wählt die Farbpalette des Siegereffekts.
-  - `Autodarts`: Diese Palette nutzt Blau- und Weißtöne und bleibt damit am nächsten am bestehenden Autodarts-Charakter. Der Effekt wirkt kühl, klar und relativ technisch.
-  - `Rot/Weiß`: Diese Palette kombiniert Weiß mit mehreren roten Tönen. Dadurch entsteht ein klassischer, festlicher Look, der deutlich wärmer und emotionaler wirkt als die blauen Standardfarben.
-  - `Ice`: Diese Palette setzt auf weiße und eisblaue Farbwerte bis in kräftige Blautöne. Der Effekt wirkt dadurch kühl, klar und fast gläsern.
-  - `Sunset`: Diese Farbpalette mischt Weiß mit warmem Orange, Pink und Violett. Dadurch bekommt der Effekt eine deutlich stimmungsvollere, buntere Sunset-Wirkung.
-  - `Neon`: Diese Palette kombiniert mehrere sehr helle Neonfarben und erzeugt damit den grellsten, modernsten Look. Der Effekt wirkt stark künstlich, bunt und maximal aufmerksamkeitsstark.
-  - `Gold`: Diese Variante färbt den Effekt in Weiß, Gold und warme Bernsteintöne. Dadurch entsteht eine klassische Feierwirkung, die besonders edel und festlich wirkt.
-- `Intensität`: Regelt Taktung und Energie des Siegereffekts.
-  - `Dezent`: Diese Stufe reduziert Partikelzahl, Geschwindigkeit und Auslösefrequenz. Das Feuerwerk wirkt dadurch ruhiger, luftiger und weniger bildfüllend.
-  - `Standard`: Diese Einstellung liefert den vorgesehenen Mittelwert für Partikelzahl, Auslöseintervall und Bewegungsenergie. Der Effekt bleibt klar festlich, ohne zu übersteuern.
-  - `Stark`: Diese Stufe steigert Partikelzahl, Auslösefrequenz und Bewegungsenergie spürbar. Der Effekt füllt den Bildschirm stärker und wirkt deutlich druckvoller als die anderen Varianten.
-- `Dauer`: Begrenzt die Laufzeit des Siegereffekts.
-  - `1 s`: Kürzeste Laufzeit; ideal, wenn der Effekt nur kurz aufblitzen soll.
-  - `2 s`: Kurze, gut sichtbare Laufzeit mit moderater Last.
-  - `5 s`: Längste Laufzeit; feierlich, aber nicht dauerhaft aktiv.
-- `Partikelanzahl`: Regelt die Partikelmenge pro Auslösung.
-  - `Sparsam`: Niedrigste Partikelmenge und geringste Last.
-  - `Optimiert`: Empfohlene Balance aus Wirkung und Performance.
-  - `Voll`: Maximale Dichte mit der höchsten Last.
-- `Test-Button`: Startet die aktuelle Konfiguration sofort als Vorschau.
-- `Bei Bull-Out aktiv`: Legt fest, ob der Effekt auch bei Bull-Out aktiv ist.
-- `Klick beendet Effekt`: Erlaubt das Beenden des Effekts per Klick.
-- `Debug`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-
-![Winner Celebration Effect](screenshots/animation-winner-fireworks.gif)
-![xConfig Test-Button](screenshots/xConfig-testbutton.png)
 <!-- xconfig-generated:end -->
 ## Weitere Hinweise zur Konfiguration
 
 - Alle Einstellungen werden lokal gespeichert.
 - Globales Wallpaper und eigener Dart-Upload werden lokal als Data-URL abgelegt.
 - Aktivierungen, Bild-Uploads und Feineinstellungen bleiben nach Reload erhalten.
-- `Winner Celebration Effect` besitzt wieder einen integrierten Test-Button in AD xConfig.

@@ -11,7 +11,6 @@ const FEATURE_CONFIG_KEYS = Object.freeze([
   "tvBoardZoom",
   "checkoutSuggestionStyles",
   "avgTrendArrow",
-  "activePlayerSweep",
   "specialHitHighlights",
   "cricketTargetHighlighter",
   "cricketGridStatusEffects",
@@ -21,7 +20,6 @@ const FEATURE_CONFIG_KEYS = Object.freeze([
   "singleBullHitSound",
   "turnScoreCounter",
   "x01RemainingScoreBar",
-  "winnerCelebrationEffect",
 ]);
 
 function wait(ms = 0) {
@@ -129,7 +127,6 @@ test("checkout-target-highlights mounts idempotently and cleans up style/observe
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
-
 test("checkout-suggestion-styles mounts idempotently and removes classes on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "D16";
@@ -207,31 +204,6 @@ test("avg-trend-arrow mounts idempotently and removes owned style", async () => 
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("autodarts-average-trend-style")), false);
-  assert.equal(runtime.context.registries.observers.size(), 0);
-});
-
-test("active-player-sweep mounts idempotently and cleans style plus observer state", async () => {
-  const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({ documentRef });
-  const runtime = createBootstrap({
-    windowRef,
-    documentRef,
-    config: createSingleFeatureConfig("activePlayerSweep", {
-      durationMs: 420,
-      sweepStyle: "standard",
-    }),
-  });
-
-  runtime.start();
-  runtime.start();
-  await wait(5);
-
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-active-player-sweep-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
-
-  runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-active-player-sweep-style")), false);
-  assert.equal(documentRef.activePlayerRow.classList.contains("ad-ext-active-player-sweep"), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
 });
 
@@ -324,7 +296,6 @@ test("cricket-grid-status-effects mounts idempotently and releases observers/lis
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });
-
 test("cricket-target-highlighter and cricket-grid-status-effects share one runtime observer/listener stack", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "Cricket";
@@ -518,37 +489,6 @@ test("x01-remaining-score-bar mounts idempotently and removes style on cleanup",
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-remaining-score-bar-style")), false);
-  assert.equal(runtime.context.registries.observers.size(), 0);
-  assert.equal(runtime.context.registries.listeners.size(), 0);
-});
-
-test("winner-celebration-effect mounts idempotently and removes overlay/style on cleanup", async () => {
-  const documentRef = new FakeDocument();
-  documentRef.winnerNode.classList.add("ad-ext-player-winner");
-  const windowRef = createFakeWindow({ documentRef });
-  const runtime = createBootstrap({
-    windowRef,
-    documentRef,
-    config: createSingleFeatureConfig("winnerCelebrationEffect", {
-      style: "realistic",
-      colorTheme: "autodarts",
-      intensity: "standard",
-      includeBullOut: true,
-      pointerDismiss: true,
-    }),
-  });
-
-  runtime.start();
-  runtime.start();
-  await wait(5);
-
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
-  assert.equal(runtime.context.registries.listeners.size(), 3);
-
-  runtime.stop();
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-style")), false);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 });

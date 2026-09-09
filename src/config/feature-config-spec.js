@@ -43,8 +43,6 @@ const TV_ZOOM_TARGETS = new Set(["finish-only", "route-first"]);
 const SUGGESTION_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
 const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
-const ACTIVE_PLAYER_SWEEP_DURATIONS = new Set([300, 420, 620]);
-const ACTIVE_PLAYER_SWEEP_STYLES = new Set(["subtle", "standard", "strong"]);
 const SPECIAL_HIT_COLOR_THEMES = new Set(["kind-signal", "ember-rush", "ice-circuit", "volt-lime", "crimson-steel", "arctic-mint", "champagne-night"]);
 const SPECIAL_HIT_ANIMATION_STYLE_ALIASES = Object.freeze({
   "": "pop-hit",
@@ -118,25 +116,6 @@ const TURN_SCORE_COUNT_EFFECT_ALIASES = Object.freeze({
 });
 const X01_REMAINING_SCORE_BAR_COLOR_THEMES = new Set(["checkout-focus", "checkout-zone-blue", "traffic-light", "danger-endgame", "gradient-by-progress", "autodarts", "signal-lime", "glass-mint", "ember-rush", "ice-circuit", "neon-violet", "sunset-amber", "monochrome-steel"]);
 const X01_REMAINING_SCORE_BAR_BAR_SIZES = new Set(["schmal", "standard", "breit", "extrabreit"]);
-const WINNER_CELEBRATION_STYLE_ALIASES = Object.freeze({
-  "": "center-side-burst",
-  realistic: "center-side-burst",
-  "center-side-burst": "center-side-burst",
-  fireworks: "top-fireworks",
-  "top-fireworks": "top-fireworks",
-  cannon: "center-cannon",
-  "center-cannon": "center-cannon",
-  victorystorm: "triple-burst",
-  "triple-burst": "triple-burst",
-  stars: "star-burst",
-  "star-burst": "star-burst",
-  sides: "side-cannons",
-  "side-cannons": "side-cannons",
-});
-const WINNER_FIREWORKS_COLOR_THEMES = new Set(["autodarts", "redwhite", "ice", "sunset", "neon", "gold"]);
-const WINNER_FIREWORKS_INTENSITIES = new Set(["dezent", "standard", "stark"]);
-const WINNER_FIREWORKS_DURATION_SECONDS = new Set([1, 2, 5]);
-const WINNER_FIREWORKS_PARTICLE_AMOUNTS = new Set(["sparsam", "optimiert", "voll"]);
 const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "center", "tile"]);
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 30, 25, 20, 15, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
@@ -375,7 +354,6 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
   x01BustActivePlayerHighlight: { enabled: false, crackCount: 2, shakeEnabled: false, soundEnabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
-  activePlayerSweep: { enabled: false, durationMs: 420, sweepStyle: "standard", debug: false },
   specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
   cricketTargetHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
   cricketGridStatusEffects: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal", debug: false },
@@ -384,7 +362,6 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   takeOutDartsAlert: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
   singleBullHitSound: { enabled: false, volume: 0.9, cooldownMs: 700, pollIntervalMs: 0, debug: false },
   turnScoreCounter: { enabled: false, durationMs: 3000, countEffect: "smooth-count", flashOnChange: true, flashMode: "on-change", debug: false },
-  winnerCelebrationEffect: { enabled: false, style: "center-side-burst", colorTheme: "autodarts", intensity: "standard", durationSeconds: 5, particleAmount: "optimiert", includeBullOut: true, pointerDismiss: true, debug: false },
   x01RemainingScoreBar: { enabled: false, colorTheme: "checkout-focus", barSize: "standard", effect: "bar-pulse", debug: false },
   botBoardStyle: {
     enabled: false,
@@ -423,7 +400,6 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutSuggestionStyles: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
   x01BustActivePlayerHighlight: { crackCount: 2, shakeEnabled: false, soundEnabled: true },
   avgTrendArrow: { durationMs: 500, size: "standard" },
-  activePlayerSweep: { durationMs: 620, sweepStyle: "strong" },
   specialHitHighlights: { colorTheme: "kind-signal", animationStyle: "electric-jolt" },
   cricketTargetHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
   cricketGridStatusEffects: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "high-contrast", intensity: "normal" },
@@ -432,7 +408,6 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   takeOutDartsAlert: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
   singleBullHitSound: { volume: 0.9, cooldownMs: 700, pollIntervalMs: 0 },
   turnScoreCounter: { durationMs: 1000, countEffect: "smooth-count", flashOnChange: false, flashMode: "on-change" },
-  winnerCelebrationEffect: { style: "center-cannon", colorTheme: "gold", intensity: "standard", durationSeconds: 5, particleAmount: "sparsam", includeBullOut: false, pointerDismiss: true },
   x01RemainingScoreBar: { colorTheme: "traffic-light", barSize: "breit", effect: "previous-score-trail" },
   botBoardStyle: { design: "winmau-blade-6-tc", scope: "all-match-boards", debug: false },
   "themes.globalBackground": {
@@ -515,14 +490,6 @@ const LEGACY_IMPORTERS = Object.freeze({
     return buildFeatureImport("avgTrendArrow", legacyFeatureState, {
       durationMs: readLegacySetting(settings, "ANIMATIONSDAUER_MS", 320),
       size: readLegacySetting(settings, "PFEIL_GROESSE", "standard"),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
-  activePlayerSweep(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("activePlayerSweep", legacyFeatureState, {
-      durationMs: readLegacySetting(settings, "SWEEP_GESCHWINDIGKEIT_MS", 420),
-      sweepStyle: readLegacySetting(settings, "SWEEP_STIL", "standard"),
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
@@ -625,19 +592,6 @@ const LEGACY_IMPORTERS = Object.freeze({
       debug: readLegacySetting(settings, "DEBUG", false),
     });
   },
-  winnerCelebrationEffect(legacyFeatureState) {
-    const settings = getLegacyFeatureSettings(legacyFeatureState);
-    return buildFeatureImport("winnerCelebrationEffect", legacyFeatureState, {
-      style: readLegacySetting(settings, "STYLE", "realistic"),
-      colorTheme: readLegacySetting(settings, "FARBE", "autodarts"),
-      intensity: readLegacySetting(settings, "INTENSITAET", "standard"),
-      durationSeconds: readLegacySetting(settings, "DAUER_SEKUNDEN", 5),
-      particleAmount: readLegacySetting(settings, "PARTIKELANZAHL", "optimiert"),
-      includeBullOut: readLegacySetting(settings, "BULLOUT_AKTIV", true),
-      pointerDismiss: readLegacySetting(settings, "KLICK_ZUM_STOPPEN", true),
-      debug: readLegacySetting(settings, "DEBUG", false),
-    });
-  },
 });
 
 const FEATURE_NORMALIZERS = Object.freeze({
@@ -658,9 +612,6 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   avgTrendArrow(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 320, AVG_TREND_DURATIONS), size: normalizeMappedStringChoice(rawConfig.size, "standard", { klein: "klein", small: "klein", standard: "standard", gross: "gross", ["gro" + "\u00df"]: "gross", big: "gross", large: "gross" }), debug: normalizeBoolean(rawConfig.debug, false) };
-  },
-  activePlayerSweep(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 420, ACTIVE_PLAYER_SWEEP_DURATIONS), sweepStyle: normalizeStringChoice(rawConfig.sweepStyle, "standard", ACTIVE_PLAYER_SWEEP_STYLES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   specialHitHighlights(rawConfig = {}) {
     const legacyHitColorMode = String(rawConfig.hitColorMode || "").trim().toLowerCase();
@@ -710,9 +661,6 @@ const FEATURE_NORMALIZERS = Object.freeze({
     }
     const normalizedFlashMode = normalizeMappedStringChoice(rawConfig.flashMode, legacyFlashMode, { "": "on-change", "on-change": "on-change", onchange: "on-change", appear: "on-change", burst: "on-change", "nur-bei-Ã¤nderung": "on-change", "nur-bei-aenderung": "on-change", permanent: "permanent", always: "permanent", persistent: "permanent", dauerhaft: "permanent" });
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeTurnScoreCounterDuration(rawConfig.durationMs), countEffect: normalizeMappedStringChoice(rawConfig.countEffect, "smooth-count", TURN_SCORE_COUNT_EFFECT_ALIASES), flashOnChange: normalizeBoolean(rawConfig.flashOnChange, true), flashMode: hasLegacyFlashPermanent ? legacyFlashMode : normalizedFlashMode, debug: normalizeBoolean(rawConfig.debug, false) };
-  },
-  winnerCelebrationEffect(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeMappedStringChoice(rawConfig.style, "center-side-burst", WINNER_CELEBRATION_STYLE_ALIASES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "autodarts", WINNER_FIREWORKS_COLOR_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "standard", WINNER_FIREWORKS_INTENSITIES), durationSeconds: normalizeNumberChoice(rawConfig.durationSeconds, 5, WINNER_FIREWORKS_DURATION_SECONDS), particleAmount: normalizeStringChoice(rawConfig.particleAmount, "optimiert", WINNER_FIREWORKS_PARTICLE_AMOUNTS), includeBullOut: normalizeBoolean(rawConfig.includeBullOut, true), pointerDismiss: normalizeBoolean(rawConfig.pointerDismiss, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   x01RemainingScoreBar(rawConfig = {}) {
     const legacyThresholdColorMode = normalizeStringChoice(rawConfig.thresholdColorMode, "", X01_REMAINING_SCORE_BAR_COLOR_THEMES);

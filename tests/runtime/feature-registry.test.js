@@ -49,7 +49,7 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.deepEqual(listed[0].variants, ["x01"]);
   assert.equal(typeof listed[0].startupTiming, "string");
   assert.equal(listed.some((feature) => feature.featureKey === "tv-board-zoom"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "active-player-sweep"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "active-player-sweep"), false);
   assert.equal(listed.some((feature) => feature.featureKey === "special-hit-highlights"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "cricket-target-highlighter"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "cricket-grid-status-effects"), true);
@@ -59,7 +59,7 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.equal(listed.some((feature) => feature.featureKey === "single-bull-hit-sound"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "turn-score-counter"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "x01-remaining-score-bar"), true);
-  assert.equal(listed.some((feature) => feature.featureKey === "winner-celebration-effect"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "winner-celebration-effect"), false);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-global-background"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-global-typography"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-global-presets"), true);

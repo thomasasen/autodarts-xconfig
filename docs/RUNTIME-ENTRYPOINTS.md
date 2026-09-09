@@ -28,7 +28,6 @@ The runtime keeps the current per-feature observer model. Each mounted feature o
 | `tv-board-zoom` | root subtree, `childList`, `characterData`, `class/style` | board DOM changes and zoom-target layout changes |
 | `checkout-suggestion-styles` | root subtree, `childList`, `characterData` | suggestion text and replacement |
 | `avg-trend-arrow` | root subtree, `childList`, `characterData` | average text changes |
-| `active-player-sweep` | root subtree, `childList`, class attributes | active-player row changes |
 | `special-hit-highlights` | root subtree, `childList`, `characterData` | throw row text changes |
 | `cricket-target-highlighter` | root subtree, `childList`, `characterData` | cricket grid text and board replacement |
 | `cricket-grid-status-effects` | root subtree, `childList`, `characterData` | cricket grid text and row replacement |
@@ -37,7 +36,6 @@ The runtime keeps the current per-feature observer model. Each mounted feature o
 | `take-out-darts-alert` | root subtree, `childList`, `characterData` | remove-darts notice appearance and fallback text |
 | `single-bull-hit-sound` | root subtree, `childList`, `characterData` | throw text changes |
 | `turn-score-counter` | root subtree, `childList`, `characterData` | turn-points text changes |
-| `winner-celebration-effect` | root subtree, `childList`, `class/style` | winner banner visibility changes |
 | `theme-*` via `mount-theme-feature` | root subtree, `childList`, `characterData` | theme target layout/content changes |
 | `xconfig-ui` | app root subtree, `childList` | navigation/content tree changes outside shell-managed DOM |
 
@@ -52,7 +50,6 @@ Features with direct game-state subscriptions:
 - `tv-board-zoom`
 - `checkout-suggestion-styles`
 - `avg-trend-arrow`
-- `active-player-sweep`
 - `special-hit-highlights`
 - `cricket-target-highlighter`
 - `cricket-grid-status-effects`
@@ -61,7 +58,6 @@ Features with direct game-state subscriptions:
 - `take-out-darts-alert`
 - `single-bull-hit-sound`
 - `turn-score-counter`
-- `winner-celebration-effect`
 - `theme-*` via `mount-theme-feature`
 
 ## DOM and Window Listeners
@@ -69,7 +65,6 @@ Features with direct game-state subscriptions:
 Registry-managed listeners are concentrated in the shell, themes, and layout-sensitive features:
 
 - `tv-board-zoom`: `resize`, `orientationchange`, `pointerdown` (Klick auf Wurfanzeigenleiste für Korrektur-Auszoom), `visibilitychange`, `beforeunload`
-- `winner-celebration-effect`: `resize`, `visibilitychange`, `pointerdown`
 - `cricket-target-highlighter`: `resize`, `orientationchange`, `visibilitychange`
 - `cricket-grid-status-effects`: `resize`, `orientationchange`, `visibilitychange`
 - `dart-marker-replacer`: `resize`, `visibilitychange`
@@ -84,8 +79,7 @@ Registry-managed listeners are concentrated in the shell, themes, and layout-sen
 
 - `shared/raf-scheduler.js` is the standard feature-side scheduler used to coalesce repeated DOM and game-state triggers into one RAF callback.
 - `turn-score-counter` animates scoreboard text and tracks per-node RAF/anime handles.
-- `avg-trend-arrow`, `active-player-sweep`, `dart-marker-replacer`, `cricket-grid-status-effects`, and `winner-celebration-effect` use timeout-based cleanup for transient UI state.
-- `winner-celebration-effect` also uses an interval while the effect is active.
+- `avg-trend-arrow`, `dart-marker-replacer`, and `cricket-grid-status-effects` use timeout-based cleanup for transient UI state.
 - `single-bull-hit-sound` and `special-hit-highlights` support optional polling intervals and now skip hidden-tab polling work.
 
 ## Cleanup Boundaries

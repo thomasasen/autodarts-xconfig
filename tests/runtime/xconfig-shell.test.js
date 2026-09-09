@@ -1257,23 +1257,23 @@ test("xConfig shell persists rapid back-to-back UI actions without losing earlie
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
 
-  clickFeatureToggle(documentRef, "active-player-sweep", true);
-  clickFeatureToggle(documentRef, "winner-celebration-effect", true);
+  clickFeatureToggle(documentRef, "avg-trend-arrow", true);
+  clickFeatureToggle(documentRef, "turn-score-counter", true);
 
   assert.equal(await waitFor(() => {
     const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
     return (
       Boolean(storedConfig) &&
-      storedConfig.featureToggles.activePlayerSweep === true &&
-      storedConfig.featureToggles.winnerCelebrationEffect === true
+      storedConfig.featureToggles.avgTrendArrow === true &&
+      storedConfig.featureToggles.turnScoreCounter === true
     );
   }, { timeoutMs: 500, intervalMs: 5 }), true);
 
   const storedConfig = gmState.get(CONFIG_STORAGE_KEY);
-  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
-  assert.equal(storedConfig.featureToggles.winnerCelebrationEffect, true);
-  assert.equal(runtime.getSnapshot().features["active-player-sweep"].enabled, true);
-  assert.equal(runtime.getSnapshot().features["winner-celebration-effect"].enabled, true);
+  assert.equal(storedConfig.featureToggles.avgTrendArrow, true);
+  assert.equal(storedConfig.featureToggles.turnScoreCounter, true);
+  assert.equal(runtime.getSnapshot().features["avg-trend-arrow"].enabled, true);
+  assert.equal(runtime.getSnapshot().features["turn-score-counter"].enabled, true);
 
   runtime.stop();
 });
@@ -1322,12 +1322,12 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
     documentRef.querySelector(".ad-xconfig-content")?.getAttribute("aria-labelledby"),
     "ad-xconfig-tab-animations"
   );
-  clickFeatureToggle(documentRef, "active-player-sweep", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles.activePlayerSweep === true);
+  clickFeatureToggle(documentRef, "turn-score-counter", true);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnScoreCounter === true);
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
-  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(storedConfig.featureToggles.turnScoreCounter, true);
 
   const openCheckoutSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
@@ -1443,7 +1443,6 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   };
 
   assert.deepEqual(readGroupCards("all-modes"), [
-    "active-player-sweep",
     "turn-score-counter",
     "avg-trend-arrow",
     "special-hit-highlights",
@@ -1453,7 +1452,6 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "dartboard-marker-highlight",
     "take-out-darts-alert",
     "single-bull-hit-sound",
-    "winner-celebration-effect",
   ]);
   assert.deepEqual(readGroupCards("x01"), [
     "checkout-suggestion-styles",
@@ -1509,7 +1507,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
 
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["bot-board-style", "turn-dart-display", "checkout-target-highlights", "dart-marker-replacer", "take-out-darts-alert",
+    const expectedStatus = ["bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "dart-marker-replacer", "take-out-darts-alert",
       "single-bull-hit-sound", "x01-remaining-score-bar", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
@@ -1547,6 +1545,14 @@ test("xConfig style checkout suggestions renders live preview and style option s
   assert.ok(previewSection);
   const previewSuggestion = previewSection.querySelector(".ad-xconfig-checkout-suggestion-demo");
   assert.ok(previewSuggestion);
+  assert.equal(
+    previewSuggestion.querySelectorAll(".ad-xconfig-checkout-suggestion-demo-field").length,
+    3
+  );
+  assert.equal(
+    previewSuggestion.querySelector(".ad-xconfig-checkout-suggestion-demo-total")?.textContent,
+    "0"
+  );
   const activeStyleOption = documentRef.querySelector(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-suggestion-styles'][data-setting-key='style'][data-active='true']"
   );
@@ -1583,7 +1589,12 @@ test("xConfig style checkout suggestions renders live preview and style option s
   assert.equal(styleOptions.length, 5);
   styleOptions.forEach((optionNode) => {
     assert.ok(optionNode.querySelector(".ad-xconfig-checkout-suggestion-option-preview"));
-    assert.ok(optionNode.querySelector(".ad-xconfig-checkout-suggestion-demo"));
+    const optionPreview = optionNode.querySelector(".ad-xconfig-checkout-suggestion-demo");
+    assert.ok(optionPreview);
+    assert.equal(
+      optionPreview.querySelectorAll(".ad-xconfig-checkout-suggestion-demo-field").length,
+      3
+    );
   });
 
   clickSelectSettingOption(documentRef, "checkout-suggestion-styles", "style", "ticket");
@@ -2514,7 +2525,6 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
         config.features.checkoutTargetHighlights.colorTheme === "violet" &&
         config.features.checkoutSuggestionStyles.style === "stripe" &&
         config.features.checkoutSuggestionStyles.labelText === "CHECKOUT" &&
-        config.features.activePlayerSweep.sweepStyle === "strong" &&
         config.features.specialHitHighlights.animationStyle === "electric-jolt" &&
         config.features.cricketTargetHighlighter.irrelevantBoardDimStyle === "hatch" &&
         config.features.cricketGridStatusEffects.intensity === "normal" &&
@@ -2528,10 +2538,6 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
         config.features.dartMarkerReplacer.enableFlightBlur === true &&
         config.features.takeOutDartsAlert.imageSize === "large" &&
         config.features.singleBullHitSound.volume === 0.9 &&
-        config.features.winnerCelebrationEffect.style === "center-cannon" &&
-        config.features.winnerCelebrationEffect.intensity === "standard" &&
-        config.features.winnerCelebrationEffect.durationSeconds === 5 &&
-        config.features.winnerCelebrationEffect.particleAmount === "sparsam" &&
         config.features.x01RemainingScoreBar.barSize === "breit" &&
         config.features.x01RemainingScoreBar.effect === "previous-score-trail" &&
         config.features.themes.globalBackground.backgroundImageDataUrl ===
@@ -2703,60 +2709,6 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
     "electric-jolt",
   ]);
   animationOptions.forEach((optionNode) => {
-    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
-  });
-
-  runtime.stop();
-});
-
-test("xConfig active-player-sweep setting buttons expose sweep previews", async () => {
-  const localStorage = new FakeStorage();
-  const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({ documentRef, localStorage });
-  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await waitForMenuButton(documentRef);
-
-  documentRef.getElementById("ad-xconfig-menu-item").click();
-  await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
-
-  const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='active-player-sweep']"
-  );
-  assert.ok(openSettings);
-  openSettings.click();
-  await waitForSettingsModal(documentRef);
-
-  const durationOptions = documentRef.querySelectorAll(
-    "[data-adxconfig-option-note='true'][data-setting-key='durationMs']"
-  );
-  const durationPreviewEffects = durationOptions.map((optionNode) =>
-    String(optionNode.getAttribute("data-preview-effect") || "")
-  );
-
-  assert.deepEqual(durationPreviewEffects, [
-    "active-player-sweep-fast",
-    "active-player-sweep-standard-speed",
-    "active-player-sweep-slow",
-  ]);
-  durationOptions.forEach((optionNode) => {
-    assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
-  });
-
-  const styleOptions = documentRef.querySelectorAll(
-    "[data-adxconfig-option-note='true'][data-setting-key='sweepStyle']"
-  );
-  const stylePreviewEffects = styleOptions.map((optionNode) =>
-    String(optionNode.getAttribute("data-preview-effect") || "")
-  );
-
-  assert.deepEqual(stylePreviewEffects, [
-    "active-player-sweep-subtle",
-    "active-player-sweep-standard-style",
-    "active-player-sweep-strong",
-  ]);
-  styleOptions.forEach((optionNode) => {
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
   });
 
@@ -4483,74 +4435,6 @@ test("xConfig shell reports invalid global background uploads and keeps previous
   runtime.stop();
 });
 
-test("xConfig shell runs feature preview actions for winner fireworks", async () => {
-  const localStorage = new FakeStorage();
-  const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({ documentRef, localStorage });
-  const originalSetTimeout = windowRef.setTimeout.bind(windowRef);
-  windowRef.setTimeout = (callback, ms, ...args) => {
-    return originalSetTimeout(callback, Math.min(Number(ms) || 0, 60), ...args);
-  };
-  windowRef.confetti = function fakeConfetti() {};
-
-  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
-  await waitForMenuButton(documentRef);
-
-  documentRef.getElementById("ad-xconfig-menu-item").click();
-  await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
-
-  const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='winner-celebration-effect']"
-  );
-  assert.ok(openSettings);
-  openSettings.click();
-  await waitForSettingsModal(documentRef);
-
-  const firstPreviewButton = documentRef.getElementById(
-    "ad-xconfig-field-winner-celebration-effect-run-feature-action"
-  );
-  assert.ok(firstPreviewButton);
-  const firstPreviewClick = new FakeEvent("click", {
-    bubbles: true,
-    cancelable: true,
-    target: firstPreviewButton,
-  });
-  firstPreviewButton.dispatchEvent(firstPreviewClick);
-  assert.equal(firstPreviewClick.defaultPrevented, true);
-  assert.equal(
-    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview"))),
-    true
-  );
-
-  windowRef.dispatchEvent(new FakeEvent("pointerdown", { bubbles: true }));
-  await waitFor(() => !documentRef.getElementById("ad-ext-winner-celebration-effect-preview"));
-
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview")), false);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-style-preview")), false);
-
-  const secondPreviewButton = documentRef.getElementById(
-    "ad-xconfig-field-winner-celebration-effect-run-feature-action"
-  );
-  assert.ok(secondPreviewButton);
-  const secondPreviewClick = new FakeEvent("click", {
-    bubbles: true,
-    cancelable: true,
-    target: secondPreviewButton,
-  });
-  secondPreviewButton.dispatchEvent(secondPreviewClick);
-  assert.equal(secondPreviewClick.defaultPrevented, true);
-  assert.equal(
-    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview"))),
-    true
-  );
-  await wait(90);
-  assert.equal(Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview")), false);
-
-  runtime.stop();
-});
-
 test("xConfig single-bull-hit-sound settings expose and run the configured sound preview", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -4665,8 +4549,8 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   );
   firstDocument.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(firstDocument, "animations");
-  clickFeatureToggle(firstDocument, "active-player-sweep", true);
-  await waitForStoredConfig(localStorage, (config) => config.featureToggles.activePlayerSweep === true);
+  clickFeatureToggle(firstDocument, "turn-score-counter", true);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnScoreCounter === true);
   clickFeatureToggle(firstDocument, "x01-remaining-score-bar", true);
   await waitForStoredConfig(localStorage, (config) => config.featureToggles.x01RemainingScoreBar === true);
 
@@ -4707,7 +4591,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
 
   let storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
-  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(storedConfig.featureToggles.turnScoreCounter, true);
   assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "glow-only");
   assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "previous-score-trail");
@@ -4729,9 +4613,9 @@ test("xConfig shell restores persisted toggle, setting and background state afte
 
   const secondSnapshot = secondRuntime.getSnapshot();
   assert.equal(secondSnapshot.features["theme-global-background"].enabled, true);
-  assert.equal(secondSnapshot.features["active-player-sweep"].enabled, true);
+  assert.equal(secondSnapshot.features["turn-score-counter"].enabled, true);
   assert.equal(secondSnapshot.features["x01-remaining-score-bar"].enabled, true);
-  assert.equal(secondSnapshot.features["active-player-sweep"].mounted, true);
+  assert.equal(secondSnapshot.features["turn-score-counter"].mounted, true);
   assert.equal(secondSnapshot.features["theme-global-background"].mounted, true);
   assert.equal(secondSnapshot.features["x01-remaining-score-bar"].mounted, true);
   assert.equal(secondSnapshot.features["x01-remaining-score-bar"].config.effect, "previous-score-trail");
@@ -4796,7 +4680,7 @@ test("xConfig shell restores persisted toggle, setting and background state afte
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
-  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
+  assert.equal(storedConfig.featureToggles.turnScoreCounter, true);
   assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
 
   secondRuntime.stop();

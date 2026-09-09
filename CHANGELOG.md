@@ -12,6 +12,18 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.6] - 2026-09-10
+
+### Changed
+
+- Nutzerwirkung: `Checkout Suggestion Styles` vergrößert die drei Turn-Felder sofort, hält Checkout-Texte in allen Themen lesbar und positioniert das optionale Label sauber auf der oberen Akzentlinie. Das Modul wird im neuen Autodarts-Design nicht mehr als `Deprecated` angezeigt.
+  Technik: Die Laufzeit verwendet die gemeinsame moderne X01-Turnfläche, beschränkt Styles und Label auf die sichtbare Checkout-Route und hält Runtime sowie xConfig-Vorschauen für Badge, Ribbon, Stripe, Ticket und Outline synchron.
+
+### Removed
+
+- Nutzerwirkung: `Active Player Sweep` und `Winner Celebration Effect` werden nicht mehr als auswählbare Module angeboten; vorhandene gespeicherte Resteinstellungen werden beim Laden sicher entfernt.
+  Technik: Registry, Konfigurationsschema, Legacy-Import, Vorschau-Assets, Dokumentation und Tests wurden vollständig um beide Module bereinigt, ohne andere Animationen oder Themes zu verändern.
+
 ## [3.0.5] - 2026-09-09
 
 ### Fixed
@@ -2019,6 +2031,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.2...v3.0.3

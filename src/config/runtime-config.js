@@ -87,6 +87,12 @@ const LEGACY_TURN_DART_FIELDS = Object.freeze([
   "turnDartShineEnabled",
   "turnDartImageDataUrl",
 ]);
+const REMOVED_FEATURE_CONFIG_KEYS = Object.freeze([
+  "activePlayerSweep",
+  "turnStartSweep",
+  "winnerCelebrationEffect",
+  "winnerFireworks",
+]);
 
 function isObjectLike(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -180,6 +186,19 @@ function migrateLegacyThemeStructure(configValue = {}) {
   const themes = ensureObjectProperty(features, "themes");
   migrateLegacyGlobalThemeSettings(features, themes, featureToggles);
   removeLegacyGameThemes(themes, featureToggles);
+}
+
+function stripRemovedFeatureConfigKeys(configValue = {}) {
+  if (!isObjectLike(configValue)) {
+    return configValue;
+  }
+
+  REMOVED_FEATURE_CONFIG_KEYS.forEach((configKey) => {
+    delete configValue.featureToggles?.[configKey];
+    deleteNestedValue(configValue.features || {}, splitFeaturePath(configKey));
+  });
+
+  return configValue;
 }
 
 function canonicalConfigKey(configKey) {
@@ -409,6 +428,7 @@ function buildRecommendedRuntimeConfig(sourceConfig = {}) {
 export function createRuntimeConfig(overrides = {}) {
   const migratedOverrides = deepClone(overrides);
   migrateLegacyThemeStructure(migratedOverrides);
+  stripRemovedFeatureConfigKeys(migratedOverrides);
   let rawConfig = migrateLegacyFeatureConfigKeys(
     deepMerge(
       createDefaultConfigFromFeatureSpecs(),
@@ -513,7 +533,7 @@ export function createRuntimeConfig(overrides = {}) {
 
   function setFeatureEnabled(featureKey, enabled) {
     const normalizedKey = canonicalConfigKey(featureKey);
-    if (!normalizedKey) {
+    if (!normalizedKey || REMOVED_FEATURE_CONFIG_KEYS.includes(normalizedKey)) {
       return;
     }
 
@@ -542,6 +562,7 @@ export function createRuntimeConfig(overrides = {}) {
   function update(partialConfig = {}) {
     const migratedPartialConfig = deepClone(partialConfig);
     migrateLegacyThemeStructure(migratedPartialConfig);
+    stripRemovedFeatureConfigKeys(migratedPartialConfig);
     rawConfig = migrateLegacyFeatureConfigKeys(
       deepMerge(rawConfig, migrateLegacyFeatureConfigKeys(migratedPartialConfig))
     );

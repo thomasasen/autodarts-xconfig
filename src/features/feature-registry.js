@@ -7,7 +7,6 @@ import {
   runX01BustActivePlayerHighlightAction,
 } from "./x01-bust-active-player-highlight/index.js";
 import { mountAvgTrendArrow } from "./avg-trend-arrow/index.js";
-import { mountActivePlayerSweep } from "./active-player-sweep/index.js";
 import { mountSpecialHitHighlights } from "./special-hit-highlights/index.js";
 import { mountCricketTargetHighlighter } from "./cricket-target-highlighter/index.js";
 import { mountCricketGridStatusEffects } from "./cricket-grid-status-effects/index.js";
@@ -16,7 +15,6 @@ import { mountDartMarkerReplacer, runDartMarkerReplacerAction } from "./dart-mar
 import { mountTakeOutDartsAlert } from "./take-out-darts-alert/index.js";
 import { mountSingleBullHitSound, runSingleBullHitSoundAction } from "./single-bull-hit-sound/index.js";
 import { mountTurnScoreCounter } from "./turn-score-counter/index.js";
-import { mountWinnerCelebrationEffect, runWinnerCelebrationEffectAction } from "./winner-celebration-effect/index.js";
 import { mountX01RemainingScoreBar } from "./x01-remaining-score-bar/index.js";
 import { mountBotBoardStyle } from "./bot-board-style/index.js";
 import { mountThemeGlobalBackground } from "./themes/global-background/index.js";
@@ -147,7 +145,6 @@ const featureInitializers = Object.freeze({
   "checkout-suggestion-styles": mountCheckoutSuggestionStyles,
   "x01-bust-active-player-highlight": mountX01BustActivePlayerHighlight,
   "avg-trend-arrow": mountAvgTrendArrow,
-  "active-player-sweep": mountActivePlayerSweep,
   "special-hit-highlights": mountSpecialHitHighlights,
   "cricket-target-highlighter": mountCricketTargetHighlighter,
   "cricket-grid-status-effects": mountCricketGridStatusEffects,
@@ -156,7 +153,6 @@ const featureInitializers = Object.freeze({
   "take-out-darts-alert": mountTakeOutDartsAlert,
   "single-bull-hit-sound": mountSingleBullHitSound,
   "turn-score-counter": mountTurnScoreCounter,
-  "winner-celebration-effect": mountWinnerCelebrationEffect,
   "x01-remaining-score-bar": mountX01RemainingScoreBar,
   "theme-global-background": mountThemeGlobalBackground,
   "theme-global-typography": mountThemeGlobalTypography,
@@ -169,7 +165,6 @@ const featureActions = Object.freeze({
   "x01-bust-active-player-highlight": runX01BustActivePlayerHighlightAction,
   "dart-marker-replacer": runDartMarkerReplacerAction,
   "single-bull-hit-sound": runSingleBullHitSoundAction,
-  "winner-celebration-effect": runWinnerCelebrationEffectAction,
 });
 
 export const defaultFeatureDefinitions = Object.freeze(

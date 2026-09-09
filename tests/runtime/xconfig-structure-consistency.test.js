@@ -233,45 +233,6 @@ test("triple-double-bull style options expose color and animation previews", () 
   });
 });
 
-test("active-player-sweep settings expose sweep previews", () => {
-  const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "active-player-sweep");
-  const expectedPreviewEffects = new Map([
-    [
-      "durationMs",
-      [
-        "active-player-sweep-fast",
-        "active-player-sweep-standard-speed",
-        "active-player-sweep-slow",
-      ],
-    ],
-    [
-      "sweepStyle",
-      [
-        "active-player-sweep-subtle",
-        "active-player-sweep-standard-style",
-        "active-player-sweep-strong",
-      ],
-    ],
-  ]);
-
-  expectedPreviewEffects.forEach((expectedEffects, fieldKey) => {
-    const field = descriptor?.fields?.find((entry) => entry.key === fieldKey);
-    const previewEffects = (field?.options || []).map((option) =>
-      String(option.previewEffect || "")
-    );
-
-    assert.deepEqual(previewEffects, expectedEffects, `unexpected previews for ${fieldKey}`);
-    previewEffects.forEach((previewEffect) => {
-      assert.equal(
-        xconfigShellStyleText.includes(`data-preview-effect="${previewEffect}"`),
-        true,
-        `missing CSS preview for ${previewEffect}`
-      );
-    });
-  });
-  assert.equal(xconfigShellStyleText.includes("ad-xconfig-active-player-sweep-preview"), true);
-});
-
 test("xConfig color preset settings expose matching preview themes", () => {
   const expectedPreviewFields = new Map([
     [
@@ -334,17 +295,6 @@ test("xConfig color preset settings expose matching preview themes", () => {
         "dart-marker-outline-off",
         "dart-marker-outline-white",
         "dart-marker-outline-black",
-      ],
-    ],
-    [
-      "winner-celebration-effect:colorTheme",
-      [
-        "winner-autodarts",
-        "winner-redwhite",
-        "winner-ice",
-        "winner-sunset",
-        "winner-neon",
-        "winner-gold",
       ],
     ],
   ]);

@@ -41,7 +41,6 @@ const RENAMED_FEATURES = Object.freeze([
   ["checkout-target-highlights", "checkoutTargetHighlights", "checkout-board-targets", "checkoutBoardTargets"],
   ["checkout-suggestion-styles", "checkoutSuggestionStyles", "style-checkout-suggestions", "styleCheckoutSuggestions"],
   ["avg-trend-arrow", "avgTrendArrow", "average-trend-arrow", "averageTrendArrow"],
-  ["active-player-sweep", "activePlayerSweep", "turn-start-sweep", "turnStartSweep"],
   ["special-hit-highlights", "specialHitHighlights", "triple-double-bull-hits", "tripleDoubleBullHits"],
   ["cricket-target-highlighter", "cricketTargetHighlighter", "cricket-highlighter", "cricketHighlighter"],
   ["cricket-grid-status-effects", "cricketGridStatusEffects", "cricket-grid-fx", "cricketGridFx"],
@@ -50,7 +49,6 @@ const RENAMED_FEATURES = Object.freeze([
   ["take-out-darts-alert", "takeOutDartsAlert", "remove-darts-notification", "removeDartsNotification"],
   ["single-bull-hit-sound", "singleBullHitSound", "single-bull-sound", "singleBullSound"],
   ["turn-score-counter", "turnScoreCounter", "turn-points-count", "turnPointsCount"],
-  ["winner-celebration-effect", "winnerCelebrationEffect", "winner-fireworks", "winnerFireworks"],
 ]);
 
 test("feature config spec regenerates the published default config exactly", () => {
@@ -274,17 +272,6 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     volume: 0.9,
     cooldownMs: 700,
     pollIntervalMs: 0,
-    debug: false,
-  });
-  assert.deepEqual(createRecommendedFeatureConfig("winnerCelebrationEffect"), {
-    enabled: false,
-    style: "center-cannon",
-    colorTheme: "gold",
-    intensity: "standard",
-    durationSeconds: 5,
-    particleAmount: "sparsam",
-    includeBullOut: false,
-    pointerDismiss: true,
     debug: false,
   });
 });

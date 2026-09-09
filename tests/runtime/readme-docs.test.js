@@ -140,8 +140,8 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 22);
-  assert.equal(overviewCounts.animationModules, 19);
+  assert.equal(overviewCounts.totalModules, 20);
+  assert.equal(overviewCounts.animationModules, 17);
   assert.equal(overviewCounts.themeModules, 3);
 });
 
@@ -377,7 +377,6 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
     "tv-board-zoom",
     "checkout-suggestion-styles",
     "avg-trend-arrow",
-    "active-player-sweep",
     "special-hit-highlights",
     "cricket-target-highlighter",
     "cricket-grid-status-effects",
@@ -386,7 +385,6 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
     "take-out-darts-alert",
     "single-bull-hit-sound",
     "turn-score-counter",
-    "winner-celebration-effect",
   ];
 
   requiredPreviewFeatureKeys.forEach((featureKey) => {
@@ -441,7 +439,7 @@ test("runtime audit docs exist and cover entry points plus findings", () => {
   assert.match(runtimeEntrypointsDoc, /Bootstrap/i);
   assert.match(runtimeEntrypointsDoc, /Mutation Observer/i);
   assert.match(runtimeEntrypointsDoc, /Game State/i);
-  assert.match(runtimeEntrypointsDoc, /winner-celebration-effect/);
+  assert.doesNotMatch(runtimeEntrypointsDoc, /active-player-sweep|winner-celebration-effect/);
 
   assert.match(performanceAuditDoc, /Findings/i);
   assert.match(performanceAuditDoc, /Changes Applied/i);

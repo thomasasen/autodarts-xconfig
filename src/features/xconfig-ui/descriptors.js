@@ -90,7 +90,6 @@ const README_ANCHOR_ALIASES = Object.freeze({
   "checkout-target-highlights": ["animation-autodarts-animate-checkout-board-targets"],
   "checkout-suggestion-styles": ["animation-autodarts-style-checkout-suggestions"],
   "avg-trend-arrow": ["animation-autodarts-animate-average-trend-arrow"],
-  "active-player-sweep": ["animation-autodarts-animate-turn-start-sweep"],
   "special-hit-highlights": ["animation-autodarts-animate-triple-double-bull-hits"],
   "cricket-target-highlighter": ["animation-autodarts-animate-cricket-highlighter"],
   "cricket-grid-status-effects": ["animation-autodarts-animate-cricket-grid-fx"],
@@ -99,7 +98,6 @@ const README_ANCHOR_ALIASES = Object.freeze({
   "take-out-darts-alert": ["animation-autodarts-animate-remove-darts-notification"],
   "single-bull-hit-sound": ["animation-autodarts-animate-single-bull-sound"],
   "turn-score-counter": ["animation-autodarts-animate-turn-points-count"],
-  "winner-celebration-effect": ["animation-autodarts-animate-winner-fireworks"],
 });
 
 const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
@@ -108,7 +106,9 @@ const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "theme-global-presets",
   "bot-board-style",
   "turn-dart-display",
+  "tv-board-zoom",
   "checkout-target-highlights",
+  "checkout-suggestion-styles",
   "dart-marker-replacer",
   "take-out-darts-alert",
   "single-bull-hit-sound",
@@ -482,7 +482,7 @@ export const xconfigDescriptors = Object.freeze([
   animationDescriptorEntry({
     featureKey: "checkout-suggestion-styles",
     readmeAnchor: "animation-autodarts-checkout-suggestion-styles",
-    description: "Macht Checkout-Hinweise auffälliger und besser lesbar.",
+    description: "Vergrößert die Turn-Felder und gestaltet Checkout-Hinweise theme-kompatibel.",
     fields: [
       selectField("style", "Stil", [
         { value: "badge", label: "Badge" },
@@ -546,23 +546,6 @@ export const xconfigDescriptors = Object.freeze([
         { value: "klein", label: "Klein" },
         { value: "standard", label: "Standard" },
         { value: "gross", label: "Groß" },
-      ]),
-    ],
-  }),
-  animationDescriptorEntry({
-    featureKey: "active-player-sweep",
-    readmeAnchor: "animation-autodarts-animate-active-player-sweep",
-    description: "Markiert den Spielerwechsel mit einem Sweep über die aktive Karte.",
-    fields: [
-      selectField("durationMs", "Sweep-Geschwindigkeit", [
-        { value: 300, label: "Schnell", previewEffect: "active-player-sweep-fast" },
-        { value: 420, label: "Standard", previewEffect: "active-player-sweep-standard-speed" },
-        { value: 620, label: "Langsam", previewEffect: "active-player-sweep-slow" },
-      ]),
-      selectField("sweepStyle", "Sweep-Stil", [
-        { value: "subtle", label: "Dezent", previewEffect: "active-player-sweep-subtle" },
-        { value: "standard", label: "Standard", previewEffect: "active-player-sweep-standard-style" },
-        { value: "strong", label: "Kräftig", previewEffect: "active-player-sweep-strong" },
       ]),
     ],
   }),
@@ -785,55 +768,6 @@ export const xconfigDescriptors = Object.freeze([
         { value: "on-change", label: "Nur bei Änderung" },
         { value: "permanent", label: "Permanent" },
       ]),
-    ],
-  }),
-  animationDescriptorEntry({
-    featureKey: "winner-celebration-effect",
-    readmeAnchor: "animation-autodarts-animate-winner-celebration-effect",
-    description: "Zeigt bei einem Sieg ein Feuerwerk in verschiedenen Stilen.",
-    fields: [
-      selectField("style", "Style", [
-        { value: "center-side-burst", label: "Center Side Burst" },
-        { value: "top-fireworks", label: "Top Fireworks" },
-        { value: "center-cannon", label: "Center Cannon" },
-        { value: "triple-burst", label: "Triple Burst" },
-        { value: "star-burst", label: "Star Burst" },
-        { value: "side-cannons", label: "Side Cannons" },
-      ]),
-      selectField("colorTheme", "Farbe", [
-        colorPreviewOption("autodarts", "Autodarts", "winner-autodarts"),
-        colorPreviewOption("redwhite", "Rot/Weiß", "winner-redwhite"),
-        colorPreviewOption("ice", "Ice", "winner-ice"),
-        colorPreviewOption("sunset", "Sunset", "winner-sunset"),
-        colorPreviewOption("neon", "Neon", "winner-neon"),
-        colorPreviewOption("gold", "Gold", "winner-gold"),
-      ]),
-      selectField("intensity", "Intensität", [
-        { value: "dezent", label: "Dezent" },
-        { value: "standard", label: "Standard" },
-        { value: "stark", label: "Stark" },
-      ]),
-      selectField("durationSeconds", "Dauer", [
-        { value: 1, label: "1 s" },
-        { value: 2, label: "2 s" },
-        { value: 5, label: "5 s" },
-      ]),
-      selectField("particleAmount", "Partikelanzahl", [
-        { value: "sparsam", label: "Sparsam" },
-        { value: "optimiert", label: "Optimiert" },
-        { value: "voll", label: "Voll" },
-      ]),
-      actionField("run-feature-action", "Test-Button", {
-        actionId: "preview",
-        buttonLabel: "Effekt jetzt testen",
-        description:
-          "Startet die aktuelle Einstellung sofort als Vorschau, auch im geöffneten xConfig-Fenster.",
-        successMessage: "Vorschau gestartet.",
-        errorMessage: "Vorschau konnte nicht gestartet werden.",
-        prominent: true,
-      }),
-      checkboxField("includeBullOut", "Bei Bull-Out aktiv"),
-      checkboxField("pointerDismiss", "Klick beendet Effekt"),
     ],
   }),
 ]);

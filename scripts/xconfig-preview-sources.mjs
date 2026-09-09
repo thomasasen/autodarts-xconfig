@@ -12,14 +12,12 @@ export const XCONFIG_PREVIEW_SOURCE_FILES = Object.freeze({
   "cricket-target-highlighter": "animation-cricket-target-highlighter.png",
   "cricket-grid-status-effects": "animation-cricket-grid-fx.png",
   "avg-trend-arrow": "animation-average-trend-arrow.png",
-  "active-player-sweep": "animation-turn-start-sweep.gif",
   "special-hit-highlights": "animation-triple-double-bull-hits.gif",
   "dartboard-marker-highlight": "animation-dart-marker-emphasis.gif",
   "dart-marker-replacer": "animation-dart-marker-darts.png",
   "take-out-darts-alert": "animation-remove-darts-notification.png",
   "single-bull-hit-sound": "animation-single-bull-sound.gif",
   "turn-score-counter": "animation-turn-points-count.gif",
-  "winner-celebration-effect": "animation-winner-fireworks.gif",
 });
 
 export const XCONFIG_PREVIEW_SOURCE_START_SECONDS = Object.freeze({

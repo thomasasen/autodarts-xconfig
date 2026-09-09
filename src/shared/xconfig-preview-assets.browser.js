@@ -8,14 +8,12 @@ import checkoutSuggestionStylesWebp from "../assets/xconfig-previews/checkout-su
 import cricketTargetHighlighterWebp from "../assets/xconfig-previews/cricket-target-highlighter.webp";
 import cricketGridStatusEffectsWebp from "../assets/xconfig-previews/cricket-grid-status-effects.webp";
 import avgTrendArrowWebp from "../assets/xconfig-previews/avg-trend-arrow.webp";
-import activePlayerSweepWebp from "../assets/xconfig-previews/active-player-sweep.webp";
 import specialHitHighlightsWebp from "../assets/xconfig-previews/special-hit-highlights.webp";
 import dartboardMarkerHighlightWebp from "../assets/xconfig-previews/dartboard-marker-highlight.webp";
 import dartMarkerReplacerWebp from "../assets/xconfig-previews/dart-marker-replacer.webp";
 import takeOutDartsAlertWebp from "../assets/xconfig-previews/take-out-darts-alert.webp";
 import singleBullHitSoundWebp from "../assets/xconfig-previews/single-bull-hit-sound.webp";
 import turnScoreCounterWebp from "../assets/xconfig-previews/turn-score-counter.webp";
-import winnerCelebrationEffectWebp from "../assets/xconfig-previews/winner-celebration-effect.webp";
 
 export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-global-background": themeGlobalTypographyWebp,
@@ -31,14 +29,12 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "cricket-target-highlighter": cricketTargetHighlighterWebp,
   "cricket-grid-status-effects": cricketGridStatusEffectsWebp,
   "avg-trend-arrow": avgTrendArrowWebp,
-  "active-player-sweep": activePlayerSweepWebp,
   "special-hit-highlights": specialHitHighlightsWebp,
   "dartboard-marker-highlight": dartboardMarkerHighlightWebp,
   "dart-marker-replacer": dartMarkerReplacerWebp,
   "take-out-darts-alert": takeOutDartsAlertWebp,
   "single-bull-hit-sound": singleBullHitSoundWebp,
   "turn-score-counter": turnScoreCounterWebp,
-  "winner-celebration-effect": winnerCelebrationEffectWebp,
 });
 
 export function resolveXConfigPreviewAsset(featureKey) {

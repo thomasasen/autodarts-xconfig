@@ -77,7 +77,7 @@ test("fresh runtime initialization persists the recommended profile", async () =
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
 
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
-  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
+  assert.equal(storedConfig.features.activePlayerSweep, undefined);
   assert.equal(storedConfig.features.dartMarkerReplacer.design, "germangiant");
   assert.equal(storedConfig.features.themes.globalBackground.enabled, false);
   assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
@@ -124,9 +124,8 @@ test("runtime initialization preserves settings from an existing installation", 
 
   assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "glow-only");
-  assert.equal(storedConfig.featureToggles.activePlayerSweep, false);
-  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 300);
-  assert.equal(storedConfig.features.activePlayerSweep.sweepStyle, "subtle");
+  assert.equal(storedConfig.featureToggles.activePlayerSweep, undefined);
+  assert.equal(storedConfig.features.activePlayerSweep, undefined);
   assert.equal(storedConfig.featureToggles["themes.globalTypography"], false);
   assert.equal(storedConfig.features.themes.globalTypography.fontPreset, "system");
 
@@ -189,12 +188,6 @@ test("runtime public config API persists updates and survives feature toggles", 
   assert.equal(storedConfig.featureToggles.checkoutScoreHighlight, false);
   assert.equal(runtime.getSnapshot().features["checkout-score-highlight"].mounted, false);
 
-  await runtime.setFeatureEnabled("active-player-sweep", true);
-  await wait(5);
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.activePlayerSweep, true);
-  assert.equal(runtime.getSnapshot().features["active-player-sweep"].mounted, true);
-
   await runtime.setFeatureEnabled("special-hit-highlights", true);
   await wait(5);
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
@@ -212,26 +205,6 @@ test("runtime public config API persists updates and survives feature toggles", 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.featureToggles.x01RemainingScoreBar, true);
   assert.equal(runtime.getSnapshot().features["x01-remaining-score-bar"].mounted, true);
-
-  await runtime.setFeatureEnabled("winner-celebration-effect", true);
-  await wait(5);
-  storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
-  assert.equal(storedConfig.featureToggles.winnerCelebrationEffect, true);
-  assert.equal(runtime.getSnapshot().features["winner-celebration-effect"].mounted, true);
-
-  const previewResult = await runtime.runFeatureAction("winner-celebration-effect", "preview");
-  assert.equal(previewResult.ok, true);
-  assert.equal(
-    await waitFor(() => Boolean(documentRef.getElementById("ad-ext-winner-celebration-effect-preview"))),
-    true
-  );
-  assert.equal(
-    await waitFor(
-      () => documentRef.getElementById("ad-ext-winner-celebration-effect-preview") === null,
-      { timeoutMs: 220, intervalMs: 5 }
-    ),
-    true
-  );
 
   await runtime.setFeatureEnabled("theme-global-background", true);
   await wait(5);
@@ -413,7 +386,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "tv-board-zoom"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "checkout-suggestion-styles"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "avg-trend-arrow"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "active-player-sweep"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "active-player-sweep"), false);
   assert.equal(listed.some((entry) => entry.featureKey === "special-hit-highlights"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "cricket-target-highlighter"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "cricket-grid-status-effects"), true);
@@ -423,7 +396,7 @@ test("runtime listFeatures exposes the full migrated feature catalog", async () 
   assert.equal(listed.some((entry) => entry.featureKey === "single-bull-hit-sound"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "turn-score-counter"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "x01-remaining-score-bar"), true);
-  assert.equal(listed.some((entry) => entry.featureKey === "winner-celebration-effect"), true);
+  assert.equal(listed.some((entry) => entry.featureKey === "winner-celebration-effect"), false);
   assert.equal(listed.some((entry) => entry.featureKey === "bot-board-style"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-global-background"), true);
   assert.equal(listed.some((entry) => entry.featureKey === "theme-global-typography"), true);
@@ -466,8 +439,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.checkoutTargetHighlights.visualPreset, "fast-blink");
   assert.equal(storedConfig.features.checkoutTargetHighlights.colorTheme, "violet");
   assert.equal(storedConfig.features.checkoutSuggestionStyles.style, "stripe");
-  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
-  assert.equal(storedConfig.features.activePlayerSweep.sweepStyle, "strong");
+  assert.equal(storedConfig.features.activePlayerSweep, undefined);
   assert.equal(storedConfig.features.specialHitHighlights.animationStyle, "electric-jolt");
   assert.equal(storedConfig.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
   assert.equal(storedConfig.features.cricketGridStatusEffects.intensity, "normal");
@@ -481,10 +453,7 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.takeOutDartsAlert.imageSize, "large");
   assert.equal(storedConfig.features.singleBullHitSound.volume, 0.9);
   assert.equal(storedConfig.features.turnScoreCounter.flashOnChange, false);
-  assert.equal(storedConfig.features.winnerCelebrationEffect.style, "center-cannon");
-  assert.equal(storedConfig.features.winnerCelebrationEffect.intensity, "standard");
-  assert.equal(storedConfig.features.winnerCelebrationEffect.durationSeconds, 5);
-  assert.equal(storedConfig.features.winnerCelebrationEffect.particleAmount, "sparsam");
+  assert.equal(storedConfig.features.winnerCelebrationEffect, undefined);
   assert.equal(storedConfig.features.x01RemainingScoreBar.barSize, "breit");
   assert.equal(storedConfig.features.x01RemainingScoreBar.effect, "previous-score-trail");
   assert.equal(

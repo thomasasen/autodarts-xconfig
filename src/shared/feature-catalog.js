@@ -30,7 +30,6 @@ const rawFeatureCatalog = [
   catalogEntry("checkout-suggestion-styles", "checkoutSuggestionStyles", "Checkout Suggestion Styles", ["x01"], "Animation/Autodarts Checkout Suggestion Styles.user.js", "a-checkout-style", immediate),
   catalogEntry("x01-bust-active-player-highlight", "x01BustActivePlayerHighlight", "X01 Bust Active Player Highlight", ["x01"], "", "", immediate),
   catalogEntry("avg-trend-arrow", "avgTrendArrow", "AVG Trend Arrow", ["all"], "Animation/Autodarts Animate AVG Trend Arrow.user.js", "a-average-arrow"),
-  catalogEntry("active-player-sweep", "activePlayerSweep", "Active Player Sweep", ["all"], "Animation/Autodarts Animate Active Player Sweep.user.js", "a-turn-sweep"),
   catalogEntry("special-hit-highlights", "specialHitHighlights", "Special Hit Highlights", ["all"], "Animation/Autodarts Animate Special Hit Highlights.user.js", "a-triple-double-bull"),
   catalogEntry("cricket-target-highlighter", "cricketTargetHighlighter", "Cricket Target Highlighter", ["cricket", "tactics"], "Animation/Autodarts Animate Cricket Target Highlighter.user.js", "a-cricket-target"),
   catalogEntry("cricket-grid-status-effects", "cricketGridStatusEffects", "Cricket Grid Status Effects", ["cricket", "tactics"], "Animation/Autodarts Animate Cricket Grid Status Effects.user.js", "a-cricket-grid-status-effects"),
@@ -39,7 +38,6 @@ const rawFeatureCatalog = [
   catalogEntry("take-out-darts-alert", "takeOutDartsAlert", "Take Out Darts Alert", ["all"], "Animation/Autodarts Animate Take Out Darts Alert.user.js", "a-remove-darts"),
   catalogEntry("single-bull-hit-sound", "singleBullHitSound", "Single Bull Hit Sound", ["all"], "Animation/Autodarts Animate Single Bull Hit Sound.user.js", "a-single-bull"),
   catalogEntry("turn-score-counter", "turnScoreCounter", "Turn Score Counter", ["all"], "Animation/Autodarts Animate Turn Score Counter.user.js", "a-turn-points"),
-  catalogEntry("winner-celebration-effect", "winnerCelebrationEffect", "Winner Celebration Effect", ["all"], "Animation/Autodarts Animate Winner Celebration Effect.user.js", "a-winner-celebration-effect"),
   catalogEntry("x01-remaining-score-bar", "x01RemainingScoreBar", "X01 Remaining Score Bar", ["x01"], "", "", immediate),
   catalogEntry("theme-global-background", "themes.globalBackground", "Hintergrund", ["all"], "", "", immediate),
   catalogEntry("theme-global-typography", "themes.globalTypography", "Schrift", ["all"], "", "", immediate),
@@ -53,7 +51,6 @@ const FEATURE_KEY_ALIASES = Object.freeze({
   "checkout-target-highlights": ["checkout-board-targets"],
   "checkout-suggestion-styles": ["style-checkout-suggestions"],
   "avg-trend-arrow": ["average-trend-arrow"],
-  "active-player-sweep": ["turn-start-sweep"],
   "special-hit-highlights": ["triple-double-bull-hits"],
   "cricket-target-highlighter": ["cricket-highlighter"],
   "cricket-grid-status-effects": ["cricket-grid-fx"],
@@ -62,7 +59,6 @@ const FEATURE_KEY_ALIASES = Object.freeze({
   "take-out-darts-alert": ["remove-darts-notification"],
   "single-bull-hit-sound": ["single-bull-sound"],
   "turn-score-counter": ["turn-points-count"],
-  "winner-celebration-effect": ["winner-fireworks"],
   "x01-remaining-score-bar": ["x01-score-progress"],
 });
 
@@ -71,7 +67,6 @@ const CONFIG_KEY_ALIASES = Object.freeze({
   checkoutTargetHighlights: ["checkoutBoardTargets"],
   checkoutSuggestionStyles: ["styleCheckoutSuggestions"],
   avgTrendArrow: ["averageTrendArrow"],
-  activePlayerSweep: ["turnStartSweep"],
   specialHitHighlights: ["tripleDoubleBullHits"],
   cricketTargetHighlighter: ["cricketHighlighter"],
   cricketGridStatusEffects: ["cricketGridFx"],
@@ -80,14 +75,12 @@ const CONFIG_KEY_ALIASES = Object.freeze({
   takeOutDartsAlert: ["removeDartsNotification"],
   singleBullHitSound: ["singleBullSound"],
   turnScoreCounter: ["turnPointsCount"],
-  winnerCelebrationEffect: ["winnerFireworks"],
   x01RemainingScoreBar: ["x01ScoreProgress"],
 });
 
 const LEGACY_FEATURE_IDS = Object.freeze({
   "cricket-grid-status-effects": "a-cricket-grid-fx",
   "dartboard-marker-highlight": "a-dart-marker-emphasis",
-  "winner-celebration-effect": "a-winner-fireworks",
 });
 
 function normalizeAliasList(values) {

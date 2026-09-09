@@ -1,10 +1,19 @@
 import {
   applySuggestionStyle,
+  applySuggestionLayout,
   collectSuggestions,
+  findModernSuggestionLayoutNode,
+  isModernSuggestionNode,
   isX01Active,
+  resetSuggestionLayout,
   resetSuggestionNode,
 } from "./logic.js";
-import { STYLE_ID, buildStyleText } from "./style.js";
+import {
+  BASE_CLASS,
+  LAYOUT_CLASS,
+  STYLE_ID,
+  buildStyleText,
+} from "./style.js";
 import {
   createTurnSurfaceObserveOptions,
   hasRelevantTurnSurfaceMutation,
@@ -22,6 +31,7 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
   const variantRules = context.domain?.variantRules;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
+  const featureDebug = context.featureDebug;
 
   if (!documentRef || !domGuards || typeof schedulerFactory !== "function") {
     return () => {};
@@ -37,25 +47,54 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
         };
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
+  let lastDebugSignature = "";
 
   function update() {
-    const nodes = collectSuggestions(documentRef);
-    if (!nodes.length) {
-      return;
-    }
+    const layoutNode = findModernSuggestionLayoutNode(documentRef, windowRef);
+    Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach((node) => {
+      if (node !== layoutNode) {
+        resetSuggestionLayout(node);
+      }
+    });
+    applySuggestionLayout(layoutNode);
+
+    const nodes = collectSuggestions(documentRef, windowRef);
+    const currentNodes = new Set(nodes);
+    Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach((node) => {
+      if (!currentNodes.has(node)) {
+        resetSuggestionNode(node);
+      }
+    });
 
     const active = isX01Active({
       gameState,
       documentRef,
+      windowRef,
       variantRules,
     });
 
+    const modernNodeCount = nodes.filter(isModernSuggestionNode).length;
+    const debugSignature = `${active}:${Boolean(layoutNode)}:${nodes.length}:${modernNodeCount}`;
+    if (featureDebug?.enabled && debugSignature !== lastDebugSignature) {
+      lastDebugSignature = debugSignature;
+      featureDebug.log(
+        `state active=${active ? "yes" : "no"} layout=${layoutNode ? "modern" : "none"} suggestions=${nodes.length} modern=${modernNodeCount} legacy=${nodes.length - modernNodeCount}`
+      );
+    }
+
+    let modernLabelAssigned = false;
     nodes.forEach((node) => {
       if (!active) {
         resetSuggestionNode(node);
         return;
       }
-      applySuggestionStyle(node, featureConfig);
+      const modernSuggestion = isModernSuggestionNode(node);
+      applySuggestionStyle(node, featureConfig, {
+        showLabel: !modernSuggestion || !modernLabelAssigned,
+      });
+      if (modernSuggestion) {
+        modernLabelAssigned = true;
+      }
     });
   }
 
@@ -67,7 +106,12 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
       target: rootNode,
       callback: (mutations = []) => {
         if (hasRelevantTurnSurfaceMutation(mutations, {
-          extraSelectors: [".suggestion", "#ad-ext-game-variant"],
+          extraSelectors: [
+            ".suggestion",
+            ".text-checkout-suggestion",
+            ".bg-surface-surface",
+            "#ad-ext-game-variant",
+          ],
         })) {
           scheduler.schedule();
         }
@@ -102,8 +146,11 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
       observerRegistry.disconnect(OBSERVER_KEY);
     }
 
-    collectSuggestions(documentRef).forEach((node) => {
+    Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach((node) => {
       resetSuggestionNode(node);
+    });
+    Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach((node) => {
+      resetSuggestionLayout(node);
     });
     domGuards.removeNodeById(STYLE_ID);
   };

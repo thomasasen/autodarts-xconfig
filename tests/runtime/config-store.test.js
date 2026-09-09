@@ -72,7 +72,7 @@ test("config store creates the recommended profile only when no current or legac
   assert.equal(result.reason, "initial-config-created");
   assert.equal(createCalls, 1);
   assert.equal(storedConfig.features.checkoutScoreHighlight.effect, "fade-blink");
-  assert.equal(storedConfig.features.activePlayerSweep.durationMs, 620);
+  assert.equal(storedConfig.features.activePlayerSweep, undefined);
   assert.equal(storedConfig.features.themes.globalTypography.enabled, false);
   assert.equal(localStorage.getItem(LEGACY_IMPORT_FLAG_KEY), "true");
 });
@@ -370,15 +370,8 @@ test("config store imports migrated legacy feature and theme settings once witho
   assert.equal(importedConfig.features.checkoutTargetHighlights.targetSelectionMode, "all");
   assert.equal(importedConfig.features.checkoutTargetHighlights.colorTheme, "cyan");
   assert.equal(importedConfig.features.checkoutTargetHighlights.debug, true);
-  assert.equal(importedConfig.featureToggles.winnerCelebrationEffect, true);
-  assert.equal(importedConfig.features.winnerCelebrationEffect.style, "center-cannon");
-  assert.equal(importedConfig.features.winnerCelebrationEffect.colorTheme, "gold");
-  assert.equal(importedConfig.features.winnerCelebrationEffect.intensity, "stark");
-  assert.equal(importedConfig.features.winnerCelebrationEffect.durationSeconds, 2);
-  assert.equal(importedConfig.features.winnerCelebrationEffect.particleAmount, "voll");
-  assert.equal(importedConfig.features.winnerCelebrationEffect.includeBullOut, false);
-  assert.equal(importedConfig.features.winnerCelebrationEffect.pointerDismiss, false);
-  assert.equal(importedConfig.features.winnerCelebrationEffect.debug, true);
+  assert.equal(importedConfig.featureToggles.winnerCelebrationEffect, undefined);
+  assert.equal(importedConfig.features.winnerCelebrationEffect, undefined);
   assert.equal(importedConfig.featureToggles.cricketTargetHighlighter, true);
   assert.equal(importedConfig.features.cricketTargetHighlighter.enabled, true);
   assert.equal(importedConfig.features.cricketTargetHighlighter.showOpenObjectives, false);

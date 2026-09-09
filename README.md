@@ -53,7 +53,7 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 ## Im Überblick
 
-- Insgesamt `22` Module: `19` Animationen und Komfortfunktionen sowie `3` Themes.
+- Insgesamt `20` Module: `17` Animationen und Komfortfunktionen sowie `3` Themes.
 - `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt globales Wallpaper sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -188,10 +188,9 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [X01 Remaining Score Bar](#animation-autodarts-x01-remaining-score-bar) | Animation & Komfort | `X01` | Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl. |
 | [Checkout Target Highlights](#animation-autodarts-animate-checkout-target-highlights) | Animation & Komfort | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
 | [TV Board Zoom](#animation-autodarts-animate-tv-board-zoom) | Animation & Komfort | `X01` | Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board. |
-| [Checkout Suggestion Styles](#animation-autodarts-checkout-suggestion-styles) | Animation & Komfort | `X01` | Gibt Checkout-Hinweisen eine markantere Hülle und bessere Lesbarkeit. |
+| [Checkout Suggestion Styles](#animation-autodarts-checkout-suggestion-styles) | Animation & Komfort | `X01` | Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor. |
 | [X01 Bust Active Player Highlight](#animation-autodarts-x01-bust-active-player-highlight) | Animation & Komfort | `X01` | Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen. |
 | [AVG Trend Arrow](#animation-autodarts-animate-avg-trend-arrow) | Animation & Komfort | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
-| [Active Player Sweep](#animation-autodarts-animate-active-player-sweep) | Animation & Komfort | `alle Modi` | Markiert den Spielerwechsel mit einem Lichtlauf über die aktive Karte. |
 | [Special Hit Highlights](#animation-autodarts-animate-special-hit-highlights) | Animation & Komfort | `alle Modi` | Setzt Triple-, Double- und Bull-Treffer mit auffälligen Stripe-/Glow-Looks, Text-Effekten und slot-genauen Burst-Bewegungen in Szene. |
 | [Cricket Target Highlighter](#animation-autodarts-animate-cricket-target-highlighter) | Animation & Komfort | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
 | [Cricket Grid Status Effects](#animation-autodarts-animate-cricket-grid-status-effects) | Animation & Komfort | `Cricket`, `Tactics` | Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel. |
@@ -200,7 +199,6 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Take Out Darts Alert](#animation-autodarts-animate-take-out-darts-alert) | Animation & Komfort | `alle Modi` | Macht den Hinweis zum Entfernen der Darts mit einer großen Grafik auffälliger. |
 | [Single Bull Hit Sound](#animation-autodarts-animate-single-bull-hit-sound) | Animation & Komfort | `alle Modi` | Spielt bei Single Bull einen kurzen Ton zur akustischen Rückmeldung ab. |
 | [Turn Score Counter](#animation-autodarts-animate-turn-score-counter) | Animation & Komfort | `alle Modi` | Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter. |
-| [Winner Celebration Effect](#animation-autodarts-animate-winner-celebration-effect) | Animation & Komfort | `alle Modi` | Zeigt bei einem Sieg ein konfigurierbares Vollbild-Feuerwerk. |
 
 ## Empfohlene Standards
 
@@ -327,8 +325,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ### Checkout Suggestion Styles
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.
-- Wann sinnvoll? Wenn du Suggestionen schneller scannen möchtest oder der Standard-Look zu unauffällig ist.
+- Was macht es sichtbar? Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.
+- Wann sinnvoll? Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-checkout-suggestion-styles)
 
@@ -358,19 +356,6 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-avg-trend-arrow)
 
 ![AVG Trend Arrow](docs/screenshots/animation-average-trend-arrow.png)
-
-<a id="animation-autodarts-animate-active-player-sweep"></a>
-<a id="animation-autodarts-animate-turn-start-sweep"></a>
-
-### Active Player Sweep
-
-- Gilt für: `alle Modi`
-- Was macht es sichtbar? Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.
-- Wann sinnvoll? Wenn du in schnellen Matches einen klareren Wechsel zwischen den Spielern sehen willst.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-active-player-sweep)
-
-![Active Player Sweep](docs/screenshots/animation-turn-start-sweep.gif)
 
 <a id="animation-autodarts-animate-special-hit-highlights"></a>
 <a id="animation-autodarts-animate-triple-double-bull-hits"></a>
@@ -471,19 +456,6 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-turn-score-counter)
 
 ![Turn Score Counter](docs/screenshots/animation-turn-points-count.gif)
-
-<a id="animation-autodarts-animate-winner-celebration-effect"></a>
-<a id="animation-autodarts-animate-winner-fireworks"></a>
-
-### Winner Celebration Effect
-
-- Gilt für: `alle Modi`
-- Was macht es sichtbar? Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.
-- Wann sinnvoll? Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-winner-celebration-effect)
-
-![Winner Celebration Effect](docs/screenshots/animation-winner-fireworks.gif)
 <!-- xconfig-generated:end -->
 ## Weitere Dokumentation
 

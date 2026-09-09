@@ -20,7 +20,7 @@ Post-release runtime audit for the userscript with a behavior-parity constraint:
    Board and cricket-grid discovery scanned the full document on every scheduled update, even when only game state changed.
 
 4. A small set of async paths could outlive feature teardown.
-   Lazy vendor loading for `winner-celebration-effect` and `turn-score-counter` could schedule late work after cleanup if not explicitly guarded.
+   Lazy vendor loading for `turn-score-counter` could schedule late work after cleanup if not explicitly guarded.
 
 5. Optional polling paths could still wake hidden tabs.
    This was low-frequency, but it was still unnecessary long-session work.
@@ -52,9 +52,7 @@ Post-release runtime audit for the userscript with a behavior-parity constraint:
 
 ### Timers and Async Cleanup
 
-- Guarded late lazy-loader callbacks after cleanup in:
-  - `winner-celebration-effect`
-  - `turn-score-counter`
+- Guarded late lazy-loader callbacks after cleanup in `turn-score-counter`.
 - Kept timeout, interval, and RAF cleanup explicit in feature teardown.
 - Gated optional polling work for hidden documents in:
   - `single-bull-hit-sound`

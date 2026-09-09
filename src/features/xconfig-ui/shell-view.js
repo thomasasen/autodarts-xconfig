@@ -180,7 +180,6 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     id: "all-modes",
     title: "Gilt für: Alle Modi",
     featureKeys: Object.freeze([
-      "active-player-sweep",
       "turn-score-counter",
       "avg-trend-arrow",
       "special-hit-highlights",
@@ -190,7 +189,6 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
       "dartboard-marker-highlight",
       "take-out-darts-alert",
       "single-bull-hit-sound",
-      "winner-celebration-effect",
     ]),
   }),
   Object.freeze({
@@ -1493,19 +1491,25 @@ function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, override
   });
   applyCheckoutSuggestionPreviewTheme(card, previewConfig);
 
-  if (labelText) {
-    card.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-checkout-suggestion-demo-label",
-      text: labelText,
+  ["T20", "25", "D18"].forEach((segment, index) => {
+    const field = createElement(documentRef, "span", {
+      className: "ad-xconfig-checkout-suggestion-demo-field",
+    });
+    if (index === 0 && labelText) {
+      field.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-checkout-suggestion-demo-label",
+        text: labelText,
+      }));
+    }
+    field.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-checkout-suggestion-demo-segment",
+      text: segment,
     }));
-  }
+    card.appendChild(field);
+  });
   card.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-checkout-suggestion-demo-score",
-    text: "96",
-  }));
-  card.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-checkout-suggestion-demo-route",
-    text: "T20  D18",
+    className: "ad-xconfig-checkout-suggestion-demo-total",
+    text: "0",
   }));
   return card;
 }

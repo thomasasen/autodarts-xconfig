@@ -130,7 +130,6 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
     id: "all-modes",
     title: "Gilt für: Alle Modi",
     featureKeys: Object.freeze([
-      "active-player-sweep",
       "turn-score-counter",
       "avg-trend-arrow",
       "special-hit-highlights",
@@ -138,7 +137,6 @@ const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
       "dartboard-marker-highlight",
       "take-out-darts-alert",
       "single-bull-hit-sound",
-      "winner-celebration-effect",
     ]),
   }),
   Object.freeze({

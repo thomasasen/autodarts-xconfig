@@ -45,7 +45,7 @@ Jedes Feature exportiert mindestens eine Mount-Funktion und optional eine Action
 
 - Animationen und Themes werden über die Feature-Registry verwaltet.
 - Themes sind normale Feature-Module unter `src/features/themes/*`.
-- `winner-celebration-effect` nutzt zusätzlich `runFeatureAction(featureKey, actionId)` für die xConfig-Vorschau.
+- Einzelne Features können zusätzlich `runFeatureAction(featureKey, actionId)` für direkte xConfig-Aktionen nutzen.
 
 ## Öffentliche Runtime-API
 

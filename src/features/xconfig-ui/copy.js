@@ -455,13 +455,13 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "checkout-suggestion-styles": featureCopy({
     cardDescription:
-      "Gibt Checkout-Hinweisen eine markantere Hülle und bessere Lesbarkeit.",
+      "Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor.",
     visibleDescription:
-      "Checkout-Empfehlungen werden auffälliger, strukturierter und besser lesbar gestaltet.",
+      "Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.",
     visualDescription:
-      "Der sichtbare Vorschlagsblock erhält je nach Stil eine Badge-, Ribbon-, Stripe-, Ticket- oder Outline-Optik. Optional sitzt darüber ein eigenes Label wie `CHECKOUT` oder `FINISH`.",
+      "Schriftart und Textfarbe bleiben beim Theme. Badge, Ribbon, Stripe, Ticket oder Outline ergänzen Fläche, Kontur und optional ein Label im ersten Checkout-Feld.",
     usefulWhen:
-      "Wenn du Suggestionen schneller scannen möchtest oder der Standard-Look zu unauffällig ist.",
+      "Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.",
     images: [
       image("Checkout Suggestion Styles", "animation-style-checkout-suggestions.png"),
       image(
@@ -483,14 +483,14 @@ export const xconfigFeatureCopy = deepFreeze({
     ],
     fields: {
       style: fieldCopy(
-        "Wechselt zwischen mehreren Hüllen für den sichtbaren Checkout-Vorschlag.",
-        "Legt die Grundform des Suggestions-Containers fest. Grafisch ändert sich die Hülle des vorhandenen Vorschlags, nicht sein Inhalt.",
-        "Wechselt die Hülle des Checkout-Vorschlags."
+        "Wechselt zwischen mehreren Akzentstilen für die sichtbaren Checkout-Felder.",
+        "Legt Kontur, Akzentkante und Flächenwirkung der Checkout-Felder fest. Schriftart und Textfarbe bleiben beim aktiven Theme.",
+        "Wechselt den Akzentstil der Checkout-Felder."
       ),
       labelText: fieldCopy(
-        "Setzt den Text des kleinen Labels oberhalb der Empfehlung oder blendet ihn aus.",
-        "Bestimmt, welcher feste Labeltext über dem gestylten Checkout-Vorschlag erscheint. `Kein Label` blendet diese Zusatzmarke vollständig aus.",
-        "Legt den festen Labeltext über dem Vorschlag fest oder blendet ihn aus."
+        "Setzt den Text des kleinen Labels im ersten Checkout-Feld oder blendet ihn aus.",
+        "Bestimmt, welcher feste Labeltext im ersten Feld der Checkout-Route erscheint. `Kein Label` blendet diese Zusatzmarke vollständig aus.",
+        "Legt den festen Labeltext im ersten Checkout-Feld fest oder blendet ihn aus."
       ),
       colorTheme: fieldCopy(
         "Wählt die Akzentfarbe des gestylten Vorschlags.",
@@ -536,30 +536,6 @@ export const xconfigFeatureCopy = deepFreeze({
         "Passt Größe und Abstand des Pfeils an.",
         "Steuert Breite, Höhe und Abstand des Pfeils direkt neben der AVG-Anzeige. Größere Stufen sind aus mehr Abstand leichter erkennbar.",
         "Passt Größe und Abstand des Pfeils an."
-      ),
-      debug: DEBUG_FIELD,
-    },
-  }),
-  "active-player-sweep": featureCopy({
-    cardDescription:
-      "Markiert den Spielerwechsel mit einem Lichtlauf über die aktive Karte.",
-    visibleDescription:
-      "Beim Spielerwechsel läuft ein kurzer Sweep über die aktive Karte.",
-    visualDescription:
-      "Eine helle, halbtransparente Bahn zieht einmal quer über die aktive Karte. So springt der neue Zugwechsel schneller ins Auge.",
-    usefulWhen:
-      "Wenn du in schnellen Matches einen klareren Wechsel zwischen den Spielern sehen willst.",
-    images: [image("Active Player Sweep", "animation-turn-start-sweep.gif")],
-    fields: {
-      durationMs: fieldCopy(
-        "Bestimmt, wie schnell der Sweep über die Karte läuft.",
-        "Legt die Gesamtdauer des Lichtlaufs fest. Kürzere Stufen wirken direkter, längere Stufen betonen den Wechsel stärker.",
-        "Bestimmt das Tempo des Sweeps."
-      ),
-      sweepStyle: fieldCopy(
-        "Regelt Breite und Helligkeit des Sweeps.",
-        "Wählt die optische Stärke des Sweeps. `Dezent` nutzt eine schmalere und schwächere Lichtbahn, `Kräftig` zeichnet sie breiter und heller.",
-        "Regelt Breite und Helligkeit des Sweeps."
       ),
       debug: DEBUG_FIELD,
     },
@@ -993,62 +969,6 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
-  "winner-celebration-effect": featureCopy({
-    cardDescription: "Zeigt bei einem Sieg ein konfigurierbares Vollbild-Feuerwerk.",
-    visibleDescription:
-      "Bei einem Sieg erscheint ein Vollbild-Effekt im gewählten Feuerwerksstil.",
-    visualDescription:
-      "Je nach Stil starten Konfetti- oder Feuerwerksmuster über den gesamten Bildschirm. Farben, Partikelmenge, Laufzeit und Geschwindigkeit folgen der gewählten Konfiguration.",
-    usefulWhen:
-      "Wenn Siege deutlich gefeiert werden sollen oder du verschiedene Effektstile testen möchtest.",
-    images: [
-      image("Winner Celebration Effect", "animation-winner-fireworks.gif"),
-      image("xConfig Test-Button", "xConfig-testbutton.png"),
-    ],
-    fields: {
-      style: fieldCopy(
-        "Wählt das Bewegungsmuster des Vollbild-Effekts.",
-        "Legt fest, ob der Siegereffekt eher wie klassisches Feuerwerk, Kanonenschuss, Sternenregen, Seitenbeschuss oder eine andere Variante wirkt. Die Farbpalette bleibt davon unabhängig.",
-        "Wählt das Bewegungsmuster des Siegereffekts."
-      ),
-      colorTheme: fieldCopy(
-        "Wählt die Farbpalette des Feuerwerks.",
-        "Bestimmt, aus welchen Farben der Effekt zusammengesetzt ist. Die Partikelmuster bleiben gleich, nur die Palette wird gewechselt.",
-        "Wählt die Farbpalette des Siegereffekts."
-      ),
-      intensity: fieldCopy(
-        "Regelt Intervall und Energie des Effekts.",
-        "Steuert über Voreinstellungen, wie häufig Schüsse ausgelöst werden und wie energisch sich der Effekt bewegt. `Stark` wirkt lebhafter, `Dezent` ruhiger.",
-        "Regelt Taktung und Energie des Siegereffekts."
-      ),
-      durationSeconds: fieldCopy(
-        "Begrenzt, wie lange der Effekt nach einem Sieg läuft.",
-        "Stoppt das Winner-Feuerwerk nach der gewählten Dauer automatisch. Die Vorschau nutzt dieselbe Dauer wie der echte Effekt.",
-        "Begrenzt die Laufzeit des Siegereffekts."
-      ),
-      particleAmount: fieldCopy(
-        "Regelt die Partikelanzahl unabhängig von der Intensität.",
-        "Senkt oder erhöht die Partikelmenge pro Auslösung. `Optimiert` reduziert die Last gegenüber der vollen Menge, ohne den Effekt leer wirken zu lassen.",
-        "Regelt die Partikelmenge pro Auslösung."
-      ),
-      "run-feature-action": fieldCopy(
-        "Startet die aktuelle Konfiguration sofort als Vorschau im geöffneten xConfig-Fenster.",
-        "Löst den aktuell konfigurierten Winner-Fireworks-Effekt direkt als Vorschau aus, ohne auf einen echten Sieg warten zu müssen. Das ist nur ein Testlauf und ändert keine gespeicherten Werte.",
-        "Startet die aktuelle Konfiguration sofort als Vorschau."
-      ),
-      includeBullOut: fieldCopy(
-        "Legt fest, ob der Effekt auch bei Bull-Out-Varianten abgespielt wird.",
-        "Bestimmt, ob der Siegereffekt auch dann startet, wenn der erkannte Spielmodus eine Bull-Out-Variante ist. Ist die Option aus, bleiben diese Varianten stumm.",
-        "Legt fest, ob der Effekt auch bei Bull-Out aktiv ist."
-      ),
-      pointerDismiss: fieldCopy(
-        "Erlaubt das Beenden des laufenden Effekts per Klick.",
-        "Bestimmt, ob ein linker Mausklick den aktuell laufenden Winner-Fireworks-Effekt vorzeitig schließen darf.",
-        "Erlaubt das Beenden des Effekts per Klick."
-      ),
-      debug: DEBUG_FIELD,
-    },
-  }),
 });
 
 const THEME_BACKGROUND_DISPLAY_OPTION_COPY = deepFreeze({
@@ -1465,24 +1385,24 @@ const TV_BOARD_ZOOM_TARGET_OPTION_COPY = deepFreeze({
 
 const CHECKOUT_SUGGESTION_STYLE_OPTION_COPY = deepFreeze({
   badge: optionCopy(
-    "Zeigt den Vorschlag wie eine markierte Badge-Fläche mit gestricheltem Rahmen.",
-    "Der Vorschlag bekommt eine plakative Badge-Optik mit gestrichelter Kontur und weichem Akzent-Hintergrund. Das wirkt wie ein klar abgesetzter Hinweisblock.",
-    "Diese Variante legt um den Suggestion-Block eine plakative Badge-Hülle mit gestrichelter Outline und weicher Akzentfläche. Der Hinweis wirkt dadurch wie ein klar eingestempeltes Label im Interface."
+    "Markiert die Checkout-Felder mit einer gestrichelten Kontur.",
+    "Die Checkout-Felder erhalten eine ruhige Akzentfläche und einen gestrichelten Rahmen. Die Theme-Typografie bleibt sichtbar.",
+    "Diese Variante verbindet die vergrößerten Checkout-Felder mit einer gestrichelten Kontur und einer dezenten Akzentfläche. Schrift und Textfarbe kommen weiterhin aus dem aktiven Theme."
   ),
   ribbon: optionCopy(
-    "Zeigt den Vorschlag wie ein leuchtendes Ribbon mit schrägem Label.",
-    "Die Hülle bekommt einen kräftigen Innenrahmen, Glow und ein leicht schräg sitzendes Label. Das wirkt dynamischer und markanter als `Badge`.",
-    "Diese Variante inszeniert den Suggestion-Block wie ein leuchtendes Ribbon oder Banner. Durch Innenrahmen, Glow und leicht gekipptes Label wirkt der Hinweis energischer und auffälliger."
+    "Betont die Checkout-Felder mit einer leuchtenden Oberkante.",
+    "Eine kräftige Akzentkante und ein kontrollierter Glow erzeugen den Ribbon-Charakter, ohne Text zu überlagern.",
+    "Diese Variante inszeniert die Checkout-Felder mit einer farbigen Oberkante und einem kontrollierten Glow. Das Label bleibt gerade und die Theme-Typografie vollständig lesbar."
   ),
   stripe: optionCopy(
-    "Zeigt den Vorschlag mit sichtbaren Akzentstreifen über der Fläche.",
-    "Der Container bekommt eine klare Hülle und darüber ein diagonales Streifenmuster. Dadurch wirkt die Empfehlung technischer und signalartiger.",
-    "Diese Variante kombiniert einen akzentfarbenen Rahmen mit diagonalem Streifenmuster in der Fläche. Der Vorschlag wirkt dadurch besonders signalhaft und gut scanbar."
+    "Setzt eine klare Akzentleiste an die Checkout-Felder.",
+    "Eine seitliche Farbleiste gibt der Route einen technischen Signalcharakter, ohne ein Muster hinter den Text zu legen.",
+    "Diese Variante markiert die Checkout-Felder mit einer seitlichen Akzentleiste und einem ruhigen Flächenverlauf. Dadurch bleibt die Route signalstark und zugleich gut lesbar."
   ),
   ticket: optionCopy(
-    "Zeigt den Vorschlag wie ein Ticket mit gestrichelter Trennlinie.",
-    "Die Hülle erinnert an einen Ticket- oder Coupon-Look. Die sichtbare gestrichelte Linie teilt den Block optisch wie einen Abrissschein.",
-    "Diese Variante formt den Suggestion-Block wie ein Ticket mit eigener Labelzone und gestrichelter Trennlinie. Dadurch wirkt die Empfehlung spielerischer und stärker wie ein separates Element."
+    "Rahmt die Checkout-Felder mit einer Ticket-Kontur.",
+    "Eine gestrichelte Innenkontur erzeugt den Ticket-Look, ohne eine Trennlinie durch das Segment zu ziehen.",
+    "Diese Variante formt jedes Checkout-Feld mit einer gestrichelten Innenkontur wie ein Ticket. Der Segmenttext bleibt frei von überlagernden Linien oder Mustern."
   ),
   outline: optionCopy(
     "Zeigt den Vorschlag mit kräftigem Außenrahmen.",
@@ -1493,19 +1413,19 @@ const CHECKOUT_SUGGESTION_STYLE_OPTION_COPY = deepFreeze({
 
 const CHECKOUT_SUGGESTION_LABEL_OPTION_COPY = deepFreeze({
   CHECKOUT: optionCopy(
-    "Zeigt oberhalb der Empfehlung das Label `CHECKOUT`.",
-    "Über dem gestylten Vorschlagsblock erscheint ein festes `CHECKOUT`-Label. Das wirkt klar technisch und direkt am klassischen Begriff orientiert.",
-    "Diese Einstellung setzt oberhalb der Empfehlung ein festes `CHECKOUT`-Label. Dadurch wird der Block sofort als Checkout-Hinweis lesbar, auch wenn man nur kurz auf die Fläche schaut."
+    "Zeigt im ersten Checkout-Feld das Label `CHECKOUT`.",
+    "Im ersten Feld der Route erscheint ein festes `CHECKOUT`-Label. Das wirkt klar technisch und direkt am klassischen Begriff orientiert.",
+    "Diese Einstellung setzt im ersten Checkout-Feld ein festes `CHECKOUT`-Label. Dadurch wird die Route sofort als Checkout-Hinweis lesbar, auch wenn man nur kurz auf die Fläche schaut."
   ),
   FINISH: optionCopy(
-    "Zeigt oberhalb der Empfehlung das Label `FINISH`.",
-    "Der Vorschlag bekommt statt `CHECKOUT` das Wort `FINISH`. Das wirkt kürzer und etwas direkter auf den Abschluss des Legs bezogen.",
-    "Mit dieser Option trägt der Suggestion-Block das Label `FINISH` statt `CHECKOUT`. Das wirkt sprachlich etwas kompakter und rückt den erfolgreichen Abschluss stärker in den Vordergrund."
+    "Zeigt im ersten Checkout-Feld das Label `FINISH`.",
+    "Das erste Checkout-Feld bekommt statt `CHECKOUT` das Wort `FINISH`. Das wirkt kürzer und direkter auf den Abschluss des Legs bezogen.",
+    "Mit dieser Option trägt das erste Feld der Checkout-Route das Label `FINISH` statt `CHECKOUT`. Das wirkt sprachlich kompakter und rückt den Abschluss stärker in den Vordergrund."
   ),
   "": optionCopy(
     "Blendet das zusätzliche Label komplett aus.",
-    "Der gestylte Vorschlagsblock bleibt aktiv, trägt aber keine eigene Label-Kapsel mehr oberhalb des Inhalts. Dadurch wirkt das Element ruhiger und flacher.",
-    "Diese Option entfernt die kleine Label-Marke oberhalb des Suggestion-Blocks vollständig. Die farbige Hülle bleibt erhalten, aber der Vorschlag wirkt minimalistischer und weniger plakativ."
+    "Die gestylten Checkout-Felder bleiben aktiv, tragen aber keine eigene Label-Kapsel. Dadurch wirkt die Route ruhiger und flacher.",
+    "Diese Option entfernt die kleine Label-Marke aus dem ersten Checkout-Feld vollständig. Die farbige Hülle bleibt erhalten, aber die Route wirkt minimalistischer."
   ),
 });
 
@@ -1560,42 +1480,6 @@ const AVG_TREND_SIZE_OPTION_COPY = deepFreeze({
     "Zeigt einen größeren und weiter abgesetzten Pfeil.",
     "Der Pfeil bekommt mehr Breite, Höhe und Abstand. Dadurch bleibt die Richtung aus mehr Entfernung leichter sichtbar.",
     "Diese Stufe macht den Trendpfeil deutlich größer und gibt ihm etwas mehr Abstand zur AVG-Zahl. Das verbessert die Erkennbarkeit besonders auf größeren Displays oder aus größerer Distanz."
-  ),
-});
-
-const TURN_START_DURATION_OPTION_COPY = deepFreeze({
-  "300": optionCopy(
-    "Lässt den Lichtlauf schnell über die Karte huschen.",
-    "Der Sweep zieht zügig durch und markiert den Spielerwechsel nur als kurzen Blitz. Das wirkt direkt und sportlich.",
-    "Diese Stufe verkürzt den Sweep auf einen schnellen, klaren Lichtimpuls. Der Turn-Wechsel springt ins Auge, ohne lange auf der Karte stehen zu bleiben."
-  ),
-  "420": optionCopy(
-    "Nutzen die ausgewogene Standardgeschwindigkeit.",
-    "Der Lichtlauf bleibt klar sichtbar, ohne träge zu wirken. Das ist die neutrale Mittelstufe für den Spielerwechsel.",
-    "Diese Einstellung hält die Balance zwischen schnellem Impuls und gut lesbarer Bewegung. Der Sweep wirkt bewusst gesetzt, aber nicht ausgedehnt."
-  ),
-  "620": optionCopy(
-    "Lässt den Sweep ruhiger und länger über die Karte ziehen.",
-    "Der Lichtlauf bleibt länger sichtbar und betont den Wechsel deutlicher. Dadurch wirkt der Übergang weicher und filmischer.",
-    "Diese Stufe verlängert den Sweep sichtbar und macht den Spielerwechsel stärker zum kleinen Übergangseffekt. Die Karte bleibt dadurch länger in einer hellen Bewegung markiert."
-  ),
-});
-
-const TURN_START_STYLE_OPTION_COPY = deepFreeze({
-  subtle: optionCopy(
-    "Zeigt eine schmale und eher sanfte Lichtbahn.",
-    "Der Sweep bleibt vergleichsweise schmal und hellt die Karte nur moderat auf. Das wirkt zurückhaltend und sauber.",
-    "Diese Variante hält Breite und Helligkeit des Sweeps bewusst niedrig. Der Spielerwechsel bleibt sichtbar, wirkt aber nicht wie ein dominanter Effektstreifen."
-  ),
-  standard: optionCopy(
-    "Nutzen die ausgewogene Standardbreite und Helligkeit.",
-    "Die Lichtbahn ist klar sichtbar, ohne die Karte komplett zu überstrahlen. Das ist die neutrale Mittelstufe.",
-    "Diese Einstellung liefert den vorgesehenen Mittelwert für Breite und Helligkeit des Sweeps. Der Wechsel ist gut sichtbar, ohne die Karte optisch zu dominieren."
-  ),
-  strong: optionCopy(
-    "Zeigt eine breite, helle Lichtbahn über der Karte.",
-    "Der Sweep zieht breiter und sichtbarer über die aktive Karte. Dadurch springt der Spielerwechsel am stärksten ins Auge.",
-    "Diese Variante verbreitert und verstärkt den Lichtlauf deutlich. Der aktive Kartenwechsel wird dadurch sehr plakativ markiert und ist auch in schnellen Matches kaum zu übersehen."
   ),
 });
 
@@ -2308,126 +2192,6 @@ const X01_REMAINING_SCORE_BAR_EFFECT_OPTION_COPY = deepFreeze({
   ),
 });
 
-const WINNER_STYLE_OPTION_COPY = deepFreeze({
-  "center-side-burst": optionCopy(
-    "Startet einen ausgewogenen Mix aus zentralen und seitlichen Feuerwerksstößen.",
-    "Der Effekt kombiniert einen kräftigen Hauptstoß aus der Mitte mit kleineren Seitenbursts. Das wirkt am ehesten wie ein klassisches Feier-Feuerwerk.",
-    "Diese Variante mischt einen zentralen Hauptausbruch mit ergänzenden seitlichen Bursts. Dadurch entsteht die ausgewogenste, klassischste Feierwirkung des Moduls."
-  ),
-  "top-fireworks": optionCopy(
-    "Erzeugt wiederholte Explosionen weiter oben im Bild.",
-    "Die Partikel starten an wechselnden Positionen im oberen Bildschirmbereich und streuen breit auseinander. Das wirkt am ehesten wie echte Himmelsfeuerwerke.",
-    "Diese Variante setzt auf wiederholte, breit streuende Explosionen im oberen Bereich des Bildes. Der Effekt erinnert am stärksten an klassisches Feuerwerk am Himmel."
-  ),
-  "center-cannon": optionCopy(
-    "Schießt eine dichte Partikelkanone aus der unteren Mitte.",
-    "Die Partikel kommen gebündelt und kraftvoll aus dem unteren Zentrum. Das wirkt wie ein konzentrierter Konfetti- oder Feuerwerksstoß nach vorn.",
-    "Diese Einstellung bündelt den Effekt in einer dichten Kanonen-Salve aus der unteren Bildmitte. Der Ausbruch wirkt kompakt, kräftig und sehr direkt."
-  ),
-  "triple-burst": optionCopy(
-    "Kombiniert Mitte und Seiten zu einem breiteren Siegessturm.",
-    "Mehrere Bursts aus Mitte, links und rechts bauen ein großes, raumgreifendes Effektbild auf. Das wirkt besonders festlich und voll.",
-    "Diese Variante verbindet zentrale und seitliche Ausbrüche zu einem breiten Effektteppich. Dadurch entsteht der vollste und raumgreifendste Feiermoment unter den Mehrfachmustern."
-  ),
-  "star-burst": optionCopy(
-    "Erzeugt sternförmige Partikel mit ruhigerem Fall.",
-    "Statt normaler Konfetti-Partikel werden Sterne verwendet, die ruhiger und dekorativer durch das Bild laufen. Das wirkt verspielter als die anderen Stile.",
-    "Diese Einstellung ersetzt die Standardpartikel durch Sternformen und lässt sie mit ruhigerer Bewegung durchs Bild laufen. Der Effekt wirkt dadurch dekorativer und weniger wie klassisches Konfetti."
-  ),
-  "side-cannons": optionCopy(
-    "Schießt kleine Bursts abwechselnd von links und rechts ins Bild.",
-    "Die Partikel kommen seitlich herein und rahmen den Bildschirm eher ein, statt ihn von der Mitte aus zu füllen. Das wirkt schnell und randbetont.",
-    "Diese Variante setzt auf kurze Seitenschüsse von links und rechts. Der Effekt rahmt das Bild stärker ein und wirkt dynamischer, aber weniger flächig als zentrale Bursts."
-  ),
-});
-
-const WINNER_COLOR_OPTION_COPY = deepFreeze({
-  autodarts: optionCopy(
-    "Nutzen eine blau-weiße Palette im Stil des Autodarts-Looks.",
-    "Der Effekt arbeitet mit mehreren Blauabstufungen und Weiß. Das wirkt kühl, sauber und markennah.",
-    "Diese Palette nutzt Blau- und Weißtöne und bleibt damit am nächsten am bestehenden Autodarts-Charakter. Der Effekt wirkt kühl, klar und relativ technisch."
-  ),
-  redwhite: optionCopy(
-    "Nutzen Weiß mit hellen bis dunklen Rottönen.",
-    "Die Partikel wechseln zwischen Weiß, hellem Rot und dunkleren Rotabstufungen. Das wirkt klassisch, festlich und deutlich wärmer als `Autodarts`.",
-    "Diese Palette kombiniert Weiß mit mehreren roten Tönen. Dadurch entsteht ein klassischer, festlicher Look, der deutlich wärmer und emotionaler wirkt als die blauen Standardfarben."
-  ),
-  ice: optionCopy(
-    "Nutzen eisige Weiß- und Blautöne.",
-    "Der Effekt läuft von Weiß über helles Eisblau bis zu kräftigem Blau. Das wirkt kühl, sauber und fast frostig.",
-    "Diese Palette setzt auf weiße und eisblaue Farbwerte bis in kräftige Blautöne. Der Effekt wirkt dadurch kühl, klar und fast gläsern."
-  ),
-  sunset: optionCopy(
-    "Nutzen warme Orange-, Pink- und Violetttöne.",
-    "Die Farbpalette erinnert an einen Sonnenuntergang mit warmen und violett auslaufenden Tönen. Das wirkt farbig und lebendig.",
-    "Diese Farbpalette mischt Weiß mit warmem Orange, Pink und Violett. Dadurch bekommt der Effekt eine deutlich stimmungsvollere, buntere Sunset-Wirkung."
-  ),
-  neon: optionCopy(
-    "Nutzen knallige Neonfarben mit sehr hoher Signalwirkung.",
-    "Die Partikel leuchten in hellen, künstlich wirkenden Neonfarben. Das ist die bunteste und auffälligste Farbpalette.",
-    "Diese Palette kombiniert mehrere sehr helle Neonfarben und erzeugt damit den grellsten, modernsten Look. Der Effekt wirkt stark künstlich, bunt und maximal aufmerksamkeitsstark."
-  ),
-  gold: optionCopy(
-    "Nutzen Weiß mit Gold- und Bernsteintönen.",
-    "Die Partikel wirken wie goldenes Feuerwerk oder Goldregen. Das ist die klassisch festliche Premium-Variante.",
-    "Diese Variante färbt den Effekt in Weiß, Gold und warme Bernsteintöne. Dadurch entsteht eine klassische Feierwirkung, die besonders edel und festlich wirkt."
-  ),
-});
-
-const WINNER_INTENSITY_OPTION_COPY = deepFreeze({
-  dezent: optionCopy(
-    "Hält Partikelmenge und Energie bewusst ruhiger.",
-    "Es entstehen weniger Partikel, die etwas gemächlicher und mit längeren Abständen ausgelöst werden. Der Effekt bleibt sichtbar, ohne den Bildschirm zu fluten.",
-    "Diese Stufe reduziert Partikelzahl, Geschwindigkeit und Auslösefrequenz. Das Feuerwerk wirkt dadurch ruhiger, luftiger und weniger bildfüllend."
-  ),
-  standard: optionCopy(
-    "Nutzen die ausgewogene Standardintensität.",
-    "Partikelmenge, Auslösefrequenz und Bewegungsenergie bleiben in Balance. Das ist die neutrale Mittelstufe des Effekts.",
-    "Diese Einstellung liefert den vorgesehenen Mittelwert für Partikelzahl, Auslöseintervall und Bewegungsenergie. Der Effekt bleibt klar festlich, ohne zu übersteuern."
-  ),
-  stark: optionCopy(
-    "Erhöht Dichte, Taktung und Bewegungsenergie sichtbar.",
-    "Mehr Partikel werden schneller und lebhafter ausgelöst. Dadurch wirkt das Feuerwerk voller, dichter und energischer.",
-    "Diese Stufe steigert Partikelzahl, Auslösefrequenz und Bewegungsenergie spürbar. Der Effekt füllt den Bildschirm stärker und wirkt deutlich druckvoller als die anderen Varianten."
-  ),
-});
-
-const WINNER_DURATION_OPTION_COPY = deepFreeze({
-  1: optionCopy(
-    "Stoppt den Effekt nach 1 Sekunde.",
-    "Der Siegereffekt läuft nur kurz an und wird dann automatisch beendet. Das ist die geringste Laufzeit und reduziert sichtbare Last am stärksten.",
-    "Kürzeste Laufzeit; ideal, wenn der Effekt nur kurz aufblitzen soll."
-  ),
-  2: optionCopy(
-    "Stoppt den Effekt nach 2 Sekunden.",
-    "Der Siegereffekt bleibt klar sichtbar, endet aber schnell genug, um längere Lastspitzen zu vermeiden.",
-    "Kurze, gut sichtbare Laufzeit mit moderater Last."
-  ),
-  5: optionCopy(
-    "Stoppt den Effekt nach 5 Sekunden.",
-    "Der Siegereffekt läuft länger und wirkt feierlicher, beendet sich aber trotzdem automatisch.",
-    "Längste Laufzeit; feierlich, aber nicht dauerhaft aktiv."
-  ),
-});
-
-const WINNER_PARTICLE_AMOUNT_OPTION_COPY = deepFreeze({
-  sparsam: optionCopy(
-    "Reduziert die Partikelmenge deutlich.",
-    "Pro Auslösung entstehen bewusst wenige Partikel. Das ist die leichteste Einstellung für schwächere Geräte.",
-    "Niedrigste Partikelmenge und geringste Last."
-  ),
-  optimiert: optionCopy(
-    "Nutzt eine reduzierte, ausgewogene Partikelmenge.",
-    "Die Partikelanzahl liegt unter der vollen Menge, bleibt aber sichtbar genug für einen klaren Siegereffekt.",
-    "Empfohlene Balance aus Wirkung und Performance."
-  ),
-  voll: optionCopy(
-    "Nutzt die volle Partikelmenge.",
-    "Jede Auslösung verwendet die ursprüngliche volle Partikeldichte. Das wirkt am dichtesten, kann aber spürbar mehr Leistung brauchen.",
-    "Maximale Dichte mit der höchsten Last."
-  ),
-});
-
 const DART_IMPACT_STYLE_OPTION_COPY = deepFreeze({
   classic: optionCopy(
     "Behält den bisherigen, einheitlichen Dart-Einschlag bei.",
@@ -2545,10 +2309,6 @@ const xconfigFieldOptionCopy = deepFreeze({
     durationMs: AVG_TREND_DURATION_OPTION_COPY,
     size: AVG_TREND_SIZE_OPTION_COPY,
   },
-  "active-player-sweep": {
-    durationMs: TURN_START_DURATION_OPTION_COPY,
-    sweepStyle: TURN_START_STYLE_OPTION_COPY,
-  },
   "special-hit-highlights": {
     colorTheme: SPECIAL_HIT_COLOR_THEME_OPTION_COPY,
     animationStyle: SPECIAL_HIT_ANIMATION_STYLE_OPTION_COPY,
@@ -2592,13 +2352,6 @@ const xconfigFieldOptionCopy = deepFreeze({
     countEffect: TURN_SCORE_COUNT_EFFECT_OPTION_COPY,
     durationMs: TURN_SCORE_DURATION_OPTION_COPY,
     flashMode: TURN_SCORE_FLASH_MODE_OPTION_COPY,
-  },
-  "winner-celebration-effect": {
-    style: WINNER_STYLE_OPTION_COPY,
-    colorTheme: WINNER_COLOR_OPTION_COPY,
-    intensity: WINNER_INTENSITY_OPTION_COPY,
-    durationSeconds: WINNER_DURATION_OPTION_COPY,
-    particleAmount: WINNER_PARTICLE_AMOUNT_OPTION_COPY,
   },
 });
 
@@ -2697,7 +2450,6 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Alle aktiviert",
             featureKeys: [
-              "active-player-sweep",
               "turn-score-counter",
               "avg-trend-arrow",
               "special-hit-highlights",
@@ -2707,7 +2459,6 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
               "dartboard-marker-highlight",
               "take-out-darts-alert",
               "single-bull-hit-sound",
-              "winner-celebration-effect",
               "checkout-suggestion-styles",
               "checkout-score-highlight",
               "x01-remaining-score-bar",
@@ -2722,7 +2473,6 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           {
             label: "Debug",
             featureKeys: [
-              "active-player-sweep",
               "turn-score-counter",
               "avg-trend-arrow",
               "special-hit-highlights",
@@ -2732,7 +2482,6 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
               "dartboard-marker-highlight",
               "take-out-darts-alert",
               "single-bull-hit-sound",
-              "winner-celebration-effect",
               "checkout-suggestion-styles",
               "checkout-score-highlight",
               "x01-remaining-score-bar",
@@ -2744,14 +2493,6 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
             ],
             key: "debug",
           },
-        ],
-      },
-      {
-        title: "Active Player Sweep",
-        featureKey: "active-player-sweep",
-        fields: [
-          { label: "Sweep-Geschwindigkeit", key: "durationMs" },
-          { label: "Sweep-Stil", key: "sweepStyle" },
         ],
       },
       {
@@ -2842,19 +2583,6 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
           { label: "Lautstärke", key: "volume" },
           { label: "Wiederholsperre", key: "cooldownMs" },
           { label: "Fallback-Scan", key: "pollIntervalMs" },
-        ],
-      },
-      {
-        title: "Winner Celebration Effect",
-        featureKey: "winner-celebration-effect",
-        fields: [
-          { label: "Style", key: "style" },
-          { label: "Farbe", key: "colorTheme" },
-          { label: "Intensität", key: "intensity" },
-          { label: "Dauer", key: "durationSeconds" },
-          { label: "Partikelanzahl", key: "particleAmount" },
-          { label: "Bei Bull-Out aktiv", key: "includeBullOut" },
-          { label: "Klick beendet Effekt", key: "pointerDismiss" },
         ],
       },
       {

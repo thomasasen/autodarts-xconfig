@@ -12,23 +12,19 @@ export const XCONFIG_PREVIEW_ASSET_FILES = Object.freeze({
   "cricket-target-highlighter": "cricket-target-highlighter.webp",
   "cricket-grid-status-effects": "cricket-grid-status-effects.webp",
   "avg-trend-arrow": "avg-trend-arrow.webp",
-  "active-player-sweep": "active-player-sweep.webp",
   "special-hit-highlights": "special-hit-highlights.webp",
   "dartboard-marker-highlight": "dartboard-marker-highlight.webp",
   "dart-marker-replacer": "dart-marker-replacer.webp",
   "take-out-darts-alert": "take-out-darts-alert.webp",
   "single-bull-hit-sound": "single-bull-hit-sound.webp",
   "turn-score-counter": "turn-score-counter.webp",
-  "winner-celebration-effect": "winner-celebration-effect.webp",
 });
 
 export const XCONFIG_ANIMATED_PREVIEW_FEATURE_KEYS = Object.freeze([
   "checkout-score-highlight",
   "x01-bust-active-player-highlight",
   "tv-board-zoom",
-  "active-player-sweep",
   "special-hit-highlights",
   "dartboard-marker-highlight",
   "turn-score-counter",
-  "winner-celebration-effect",
 ]);

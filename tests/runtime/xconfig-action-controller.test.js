@@ -126,7 +126,7 @@ test("createShellActionController dispatches navigation and shell-state commands
   controller.handleAction("open-settings", null, { featureKey: "theme-x01" });
   controller.handleAction("close-settings");
   controller.handleAction("close-settings-backdrop");
-  controller.handleAction("open-readme", null, { featureKey: "winner-celebration-effect" });
+  controller.handleAction("open-readme", null, { featureKey: "turn-score-counter" });
   controller.handleAction("open-changelog");
   controller.handleAction("open-settings-export");
   controller.handleAction("start-settings-export");
@@ -144,7 +144,7 @@ test("createShellActionController dispatches navigation and shell-state commands
     "sync",
     "sync",
     "sync",
-    ["readme", "winner-celebration-effect"],
+    ["readme", "turn-score-counter"],
     "changelog",
     "open-export",
     "start-export",
@@ -381,7 +381,7 @@ test("createShellActionController dispatches feature and setting payload command
   controller.handleAction("run-feature-action", createActionNode({
     "data-feature-action-id": "preview",
   }, actionButtonParent), {
-    featureKey: "winner-celebration-effect",
+    featureKey: "single-bull-hit-sound",
   });
 
   await flushMicrotasks();
@@ -391,7 +391,7 @@ test("createShellActionController dispatches feature and setting payload command
     ["save-config", { configKey: "checkoutScoreHighlight", settingKey: "enabled", value: true }],
     ["sync-select", selectButton, "glow"],
     ["save-config", { configKey: "checkoutScoreHighlight", settingKey: "effect", value: "parsed:glow" }],
-    ["run-feature-action", "winner-celebration-effect", "preview", previewTarget],
+    ["run-feature-action", "single-bull-hit-sound", "preview", previewTarget],
     "sync",
     "sync",
     "sync",
