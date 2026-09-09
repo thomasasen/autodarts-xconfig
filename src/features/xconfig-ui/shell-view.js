@@ -9,7 +9,10 @@ import {
   buildTurnDartImageStatus,
   formatThemeBackgroundSummary,
 } from "./theme-background.js";
-import { resolveFeatureCardPreview } from "./feature-card-preview.js";
+import {
+  resolveFeatureCardPreview,
+  resolveThemeGlobalPresetState,
+} from "./feature-card-preview.js";
 import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
 import { resolveThemePresetAsset } from "#theme-preset-assets";
@@ -52,6 +55,7 @@ import {
   getEffectFillClass as getX01RemainingScoreBarEffectFillClass,
   getSizeClass as getX01RemainingScoreBarSizeClass,
   HOST_ATTRIBUTE as X01_REMAINING_SCORE_BAR_HOST_ATTRIBUTE,
+  PREVIEW_HOST_ATTRIBUTE as X01_REMAINING_SCORE_BAR_PREVIEW_HOST_ATTRIBUTE,
   TRAIL_CLASS as X01_REMAINING_SCORE_BAR_TRAIL_CLASS,
   TRACK_CLASS as X01_REMAINING_SCORE_BAR_TRACK_CLASS,
   normalizeBarSize as normalizeX01RemainingScoreBarBarSize,
@@ -105,6 +109,8 @@ const X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY = "effect";
 const X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE = 501;
 const X01_REMAINING_SCORE_BAR_STATIC_PREVIEW_SCORE = 140;
 const X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE = X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE * 0.8;
+const X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_SIZE = "breit";
+const X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_EFFECT = "off";
 const X01_REMAINING_SCORE_BAR_TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-remaining-score-bar-trail-width";
 const STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY = "checkout-suggestion-styles";
 const STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY = "style";
@@ -267,7 +273,7 @@ function buildThemeGlobalCardSummary(documentRef) {
   });
   badges.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-card-global-badge ad-xconfig-card-global-badge--primary",
-    text: "Global",
+    text: "Global · alle Spielmodi",
   }));
   summary.appendChild(badges);
 
@@ -1312,6 +1318,7 @@ function buildX01RemainingScoreBarPreviewBar(documentRef, featureConfig = {}, ov
     ].filter(Boolean).join(" "),
     attributes: {
       [X01_REMAINING_SCORE_BAR_HOST_ATTRIBUTE]: "true",
+      [X01_REMAINING_SCORE_BAR_PREVIEW_HOST_ATTRIBUTE]: "true",
       [X01_REMAINING_SCORE_BAR_COLOR_THEME_ATTRIBUTE]: previewConfig.colorTheme,
       [X01_REMAINING_SCORE_BAR_SIZE_ATTRIBUTE]: previewConfig.barSize,
       [X01_REMAINING_SCORE_BAR_EFFECT_ATTRIBUTE]: previewConfig.effect,
@@ -1400,15 +1407,27 @@ function buildX01RemainingScoreBarOptionLayout(
 ) {
   const fieldKey = String(field?.key || "").trim();
   const previewOverrides = resolveX01RemainingScoreBarPreviewOverrides(fieldKey, optionValue);
+  const isColorPreview = fieldKey === X01_REMAINING_SCORE_BAR_COLOR_THEME_FIELD_KEY;
   const isEffectPreview = fieldKey === X01_REMAINING_SCORE_BAR_EFFECT_FIELD_KEY;
   const previewEffect = normalizeX01RemainingScoreBarEffect(previewOverrides.effect);
+  const optionPreviewOverrides = isColorPreview
+    ? {
+        ...previewOverrides,
+        barSize: X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_SIZE,
+        effect: X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_EFFECT,
+      }
+    : previewOverrides;
   const preview = createElement(documentRef, "div", {
     className: "ad-xconfig-x01-remaining-score-bar-option-preview",
   });
   preview.appendChild(
-    buildX01RemainingScoreBarPreviewBar(documentRef, feature?.config || {}, previewOverrides, {
+    buildX01RemainingScoreBarPreviewBar(documentRef, feature?.config || {}, optionPreviewOverrides, {
       mini: true,
-      score: isEffectPreview ? X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE : undefined,
+      score: isColorPreview
+        ? X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE
+        : isEffectPreview
+          ? X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE
+          : undefined,
       loop: isEffectPreview && previewEffect === "previous-score-trail" ? "previous-score-trail-drop" : undefined,
     })
   );
@@ -1510,11 +1529,35 @@ const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
       buildThemeGlobalCardPreviewSample(
         documentRef,
         preset,
-        `${preview.active ? "Aktuelle Vorlage" : "Vorlage"}: ${preset.label}`
+        preview.state === "active"
+          ? `Aktuelle Vorlage: ${preset.label}`
+          : preview.state === "customized"
+            ? `Basierend auf ${preset.label} · angepasst`
+            : preview.state === "disabled"
+              ? `${preset.label} · deaktiviert`
+              : `Vorlage: ${preset.label}`
       )
     );
   },
 });
+
+function buildThemeGlobalCardPreviewPlayer(documentRef, name, score, modifier = "") {
+  const player = createElement(documentRef, "span", {
+    className: [
+      "ad-xconfig-theme-card-preview-player",
+      modifier ? `ad-xconfig-theme-card-preview-player--${modifier}` : "",
+    ].filter(Boolean).join(" "),
+  });
+  player.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-card-preview-name",
+    text: name,
+  }));
+  player.appendChild(createElement(documentRef, "strong", {
+    className: "ad-xconfig-theme-card-preview-score",
+    text: score,
+  }));
+  return player;
+}
 
 function buildThemeGlobalCardPreviewSample(documentRef, config = {}, label = "") {
   const sample = createElement(documentRef, "div", {
@@ -1538,18 +1581,12 @@ function buildThemeGlobalCardPreviewSample(documentRef, config = {}, label = "")
     className: "ad-xconfig-theme-card-preview-label",
     text: label,
   }));
-  sample.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-theme-card-preview-name",
-    text: "THOMAS",
-  }));
-  sample.appendChild(createElement(documentRef, "strong", {
-    className: "ad-xconfig-theme-card-preview-score",
-    text: "501",
-  }));
+  sample.appendChild(buildThemeGlobalCardPreviewPlayer(documentRef, "THOMAS", "501", "active"));
   sample.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-theme-card-preview-throw",
     text: "T20  D20",
   }));
+  sample.appendChild(buildThemeGlobalCardPreviewPlayer(documentRef, "GAST", "301"));
   return sample;
 }
 
@@ -2284,10 +2321,10 @@ function buildX01BustActivePlayerHighlightPreview(documentRef) {
   return preview;
 }
 
-function buildFeatureActionField(documentRef, feature, field, fieldId) {
+function buildFeatureActionField(documentRef, feature, field, fieldId, features = []) {
   const previewTarget = String(field?.previewTarget || "").trim();
   if (previewTarget === "theme-global-template-preset") {
-    return buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId);
+    return buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId, features);
   }
 
   const previewColorTheme = String(field?.previewColorTheme || "").trim();
@@ -2390,9 +2427,15 @@ function applyThemeGlobalTemplatePresetPreviewStyles(button, preset, fontPreset)
     "--ad-xconfig-theme-preset-font",
     String(fontPreset?.previewFontFamily || "inherit")
   );
+  button.style.setProperty(
+    "--ad-xconfig-theme-preset-throw-font",
+    preset.applyTo.includes("throws")
+      ? String(fontPreset?.previewFontFamily || "inherit")
+      : "Inter, Arial, sans-serif"
+  );
 }
 
-function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId) {
+function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId, features = []) {
   const preset = getThemeGlobalTemplatePreset(field?.actionId);
   if (!preset) {
     return createElement(documentRef, "p", {
@@ -2403,6 +2446,7 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
 
   const wallpaperUrl = resolveThemePresetAsset(preset.backgroundAssetKey);
   const fontPreset = getThemeGlobalTypographyPreset(preset.fontPreset);
+  const presetState = resolveThemeGlobalPresetState(features, preset);
   const wrapper = createElement(documentRef, "div", {
     className: "ad-xconfig-setting-action ad-xconfig-setting-action--theme-preset",
   });
@@ -2418,8 +2462,10 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
       "data-theme-preset-key": preset.key,
       "data-theme-preset-has-wallpaper": wallpaperUrl ? "true" : "false",
       "data-theme-preset-background-mode": preset.backgroundDisplayMode,
+      "data-theme-preset-state": presetState || "available",
       "data-adxconfig-preview-font": fontPreset?.remote ? fontPreset.value : undefined,
-      "aria-label": `Preset ${preset.label} anwenden`,
+      "aria-label": `Vorlage ${preset.label} anwenden`,
+      "aria-pressed": presetState === "active" ? "true" : "false",
       title: preset.description,
     },
   });
@@ -2447,6 +2493,16 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
     className: "ad-xconfig-theme-preset-name",
     text: preset.label,
   }));
+  if (presetState) {
+    identity.appendChild(createElement(documentRef, "span", {
+      className: `ad-xconfig-theme-preset-state ad-xconfig-theme-preset-state--${presetState}`,
+      text: presetState === "active"
+        ? "Aktiv"
+        : presetState === "customized"
+          ? "Angepasst"
+          : "Deaktiviert",
+    }));
+  }
   if (!wallpaperUrl) {
     identity.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-theme-preset-wallpaper-state",
@@ -2475,6 +2531,25 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
     text: "T20",
   }));
   content.appendChild(player);
+  content.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-turn",
+    text: "T20\nD20",
+  }));
+  const opponent = createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-player ad-xconfig-theme-preset-player--opponent",
+  });
+  opponent.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-theme-preset-player-name",
+    text: "GAST",
+    attributes: {
+      "data-adxconfig-preview-font": fontPreset?.remote ? fontPreset.value : undefined,
+    },
+  }));
+  opponent.appendChild(createElement(documentRef, "strong", {
+    className: "ad-xconfig-theme-preset-score",
+    text: "301",
+  }));
+  content.appendChild(opponent);
   button.appendChild(content);
   wrapper.appendChild(button);
   return wrapper;
@@ -2515,7 +2590,9 @@ function buildSelectOptionClassName(state, previewColorTheme) {
     state.hasTurnScoreCounterPreview ? "ad-xconfig-option-item--turn-score-counter-preview" : "",
     state.hasAvgTrendArrowPreview ? "ad-xconfig-option-item--avg-trend-arrow-preview" : "",
     state.hasDartboardMarkerHighlightPreview ? "ad-xconfig-option-item--dartboard-marker-highlight-preview" : "",
-    previewColorTheme ? "ad-xconfig-option-item--color-preview" : "",
+    previewColorTheme && !state.isX01RemainingScoreBarPreviewSelectField
+      ? "ad-xconfig-option-item--color-preview"
+      : "",
   ].filter(Boolean).join(" ");
 }
 
@@ -2673,11 +2750,11 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
   return list;
 }
 
-function buildFeatureField(documentRef, feature, field) {
+function buildFeatureField(documentRef, feature, field, features = []) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
   if (field.control === "action") {
-    return buildFeatureActionField(documentRef, feature, field, fieldId);
+    return buildFeatureActionField(documentRef, feature, field, fieldId, features);
   }
 
   if (field.control === "checkbox") {
@@ -3052,7 +3129,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
     }));
   }
   const variantLabel = formatVariantLabel(feature.variants);
-  if (variantLabel) {
+  if (variantLabel && !isThemeGlobalCard) {
     badges.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-variant",
       text: `Gilt für: ${variantLabel}`,
@@ -3104,13 +3181,13 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
 
   cardContent.appendChild(createElement(documentRef, "p", {
     className: "ad-xconfig-note",
-    attributes: isBackgroundThemeFeature(feature)
+    attributes: feature.featureKey === "theme-global-background"
       ? {
           "data-adxconfig-theme-card-status": "true",
           "data-feature-key": feature.featureKey,
         }
       : {},
-    text: isBackgroundThemeFeature(feature)
+    text: feature.featureKey === "theme-global-background"
       ? formatThemeBackgroundSummary(feature)
       : "Änderungen werden sofort gespeichert und direkt angewendet.",
   }));
@@ -3241,7 +3318,7 @@ function buildSettingsModal(documentRef, state, features) {
           text: sectionLabel,
         }));
         const isThemePresetSection =
-          isThemeGlobalFeature(feature) && sectionLabel === "Presets";
+          isThemeGlobalFeature(feature) && field.previewTarget === "theme-global-template-preset";
         const nextSectionBody = createElement(documentRef, "div", {
           className: isThemePresetSection
             ? "ad-xconfig-settings-section-body ad-xconfig-settings-section-body--theme-presets"
@@ -3285,7 +3362,7 @@ function buildSettingsModal(documentRef, state, features) {
         }));
       }
     }
-    inputWrap.appendChild(buildFeatureField(documentRef, feature, field));
+    inputWrap.appendChild(buildFeatureField(documentRef, feature, field, features));
     row.appendChild(inputWrap);
     sectionBody.appendChild(row);
   });
@@ -3734,10 +3811,21 @@ export function buildShellContent(documentRef, state, features) {
   }
 
   if (state.notice?.type && state.notice?.message) {
-    shell.appendChild(createElement(documentRef, "div", {
+    const notice = createElement(documentRef, "div", {
       className: `ad-xconfig-notice ad-xconfig-notice--${state.notice.type}`,
       text: state.notice.message,
-    }));
+    });
+    if (state.notice.action && state.notice.actionLabel) {
+      notice.appendChild(createElement(documentRef, "button", {
+        className: "ad-xconfig-notice-action",
+        type: "button",
+        text: state.notice.actionLabel,
+        attributes: {
+          "data-adxconfig-action": state.notice.action,
+        },
+      }));
+    }
+    shell.appendChild(notice);
   }
 
   shell.appendChild(createElement(documentRef, "p", {

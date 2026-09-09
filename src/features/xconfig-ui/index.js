@@ -47,6 +47,7 @@ import { createTurnScoreCounterPreviewAdapter } from "./turn-score-preview-adapt
 import { createAvgTrendArrowPreviewAdapter } from "./avg-trend-preview-adapter.js";
 import { createDartboardMarkerHighlightPreviewAdapter } from "./dartboard-marker-highlight-preview-adapter.js";
 import { createX01RemainingScoreBarPreviewController } from "./x01-remaining-score-bar-preview-controller.js";
+import { createX01RemainingScoreBarColorPreviewAdapter } from "./x01-remaining-score-bar-color-preview-adapter.js";
 import {
   downloadSettingsExport,
   selectSettingsImportFile,
@@ -252,8 +253,13 @@ function ensureXConfigShell(options = {}) {
     }
   }
 
-  function setNotice(type, message) {
-    state.notice = { type: String(type || ""), message: String(message || "").trim() };
+  function setNotice(type, message, action = {}) {
+    state.notice = {
+      type: String(type || ""),
+      message: String(message || "").trim(),
+      action: String(action?.action || "").trim(),
+      actionLabel: String(action?.label || "").trim(),
+    };
     clearNoticeTimer();
     if (state.notice.message && typeof windowRef.setTimeout === "function") {
       state.noticeTimer = windowRef.setTimeout(() => {
@@ -641,6 +647,7 @@ function ensureXConfigShell(options = {}) {
 
   effectPreviewController = createXConfigEffectPreviewController({
     adapters: [
+      createX01RemainingScoreBarColorPreviewAdapter({ windowRef }),
       createAvgTrendArrowPreviewAdapter(),
       createDartboardMarkerHighlightPreviewAdapter(),
       createTurnScoreCounterPreviewAdapter({

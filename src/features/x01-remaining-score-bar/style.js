@@ -1,6 +1,7 @@
 export const STYLE_ID = "ad-ext-x01-remaining-score-bar-style";
 export const HOST_ATTRIBUTE = "data-ad-ext-x01-remaining-score-bar";
 export const HOST_SELECTOR = `[${HOST_ATTRIBUTE}='true']`;
+export const PREVIEW_HOST_ATTRIBUTE = "data-ad-ext-x01-remaining-score-bar-preview";
 export const STACK_ATTRIBUTE = "data-ad-ext-x01-remaining-score-bar-stack";
 export const STACK_SELECTOR = `.chakra-stack[${STACK_ATTRIBUTE}='true']`;
 export const TRACK_CLASS = "ad-ext-x01-remaining-score-bar__track";

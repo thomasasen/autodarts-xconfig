@@ -5,6 +5,7 @@ import { createXConfigEffectPreviewController } from "../../src/features/xconfig
 import { createTurnScoreCounterPreviewAdapter } from "../../src/features/xconfig-ui/turn-score-preview-adapter.js";
 import { createAvgTrendArrowPreviewAdapter } from "../../src/features/xconfig-ui/avg-trend-preview-adapter.js";
 import { createDartboardMarkerHighlightPreviewAdapter } from "../../src/features/xconfig-ui/dartboard-marker-highlight-preview-adapter.js";
+import { createX01RemainingScoreBarColorPreviewAdapter } from "../../src/features/xconfig-ui/x01-remaining-score-bar-color-preview-adapter.js";
 import { AVG_TREND_PREVIEW_ATTRIBUTE } from "../../src/features/xconfig-ui/avg-trend-preview-contract.js";
 import { DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE } from "../../src/features/xconfig-ui/dartboard-marker-highlight-preview-contract.js";
 import { TURN_SCORE_PREVIEW_SCORE_CLASS } from "../../src/features/xconfig-ui/turn-score-preview-contract.js";
@@ -66,6 +67,35 @@ function createDartboardMarkerHighlightPreviewOption(documentRef, attributes = {
   marker.setAttribute(DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE, "true");
   optionNode.appendChild(marker);
   return { optionNode, marker };
+}
+
+function createX01RemainingScoreBarColorPreviewOption(documentRef, attributes = {}) {
+  const optionNode = documentRef.createElement("button");
+  optionNode.className = "ad-xconfig-option-item ad-xconfig-option-item--effect-preview";
+  Object.entries(attributes).forEach(([name, value]) => {
+    optionNode.setAttribute(name, value);
+  });
+
+  const hostNode = documentRef.createElement("div");
+  hostNode.className =
+    "ad-xconfig-x01-remaining-score-bar-preview-host ad-ext-x01-remaining-score-bar--active ad-ext-x01-remaining-score-bar--size-breit";
+  hostNode.setAttribute("data-adxconfig-x01-remaining-score-bar-preview-bar", "true");
+  hostNode.setAttribute("data-ad-ext-x01-remaining-score-bar-color-theme", "traffic-light");
+  hostNode.setAttribute("data-ad-ext-x01-remaining-score-bar-size", "breit");
+  hostNode.setAttribute("data-ad-ext-x01-remaining-score-bar-effect", "off");
+
+  const trackNode = documentRef.createElement("div");
+  trackNode.className = "ad-ext-x01-remaining-score-bar__track";
+  const trailNode = documentRef.createElement("div");
+  trailNode.className = "ad-ext-x01-remaining-score-bar__trail";
+  const fillNode = documentRef.createElement("div");
+  fillNode.className =
+    "ad-ext-x01-remaining-score-bar__fill ad-ext-x01-remaining-score-bar__fill--effect-off";
+  trackNode.appendChild(trailNode);
+  trackNode.appendChild(fillNode);
+  hostNode.appendChild(trackNode);
+  optionNode.appendChild(hostNode);
+  return { optionNode, hostNode };
 }
 
 test("xConfig effect preview controller keeps only one adapter run active", () => {
@@ -139,6 +169,55 @@ test("xConfig effect preview controller does not restart the same option", () =>
 
   controller.handlePreviewEndEvent(new FakeEvent("focusout", { target: optionNode }));
   assert.deepEqual(cleanups, ["demo-first"]);
+});
+
+test("X01 color preview cycles real score states on hover and restores a full stable bar", () => {
+  const documentRef = new FakeDocument();
+  const { optionNode, hostNode } = createX01RemainingScoreBarColorPreviewOption(documentRef, {
+    "data-preview-effect": "x01-remaining-score-bar-color-cycle",
+    "data-feature-key": "x01-remaining-score-bar",
+    "data-setting-key": "colorTheme",
+    "data-setting-value": "traffic-light",
+  });
+  let intervalCallback = null;
+  let clearedInterval = null;
+  const adapter = createX01RemainingScoreBarColorPreviewAdapter({
+    windowRef: {
+      setInterval(callback, ms) {
+        assert.equal(ms, 1200);
+        intervalCallback = callback;
+        return 77;
+      },
+      clearInterval(handle) {
+        clearedInterval = handle;
+      },
+    },
+  });
+
+  const cleanup = adapter.start({ optionNode });
+  const startGradient = hostNode.style.getPropertyValue(
+    "--ad-ext-x01-remaining-score-bar-fill-bg-active"
+  );
+  assert.equal(hostNode.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-score-state"), "501");
+  assert.equal(hostNode.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "100%");
+  assert.equal(typeof intervalCallback, "function");
+
+  intervalCallback();
+  const progressGradient = hostNode.style.getPropertyValue(
+    "--ad-ext-x01-remaining-score-bar-fill-bg-active"
+  );
+  assert.equal(hostNode.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-score-state"), "251");
+  assert.equal(hostNode.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "100%");
+  assert.notEqual(progressGradient, startGradient);
+
+  cleanup();
+  assert.equal(clearedInterval, 77);
+  assert.equal(hostNode.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-score-state"), "501");
+  assert.equal(hostNode.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "100%");
+  assert.equal(
+    hostNode.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-bg-active"),
+    startGradient
+  );
 });
 
 test("turn points preview adapter gates odometer until the real plugin is loaded", async () => {

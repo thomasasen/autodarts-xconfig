@@ -13,33 +13,80 @@ function findFeature(features, featureKey) {
   ) || null;
 }
 
+function normalizeComparableColor(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
 function matchesPresetTypography(config = {}, preset = {}) {
+  const configuredScopes = Array.isArray(config.applyTo) ? config.applyTo : [];
   return (
     String(config.fontPreset || "").trim() === preset.fontPreset &&
-    String(config.accentColor || "").trim().toUpperCase() === String(preset.accentColor || "").toUpperCase() &&
-    String(config.scoreColor || "").trim().toUpperCase() === String(preset.scoreColor || "").toUpperCase() &&
-    String(config.secondaryTextColor || "").trim().toUpperCase() === String(preset.secondaryTextColor || "").toUpperCase() &&
-    String(config.throwLabelColor || "").trim().toUpperCase() === String(preset.throwLabelColor || "").toUpperCase()
+    configuredScopes.length === preset.applyTo.length &&
+    preset.applyTo.every((scope, index) => configuredScopes[index] === scope) &&
+    normalizeComparableColor(config.accentColor) === normalizeComparableColor(preset.accentColor) &&
+    normalizeComparableColor(config.scoreColor) === normalizeComparableColor(preset.scoreColor) &&
+    normalizeComparableColor(config.secondaryTextColor) === normalizeComparableColor(preset.secondaryTextColor) &&
+    normalizeComparableColor(config.throwLabelColor) === normalizeComparableColor(preset.throwLabelColor) &&
+    Number(config.activePlayerTintIntensity) === Number(preset.activePlayerTintIntensity)
   );
 }
 
-function resolveActiveThemeGlobalPreset(features) {
-  const backgroundConfig = findFeature(features, "theme-global-background")?.config || {};
+function matchesPresetBackground(config = {}, preset = {}) {
+  return (
+    !String(config.backgroundImageDataUrl || "").trim() &&
+    String(config.backgroundAssetKey || "").trim() === preset.backgroundAssetKey &&
+    String(config.backgroundDisplayMode || "").trim() === preset.backgroundDisplayMode &&
+    Number(config.backgroundOpacity) === Number(preset.backgroundOpacity) &&
+    Number(config.playerFieldTransparency) === Number(preset.playerFieldTransparency)
+  );
+}
+
+function isFeatureEnabled(feature) {
+  if (typeof feature?.enabled === "boolean") {
+    return feature.enabled;
+  }
+  return feature?.config?.enabled === true;
+}
+
+export function resolveThemeGlobalPresetState(features, preset) {
+  if (!preset) {
+    return "";
+  }
+  const backgroundFeature = findFeature(features, "theme-global-background");
+  const typographyFeature = findFeature(features, "theme-global-typography");
+  const backgroundConfig = backgroundFeature?.config || {};
+  const typographyConfig = typographyFeature?.config || {};
   if (String(backgroundConfig.backgroundImageDataUrl || "").trim()) {
-    return null;
+    return "";
   }
 
   const backgroundAssetKey = String(backgroundConfig.backgroundAssetKey || "").trim();
-  if (backgroundAssetKey) {
-    return THEME_GLOBAL_TEMPLATE_PRESETS.find(
-      (preset) => preset.backgroundAssetKey === backgroundAssetKey
-    ) || null;
+  const hasMatchingIdentity = preset.backgroundAssetKey
+    ? backgroundAssetKey === preset.backgroundAssetKey
+    : !backgroundAssetKey && String(typographyConfig.fontPreset || "").trim() === preset.fontPreset;
+  if (!hasMatchingIdentity) {
+    return "";
   }
 
-  const typographyConfig = findFeature(features, "theme-global-typography")?.config || {};
-  return THEME_GLOBAL_TEMPLATE_PRESETS.find(
-    (preset) => !preset.backgroundAssetKey && matchesPresetTypography(typographyConfig, preset)
-  ) || null;
+  const bothEnabled = isFeatureEnabled(backgroundFeature) && isFeatureEnabled(typographyFeature);
+  if (!bothEnabled) {
+    return "disabled";
+  }
+  return matchesPresetBackground(backgroundConfig, preset) && matchesPresetTypography(typographyConfig, preset)
+    ? "active"
+    : "customized";
+}
+
+function resolveThemeGlobalPresetMatch(features) {
+  for (const state of ["active", "customized", "disabled"]) {
+    const preset = THEME_GLOBAL_TEMPLATE_PRESETS.find(
+      (candidate) => resolveThemeGlobalPresetState(features, candidate) === state
+    );
+    if (preset) {
+      return { preset, state };
+    }
+  }
+  return { preset: null, state: "" };
 }
 
 function resolveRepresentativeThemeGlobalPreset() {
@@ -49,15 +96,16 @@ function resolveRepresentativeThemeGlobalPreset() {
 }
 
 function resolveThemeGlobalPresetsPreview(features) {
-  const activePreset = resolveActiveThemeGlobalPreset(features);
-  const preset = activePreset || resolveRepresentativeThemeGlobalPreset();
+  const match = resolveThemeGlobalPresetMatch(features);
+  const preset = match.preset || resolveRepresentativeThemeGlobalPreset();
   return {
     kind: "theme-global-presets",
     url:
       resolveThemePresetAsset(preset?.backgroundAssetKey) ||
       resolveXConfigPreviewAsset("theme-global-presets"),
     preset,
-    active: Boolean(activePreset),
+    state: match.state,
+    active: match.state === "active",
     displayMode: preset?.backgroundDisplayMode || "fill",
   };
 }

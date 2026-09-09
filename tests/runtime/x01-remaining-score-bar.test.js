@@ -15,6 +15,7 @@ import {
   FILL_CLASS,
   HOST_SELECTOR,
   INACTIVE_CLASS,
+  PREVIEW_HOST_ATTRIBUTE,
   STACK_ATTRIBUTE,
   TRACK_CLASS,
   TRAIL_CLASS,
@@ -543,6 +544,11 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   const activePlayer = createPlayerCard(documentRef, 170, { active: true });
   playerDisplay.appendChild(activePlayer.cardNode);
 
+  const previewHost = documentRef.createElement("div");
+  previewHost.setAttribute("data-ad-ext-x01-remaining-score-bar", "true");
+  previewHost.setAttribute(PREVIEW_HOST_ATTRIBUTE, "true");
+  documentRef.main.appendChild(previewHost);
+
   const state = createScoreProgressState();
 
   syncScoreProgress(
@@ -590,6 +596,7 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   assert.equal(cleared.startScore, null);
   assert.equal(cleared.renderedCards, 0);
   assert.equal(playerDisplay.querySelectorAll(HOST_SELECTOR).length, 0);
+  assert.equal(previewHost.isConnected, true);
   assert.equal(activePlayer.stackNode.getAttribute(STACK_ATTRIBUTE), null);
 });
 

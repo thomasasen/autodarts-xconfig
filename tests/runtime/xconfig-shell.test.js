@@ -8,7 +8,10 @@ import {
   resolveDartDesignAsset,
 } from "../../src/shared/feature-assets.node.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
-import { getThemeGlobalTemplatePreset } from "../../src/shared/theme-global-template-presets.js";
+import {
+  THEME_GLOBAL_TEMPLATE_PRESETS,
+  getThemeGlobalTemplatePreset,
+} from "../../src/shared/theme-global-template-presets.js";
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import {
@@ -1788,16 +1791,25 @@ test("xConfig X01 score progress renders configured size effect and color previe
   const originalSetInterval = windowRef.setInterval.bind(windowRef);
   const originalClearInterval = windowRef.clearInterval.bind(windowRef);
   let x01PreviewIntervalCallback = null;
+  let x01ColorPreviewIntervalCallback = null;
   windowRef.setInterval = (callback, ms, ...args) => {
     if (Number(ms) === 2000) {
       x01PreviewIntervalCallback = () => callback(...args);
       return 20_001;
+    }
+    if (Number(ms) === 1200) {
+      x01ColorPreviewIntervalCallback = () => callback(...args);
+      return 20_002;
     }
     return originalSetInterval(callback, ms, ...args);
   };
   windowRef.clearInterval = (handle) => {
     if (Number(handle) === 20_001) {
       x01PreviewIntervalCallback = null;
+      return;
+    }
+    if (Number(handle) === 20_002) {
+      x01ColorPreviewIntervalCallback = null;
       return;
     }
     originalClearInterval(handle);
@@ -1809,6 +1821,12 @@ test("xConfig X01 score progress renders configured size effect and color previe
   await waitForShellOpen(windowRef, documentRef);
   documentRef.getElementById("ad-xconfig-tab-animations").click();
   await waitForActiveTab(documentRef, "animations");
+
+  clickFeatureToggle(documentRef, "x01-remaining-score-bar", true);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.featureToggles.x01RemainingScoreBar === true
+  );
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='x01-remaining-score-bar']"
@@ -1902,12 +1920,84 @@ test("xConfig X01 score progress renders configured size effect and color previe
   assert.equal(previewRoute.textContent, "100%  75%  45%  20%");
   assert.equal(previewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"), "100%");
 
+  const colorPreviewBars = documentRef.querySelectorAll(
+    "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
+  );
+  assert.equal(colorPreviewBars.length, 13);
+  colorPreviewBars.forEach((colorPreviewBar) => {
+    assert.equal(
+      colorPreviewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"),
+      "100%"
+    );
+    assert.equal(colorPreviewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-size"), "breit");
+    assert.equal(colorPreviewBar.getAttribute("data-ad-ext-x01-remaining-score-bar-effect"), "off");
+    assert.ok(colorPreviewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-fill-bg-active"));
+  });
   assert.equal(
     documentRef.querySelectorAll(
-      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'] .ad-xconfig-x01-remaining-score-bar-option-preview"
+      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'][data-preview-effect='x01-remaining-score-bar-color-cycle']"
     ).length,
-    13
+    5
   );
+  assert.equal(
+    documentRef.querySelector(
+      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'][data-setting-value='autodarts']"
+    )?.getAttribute("data-preview-effect"),
+    null
+  );
+  const trafficLightOption = documentRef.querySelector(
+    "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'][data-setting-value='traffic-light']"
+  );
+  const trafficLightPreviewBar = trafficLightOption?.querySelector(
+    "[data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
+  );
+  assert.ok(trafficLightOption);
+  assert.ok(trafficLightPreviewBar);
+  const trafficLightStartGradient = trafficLightPreviewBar.style.getPropertyValue(
+    "--ad-ext-x01-remaining-score-bar-fill-bg-active"
+  );
+  documentRef.dispatchEvent(new FakeEvent("pointerover", {
+    bubbles: true,
+    target: trafficLightOption,
+  }));
+  assert.equal(typeof x01ColorPreviewIntervalCallback, "function");
+  x01ColorPreviewIntervalCallback();
+  assert.equal(
+    trafficLightPreviewBar.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-score-state"),
+    "251"
+  );
+  assert.equal(
+    trafficLightPreviewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"),
+    "100%"
+  );
+  assert.notEqual(
+    trafficLightPreviewBar.style.getPropertyValue(
+      "--ad-ext-x01-remaining-score-bar-fill-bg-active"
+    ),
+    trafficLightStartGradient
+  );
+  documentRef.dispatchEvent(new FakeEvent("pointerout", {
+    bubbles: true,
+    target: trafficLightOption,
+  }));
+  assert.equal(x01ColorPreviewIntervalCallback, null);
+  assert.equal(
+    trafficLightPreviewBar.getAttribute("data-adxconfig-x01-remaining-score-bar-preview-score-state"),
+    "501"
+  );
+  assert.equal(
+    trafficLightPreviewBar.style.getPropertyValue("--ad-ext-x01-remaining-score-bar-width"),
+    "100%"
+  );
+  assert.equal(
+    documentRef.querySelectorAll(
+      "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'].ad-xconfig-option-item--color-preview"
+    ).length,
+    0
+  );
+  assert.ok(previewCss.includes(
+    ".ad-xconfig-option-item--x01-remaining-score-bar-preview{overflow:hidden}"
+  ));
   const checkoutZonePreviewBar = documentRef.querySelector(
     "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'][data-setting-value='checkout-zone-blue'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
   );
@@ -1926,7 +2016,7 @@ test("xConfig X01 score progress renders configured size effect and color previe
     checkoutZonePreviewBar.style.getPropertyValue(
       "--ad-ext-x01-remaining-score-bar-fill-overlay-width-active"
     ),
-    "100%"
+    "33.93%"
   );
 
   assert.equal(
@@ -1946,6 +2036,15 @@ test("xConfig X01 score progress renders configured size effect and color previe
   await waitForStoredConfig(
     localStorage,
     (config) => config.features.x01RemainingScoreBar.colorTheme === "checkout-zone-blue"
+  );
+
+  assert.equal(
+    await waitFor(() =>
+      documentRef.querySelectorAll(
+        "[data-feature-key='x01-remaining-score-bar'][data-setting-key='colorTheme'] [data-adxconfig-x01-remaining-score-bar-preview-bar='true']"
+      ).length === 13
+    ),
+    true
   );
 
   assert.equal(
@@ -3554,7 +3653,7 @@ test("xConfig shell renders a compact searchable global font picker and loads th
   runtime.stop();
 });
 
-test("xConfig shell applies Templates Global presets with confirmation and asset-backed preview wallpaper", async () => {
+test("xConfig shell applies global presets immediately with asset-backed preview wallpaper", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -3584,6 +3683,21 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
+
+  assert.deepEqual(
+    documentRef.querySelectorAll(".ad-xconfig-settings-section-title")
+      .map((node) => String(node.textContent || "")),
+    ["Empfohlen", "Atmosphäre", "Regional", "Cinematic"]
+  );
+  assert.equal(
+    documentRef.querySelectorAll(".ad-xconfig-theme-preset-card").length,
+    THEME_GLOBAL_TEMPLATE_PRESETS.length
+  );
+  const renderedPresetNames = documentRef.querySelectorAll(".ad-xconfig-theme-preset-name")
+    .map((node) => String(node.textContent || ""));
+  ["Spider-Man", "John Wick", "Avengers Endgame", "Gladiator", "Dark Side"].forEach((name) => {
+    assert.ok(renderedPresetNames.includes(name), `missing unchanged preset name ${name}`);
+  });
 
   const presetButton = documentRef.getElementById(
     "ad-xconfig-field-theme-global-presets-preset-cyberpunk"
@@ -3633,7 +3747,7 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   assert.deepEqual(storedConfig.features.themes.globalTypography, {
     enabled: true,
     fontPreset: "audiowide",
-    applyTo: ["scores", "throws", "names"],
+    applyTo: ["scores", "names"],
     accentColor: "#2EF2FF",
     scoreColor: "#E8FF5A",
     secondaryTextColor: "#FFD0F5",
@@ -3644,8 +3758,8 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   assert.deepEqual(storedConfig.features.themes.globalBackground, {
     enabled: true,
     backgroundDisplayMode: "fill",
-    backgroundOpacity: 40,
-    playerFieldTransparency: 30,
+    backgroundOpacity: 20,
+    playerFieldTransparency: 10,
     backgroundImageDataUrl: "",
     backgroundAssetKey: "cyberpunk",
     debug: false,
@@ -3653,9 +3767,7 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   assert.equal(storedConfig.features.turnDartDisplay.turnDartStyle, "solid");
   assert.equal(storedConfig.features.turnDartDisplay.turnDartColor, "#123456");
 
-  assert.equal(confirmMessages.length, 1);
-  assert.match(confirmMessages[0], /Vorlage "Cyberpunk"/);
-  assert.match(confirmMessages[0], /Wurffeld-Darts bleiben unverändert/);
+  assert.equal(confirmMessages.length, 0);
 
   const themeCard = documentRef.querySelector(
     ".ad-xconfig-card[data-feature-key='theme-global-presets']"
@@ -3669,7 +3781,7 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   const themeGlobalBadges = themeGlobalSummary
     .querySelectorAll(".ad-xconfig-card-global-badge")
     .map((node) => String(node.textContent || ""));
-  assert.deepEqual(themeGlobalBadges, ["Global"]);
+  assert.deepEqual(themeGlobalBadges, ["Global · alle Spielmodi"]);
 
   const themeGlobalValues = themeGlobalSummary
     .querySelectorAll(".ad-xconfig-card-global-value")
@@ -3712,6 +3824,31 @@ test("xConfig shell applies Templates Global presets with confirmation and asset
   assert.equal(
     typographySample.style.getPropertyValue("--ad-xconfig-theme-card-score"),
     cyberpunkPreset.scoreColor
+  );
+
+  await waitFor(() => documentRef.querySelector(
+    ".ad-xconfig-theme-preset-card[data-theme-preset-key='cyberpunk']"
+  )?.getAttribute("data-theme-preset-state") === "active");
+  const activePresetButton = documentRef.querySelector(
+    ".ad-xconfig-theme-preset-card[data-theme-preset-key='cyberpunk']"
+  );
+  assert.equal(activePresetButton?.getAttribute("aria-pressed"), "true");
+  assert.equal(activePresetButton?.getAttribute("data-theme-preset-state"), "active");
+  assert.equal(
+    String(activePresetButton?.querySelector(".ad-xconfig-theme-preset-state")?.textContent || ""),
+    "Aktiv"
+  );
+
+  const undoButton = documentRef.querySelector(
+    "[data-adxconfig-action='undoThemeGlobalPreset']"
+  );
+  assert.ok(undoButton);
+  undoButton.click();
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.featureToggles?.["themes.globalTypography"] === false &&
+      config.featureToggles?.["themes.globalBackground"] === false
   );
 
   runtime.stop();
@@ -3820,7 +3957,11 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     backgroundCard
       ?.querySelectorAll(".ad-xconfig-variant")
       .map((node) => String(node.textContent || "")),
-    ["Gilt für: Alle Modi"]
+    []
+  );
+  assert.equal(
+    String(backgroundCard?.querySelector(".ad-xconfig-card-global-badge")?.textContent || ""),
+    "Global · alle Spielmodi"
   );
   assert.equal(
     Array.from(documentRef.querySelectorAll(".ad-xconfig-card .ad-xconfig-variant"))
@@ -3834,7 +3975,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
-    assert.ok(card.querySelector(".ad-xconfig-variant"), `missing retained theme tag for ${featureKey}`);
+    assert.ok(card.querySelector(".ad-xconfig-card-global-badge"), `missing retained theme tag for ${featureKey}`);
   });
 
   documentRef.getElementById("ad-xconfig-tab-animations").click();

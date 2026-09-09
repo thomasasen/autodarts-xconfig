@@ -246,10 +246,6 @@ test("createShellActionController dispatches runtime, update and theme commands"
       },
     ],
     [
-      "confirm",
-      'Vorlage "Cyberpunk" anwenden? Hintergrund, Schrift und Farben werden ersetzt; Wurffeld-Darts bleiben unverändert.',
-    ],
-    [
       "save-config",
       {
         featureToggles: {
@@ -261,8 +257,8 @@ test("createShellActionController dispatches runtime, update and theme commands"
             globalBackground: {
               enabled: true,
               backgroundDisplayMode: "fill",
-              backgroundOpacity: 40,
-              playerFieldTransparency: 30,
+              backgroundOpacity: 20,
+              playerFieldTransparency: 10,
               backgroundImageDataUrl: "",
               backgroundAssetKey: "cyberpunk",
               debug: false,
@@ -270,7 +266,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
             globalTypography: {
               enabled: true,
               fontPreset: "audiowide",
-              applyTo: ["scores", "throws", "names"],
+              applyTo: ["scores", "names"],
               accentColor: "#2EF2FF",
               scoreColor: "#E8FF5A",
               secondaryTextColor: "#FFD0F5",

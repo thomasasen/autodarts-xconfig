@@ -16,6 +16,8 @@ export function buildShellRenderSignature(state, features, routeActive) {
     activeSettingsFeatureKey: String(state?.activeSettingsFeatureKey || ""),
     noticeType: String(state?.notice?.type || ""),
     noticeMessage: String(state?.notice?.message || ""),
+    noticeAction: String(state?.notice?.action || ""),
+    noticeActionLabel: String(state?.notice?.actionLabel || ""),
     settingsTransfer: {
       dialog: String(state?.settingsTransfer?.dialog || ""),
       includeAssets: state?.settingsTransfer?.includeAssets !== false,

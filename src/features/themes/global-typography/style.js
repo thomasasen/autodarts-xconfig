@@ -35,6 +35,16 @@ export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
   ]),
 });
 
+const MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS = Object.freeze([
+  "main .overflow-clip:has(.bg-mono-white.rounded-full):has(.font-number.overflow-hidden)",
+  "main .grid > .relative.isolate.overflow-hidden.bg-raspberry-slush-diagonal:has(.font-display)",
+]);
+
+const MODERN_ACTIVE_PLAYER_MARKER_SELECTORS = Object.freeze([
+  "main .overflow-clip:has(.font-number.overflow-hidden) .bg-mono-white.rounded-full",
+  "main .grid > .relative.isolate.overflow-hidden.bg-raspberry-slush-diagonal .bg-mono-white.rounded-full",
+]);
+
 export function getThemeGlobalTypographySelectors(applyTo = ["scores"]) {
   const scopeValues = getThemeGlobalTypographyScopeValues(applyTo);
   const selectors = scopeValues.flatMap((scopeValue) =>
@@ -108,6 +118,13 @@ function buildThemeGlobalTypographyColorDeclarations(featureConfig = {}) {
   return declarations;
 }
 
+function appendColorRule(blocks, selectors, color) {
+  if (!color) {
+    return;
+  }
+  blocks.push(`${selectors.join(",\n")} {\n  color: ${color} !important;\n}`);
+}
+
 export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
   const preset = getThemeGlobalTypographyPreset(featureConfig.fontPreset);
   const selectors = getThemeGlobalTypographySelectors(featureConfig.applyTo);
@@ -128,10 +145,28 @@ export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
     blocks.push(`:root {\n  ${colorDeclarations.join("\n  ")}\n}`);
   }
 
-  const tintIntensity = Math.max(0, Number.parseInt(featureConfig.activePlayerTintIntensity, 10) || 0);
+  const scoreColor = normalizeHexColor(featureConfig.scoreColor, "");
+  const secondaryTextColor = normalizeHexColor(featureConfig.secondaryTextColor, "");
+  const throwLabelColor = normalizeHexColor(featureConfig.throwLabelColor, "");
   const accentColor = normalizeHexColor(featureConfig.accentColor, "");
+  appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.scores, scoreColor);
+  appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.names, secondaryTextColor);
+  appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.throws, throwLabelColor);
+
+  if (accentColor) {
+    blocks.push(`${MODERN_ACTIVE_PLAYER_MARKER_SELECTORS.join(",\n")} {
+  background-color: ${accentColor} !important;
+}`);
+    blocks.push(`${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS.join(",\n")} {
+  outline: 2px solid ${hexColorToRgba(accentColor, 0.78)} !important;
+  outline-offset: -2px !important;
+}`);
+  }
+
+  const tintIntensity = Math.max(0, Number.parseInt(featureConfig.activePlayerTintIntensity, 10) || 0);
   if (accentColor && tintIntensity > 0) {
-    blocks.push(`#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack {
+    blocks.push(`#ad-ext-player-display .ad-ext-player.ad-ext-player-active > .chakra-stack,
+${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS.join(",\n")} {
   box-shadow: inset 0 0 0 9999px ${hexColorToRgba(accentColor, tintIntensity / 100)} !important;
 }`);
   }

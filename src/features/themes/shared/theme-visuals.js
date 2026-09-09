@@ -92,6 +92,10 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
 #ad-ext-player-display .ad-ext-player > .chakra-stack > *{
   background: transparent !important;
 }
+main .overflow-clip:has([role="button"]):has(.font-number.overflow-hidden),
+main .grid > .relative.isolate.overflow-hidden:has(.font-display){
+  background: rgba(8, 12, 24, ${playerFieldAlpha.toFixed(3)}) !important;
+}
 `;
 
   if (!backgroundUrl) {

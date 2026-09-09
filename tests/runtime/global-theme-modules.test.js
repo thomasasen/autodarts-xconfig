@@ -12,6 +12,7 @@ import {
   STYLE_ID as TYPOGRAPHY_STYLE_ID,
   buildThemeGlobalTypographyStyleText,
 } from "../../src/features/themes/global-typography/style.js";
+import { buildThemeVisualSettingsCss } from "../../src/features/themes/shared/theme-visuals.js";
 import { mountTurnDartDisplay } from "../../src/features/turn-dart-display/index.js";
 import {
   TURN_DART_DISPLAY_STYLE_ID,
@@ -43,13 +44,29 @@ test("global background, typography and turn darts build isolated CSS", () => {
     fontPreset: "fragment-mono",
     applyTo: ["scores", "names"],
     accentColor: "#9fdb58",
+    scoreColor: "#f7f8fa",
+    secondaryTextColor: "#d9e0ea",
+    throwLabelColor: "#aab5c5",
     activePlayerTintIntensity: 20,
     turnDartStyle: "gradient",
   });
   assert.match(typographyCss, /Fragment\+Mono/);
   assert.match(typographyCss, /\.ad-ext-player-name/);
   assert.match(typographyCss, /ad-ext-player-active/);
+  assert.match(typographyCss, /main \.overflow-clip:has\(\.bg-mono-white\.rounded-full\)/);
+  assert.match(typographyCss, /color: #F7F8FA !important/);
+  assert.match(typographyCss, /color: #D9E0EA !important/);
+  assert.match(typographyCss, /color: #AAB5C5 !important/);
+  assert.match(typographyCss, /background-color: #9FDB58 !important/);
   assert.doesNotMatch(typographyCss, /img\[alt="Dart"\]/);
+
+  const backgroundCss = buildThemeVisualSettingsCss({
+    backgroundOpacity: 20,
+    playerFieldTransparency: 10,
+  });
+  assert.match(backgroundCss, /main \.overflow-clip:has\(\[role="button"\]\)/);
+  assert.match(backgroundCss, /main \.grid > \.relative\.isolate\.overflow-hidden/);
+  assert.match(backgroundCss, /background: rgba\(8, 12, 24, 0\.900\) !important/);
 
   const dartCss = buildTurnDartDisplayStyleText({
     turnDartStyle: "gradient",

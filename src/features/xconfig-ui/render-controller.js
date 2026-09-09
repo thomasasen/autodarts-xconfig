@@ -320,6 +320,7 @@ function ensurePanelHost(controller) {
 function shouldKeepModalStable(previousSignaturePayload, state, routeActive) {
   return Boolean(previousSignaturePayload?.routeActive) &&
     String(previousSignaturePayload?.activeSettingsFeatureKey || "") !== "" &&
+    String(state.activeSettingsFeatureKey || "") !== "theme-global-presets" &&
     String(previousSignaturePayload?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
     Boolean(routeActive);
 }

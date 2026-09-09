@@ -13,14 +13,21 @@ function isControllerActive(controller) {
   return controller?.state?.started !== false;
 }
 
-function withRuntimeCall(controller, promiseLike, successMessage, errorMessage, successType = "success") {
+function withRuntimeCall(
+  controller,
+  promiseLike,
+  successMessage,
+  errorMessage,
+  successType = "success",
+  successAction = null
+) {
   Promise.resolve(promiseLike)
     .then(() => {
       if (!isControllerActive(controller)) {
         return;
       }
       if (successMessage) {
-        controller.setNotice(successType, successMessage);
+        controller.setNotice(successType, successMessage, successAction);
       }
     })
     .catch(() => {
@@ -352,13 +359,26 @@ function handleApplyThemeGlobalPreset(controller, actionNode, feature) {
     return;
   }
 
-  const confirmed = confirmAction(
-    controller.windowRef,
-    `Vorlage "${preset.label}" anwenden? Hintergrund, Schrift und Farben werden ersetzt; Wurffeld-Darts bleiben unverändert.`
+  const backgroundFeature = controller.getFeatures().find(
+    (entry) => entry?.featureKey === "theme-global-background"
   );
-  if (!confirmed) {
-    return;
-  }
+  const typographyFeature = controller.getFeatures().find(
+    (entry) => entry?.featureKey === "theme-global-typography"
+  );
+  controller.themePresetUndoPatch = backgroundFeature && typographyFeature
+    ? {
+        featureToggles: {
+          "themes.globalBackground": Boolean(backgroundFeature.enabled),
+          "themes.globalTypography": Boolean(typographyFeature.enabled),
+        },
+        features: {
+          themes: {
+            globalBackground: { ...backgroundFeature.config },
+            globalTypography: { ...typographyFeature.config },
+          },
+        },
+      }
+    : null;
 
   withRuntimeCall(
     controller,
@@ -366,7 +386,28 @@ function handleApplyThemeGlobalPreset(controller, actionNode, feature) {
       controller.syncThemeBackgroundIndicators("theme-global-background");
     }),
     `Preset "${preset.label}" angewendet.`,
-    `Preset "${preset.label}" konnte nicht angewendet werden.`
+    `Preset "${preset.label}" konnte nicht angewendet werden.`,
+    "success",
+    controller.themePresetUndoPatch
+      ? { action: "undoThemeGlobalPreset", label: "Rückgängig" }
+      : null
+  );
+}
+
+function handleUndoThemeGlobalPreset(controller) {
+  const patch = controller.themePresetUndoPatch;
+  if (!patch || typeof controller.runtimeApi?.saveConfig !== "function") {
+    return;
+  }
+  controller.themePresetUndoPatch = null;
+  withRuntimeCall(
+    controller,
+    Promise.resolve(controller.runtimeApi.saveConfig(patch)).then(() => {
+      controller.syncThemeBackgroundIndicators("theme-global-background");
+    }),
+    "Vorherige Themen-Einstellungen wiederhergestellt.",
+    "Vorherige Themen-Einstellungen konnten nicht wiederhergestellt werden.",
+    "info"
   );
 }
 
@@ -544,6 +585,7 @@ function buildCommandHandlers(controller) {
       }
       handleApplyThemeGlobalPreset(controller, actionNode, feature);
     }],
+    ["undoThemeGlobalPreset", () => handleUndoThemeGlobalPreset(controller)],
     ["clearThemeBackground", (_actionNode, feature) => {
       if (!feature) {
         return;
@@ -604,6 +646,7 @@ function buildShellActionControllerContext(options = {}) {
     openChangelog: resolveOptionalFunction(options.openChangelog, () => {}),
     openUserscriptInstall: resolveOptionalFunction(options.openUserscriptInstall, () => false),
     getXConfigDescriptor: resolveOptionalFunction(options.getXConfigDescriptor, () => null),
+    getFeatures: resolveOptionalFunction(options.getFeatures, () => []),
     buildFeatureSettingPatch: resolveOptionalFunction(options.buildFeatureSettingPatch, () => ({ features: {} })),
     parseFieldValue: resolveOptionalFunction(options.parseFieldValue, (_field, value) => value),
     syncSelectOptionButtons: resolveOptionalFunction(options.syncSelectOptionButtons, () => {}),
@@ -622,6 +665,7 @@ function buildShellActionControllerContext(options = {}) {
     setSettingsImportMode: resolveOptionalFunction(options.setSettingsImportMode, () => {}),
     confirmSettingsImport: resolveOptionalFunction(options.confirmSettingsImport, () => {}),
     closeSettingsTransfer: resolveOptionalFunction(options.closeSettingsTransfer, () => {}),
+    themePresetUndoPatch: null,
   };
 }
 

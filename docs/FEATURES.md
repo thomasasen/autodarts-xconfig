@@ -179,23 +179,23 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
 - `Classic`: Wendet die Vorlage Classic mit einem Klick an.
 - `Broadcast`: Wendet die Vorlage Broadcast mit einem Klick an.
-- `British Flag`: Wendet die Vorlage British Flag mit einem Klick an.
+- `Darts Arena`: Wendet die Vorlage Darts Arena mit einem Klick an.
+- `Crimson Facets`: Wendet die Vorlage Crimson Facets mit einem Klick an.
 - `Cyberpunk`: Wendet die Vorlage Cyberpunk mit einem Klick an.
 - `Matrix`: Wendet die Vorlage Matrix mit einem Klick an.
 - `Fire`: Wendet die Vorlage Fire mit einem Klick an.
 - `Ice`: Wendet die Vorlage Ice mit einem Klick an.
-- `Spider-Man`: Wendet die Vorlage Spider-Man mit einem Klick an.
-- `Neon Splash`: Wendet die Vorlage Neon Splash mit einem Klick an.
-- `John Wick`: Wendet die Vorlage John Wick mit einem Klick an.
-- `Solar Pulse`: Wendet die Vorlage Solar Pulse mit einem Klick an.
-- `Crimson Facets`: Wendet die Vorlage Crimson Facets mit einem Klick an.
 - `Aqua Flux`: Wendet die Vorlage Aqua Flux mit einem Klick an.
+- `Neon Splash`: Wendet die Vorlage Neon Splash mit einem Klick an.
+- `Solar Pulse`: Wendet die Vorlage Solar Pulse mit einem Klick an.
+- `British Flag`: Wendet die Vorlage British Flag mit einem Klick an.
+- `Deutschland`: Wendet die Vorlage Deutschland mit einem Klick an.
+- `Bayern`: Wendet die Vorlage Bayern mit einem Klick an.
+- `Spider-Man`: Wendet die Vorlage Spider-Man mit einem Klick an.
+- `John Wick`: Wendet die Vorlage John Wick mit einem Klick an.
 - `Avengers Endgame`: Wendet die Vorlage Avengers Endgame mit einem Klick an.
 - `Gladiator`: Wendet die Vorlage Gladiator mit einem Klick an.
-- `Deutschland`: Wendet die Vorlage Deutschland mit einem Klick an.
 - `Dark Side`: Wendet die Vorlage Dark Side mit einem Klick an.
-- `Darts Arena`: Wendet die Vorlage Darts Arena mit einem Klick an.
-- `Bayern`: Wendet die Vorlage Bayern mit einem Klick an.
 
 ![Globale Vorlagen](screenshots/templates-global-presets.webp)
 
@@ -219,7 +219,10 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `70 %`: Das Hintergrundmotiv bleibt deutlich sichtbar, wirkt aber bereits eingebettet statt aufgeklebt. Farben und Formen sind noch erkennbar, während das Theme die Fläche ruhiger und geschlossener erscheinen lässt.
   - `55 %`: Das Hintergrundbild ist weiterhin erkennbar, verliert aber deutlich an Dominanz. Diese Stufe ist ein Mittelweg, bei dem Motiv und Lesbarkeit ungefähr gleich wichtig bleiben.
   - `40 %`: Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv.
+  - `30 %`: Diese Stufe eignet sich für bereits dunkle, ruhige Motive: Das Wallpaper bleibt erkennbar, konkurriert aber nicht mit den Spielinformationen.
   - `25 %`: Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen.
+  - `20 %`: Diese Stufe beruhigt strukturierte oder kontrastreiche Wallpaper deutlich und schützt die Lesbarkeit der darüberliegenden Spieloberfläche.
+  - `15 %`: Diese Stufe ist für helle, detailreiche oder plakative Motive gedacht und macht sie zu einer sehr zurückhaltenden Kulisse.
   - `10 %`: Das Hintergrundmotiv ist fast nur noch als Schatten, Form oder grobe Farbstruktur wahrnehmbar. Diese Stufe priorisiert eine ruhige, sehr lesbare Oberfläche gegenüber sichtbaren Bilddetails.
 - `Spielerfelder-Transparenz`: Passt die Transparenz der Spielerfelder gegenüber dem Hintergrund an.
   - `0 %`: Die Spielerfelder erscheinen nahezu opak und schirmen das Hintergrundbild stark ab. Das Layout wirkt dadurch ruhig, dicht und klar vom Hintergrund getrennt.

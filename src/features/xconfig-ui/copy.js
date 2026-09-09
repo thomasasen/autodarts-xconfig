@@ -1105,10 +1105,25 @@ const THEME_BACKGROUND_OPACITY_OPTION_COPY = deepFreeze({
     "Das Motiv bleibt sichtbar, rückt aber klar in den Hintergrund. Farbflächen und Konturen wirken gedämpfter und dienen mehr als Stimmung als als Hauptmotiv.",
     "Das Bild ist noch klar als Motiv erkennbar, wird aber bereits deutlich von der dunklen Theme-Schicht zurückgenommen. Es wirkt mehr wie Atmosphäre im Hintergrund als wie ein aktives Titelmotiv."
   ),
+  "30": optionCopy(
+    "Hält dunkle Motive erkennbar und klar hinter den Spielinformationen.",
+    "Das Hintergrundbild bleibt als Atmosphäre erkennbar, während Karten und Spieltexte sichtbar den Vorrang behalten.",
+    "Diese Stufe eignet sich für bereits dunkle, ruhige Motive: Das Wallpaper bleibt erkennbar, konkurriert aber nicht mit den Spielinformationen."
+  ),
   "25": optionCopy(
     "Zeigt das Bild nur noch als dezente Hintergrundstimmung.",
     "Das Bild schimmert eher subtil durch die dunkle Fläche. Einzelne Formen und Farben bleiben sichtbar, ohne die Lesbarkeit des Layouts zu stören.",
     "Das Motiv bleibt nur noch als ruhige Bildstimmung im Hintergrund erhalten. Farben und Strukturen tragen Atmosphäre bei, ohne Spielerfelder, Texte oder Karten optisch zu überholen."
+  ),
+  "20": optionCopy(
+    "Dämpft strukturierte Motive deutlich zugunsten der Lesbarkeit.",
+    "Das Bild bleibt als Farb- und Formstimmung sichtbar, tritt gegenüber Scores, Namen und Wurfinformationen aber klar zurück.",
+    "Diese Stufe beruhigt strukturierte oder kontrastreiche Wallpaper deutlich und schützt die Lesbarkeit der darüberliegenden Spieloberfläche."
+  ),
+  "15": optionCopy(
+    "Reduziert helle oder detailreiche Motive auf eine dezente Kulisse.",
+    "Nur die wichtigsten Farben und Konturen bleiben sichtbar; helle Bildbereiche werden stark zurückgenommen.",
+    "Diese Stufe ist für helle, detailreiche oder plakative Motive gedacht und macht sie zu einer sehr zurückhaltenden Kulisse."
   ),
   "10": optionCopy(
     "Lässt das Bild fast nur noch als dunkle Struktur durchscheinen.",

@@ -12,6 +12,24 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.4] - 2026-09-09
+
+### Changed
+
+- Nutzerwirkung: Alle xConfig-Kacheln folgen einem einheitlicheren kompakten Design mit klaren Ein-/Aus-Schaltern, Einstellungs-Symbol und erhaltenen Status-Tags. Im Themenbereich stehen die Vorlagen oben; Hintergrund und Schrift folgen gemeinsam in der nächsten Zeile, während die native Hauptnavigation auch über geöffneten Dialogen sichtbar und bedienbar bleibt.
+  Technik: Kartenaufbau, responsive Themenreihenfolge, Schalter-, Icon- und Dialog-Layering verwenden gemeinsame UI-Verträge. Reale Vorschaubilder und konfigurationsabhängige Kartenzustände werden ohne wirkungslose Einstellungs-Tags gerendert.
+- Nutzerwirkung: Alle bestehenden Designvorlagen einschließlich `Spider-Man`, `John Wick`, `Avengers Endgame`, `Gladiator` und `Dark Side` behalten ihre Namen, sind aber dunkler, ruhiger und besser lesbar abgestimmt. Die Vorlagenauswahl ist gruppiert, zeigt Aktiv-, Angepasst- und Deaktiviert-Zustände und lässt sich nach dem direkten Anwenden rückgängig machen.
+  Technik: Wallpaper, Deckkraft, Spielerfeld-Transparenz, Schriften, Farbpaletten und Aktivspieler-Tönung wurden presetweise neu balanciert. Die Preset-Erkennung vergleicht den vollständigen Hintergrund- und Typografie-Fingerabdruck.
+- Nutzerwirkung: Dynamische Farben der `X01 Remaining Score Bar` zeigen ihren Verlauf beim Überfahren als echte Score-Abfolge; statische Farbstile bleiben ruhig und alle Farbverläufe sind in den Auswahlkarten klar erkennbar.
+  Technik: Ein eigener Preview-Adapter verwendet die Runtime-Berechnung für mehrere Score-Zustände und räumt Timer sowie Vorschauzustand beim Verlassen vollständig auf.
+
+### Fixed
+
+- Nutzerwirkung: Globale Schriftarten und Textfarben greifen nun auch auf den modernen Spieler-, Score- und Wurfflächen zuverlässig; Hintergrund-Transparenz und Aktivspieler-Akzent bleiben dort lesbar.
+  Technik: Moderne Match-Selektoren ergänzen die globalen Typografie- und Hintergrundregeln für Scores, Namen, Würfe, Marker und Spielerflächen.
+- Nutzerwirkung: Die Farb-Vorschauen der `X01 Remaining Score Bar` verschwinden nach einer Farbauswahl oder einem Konfigurations-Remount nicht mehr.
+  Technik: Vorschau-Balken tragen einen eigenen Runtime-Marker und werden von der Bereinigung echter Spielerbalken ausgenommen; Regressionstests sichern den aktivierten Remount-Pfad ab.
+
 ## [3.0.3] - 2026-09-08
 
 ### Added
@@ -1994,6 +2012,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.0...v3.0.1

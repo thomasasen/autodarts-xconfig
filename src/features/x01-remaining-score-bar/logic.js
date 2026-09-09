@@ -8,6 +8,7 @@ import {
   HOST_ATTRIBUTE,
   HOST_SELECTOR,
   INACTIVE_CLASS,
+  PREVIEW_HOST_ATTRIBUTE,
   normalizeBarSize,
   normalizeColorTheme,
   normalizeEffect,
@@ -404,6 +405,12 @@ function queryAll(documentRef, selector) {
   }
 
   return Array.from(documentRef.querySelectorAll(selector));
+}
+
+function getRuntimeProgressHosts(documentRef) {
+  return queryAll(documentRef, HOST_SELECTOR).filter(
+    (node) => node.getAttribute?.(PREVIEW_HOST_ATTRIBUTE) !== "true"
+  );
 }
 
 function readClassName(node) {
@@ -836,7 +843,7 @@ export function getPlayerCards(documentRef) {
 }
 
 export function clearAllScoreProgress(documentRef) {
-  queryAll(documentRef, HOST_SELECTOR).forEach((node) => {
+  getRuntimeProgressHosts(documentRef).forEach((node) => {
     node.remove?.();
   });
   cleanupStackMarkers(documentRef);
@@ -1437,7 +1444,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     clearAllScoreProgress(documentRef);
     debugPayload.reason = "render-disabled";
     if (debugEnabled) {
-      debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+      debugPayload.hostCountAfterCleanup = getRuntimeProgressHosts(documentRef).length;
     }
     return withDebug({ startScore: null, renderedCards: 0 });
   }
@@ -1461,7 +1468,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     clearAllScoreProgress(documentRef);
     debugPayload.reason = "missing-start-score";
     if (debugEnabled) {
-      debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+      debugPayload.hostCountAfterCleanup = getRuntimeProgressHosts(documentRef).length;
     }
     return withDebug({ startScore: null, renderedCards: 0 });
   }
@@ -1475,7 +1482,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     clearAllScoreProgress(documentRef);
     debugPayload.reason = "missing-player-cards";
     if (debugEnabled) {
-      debugPayload.hostCountAfterCleanup = queryAll(documentRef, HOST_SELECTOR).length;
+      debugPayload.hostCountAfterCleanup = getRuntimeProgressHosts(documentRef).length;
     }
     return withDebug({ startScore, renderedCards: 0 });
   }
@@ -1597,7 +1604,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   });
 
   let staleHostsRemoved = 0;
-  queryAll(documentRef, HOST_SELECTOR).forEach((hostNode) => {
+  getRuntimeProgressHosts(documentRef).forEach((hostNode) => {
     if (!activeHosts.has(hostNode)) {
       hostNode.remove?.();
       staleHostsRemoved += 1;
@@ -1612,7 +1619,7 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
   debugPayload.sampledCards = sampledCards;
 
   if (debugEnabled) {
-    const hostsAfter = queryAll(documentRef, HOST_SELECTOR);
+    const hostsAfter = getRuntimeProgressHosts(documentRef);
     debugPayload.hostCountAfterCleanup = hostsAfter.length;
     debugPayload.hiddenHostCount = hostsAfter.filter((hostNode) => {
       const display = readComputedDisplay(windowRef, hostNode).toLowerCase();

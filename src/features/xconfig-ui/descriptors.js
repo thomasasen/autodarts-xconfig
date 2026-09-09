@@ -9,6 +9,9 @@ import { BOARD_STYLE_DESIGN_OPTIONS } from "../../shared/board-style-assets.mani
 import { DART_DESIGN_OPTIONS } from "../../shared/feature-assets.manifest.js";
 import { TURN_DART_ASSET_OPTIONS } from "../../shared/turn-dart-assets.manifest.js";
 
+const X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT =
+  "x01-remaining-score-bar-color-cycle";
+
 function checkboxField(key, label, fieldOptions = {}) {
   return Object.freeze({
     key,
@@ -39,8 +42,8 @@ function selectField(key, label, options = [], fieldOptions = {}) {
   });
 }
 
-function colorPreviewOption(value, label, previewColorTheme = value) {
-  return { value, label, previewColorTheme };
+function colorPreviewOption(value, label, previewColorTheme = value, previewEffect = "") {
+  return { value, label, previewColorTheme, previewEffect };
 }
 
 function colorField(key, label, fieldOptions = {}) {
@@ -191,7 +194,10 @@ const BACKGROUND_OPACITY_OPTIONS = Object.freeze([
   { value: 70, label: "70 %" },
   { value: 55, label: "55 %" },
   { value: 40, label: "40 %" },
+  { value: 30, label: "30 %" },
   { value: 25, label: "25 %" },
+  { value: 20, label: "20 %" },
+  { value: 15, label: "15 %" },
   { value: 10, label: "10 %" },
 ]);
 
@@ -229,21 +235,47 @@ const TURN_DART_SIZE_OPTIONS = Object.freeze([
 ]);
 const DEBUG_FIELD = checkboxField("debug", "Debug");
 
+const THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS = Object.freeze([
+  Object.freeze({
+    label: "Empfohlen",
+    keys: Object.freeze(["classic", "broadcast", "darts-arena", "crimson-facets", "cyberpunk", "matrix"]),
+  }),
+  Object.freeze({
+    label: "Atmosphäre",
+    keys: Object.freeze(["fire", "ice", "aqua-flux", "neon-splash", "solar-pulse"]),
+  }),
+  Object.freeze({
+    label: "Regional",
+    keys: Object.freeze(["british-flag", "deutschland", "bayern"]),
+  }),
+  Object.freeze({
+    label: "Cinematic",
+    keys: Object.freeze(["spider-man", "john-wick", "endgame", "gladiator", "dark-side"]),
+  }),
+]);
+
+const THEME_GLOBAL_TEMPLATE_PRESET_FIELDS = Object.freeze(
+  THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS.flatMap((section) =>
+    section.keys.map((presetKey) => {
+      const preset = THEME_GLOBAL_TEMPLATE_PRESETS.find((entry) => entry.key === presetKey);
+      return actionField("applyThemeGlobalPreset", preset.label, {
+        key: `preset-${preset.key}`,
+        actionId: preset.key,
+        buttonLabel: preset.label,
+        previewTarget: "theme-global-template-preset",
+        section: section.label,
+      });
+    })
+  )
+);
+
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
     featureKey: "theme-global-presets",
     tab: "themes",
     readmeAnchor: "theme-global-presets",
     cardType: "action",
-    fields: THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) =>
-      actionField("applyThemeGlobalPreset", preset.label, {
-        key: `preset-${preset.key}`,
-        actionId: preset.key,
-        buttonLabel: preset.label,
-        previewTarget: "theme-global-template-preset",
-        section: "Vorlagen",
-      })
-    ),
+    fields: THEME_GLOBAL_TEMPLATE_PRESET_FIELDS,
   }),
   descriptorEntry({
     featureKey: "theme-global-background",
@@ -365,11 +397,11 @@ export const xconfigDescriptors = Object.freeze([
     description: "Zeigt den verbleibenden X01-Score als abnehmenden Balken pro Spielerkarte.",
     fields: [
       selectField("colorTheme", "Farben", [
-        colorPreviewOption("checkout-focus", "Checkout Focus", "x01-checkout-focus"),
-        colorPreviewOption("checkout-zone-blue", "Checkout-Zone Blau/Weiß", "x01-checkout-zone-blue"),
-        colorPreviewOption("traffic-light", "Traffic Light", "x01-traffic-light"),
-        colorPreviewOption("danger-endgame", "Danger Endgame", "x01-danger-endgame"),
-        colorPreviewOption("gradient-by-progress", "Gradient Progress", "x01-gradient-by-progress"),
+        colorPreviewOption("checkout-focus", "Checkout Focus", "x01-checkout-focus", X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT),
+        colorPreviewOption("checkout-zone-blue", "Checkout-Zone Blau/Weiß", "x01-checkout-zone-blue", X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT),
+        colorPreviewOption("traffic-light", "Traffic Light", "x01-traffic-light", X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT),
+        colorPreviewOption("danger-endgame", "Danger Endgame", "x01-danger-endgame", X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT),
+        colorPreviewOption("gradient-by-progress", "Gradient Progress", "x01-gradient-by-progress", X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT),
         colorPreviewOption("autodarts", "Autodarts", "x01-autodarts"),
         colorPreviewOption("signal-lime", "Signal Lime", "x01-signal-lime"),
         colorPreviewOption("glass-mint", "Glass Mint", "x01-glass-mint"),
