@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.5] - 2026-09-09
+
+### Fixed
+
+- Nutzerwirkung: Die mit `3.0.4` veröffentlichten Themen-, Schrift- und X01-Vorschaufunktionen bleiben funktional unverändert; dieser Patch schließt ausschließlich nachgelagerte Qualitätsbefunde des Release-Kandidaten.
+  Technik: Verschachtelte UI-Zustandsauswahl und der Aufbau moderner Typografie-Regeln wurden in lineare Helfer und gemeinsame Operationen überführt, sodass im geänderten Release-Scope keine offenen SonarQube-Befunde verbleiben.
+
 ## [3.0.4] - 2026-09-09
 
 ### Changed
@@ -2012,6 +2019,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.1...v3.0.2

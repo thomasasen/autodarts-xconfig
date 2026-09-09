@@ -154,13 +154,15 @@ export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
   appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.throws, throwLabelColor);
 
   if (accentColor) {
-    blocks.push(`${MODERN_ACTIVE_PLAYER_MARKER_SELECTORS.join(",\n")} {
+    blocks.push(
+      `${MODERN_ACTIVE_PLAYER_MARKER_SELECTORS.join(",\n")} {
   background-color: ${accentColor} !important;
-}`);
-    blocks.push(`${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS.join(",\n")} {
+}`,
+      `${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS.join(",\n")} {
   outline: 2px solid ${hexColorToRgba(accentColor, 0.78)} !important;
   outline-offset: -2px !important;
-}`);
+}`
+    );
   }
 
   const tintIntensity = Math.max(0, Number.parseInt(featureConfig.activePlayerTintIntensity, 10) || 0);

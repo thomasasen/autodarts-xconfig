@@ -1417,17 +1417,19 @@ function buildX01RemainingScoreBarOptionLayout(
         effect: X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_EFFECT,
       }
     : previewOverrides;
+  let previewScore;
+  if (isColorPreview) {
+    previewScore = X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE;
+  } else if (isEffectPreview) {
+    previewScore = X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE;
+  }
   const preview = createElement(documentRef, "div", {
     className: "ad-xconfig-x01-remaining-score-bar-option-preview",
   });
   preview.appendChild(
     buildX01RemainingScoreBarPreviewBar(documentRef, feature?.config || {}, optionPreviewOverrides, {
       mini: true,
-      score: isColorPreview
-        ? X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE
-        : isEffectPreview
-          ? X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE
-          : undefined,
+      score: previewScore,
       loop: isEffectPreview && previewEffect === "previous-score-trail" ? "previous-score-trail-drop" : undefined,
     })
   );
@@ -1529,17 +1531,24 @@ const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
       buildThemeGlobalCardPreviewSample(
         documentRef,
         preset,
-        preview.state === "active"
-          ? `Aktuelle Vorlage: ${preset.label}`
-          : preview.state === "customized"
-            ? `Basierend auf ${preset.label} · angepasst`
-            : preview.state === "disabled"
-              ? `${preset.label} · deaktiviert`
-              : `Vorlage: ${preset.label}`
+        formatThemeGlobalPresetPreviewLabel(preview, preset)
       )
     );
   },
 });
+
+function formatThemeGlobalPresetPreviewLabel(preview, preset) {
+  if (preview.state === "active") {
+    return `Aktuelle Vorlage: ${preset.label}`;
+  }
+  if (preview.state === "customized") {
+    return `Basierend auf ${preset.label} · angepasst`;
+  }
+  if (preview.state === "disabled") {
+    return `${preset.label} · deaktiviert`;
+  }
+  return `Vorlage: ${preset.label}`;
+}
 
 function buildThemeGlobalCardPreviewPlayer(documentRef, name, score, modifier = "") {
   const player = createElement(documentRef, "span", {
@@ -2435,6 +2444,16 @@ function applyThemeGlobalTemplatePresetPreviewStyles(button, preset, fontPreset)
   );
 }
 
+function formatThemeGlobalPresetState(presetState) {
+  if (presetState === "active") {
+    return "Aktiv";
+  }
+  if (presetState === "customized") {
+    return "Angepasst";
+  }
+  return "Deaktiviert";
+}
+
 function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, fieldId, features = []) {
   const preset = getThemeGlobalTemplatePreset(field?.actionId);
   if (!preset) {
@@ -2496,11 +2515,7 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
   if (presetState) {
     identity.appendChild(createElement(documentRef, "span", {
       className: `ad-xconfig-theme-preset-state ad-xconfig-theme-preset-state--${presetState}`,
-      text: presetState === "active"
-        ? "Aktiv"
-        : presetState === "customized"
-          ? "Angepasst"
-          : "Deaktiviert",
+      text: formatThemeGlobalPresetState(presetState),
     }));
   }
   if (!wallpaperUrl) {
