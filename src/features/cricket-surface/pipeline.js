@@ -1218,6 +1218,47 @@ function readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount)
   return hasAnyTurnMarks ? marksByLabel : null;
 }
 
+function resolveExpectedGridPlayerCount(documentRef, gameState, grid) {
+  if (grid.modern) {
+    return grid.headers.length;
+  }
+
+  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
+  const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
+  if (playerCountFromMatch > 0) {
+    return playerCountFromMatch;
+  }
+
+  return resolveVisiblePlayerCount(documentRef);
+}
+
+function normalizeMarksByLabel(cricketRules, marksByLabel, playerCount, targetOrder) {
+  const marksMergeByLabelDebug = {};
+
+  targetOrder.forEach((label) => {
+    const domMarks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
+    const domMarksBeforeMerge = domMarks.map((value) => cricketRules.clampMarks(value || 0));
+
+    for (let index = 0; index < playerCount; index += 1) {
+      domMarks[index] = cricketRules.clampMarks(domMarks[index] || 0);
+    }
+
+    const relevantDebugEntry =
+      domMarksBeforeMerge.some((value) => value > 0) ||
+      domMarks.some((value) => cricketRules.clampMarks(value || 0) > 0);
+    if (relevantDebugEntry) {
+      marksMergeByLabelDebug[label] = {
+        domBefore: domMarksBeforeMerge.join(","),
+        mergeSource: "grid",
+        activeThrowApplied: false,
+        final: domMarks.map((value) => cricketRules.clampMarks(value || 0)).join(","),
+      };
+    }
+  });
+
+  return marksMergeByLabelDebug;
+}
+
 function buildMarksByLabelSnapshot(options = {}) {
   const documentRef = options.documentRef;
   const cricketRules = options.cricketRules;
@@ -1253,11 +1294,7 @@ function buildMarksByLabelSnapshot(options = {}) {
   if (labelDiagnostics.atomicUniqueLabelCount <= 0) {
     labelDiagnostics.atomicUniqueLabelCount = new Set(grid.labels.map((entry) => entry.label)).size;
   }
-  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
-  const playerCountFromMatch = Array.isArray(snapshot?.match?.players) ? snapshot.match.players.length : 0;
-  const playerCountFromDom = resolveVisiblePlayerCount(documentRef);
-  const expectedPlayerCount = grid.modern ? grid.headers.length :
-    playerCountFromMatch > 0 ? playerCountFromMatch : playerCountFromDom;
+  const expectedPlayerCount = resolveExpectedGridPlayerCount(documentRef, gameState, grid);
   const cachedStableRows =
     !grid.modern && options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
   const {
@@ -1312,28 +1349,12 @@ function buildMarksByLabelSnapshot(options = {}) {
       activePlayerIndex,
     },
   };
-  const marksMergeByLabelDebug = {};
-
-  targetOrder.forEach((label) => {
-    const domMarks = Array.isArray(marksByLabel[label]) ? marksByLabel[label] : [];
-    const domMarksBeforeMerge = domMarks.map((value) => cricketRules.clampMarks(value || 0));
-
-    for (let index = 0; index < playerCount; index += 1) {
-      domMarks[index] = cricketRules.clampMarks(domMarks[index] || 0);
-    }
-
-    const relevantDebugEntry =
-      domMarksBeforeMerge.some((value) => value > 0) ||
-      domMarks.some((value) => cricketRules.clampMarks(value || 0) > 0);
-    if (relevantDebugEntry) {
-      marksMergeByLabelDebug[label] = {
-        domBefore: domMarksBeforeMerge.join(","),
-        mergeSource: "grid",
-        activeThrowApplied: false,
-        final: domMarks.map((value) => cricketRules.clampMarks(value || 0)).join(","),
-      };
-    }
-  });
+  const marksMergeByLabelDebug = normalizeMarksByLabel(
+    cricketRules,
+    marksByLabel,
+    playerCount,
+    targetOrder
+  );
 
   const scoringModeState = resolveScoringModeState(
     gameState,
