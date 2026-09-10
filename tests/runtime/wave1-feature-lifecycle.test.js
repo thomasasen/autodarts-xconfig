@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { createBootstrap } from "../../src/core/bootstrap.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 const FEATURE_CONFIG_KEYS = Object.freeze([
   "checkoutScoreHighlight",
@@ -295,6 +296,29 @@ test("cricket-grid-status-effects mounts idempotently and releases observers/lis
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), false);
   assert.equal(runtime.context.registries.observers.size(), 0);
   assert.equal(runtime.context.registries.listeners.size(), 0);
+});
+
+test("special-hit-highlights mounts onto the native turn surface and leaves suggestions untouched", async () => {
+  const fixture = createModernX01Fixture({ throws: ["T20"], route: ["D18"] });
+  const runtime = createBootstrap({
+    windowRef: fixture.windowRef,
+    documentRef: fixture.documentRef,
+    config: createSingleFeatureConfig("specialHitHighlights", {
+      colorTheme: "kind-signal",
+      animationStyle: "pop-hit",
+    }),
+  });
+
+  runtime.start();
+  await waitFor(() => fixture.rows[0].row.classList.contains("ad-ext-hit-highlight--modern"));
+
+  assert.equal(fixture.rows[0].row.classList.contains("ad-ext-hit-highlight--triple"), true);
+  assert.equal(fixture.rows[1].row.classList.contains("ad-ext-hit-highlight"), false);
+
+  runtime.stop();
+  assert.equal(fixture.rows[0].row.classList.contains("ad-ext-hit-highlight--modern"), false);
+  assert.equal(fixture.rows[0].row.querySelectorAll(".ad-ext-hit-effect-layer").length, 0);
+  assert.equal(fixture.rows[0].row.querySelectorAll(".ad-ext-hit-frame-layer").length, 0);
 });
 test("cricket-target-highlighter and cricket-grid-status-effects share one runtime observer/listener stack", async () => {
   const documentRef = new FakeDocument();

@@ -5,43 +5,66 @@ import {
   HIT_ANIMATION_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
   HIT_BASE_CLASS,
+  HIT_EFFECT_LAYER_CLASS,
+  HIT_FRAME_LAYER_CLASS,
   HIT_KIND_CLASS,
+  HIT_MODERN_CLASS,
   HIT_THEME_CLASS,
   buildStyleText,
 } from "../../src/features/special-hit-highlights/style.js";
+
+const HIT_SURFACE_SELECTOR = `:is(.ad-ext-turn-throw, .${HIT_MODERN_CLASS}).${HIT_BASE_CLASS}`;
+const HIT_SURFACE_SELECTOR_PATTERN = HIT_SURFACE_SELECTOR.replaceAll(
+  /[.*+?^${}()|[\]\\]/g,
+  String.raw`\$&`
+);
+const LEGACY_HIT_SURFACE_SELECTOR = `.ad-ext-turn-throw.${HIT_BASE_CLASS}`;
+const LEGACY_HIT_SURFACE_SELECTOR_PATTERN = LEGACY_HIT_SURFACE_SELECTOR.replaceAll(
+  /[.*+?^${}()|[\]\\]/g,
+  String.raw`\$&`
+);
 
 test("special-hit-highlights style defines centered text contract and strong row motion", () => {
   const css = buildStyleText();
   const baseBeforeBlock =
     css.match(
       new RegExp(
-        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}::before\s*\{[^}]+\}`,
+        String.raw`${LEGACY_HIT_SURFACE_SELECTOR_PATTERN}::before[^\{]*\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";
   const baseAfterBlock =
     css.match(
       new RegExp(
-        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}::after\s*\{[^}]+\}`,
+        String.raw`${LEGACY_HIT_SURFACE_SELECTOR_PATTERN}::after[^\{]*\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";
   const triggerBeforeBlock =
     css.match(
       new RegExp(
-        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.${HIT_ANIMATION_TRIGGER_CLASS}::before\s*\{[^}]+\}`,
+        String.raw`${LEGACY_HIT_SURFACE_SELECTOR_PATTERN}\.${HIT_ANIMATION_TRIGGER_CLASS}::before[^\{]*\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";
   const triggerAfterBlock =
     css.match(
       new RegExp(
-        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.${HIT_ANIMATION_TRIGGER_CLASS}::after\s*\{[^}]+\}`,
+        String.raw`${LEGACY_HIT_SURFACE_SELECTOR_PATTERN}\.${HIT_ANIMATION_TRIGGER_CLASS}::after[^\{]*\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";
 
   assert.equal(css.includes(`.ad-ext-turn-throw.${HIT_BASE_CLASS} > p,`), true);
+  assert.equal(
+    css.includes(`.${HIT_MODERN_CLASS}.${HIT_BASE_CLASS} > .${HIT_EFFECT_LAYER_CLASS}`),
+    true
+  );
+  assert.equal(
+    css.includes(`.${HIT_MODERN_CLASS}.${HIT_BASE_CLASS} > .${HIT_FRAME_LAYER_CLASS}`),
+    true
+  );
+  assert.equal(css.includes(`${HIT_SURFACE_SELECTOR}::before`), false);
   assert.equal(css.includes("position: absolute !important;"), true);
   assert.equal(css.includes("display: flex !important;"), true);
 
@@ -62,7 +85,7 @@ test("special-hit-highlights style defines centered text contract and strong row
   assert.equal(css.includes("ad-ext-hit-electric-jolt-frame-aura"), true);
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-jolt"]}.ad-ext-hit-highlight--animate`
+      `${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.ad-ext-hit-highlight--animate`
     ),
     true
   );
@@ -79,7 +102,7 @@ test("special-hit-highlights style defines centered text contract and strong row
 
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple}`
+      `${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple}`
     ),
     true
   );
@@ -88,7 +111,7 @@ test("special-hit-highlights style defines centered text contract and strong row
 
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double}`
+      `${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double}`
     ),
     true
   );
@@ -97,13 +120,13 @@ test("special-hit-highlights style defines centered text contract and strong row
 
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter}`
+      `${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter}`
     ),
     true
   );
   assert.equal(
     css.includes(
-      `.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner}`
+      `${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner}`
     ),
     true
   );
@@ -116,11 +139,33 @@ test("special-hit-highlights keeps displacement filter scoped to electric-jolt s
   const pulseBlock =
     css.match(
       new RegExp(
-        String.raw`\.ad-ext-turn-throw\.${HIT_BASE_CLASS}\.ad-ext-hit-animation--glow-pop\.ad-ext-hit-highlight--animate\{[^}]+\}`,
+        String.raw`${HIT_SURFACE_SELECTOR_PATTERN}\.ad-ext-hit-animation--glow-pop\.ad-ext-hit-highlight--animate\{[^}]+\}`,
         "s"
       )
     )?.[0] || "";
 
   assert.equal(css.includes("url(#ad-ext-electric-displace-soft)"), true);
   assert.equal(pulseBlock.includes("filter: var(--ad-ext-hit-electric-filter"), false);
+});
+
+test("modern highlight layers preserve the enhanced scoring display pseudo element", () => {
+  const css = buildStyleText();
+  const modernScoreBlock =
+    css.match(
+      new RegExp(
+        String.raw`\.${HIT_MODERN_CLASS}\.${HIT_BASE_CLASS}[^\{]*::before\s*\{[^}]+\}`,
+        "s"
+      )
+    )?.[0] || "";
+
+  assert.equal(modernScoreBlock.includes("z-index: 9"), true);
+  assert.equal(modernScoreBlock.includes("content:"), false);
+  assert.equal(modernScoreBlock.includes("font-family: inherit !important"), true);
+  assert.equal(modernScoreBlock.includes("font-size: clamp(2.25rem, 38cqw, 2.6rem) !important"), true);
+  assert.equal(
+    css.includes(`.${HIT_MODERN_CLASS}.${HIT_BASE_CLASS} > .${HIT_EFFECT_LAYER_CLASS}`),
+    true
+  );
+  assert.equal(css.includes("font-size: clamp(1.2rem, 20cqw, 1.4rem) !important"), true);
+  assert.equal(css.includes("opacity: 1 !important"), true);
 });

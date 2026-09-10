@@ -4,11 +4,17 @@ import {
   retainElectricFilterDefs,
 } from "../../shared/electric-border-engine.js";
 import { clearHitDecoration, updateHitDecorations } from "./logic.js";
-import { STYLE_ID, buildStyleText } from "./style.js";
+import {
+  HIT_EFFECT_LAYER_CLASS,
+  HIT_FRAME_LAYER_CLASS,
+  STYLE_ID,
+  buildStyleText,
+} from "./style.js";
 import {
   createTurnSurfaceObserveOptions,
   hasRelevantTurnSurfaceMutation,
 } from "../shared/turn-surface-adapter.js";
+import { MODERN_TURN_SELECTOR } from "../shared/x01-match-surface.js";
 import { createManagedNodeMatcher } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "special-hit-highlights";
@@ -97,6 +103,7 @@ export function initializeSpecialHitHighlights(context = {}) {
   const observerRegistry = context.registries?.observers;
   const listenerRegistry = context.registries?.listeners;
   const gameState = context.gameState;
+  const x01Rules = context.domain?.x01Rules;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
@@ -126,7 +133,7 @@ export function initializeSpecialHitHighlights(context = {}) {
   let electricFilterDefsRetained = false;
   const isManagedNode = createManagedNodeMatcher({
     ids: ["ad-ext-electric-filter-defs"],
-    classNames: [],
+    classNames: [HIT_EFFECT_LAYER_CLASS, HIT_FRAME_LAYER_CLASS],
     predicates: [
       (node) => node?.id === STYLE_ID,
     ],
@@ -152,6 +159,7 @@ export function initializeSpecialHitHighlights(context = {}) {
       triggerResetTimersByRow,
       animeRef,
       windowRef,
+      x01Rules,
       debugRows: Boolean(featureDebug?.enabled),
     });
 
@@ -223,7 +231,10 @@ export function initializeSpecialHitHighlights(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasRelevantTurnSurfaceMutation(mutations, { isManagedNode })) {
+        if (!hasRelevantTurnSurfaceMutation(mutations, {
+          isManagedNode,
+          extraSelectors: [MODERN_TURN_SELECTOR],
+        })) {
           return;
         }
         scheduler.schedule();

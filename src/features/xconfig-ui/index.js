@@ -48,6 +48,8 @@ import { createAvgTrendArrowPreviewAdapter } from "./avg-trend-preview-adapter.j
 import { createDartboardMarkerHighlightPreviewAdapter } from "./dartboard-marker-highlight-preview-adapter.js";
 import { createX01RemainingScoreBarPreviewController } from "./x01-remaining-score-bar-preview-controller.js";
 import { createX01RemainingScoreBarColorPreviewAdapter } from "./x01-remaining-score-bar-color-preview-adapter.js";
+import { createSpecialHitHighlightsPreviewController } from "./special-hit-highlights-preview-controller.js";
+import { buildStyleText as buildSpecialHitHighlightsStyleText } from "../special-hit-highlights/style.js";
 import {
   downloadSettingsExport,
   selectSettingsImportFile,
@@ -81,6 +83,7 @@ const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
 const STYLE_ID = "ad-xconfig-shell-style";
 const PREVIEW_FONTS_STYLE_ID = "ad-xconfig-preview-fonts-style";
+const SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID = "ad-xconfig-special-hit-highlights-preview-style";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
@@ -242,6 +245,7 @@ function ensureXConfigShell(options = {}) {
   let effectPreviewController = null;
   let typographyPreviewFontController = null;
   let x01RemainingScoreBarPreviewController = null;
+  let specialHitHighlightsPreviewController = null;
   let electricPreviewFiltersRetained = false;
 
   function clearNoticeTimer() {
@@ -586,7 +590,14 @@ function ensureXConfigShell(options = {}) {
   });
 
   const isManagedNode = createManagedNodeMatcher({
-    ids: [MENU_ITEM_ID, PANEL_HOST_ID, STYLE_ID, PREVIEW_FONTS_STYLE_ID, ELECTRIC_FILTER_DEFS_NODE_ID],
+    ids: [
+      MENU_ITEM_ID,
+      PANEL_HOST_ID,
+      STYLE_ID,
+      PREVIEW_FONTS_STYLE_ID,
+      SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID,
+      ELECTRIC_FILTER_DEFS_NODE_ID,
+    ],
   });
 
   function retainElectricPreviewFilters() {
@@ -664,6 +675,11 @@ function ensureXConfigShell(options = {}) {
     documentRef,
     windowRef,
   });
+  specialHitHighlightsPreviewController = createSpecialHitHighlightsPreviewController({
+    documentRef,
+    getFeatures,
+    windowRef,
+  });
 
   const focusController = createShellFocusController({ documentRef, panelHostId: PANEL_HOST_ID });
   renderController = createShellRenderController({
@@ -684,9 +700,11 @@ function ensureXConfigShell(options = {}) {
       focusController.beforeRender();
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
+      specialHitHighlightsPreviewController?.stop();
     },
     onAfterRender: () => {
       x01RemainingScoreBarPreviewController?.start();
+      specialHitHighlightsPreviewController?.start();
       focusController.afterRender();
     },
     panelHostId: PANEL_HOST_ID,
@@ -724,8 +742,19 @@ function ensureXConfigShell(options = {}) {
     state,
     syncColorFieldControl,
     syncSelectOptionButtons,
-    syncSettingsPreview: (featureKey, settingKey, settingValue) =>
-      syncSettingsPreview(documentRef, getFeatures(), featureKey, settingKey, settingValue),
+    syncSettingsPreview: (featureKey, settingKey, settingValue) => {
+      const didSync = syncSettingsPreview(
+        documentRef,
+        getFeatures(),
+        featureKey,
+        settingKey,
+        settingValue
+      );
+      if (didSync && featureKey === "special-hit-highlights") {
+        specialHitHighlightsPreviewController?.start();
+      }
+      return didSync;
+    },
     syncFeatureCardPreview,
     syncThemeBackgroundIndicators,
     syncTurnDartImageIndicators,
@@ -760,16 +789,24 @@ function ensureXConfigShell(options = {}) {
       typographyPreviewFontController?.handlePreviewRequest(event);
     },
     onDocumentPointerout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
-    onMounted: retainElectricPreviewFilters,
+    onMounted: () => {
+      domGuards.ensureStyle(
+        SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID,
+        buildSpecialHitHighlightsStyleText()
+      );
+      retainElectricPreviewFilters();
+    },
     onTeardown: () => {
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
+      specialHitHighlightsPreviewController?.stop();
       typographyPreviewFontController?.deactivate();
       releaseElectricPreviewFilters();
     },
     onVisibilityChange: (event) => {
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
+      specialHitHighlightsPreviewController?.stop();
       onVisibilityChange(event);
     },
     panelHostId: PANEL_HOST_ID,
@@ -783,7 +820,7 @@ function ensureXConfigShell(options = {}) {
     startAutoUpdateChecks,
     state,
     stopAutoUpdateChecks,
-    extraNodeIds: [PREVIEW_FONTS_STYLE_ID],
+    extraNodeIds: [PREVIEW_FONTS_STYLE_ID, SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID],
     styleId: STYLE_ID,
     styleText,
     windowRef,

@@ -13,7 +13,10 @@ import {
   resolveFeatureCardPreview,
   resolveThemeGlobalPresetState,
 } from "./feature-card-preview.js";
-import { getThemeGlobalTypographyPreset } from "../../shared/theme-global-typography-presets.js";
+import {
+  getThemeGlobalTypographyPreset,
+  getThemeGlobalTypographyScopeValues,
+} from "../../shared/theme-global-typography-presets.js";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
 import { resolveThemePresetAsset } from "#theme-preset-assets";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
@@ -69,6 +72,13 @@ import {
   WIDTH_PROPERTY as X01_REMAINING_SCORE_BAR_WIDTH_PROPERTY,
   resolveActiveVisualVars as resolveX01RemainingScoreBarActiveVisualVars,
 } from "../x01-remaining-score-bar/logic.js";
+import {
+  SPECIAL_HIT_HIGHLIGHTS_PREVIEW_ANIMATION_STYLE_ATTRIBUTE,
+  SPECIAL_HIT_HIGHLIGHTS_PREVIEW_COLOR_THEME_ATTRIBUTE,
+  SPECIAL_HIT_HIGHLIGHTS_PREVIEW_SCORE_ATTRIBUTE,
+  SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STEP_ATTRIBUTE,
+  SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STEPS,
+} from "./special-hit-highlights-preview-contract.js";
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
@@ -112,6 +122,8 @@ const X01_REMAINING_SCORE_BAR_EFFECT_PREVIEW_SCORE = X01_REMAINING_SCORE_BAR_PRE
 const X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_SIZE = "breit";
 const X01_REMAINING_SCORE_BAR_COLOR_PREVIEW_EFFECT = "off";
 const X01_REMAINING_SCORE_BAR_TRAIL_WIDTH_PROPERTY = "--ad-ext-x01-remaining-score-bar-trail-width";
+const SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY = "special-hit-highlights";
+const SPECIAL_HIT_HIGHLIGHTS_LIVE_PREVIEW_FIELD_KEYS = new Set(["colorTheme", "animationStyle"]);
 const STYLE_CHECKOUT_SUGGESTIONS_FEATURE_KEY = "checkout-suggestion-styles";
 const STYLE_CHECKOUT_SUGGESTIONS_STYLE_FIELD_KEY = "style";
 const STYLE_CHECKOUT_SUGGESTIONS_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
@@ -1171,6 +1183,22 @@ export function syncSettingsPreview(documentRef, features, featureKey, settingKe
   const normalizedFeatureKey = String(featureKey || "").trim();
   const normalizedSettingKey = String(settingKey || "").trim();
   if (
+    normalizedFeatureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY &&
+    SPECIAL_HIT_HIGHLIGHTS_LIVE_PREVIEW_FIELD_KEYS.has(normalizedSettingKey)
+  ) {
+    const previewRow = documentRef.querySelector?.(
+      "[data-adxconfig-special-hit-highlights-preview-row='true']"
+    ) || null;
+    if (!previewRow) {
+      return false;
+    }
+    const attributeName = normalizedSettingKey === "colorTheme"
+      ? SPECIAL_HIT_HIGHLIGHTS_PREVIEW_COLOR_THEME_ATTRIBUTE
+      : SPECIAL_HIT_HIGHLIGHTS_PREVIEW_ANIMATION_STYLE_ATTRIBUTE;
+    previewRow.setAttribute(attributeName, String(settingValue || "").trim());
+    return true;
+  }
+  if (
     normalizedFeatureKey !== CHECKOUT_BOARD_TARGETS_FEATURE_KEY ||
     !CHECKOUT_BOARD_TARGETS_LIVE_PREVIEW_FIELD_KEYS.has(normalizedSettingKey)
   ) {
@@ -1377,6 +1405,70 @@ function buildX01RemainingScoreBarPreviewSection(documentRef, feature) {
           score: X01_REMAINING_SCORE_BAR_PREVIEW_START_SCORE,
         })
       );
+    },
+  });
+}
+
+function resolveSpecialHitHighlightsPreviewFont(features = []) {
+  const typographyFeature = features.find?.(
+    (entry) => entry?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
+  ) || null;
+  const typographyConfig = typographyFeature?.config || {};
+  const appliesToThrows = getThemeGlobalTypographyScopeValues(typographyConfig.applyTo)
+    .includes("throws");
+  if (typographyFeature?.enabled !== true || !appliesToThrows) {
+    return null;
+  }
+  return getThemeGlobalTypographyPreset(typographyConfig.fontPreset);
+}
+
+function buildSpecialHitHighlightsPreviewSection(documentRef, feature, features = []) {
+  const previewConfig = feature?.config || {};
+  const firstStep = SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STEPS[0];
+  const fontPreset = resolveSpecialHitHighlightsPreviewFont(features);
+  return buildSettingsPreviewSection(documentRef, {
+    previewAttribute: "data-adxconfig-special-hit-highlights-preview",
+    rowClassName: "ad-xconfig-setting-row ad-xconfig-setting-row--special-hit-highlights-preview",
+    surfaceClassName: "ad-xconfig-special-hit-highlights-preview-surface",
+    fillSurface: (surface) => {
+      const head = createElement(documentRef, "div", {
+        className: "ad-xconfig-special-hit-highlights-preview-head",
+      });
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-special-hit-highlights-preview-title",
+        text: "Trefferfolge",
+      }));
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-special-hit-highlights-preview-route",
+        text: SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STEPS.map((step) => step.segment).join("  ·  "),
+      }));
+      surface.appendChild(head);
+
+      const previewRow = createElement(documentRef, "div", {
+        className: "ad-xconfig-special-hit-highlights-preview-card",
+        attributes: {
+          "data-adxconfig-special-hit-highlights-preview-row": "true",
+          [SPECIAL_HIT_HIGHLIGHTS_PREVIEW_SCORE_ATTRIBUTE]: firstStep.score,
+          [SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STEP_ATTRIBUTE]: firstStep.segment,
+          [SPECIAL_HIT_HIGHLIGHTS_PREVIEW_COLOR_THEME_ATTRIBUTE]:
+            previewConfig.colorTheme || "kind-signal",
+          [SPECIAL_HIT_HIGHLIGHTS_PREVIEW_ANIMATION_STYLE_ATTRIBUTE]:
+            previewConfig.animationStyle || "pop-hit",
+          "data-adxconfig-preview-font": fontPreset?.remote ? fontPreset.value : undefined,
+          "aria-label": "Automatische Vorschau für besondere Treffer",
+        },
+      });
+      if (fontPreset?.previewFontFamily) {
+        previewRow.style.fontFamily = fontPreset.previewFontFamily;
+      }
+      previewRow.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-special-hit-highlights-preview-segment",
+        text: firstStep.segment,
+        attributes: {
+          "data-adxconfig-special-hit-highlights-preview-segment": "true",
+        },
+      }));
+      surface.appendChild(previewRow);
     },
   });
 }
@@ -3319,6 +3411,9 @@ function buildSettingsModal(documentRef, state, features) {
   }
   if (isX01RemainingScoreBarFeature(feature)) {
     body.appendChild(buildX01RemainingScoreBarPreviewSection(documentRef, feature));
+  }
+  if (feature.featureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY) {
+    body.appendChild(buildSpecialHitHighlightsPreviewSection(documentRef, feature, features));
   }
   const sectionBodies = new Map();
   fields.forEach((field) => {

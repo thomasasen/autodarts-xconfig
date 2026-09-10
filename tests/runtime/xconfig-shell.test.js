@@ -1508,7 +1508,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     const expectedStatus = ["bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "dart-marker-replacer", "take-out-darts-alert",
-      "single-bull-hit-sound", "x01-remaining-score-bar", "cricket-target-highlighter",
+      "single-bull-hit-sound", "special-hit-highlights", "x01-remaining-score-bar", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
     )
@@ -2657,6 +2657,23 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
+  const originalSetInterval = windowRef.setInterval.bind(windowRef);
+  const originalClearInterval = windowRef.clearInterval.bind(windowRef);
+  let hitPreviewIntervalCallback = null;
+  windowRef.setInterval = (callback, ms, ...args) => {
+    if (Number(ms) === 1800) {
+      hitPreviewIntervalCallback = () => callback(...args);
+      return 18_001;
+    }
+    return originalSetInterval(callback, ms, ...args);
+  };
+  windowRef.clearInterval = (handle) => {
+    if (Number(handle) === 18_001) {
+      hitPreviewIntervalCallback = null;
+      return;
+    }
+    originalClearInterval(handle);
+  };
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
   await waitForMenuButton(documentRef);
 
@@ -2671,6 +2688,42 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
   assert.ok(openSettings);
   openSettings.click();
   await waitForSettingsModal(documentRef);
+
+  const previewSection = documentRef.querySelector(
+    "[data-adxconfig-special-hit-highlights-preview='true']"
+  );
+  const previewRow = previewSection?.querySelector(
+    "[data-adxconfig-special-hit-highlights-preview-row='true']"
+  );
+  const previewSegment = previewSection?.querySelector(
+    "[data-adxconfig-special-hit-highlights-preview-segment='true']"
+  );
+  assert.ok(previewSection);
+  assert.ok(previewRow);
+  assert.ok(previewSegment);
+  assert.equal(previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-score"), "60");
+  assert.equal(previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-step"), "T20");
+  assert.equal(previewSegment.textContent, "T20");
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight"), true);
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight--modern"), true);
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight--triple"), true);
+  assert.equal(typeof hitPreviewIntervalCallback, "function");
+
+  hitPreviewIntervalCallback();
+  assert.equal(previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-score"), "38");
+  assert.equal(previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-step"), "D19");
+  assert.equal(previewSegment.textContent, "D19");
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight--double"), true);
+
+  hitPreviewIntervalCallback();
+  assert.equal(previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-score"), "50");
+  assert.equal(previewSegment.textContent, "BULL");
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight--bull-inner"), true);
+
+  hitPreviewIntervalCallback();
+  assert.equal(previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-score"), "25");
+  assert.equal(previewSegment.textContent, "25");
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight--bull-outer"), true);
 
   const colorOptions = documentRef.querySelectorAll(
     "[data-adxconfig-option-note='true'][data-setting-key='colorTheme']"
@@ -2712,7 +2765,30 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
     assert.equal(optionNode.classList.contains("ad-xconfig-option-item--effect-preview"), true);
   });
 
+  clickSelectSettingOption(documentRef, "special-hit-highlights", "colorTheme", "ice-circuit");
+  assert.equal(
+    previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-color-theme"),
+    "ice-circuit"
+  );
+  assert.equal(previewRow.classList.contains("ad-ext-hit-theme--ice-circuit"), true);
+
+  clickSelectSettingOption(documentRef, "special-hit-highlights", "animationStyle", "side-shake");
+  assert.equal(
+    previewRow.getAttribute("data-adxconfig-special-hit-highlights-preview-animation-style"),
+    "side-shake"
+  );
+  assert.equal(previewRow.classList.contains("ad-ext-hit-animation--side-shake"), true);
+
+  documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
+  assert.equal(
+    await waitFor(() => documentRef.querySelector("[data-adxconfig-modal='true']") === null),
+    true
+  );
+  assert.equal(hitPreviewIntervalCallback, null);
+  assert.equal(previewRow.classList.contains("ad-ext-hit-highlight"), false);
+
   runtime.stop();
+  assert.equal(documentRef.getElementById("ad-xconfig-special-hit-highlights-preview-style"), null);
 });
 
 test("xConfig avg-trend-arrow settings expose real arrow preview hosts", async () => {

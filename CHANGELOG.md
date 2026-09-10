@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.7] - 2026-09-10
+
+### Changed
+
+- Nutzerwirkung: `Special Hit Highlights` unterstützt das neue Autodarts-Design, zeigt Triple-, Double- und Bull-Treffer dort mit großen, gut lesbaren Zahlen sowie Trefferbezeichnungen im gewählten Theme-Font und wird nicht mehr als `Deprecated` geführt. In xConfig simuliert eine kompakte Live-Vorschau nacheinander `T20`, `D19`, `BULL` und `25` im Originalformat der Wurffelder.
+  Technik: Die Laufzeit verwendet die gemeinsame moderne X01-Turnfläche, trennt Score-Pseudoelement und eigene Effekt-Layer kollisionsfrei und beobachtet moderne Trefferänderungen. Die xConfig-Vorschau nutzt dieselbe Klassifizierung, Theme-, Typografie- und Animationslogik und räumt Timer sowie Effektzustände bei Neurendering und Dialogende vollständig auf.
+
 ## [3.0.6] - 2026-09-10
 
 ### Changed
@@ -2031,6 +2038,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.6...v3.0.7
 [3.0.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.3...v3.0.4

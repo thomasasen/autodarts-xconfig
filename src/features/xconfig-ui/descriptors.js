@@ -112,6 +112,7 @@ const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "dart-marker-replacer",
   "take-out-darts-alert",
   "single-bull-hit-sound",
+  "special-hit-highlights",
   "x01-remaining-score-bar",
   "cricket-target-highlighter",
   "cricket-grid-status-effects",

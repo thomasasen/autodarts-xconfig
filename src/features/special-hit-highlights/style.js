@@ -5,6 +5,9 @@ import {
 
 export const STYLE_ID = "ad-ext-special-hit-highlights-style";
 export const HIT_BASE_CLASS = "ad-ext-hit-highlight";
+export const HIT_MODERN_CLASS = "ad-ext-hit-highlight--modern";
+export const HIT_EFFECT_LAYER_CLASS = "ad-ext-hit-effect-layer";
+export const HIT_FRAME_LAYER_CLASS = "ad-ext-hit-frame-layer";
 export const HIT_IDLE_LOOP_CLASS = "ad-ext-hit-highlight--idle";
 export const HIT_SCORE_CLASS = "ad-ext-hit-score";
 export const HIT_SEGMENT_CLASS = "ad-ext-hit-segment";
@@ -33,10 +36,18 @@ export const HIT_ANIMATION_CLASS = Object.freeze({
   "electric-jolt": "ad-ext-hit-animation--electric-jolt",
 });
 export const HIT_ANIMATION_TRIGGER_CLASS = "ad-ext-hit-highlight--animate";
+const LEGACY_HIT_SURFACE_SELECTOR = ".ad-ext-turn-throw." + HIT_BASE_CLASS;
+const MODERN_HIT_SURFACE_SELECTOR = `.${HIT_MODERN_CLASS}.${HIT_BASE_CLASS}`;
+const MODERN_HIT_TEXT_SELECTOR = `${MODERN_HIT_SURFACE_SELECTOR}[data-ad-ext-hit-kind][data-ad-ext-hit-segment][data-ad-ext-hit-theme]`;
+const HIT_SURFACE_SELECTOR = `:is(.ad-ext-turn-throw, .${HIT_MODERN_CLASS}).${HIT_BASE_CLASS}`;
+const hitEffectLayerSelector = (stateSelector = "") =>
+  `${LEGACY_HIT_SURFACE_SELECTOR}${stateSelector}::before,\n${MODERN_HIT_SURFACE_SELECTOR}${stateSelector} > .${HIT_EFFECT_LAYER_CLASS}`;
+const hitFrameLayerSelector = (stateSelector = "") =>
+  `${LEGACY_HIT_SURFACE_SELECTOR}${stateSelector}::after,\n${MODERN_HIT_SURFACE_SELECTOR}${stateSelector} > .${HIT_FRAME_LAYER_CLASS}`;
 
 export function buildStyleText() {
   return `
-.ad-ext-turn-throw.${HIT_BASE_CLASS} {
+${HIT_SURFACE_SELECTOR} {
   --ad-ext-hit-theme-a: #31f7a0;
   --ad-ext-hit-theme-b: #8cf34a;
   --ad-ext-hit-theme-c: #a0ffd0;
@@ -78,11 +89,11 @@ export function buildStyleText() {
   transition: box-shadow 180ms ease-out, border-color 180ms ease-out, opacity 180ms ease-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} > * {
+${LEGACY_HIT_SURFACE_SELECTOR} > * {
   position: relative;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} img {
+${LEGACY_HIT_SURFACE_SELECTOR} img {
   z-index: 2 !important;
   opacity: var(--ad-ext-hit-img-opacity) !important;
   filter: var(--ad-ext-hit-img-filter) !important;
@@ -90,8 +101,8 @@ export function buildStyleText() {
   transition: opacity 180ms ease-out, filter 180ms ease-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} > p,
-.ad-ext-turn-throw.${HIT_BASE_CLASS} > .chakra-text {
+${LEGACY_HIT_SURFACE_SELECTOR} > p,
+${LEGACY_HIT_SURFACE_SELECTOR} > .chakra-text {
   position: absolute !important;
   inset: 0 !important;
   margin: 0 !important;
@@ -105,9 +116,9 @@ export function buildStyleText() {
   pointer-events: none;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} > p > div,
-.ad-ext-turn-throw.${HIT_BASE_CLASS} > .chakra-text > div,
-.ad-ext-turn-throw.${HIT_BASE_CLASS} [style*="flex-direction: column"][style*="align-items: center"] {
+${LEGACY_HIT_SURFACE_SELECTOR} > p > div,
+${LEGACY_HIT_SURFACE_SELECTOR} > .chakra-text > div,
+${LEGACY_HIT_SURFACE_SELECTOR} [style*="flex-direction: column"][style*="align-items: center"] {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -120,8 +131,8 @@ export function buildStyleText() {
   text-align: center !important;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}::before,
-.ad-ext-turn-throw.${HIT_BASE_CLASS}::after {
+${hitEffectLayerSelector()},
+${hitFrameLayerSelector()} {
   content: "";
   position: absolute;
   inset: 0;
@@ -129,7 +140,7 @@ export function buildStyleText() {
   pointer-events: none;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}::before {
+${hitEffectLayerSelector()} {
   z-index: 3;
   inset: -14%;
   opacity: var(--ad-ext-hit-gradient-opacity);
@@ -146,7 +157,7 @@ export function buildStyleText() {
   transform: translate3d(0, 0, 0) scale(1.03);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}::after {
+${hitFrameLayerSelector()} {
   z-index: 6;
   opacity: var(--ad-ext-hit-border-opacity);
   border: 1px solid color-mix(in srgb, var(--ad-ext-hit-edge) 72%, white 28%);
@@ -159,8 +170,24 @@ export function buildStyleText() {
     0 0 0 1px color-mix(in srgb, var(--ad-ext-hit-edge) 82%, white 18%);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SCORE_CLASS},
-.ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SEGMENT_CLASS} {
+${MODERN_HIT_TEXT_SELECTOR}::before {
+  position: relative;
+  z-index: 9;
+  color: var(--ad-ext-hit-text-main) !important;
+  font-family: inherit !important;
+  font-size: clamp(2.25rem, 38cqw, 2.6rem) !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.3),
+    0 0 14px rgba(0, 0, 0, 0.6),
+    0 0 24px var(--ad-ext-hit-soft-glow),
+    0 0 42px var(--ad-ext-hit-glow);
+  pointer-events: none;
+}
+
+${HIT_SURFACE_SELECTOR} .${HIT_SCORE_CLASS},
+${HIT_SURFACE_SELECTOR} .${HIT_SEGMENT_CLASS} {
   position: relative;
   z-index: 9;
   display: inline-block;
@@ -169,7 +196,7 @@ export function buildStyleText() {
   text-align: center !important;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SCORE_CLASS} {
+${HIT_SURFACE_SELECTOR} .${HIT_SCORE_CLASS} {
   color: var(--ad-ext-hit-text-main) !important;
   font-weight: 900;
   text-shadow:
@@ -180,7 +207,7 @@ export function buildStyleText() {
   -webkit-text-stroke: 0.45px rgba(0, 0, 0, 0.38);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SEGMENT_CLASS} {
+${HIT_SURFACE_SELECTOR} .${HIT_SEGMENT_CLASS} {
   color: var(--ad-ext-hit-text-sub) !important;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -190,20 +217,35 @@ export function buildStyleText() {
   -webkit-text-stroke: 0.35px rgba(0, 0, 0, 0.3);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.triple} {
+${MODERN_HIT_TEXT_SELECTOR} > .${HIT_SEGMENT_CLASS} {
+  color: var(--ad-ext-hit-text-main) !important;
+  font-family: inherit !important;
+  font-size: clamp(1.2rem, 20cqw, 1.4rem) !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.04em !important;
+  opacity: 1 !important;
+}
+
+${MODERN_HIT_TEXT_SELECTOR} > .${HIT_SEGMENT_CLASS} * {
+  color: var(--ad-ext-hit-text-main) !important;
+  font-family: inherit !important;
+}
+
+${HIT_SURFACE_SELECTOR}.${HIT_KIND_CLASS.triple} {
   --ad-ext-hit-gradient-opacity: 0.96;
   --ad-ext-hit-border-opacity: 1;
   --ad-ext-hit-shadow-size: 46px;
   filter: saturate(1.14);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.double} {
+${HIT_SURFACE_SELECTOR}.${HIT_KIND_CLASS.double} {
   --ad-ext-hit-gradient-opacity: 0.9;
   --ad-ext-hit-border-opacity: 0.97;
   --ad-ext-hit-shadow-size: 38px;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullOuter} {
+${HIT_SURFACE_SELECTOR}.${HIT_KIND_CLASS.bullOuter} {
   --ad-ext-hit-gradient-opacity: 0.74;
   --ad-ext-hit-border-opacity: 0.84;
   --ad-ext-hit-shadow-size: 26px;
@@ -211,7 +253,7 @@ export function buildStyleText() {
   filter: saturate(0.98);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_KIND_CLASS.bullInner} {
+${HIT_SURFACE_SELECTOR}.${HIT_KIND_CLASS.bullInner} {
   --ad-ext-hit-gradient-opacity: 1;
   --ad-ext-hit-border-opacity: 1;
   --ad-ext-hit-shadow-size: 52px;
@@ -224,7 +266,7 @@ export function buildStyleText() {
     0 0 30px color-mix(in srgb, var(--ad-ext-hit-glow) 58%, white 42%);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["ember-rush"]} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["ember-rush"]} {
   --ad-ext-hit-theme-a: #4e0f19;
   --ad-ext-hit-theme-b: #8f1e2a;
   --ad-ext-hit-theme-c: #c94d1f;
@@ -238,7 +280,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.05;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["ice-circuit"]} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["ice-circuit"]} {
   --ad-ext-hit-theme-a: #0f2948;
   --ad-ext-hit-theme-b: #0f4c73;
   --ad-ext-hit-theme-c: #1487b6;
@@ -252,7 +294,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.02;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["volt-lime"]} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["volt-lime"]} {
   --ad-ext-hit-theme-a: #1a3410;
   --ad-ext-hit-theme-b: #2f5f13;
   --ad-ext-hit-theme-c: #57a61d;
@@ -266,7 +308,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.03;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["crimson-steel"]} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["crimson-steel"]} {
   --ad-ext-hit-theme-a: #3d1028;
   --ad-ext-hit-theme-b: #661436;
   --ad-ext-hit-theme-c: #8e2a4f;
@@ -280,7 +322,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.07;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["arctic-mint"]} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["arctic-mint"]} {
   --ad-ext-hit-theme-a: #103241;
   --ad-ext-hit-theme-b: #145266;
   --ad-ext-hit-theme-c: #1e9387;
@@ -294,7 +336,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.02;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["champagne-night"]} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["champagne-night"]} {
   --ad-ext-hit-theme-a: #2e2512;
   --ad-ext-hit-theme-b: #5f4a1a;
   --ad-ext-hit-theme-c: #9a7a2e;
@@ -308,7 +350,7 @@ export function buildStyleText() {
   --ad-ext-hit-stripe-alpha: 0.015;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.triple} {
   --ad-ext-hit-theme-a: #3b0a11;
   --ad-ext-hit-theme-b: #7f1124;
   --ad-ext-hit-theme-c: #c62828;
@@ -318,7 +360,7 @@ export function buildStyleText() {
   --ad-ext-hit-soft-glow: rgba(255, 82, 82, 0.3);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.double} {
   --ad-ext-hit-theme-a: #0a1f45;
   --ad-ext-hit-theme-b: #0d4f9b;
   --ad-ext-hit-theme-c: #1976d2;
@@ -328,8 +370,8 @@ export function buildStyleText() {
   --ad-ext-hit-soft-glow: rgba(33, 150, 243, 0.3);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter},
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner} {
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullOuter},
+${HIT_SURFACE_SELECTOR}.${HIT_THEME_CLASS["kind-signal"]}.${HIT_KIND_CLASS.bullInner} {
   --ad-ext-hit-theme-a: #0c2a14;
   --ad-ext-hit-theme-b: #1b7a34;
   --ad-ext-hit-theme-c: #2eaf50;
@@ -339,55 +381,55 @@ export function buildStyleText() {
   --ad-ext-hit-soft-glow: rgba(76, 217, 100, 0.28);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation: ad-ext-hit-row-pop-hit 780ms cubic-bezier(0.14, 0.92, 0.24, 1);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
+${hitEffectLayerSelector(`.${HIT_ANIMATION_TRIGGER_CLASS}`)} {
   animation: ad-ext-hit-burst-surface 900ms cubic-bezier(0.12, 0.9, 0.2, 1);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS}::after {
+${hitFrameLayerSelector(`.${HIT_ANIMATION_TRIGGER_CLASS}`)} {
   animation: ad-ext-hit-burst-border 860ms ease-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
   animation: ad-ext-hit-score-burst 760ms cubic-bezier(0.14, 0.92, 0.24, 1);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SEGMENT_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SEGMENT_CLASS} {
   animation: ad-ext-hit-segment-burst 620ms ease-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["pop-hit"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["pop-hit"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-pop-hit;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["side-shake"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["side-shake"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-side-shake;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["glow-pop"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["glow-pop"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-glow-pop;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["flip-spin"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["flip-spin"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-flip-spin;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["light-sweep"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["light-sweep"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-light-sweep;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["light-sweep"]}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
+${hitEffectLayerSelector(`.${HIT_ANIMATION_CLASS["light-sweep"]}.${HIT_ANIMATION_TRIGGER_CLASS}`)} {
   animation: ad-ext-hit-light-sweep-surface 780ms cubic-bezier(0.12, 0.9, 0.2, 1);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["shockwave-ring"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["shockwave-ring"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   animation-name: ad-ext-hit-row-shockwave-ring;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS} {
   --ad-ext-hit-gradient-opacity: 0.22;
   --ad-ext-hit-border-opacity: 1;
   --ad-ext-hit-shadow-size: 42px;
@@ -396,7 +438,7 @@ export function buildStyleText() {
   animation-name: ad-ext-hit-row-electric-jolt;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS}::before {
+${hitEffectLayerSelector(`.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS}`)} {
   inset: -7px;
   border-radius: calc(14px + 3px);
   border: 1.1px solid color-mix(in srgb, var(--ad-ext-hit-edge) 74%, white 26%);
@@ -417,7 +459,7 @@ export function buildStyleText() {
     ad-ext-hit-electric-jolt-frame-glow 760ms ease-in-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS}::after {
+${hitFrameLayerSelector(`.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS}`)} {
   inset: -12px;
   border-radius: calc(14px + 6px);
   border: none;
@@ -430,11 +472,11 @@ export function buildStyleText() {
   animation: ad-ext-hit-electric-jolt-frame-aura 760ms ease-out;
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SCORE_CLASS} {
   animation: ad-ext-hit-score-electric-jolt 760ms cubic-bezier(0.14, 0.92, 0.24, 1);
 }
 
-.ad-ext-turn-throw.${HIT_BASE_CLASS}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SEGMENT_CLASS} {
+${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_TRIGGER_CLASS} .${HIT_SEGMENT_CLASS} {
   animation: ad-ext-hit-segment-electric-jolt 620ms linear;
 }
 
@@ -696,11 +738,11 @@ export function buildStyleText() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ad-ext-turn-throw.${HIT_BASE_CLASS},
-  .ad-ext-turn-throw.${HIT_BASE_CLASS}::before,
-  .ad-ext-turn-throw.${HIT_BASE_CLASS}::after,
-  .ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SCORE_CLASS},
-  .ad-ext-turn-throw.${HIT_BASE_CLASS} .${HIT_SEGMENT_CLASS} {
+  ${HIT_SURFACE_SELECTOR},
+  ${hitEffectLayerSelector()},
+  ${hitFrameLayerSelector()},
+  ${HIT_SURFACE_SELECTOR} .${HIT_SCORE_CLASS},
+  ${HIT_SURFACE_SELECTOR} .${HIT_SEGMENT_CLASS} {
     animation: none !important;
     transition: none !important;
     transform: none !important;

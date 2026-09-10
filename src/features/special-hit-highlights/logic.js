@@ -2,12 +2,19 @@ import {
   HIT_ANIMATION_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
   HIT_BASE_CLASS,
+  HIT_EFFECT_LAYER_CLASS,
+  HIT_FRAME_LAYER_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
+  HIT_MODERN_CLASS,
   HIT_SCORE_CLASS,
   HIT_SEGMENT_CLASS,
   HIT_THEME_CLASS,
 } from "./style.js";
+import {
+  findModernTurnSurface,
+  readModernThrows,
+} from "../shared/x01-match-surface.js";
 import {
   collectTurnThrowRows,
   getTurnSurfaceSnapshot,
@@ -592,6 +599,32 @@ function collectAnimationTargets(rowNode, roleStateByRow = null) {
   return [rowNode, roleState?.scoreNode || null, roleState?.segmentNode || null].filter(Boolean);
 }
 
+function ensureModernEffectLayers(rowNode) {
+  if (!rowNode?.classList || !rowNode?.ownerDocument?.createElement) {
+    return;
+  }
+
+  [HIT_EFFECT_LAYER_CLASS, HIT_FRAME_LAYER_CLASS].forEach((className) => {
+    const existingNode = getChildElements(rowNode).find((node) => node?.classList?.contains?.(className));
+    if (existingNode) {
+      return;
+    }
+    const layerNode = rowNode.ownerDocument.createElement("span");
+    layerNode.classList.add(className);
+    layerNode.setAttribute("aria-hidden", "true");
+    rowNode.appendChild(layerNode);
+  });
+}
+
+function removeModernEffectLayers(rowNode) {
+  getChildElements(rowNode)
+    .filter((node) =>
+      node?.classList?.contains?.(HIT_EFFECT_LAYER_CLASS) ||
+      node?.classList?.contains?.(HIT_FRAME_LAYER_CLASS)
+    )
+    .forEach((node) => node.remove?.());
+}
+
 function clearReplayTimer(rowNode, replayTimersByRow = null, windowRef = null) {
   if (!rowNode || !replayTimersByRow || typeof replayTimersByRow.get !== "function") {
     return;
@@ -707,9 +740,11 @@ export function clearHitDecoration(rowNode, signatureByRow = null, options = {})
 
   stopRowAnimation(rowNode, options);
   clearTextRoles(rowNode, options.roleStateByRow || null);
+  removeModernEffectLayers(rowNode);
 
   rowNode.classList.remove(
     HIT_BASE_CLASS,
+    HIT_MODERN_CLASS,
     HIT_ANIMATION_TRIGGER_CLASS,
     HIT_IDLE_LOOP_CLASS,
     ...KIND_CLASS_NAMES,
@@ -1332,6 +1367,12 @@ export function applyHitDecoration(rowNode, options = {}) {
   const burst = Boolean(burstKey) && burstKey !== lastBurstKey;
 
   rowNode.classList.add(HIT_BASE_CLASS);
+  rowNode.classList.toggle(HIT_MODERN_CLASS, options.modernSurface === true);
+  if (options.modernSurface === true) {
+    ensureModernEffectLayers(rowNode);
+  } else {
+    removeModernEffectLayers(rowNode);
+  }
   setExclusiveClass(rowNode, KIND_CLASS_NAMES, kindClassName);
   setExclusiveClass(rowNode, THEME_CLASS_NAMES, themeClassName);
   setExclusiveClass(rowNode, ANIMATION_CLASS_NAMES, animationClassName);
@@ -1394,9 +1435,21 @@ export function updateHitDecorations(options = {}) {
   const includeRowDebug = options.debugRows === true;
   const animeRef = options.animeRef || null;
   const windowRef = options.windowRef || null;
-  const turnSurface = getTurnSurfaceSnapshot(documentRef, {
+  let turnSurface = getTurnSurfaceSnapshot(documentRef, {
     normalizeText: normalizeRawText,
   });
+  if (!turnSurface.turnContainer && turnSurface.throwRows.length === 0) {
+    const modernSurface = findModernTurnSurface(documentRef, windowRef);
+    const modernThrows = readModernThrows(modernSurface, options.x01Rules);
+    if (modernSurface && Array.isArray(modernThrows)) {
+      turnSurface = {
+        turnContainer: modernSurface.turnContainer,
+        throwRows: modernSurface.throwRows.slice(0, modernThrows.length),
+        turnScoreToken: modernSurface.turnScoreToken,
+        rowSource: "modern-turn-container",
+      };
+    }
+  }
   const turnContainer = turnSurface.turnContainer;
   const turnScoreToken = turnSurface.turnScoreToken;
   const currentRows = turnSurface.throwRows.filter((rowNode) => {
@@ -1540,6 +1593,7 @@ export function updateHitDecorations(options = {}) {
       windowRef,
       animeRef,
       rowText,
+      modernSurface: turnSurface.rowSource === "modern-turn-container",
     });
 
     if (includeRowDebug) {

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import * as x01Rules from "../../src/domain/x01-rules.js";
 
 import {
   classifyThrowText,
@@ -9,14 +10,18 @@ import {
 } from "../../src/features/special-hit-highlights/logic.js";
 import {
   HIT_BASE_CLASS,
+  HIT_EFFECT_LAYER_CLASS,
+  HIT_FRAME_LAYER_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
   HIT_IDLE_LOOP_CLASS,
   HIT_KIND_CLASS,
+  HIT_MODERN_CLASS,
   HIT_SCORE_CLASS,
   HIT_SEGMENT_CLASS,
   HIT_THEME_CLASS,
 } from "../../src/features/special-hit-highlights/style.js";
 import { FakeDocument, createFakeWindow, useHtmlCollectionChildren } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function createAnimeStub() {
   const calls = [];
@@ -728,6 +733,64 @@ test("one-shot presets keep prior rows stable without idle loops", () => {
   assert.equal(second.rows[1].burst, true);
   assert.equal(documentRef.throwRow.classList.contains(HIT_IDLE_LOOP_CLASS), false);
   assert.equal(row2.row.classList.contains(HIT_IDLE_LOOP_CLASS), false);
+});
+
+test("modern native turn decorates actual special hits without touching checkout suggestions", () => {
+  const fixture = createModernX01Fixture({ throws: ["T20"], route: ["D18"] });
+  const state = {
+    trackedRows: new Set(),
+    signatureByRow: new Map(),
+    burstKeyBySlot: new Map(),
+    slotStateByIndex: new Map(),
+    activeAnimeByRow: new Map(),
+    roleStateByRow: new Map(),
+  };
+
+  const firstStats = updateHitDecorations({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+    x01Rules,
+    ...state,
+    featureConfig: { colorTheme: "kind-signal", animationStyle: "pop-hit" },
+  });
+
+  assert.equal(firstStats.rowSource, "modern-turn-container");
+  assert.equal(firstStats.rowCount, 1);
+  assert.equal(fixture.rows[0].row.classList.contains(HIT_BASE_CLASS), true);
+  assert.equal(fixture.rows[0].row.classList.contains(HIT_MODERN_CLASS), true);
+  assert.equal(fixture.rows[0].row.classList.contains(HIT_KIND_CLASS.triple), true);
+  assert.equal(fixture.rows[0].label.classList.contains(HIT_SEGMENT_CLASS), true);
+  const effectLayer = Array.from(fixture.rows[0].row.children).find((node) =>
+    node.classList.contains(HIT_EFFECT_LAYER_CLASS)
+  );
+  const frameLayer = Array.from(fixture.rows[0].row.children).find((node) =>
+    node.classList.contains(HIT_FRAME_LAYER_CLASS)
+  );
+  assert.equal(effectLayer?.getAttribute("aria-hidden"), "true");
+  assert.equal(frameLayer?.getAttribute("aria-hidden"), "true");
+  assert.equal(fixture.rows[1].row.classList.contains(HIT_BASE_CLASS), false);
+
+  fixture.setVisit(["T20", "S20", "BULL"], []);
+  const secondStats = updateHitDecorations({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+    x01Rules,
+    ...state,
+    featureConfig: { colorTheme: "kind-signal", animationStyle: "pop-hit" },
+  });
+
+  assert.equal(secondStats.rowCount, 3);
+  assert.equal(fixture.rows[1].row.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(fixture.rows[2].row.classList.contains(HIT_KIND_CLASS.bullInner), true);
+
+  clearHitDecoration(fixture.rows[0].row, state.signatureByRow, state);
+  assert.equal(fixture.rows[0].row.classList.contains(HIT_MODERN_CLASS), false);
+  assert.equal(
+    Array.from(fixture.rows[0].row.children).some((node) =>
+      node.classList.contains(HIT_EFFECT_LAYER_CLASS) || node.classList.contains(HIT_FRAME_LAYER_CLASS)
+    ),
+    false
+  );
 });
 
 test("turn timeline and legacy flip alias keep the promised 360 degree spin", () => {
