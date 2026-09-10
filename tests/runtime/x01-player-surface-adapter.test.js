@@ -6,11 +6,13 @@ import {
   X01_PLAYER_DISPLAY_ROOT_SELECTOR,
   X01_PLAYER_NAME_SELECTOR,
   X01_PLAYER_SCORE_SELECTOR,
+  X01_PLAYER_SURFACE_SOURCE_MODERN,
   createX01PlayerSurfaceObserveOptions,
   findX01PlayerSurface,
   getX01PlayerSurfaceSnapshot,
 } from "../../src/features/shared/x01-player-surface-adapter.js";
 import { FakeDocument } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function removeDefaultPlayerNodes(documentRef) {
   documentRef.activePlayerRow.remove();
@@ -176,6 +178,26 @@ test("x01 player surface adapter handles missing score and name nodes defensivel
   assert.equal(snapshot.players[0].isActive, false);
 });
 
+test("x01 player surface adapter reads the native modern player card when enabled", () => {
+  const fixture = createModernX01Fixture({ score: 36 });
+
+  const legacyOnlySnapshot = getX01PlayerSurfaceSnapshot(fixture.documentRef);
+  const modernSnapshot = getX01PlayerSurfaceSnapshot(fixture.documentRef, {
+    includeModern: true,
+    windowRef: fixture.windowRef,
+  });
+
+  assert.equal(legacyOnlySnapshot.source, "none");
+  assert.equal(modernSnapshot.source, X01_PLAYER_SURFACE_SOURCE_MODERN);
+  assert.equal(modernSnapshot.playerDisplayRoot, fixture.documentRef.main);
+  assert.deepEqual(modernSnapshot.playerCards, [fixture.card]);
+  assert.equal(modernSnapshot.players[0].node, fixture.card);
+  assert.equal(modernSnapshot.players[0].scoreNode, fixture.score);
+  assert.equal(modernSnapshot.players[0].nameText, "Player 1");
+  assert.equal(modernSnapshot.players[0].scoreText, "36");
+  assert.equal(modernSnapshot.players[0].isActive, true);
+});
+
 test("x01 player surface adapter collects nested player cards safely", () => {
   const documentRef = new FakeDocument();
   const root = appendPlayerDisplayRoot(documentRef);
@@ -200,5 +222,15 @@ test("x01 player surface observe options stay scoped to class changes", () => {
     characterData: true,
     attributes: true,
     attributeFilter: ["class"],
+  });
+});
+
+test("x01 player surface observe options track native visibility state when modern cards are enabled", () => {
+  assert.deepEqual(createX01PlayerSurfaceObserveOptions({ includeModern: true }), {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ["class", "style", "hidden", "aria-hidden"],
   });
 });

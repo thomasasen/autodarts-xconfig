@@ -1,8 +1,11 @@
+import { readModernPlayerSurfaces } from "./x01-match-surface.js";
+
 export const X01_PLAYER_DISPLAY_ROOT_SELECTOR = "#ad-ext-player-display";
 export const X01_PLAYER_CARD_SELECTOR = ".ad-ext-player, [id^=\"ad-ext-player-\"]";
 export const X01_PLAYER_SCORE_SELECTOR = ".ad-ext-player-score";
 export const X01_PLAYER_NAME_SELECTOR = ".ad-ext-player-name";
 export const X01_PLAYER_SURFACE_SOURCE_TOOLS = "tools-for-autodarts";
+export const X01_PLAYER_SURFACE_SOURCE_MODERN = "autodarts-modern";
 export const X01_PLAYER_SURFACE_SOURCE_NONE = "none";
 
 const PLAYER_ID_PATTERN = /^ad-ext-player-\d+$/;
@@ -117,13 +120,46 @@ function isPlayerActive(node) {
 }
 
 function toPlayerEntry(node, index) {
+  const scoreNode = queryOne(node, X01_PLAYER_SCORE_SELECTOR);
   return {
     node,
+    scoreNode,
     index,
     id: readPlayerId(node),
     nameText: readScopedText(node, X01_PLAYER_NAME_SELECTOR),
-    scoreText: readScopedText(node, X01_PLAYER_SCORE_SELECTOR),
+    scoreText: normalizeText(scoreNode?.textContent || ""),
     isActive: isPlayerActive(node),
+  };
+}
+
+function getModernPlayerSurfaceSnapshot(documentRef, windowRef) {
+  const modernPlayers = readModernPlayerSurfaces(documentRef, windowRef);
+  if (!modernPlayers.length) {
+    return createEmptySnapshot();
+  }
+
+  const playerDisplayRoot = queryOne(documentRef, "main");
+  if (!playerDisplayRoot) {
+    return createEmptySnapshot();
+  }
+
+  const playerCards = modernPlayers.map((player) => player.cardNode);
+  return {
+    playerDisplayRoot,
+    playerCards,
+    players: modernPlayers.map((player, index) => {
+      const nameNode = queryOne(player.cardNode, '[role="button"]');
+      return {
+        node: player.cardNode,
+        scoreNode: player.scoreNode,
+        index,
+        id: readPlayerId(player.cardNode),
+        nameText: normalizeText(nameNode?.textContent || ""),
+        scoreText: normalizeText(player.scoreNode?.textContent || ""),
+        isActive: player.active,
+      };
+    }),
+    source: X01_PLAYER_SURFACE_SOURCE_MODERN,
   };
 }
 
@@ -136,7 +172,17 @@ function createEmptySnapshot() {
   };
 }
 
-export function getX01PlayerSurfaceSnapshot(documentRef) {
+export function getX01PlayerSurfaceSnapshot(documentRef, options = {}) {
+  if (options.includeModern) {
+    const modernSnapshot = getModernPlayerSurfaceSnapshot(
+      documentRef,
+      options.windowRef || documentRef?.defaultView
+    );
+    if (modernSnapshot.playerDisplayRoot) {
+      return modernSnapshot;
+    }
+  }
+
   const playerDisplayRoot = queryOne(documentRef, X01_PLAYER_DISPLAY_ROOT_SELECTOR);
   if (!playerDisplayRoot) {
     return createEmptySnapshot();
@@ -151,17 +197,19 @@ export function getX01PlayerSurfaceSnapshot(documentRef) {
   };
 }
 
-export function findX01PlayerSurface(documentRef) {
-  return getX01PlayerSurfaceSnapshot(documentRef);
+export function findX01PlayerSurface(documentRef, options = {}) {
+  return getX01PlayerSurfaceSnapshot(documentRef, options);
 }
 
-export function createX01PlayerSurfaceObserveOptions() {
+export function createX01PlayerSurfaceObserveOptions(options = {}) {
   return {
     childList: true,
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ["class"],
+    attributeFilter: options.includeModern
+      ? ["class", "style", "hidden", "aria-hidden"]
+      : ["class"],
   };
 }
 
@@ -192,6 +240,8 @@ export function createX01PlayerSurfaceObserverController(options = {}) {
     typeof options.onSurfaceMutation === "function" ? options.onSurfaceMutation : () => {};
   const onSurfaceChange =
     typeof options.onSurfaceChange === "function" ? options.onSurfaceChange : () => {};
+  const includeModern = Boolean(options.includeModern);
+  const windowRef = options.windowRef || documentRef?.defaultView;
   const lifecycleKey = `${keyPrefix}:lifecycle`;
   const surfaceKey = `${keyPrefix}:surface`;
   let currentRoot = null;
@@ -217,7 +267,10 @@ export function createX01PlayerSurfaceObserverController(options = {}) {
       return false;
     }
 
-    const nextRoot = queryOne(documentRef, X01_PLAYER_DISPLAY_ROOT_SELECTOR);
+    const nextRoot = getX01PlayerSurfaceSnapshot(documentRef, {
+      includeModern,
+      windowRef,
+    }).playerDisplayRoot;
     if (nextRoot === currentRoot) {
       surfaceInitialized = true;
       return false;
@@ -237,7 +290,7 @@ export function createX01PlayerSurfaceObserverController(options = {}) {
             onSurfaceMutation(records, currentRoot);
           }
         },
-        observeOptions: createX01PlayerSurfaceObserveOptions(),
+        observeOptions: createX01PlayerSurfaceObserveOptions({ includeModern }),
         MutationObserverRef,
       });
     }

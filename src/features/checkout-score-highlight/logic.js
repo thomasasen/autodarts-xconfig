@@ -3,13 +3,18 @@ import {
   getEffectClass,
   getEffectClassList,
 } from "./style.js";
-import { collectVisibleCheckoutRoute, resolveCheckoutSurfaceSemantics } from "../x01-checkout-route.js";
+import {
+  SUGGESTION_SELECTOR as CHECKOUT_ROUTE_SUGGESTION_SELECTOR,
+  collectVisibleCheckoutRouteEntries,
+  resolveCheckoutSurfaceSemantics,
+} from "../x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
+import { X01_PLAYER_SURFACE_SOURCE_MODERN } from "../shared/x01-player-surface-adapter.js";
 
 export const SCORE_SELECTOR = "p.ad-ext-player-score";
 export const ACTIVE_SCORE_SELECTOR =
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score, .ad-ext-player-active p.ad-ext-player-score";
-export const SUGGESTION_SELECTOR = ".suggestion";
+export const SUGGESTION_SELECTOR = CHECKOUT_ROUTE_SUGGESTION_SELECTOR;
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 
 export function getCheckoutSuggestionState(context = {}) {
@@ -101,7 +106,8 @@ function resolveCheckoutSuggestionSignal(context = {}) {
     return null;
   }
 
-  const suggestionNode = documentRef.querySelector(SUGGESTION_SELECTOR);
+  const routeEntries = collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules);
+  const suggestionNode = routeEntries[0]?.node || documentRef.querySelector(SUGGESTION_SELECTOR);
   if (!suggestionNode) {
     return null;
   }
@@ -110,8 +116,10 @@ function resolveCheckoutSuggestionSignal(context = {}) {
     return null;
   }
 
-  const suggestionText = suggestionNode.textContent || "";
-  const routeSegments = collectVisibleCheckoutRoute(documentRef, windowRef, x01Rules);
+  const suggestionText = routeEntries[0]?.text || suggestionNode.textContent || "";
+  const routeSegments = routeEntries.flatMap((entry) =>
+    Array.isArray(entry?.segments) ? entry.segments : []
+  );
 
   const explicitSuggestionState = resolveExplicitCheckoutSuggestionState(
     x01Rules,
@@ -212,7 +220,12 @@ function resolveScoreLookupSurface(documentRef, options = {}) {
 }
 
 export function getAllScoreNodes(documentRef, options = {}) {
-  const { rootNode } = resolveScoreLookupSurface(documentRef, options);
+  const { playerSurfaceSnapshot, rootNode } = resolveScoreLookupSurface(documentRef, options);
+  if (playerSurfaceSnapshot?.source === X01_PLAYER_SURFACE_SOURCE_MODERN) {
+    return playerSurfaceSnapshot.players
+      .map((player) => player?.scoreNode || null)
+      .filter(Boolean);
+  }
   return queryAll(rootNode, SCORE_SELECTOR);
 }
 
@@ -220,6 +233,28 @@ export function getScoreNodes(documentRef, gameState = null, options = {}) {
   const { playerSurfaceSnapshot, rootNode } = resolveScoreLookupSurface(documentRef, options);
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
     return [];
+  }
+
+  if (playerSurfaceSnapshot?.source === X01_PLAYER_SURFACE_SOURCE_MODERN) {
+    const activeScores = playerSurfaceSnapshot.players
+      .filter((player) => player?.isActive)
+      .map((player) => player?.scoreNode || null)
+      .filter(Boolean);
+    if (activeScores.length) {
+      return activeScores;
+    }
+
+    const activePlayerIndex =
+      gameState && typeof gameState.getActivePlayerIndex === "function"
+        ? Number(gameState.getActivePlayerIndex())
+        : Number.NaN;
+    if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
+      const activeScore = playerSurfaceSnapshot.players[activePlayerIndex]?.scoreNode || null;
+      return activeScore ? [activeScore] : [];
+    }
+
+    const allScores = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
+    return allScores.length === 1 ? allScores : [];
   }
 
   const activeScores = queryAll(rootNode, ACTIVE_SCORE_SELECTOR);

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import * as x01Rules from "../../src/domain/x01-rules.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { mountCheckoutScoreHighlight } from "../../src/features/checkout-score-highlight/index.js";
@@ -16,6 +17,7 @@ import {
   getX01PlayerSurfaceSnapshot,
 } from "../../src/features/shared/x01-player-surface-adapter.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function appendPlayerRow(documentRef, scoreText, { active = false } = {}) {
   const row = documentRef.createElement("div");
@@ -139,7 +141,10 @@ test("checkout-score-highlight observes player surface mutations without schedul
     subtree: true,
   });
   assert.equal(surfaceObserver.observeCalls[0].target, root);
-  assert.deepEqual(surfaceObserver.observeCalls[0].options, createX01PlayerSurfaceObserveOptions());
+  assert.deepEqual(
+    surfaceObserver.observeCalls[0].options,
+    createX01PlayerSurfaceObserveOptions({ includeModern: true })
+  );
 
   const unrelatedNode = documentRef.createElement("div");
   documentRef.sidebar.appendChild(unrelatedNode);
@@ -332,4 +337,75 @@ test("checkout-score-highlight keeps the single-score fallback when only one sco
 
   assert.equal(resolved.length, 1);
   assert.equal(resolved[0], documentRef.activeScoreElement);
+});
+
+test("checkout-score-highlight decorates and rebinds the native modern active score", () => {
+  const fixture = createModernX01Fixture({ score: 36, throws: [], route: ["D18"] });
+  const domGuards = createDomGuards({ documentRef: fixture.documentRef });
+  const observers = createObserverRegistry();
+  const debugMessages = [];
+  let rafId = 0;
+  fixture.windowRef.requestAnimationFrame = (callback) => {
+    rafId += 1;
+    callback();
+    return rafId;
+  };
+  fixture.windowRef.cancelAnimationFrame = () => {};
+
+  const cleanup = mountCheckoutScoreHighlight({
+    ...fixture,
+    domGuards,
+    registries: { observers },
+    domain: { x01Rules },
+    config: {
+      getFeatureConfig: () => ({
+        effect: "grow-only",
+        colorTheme: "159, 219, 88",
+        intensity: "standard",
+        triggerSource: "suggestion-only",
+      }),
+    },
+    featureDebug: {
+      enabled: true,
+      log(message) {
+        debugMessages.push(message);
+      },
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getOutMode: () => "Double Out",
+      getActiveThrows: () => [],
+      getActivePlayerIndex: () => 0,
+      subscribe: () => () => {},
+    },
+  });
+
+  assert.ok(fixture.score.classList.contains(HIGHLIGHT_CLASS));
+  assert.match(debugMessages[0], /surface="autodarts-modern"/);
+  const surfaceObserver = observers.get("checkout-score-highlight:dom-observer:surface");
+  assert.equal(surfaceObserver.observeCalls[0].target, fixture.documentRef.main);
+  assert.deepEqual(
+    surfaceObserver.observeCalls[0].options,
+    createX01PlayerSurfaceObserveOptions({ includeModern: true })
+  );
+
+  fixture.score.remove();
+  const replacementScore = fixture.node(
+    fixture.card,
+    "div",
+    "font-number font-bold overflow-hidden",
+    "36"
+  );
+  surfaceObserver.callback([
+    {
+      type: "childList",
+      target: fixture.card,
+      addedNodes: [replacementScore],
+      removedNodes: [fixture.score],
+    },
+  ]);
+
+  assert.ok(replacementScore.classList.contains(HIGHLIGHT_CLASS));
+  cleanup();
+  assert.equal(replacementScore.classList.contains(HIGHLIGHT_CLASS), false);
 });

@@ -22,6 +22,7 @@ export function mountCheckoutScoreHighlight(context = {}) {
   const observerRegistry = context.registries?.observers;
   const gameState = context.gameState;
   const config = context.config;
+  const featureDebug = context.featureDebug || null;
 
   if (!documentRef || !domGuards) {
     return () => {};
@@ -45,8 +46,38 @@ export function mountCheckoutScoreHighlight(context = {}) {
     })
   );
 
+  let lastDebugSignature = "";
+
+  function emitDebugState(playerSurfaceSnapshot, allScoreNodes, scoreNodes, shouldHighlight) {
+    if (!featureDebug?.enabled || typeof featureDebug.log !== "function") {
+      return;
+    }
+
+    const scoreText = scoreNodes
+      .map((node) => String(node?.textContent || "").trim())
+      .join("|");
+    const signature = [
+      playerSurfaceSnapshot?.source || "none",
+      allScoreNodes.length,
+      scoreText,
+      shouldHighlight ? 1 : 0,
+      featureConfig.triggerSource,
+    ].join("::");
+    if (signature === lastDebugSignature) {
+      return;
+    }
+
+    lastDebugSignature = signature;
+    featureDebug.log(
+      `state surface="${playerSurfaceSnapshot?.source || "none"}" scores=${allScoreNodes.length} activeScore="${scoreText || "-"}" highlight=${shouldHighlight ? "yes" : "no"} trigger="${featureConfig.triggerSource}"`
+    );
+  }
+
   function update() {
-    const playerSurfaceSnapshot = getX01PlayerSurfaceSnapshot(documentRef);
+    const playerSurfaceSnapshot = getX01PlayerSurfaceSnapshot(documentRef, {
+      includeModern: true,
+      windowRef,
+    });
     const allScoreNodes = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
     const scoreNodes = getScoreNodes(documentRef, gameState, { playerSurfaceSnapshot });
     const shouldHighlight = computeShouldHighlight({
@@ -57,6 +88,8 @@ export function mountCheckoutScoreHighlight(context = {}) {
       x01Rules: context.domain?.x01Rules,
       triggerSource: featureConfig.triggerSource,
     });
+
+    emitDebugState(playerSurfaceSnapshot, allScoreNodes, scoreNodes, shouldHighlight);
 
     if (!shouldHighlight) {
       clearHighlightState(allScoreNodes);
@@ -77,6 +110,8 @@ export function mountCheckoutScoreHighlight(context = {}) {
     observerRegistry,
     MutationObserverRef: windowRef?.MutationObserver,
     keyPrefix: OBSERVER_KEY,
+    includeModern: true,
+    windowRef,
     onSurfaceMutation: () => scheduler.schedule(),
     onSurfaceChange: () => scheduler.schedule(),
   });
@@ -106,7 +141,11 @@ export function mountCheckoutScoreHighlight(context = {}) {
 
     cleanupSurfaceObserver();
 
-    clearHighlightState(getAllScoreNodes(documentRef));
+    const playerSurfaceSnapshot = getX01PlayerSurfaceSnapshot(documentRef, {
+      includeModern: true,
+      windowRef,
+    });
+    clearHighlightState(getAllScoreNodes(documentRef, { playerSurfaceSnapshot }));
     domGuards.removeNodeById(STYLE_ID);
   };
 }

@@ -109,6 +109,7 @@ const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "tv-board-zoom",
   "checkout-target-highlights",
   "checkout-suggestion-styles",
+  "checkout-score-highlight",
   "avg-trend-arrow",
   "dart-marker-replacer",
   "dartboard-marker-highlight",
