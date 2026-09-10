@@ -12,6 +12,18 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.8] - 2026-09-10
+
+### Changed
+
+- Nutzerwirkung: `Dartboard Marker Highlight`, `AVG Trend Arrow` und `Checkout Score Highlight` funktionieren im neuen Autodarts-Design und werden nicht mehr als `Deprecated` geführt. Marker, Durchschnittstrend und Checkout-Hervorhebung bleiben bei Aktualisierungen der modernen Spieloberfläche sichtbar und korrekt zugeordnet.
+  Technik: Gemeinsame moderne X01-Spielerflächen, robuste DOM-Erneuerung und gezielte Regressionstests decken moderne Spieler- und Board-Wechsel ab.
+
+### Fixed
+
+- Nutzerwirkung: `TV Board Zoom` bleibt bei einer zurückgenommenen Korrektur stabil und zoomt den erneuten Checkout zuverlässig, ohne bei minimalen Layout-Rundungen sichtbar zu springen.
+  Technik: Der aktive Zoom erkennt seinen tatsächlich sichtbaren Transformzustand, statt identische Pixelwerte aus erneuten Layout-Messungen zu verlangen; Layout- und Runtime-Regressionstests sichern beide Fälle.
+
 ## [3.0.7] - 2026-09-10
 
 ### Changed
@@ -2038,6 +2050,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.7...v3.0.8
 [3.0.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.6...v3.0.7
 [3.0.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.4...v3.0.5
