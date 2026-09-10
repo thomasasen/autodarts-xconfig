@@ -23,6 +23,8 @@ import {
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const GIF_OBSERVER_KEY = `${FEATURE_KEY}:tools-animation-observer`;
+const TOOLS_ANIMATION_HOST_SELECTOR = "autodarts-tools-animations";
 const LISTENER_KEYS = Object.freeze({
   resize: `${FEATURE_KEY}:window-resize`,
   orientation: `${FEATURE_KEY}:window-orientation`,
@@ -465,6 +467,7 @@ export function initializeTvBoardZoom(context = {}) {
 
   let scheduler = null;
   let holdTimerId = 0;
+  let gifOverlayShadowRoot = null;
 
   function clearHoldTimer() {
     if (holdTimerId) {
@@ -541,8 +544,36 @@ export function initializeTvBoardZoom(context = {}) {
     });
   }
 
+  function ensureGifOverlayObserver() {
+    const animationHost = documentRef.querySelector?.(TOOLS_ANIMATION_HOST_SELECTOR) || null;
+    const nextShadowRoot = animationHost?.shadowRoot || null;
+    if (nextShadowRoot === gifOverlayShadowRoot) {
+      return;
+    }
+
+    observerRegistry?.disconnect?.(GIF_OBSERVER_KEY);
+    gifOverlayShadowRoot = nextShadowRoot;
+    if (!nextShadowRoot || typeof observerRegistry?.registerMutationObserver !== "function") {
+      return;
+    }
+
+    observerRegistry.registerMutationObserver({
+      key: GIF_OBSERVER_KEY,
+      target: nextShadowRoot,
+      callback: () => scheduler?.schedule?.(),
+      observeOptions: {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["class", "src", "hidden"],
+      },
+      MutationObserverRef: windowRef?.MutationObserver,
+    });
+  }
+
   scheduler = schedulerFactory(() => {
     clearHoldTimer();
+    ensureGifOverlayObserver();
     const matchSurface = readModernMatchSurface(documentRef, windowRef);
     lastMatchSurface = matchSurface;
     if (!hasActiveTurnSurface(documentRef, matchSurface)) {
@@ -763,7 +794,9 @@ export function initializeTvBoardZoom(context = {}) {
 
     if (observerRegistry && typeof observerRegistry.disconnect === "function") {
       observerRegistry.disconnect(OBSERVER_KEY);
+      observerRegistry.disconnect(GIF_OBSERVER_KEY);
     }
+    gifOverlayShadowRoot = null;
 
     if (listenerRegistry && typeof listenerRegistry.remove === "function") {
       Object.values(LISTENER_KEYS).forEach((key) => {

@@ -175,6 +175,68 @@ test("native D18 zoom moves all four board layers together and restores clipping
   assert.equal(f.host.style.overflow || "", "");
 });
 
+test("tv-board-zoom contains a gif inserted into the tools shadow root after zoom starts", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({ activeScore: 40 });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+  const animationHost = documentRef.createElement("autodarts-tools-animations");
+  const shadowRoot = documentRef.createElement("div");
+  const shadowMutationTarget = { __mutationObservers: [] };
+  shadowRoot.ownerDocument = shadowMutationTarget;
+  animationHost.shadowRoot = shadowRoot;
+  documentRef.main.appendChild(animationHost);
+
+  const cleanup = startTvBoardZoom({
+    documentRef,
+    windowRef,
+    gameState: gameState.api,
+  });
+
+  try {
+    timers.advance(25);
+    assert.match(String(targetNode.style.transform || ""), /scale\(/);
+    assert.equal(shadowMutationTarget.__mutationObservers.length, 1);
+
+    const fixedWrapper = documentRef.createElement("div");
+    const innerFrame = documentRef.createElement("div");
+    const gifNode = documentRef.createElement("img");
+    fixedWrapper.classList.add("fixed");
+    fixedWrapper.style.width = "1361.25px";
+    fixedWrapper.style.height = "1361.25px";
+    innerFrame.classList.add("absolute", "inset-0");
+    gifNode.setAttribute("src", "https://example.test/s25.gif");
+    gifNode.classList.add("size-full", "object-contain");
+    innerFrame.appendChild(gifNode);
+    fixedWrapper.appendChild(innerFrame);
+    shadowRoot.appendChild(fixedWrapper);
+
+    const mutations = [{
+      type: "childList",
+      target: shadowRoot,
+      addedNodes: [fixedWrapper],
+      removedNodes: [],
+    }];
+    shadowMutationTarget.__mutationObservers.forEach((observer) => observer.callback(mutations));
+    timers.advance(25);
+
+    assert.equal(fixedWrapper.style.width, `${hostNode.__rect.width.toFixed(2)}px`);
+    assert.equal(fixedWrapper.style.height, `${hostNode.__rect.height.toFixed(2)}px`);
+    assert.equal(fixedWrapper.style.overflow, "hidden");
+    assert.equal(innerFrame.style.width, "100%");
+    assert.equal(innerFrame.style.height, "100%");
+    assert.equal(gifNode.style.width, "100%");
+    assert.equal(gifNode.style.height, "100%");
+    assert.equal(gifNode.style.objectFit, "contain");
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
 test("native correction click pauses zoom until the next dart", () => {
   const f = startModernZoom();
   try {

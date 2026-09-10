@@ -1931,6 +1931,7 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   const hasAppliedTransform =
     targetNode.classList.contains(ZOOM_CLASS) &&
     Boolean(String(getStyleValue(targetNode.style, "transform") || "").trim());
+  applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
   if (
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
@@ -1941,7 +1942,6 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   }
 
   applyZoomHostState(state, hostNode);
-  applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
 
   if (!targetNode.classList.contains(ZOOM_CLASS)) {
     targetNode.classList.add(ZOOM_CLASS);
