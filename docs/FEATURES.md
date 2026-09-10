@@ -6,7 +6,9 @@
 - `17` Animationen und Komfortfunktionen
 - `3` Themes
 
-Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
+Die gesamte Steuerung läuft über **xConfig** direkt im Spiel. Öffne rechts oben über dein Profilbild das Benutzermenü; der Eintrag befindet sich direkt unter `Legal` und vor `Tools for Autodarts`. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
+
+![xConfig direkt unter Legal im Autodarts-Benutzermenü](screenshots/ad-xconfig-menu-location.png)
 
 ## Hinweise zur Konfiguration
 

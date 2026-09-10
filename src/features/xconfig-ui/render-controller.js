@@ -177,57 +177,74 @@ function syncMenuLabelVisibility(controller, item = null) {
   if (!label) {
     return;
   }
-  label.style.display = "inline";
+  label.style.display = "";
 }
 
-function resolveSidebarTemplate(controller, sidebar, insertionAnchor) {
-  return [
-    insertionAnchor,
-    ...Array.from(sidebar.querySelectorAll?.("a[href], button, [role='button']") || []),
-    sidebar.lastElementChild,
-  ].find((node) => {
-    return Boolean(node) &&
-      node.id !== controller.menuItemId &&
-      !node.closest?.(`#${controller.panelHostId}`) &&
-      String(node.dataset?.adxconfigTab || "").trim() === "";
+function findSideMenuLegalAnchor(controller) {
+  return Array.from(controller.documentRef.querySelectorAll?.("a[href]") || []).find((item) => {
+    const route = controller.toRoutePathname(controller.windowRef, item.getAttribute?.("href"));
+    return route === "/legal" && Boolean(item.closest?.("[data-slot='drawer-popup']"));
   }) || null;
+}
+
+function createMenuIcon(controller, templateIcon = null) {
+  const svg = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "currentColor");
+  svg.setAttribute("aria-hidden", "true");
+  const templateIconClass = String(templateIcon?.getAttribute?.("class") || "").trim();
+  svg.setAttribute(
+    "class",
+    templateIconClass ? `${templateIconClass} ad-xconfig-menu-icon` : "ad-xconfig-menu-icon"
+  );
+
+  const path = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute(
+    "d",
+    "M3 6.5A1.5 1.5 0 0 1 4.5 5h10A1.5 1.5 0 0 1 16 6.5v1A1.5 1.5 0 0 1 14.5 9h-10A1.5 1.5 0 0 1 3 7.5zm0 10A1.5 1.5 0 0 1 4.5 15h6A1.5 1.5 0 0 1 12 16.5v1a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 17.5zM18 4a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0 10a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3"
+  );
+  svg.appendChild(path);
+  return svg;
+}
+
+function syncSideMenuContent(controller, item, template) {
+  const media = item.querySelector?.("[data-slot='item-media']");
+  const templateIcon = template.querySelector?.("[data-slot='item-media'] svg") || null;
+  const icon = createMenuIcon(controller, templateIcon);
+  if (media) {
+    media.replaceChildren(icon);
+  }
+
+  let label = item.querySelector?.("[data-slot='item-title']") || null;
+  if (!label) {
+    label = controller.createElement(controller.documentRef, "span");
+    item.appendChild(label);
+  }
+  label.classList?.add?.("ad-xconfig-menu-label");
+  label.textContent = controller.menuLabel;
 }
 
 function ensureMenuButton(controller) {
-  const sidebar = controller.getSidebarElement(controller.windowRef, controller.documentRef, {
-    panelHostId: controller.panelHostId,
-    sidebarRouteHints: controller.sidebarRouteHints,
-  });
-  if (!sidebar) {
+  const insertionAnchor = findSideMenuLegalAnchor(controller);
+  let item = controller.documentRef.getElementById?.(controller.menuItemId);
+  if (!insertionAnchor) {
+    item?.remove?.();
     return null;
   }
 
-  const sidebarItems = Array.from(sidebar.querySelectorAll("a[href], button, [role='button']"));
-  const sidebarLinks = sidebarItems.filter((item) => item.getAttribute?.("href"));
-  const statsAnchor = sidebarItems.find((item) => {
-    const route = controller.toRoutePathname(controller.windowRef, item.getAttribute?.("href"));
-    const label = String(item.textContent || "").trim().toLowerCase();
-    return route === "/statistics" || route === "/stats" || label === "stats" || label === "statistik";
-  }) || null;
-  const boardsAnchor =
-    sidebarLinks.find((link) => controller.toRoutePathname(controller.windowRef, link.getAttribute("href")) === "/boards") ||
-    sidebarLinks.find((link) => String(link.textContent || "").trim().toLowerCase() === "meine boards") ||
-    null;
-  const insertionAnchor =
-    statsAnchor ||
-    boardsAnchor ||
-    sidebarLinks.find((link) => controller.sidebarRouteHints.has(controller.toRoutePathname(controller.windowRef, link.getAttribute("href")))) ||
-    null;
-  const template = resolveSidebarTemplate(controller, sidebar, insertionAnchor);
-
-  let item = controller.documentRef.getElementById?.(controller.menuItemId);
+  const menuContainer = insertionAnchor.parentElement;
+  const template = insertionAnchor;
   const shouldRebuildExistingItem =
     Boolean(item) &&
     (
+      item.parentElement !== menuContainer ||
       Boolean(item.closest?.(`#${controller.panelHostId}`)) ||
       item.getAttribute?.("data-adxconfig-tab") !== null ||
       String(item.getAttribute?.("data-adxconfig-action") || "").trim() !== "open" ||
-      !item.querySelector?.(".ad-xconfig-menu-label")
+      !item.querySelector?.(".ad-xconfig-menu-label") ||
+      !item.querySelector?.(".ad-xconfig-menu-icon")
     );
   if (shouldRebuildExistingItem) {
     item.remove?.();
@@ -235,14 +252,10 @@ function ensureMenuButton(controller) {
   }
 
   if (!item) {
-    item = template ? template.cloneNode(true) : controller.createElement(controller.documentRef, "button", { type: "button" });
-    const label = controller.createElement(controller.documentRef, "span", {
-      className: "ad-xconfig-menu-label",
-      text: controller.menuLabel,
-    });
-    item.textContent = "";
-    item.replaceChildren(label);
+    item = template.cloneNode(true);
   }
+
+  syncSideMenuContent(controller, item, template);
 
   item.id = controller.menuItemId;
   item.classList?.remove?.("ad-xconfig-tab");
@@ -260,24 +273,8 @@ function ensureMenuButton(controller) {
     item.setAttribute("type", "button");
   }
 
-  const labelNode = item.querySelector?.(".ad-xconfig-menu-label");
-  if (!labelNode) {
-    const label = controller.createElement(controller.documentRef, "span", {
-      className: "ad-xconfig-menu-label",
-      text: controller.menuLabel,
-    });
-    item.replaceChildren(label);
-  } else {
-    labelNode.textContent = controller.menuLabel;
-    item.replaceChildren(labelNode);
-  }
-
-  if (insertionAnchor) {
-    if (insertionAnchor.nextElementSibling !== item) {
-      insertionAnchor.after(item);
-    }
-  } else if (item.parentNode !== sidebar) {
-    sidebar.appendChild(item);
+  if (insertionAnchor.nextElementSibling !== item) {
+    insertionAnchor.after(item);
   }
 
   syncMenuButtonState(controller);

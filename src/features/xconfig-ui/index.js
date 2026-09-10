@@ -647,6 +647,23 @@ function ensureXConfigShell(options = {}) {
       return true;
     }
 
+    const touchesSideMenu = mutations.some((mutation) => {
+      return [...Array.from(mutation?.addedNodes || []), ...Array.from(mutation?.removedNodes || [])]
+        .some((node) => {
+          if (node?.nodeType !== 1) {
+            return false;
+          }
+          return Boolean(
+            node.matches?.("[data-slot='drawer-popup']") ||
+            node.matches?.("a[href='/legal']") ||
+            node.querySelector?.("a[href='/legal']")
+          );
+        });
+    });
+    if (touchesSideMenu) {
+      return true;
+    }
+
     return hasShellNavigationOrLayoutMutation(mutations, {
       menuItemId: MENU_ITEM_ID,
       panelHostId: PANEL_HOST_ID,
@@ -879,6 +896,17 @@ function ensureXConfigShell(options = {}) {
     }
 
     event.preventDefault?.();
+    if (insideMenuButton && action === "open") {
+      const drawer = actionNode.closest?.("[data-slot='drawer-popup'][role='dialog']");
+      const drawerId = String(drawer?.id || "").trim();
+      if (drawerId) {
+        const drawerTrigger = Array.from(documentRef.querySelectorAll("button[aria-controls]")).find((button) => {
+          return button.getAttribute?.("aria-controls") === drawerId &&
+            button.getAttribute?.("aria-expanded") === "true";
+        }) || null;
+        drawerTrigger?.click?.();
+      }
+    }
     const featureKey = actionNode.dataset?.featureKey || "";
     const feature = getFeatures().find((entry) => entry.featureKey === featureKey) || null;
     handleAction(action, actionNode, feature);

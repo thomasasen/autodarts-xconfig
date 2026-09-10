@@ -229,6 +229,31 @@ export function getAllScoreNodes(documentRef, options = {}) {
   return queryAll(rootNode, SCORE_SELECTOR);
 }
 
+function resolveActivePlayerIndex(gameState) {
+  return gameState && typeof gameState.getActivePlayerIndex === "function"
+    ? Number(gameState.getActivePlayerIndex())
+    : Number.NaN;
+}
+
+function getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot) {
+  const activeScores = playerSurfaceSnapshot.players
+    .filter((player) => player?.isActive)
+    .map((player) => player?.scoreNode || null)
+    .filter(Boolean);
+  if (activeScores.length) {
+    return activeScores;
+  }
+
+  const activePlayerIndex = resolveActivePlayerIndex(gameState);
+  if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
+    const activeScore = playerSurfaceSnapshot.players[activePlayerIndex]?.scoreNode || null;
+    return activeScore ? [activeScore] : [];
+  }
+
+  const allScores = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
+  return allScores.length === 1 ? allScores : [];
+}
+
 export function getScoreNodes(documentRef, gameState = null, options = {}) {
   const { playerSurfaceSnapshot, rootNode } = resolveScoreLookupSurface(documentRef, options);
   if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
@@ -236,25 +261,7 @@ export function getScoreNodes(documentRef, gameState = null, options = {}) {
   }
 
   if (playerSurfaceSnapshot?.source === X01_PLAYER_SURFACE_SOURCE_MODERN) {
-    const activeScores = playerSurfaceSnapshot.players
-      .filter((player) => player?.isActive)
-      .map((player) => player?.scoreNode || null)
-      .filter(Boolean);
-    if (activeScores.length) {
-      return activeScores;
-    }
-
-    const activePlayerIndex =
-      gameState && typeof gameState.getActivePlayerIndex === "function"
-        ? Number(gameState.getActivePlayerIndex())
-        : Number.NaN;
-    if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
-      const activeScore = playerSurfaceSnapshot.players[activePlayerIndex]?.scoreNode || null;
-      return activeScore ? [activeScore] : [];
-    }
-
-    const allScores = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
-    return allScores.length === 1 ? allScores : [];
+    return getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot);
   }
 
   const activeScores = queryAll(rootNode, ACTIVE_SCORE_SELECTOR);
@@ -263,10 +270,7 @@ export function getScoreNodes(documentRef, gameState = null, options = {}) {
   }
 
   const allScores = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
-  const activePlayerIndex =
-    gameState && typeof gameState.getActivePlayerIndex === "function"
-      ? Number(gameState.getActivePlayerIndex())
-      : Number.NaN;
+  const activePlayerIndex = resolveActivePlayerIndex(gameState);
   if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
     const playerRows = playerSurfaceSnapshot?.playerDisplayRoot
       ? playerSurfaceSnapshot.playerCards.filter((rowNode) =>

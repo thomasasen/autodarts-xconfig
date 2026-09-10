@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.9] - 2026-09-10
+
+### Changed
+
+- Nutzerwirkung: `xConfig` befindet sich jetzt im seitlichen Benutzermenü direkt unter `Legal`, verwendet wieder das frühere xConfig-Symbol und ist dort mit einem neuen Menüausschnitt in der Dokumentation leichter auffindbar.
+  Technik: Der Menüeintrag übernimmt die native Drawer-Darstellung, schließt den Drawer beim Öffnen von xConfig und wird nach einem erneuten Mount des Benutzermenüs automatisch wiederhergestellt.
+
+### Fixed
+
+- Nutzerwirkung: GIF-Effekte aus `Tools for Autodarts` bleiben beim `TV Board Zoom` innerhalb der sichtbaren Board-Fläche und folgen dem aktiven Zoom auch dann zuverlässig, wenn die Animation erst nachträglich erscheint oder gewechselt wird.
+  Technik: Die Zoom-Laufzeit begrenzt erkannte GIF-Overlays auf den Board-Host und beobachtet den Animation-Shadow-DOM auf neue sowie geänderte Medien, ohne fremde Stile dauerhaft zu überschreiben.
+- Nutzerwirkung: Keine sichtbare Änderung.
+  Technik: Die Ermittlung der aktiven X01-Punktanzeige wurde in kleinere Hilfsfunktionen aufgeteilt, um den offenen SonarQube-Wartbarkeitsbefund ohne Verhaltensänderung zu beseitigen.
+
 ## [3.0.8] - 2026-09-10
 
 ### Changed
@@ -2050,6 +2064,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.8...v3.0.9
 [3.0.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.7...v3.0.8
 [3.0.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.6...v3.0.7
 [3.0.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.5...v3.0.6

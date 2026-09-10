@@ -6,10 +6,10 @@ Abschluss der UI-/UX-Parität für die bestehende Bundle-Architektur ohne Rückk
 
 ## Umgesetzte UI-Korrekturen
 
-- Sidebar-Menüeintrag `AD xConfig` wird idempotent direkt in die vorhandene Navigation eingefügt.
+- Der Menüeintrag `xConfig` wird idempotent im seitlichen Benutzermenü direkt unter `Legal` eingefügt und verwendet wieder das frühere xConfig-Symbol.
 - Menü- und Panel-Injektion bleiben stabil bei Mutation, Re-Render und Start-/Stop-Zyklen.
 - Interne xConfig-Mutationen triggern keine Observer-Feedbackschleifen.
-- Schmale Sidebars blenden das Label kontrolliert aus.
+- Beim Öffnen von xConfig wird das seitliche Benutzermenü geschlossen; bei dessen erneutem Mount wird der Eintrag automatisch wiederhergestellt.
 - Kartenlayout, Tabs und Toggles orientieren sich an der Legacy-UX, bleiben aber Bundle-only.
 - Karten besitzen Preview-Hintergründe, README-Links und klar erkennbare `An`-/`Aus`-Schalter.
 - Settings-Modal unterstützt Checkboxen, Selects, Theme-Bild-Upload/Clear und Feature-Aktionen.

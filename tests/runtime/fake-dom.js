@@ -1196,6 +1196,34 @@ function createSidebarLink(documentRef, href, label) {
   return link;
 }
 
+function createDrawerLink(documentRef, href, label) {
+  const link = documentRef.createElement("a");
+  link.setAttribute("href", href);
+  link.setAttribute("data-slot", "item");
+  link.classList.add("group/item", "autodarts-side-menu-item");
+
+  const media = documentRef.createElement("div");
+  media.setAttribute("data-slot", "item-media");
+  const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.classList.add("size-5", "text-foreground");
+  svg.appendChild(documentRef.createElementNS("http://www.w3.org/2000/svg", "path"));
+  media.appendChild(svg);
+
+  const content = documentRef.createElement("div");
+  content.setAttribute("data-slot", "item-content");
+  const title = documentRef.createElement("div");
+  title.setAttribute("data-slot", "item-title");
+  title.textContent = label;
+  content.appendChild(title);
+
+  const chevron = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  chevron.classList.add("side-menu-chevron");
+  link.appendChild(media);
+  link.appendChild(content);
+  link.appendChild(chevron);
+  return link;
+}
+
 class FakeDocument extends FakeEventTarget {
   constructor(options = {}) {
     super();
@@ -1249,6 +1277,26 @@ class FakeDocument extends FakeEventTarget {
     this.layoutShell.appendChild(this.main);
     this.rootElement.appendChild(this.layoutShell);
     this.body.appendChild(this.rootElement);
+
+    if (options.withUserMenu === true) {
+      this.userMenuTrigger = this.createElement("button");
+      this.userMenuTrigger.setAttribute("aria-controls", "fake-user-menu");
+      this.userMenuTrigger.setAttribute("aria-expanded", "true");
+      this.rootElement.appendChild(this.userMenuTrigger);
+
+      this.userMenuDialog = this.createElement("div");
+      this.userMenuDialog.id = "fake-user-menu";
+      this.userMenuDialog.setAttribute("role", "dialog");
+      this.userMenuDialog.setAttribute("data-slot", "drawer-popup");
+      this.userMenuDialog.setAttribute("data-open", "");
+      this.userMenuList = this.createElement("div");
+      this.userMenuList.setAttribute("role", "list");
+      this.userMenuList.setAttribute("data-slot", "item-group");
+      this.legalLink = createDrawerLink(this, "/legal", "Legal");
+      this.userMenuList.appendChild(this.legalLink);
+      this.userMenuDialog.appendChild(this.userMenuList);
+      this.body.appendChild(this.userMenuDialog);
+    }
 
     this.variantElement = new FakeElement("div");
     this.variantElement.ownerDocument = this;

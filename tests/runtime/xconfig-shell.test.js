@@ -33,7 +33,13 @@ import {
 } from "../../src/features/checkout-score-highlight/style.js";
 import { initializeTampermonkeyRuntime } from "../../src/runtime/bootstrap-runtime.js";
 import { ELECTRIC_FILTER_DEFS_NODE_ID } from "../../src/shared/electric-border-engine.js";
-import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument } from "./fake-dom.js";
+import { FakeEvent, FakeStorage, createFakeWindow, FakeDocument as BaseFakeDocument } from "./fake-dom.js";
+
+class FakeDocument extends BaseFakeDocument {
+  constructor(options = {}) {
+    super({ ...options, withUserMenu: true });
+  }
+}
 
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 function wait(ms = 0) {
@@ -285,28 +291,13 @@ function getUrlWithoutQuery(url) {
   return parsed.toString();
 }
 
-test("xConfig shell injects after Stats, clones its presentation, opens route and closes safely", async () => {
+test("xConfig shell injects below Legal with its legacy icon, opens route and closes the drawer", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
-  const statsTemplate = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
-    .find((link) => String(link.getAttribute("href") || "") === "/stats");
-  assert.ok(statsTemplate);
-  statsTemplate.classList.remove("chakra-link");
-  statsTemplate.classList.add("autodarts-main-menu-item", "text-inactive");
-  const lobbiesLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
-    .find((link) => String(link.getAttribute("href") || "") === "/lobbies");
-  assert.ok(lobbiesLink);
-  lobbiesLink.className = "autodarts-main-menu-item text-active";
-  lobbiesLink.setAttribute("aria-current", "page");
-  lobbiesLink.setAttribute("data-status", "active");
-  lobbiesLink.__rect = { left: 20, width: 70, height: 64 };
-  documentRef.sidebar.__rect = { left: 10, width: 500, height: 64 };
-  const nativeIndicator = documentRef.createElement("div");
-  nativeIndicator.setAttribute("aria-hidden", "true");
-  nativeIndicator.classList.add("pointer-events-none", "absolute", "bottom-0");
-  nativeIndicator.style.left = "10px";
-  nativeIndicator.style.width = "70px";
-  documentRef.sidebar.appendChild(nativeIndicator);
+  let drawerCloseClicks = 0;
+  documentRef.userMenuTrigger.addEventListener("click", () => {
+    drawerCloseClicks += 1;
+  });
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
@@ -324,16 +315,15 @@ test("xConfig shell injects after Stats, clones its presentation, opens route an
   assert.equal(menuButton.getAttribute("data-adxconfig-action"), "open");
   assert.equal(menuButton.getAttribute("aria-label"), "xConfig");
   assert.equal(String(menuButton.querySelector(".ad-xconfig-menu-label")?.textContent || "").trim(), "xConfig");
-  assert.equal(menuButton.querySelector("svg"), null);
-  assert.equal(menuButton.querySelector(".ad-xconfig-menu-icon"), null);
+  const menuIcon = menuButton.querySelector(".ad-xconfig-menu-icon");
+  assert.ok(menuIcon);
+  assert.equal(menuIcon.querySelector("path")?.getAttribute("d")?.startsWith("M3 6.5"), true);
+  assert.ok(menuButton.querySelector(".side-menu-chevron"));
   assert.ok(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID));
-  const statsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
-    .find((link) => String(link.getAttribute("href") || "") === "/stats");
-  assert.ok(statsLink);
-  assert.equal(statsLink.nextElementSibling, menuButton);
-  assert.ok(menuButton.classList.contains("autodarts-main-menu-item"));
-  assert.equal(menuButton.classList.contains("chakra-link"), false);
-  menuButton.__rect = { left: 390, width: 68, height: 64 };
+  assert.equal(documentRef.legalLink.nextElementSibling, menuButton);
+  assert.equal(menuButton.parentElement, documentRef.userMenuList);
+  assert.ok(menuButton.classList.contains("autodarts-side-menu-item"));
+  assert.equal(documentRef.sidebar.contains(menuButton), false);
 
   menuButton.click();
   await waitForShellOpen(windowRef, documentRef);
@@ -341,31 +331,8 @@ test("xConfig shell injects after Stats, clones its presentation, opens route an
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "#ad-xconfig");
   assert.equal(menuButton.getAttribute("aria-current"), "page");
-  assert.equal(menuButton.className, "autodarts-main-menu-item text-active");
-  assert.equal(lobbiesLink.className, "autodarts-main-menu-item text-inactive");
-  assert.equal(lobbiesLink.getAttribute("aria-current"), null);
-  assert.equal(lobbiesLink.getAttribute("data-status"), null);
-  assert.equal(nativeIndicator.style.left, "380px");
-  assert.equal(nativeIndicator.style.width, "68px");
+  assert.equal(drawerCloseClicks, 1);
   assert.equal(documentRef.variantElement.style.display, "none");
-
-  const replacementIndicator = documentRef.createElement("div");
-  replacementIndicator.setAttribute("aria-hidden", "true");
-  replacementIndicator.classList.add("pointer-events-none", "absolute", "bottom-0");
-  replacementIndicator.style.left = "10px";
-  replacementIndicator.style.width = "70px";
-  nativeIndicator.remove();
-  documentRef.sidebar.appendChild(replacementIndicator);
-  documentRef.flushMutations([{
-    target: documentRef.sidebar,
-    addedNodes: [replacementIndicator],
-    removedNodes: [nativeIndicator],
-  }]);
-  await waitFor(() => replacementIndicator.style.left === "380px");
-
-  assert.equal(menuButton.className, "autodarts-main-menu-item text-active");
-  assert.equal(lobbiesLink.getAttribute("aria-current"), null);
-  assert.equal(replacementIndicator.style.width, "68px");
 
   const panelHost = documentRef.getElementById("ad-xconfig-panel-host");
   assert.ok(panelHost);
@@ -377,12 +344,6 @@ test("xConfig shell injects after Stats, clones its presentation, opens route an
   assert.equal(windowRef.location.pathname, "/lobbies");
   assert.equal(windowRef.location.hash, "");
   assert.equal(menuButton.getAttribute("aria-current"), null);
-  assert.equal(menuButton.className, "autodarts-main-menu-item text-inactive");
-  assert.equal(lobbiesLink.className, "autodarts-main-menu-item text-active");
-  assert.equal(lobbiesLink.getAttribute("aria-current"), "page");
-  assert.equal(lobbiesLink.getAttribute("data-status"), "active");
-  assert.equal(replacementIndicator.style.left, "10px");
-  assert.equal(replacementIndicator.style.width, "70px");
   assert.equal(panelHost.style.display, "none");
   assert.equal(documentRef.variantElement.style.display, "");
 
@@ -515,7 +476,7 @@ test("xConfig shell does not hijack external links that accidentally reuse xConf
   runtime.stop();
 });
 
-test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => {
+test("xConfig shell repairs a corrupted side-menu node on sync", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -542,10 +503,37 @@ test("xConfig shell repairs a corrupted sidebar menu node on sync", async () => 
   assert.ok(label);
   assert.equal(String(label.textContent || "").trim(), "xConfig");
 
-  const statsLink = Array.from(documentRef.sidebar.querySelectorAll("a[href]"))
-    .find((link) => String(link.getAttribute("href") || "") === "/stats");
-  assert.ok(statsLink);
-  assert.equal(statsLink.nextElementSibling, repaired);
+  assert.equal(documentRef.legalLink.nextElementSibling, repaired);
+  assert.equal(repaired.parentElement, documentRef.userMenuList);
+
+  runtime.stop();
+});
+
+test("xConfig shell restores the menu item when the user drawer is remounted", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  const previousDialog = documentRef.userMenuDialog;
+  const replacementDialog = previousDialog.cloneNode(true);
+  replacementDialog.querySelector("#ad-xconfig-menu-item")?.remove();
+  previousDialog.remove();
+  documentRef.body.appendChild(replacementDialog);
+  documentRef.flushMutations([{
+    target: documentRef.body,
+    addedNodes: [replacementDialog],
+    removedNodes: [previousDialog],
+  }]);
+
+  await waitForMenuButton(documentRef);
+  const replacementLegalLink = replacementDialog.querySelector("a[href='/legal']");
+  const replacementMenuButton = replacementDialog.querySelector("#ad-xconfig-menu-item");
+  assert.ok(replacementLegalLink);
+  assert.ok(replacementMenuButton);
+  assert.equal(replacementLegalLink.nextElementSibling, replacementMenuButton);
+  assert.ok(replacementMenuButton.querySelector(".ad-xconfig-menu-icon"));
 
   runtime.stop();
 });
@@ -786,7 +774,7 @@ test("xConfig settings modal keeps container identity while applying setting upd
   runtime.stop();
 });
 
-test("xConfig menu injection stays idempotent and keeps its text visible without an icon", async () => {
+test("xConfig side-menu injection stays idempotent and keeps its label and icon", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -802,12 +790,12 @@ test("xConfig menu injection stays idempotent and keeps its text visible without
   documentRef.sidebar.__rect = { width: 96, height: 720 };
   documentRef.flushMutations();
   assert.equal(documentRef.querySelectorAll("#ad-xconfig-menu-item").length, 1);
-  assert.equal(label.style.display, "inline");
-  assert.equal(documentRef.querySelector("#ad-xconfig-menu-item .ad-xconfig-menu-icon"), null);
+  assert.equal(label.style.display, "");
+  assert.ok(documentRef.querySelector("#ad-xconfig-menu-item .ad-xconfig-menu-icon"));
 
   documentRef.sidebar.__rect = { width: 260, height: 720 };
   documentRef.flushMutations();
-  assert.equal(label.style.display, "inline");
+  assert.equal(label.style.display, "");
   runtime.stop();
 });
 

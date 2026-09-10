@@ -2,9 +2,9 @@ import { shouldHandleExternalDomMutation } from "../../core/dom-mutation-filter.
 
 function observeRootController(controller) {
   const target =
-    controller.documentRef.getElementById?.("root") ||
     controller.documentRef.documentElement ||
     controller.documentRef.body ||
+    controller.documentRef.getElementById?.("root") ||
     null;
 
   if (!target || typeof controller.observerRegistry?.registerMutationObserver !== "function") {

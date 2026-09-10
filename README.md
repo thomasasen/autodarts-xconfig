@@ -22,7 +22,7 @@ Die folgenden Screenshots zeigen teilweise noch das frühere Design und werden s
    [![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js)
 
 4. Öffne die heruntergeladene Datei `autodarts-xconfig.user.js` und bestätige die Installation in Tampermonkey.
-5. Lade `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu und öffne in der Navigation **AD xConfig**.
+5. Lade `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle dort direkt unter `Legal` den Eintrag **xConfig**.
 
 **Installiere immer nur die Datei `autodarts-xconfig.user.js`.** Der Button lädt automatisch die neueste stabile Version herunter.
 
@@ -42,7 +42,7 @@ Die Screenshots und Bezeichnungen in dieser Anleitung stammen aus einem Chrome-/
 
 `autodarts-xconfig` ergänzt Autodarts um Themes, Animationen und kleine Komfortfunktionen. Du kannst damit das Spiel übersichtlicher machen und die Oberfläche nach deinem Geschmack anpassen.
 
-Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts programmieren und keine Dateien ändern.
+Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag rechts oben im Benutzermenü direkt unter `Legal`. Du musst nichts programmieren und keine Dateien ändern.
 
 ## Was bringt es mir?
 
@@ -72,13 +72,19 @@ Alles wird direkt im Spiel im Menü **AD xConfig** eingestellt. Du musst nichts 
 
 Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
 
-1. Öffne in der Autodarts-Navigation **AD xConfig**.
+1. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle direkt unter `Legal` den Eintrag **xConfig**.
 2. Stelle unter `Themen` Hintergrund und Schrift global ein oder wende eine Vorlage an.
 3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne globales Wallpaper oder Dart-Upload beginnen möchtest.
 4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigenes Wallpaper und Dart-Upload bleiben dabei erhalten.
 
 ![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
 ![AD xConfig Animationenübersicht](docs/screenshots/ad-xconfig-animationen.png)
+
+### Wo öffne ich xConfig?
+
+Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xConfig** direkt unter `Legal` und unmittelbar vor dem Bereich `Tools for Autodarts`. Der folgende zugeschnittene Menüausschnitt zeigt die neue Position.
+
+![xConfig direkt unter Legal im Autodarts-Benutzermenü](docs/screenshots/ad-xconfig-menu-location.png)
 
 ## Wenn AD xConfig nicht erscheint
 
@@ -87,7 +93,7 @@ Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Ei
 3. In den Browsererweiterungen bei Tampermonkey `Nutzerscripts zulassen` und `Zugriff auf Datei-URLs zulassen` aktivieren.
 4. Falls Tampermonkey beim Installieren oder Aktualisieren einen zusätzlichen Tab geöffnet hat, die Installation dort vollständig bestätigen.
 5. Wenn ein Injection-Hinweis erscheint, die empfohlene Browser-Einstellung übernehmen.
-6. Danach erneut in der Navigation nach **AD xConfig** suchen.
+6. Danach rechts oben das Benutzermenü über das Profilbild öffnen und direkt unter `Legal` nach **xConfig** suchen.
 
 ## Wo finde ich was?
 
@@ -124,7 +130,7 @@ Erst `Import bestätigen` schreibt die geprüfte Konfiguration. Bei unlesbarem J
 ## Updates erkennen und installieren
 
 1. AD xConfig prüft direkt beim Start und danach regelmäßig im Hintergrund, ob auf GitHub eine neuere Version verfügbar ist. Wegen Zwischenspeicherung wird ohne Klick auf `Neu prüfen` höchstens ungefähr einmal pro Stunde wirklich online verglichen.
-2. Wenn ein Update verfügbar ist, erscheinen ein orangefarbener Punkt am Menüpunkt **AD xConfig** und die Meldung `Update verfügbar` im geöffneten Menü.
+2. Wenn ein Update verfügbar ist, erscheinen ein orangefarbener Punkt am Menüpunkt **xConfig** im Benutzermenü und die Meldung `Update verfügbar` im geöffneten xConfig-Menü.
 3. `Was ist neu?` öffnet den Changelog, damit du die Änderungen vor der Installation prüfen kannst.
 4. `Update installieren` öffnet die vollständige Userscript-Datei. Bestätige anschließend die Aktualisierung in Tampermonkey.
 
