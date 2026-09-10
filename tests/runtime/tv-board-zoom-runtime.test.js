@@ -194,6 +194,26 @@ test("native correction click pauses zoom until the next dart", () => {
   } finally { f.stop(); }
 });
 
+test("native correction undo reapplies the same zoom before zoom-out completes", () => {
+  const f = startModernZoom();
+  try {
+    f.timers.advance(25);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+
+    f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
+    f.score.textContent = "61";
+    f.setVisit(["T20"], ["25", "D18"]);
+    f.tick();
+    assert.equal(f.board.style.transform || "", "");
+
+    f.score.textContent = "36";
+    f.setVisit(["T20", "25"], ["D18"]);
+    f.tick();
+
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
 test("native Bust and leaving the match immediately remove active zoom", () => {
   for (const exit of ["bust", "variant", "leave"]) {
     const f = startModernZoom();

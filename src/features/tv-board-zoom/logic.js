@@ -1928,10 +1928,14 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
     state.lastAppliedIntentSignature === zoomData.intentSignature;
+  const hasAppliedTransform =
+    targetNode.classList.contains(ZOOM_CLASS) &&
+    String(getStyleValue(targetNode.style, "transform") || "").trim() === composedTransform;
   if (
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
-    state.lastAppliedSignature === zoomData.signature
+    state.lastAppliedSignature === zoomData.signature &&
+    hasAppliedTransform
   ) {
     return zoomData;
   }
