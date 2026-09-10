@@ -19,6 +19,10 @@ import {
   createDartboardMarkerHighlightState,
   updateDartboardMarkerHighlight,
 } from "../../src/features/dartboard-marker-highlight/logic.js";
+import {
+  BASE_CLASS as DARTBOARD_MARKER_BASE_CLASS,
+  EFFECT_CLASSES as DARTBOARD_MARKER_EFFECT_CLASSES,
+} from "../../src/features/dartboard-marker-highlight/style.js";
 import { initializeSpecialHitHighlights } from "../../src/features/special-hit-highlights/index.js";
 import {
   buildStyleText,
@@ -125,6 +129,30 @@ function appendLayeredBoardFixture(documentRef) {
   documentRef.main.appendChild(markerSvg);
 
   return { ...board, markerSvg, markerGroup };
+}
+
+function appendModernNativeBoardFixture(documentRef) {
+  const board = appendBoardFixture(documentRef);
+  const nativeBoard = documentRef.createElement("div");
+  nativeBoard.setAttribute("role", "img");
+  nativeBoard.setAttribute("aria-label", "Dartboard");
+  nativeBoard.appendChild(board.svg);
+
+  ["0 0 1281.3 1281.3", "0 0 1281.3 1281.3"].forEach((viewBox) => {
+    const decorativeSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+    decorativeSvg.setAttribute("viewBox", viewBox);
+    nativeBoard.appendChild(decorativeSvg);
+  });
+
+  const markerSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  markerSvg.setAttribute("viewBox", "0 0 1000 1000");
+  const markerGroup = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  markerGroup.setAttribute("transform", "translate(500, 500)");
+  markerSvg.appendChild(markerGroup);
+  nativeBoard.appendChild(markerSvg);
+  documentRef.main.appendChild(nativeBoard);
+
+  return { ...board, nativeBoard, markerSvg, markerGroup };
 }
 
 function appendModernCheckoutSuggestion(documentRef, text, left, top) {
@@ -4521,6 +4549,61 @@ test("dartboard-marker-highlight skips marker writes when visual and hidden stat
 
   assert.equal(writeCount, 0);
   clearDartboardMarkerHighlight(state);
+});
+
+test("dartboard-marker-highlight styles and restores the modern native marker layer", () => {
+  const documentRef = new FakeDocument();
+  const firstBoard = appendModernNativeBoardFixture(documentRef);
+  const firstMarker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  firstMarker.setAttribute("cx", "12");
+  firstMarker.setAttribute("cy", "-300");
+  firstMarker.setAttribute("r", "4");
+  firstMarker.setAttribute("filter", "url(#_r_2e_-shadow)");
+  firstBoard.markerGroup.appendChild(firstMarker);
+
+  const state = createDartboardMarkerHighlightState();
+  const visualConfig = {
+    markerSize: 9,
+    markerColor: "rgb(248, 113, 113)",
+    effect: "soft-glow",
+    opacity: 1,
+    outlineColor: "rgb(255, 255, 255)",
+  };
+
+  updateDartboardMarkerHighlight({ documentRef, state, visualConfig });
+
+  assert.equal(firstMarker.getAttribute("r"), "9");
+  assert.equal(firstMarker.style.fill, "rgb(248, 113, 113)");
+  assert.equal(firstMarker.style.stroke, "rgb(255, 255, 255)");
+  assert.equal(firstMarker.classList.contains(DARTBOARD_MARKER_BASE_CLASS), true);
+  assert.equal(
+    firstMarker.classList.contains(DARTBOARD_MARKER_EFFECT_CLASSES["soft-glow"]),
+    true
+  );
+
+  firstBoard.nativeBoard.remove();
+  const replacementBoard = appendModernNativeBoardFixture(documentRef);
+  const replacementMarker = documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  replacementMarker.setAttribute("cx", "175");
+  replacementMarker.setAttribute("cy", "-253");
+  replacementMarker.setAttribute("r", "4");
+  replacementMarker.setAttribute("filter", "url(#_r_3a_-shadow)");
+  replacementBoard.markerGroup.appendChild(replacementMarker);
+
+  updateDartboardMarkerHighlight({ documentRef, state, visualConfig });
+
+  assert.equal(firstMarker.getAttribute("r"), "4");
+  assert.equal(firstMarker.style.fill, "");
+  assert.equal(firstMarker.classList.contains(DARTBOARD_MARKER_BASE_CLASS), false);
+  assert.equal(replacementMarker.getAttribute("r"), "9");
+  assert.equal(replacementMarker.classList.contains(DARTBOARD_MARKER_BASE_CLASS), true);
+
+  clearDartboardMarkerHighlight(state);
+
+  assert.equal(replacementMarker.getAttribute("r"), "4");
+  assert.equal(replacementMarker.style.fill, "");
+  assert.equal(replacementMarker.style.stroke, "");
+  assert.equal(replacementMarker.classList.contains(DARTBOARD_MARKER_BASE_CLASS), false);
 });
 
 test("game state store suppresses identical consecutive websocket state payloads", () => {

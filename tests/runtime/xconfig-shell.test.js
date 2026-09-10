@@ -23,6 +23,10 @@ import {
   EFFECT_CLASSES as DARTBOARD_MARKER_HIGHLIGHT_EFFECT_CLASSES,
 } from "../../src/features/dartboard-marker-highlight/style.js";
 import {
+  ARROW_HALF_WIDTH_VAR as AVG_TREND_ARROW_HALF_WIDTH_VAR,
+  ARROW_HEIGHT_VAR as AVG_TREND_ARROW_HEIGHT_VAR,
+} from "../../src/features/avg-trend-arrow/style.js";
+import {
   EFFECT_CLASSES as CHECKOUT_SCORE_HIGHLIGHT_EFFECT_CLASSES,
   HIGHLIGHT_CLASS as CHECKOUT_SCORE_HIGHLIGHT_HIGHLIGHT_CLASS,
   STYLE_VARIABLES as CHECKOUT_SCORE_HIGHLIGHT_STYLE_VARIABLES,
@@ -1507,7 +1511,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
 
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "dart-marker-replacer", "take-out-darts-alert",
+    const expectedStatus = ["bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
       "single-bull-hit-sound", "special-hit-highlights", "x01-remaining-score-bar", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
@@ -2840,6 +2844,8 @@ test("xConfig avg-trend-arrow settings expose real arrow preview hosts", async (
     assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-arrow"), true);
     assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-visible"), true);
     assert.equal(arrowNode.classList.contains("ad-ext-avg-trend-up"), true);
+    assert.match(arrowNode.style.getPropertyValue(AVG_TREND_ARROW_HALF_WIDTH_VAR), /em$/);
+    assert.match(arrowNode.style.getPropertyValue(AVG_TREND_ARROW_HEIGHT_VAR), /em$/);
     assert.equal(
       Array.from(optionNode.querySelector(".ad-xconfig-option-layout--avg-trend-arrow").children)
         .indexOf(previewNode) <

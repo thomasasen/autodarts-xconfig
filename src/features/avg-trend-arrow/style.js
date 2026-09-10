@@ -10,19 +10,19 @@ export const ARROW_HEIGHT_VAR = "--ad-ext-avg-trend-arrow-height-base";
 
 const SIZE_PRESETS = Object.freeze({
   klein: {
-    marginLeftPx: 4,
-    arrowHalfWidthPx: 4,
-    arrowHeightPx: 6,
+    marginLeft: "0.18em",
+    arrowHalfWidth: "0.25em",
+    arrowHeight: "0.4em",
   },
   standard: {
-    marginLeftPx: 6,
-    arrowHalfWidthPx: 5.5,
-    arrowHeightPx: 8.8,
+    marginLeft: "0.24em",
+    arrowHalfWidth: "0.32em",
+    arrowHeight: "0.52em",
   },
   gross: {
-    marginLeftPx: 8,
-    arrowHalfWidthPx: 6.6,
-    arrowHeightPx: 11,
+    marginLeft: "0.3em",
+    arrowHalfWidth: "0.4em",
+    arrowHeight: "0.66em",
   },
 });
 
@@ -53,14 +53,16 @@ export function buildStyleText(options = {}) {
 
   return `
 .${ARROW_CLASS} {
-  ${ARROW_MARGIN_LEFT_VAR}: ${size.marginLeftPx}px;
-  ${ARROW_HALF_WIDTH_VAR}: ${size.arrowHalfWidthPx}px;
-  ${ARROW_HEIGHT_VAR}: ${size.arrowHeightPx}px;
+  ${ARROW_MARGIN_LEFT_VAR}: ${size.marginLeft};
+  ${ARROW_HALF_WIDTH_VAR}: ${size.arrowHalfWidth};
+  ${ARROW_HEIGHT_VAR}: ${size.arrowHeight};
   display: inline-block;
   width: 0;
   height: 0;
   margin-left: var(${ARROW_MARGIN_LEFT_VAR});
-  vertical-align: middle;
+  vertical-align: 0.08em;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.28));
   opacity: 0;
   transition: opacity 120ms ease-out;
 }

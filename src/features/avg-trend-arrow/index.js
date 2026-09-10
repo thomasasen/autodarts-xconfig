@@ -42,6 +42,7 @@ export function initializeAvgTrendArrow(context = {}) {
     update: () => {
       updateAvgTrendArrows({
         documentRef,
+        windowRef,
         lastValueByNode,
         arrowByAverageNode,
         timeoutByArrow,

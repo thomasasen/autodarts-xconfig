@@ -2158,8 +2158,8 @@ function buildAvgTrendArrowOptionPreview(documentRef, field, optionValue) {
       [AVG_TREND_PREVIEW_ATTRIBUTE]: "true",
     },
   });
-  arrow.style.setProperty(ARROW_HALF_WIDTH_VAR, `${size.arrowHalfWidthPx}px`);
-  arrow.style.setProperty(ARROW_HEIGHT_VAR, `${size.arrowHeightPx}px`);
+  arrow.style.setProperty(ARROW_HALF_WIDTH_VAR, size.arrowHalfWidth);
+  arrow.style.setProperty(ARROW_HEIGHT_VAR, size.arrowHeight);
   arrow.style.setProperty("--ad-xconfig-avg-trend-preview-duration", `${durationMs}ms`);
   preview.appendChild(arrow);
   return preview;
