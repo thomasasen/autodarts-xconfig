@@ -737,16 +737,5 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
   50% { opacity: 0.72; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  ${HIT_SURFACE_SELECTOR},
-  ${hitEffectLayerSelector()},
-  ${hitFrameLayerSelector()},
-  ${HIT_SURFACE_SELECTOR} .${HIT_SCORE_CLASS},
-  ${HIT_SURFACE_SELECTOR} .${HIT_SEGMENT_CLASS} {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-}
 `;
 }

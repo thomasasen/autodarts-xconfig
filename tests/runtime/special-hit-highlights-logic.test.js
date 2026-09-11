@@ -899,6 +899,42 @@ test("electric-jolt timeline keeps subtle frame jitter and moderated score spaci
   );
 });
 
+test("selected hit animations still play when the browser prefers reduced motion", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.matchMedia = () => ({ matches: true });
+  const trackedRows = new Set();
+  const signatureByRow = new Map();
+  const burstKeyBySlot = new Map();
+  const activeAnimeByRow = new Map();
+  const roleStateByRow = new Map();
+  const animeRef = createAnimeStub();
+
+  documentRef.throwTextElement.textContent = "60 T20";
+  documentRef.throwRow.textContent = "60 T20";
+
+  updateHitDecorations({
+    documentRef,
+    windowRef,
+    trackedRows,
+    signatureByRow,
+    burstKeyBySlot,
+    activeAnimeByRow,
+    roleStateByRow,
+    animeRef,
+    featureConfig: {
+      colorTheme: "volt-lime",
+      animationStyle: "electric-jolt",
+    },
+  });
+
+  const play = animeRef._calls.findLast((entry) => entry.type === "timeline-play");
+  const rowStep = play?.steps.find((entry) => entry.step?.targets === documentRef.throwRow);
+
+  assert.ok(play);
+  assert.equal(rowStep?.step?.duration, 760);
+});
+
 test("burst trigger class is removed automatically after the replay window", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

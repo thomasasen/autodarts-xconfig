@@ -473,18 +473,6 @@ function annotateHitTextRoles(rowNode, hitMeta, roleStateByRow = null) {
   };
 }
 
-function prefersReducedMotion(windowRef = null) {
-  if (!windowRef || typeof windowRef.matchMedia !== "function") {
-    return false;
-  }
-
-  try {
-    return Boolean(windowRef.matchMedia("(prefers-reduced-motion: reduce)")?.matches);
-  } catch (_) {
-    return false;
-  }
-}
-
 function isLoopAnimationStyle() {
   return false;
 }
@@ -1359,8 +1347,7 @@ export function applyHitDecoration(rowNode, options = {}) {
     };
   }
 
-  const reducedMotion = prefersReducedMotion(windowRef);
-  const idleLoopActive = isLoopAnimationStyle() && !reducedMotion;
+  const idleLoopActive = isLoopAnimationStyle();
   const signature = [hitMeta.kind, hitMeta.segment, colorTheme, animationStyle].join("|");
   const burstKey = getRowBurstKey(rowNode, rowIndex) || `${rowIndex}|${rowText}`;
   const lastBurstKey = burstKeyBySlot?.get?.(rowIndex) || "";
@@ -1404,7 +1391,6 @@ export function applyHitDecoration(rowNode, options = {}) {
       triggerResetTimersByRow,
       windowRef,
       animationStyle,
-      reducedMotion,
     });
   }
 

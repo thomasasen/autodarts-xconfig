@@ -119,10 +119,5 @@ export function buildStyleText(visualConfig = {}) {
   50% { transform: scale(${pulseScale}); opacity: 0.95; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .${CARD_CLASS} {
-    animation: none !important;
-  }
-}
 `;
 }

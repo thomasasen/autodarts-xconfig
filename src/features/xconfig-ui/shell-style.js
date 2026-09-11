@@ -575,8 +575,6 @@ ${buildX01RemainingScoreBarSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remainin
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-settings-section-body--theme-presets{grid-template-columns:1fr}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-font-picker-current{grid-template-columns:minmax(0,1fr) auto;gap:8px}#${PANEL_HOST_ID} .ad-xconfig-font-picker-current-preview{gap:.45rem}#${PANEL_HOST_ID} .ad-xconfig-font-option-list,#${PANEL_HOST_ID} .ad-xconfig-turn-dart-asset-option-list{grid-template-columns:1fr;max-height:min(24rem,52vh)}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-color-controls{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"swatch picker reset" "code code code"}#${PANEL_HOST_ID} .ad-xconfig-color-swatch{grid-area:swatch}#${PANEL_HOST_ID} .ad-xconfig-color-picker{grid-area:picker}#${PANEL_HOST_ID} .ad-xconfig-color-code{grid-area:code}#${PANEL_HOST_ID} .ad-xconfig-mini-btn--color-reset{grid-area:reset;justify-self:end}}
-@media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::before,#${PANEL_HOST_ID} .ad-xconfig-option-item--effect-preview::after{animation:none!important;transform:none!important;transition:none!important}}
-
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary{background:var(--adx-primary);border-color:var(--adx-primary)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary:hover{background:var(--color-blue-70,#003eb3)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{background:rgba(218,57,84,.12);border-color:#da3954}
