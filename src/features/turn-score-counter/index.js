@@ -11,6 +11,7 @@ import {
 import {
   collectScoreNodes,
   isNodeWithinActiveScoreAnimation,
+  releaseManagedScoreNodes,
   stopAnimation,
   updateTurnScore,
 } from "./logic.js";
@@ -19,6 +20,10 @@ import {
   createTurnSurfaceObserveOptions,
   findTurnContainer,
 } from "../shared/turn-surface-adapter.js";
+import {
+  MODERN_TURN_SELECTOR,
+  findModernTurnSurface,
+} from "../shared/x01-match-surface.js";
 
 const FEATURE_KEY = "turn-score-counter";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -34,6 +39,7 @@ export function initializeTurnScoreCounter(context = {}) {
   const domGuards = context.domGuards;
   const gameState = context.gameState;
   const config = context.config;
+  const featureDebug = context.featureDebug || null;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
   if (!documentRef || typeof schedulerFactory !== "function") {
@@ -61,11 +67,14 @@ export function initializeTurnScoreCounter(context = {}) {
     flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
     scoreNodeCache: [],
+    modernScoreNode: null,
   };
   let animeRef = getAnime(windowRef);
   let odometerPluginRef = getOdometer();
   let disposed = false;
   let electricDefsRetained = false;
+  let observedModernTurn = null;
+  let lastDebugSignature = "";
 
   if (domGuards && typeof domGuards.ensureStyle === "function") {
     domGuards.ensureStyle(STYLE_ID, buildStyleText());
@@ -74,6 +83,7 @@ export function initializeTurnScoreCounter(context = {}) {
   }
 
   function update() {
+    observedModernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
     updateTurnScore({
       documentRef,
       state,
@@ -86,20 +96,42 @@ export function initializeTurnScoreCounter(context = {}) {
       odometerPluginRef,
       windowRef,
     });
+
+    if (featureDebug?.enabled && typeof featureDebug.log === "function") {
+      let source = "none";
+      if (observedModernTurn) {
+        source = "modern";
+      } else if (findTurnContainer(documentRef)) {
+        source = "legacy";
+      }
+      const values = state.scoreNodeCache
+        .map((node) => String(node?.textContent || "").trim())
+        .join("|");
+      const signature = `${source}:${state.scoreNodeCache.length}:${values}`;
+      if (signature !== lastDebugSignature) {
+        lastDebugSignature = signature;
+        featureDebug.log(
+          `state surface="${source}" scores=${state.scoreNodeCache.length} value="${values || "-"}"`
+        );
+      }
+    }
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
-  const initialScoreNode = collectScoreNodes(documentRef, state)[0] || null;
+  observedModernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
+  const initialScoreNode = collectScoreNodes(documentRef, state, { windowRef })[0] || null;
   const scoreContainer = initialScoreNode?.closest?.("#ad-ext-turn")
     ? initialScoreNode.parentElement || null
     : null;
   const rootNode =
     scoreContainer ||
+    observedModernTurn?.closest?.("main") ||
     findTurnContainer(documentRef) ||
     documentRef.documentElement ||
     documentRef.body ||
     documentRef;
   const observerUsesScoreContainer = Boolean(scoreContainer && rootNode === scoreContainer);
+  const observerUsesModernRoot = Boolean(observedModernTurn && !scoreContainer);
   const isWithinObserverRoot = (node) => {
     if (!node) {
       return false;
@@ -115,6 +147,26 @@ export function initializeTurnScoreCounter(context = {}) {
     }
     if (observerUsesScoreContainer) {
       return isWithinObserverRoot(node);
+    }
+    const elementNode = Number(node?.nodeType) === 3 ? node?.parentNode || null : node;
+    if (observedModernTurn && elementNode) {
+      if (
+        elementNode === observedModernTurn ||
+        observedModernTurn.contains?.(elementNode) ||
+        elementNode.contains?.(observedModernTurn)
+      ) {
+        return true;
+      }
+    }
+    if (
+      elementNode?.matches?.(MODERN_TURN_SELECTOR) ||
+      elementNode?.closest?.(MODERN_TURN_SELECTOR) ||
+      elementNode?.querySelector?.(MODERN_TURN_SELECTOR)
+    ) {
+      return true;
+    }
+    if (observerUsesModernRoot) {
+      return false;
     }
     return Boolean(node?.closest?.("#ad-ext-turn") || isWithinObserverRoot(node));
   };
@@ -241,8 +293,9 @@ export function initializeTurnScoreCounter(context = {}) {
       odometerPluginRef,
       windowRef,
     });
-    const scoreNodes = collectScoreNodes(documentRef);
+    const scoreNodes = collectScoreNodes(documentRef, state, { windowRef });
     scoreNodes.forEach((node) => stopAnimation(node, state, windowRef));
+    releaseManagedScoreNodes(state);
     if (domGuards && typeof domGuards.removeNodeById === "function") {
       domGuards.removeNodeById(STYLE_ID);
     }

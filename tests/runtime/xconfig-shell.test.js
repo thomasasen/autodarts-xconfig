@@ -1610,7 +1610,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
-      "single-bull-hit-sound", "special-hit-highlights", "x01-remaining-score-bar", "cricket-target-highlighter",
+      "single-bull-hit-sound", "special-hit-highlights", "turn-score-counter", "x01-remaining-score-bar", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
     )

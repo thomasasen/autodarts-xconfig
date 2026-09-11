@@ -18,6 +18,7 @@ import {
   buildStyleText,
 } from "../../src/features/turn-score-counter/style.js";
 import { FakeDocument, createFakeTimerHarness, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function createState() {
   return {
@@ -31,6 +32,7 @@ function createState() {
     flashRafByNode: new Map(),
     flashTimeoutByNode: new Map(),
     scoreNodeCache: [],
+    modernScoreNode: null,
   };
 }
 
@@ -228,6 +230,31 @@ function createMountHarness(options = {}) {
 function moveTurnScoreIntoTurnContainer(documentRef) {
   documentRef.turnContainer.appendChild(documentRef.turnScoreElement);
   return createTurnScoreFrame(documentRef);
+}
+
+function appendModernTurnScoreText(fixture, value = "85") {
+  const scoreNode = fixture.node(
+    fixture.total,
+    "span",
+    "text-[min(2.5rem,40cqw)]",
+    String(value)
+  );
+  fixture.total.textContent = String(value);
+  return scoreNode;
+}
+
+function appendModernTurnSurface(fixture, value = "0") {
+  const turn = fixture.node(fixture.documentRef.main, "div", "flex bg-surface-surface");
+  const slots = fixture.node(turn, "div", "flex items-stretch justify-evenly");
+  Array.from({ length: 3 }, () => fixture.node(slots, "div", "font-number"));
+  const total = fixture.node(turn, "div", "font-number", String(value));
+  const scoreNode = fixture.node(
+    total,
+    "span",
+    "text-[min(2.5rem,40cqw)]",
+    String(value)
+  );
+  return { turn, total, scoreNode };
 }
 
 test("turn-score-counter keeps flash frame for a short afterglow after score animation completes", async () => {
@@ -925,6 +952,85 @@ test("turn-score-counter caches the discovered score node until it is detached",
 
   assert.deepEqual(collectScoreNodes(documentRef, state), [replacementNode]);
   assert.equal(scoreQueryCount, 2);
+});
+
+test("turn-score-counter discovers only the modern turn total text node", () => {
+  const fixture = createModernX01Fixture();
+  const state = createState();
+  const scoreNode = appendModernTurnScoreText(fixture);
+
+  assert.deepEqual(
+    collectScoreNodes(fixture.documentRef, state, { windowRef: fixture.windowRef }),
+    [scoreNode]
+  );
+  assert.equal(scoreNode.classList.contains("ad-ext-turn-points"), true);
+  assert.equal(fixture.total.classList.contains("ad-ext-turn-points"), false);
+  fixture.rows.forEach(({ row }) => {
+    assert.equal(row.classList.contains("ad-ext-turn-points"), false);
+  });
+  assert.equal(fixture.score.classList.contains("ad-ext-turn-points"), false);
+});
+
+test("turn-score-counter animates modern turn totals and observes the stable main surface", () => {
+  const fixture = createModernX01Fixture();
+  const scoreNode = appendModernTurnScoreText(fixture);
+  const harness = createMountHarness({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+  });
+  const callback = harness.observerProbe.state.registration?.callback;
+  const initialScheduleCount = harness.scheduleCounter.count;
+
+  assert.equal(harness.observerProbe.state.registration?.target, fixture.documentRef.main);
+
+  scoreNode.textContent = "145";
+  callback([{ type: "characterData", target: { nodeType: 3, parentNode: scoreNode } }]);
+
+  assert.equal(harness.scheduleCounter.count, initialScheduleCount + 1);
+  assert.equal(harness.animeRef.calls.length, 1);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  assert.equal(fixture.total.classList.contains(SCORE_FRAME_CLASS), true);
+
+  harness.cleanup();
+  assert.equal(scoreNode.classList.contains("ad-ext-turn-points"), false);
+});
+
+test("turn-score-counter follows a replaced modern turn surface", () => {
+  const fixture = createModernX01Fixture();
+  const originalScoreNode = appendModernTurnScoreText(fixture);
+  const originalTurn = fixture.turn;
+  const harness = createMountHarness({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+  });
+  const callback = harness.observerProbe.state.registration?.callback;
+
+  originalTurn.remove();
+  const replacement = appendModernTurnSurface(fixture, "0");
+  callback([
+    {
+      type: "childList",
+      target: fixture.documentRef.main,
+      addedNodes: [replacement.turn],
+      removedNodes: [originalTurn],
+    },
+  ]);
+
+  assert.equal(originalScoreNode.classList.contains("ad-ext-turn-points"), false);
+  assert.equal(replacement.scoreNode.classList.contains("ad-ext-turn-points"), true);
+
+  replacement.scoreNode.textContent = "60";
+  callback([
+    {
+      type: "characterData",
+      target: { nodeType: 3, parentNode: replacement.scoreNode },
+    },
+  ]);
+
+  assert.equal(harness.animeRef.calls.length, 1);
+  assert.equal(replacement.total.classList.contains(SCORE_FRAME_CLASS), true);
+
+  harness.cleanup();
 });
 
 test("turn-score-counter observes the score container when it is present in the turn surface", () => {

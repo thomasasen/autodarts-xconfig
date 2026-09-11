@@ -12,6 +12,18 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.11] - 2026-09-12
+
+### Changed
+
+- Nutzerwirkung: `Punkte animiert zählen` unterstützt die neue Autodarts-Spieloberfläche und wird in xConfig nicht mehr als `Deprecated` geführt. Der Turn-Gesamtwert zählt weiterhin sichtbar hoch oder herunter, ohne Spielerpunkte oder Checkout-Vorschläge zu verändern.
+  Technik: Die Laufzeit verwendet die gemeinsame moderne Turn-Surface, animiert ausschließlich den inneren Zahlenknoten und folgt einem Austausch der nativen Turn-Leiste. Gezielte Regressionstests sichern Erkennung, Animation, Cleanup und DOM-Erneuerung ab.
+
+### Fixed
+
+- Nutzerwirkung: Der Hinweis auf ein verfügbares Update steht im Benutzermenü direkt neben der Beschriftung `xConfig` und überlagert keine anderen Inhalte.
+  Technik: Der Statuspunkt ist an die Menübeschriftung statt an die gesamte Menüzeile gebunden; ein fokussierter Shell-Test sichert die Positionierungsregel ab.
+
 ## [3.0.10] - 2026-09-11
 
 ### Changed
@@ -2078,6 +2090,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.10...v3.0.11
 [3.0.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.9...v3.0.10
 [3.0.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.8...v3.0.9
 [3.0.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.7...v3.0.8

@@ -6,6 +6,7 @@ import {
   SCORE_SELECTOR,
 } from "./style.js";
 import { CountUp } from "../../vendors/countUp.min.js";
+import { findModernTurnSurface } from "../shared/x01-match-surface.js";
 
 const COUNT_EFFECT_SMOOTH = "smooth-count";
 const COUNT_EFFECT_ROLLING = "rolling-digits";
@@ -70,11 +71,50 @@ function isValidCachedScoreNode(node) {
   return node.classList?.contains?.(SCORE_CLASS_NAME) === true;
 }
 
-export function collectScoreNodes(documentRef, state = null) {
+function resolveModernScoreNode(documentRef, windowRef) {
+  const turnSurface = findModernTurnSurface(documentRef, windowRef);
+  const scoreFrameNode = turnSurface?.turnScoreNode || null;
+  if (!scoreFrameNode) {
+    return null;
+  }
+
+  const directTextNode = Array.from(scoreFrameNode.children || []).find((node) => {
+    return /^-?\d+$/.test(String(node?.textContent || "").trim());
+  });
+  return directTextNode || scoreFrameNode;
+}
+
+function syncModernScoreNode(documentRef, state, windowRef) {
+  if (!state) {
+    return null;
+  }
+
+  const nextNode = resolveModernScoreNode(documentRef, windowRef);
+  const previousNode = state.modernScoreNode || null;
+  if (previousNode && previousNode !== nextNode) {
+    previousNode.classList?.remove?.(SCORE_CLASS_NAME);
+  }
+  if (nextNode) {
+    nextNode.classList?.add?.(SCORE_CLASS_NAME);
+  }
+  state.modernScoreNode = nextNode;
+  return nextNode;
+}
+
+export function collectScoreNodes(documentRef, state = null, options = {}) {
+  const modernScoreNode = syncModernScoreNode(
+    documentRef,
+    state,
+    options.windowRef || documentRef?.defaultView
+  );
   const cachedNodes = Array.isArray(state?.scoreNodeCache)
     ? state.scoreNodeCache
     : [];
-  if (cachedNodes.length > 0 && cachedNodes.every(isValidCachedScoreNode)) {
+  if (
+    cachedNodes.length > 0 &&
+    cachedNodes.every(isValidCachedScoreNode) &&
+    (!modernScoreNode || cachedNodes.includes(modernScoreNode))
+  ) {
     return cachedNodes;
   }
 
@@ -89,6 +129,15 @@ export function collectScoreNodes(documentRef, state = null) {
     state.scoreNodeCache = scoreNodes;
   }
   return scoreNodes;
+}
+
+export function releaseManagedScoreNodes(state) {
+  const modernScoreNode = state?.modernScoreNode || null;
+  modernScoreNode?.classList?.remove?.(SCORE_CLASS_NAME);
+  if (state) {
+    state.modernScoreNode = null;
+    state.scoreNodeCache = [];
+  }
 }
 
 function resolveFrameNode(scoreNode) {
@@ -618,7 +667,7 @@ export function updateTurnScore(options = {}) {
     return;
   }
 
-  const scoreNodes = collectScoreNodes(documentRef, state);
+  const scoreNodes = collectScoreNodes(documentRef, state, { windowRef });
   const nodeSet = new Set(scoreNodes);
 
   state.lastValueByNode.forEach((_value, node) => {
