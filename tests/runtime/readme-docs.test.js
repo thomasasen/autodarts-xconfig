@@ -14,6 +14,7 @@ import {
 } from "../../src/features/xconfig-ui/copy.js";
 import { createRecommendedFeatureConfig } from "../../src/config/feature-config-spec.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
+import { getXConfigSectionMeta } from "../../src/features/xconfig-ui/sections.js";
 
 const readmePath = path.resolve(process.cwd(), "README.md");
 const featuresDocPath = path.resolve(process.cwd(), "docs", "FEATURES.md");
@@ -38,18 +39,7 @@ const releaseQaDocPath = path.resolve(
 const runtimeEntrypointsDocPath = path.resolve(process.cwd(), "docs", "RUNTIME-ENTRYPOINTS.md");
 const performanceAuditDocPath = path.resolve(process.cwd(), "docs", "PERFORMANCE-AUDIT.md");
 const deprecatedOverviewScreenshotPattern = /ad-xconfig\.png/;
-const requiredReadmeOverviewScreenshots = [
-  "docs/screenshots/ad-xconfig-themen.png",
-  "docs/screenshots/ad-xconfig-animationen.png",
-  "docs/screenshots/ad-xconfig-header.png",
-  "docs/screenshots/ad-xconfig-kachel.png",
-  "docs/screenshots/ad-xconfig-einstellungen.png",
-  "docs/screenshots/ad-xconfig-theme-background.png",
-];
-const requiredFeaturesOverviewScreenshots = [
-  "screenshots/ad-xconfig-themen.png",
-  "screenshots/ad-xconfig-animationen.png",
-];
+const staleXConfigUiScreenshotPattern = /ad-xconfig-(?:themen|animationen|header)\.png/;
 const mojibakePattern =
   /\u00C3\u00A4|\u00C3\u00B6|\u00C3\u00BC|\u00C3\u009F|\u00C3\u0084|\u00C3\u0096|\u00C3\u009C/;
 const featureDefinitionByKey = new Map(
@@ -67,8 +57,12 @@ function resolveRecommendedConfig(featureKey) {
 }
 const overviewCounts = {
   totalModules: xconfigDescriptors.length,
-  animationModules: xconfigDescriptors.filter((descriptor) => descriptor.tab !== "themes").length,
-  themeModules: xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes").length,
+  animationModules: xconfigDescriptors.filter(
+    (descriptor) => getXConfigSectionMeta(descriptor.featureKey).sectionId !== "template"
+  ).length,
+  themeModules: xconfigDescriptors.filter(
+    (descriptor) => getXConfigSectionMeta(descriptor.featureKey).sectionId === "template"
+  ).length,
   themeImageLimit: "1,5 MiB",
 };
 
@@ -123,12 +117,10 @@ test("README screenshot paths exist in docs/screenshots", () => {
   });
 });
 
-test("README uses the current AD xConfig overview screenshots", () => {
+test("README removes stale tab and header screenshots", () => {
   const readme = readText(readmePath);
 
-  requiredReadmeOverviewScreenshots.forEach((screenshotPath) => {
-    assert.match(readme, new RegExp(escapeRegExp(screenshotPath)));
-  });
+  assert.doesNotMatch(readme, staleXConfigUiScreenshotPattern);
 });
 
 test("README and FEATURES no longer reference the deprecated AD xConfig overview screenshot", () => {
@@ -310,12 +302,10 @@ test("FEATURES doc screenshot paths exist in docs/screenshots", () => {
   });
 });
 
-test("FEATURES uses the current AD xConfig overview screenshots", () => {
+test("FEATURES removes stale tab and header screenshots", () => {
   const featuresDoc = readText(featuresDocPath);
 
-  requiredFeaturesOverviewScreenshots.forEach((screenshotPath) => {
-    assert.match(featuresDoc, new RegExp(escapeRegExp(screenshotPath)));
-  });
+  assert.doesNotMatch(featuresDoc, staleXConfigUiScreenshotPattern);
 });
 
 test("FEATURES doc contains the generated xConfig feature sections and all setting explanations", () => {

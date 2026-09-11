@@ -241,7 +241,6 @@ function ensureMenuButton(controller) {
     (
       item.parentElement !== menuContainer ||
       Boolean(item.closest?.(`#${controller.panelHostId}`)) ||
-      item.getAttribute?.("data-adxconfig-tab") !== null ||
       String(item.getAttribute?.("data-adxconfig-action") || "").trim() !== "open" ||
       !item.querySelector?.(".ad-xconfig-menu-label") ||
       !item.querySelector?.(".ad-xconfig-menu-icon")
@@ -258,8 +257,6 @@ function ensureMenuButton(controller) {
   syncSideMenuContent(controller, item, template);
 
   item.id = controller.menuItemId;
-  item.classList?.remove?.("ad-xconfig-tab");
-  item.removeAttribute?.("data-adxconfig-tab");
   item.setAttribute("role", "button");
   item.setAttribute("tabindex", "0");
   item.setAttribute("aria-label", controller.menuLabel);

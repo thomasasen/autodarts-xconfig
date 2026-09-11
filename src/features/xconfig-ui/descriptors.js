@@ -179,7 +179,6 @@ function animationDescriptorEntry(definition) {
   const fields = Array.isArray(definition.fields) ? definition.fields : [];
   return descriptorEntry({
     ...definition,
-    tab: "animations",
     fields: [...fields, DEBUG_FIELD],
   });
 }
@@ -228,7 +227,7 @@ const TURN_DART_STYLE_OPTIONS = Object.freeze([
   { value: "original", label: "Original" },
   { value: "solid", label: "Farbe" },
   { value: "gradient", label: "Verlauf" },
-  { value: "preset", label: "Marker-Bild" },
+  { value: "preset", label: "Dart-Bild" },
   { value: "image", label: "Eigenes Bild" },
 ]);
 
@@ -237,7 +236,7 @@ const TURN_DART_SIZE_OPTIONS = Object.freeze([
   { value: 115, label: "Standard" },
   { value: 135, label: "Groß" },
 ]);
-const DEBUG_FIELD = checkboxField("debug", "Debug");
+const DEBUG_FIELD = checkboxField("debug", "Diagnose");
 
 const THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS = Object.freeze([
   Object.freeze({
@@ -276,19 +275,17 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELDS = Object.freeze(
 export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
     featureKey: "theme-global-presets",
-    tab: "themes",
     readmeAnchor: "theme-global-presets",
     cardType: "action",
     fields: THEME_GLOBAL_TEMPLATE_PRESET_FIELDS,
   }),
   descriptorEntry({
     featureKey: "theme-global-background",
-    tab: "themes",
     readmeAnchor: "theme-global-background",
     fields: [
-      selectField("backgroundDisplayMode", "Hintergrund-Darstellung", BACKGROUND_DISPLAY_OPTIONS),
-      selectField("backgroundOpacity", "Hintergrundbild-Deckkraft", BACKGROUND_OPACITY_OPTIONS),
-      selectField("playerFieldTransparency", "Spielerfelder-Transparenz", PLAYER_FIELD_TRANSPARENCY_OPTIONS),
+      selectField("backgroundDisplayMode", "Bildanpassung", BACKGROUND_DISPLAY_OPTIONS),
+      selectField("backgroundOpacity", "Sichtbarkeit des Hintergrundbilds", BACKGROUND_OPACITY_OPTIONS),
+      selectField("playerFieldTransparency", "Durchsichtigkeit der Spielerfelder", PLAYER_FIELD_TRANSPARENCY_OPTIONS),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
         description: "Speichert ein globales Hintergrundbild für alle Spielansichten.",
       }),
@@ -301,32 +298,31 @@ export const xconfigDescriptors = Object.freeze([
   }),
   descriptorEntry({
     featureKey: "theme-global-typography",
-    tab: "themes",
     readmeAnchor: "template-global-typography",
-    description: "Template-weite Typografie für stabile Score-, Wurf- und Namensbereiche.",
+    description: "Spielübergreifende Schrift und Farben für Scores, Würfe und Namen.",
     fields: [
       selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS, {
         section: "Schrift",
       }),
-      selectField("applyTo", "Greift bei", THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS, {
+      selectField("applyTo", "Schrift anwenden auf", THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS, {
         multiple: true,
         section: "Schrift",
       }),
-      colorField("accentColor", "Aktiv-Akzent", {
+      colorField("accentColor", "Farbe des aktiven Spielers", {
         section: "Farben",
       }),
-      colorField("scoreColor", "Hauptzahlen", {
+      colorField("scoreColor", "Score-Farbe", {
         section: "Farben",
       }),
-      colorField("secondaryTextColor", "Sekundärtext", {
+      colorField("secondaryTextColor", "Namen und Statistiken", {
         section: "Farben",
       }),
-      colorField("throwLabelColor", "Wurf-/Checkout-Text", {
+      colorField("throwLabelColor", "Wurf- und Checkout-Hinweise", {
         section: "Farben",
       }),
       selectField(
         "activePlayerTintIntensity",
-        "Aktivspieler-Tönung",
+        "Hintergrund des aktiven Spielers",
         ACTIVE_PLAYER_TINT_INTENSITY_OPTIONS,
         {
           section: "Farben",
@@ -340,7 +336,7 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "bot-board-style",
     fields: [
       selectField("design", "Board-Design", BOARD_STYLE_DESIGN_OPTIONS),
-      selectField("scope", "Geltungsbereich", [
+      selectField("scope", "Anwenden auf", [
         { value: "bot-turns", label: "Nur bei Bot-Zügen" },
         { value: "all-match-boards", label: "Alle Match-Boards" },
       ]),
@@ -356,7 +352,7 @@ export const xconfigDescriptors = Object.freeze([
       colorField("turnDartColor", "Dart-Farbe"),
       colorField("turnDartGradientColor", "Verlaufsfarbe"),
       selectField("turnDartSizePercent", "Dart-Größe", TURN_DART_SIZE_OPTIONS),
-      checkboxField("turnDartShineEnabled", "Dart-Glanz"),
+      checkboxField("turnDartShineEnabled", "Leuchteffekt"),
       actionField("uploadTurnDartImage", "Dart-Bild hochladen", {
         description: "Empfohlen: transparentes PNG oder WebP, horizontal und eng zugeschnitten. Das Bild wird lokal auf maximal 960×240 optimiert und bis 350 KB gespeichert.",
       }),
@@ -371,24 +367,24 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-checkout-score-highlight",
     description: "Hebt finishfähige Restwerte in X01 sichtbar hervor.",
     fields: [
-      selectField("effect", "Effekt", [
-        { value: "grow-glow", label: "Grow + Glow" },
-        { value: "glow-only", label: "Glow Only" },
-        { value: "grow-only", label: "Grow Only" },
-        { value: "fade-blink", label: "Fade Blink" },
+      selectField("effect", "Animation", [
+        { value: "grow-glow", label: "Vergrößern & leuchten" },
+        { value: "glow-only", label: "Nur leuchten" },
+        { value: "grow-only", label: "Nur vergrößern" },
+        { value: "fade-blink", label: "Sanft blinken" },
       ]),
-      selectField("colorTheme", "Farbthema", [
+      selectField("colorTheme", "Farbe", [
         colorPreviewOption("159, 219, 88", "Autodarts Grün", "checkout-score-autodarts-green"),
         colorPreviewOption("56, 189, 248", "Cyan", "checkout-score-cyan"),
         colorPreviewOption("245, 158, 11", "Amber", "checkout-score-amber"),
         colorPreviewOption("248, 113, 113", "Rot", "checkout-score-red"),
       ]),
-      selectField("intensity", "Intensität", [
+      selectField("intensity", "Stärke", [
         { value: "dezent", label: "Dezent" },
         { value: "standard", label: "Standard" },
         { value: "stark", label: "Stark" },
       ]),
-      selectField("triggerSource", "Trigger-Quelle", [
+      selectField("triggerSource", "Finish-Erkennung", [
         { value: "suggestion-first", label: "Vorschlag zuerst" },
         { value: "score-only", label: "Nur Score" },
         { value: "suggestion-only", label: "Nur Vorschlag" },
@@ -421,12 +417,12 @@ export const xconfigDescriptors = Object.freeze([
         { value: "breit", label: "Breit" },
         { value: "extrabreit", label: "Extrabreit" },
       ]),
-      selectField("effect", "Effekt", [
-        { value: "bar-pulse", label: "Bar Pulse" },
-        { value: "glass-light-sweep", label: "Glass Light Sweep" },
-        { value: "moving-segments", label: "Moving Segments" },
-        { value: "previous-score-trail", label: "Previous Score Trail" },
-        { value: "fast-signal-sweep", label: "Fast Signal Sweep" },
+      selectField("effect", "Animation", [
+        { value: "bar-pulse", label: "Balken pulsieren" },
+        { value: "glass-light-sweep", label: "Lichtlauf" },
+        { value: "moving-segments", label: "Laufende Segmente" },
+        { value: "previous-score-trail", label: "Vorherigen Stand anzeigen" },
+        { value: "fast-signal-sweep", label: "Schneller Lichtlauf" },
         { value: "off", label: "Aus" },
       ]),
     ],
@@ -436,12 +432,12 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-checkout-target-highlights",
     description: "Markiert sinnvolle Checkout-Ziele direkt am Board.",
     fields: [
-      selectField("visualPreset", "Darstellung", [
-        { value: "soft-pulse", label: "Soft Pulse" },
-        { value: "fast-blink", label: "Fast Blink" },
-        { value: "slow-glow", label: "Slow Glow" },
+      selectField("visualPreset", "Animation", [
+        { value: "soft-pulse", label: "Sanft pulsieren" },
+        { value: "fast-blink", label: "Schnell blinken" },
+        { value: "slow-glow", label: "Langsam leuchten" },
       ]),
-      selectField("segmentStyle", "Segmentstil", [
+      selectField("segmentStyle", "Art der Hervorhebung", [
         { value: "surface-outline", label: "Fläche + Rahmen" },
         { value: "surface-only", label: "Nur Fläche" },
       ]),
@@ -450,7 +446,7 @@ export const xconfigDescriptors = Object.freeze([
         { value: "all", label: "Alle Felder" },
         { value: "finish", label: "Nur Finish" },
       ]),
-      selectField("colorTheme", "Farbthema", [
+      selectField("colorTheme", "Farbe", [
         colorPreviewOption("violet", "Violett", "checkout-board-violet"),
         colorPreviewOption("cyan", "Cyan", "checkout-board-cyan"),
         colorPreviewOption("amber", "Amber", "checkout-board-amber"),
@@ -465,10 +461,10 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-tv-board-zoom",
     description: "Zoomt bei klaren Checkout- und Setup-Situationen TV-artig auf Zielbereiche.",
     fields: [
-      selectField("zoomLevel", "Zoom-Stufe", [
-        { value: 2.35, label: "2,35" },
-        { value: 2.75, label: "2,75" },
-        { value: 3.15, label: "3,15" },
+      selectField("zoomLevel", "Zoomstärke", [
+        { value: 2.35, label: "Leicht" },
+        { value: 2.75, label: "Mittel" },
+        { value: 3.15, label: "Stark" },
       ]),
       selectField("zoomSpeed", "Zoom-Geschwindigkeit", [
         { value: "schnell", label: "Schnell" },
@@ -476,11 +472,11 @@ export const xconfigDescriptors = Object.freeze([
         { value: "langsam", label: "Langsam" },
       ]),
       checkboxField("checkoutZoomEnabled", "Checkout-Zoom"),
-      selectField("checkoutZoomTarget", "Checkout-Ziel", [
+      selectField("checkoutZoomTarget", "Zoom auf", [
         { value: "finish-only", label: "Nur Finish-Feld" },
         { value: "route-first", label: "Erstes Routenfeld" },
       ]),
-      checkboxField("t20SetupZoomEnabled", "T20-Setup-Zoom"),
+      checkboxField("t20SetupZoomEnabled", "Auch auf T20-Setup zoomen"),
     ],
   }),
   animationDescriptorEntry({
@@ -488,19 +484,19 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-checkout-suggestion-styles",
     description: "Vergrößert die Turn-Felder und gestaltet Checkout-Hinweise theme-kompatibel.",
     fields: [
-      selectField("style", "Stil", [
-        { value: "badge", label: "Badge" },
-        { value: "ribbon", label: "Ribbon" },
-        { value: "stripe", label: "Stripe" },
+      selectField("style", "Darstellung", [
+        { value: "badge", label: "Plakette" },
+        { value: "ribbon", label: "Band" },
+        { value: "stripe", label: "Streifen" },
         { value: "ticket", label: "Ticket" },
-        { value: "outline", label: "Outline" },
+        { value: "outline", label: "Rahmen" },
       ]),
-      selectField("labelText", "Labeltext", [
+      selectField("labelText", "Beschriftung", [
         { value: "CHECKOUT", label: "CHECKOUT" },
         { value: "FINISH", label: "FINISH" },
         { value: "", label: "Kein Label" },
       ]),
-      selectField("colorTheme", "Farbthema", [
+      selectField("colorTheme", "Farbe", [
         colorPreviewOption("amber", "Amber", "checkout-suggestion-amber"),
         colorPreviewOption("cyan", "Cyan", "checkout-suggestion-cyan"),
         colorPreviewOption("rose", "Rose", "checkout-suggestion-rose"),
@@ -526,13 +522,13 @@ export const xconfigDescriptors = Object.freeze([
       }),
       selectField(
         "crackCount",
-        "Anzahl Glasrisse",
+        "Glasrisse",
         Array.from({ length: 4 }, (_, crackCount) => ({
           value: crackCount,
           label: crackCount === 0 ? "Aus" : String(crackCount),
         }))
       ),
-      checkboxField("shakeEnabled", "Wackeleffekt"),
+      checkboxField("shakeEnabled", "Spielerkarte kurz schütteln"),
       checkboxField("soundEnabled", "Glasbruch-Sound"),
     ],
   }),
@@ -546,7 +542,7 @@ export const xconfigDescriptors = Object.freeze([
         { value: 320, label: "Standard" },
         { value: 500, label: "Lang" },
       ]),
-      selectField("size", "Pfeil-Größe", [
+      selectField("size", "Pfeilgröße", [
         { value: "klein", label: "Klein" },
         { value: "standard", label: "Standard" },
         { value: "gross", label: "Groß" },
@@ -567,14 +563,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: "arctic-mint", label: "Polar Mint", previewColorTheme: "arctic-mint" },
         { value: "champagne-night", label: "Midnight Gold", previewColorTheme: "champagne-night" },
       ]),
-      selectField("animationStyle", "Animationsstil", [
-        { value: "pop-hit", label: "Pop Hit", previewEffect: "pop-hit" },
-        { value: "side-shake", label: "Side Shake", previewEffect: "side-shake" },
-        { value: "glow-pop", label: "Glow Pop", previewEffect: "glow-pop" },
-        { value: "flip-spin", label: "Flip Spin", previewEffect: "flip-spin" },
-        { value: "light-sweep", label: "Light Sweep", previewEffect: "light-sweep" },
-        { value: "shockwave-ring", label: "Shockwave Ring", previewEffect: "shockwave-ring" },
-        { value: "electric-jolt", label: "Electric Jolt", previewEffect: "electric-jolt" },
+      selectField("animationStyle", "Animation", [
+        { value: "pop-hit", label: "Aufspringen", previewEffect: "pop-hit" },
+        { value: "side-shake", label: "Seitlich wackeln", previewEffect: "side-shake" },
+        { value: "glow-pop", label: "Aufleuchten", previewEffect: "glow-pop" },
+        { value: "flip-spin", label: "Drehen", previewEffect: "flip-spin" },
+        { value: "light-sweep", label: "Lichtlauf", previewEffect: "light-sweep" },
+        { value: "shockwave-ring", label: "Wellenring", previewEffect: "shockwave-ring" },
+        { value: "electric-jolt", label: "Stromstoß", previewEffect: "electric-jolt" },
       ]),
     ],
   }),
@@ -583,19 +579,19 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
     fields: [
-      checkboxField("showOpenObjectives", "OPEN-Ziele anzeigen"),
-      checkboxField("showDeadObjectives", "DEAD-Ziele anzeigen"),
-      selectField("irrelevantBoardDimStyle", "Irrelevante Felder abdunkeln", [
+      checkboxField("showOpenObjectives", "Offene Ziele anzeigen (OPEN)"),
+      checkboxField("showDeadObjectives", "Erledigte Ziele anzeigen (DEAD)"),
+      selectField("irrelevantBoardDimStyle", "Andere Felder abdunkeln", [
         { value: "off", label: "Aus" },
-        { value: "smoke", label: "Smoke" },
-        { value: "hatch", label: "Hatch+" },
-        { value: "mask", label: "Mask" },
+        { value: "smoke", label: "Rauch" },
+        { value: "hatch", label: "Schraffur" },
+        { value: "mask", label: "Abdeckung" },
       ]),
-      selectField("colorTheme", "Farbthema", [
+      selectField("colorTheme", "Farben", [
         colorPreviewOption("standard", "Standard", "cricket-standard"),
         colorPreviewOption("high-contrast", "High Contrast", "cricket-high-contrast"),
       ]),
-      selectField("intensity", "Intensität", [
+      selectField("intensity", "Stärke", [
         { value: "subtle", label: "Dezent" },
         { value: "normal", label: "Standard" },
         { value: "strong", label: "Stark" },
@@ -607,21 +603,21 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-cricket-grid-status-effects",
     description: "Ergänzt die Cricket-/Tactics-Matrix um zusätzliche Live-Effekte.",
     fields: [
-      checkboxField("rowWave", "Zeilen-Sweep"),
-      checkboxField("badgeBeacon", "Ziel-Badge-Hinweis"),
-      checkboxField("markProgress", "Mark-Fortschritt"),
-      checkboxField("pressureEdge", "PRESSURE-Kante"),
-      checkboxField("scoringStripe", "SCORING-Streifen"),
-      checkboxField("deadRowMuted", "DEAD-Zeilen abdunkeln"),
-      checkboxField("deltaChips", "Delta-Chips"),
+      checkboxField("rowWave", "Welle durch die Zeile"),
+      checkboxField("badgeBeacon", "Zielmarke hervorheben"),
+      checkboxField("markProgress", "Markierungen auffüllen"),
+      checkboxField("pressureEdge", "Druck anzeigen (PRESSURE)"),
+      checkboxField("scoringStripe", "Punktemöglichkeit anzeigen (SCORING)"),
+      checkboxField("deadRowMuted", "Erledigte Zeilen abdunkeln (DEAD)"),
+      checkboxField("deltaChips", "Änderungen anzeigen"),
       checkboxField("hitSpark", "Treffer-Impuls"),
       checkboxField("roundTransitionWipe", "Zugwechsel-Übergang"),
-      checkboxField("pressureOverlay", "PRESSURE-Overlay"),
-      selectField("colorTheme", "Farbthema", [
+      checkboxField("pressureOverlay", "Druckfläche anzeigen (PRESSURE)"),
+      selectField("colorTheme", "Farben", [
         colorPreviewOption("standard", "Standard", "cricket-standard"),
         colorPreviewOption("high-contrast", "High Contrast", "cricket-high-contrast"),
       ]),
-      selectField("intensity", "Intensität", [
+      selectField("intensity", "Stärke", [
         { value: "subtle", label: "Dezent" },
         { value: "normal", label: "Standard" },
         { value: "strong", label: "Stark" },
@@ -633,29 +629,29 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-dartboard-marker-highlight",
     description: "Macht Marker auf dem virtuellen Dartboard deutlicher sichtbar.",
     fields: [
-      selectField("size", "Marker-Größe", [
+      selectField("size", "Größe der Treffermarkierung", [
         { value: 4, label: "Klein" },
         { value: 6, label: "Standard" },
         { value: 9, label: "Groß" },
       ]),
-      selectField("color", "Marker-Farbe", [
+      selectField("color", "Farbe der Treffermarkierung", [
         colorPreviewOption("rgb(49, 130, 206)", "Blau", "dart-marker-blue"),
         colorPreviewOption("rgb(34, 197, 94)", "Grün", "dart-marker-green"),
         colorPreviewOption("rgb(248, 113, 113)", "Rot", "dart-marker-red"),
         colorPreviewOption("rgb(250, 204, 21)", "Gelb", "dart-marker-yellow"),
         colorPreviewOption("rgb(255, 255, 255)", "Weiß", "dart-marker-white"),
       ]),
-      selectField("effect", "Effekt", [
-        { value: "soft-glow", label: "Soft Glow" },
-        { value: "size-pulse", label: "Size Pulse" },
+      selectField("effect", "Animation", [
+        { value: "soft-glow", label: "Sanft leuchten" },
+        { value: "size-pulse", label: "Größe pulsieren" },
         { value: "none", label: "Kein Effekt" },
       ]),
-      selectField("opacityPercent", "Marker-Sichtbarkeit", [
+      selectField("opacityPercent", "Sichtbarkeit der Treffermarkierung", [
         { value: 65, label: "65 %" },
         { value: 85, label: "85 %" },
         { value: 100, label: "100 %" },
       ]),
-      selectField("outline", "Outline-Farbe", [
+      selectField("outline", "Randfarbe", [
         colorPreviewOption("aus", "Aus", "dart-marker-outline-off"),
         colorPreviewOption("weiss", "Weiß", "dart-marker-outline-white"),
         colorPreviewOption("schwarz", "Schwarz", "dart-marker-outline-black"),
@@ -678,7 +674,7 @@ export const xconfigDescriptors = Object.freeze([
         prominent: true,
         previewTarget: "dart-marker-replacer",
       }),
-      selectField("design", "Dart Design", DART_DESIGN_OPTIONS),
+      selectField("design", "Dart-Design", DART_DESIGN_OPTIONS),
       checkboxField("animateDarts", "Dart-Fluganimation"),
       selectField("sizePercent", "Dart-Größe", [
         { value: 108, label: "Klein" },
@@ -693,12 +689,12 @@ export const xconfigDescriptors = Object.freeze([
       ]),
       checkboxField("enableShadow", "Einschlag-Schatten"),
       checkboxField("enableShadowBlur", "Schatten-Weichzeichnung"),
-      checkboxField("enableWobble", "Einschlag-Wobble"),
-      checkboxField("enableFlightBlur", "Flug-Blur"),
+      checkboxField("enableWobble", "Nachwippen beim Einschlag"),
+      checkboxField("enableFlightBlur", "Bewegungsunschärfe im Flug"),
       selectField("flightSpeed", "Fluggeschwindigkeit", [
         { value: "schnell", label: "Schnell" },
         { value: "standard", label: "Standard" },
-        { value: "cinematic", label: "Cinematic" },
+        { value: "cinematic", label: "Filmisch" },
       ]),
     ],
   }),
@@ -712,8 +708,8 @@ export const xconfigDescriptors = Object.freeze([
         { value: "standard", label: "Standard" },
         { value: "large", label: "Groß" },
       ]),
-      checkboxField("pulseAnimation", "Pulse-Animation"),
-      selectField("pulseScale", "Pulse-Stärke", [
+      checkboxField("pulseAnimation", "Pulsieren"),
+      selectField("pulseScale", "Stärke des Pulsierens", [
         { value: 1.02, label: "Dezent" },
         { value: 1.04, label: "Standard" },
         { value: 1.08, label: "Stark" },
@@ -727,7 +723,7 @@ export const xconfigDescriptors = Object.freeze([
     fields: [
       actionField("run-feature-action", "Sound-Test", {
         actionId: "preview",
-        buttonLabel: "Single Bull Hit Sound abspielen",
+        buttonLabel: "Single-Bull-Ton abspielen",
         section: "Sound-Test",
         description:
           "Spielt den Single-Bull-Ton mit der aktuell gespeicherten Lautstärke.",
@@ -741,14 +737,14 @@ export const xconfigDescriptors = Object.freeze([
         { value: 0.9, label: "Standard" },
         { value: 1, label: "Sehr laut" },
       ]),
-      selectField("cooldownMs", "Wiederholsperre", [
+      selectField("cooldownMs", "Mindestabstand zwischen Tönen", [
         { value: 400, label: "400 ms" },
         { value: 700, label: "700 ms" },
         { value: 1000, label: "1000 ms" },
       ]),
-      selectField("pollIntervalMs", "Fallback-Scan", [
-        { value: 0, label: "Nur live" },
-        { value: 1200, label: "1200 ms" },
+      selectField("pollIntervalMs", "Zusätzliche Trefferprüfung", [
+        { value: 0, label: "Aus" },
+        { value: 1200, label: "Alle 1,2 Sekunden" },
       ]),
     ],
   }),
@@ -757,18 +753,18 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-turn-score-counter",
     description: "Zählt Punkteänderungen sichtbar hoch oder runter.",
     fields: [
-      selectField("countEffect", "Zählstil", [
-        { value: "smooth-count", label: "Smooth Count" },
-        { value: "rolling-digits", label: "Rolling Digits" },
-        { value: "step-count", label: "Step Count" },
+      selectField("countEffect", "Zählweise", [
+        { value: "smooth-count", label: "Fließend zählen" },
+        { value: "rolling-digits", label: "Rollende Zahlen" },
+        { value: "step-count", label: "In Schritten zählen" },
       ]),
       selectField("durationMs", "Zählgeschwindigkeit", [
         { value: 1000, label: "Schnell" },
         { value: 3000, label: "Standard" },
         { value: 5000, label: "Ruhig" },
       ]),
-      checkboxField("flashOnChange", "Aufblitz-Effekt"),
-      selectField("flashMode", "Aufblitz-Modus", [
+      checkboxField("flashOnChange", "Bei Änderung aufblitzen"),
+      selectField("flashMode", "Aufblitzen", [
         { value: "on-change", label: "Nur bei Änderung" },
         { value: "permanent", label: "Permanent" },
       ]),

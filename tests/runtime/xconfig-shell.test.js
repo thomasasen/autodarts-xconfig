@@ -14,6 +14,7 @@ import {
 } from "../../src/shared/theme-global-template-presets.js";
 import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
+import { groupXConfigFeatures } from "../../src/features/xconfig-ui/shell-view.js";
 import {
   DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_ATTRIBUTE,
   DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_MARKER_ATTRIBUTE,
@@ -92,13 +93,6 @@ async function waitForShellClosed(windowRef, documentRef) {
         documentRef.variantElement.style.display === ""
       );
     }),
-    true
-  );
-}
-
-async function waitForActiveTab(documentRef, tabId) {
-  assert.equal(
-    await waitFor(() => documentRef.getElementById(`ad-xconfig-tab-${tabId}`)?.getAttribute("data-active") === "true"),
     true
   );
 }
@@ -485,8 +479,6 @@ test("xConfig shell repairs a corrupted side-menu node on sync", async () => {
 
   const broken = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(broken);
-  broken.classList.add("ad-xconfig-tab");
-  broken.setAttribute("data-adxconfig-tab", "themes");
   broken.removeAttribute("data-adxconfig-action");
   broken.replaceChildren(documentRef.createElement("span"));
 
@@ -495,8 +487,6 @@ test("xConfig shell repairs a corrupted side-menu node on sync", async () => {
 
   const repaired = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(repaired);
-  assert.equal(repaired.classList.contains("ad-xconfig-tab"), false);
-  assert.equal(repaired.getAttribute("data-adxconfig-tab"), null);
   assert.equal(repaired.getAttribute("data-adxconfig-action"), "open");
 
   const label = repaired.querySelector(".ad-xconfig-menu-label");
@@ -505,6 +495,34 @@ test("xConfig shell repairs a corrupted side-menu node on sync", async () => {
 
   assert.equal(documentRef.legalLink.nextElementSibling, repaired);
   assert.equal(repaired.parentElement, documentRef.userMenuList);
+
+  runtime.stop();
+});
+
+test("xConfig back action restores the originating path and query parameters", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    localStorage,
+    href: "https://play.autodarts.com/statistics?range=30d",
+  });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  assert.equal(windowRef.location.pathname, "/statistics");
+  assert.equal(windowRef.location.search, "?range=30d");
+
+  const backButton = documentRef.querySelector("[data-adxconfig-action='close']");
+  assert.equal(backButton?.textContent, "← Zurück");
+  backButton.click();
+  await waitForShellClosed(windowRef, documentRef);
+
+  assert.equal(windowRef.location.pathname, "/statistics");
+  assert.equal(windowRef.location.search, "?range=30d");
+  assert.equal(windowRef.location.hash, "");
 
   runtime.stop();
 });
@@ -679,8 +697,6 @@ test("xConfig settings modal preserves node identity and scroll offsets during e
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']"
@@ -736,8 +752,6 @@ test("xConfig settings modal keeps container identity while applying setting upd
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']"
@@ -1246,8 +1260,6 @@ test("xConfig shell persists rapid back-to-back UI actions without losing earlie
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   clickFeatureToggle(documentRef, "avg-trend-arrow", true);
   clickFeatureToggle(documentRef, "turn-score-counter", true);
@@ -1270,7 +1282,7 @@ test("xConfig shell persists rapid back-to-back UI actions without losing earlie
   runtime.stop();
 });
 
-test("xConfig shell wires tabs, settings modal, toggles and save actions", async () => {
+test("xConfig shell wires settings modals, toggles and save actions on one page", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1280,39 +1292,17 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  let themesTab = documentRef.getElementById("ad-xconfig-tab-themes");
-  let animationsTab = documentRef.getElementById("ad-xconfig-tab-animations");
-  const tablist = documentRef.querySelector(".ad-xconfig-tabs");
-  const tabpanel = documentRef.querySelector(".ad-xconfig-content");
-  assert.equal(tablist?.getAttribute("role"), "tablist");
-  assert.equal(tablist?.getAttribute("aria-label"), "Bereich wählen");
-  assert.equal(documentRef.getElementById("ad-xconfig-tabs-copy"), null);
-  assert.equal(themesTab?.querySelector(".ad-xconfig-tab-title")?.textContent, "Themen");
-  assert.equal(animationsTab?.querySelector(".ad-xconfig-tab-title")?.textContent, "Animationen");
-  assert.equal(themesTab?.getAttribute("role"), "tab");
-  assert.equal(themesTab?.getAttribute("aria-selected"), "true");
-  assert.equal(animationsTab?.getAttribute("aria-selected"), "false");
-  assert.equal(themesTab?.getAttribute("tabindex"), "0");
-  assert.equal(animationsTab?.getAttribute("tabindex"), "-1");
-  assert.equal(tabpanel?.getAttribute("role"), "tabpanel");
-  assert.equal(tabpanel?.getAttribute("aria-labelledby"), "ad-xconfig-tab-themes");
+  assert.equal(documentRef.querySelector("[role='tablist']"), null);
+  assert.equal(documentRef.querySelector("[data-adxconfig-tab]"), null);
+  assert.equal(
+    documentRef.querySelector(".ad-xconfig-content")?.getAttribute("data-adxconfig-sections"),
+    "true"
+  );
 
   clickFeatureToggle(documentRef, "theme-global-background", true);
   await waitForStoredConfig(
     localStorage,
     (config) => config.featureToggles["themes.globalBackground"] === true
-  );
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
-  themesTab = documentRef.getElementById("ad-xconfig-tab-themes");
-  animationsTab = documentRef.getElementById("ad-xconfig-tab-animations");
-  assert.equal(themesTab?.getAttribute("aria-selected"), "false");
-  assert.equal(animationsTab?.getAttribute("aria-selected"), "true");
-  assert.equal(themesTab?.getAttribute("tabindex"), "-1");
-  assert.equal(animationsTab?.getAttribute("tabindex"), "0");
-  assert.equal(
-    documentRef.querySelector(".ad-xconfig-content")?.getAttribute("aria-labelledby"),
-    "ad-xconfig-tab-animations"
   );
   clickFeatureToggle(documentRef, "turn-score-counter", true);
   await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnScoreCounter === true);
@@ -1355,8 +1345,6 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   closeSettings.click();
   await waitForSettingsClosed(documentRef);
 
-  documentRef.getElementById("ad-xconfig-tab-themes").click();
-  await waitForActiveTab(documentRef, "themes");
   const openThemeSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='theme-global-background']"
   );
@@ -1391,7 +1379,7 @@ test("xConfig shell wires tabs, settings modal, toggles and save actions", async
   runtime.stop();
 });
 
-test("xConfig shell sorts themes and groups animations by mode relevance", async () => {
+test("xConfig shell renders every feature exactly once in ordered domain sections", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1401,40 +1389,30 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  const themeCardFeatureKeys = documentRef
-    .querySelectorAll(".ad-xconfig-card")
-    .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""))
-    .filter((featureKey) => featureKey.startsWith("theme-"));
-  assert.deepEqual(themeCardFeatureKeys, [
-    "theme-global-presets",
-    "theme-global-background",
-    "theme-global-typography",
-  ]);
-
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
-
-  const groupNodes = documentRef.querySelectorAll("[data-adxconfig-animation-group]");
-  const groupIds = groupNodes.map((groupNode) =>
-    String(groupNode.getAttribute("data-adxconfig-animation-group") || "")
+  const sectionNodes = documentRef.querySelectorAll("[data-adxconfig-section]");
+  const sectionIds = sectionNodes.map((sectionNode) =>
+    String(sectionNode.getAttribute("data-adxconfig-section") || "")
   );
-  assert.deepEqual(groupIds, ["all-modes", "x01", "cricket-tactics"]);
-  assert.equal(
-    documentRef.querySelectorAll("[data-adxconfig-animation-divider='true']").length,
-    groupIds.length - 1
-  );
+  assert.deepEqual(sectionIds, ["template", "all-modes", "x01", "cricket-tactics"]);
+  assert.equal(documentRef.querySelector("[role='tablist']"), null);
+  assert.equal(documentRef.querySelector("[data-adxconfig-tab]"), null);
 
-  const readGroupCards = (groupId) => {
-    const groupNode = documentRef.querySelector(
-      `[data-adxconfig-animation-group='${groupId}']`
+  const readSectionCards = (sectionId) => {
+    const sectionNode = documentRef.querySelector(
+      `[data-adxconfig-section='${sectionId}']`
     );
-    assert.ok(groupNode, `missing group ${groupId}`);
-    return groupNode
+    assert.ok(sectionNode, `missing section ${sectionId}`);
+    return sectionNode
       .querySelectorAll(".ad-xconfig-card")
       .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""));
   };
 
-  assert.deepEqual(readGroupCards("all-modes"), [
+  assert.deepEqual(readSectionCards("template"), [
+    "theme-global-presets",
+    "theme-global-background",
+    "theme-global-typography",
+  ]);
+  assert.deepEqual(readSectionCards("all-modes"), [
     "turn-score-counter",
     "avg-trend-arrow",
     "special-hit-highlights",
@@ -1445,7 +1423,7 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "take-out-darts-alert",
     "single-bull-hit-sound",
   ]);
-  assert.deepEqual(readGroupCards("x01"), [
+  assert.deepEqual(readSectionCards("x01"), [
     "checkout-suggestion-styles",
     "checkout-score-highlight",
     "x01-remaining-score-bar",
@@ -1453,10 +1431,133 @@ test("xConfig shell sorts themes and groups animations by mode relevance", async
     "checkout-target-highlights",
     "tv-board-zoom",
   ]);
-  assert.deepEqual(readGroupCards("cricket-tactics"), [
+  assert.deepEqual(readSectionCards("cricket-tactics"), [
     "cricket-target-highlighter",
     "cricket-grid-status-effects",
   ]);
+
+  const allCardFeatureKeys = documentRef.querySelectorAll(".ad-xconfig-card")
+    .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""));
+  assert.equal(allCardFeatureKeys.length, 20);
+  assert.equal(new Set(allCardFeatureKeys).size, 20);
+  assert.deepEqual(
+    sectionNodes.map((sectionNode) => sectionNode.querySelector(".ad-xconfig-section-count")?.textContent),
+    ["3 Kacheln", "9 Kacheln", "6 Kacheln", "2 Kacheln"]
+  );
+
+  runtime.stop();
+});
+
+test("xConfig section grouping keeps unknown future features visible under Weitere", () => {
+  const sections = groupXConfigFeatures([
+    { featureKey: "turn-score-counter", title: "Runden-Score" },
+    { featureKey: "future-feature", title: "Zukünftiges Modul" },
+  ]);
+
+  assert.deepEqual(sections.map(({ definition }) => definition.id), ["all-modes", "other"]);
+  assert.deepEqual(
+    sections.at(-1).entries.map(({ featureKey }) => featureKey),
+    ["future-feature"]
+  );
+  assert.equal(sections.at(-1).definition.title, "Weitere");
+});
+
+test("xConfig active cards expose a persistent frame and an explicit switch state", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const cardSelector = ".ad-xconfig-card[data-feature-key='turn-score-counter']";
+  assert.equal(documentRef.querySelector(cardSelector)?.getAttribute("data-enabled"), "false");
+  assert.deepEqual(
+    documentRef.querySelector(cardSelector)
+      ?.querySelectorAll(".ad-xconfig-switch-option")
+      .map((node) => String(node.textContent || "").trim()),
+    ["Aus", "✓ Aktiv"]
+  );
+
+  clickFeatureToggle(documentRef, "turn-score-counter", true);
+  await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnScoreCounter === true);
+  assert.equal(
+    await waitFor(() => documentRef.querySelector(cardSelector)?.getAttribute("data-enabled") === "true"),
+    true
+  );
+  assert.equal(documentRef.querySelector(`${cardSelector} [role='switch']`)?.checked, true);
+  assert.equal(
+    documentRef.querySelector(".ad-xconfig-card[data-feature-key='theme-global-presets']")
+      ?.getAttribute("data-enabled"),
+    null
+  );
+
+  const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
+  assert.match(styleText, /\.ad-xconfig-card\[data-enabled="true"\]::after\{[^}]*border:2px solid var\(--color-brand-blue-50,#4a89ff\)/);
+  assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track \.ad-xconfig-switch-thumb\{[^}]*translateX\(20px\)/);
+
+  runtime.stop();
+});
+
+test("xConfig cards show when diagnosis is active", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+
+  const cardSelector = ".ad-xconfig-card[data-feature-key='theme-global-typography']";
+  const diagnosticBadgeSelector = "[data-adxconfig-status-badge='diagnostic']";
+  assert.equal(documentRef.querySelector(cardSelector)?.querySelector(diagnosticBadgeSelector), null);
+
+  documentRef
+    .querySelector(`${cardSelector} [data-adxconfig-action='open-settings']`)
+    .click();
+  await waitForSettingsModal(documentRef);
+  clickSettingToggle(documentRef, "theme-global-typography", "debug", true);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalTypography.debug === true
+  );
+  documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
+  await waitForSettingsClosed(documentRef);
+  assert.equal(
+    await waitFor(() => Boolean(
+      documentRef.querySelector(cardSelector)?.querySelector(diagnosticBadgeSelector)
+    )),
+    true
+  );
+  assert.equal(
+    documentRef.querySelector(cardSelector)?.querySelector(diagnosticBadgeSelector)?.textContent,
+    "Diagnose aktiv"
+  );
+
+  documentRef
+    .querySelector(`${cardSelector} [data-adxconfig-action='open-settings']`)
+    .click();
+  await waitForSettingsModal(documentRef);
+  clickSettingToggle(documentRef, "theme-global-typography", "debug", false);
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.globalTypography.debug === false
+  );
+  documentRef.querySelector("[data-adxconfig-action='close-settings']").click();
+  await waitForSettingsClosed(documentRef);
+  assert.equal(
+    await waitFor(() => !documentRef.querySelector(cardSelector)?.querySelector(diagnosticBadgeSelector)),
+    true
+  );
+
+  const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
+  assert.match(
+    styleText,
+    /\.ad-xconfig-status-badge--diagnostic\{[^}]*border:[^}]*background:[^}]*color:/
+  );
 
   runtime.stop();
 });
@@ -1494,12 +1595,10 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
   assert.match(styleText, /\.ad-xconfig-status-badge--deprecated\{[^}]*border:[^}]*background:[^}]*color:/);
 
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
+    const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
       "single-bull-hit-sound", "special-hit-highlights", "x01-remaining-score-bar", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
@@ -1521,8 +1620,6 @@ test("xConfig style checkout suggestions renders live preview and style option s
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-suggestion-styles']"
@@ -1676,8 +1773,6 @@ test("xConfig checkout score pulse renders real effect previews and color button
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-score-highlight']"
@@ -1828,8 +1923,6 @@ test("xConfig X01 score progress renders configured size effect and color previe
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   clickFeatureToggle(documentRef, "x01-remaining-score-bar", true);
   await waitForStoredConfig(
@@ -2084,8 +2177,6 @@ test("xConfig checkout board targets renders board and segment previews", async 
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-target-highlights']"
@@ -2258,8 +2349,6 @@ test("xConfig shell persists checkout board target and TV zoom select settings",
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openBoardTargetSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='checkout-target-highlights']"
@@ -2342,11 +2431,24 @@ test("xConfig shell renders reset and recommended default header actions", async
   );
   const exportButton = documentRef.querySelector("[data-adxconfig-action='open-settings-export']");
   const importButton = documentRef.querySelector("[data-adxconfig-action='open-settings-import']");
+  const backButton = documentRef.querySelector("[data-adxconfig-action='close']");
+  const header = documentRef.querySelector(".ad-xconfig-header");
+  const updatePanel = documentRef.querySelector("[data-adxconfig-update-panel='true']");
 
   assert.ok(resetButton);
   assert.ok(recommendedButton);
   assert.ok(exportButton);
   assert.ok(importButton);
+  assert.ok(backButton);
+  assert.ok(updatePanel);
+  [resetButton, recommendedButton, exportButton, importButton, backButton, updatePanel].forEach((node) => {
+    assert.equal(header?.contains(node), true);
+  });
+  assert.match(
+    String(updatePanel.querySelector(".ad-xconfig-update-title")?.textContent || ""),
+    /Version \d+\.\d+\.\d+/
+  );
+  assert.ok(updatePanel.querySelector("[data-adxconfig-action='open-changelog']"));
   assert.equal(resetButton.classList.contains("ad-xconfig-btn--danger"), true);
   assert.equal(recommendedButton.classList.contains("ad-xconfig-btn--primary"), true);
   assert.equal(
@@ -2677,8 +2779,6 @@ test("xConfig triple-double-bull style buttons expose color and animation previe
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='special-hit-highlights']"
@@ -2798,8 +2898,6 @@ test("xConfig avg-trend-arrow settings expose real arrow preview hosts", async (
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='avg-trend-arrow']"
@@ -2861,8 +2959,6 @@ test("xConfig dartboard-marker-highlight settings expose real marker preview hos
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='dartboard-marker-highlight']"
@@ -2951,8 +3047,6 @@ test("xConfig turn-score-counter settings expose real effect preview hosts", asy
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='turn-score-counter']"
@@ -3020,8 +3114,6 @@ test("xConfig x01 score progress settings no longer expose a design selector", a
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='x01-remaining-score-bar']"
@@ -3066,8 +3158,6 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='turn-score-counter']"
@@ -3097,7 +3187,7 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     .querySelectorAll(".ad-xconfig-modal .ad-xconfig-note")
     .map((node) => String(node.textContent || ""));
   assert.ok(
-    noteTexts.some((text) => /Aufblitz-Effekt/.test(text)),
+    noteTexts.some((text) => /Aufblitzen/.test(text)),
     "missing turn-points flash setting note"
   );
   assert.ok(
@@ -3157,8 +3247,6 @@ test("xConfig dart design options render split layout with preview and active ba
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='dart-marker-replacer']"
@@ -3273,12 +3361,6 @@ test("xConfig shell links every card README button to the matching README anchor
   await waitForShellOpen(windowRef, documentRef);
 
   for (const descriptor of xconfigDescriptors) {
-    const tabId = descriptor.tab === "themes" ? "themes" : "animations";
-    const tabButton = documentRef.getElementById(`ad-xconfig-tab-${tabId}`);
-    assert.ok(tabButton, `missing tab button for ${descriptor.featureKey}`);
-    tabButton.click();
-    await waitForActiveTab(documentRef, tabId);
-
     const cardReadmeButton = documentRef.querySelector(
       `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-readme'][data-feature-key='${descriptor.featureKey}']`
     );
@@ -3897,12 +3979,6 @@ test("xConfig shell links every settings modal README button to the matching REA
       continue;
     }
 
-    const tabId = descriptor.tab === "themes" ? "themes" : "animations";
-    const tabButton = documentRef.getElementById(`ad-xconfig-tab-${tabId}`);
-    assert.ok(tabButton, `missing tab button for ${descriptor.featureKey}`);
-    tabButton.click();
-    await waitForActiveTab(documentRef, tabId);
-
     const settingsButton = documentRef.querySelector(
       `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-settings'][data-feature-key='${descriptor.featureKey}']`
     );
@@ -3949,7 +4025,18 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   const styleText = String(styleNode.textContent || "");
   assert.match(styleText, /\.ad-xconfig-card\{[^}]*min-height:224px[^}]*border-radius:12px[^}]*border:0/);
   assert.match(styleText, /\.ad-xconfig-card-bg\{[^}]*position:absolute[^}]*inset:0 0 0 33\.333%/);
-  assert.match(styleText, /\.ad-xconfig-card-bg::after\{[^}]*linear-gradient/);
+  assert.match(
+    styleText,
+    /\.ad-xconfig-card-bg::after\{[^}]*linear-gradient\(90deg,rgba\(27,31,41,\.92\) 0%,rgba\(27,31,41,\.72\) 35%,rgba\(27,31,41,\.44\) 62%,rgba\(27,31,41,\.16\) 82%,rgba\(27,31,41,\.02\) 100%\)/
+  );
+  assert.match(
+    styleText,
+    /@media\(max-width:640px\)\{[^}]*\.ad-xconfig-card-bg::after\{background:linear-gradient\(90deg,rgba\(27,31,41,\.90\) 0%,rgba\(27,31,41,\.72\) 55%,rgba\(27,31,41,\.46\) 78%,rgba\(27,31,41,\.28\) 100%\)/
+  );
+  assert.match(
+    styleText,
+    /\.ad-xconfig-card-title,[^}]*\.ad-xconfig-card-copy,[^}]*\.ad-xconfig-switch-state\{text-shadow:0 2px 7px rgba\(0,0,0,\.88\)\}/
+  );
   const presetCard = documentRef.querySelector(
     ".ad-xconfig-card[data-feature-key='theme-global-presets']"
   );
@@ -3974,7 +4061,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     backgroundCard
       ?.querySelectorAll(".ad-xconfig-switch-option")
       .map((node) => String(node.textContent || "").trim()),
-    ["On", "Off"]
+    ["Aus", "✓ Aktiv"]
   );
   const settingsIcon = backgroundCard?.querySelector(".ad-xconfig-card-settings-icon");
   assert.ok(settingsIcon);
@@ -3997,23 +4084,25 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     false
   );
   assert.match(styleText, /\.ad-xconfig-switch\{[^}]*width:114px[^}]*height:44px/);
-  assert.match(styleText, /\.ad-xconfig-switch-track\{[^}]*border-radius:12px[^}]*background:#0e2250/);
-  assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track \.ad-xconfig-switch-option--on\{[^}]*linear-gradient\(90deg,#901f7d 0%,#c12f63 100%\)/);
-  assert.match(styleText, /\.ad-xconfig-switch-input:not\(:checked\) \+ \.ad-xconfig-switch-track \.ad-xconfig-switch-option--off\{[^}]*background:#2d313a/);
-  documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
+  assert.match(styleText, /\.ad-xconfig-switch-track\{[^}]*width:48px[^}]*height:28px[^}]*border-radius:999px[^}]*background:#353b46/);
+  assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track\{[^}]*background:var\(--color-brand-blue-50,#4a89ff\)/);
+  documentRef.querySelectorAll("[data-adxconfig-section='template'] .ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
     assert.ok(card.querySelector(".ad-xconfig-card-global-badge"), `missing retained theme tag for ${featureKey}`);
   });
 
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
-
-  documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
+  ["all-modes", "x01", "cricket-tactics"].flatMap((sectionId) =>
+    documentRef.querySelectorAll(`[data-adxconfig-section='${sectionId}'] .ad-xconfig-card`)
+  ).forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing animation card image for ${featureKey}`);
     assert.ok(card.querySelector(".ad-xconfig-variant"), `missing retained animation tag for ${featureKey}`);
   });
+
+  assert.match(styleText, /@media\(max-width:1023px\)\{[^}]*\.ad-xconfig-grid\{grid-template-columns:1fr\}/);
+  assert.equal(styleText.includes("@media(max-width:640px)"), true);
+  assert.equal(styleText.includes(".ad-xconfig-header{padding:12px}"), true);
 
   assert.equal(
     documentRef.querySelector(
@@ -4052,8 +4141,6 @@ test("Bot Board Style card uses and updates the selected board as its background
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const previewSelector =
     ".ad-xconfig-card[data-feature-key='bot-board-style'] .ad-xconfig-card-bg img";
@@ -4098,8 +4185,6 @@ test("Dart Marker Replacer card features and updates the selected dart", async (
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const cardSelector = ".ad-xconfig-card[data-feature-key='dart-marker-replacer']";
   const previewSelector = `${cardSelector} .ad-xconfig-card-bg img`;
@@ -4359,8 +4444,6 @@ test("xConfig shell supports independent turn dart upload and clear actions", as
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openThemeSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='turn-dart-display']"
@@ -4538,8 +4621,6 @@ test("xConfig single-bull-hit-sound settings expose and run the configured sound
 
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
-  documentRef.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(documentRef, "animations");
 
   const openSettings = documentRef.querySelector(
     "[data-adxconfig-action='open-settings'][data-feature-key='single-bull-hit-sound']"
@@ -4623,8 +4704,6 @@ test("xConfig shell restores persisted toggle, setting and background state afte
     localStorage,
     (config) => config.featureToggles["themes.globalBackground"] === true
   );
-  firstDocument.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(firstDocument, "animations");
   clickFeatureToggle(firstDocument, "turn-score-counter", true);
   await waitForStoredConfig(localStorage, (config) => config.featureToggles.turnScoreCounter === true);
   clickFeatureToggle(firstDocument, "x01-remaining-score-bar", true);
@@ -4709,8 +4788,6 @@ test("xConfig shell restores persisted toggle, setting and background state afte
   assert.ok(restoredThemeToggle);
   assert.equal(restoredThemeToggle.checked, true);
 
-  secondDocument.getElementById("ad-xconfig-tab-animations").click();
-  await waitForActiveTab(secondDocument, "animations");
   const restoredX01ProgressToggle = secondDocument.querySelector(
     "[data-adxconfig-feature-toggle='true'][data-feature-key='x01-remaining-score-bar']"
   );

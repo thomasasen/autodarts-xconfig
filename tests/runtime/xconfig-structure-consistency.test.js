@@ -58,8 +58,10 @@ test("xConfig descriptors stay aligned with registry definitions and exported or
   });
 });
 
-test("themes contain exactly background, font and action-only presets", () => {
-  const themeDescriptors = xconfigDescriptors.filter((descriptor) => descriptor.tab === "themes");
+test("template descriptors contain exactly background, font and action-only presets", () => {
+  const themeDescriptors = xconfigDescriptors.filter((descriptor) =>
+    descriptor.featureKey.startsWith("theme-global-")
+  );
   assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.featureKey), [
     "theme-global-presets",
     "theme-global-background",
@@ -79,7 +81,6 @@ test("bot board style descriptor exposes exactly ten designs and both scopes", (
   const scopeField = descriptor?.fields.find((field) => field.key === "scope");
 
   assert.ok(descriptor);
-  assert.equal(descriptor.tab, "animations");
   assert.deepEqual(descriptor.fields.map((field) => field.key), ["design", "scope", "debug"]);
   assert.equal(designField.options.length, 10);
   assert.deepEqual(scopeField.options.map((option) => option.value), [
@@ -91,7 +92,6 @@ test("bot board style descriptor exposes exactly ten designs and both scopes", (
 test("turn dart display is an independent global animation module", () => {
   const descriptor = xconfigDescriptors.find((entry) => entry.featureKey === "turn-dart-display");
   assert.ok(descriptor);
-  assert.equal(descriptor.tab, "animations");
   assert.equal(descriptor.fields.some((field) => field.key === "turnDartStyle"), true);
   assert.equal(descriptor.fields.some((field) => field.action === "uploadTurnDartImage"), true);
 });
@@ -102,7 +102,6 @@ test("x01 bust active player highlight descriptor exposes the configurable crack
   );
 
   assert.ok(descriptor);
-  assert.equal(descriptor.tab, "animations");
   assert.equal(descriptor.readmeAnchor, "animation-autodarts-x01-bust-active-player-highlight");
   assert.deepEqual(
     descriptor.fields.map((field) => field.key),

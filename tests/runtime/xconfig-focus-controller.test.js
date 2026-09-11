@@ -70,26 +70,6 @@ test("xConfig traps both dialog tab boundaries and leaves native menu keyboard e
   assert.equal(controller.handleKeydown(key(native, "Tab")), false);
 });
 
-test("xConfig tabs wrap with arrows and support Home and End", () => {
-  const { documentRef, element, controller } = setup();
-  const themes = element("button", { role: "tab", "data-adxconfig-tab": "themes" });
-  const animations = element("button", { role: "tab", "data-adxconfig-tab": "animations" });
-  let selected;
-  themes.click = () => { selected = "themes"; };
-  animations.click = () => { selected = "animations"; };
-  for (const [target, value, expected] of [
-    [themes, "ArrowLeft", animations], [animations, "ArrowRight", themes],
-    [animations, "Home", themes], [themes, "End", animations],
-  ]) {
-    const event = key(target, value);
-    assert.equal(controller.handleKeydown(event), true);
-    assert.equal(event.prevented, true);
-    assert.equal(documentRef.activeElement, expected);
-    assert.equal(selected, expected.getAttribute("data-adxconfig-tab"));
-  }
-});
-
-
 test("xConfig restores the import trigger after asynchronous file selection", () => {
   const { documentRef, element, controller } = setup();
   const trigger = element("button", { "data-adxconfig-action": "open-settings-import" });

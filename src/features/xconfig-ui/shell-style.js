@@ -108,22 +108,25 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-page{box-sizing:border-box;min-height:100%;margin:0 auto;width:100%;padding:24px;color:var(--adx-text);font:14px/1.5 var(--adx-body)}
 #${PANEL_HOST_ID} .ad-xconfig-shell{max-width:1366px;margin:0 auto;padding:0;background:transparent}
 #${PANEL_HOST_ID} .ad-xconfig-shell,#${PANEL_HOST_ID} .ad-xconfig-shell *{pointer-events:auto}
-#${PANEL_HOST_ID} .ad-xconfig-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px}
+#${PANEL_HOST_ID} .ad-xconfig-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;padding:16px;border:1px solid var(--adx-border);border-radius:12px;background:var(--adx-surface)}
+#${PANEL_HOST_ID} .ad-xconfig-header-lead{min-width:0;display:flex;flex:1 1 760px;flex-wrap:wrap;align-items:center;gap:16px}
+#${PANEL_HOST_ID} .ad-xconfig-heading{min-width:190px}
 #${PANEL_HOST_ID} .ad-xconfig-header-main{display:flex;align-items:center;gap:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-title{margin:0;font:32px/1.2 var(--adx-display)}
-#${PANEL_HOST_ID} .ad-xconfig-subtitle{margin:8px 0 0;font-size:14px;color:var(--adx-subtle)}
+#${PANEL_HOST_ID} .ad-xconfig-subtitle{margin:3px 0 0;font-size:12px;color:var(--adx-subtle)}
+#${PANEL_HOST_ID} .ad-xconfig-back-btn{white-space:nowrap}
 #${PANEL_HOST_ID} .ad-xconfig-notice{margin-top:.85rem;border-radius:8px;padding:.62rem .8rem;font-size:.85rem;border:1px solid transparent;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
 #${PANEL_HOST_ID} .ad-xconfig-notice-action{appearance:none;border:1px solid currentColor;border-radius:999px;padding:.28rem .58rem;background:transparent;color:inherit;font:800 .76rem/1 var(--adx-body);cursor:pointer;white-space:nowrap}
 #${PANEL_HOST_ID} .ad-xconfig-notice--success{background:rgba(58,180,122,.17);border-color:rgba(58,180,122,.52)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--error{background:rgba(255,84,84,.15);border-color:rgba(255,84,84,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--info{background:rgba(74,178,255,.18);border-color:rgba(74,178,255,.5)}
-#${PANEL_HOST_ID} .ad-xconfig-header-actions{display:flex;flex-wrap:wrap;gap:8px}
-#${PANEL_HOST_ID} .ad-xconfig-update-panel{margin-top:24px;padding:16px;border-radius:12px;border:1px solid var(--adx-border);background:var(--adx-surface);display:grid;gap:8px}
+#${PANEL_HOST_ID} .ad-xconfig-header-actions{display:flex;flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+#${PANEL_HOST_ID} .ad-xconfig-update-panel{min-width:min(100%,360px);padding:10px 12px;border-radius:10px;border:1px solid var(--adx-border);background:var(--adx-raised);display:grid;gap:8px}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"]{border-color:var(--adx-primary);background:var(--adx-surface)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="current"]{background:var(--adx-surface)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="checking"]{background:var(--adx-surface)}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="error"]{border-color:#da3954;background:var(--adx-surface)}
-#${PANEL_HOST_ID} .ad-xconfig-update-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-update-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-update-summary{display:grid;gap:.18rem}
 #${PANEL_HOST_ID} .ad-xconfig-update-title-row{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-update-dot{width:8px;height:8px;border-radius:50%;background:var(--adx-subtle)}
@@ -137,31 +140,32 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-update-link .ad-xconfig-update-link-copy{display:inline-flex;align-items:center;gap:.38rem}
 #${PANEL_HOST_ID} .ad-xconfig-update-link .ad-xconfig-update-link-kicker{display:inline-flex;padding:.14rem .42rem;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(240,246,255,.82)}
 #${PANEL_HOST_ID} .ad-xconfig-update-link .ad-xconfig-update-link-label{color:rgba(248,251,255,.96)}
-#${PANEL_HOST_ID} .ad-xconfig-tabs-label{margin:24px 0 8px;color:var(--adx-text);font:700 14px/1.5 var(--adx-body)}
-#${PANEL_HOST_ID} .ad-xconfig-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;border:1px solid var(--adx-border);border-radius:12px;background:var(--adx-surface)}
 #${PANEL_HOST_ID} .ad-xconfig-btn{border:1px solid rgba(255,255,255,.24);border-radius:8px;background:var(--adx-secondary);color:var(--adx-text);cursor:pointer;font:inherit}
 #${PANEL_HOST_ID} .ad-xconfig-btn{padding:.55rem .85rem}
 #${PANEL_HOST_ID} .ad-xconfig-btn:hover{background:rgba(255,255,255,.16)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
-#${PANEL_HOST_ID} .ad-xconfig-tab{min-width:0;min-height:48px;border:1px solid var(--adx-border);border-radius:8px;background:var(--adx-secondary);padding:12px 8px;display:flex;align-items:center;justify-content:center;color:var(--adx-text);font:700 16px/1.2 var(--adx-body);cursor:pointer}
-#${PANEL_HOST_ID} .ad-xconfig-tab:hover{border-color:var(--adx-subtle);background:var(--color-black-60,#4d525d)}
-#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"]{color:var(--adx-text);border-color:var(--adx-primary);background:var(--adx-primary)}
-#${PANEL_HOST_ID} .ad-xconfig-tab-title{font:inherit}
-#${PANEL_HOST_ID} .ad-xconfig-tab[data-active="true"] .ad-xconfig-tab-title{color:rgba(248,252,255,.99)}
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:24px}
-#${PANEL_HOST_ID} .ad-xconfig-content-head{display:flex;align-items:center;justify-content:space-between;gap:.55rem;flex-wrap:wrap}
-#${PANEL_HOST_ID} .ad-xconfig-content-title{margin:0;font:24px/1.2 var(--adx-display)}
-#${PANEL_HOST_ID} .ad-xconfig-group{display:grid;gap:.6rem}
-#${PANEL_HOST_ID} .ad-xconfig-group + .ad-xconfig-group{margin-top:1.1rem}
-#${PANEL_HOST_ID} .ad-xconfig-group-divider{height:1px;background:var(--adx-border);border:0;margin:24px 0}
-#${PANEL_HOST_ID} .ad-xconfig-group-title{margin:0;font:24px/1.2 var(--adx-display);color:var(--adx-text)}
+#${PANEL_HOST_ID} .ad-xconfig-section{--adx-section-accent:#94a3b8;display:grid;gap:0}
+#${PANEL_HOST_ID} .ad-xconfig-section + .ad-xconfig-section{margin-top:36px;padding-top:36px;border-top:1px solid var(--adx-border)}
+#${PANEL_HOST_ID} .ad-xconfig-section[data-adxconfig-section="template"]{--adx-section-accent:#a855f7}
+#${PANEL_HOST_ID} .ad-xconfig-section[data-adxconfig-section="all-modes"]{--adx-section-accent:#38bdf8}
+#${PANEL_HOST_ID} .ad-xconfig-section[data-adxconfig-section="x01"]{--adx-section-accent:#84cc16}
+#${PANEL_HOST_ID} .ad-xconfig-section[data-adxconfig-section="cricket-tactics"]{--adx-section-accent:#f59e0b}
+#${PANEL_HOST_ID} .ad-xconfig-section-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-left:4px solid var(--adx-section-accent);border-radius:0 10px 10px 0;background:linear-gradient(90deg,color-mix(in srgb,var(--adx-section-accent) 13%,transparent),rgba(255,255,255,.025))}
+#${PANEL_HOST_ID} .ad-xconfig-section-heading{min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-section-eyebrow{display:block;margin-bottom:2px;color:var(--adx-section-accent);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+#${PANEL_HOST_ID} .ad-xconfig-section-title{margin:0;color:var(--adx-text);font:28px/1.1 var(--adx-display)}
+#${PANEL_HOST_ID} .ad-xconfig-section-description{margin:4px 0 0;color:var(--adx-subtle);font-size:13px}
+#${PANEL_HOST_ID} .ad-xconfig-section-count{flex:0 0 auto;padding:.28rem .58rem;border:1px solid color-mix(in srgb,var(--adx-section-accent) 48%,transparent);border-radius:999px;background:color-mix(in srgb,var(--adx-section-accent) 10%,transparent);color:var(--adx-text);font-size:11px;font-weight:800;white-space:nowrap}
 #${PANEL_HOST_ID} .ad-xconfig-btn--compact{padding:.38rem .62rem;font-size:.74rem;line-height:1.12}
 #${PANEL_HOST_ID} .ad-xconfig-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:16px}
-#${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-width:0;min-height:224px;border-radius:12px;border:0;background:rgb(27,31,41);display:flex;flex-direction:column;box-shadow:inset 0 0 0 1px rgba(255,255,255,.045),0 8px 22px rgba(0,0,0,.18)}
+#${PANEL_HOST_ID} .ad-xconfig-card{position:relative;overflow:hidden;min-width:0;min-height:224px;border-radius:12px;border:0;background:rgb(27,31,41);display:flex;flex-direction:column;box-shadow:inset 0 0 0 1px rgba(255,255,255,.045),0 8px 22px rgba(0,0,0,.18);transition:box-shadow .14s cubic-bezier(.2,.6,.2,1)}
+#${PANEL_HOST_ID} .ad-xconfig-card[data-enabled="true"]{box-shadow:inset 0 0 0 2px var(--color-brand-blue-50,#4a89ff),0 0 0 1px rgba(74,137,255,.2),0 8px 22px rgba(0,0,0,.22)}
+#${PANEL_HOST_ID} .ad-xconfig-card[data-enabled="true"]::after{content:"";position:absolute;z-index:8;inset:0;border:2px solid var(--color-brand-blue-50,#4a89ff);border-radius:inherit;pointer-events:none}
 #${PANEL_HOST_ID} .ad-xconfig-card--theme-global{grid-column:1/-1}
 #${PANEL_HOST_ID} .ad-xconfig-card-bg{position:absolute;z-index:0;inset:0 0 0 33.333%;height:auto;overflow:hidden;pointer-events:none;background:var(--adx-raised);border:0}
-#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,rgb(27,31,41) 0%,rgba(27,31,41,.86) 18%,rgba(27,31,41,.36) 48%,rgba(27,31,41,.04) 100%)}
+#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,rgba(27,31,41,.92) 0%,rgba(27,31,41,.72) 35%,rgba(27,31,41,.44) 62%,rgba(27,31,41,.16) 82%,rgba(27,31,41,.02) 100%)}
 #${PANEL_HOST_ID} .ad-xconfig-card-bg img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind^="theme-global-"][data-preview-display-mode="fit"] .ad-xconfig-card-bg img{object-fit:contain}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind^="theme-global-"][data-preview-display-mode="stretch"] .ad-xconfig-card-bg img{object-fit:fill}
@@ -197,9 +201,11 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-card-settings-icon:focus-visible{outline:2px solid var(--color-brand-blue-50,#4a89ff);outline-offset:3px;border-radius:4px}
 #${PANEL_HOST_ID} .ad-xconfig-card-settings-icon svg{display:block;width:20px;height:20px}
 #${PANEL_HOST_ID} .ad-xconfig-card-copy{margin:8px 0 0;color:var(--adx-muted);font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+#${PANEL_HOST_ID} .ad-xconfig-card-title,#${PANEL_HOST_ID} .ad-xconfig-card-copy,#${PANEL_HOST_ID} .ad-xconfig-switch-state{text-shadow:0 2px 7px rgba(0,0,0,.88)}
 #${PANEL_HOST_ID} .ad-xconfig-card-badges{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-status-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font:600 12px/1.2 var(--adx-body)}
 #${PANEL_HOST_ID} .ad-xconfig-status-badge--deprecated{border:1px solid #fb8b58;background:rgba(251,139,88,.08);color:#fb8b58}
+#${PANEL_HOST_ID} .ad-xconfig-status-badge--diagnostic{border:1px solid #f7c948;background:rgba(247,201,72,.12);color:#f7c948}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-summary{margin-top:.85rem;display:grid;gap:.58rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-badges{display:flex;gap:.45rem;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-badge{display:inline-flex;align-items:center;padding:.22rem .62rem;border-radius:999px;font-size:.67rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
@@ -575,14 +581,22 @@ ${buildX01RemainingScoreBarSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remainin
 #${PANEL_HOST_ID} .ad-xconfig-btn--primary:hover{background:var(--color-blue-70,#003eb3)}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{background:rgba(218,57,84,.12);border-color:#da3954}
 #${PANEL_HOST_ID} :is(button,input,a,[tabindex]):focus-visible{outline:2px solid var(--color-brand-blue-50,#4a89ff);outline-offset:3px}
-#${PANEL_HOST_ID} .ad-xconfig-switch{position:relative;display:inline-flex;flex:0 0 114px;width:114px;height:44px;cursor:pointer;margin:0}
+#${PANEL_HOST_ID} .ad-xconfig-switch{position:relative;display:inline-flex;align-items:center;gap:8px;flex:0 0 114px;width:114px;height:44px;cursor:pointer;margin:0}
 #${PANEL_HOST_ID} .ad-xconfig-switch-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer;z-index:1}
-#${PANEL_HOST_ID} .ad-xconfig-switch-track{box-sizing:border-box;position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;border:0;border-radius:12px;background:#0e2250;overflow:hidden}
-#${PANEL_HOST_ID} .ad-xconfig-switch-option{display:flex;align-items:center;justify-content:center;padding:0 18px;border-radius:12px;color:#f7f8fa;font:700 14px/1 var(--adx-body);transition:background-color .12s cubic-bezier(.2,.6,.2,1),color .12s cubic-bezier(.2,.6,.2,1),opacity .12s cubic-bezier(.2,.6,.2,1),transform .12s cubic-bezier(.2,.6,.2,1)}
-#${PANEL_HOST_ID} .ad-xconfig-switch-input:checked + .ad-xconfig-switch-track .ad-xconfig-switch-option--on{background:linear-gradient(90deg,#901f7d 0%,#c12f63 100%)}
-#${PANEL_HOST_ID} .ad-xconfig-switch-input:not(:checked) + .ad-xconfig-switch-track .ad-xconfig-switch-option--off{background:#2d313a}
+#${PANEL_HOST_ID} .ad-xconfig-switch-track{box-sizing:border-box;position:relative;flex:0 0 48px;width:48px;height:28px;border:1px solid #77808f;border-radius:999px;background:#353b46;box-shadow:inset 0 1px 2px rgba(0,0,0,.36);transition:background-color .14s cubic-bezier(.2,.6,.2,1),border-color .14s cubic-bezier(.2,.6,.2,1),box-shadow .14s cubic-bezier(.2,.6,.2,1)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#f7f8fa;box-shadow:0 1px 4px rgba(0,0,0,.48);transition:transform .14s cubic-bezier(.2,.6,.2,1)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-state{display:grid;align-items:center;min-width:58px;color:#d8dde7;font:800 13px/1 var(--adx-body);white-space:nowrap}
+#${PANEL_HOST_ID} .ad-xconfig-switch-option{grid-area:1/1;transition:color .12s cubic-bezier(.2,.6,.2,1),opacity .12s cubic-bezier(.2,.6,.2,1),transform .12s cubic-bezier(.2,.6,.2,1)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-option--on{color:#d9e8ff;opacity:0;transform:translateY(2px)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-option--off{opacity:1;transform:translateY(0)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:checked + .ad-xconfig-switch-track{border-color:#8ab4ff;background:var(--color-brand-blue-50,#4a89ff);box-shadow:inset 0 1px 2px rgba(0,32,92,.34),0 0 0 1px rgba(74,137,255,.18)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:checked + .ad-xconfig-switch-track .ad-xconfig-switch-thumb{transform:translateX(20px)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:checked ~ .ad-xconfig-switch-state .ad-xconfig-switch-option--on{opacity:1;transform:translateY(0)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:checked ~ .ad-xconfig-switch-state .ad-xconfig-switch-option--off{opacity:0;transform:translateY(-2px)}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:not(:disabled):hover + .ad-xconfig-switch-track{border-color:#a9b2c0}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:checked:not(:disabled):hover + .ad-xconfig-switch-track{border-color:#bfd4ff;background:#5b95ff}
 #${PANEL_HOST_ID} .ad-xconfig-switch-input:focus-visible + .ad-xconfig-switch-track{outline:2px solid var(--color-brand-blue-50,#4a89ff);outline-offset:3px}
-#${PANEL_HOST_ID} .ad-xconfig-switch-input:disabled + .ad-xconfig-switch-track{opacity:.5}
+#${PANEL_HOST_ID} .ad-xconfig-switch-input:disabled + .ad-xconfig-switch-track,#${PANEL_HOST_ID} .ad-xconfig-switch-input:disabled ~ .ad-xconfig-switch-state{opacity:.5}
 #${PANEL_HOST_ID} .ad-xconfig-setting-input > .ad-xconfig-switch{float:right}
 #${PANEL_HOST_ID} .ad-xconfig-card-head > div{min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-setting-row:has(> .ad-xconfig-setting-input:only-child),#${PANEL_HOST_ID} .ad-xconfig-setting-row[data-adxconfig-settings-summary]{grid-template-columns:minmax(0,1fr)}
@@ -591,8 +605,9 @@ ${buildX01RemainingScoreBarSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remainin
 #${PANEL_HOST_ID} .ad-xconfig-variant,#${PANEL_HOST_ID} .ad-xconfig-option-active{background:var(--adx-secondary);color:var(--adx-muted);box-shadow:none}
 #${PANEL_HOST_ID} :is(.ad-xconfig-text-input,.ad-xconfig-color-code){background:var(--adx-raised);color:var(--adx-text);border:1px solid var(--adx-border);border-radius:8px;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-transfer-dialog > :first-child{position:sticky;top:-24px;background:var(--adx-surface);z-index:3;padding:16px 0;margin:0}
-@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-page{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-grid{gap:16px}#${PANEL_HOST_ID} .ad-xconfig-card-bg{inset:0}#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.96) 0%,rgba(27,31,41,.88) 58%,rgba(27,31,41,.5) 100%)}#${PANEL_HOST_ID} .ad-xconfig-card-content,#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-content{width:100%}#${PANEL_HOST_ID} .ad-xconfig-setting-row{grid-template-columns:minmax(0,1fr)}#${PANEL_HOST_ID} .ad-xconfig-setting-input > .ad-xconfig-switch{float:none}#${PANEL_HOST_ID} .ad-xconfig-modal{padding:0 16px 16px}#${PANEL_HOST_ID} .ad-xconfig-modal-header{padding-top:16px}#${PANEL_HOST_ID} .ad-xconfig-transfer-dialog{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-header-actions{width:100%}#${PANEL_HOST_ID} .ad-xconfig-modal-actions{flex-wrap:wrap;justify-content:flex-end}#${PANEL_HOST_ID} .ad-xconfig-transfer-summary{grid-template-columns:minmax(0,1fr)}}
-@media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-switch-option{transition:none}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-page{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-header{padding:12px}#${PANEL_HOST_ID} .ad-xconfig-header-lead{align-items:flex-start}#${PANEL_HOST_ID} .ad-xconfig-heading{flex:1 1 180px}#${PANEL_HOST_ID} .ad-xconfig-update-panel{min-width:100%}#${PANEL_HOST_ID} .ad-xconfig-header-actions{width:100%;justify-content:flex-start}#${PANEL_HOST_ID} .ad-xconfig-section + .ad-xconfig-section{margin-top:28px;padding-top:28px}#${PANEL_HOST_ID} .ad-xconfig-section-header{align-items:flex-start;padding:12px}#${PANEL_HOST_ID} .ad-xconfig-grid{gap:16px}#${PANEL_HOST_ID} .ad-xconfig-card-bg{inset:0}#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.96) 0%,rgba(27,31,41,.88) 58%,rgba(27,31,41,.5) 100%)}#${PANEL_HOST_ID} .ad-xconfig-card-content,#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-content{width:100%}#${PANEL_HOST_ID} .ad-xconfig-setting-row{grid-template-columns:minmax(0,1fr)}#${PANEL_HOST_ID} .ad-xconfig-setting-input > .ad-xconfig-switch{float:none}#${PANEL_HOST_ID} .ad-xconfig-modal{padding:0 16px 16px}#${PANEL_HOST_ID} .ad-xconfig-modal-header{padding-top:16px}#${PANEL_HOST_ID} .ad-xconfig-transfer-dialog{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-modal-actions{flex-wrap:wrap;justify-content:flex-end}#${PANEL_HOST_ID} .ad-xconfig-transfer-summary{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.90) 0%,rgba(27,31,41,.72) 55%,rgba(27,31,41,.46) 78%,rgba(27,31,41,.28) 100%)}}
+@media(prefers-reduced-motion:reduce){#${PANEL_HOST_ID} .ad-xconfig-card,#${PANEL_HOST_ID} .ad-xconfig-switch-track,#${PANEL_HOST_ID} .ad-xconfig-switch-thumb,#${PANEL_HOST_ID} .ad-xconfig-switch-option{transition:none}}
 #${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-bg img{object-fit:contain}
 #${PANEL_HOST_ID} .ad-xconfig-setting-row[class*="-preview"]{grid-template-columns:minmax(0,1fr)}
 #${PANEL_HOST_ID} .ad-xconfig-transfer-dialog > .ad-xconfig-modal-header{top:-24px;margin:0;padding:16px 0;display:block}

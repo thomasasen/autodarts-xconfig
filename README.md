@@ -5,13 +5,11 @@
 
 ## Version 3.0: Umstellung auf das neue Autodarts-Design
 
-Autodarts hat sein Design und die Struktur der Oberfläche geändert. xConfig 3.0 startet deshalb eine neue Major-Version mit angepasster Verwaltung, neutralen Karten und Dialogen sowie einer deutlichen Bereichsauswahl zwischen **Themen** und **Animationen**.
+Autodarts hat sein Design und die Struktur der Oberfläche geändert. xConfig 3.0 startet deshalb eine neue Major-Version mit angepasster Verwaltung, neutralen Karten und Dialogen. Alle Kacheln stehen gemeinsam auf einer Seite und sind nach **Design**, **Alle Modi**, **X01** und **Cricket / Tactics** geordnet.
 
 **Viele Optionen sind derzeit als `Deprecated` markiert.** Sie sind noch nicht vollständig an die neue Autodarts-Oberfläche angepasst und können eingeschränkt oder ohne Funktion sein. Die Anpassung erfolgt in den kommenden Tagen Stück für Stück; weitere Updates folgen. Das Badge bleibt bis zur Freigabe des jeweiligen Moduls sichtbar.
 
 Bei einer frischen Installation und beim Anwenden von `Empfohlene Standards` bleiben zunächst alle Module ausgeschaltet. Aktiviere benötigte Module gezielt. Bereits gespeicherte Einstellungen bleiben beim Update erhalten.
-
-Die folgenden Screenshots zeigen teilweise noch das frühere Design und werden schrittweise aktualisiert.
 
 ## Installieren
 
@@ -73,18 +71,15 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
 
 1. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle direkt unter `Legal` den Eintrag **xConfig**.
-2. Stelle unter `Themen` Hintergrund und Schrift global ein oder wende eine Vorlage an.
+2. Stelle im Bereich `Design` Hintergrund, Schrift und Farben für alle Spielansichten ein oder wende eine Designvorlage an. Die übrigen Module findest du direkt darunter nach Spielbereich geordnet.
 3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne globales Wallpaper oder Dart-Upload beginnen möchtest.
 4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigenes Wallpaper und Dart-Upload bleiben dabei erhalten.
 
-![AD xConfig Themenübersicht](docs/screenshots/ad-xconfig-themen.png)
-![AD xConfig Animationenübersicht](docs/screenshots/ad-xconfig-animationen.png)
+![Aktuelle AD xConfig Übersicht](docs/screenshots/ad-xconfig-overview-v3.png)
 
 ### Wo öffne ich xConfig?
 
-Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xConfig** direkt unter `Legal` und unmittelbar vor dem Bereich `Tools for Autodarts`. Der folgende zugeschnittene Menüausschnitt zeigt die neue Position.
-
-![xConfig direkt unter Legal im Autodarts-Benutzermenü](docs/screenshots/ad-xconfig-menu-location.png)
+Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xConfig** direkt unter `Legal` und unmittelbar vor dem Bereich `Tools for Autodarts`.
 
 ## Wenn AD xConfig nicht erscheint
 
@@ -97,16 +92,17 @@ Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xCon
 
 ## Wo finde ich was?
 
-- `Themen`: Hier findest du den globalen Hintergrund, die globale Schrift und fertige Vorlagen.
-- `Animationen`: Hier findest du Effekte, Komfortfunktionen, Bot Board Style und Wurffeld-Darts.
+- `Design`: Fertige Designvorlagen, Hintergrund, Schrift und Farben für alle Spielansichten.
+- `Alle Modi`: Anzeigen, Darts, Treffermarkierungen und Komfortfunktionen für alle Spielmodi.
+- `X01`: Checkout, Restscore, BUST und Board-Zoom.
+- `Cricket / Tactics`: Ziel- und Matrixeffekte für beide Spielmodi.
 - `⚙ Einstellungen`: Mit diesem Button öffnest du die Einstellungen einer Kachel.
 - `📖 README`: Mit diesem Button öffnest du die GitHub-README direkt an der passenden Modulstelle in einem neuen Tab.
 - An/Aus-Schalter: Hier schaltest du ein Modul direkt ein oder aus. Die Aktionskachel `Vorlagen` hat bewusst keinen Schalter.
 
 ## Der obere Bereich im Menü
 
-![AD xConfig Kopfbereich](docs/screenshots/ad-xconfig-header.png)
-
+- `Zurück`: Schließt xConfig und stellt die zuvor geöffnete Autodarts-Seite einschließlich ihrer Filter in der Adresse wieder her.
 - `↺ Zurücksetzen`: Führt einen echten Hard Reset aus. Alle Einstellungen gehen auf Standard, alle Module werden deaktiviert, Debug wird ausgeschaltet und globales Wallpaper sowie Dart-Upload werden entfernt.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren`: Erstellt ein lokales JSON-Backup. Eigenes Wallpaper und Dart-Bild sind standardmäßig enthalten, können für eine kleinere Datei aber abgewählt werden.
@@ -114,7 +110,7 @@ Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xCon
 - Versionsstatus: Hier siehst du, ob deine Version aktuell ist, ob ein Update verfügbar ist oder ob die Update-Prüfung fehlgeschlagen ist.
 - `Changelog` / `Was ist neu?`: Öffnet direkt die veröffentlichten Änderungen auf GitHub in einem neuen Tab.
 - `Neu prüfen`: Startet sofort eine neue Update-Prüfung.
-- `Themen` und `Animationen`: Mit diesen Buttons wechselst du zwischen beiden Bereichen.
+- Die native Autodarts-Kopfzeile bleibt sichtbar; alle vier xConfig-Bereiche sind gleichzeitig geöffnet.
 
 ## Einstellungen exportieren und importieren
 
@@ -149,7 +145,7 @@ Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https
 - `⚙ Einstellungen` öffnet das Einstellungsfenster dieser Kachel.
 - `📖 README` öffnet die GitHub-README direkt an der passenden Modulstelle.
 - Der Hinweis unten zeigt bei `Hintergrund` zum Beispiel an, ob schon ein eigenes Wallpaper gespeichert ist.
-- Der An/Aus-Schalter oben rechts aktiviert das jeweilige Modul; `Vorlagen` ist stattdessen eine reine Aktionskachel ohne Schalter.
+- Der An/Aus-Schalter oben rechts aktiviert das jeweilige Modul; `Designvorlagen` ist stattdessen eine reine Aktionskachel ohne Schalter.
 
 ## So sieht das Einstellungsfenster aus
 
@@ -160,23 +156,23 @@ Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https
 - Viele Gruppen funktionieren wie eine Einzelauswahl. Meist ist pro Gruppe nur eine Option gleichzeitig aktiv.
 - Die aktuell ausgewählte Option ist mit `Aktuell` markiert.
 - Manche Einstellungen sind einfache An/Aus-Schalter.
-- `Debug` ist nur für Entwicklung und Fehlersuche gedacht. Diese Option nur aktivieren, wenn du ausdrücklich dazu aufgefordert wirst. Sonst kann es zu unerwünschten Nebeneffekten kommen.
+- `Diagnose` ist nur für Entwicklung und Fehlersuche gedacht. Diese Option nur aktivieren, wenn du ausdrücklich dazu aufgefordert wirst. Sonst kann es zu unerwünschten Nebeneffekten kommen.
 
 ## Globales Hintergrundbild
 
 ![Theme-Hintergrundbild in AD xConfig](docs/screenshots/ad-xconfig-theme-background.png)
 
-In der Kachel `Hintergrund` kannst du ein eigenes Wallpaper hochladen und später wieder entfernen. Das Bild gilt für alle Spielansichten unter `/matches`. Empfohlen ist ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
+In der Kachel `Hintergrund` kannst du ein eigenes Hintergrundbild hochladen und später wieder entfernen. Das Bild gilt für alle Spielansichten unter `/matches`. Empfohlen ist ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
 
-Eine Vorlage kann das eigene Wallpaper durch ihr Preset-Wallpaper ersetzen und aktiviert dabei `Hintergrund` und `Schrift`. Wurffeld-Darts bleiben von Vorlagen unverändert.
+Eine Designvorlage kann das eigene Hintergrundbild durch ihr mitgeliefertes Bild ersetzen und aktiviert dabei `Hintergrund` und `Schrift & Farben`. Die Darts in der Wurfanzeige bleiben von Designvorlagen unverändert.
 
 Den globalen Hintergrund kannst du zusätzlich anpassen:
 
-- `Hintergrund-Darstellung`: Hier legst du fest, wie das Bild platziert wird.
-- `Hintergrundbild-Deckkraft`: Hier regelst du, wie stark das Bild sichtbar bleibt.
-- `Spielerfelder-Transparenz`: Hier bestimmst du, wie stark die Spielerfelder den Hintergrund durchlassen.
+- `Bildanpassung`: Hier legst du fest, wie das Bild platziert wird.
+- `Sichtbarkeit des Hintergrundbilds`: Hier regelst du, wie stark das Bild sichtbar bleibt.
+- `Durchsichtigkeit der Spielerfelder`: Hier bestimmst du, wie stark die Spielerfelder den Hintergrund durchlassen.
 
-Hinweis: Die Option `Debug` ist in allen Modulen nur für Fehlersuche gedacht. Im normalen Spielbetrieb sollte sie deaktiviert bleiben.
+Hinweis: Die Option `Diagnose` ist in allen Modulen nur für Fehlersuche gedacht. Im normalen Spielbetrieb sollte sie deaktiviert bleiben.
 
 <!-- xconfig-generated:start -->
 ## Modul-Finder
@@ -185,26 +181,26 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 
 | Modul | Bereich | Geeignet für | Kurz erklärt |
 | --- | --- | --- | --- |
-| [Vorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
-| [Hintergrund](#theme-global-background) | Theme | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
-| [Schrift](#template-global-typography) | Theme | `alle Modi` | Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen. |
-| [Bot Board Style](#bot-board-style) | Animation & Komfort | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
-| [Wurffeld-Darts](#turn-dart-display) | Animation & Komfort | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
-| [Checkout Score Highlight](#animation-autodarts-animate-checkout-score-highlight) | Animation & Komfort | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
-| [X01 Remaining Score Bar](#animation-autodarts-x01-remaining-score-bar) | Animation & Komfort | `X01` | Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl. |
-| [Checkout Target Highlights](#animation-autodarts-animate-checkout-target-highlights) | Animation & Komfort | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
-| [TV Board Zoom](#animation-autodarts-animate-tv-board-zoom) | Animation & Komfort | `X01` | Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board. |
-| [Checkout Suggestion Styles](#animation-autodarts-checkout-suggestion-styles) | Animation & Komfort | `X01` | Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor. |
-| [X01 Bust Active Player Highlight](#animation-autodarts-x01-bust-active-player-highlight) | Animation & Komfort | `X01` | Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen. |
-| [AVG Trend Arrow](#animation-autodarts-animate-avg-trend-arrow) | Animation & Komfort | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
-| [Special Hit Highlights](#animation-autodarts-animate-special-hit-highlights) | Animation & Komfort | `alle Modi` | Setzt Triple-, Double- und Bull-Treffer mit auffälligen Stripe-/Glow-Looks, Text-Effekten und slot-genauen Burst-Bewegungen in Szene. |
-| [Cricket Target Highlighter](#animation-autodarts-animate-cricket-target-highlighter) | Animation & Komfort | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
-| [Cricket Grid Status Effects](#animation-autodarts-animate-cricket-grid-status-effects) | Animation & Komfort | `Cricket`, `Tactics` | Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel. |
-| [Dartboard Marker Highlight](#animation-autodarts-animate-dartboard-marker-highlight) | Animation & Komfort | `alle Modi` | Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger. |
-| [Dart Marker Replacer](#animation-autodarts-animate-dart-marker-replacer) | Animation & Komfort | `alle Modi` | Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation und pausiert im Live-Modus automatisch. |
-| [Take Out Darts Alert](#animation-autodarts-animate-take-out-darts-alert) | Animation & Komfort | `alle Modi` | Macht den Hinweis zum Entfernen der Darts mit einer großen Grafik auffälliger. |
-| [Single Bull Hit Sound](#animation-autodarts-animate-single-bull-hit-sound) | Animation & Komfort | `alle Modi` | Spielt bei Single Bull einen kurzen Ton zur akustischen Rückmeldung ab. |
-| [Turn Score Counter](#animation-autodarts-animate-turn-score-counter) | Animation & Komfort | `alle Modi` | Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter. |
+| [Designvorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
+| [Hintergrund](#theme-global-background) | Design | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
+| [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen. |
+| [Dartboard-Design](#bot-board-style) | Funktion | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
+| [Darts in der Wurfanzeige](#turn-dart-display) | Funktion | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
+| [Finishbaren Restscore hervorheben](#animation-autodarts-animate-checkout-score-highlight) | Funktion | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
+| [Restscore-Balken](#animation-autodarts-x01-remaining-score-bar) | Funktion | `X01` | Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl. |
+| [Checkout-Ziele hervorheben](#animation-autodarts-animate-checkout-target-highlights) | Funktion | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
+| [Automatischer Board-Zoom](#animation-autodarts-animate-tv-board-zoom) | Funktion | `X01` | Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board. |
+| [Checkout-Vorschlag gestalten](#animation-autodarts-checkout-suggestion-styles) | Funktion | `X01` | Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor. |
+| [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen. |
+| [AVG-Trend anzeigen](#animation-autodarts-animate-avg-trend-arrow) | Funktion | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
+| [Triple, Double & Bull hervorheben](#animation-autodarts-animate-special-hit-highlights) | Funktion | `alle Modi` | Hebt Triple-, Double- und Bull-Treffer mit Farben, Licht und kurzen Bewegungen hervor. |
+| [Cricket-Ziele hervorheben](#animation-autodarts-animate-cricket-target-highlighter) | Funktion | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
+| [Cricket-Statusanzeigen](#animation-autodarts-animate-cricket-grid-status-effects) | Funktion | `Cricket`, `Tactics` | Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel. |
+| [Treffermarkierungen hervorheben](#animation-autodarts-animate-dartboard-marker-highlight) | Funktion | `alle Modi` | Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger. |
+| [Treffermarkierungen durch Darts ersetzen](#animation-autodarts-animate-dart-marker-replacer) | Funktion | `alle Modi` | Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation und pausiert im Live-Modus automatisch. |
+| [Hinweis: Darts entfernen](#animation-autodarts-animate-take-out-darts-alert) | Funktion | `alle Modi` | Macht den Hinweis zum Entfernen der Darts mit einer großen Grafik auffälliger. |
+| [Ton bei Single Bull](#animation-autodarts-animate-single-bull-hit-sound) | Funktion | `alle Modi` | Spielt bei Single Bull einen kurzen Ton zur akustischen Rückmeldung ab. |
+| [Punkte animiert zählen](#animation-autodarts-animate-turn-score-counter) | Funktion | `alle Modi` | Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter. |
 
 ## Empfohlene Standards
 
@@ -212,14 +208,14 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Vollständiges Profil der empfohlenen Standards](docs/FEATURES.md#empfohlene-standards)
 
-## Themen
+## Design
 
 <a id="theme-global-presets"></a>
 
-### Vorlagen
+### Designvorlagen
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Wendet Wallpaper, Schrift und Farben gemeinsam an, ohne Wurffeld-Darts zu verändern.
+- Was macht es sichtbar? Wendet Hintergrundbild, Schrift und Farben gemeinsam an, ohne die Darts in der Wurfanzeige zu verändern.
 - Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-presets)
@@ -240,21 +236,21 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 <a id="template-global-typography"></a>
 
-### Schrift
+### Schrift & Farben
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Wendet Schrift, Farbrollen und Aktivspieler-Tönung auf ausgewählte Bereiche aller Spielansichten an.
+- Was macht es sichtbar? Wendet Schrift und Farben auf ausgewählte Bereiche aller Spielansichten an und kann den Hintergrund des aktiven Spielers leicht einfärben.
 - Wann sinnvoll? Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-global-typography)
 
 ![Globale Schrift](docs/screenshots/template-theme-global-typography-xConfig.png)
 
-## Animationen und Komfort
+## Alle Modi
 
 <a id="bot-board-style"></a>
 
-### Bot Board Style
+### Dartboard-Design
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.
@@ -264,96 +260,20 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 <a id="turn-dart-display"></a>
 
-### Wurffeld-Darts
+### Darts in der Wurfanzeige
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Ersetzt Wurffeld-Darts durch Farbe, Verlauf, Text, Marker-Bild oder eigenen Upload.
+- Was macht es sichtbar? Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild oder einen eigenen Upload.
 - Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#turn-dart-display)
 
-![Wurffeld-Darts mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
-
-<a id="animation-autodarts-animate-checkout-score-highlight"></a>
-<a id="animation-autodarts-animate-checkout-score-pulse"></a>
-
-### Checkout Score Highlight
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
-- Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-checkout-score-highlight)
-
-![Checkout Score Highlight](docs/screenshots/animation-checkout-score-pulse.gif)
-
-<a id="animation-autodarts-x01-remaining-score-bar"></a>
-<a id="animation-autodarts-x01-score-progress"></a>
-
-### X01 Remaining Score Bar
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
-- Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-remaining-score-bar)
-
-![X01 Remaining Score Bar](docs/screenshots/animation-x01-score-progress.png)
-
-<a id="animation-autodarts-animate-checkout-target-highlights"></a>
-<a id="animation-autodarts-animate-checkout-board-targets"></a>
-
-### Checkout Target Highlights
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
-- Wann sinnvoll? Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-checkout-target-highlights)
-
-![Checkout Target Highlights](docs/screenshots/animation-checkout-board-targets.gif)
-
-<a id="animation-autodarts-animate-tv-board-zoom"></a>
-
-### TV Board Zoom
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil.
-- Wann sinnvoll? Wenn du bei dritten Darts und Finishes mehr Fokus auf Zielbereiche willst, aber bei Korrekturen schnell wieder die ganze Scheibe brauchst.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-tv-board-zoom)
-
-![TV Board Zoom](docs/screenshots/animation-tv-board-zoom.gif)
-
-<a id="animation-autodarts-checkout-suggestion-styles"></a>
-<a id="animation-autodarts-style-checkout-suggestions"></a>
-
-### Checkout Suggestion Styles
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.
-- Wann sinnvoll? Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-checkout-suggestion-styles)
-
-![Checkout Suggestion Styles](docs/screenshots/animation-style-checkout-suggestions.png)
-
-<a id="animation-autodarts-x01-bust-active-player-highlight"></a>
-
-### X01 Bust Active Player Highlight
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
-- Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-bust-active-player-highlight)
-
-![X01 Bust Active Player Highlight](docs/screenshots/animation-x01-bust-active-player-highlight.gif)
+![Darts in der Wurfanzeige mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
 
-### AVG Trend Arrow
+### AVG-Trend anzeigen
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Ein kleiner Pfeil direkt am AVG zeigt kurz die Trendrichtung.
@@ -361,49 +281,23 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-avg-trend-arrow)
 
-![AVG Trend Arrow](docs/screenshots/animation-average-trend-arrow.png)
+![AVG-Trend anzeigen](docs/screenshots/animation-average-trend-arrow.png)
 
 <a id="animation-autodarts-animate-special-hit-highlights"></a>
 <a id="animation-autodarts-animate-triple-double-bull-hits"></a>
 
-### Special Hit Highlights
+### Triple, Double & Bull hervorheben
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen dunkle Pattern-Highlights, stärkeren Text-Fokus und klar sichtbare Burst-Moves.
+- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen farbige Flächen und einen deutlich sichtbaren Trefferimpuls.
 - Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-special-hit-highlights)
 
-<a id="animation-autodarts-animate-cricket-target-highlighter"></a>
-<a id="animation-autodarts-animate-cricket-highlighter"></a>
-
-### Cricket Target Highlighter
-
-- Gilt für: `Cricket`, `Tactics`
-- Was macht es sichtbar? Zielzustände und Drucksituationen werden direkt am Board sichtbar.
-- Wann sinnvoll? Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, scorable, unter Druck oder bereits erledigt sind.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-cricket-target-highlighter)
-
-![Cricket Target Highlighter](docs/screenshots/animation-cricket-target-highlighter.png)
-
-<a id="animation-autodarts-animate-cricket-grid-status-effects"></a>
-<a id="animation-autodarts-animate-cricket-grid-fx"></a>
-
-### Cricket Grid Status Effects
-
-- Gilt für: `Cricket`, `Tactics`
-- Was macht es sichtbar? Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
-- Wann sinnvoll? Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-cricket-grid-status-effects)
-
-![Cricket Grid Status Effects](docs/screenshots/animation-cricket-grid-fx.png)
-
 <a id="animation-autodarts-animate-dartboard-marker-highlight"></a>
 <a id="animation-autodarts-animate-dart-marker-emphasis"></a>
 
-### Dartboard Marker Highlight
+### Treffermarkierungen hervorheben
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
@@ -411,12 +305,12 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dartboard-marker-highlight)
 
-![Dartboard Marker Highlight](docs/screenshots/animation-dart-marker-emphasis.gif)
+![Treffermarkierungen hervorheben](docs/screenshots/animation-dart-marker-emphasis.gif)
 
 <a id="animation-autodarts-animate-dart-marker-replacer"></a>
 <a id="animation-autodarts-animate-dart-marker-darts"></a>
 
-### Dart Marker Replacer
+### Treffermarkierungen durch Darts ersetzen
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
@@ -424,12 +318,12 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dart-marker-replacer)
 
-![Dart Marker Replacer](docs/screenshots/animation-dart-marker-darts.png)
+![Treffermarkierungen durch Darts ersetzen](docs/screenshots/animation-dart-marker-darts.png)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
 
-### Take Out Darts Alert
+### Hinweis: Darts entfernen
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Der Hinweis zum Entfernen der Darts wird als große Grafik deutlich präsenter dargestellt.
@@ -437,12 +331,12 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-take-out-darts-alert)
 
-![Take Out Darts Alert](docs/screenshots/animation-remove-darts-notification.png)
+![Hinweis: Darts entfernen](docs/screenshots/animation-remove-darts-notification.png)
 
 <a id="animation-autodarts-animate-single-bull-hit-sound"></a>
 <a id="animation-autodarts-animate-single-bull-sound"></a>
 
-### Single Bull Hit Sound
+### Ton bei Single Bull
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Bei Single Bull hörst du einen kurzen Ton; grafisch bleibt das Spiel unverändert.
@@ -453,7 +347,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 <a id="animation-autodarts-animate-turn-score-counter"></a>
 <a id="animation-autodarts-animate-turn-points-count"></a>
 
-### Turn Score Counter
+### Punkte animiert zählen
 
 - Gilt für: `alle Modi`
 - Was macht es sichtbar? Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
@@ -461,7 +355,113 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-turn-score-counter)
 
-![Turn Score Counter](docs/screenshots/animation-turn-points-count.gif)
+![Punkte animiert zählen](docs/screenshots/animation-turn-points-count.gif)
+
+## X01
+
+<a id="animation-autodarts-animate-checkout-score-highlight"></a>
+<a id="animation-autodarts-animate-checkout-score-pulse"></a>
+
+### Finishbaren Restscore hervorheben
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
+- Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-checkout-score-highlight)
+
+![Finishbaren Restscore hervorheben](docs/screenshots/animation-checkout-score-pulse.gif)
+
+<a id="animation-autodarts-x01-remaining-score-bar"></a>
+<a id="animation-autodarts-x01-score-progress"></a>
+
+### Restscore-Balken
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
+- Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-remaining-score-bar)
+
+![Restscore-Balken](docs/screenshots/animation-x01-score-progress.png)
+
+<a id="animation-autodarts-animate-checkout-target-highlights"></a>
+<a id="animation-autodarts-animate-checkout-board-targets"></a>
+
+### Checkout-Ziele hervorheben
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Unter `180` wird das nächste sinnvolle Checkout-Ziel direkt am virtuellen Board markiert.
+- Wann sinnvoll? Wenn du in der Checkout-Phase immer direkt am Board sehen willst, welches Feld als Nächstes sinnvoll ist.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-checkout-target-highlights)
+
+![Checkout-Ziele hervorheben](docs/screenshots/animation-checkout-board-targets.gif)
+
+<a id="animation-autodarts-animate-tv-board-zoom"></a>
+
+### Automatischer Board-Zoom
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil.
+- Wann sinnvoll? Wenn du bei dritten Darts und Finishes mehr Fokus auf Zielbereiche willst, aber bei Korrekturen schnell wieder die ganze Scheibe brauchst.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-tv-board-zoom)
+
+![Automatischer Board-Zoom](docs/screenshots/animation-tv-board-zoom.gif)
+
+<a id="animation-autodarts-checkout-suggestion-styles"></a>
+<a id="animation-autodarts-style-checkout-suggestions"></a>
+
+### Checkout-Vorschlag gestalten
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.
+- Wann sinnvoll? Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-checkout-suggestion-styles)
+
+![Checkout-Vorschlag gestalten](docs/screenshots/animation-style-checkout-suggestions.png)
+
+<a id="animation-autodarts-x01-bust-active-player-highlight"></a>
+
+### Überworfen (BUST) hervorheben
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
+- Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-bust-active-player-highlight)
+
+![Überworfen (BUST) hervorheben](docs/screenshots/animation-x01-bust-active-player-highlight.gif)
+
+## Cricket / Tactics
+
+<a id="animation-autodarts-animate-cricket-target-highlighter"></a>
+<a id="animation-autodarts-animate-cricket-highlighter"></a>
+
+### Cricket-Ziele hervorheben
+
+- Gilt für: `Cricket`, `Tactics`
+- Was macht es sichtbar? Zielzustände und Drucksituationen werden direkt am Board sichtbar.
+- Wann sinnvoll? Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, scorable, unter Druck oder bereits erledigt sind.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-cricket-target-highlighter)
+
+![Cricket-Ziele hervorheben](docs/screenshots/animation-cricket-target-highlighter.png)
+
+<a id="animation-autodarts-animate-cricket-grid-status-effects"></a>
+<a id="animation-autodarts-animate-cricket-grid-fx"></a>
+
+### Cricket-Statusanzeigen
+
+- Gilt für: `Cricket`, `Tactics`
+- Was macht es sichtbar? Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
+- Wann sinnvoll? Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-cricket-grid-status-effects)
+
+![Cricket-Statusanzeigen](docs/screenshots/animation-cricket-grid-fx.png)
 <!-- xconfig-generated:end -->
 ## Weitere Dokumentation
 

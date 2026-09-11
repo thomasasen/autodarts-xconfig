@@ -9,8 +9,6 @@ export function createShellRouteController(options = {}) {
     typeof options.isLegacyConfigPath === "function" ? options.isLegacyConfigPath : () => false;
   const isConfigHash =
     typeof options.isConfigHash === "function" ? options.isConfigHash : () => false;
-  const currentRoute =
-    typeof options.currentRoute === "function" ? options.currentRoute : () => "";
   const queueSync = typeof options.queueSync === "function" ? options.queueSync : () => {};
 
   function isConfigRoute() {
@@ -37,6 +35,14 @@ export function createShellRouteController(options = {}) {
     return `${resolveBaseRouteForConfigHash()}${search}${configHash}`;
   }
 
+  function buildCurrentReturnRoute() {
+    const pathname = normalizeRoutePath(windowRef?.location?.pathname || "");
+    if (!pathname || pathname === configPath) {
+      return "";
+    }
+    return `${pathname}${String(windowRef?.location?.search || "")}`;
+  }
+
   function normalizeLegacyConfigPathIfNeeded() {
     if (!isLegacyConfigPath(windowRef?.location?.pathname || "", configPath)) {
       return false;
@@ -50,7 +56,7 @@ export function createShellRouteController(options = {}) {
 
   function navigateToConfigRoute() {
     if (!isConfigRoute()) {
-      state.lastNonConfigRoute = normalizeRoutePath(currentRoute(windowRef)) || "/lobbies";
+      state.lastNonConfigRoute = buildCurrentReturnRoute() || "/lobbies";
       windowRef.history.pushState({ adxconfig: true }, "", buildConfigHashRoute());
     } else if (normalizeLegacyConfigPathIfNeeded()) {
       // Legacy /ad-xconfig URLs should be normalized once to avoid 404 on hard reload.
@@ -68,6 +74,7 @@ export function createShellRouteController(options = {}) {
 
   return {
     buildConfigHashRoute,
+    buildCurrentReturnRoute,
     isConfigRoute,
     navigateBack,
     navigateToConfigRoute,

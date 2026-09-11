@@ -22,7 +22,7 @@ test("feature registry ignores duplicate feature keys deterministically", () => 
   const features = registry.getDefinitions();
 
   assert.equal(features.length, defaultFeatureDefinitions.length);
-  assert.equal(features[0].title, "Checkout Score Highlight");
+  assert.equal(features[0].title, "Finishbaren Restscore hervorheben");
 });
 
 test("feature registry lists runtime metadata against snapshots", () => {

@@ -1,7 +1,7 @@
 const FOCUSABLE = 'button, input, select, textarea, summary, a[href], [tabindex]';
 const IDENTITY_ATTRIBUTES = [
   'id', 'data-adxconfig-action', 'data-feature-key', 'data-setting-key',
-  'data-setting-value', 'data-adxconfig-tab', 'data-color-input-role',
+  'data-setting-value', 'data-color-input-role',
   'aria-label', 'data-adxconfig-transfer-include-assets',
 ];
 
@@ -66,19 +66,6 @@ export function createShellFocusController({ documentRef, panelHostId }) {
     handleKeydown(event) {
       const root = host();
       if (!root?.contains?.(event.target)) return false;
-      const tab = event.target.closest?.('[role="tab"]');
-      const directions = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
-      if (tab && directions.includes(event.key)) {
-        const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
-        const index = tabs.indexOf(tab);
-        let next = event.key === 'Home' ? 0 : tabs.length - 1;
-        if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
-        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
-        event.preventDefault();
-        tabs[next]?.focus?.();
-        tabs[next]?.click?.();
-        return true;
-      }
       const activeDialog = dialog();
       if (event.key !== 'Tab' || !activeDialog?.contains?.(event.target)) return false;
       const nodes = focusableNodes(activeDialog);

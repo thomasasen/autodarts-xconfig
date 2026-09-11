@@ -1,8 +1,8 @@
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
+import { getXConfigSectionMeta, XCONFIG_SECTION_DEFINITIONS } from "./sections.js";
 import { resolveDartDesignAsset, resolveTurnDartAsset } from "#feature-assets";
 import {
   isBackgroundThemeFeature,
-  isThemeFeature,
 } from "./path-utils.js";
 import {
   buildThemeBackgroundStatus,
@@ -156,20 +156,6 @@ const LISTENER_KEYS = Object.freeze({
   keydown: "xconfig-shell:document-keydown",
   visibilitychange: "xconfig-shell:document-visibilitychange",
 });
-const TAB_DEFINITIONS = Object.freeze([
-  Object.freeze({
-    id: "themes",
-    icon: "🎨",
-    label: "Themen",
-    description: "Farben, Layout und Hintergründe",
-  }),
-  Object.freeze({
-    id: "animations",
-    icon: "✨",
-    label: "Animationen",
-    description: "Effekte und Komfortfunktionen",
-  }),
-]);
 const SIDEBAR_ROUTE_HINTS = new Set([
   "/lobbies",
   "/boards",
@@ -180,51 +166,6 @@ const SIDEBAR_ROUTE_HINTS = new Set([
   "/settings",
 ]);
 const descriptorOrder = xconfigDescriptorOrder;
-const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
-  Object.freeze({
-    id: "all-modes",
-    title: "Gilt für: Alle Modi",
-    featureKeys: Object.freeze([
-      "turn-score-counter",
-      "avg-trend-arrow",
-      "special-hit-highlights",
-      "bot-board-style",
-      "turn-dart-display",
-      "dart-marker-replacer",
-      "dartboard-marker-highlight",
-      "take-out-darts-alert",
-      "single-bull-hit-sound",
-    ]),
-  }),
-  Object.freeze({
-    id: "x01",
-    title: "Gilt für: X01",
-    featureKeys: Object.freeze([
-      "checkout-suggestion-styles",
-      "checkout-score-highlight",
-      "x01-remaining-score-bar",
-      "x01-bust-active-player-highlight",
-      "checkout-target-highlights",
-      "tv-board-zoom",
-    ]),
-  }),
-  Object.freeze({
-    id: "cricket-tactics",
-    title: "Gilt für: Cricket / Tactics",
-    featureKeys: Object.freeze([
-      "cricket-target-highlighter",
-      "cricket-grid-status-effects",
-    ]),
-  }),
-]);
-const animationGroupOrder = new Map(
-  ANIMATION_GROUP_DEFINITIONS.map((group, index) => [group.id, index])
-);
-const animationFeatureOrder = new Map(
-  ANIMATION_GROUP_DEFINITIONS.flatMap((group) =>
-    group.featureKeys.map((featureKey, index) => [featureKey, [group.id, index]])
-  )
-);
 const shellByWindow = new WeakMap();
 
 function isObjectLike(value) {
@@ -341,31 +282,9 @@ function sortFeatures(left, right) {
   return String(left.title || "").localeCompare(String(right.title || ""));
 }
 
-function getAnimationGroupMeta(featureKey) {
-  const groupMeta = animationFeatureOrder.get(String(featureKey || "").trim());
-  if (!groupMeta) {
-    return {
-      groupId: "other",
-      groupOrder: Number.MAX_SAFE_INTEGER,
-      featureOrder: Number.MAX_SAFE_INTEGER,
-    };
-  }
-  const [groupId, featureOrder] = groupMeta;
-  return {
-    groupId,
-    groupOrder: animationGroupOrder.has(groupId)
-      ? animationGroupOrder.get(groupId)
-      : Number.MAX_SAFE_INTEGER,
-    featureOrder,
-  };
-}
-
-function sortAnimationFeatures(left, right) {
-  const leftMeta = getAnimationGroupMeta(left?.featureKey);
-  const rightMeta = getAnimationGroupMeta(right?.featureKey);
-  if (leftMeta.groupOrder !== rightMeta.groupOrder) {
-    return leftMeta.groupOrder - rightMeta.groupOrder;
-  }
+function sortSectionFeatures(left, right) {
+  const leftMeta = getXConfigSectionMeta(left?.featureKey);
+  const rightMeta = getXConfigSectionMeta(right?.featureKey);
   if (leftMeta.featureOrder !== rightMeta.featureOrder) {
     return leftMeta.featureOrder - rightMeta.featureOrder;
   }
@@ -431,6 +350,12 @@ function buildUpdateVersionCopy(installedVersion, remoteVersion) {
 }
 
 const UPDATE_PANEL_TEXT_RESOLVERS = Object.freeze({
+  local({ installedVersion }) {
+    return {
+      titleText: `Version ${installedVersion}`,
+      copyText: "Lokale Installation",
+    };
+  },
   checking() {
     return {
       titleText: "Versionsstatus wird geprüft",
@@ -464,7 +389,7 @@ function resolveUpdatePanelText(panelState, context) {
 
 function getUpdatePanelState(updateStatus) {
   if (!updateStatus?.capable) {
-    return "";
+    return "local";
   }
 
   const normalizedStatus = String(updateStatus.status || "").trim().toLowerCase();
@@ -477,10 +402,6 @@ function getUpdatePanelState(updateStatus) {
 }
 
 function buildUpdatePanel(documentRef, updateStatus) {
-  if (!updateStatus?.capable) {
-    return null;
-  }
-
   const panelState = getUpdatePanelState(updateStatus);
   const installedVersion = String(updateStatus.installedVersion || "unbekannt").trim() || "unbekannt";
   const remoteVersion = String(updateStatus.remoteVersion || "").trim();
@@ -555,16 +476,18 @@ function buildUpdatePanel(documentRef, updateStatus) {
     text: panelState === "available" ? "Was ist neu?" : "Changelog",
   }));
   actions.appendChild(changelogLink);
-  actions.appendChild(createElement(documentRef, "button", {
-    type: "button",
-    className: "ad-xconfig-btn",
-    text: panelState === "checking" ? "Prüfe..." : "Neu prüfen",
-    attributes: {
-      "data-adxconfig-action": "check-update",
-      "aria-label": "Update erneut prüfen",
-      disabled: panelState === "checking" ? "disabled" : null,
-    },
-  }));
+  if (updateStatus?.capable) {
+    actions.appendChild(createElement(documentRef, "button", {
+      type: "button",
+      className: "ad-xconfig-btn",
+      text: panelState === "checking" ? "Prüfe..." : "Neu prüfen",
+      attributes: {
+        "data-adxconfig-action": "check-update",
+        "aria-label": "Update erneut prüfen",
+        disabled: panelState === "checking" ? "disabled" : null,
+      },
+    }));
+  }
   if (panelState === "available") {
     actions.appendChild(createElement(documentRef, "button", {
       type: "button",
@@ -595,14 +518,22 @@ function buildSwitch(documentRef, input, label) {
     attributes: { "aria-hidden": "true" },
   });
   track.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-switch-option ad-xconfig-switch-option--on",
-    text: "On",
-  }));
-  track.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-switch-option ad-xconfig-switch-option--off",
-    text: "Off",
+    className: "ad-xconfig-switch-thumb",
   }));
   wrapper.appendChild(track);
+  const state = createElement(documentRef, "span", {
+    className: "ad-xconfig-switch-state",
+    attributes: { "aria-hidden": "true" },
+  });
+  state.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-switch-option ad-xconfig-switch-option--off",
+    text: "Aus",
+  }));
+  state.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-switch-option ad-xconfig-switch-option--on",
+    text: "✓ Aktiv",
+  }));
+  wrapper.appendChild(state);
   return wrapper;
 }
 
@@ -3144,6 +3075,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
       "data-feature-key": feature.featureKey,
       "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
       "data-card-type": descriptor?.cardType || "toggle",
+      "data-enabled": descriptor?.cardType === "action" ? undefined : String(Boolean(feature.enabled)),
       "data-design-status": descriptor?.designStatus || "deprecated",
       "data-preview-kind": preview.kind,
       "data-preview-display-mode": preview.displayMode || undefined,
@@ -3229,6 +3161,15 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
       text: "Deprecated",
       attributes: {
         "data-adxconfig-status-badge": "deprecated",
+      },
+    }));
+  }
+  if (feature.config?.debug === true) {
+    badges.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-status-badge ad-xconfig-status-badge--diagnostic",
+      text: "Diagnose aktiv",
+      attributes: {
+        "data-adxconfig-status-badge": "diagnostic",
       },
     }));
   }
@@ -3479,9 +3420,9 @@ function buildSettingsModal(documentRef, state, features) {
   return backdrop;
 }
 
-function buildAnimationGroups(documentRef, features = []) {
+export function groupXConfigFeatures(features = []) {
   const sortedFeatures = Array.isArray(features)
-    ? features.slice().sort(sortAnimationFeatures)
+    ? features.slice()
     : [];
   if (!sortedFeatures.length) {
     return [];
@@ -3489,62 +3430,83 @@ function buildAnimationGroups(documentRef, features = []) {
 
   const groupedFeatures = new Map();
   sortedFeatures.forEach((feature) => {
-    const { groupId } = getAnimationGroupMeta(feature?.featureKey);
-    const list = groupedFeatures.get(groupId) || [];
+    const { sectionId } = getXConfigSectionMeta(feature?.featureKey);
+    const list = groupedFeatures.get(sectionId) || [];
     list.push(feature);
-    groupedFeatures.set(groupId, list);
+    groupedFeatures.set(sectionId, list);
   });
 
   const sections = [];
-  ANIMATION_GROUP_DEFINITIONS.forEach((group) => {
-    const entries = groupedFeatures.get(group.id) || [];
+  XCONFIG_SECTION_DEFINITIONS.forEach((sectionDefinition) => {
+    const entries = (groupedFeatures.get(sectionDefinition.id) || []).sort(sortSectionFeatures);
     if (!entries.length) {
       return;
     }
-    const section = createElement(documentRef, "section", {
-      className: "ad-xconfig-group",
-      attributes: {
-        "data-adxconfig-animation-group": group.id,
-      },
-    });
-    section.appendChild(createElement(documentRef, "h2", {
-      className: "ad-xconfig-group-title",
-      text: group.title,
-    }));
-    const grid = createElement(documentRef, "div", {
-      className: "ad-xconfig-grid",
-    });
-    entries.forEach((feature) => {
-      grid.appendChild(buildFeatureCard(documentRef, feature));
-    });
-    section.appendChild(grid);
-    sections.push(section);
-    groupedFeatures.delete(group.id);
+    sections.push({ definition: sectionDefinition, entries });
+    groupedFeatures.delete(sectionDefinition.id);
   });
 
   const remainingFeatures = groupedFeatures.get("other") || [];
   if (remainingFeatures.length) {
-    const fallbackSection = createElement(documentRef, "section", {
-      className: "ad-xconfig-group",
-      attributes: {
-        "data-adxconfig-animation-group": "other",
+    sections.push({
+      definition: {
+        id: "other",
+        title: "Weitere",
+        description: "Weitere xConfig-Module ohne eigene Bereichszuordnung.",
       },
+      entries: remainingFeatures.sort(sortFeatures),
     });
-    fallbackSection.appendChild(createElement(documentRef, "h2", {
-      className: "ad-xconfig-group-title",
-      text: "Weitere",
-    }));
-    const fallbackGrid = createElement(documentRef, "div", {
-      className: "ad-xconfig-grid",
-    });
-    remainingFeatures.forEach((feature) => {
-      fallbackGrid.appendChild(buildFeatureCard(documentRef, feature));
-    });
-    fallbackSection.appendChild(fallbackGrid);
-    sections.push(fallbackSection);
   }
 
   return sections;
+}
+
+function buildXConfigSections(documentRef, features = []) {
+  return groupXConfigFeatures(features).map(({ definition, entries }) =>
+    buildXConfigSection(documentRef, definition, entries, features)
+  );
+}
+
+function buildXConfigSection(documentRef, sectionDefinition, entries, allFeatures) {
+  const section = createElement(documentRef, "section", {
+    className: "ad-xconfig-section",
+    attributes: {
+      "data-adxconfig-section": sectionDefinition.id,
+    },
+  });
+  const header = createElement(documentRef, "header", {
+    className: "ad-xconfig-section-header",
+  });
+  const heading = createElement(documentRef, "div", {
+    className: "ad-xconfig-section-heading",
+  });
+  heading.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-section-eyebrow",
+    text: "Bereich",
+  }));
+  heading.appendChild(createElement(documentRef, "h2", {
+    className: "ad-xconfig-section-title",
+    text: sectionDefinition.title,
+  }));
+  heading.appendChild(createElement(documentRef, "p", {
+    className: "ad-xconfig-section-description",
+    text: sectionDefinition.description,
+  }));
+  header.appendChild(heading);
+  header.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-section-count",
+    text: `${entries.length} ${entries.length === 1 ? "Kachel" : "Kacheln"}`,
+  }));
+  section.appendChild(header);
+
+  const grid = createElement(documentRef, "div", {
+    className: "ad-xconfig-grid",
+  });
+  entries.forEach((feature) => {
+    grid.appendChild(buildFeatureCard(documentRef, feature, allFeatures));
+  });
+  section.appendChild(grid);
+  return section;
 }
 
 function formatTransferFileSize(value) {
@@ -3804,7 +3766,21 @@ export function buildShellContent(documentRef, state, features) {
   const header = createElement(documentRef, "header", {
     className: "ad-xconfig-header",
   });
-  const heading = createElement(documentRef, "div");
+  const headerLead = createElement(documentRef, "div", {
+    className: "ad-xconfig-header-lead",
+  });
+  headerLead.appendChild(createElement(documentRef, "button", {
+    className: "ad-xconfig-btn ad-xconfig-back-btn",
+    text: "← Zurück",
+    type: "button",
+    attributes: {
+      "data-adxconfig-action": "close",
+      "aria-label": "xConfig schließen und zur Ausgangsseite zurückkehren",
+    },
+  }));
+  const heading = createElement(documentRef, "div", {
+    className: "ad-xconfig-heading",
+  });
   const headingMain = createElement(documentRef, "div", {
     className: "ad-xconfig-header-main",
   });
@@ -3815,9 +3791,13 @@ export function buildShellContent(documentRef, state, features) {
   heading.appendChild(headingMain);
   heading.appendChild(createElement(documentRef, "p", {
     className: "ad-xconfig-subtitle",
-    text: "Modulverwaltung für Themen und Animationen.",
+    text: "Alle Module nach Einsatzbereich geordnet.",
   }));
-  header.appendChild(heading);
+  headerLead.appendChild(heading);
+
+  const updatePanel = buildUpdatePanel(documentRef, state.updateStatus);
+  headerLead.appendChild(updatePanel);
+  header.appendChild(headerLead);
 
   const headerActions = createElement(documentRef, "div", {
     className: "ad-xconfig-header-actions",
@@ -3861,11 +3841,6 @@ export function buildShellContent(documentRef, state, features) {
   header.appendChild(headerActions);
   shell.appendChild(header);
 
-  const updatePanel = buildUpdatePanel(documentRef, state.updateStatus);
-  if (updatePanel) {
-    shell.appendChild(updatePanel);
-  }
-
   if (state.notice?.type && state.notice?.message) {
     const notice = createElement(documentRef, "div", {
       className: `ad-xconfig-notice ad-xconfig-notice--${state.notice.type}`,
@@ -3884,104 +3859,18 @@ export function buildShellContent(documentRef, state, features) {
     shell.appendChild(notice);
   }
 
-  shell.appendChild(createElement(documentRef, "p", {
-    className: "ad-xconfig-tabs-label",
-    text: "Bereich auswählen",
-  }));
-  const tabs = createElement(documentRef, "nav", {
-    className: "ad-xconfig-tabs",
-    attributes: {
-      role: "tablist",
-      "aria-label": "Bereich wählen",
-    },
-  });
-  TAB_DEFINITIONS.forEach((tab) => {
-    const isActive = state.activeTab === tab.id;
-    const button = createElement(documentRef, "button", {
-      id: `ad-xconfig-tab-${tab.id}`,
-      className: "ad-xconfig-tab",
-      type: "button",
-      attributes: {
-        "data-adxconfig-tab": tab.id,
-        "data-active": isActive ? "true" : "false",
-        role: "tab",
-        "aria-controls": `ad-xconfig-tabpanel-${tab.id}`,
-        "aria-selected": isActive ? "true" : "false",
-        tabindex: isActive ? "0" : "-1",
-      },
-    });
-    button.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-tab-title",
-      text: tab.label,
-    }));
-
-    tabs.appendChild(button);
-  });
-  shell.appendChild(tabs);
-
-  const activeTabFeatures = features
-    .filter((feature) => {
-      const descriptor = getXConfigDescriptor(feature.featureKey);
-      return (descriptor?.tab || "animations") === state.activeTab;
-    });
-
   const content = createElement(documentRef, "div", {
     className: "ad-xconfig-content",
-    id: `ad-xconfig-tabpanel-${state.activeTab}`,
-    attributes: {
-      role: "tabpanel",
-      "aria-labelledby": `ad-xconfig-tab-${state.activeTab}`,
-    },
+    attributes: { "data-adxconfig-sections": "true" },
   });
-  if (state.activeTab === "themes" && activeTabFeatures.some((feature) => isThemeFeature(feature))) {
-    const contentHead = createElement(documentRef, "div", {
-      className: "ad-xconfig-content-head",
-    });
-    contentHead.appendChild(createElement(documentRef, "h2", {
-      className: "ad-xconfig-content-title",
-      text: "Themen",
-    }));
-    content.appendChild(contentHead);
-  }
-  if (state.activeTab === "animations") {
-    const groups = buildAnimationGroups(documentRef, activeTabFeatures);
-    if (groups.length) {
-      groups.forEach((groupNode, index) => {
-        if (index > 0) {
-          content.appendChild(createElement(documentRef, "hr", {
-            className: "ad-xconfig-group-divider",
-            attributes: {
-              "aria-hidden": "true",
-              "data-adxconfig-animation-divider": "true",
-            },
-          }));
-        }
-        content.appendChild(groupNode);
-      });
-    } else {
-      content.appendChild(createElement(documentRef, "div", {
-        className: "ad-xconfig-empty",
-        text: "Für diesen Bereich wurden keine Module gefunden.",
-      }));
-    }
+  const sections = buildXConfigSections(documentRef, features);
+  if (sections.length) {
+    sections.forEach((sectionNode) => content.appendChild(sectionNode));
   } else {
-    const grid = createElement(documentRef, "div", {
-      className: "ad-xconfig-grid",
-    });
-    activeTabFeatures
-      .slice()
-      .sort(sortFeatures)
-      .forEach((feature) => {
-        grid.appendChild(buildFeatureCard(documentRef, feature, activeTabFeatures));
-      });
-    if (grid.children.length) {
-      content.appendChild(grid);
-    } else {
-      content.appendChild(createElement(documentRef, "div", {
-        className: "ad-xconfig-empty",
-        text: "Für diesen Bereich wurden keine Module gefunden.",
-      }));
-    }
+    content.appendChild(createElement(documentRef, "div", {
+      className: "ad-xconfig-empty",
+      text: "Es wurden keine Module gefunden.",
+    }));
   }
   shell.appendChild(content);
 

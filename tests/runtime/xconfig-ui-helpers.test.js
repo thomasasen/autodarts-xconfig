@@ -43,7 +43,6 @@ test("xconfig path utils build nested feature setting patches and theme keys", (
 test("xconfig render signature helpers round-trip the shell snapshot", () => {
   const signature = buildShellRenderSignature(
     {
-      activeTab: "themes",
       activeSettingsFeatureKey: "theme-cricket",
       notice: {
         type: "info",

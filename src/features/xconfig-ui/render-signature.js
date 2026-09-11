@@ -12,7 +12,6 @@ export function buildShellRenderSignature(state, features, routeActive) {
 
   return JSON.stringify({
     routeActive: Boolean(routeActive),
-    activeTab: String(state?.activeTab || ""),
     activeSettingsFeatureKey: String(state?.activeSettingsFeatureKey || ""),
     noticeType: String(state?.notice?.type || ""),
     noticeMessage: String(state?.notice?.message || ""),

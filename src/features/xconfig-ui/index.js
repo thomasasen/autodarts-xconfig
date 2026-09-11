@@ -1,11 +1,10 @@
-import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
+import { getXConfigDescriptor } from "./descriptors.js";
 import {
   openUserscriptInstall,
   readStoredUpdateStatus,
 } from "./update-check.js";
 import { createManagedNodeMatcher } from "../../core/dom-mutation-filter.js";
 import {
-  currentRoute,
   getContentElement,
   getSidebarElement,
   hasShellNavigationOrLayoutMutation,
@@ -103,20 +102,6 @@ const LISTENER_KEYS = Object.freeze({
   focusout: "xconfig-shell:document-focusout",
   visibilitychange: "xconfig-shell:document-visibilitychange",
 });
-const TAB_DEFINITIONS = Object.freeze([
-  Object.freeze({
-    id: "themes",
-    icon: "🎨",
-    label: "Themen",
-    description: "Farben, Layout und Hintergründe",
-  }),
-  Object.freeze({
-    id: "animations",
-    icon: "✨",
-    label: "Animationen",
-    description: "Effekte und Komfortfunktionen",
-  }),
-]);
 const SIDEBAR_ROUTE_HINTS = new Set([
   "/lobbies",
   "/boards",
@@ -127,50 +112,6 @@ const SIDEBAR_ROUTE_HINTS = new Set([
   "/plus",
   "/settings",
 ]);
-const descriptorOrder = xconfigDescriptorOrder;
-const ANIMATION_GROUP_DEFINITIONS = Object.freeze([
-  Object.freeze({
-    id: "all-modes",
-    title: "Gilt für: Alle Modi",
-    featureKeys: Object.freeze([
-      "turn-score-counter",
-      "avg-trend-arrow",
-      "special-hit-highlights",
-      "dart-marker-replacer",
-      "dartboard-marker-highlight",
-      "take-out-darts-alert",
-      "single-bull-hit-sound",
-    ]),
-  }),
-  Object.freeze({
-    id: "x01",
-    title: "Gilt für: X01",
-    featureKeys: Object.freeze([
-      "checkout-suggestion-styles",
-      "checkout-score-highlight",
-      "x01-remaining-score-bar",
-      "x01-bust-active-player-highlight",
-      "checkout-target-highlights",
-      "tv-board-zoom",
-    ]),
-  }),
-  Object.freeze({
-    id: "cricket-tactics",
-    title: "Gilt für: Cricket / Tactics",
-    featureKeys: Object.freeze([
-      "cricket-target-highlighter",
-      "cricket-grid-status-effects",
-    ]),
-  }),
-]);
-const animationGroupOrder = new Map(
-  ANIMATION_GROUP_DEFINITIONS.map((group, index) => [group.id, index])
-);
-const animationFeatureOrder = new Map(
-  ANIMATION_GROUP_DEFINITIONS.flatMap((group) =>
-    group.featureKeys.map((featureKey, index) => [featureKey, [group.id, index]])
-  )
-);
 const shellByWindow = new WeakMap();
 
 function ensureXConfigShell(options = {}) {
@@ -198,10 +139,11 @@ function ensureXConfigShell(options = {}) {
   const installedVersion = String(runtimeApi.apiVersion || "").trim();
   const initialRoutePath = normalizeRoutePath(windowRef?.location?.pathname || "");
   const initialLastNonConfigRoute =
-    initialRoutePath && initialRoutePath !== CONFIG_PATH ? initialRoutePath : "/lobbies";
+    initialRoutePath && initialRoutePath !== CONFIG_PATH
+      ? `${initialRoutePath}${String(windowRef?.location?.search || "")}`
+      : "/lobbies";
 
   const state = {
-    activeTab: "themes",
     activeSettingsFeatureKey: "",
     hiddenDisplays: new Map(),
     contentHidden: false,
@@ -552,11 +494,7 @@ function ensureXConfigShell(options = {}) {
   function queueSync() {
     queueWindowSync(state, windowRef, () => {
       domGuards.ensureStyle(STYLE_ID, styleText);
-      if (
-        isConfigRoute() &&
-        (state.activeSettingsFeatureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY ||
-          state.activeTab === "themes")
-      ) {
+      if (isConfigRoute()) {
         const typographyFeature = getFeatures().find(
           (feature) => feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
         );
@@ -621,7 +559,6 @@ function ensureXConfigShell(options = {}) {
   routeController = createShellRouteController({
     configHash: CONFIG_HASH,
     configPath: CONFIG_PATH,
-    currentRoute,
     isConfigHash,
     isLegacyConfigPath,
     normalizeRoutePath,
@@ -861,17 +798,6 @@ function ensureXConfigShell(options = {}) {
       return;
     }
     effectPreviewController?.stopActivePreview();
-
-    const tabNode = target.closest("[data-adxconfig-tab]");
-    if (tabNode) {
-      const tabId = tabNode.dataset?.adxconfigTab || "themes";
-      if (TAB_DEFINITIONS.some((tab) => tab.id === tabId)) {
-        state.activeTab = tabId;
-        state.activeSettingsFeatureKey = "";
-        queueSync();
-      }
-      return;
-    }
 
     const actionNode = target.closest("[data-adxconfig-action]");
     if (!actionNode) {

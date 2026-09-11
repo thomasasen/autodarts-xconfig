@@ -10,6 +10,7 @@ import {
 } from "../src/features/xconfig-ui/copy.js";
 import { createRecommendedFeatureConfig } from "../src/config/feature-config-spec.js";
 import { defaultFeatureDefinitions } from "../src/features/feature-registry.js";
+import { getXConfigSectionMeta, XCONFIG_SECTION_DEFINITIONS } from "../src/features/xconfig-ui/sections.js";
 
 const repoRoot = process.cwd();
 const readmePath = path.resolve(repoRoot, "README.md");
@@ -35,10 +36,20 @@ const orderedEntries = xconfigDescriptors
 
 const overviewCounts = Object.freeze({
   totalModules: orderedEntries.length,
-  animationModules: orderedEntries.filter((entry) => entry.descriptor.tab !== "themes").length,
-  themeModules: orderedEntries.filter((entry) => entry.descriptor.tab === "themes").length,
+  animationModules: orderedEntries.filter(
+    (entry) => getXConfigSectionMeta(entry.descriptor.featureKey).sectionId !== "template"
+  ).length,
+  themeModules: orderedEntries.filter(
+    (entry) => getXConfigSectionMeta(entry.descriptor.featureKey).sectionId === "template"
+  ).length,
   themeImageLimit: "1,5 MiB",
 });
+
+function entriesForSection(sectionId) {
+  return orderedEntries.filter(
+    (entry) => getXConfigSectionMeta(entry.descriptor.featureKey).sectionId === sectionId
+  );
+}
 
 function buildRecommendedDefaultsSummary() {
   return [
@@ -51,28 +62,20 @@ function buildRecommendedDefaultsSummary() {
 }
 
 function buildReadmeFeatureDocs() {
-  const themeSections = orderedEntries
-    .filter((entry) => entry.descriptor.tab === "themes")
-    .map(({ descriptor, definition }) => buildReadmeFeatureSection(descriptor, definition).trim())
-    .join("\n\n");
-  const animationSections = orderedEntries
-    .filter((entry) => entry.descriptor.tab !== "themes")
-    .map(({ descriptor, definition }) => buildReadmeFeatureSection(descriptor, definition).trim())
-    .join("\n\n");
+  const sectionDocs = XCONFIG_SECTION_DEFINITIONS.flatMap((section) => {
+    const entries = entriesForSection(section.id);
+    const featureSections = entries
+      .map(({ descriptor, definition }) => buildReadmeFeatureSection(descriptor, definition).trim())
+      .join("\n\n");
+    return [`## ${section.title}`, "", featureSections, ""];
+  });
 
   return [
     buildModuleFinderSection("Modul-Finder", orderedEntries).trim(),
     "",
     buildRecommendedDefaultsSummary(),
     "",
-    "## Themen",
-    "",
-    themeSections,
-    "",
-    "## Animationen und Komfort",
-    "",
-    animationSections,
-    "",
+    ...sectionDocs,
   ].join("\n");
 }
 
@@ -92,26 +95,12 @@ function buildFeaturesDocSections() {
     `- \`${overviewCounts.animationModules}\` Animationen und Komfortfunktionen`,
     `- \`${overviewCounts.themeModules}\` Themes`,
     "",
-    "Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).",
+    "Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).",
+    "",
+    "![Aktuelle AD xConfig Übersicht](screenshots/ad-xconfig-overview-v3.png)",
     "",
     buildXConfigOverviewSection("Hinweise zur Konfiguration", overviewCounts).trim(),
-    "",
-    "![AD xConfig Themenübersicht](screenshots/ad-xconfig-themen.png)",
-    "![AD xConfig Animationenübersicht](screenshots/ad-xconfig-animationen.png)",
   ].join("\n");
-  const themeEntries = orderedEntries.filter((entry) => entry.descriptor.tab === "themes");
-  const x01Entries = orderedEntries.filter(
-    (entry) => entry.descriptor.tab !== "themes" && entry.definition.variants.includes("x01")
-  );
-  const cricketEntries = orderedEntries.filter(
-    (entry) =>
-      entry.descriptor.tab !== "themes" &&
-      entry.definition.variants.includes("cricket") &&
-      entry.definition.variants.includes("tactics")
-  );
-  const allModeEntries = orderedEntries.filter(
-    (entry) => entry.descriptor.tab !== "themes" && entry.definition.variants.includes("all")
-  );
 
   return [
     introSection.trim(),
@@ -124,13 +113,10 @@ function buildFeaturesDocSections() {
       resolveRecommendedConfig
     ).trim(),
     "",
-    buildFeaturesDocGroup("Themen", themeEntries).trim(),
-    "",
-    buildFeaturesDocGroup("Animationen für X01", x01Entries).trim(),
-    "",
-    buildFeaturesDocGroup("Animationen für Cricket und Tactics", cricketEntries).trim(),
-    "",
-    buildFeaturesDocGroup("Animationen für alle Modi", allModeEntries).trim(),
+    ...XCONFIG_SECTION_DEFINITIONS.flatMap((section) => [
+      buildFeaturesDocGroup(section.title, entriesForSection(section.id)).trim(),
+      "",
+    ]),
     "",
   ].join("\n");
 }
