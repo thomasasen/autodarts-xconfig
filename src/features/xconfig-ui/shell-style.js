@@ -102,8 +102,8 @@ ${buildCheckoutScoreHighlightStyleText({ selectorPrefix: `#${PANEL_HOST_ID}` })}
 ${buildCheckoutTargetHighlightsStyleText()}
 ${buildX01RemainingScoreBarStyleText()}
 #${MENU_ITEM_ID}{cursor:pointer}
-#${MENU_ITEM_ID}[data-update-available="true"]{position:relative}
-#${MENU_ITEM_ID}[data-update-available="true"]::after{content:"";position:absolute;top:.52rem;right:.6rem;width:.62rem;height:.62rem;border-radius:999px;background:#ff8370;box-shadow:0 0 0 2px rgba(12,22,54,.92),0 0 0 4px rgba(255,131,112,.18)}
+#${MENU_ITEM_ID}[data-update-available="true"] .ad-xconfig-menu-label{display:inline-flex;align-items:center}
+#${MENU_ITEM_ID}[data-update-available="true"] .ad-xconfig-menu-label::after{content:"";display:inline-block;flex:0 0 auto;margin-left:.38rem;width:.62rem;height:.62rem;border-radius:999px;background:#ff8370;box-shadow:0 0 0 2px rgba(12,22,54,.92),0 0 0 4px rgba(255,131,112,.18)}
 #${PANEL_HOST_ID}{display:none;position:relative;width:100%;height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--color-midnight-midnight,#020817);--adx-surface:var(--color-surface-surface,#16181c);--adx-raised:var(--color-black-85,#1b1f29);--adx-secondary:var(--color-black-70,#292c33);--adx-text:#fff;--adx-muted:var(--color-black-20,#cacfd9);--adx-subtle:var(--color-black-30,#b8bcc5);--adx-primary:var(--color-brand-blue-60,#0b55df);--adx-success:var(--color-system-success,#49da9e);--adx-border:rgba(255,255,255,.12);--adx-body:var(--font-body,"Manrope Variable",sans-serif);--adx-display:var(--font-display,"Bebas Neue",sans-serif);color:var(--adx-text);font-family:var(--adx-body)}
 #${PANEL_HOST_ID} .ad-xconfig-page{box-sizing:border-box;min-height:100%;margin:0 auto;width:100%;padding:24px;color:var(--adx-text);font:14px/1.5 var(--adx-body)}
 #${PANEL_HOST_ID} .ad-xconfig-shell{max-width:1366px;margin:0 auto;padding:0;background:transparent}

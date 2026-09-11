@@ -888,6 +888,17 @@ test("xConfig shell marks the menu and offers install action when a newer usersc
   const menuButton = documentRef.getElementById("ad-xconfig-menu-item");
   assert.ok(menuButton);
   assert.match(String(menuButton.getAttribute("title") || ""), /Update verfügbar/);
+  const shellStyleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
+  assert.equal(
+    shellStyleText.includes(
+      '#ad-xconfig-menu-item[data-update-available="true"] .ad-xconfig-menu-label::after'
+    ),
+    true
+  );
+  assert.equal(
+    shellStyleText.includes('#ad-xconfig-menu-item[data-update-available="true"]::after'),
+    false
+  );
 
   menuButton.click();
   await waitFor(() => documentRef.querySelector("[data-adxconfig-update-panel='true']")?.getAttribute("data-update-state") === "available");
