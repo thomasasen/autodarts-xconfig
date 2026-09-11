@@ -77,6 +77,21 @@ function scopedClassSelector(selectorPrefix, className) {
   return prefix ? `${prefix} .${className}` : `.${className}`;
 }
 
+function checkoutScoreSelector(selectorPrefix) {
+  const baseSelector = scopedClassSelector(selectorPrefix, HIGHLIGHT_CLASS);
+  if (String(selectorPrefix || "").trim()) {
+    return baseSelector;
+  }
+
+  return [
+    baseSelector,
+    `.ad-ext-player-score.${HIGHLIGHT_CLASS}`,
+    `#ad-ext-turn > .score.${HIGHLIGHT_CLASS}`,
+    `main .overflow-clip .font-number.overflow-hidden.${HIGHLIGHT_CLASS}`,
+    `main .bg-surface-surface > .font-number.${HIGHLIGHT_CLASS}`,
+  ].join(",\n");
+}
+
 export function resolveCheckoutScoreHighlightStyleVariables(options = {}) {
   const pulseColor = sanitizeColorTheme(options.colorTheme);
   const intensity = resolveIntensityPreset(options.intensity);
@@ -129,7 +144,7 @@ export function buildStyleText(options = {}) {
   }
 }
 
-${scopedClassSelector(selectorPrefix, HIGHLIGHT_CLASS)} {
+${checkoutScoreSelector(selectorPrefix)} {
   ${STYLE_VARIABLES.color}: ${variables[STYLE_VARIABLES.color]};
   ${STYLE_VARIABLES.pulseScale}: ${variables[STYLE_VARIABLES.pulseScale]};
   ${STYLE_VARIABLES.pulseMidOpacity}: ${variables[STYLE_VARIABLES.pulseMidOpacity]};
@@ -139,6 +154,7 @@ ${scopedClassSelector(selectorPrefix, HIGHLIGHT_CLASS)} {
   ${STYLE_VARIABLES.glowMaxBlur}: ${variables[STYLE_VARIABLES.glowMaxBlur]};
   ${STYLE_VARIABLES.scaleMax}: ${variables[STYLE_VARIABLES.scaleMax]};
   ${STYLE_VARIABLES.blinkMinOpacity}: ${variables[STYLE_VARIABLES.blinkMinOpacity]};
+  color: rgb(var(${STYLE_VARIABLES.color})) !important;
   display: inline-block;
   transform-origin: center;
 }
@@ -195,13 +211,6 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  ${scopedClassSelector(selectorPrefix, HIGHLIGHT_CLASS)} {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-}
 `;
 }
 
