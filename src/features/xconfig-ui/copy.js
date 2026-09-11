@@ -2413,32 +2413,36 @@ export function buildXConfigOverviewSection(title, summary = {}) {
   return `${lines.join("\n")}\n`;
 }
 
+function recommendedField([key, label]) {
+  return { key, label };
+}
+
+function recommendedSection(title, featureKey, fields = []) {
+  return { title, featureKey, fields: fields.map(recommendedField) };
+}
+
+const RECOMMENDED_FEATURE_KEYS = Object.freeze([
+  "turn-score-counter", "avg-trend-arrow", "special-hit-highlights", "bot-board-style",
+  "turn-dart-display", "dart-marker-replacer", "dartboard-marker-highlight",
+  "take-out-darts-alert", "single-bull-hit-sound", "checkout-suggestion-styles",
+  "checkout-score-highlight", "x01-remaining-score-bar", "x01-bust-active-player-highlight",
+  "checkout-target-highlights", "tv-board-zoom", "cricket-target-highlighter",
+  "cricket-grid-status-effects",
+]);
+
 const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
   {
     title: "Design",
     sections: [
-      {
-        title: "Hintergrund",
-        featureKey: "theme-global-background",
-        fields: [
-          { label: "Aktiv", key: "enabled" },
-          { label: "Bildanpassung", key: "backgroundDisplayMode" },
-          { label: "Sichtbarkeit des Hintergrundbilds", key: "backgroundOpacity" },
-          { label: "Durchsichtigkeit der Spielerfelder", key: "playerFieldTransparency" },
-          { label: "Diagnose", key: "debug" },
-        ],
-      },
-      {
-        title: "Schrift & Farben",
-        featureKey: "theme-global-typography",
-        fields: [
-          { label: "Aktiv", key: "enabled" },
-          { label: "Schriftart", key: "fontPreset" },
-          { label: "Schrift anwenden auf", key: "applyTo" },
-          { label: "Hintergrund des aktiven Spielers", key: "activePlayerTintIntensity" },
-          { label: "Diagnose", key: "debug" },
-        ],
-      },
+      recommendedSection("Hintergrund", "theme-global-background", [
+        ["enabled", "Aktiv"], ["backgroundDisplayMode", "Bildanpassung"],
+        ["backgroundOpacity", "Sichtbarkeit des Hintergrundbilds"],
+        ["playerFieldTransparency", "Durchsichtigkeit der Spielerfelder"], ["debug", "Diagnose"],
+      ]),
+      recommendedSection("Schrift & Farben", "theme-global-typography", [
+        ["enabled", "Aktiv"], ["fontPreset", "Schriftart"], ["applyTo", "Schrift anwenden auf"],
+        ["activePlayerTintIntensity", "Hintergrund des aktiven Spielers"], ["debug", "Diagnose"],
+      ]),
     ],
   },
   {
@@ -2447,227 +2451,83 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
       {
         title: "Für alle Module",
         fields: [
-          {
-            label: "Alle eingeschaltet",
-            featureKeys: [
-              "turn-score-counter",
-              "avg-trend-arrow",
-              "special-hit-highlights",
-              "bot-board-style",
-              "turn-dart-display",
-              "dart-marker-replacer",
-              "dartboard-marker-highlight",
-              "take-out-darts-alert",
-              "single-bull-hit-sound",
-              "checkout-suggestion-styles",
-              "checkout-score-highlight",
-              "x01-remaining-score-bar",
-              "x01-bust-active-player-highlight",
-              "checkout-target-highlights",
-              "tv-board-zoom",
-              "cricket-target-highlighter",
-              "cricket-grid-status-effects",
-            ],
-            key: "enabled",
-          },
-          {
-            label: "Diagnose",
-            featureKeys: [
-              "turn-score-counter",
-              "avg-trend-arrow",
-              "special-hit-highlights",
-              "bot-board-style",
-              "turn-dart-display",
-              "dart-marker-replacer",
-              "dartboard-marker-highlight",
-              "take-out-darts-alert",
-              "single-bull-hit-sound",
-              "checkout-suggestion-styles",
-              "checkout-score-highlight",
-              "x01-remaining-score-bar",
-              "x01-bust-active-player-highlight",
-              "checkout-target-highlights",
-              "tv-board-zoom",
-              "cricket-target-highlighter",
-              "cricket-grid-status-effects",
-            ],
-            key: "debug",
-          },
+          { label: "Alle eingeschaltet", featureKeys: RECOMMENDED_FEATURE_KEYS, key: "enabled" },
+          { label: "Diagnose", featureKeys: RECOMMENDED_FEATURE_KEYS, key: "debug" },
         ],
       },
-      {
-        title: "Punkte animiert zählen",
-        featureKey: "turn-score-counter",
-        fields: [
-          { label: "Zählweise", key: "countEffect" },
-          { label: "Zählgeschwindigkeit", key: "durationMs" },
-          { label: "Bei Änderung aufblitzen", key: "flashOnChange" },
-          { label: "Aufblitzen", key: "flashMode" },
-        ],
-      },
-      {
-        title: "AVG-Trend anzeigen",
-        featureKey: "avg-trend-arrow",
-        fields: [
-          { label: "Animationsdauer", key: "durationMs" },
-          { label: "Pfeilgröße", key: "size" },
-        ],
-      },
-      {
-        title: "Triple, Double & Bull hervorheben",
-        featureKey: "special-hit-highlights",
-        fields: [
-          { label: "Farbstil", key: "colorTheme" },
-          { label: "Animation", key: "animationStyle" },
-        ],
-      },
-      {
-        title: "Dartboard-Design",
-        featureKey: "bot-board-style",
-        fields: [
-          { label: "Board-Design", key: "design" },
-          { label: "Anwenden auf", key: "scope" },
-        ],
-      },
-      {
-        title: "Darts in der Wurfanzeige",
-        featureKey: "turn-dart-display",
-        fields: [
-          { label: "Stil", key: "turnDartStyle" },
-          { label: "Dart auswählen", key: "turnDartAssetKey" },
-          { label: "Text", key: "turnDartTextTemplate" },
-          { label: "Größe", key: "turnDartSizePercent" },
-          { label: "Leuchteffekt", key: "turnDartShineEnabled" },
-        ],
-      },
-      {
-        title: "Treffermarkierungen durch Darts ersetzen",
-        featureKey: "dart-marker-replacer",
-        fields: [
-          { label: "Dart-Design", key: "design" },
-          { label: "Dart-Fluganimation", key: "animateDarts" },
-          { label: "Dart-Größe", key: "sizePercent" },
-          { label: "Original-Marker ausblenden", key: "hideOriginalMarkers" },
-          { label: "Einschlagstil", key: "impactStyle" },
-          { label: "Einschlag-Schatten", key: "enableShadow" },
-          { label: "Schatten-Weichzeichnung", key: "enableShadowBlur" },
-          { label: "Nachwippen beim Einschlag", key: "enableWobble" },
-          { label: "Bewegungsunschärfe im Flug", key: "enableFlightBlur" },
-          { label: "Fluggeschwindigkeit", key: "flightSpeed" },
-        ],
-      },
-      {
-        title: "Treffermarkierungen hervorheben",
-        featureKey: "dartboard-marker-highlight",
-        fields: [
-          { label: "Größe der Treffermarkierung", key: "size" },
-          { label: "Farbe der Treffermarkierung", key: "color" },
-          { label: "Animation", key: "effect" },
-          { label: "Sichtbarkeit der Treffermarkierung", key: "opacityPercent" },
-          { label: "Randfarbe", key: "outline" },
-        ],
-      },
-      {
-        title: "Hinweis: Darts entfernen",
-        featureKey: "take-out-darts-alert",
-        fields: [
-          { label: "Bildgröße", key: "imageSize" },
-          { label: "Pulsieren", key: "pulseAnimation" },
-          { label: "Stärke des Pulsierens", key: "pulseScale" },
-        ],
-      },
-      {
-        title: "Ton bei Single Bull",
-        featureKey: "single-bull-hit-sound",
-        fields: [
-          { label: "Lautstärke", key: "volume" },
-          { label: "Mindestabstand zwischen Tönen", key: "cooldownMs" },
-          { label: "Zusätzliche Trefferprüfung", key: "pollIntervalMs" },
-        ],
-      },
-      {
-        title: "Checkout-Vorschlag gestalten",
-        featureKey: "checkout-suggestion-styles",
-        fields: [
-          { label: "Darstellung", key: "style" },
-          { label: "Beschriftung", key: "labelText" },
-          { label: "Farbe", key: "colorTheme" },
-        ],
-      },
-      {
-        title: "Finishbaren Restscore hervorheben",
-        featureKey: "checkout-score-highlight",
-        fields: [
-          { label: "Animation", key: "effect" },
-          { label: "Farbe", key: "colorTheme" },
-          { label: "Stärke", key: "intensity" },
-          { label: "Finish-Erkennung", key: "triggerSource" },
-        ],
-      },
-      {
-        title: "Restscore-Balken",
-        featureKey: "x01-remaining-score-bar",
-        fields: [
-          { label: "Farben", key: "colorTheme" },
-          { label: "Balkengröße", key: "barSize" },
-          { label: "Animation", key: "effect" },
-        ],
-      },
-      {
-        title: "Überworfen (BUST) hervorheben",
-        featureKey: "x01-bust-active-player-highlight",
-        fields: [],
-      },
-      {
-        title: "Checkout-Ziele hervorheben",
-        featureKey: "checkout-target-highlights",
-        fields: [
-          { label: "Animation", key: "visualPreset" },
-          { label: "Art der Hervorhebung", key: "segmentStyle" },
-          { label: "Zielauswahl", key: "targetSelectionMode" },
-          { label: "Farbe", key: "colorTheme" },
-        ],
-      },
-      {
-        title: "Automatischer Board-Zoom",
-        featureKey: "tv-board-zoom",
-        fields: [
-          { label: "Zoomstärke", key: "zoomLevel" },
-          { label: "Zoom-Geschwindigkeit", key: "zoomSpeed" },
-          { label: "Checkout-Zoom", key: "checkoutZoomEnabled" },
-          { label: "Zoom auf", key: "checkoutZoomTarget" },
-          { label: "Auch auf T20-Setup zoomen", key: "t20SetupZoomEnabled" },
-        ],
-      },
-      {
-        title: "Cricket-Ziele hervorheben",
-        featureKey: "cricket-target-highlighter",
-        fields: [
-          { label: "Offene Ziele anzeigen (OPEN)", key: "showOpenObjectives" },
-          { label: "Erledigte Ziele anzeigen (DEAD)", key: "showDeadObjectives" },
-          { label: "Andere Felder abdunkeln", key: "irrelevantBoardDimStyle" },
-          { label: "Farben", key: "colorTheme" },
-          { label: "Stärke", key: "intensity" },
-        ],
-      },
-      {
-        title: "Cricket-Statusanzeigen",
-        featureKey: "cricket-grid-status-effects",
-        fields: [
-          { label: "Welle durch die Zeile", key: "rowWave" },
-          { label: "Zielmarke hervorheben", key: "badgeBeacon" },
-          { label: "Markierungen auffüllen", key: "markProgress" },
-          { label: "Druck anzeigen (PRESSURE)", key: "pressureEdge" },
-          { label: "Punktemöglichkeit anzeigen (SCORING)", key: "scoringStripe" },
-          { label: "Erledigte Zeilen abdunkeln (DEAD)", key: "deadRowMuted" },
-          { label: "Änderungen anzeigen", key: "deltaChips" },
-          { label: "Treffer-Impuls", key: "hitSpark" },
-          { label: "Zugwechsel-Übergang", key: "roundTransitionWipe" },
-          { label: "Druckfläche anzeigen (PRESSURE)", key: "pressureOverlay" },
-          { label: "Farben", key: "colorTheme" },
-          { label: "Stärke", key: "intensity" },
-        ],
-      },
+      recommendedSection("Punkte animiert zählen", "turn-score-counter", [
+        ["countEffect", "Zählweise"], ["durationMs", "Zählgeschwindigkeit"],
+        ["flashOnChange", "Bei Änderung aufblitzen"], ["flashMode", "Aufblitzen"],
+      ]),
+      recommendedSection("AVG-Trend anzeigen", "avg-trend-arrow", [
+        ["durationMs", "Animationsdauer"], ["size", "Pfeilgröße"],
+      ]),
+      recommendedSection("Triple, Double & Bull hervorheben", "special-hit-highlights", [
+        ["colorTheme", "Farbstil"], ["animationStyle", "Animation"],
+      ]),
+      recommendedSection("Dartboard-Design", "bot-board-style", [
+        ["design", "Board-Design"], ["scope", "Anwenden auf"],
+      ]),
+      recommendedSection("Darts in der Wurfanzeige", "turn-dart-display", [
+        ["turnDartStyle", "Stil"], ["turnDartAssetKey", "Dart auswählen"],
+        ["turnDartTextTemplate", "Text"], ["turnDartSizePercent", "Größe"],
+        ["turnDartShineEnabled", "Leuchteffekt"],
+      ]),
+      recommendedSection("Treffermarkierungen durch Darts ersetzen", "dart-marker-replacer", [
+        ["design", "Dart-Design"], ["animateDarts", "Dart-Fluganimation"],
+        ["sizePercent", "Dart-Größe"], ["hideOriginalMarkers", "Original-Marker ausblenden"],
+        ["impactStyle", "Einschlagstil"], ["enableShadow", "Einschlag-Schatten"],
+        ["enableShadowBlur", "Schatten-Weichzeichnung"], ["enableWobble", "Nachwippen beim Einschlag"],
+        ["enableFlightBlur", "Bewegungsunschärfe im Flug"], ["flightSpeed", "Fluggeschwindigkeit"],
+      ]),
+      recommendedSection("Treffermarkierungen hervorheben", "dartboard-marker-highlight", [
+        ["size", "Größe der Treffermarkierung"], ["color", "Farbe der Treffermarkierung"],
+        ["effect", "Animation"], ["opacityPercent", "Sichtbarkeit der Treffermarkierung"],
+        ["outline", "Randfarbe"],
+      ]),
+      recommendedSection("Hinweis: Darts entfernen", "take-out-darts-alert", [
+        ["imageSize", "Bildgröße"], ["pulseAnimation", "Pulsieren"],
+        ["pulseScale", "Stärke des Pulsierens"],
+      ]),
+      recommendedSection("Ton bei Single Bull", "single-bull-hit-sound", [
+        ["volume", "Lautstärke"], ["cooldownMs", "Mindestabstand zwischen Tönen"],
+        ["pollIntervalMs", "Zusätzliche Trefferprüfung"],
+      ]),
+      recommendedSection("Checkout-Vorschlag gestalten", "checkout-suggestion-styles", [
+        ["style", "Darstellung"], ["labelText", "Beschriftung"], ["colorTheme", "Farbe"],
+      ]),
+      recommendedSection("Finishbaren Restscore hervorheben", "checkout-score-highlight", [
+        ["effect", "Animation"], ["colorTheme", "Farbe"], ["intensity", "Stärke"],
+        ["triggerSource", "Finish-Erkennung"],
+      ]),
+      recommendedSection("Restscore-Balken", "x01-remaining-score-bar", [
+        ["colorTheme", "Farben"], ["barSize", "Balkengröße"], ["effect", "Animation"],
+      ]),
+      recommendedSection("Überworfen (BUST) hervorheben", "x01-bust-active-player-highlight"),
+      recommendedSection("Checkout-Ziele hervorheben", "checkout-target-highlights", [
+        ["visualPreset", "Animation"], ["segmentStyle", "Art der Hervorhebung"],
+        ["targetSelectionMode", "Zielauswahl"], ["colorTheme", "Farbe"],
+      ]),
+      recommendedSection("Automatischer Board-Zoom", "tv-board-zoom", [
+        ["zoomLevel", "Zoomstärke"], ["zoomSpeed", "Zoom-Geschwindigkeit"],
+        ["checkoutZoomEnabled", "Checkout-Zoom"], ["checkoutZoomTarget", "Zoom auf"],
+        ["t20SetupZoomEnabled", "Auch auf T20-Setup zoomen"],
+      ]),
+      recommendedSection("Cricket-Ziele hervorheben", "cricket-target-highlighter", [
+        ["showOpenObjectives", "Offene Ziele anzeigen (OPEN)"],
+        ["showDeadObjectives", "Erledigte Ziele anzeigen (DEAD)"],
+        ["irrelevantBoardDimStyle", "Andere Felder abdunkeln"], ["colorTheme", "Farben"],
+        ["intensity", "Stärke"],
+      ]),
+      recommendedSection("Cricket-Statusanzeigen", "cricket-grid-status-effects", [
+        ["rowWave", "Welle durch die Zeile"], ["badgeBeacon", "Zielmarke hervorheben"],
+        ["markProgress", "Markierungen auffüllen"], ["pressureEdge", "Druck anzeigen (PRESSURE)"],
+        ["scoringStripe", "Punktemöglichkeit anzeigen (SCORING)"],
+        ["deadRowMuted", "Erledigte Zeilen abdunkeln (DEAD)"], ["deltaChips", "Änderungen anzeigen"],
+        ["hitSpark", "Treffer-Impuls"], ["roundTransitionWipe", "Zugwechsel-Übergang"],
+        ["pressureOverlay", "Druckfläche anzeigen (PRESSURE)"], ["colorTheme", "Farben"],
+        ["intensity", "Stärke"],
+      ]),
     ],
   },
 ]);
@@ -2874,16 +2734,26 @@ function appendFieldWithOptions(lines, field, description, optionDescriptionKey,
   });
 }
 
-export function buildReadmeFeatureSection(descriptor, definition) {
+function resolveFeatureDocContext(descriptor, definition) {
   const featureKey = String(descriptor?.featureKey || definition?.featureKey || "").trim();
   const copy = getXConfigFeatureCopy(featureKey);
   if (!descriptor || !definition || !copy) {
-    return "";
+    return null;
   }
   const anchorIds = [
     String(descriptor.readmeAnchor || "").trim(),
     ...(Array.isArray(descriptor.readmeAnchorAliases) ? descriptor.readmeAnchorAliases : []),
   ].filter(Boolean);
+
+  return { anchorIds, copy };
+}
+
+export function buildReadmeFeatureSection(descriptor, definition) {
+  const context = resolveFeatureDocContext(descriptor, definition);
+  if (!context) {
+    return "";
+  }
+  const { anchorIds, copy } = context;
 
   const lines = [
     ...anchorIds.map((anchorId) => `<a id="${anchorId}"></a>`),
@@ -2913,16 +2783,11 @@ export function buildReadmeFeatureSection(descriptor, definition) {
 }
 
 export function buildFeaturesDocSection(descriptor, definition) {
-  const featureKey = String(descriptor?.featureKey || definition?.featureKey || "").trim();
-  const copy = getXConfigFeatureCopy(featureKey);
-  if (!descriptor || !definition || !copy) {
+  const context = resolveFeatureDocContext(descriptor, definition);
+  if (!context) {
     return "";
   }
-
-  const anchorIds = [
-    String(descriptor.readmeAnchor || "").trim(),
-    ...(Array.isArray(descriptor.readmeAnchorAliases) ? descriptor.readmeAnchorAliases : []),
-  ].filter(Boolean);
+  const { anchorIds, copy } = context;
 
   const lines = [
     ...anchorIds.map((anchorId) => `<a id="${anchorId}"></a>`),

@@ -3195,7 +3195,7 @@ test("xConfig turn points settings expose flash toggle plus mode selector and pe
     "missing turn-points speed setting note"
   );
   assert.ok(
-    noteTexts.some((text) => /CountUp|Odometer|Zählstil/.test(text)),
+    noteTexts.some((text) => /Zahl sichtbar zum neuen Wert/.test(text)),
     "missing turn-points count style setting note"
   );
 

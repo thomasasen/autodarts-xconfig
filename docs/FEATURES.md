@@ -3,8 +3,8 @@
 
 `autodarts-xconfig` bündelt `20` Module in einem Userscript:
 
-- `17` Animationen und Komfortfunktionen
-- `3` Themes
+- `17` Anzeigen und Komfortfunktionen
+- `3` Designmodule
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 

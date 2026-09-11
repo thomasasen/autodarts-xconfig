@@ -51,8 +51,8 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 
 ## Im Überblick
 
-- Insgesamt `20` Module: `17` Animationen und Komfortfunktionen sowie `3` Themes.
-- `↺ Zurücksetzen`: Ein echter Hard Reset setzt alle Einstellungen auf Standard zurück, deaktiviert alle Module, schaltet Debug aus und entfernt globales Wallpaper sowie Dart-Upload.
+- Insgesamt `20` Module: `17` Anzeigen und Komfortfunktionen sowie `3` Designmodule.
+- `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
 - Hintergrundbild: Die Kachel `Hintergrund` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.
@@ -103,7 +103,7 @@ Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xCon
 ## Der obere Bereich im Menü
 
 - `Zurück`: Schließt xConfig und stellt die zuvor geöffnete Autodarts-Seite einschließlich ihrer Filter in der Adresse wieder her.
-- `↺ Zurücksetzen`: Führt einen echten Hard Reset aus. Alle Einstellungen gehen auf Standard, alle Module werden deaktiviert, Debug wird ausgeschaltet und globales Wallpaper sowie Dart-Upload werden entfernt.
+- `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück. Alle Module werden deaktiviert, die Diagnose wird ausgeschaltet und globales Hintergrundbild sowie Dart-Upload werden entfernt.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren`: Erstellt ein lokales JSON-Backup. Eigenes Wallpaper und Dart-Bild sind standardmäßig enthalten, können für eine kleinere Datei aber abgewählt werden.
 - `Importieren`: Prüft ein Backup vor dem Speichern und zeigt, welche Einstellungen übernommen, migriert oder ausgelassen werden.

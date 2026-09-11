@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.0.10] - 2026-09-11
+
+### Changed
+
+- Nutzerwirkung: xConfig zeigt alle Module in einer kompakten Übersicht unter `Design`, `Alle Modi`, `X01` und `Cricket / Tactics`. Verständlichere deutsche Bezeichnungen, klarere Ein-/Aus-Schalter, sichtbare Aktivrahmen und eine Zurück-Schaltfläche erleichtern Orientierung und Bedienung ohne eine doppelte Hauptnavigation.
+  Technik: Zentrale Abschnittsdefinitionen steuern Gruppierung und Reihenfolge der Karten; die Shell rendert die Bereiche in einem gemeinsamen responsiven Layout und stellt beim Zurückgehen den zuvor geöffneten Autodarts-Pfad einschließlich Query und Hash wieder her.
+- Nutzerwirkung: Explizit aktivierte Treffer-, Restscore-, Checkout- und Hinweisanimationen laufen auch dann wie ausgewählt, wenn das Betriebssystem reduzierte Bewegung bevorzugt.
+  Technik: Die modulspezifischen `prefers-reduced-motion`-Abschaltungen und die entsprechende Laufzeitverzweigung wurden entfernt; reduzierte Bewegung bleibt auf reine xConfig-Oberflächenübergänge begrenzt.
+
+### Fixed
+
+- Nutzerwirkung: Finishbare Restwerte erscheinen auf klassischen und modernen X01-Punkteflächen zuverlässig in der gewählten Hervorhebungsfarbe und mit dem konfigurierten Effekt.
+  Technik: Die Style-Regeln erfassen die bekannten Legacy- und modernen Score-Flächen gemeinsam und setzen die ausgewählte Farbe explizit; Regressionstests sichern Selektoren und Animationen ab.
+
 ## [3.0.9] - 2026-09-10
 
 ### Changed
@@ -2064,6 +2078,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.0.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.9...v3.0.10
 [3.0.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.8...v3.0.9
 [3.0.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.7...v3.0.8
 [3.0.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.6...v3.0.7

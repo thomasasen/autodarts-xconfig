@@ -140,7 +140,7 @@ test("modern cards keep each explicitly selected effect across passive updates a
   }
   assert.equal(host.querySelector(`.${TRAIL_CLASS}`).style.getPropertyValue("opacity"), "0");
   const css = buildStyleText();
-  assert.equal(css.includes("prefers-reduced-motion"), true);
+  assert.equal(css.includes("prefers-reduced-motion"), false);
 });
 
 test("modern score bars use the native base and preserve nested score, stats and checkout rows", () => {

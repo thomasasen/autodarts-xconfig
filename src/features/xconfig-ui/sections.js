@@ -1,19 +1,19 @@
+function sectionDefinition(id, title, description, featureKeys) {
+  return Object.freeze({ id, title, description, featureKeys: Object.freeze(featureKeys) });
+}
+
 export const XCONFIG_SECTION_DEFINITIONS = Object.freeze([
-  Object.freeze({
-    id: "template",
-    title: "Design",
-    description: "Designvorlagen, Hintergrund, Schrift und Farben für alle Spielansichten.",
-    featureKeys: Object.freeze([
-      "theme-global-presets",
-      "theme-global-background",
-      "theme-global-typography",
-    ]),
-  }),
-  Object.freeze({
-    id: "all-modes",
-    title: "Alle Modi",
-    description: "Anzeigen, Darts, Treffermarkierungen und Komfortfunktionen für alle Spielmodi.",
-    featureKeys: Object.freeze([
+  sectionDefinition(
+    "template",
+    "Design",
+    "Designvorlagen, Hintergrund, Schrift und Farben für alle Spielansichten.",
+    ["theme-global-presets", "theme-global-background", "theme-global-typography"]
+  ),
+  sectionDefinition(
+    "all-modes",
+    "Alle Modi",
+    "Anzeigen, Darts, Treffermarkierungen und Komfortfunktionen für alle Spielmodi.",
+    [
       "turn-score-counter",
       "avg-trend-arrow",
       "special-hit-highlights",
@@ -23,30 +23,27 @@ export const XCONFIG_SECTION_DEFINITIONS = Object.freeze([
       "dartboard-marker-highlight",
       "take-out-darts-alert",
       "single-bull-hit-sound",
-    ]),
-  }),
-  Object.freeze({
-    id: "x01",
-    title: "X01",
-    description: "Checkout, Restscore, BUST und Board-Zoom für X01.",
-    featureKeys: Object.freeze([
+    ]
+  ),
+  sectionDefinition(
+    "x01",
+    "X01",
+    "Checkout, Restscore, BUST und Board-Zoom für X01.",
+    [
       "checkout-suggestion-styles",
       "checkout-score-highlight",
       "x01-remaining-score-bar",
       "x01-bust-active-player-highlight",
       "checkout-target-highlights",
       "tv-board-zoom",
-    ]),
-  }),
-  Object.freeze({
-    id: "cricket-tactics",
-    title: "Cricket / Tactics",
-    description: "Ziel- und Matrixeffekte für Cricket und Tactics.",
-    featureKeys: Object.freeze([
-      "cricket-target-highlighter",
-      "cricket-grid-status-effects",
-    ]),
-  }),
+    ]
+  ),
+  sectionDefinition(
+    "cricket-tactics",
+    "Cricket / Tactics",
+    "Ziel- und Matrixeffekte für Cricket und Tactics.",
+    ["cricket-target-highlighter", "cricket-grid-status-effects"]
+  ),
 ]);
 
 const sectionFeatureOrder = new Map(
