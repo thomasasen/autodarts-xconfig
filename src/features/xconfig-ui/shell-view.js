@@ -83,13 +83,6 @@ import {
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
 const MENU_LABEL = "AD xConfig";
-const MAIN_NAVIGATION_ITEMS = Object.freeze([
-  Object.freeze({ label: "Home", href: "/" }),
-  Object.freeze({ label: "Play", href: "/play" }),
-  Object.freeze({ label: "Online", href: "/lobbies" }),
-  Object.freeze({ label: "Tournaments", href: "/tournaments" }),
-  Object.freeze({ label: "Stats", href: "/statistics" }),
-]);
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
@@ -3800,61 +3793,10 @@ function buildSettingsTransferDialog(documentRef, state) {
   return backdrop;
 }
 
-function buildMainNavigation(documentRef) {
-  const header = createElement(documentRef, "header", {
-    className: "ad-xconfig-main-nav",
-  });
-  const inner = createElement(documentRef, "div", {
-    className: "ad-xconfig-main-nav-inner",
-  });
-  const brand = createElement(documentRef, "a", {
-    className: "ad-xconfig-main-nav-brand",
-    attributes: {
-      href: "/",
-      "aria-label": "Autodarts",
-    },
-  });
-  brand.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-main-nav-brand-mark",
-    text: "AD",
-    attributes: { "aria-hidden": "true" },
-  }));
-  brand.appendChild(createElement(documentRef, "span", {
-    className: "ad-xconfig-main-nav-brand-text",
-    text: "AUTODARTS",
-  }));
-  inner.appendChild(brand);
-
-  const navigation = createElement(documentRef, "nav", {
-    className: "ad-xconfig-main-nav-links",
-    attributes: { "aria-label": "Hauptnavigation" },
-  });
-  MAIN_NAVIGATION_ITEMS.forEach((item) => {
-    navigation.appendChild(createElement(documentRef, "a", {
-      className: "ad-xconfig-main-nav-link",
-      text: item.label,
-      attributes: { href: item.href },
-    }));
-  });
-  navigation.appendChild(createElement(documentRef, "button", {
-    className: "ad-xconfig-main-nav-link ad-xconfig-main-nav-link--active",
-    text: "xConfig",
-    type: "button",
-    attributes: {
-      "aria-current": "page",
-      "aria-label": "xConfig, aktuelle Seite",
-    },
-  }));
-  inner.appendChild(navigation);
-  header.appendChild(inner);
-  return header;
-}
-
 export function buildShellContent(documentRef, state, features) {
   const page = createElement(documentRef, "div", {
     className: "ad-xconfig-page",
   });
-  page.appendChild(buildMainNavigation(documentRef));
   const shell = createElement(documentRef, "div", {
     className: "ad-xconfig-shell",
   });

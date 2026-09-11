@@ -1617,9 +1617,25 @@ test("xConfig style checkout suggestions renders live preview and style option s
   runtime.stop();
 });
 
-test("xConfig shell keeps a functional main navigation visible above fixed modal backdrops", async () => {
+test("xConfig shell leaves the native header and its action menu unobstructed", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
+  const nativeHeader = documentRef.createElement("header");
+  const nativeNavigation = documentRef.createElement("nav");
+  nativeNavigation.setAttribute("aria-label", "Main navigation");
+  const nativeHomeLink = documentRef.createElement("a");
+  nativeHomeLink.setAttribute("href", "/");
+  nativeHomeLink.textContent = "Home";
+  nativeNavigation.appendChild(nativeHomeLink);
+  const nativeActions = documentRef.createElement("div");
+  ["Open user menu", "Open friends", "Open notifications"].forEach((label) => {
+    const button = documentRef.createElement("button");
+    button.setAttribute("aria-label", label);
+    nativeActions.appendChild(button);
+  });
+  nativeHeader.appendChild(nativeNavigation);
+  nativeHeader.appendChild(nativeActions);
+  documentRef.rootElement.insertBefore(nativeHeader, documentRef.layoutShell);
   const windowRef = createFakeWindow({ documentRef, localStorage });
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
 
@@ -1627,34 +1643,24 @@ test("xConfig shell keeps a functional main navigation visible above fixed modal
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  const mainNavigation = documentRef.querySelector(".ad-xconfig-main-nav");
-  assert.ok(mainNavigation);
-  assert.equal(mainNavigation.tagName, "HEADER");
-  assert.equal(
-    mainNavigation.querySelector(".ad-xconfig-main-nav-links")?.getAttribute("aria-label"),
-    "Hauptnavigation"
+  assert.equal(documentRef.querySelector(".ad-xconfig-main-nav"), null);
+  assert.equal(nativeHeader.isConnected, true);
+  assert.notEqual(nativeHeader.style.display, "none");
+  assert.notEqual(nativeNavigation.style.display, "none");
+  assert.notEqual(nativeActions.style.display, "none");
+  assert.deepEqual(
+    Array.from(nativeActions.querySelectorAll("button")).map((button) => button.getAttribute("aria-label")),
+    ["Open user menu", "Open friends", "Open notifications"]
   );
-  const navigationTargets = Array.from(mainNavigation.querySelectorAll(".ad-xconfig-main-nav-links a[href]"))
-    .map((link) => [String(link.textContent || "").trim(), link.getAttribute("href")]);
-  assert.deepEqual(navigationTargets, [
-    ["Home", "/"],
-    ["Play", "/play"],
-    ["Online", "/lobbies"],
-    ["Tournaments", "/tournaments"],
-    ["Stats", "/statistics"],
-  ]);
-  const activeItem = mainNavigation.querySelector(".ad-xconfig-main-nav-link--active");
-  assert.equal(String(activeItem?.textContent || "").trim(), "xConfig");
-  assert.equal(activeItem?.getAttribute("aria-current"), "page");
 
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
 
   assert.equal(
-    styleText.includes("position:fixed;inset:0;z-index:2147483000;width:100%;height:100dvh"),
+    styleText.includes("position:relative;width:100%;height:100%"),
     true
   );
   assert.equal(styleText.includes(".ad-xconfig-page{box-sizing:border-box;min-height:100%"), true);
-  assert.equal(styleText.includes(".ad-xconfig-main-nav{position:fixed;z-index:60;inset:0 0 auto;height:64px"), true);
+  assert.equal(styleText.includes(".ad-xconfig-main-nav"), false);
   assert.equal(styleText.includes(".ad-xconfig-modal-backdrop{position:fixed;inset:64px 0 0"), true);
   assert.equal(styleText.includes("max-height:calc(100dvh - 96px)"), true);
 
