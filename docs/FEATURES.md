@@ -772,20 +772,17 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 ### Überworfen (BUST) hervorheben
 
 - Gilt für: `X01`
-- Kurz: Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
-- Grafisch: Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen. Wenn das Schütteln aktiv ist, bewegt sich die aktive Karte drei Sekunden deutlich hin und her. Wenn der Glasbruch-Sound aktiviert ist, wird er gleichzeitig gestartet. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.
+- Kurz: Bei sichtbarem `BUST` wird nur der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung ersetzt. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.
+- Grafisch: Beim Eintritt in BUST färbt sich die aktive Spielerkarte dunkelrot, erhält einen klaren roten Rahmen und zeigt die konfigurierten Glasrisse an zufälligen Stellen. Optional startet gleichzeitig der Glasbruch-Sound. Die Markierung bleibt ruhig und sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.
 - Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
 - `Vorschau`: Startet die BUST-Vorschau im Einstellungsdialog.
 - `Glasrisse`: Bestimmt die Anzahl zufällig platzierter Glasrisse.
-  - `Aus`: Keine Glasrisse; Rotmarkierung und Wackeln bleiben aktiv.
+  - `Aus`: Keine Glasrisse; die rote Kartenmarkierung bleibt aktiv.
   - `1`: Zeigt ein zufällig platziertes Einschlagzentrum.
   - `2`: Zeigt zwei zufällig und unabhängig platzierte Einschlagzentren.
   - `3`: Zeigt drei Einschlagzentren und damit die dichteste Darstellung.
-- `Spielerkarte kurz schütteln`: Schaltet das kurze Schütteln für Effekt und Vorschau ein.
 - `Glasbruch-Sound`: Schaltet den Glasbruch-Sound für Effekt und Vorschau ein.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-
-![Überworfen (BUST) hervorheben](screenshots/animation-x01-bust-active-player-highlight.gif)
 
 ## Cricket / Tactics
 

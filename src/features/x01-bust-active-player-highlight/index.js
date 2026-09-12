@@ -1,5 +1,4 @@
 import {
-  SHAKE_DURATION_MS,
   clearBustActivePlayerHighlightState,
   createBustActivePlayerHighlightState,
   ensureBustGlassCrackAudio,
@@ -31,7 +30,7 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   const featureConfig =
     context.config && typeof context.config.getFeatureConfig === "function"
       ? context.config.getFeatureConfig("x01BustActivePlayerHighlight")
-      : { crackCount: 3, shakeEnabled: true, soundEnabled: false };
+      : { crackCount: 2, soundEnabled: false };
 
   if (!documentRef || !domGuards) {
     return () => {};
@@ -50,7 +49,6 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
         documentRef,
         windowRef,
         crackCount: featureConfig.crackCount,
-        shakeEnabled: featureConfig.shakeEnabled !== false,
         soundEnabled: featureConfig.soundEnabled === true,
       },
       state
@@ -68,9 +66,11 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
 
   harness.addCleanup(createX01PlayerSurfaceObserverController({
     documentRef,
+    windowRef,
     observerRegistry: context.registries?.observers,
     MutationObserverRef: windowRef?.MutationObserver,
     keyPrefix: OBSERVER_KEY,
+    includeModern: true,
     onSurfaceMutation: () => harness.schedule(),
     onSurfaceChange: () => harness.schedule(),
   }));
@@ -105,7 +105,7 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   harness.schedule();
 
   return harness.createCleanup(() => {
-    clearBustActivePlayerHighlightState(state, windowRef);
+    clearBustActivePlayerHighlightState(state);
     domGuards.removeNodeById(STYLE_ID);
   });
 }
@@ -149,14 +149,8 @@ export async function runX01BustActivePlayerHighlightAction(actionContext = {}) 
     windowRef,
     targetNode,
     crackCount: actionContext.featureConfig?.crackCount,
-    shakeEnabled: actionContext.featureConfig?.shakeEnabled !== false,
     soundEnabled: actionContext.featureConfig?.soundEnabled === true,
   });
-  const setTimeoutRef =
-    windowRef && typeof windowRef.setTimeout === "function"
-      ? windowRef.setTimeout.bind(windowRef)
-      : setTimeout;
-  await new Promise((resolve) => setTimeoutRef(resolve, SHAKE_DURATION_MS));
 }
 
 export const initializeX01BustActivePlayerHighlight = mountX01BustActivePlayerHighlight;

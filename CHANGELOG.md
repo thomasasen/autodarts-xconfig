@@ -12,6 +12,15 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.0] - 2026-09-12
+
+### Changed
+
+- Nutzerwirkung: `Überworfen (BUST) hervorheben` unterstützt die neue Autodarts-Spieloberfläche und wird in xConfig nicht mehr als `Deprecated` geführt. Wenn das Modul aktiv ist, ersetzt eine ruhige dunkelrote Spielerkarte mit konfigurierbaren Glasrissen gezielt die native Kartenanimation; die native BUST-Anzeige und der rote Zugrahmen bleiben erhalten. Das frühere dreisekündige Wackeln entfällt.
+  Technik: Die Laufzeit verwendet die gemeinsame moderne X01-Surface, erkennt die native BUST-Lottie strukturell und blendet ausschließlich deren Ebene reversibel aus. Moderne und klassische Spielerflächen, spätes Einfügen der Lottie, Feature-Cleanup und BUST-Ende sind durch gezielte Regressionstests abgedeckt; Kachel, Einstellungs-Vorschau und Dokumentation wurden auf den neuen Stand synchronisiert.
+- Nutzerwirkung: Die README weist darauf hin, dass die Migration auf die neue Autodarts-Oberfläche abgeschlossen ist, noch nicht jede Spielsituation ausführlich getestet wurde und Fehler direkt als GitHub-Issue gemeldet werden können.
+  Technik: Der veraltete allgemeine `Deprecated`-Hinweis wurde durch einen Abschluss- und Feedbackhinweis mit direktem Link zum Issue-Formular ersetzt.
+
 ## [3.0.11] - 2026-09-12
 
 ### Changed
@@ -2090,6 +2099,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.11...v3.1.0
 [3.0.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.10...v3.0.11
 [3.0.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.9...v3.0.10
 [3.0.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.8...v3.0.9

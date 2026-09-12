@@ -1,8 +1,8 @@
 export const STYLE_ID = "ad-ext-x01-bust-active-player-highlight-style";
 export const BUST_ACTIVE_CLASS = "ad-ext-x01-bust-active-player-highlight";
-export const BUST_SHAKE_CLASS = "ad-ext-x01-bust-active-player-highlight--shake";
 export const BUST_CRACK_OVERLAY_CLASS = "ad-ext-x01-bust-active-player-cracks";
 export const BUST_CRACK_CLASS = "ad-ext-x01-bust-active-player-crack";
+export const NATIVE_BUST_EFFECT_HIDDEN_CLASS = "ad-ext-x01-bust-native-effect-hidden";
 export const DEMO_CRACK_SETTINGS = Object.freeze({
   rays: 20,
   initialRadius: 5,
@@ -32,38 +32,35 @@ export const BUST_CARD_STYLE_PROPERTIES = Object.freeze([
 ]);
 
 export const FALLBACK_BUST_CARD_VISUALS = Object.freeze({
-  background: "rgba(255, 0, 0, 0.15)",
-  backgroundColor: "rgba(255, 0, 0, 0.15)",
-  border: "0.8px solid rgb(207, 52, 52)",
-  boxShadow: "none",
+  background: "linear-gradient(145deg, rgba(48, 10, 20, 0.97), rgba(18, 20, 27, 0.96))",
+  backgroundColor: "rgb(31, 13, 19)",
+  border: "2px solid rgb(217, 31, 62)",
+  boxShadow:
+    "rgba(217, 31, 62, 0.16) 0 0 0 9999px inset, rgba(217, 31, 62, 0.32) 0 0 18px 0",
 });
 
 export function buildStyleText() {
   return `
-#ad-ext-player-display .ad-ext-player.${BUST_ACTIVE_CLASS},
-.ad-ext-player.ad-ext-player-active.${BUST_ACTIVE_CLASS},
-.ad-ext-player.${BUST_ACTIVE_CLASS} {
-  position: relative !important;
-  border: var(--ad-ext-x01-bust-active-player-border, 0.8px solid rgb(207, 52, 52)) !important;
-  box-shadow: var(--ad-ext-x01-bust-active-player-box-shadow, none) !important;
+.${NATIVE_BUST_EFFECT_HIDDEN_CLASS} {
+  display: none !important;
 }
 
-#ad-ext-player-display .ad-ext-player.${BUST_ACTIVE_CLASS}:not(:has(> .chakra-stack)),
-.ad-ext-player.${BUST_ACTIVE_CLASS}:not(:has(> .chakra-stack)) {
-  background: var(--ad-ext-x01-bust-active-player-background, rgba(255, 0, 0, 0.15)) !important;
-  background-color: var(--ad-ext-x01-bust-active-player-background-color, rgba(255, 0, 0, 0.15)) !important;
+.${BUST_ACTIVE_CLASS} {
+  position: relative !important;
+  isolation: isolate;
+  border: var(--ad-ext-x01-bust-active-player-border, 2px solid rgb(217, 31, 62)) !important;
+  box-shadow: var(--ad-ext-x01-bust-active-player-box-shadow, rgba(217, 31, 62, 0.16) 0 0 0 9999px inset, rgba(217, 31, 62, 0.32) 0 0 18px 0) !important;
+}
+
+.${BUST_ACTIVE_CLASS}:not(:has(> .chakra-stack)) {
+  background: var(--ad-ext-x01-bust-active-player-background, linear-gradient(145deg, rgba(48, 10, 20, 0.97), rgba(18, 20, 27, 0.96))) !important;
+  background-color: var(--ad-ext-x01-bust-active-player-background-color, rgb(31, 13, 19)) !important;
 }
 
 #ad-ext-player-display .ad-ext-player.${BUST_ACTIVE_CLASS} > .chakra-stack,
 .ad-ext-player.${BUST_ACTIVE_CLASS} > .chakra-stack {
-  background: var(--ad-ext-x01-bust-active-player-background, rgba(255, 0, 0, 0.15)) !important;
-  background-color: var(--ad-ext-x01-bust-active-player-background-color, rgba(255, 0, 0, 0.15)) !important;
-}
-
-.${BUST_ACTIVE_CLASS}.${BUST_SHAKE_CLASS} {
-  animation: ad-ext-x01-bust-active-player-shake 150ms linear 20;
-  transform-origin: center center;
-  will-change: transform;
+  background: var(--ad-ext-x01-bust-active-player-background, linear-gradient(145deg, rgba(48, 10, 20, 0.97), rgba(18, 20, 27, 0.96))) !important;
+  background-color: var(--ad-ext-x01-bust-active-player-background-color, rgb(31, 13, 19)) !important;
 }
 
 .${BUST_CRACK_OVERLAY_CLASS} {
@@ -78,44 +75,44 @@ export function buildStyleText() {
 
 .${BUST_CRACK_CLASS} {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.92);
+  stroke: rgba(255, 236, 240, 0.92);
   stroke-linecap: round;
   stroke-linejoin: round;
-  animation: ad-ext-x01-bust-crack-appear 180ms ease-out both;
+  animation: ad-ext-x01-bust-crack-appear 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .${BUST_CRACK_CLASS} .ad-ext-x01-bust-crack-main {
-  stroke: rgba(255, 255, 255, 0.78);
+  stroke: rgba(255, 226, 232, 0.82);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .${BUST_CRACK_CLASS} .ad-ext-x01-bust-crack-reflection {
-  stroke: rgba(255, 255, 255, ${DEMO_CRACK_SETTINGS.reflectAlpha * 0.5});
+  stroke: rgba(255, 112, 136, ${DEMO_CRACK_SETTINGS.reflectAlpha * 0.72});
   stroke-width: ${DEMO_CRACK_SETTINGS.refractWidth};
   vector-effect: non-scaling-stroke;
 }
 
 .${BUST_CRACK_CLASS} .ad-ext-x01-bust-crack-web {
-  stroke: rgba(255, 255, 255, 0.58);
+  stroke: rgba(255, 151, 168, 0.58);
   stroke-width: 0.8;
   vector-effect: non-scaling-stroke;
 }
 
 .${BUST_CRACK_CLASS} .ad-ext-x01-bust-crack-splinters {
-  stroke: rgba(255, 255, 255, 0.78);
+  stroke: rgba(255, 218, 225, 0.76);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .${BUST_CRACK_CLASS} .ad-ext-x01-bust-crack-noise {
-  stroke: rgba(255, 255, 255, ${DEMO_CRACK_SETTINGS.noiseAlpha * 0.24});
+  stroke: rgba(217, 31, 62, ${DEMO_CRACK_SETTINGS.noiseAlpha * 0.34});
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .${BUST_CRACK_CLASS} .ad-ext-x01-bust-crack-shards {
-  fill: rgba(255, 255, 255, ${DEMO_CRACK_SETTINGS.fractureAlpha * 0.6});
+  fill: rgba(217, 31, 62, ${DEMO_CRACK_SETTINGS.fractureAlpha * 0.52});
   stroke: none;
   vector-effect: non-scaling-stroke;
 }
@@ -125,18 +122,10 @@ export function buildStyleText() {
   to { opacity: 1; }
 }
 
-@keyframes ad-ext-x01-bust-active-player-shake {
-  0% { transform: translate(1px, 1px) rotate(0deg); }
-  10% { transform: translate(-1px, -2px) rotate(-1deg); }
-  20% { transform: translate(-3px, 0px) rotate(1deg); }
-  30% { transform: translate(3px, 2px) rotate(0deg); }
-  40% { transform: translate(1px, -1px) rotate(1deg); }
-  50% { transform: translate(-1px, 2px) rotate(-1deg); }
-  60% { transform: translate(-3px, 1px) rotate(0deg); }
-  70% { transform: translate(3px, 1px) rotate(-1deg); }
-  80% { transform: translate(-1px, -1px) rotate(1deg); }
-  90% { transform: translate(1px, 2px) rotate(0deg); }
-  100% { transform: translate(1px, -2px) rotate(-1deg); }
+@media (prefers-reduced-motion: reduce) {
+  .${BUST_CRACK_CLASS} {
+    animation: none;
+  }
 }
 `;
 }

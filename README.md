@@ -3,11 +3,13 @@
 > Visuelle Erweiterungen für Autodarts: bessere Lesbarkeit, klarere Hinweise, Themes und optionale Effekte.  
 > Die Spiellogik bleibt unverändert.
 
-## Version 3.0: Umstellung auf das neue Autodarts-Design
+## Version 3.0: Migration auf die neue Autodarts-Oberfläche abgeschlossen
 
-Autodarts hat sein Design und die Struktur der Oberfläche geändert. xConfig 3.0 startet deshalb eine neue Major-Version mit angepasster Verwaltung, neutralen Karten und Dialogen. Alle Kacheln stehen gemeinsam auf einer Seite und sind nach **Design**, **Alle Modi**, **X01** und **Cricket / Tactics** geordnet.
+Die Migration aller xConfig-Module auf die neue Autodarts-Oberfläche ist abgeschlossen. Die Verwaltung verwendet angepasste Karten und Dialoge; alle Kacheln stehen gemeinsam auf einer Seite und sind nach **Design**, **Alle Modi**, **X01** und **Cricket / Tactics** geordnet.
 
-**Viele Optionen sind derzeit als `Deprecated` markiert.** Sie sind noch nicht vollständig an die neue Autodarts-Oberfläche angepasst und können eingeschränkt oder ohne Funktion sein. Die Anpassung erfolgt in den kommenden Tagen Stück für Stück; weitere Updates folgen. Das Badge bleibt bis zur Freigabe des jeweiligen Moduls sichtbar.
+Noch konnten nicht alle Funktionen in jeder Spielsituation ausführlich getestet werden. Wir freuen uns deshalb über Rückmeldungen und Hinweise auf Fehler. Einen gefundenen Bug kannst du direkt als [GitHub-Issue melden](https://github.com/thomasasen/autodarts-xconfig/issues/new).
+
+Viel Spaß beim Ausprobieren!
 
 Bei einer frischen Installation und beim Anwenden von `Empfohlene Standards` bleiben zunächst alle Module ausgeschaltet. Aktiviere benötigte Module gezielt. Bereits gespeicherte Einstellungen bleiben beim Update erhalten.
 
@@ -191,7 +193,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Checkout-Ziele hervorheben](#animation-autodarts-animate-checkout-target-highlights) | Funktion | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
 | [Automatischer Board-Zoom](#animation-autodarts-animate-tv-board-zoom) | Funktion | `X01` | Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board. |
 | [Checkout-Vorschlag gestalten](#animation-autodarts-checkout-suggestion-styles) | Funktion | `X01` | Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor. |
-| [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen. |
+| [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Ersetzt den nativen Karteneffekt bei BUST durch eine rote Glasbruch-Markierung. |
 | [AVG-Trend anzeigen](#animation-autodarts-animate-avg-trend-arrow) | Funktion | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
 | [Triple, Double & Bull hervorheben](#animation-autodarts-animate-special-hit-highlights) | Funktion | `alle Modi` | Hebt Triple-, Double- und Bull-Treffer mit Farben, Licht und kurzen Bewegungen hervor. |
 | [Cricket-Ziele hervorheben](#animation-autodarts-animate-cricket-target-highlighter) | Funktion | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
@@ -428,12 +430,10 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ### Überworfen (BUST) hervorheben
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.
+- Was macht es sichtbar? Bei sichtbarem `BUST` wird nur der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung ersetzt. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.
 - Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-bust-active-player-highlight)
-
-![Überworfen (BUST) hervorheben](docs/screenshots/animation-x01-bust-active-player-highlight.gif)
 
 ## Cricket / Tactics
 

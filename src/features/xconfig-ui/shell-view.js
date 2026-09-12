@@ -1555,6 +1555,11 @@ const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
       )
     );
   },
+  "x01-bust-active-player-highlight": (documentRef, host) => {
+    host.replaceChildren(
+      buildX01BustActivePlayerHighlightPreview(documentRef, { catalog: true })
+    );
+  },
 });
 
 function formatThemeGlobalPresetPreviewLabel(preview, preset) {
@@ -2309,29 +2314,40 @@ function resolveThemeActionNoteText(action) {
   return "";
 }
 
-function buildX01BustActivePlayerHighlightPreview(documentRef) {
+function buildX01BustActivePlayerHighlightPreview(documentRef, options = {}) {
   const preview = createElement(documentRef, "div", {
-    className: "ad-xconfig-x01-bust-preview",
+    className: [
+      "ad-xconfig-x01-bust-preview",
+      options.catalog ? "ad-xconfig-x01-bust-preview--catalog" : "",
+    ].filter(Boolean).join(" "),
   });
   const card = createElement(documentRef, "div", {
-    className: "ad-ext-player ad-ext-player-active ad-xconfig-x01-bust-preview-card",
+    className: [
+      "ad-xconfig-x01-bust-preview-card",
+      options.catalog ? "ad-xconfig-x01-bust-preview-card--bust" : "",
+    ].filter(Boolean).join(" "),
     attributes: {
       "data-adxconfig-x01-bust-active-player-preview-card": "true",
     },
   });
+  card.appendChild(createElement(documentRef, "div", {
+    className: "ad-xconfig-x01-bust-preview-route",
+    text: "D2",
+    attributes: { "aria-hidden": "true" },
+  }));
   const stack = createElement(documentRef, "div", {
-    className: "chakra-stack ad-xconfig-x01-bust-preview-stack",
+    className: "ad-xconfig-x01-bust-preview-stack",
   });
   const head = createElement(documentRef, "div", {
     className: "ad-xconfig-x01-bust-preview-head",
   });
   head.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-x01-bust-preview-leg",
-    text: "0",
+    attributes: { "aria-hidden": "true" },
   }));
   head.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-x01-bust-preview-name",
-    text: "TORNADO T...",
+    text: "TORNADO TOM",
   }));
   head.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-x01-bust-preview-score",
@@ -2340,7 +2356,7 @@ function buildX01BustActivePlayerHighlightPreview(documentRef) {
   stack.appendChild(head);
   stack.appendChild(createElement(documentRef, "div", {
     className: "ad-xconfig-x01-bust-preview-meta",
-    text: "#2 | Ø 0.0 / 0.0",
+    text: "Leg 85.5 · Match 85.5",
   }));
   stack.appendChild(createElement(documentRef, "div", {
     className: "ad-xconfig-x01-bust-preview-bar",

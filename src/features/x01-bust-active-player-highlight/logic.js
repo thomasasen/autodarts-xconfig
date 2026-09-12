@@ -1,18 +1,18 @@
 import {
   BUST_ACTIVE_CLASS,
   BUST_CARD_STYLE_PROPERTIES,
-  BUST_SHAKE_CLASS,
   FALLBACK_BUST_CARD_VISUALS,
+  NATIVE_BUST_EFFECT_HIDDEN_CLASS,
 } from "./style.js";
 import { X01_BUST_GLASS_CRACK_SOUND_ASSET } from "#feature-assets";
 import { getX01PlayerSurfaceSnapshot } from "../shared/x01-player-surface-adapter.js";
+import { readModernMatchSurface } from "../shared/x01-match-surface.js";
 import { isX01VariantText } from "../../domain/variant-rules.js";
 import { removeBustCracks, renderBustCracks } from "./cracks.js";
 
 export const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
 export const ACTIVE_PLAYER_SELECTOR =
   "#ad-ext-player-display .ad-ext-player.ad-ext-player-active, #ad-ext-player-display .ad-ext-player-active, .ad-ext-player.ad-ext-player-active, .ad-ext-player-active";
-export const SHAKE_DURATION_MS = 3000;
 const BUST_SOUND_VOLUME = 0.9;
 const BUST_AUDIO_FALLBACK_SOURCE = "html-audio";
 const BUST_AUDIO_WEB_SOURCE = "web-audio";
@@ -75,6 +75,14 @@ export function isX01BustFeatureActive(context = {}) {
     });
   }
 
+  const modernSurface = readModernMatchSurface(
+    context.documentRef,
+    context.windowRef || context.documentRef?.defaultView
+  );
+  if (modernSurface.turnContainer || modernSurface.playerCard) {
+    return modernSurface.variant === "X01";
+  }
+
   return isX01VariantText(readVariantText(context.documentRef), {
     allowMissing: false,
     allowEmpty: false,
@@ -82,14 +90,21 @@ export function isX01BustFeatureActive(context = {}) {
   });
 }
 
-export function hasVisibleBustTurnScore(documentRef) {
+export function hasVisibleBustTurnScore(documentRef, windowRef = documentRef?.defaultView) {
+  const modernSurface = readModernMatchSurface(documentRef, windowRef);
+  if (modernSurface.turnScoreNode) {
+    return normalizeText(modernSurface.turnScoreToken).toUpperCase() === "BUST";
+  }
   return queryAll(documentRef, TURN_POINTS_SELECTOR).some((node) => {
     return normalizeText(node?.textContent || "").toUpperCase() === "BUST";
   });
 }
 
-export function findActiveX01PlayerCard(documentRef) {
-  const snapshot = getX01PlayerSurfaceSnapshot(documentRef);
+export function findActiveX01PlayerCard(documentRef, windowRef = documentRef?.defaultView) {
+  const snapshot = getX01PlayerSurfaceSnapshot(documentRef, {
+    includeModern: true,
+    windowRef,
+  });
   const activePlayer = Array.isArray(snapshot.players)
     ? snapshot.players.find((player) => player?.isActive === true)
     : null;
@@ -100,12 +115,69 @@ export function findActiveX01PlayerCard(documentRef) {
   return queryOne(documentRef, ACTIVE_PLAYER_SELECTOR);
 }
 
+function isNativeBustEffectLayer(node) {
+  if (
+    !node?.classList?.contains?.("absolute") ||
+    !node.classList.contains("inset-0") ||
+    !node.classList.contains("pointer-events-none") ||
+    node.getAttribute?.("aria-hidden") !== "true"
+  ) {
+    return false;
+  }
+
+  return queryAll(node, "svg").some((svg) => {
+    if (
+      svg.getAttribute?.("viewBox") !== "0 0 1000 1000" ||
+      svg.getAttribute?.("preserveAspectRatio") !== "xMidYMid slice"
+    ) {
+      return false;
+    }
+    return queryAll(svg, "clipPath").some((clipPath) =>
+      String(clipPath?.getAttribute?.("id") || "").startsWith("__lottie_element_")
+    );
+  });
+}
+
+export function findNativeBustEffectLayers(node) {
+  return Array.from(node?.children || []).filter(isNativeBustEffectLayer);
+}
+
+function restoreNativeBustEffectLayers(state) {
+  if (!(state?.nativeEffectNodes instanceof Set)) {
+    return;
+  }
+  state.nativeEffectNodes.forEach((node) => {
+    node?.classList?.remove?.(NATIVE_BUST_EFFECT_HIDDEN_CLASS);
+  });
+  state.nativeEffectNodes.clear();
+}
+
+function suppressNativeBustEffectLayers(node, state) {
+  if (!(state?.nativeEffectNodes instanceof Set)) {
+    return 0;
+  }
+
+  state.nativeEffectNodes.forEach((previousNode) => {
+    if (!node?.contains?.(previousNode)) {
+      previousNode?.classList?.remove?.(NATIVE_BUST_EFFECT_HIDDEN_CLASS);
+      state.nativeEffectNodes.delete(previousNode);
+    }
+  });
+
+  const nativeEffectNodes = findNativeBustEffectLayers(node);
+  nativeEffectNodes.forEach((nativeEffectNode) => {
+    nativeEffectNode.classList?.add?.(NATIVE_BUST_EFFECT_HIDDEN_CLASS);
+    state.nativeEffectNodes.add(nativeEffectNode);
+  });
+  return nativeEffectNodes.length;
+}
+
 export function resolveBustCardVisuals() {
   return {
     ...FALLBACK_BUST_CARD_VISUALS,
-    borderColor: "rgb(207, 52, 52)",
+    borderColor: "rgb(217, 31, 62)",
     borderStyle: "solid",
-    borderWidth: "0.8px",
+    borderWidth: "2px",
   };
 }
 
@@ -134,9 +206,9 @@ function setImportantStyleProperty(node, propertyName, value) {
 
 function applyBustInlineVisuals(node, visuals = {}) {
   setImportantStyleProperty(node, "border", visuals.border || FALLBACK_BUST_CARD_VISUALS.border);
-  setImportantStyleProperty(node, "border-color", visuals.borderColor || "rgb(207, 52, 52)");
+  setImportantStyleProperty(node, "border-color", visuals.borderColor || "rgb(217, 31, 62)");
   setImportantStyleProperty(node, "border-style", visuals.borderStyle || "solid");
-  setImportantStyleProperty(node, "border-width", visuals.borderWidth || "0.8px");
+  setImportantStyleProperty(node, "border-width", visuals.borderWidth || "2px");
   setImportantStyleProperty(
     node,
     "box-shadow",
@@ -219,19 +291,6 @@ function clearBustCardVisuals(node) {
   if (fillNode !== node) {
     clearBustInlineVisuals(fillNode);
   }
-}
-
-function getTimerApi(windowRef = null) {
-  return {
-    setTimeout:
-      windowRef && typeof windowRef.setTimeout === "function"
-        ? windowRef.setTimeout.bind(windowRef)
-        : setTimeout,
-    clearTimeout:
-      windowRef && typeof windowRef.clearTimeout === "function"
-        ? windowRef.clearTimeout.bind(windowRef)
-        : clearTimeout,
-  };
 }
 
 function createBustSoundAudio(windowRef = null) {
@@ -474,75 +533,40 @@ export function playBustGlassCrackSound(options = {}) {
   };
 }
 
-function clearShakeTimeout(state, windowRef = null) {
-  if (!state?.shakeTimeoutHandle) {
-    return;
-  }
-
-  getTimerApi(windowRef).clearTimeout(state.shakeTimeoutHandle);
-  state.shakeTimeoutHandle = null;
-}
-
-function clearNodeState(node) {
+function clearNodeState(node, state = null) {
   if (!node?.classList) {
     return;
   }
-  node.classList.remove(BUST_SHAKE_CLASS, BUST_ACTIVE_CLASS);
+  node.classList.remove(BUST_ACTIVE_CLASS);
   removeBustCracks(node);
   clearBustCardVisuals(node);
+  findNativeBustEffectLayers(node).forEach((nativeEffectNode) => {
+    nativeEffectNode.classList?.remove?.(NATIVE_BUST_EFFECT_HIDDEN_CLASS);
+    state?.nativeEffectNodes?.delete?.(nativeEffectNode);
+  });
 }
 
 export function createBustActivePlayerHighlightState() {
   return {
     wasBust: false,
     activeNode: null,
-    shakeNode: null,
-    shakeTimeoutHandle: null,
     audioState: null,
     audioUnlocked: false,
+    nativeEffectNodes: new Set(),
   };
 }
 
-export function triggerBustShake(node, state, windowRef = null) {
-  if (!node?.classList || !state) {
-    return;
-  }
-
-  clearShakeTimeout(state, windowRef);
-  if (state.shakeNode && state.shakeNode !== node) {
-    state.shakeNode.classList?.remove?.(BUST_SHAKE_CLASS);
-  }
-
-  node.classList.remove(BUST_SHAKE_CLASS);
-  Number(node.offsetWidth || node.getBoundingClientRect?.().width || 0);
-  node.classList.add(BUST_SHAKE_CLASS);
-  state.shakeNode = node;
-
-  const { setTimeout: setTimeoutRef } = getTimerApi(windowRef);
-  state.shakeTimeoutHandle = setTimeoutRef(() => {
-    node.classList?.remove?.(BUST_SHAKE_CLASS);
-    if (state.shakeNode === node) {
-      state.shakeNode = null;
-    }
-    state.shakeTimeoutHandle = null;
-  }, SHAKE_DURATION_MS);
-}
-
-export function clearBustActivePlayerHighlightState(state, windowRef = null) {
+export function clearBustActivePlayerHighlightState(state) {
   if (!state) {
     return;
   }
 
-  clearShakeTimeout(state, windowRef);
-  if (state.shakeNode) {
-    state.shakeNode.classList?.remove?.(BUST_SHAKE_CLASS);
-  }
   if (state.activeNode) {
-    clearNodeState(state.activeNode);
+    clearNodeState(state.activeNode, state);
   }
+  restoreNativeBustEffectLayers(state);
   state.wasBust = false;
   state.activeNode = null;
-  state.shakeNode = null;
 }
 
 export function runBustActivePlayerHighlightPreview(options = {}) {
@@ -560,9 +584,6 @@ export function runBustActivePlayerHighlightPreview(options = {}) {
   applyBustCardVisuals(targetNode, FALLBACK_BUST_CARD_VISUALS);
   state.activeNode = targetNode;
   state.wasBust = true;
-  if (options.shakeEnabled !== false) {
-    triggerBustShake(targetNode, state, windowRef);
-  }
   renderBustCracks(targetNode, options.crackCount, {
     documentRef,
     random: options.random,
@@ -574,37 +595,37 @@ export function runBustActivePlayerHighlightPreview(options = {}) {
   });
   state.audioState = soundResult.audioState || null;
 
-  return () => clearBustActivePlayerHighlightState(state, windowRef);
+  return () => clearBustActivePlayerHighlightState(state);
 }
 
 export function syncBustActivePlayerHighlight(context = {}, state = createBustActivePlayerHighlightState()) {
   const documentRef = context.documentRef;
   const windowRef = context.windowRef || null;
   const isSupported = documentRef && isX01BustFeatureActive(context);
-  const isBust = Boolean(isSupported && hasVisibleBustTurnScore(documentRef));
+  const isBust = Boolean(isSupported && hasVisibleBustTurnScore(documentRef, windowRef));
 
   if (!isBust) {
-    clearBustActivePlayerHighlightState(state, windowRef);
+    clearBustActivePlayerHighlightState(state);
     return {
       isBust: false,
       activeNode: null,
-      shook: false,
+      enteredBust: false,
     };
   }
 
-  const activeNode = findActiveX01PlayerCard(documentRef);
+  const activeNode = findActiveX01PlayerCard(documentRef, windowRef);
   if (!activeNode?.classList) {
-    clearBustActivePlayerHighlightState(state, windowRef);
+    clearBustActivePlayerHighlightState(state);
     state.wasBust = true;
     return {
       isBust: true,
       activeNode: null,
-      shook: false,
+      enteredBust: false,
     };
   }
 
   if (state.activeNode && state.activeNode !== activeNode) {
-    clearNodeState(state.activeNode);
+    clearNodeState(state.activeNode, state);
   }
 
   const enteredBust = state.wasBust !== true;
@@ -613,11 +634,9 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
   applyBustCardVisuals(activeNode, visuals);
   state.activeNode = activeNode;
   state.wasBust = true;
+  const suppressedNativeEffects = suppressNativeBustEffectLayers(activeNode, state);
 
   if (enteredBust) {
-    if (context.shakeEnabled !== false) {
-      triggerBustShake(activeNode, state, windowRef);
-    }
     renderBustCracks(activeNode, context.crackCount, {
       documentRef,
       random: context.random,
@@ -634,6 +653,7 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
   return {
     isBust: true,
     activeNode,
-    shook: enteredBust,
+    enteredBust,
+    suppressedNativeEffects,
   };
 }

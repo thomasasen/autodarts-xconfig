@@ -105,7 +105,7 @@ test("x01 bust active player highlight descriptor exposes the configurable crack
   assert.equal(descriptor.readmeAnchor, "animation-autodarts-x01-bust-active-player-highlight");
   assert.deepEqual(
     descriptor.fields.map((field) => field.key),
-    ["preview", "crackCount", "shakeEnabled", "soundEnabled", "debug"]
+    ["preview", "crackCount", "soundEnabled", "debug"]
   );
   const previewField = descriptor.fields.find((field) => field.key === "preview");
   assert.equal(previewField.control, "action");
@@ -115,7 +115,6 @@ test("x01 bust active player highlight descriptor exposes the configurable crack
     crackCountField.options.map((option) => option.value),
     [0, 1, 2, 3]
   );
-  assert.equal(descriptor.fields.find((field) => field.key === "shakeEnabled")?.control, "checkbox");
   assert.equal(descriptor.fields.find((field) => field.key === "soundEnabled")?.control, "checkbox");
 });
 

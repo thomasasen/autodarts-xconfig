@@ -346,16 +346,14 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "x01-bust-active-player-highlight": featureCopy({
     cardDescription:
-      "Markiert die aktive X01-Spielerkarte bei BUST mit roter Wurfkachel-Optik und Glasrissen.",
+      "Ersetzt den nativen Karteneffekt bei BUST durch eine rote Glasbruch-Markierung.",
     visibleDescription:
-      "Bei sichtbarem `BUST` übernimmt die aktive X01-Spielerkarte Hintergrund und Rahmen der roten Wurfkacheln; optional wird ein Glasbruch-Sound abgespielt.",
+      "Bei sichtbarem `BUST` wird nur der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung ersetzt. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.",
     visualDescription:
-      "Beim Eintritt in BUST erscheinen die konfigurierten Glasrisse sofort an zufälligen Stellen. Wenn das Schütteln aktiv ist, bewegt sich die aktive Karte drei Sekunden deutlich hin und her. Wenn der Glasbruch-Sound aktiviert ist, wird er gleichzeitig gestartet. Danach bleiben Glasrisse und rote Wurfkachel-Färbung stehen, bis `BUST` verschwindet.",
+      "Beim Eintritt in BUST färbt sich die aktive Spielerkarte dunkelrot, erhält einen klaren roten Rahmen und zeigt die konfigurierten Glasrisse an zufälligen Stellen. Optional startet gleichzeitig der Glasbruch-Sound. Die Markierung bleibt ruhig und sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.",
     usefulWhen:
       "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
-    images: [
-      image("Überworfen (BUST) hervorheben", "animation-x01-bust-active-player-highlight.gif"),
-    ],
+    images: [],
     fields: {
       preview: fieldCopy(
         "Startet eine sofortige BUST-Vorschau auf der Beispielkarte.",
@@ -364,17 +362,12 @@ export const xconfigFeatureCopy = deepFreeze({
       ),
       crackCount: fieldCopy(
         "Legt fest, wie viele Glasrisse beim BUST erscheinen; `Aus` deaktiviert nur die Glasrisse.",
-        "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt Markierung und Schütteln aktiv.",
+        "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt die ruhige rote Kartenmarkierung aktiv.",
         "Bestimmt die Anzahl zufällig platzierter Glasrisse."
-      ),
-      shakeEnabled: fieldCopy(
-        "Schaltet das dreisekündige Wackeln beim Eintritt in BUST ein oder aus.",
-        "Steuert nur die kurze Earthquake-Bewegung der aktiven Spielerkarte. Rote Markierung, Glasrisse und optionaler Sound bleiben von dieser Einstellung unberührt.",
-        "Schaltet das kurze Schütteln für Effekt und Vorschau ein."
       ),
       soundEnabled: fieldCopy(
         "Spielt beim Eintritt in BUST und in der Vorschau einen Glasbruch-Sound ab.",
-        "Aktiviert den zusätzlichen Glasbruch-Sound parallel zu roter Markierung, Glasrissen und optionalem Wackeln. Bei blockierter Browser-Audiowiedergabe bleibt der visuelle Effekt unverändert.",
+        "Aktiviert den zusätzlichen Glasbruch-Sound parallel zu roter Markierung und Glasrissen. Bei blockierter Browser-Audiowiedergabe bleibt der visuelle Effekt unverändert.",
         "Schaltet den Glasbruch-Sound für Effekt und Vorschau ein."
       ),
       debug: DEBUG_FIELD,
@@ -2212,9 +2205,9 @@ const DART_IMPACT_STYLE_OPTION_COPY = deepFreeze({
 
 const X01_BUST_CRACK_COUNT_OPTION_COPY = deepFreeze({
   "0": optionCopy(
-    "Blendet die Glasrisse aus; Rotmarkierung und Wackeln bleiben aktiv.",
-    "Deaktiviert nur die Glasriss-Overlays. Die rote BUST-Markierung und der Earthquake-Effekt der aktiven Spielerkarte bleiben unverändert aktiv.",
-    "Keine Glasrisse; Rotmarkierung und Wackeln bleiben aktiv."
+    "Blendet die Glasrisse aus; die rote Kartenmarkierung bleibt aktiv.",
+    "Deaktiviert nur die Glasriss-Overlays. Die ruhige rote BUST-Markierung der aktiven Spielerkarte bleibt unverändert aktiv.",
+    "Keine Glasrisse; die rote Kartenmarkierung bleibt aktiv."
   ),
   "1": optionCopy(
     "Zeigt einen zufällig platzierten Glasriss.",

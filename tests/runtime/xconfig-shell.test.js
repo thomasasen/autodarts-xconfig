@@ -1610,7 +1610,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
-      "single-bull-hit-sound", "special-hit-highlights", "turn-score-counter", "x01-remaining-score-bar", "cricket-target-highlighter",
+      "single-bull-hit-sound", "special-hit-highlights", "turn-score-counter", "x01-remaining-score-bar", "x01-bust-active-player-highlight", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
     )
@@ -1618,6 +1618,38 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
       : "deprecated";
     assertCardStatus(featureKey, expectedStatus);
   });
+
+  runtime.stop();
+});
+
+test("xConfig Bust settings use the modern player-card preview", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  const catalogCard = documentRef.querySelector(
+    ".ad-xconfig-card[data-feature-key='x01-bust-active-player-highlight']"
+  );
+  assert.equal(catalogCard?.getAttribute("data-preview-kind"), "x01-bust-active-player-highlight");
+  assert.ok(catalogCard?.querySelector(".ad-xconfig-x01-bust-preview-card--bust"));
+  documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='x01-bust-active-player-highlight']"
+  ).click();
+  await waitForSettingsModal(documentRef);
+
+  const previewCard = documentRef.querySelector(
+    "[data-adxconfig-x01-bust-active-player-preview-card='true']"
+  );
+  assert.ok(previewCard);
+  assert.equal(previewCard.classList.contains("ad-ext-player"), false);
+  assert.equal(previewCard.querySelector(".chakra-stack"), null);
+  assert.equal(previewCard.querySelector(".ad-xconfig-x01-bust-preview-route")?.textContent, "D2");
+  assert.equal(previewCard.querySelector(".ad-xconfig-x01-bust-preview-name")?.textContent, "TORNADO TOM");
+  assert.equal(previewCard.querySelector(".ad-xconfig-x01-bust-preview-score")?.textContent, "121");
 
   runtime.stop();
 });

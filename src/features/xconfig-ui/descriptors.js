@@ -118,6 +118,7 @@ const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "special-hit-highlights",
   "turn-score-counter",
   "x01-remaining-score-bar",
+  "x01-bust-active-player-highlight",
   "cricket-target-highlighter",
   "cricket-grid-status-effects",
 ]);
@@ -493,7 +494,7 @@ export const xconfigDescriptors = Object.freeze([
   animationDescriptorEntry({
     featureKey: "x01-bust-active-player-highlight",
     readmeAnchor: "animation-autodarts-x01-bust-active-player-highlight",
-    description: "Färbt die aktive X01-Spielerkarte bei BUST rot und schüttelt sie kurz.",
+    description: "Ersetzt den nativen Karteneffekt bei BUST durch einen abgestimmten roten Glasbruch.",
     fields: [
       actionField("run-feature-action", "Vorschau", {
         key: "preview",
@@ -501,7 +502,7 @@ export const xconfigDescriptors = Object.freeze([
         buttonLabel: "BUST auslösen",
         section: "Vorschau",
         description:
-          "Zeigt die rote aktive Spielerkarte mit der aktuell gewählten Anzahl Glasrisse.",
+          "Zeigt den roten Karteneffekt mit der aktuell gewählten Anzahl Glasrisse.",
         successMessage: "",
         errorMessage: "Vorschau konnte nicht gestartet werden.",
         prominent: true,
@@ -515,7 +516,6 @@ export const xconfigDescriptors = Object.freeze([
           label: crackCount === 0 ? "Aus" : String(crackCount),
         }))
       ),
-      checkboxField("shakeEnabled", "Spielerkarte kurz schütteln"),
       checkboxField("soundEnabled", "Glasbruch-Sound"),
     ],
   }),

@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  SHAKE_DURATION_MS,
   clearBustActivePlayerHighlightState,
   createBustActivePlayerHighlightState,
   ensureBustGlassCrackAudio,
@@ -15,12 +14,13 @@ import {
   BUST_ACTIVE_CLASS,
   BUST_CRACK_CLASS,
   BUST_CRACK_OVERLAY_CLASS,
-  BUST_SHAKE_CLASS,
   DEMO_CRACK_SETTINGS,
+  NATIVE_BUST_EFFECT_HIDDEN_CLASS,
   buildStyleText,
 } from "../../src/features/x01-bust-active-player-highlight/style.js";
 import { mountX01BustActivePlayerHighlight } from "../../src/features/x01-bust-active-player-highlight/index.js";
 import { FakeDocument } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function createManualTimerWindow(documentRef, computedStyle = {}) {
   const timers = [];
@@ -143,7 +143,134 @@ function setupBustDocument(options = {}) {
   };
 }
 
-test("x01 bust highlight styles and shakes only the active player on bust entry", () => {
+function appendNativeBustEffectLayer(fixture, options = {}) {
+  const host = fixture.node(
+    fixture.card,
+    "div",
+    options.className || "absolute inset-0 pointer-events-none"
+  );
+  host.setAttribute("aria-hidden", "true");
+  const svg = fixture.documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", options.viewBox || "0 0 1000 1000");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+  const clipPath = fixture.documentRef.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "clipPath"
+  );
+  clipPath.id = options.clipPathId || "__lottie_element_7";
+  svg.appendChild(clipPath);
+  host.appendChild(svg);
+  return host;
+}
+
+function setupModernBustDocument(options = {}) {
+  const fixture = createModernX01Fixture({
+    base: 121,
+    score: 121,
+    throws: ["S20"],
+    route: [],
+  });
+  fixture.total.textContent = "BUST";
+  fixture.card.classList.remove("bg-raspberry-slush-diagonal");
+  fixture.card.classList.add("bg-grey-slush-diagonal");
+  const nativeEffect = options.withNativeEffect === false
+    ? null
+    : appendNativeBustEffectLayer(fixture, options.nativeEffectOptions);
+  return { ...fixture, nativeEffect };
+}
+
+test("x01 bust highlight owns the modern player card and suppresses only the native Bust Lottie", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+
+  const result = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      crackCount: 2,
+      soundEnabled: false,
+    },
+    state
+  );
+
+  assert.equal(result.isBust, true);
+  assert.equal(result.activeNode, fixture.card);
+  assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), true);
+  assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), true);
+  assert.equal(fixture.card.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 2);
+});
+
+test("x01 bust highlight suppresses a native Lottie inserted after Bust entry without replaying the effect", () => {
+  const fixture = setupModernBustDocument({ withNativeEffect: false });
+  const state = createBustActivePlayerHighlightState();
+
+  const first = syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+  const nativeEffect = appendNativeBustEffectLayer(fixture);
+  const second = syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+
+  assert.equal(first.enteredBust, true);
+  assert.equal(second.enteredBust, false);
+  assert.equal(nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), true);
+  assert.equal(fixture.card.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+});
+
+test("x01 bust highlight leaves similar non-Lottie overlays untouched", () => {
+  const fixture = setupModernBustDocument({ withNativeEffect: false });
+  const lookalike = appendNativeBustEffectLayer(fixture, {
+    clipPathId: "custom-overlay-clip",
+  });
+  const state = createBustActivePlayerHighlightState();
+
+  syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+
+  assert.equal(lookalike.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), false);
+});
+
+test("x01 bust highlight restores the native Lottie and card state when Bust ends", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+
+  syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+  fixture.total.textContent = "20";
+  const result = syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+
+  assert.equal(result.isBust, false);
+  assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), false);
+  assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), false);
+  assert.equal(fixture.card.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+});
+
+test("x01 bust highlight restores the native Lottie when the feature is disabled", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+
+  syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+  clearBustActivePlayerHighlightState(state);
+
+  assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), false);
+  assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), false);
+  assert.equal(fixture.card.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+});
+
+test("x01 bust highlight styles only the active player on bust entry", () => {
   const { documentRef, activeCard, activeSurface, inactiveCard, inactiveSurface } = setupBustDocument();
   const state = createBustActivePlayerHighlightState();
   const { windowRef, timers } = createManualTimerWindow(documentRef);
@@ -151,37 +278,35 @@ test("x01 bust highlight styles and shakes only the active player on bust entry"
   const result = syncBustActivePlayerHighlight({ documentRef, windowRef }, state);
 
   assert.equal(result.isBust, true);
-  assert.equal(result.shook, true);
+  assert.equal(result.enteredBust, true);
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), true);
   assert.equal(inactiveCard.classList.contains(BUST_ACTIVE_CLASS), false);
-  assert.equal(timers.length, 1);
-  assert.equal(timers[0].ms, SHAKE_DURATION_MS);
+  assert.equal(timers.length, 0);
   assert.equal(
     activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-background-color"),
-    "rgba(255, 0, 0, 0.15)"
+    "rgb(31, 13, 19)"
   );
   assert.equal(
     activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-border"),
-    "0.8px solid rgb(207, 52, 52)"
+    "2px solid rgb(217, 31, 62)"
   );
   assert.equal(activeCard.style.getPropertyValue("background-color"), "");
-  assert.equal(activeSurface.style.getPropertyValue("background-color"), "rgba(255, 0, 0, 0.15)");
+  assert.equal(activeSurface.style.getPropertyValue("background-color"), "rgb(31, 13, 19)");
   assert.equal(activeSurface.style.getPropertyPriority("background-color"), "important");
   assert.equal(inactiveSurface.style.getPropertyValue("background-color"), "");
-  assert.equal(activeCard.style.getPropertyValue("border"), "0.8px solid rgb(207, 52, 52)");
+  assert.equal(activeCard.style.getPropertyValue("border"), "2px solid rgb(217, 31, 62)");
   assert.equal(activeCard.style.getPropertyPriority("border"), "important");
-  assert.equal(activeCard.style.getPropertyValue("border-color"), "rgb(207, 52, 52)");
+  assert.equal(activeCard.style.getPropertyValue("border-color"), "rgb(217, 31, 62)");
   assert.equal(activeCard.style.getPropertyPriority("border-color"), "important");
-  assert.equal(activeCard.style.getPropertyValue("border-width"), "0.8px");
+  assert.equal(activeCard.style.getPropertyValue("border-width"), "2px");
   assert.equal(activeCard.style.getPropertyPriority("border-width"), "important");
   assert.equal(activeCard.style.getPropertyValue("border-style"), "solid");
   assert.equal(activeCard.style.getPropertyPriority("border-style"), "important");
-  assert.equal(activeCard.style.getPropertyValue("box-shadow"), "none");
+  assert.match(activeCard.style.getPropertyValue("box-shadow"), /rgba\(217, 31, 62/);
   assert.equal(activeCard.style.getPropertyPriority("box-shadow"), "important");
 });
 
-test("x01 bust highlight keeps copied hit visuals when current hit tiles use another theme", () => {
+test("x01 bust highlight keeps its dedicated visuals when hit tiles use another theme", () => {
   const { documentRef, activeCard, activeSurface } = setupBustDocument({
     throwComputedStyle: {
       background:
@@ -202,15 +327,15 @@ test("x01 bust highlight keeps copied hit visuals when current hit tiles use ano
 
   assert.equal(
     activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-background-color"),
-    "rgba(255, 0, 0, 0.15)"
+    "rgb(31, 13, 19)"
   );
   assert.equal(
     activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-border"),
-    "0.8px solid rgb(207, 52, 52)"
+    "2px solid rgb(217, 31, 62)"
   );
-  assert.equal(activeSurface.style.getPropertyValue("background-color"), "rgba(255, 0, 0, 0.15)");
-  assert.equal(activeCard.style.getPropertyValue("border-color"), "rgb(207, 52, 52)");
-  assert.equal(activeCard.style.getPropertyValue("box-shadow"), "none");
+  assert.equal(activeSurface.style.getPropertyValue("background-color"), "rgb(31, 13, 19)");
+  assert.equal(activeCard.style.getPropertyValue("border-color"), "rgb(217, 31, 62)");
+  assert.match(activeCard.style.getPropertyValue("box-shadow"), /rgba\(217, 31, 62/);
 });
 
 test("x01 bust highlight plays the glass crack sound only on bust entry when enabled", () => {
@@ -234,20 +359,19 @@ test("x01 bust highlight plays the glass crack sound only on bust entry when ena
   assert.equal(audioInstances[0].playCount, 1);
 });
 
-test("x01 bust highlight can disable shake while keeping persistent bust styling", () => {
+test("x01 bust highlight keeps persistent styling without moving the player card", () => {
   const { documentRef, activeCard } = setupBustDocument();
   const state = createBustActivePlayerHighlightState();
   const timerWindow = createManualTimerWindow(documentRef);
 
   const result = syncBustActivePlayerHighlight(
-    { documentRef, windowRef: timerWindow.windowRef, crackCount: 1, shakeEnabled: false },
+    { documentRef, windowRef: timerWindow.windowRef, crackCount: 1 },
     state
   );
 
   assert.equal(result.isBust, true);
-  assert.equal(result.shook, true);
+  assert.equal(result.enteredBust, true);
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
   assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
   assert.equal(timerWindow.timers.length, 0);
 });
@@ -321,7 +445,7 @@ test("x01 bust sound unlock ignores xConfig panel clicks so preview playback kee
   cleanup();
 });
 
-test("x01 bust preview applies visuals, cracks, shake and optional sound", () => {
+test("x01 bust preview applies visuals, cracks and optional sound", () => {
   const { documentRef, activeCard } = setupBustDocument();
   const { windowRef, audioInstances } = createManualTimerWindow(documentRef);
 
@@ -334,35 +458,13 @@ test("x01 bust preview applies visuals, cracks, shake and optional sound", () =>
   });
 
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), true);
   assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
   assert.equal(audioInstances.length, 1);
   assert.match(audioInstances[0].src, /glasscrack\.mp3$/);
 
   cleanup();
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
   assert.equal(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
-});
-
-test("x01 bust preview can disable shake while keeping visuals and cracks", () => {
-  const { documentRef, activeCard } = setupBustDocument();
-  const { windowRef } = createManualTimerWindow(documentRef);
-
-  const cleanup = runBustActivePlayerHighlightPreview({
-    documentRef,
-    windowRef,
-    targetNode: activeCard,
-    crackCount: 1,
-    shakeEnabled: false,
-  });
-
-  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
-  assert.equal(activeCard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
-
-  cleanup();
-  assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
 });
 
 test("x01 bust sound uses Web Audio buffer playback when AudioContext is available", async () => {
@@ -490,12 +592,12 @@ test("x01 bust highlight disables cracks when configured with zero", () => {
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
 });
 
-test("x01 bust highlight CSS overrides active card visuals and shakes quickly for three seconds", () => {
+test("x01 bust highlight CSS supports modern and legacy cards without motion", () => {
   const css = buildStyleText();
 
   assert.match(
     css,
-    /#ad-ext-player-display \.ad-ext-player\.ad-ext-x01-bust-active-player-highlight,[\s\S]*\.ad-ext-player\.ad-ext-player-active\.ad-ext-x01-bust-active-player-highlight/
+    /\.ad-ext-x01-bust-active-player-highlight \{[\s\S]*border: var\(--ad-ext-x01-bust-active-player-border, 2px solid rgb\(217, 31, 62\)\)/
   );
   assert.match(
     css,
@@ -503,19 +605,18 @@ test("x01 bust highlight CSS overrides active card visuals and shakes quickly fo
   );
   assert.match(
     css,
-    /\.ad-ext-x01-bust-active-player-highlight\.ad-ext-x01-bust-active-player-highlight--shake \{[^}]*animation: ad-ext-x01-bust-active-player-shake 150ms linear 20;/
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.ad-ext-x01-bust-active-player-crack[\s\S]*animation: none;/
   );
+  assert.match(css, /\.ad-ext-x01-bust-native-effect-hidden \{[\s\S]*display: none !important;/);
+  assert.doesNotMatch(css, /ad-ext-x01-bust-active-player-shake/);
 });
 
-test("x01 bust shake stops after three seconds while the red bust styling remains", () => {
+test("x01 bust passive resync does not replay the entry effect", () => {
   const { documentRef, activeCard } = setupBustDocument();
   const state = createBustActivePlayerHighlightState();
   const timerWindow = createManualTimerWindow(documentRef);
 
   syncBustActivePlayerHighlight({ documentRef, windowRef: timerWindow.windowRef }, state);
-  timerWindow.runTimer();
-
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), true);
 
   const result = syncBustActivePlayerHighlight(
@@ -523,11 +624,11 @@ test("x01 bust shake stops after three seconds while the red bust styling remain
     state
   );
 
-  assert.equal(result.shook, false);
-  assert.equal(timerWindow.timers.length, 1);
+  assert.equal(result.enteredBust, false);
+  assert.equal(timerWindow.timers.length, 0);
 });
 
-test("x01 bust highlight clears styling and shake state when bust disappears", () => {
+test("x01 bust highlight clears styling when bust disappears", () => {
   const { documentRef, activeCard, activeSurface } = setupBustDocument();
   const state = createBustActivePlayerHighlightState();
   const timerWindow = createManualTimerWindow(documentRef);
@@ -541,7 +642,6 @@ test("x01 bust highlight clears styling and shake state when bust disappears", (
 
   assert.equal(result.isBust, false);
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
   assert.equal(
     activeCard.style.getPropertyValue("--ad-ext-x01-bust-active-player-background-color"),
     ""
@@ -553,7 +653,7 @@ test("x01 bust highlight clears styling and shake state when bust disappears", (
   assert.equal(activeCard.style.getPropertyValue("border-width"), "");
   assert.equal(activeCard.style.getPropertyValue("border-style"), "");
   assert.equal(activeCard.style.getPropertyValue("box-shadow"), "");
-  assert.equal(timerWindow.timers[0].cleared, true);
+  assert.equal(timerWindow.timers.length, 0);
 });
 
 test("x01 bust highlight ignores non-X01 variants even when BUST is visible", () => {
@@ -565,11 +665,10 @@ test("x01 bust highlight ignores non-X01 variants even when BUST is visible", ()
 
   assert.equal(result.isBust, false);
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
   assert.equal(timers.length, 0);
 });
 
-test("x01 bust highlight moves persistent styling to a new active player without retriggering shake", () => {
+test("x01 bust highlight moves persistent styling to a new active player without replaying entry", () => {
   const { documentRef, activeCard, inactiveCard } = setupBustDocument();
   const state = createBustActivePlayerHighlightState();
   const timerWindow = createManualTimerWindow(documentRef);
@@ -585,14 +684,13 @@ test("x01 bust highlight moves persistent styling to a new active player without
     state
   );
 
-  assert.equal(result.shook, false);
+  assert.equal(result.enteredBust, false);
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
   assert.equal(inactiveCard.classList.contains(BUST_ACTIVE_CLASS), true);
-  assert.equal(inactiveCard.classList.contains(BUST_SHAKE_CLASS), false);
-  assert.equal(timerWindow.timers.length, 1);
+  assert.equal(timerWindow.timers.length, 0);
 });
 
-test("x01 bust highlight cleanup removes classes and pending timers", () => {
+test("x01 bust highlight cleanup removes classes and overlays", () => {
   const { documentRef, activeCard } = setupBustDocument();
   const state = createBustActivePlayerHighlightState();
   const timerWindow = createManualTimerWindow(documentRef);
@@ -602,10 +700,9 @@ test("x01 bust highlight cleanup removes classes and pending timers", () => {
     state
   );
   assert.ok(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`));
-  clearBustActivePlayerHighlightState(state, timerWindow.windowRef);
+  clearBustActivePlayerHighlightState(state);
 
   assert.equal(activeCard.classList.contains(BUST_ACTIVE_CLASS), false);
-  assert.equal(activeCard.classList.contains(BUST_SHAKE_CLASS), false);
   assert.equal(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
-  assert.equal(timerWindow.timers[0].cleared, true);
+  assert.equal(timerWindow.timers.length, 0);
 });
