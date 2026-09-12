@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.1] - 2026-09-12
+
+### Fixed
+
+- Nutzerwirkung: Cricket- und Tactics-Erweiterungen erkennen die aktuelle Autodarts-Spieloberfläche zuverlässig. Insbesondere wird das spaltenweise aufgebaute Tactics-Raster wieder korrekt ausgewertet.
+  Technik: Der gemeinsame Parser unterstützt nun sowohl das zeilenweise Cricket-Raster als auch das spaltenweise Tactics-Raster. Sanitierte Live-DOM-Fixtures und Playwright-Vertragstests sichern zusätzlich die aktuellen Oberflächen von X01, Cricket, Tactics und Dartboard ab.
+
 ## [3.1.0] - 2026-09-12
 
 ### Changed
@@ -2099,6 +2106,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.11...v3.1.0
 [3.0.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.10...v3.0.11
 [3.0.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.9...v3.0.10
