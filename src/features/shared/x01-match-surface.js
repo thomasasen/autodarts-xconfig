@@ -76,9 +76,12 @@ export function readModernMatchSurface(documentRef, windowRef = documentRef?.def
 }
 
 export function readModernPlayerSurfaces(documentRef, windowRef = documentRef?.defaultView) {
-  return all(documentRef, MODERN_PLAYER_SELECTOR).filter((node) =>
-    node.querySelector?.('[role="button"]') && isMatchNodeVisible(node, windowRef)
-  ).map((cardNode) => {
+  return all(documentRef, MODERN_PLAYER_SELECTOR).filter((node) => {
+    if (!isMatchNodeVisible(node, windowRef)) return false;
+    const scores = all(node, ".font-number.overflow-hidden").filter((scoreNode) =>
+      /^\d+$/.test(text(scoreNode)) && isMatchNodeVisible(scoreNode, windowRef));
+    return scores.length === 1;
+  }).map((cardNode) => {
     const scores = all(cardNode, ".font-number.overflow-hidden").filter((node) =>
       /^\d+$/.test(text(node)) && isMatchNodeVisible(node, windowRef));
     return {

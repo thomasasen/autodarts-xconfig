@@ -19,6 +19,7 @@ import { mountX01RemainingScoreBar } from "./x01-remaining-score-bar/index.js";
 import { mountBotBoardStyle } from "./bot-board-style/index.js";
 import { mountThemeGlobalBackground } from "./themes/global-background/index.js";
 import { mountThemeGlobalTypography } from "./themes/global-typography/index.js";
+import { mountThemeGameLayout } from "./themes/game-layout/index.js";
 import { mountTurnDartDisplay } from "./turn-dart-display/index.js";
 import { normalizeFeatureIdentity, normalizeFeatureKey } from "./feature-metadata.js";
 import {
@@ -156,6 +157,7 @@ const featureInitializers = Object.freeze({
   "x01-remaining-score-bar": mountX01RemainingScoreBar,
   "theme-global-background": mountThemeGlobalBackground,
   "theme-global-typography": mountThemeGlobalTypography,
+  "theme-game-layout": mountThemeGameLayout,
   "theme-global-presets": () => () => {},
   "bot-board-style": mountBotBoardStyle,
   "turn-dart-display": mountTurnDartDisplay,

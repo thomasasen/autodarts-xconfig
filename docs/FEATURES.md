@@ -1,10 +1,10 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `20` Module in einem Userscript:
+`autodarts-xconfig` bündelt `21` Module in einem Userscript:
 
 - `17` Anzeigen und Komfortfunktionen
-- `3` Designmodule
+- `4` Designmodule
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
@@ -12,7 +12,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln 
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `20` Module: `17` Anzeigen und Komfortfunktionen sowie `3` Designmodule.
+- Insgesamt `21` Module: `17` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -302,6 +302,18 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Globale Schrift](screenshots/template-theme-global-typography-xConfig.png)
+
+<a id="theme-game-layout"></a>
+
+### Spiel-Layout
+
+- Gilt für: `X01`
+- Kurz: Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.
+- Grafisch: Alle nativen Spielerkarten bleiben erhalten und werden in einer scrollbaren linken Leiste angeordnet. Das unverzerrte Dartboard füllt die freie Fläche; Eingabe, Undo und Next stehen in einem beschrifteten Dock rechts.
+- Wann sinnvoll? Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.
+- Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.
+- Bei vielen Spielern folgt die Leiste dem aktiven Spieler automatisch und kann in ganzen Karten weitergescrollt werden.
+- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ## Alle Modi
 

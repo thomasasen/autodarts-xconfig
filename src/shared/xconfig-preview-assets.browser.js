@@ -19,6 +19,7 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-global-background": themeGlobalTypographyWebp,
   "theme-global-typography": themeGlobalTypographyWebp,
   "theme-global-presets": themeGlobalTypographyWebp,
+  "theme-game-layout": themeGlobalTypographyWebp,
   "turn-dart-display": dartMarkerReplacerWebp,
   "checkout-score-highlight": checkoutScoreHighlightWebp,
   "x01-remaining-score-bar": x01RemainingScoreBarWebp,

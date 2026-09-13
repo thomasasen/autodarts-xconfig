@@ -62,6 +62,7 @@ test("feature registry lists runtime metadata against snapshots", () => {
   assert.equal(listed.some((feature) => feature.featureKey === "winner-celebration-effect"), false);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-global-background"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-global-typography"), true);
+  assert.equal(listed.some((feature) => feature.featureKey === "theme-game-layout"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-global-presets"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "turn-dart-display"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "theme-x01"), false);

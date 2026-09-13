@@ -255,6 +255,17 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
+  "theme-game-layout": featureCopy({
+    cardDescription: "Ordnet alle X01-Spieler links an und nutzt den rechten Bereich für ein größeres Dartboard.",
+    visibleDescription: "Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.",
+    visualDescription: "Alle nativen Spielerkarten bleiben erhalten und werden in einer scrollbaren linken Leiste angeordnet. Das unverzerrte Dartboard füllt die freie Fläche; Eingabe, Undo und Next stehen in einem beschrifteten Dock rechts.",
+    usefulWhen: "Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.",
+    featuresDetails: [
+      "Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.",
+      "Bei vielen Spielern folgt die Leiste dem aktiven Spieler automatisch und kann in ganzen Karten weitergescrollt werden.",
+    ],
+    fields: { debug: DEBUG_FIELD },
+  }),
   "theme-global-presets": featureCopy({
     cardDescription: "Fertige Vorlagen für globalen Hintergrund und globale Schrift.",
     visibleDescription: "Wendet Hintergrundbild, Schrift und Farben gemeinsam an, ohne die Darts in der Wurfanzeige zu verändern.",

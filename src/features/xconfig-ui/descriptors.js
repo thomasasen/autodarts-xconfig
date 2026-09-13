@@ -103,6 +103,7 @@ const README_ANCHOR_ALIASES = Object.freeze({
 const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
   "theme-global-background",
   "theme-global-typography",
+  "theme-game-layout",
   "theme-global-presets",
   "bot-board-style",
   "turn-dart-display",
@@ -341,6 +342,11 @@ export const xconfigDescriptors = Object.freeze([
       ),
       DEBUG_FIELD,
     ],
+  }),
+  descriptorEntry({
+    featureKey: "theme-game-layout",
+    readmeAnchor: "theme-game-layout",
+    fields: [DEBUG_FIELD],
   }),
   animationDescriptorEntry({
     featureKey: "bot-board-style",

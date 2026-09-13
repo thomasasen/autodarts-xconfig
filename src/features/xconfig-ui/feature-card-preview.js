@@ -162,6 +162,10 @@ const FEATURE_PREVIEW_RESOLVERS = Object.freeze({
     displayMode: feature?.config?.backgroundDisplayMode || "fill",
   }),
   "theme-global-typography": resolveThemeGlobalTypographyPreview,
+  "theme-game-layout": () => ({
+    kind: "theme-game-layout",
+    url: resolveXConfigPreviewAsset("theme-game-layout"),
+  }),
   "theme-global-presets": (_feature, features) => resolveThemeGlobalPresetsPreview(features),
 });
 

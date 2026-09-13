@@ -389,6 +389,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     activePlayerTintIntensity: 15,
     debug: false,
   },
+  "themes.gameLayout": { enabled: false, debug: false },
   "themes.globalPresets": { enabled: false },
   turnDartDisplay: DEFAULT_TURN_DART_DISPLAY_CONFIG,
 });
@@ -704,6 +705,12 @@ const FEATURE_NORMALIZERS = Object.freeze({
         Number(DEFAULT_FEATURE_CONFIGS["themes.globalTypography"].activePlayerTintIntensity || 0),
         THEME_ACTIVE_PLAYER_TINT_INTENSITY
       ),
+      debug: normalizeBoolean(rawConfig.debug, false),
+    };
+  },
+  "themes.gameLayout"(rawConfig = {}) {
+    return {
+      enabled: normalizeBoolean(rawConfig.enabled, false),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },

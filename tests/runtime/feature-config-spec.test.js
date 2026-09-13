@@ -408,3 +408,15 @@ test("retired game themes no longer expose config specs", () => {
   assert.equal(getFeatureConfigSpec("themes.gotcha"), null);
   assert.equal(getFeatureConfigSpec("themes.bullOff"), null);
 });
+
+test("game layout defaults disabled and normalizes only boolean runtime flags", () => {
+  assert.deepEqual(getDefaultFeatureConfig("themes.gameLayout"), {
+    enabled: false,
+    debug: false,
+  });
+  const spec = getFeatureConfigSpec("themes.gameLayout");
+  assert.deepEqual(spec.normalizeConfig({ enabled: 1, debug: "yes", ignored: true }), {
+    enabled: true,
+    debug: true,
+  });
+});

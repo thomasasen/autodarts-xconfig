@@ -21,6 +21,11 @@ function appendModernPlayerCard(documentRef, averageText = "50.0") {
   playerButton.textContent = "Player One";
   cardNode.appendChild(playerButton);
 
+  const scoreNode = documentRef.createElement("div");
+  scoreNode.classList.add("font-number", "overflow-hidden");
+  scoreNode.textContent = "501";
+  cardNode.appendChild(scoreNode);
+
   const averageRow = documentRef.createElement("div");
   averageRow.classList.add("flex", "gap-1");
   const labelNode = documentRef.createElement("span");

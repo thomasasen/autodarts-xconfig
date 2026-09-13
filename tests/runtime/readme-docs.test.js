@@ -132,9 +132,9 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
 });
 
 test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 20);
+  assert.equal(overviewCounts.totalModules, 21);
   assert.equal(overviewCounts.animationModules, 17);
-  assert.equal(overviewCounts.themeModules, 3);
+  assert.equal(overviewCounts.themeModules, 4);
 });
 
 test("README and FEATURES share the generated xConfig overview copy", () => {
@@ -360,6 +360,7 @@ test("xConfig preview manifest covers the key animation/theme cards with visual 
     "theme-global-background",
     "theme-global-typography",
     "theme-global-presets",
+    "theme-game-layout",
     "turn-dart-display",
     "checkout-score-highlight",
     "x01-bust-active-player-highlight",

@@ -2,6 +2,7 @@ export const XCONFIG_PREVIEW_ASSET_FILES = Object.freeze({
   "theme-global-background": "theme-global-typography.webp",
   "theme-global-typography": "theme-global-typography.webp",
   "theme-global-presets": "theme-global-typography.webp",
+  "theme-game-layout": "theme-global-typography.webp",
   "turn-dart-display": "dart-marker-replacer.webp",
   "checkout-score-highlight": "checkout-score-highlight.webp",
   "x01-remaining-score-bar": "x01-remaining-score-bar.webp",

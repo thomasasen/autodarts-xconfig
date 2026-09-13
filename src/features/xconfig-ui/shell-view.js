@@ -1530,6 +1530,57 @@ function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, override
   return card;
 }
 
+function buildThemeGameLayoutCardPreview(documentRef) {
+  const sample = createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-preview",
+    attributes: { "aria-hidden": "true" },
+  });
+  const rail = createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-preview-rail",
+  });
+  rail.appendChild(createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-preview-turn",
+    text: "T20  25  D18",
+  }));
+  [
+    ["TORNADO TOM", "121", "Leg 61.2"],
+    ["GAST 1", "184", "Leg 54.8"],
+    ["GAST 2", "236", "Leg 48.5"],
+  ].forEach(([name, score, average], index) => {
+    const player = createElement(documentRef, "div", {
+      className: `ad-xconfig-game-layout-preview-player${index === 0 ? " is-active" : ""}`,
+    });
+    player.appendChild(createElement(documentRef, "span", { text: name }));
+    player.appendChild(createElement(documentRef, "strong", { text: score }));
+    player.appendChild(createElement(documentRef, "small", { text: average }));
+    player.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-game-layout-preview-darts",
+      text: "↗ 60",
+    }));
+    player.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-game-layout-preview-legs",
+      text: String(index === 0 ? 1 : 0),
+    }));
+    rail.appendChild(player);
+  });
+  const board = createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-preview-board",
+  });
+  board.appendChild(createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-preview-bull",
+  }));
+  const dock = createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-preview-dock",
+  });
+  ["⌨", "↶", "Next"].forEach((label) => {
+    dock.appendChild(createElement(documentRef, "span", { text: label }));
+  });
+  sample.appendChild(rail);
+  sample.appendChild(board);
+  sample.appendChild(dock);
+  return sample;
+}
+
 const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
   "checkout-suggestion-style": (documentRef, host, feature) => {
     host.replaceChildren(
@@ -1554,6 +1605,9 @@ const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
         formatThemeGlobalPresetPreviewLabel(preview, preset)
       )
     );
+  },
+  "theme-game-layout": (documentRef, host) => {
+    host.replaceChildren(buildThemeGameLayoutCardPreview(documentRef));
   },
   "x01-bust-active-player-highlight": (documentRef, host) => {
     host.replaceChildren(

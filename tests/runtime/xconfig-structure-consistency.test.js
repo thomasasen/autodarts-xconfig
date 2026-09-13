@@ -58,17 +58,25 @@ test("xConfig descriptors stay aligned with registry definitions and exported or
   });
 });
 
-test("template descriptors contain exactly background, font and action-only presets", () => {
+test("template descriptors contain presets, background, typography and game layout", () => {
+  const themeKeys = new Set([
+    "theme-global-presets",
+    "theme-global-background",
+    "theme-global-typography",
+    "theme-game-layout",
+  ]);
   const themeDescriptors = xconfigDescriptors.filter((descriptor) =>
-    descriptor.featureKey.startsWith("theme-global-")
+    themeKeys.has(descriptor.featureKey)
   );
   assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.featureKey), [
     "theme-global-presets",
     "theme-global-background",
     "theme-global-typography",
+    "theme-game-layout",
   ]);
   assert.deepEqual(themeDescriptors.map((descriptor) => descriptor.cardType), [
     "action",
+    "toggle",
     "toggle",
     "toggle",
   ]);

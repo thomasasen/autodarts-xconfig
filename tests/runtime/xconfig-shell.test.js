@@ -1422,6 +1422,7 @@ test("xConfig shell renders every feature exactly once in ordered domain section
     "theme-global-presets",
     "theme-global-background",
     "theme-global-typography",
+    "theme-game-layout",
   ]);
   assert.deepEqual(readSectionCards("all-modes"), [
     "turn-score-counter",
@@ -1449,11 +1450,11 @@ test("xConfig shell renders every feature exactly once in ordered domain section
 
   const allCardFeatureKeys = documentRef.querySelectorAll(".ad-xconfig-card")
     .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""));
-  assert.equal(allCardFeatureKeys.length, 20);
-  assert.equal(new Set(allCardFeatureKeys).size, 20);
+  assert.equal(allCardFeatureKeys.length, 21);
+  assert.equal(new Set(allCardFeatureKeys).size, 21);
   assert.deepEqual(
     sectionNodes.map((sectionNode) => sectionNode.querySelector(".ad-xconfig-section-count")?.textContent),
-    ["3 Kacheln", "9 Kacheln", "6 Kacheln", "2 Kacheln"]
+    ["4 Kacheln", "9 Kacheln", "6 Kacheln", "2 Kacheln"]
   );
 
   runtime.stop();
@@ -1601,6 +1602,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
     "theme-global-background",
     "theme-global-typography",
     "theme-global-presets",
+    "theme-game-layout",
   ].forEach((featureKey) => assertCardStatus(featureKey, "ready"));
 
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
@@ -1609,7 +1611,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
 
   documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
+    const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "theme-game-layout", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
       "single-bull-hit-sound", "special-hit-highlights", "turn-score-counter", "x01-remaining-score-bar", "x01-bust-active-player-highlight", "cricket-target-highlighter",
       "cricket-grid-status-effects"].includes(
       featureKey
@@ -4129,10 +4131,20 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   assert.match(styleText, /\.ad-xconfig-switch\{[^}]*width:114px[^}]*height:44px/);
   assert.match(styleText, /\.ad-xconfig-switch-track\{[^}]*width:48px[^}]*height:28px[^}]*border-radius:999px[^}]*background:#353b46/);
   assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track\{[^}]*background:var\(--color-brand-blue-50,#4a89ff\)/);
+  assert.match(styleText, /\.ad-xconfig-game-layout-preview\{[^}]*position:relative[^}]*grid-template-columns:minmax\(9rem,38%\) minmax\(0,1fr\)/);
+  assert.match(styleText, /\.ad-xconfig-game-layout-preview-dock\{[^}]*position:absolute[^}]*right:\.35rem[^}]*bottom:\.35rem[^}]*display:flex[^}]*align-items:center/);
   documentRef.querySelectorAll("[data-adxconfig-section='template'] .ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
-    assert.ok(card.querySelector(".ad-xconfig-card-global-badge"), `missing retained theme tag for ${featureKey}`);
+    if (featureKey === "theme-game-layout") {
+      assert.equal(card.querySelector(".ad-xconfig-card-global-badge"), null);
+      assert.equal(card.querySelector(".ad-xconfig-variant")?.textContent, "Gilt für: X01");
+      assert.ok(card.querySelector(".ad-xconfig-game-layout-preview"));
+      assert.ok(card.querySelector(".ad-xconfig-game-layout-preview-darts"));
+      assert.ok(card.querySelector(".ad-xconfig-game-layout-preview-legs"));
+    } else {
+      assert.ok(card.querySelector(".ad-xconfig-card-global-badge"), `missing retained theme tag for ${featureKey}`);
+    }
   });
 
   ["all-modes", "x01", "cricket-tactics"].flatMap((sectionId) =>

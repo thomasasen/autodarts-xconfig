@@ -6,8 +6,8 @@ export const XCONFIG_SECTION_DEFINITIONS = Object.freeze([
   sectionDefinition(
     "template",
     "Design",
-    "Designvorlagen, Hintergrund, Schrift und Farben für alle Spielansichten.",
-    ["theme-global-presets", "theme-global-background", "theme-global-typography"]
+    "Designvorlagen, Hintergrund, Schrift, Farben und Spiel-Layout.",
+    ["theme-global-presets", "theme-global-background", "theme-global-typography", "theme-game-layout"]
   ),
   sectionDefinition(
     "all-modes",

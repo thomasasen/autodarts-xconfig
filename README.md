@@ -53,7 +53,7 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 
 ## Im Überblick
 
-- Insgesamt `20` Module: `17` Anzeigen und Komfortfunktionen sowie `3` Designmodule.
+- Insgesamt `21` Module: `17` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -73,7 +73,7 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
 
 1. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle direkt unter `Legal` den Eintrag **xConfig**.
-2. Stelle im Bereich `Design` Hintergrund, Schrift und Farben für alle Spielansichten ein oder wende eine Designvorlage an. Die übrigen Module findest du direkt darunter nach Spielbereich geordnet.
+2. Stelle im Bereich `Design` Hintergrund, Schrift, Farben und das X01-Spiel-Layout ein oder wende eine Designvorlage an. Die übrigen Module findest du direkt darunter nach Spielbereich geordnet.
 3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne globales Wallpaper oder Dart-Upload beginnen möchtest.
 4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigenes Wallpaper und Dart-Upload bleiben dabei erhalten.
 
@@ -94,7 +94,7 @@ Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xCon
 
 ## Wo finde ich was?
 
-- `Design`: Fertige Designvorlagen, Hintergrund, Schrift und Farben für alle Spielansichten.
+- `Design`: Fertige Designvorlagen, Hintergrund, Schrift, Farben und das X01-Spiel-Layout.
 - `Alle Modi`: Anzeigen, Darts, Treffermarkierungen und Komfortfunktionen für alle Spielmodi.
 - `X01`: Checkout, Restscore, BUST und Board-Zoom.
 - `Cricket / Tactics`: Ziel- und Matrixeffekte für beide Spielmodi.
@@ -186,6 +186,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Designvorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
 | [Hintergrund](#theme-global-background) | Design | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
 | [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen. |
+| [Spiel-Layout](#theme-game-layout) | Design | `X01` | Ordnet alle X01-Spieler links an und nutzt den rechten Bereich für ein größeres Dartboard. |
 | [Dartboard-Design](#bot-board-style) | Funktion | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
 | [Darts in der Wurfanzeige](#turn-dart-display) | Funktion | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
 | [Finishbaren Restscore hervorheben](#animation-autodarts-animate-checkout-score-highlight) | Funktion | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
@@ -247,6 +248,16 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-global-typography)
 
 ![Globale Schrift](docs/screenshots/template-theme-global-typography-xConfig.png)
+
+<a id="theme-game-layout"></a>
+
+### Spiel-Layout
+
+- Gilt für: `X01`
+- Was macht es sichtbar? Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.
+- Wann sinnvoll? Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-game-layout)
 
 ## Alle Modi
 

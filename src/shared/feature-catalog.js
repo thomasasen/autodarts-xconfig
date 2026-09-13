@@ -41,6 +41,7 @@ const rawFeatureCatalog = [
   catalogEntry("x01-remaining-score-bar", "x01RemainingScoreBar", "Restscore-Balken", ["x01"], "", "", immediate),
   catalogEntry("theme-global-background", "themes.globalBackground", "Hintergrund", ["all"], "", "", immediate),
   catalogEntry("theme-global-typography", "themes.globalTypography", "Schrift & Farben", ["all"], "", "", immediate),
+  catalogEntry("theme-game-layout", "themes.gameLayout", "Spiel-Layout", ["x01"], "", "", immediate),
   catalogEntry("theme-global-presets", "themes.globalPresets", "Designvorlagen", ["all"], "", "", immediate),
   catalogEntry("bot-board-style", "botBoardStyle", "Dartboard-Design", ["all"]),
   catalogEntry("turn-dart-display", "turnDartDisplay", "Darts in der Wurfanzeige", ["all"], "", "", immediate),

@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.2] - 2026-09-13
+
+### Added
+
+- Nutzerwirkung: Die neue Designkachel `Spiel-Layout` ordnet bei modernen X01-Spielen sämtliche Spieler links an und gibt dem Dartboard die größtmögliche unverzerrte Fläche rechts. Wurf- und Checkoutanzeige stehen oberhalb der Spielerliste, die nativen Aktionen liegen als kompaktes Dock vor dem Board. Der aktive Spieler bleibt groß und deutlich; inaktive Spieler werden platzsparend dargestellt, ohne Namen, Punktestand oder Statistiken abzuschneiden.
+  Technik: Ein fehlertoleranter DOM-Adapter erkennt Spieler-, Wurf-, Board- und Bedienbereiche semantisch und ordnet ausschließlich die nativen Elemente per CSS neu an. Variable Kartenhöhen, zeilenweises Scrollen, automatisches Sichtbarhalten des aktiven Spielers, exakte Score-Ausrichtung, vollständiges Cleanup und der Rückfall auf das native Layout sind durch fokussierte Geometrie-, DOM- und Lebenszyklustests abgesichert; Kachelvorschau und Dokumentation wurden synchronisiert.
+
 ## [3.1.1] - 2026-09-12
 
 ### Fixed
@@ -2106,6 +2113,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.11...v3.1.0
 [3.0.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.10...v3.0.11
