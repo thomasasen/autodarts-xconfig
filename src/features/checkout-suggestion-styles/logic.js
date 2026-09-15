@@ -11,11 +11,10 @@ import {
   findModernTurnSurface,
   isMatchNodeVisible,
   isModernCheckoutHint,
-  MODERN_CHECKOUT_HINT_SELECTOR,
 } from "../shared/x01-match-surface.js";
 
 export const SUGGESTION_SELECTOR = ".suggestion";
-export const MODERN_SUGGESTION_SELECTOR = MODERN_CHECKOUT_HINT_SELECTOR;
+export { MODERN_CHECKOUT_HINT_SELECTOR as MODERN_SUGGESTION_SELECTOR } from "../shared/x01-match-surface.js";
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 
 const COLOR_THEMES = Object.freeze({
