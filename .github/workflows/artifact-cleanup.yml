@@ -1,0 +1,63 @@
+name: Actions Artifact Cleanup
+
+on:
+  schedule:
+    - cron: "23 4 * * *"
+  push:
+    branches: [ main, master ]
+    paths:
+      - ".github/workflows/artifact-cleanup.yml"
+      - ".github/workflows/playwright.yml"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: actions-artifact-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete stale transient artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100
+              }
+            );
+
+            const stale = artifacts.filter((artifact) => {
+              if (artifact.expired) return false;
+              const transient =
+                artifact.name === 'playwright-report' ||
+                artifact.name.startsWith('userscript-release-');
+              return transient && Date.parse(artifact.created_at) < cutoff;
+            });
+
+            let deletedBytes = 0;
+            for (const artifact of stale) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id
+              });
+              deletedBytes += artifact.size_in_bytes || 0;
+              core.info(`Deleted ${artifact.name} (${artifact.id}), ${artifact.size_in_bytes || 0} bytes`);
+            }
+
+            core.summary
+              .addHeading('Actions artifact cleanup')
+              .addRaw(`Deleted artifacts: ${stale.length}\n`)
+              .addRaw(`Deleted bytes: ${deletedBytes}\n`)
+              .write();
