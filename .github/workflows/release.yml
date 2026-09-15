@@ -57,7 +57,7 @@ jobs:
             dist/autodarts-xconfig.user.js
             dist/autodarts-xconfig.meta.js
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
 
   draft-release:
     name: Stage GitHub draft release
