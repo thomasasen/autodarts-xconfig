@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.4] - 2026-09-15
+
+### Fixed
+
+- Nutzerwirkung: Der automatische Board-Zoom für den dritten Dart bleibt auch bei Fehlwürfen, WIN und BUST bis zum Spielerwechsel bestehen. Wurfkorrekturen heben den Zoom weiterhin auf.
+  Technik: Das bisherige Zeitlimit entfällt zugunsten der Zugbindung. Die BUST-Erkennung bewahrt die Zugidentität trotz zurückgesetztem Punktestand; Korrekturen werden vor dem Halten des Zooms verarbeitet.
+
 ## [3.1.3] - 2026-09-15
 
 ### Changed
@@ -2129,6 +2136,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.0...v3.1.1

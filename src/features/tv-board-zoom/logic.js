@@ -30,7 +30,6 @@ const RING_RATIOS = Object.freeze({
   doubleOuter: 0.755556,
 });
 const SINGLE_RING_RATIO = (RING_RATIOS.tripleOuter + RING_RATIOS.doubleInner) / 2;
-const HOLD_AFTER_THIRD_MS = 1300;
 const RELEASE_PADDING_MS = 40;
 const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
   min: 2.35,
@@ -1221,6 +1220,11 @@ function resolveZoomGameState(options) {
         throws: domThrows,
       }
     : null;
+  if (domTurn && hasVisibleBustTurnScore(options.documentRef, surface) &&
+      String(options.state?.lastTurnId || "").startsWith(`dom:${surface.playerKey}:`)) {
+    // BUST restores the visit's starting score, so score + throws no longer identifies the turn.
+    domTurn.id = options.state.lastTurnId;
+  }
   const turn = current?.getActiveTurn?.() || domTurn;
   return {
     isX01Variant: () => true,
@@ -1508,30 +1512,14 @@ function resolveThirdDartStickyIntent({
   turnChanged,
   previousThrowCount,
   throwCount,
-  throws,
-  x01Rules,
-  activeScore,
-  nowTs,
 }) {
   if (turnChanged || !state.activeIntent || previousThrowCount !== 2 || throwCount !== 3) {
     return null;
   }
 
-  const thirdSegment = getThrowSegmentName(throws[2], x01Rules);
-  if (state.activeIntent.reason === "t20-setup" && thirdSegment === "T20") {
-    state.holdUntilTs = 0;
-    state.stickyUntilTurnChange = true;
-    return state.activeIntent;
-  }
-
-  if (state.activeIntent.reason === "checkout" && Number.isFinite(activeScore) && activeScore === 0) {
-    state.holdUntilTs = 0;
-    state.stickyUntilLegEnd = true;
-    return state.activeIntent;
-  }
-
-  state.holdUntilTs = nowTs + HOLD_AFTER_THIRD_MS;
-  return null;
+  state.holdUntilTs = 0;
+  state.stickyUntilTurnChange = true;
+  return state.activeIntent;
 }
 
 function resolveFinishedCheckoutStickyIntent(state, activeScore) {
@@ -1681,15 +1669,14 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
-  if (hasVisibleBustTurnScore(documentRef, matchSurface)) {
-    resetZoomIntentForBust(state);
-    return null;
-  }
-
   syncBoundaryTokenState(state, resolveGameBoundaryToken(gameState));
 
   const turnProgress = resolveTurnProgressState(state, gameState);
   if (!turnProgress) {
+    if (hasVisibleBustTurnScore(documentRef, matchSurface)) {
+      resetZoomIntentForBust(state);
+      return null;
+    }
     return resolveHydrationCheckoutIntent({
       gameState,
       x01Rules,
@@ -1749,6 +1736,16 @@ export function computeZoomIntent(options = {}) {
     return null;
   }
 
+  if (hasVisibleBustTurnScore(documentRef, matchSurface)) {
+    const heldIntent = !turnChanged && state.stickyUntilTurnChange ? state.activeIntent :
+      resolveThirdDartStickyIntent({ state, turnChanged, previousThrowCount, throwCount });
+    if (heldIntent) {
+      return heldIntent;
+    }
+    resetZoomIntentForBust(state);
+    return null;
+  }
+
   const stickyIntent = resolveStickyIntent(state, checkoutContext.activeScore);
   if (stickyIntent) {
     return stickyIntent;
@@ -1759,10 +1756,6 @@ export function computeZoomIntent(options = {}) {
     turnChanged,
     previousThrowCount,
     throwCount,
-    throws,
-    x01Rules,
-    activeScore: checkoutContext.activeScore,
-    nowTs,
   });
   if (thirdDartStickyIntent) {
     return thirdDartStickyIntent;

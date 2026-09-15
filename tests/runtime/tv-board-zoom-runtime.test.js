@@ -276,7 +276,7 @@ test("native correction undo reapplies the same zoom before zoom-out completes",
   } finally { f.stop(); }
 });
 
-test("native Bust and leaving the match immediately remove active zoom", () => {
+test("native Bust before the third dart and leaving the match immediately remove active zoom", () => {
   for (const exit of ["bust", "variant", "leave"]) {
     const f = startModernZoom();
     try {
@@ -338,16 +338,76 @@ test("native board replacement rebinds the common target without touching siblin
   } finally { f.stop(); }
 });
 
-test("native missed third dart zoom expires without another DOM event", () => {
-  const f = startModernZoom({ score: 181, throws: ["T20", "T20"], route: [] });
+for (const scenario of [
+  { name: "T20 setup", score: 181, throws: ["T20", "T20"], route: [], reason: "t20-setup", remainingScore: 180 },
+  { name: "checkout", score: 36, throws: ["T20", "25"], route: ["D18"], reason: "checkout", remainingScore: 35 },
+]) {
+  test(`native missed third dart keeps ${scenario.name} zoom until player change`, () => {
+    const f = startModernZoom(scenario);
+    try {
+      f.timers.advance(25);
+      assert.equal(f.events.find((event) => event.status === "apply")?.reason, scenario.reason);
+      const transform = f.board.style.transform;
+      f.score.textContent = String(scenario.remainingScore);
+      f.setVisit([...scenario.throws, "1"], []);
+      f.tick();
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+      f.timers.advance(10000);
+      f.tick();
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+      assert.equal(f.board.style.transform, transform);
+      f.player.textContent = "Player 2";
+      f.score.textContent = "301";
+      f.setVisit([], []);
+      f.tick();
+      f.timers.advance(500);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    } finally { f.stop(); }
+  });
+}
+
+for (const result of ["WIN", "BUST"]) {
+  for (const correction of [false, true]) {
+    test(`native third-dart ${result} keeps zoom until ${correction ? "correction" : "player change"}`, () => {
+      const f = startModernZoom();
+      try {
+        f.timers.advance(25);
+        const transform = f.board.style.transform;
+        f.score.textContent = result === "WIN" ? "0" : "121";
+        f.setVisit(["T20", "25", result === "WIN" ? "D18" : "T20"], []);
+        f.total.textContent = result;
+        f.tick();
+        f.timers.advance(10000);
+        f.tick();
+        assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+        assert.equal(f.board.style.transform, transform);
+        if (correction) {
+          f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[2].label });
+        } else {
+          f.player.textContent = "Player 2";
+          f.score.textContent = "301";
+          f.setVisit([], []);
+        }
+        f.tick();
+        f.timers.advance(500);
+        assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      } finally { f.stop(); }
+    });
+  }
+}
+
+test("native correction releases a zoom held after the third dart", () => {
+  const f = startModernZoom();
   try {
     f.timers.advance(25);
-    assert.equal(f.events.find((event) => event.status === "apply")?.reason, "t20-setup");
-    f.score.textContent = "180";
-    f.setVisit(["T20", "T20", "1"], []);
+    f.score.textContent = "35";
+    f.setVisit(["T20", "25", "1"], []);
     f.tick();
+    f.timers.advance(10000);
     assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
-    f.timers.advance(1800);
+    f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[2].label });
+    f.tick();
+    f.timers.advance(500);
     assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
   } finally { f.stop(); }
 });

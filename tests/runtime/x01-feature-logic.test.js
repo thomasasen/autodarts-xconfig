@@ -1136,7 +1136,7 @@ test("tv-board-zoom does not use T20 setup when first two darts are mixed", () =
   assert.equal(mixedIntent, null);
 });
 
-test("tv-board-zoom keeps the long hold after the third dart stable", () => {
+test("tv-board-zoom keeps a missed third dart zoom beyond the former hold timeout", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "";
   const windowRef = createFakeWindow({ documentRef });
@@ -1221,7 +1221,7 @@ test("tv-board-zoom keeps the long hold after the third dart stable", () => {
     nowTs: 7300,
   });
 
-  const releasedIntent = computeZoomIntent({
+  const stillHeldIntent = computeZoomIntent({
     gameState: createX01GameState({
       activeScore: 1,
       outMode: "Straight Out",
@@ -1247,13 +1247,13 @@ test("tv-board-zoom keeps the long hold after the third dart stable", () => {
     featureConfig: {
       checkoutZoomEnabled: true,
     },
-    nowTs: 7400,
+    nowTs: 74000,
   });
 
   assert.deepEqual(secondDartIntent, { reason: "t20-setup", segment: "T20" });
   assert.deepEqual(immediateThirdDartIntent, { reason: "t20-setup", segment: "T20" });
   assert.deepEqual(heldIntent, { reason: "t20-setup", segment: "T20" });
-  assert.equal(releasedIntent, null);
+  assert.deepEqual(stillHeldIntent, { reason: "t20-setup", segment: "T20" });
 });
 
 test("tv-board-zoom keeps T20 setup zoom after T20,T20,T20 until player change", () => {
@@ -1951,7 +1951,7 @@ test("tv-board-zoom resumes checkout focus after single-player miss visit resets
 
   assert.deepEqual(initialIntent, { reason: "checkout", segment: "D7" });
   assert.deepEqual(thirdMissHoldIntent, { reason: "checkout", segment: "D7" });
-  assert.equal(holdElapsedIntent, null);
+  assert.deepEqual(holdElapsedIntent, { reason: "checkout", segment: "D7" });
   assert.deepEqual(nextVisitIntent, { reason: "checkout", segment: "D7" });
   assert.equal(state.manualPause, false);
 });
