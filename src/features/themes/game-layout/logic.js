@@ -6,8 +6,11 @@ export const GAME_LAYOUT_GAP = 16;
 export const GAME_LAYOUT_PLAYER_GAP = 10;
 export const GAME_LAYOUT_PLAYER_MIN_HEIGHT = 112;
 export const GAME_LAYOUT_PLAYER_MAX_HEIGHT = 160;
+export const GAME_LAYOUT_RAIL_MAX_WIDTH = 820;
 export const GAME_LAYOUT_INACTIVE_SCALE = 0.6;
-export const GAME_LAYOUT_TURN_HEIGHT = 128;
+export const GAME_LAYOUT_TURN_HEIGHT = 144;
+export const GAME_LAYOUT_TURN_PLAYER_GAP = 16;
+export const GAME_LAYOUT_NAME_MIN_FONT_SIZE = 14;
 
 function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -16,6 +19,53 @@ function clamp(value, minimum, maximum) {
 function normalizeIndex(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(0, Math.trunc(number)) : fallback;
+}
+
+export function calculateFittedFontSize(options = {}) {
+  const preferredFontSize = Math.max(0, Number(options.preferredFontSize) || 0);
+  const minimumFontSize = Math.min(
+    preferredFontSize,
+    Math.max(0, Number(options.minimumFontSize) || 0)
+  );
+  const availableWidth = Math.max(0, Number(options.availableWidth) || 0);
+  const availableHeight = Math.max(0, Number(options.availableHeight) || 0);
+  const contentWidth = Math.max(0, Number(options.contentWidth) || 0);
+  const contentHeight = Math.max(0, Number(options.contentHeight) || 0);
+
+  if (!preferredFontSize || !availableWidth || !availableHeight || !contentWidth || !contentHeight) {
+    return preferredFontSize;
+  }
+
+  const scale = Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight);
+  const fittedFontSize = Math.max(minimumFontSize, preferredFontSize * scale);
+  return Math.floor(fittedFontSize * 4) / 4;
+}
+
+export function calculateClearRailRange(options = {}) {
+  const railLeft = Number(options.railLeft) || 0;
+  const railWidth = Math.max(0, Number(options.railWidth) || 0);
+  const railTop = Number(options.railTop) || 0;
+  const railBottom = Number(options.railBottom) || 0;
+  const gap = Math.max(0, Number(options.gap) || 0);
+  const railRight = railLeft + railWidth;
+  let clearLeft = railLeft;
+
+  for (const obstacle of options.obstacles || []) {
+    const left = Number(obstacle?.left);
+    const right = Number(obstacle?.right);
+    const top = Number(obstacle?.top);
+    const bottom = Number(obstacle?.bottom);
+    if (![left, right, top, bottom].every(Number.isFinite)) continue;
+    const overlapsVertically = top < railBottom && bottom > railTop;
+    const overlapsRail = left < railRight && right > railLeft;
+    if (overlapsVertically && overlapsRail) clearLeft = Math.max(clearLeft, right + gap);
+  }
+
+  clearLeft = Math.min(clearLeft, railRight);
+  return {
+    left: clearLeft,
+    width: Math.max(0, railRight - clearLeft),
+  };
 }
 
 export function calculateBoardFocusLayout(options = {}) {
@@ -42,10 +92,10 @@ export function calculateBoardFocusLayout(options = {}) {
     };
   }
 
-  const railWidth = clamp(width * 0.42, 480, 650);
+  const railWidth = clamp(width * 0.42, 480, GAME_LAYOUT_RAIL_MAX_WIDTH);
   const playerViewportHeight = Math.max(
     0,
-    height - GAME_LAYOUT_PADDING * 2 - GAME_LAYOUT_TURN_HEIGHT
+    height - GAME_LAYOUT_PADDING * 2 - GAME_LAYOUT_TURN_HEIGHT - GAME_LAYOUT_TURN_PLAYER_GAP
   );
   const requestedActiveIndex = Number(options.activeIndex);
   const hasActivePlayer = options.activeIndex == null ||

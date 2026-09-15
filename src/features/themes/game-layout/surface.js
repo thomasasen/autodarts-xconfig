@@ -96,6 +96,8 @@ export function resolveModernX01GameLayoutSurface(documentRef, windowRef = docum
     const nameNode = player.cardNode.querySelector?.(".font-display") ||
       player.cardNode.querySelector?.('[role="button"]') || null;
     const nameRegion = findDirectDescendant(content, nameNode);
+    const nameContainerNode = findDirectDescendant(nameRegion, nameNode);
+    const namePlateNode = nameNode?.parentElement || null;
     const scoreRegion = findDirectDescendant(content, player.scoreNode);
     const { scoreValueNode, legsNode } = findScoreParts(scoreRegion, player.scoreNode);
     const { statRegions, dartIndicatorNode, dartIconNode } = findPlayerStatusParts(
@@ -112,6 +114,9 @@ export function resolveModernX01GameLayoutSurface(documentRef, windowRef = docum
       item,
       body,
       content,
+      nameNode,
+      nameContainerNode,
+      namePlateNode,
       nameRegion,
       scoreRegion,
       scoreValueNode,
@@ -127,7 +132,9 @@ export function resolveModernX01GameLayoutSurface(documentRef, windowRef = docum
     !players.length ||
     players.some((player) =>
       !player.column || !player.item || !player.body || !player.content ||
-      !player.nameRegion || !player.scoreRegion || !player.scoreValueNode || !player.legsNode ||
+      !player.nameNode || !player.nameContainerNode || !player.namePlateNode ||
+      !player.nameRegion || !player.scoreRegion ||
+      !player.scoreValueNode || !player.legsNode ||
       player.statRegions.length !== 2 || !player.dartIndicatorNode || !player.dartIconNode
     ) ||
     new Set(players.map((player) => player.item)).size !== players.length
